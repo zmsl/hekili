@@ -272,6 +272,24 @@ describe("the tracked set", function()
     end)
 
     it(
+        "leaves a function `fsr` share to the belief, which reads it after its talent walk (by rank, never the spec)",
+        function()
+            local meta = {}
+            h.Class.resources.rage.state.meta = meta
+            local share = function()
+                return 0.25
+            end
+            meta.fsr = { spirit = 10, mp5 = 0, share = share }
+            ns.BuildTracked()
+            local r = I.res.slotOf[h.Class.resources.rage.type]
+            local fsr = I.def.resources[r].fsr
+            h.Class.resources.rage.state.meta = nil
+            assert.are.equal(share, fsr.share)
+            assert.are.equal(0.25, I.res.share[r])
+        end
+    )
+
+    it(
         "skips the sim's own generated entries (`__decay`, `__taken`: Engine/Schema/Spec/Regen.lua's) in the walk",
         function()
             local model = h.Class.resources.rage.state.regenModel

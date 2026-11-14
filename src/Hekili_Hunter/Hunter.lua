@@ -222,6 +222,9 @@ local function removes(key)
     end
 end
 
+-- Bestial Discipline (19590): 25/50% of the spirit regen while casting by rank (its effect 2, wowsims's curve).
+local BESTIAL_DISCIPLINE = { 0.25, 0.5 }
+
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace, as wowsims's logs measure them at 60: hunter_beast_mastery 7.94 a second while
 -- casting (Bestial Discipline 2/2's 50% share of 15.88) and 15.88 outside, so spirit 7.94, mp5 7.94 and share 0.5;
@@ -247,8 +250,8 @@ spec:RegisterResource(
             mp5 = function()
                 return state.spec.beast_mastery and 7.94 or 0
             end,
-            share = function()
-                return state.spec.beast_mastery and 0.5 or 0
+            share = function() -- Bestial Discipline's rank (the belief reads it after its talent walk), never the spec
+                return BESTIAL_DISCIPLINE[talent.bestial_discipline.rank] or 0
             end,
         },
         base = BASE_MANA, -- a fraction cost is of base mana (Spec.lua)

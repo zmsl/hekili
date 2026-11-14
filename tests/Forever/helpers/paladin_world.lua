@@ -269,7 +269,7 @@ local PACKS = {
             [1311084] = 3, -- Champion of the Light
         },
         weapon = { 100, 160, 2.2 },
-        fsr = { 18.37, 7.88 },
+        fsr = { 18.37, 7.88, share = 0.3 }, -- Reverence 2/2 (its talents above): the parts hold its 30%
         max = 4667,
         uptime = { "consecrated_ground" },
     },

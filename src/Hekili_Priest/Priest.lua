@@ -212,6 +212,9 @@ local function pain()
     end
 end
 
+-- Meditation (14521): 17/33/50% of the spirit regen while casting by rank (wowsims's curve, e5a9cd2a2d).
+local MEDITATION = { 0.17, 0.33, 0.5 }
+
 -- The five-second rule (C3): the regen per second the declared starting point the out-of-combat read and the in-combat
 -- calibration replace, per spec as wowsims's logs measure it at 60 (Forever's Spirit regen is `6.25 + Spirit/8` a
 -- second for every class, wowsims mana.go:75-76). Shadow (testing.build.json, priest_shadow.log): 2.688 a 0.1 s tick
@@ -260,8 +263,8 @@ spec:RegisterResource(
             mp5 = function()
                 return state.spec.shadow and 26.88 or 35.73
             end,
-            share = function()
-                return state.spec.shadow and 0.5 or 0
+            share = function() -- Meditation's rank (the belief reads it after its talent walk), never the spec
+                return MEDITATION[talent.meditation.rank] or 0
             end,
         },
         base = 1376, -- a fraction cost is of base mana (wowsims's priest base mana at 60, base_stats_auto_gen.go)

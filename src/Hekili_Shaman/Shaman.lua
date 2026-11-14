@@ -430,9 +430,13 @@ local function shock(other, ids, costs, debuffKey)
     }
 end
 
+-- Mindfulness (1223033): 17/33/50% of the spirit regen while casting by rank (wowsims's curve, e5a9cd2a2d; its row's
+-- BasePoints 5 is a placeholder the curve replaces: the pack's old 15% at 3/3 misread it).
+local MINDFULNESS = { 0.17, 0.33, 0.5 }
+
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace, as wowsims's logs measure them at 60: shaman_elemental 31.13 a second while casting
--- (Mana Spring Totem, Mindfulness 3/3's 15% share and gear) and 45.25 outside the rule, so spirit 14.12 (the outside
+-- (Mana Spring Totem, Mindfulness 3/3's 50% share and gear: S = 28.24, the parts below are the log's two rates) and 45.25 outside the rule, so spirit 14.12 (the outside
 -- rate less the casting one) and mp5 31.13 (the e2842f0a78 log, Windshaper Skyborne; was 29.75 / 42.5 as a Troll);
 -- shaman_enhancement 17.8 / 49.05, so spirit 31.25 and mp5 17.8 (the e2842f0a78 log, Windshaper Skyborne; was 9.8 /
 -- 38.42 as an Orc). Forever's
@@ -468,8 +472,8 @@ spec:RegisterResource(
             mp5 = function()
                 return state.spec.elemental and 26.13 or 12.8
             end,
-            share = function()
-                return state.spec.elemental and 0.15 or 0
+            share = function() -- Mindfulness's rank (the belief reads it after its talent walk), never the spec
+                return MINDFULNESS[talent.mindfulness.rank] or 0
             end,
         },
         base = 1520, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)

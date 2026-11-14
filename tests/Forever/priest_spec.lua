@@ -142,8 +142,16 @@ describe("Forever Priest", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
-        assert.are.same({ 14.79, 26.88, 0.5 }, seed("shadow")) -- Meditation's 50%, before Dark Inspiration
+        assert.are.same({ 14.79, 26.88, 0 }, seed("shadow")) -- before Dark Inspiration
         assert.are.same({ 20.12, 35.73, 0 }, seed("discipline")) -- the Smite build's
+        -- the static share follows Meditation's rank (17/33/50%, wowsims's curve), never the spec
+        local shares = {}
+        for rank = 0, 3 do
+            e.talent.meditation = { rank = rank }
+            shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
+        end
+        e.talent.meditation = nil
+        assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares)
         assert.are.equal(1376, r.meta.base)
         -- the regen functions run under the stand-in's w.state, as the sim's: Spirit is UnitStat(5)'s second return
         local di, ds = r.models.dark_inspiration, r.models.dark_sacrifice

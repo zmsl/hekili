@@ -2294,6 +2294,27 @@ describe("resources", function()
             within(500 + 7 + 9, VS.Power(MANA, 14).est)
         end)
 
+        it("reads a function `share` of a rate entry at the build and each combat start (a rank's value)", function()
+            local s = 0.25
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, {
+                {
+                    aura = "focus",
+                    share = function()
+                        return s
+                    end,
+                },
+            })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 2, 10, 1e6, 1, 10, 0) -- focus up
+            -- inside: M + S x (0.5 + 0.25) = 2 + 15
+            assert.are.equal(17, VS.Regen(MANA, 12).est)
+            s = 2 -- out of range: inert after the next combat start
+            obs(Obs.CombatStart, 13, 0, 0, 0)
+            I.Fold(13, false)
+            assert.are.equal(12, VS.Regen(MANA, 14).est)
+        end)
+
         it("caps a `share` aura's casting share at all of the spirit regen with the slot's static share", function()
             shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "focus", share = 0.75 } })
             read(10, 500)

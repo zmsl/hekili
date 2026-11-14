@@ -178,7 +178,15 @@ describe("Forever Shaman", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
-        assert.are.same({ 14.12, 26.13, 0.15 }, seed("elemental")) -- Mindfulness 3/3: 15% while casting; no totem; re-pin log
+        assert.are.same({ 14.12, 26.13, 0 }, seed("elemental")) -- no totem; re-pin log
+        -- the static share follows Mindfulness's rank (17/33/50%, wowsims's curve; was 15% at 3/3), never the spec
+        local shares = {}
+        for rank = 0, 3 do
+            e.talent.mindfulness = { rank = rank }
+            shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
+        end
+        e.talent.mindfulness = nil
+        assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares)
         assert.are.same({ 31.25, 12.8, 0 }, seed("enhancement")) -- re-pin log (Windshaper Skyborne)
         assert.are.same({ aura = "improved_stormstrike", share = 0.5 }, r.models.improved_stormstrike)
         assert.are.same({ 2, 1223031, 2 }, w.talents.improved_stormstrike)

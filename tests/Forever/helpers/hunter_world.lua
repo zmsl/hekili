@@ -256,7 +256,9 @@ local PACKS = {
         weapon = { 150, 220, 3.5 },
         ranged = { 140, 200, 3.0 },
         aspect = "aspect_of_the_hawk",
-        talents = { [19416] = 2 }, -- the export's Efficiency 2/5 (the log header's 19416=2): the shots and Sting 6% off
+        -- the export's Efficiency 2/5 (the log header's 19416=2): the shots and Sting 6% off; its Bestial Discipline 2/2
+        -- (19590=2): the belief's static share by rank (the 0.5 below)
+        talents = { [19416] = 2, [19590] = 2 },
         -- wowsims's log (hunter_beast_mastery.log): 7.94 a second while casting (Bestial Discipline's 50%), 15.88 outside
         fsr = { 7.94, 7.94, share = 0.5 },
         uptime = { "serpent_sting", "hunters_mark" },

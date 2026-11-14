@@ -223,9 +223,12 @@ local function selfBuff(key, ids, extra)
     return a
 end
 
+-- Reverence (1310899): 15/30% of the spirit regen while casting by rank (wowsims's curve, e5a9cd2a2d: 2 ranks).
+local REVERENCE = { 0.15, 0.3 }
+
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace, as wowsims's logs measure them at 60: Retribution 13.65 spirit + 8.25 casting =
--- 21.9 outside (Reverence's share is inside the 8.25), Protection 0 while casting and 17.38 outside. Forever's Spirit regen is `6.25 + Spirit/8` a second for every class
+-- 21.9 outside (Reverence 2/2's share is inside the 8.25: the share below is the static share those parts hold), Protection 0 while casting and 17.38 outside. Forever's Spirit regen is `6.25 + Spirit/8` a second for every class
 -- (wowsims mana.go:75-76), not Classic's formula.
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
@@ -235,6 +238,9 @@ spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
         end,
         mp5 = function()
             return state.spec.retribution and 8.25 or 0
+        end,
+        share = function() -- Reverence's rank (the belief reads it after its talent walk), never the spec
+            return REVERENCE[talent.reverence.rank] or 0
         end,
     },
     base = BASE_MANA,
