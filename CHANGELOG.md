@@ -27,6 +27,7 @@
 - Warlock: with Soul Harvest, Hekili now counts the mana regeneration Soul Harvest gives for 10 seconds after you kill an enemy that gives experience while your Drain Soul is on it. Not in dungeons or raids, where the game hides who made the kill.
 
 ### Fixed
+- With the Cooldown Manager on, a Rake or Faerie Fire that misses is now corrected from the Cooldown Manager even right after the Cooldown Manager reloads its data, so it no longer stays shown as up for its whole duration (usually the first one of a fight).
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 - Items (trinkets, potions and other usable items) now have a Clash setting on their options page, and it now takes effect; before, an item's Clash was always 0.
@@ -36,6 +37,7 @@
 - Importing a priority no longer breaks lines that use min(), max() or the ^ operator. Re-importing Fury (wowsims.com) or Enhancement (wowsims.com) from a copy's Source tab now keeps every line intact.
 - `prev.last` in a priority condition now names the last ability you cast, and `prev.<ability>` is true when it was that ability. Before, for the ability Hekili shows first, `prev.last` read "none" and `prev.<ability>` was always false.
 - A priority line's `interrupt=` option now works: while you channel that spell, Hekili shows the next ability at the channel's next tick once your global cooldown is ready. Before, `interrupt=` did nothing.
+- Paladins: Judgement being usable now corrects Hekili's mana estimate, so abilities are held back less often after a seal. Rogue finishers being usable now correct the energy estimate the same way.
 
 ### Known issues
 - The Hunter Turret priorities have not been checked in the game yet.

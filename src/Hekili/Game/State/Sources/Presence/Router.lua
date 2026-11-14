@@ -38,6 +38,12 @@ local tracked, disagree, lost, seedN, edgeN = R.tracked, R.disagree, R.lost, R.s
 local fState, fN, fAgree, fT, fFrom, fEdge, fDark, fPdark, fPdarkT =
     fact.state, fact.n, fact.agree, fact.t, fact.from, fact.edge, fact.dark, fact.pdark, fact.pdarkT
 local leaf, want, api0, def0, pending = nil, nil, nil, nil, false
+-- The leaf's map builds by trigger, per session (the snapshot's presence-proof line, L972): 1-3 the viewer's events
+-- (VIEWER_EVENTS' order), 4 a belief build (I.Build), 5 any other (a provider or Cooldown Manager panel switch, VS.Start);
+-- one waiting for combat end counts for its latest trigger. evInCombat: the viewer's events received in combat (each
+-- restarts every dark: ForgetEdges).
+R.buildsBy, R.evInCombat = { 0, 0, 0, 0, 0 }, 0
+local why = 5
 local edges = { up = 0, down = 0 } -- the edges passed on this fight (Snapshot)
 I.presenceEdges = edges
 
@@ -146,8 +152,11 @@ local function activate(t)
         return
     end
     leaf.onThing = thing
-    local errors = leaf.errors
+    local errors, builds = leaf.errors, leaf.builds or 0
     leaf.Activate(api0, t, def0, nil)
+    if (leaf.builds or 0) ~= builds then
+        R.buildsBy[why] = R.buildsBy[why] + 1
+    end
     if leaf.errors ~= errors then
         drop()
         return
@@ -175,7 +184,7 @@ end
 --- Takes the leaf when cfg.viewer; builds the map and activates the leaf out of combat (else at combat end).
 function R.Activate(api, t, def, cfg)
     listen(cfg and cfg.viewer)
-    api0, def0, want = api, def, nil
+    api0, def0, want, why = api, def, nil, cfg and cfg.build and 4 or 5
     if cfg and cfg.viewer then
         want = I.PRESENCE.viewer
     end
@@ -253,7 +262,12 @@ function R.LeafState()
 end
 
 -- The viewer's sets changed (CV §3): rebuild out of combat, else at combat end (decision 89: no change mid-fight).
-local function changed(_, t)
+-- n: the event's index in VIEWER_EVENTS (R.buildsBy).
+local function changed(n, t)
+    if I.inCombat then
+        R.evInCombat = R.evInCombat + 1
+    end
+    why = n
     if leaf and leaf.ForgetEdges then -- the data reloaded: every slot's lit/dark starts over, even while the rebuild waits
         leaf.ForgetEdges()
     end
@@ -262,7 +276,9 @@ local function changed(_, t)
     end
 end
 for n = 1, #VIEWER_EVENTS do
-    S.On(VIEWER_EVENTS[n], nil, changed)
+    S.On(VIEWER_EVENTS[n], nil, function(_, t)
+        changed(n, t)
+    end)
     S.Dormant(VIEWER_EVENTS[n], true)
 end
 -- Player.lua's handler runs first (TOC order) and clears I.inCombat.

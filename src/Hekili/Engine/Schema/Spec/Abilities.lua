@@ -62,9 +62,10 @@ end
 
 
 local methods = {
-    -- Content fields beside Hekili's own. `ladder = false`: the ability's usability answers are no rungs of the
-    -- belief's cost ladder (Game/State/Families/Resources.lua); without it a short answer is a rung only while its
-    -- `usable` holds in the belief's `now` context (a finisher at 0 combo points pins no energy). `missable = true` or
+    -- Content fields beside Hekili's own. `ladder = false`: the ability's short answers are no rungs of the
+    -- belief's cost ladder (Game/State/Families/Resources.lua; a usable answer still lifts the floor to the cost);
+    -- without it a short answer is a rung only while its `usable` holds in the belief's `now` context (a finisher at 0
+    -- combo points pins no energy). `missable = true` or
     -- an aura key: a miss leaves that debuff off the target (trackMisses, above). `refundOnAvoid = true` (its resource
     -- meta's share) or a share 0-1: a dodged, parried or missed cast gives back that much of its cost (the belief's
     -- only, Game/State/Families/Now.lua; the sim does not predict avoidance). `onCrit = function() ... end`, beside

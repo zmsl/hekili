@@ -308,8 +308,8 @@ describe("the Presence router's reduced facts (Task 4a)", function()
             assert.is_true(R.fact.pdark[1])
             ctl.Fire("PLAYER_TARGET_CHANGED") -- a player item: its pdark stands
             assert.is_true(R.fact.pdark[1])
-            R.Activate(api, 8, d, { viewer = true }) -- a rebuild clears it
-            assert.are.same({ false, 0 }, { R.fact.pdark[1], R.fact.pdarkT[1] })
+            R.Activate(api, 8, d, { viewer = true }) -- a rebuild restarts it: the unchanged map keeps the proof (L972)
+            assert.are.same({ true, 8 }, { R.fact.pdark[1], R.fact.pdarkT[1] }) -- dark again from the build's sweep
         end
     )
 
