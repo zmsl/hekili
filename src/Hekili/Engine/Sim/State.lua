@@ -1379,14 +1379,20 @@ do
                     -- a pack's `value` reads it instead of repeating this test.
                     v.resume, v.pending = nil, 0
                     if v.swing and i > 0 then
-                        local p
-                        if v.swing == "offhand" then p = state.swings.oh_pending else p = state.swings.mh_pending end
-                        -- L872 / review I1: the swings after it run off the newer of the anchor and the pending swing.
-                        -- The pending one is newer whenever it lands before its row moves the anchor: the fight's
-                        -- first swing after the combat-start pseudo swing, however soon after the pull, or an early
-                        -- (hasted) swing mid-fight.
+                        local p, a
+                        if v.swing == "offhand" then
+                            p, a = state.swings.oh_pending, state.swings.oh_actual
+                        else
+                            p, a = state.swings.mh_pending, state.swings.mh_actual
+                        end
+                        -- L872 / review I1: a pending swing newer than the last swing row (mh_actual / oh_actual,
+                        -- within the parry pull's 1 ms) is not the anchor's swing: the swings after it run off it.
+                        -- That is the fight's first swing after the combat-start pseudo swing, however soon after the
+                        -- pull, or an early (hasted) swing mid-fight. Else it is the anchor's own swing, and the
+                        -- anchor keeps its phase (a parry-haste pull moves it).
                         if p > 0 then
-                            v.next, v.resume, v.pending = max( now, p + 2 * ns.ORACLE_MIN ), max( l, p ) + i, p
+                            local from = p > a + 0.001 and p or l
+                            v.next, v.resume, v.pending = max( now, p + 2 * ns.ORACLE_MIN ), from + i, p
                         end
                     end
 
