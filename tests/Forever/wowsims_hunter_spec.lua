@@ -118,7 +118,10 @@ local PACKS = {
         0.93,
         { [10] = 6, [40] = 7.6, [60] = 14.0 },
         -- 2.4 -> 0.7 (0.67 measured): R51's weave position bounces (above) are gone with the new weave
-        0.7,
+        -- 0.7 -> 1.1 (1.00 measured, 3 flips, was 2; flicker-085 P1, L755 / ruling L960: a mana pool with no tick seen
+        -- pads nothing, at the gap BT cost crossing; not traced per tick). provisional: final value set on
+        -- integ/0.8.5-w2 after the Survival-moving lanes merge (L1037)
+        1.1,
         "SurvivalRanged",
     },
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): new rows, first measured on this lane (R6; the
