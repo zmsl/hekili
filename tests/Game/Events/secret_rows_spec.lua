@@ -15,14 +15,21 @@ describe("rows with a secret amount (kind-only routing)", function()
     before_each(function()
         api, ctl = fake.new()
         saved = {}
-        for k, v in pairs({ CreateFrame = api.CreateFrame, issecretvalue = api.issecretvalue, GetTime = api.GetTime }) do
+        local stop = function()
+            return 0
+        end
+        local globals = { CreateFrame = api.CreateFrame, issecretvalue = api.issecretvalue, GetTime = api.GetTime }
+        globals.debugprofilestop = stop -- VS.Drain's timing
+        for k, v in pairs(globals) do
             saved[k] = rawget(_G, k) or false
             _G[k] = v
         end
         ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
         T, X, L = I.Tickets, I.Expect, I.Log
-        I.Build(fs.def(fs.new(9, false, false, true)), 1)
+        local def = fs.def(fs.new(9, false, false, true))
+        def.abilities[3].refundOnAvoid = 0.8 -- spender_c (its `now` writes a 15 s target debuff): an avoid refunds 80%
+        I.Build(def, 1)
         VS.Start(api)
         got = {}
         cleu = I.Events.CreateFrame("Frame")
@@ -173,6 +180,211 @@ describe("rows with a secret amount (kind-only routing)", function()
         ctl.Fire("UNIT_COMBAT", "target", "WOUND", S, S, 4)
         ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, S)
         assert.are.same({ 0, 2, 0 }, { T.paid[X.FRAME], L.background, count(VS.Obs.Avoided) })
+    end)
+
+    -- L607 / L629 / L972 option A (Fable decision 2026-11-14): live, our landed white swing's row is a WOUND whose amount
+    -- alone is secret. An avoid in a cast's own frame the MELEE tie gave a swing in flight goes back to the cast when a
+    -- secret white wound then lands where that swing's landing is expected (the test that gave it the avoid: its core
+    -- band, or a first swing's whole window): the swing landed. The wound itself pays nothing (L505).
+    describe("a tied avoid given back by the swing's secret wound", function()
+        local HK
+
+        local function pin() -- rage 10 before the cast (the usability poll's rung)
+            ctl.usable[fs.SPENDER_C] = { true, false }
+            ctl.now = 4
+            VS.Drain(4)
+            ctl.usable[fs.SPENDER_C] = nil
+        end
+
+        local function settle(t)
+            ctl.Tick(t)
+            VS.Drain(t)
+        end
+
+        -- our main-hand swing at `at`, then spender_c at 5 and its own-frame secret DODGE, which the swing's band holds
+        local function tie(at)
+            pin()
+            ctl.now = at or 4.526 -- the main hand's landing lag is about 0.474 s
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+            return i
+        end
+
+        local function wound(t)
+            ctl.now = t
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 1)
+        end
+
+        local function missRow(id)
+            for _, r in ipairs(got) do
+                if r[2] == "SPELL_MISSED" and r[12] == id then
+                    return r[15]
+                end
+            end
+        end
+
+        before_each(function()
+            HK = I.HitKind
+        end)
+
+        it("gives it back on the swing's wound in its core band: undo, refund, SPELL_MISSED, a no-row close", function()
+            local i = tie()
+            assert.are.same({ T.PROV, 0, 1 }, { T.state[i], count(VS.Obs.Avoided), L.tieHeld })
+            wound(5.08) -- the swing's core band (0.474 +- 0.12), past the cast's own frame
+            settle(5.1)
+            assert.are.same(
+                { 1, 1, T.OPEN, "", 1 },
+                { count(VS.Obs.Avoided), I.avoidsRun, T.state[i], T.avoid[i], L.tieBack }
+            )
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.1).est) -- 10 paid, 8 back
+            assert.are.equal("DODGE", missRow(fs.SPENDER_C))
+            assert.are.equal(1, L.background) -- the wound itself is still background: it pays nothing (L505)
+            settle(6.2) -- past the swing's window
+            assert.are.same({ 1, 0 }, { count(VS.Obs.SwingSettled, -1), count(VS.Obs.SwingSettled, HK.DODGE) })
+        end)
+
+        it("keeps the cast's own-frame avoid when the swing's secret wound came first (the reversed order)", function()
+            pin()
+            ctl.now = 4.526
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            wound(4.95) -- in the swing's core band, before the cast
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+            settle(5.1)
+            assert.are.same({ 1, 1, T.OPEN, 1 }, { count(VS.Obs.Avoided), I.avoidsRun, T.state[i], L.tieBack })
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.1).est)
+            settle(6.2)
+            assert.are.same({ 1, 0 }, { count(VS.Obs.SwingSettled, -1), count(VS.Obs.SwingSettled, HK.DODGE) })
+        end)
+
+        it("keeps the tie with no wound: the debuff stays, the swing closes on its avoid", function()
+            local i = tie()
+            settle(6.2)
+            assert.are.same(
+                { 0, 0, 1, 0 },
+                { count(VS.Obs.Avoided), I.avoidsRun, count(VS.Obs.SwingSettled, HK.DODGE), L.tieBack }
+            )
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 6.2).est)
+            assert.are_not.equal(T.OPEN, T.state[i])
+        end)
+
+        it("keeps the tie and drops the hold on a wound in the tied cast's own frame (the cast landed)", function()
+            tie()
+            wound(5.02) -- the cast's own frame: its hit
+            wound(5.08) -- then a white wound in the swing's band: the hold is gone
+            settle(6.2)
+            assert.are.same({ 0, 0, 1 }, { count(VS.Obs.Avoided), L.tieBack, count(VS.Obs.SwingSettled, HK.DODGE) })
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 6.2).est)
+        end)
+
+        it("gives nothing back for a wound both our hands' swings explain (dual wield)", function()
+            ctl.now = 4.377
+            ctl.Fire("PLAYER_SWING", 2.6, 1) -- the off hand: its core band (0.703 +- 0.04) holds 5.08 too
+            tie()
+            assert.are.equal(1, L.tieHeld)
+            wound(5.08)
+            settle(6.2)
+            assert.are.same({ 0, 0 }, { count(VS.Obs.Avoided), L.tieBack })
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 6.2).est)
+        end)
+
+        it("gives nothing back for a wound in a due tick band of our own physical schedule", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-0", fs.SPENDER_S) -- first tick due 13.375 +- 0.475
+            T.school[ticket(X.TICKS)] = 1 -- a bleed's (the fixture's schedule is nature)
+            ctl.now = 12.926
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 13.4
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+            assert.are.equal(1, L.tieHeld)
+            wound(13.48) -- the swing's core band and the tick's band
+            settle(15)
+            assert.are.same({ 0, 0 }, { count(VS.Obs.Avoided), L.tieBack })
+        end)
+
+        it("tests a first swing's landing by its whole window, the cast's ticket closed by then", function()
+            pin()
+            ctl.now = 4.52
+            ctl.Fire("PLAYER_ENTER_COMBAT")
+            ctl.now = 4.526
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            assert.is_true(T.first[i])
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+            ctl.Tick(5.66) -- the cast's landing window (0.474 + 3 x 0.06) is over: its ticket closed
+            assert.is_nil(ticket(X.FRAME))
+            wound(5.7) -- 1.17 s after the first swing: past its core band, inside its window
+            settle(5.8)
+            assert.are.same({ 1, 1, 1 }, { count(VS.Obs.Avoided), I.avoidsRun, L.tieBack })
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.8))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.8).est)
+            assert.are.equal("DODGE", missRow(fs.SPENDER_C))
+        end)
+
+        it("gives nothing back on a later swing's wound past its core band", function()
+            tie()
+            wound(5.7) -- 1.17 s after a swing that is not the first: outside its landing test
+            settle(6.2)
+            assert.are.same({ 0, 0 }, { count(VS.Obs.Avoided), L.tieBack })
+        end)
+
+        it("leaves a plain-amount client unchanged: a wound outside the amount classes gives nothing back", function()
+            ctl.damage = { 40, 50, 0, 0 }
+            ctl.now = 3
+            ctl.Fire("PLAYER_REGEN_ENABLED") -- UnitDamage read: the amount classes known
+            pin()
+            ctl.now = 4.526
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.now = 5.08
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 900, 1) -- no amount class of ours: not the swing's own
+            settle(6.2)
+            assert.are.same({ 0, 0 }, { count(VS.Obs.Avoided), L.tieBack })
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 6.2).est)
+        end)
+
+        it("gives nothing back with the internal switch off (I.tieWoundOff)", function()
+            I.tieWoundOff = true
+            tie()
+            wound(5.08)
+            settle(6.2)
+            I.tieWoundOff = nil
+            assert.are.same({ 0, 0 }, { count(VS.Obs.Avoided), L.tieBack })
+        end)
+
+        it("allocates nothing holding, giving back and dropping tied avoids", function()
+            I.Sources.Stage = stage
+            cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+            local t0 = 10
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t0 = t0 + 5
+                    ctl.now = t0
+                    ctl.Fire("PLAYER_SWING", 2.6, 0)
+                    ctl.now = t0 + 0.474
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+                    ctl.now = t0 + 0.554
+                    ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 1)
+                    ctl.Tick(t0 + 2)
+                    I.Sources.Flush()
+                end, 200)
+            )
+        end)
     end)
 
     it("allocates nothing routing a secret avoid and a secret crit", function()
