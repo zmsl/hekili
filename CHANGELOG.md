@@ -19,6 +19,7 @@
 ### Fixed
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
+- When a fight starts, the first icon now switches to its in-combat choice at once instead of one update late.
 
 ### Known issues
 
