@@ -137,24 +137,57 @@ end)
 describe("max_energy on a line", function()
     -- A Feral cat in combat with 5 combo points and `energy` (plain to the fake client), the list one Ferocious Bite
     -- line; returns the first recommendation's name and time.
-    local function bite(energy, flag)
+    -- `secret`: the energy is read plain once out of combat, then secret in combat (Forever's case: the belief's
+    -- estimate and floor carry it); `extra`: more lines after Bite's; mana is plain at 2674.
+    local function bite(energy, flag, secret, extra)
         local c = DW.Feral.character()
         c.power = { type = 3, token = "ENERGY", max = 100, value = energy }
         local H = headless.new({ character = c, pack = DW.Feral.PACK })
         assert.are.same({}, H.loadErrors)
         local hk = H.Hekili
-        hk.DB.profile.packs[DW.Feral.PACK].lists = { default = { line("ferocious_bite", { max_energy = flag }) } }
+        local list = { line("ferocious_bite", { max_energy = flag }) }
+        for _, e in ipairs(extra or {}) do
+            list[#list + 1] = e
+        end
+        hk.DB.profile.packs[DW.Feral.PACK].lists = { default = list }
         hk:LoadScripts()
-        H.ctl.power[3], H.ctl.power[4] = energy, 5
+        H.ctl.power[0], H.ctl.power[3], H.ctl.power[4] = 2674, energy, 5
         H.ctl.inRange.target, H.ctl.level.target = true, 60
         H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_true(hk.Engine.Subscribe("Primary", function() end))
+        if secret then
+            assert(headless.cycle(H, H.ctl.now + 0.2))
+            H.ctl.power[3] = nil -- secret from here
+        end
         H.ctl.combat = true
         H.Fire("PLAYER_REGEN_DISABLED")
-        assert.is_true(hk.Engine.Subscribe("Primary", function() end))
-        assert(headless.cycle(H, H.ctl.now + 0.2))
+        assert(headless.cycle(H, H.ctl.now + (secret and 1 or 0.2)))
         assert.are.same({}, H.errors)
         local r = hk.Engine.Output.Primary.recs[1]
         return r.actionName, r.time, hk
+    end
+
+    it("=1 with secret energy at the cap: Bite now, not held short of it", function()
+        local name, t, hk = bite(100, 1, true)
+        assert.are.equal("ferocious_bite", name)
+        assert.is_true(t < 0.5, tostring(t))
+        assert.is_false(hk.State.nearCost, "ready, not near its cost")
+    end)
+
+    -- TimeToReady of `key` on line 2 (max_energy=1) and line 3 (no flag) at 60 energy: the flag changes nothing for an
+    -- ability without excess_cap, nor for one paid in another resource
+    for _, key in ipairs({ "rake", "faerie_fire" }) do
+        it("=1 on " .. key .. " (no excess_cap): no change to its readiness", function()
+            local _, _, hk = bite(60, nil, false, { line(key, { max_energy = 1 }), line(key) })
+            local st = hk.State
+            st.reset("Primary", true)
+            st.scriptID = DW.Feral.PACK .. ":default:2"
+            assert.is_true(st.args.max_energy == 1)
+            local flagged = st:TimeToReady(key)
+            st.scriptID = DW.Feral.PACK .. ":default:3"
+            assert.are.equal(st:TimeToReady(key), flagged)
+            assert.is_true(flagged < 3600, tostring(flagged))
+        end)
     end
 
     it("the pack declares Bite's excess cap: all the energy it holds (wowsims ferocious_bite.go)", function()
