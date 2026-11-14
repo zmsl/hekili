@@ -269,6 +269,9 @@ I.On(Obs.Read, function(o, t)
             applied = o.t
         end
         set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "observed", event)
+        if u <= 2 then
+            I.AuraClaimFolded(o.a, o.t, applied) -- whose application this is, now the fold has written it
+        end
         if kind == ReadOf.AuraOpen then
             U.openFold[u][j] = I.folds
         end

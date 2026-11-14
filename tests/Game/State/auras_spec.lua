@@ -1105,6 +1105,26 @@ describe("auras", function()
             assert.is_true(math.abs(est("target", fs.SPENDER_C, 25.8) - 40.8) < 1e-9) -- opened at once from its light
         end)
 
+        -- A close and a CDM open of one record staged in one drain (the harness's Retribution live-auras trace at 87.6):
+        -- the close folds first, so the open writes a new application at its own t. It is ours (the CDM opened it): its
+        -- NONE closes it (rule 1). Red before the fix: ours named the closed application's applied time (10), so the
+        -- record stood its whole registered duration.
+        it("a close then a CDM open in one drain: a new application, ours, closed by its NONE", function()
+            cast(1, SHOUT, 10, 10) -- ours, applied 10, the model's expiry 20; the item never lit (UNKNOWN)
+            for t = 10.5, 19.5, 0.5 do
+                poll(t)
+            end
+            ctl.now = 20
+            S.Direct(Obs.Read, 20, SHOUT, 0, I.ReadOf.Aura) -- a down logged first in the drain
+            ctl.ViewerAura(pi, "player") -- a lone light at the model's expiry: poll 15 opens the record
+            poll(20)
+            local rec, _, applied = VS.Aura("player", fs.SPENDER_A, 20)
+            assert.are.same({ 140, 20 }, { rec and rec.est, applied })
+            ctl.ViewerClear(pi)
+            poll(20.5)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 20.5))
+        end)
+
         it("C: a CDM UP with no model record opens at once; no numeric duration: long on the target too", function()
             local def = fs.def(fs.new(9))
             def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
