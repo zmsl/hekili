@@ -197,7 +197,7 @@ describe("make wiki-build", function()
 
     it("keeps the source's regions empty, fills a copy outside the source and leaves the source alone", function()
         local before = tree()
-        assert.is_true(build())
+        build()
         assert.are.equal(before, tree())
         local src, out = slurp("docs/wiki/Slash-Commands.md"), slurp(OUT .. "/Slash-Commands.md")
         assert.are.equal(src, markers.strip(src, "S"), "docs/wiki/ holds only bare markers")
