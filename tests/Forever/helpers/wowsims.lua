@@ -337,7 +337,10 @@ M.READY = {
     -- (the mana floor); median 0.260, the same after owner R20a (Innervate low-mana only), so 0.71 -> 0.26 (R6);
     -- kept on task #3 (gear-aware): median 0.260, 22 real (the three moved Wrath rows, the wrath -> insect_swarm
     -- misses, were never, not real)
-    druid_balance = { 0.26, 22 },
+    -- { 0.26, 22 } -> { 0.27, 22 } (Lane R2 Mage, PROPOSED: the calibration skips the two intervals holding Serenity
+    -- Field's edges; at share 1 its spirit multiplier has no part to scale, so the EMA learns its gain one interval
+    -- later each way: 17 real, median 0.270; lane-r2-dh's Reflection by rank (c 0.5) models the window, re-check there)
+    druid_balance = { 0.27, 22 },
     -- 0.26 -> 0.43: 0.26 rested on the Innervate miscalibration that ran the mana belief ~31 high before the 107.74 s
     -- Shifting Power; with regen correct the floor (lo) reaches the cost ~0.4 s after the truth (gap BQ); owner ruling
     -- 2026-10-26
@@ -356,7 +359,10 @@ M.READY = {
     -- { 0.40, 10 } -> { 0.45, 9 } (R6, cause Faerie Fire 1.0 s Cat GCD (pin Cat Form passive 3025; owner in game, Rake
     -- shown ~0.5 s late)): shifting_power 41.88 late 0.25 -> in:grain leaves the real set, decision 4 (rake at 2.0)
     -- -0.4 -> -1.0 early (wowsims's slack after the 1 s GCD); real 9 (early 2, late 7), median 0.450
-    druid_feral = { 0.45, 9 },
+    -- { 0.45, 9 } -> { 0.49, 9 } (Lane R2 Mage, PROPOSED: the calibration skips the 22.5-39.7 s interval holding
+    -- Innervate's end; the estimate at shifting_power 111.89 is truer (+0.9 over the log, was +1.7) but the lower band
+    -- 0.8 under, so that floor-driven row reads 0.04 s later): real 9, median 0.490
+    druid_feral = { 0.49, 9 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
