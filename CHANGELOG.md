@@ -23,6 +23,7 @@
 - Hunters and wand users: a change to your ranged attack speed out of combat (a new ranged weapon, quiver or buff) is now picked up at once for the shot timer.
 - Mana users: drinking a Major Mana Potion or using a Demonic Rune now adds its mana to Hekili's mana estimate (the average of what it can restore), so spells you can afford again after one are recommended right away.
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
+- Trolls: Berserking used in combat now shortens your global cooldown, cast times and swings in Hekili's forecast while it is up (the game hides your haste in combat). In the same way, a Priest's Divine Spirit or Spirit Tap and a Druid's Mark or Gift of the Wild now stop counting toward your Spirit as soon as they fall mid-fight.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 
 ### Known issues
