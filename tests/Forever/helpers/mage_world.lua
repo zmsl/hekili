@@ -678,8 +678,6 @@ local function content(name)
     -- (hunter_world's reason: a kill ends the loop before the client sees it).
     local function hooks(W, us)
         us.health, us.healthMax = 1e9, 1e9
-        -- every wowsims export pre-buffs Mage Armor (defaultMageArmor, 30 min): the share reads it
-        W.applyAura(us, 22783, 1800, 1, 1)
     end
     C.WORLD = {
         level = 60,
@@ -691,6 +689,9 @@ local function content(name)
         mobHealth = 1e9,
         distance = 25, -- a caster's range: no melee swings of ours
         script = hooks,
+        -- every wowsims export pre-buffs Mage Armor (defaultMageArmor, 30 min): up before the pull, as a player's is,
+        -- so the share's read at the combat start sees it
+        buffs = { { 22783, 1800 } },
     }
 
     -- No other power read (mana is secret in combat).

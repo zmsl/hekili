@@ -427,6 +427,24 @@ describe("the world's resources", function()
         end)
 
         it(
+            "puts scenarios' buffs on us from the world's start, before the prepull's reads (cast before the pull)",
+            function()
+                local scenarios = require("Game.harness.scenarios")
+                local Wx = scenarios.build({ duration = 10, pull = 3, buffs = { { 900001, 1800 } } }, 1)
+                local auraT, prepullT
+                for _, ev in ipairs(Wx.truth) do
+                    if ev.kind == "aura" and ev.aura == 900001 and ev.dst == Wx.ents[1] and ev.stacks > 0 then
+                        auraT = auraT or ev.t
+                    elseif ev.kind == "prepull" then
+                        prepullT = ev.t
+                    end
+                end
+                assert.are.same({ 0, 2.5 }, { auraT, prepullT })
+                assert.are.equal(1800, Wx.ents[1].auras[900001].expires)
+            end
+        )
+
+        it(
             "rolls our instant hits on scenarios' mobAvoid and crit; the defaults are entities' and world.CRIT",
             function()
                 local scenarios = require("Game.harness.scenarios")

@@ -119,7 +119,8 @@ M.ARCHETYPES = ARCHETYPES
 --- that form, W.regenRate), decay ({ pt, rate, interval, pausedBy }: from the stop), formSpeed ({ [form] = period }), payIn (the form whose swings pay), critRage
 --- ({ main, off }), gcdOrder (1, 2 or "mixed") and gcdLatency [0] (W.press), script (fn(W, us): our presses, started
 --- at the pull), after (seconds the world runs past the stop [3]), distance (yards from our target from the start
---- [none: no positions]; W.moveTo changes it), bags, pet and stats (ours: entities.new's; the pet regenerates from the
+--- [none: no positions]; W.moveTo changes it), buffs ({ { id, duration } }: ours on us from the world's start, cast
+--- before the pull [none]), bags, pet and stats (ours: entities.new's; the pet regenerates from the
 --- start, W.startPetRegen), canParry (false: we never parry a swing at us, so no parry haste of ours; wowsims's
 --- PseudoStats.CanParry, true only for some classes [true]), mobAvoid (the mobs' avoid table of our hits, entities.new's
 --- `avoid` [its 5/5/5]), crit (our crit rate on an instant hit or strike, W.crit [world.CRIT]) and takenRage (W.takenRage:
@@ -197,6 +198,13 @@ function M.world(o, seed)
     if o.distance then
         W.at(0, function()
             W.moveTo(us, o.distance)
+        end)
+    end
+    if o.buffs then -- cast before the pull: up for the prepull's out-of-combat reads, as in the game
+        W.at(0, function()
+            for _, b in ipairs(o.buffs) do
+                W.applyAura(us, b[1], b[2])
+            end
         end)
     end
     if o.regen or o.fsr then -- before the prepull: its reads answer the rates
