@@ -229,18 +229,21 @@ describe("rows with a secret amount (kind-only routing)", function()
             HK = I.HitKind
         end)
 
-        it("gives it back on the swing's wound in its core band: the cast's avoid, SPELL_MISSED, a no-row close", function()
-            local i = tie()
-            assert.are.same({ T.PROV, 0, 1 }, { T.state[i], count(VS.Obs.Avoided), L.tieHeld })
-            wound(5.08) -- the swing's core band (0.474 +- 0.12), past the cast's own frame
-            settle(5.1)
-            assert.are.same({ 1, T.OPEN, "", 1 }, { count(VS.Obs.Avoided), T.state[i], T.avoid[i], L.tieBack })
-            assert.are.same(cast5(), avoidedAt())
-            assert.are.equal("DODGE", missRow(fs.SPENDER_C))
-            assert.are.equal(1, L.background) -- the wound itself is still background: it pays nothing (L505)
-            settle(6.2) -- past the swing's window
-            assert.are.same({ 1, 0 }, { count(VS.Obs.SwingSettled, -1), count(VS.Obs.SwingSettled, HK.DODGE) })
-        end)
+        it(
+            "gives it back on the swing's wound in its core band: the cast's avoid, SPELL_MISSED, a no-row close",
+            function()
+                local i = tie()
+                assert.are.same({ T.PROV, 0, 1 }, { T.state[i], count(VS.Obs.Avoided), L.tieHeld })
+                wound(5.08) -- the swing's core band (0.474 +- 0.12), past the cast's own frame
+                settle(5.1)
+                assert.are.same({ 1, T.OPEN, "", 1 }, { count(VS.Obs.Avoided), T.state[i], T.avoid[i], L.tieBack })
+                assert.are.same(cast5(), avoidedAt())
+                assert.are.equal("DODGE", missRow(fs.SPENDER_C))
+                assert.are.equal(1, L.background) -- the wound itself is still background: it pays nothing (L505)
+                settle(6.2) -- past the swing's window
+                assert.are.same({ 1, 0 }, { count(VS.Obs.SwingSettled, -1), count(VS.Obs.SwingSettled, HK.DODGE) })
+            end
+        )
 
         it("keeps the cast's own-frame avoid when the swing's secret wound came first (the reversed order)", function()
             ctl.now = 4.526
