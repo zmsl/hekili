@@ -210,7 +210,7 @@ M.MAP = {
     multi_shot = shot("multi_shot", true),
     sniper_shot = shot("sniper_shot", true),
     strider_kick = shot("strider_kick", true),
-    wing_clip = shot("wing_clip"),
+    wing_clip = shot("wing_clip", true), -- a main-hand special that crits (wowsims wing_clip.go): Resourcefulness
     immolation_trap = {}, -- the trap's burn is unmodelled (no read of it)
     bestial_wrath = {}, -- the BM talent: its rage is the pet's (no pet modelled), nothing on us
     -- the Orc racial (Hekili_Shared, the wowsims build's race): its buff on us; the attack power it adds is unmodelled

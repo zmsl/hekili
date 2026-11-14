@@ -1063,5 +1063,11 @@ describe("the Hunter worlds' Resourcefulness", function()
         p.effect(fake("CRITICAL"), e)
         assert.are.same({ 1242688 }, applied)
         assert.are.same({ 1 }, chances) -- 2/2: every crit
+        -- every ability whose crit the pack's onCrit counts, Wing Clip's included (a main-hand special, wowsims)
+        for _, key in ipairs({ "wing_clip", "multi_shot", "strider_kick" }) do
+            applied = {}
+            C.resolve(key, H).effect(fake("CRITICAL"), e)
+            assert.are.same({ 1242688 }, applied, key)
+        end
     end)
 end)
