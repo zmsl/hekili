@@ -113,10 +113,50 @@ describe("Forever Hunter", function()
         end
         assert.are.same({ 0, 0.25, 0.5 }, shares)
         assert.are.same({ aura = "resourcefulness", share = 0.5 }, r.models.resourcefulness)
-        assert.are.same({ aura = "rapid_recuperation", share = 0.5 }, r.models.rapid_recuperation)
+        assert.are.same("rapid_recuperation", r.models.rapid_recuperation.aura)
         assert.are.same(1242688, w.auras.resourcefulness.id)
         assert.are.same(1242512, w.auras.rapid_recuperation.id)
         assert.are.same({ 2, 1223987, 2 }, w.talents.rapid_recuperation)
+    end)
+
+    -- Rapid Recuperation (1223987, wowsims talents_marksmanship.go): 25/50% of the spirit regen while casting by rank for
+    -- 15 s when Serpent Sting is cast (the listener needs no damage); the belief opens it at the cast
+    it("opens Rapid Recuperation at a Serpent Sting, its casting share 25/50% by rank", function()
+        local rr = w.resources[0].models.rapid_recuperation
+        local got = {}
+        for rank = 0, 2 do
+            local e = ld.env(w)
+            e.talent.rapid_recuperation = { rank = rank }
+            ld.run(w.abilities.serpent_sting.now, e)
+            got[#got + 1] = { ld.run(rr.share, e), #e.applied }
+        end
+        assert.are.same({ { 0, 1 }, { 0.25, 2 }, { 0.5, 2 } }, got) -- the sting's dot, and the buff once talented
+    end)
+
+    -- Resourcefulness (440529 2/2, wowsims talents_survival.go): a melee or ranged ability's crit (proc flags 0x110: not a
+    -- white swing or Auto Shot) gives its 30 s buff, 50/100% by rank; the owner's rule assumes it at 2/2 only. The crit
+    -- reaches the belief by kind, flag and school with its amount secret (Rows.lua, D1): the ability's `onCrit`.
+    it("opens Resourcefulness at a melee or ranged ability's crit at 2/2", function()
+        local A = w.abilities
+        for _, key in ipairs({
+            "arcane_shot",
+            "aimed_shot",
+            "multi_shot",
+            "sniper_shot",
+            "raptor_strike",
+            "mongoose_bite",
+            "strider_kick",
+            "wing_clip",
+        }) do
+            for rank = 1, 2 do
+                local e = ld.env(w)
+                e.talent.resourcefulness = { rank = rank }
+                assert.is_function(A[key].onCrit, key)
+                ld.run(A[key].onCrit, e)
+                assert.are.same(rank == 2 and { "resourcefulness" } or {}, e.applied, key .. " rank " .. rank)
+            end
+        end
+        assert.is_nil(A.auto_shot.onCrit)
     end)
 
     it("anchors the ranged clock on Auto Shot, off the GCD", function()

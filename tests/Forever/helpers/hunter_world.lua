@@ -125,7 +125,9 @@ local function drop(W, e, X, key) -- aura `key` off us, if up
     end
 end
 
--- Resourcefulness: a landed ability of a build that has the talent (`rate`: its measured crit rate) crits.
+-- Resourcefulness: a landed ability of a build that has the talent (`rate`: its measured crit rate) crits. The hit's row
+-- stays a plain wound (the shots' damage has no crits here), so the belief's crit route (the abilities' `onCrit`) is not
+-- exercised by these worlds: their belief never opens the aura (as before); the replays feed the log's crits.
 local function resourceful(W, e, rate, X)
     if rate and W.rng.chance(rate) then
         aura(W, X, e, "resourcefulness")
@@ -370,7 +372,9 @@ PACKS.MarksmanshipTurret = turret(
     "Marksmanship Turret (wowsims.com)",
     "hunter_marksmanship_turret",
     { "sniper_shot" },
-    { 15.88, 0 } -- no Resourcefulness in this build
+    -- no Resourcefulness in this build; its Rapid Recuperation 2/2 (the log header's 1223987=2): half the spirit regen
+    -- while casting for 15 s after each landed Serpent Sting (the log's 2.554 a tick casting under it, 1.36 without)
+    { 15.88, 0, auras = { [1242512] = { share = 0.5 } } }
 )
 PACKS.SurvivalTurret = turret(
     "Survival Turret (wowsims.com)",
@@ -485,6 +489,7 @@ local function content(name)
     -- Resourcefulness's proc: 50% a rank of a crit (wowsims: 440529 effect 2); nil: the build lacks the talent
     local res = P.talents and P.talents[440529]
     local rate = res and CRIT[name] * res / 2
+    local recup = P.talents and (P.talents[1223987] or 0) > 0 -- Rapid Recuperation (its log header's rank)
     C.SPEC = ({
         BeastMastery = 100031,
         Marksmanship = 100032,
@@ -665,6 +670,11 @@ local function content(name)
                 e.raptorQueued = true -- the next landed swing of ours is the strike (hooks)
             elseif m.crits and e.lastHit and e.lastHit.act == "WOUND" then
                 resourceful(W, e, rate, X)
+            end
+            -- Rapid Recuperation (1223987, a build that has it: wowsims talents_marksmanship.go): a landed Serpent
+            -- Sting gives its 15 s buff (the fsr's aura entry: 25% a rank of the spirit regen while casting)
+            if key == "serpent_sting" and recup and e.lastHit and e.lastHit.act == "WOUND" then
+                aura(W, X, e, "rapid_recuperation")
             end
         end
         return p
