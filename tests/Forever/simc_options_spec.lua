@@ -68,16 +68,19 @@ end
 describe("interrupt_global on a channel line", function()
     -- Bloodrage above the channel's line, Battle Shout below it; mid-channel (4 s into Cannibalize's 10 s) the
     -- first recommendation is Bloodrage now only when the channel's line carries interrupt_global=1.
-    local function firstMidChannel(flag, noneAbove)
-        local list = {
-            line("bloodrage"),
-            line("cannibalize", { interrupt_global = flag }),
-            line("battle_shout"),
-        }
+    -- `mods`: more options on the channel's line; `ticks`: give Cannibalize a 2 s tick_time, so its interrupt and
+    -- interrupt_if checks (which need tick data) can run
+    local function firstMidChannel(flag, noneAbove, mods, ticks)
+        local chan = line("cannibalize", mods)
+        chan.interrupt_global = flag
+        local list = { line("bloodrage"), chan, line("battle_shout") }
         if noneAbove then
             table.remove(list, 1)
         end
         local H, W, us, upTo = rig(list)
+        if ticks then
+            H.Hekili.Class.abilities.cannibalize.tick_time = 2
+        end
         W.t = 1
         assert.is_true(
             W.press(us, "cannibalize", { spell = CANNIBALIZE, gcd = 1.5, channel = { length = 10, tick = 2 } })
@@ -109,6 +112,25 @@ describe("interrupt_global on a channel line", function()
     it("=0: nothing breaks the channel before it ends", function()
         local name, t = firstMidChannel(0)
         assert.is_true(t > 5, tostring(name) .. " at " .. tostring(t))
+    end)
+
+    -- SimC: interrupt_global widens interrupt / interrupt_if to the whole priority (Hekili's already are), never
+    -- overrides them; on its own, or beside interrupt=0, it breaks the channel itself
+    it("=1 with a false interrupt_if: the condition holds the channel", function()
+        local name, t = firstMidChannel(1, false, { interrupt_if = "time<0" }, true)
+        assert.is_true(t > 5, tostring(name) .. " at " .. tostring(t))
+    end)
+
+    it("=1 with a true interrupt_if: the channel breaks for the higher line", function()
+        local name, t = firstMidChannel(1, false, { interrupt_if = "time>=0" }, true)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.5, tostring(t))
+    end)
+
+    it("=1 with interrupt=0: breaks as the flag alone", function()
+        local name, t = firstMidChannel(1, false, { interrupt = 0 }, true)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.5, tostring(t))
     end)
 end)
 
