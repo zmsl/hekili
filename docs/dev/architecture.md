@@ -250,12 +250,14 @@ condition fails now is rechecked like any entry, so "true in t" opens the window
 `window.<name>` gets that time as a recheck (its countdown). The decreasing-clock `<`/`<=` direction works today; the
 weave's "the next Auto Shot fires" is the wrap of a decreasing clock (`ranged_remains>ranged_speed-x`), which only
 ruling R6's `>`/`>=` wrap branch (Task 8b, `Engine/Sim/Scripts.lua`) times.
-`spec:RegisterReaction(name, { who = "player"|"target", outcome = "dodge"|"parry"|"block"|"miss"|"deflect"|"evade"|"crit"|"swing"|"land", hand = "main"|"off", now = fn })`
+`spec:RegisterReaction(name, { who = "player"|"target", outcome = "dodge"|"parry"|"block"|"miss"|"deflect"|"evade"|"crit"|"swing"|"land"|"kill", hand = "main"|"off", now = fn })`
 crosses as `def.reactions`: a `now` function the belief runs at a settled outcome's row time
 (`Game/State/Families/Now.lua`; incoming from victim-side `UNIT_COMBAT`, ours from `Game/Events/Rows.lua`'s settled
 payments and a white swing's `Obs.SwingSettled`: a final credit, a provisional one at `T.onFinal`, an avoid at its
 window's close), never an ability (no index, cast history, `prev_gcd`, ticket, GCD or options row) and with no
-forecast: its window reaches the core in the next copy. `swing` (who `target` only; a hit on us tells no white swing
+forecast: its window reaches the core in the next copy. `kill` (who `target` only; Lane R) runs at our `PARTY_KILL` of a
+victim that yields XP (under 10 levels below the player's, or a boss's -1, its level read plain from a token still bound
+to it, `Sources/Units.lua` -> `Obs.Kill`); under the Map restriction the GUIDs are secret and nothing runs. `swing` (who `target` only; a hit on us tells no white swing
 from a special) runs once per white swing of ours whatever its outcome, `hand` (swing and land only) filtering by the
 hand the belief paired it to; a swing closing with no row runs only `land`, and a spell of ours blocked fires nothing
 (`docs/dev/gaps.md` CO). `land` (who `target` only; aura audit C3) runs once per white swing of ours that landed: a

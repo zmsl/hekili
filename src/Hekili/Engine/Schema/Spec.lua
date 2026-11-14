@@ -484,7 +484,9 @@ local HekiliSpecMixin = {
     -- BLOCKED), "miss", "deflect", "evade" or "crit"; a spell of ours blocked fires nothing (Game/Events/Rows.lua stages
     -- DODGE, PARRY, MISS, DEFLECT and EVADE only; docs/dev/gaps.md). Outcome "swing" (who "target" only: a hit on us
     -- tells no white swing from a special) runs once per white swing of ours at its settled outcome, whatever it is;
-    -- optional `hand` "main" or "off" (the hand the belief paired the swing to) filters it. Not an ability: no index,
+    -- optional `hand` "main" or "off" (the hand the belief paired the swing to) filters it. Outcome "kill" (who
+    -- "target" only) runs at our killing blow on a victim that yields XP (under 10 levels below us, or a boss; its level
+    -- read plain), never under the Map restriction (the GUIDs are secret). Not an ability: no index,
     -- cast history, ticket, GCD or options row. The belief runs it in the `now` context at the settled outcome's time
     -- (Game/State/Families/Now.lua); the sim never sees it.
     RegisterReaction = function( self, name, data )
@@ -497,7 +499,8 @@ local HekiliSpecMixin = {
         assert( data.who == "player" or data.who == "target", "RegisterReaction: " .. name .. "'s who" )
         local o = data.outcome
         assert( o == "dodge" or o == "parry" or o == "block" or o == "miss" or o == "deflect" or o == "evade" or o == "crit"
-            or ( ( o == "swing" or o == "land" ) and data.who == "target" ), "RegisterReaction: " .. name .. "'s outcome" )
+            or ( ( o == "swing" or o == "land" or o == "kill" ) and data.who == "target" ),
+            "RegisterReaction: " .. name .. "'s outcome" )
         assert( data.hand == nil or ( o == "swing" or o == "land" ) and ( data.hand == "main" or data.hand == "off" ),
             "RegisterReaction: " .. name .. "'s hand (a target swing's: main or off)" )
         assert( type( data.now ) == "function", "RegisterReaction: " .. name .. "'s now is not a function" )

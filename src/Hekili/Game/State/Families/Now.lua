@@ -549,8 +549,9 @@ NAMES.window = setmetatable({}, {
 -- 2 off: a "swing" reaction's filter), preallocated at load, refilled at the build.
 
 local WHO, HAND = { player = 1, target = 2 }, { main = 1, off = 2 }
-local OUTCOME = { dodge = 1, parry = 2, block = 3, miss = 4, deflect = 5, evade = 6, crit = 7, swing = 8, land = 9 }
-local CRIT, SWING, LAND = OUTCOME.crit, OUTCOME.swing, OUTCOME.land
+local OUTCOME =
+    { dodge = 1, parry = 2, block = 3, miss = 4, deflect = 5, evade = 6, crit = 7, swing = 8, land = 9, kill = 10 }
+local CRIT, SWING, LAND, KILL = OUTCOME.crit, OUTCOME.swing, OUTCOME.land, OUTCOME.kill
 local OUTCOME_OF = {} -- by I.HitKind: the outcome slot (0: no reaction outcome)
 for name, kind in pairs(I.HitKind) do
     local o = OUTCOME[name:lower()]
@@ -560,7 +561,7 @@ OUTCOME_OF[I.HitKind.BLOCKED] = OUTCOME.block -- `block` covers BLOCK and BLOCKE
 local NO_REACTIONS = {}
 local react = { {}, {} } -- react[who][outcome] = { n = count, bound functions... }
 for w = 1, 2 do
-    for o = 1, LAND do
+    for o = 1, KILL do
         react[w][o] = { n = 0, hand = {} }
     end
 end
@@ -568,7 +569,7 @@ I.reactionsRun = 0
 
 local function bindReactions(list)
     for w = 1, 2 do
-        for o = 1, LAND do
+        for o = 1, KILL do
             local l = react[w][o]
             for k = 1, l.n do
                 l[k], l.hand[k] = nil, nil
@@ -842,6 +843,16 @@ I.On(Obs.ChannelStop, function(o)
         journal = false
         call(A.finish[a], a, o.t)
         journal = true
+    end
+end)
+
+-- Our kill (Sources/Units.lua): the target "kill" reactions run at it when the victim yields XP, the owner's rule
+-- (L695): under KILL_LEVELS levels below the player's, or a boss (-1). The player's level unknown (0): none.
+local KILL_LEVELS = 10
+I.On(Obs.Kill, function(o)
+    local mine, level = I.level or 0, o.a
+    if mine > 0 and (level == -1 or level > mine - KILL_LEVELS) then
+        fire(2, KILL, o.t)
     end
 end)
 

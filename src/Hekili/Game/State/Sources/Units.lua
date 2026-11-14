@@ -13,7 +13,8 @@
 local _, ns = ...
 local I = ns.VirtualStateInternal
 local S = I.Sources
-local Plain = S.Plain
+local Plain, Stage = S.Plain, S.Stage
+local Obs = ns.VirtualState.Obs
 
 local U = {}
 I.Units = U
@@ -365,11 +366,23 @@ end)
 S.On("PLAYER_TARGET_DIED", nil, function(api, t)
     kill(tokUid[1], t, "event")
 end)
+-- Our kill also stages Kill with the victim's level, read from a token still bound to it (a plain answer only); a
+-- victim no token names, or whose level is secret, stages nothing. Under the Map restriction the GUIDs are secret:
+-- Plain passes them as nil, so no kill is ours and nothing is staged (the dim side: no kill proc assumed).
 S.On("PARTY_KILL", nil, function(api, t, killer, victim)
     if killer ~= nil and killer == U.player then
         local u = U.Find(victim)
         if u > 0 then
             uOurs[u] = true
+            for i = 1, NTOK do
+                if tokUid[i] == u then
+                    local level = Plain(api, api.UnitLevel(TOKENS[i]))
+                    if type(level) == "number" and level ~= 0 then
+                        Stage(Obs.Kill, t, level)
+                        return
+                    end
+                end
+            end
         end
     end
 end)

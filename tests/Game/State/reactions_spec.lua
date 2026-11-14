@@ -470,6 +470,39 @@ describe("reactions", function()
         end)
     end)
 
+    -- outcome "kill" (Lane R, L695): our PARTY_KILL of a victim that yields XP (the owner's rule: under 10 levels below
+    -- the player, or a boss's -1), its level read from a token still bound to it; no GUID (the Map restriction's secret
+    -- one, which Plain drops) or no plain level runs nothing
+    describe('outcome "kill" (who = "target")', function()
+        local function kill(killer, level, player)
+            build({ reaction("killed", "target", "kill") })
+            ctl.level.player, ctl.level.target = player or 60, level
+            ctl.now = 5
+            ctl.Fire("PARTY_KILL", killer, "Creature-1")
+            drain(5.1)
+            return runs.killed
+        end
+
+        it("our kill of a victim 9 levels below runs it at the kill; 10 below, a boss (-1) and ours only", function()
+            assert.are.equal(1, kill("Player-1", 51))
+            assert.are.same({ true, 5, 11, 0, 0 }, W("killed"))
+            assert.are.equal(0, kill("Player-1", 50))
+            assert.are.equal(1, kill("Player-1", -1))
+            assert.are.equal(0, kill("Player-2", 60)) -- another's kill
+            assert.are.equal(0, I.nowErrors)
+        end)
+
+        it("runs nothing for a secret killer GUID (Map restriction), a secret level or an unknown victim", function()
+            assert.are.equal(0, kill(nil, 60))
+            assert.are.equal(0, kill("Player-1", nil))
+            build({ reaction("killed", "target", "kill") })
+            ctl.level.player = 60
+            ctl.Fire("PARTY_KILL", "Player-1", "Creature-77")
+            drain(ctl.now + 0.1)
+            assert.are.equal(0, runs.killed)
+        end)
+    end)
+
     describe('outcomes "deflect" and "evade"', function()
         it("on us (victim-side UNIT_COMBAT): each runs its own reaction", function()
             build({ reaction("deflected", "player", "deflect"), reaction("evaded", "player", "evade") })
