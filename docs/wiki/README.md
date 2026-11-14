@@ -12,6 +12,14 @@ with the generated tables filled in, without `README.md`, `data/` and `.gitkeep`
 page changed. It never deletes a page that exists only on the wiki, except the retired pages listed in `data/retired-pages.txt` (one file name per line, e.g. `Report-an-issue.md`): the job removes exactly those files from the clone before copying and logs each removal. `make wiki-check` fails if a retired name is also a page here. It runs no blanket `--delete`, never runs `git init` and never force-pushes, so
 the wiki's history is kept. A wiki page therefore always describes the latest release, never unreleased work.
 
+### Rehearsing a publish
+
+Run Actions > wiki > Run workflow on the branch or tag to rehearse. A manual run has `dry_run` ticked by default: it
+builds, checks, clones the wiki repository, retires pages, copies, commits locally and then runs `git push --dry-run`,
+which proves the token can push and publishes nothing. Untick `dry_run` to publish by hand; a published final release
+always pushes for real. Rehearse before the first release that ships the wiki: if the dry run is refused, add a
+`WIKI_TOKEN` secret and use it in the workflow. The job shares one concurrency group, so two runs never overlap.
+
 ## Pages
 
 - One file per page. The file name is the page name: Title-Case-With-Hyphens, no subfolders, unique. GitHub shows
@@ -58,14 +66,14 @@ here; to see how a page renders, run `make wiki-build` and read `build/wiki/`.
 | `tools/wiki/check.lua` | The page checks |
 | `data/commands.lua` | The reviewed list of chat commands: public (published) or internal |
 | `data/expressions.lua` | What each expression means, written by hand |
-| `data/accuracy.json` | A copy of `.accuracy/report.json` from the last batch `make accuracy` run |
+| `data/accuracy.json` | A copy of `.accuracy/report.json` from the last batch `make accuracy` run, plus a hand-set `version` and `wowsimsAsOf` (the Accuracy page's facts table is generated from them) |
 
 The collectors read the addon the way a player's client builds it: each class addon is loaded headless and the options
 tree, the class kits and the command table are read from the running code. The expression keys are the exception:
 they are branches inside a function, so they come from a scan of `src/Hekili/Engine/Sim/State.lua`, with their
 meanings from `data/expressions.lua`. The accuracy table reads `data/accuracy.json`, because `make accuracy` takes the
 gate lock for every loop and cannot run in CI: copy `.accuracy/report.json` there after a batch accuracy run, and
-update the version the Accuracy page names.
+set `version` and `wowsimsAsOf` in the file.
 
 To add a table: add an entry to the manifest (a collector and its arguments, headers, and a note for any "n/a" cell),
 put the empty marker pair in a page, and run `make wiki-build`.

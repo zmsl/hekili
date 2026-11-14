@@ -58,7 +58,7 @@ end
 
 --- GitHub's anchor for a heading.
 function M.slug(heading)
-    return (heading:lower():gsub("[^%w%- ]", ""):gsub(" ", "-"))
+    return (heading:lower():gsub("[^%w%-_ ]", ""):gsub(" ", "-"))
 end
 
 local function anchors(s)
@@ -183,8 +183,8 @@ M.BANNED = {
     { "\\\\wsl", "a WSL path" },
     { "cdmOff", "a hidden switch" },
     { "claude%.ai", "a link to a Claude artifact" },
-    { "%f[%w]L%d%d%d%f[%W]", "an internal ledger ID" },
-    { "%f[%w]R%d%d%f[%W]", "an internal ruling ID" },
+    { "%f[%w]L%d%d%d+%f[%W]", "an internal ledger ID" },
+    { "%f[%w]R%d%d+%f[%W]", "an internal ruling ID" },
 }
 
 --- Banned content anywhere in a page, comments included.

@@ -133,6 +133,106 @@ describe("wiki-check", function()
             "P:3: an internal ledger ID",
             "P:3: an internal ruling ID",
         }, errs)
+        assert.are.equal(2, #check.banned({ P = "L1000\nR123" }))
+    end)
+end)
+
+describe("the expression check", function()
+    local SOURCE = table.concat({
+        "",
+        "local mt_x = {",
+        '    __index = function( t, k ) if k == "lo" then return 1 elseif k:sub(1, 8) == "time_to_" then return 2 end end',
+        "}",
+        "ns.metatables.mt_x = mt_x",
+    }, "\n")
+
+    it("scans a root's keys from its __index branches", function()
+        assert.are.same({ ["<r>.lo"] = true, ["<r>.time_to_<N>"] = true }, expressions.scan(SOURCE, "mt_x", "<r>"))
+    end)
+
+    it("fails both ways: a scanned key with no meaning, and a meaning whose key does not evaluate", function()
+        local mt = {
+            __index = function(_, k)
+                if k == "lo" then
+                    return 1
+                end
+            end,
+        }
+        local H = {
+            Hekili = { State = { pool = setmetatable({ actual_lo = 1 }, mt) } },
+            ns = { metatables = { mt_resource = mt, mt_x = mt } },
+        }
+        local scanned = expressions.scan(SOURCE, "mt_x", "<resource>")
+        local d = {
+            ["<resource>.lo"] = { type = "number", meaning = "The low end" },
+            ["<resource>.gone"] = { type = "number", meaning = "A key the code no longer has" },
+        }
+        assert.are.same({
+            "docs/wiki/data/expressions.lua: <resource>.gone does not evaluate (pool.gone)",
+            "docs/wiki/data/expressions.lua: <resource>.time_to_<N> (scanned in mt_x) has no entry",
+        }, expressions.problems({ root = "mt_x", prefix = "<resource>" }, H, scanned, d))
+        d["<resource>.time_to_<N>"] = { omit = "not for priorities" }
+        d["<resource>.gone"] = nil
+        assert.are.same({}, expressions.problems({ root = "mt_x", prefix = "<resource>" }, H, scanned, d))
+    end)
+end)
+
+describe("make wiki-build", function()
+    -- A per-run directory, so parallel worktrees running this spec never share one.
+    local OUT = os.tmpname()
+    os.remove(OUT)
+    local function build(out)
+        local ok = os.execute("make wiki-build WIKI_OUT=" .. (out or OUT) .. " >/dev/null 2>&1")
+        return ok == 0 or ok == true
+    end
+    local function slurp(path)
+        local f = assert(io.open(path, "rb"))
+        local s = f:read("*a")
+        f:close()
+        return s
+    end
+    local function tree()
+        local p = assert(io.popen("cd docs/wiki && find . -name '*.md' -not -name README.md | sort | xargs cat"))
+        local s = p:read("*a")
+        p:close()
+        return s
+    end
+
+    teardown(function()
+        os.execute("rm -rf " .. OUT)
+    end)
+
+    it("keeps the source's regions empty, fills a copy outside the source and leaves the source alone", function()
+        local before = tree()
+        assert.is_true(build())
+        assert.are.equal(before, tree())
+        local src, out = slurp("docs/wiki/Slash-Commands.md"), slurp(OUT .. "/Slash-Commands.md")
+        assert.are.equal(src, markers.strip(src, "S"), "docs/wiki/ holds only bare markers")
+        assert.are_not.equal(src, out)
+        assert.truthy(out:find(markers.NOTE, 1, true))
+        assert.are.equal(src, markers.strip(out, "S"), "the copy differs only inside the regions")
+        assert.is_nil(io.open(OUT .. "/README.md"))
+        assert.is_nil(io.open(OUT .. "/data/commands.lua"))
+    end)
+
+    it("is idempotent", function()
+        assert.is_true(build())
+        local first = slurp(OUT .. "/Slash-Commands.md")
+        assert.is_true(build())
+        assert.are.equal(first, slurp(OUT .. "/Slash-Commands.md"))
+    end)
+
+    it("fills the accuracy facts from the version in accuracy.json", function()
+        assert.is_true(build())
+        assert.truthy(slurp(OUT .. "/Accuracy.md"):find("| Measured on | Hekili Forever v", 1, true))
+    end)
+
+    it("refuses an empty, root or docs output path and leaves the source alone", function()
+        local before = tree()
+        for _, bad in ipairs({ "''", "/", "docs/wiki", "./", ".." }) do
+            assert.is_false(build(bad), bad)
+        end
+        assert.are.equal(before, tree())
     end)
 end)
 

@@ -1,23 +1,40 @@
-# Publishes the filled build/wiki/ (make wiki-build from docs/wiki/) to the GitHub wiki (github.com/zmsl/hekili/wiki) when a final release is published, so the wiki
-# always describes the latest release (docs/wiki/README.md). It runs wiki-build and wiki-check at the tag and stops if either fails.
+# Publishes the filled build/wiki/ (make wiki-build from docs/wiki/) to the GitHub wiki (github.com/zmsl/hekili/wiki)
+# when a final release is published, so the wiki always describes the latest release (docs/wiki/README.md). It runs
+# wiki-build and wiki-check at the tag and stops if either fails.
 # The wiki keeps its history: the job clones the wiki repository, copies the pages over it without --delete (a page
-# only on the wiki stays, except the retired pages named in docs/wiki/data/retired-pages.txt, removed one by one), commits only when something changed and does a plain push. It never runs `git init` and
-# never force-pushes. Only `published` fires it, like publish.yml.
+# only on the wiki stays, except the retired pages named in docs/wiki/data/retired-pages.txt, removed one by one),
+# commits only when something changed and does a plain push. It never runs `git init` and never force-pushes.
+# A manual run (Actions > wiki > Run workflow) is a rehearsal by default: dry_run=true does everything up to the push
+# and then `git push --dry-run`, which proves the token can push and publishes nothing. dry_run=false, like the
+# `published` release event, pushes for real.
 name: wiki
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Rehearse: build, check, clone and commit, then git push --dry-run (nothing is published)"
+        type: boolean
+        default: true
 
 permissions:
   contents: write # the push to the wiki repository
 
+concurrency:
+  group: wiki-publish
+  cancel-in-progress: false # two quick publishes run one after the other
+
 jobs:
   wiki:
-    if: ${{ !github.event.release.prerelease && !contains(github.event.release.tag_name, '-') }}
+    # A release publishes only if final; a manual run may be on any ref.
+    if: ${{ github.event_name == 'workflow_dispatch' || (!github.event.release.prerelease && !contains(github.event.release.tag_name, '-')) }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # the release tag
+      - uses: actions/checkout@v4 # the release tag (or the ref of a manual run)
+        with:
+          persist-credentials: false # the write-scoped token stays out of .git/config while bootstrap installs third-party packages
       - uses: jdx/mise-action@v2
       - uses: actions/cache@v4
         with:
@@ -28,29 +45,44 @@ jobs:
       - run: make wiki-check # a dead link, an unknown marker, a label or command that names nothing: stop here
       - name: Publish
         env:
-          TAG: ${{ github.event.release.tag_name }}
-          # The default token. Not yet verified that it can push to the .wiki.git repository; if the push is refused,
-          # a personal access token with write access to this repository (a WIKI_TOKEN secret) may be needed here.
+          TAG: ${{ github.event.release.tag_name || github.ref_name }}
+          DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          # The default token. Not yet verified that it can push to the .wiki.git repository: rehearse with a manual
+          # run first. If the push is refused, a personal access token with write access to this repository (a
+          # WIKI_TOKEN secret) may be needed here.
           TOKEN: ${{ github.token }}
         run: |
-          git clone "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" "$RUNNER_TEMP/wiki"
+          WIKI="$RUNNER_TEMP/wiki"
+          B64="$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)"
+          echo "::add-mask::${B64}"
+          AUTH="AUTHORIZATION: basic ${B64}"
+          git -c http.extraheader="$AUTH" clone "https://github.com/${GITHUB_REPOSITORY}.wiki.git" "$WIKI"
+          git -C "$WIKI" config http.extraheader "$AUTH" # on the wiki clone only; discarded with the runner
           # Retired pages (docs/wiki/data/retired-pages.txt): exactly these files are removed, each logged; never a blanket --delete.
-          while IFS= read -r page; do
-            [ -z "$page" ] && continue
-            if [ -f "$RUNNER_TEMP/wiki/$page" ]; then
-              git -C "$RUNNER_TEMP/wiki" rm -q -- "$page"
+          while IFS= read -r page || [ -n "$page" ]; do
+            page="${page%$'\r'}"
+            case "$page" in "" | */* | .*) continue ;; esac
+            if [ -f "$WIKI/$page" ]; then
+              git -C "$WIKI" rm -q -- "$page"
               echo "retired page removed: $page"
+            else
+              echo "retired page not present: $page"
             fi
           done < docs/wiki/data/retired-pages.txt
-          rsync -a --exclude .git build/wiki/ "$RUNNER_TEMP/wiki/"
-          sed -i "s/{{VERSION}}/${TAG}/" "$RUNNER_TEMP/wiki/_Footer.md"
-          cd "$RUNNER_TEMP/wiki"
+          rsync -a --exclude .git build/wiki/ "$WIKI/"
+          sed -i "s/{{VERSION}}/${TAG}/" "$WIKI/_Footer.md"
+          cd "$WIKI"
           git add -A
           if git diff --cached --quiet; then
             echo "wiki unchanged for ${TAG}"
-            exit 0
+          else
+            git -c user.name="github-actions[bot]" \
+                -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+                commit -m "Wiki for ${TAG}"
           fi
-          git -c user.name="github-actions[bot]" \
-              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-              commit -m "Wiki for ${TAG}"
-          git push origin HEAD
+          if [ "$DRY" = "true" ]; then
+            echo "dry run: proving the token can push, publishing nothing"
+            git push --dry-run origin HEAD
+          else
+            git push origin HEAD
+          fi

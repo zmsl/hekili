@@ -98,15 +98,35 @@ end
 
 local OUT = ((arg[2] or "build/wiki"):gsub("/*$", "/")) -- the second argument is for the tests
 
+local function ran(r)
+    return r == 0 or r == true
+end
+
 local function build()
+    -- build() deletes OUT first: never the root, the working directory, a parent or anything under docs/.
+    assert(
+        not (
+                OUT == "/"
+                or OUT:match("^%.*/$")
+                or OUT:match("^/?docs/")
+                or OUT:match("^%.%./")
+                or OUT:match("^/[^/]*/$")
+            ),
+        "wiki-build: refusing output path " .. OUT
+    )
     -- Contributor files (README.md, data/, .gitkeep) are not wiki content.
-    os.execute("rm -rf " .. OUT .. " && mkdir -p " .. OUT)
-    os.execute(
-        "tar -C "
-            .. DIR
-            .. " --exclude=./README.md --exclude=./data --exclude=.gitkeep -cf - . | tar -C "
-            .. OUT
-            .. " -xf -"
+    assert(ran(os.execute("rm -rf " .. OUT .. " && mkdir -p " .. OUT)), "wiki-build: cannot clear " .. OUT)
+    assert(
+        ran(
+            os.execute(
+                "tar -C "
+                    .. DIR
+                    .. " --exclude=./README.md --exclude=./data --exclude=.gitkeep -cf - . | tar -C "
+                    .. OUT
+                    .. " -xf -"
+            )
+        ),
+        "wiki-build: the copy of docs/wiki/ failed"
     )
     local n = 0
     for name, s in pairs(pages()) do

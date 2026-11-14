@@ -35,7 +35,7 @@ function M.names(text, where)
         elseif l:match(CLOSE) then
             assert(open, ("%s:%d: a /GENERATED with no GENERATED before it"):format(where or "?", i))
             open = nil
-        elseif l:match("GENERATED") and l:match("^<!%-%-") and l ~= M.NOTE then
+        elseif l:lower():find("<!%-%-%s*/?generated") and l ~= M.NOTE then
             error(("%s:%d: a malformed GENERATED marker: %s"):format(where or "?", i, l), 0)
         end
     end

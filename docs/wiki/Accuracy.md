@@ -1,12 +1,7 @@
 The **Accuracy** page reports, for each specialization and priority, how closely Hekili Forever's recommendations follow the rotations from [wowsims.com](https://wowsims.com), and how much the values the game hides cost. All numbers come from test simulations run outside the game. None was measured in live play.
 
-| Accuracy measurements | |
-|---|---|
-| Measured on | Hekili Forever v0.8.0 |
-| Priorities | Built from wowsims.com as of 2026-11-07 |
-| Specializations and priorities | 27 |
-| Scale | 0 to 1; higher is better |
-| Produced by | `make accuracy` in the repository |
+<!-- GENERATED:accuracy-meta -->
+<!-- /GENERATED -->
 
 ## Reading the table
 

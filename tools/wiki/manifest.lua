@@ -141,6 +141,11 @@ return {
     },
 
     -- Accuracy
+    ["accuracy-meta"] = {
+        collector = "accuracy",
+        fn = "meta",
+        headers = { "Accuracy measurements", "" },
+    },
     accuracy = {
         collector = "accuracy",
         fn = "rows",

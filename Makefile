@@ -163,8 +163,9 @@ packs-check: wowsims-packs packs
 # docs/wiki/ keeps its regions empty. wiki-check fails on a malformed or unknown marker, a dead link, a bold label or
 # command that names nothing, an expression that no longer evaluates, an unreviewed command or banned content (open
 # TODO placeholders are warnings).
+WIKI_OUT ?= build/wiki
 wiki-build:
-	$(LUA) tools/wiki/gen.lua build
+	$(LUA) tools/wiki/gen.lua build "$(WIKI_OUT)"
 
 wiki-tables: wiki-build
 

@@ -1,4 +1,6 @@
 {
+  "version": "v0.8.0",
+  "wowsimsAsOf": "2026-11-07",
   "specs": {
     "1": {
       "class": "Druid",

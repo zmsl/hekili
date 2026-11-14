@@ -23,6 +23,24 @@ local function pair(a, b)
     return ("%.3f / %.3f"):format(a, b)
 end
 
+--- The facts above the table: the version measured, the wowsims date, the number of specs (a hand-set "version" and
+--- "wowsimsAsOf" in the json, kept with it when the report is refreshed).
+function M.meta()
+    local d = load()
+    assert(type(d.version) == "string" and type(d.wowsimsAsOf) == "string", M.DATA .. ": version / wowsimsAsOf missing")
+    local n = 0
+    for _ in pairs(d.specs) do
+        n = n + 1
+    end
+    return {
+        { "Measured on", "Hekili Forever " .. d.version },
+        { "Priorities", "Built from wowsims.com as of " .. d.wowsimsAsOf },
+        { "Specializations and priorities", tostring(n) },
+        { "Scale", "0 to 1; higher is better" },
+        { "Produced by", "`make accuracy` in the repository" },
+    }
+end
+
 --- Class, spec, matches wowsims, solo, crowded target: one row per spec, in the report's order.
 function M.rows()
     local specs = load().specs
