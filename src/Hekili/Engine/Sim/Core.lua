@@ -370,12 +370,15 @@ function Hekili:CheckChannel( ability, prio )
     local modifiers = scripts.Channels[ state.system.packName ]
     modifiers = modifiers and modifiers[ channel ] or default_modifiers
 
-    -- interrupt_global=1 on the channel's line: break_any for that line; any line above it in the whole priority (the
-    -- walk stops at the channel's own line) may break the channel, at once (Hekili 09cfecf33's meaning).
+    -- interrupt_global=1 on the channel's line: any line above it in the whole priority (the walk stops at the channel's
+    -- own line) may break the channel, at once (Hekili 09cfecf33's meaning). SimC's flag widens interrupt / interrupt_if
+    -- to the whole priority, which Hekili's already are: beside an interrupt_if (any) or an interrupt that holds, it
+    -- defers to their checks below; alone or beside interrupt=0 it breaks the channel itself.
     if channel ~= ability and modifiers.interrupt_global then
         local act = state.this_action
         state.this_action = channel
-        local val = state.safebool( modifiers.interrupt_global() )
+        local val = state.safebool( modifiers.interrupt_global() ) and not modifiers.interrupt_if
+            and not ( modifiers.interrupt and state.safebool( modifiers.interrupt() ) )
         state.this_action = act
         if val then
             if self.ActiveDebug then self:Debug( "CC: %s's interrupt_global is true; break it.", channel ) end
