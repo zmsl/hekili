@@ -6700,7 +6700,8 @@ do
             -- a pull taken before this fight's first swing (from: 0 or an older fight's swing; CombatEnd clears it)
             -- moves the combat-start anchor; nextMH stays 0 as E8 has it
             if pull > 0 and pullFrom < state.combat then state.swings.mh_pseudo = state.combat - pull end
-            if state.offhand_speed > 0 then state.swings.oh_pseudo = state.combat + state.offhand_speed / 2 end
+            -- review R3: only until the off hand's own first swing row lands (it may swing before the main hand)
+            if state.offhand_speed > 0 and state.swings.oh_actual == 0 then state.swings.oh_pseudo = state.combat + state.offhand_speed / 2 end
             state:ForecastSwingbasedResources()
         end
 
