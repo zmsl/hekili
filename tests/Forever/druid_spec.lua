@@ -280,14 +280,11 @@ describe("Forever Druid", function()
             assert.is_true(w.abilities.maul.onNextSwing)
             assert.are.same({ true, 10 }, { w.abilities.hurricane.channeled, w.abilities.hurricane.cast })
             -- Wrath's cast at its top rank (the cost loop above learned every rank)
-            assert.are.same(
-                { 2, 3.5, 2 },
-                {
-                    ld.run(w.abilities.wrath.cast, e),
-                    ld.run(w.abilities.starfire.cast, e),
-                    ld.run(w.abilities.regrowth.cast, e),
-                }
-            )
+            assert.are.same({ 2, 3.5, 2 }, {
+                ld.run(w.abilities.wrath.cast, e),
+                ld.run(w.abilities.starfire.cast, e),
+                ld.run(w.abilities.regrowth.cast, e),
+            })
         end
     )
 
