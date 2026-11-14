@@ -699,14 +699,11 @@ describe("Forever Mage priorities", function()
         w.game.known[22783], w.game.known[10220], w.game.known[7301] = true, true, true
         local e = ld.env(w)
         e.talent.frost_channeling = { rank = 3 }
-        assert.are.same(
-            { 490, 500 * 0.85, 170 * 0.85 },
-            {
-                ld.run(w.abilities.mage_armor.spend, e),
-                ld.run(w.abilities.ice_armor.spend, e),
-                ld.run(w.abilities.frost_armor.spend, e),
-            }
-        )
+        assert.are.same({ 490, 500 * 0.85, 170 * 0.85 }, {
+            ld.run(w.abilities.mage_armor.spend, e),
+            ld.run(w.abilities.ice_armor.spend, e),
+            ld.run(w.abilities.frost_armor.spend, e),
+        })
         for _, key in ipairs({ "mage_armor", "ice_armor", "frost_armor" }) do
             for _, field in ipairs({ "now", "handler" }) do
                 e = ld.env(w)
