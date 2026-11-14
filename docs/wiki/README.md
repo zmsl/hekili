@@ -7,8 +7,8 @@ edits made on GitHub's wiki editor are lost.
 ## How it is published
 
 `.github/workflows/wiki.yml` runs when a final release is published. It checks out the release tag, runs
-`make wiki-check`, then clones the wiki repository, copies this folder over it (everything except `README.md`,
-`data/` and `.gitkeep`), fills the `{{VERSION}}` line of `_Footer.md` with the tag, and commits and pushes only if a
+`make wiki-build` and `make wiki-check`, then clones the wiki repository, copies `build/wiki/` over it (this folder
+with the generated tables filled in, without `README.md`, `data/` and `.gitkeep`), fills the `{{VERSION}}` line of `_Footer.md` with the tag, and commits and pushes only if a
 page changed. It never deletes a page that exists only on the wiki, never runs `git init` and never force-pushes, so
 the wiki's history is kept. A wiki page therefore always describes the latest release, never unreleased work.
 
@@ -35,21 +35,23 @@ fact against its source, and remove the comment's `Status:` line when the page i
 
 ## Generated tables
 
-Some tables are written by the generator from the addon itself, so they cannot go stale by hand. A page asks for one
-with a marker pair, each on its own line:
+Some tables are written by the generator from the addon itself, so they cannot go stale by hand. They exist only in
+the published wiki: this folder holds just the marker pair, with nothing between. A page asks for a table with a
+pair, each marker on its own line:
 
 ```text
 <!-- GENERATED:spec-defaults-nameplate -->
 <!-- /GENERATED -->
 ```
 
-`make wiki-tables` fills every pair: it finds the name in `tools/wiki/manifest.lua`, runs that table's collector and
-replaces only the lines between the markers (after a "Do not edit" comment). Text outside the markers is never read or
-written, and running it twice changes nothing. Never edit inside a pair: run `make wiki-tables` instead.
+`make wiki-build` writes a filled copy of this folder to `build/wiki/` (gitignored): for each pair it finds the name in
+`tools/wiki/manifest.lua`, runs that table's collector and puts the table between the markers (after a "Do not edit"
+comment). It never writes this folder, and running it twice gives the same copy. Never put a table inside a pair
+here; to see how a page renders, run `make wiki-build` and read `build/wiki/`.
 
 | Part | What it is |
 | --- | --- |
-| `tools/wiki/gen.lua` | `write` (`make wiki-tables`) and `check` (`make wiki-check`) |
+| `tools/wiki/gen.lua` | `build` (`make wiki-build`) and `check` (`make wiki-check`) |
 | `tools/wiki/manifest.lua` | Every table: its collector, the collector's arguments, the headers and the note under it |
 | `tools/wiki/collect/*.lua` | The collectors: options, commands, expressions, specs (priorities, settings, ranges), api, accuracy |
 | `tools/wiki/boot.lua` | One headless boot of the addon per class (the test harness's fake client) |
@@ -66,13 +68,14 @@ gate lock for every loop and cannot run in CI: copy `.accuracy/report.json` ther
 update the version the Accuracy page names.
 
 To add a table: add an entry to the manifest (a collector and its arguments, headers, and a note for any "n/a" cell),
-put the marker pair in a page, and run `make wiki-tables`.
+put the empty marker pair in a page, and run `make wiki-build`.
 
 ## wiki-check
 
-`make wiki-check` runs in `make check` and in the release workflow. It fails on:
+`make wiki-check` runs in `make check` and in the release workflow. It does not check the tables (they are filled
+only at publish time); it fails on:
 
-- a generated region that differs from what `make wiki-tables` would write, or a marker the manifest does not name;
+- a malformed marker, or one the manifest does not name;
 - a bold option path (`**/hekili > A > *placeholder* > B**`) whose segments are not option labels, or a bold Title
   Case label that names no option or is not an English string in `src/Hekili/Locales/enUS.lua` (a lead-in ending in a
   colon or full stop, a sentence-case term and the page's bold title term are not checked);

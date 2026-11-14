@@ -39,20 +39,6 @@ Beyond 10 yards, Hekili Forever counts only enemies that are in combat.
 ### Default radius by specialization
 
 <!-- GENERATED:spec-defaults-nameplate -->
-<!-- Do not edit: written by `make wiki-tables` (tools/wiki/manifest.lua). -->
-| Class | Specializations | Default (yards) |
-|---|---|---|
-| Warrior | Arms, Fury, Protection | 10 |
-| Druid | Balance | 30 |
-| Druid | Feral, Guardian | 10 |
-| Rogue | Assassination, Combat, Subtlety | 10 |
-| Paladin | Protection, Retribution | 10 |
-| Shaman | Elemental | 30 |
-| Shaman | Enhancement | 10 |
-| Hunter | Beast Mastery, Marksmanship, Survival | 35 |
-| Mage | Arcane, Fire, Frost | 30 |
-| Priest | Discipline, Shadow | 30 |
-| Warlock | Affliction, Demonology, Destruction | 30 |
 <!-- /GENERATED -->
 
 ## Check that it works

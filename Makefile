@@ -7,7 +7,7 @@ LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
 .PHONY: accuracy gate gate-ab gate-body gate-ab-body bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check cdv-coverage syntax api-check \
-	packs-check tools-test wiki-tables wiki-check check check-full packs package package-check wowsims-cli wowsims-sim-cli wowsims-export wowsims-siml wowsims-learn shared-auras wowsims-packs test-wowsims
+	packs-check tools-test wiki-build wiki-tables wiki-check check check-full packs package package-check wowsims-cli wowsims-sim-cli wowsims-export wowsims-siml wowsims-learn shared-auras wowsims-packs test-wowsims
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -158,12 +158,15 @@ api-check:
 packs-check: wowsims-packs packs
 	git diff --exit-code src
 
-# The wiki's generated tables (docs/wiki/README.md): one headless boot per class, the collectors tools/wiki/manifest.lua
-# names, written into the regions between GENERATED markers in docs/wiki/*.md. wiki-check regenerates in memory and
-# fails on a stale region, a dead link, a bold label or command that names nothing, an expression that no longer
-# evaluates, an unreviewed command or banned content (open TODO placeholders are warnings).
-wiki-tables:
-	$(LUA) tools/wiki/gen.lua write
+# The wiki's generated tables (docs/wiki/README.md): wiki-build writes a copy of docs/wiki/ to build/wiki/ with the
+# regions between GENERATED markers filled (one headless boot per class, the collectors tools/wiki/manifest.lua names);
+# docs/wiki/ keeps its regions empty. wiki-check fails on a malformed or unknown marker, a dead link, a bold label or
+# command that names nothing, an expression that no longer evaluates, an unreviewed command or banned content (open
+# TODO placeholders are warnings).
+wiki-build:
+	$(LUA) tools/wiki/gen.lua build
+
+wiki-tables: wiki-build
 
 wiki-check:
 	$(LUA) tools/wiki/gen.lua check

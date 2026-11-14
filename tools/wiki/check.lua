@@ -23,15 +23,20 @@ local function nocode(s)
     return (s:gsub("`[^`\n]*`", "``"))
 end
 
---- Regions whose text differs from what the generator writes now: render(name) is the generator.
-function M.stale(pages, render)
+--- Markers that are malformed or that the manifest does not name (`known` is a set of table names). Tables are filled
+--- only at publish time, so the check never compares a region's body.
+function M.markers(pages, known)
     local out = {}
     for name, s in pairs(pages) do
-        local ok, fresh = pcall(markers.rewrite, s, render, name)
+        local ok, names = pcall(markers.names, s, name)
         if not ok then
-            out[#out + 1] = tostring(fresh)
-        elseif fresh ~= s then
-            out[#out + 1] = name .. ": a generated table is stale (run `make wiki-tables`)"
+            out[#out + 1] = tostring(names)
+        else
+            for _, region in ipairs(names) do
+                if not known[region] then
+                    out[#out + 1] = ("%s: GENERATED:%s is not in tools/wiki/manifest.lua"):format(name, region)
+                end
+            end
         end
     end
     return sorted(out)

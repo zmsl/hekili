@@ -4,7 +4,7 @@
 -- (each on its own line); rewrite() replaces only the lines between the pair and never reads or writes the rest.
 local M = {}
 
-M.NOTE = "<!-- Do not edit: written by `make wiki-tables` (tools/wiki/manifest.lua). -->"
+M.NOTE = "<!-- Do not edit: written by `make wiki-build` (tools/wiki/manifest.lua). -->"
 
 local OPEN = "^<!%-%- GENERATED:([%w_%-]+) %-%->$"
 local CLOSE = "^<!%-%- /GENERATED %-%->$"
@@ -45,14 +45,16 @@ end
 
 --- `text` with each region's body replaced by render(name) (a string, no trailing newline), after the do-not-edit
 --- note. Everything outside the regions is kept byte for byte.
-function M.rewrite(text, render, where)
+function M.rewrite(text, render, where, bare)
     M.names(text, where) -- the shape first: a broken pair never half-rewrites a page
     local out, skipping = {}, false
     for _, l in ipairs(lines(text)) do
         local name = l:match(OPEN)
         if name then
             out[#out + 1] = l
-            out[#out + 1] = M.NOTE
+            if not bare then
+                out[#out + 1] = M.NOTE
+            end
             local body = render(name)
             if body ~= "" then
                 out[#out + 1] = body
@@ -70,6 +72,13 @@ function M.rewrite(text, render, where)
         s = s .. "\n"
     end
     return s
+end
+
+--- `text` with every region emptied (the committed form: the markers alone, no note, no body).
+function M.strip(text, where)
+    return M.rewrite(text, function()
+        return ""
+    end, where, true)
 end
 
 return M

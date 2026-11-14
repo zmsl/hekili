@@ -1,7 +1,7 @@
 -- tools/wiki/manifest.lua: every generated table. A page asks for one with
 --   <!-- GENERATED:<name> -->
 --   <!-- /GENERATED -->
--- and `make wiki-tables` rewrites only what lies between the pair (tools/wiki/gen.lua). Each entry names its
+-- and `make wiki-build` fills the pair in a copy under build/wiki/ and docs/wiki/ keeps the pair empty (tools/wiki/gen.lua). Each entry names its
 -- collector (tools/wiki/collect/<collector>.lua), the collector's arguments, the table's headers and, for an "n/a"
 -- cell, the note under the table that says what it means. A name a page uses that is not here is an error.
 local OPTION_COLUMNS = { "section", "label", "type", "default", "range", "description" }

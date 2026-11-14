@@ -1,5 +1,5 @@
 -- tests/wiki_spec.lua: the wiki generator (tools/wiki): the marker rewrite leaves prose alone and is idempotent, and
--- wiki-check fails both ways: on a stale region, and on a page or data entry that names something that does not exist.
+-- wiki-check fails both ways: on a malformed or unknown marker, and on a page or data entry that names something that does not exist.
 local markers = require("tools.wiki.markers")
 local check = require("tools.wiki.check")
 local expressions = require("tools.wiki.collect.expressions")
@@ -33,6 +33,13 @@ describe("the wiki's marker rewrite", function()
         assert.are.equal(once, markers.rewrite(once, render, "P"))
     end)
 
+    it("strips a region to its bare markers", function()
+        local filled = markers.rewrite(PAGE, render, "P")
+        local bare = PAGE:gsub("old row\n", "")
+        assert.are.equal(bare, markers.strip(filled, "P"))
+        assert.are.equal(bare, markers.strip(PAGE, "P"))
+    end)
+
     it("keeps a page with no final newline as it is", function()
         local s = PAGE:sub(1, -2)
         assert.are.equal(s:sub(-1), markers.rewrite(s, render, "P"):sub(-1))
@@ -52,17 +59,15 @@ describe("the wiki's marker rewrite", function()
 end)
 
 describe("wiki-check", function()
-    it("fails on a stale region and passes once it is regenerated", function()
-        assert.are.same({ "P: a generated table is stale (run `make wiki-tables`)" }, check.stale({ P = PAGE }, render))
-        assert.are.same({}, check.stale({ P = markers.rewrite(PAGE, render, "P") }, render))
-    end)
-
-    it("fails on a region the manifest does not name", function()
-        local errs = check.stale({ P = PAGE }, function(name)
-            error("GENERATED:" .. name .. " is not in tools/wiki/manifest.lua", 0)
-        end)
+    it("fails on a region the manifest does not name or a malformed marker, and passes a known one", function()
+        assert.are.same({}, check.markers({ P = PAGE }, { one = true }))
+        assert.are.same(
+            { "P: GENERATED:one is not in tools/wiki/manifest.lua" },
+            check.markers({ P = PAGE }, { other = true })
+        )
+        local errs = check.markers({ P = "<!-- GENERATED:one -->\nx\n" }, { one = true })
         assert.are.equal(1, #errs)
-        assert.truthy(errs[1]:find("not in tools/wiki/manifest.lua", 1, true))
+        assert.truthy(errs[1]:find("never closed", 1, true))
     end)
 
     it("fails on a bold label or path segment that names no option, and passes a real one", function()
@@ -160,5 +165,41 @@ describe("the expression check", function()
         d["<resource>.time_to_<N>"] = { omit = "not for priorities" }
         d["<resource>.gone"] = nil
         assert.are.same({}, expressions.problems({ root = "mt_x", prefix = "<resource>" }, H, scanned, d))
+    end)
+end)
+
+describe("make wiki-build", function()
+    local function slurp(path)
+        local f = assert(io.open(path, "rb"))
+        local s = f:read("*a")
+        f:close()
+        return s
+    end
+    local function tree()
+        local p = assert(io.popen("cd docs/wiki && find . -name '*.md' -not -name README.md | sort | xargs cat"))
+        local s = p:read("*a")
+        p:close()
+        return s
+    end
+
+    it("keeps the source's regions empty, fills a copy under build/wiki/ and leaves the source alone", function()
+        local before = tree()
+        assert.is_true(
+            os.execute("make wiki-build >/dev/null 2>&1") == 0 or os.execute("make wiki-build >/dev/null 2>&1") == true
+        )
+        assert.are.equal(before, tree())
+        local src, out = slurp("docs/wiki/Slash-Commands.md"), slurp("build/wiki/Slash-Commands.md")
+        assert.are.equal(src, markers.strip(src, "S"), "docs/wiki/ holds only bare markers")
+        assert.are_not.equal(src, out)
+        assert.truthy(out:find(markers.NOTE, 1, true))
+        assert.are.equal(src, markers.strip(out, "S"), "the copy differs only inside the regions")
+        assert.is_nil(io.open("build/wiki/README.md"))
+        assert.is_nil(io.open("build/wiki/data/commands.lua"))
+    end)
+
+    it("is idempotent", function()
+        local first = slurp("build/wiki/Slash-Commands.md")
+        os.execute("make wiki-build >/dev/null 2>&1")
+        assert.are.equal(first, slurp("build/wiki/Slash-Commands.md"))
     end)
 end)

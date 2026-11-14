@@ -13,7 +13,7 @@ TODO: the lead. How the wiki is built: docs/wiki/, generated tables, wiki-check.
 
 ## Generated tables
 
-- `make wiki-tables` rewrites the regions between GENERATED markers. Source: `tools/wiki/manifest.lua`, `tools/wiki/gen.lua`
+- `make wiki-build` fills the regions between GENERATED markers in a copy under `build/wiki/` (the repo keeps them empty). Source: `tools/wiki/manifest.lua`, `tools/wiki/gen.lua`
 
 ## wiki-check
 

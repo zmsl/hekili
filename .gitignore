@@ -70,3 +70,6 @@ __pycache__/
 
 debug/
 .accuracy/
+
+# make wiki-build output
+/build/

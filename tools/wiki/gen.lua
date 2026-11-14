@@ -1,6 +1,7 @@
 -- tools/wiki/gen.lua: the wiki's generated tables and its check (docs/wiki/README.md).
---   lua tools/wiki/gen.lua write   rewrites every GENERATED region of docs/wiki/*.md (`make wiki-tables`)
---   lua tools/wiki/gen.lua check   fails on a stale region, a dead link, a bold label or command that names nothing,
+--   lua tools/wiki/gen.lua build   writes a copy of docs/wiki/ with every GENERATED region filled to build/wiki/
+--                                  (`make wiki-build`); docs/wiki/ itself is never written (its regions stay empty)
+--   lua tools/wiki/gen.lua check   fails on a malformed or unknown marker, a dead link, a bold label or command that names nothing,
 --                                  an expression that no longer evaluates, a command not reviewed, or banned content;
 --                                  open TODO placeholders and missing screenshots are warnings (`make wiki-check`)
 -- Run from the repository root. The collectors boot the addon headless (tools/wiki/boot.lua), one boot per class.
@@ -95,19 +96,19 @@ local function enus()
     return out
 end
 
-local function write()
-    local changed = 0
+local OUT = "build/wiki/"
+
+local function build()
+    os.execute("rm -rf " .. OUT .. " && mkdir -p " .. OUT .. " && cp -r " .. DIR .. ". " .. OUT)
+    os.execute("rm -rf " .. OUT .. "README.md " .. OUT .. "data " .. OUT .. ".gitkeep") -- contributor files, not wiki
+    local n = 0
     for name, s in pairs(pages()) do
-        local fresh = markers.rewrite(s, render, name)
-        if fresh ~= s then
-            local f = assert(io.open(DIR .. name .. ".md", "wb"))
-            f:write(fresh)
-            f:close()
-            changed = changed + 1
-            print("wiki-tables: rewrote " .. name .. ".md")
-        end
+        local f = assert(io.open(OUT .. name .. ".md", "wb"))
+        f:write(markers.rewrite(s, render, name))
+        f:close()
+        n = n + 1
     end
-    print(("wiki-tables: %d page(s) changed"):format(changed))
+    print(("wiki-build: %d page(s) written to %s"):format(n, OUT))
 end
 
 local function run()
@@ -118,7 +119,11 @@ local function run()
             list[#list + 1] = m
         end
     end
-    add(errors, check.stale(ps, render))
+    local known = {}
+    for region in pairs(manifest) do
+        known[region] = true
+    end
+    add(errors, check.markers(ps, known))
     local e, w = check.links(ps, exists)
     add(errors, e)
     add(warnings, w)
@@ -151,13 +156,13 @@ local function run()
 end
 
 local mode = arg[1]
-if mode == "write" then
-    write()
+if mode == "build" then
+    build()
 elseif mode == "check" then
     if not run() then
         os.exit(1)
     end
 else
-    io.stderr:write("usage: lua tools/wiki/gen.lua write | check\n")
+    io.stderr:write("usage: lua tools/wiki/gen.lua build | check\n")
     os.exit(2)
 end
