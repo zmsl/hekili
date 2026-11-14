@@ -935,6 +935,44 @@ describe("the replay's mana regen (wowsims's regen lines)", function()
         assert.is_true(math.abs(select(2, replay.manaRegen(ev)) - 7.94) < 1e-9, "no shares declared: the modal tick")
     end)
 
+    it("reads a function share (a rank's value) as the booted character answers it", function()
+        local text = table.concat({
+            "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+            line(0.5, 0.2, 1),
+            "[1.00] [Tester (#1)] Aura gained: {SpellID: 77}",
+            line(1.1, 0.794, 1),
+            line(1.2, 0.794, 1),
+            "[2.00] [Tester (#1)] Aura faded: {SpellID: 77}",
+            line(2.1, 0.2, 1),
+            line(2.2, 1.588, 2),
+        }, "\n")
+        local HC = {
+            Hekili = {
+                Class = {
+                    abilities = {},
+                    auras = { boost = { id = 77, duration = 15 } },
+                    resources = {
+                        mana = {
+                            state = {
+                                regenMult = {
+                                    {
+                                        aura = "boost",
+                                        share = function()
+                                            return 0.25 * talent.boosting.rank -- luacheck: ignore 113
+                                        end,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                State = { talent = { boosting = { rank = 2 } } },
+            },
+        }
+        local R = replay.new(text, HC, {})
+        assert.is_true(math.abs(R.manaCasting - 2) < 1e-9, tostring(R.manaCasting)) -- the 0.5 share's unboosted rate
+    end)
+
     it(
         "keeps the content's mp5 auras that the log gains out of the part A, the client's read following them",
         function()

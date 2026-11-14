@@ -664,9 +664,16 @@ function M.new(text, H, o)
     local shares, Class = {}, H.Hekili.Class
     for _, rs in pairs(Class.resources or {}) do
         for _, m in ipairs(rs.state and rs.state.regenMult or {}) do
-            local a = m.share and m.aura and Class.auras[m.aura]
-            if a and a.id then
-                shares[a.id] = m.share
+            local a, sh = m.share and m.aura and Class.auras[m.aura], m.share
+            if type(sh) == "function" then -- a rank's value: the booted character's answer (its talents set at boot)
+                local env = getfenv(sh)
+                setfenv(sh, H.Hekili.State)
+                local ok, v = pcall(sh)
+                setfenv(sh, env)
+                sh = ok and tonumber(v) or nil
+            end
+            if a and a.id and sh then
+                shares[a.id] = sh
             end
         end
     end
