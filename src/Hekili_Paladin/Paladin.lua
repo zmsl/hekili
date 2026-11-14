@@ -315,10 +315,24 @@ spec:RegisterAuras({
     justice_battlegear_5pc = { id = 1301702, duration = 3600, max_stack = 1 },
     justice_armor_5pc = { id = 1301694, duration = 3600, max_stack = 1 },
     justice_battleplate_5pc = { id = 1301697, duration = 3600, max_stack = 1 },
-    seal_of_command = { id = 20375, copy = rest(SEAL_OF_COMMAND), duration = 30, max_stack = 1 },
-    seal_of_righteousness = { id = 20154, copy = rest(SEAL_OF_RIGHTEOUSNESS), duration = 30, max_stack = 1 },
-    seal_of_the_crusader = { id = 21082, copy = rest(SEAL_OF_THE_CRUSADER), duration = 30, max_stack = 1 },
-    seal_of_fury = { id = 1311649, copy = rest(SEAL_OF_FURY), duration = 30, max_stack = 1 },
+    -- The seals are one family (L727): the Cooldown Manager's Seals entry says a seal is up or none is, our last seal
+    -- cast says which.
+    seal_of_command = { id = 20375, copy = rest(SEAL_OF_COMMAND), duration = 30, max_stack = 1, family = "seals" },
+    seal_of_righteousness = {
+        id = 20154,
+        copy = rest(SEAL_OF_RIGHTEOUSNESS),
+        duration = 30,
+        max_stack = 1,
+        family = "seals",
+    },
+    seal_of_the_crusader = {
+        id = 21082,
+        copy = rest(SEAL_OF_THE_CRUSADER),
+        duration = 30,
+        max_stack = 1,
+        family = "seals",
+    },
+    seal_of_fury = { id = 1311649, copy = rest(SEAL_OF_FURY), duration = 30, max_stack = 1, family = "seals" },
     -- Unsealed Wrath's Echoes (hotfix 113554 rows: 15 s, 3 stacks): each landed white swing stores a stack of the
     -- active seal's; a swing under another seal spends them (the `unsealed_wrath` reaction, below).
     echo_of_command = { id = 1311703, duration = 15, max_stack = 3 },
@@ -327,9 +341,9 @@ spec:RegisterAuras({
     echo_of_justice = { id = 1311705, duration = 15, max_stack = 3 },
     echo_of_light = { id = 1328198, duration = 15, max_stack = 3 },
     echo_of_wisdom = { id = 1328206, duration = 15, max_stack = 3 },
-    seal_of_justice = { id = 20164, duration = 30, max_stack = 1 },
-    seal_of_light = { id = 20165, copy = rest(SEAL_OF_LIGHT), duration = 30, max_stack = 1 },
-    seal_of_wisdom = { id = 20166, copy = rest(SEAL_OF_WISDOM), duration = 30, max_stack = 1 },
+    seal_of_justice = { id = 20164, duration = 30, max_stack = 1, family = "seals" },
+    seal_of_light = { id = 20165, copy = rest(SEAL_OF_LIGHT), duration = 30, max_stack = 1, family = "seals" },
+    seal_of_wisdom = { id = 20166, copy = rest(SEAL_OF_WISDOM), duration = 30, max_stack = 1, family = "seals" },
     -- Holy Shield: +30% block for 10 s, 4 charges (DB2 ProcCharges), each block or partial block on us spending one.
     holy_shield = {
         id = 20925,

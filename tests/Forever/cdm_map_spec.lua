@@ -4,8 +4,9 @@
 -- fixture (every entry as unlearned, GetOverrideSpell from the export's own read), and the leaf's real build
 -- (Presence/CooldownViewer.lua build/candidates) makes the map: its verdict is the classification. This spec's own walk
 -- (`walk`, mirroring candidates()) only names what an entry hit, for the messages.
--- Kinds: mapped (one aura), ambiguous (several auras, or one aura and an ID no aura has), ability-only (no aura, but a
--- pack ability's ID), unmapped (neither), spell-less (no spell ID at all: the client's category 5-8 placeholders).
+-- Kinds: mapped (one aura), family (every candidate a member of one declared aura family, L727), ambiguous (several
+-- auras, or one aura and an ID no aura has), ability-only (no aura, but a pack ability's ID), unmapped (neither),
+-- spell-less (no spell ID at all: the client's category 5-8 placeholders).
 -- Every ambiguous and unmapped entry must be in GAPS below with a reason; one that is not fails, and so does a GAPS line
 -- whose entry is no longer ambiguous or unmapped (delete the line: the list shrinks as the coverage lanes land).
 -- The same export's talent tree (fixture `talents`) against the pack's RegisterTalents (the def's talents: key, spell,
@@ -49,7 +50,6 @@ local GAPS = {
         [199395] = { "Mark of the Wild", "ambiguous, cat 2; auras mark_of_the_wild,gift_of_the_wild; abilities mark_of_the_wild,gift_of_the_wild; no aura has 5287; lane core: one item for a family of auras, ambiguous by the map's one-aura rule" },
         [199491] = { "Wild Growth", "unmapped, cat 2; no aura has any of 1238215,1238214,408120; lane cov-druid" },
         [199431] = { "Tranquility", "unmapped, cat 2; no aura has any of 740,8918,9862,9863; lane cov-druid" },
-        [199507] = { "Druid Forms", "ambiguous, cat 2; auras bear_form,cat_form,aquatic_form,travel_form,moonkin_form; abilities bear_form,cat_form,aquatic_form,travel_form,moonkin_form; lane core: one item for a family of auras, ambiguous by the map's one-aura rule" },
         [199509] = { "Leader of the Pack", "unmapped, cat 2; no aura has any of 24932; lane cov-druid" },
         [200451] = { "Moonkin Aura", "unmapped, cat 2; no aura has any of 24907; lane cov-druid" },
         [200174] = { "Plainsrunning", "unmapped, cat 2; no aura has any of 1259918; lane shared races (Tauren.lua: a passive, no aura registered)" },
@@ -114,7 +114,6 @@ local GAPS = {
         [199291] = { "Mana Shield", "unmapped, cat 2; no aura has any of 8494,8495,10191,10192,10193,1463; lane cov-mage" },
     },
     PALADIN = {
-        [200339] = { "Seals", "ambiguous, cat 0; auras seal_of_the_crusader,seal_of_righteousness,seal_of_justice,seal_of_wisdom,seal_of_light,seal_of_command,seal_of_fury; abilities seal_of_the_crusader,seal_of_righteousness,seal_of_justice,seal_of_wisdom,seal_of_light,seal_of_command,seal_of_fury; lane core: one item for a family of auras, ambiguous by the map's one-aura rule" },
         [200307] = { "Light's Vigil", "unmapped, cat 0; no aura has any of 1310911,1311590,1311595; lane cov-paladin" },
         [200303] = { "Holy Wrath", "unmapped, cat 0; no aura has any of 2812,10318; lane cov-paladin" },
         [200274] = { "Blessing of Freedom", "unmapped, cat 1; no aura has any of 1044; lane cov-paladin" },
@@ -133,7 +132,6 @@ local GAPS = {
         [200291] = { "Reckoning", "ambiguous, cat 2; auras reckoning; no aura has 20177; lane cov-paladin" },
         [200288] = { "Hammer of Justice", "unmapped, cat 2; no aura has any of 1324513,1324515,1324516,1324517; lane cov-paladin" },
         [200305] = { "Turn Undead", "unmapped, cat 2; no aura has any of 1324543,1324545,1324546; lane cov-paladin" },
-        [200340] = { "Seals", "ambiguous, cat 2; auras seal_of_righteousness,seal_of_fury,seal_of_the_crusader,seal_of_command,seal_of_light,seal_of_wisdom,seal_of_justice; abilities seal_of_righteousness,seal_of_fury,seal_of_the_crusader,seal_of_command,seal_of_light,seal_of_wisdom,seal_of_justice; lane core: one item for a family of auras, ambiguous by the map's one-aura rule" },
         [200272] = { "Blessing of Freedom", "unmapped, cat 2; no aura has any of 1044; lane cov-paladin" },
         [200277] = { "Blessing of Sacrifice", "unmapped, cat 2; no aura has any of 6940,20729; lane cov-paladin" },
         [200275] = { "Blessing of Protection", "unmapped, cat 2; no aura has any of 1022,5599,10278; lane cov-paladin" },
@@ -313,21 +311,23 @@ local function boot(c)
     H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
     H.ns.VirtualState.Drain(ctl.now)
     assert(Q.builds > builds, c[1] .. ": the Cooldown Manager map was not rebuilt")
-    return fx, I.def, Q.map
+    return fx, I.def, Q
 end
 
 -- Each Cooldown Manager entry as { key = cooldownID, name, kind, detail, gap }.
-local function entryRows(fx, def, map)
+local function entryRows(fx, def, Q)
     local rows = {}
     for n, e in ipairs(fx.entries) do
         local ids = candidateIds(e)
         local auras, off, abilities, stray = walk(def, ids)
-        local j = map[e.id]
+        local j = Q.map[e.id]
         local kind
         if #ids == 0 then
             kind = "spell-less"
         elseif j and j > 0 then
             kind = "mapped"
+        elseif j and Q.family[-j] > 0 then
+            kind = "family" -- every candidate one declared family's member (L727): presence + the last cast
         elseif j then
             kind = "ambiguous"
         elseif #abilities > 0 then
@@ -437,13 +437,13 @@ end
 
 for _, c in ipairs(CLASSES) do
     describe("the live export against the " .. c[1] .. " pack", function()
-        local fx, def, map
+        local fx, def, leaf
         setup(function()
-            fx, def, map = boot(c)
+            fx, def, leaf = boot(c)
         end)
 
         it("every ambiguous or unmapped Cooldown Manager entry is in GAPS, every GAPS line still one", function()
-            local rows, count = entryRows(fx, def, map), {}
+            local rows, count = entryRows(fx, def, leaf), {}
             for _, r in ipairs(rows) do
                 count[r.kind] = (count[r.kind] or 0) + 1
             end
@@ -452,11 +452,12 @@ for _, c in ipairs(CLASSES) do
                 n = check(c[1] .. " Cooldown Manager", rows, GAPS[c[1]])
             end)
             print(
-                ("CDM map %s (level %s, export %s): mapped %d / ambiguous %d / ability-only %d / unmapped %d / spell-less %d; known gaps %s"):format(
+                ("CDM map %s (level %s, export %s): mapped %d / family %d / ambiguous %d / ability-only %d / unmapped %d / spell-less %d; known gaps %s"):format(
                     c[1],
                     tostring(fx.level),
                     fx.date,
                     count.mapped or 0,
+                    count.family or 0,
                     count.ambiguous or 0,
                     count["ability-only"] or 0,
                     count.unmapped or 0,

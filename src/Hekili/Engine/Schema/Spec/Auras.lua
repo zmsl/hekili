@@ -24,6 +24,9 @@ local methods = {
     -- while either weapon slot carries one of those IDs (the client's enchantID). Both are read from
     -- C_Item.GetWeaponEnchantInfo, in combat too, on its events (Sources/Enchants.lua), and modelled from our apply cast
     -- between reads.
+    -- And `family = "<name>"` (L727) on each member of a set of auras the Cooldown Manager shows as one entry: that
+    -- entry says whether some member is up, the family's latest application in the belief says which
+    -- (Game/State/Sources/Presence/CooldownViewer.lua).
     RegisterAura = function( self, aura, data )
         CommitKey( aura )
 

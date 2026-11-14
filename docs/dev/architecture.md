@@ -332,6 +332,17 @@ times its tick phase). An `icd` aura already up in the unit's first clean walk (
 so its ICD reads ready (its applied time is put one ICD back, a sentinel) until a gain is seen. The sim's `applyBuff`
 starts it too, and removing a down aura keeps it (`tests/Forever/aura_icd_spec.lua`, `tests/Game/State/auras_spec.lua`).
 
+**A family of auras on one Cooldown Manager entry** (owner rule L727). `RegisterAura{ family = "<name>" }` on each
+member of a set the client's Cooldown Manager shows as one entry, one member up at a time (the pack's casts take the
+others down, in `now` and `handler`). An entry whose every candidate spell names a member of one family (no untracked
+or secret candidate, no member switched off in the Cooldown Manager panel) is a family item
+(`Game/State/Sources/Presence/CooldownViewer.lua`): the client shows whether some member is up but, after an
+in-combat change, not which (probes L725/L726), so each sweep counts the item for the family's latest application in
+the belief (the member up, or the one that fell last: our last cast, or a later plain read) and treats it as that
+member's one-aura item (rules 1-4, the seen rule, the verdict). With no member applied yet it stays ambiguous. A plain
+direct read still wins: a form aura the shapeshift read owns is never judged by the Cooldown Manager. The family name
+is the pack's own; the core only compares it.
+
 **A charge spent by hits on us, with its own cooldown.** A player aura's `consumedBy` (a set of hit kinds:
 `WOUND`, `BLOCK`, `BLOCKED`, ...) makes each such hit on us spend one stack in the belief (`Families/Auras.lua`), and
 `consumeIcd = <seconds>` limits it to one stack a window from the last spend (wowsims's ICD timer: a recast keeps it
