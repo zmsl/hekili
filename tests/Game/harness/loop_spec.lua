@@ -362,6 +362,28 @@ describe("the headless loop's pools between two fights (loop.rest)", function()
         assert.are.equal(math.min(100, a.us.power + loop.GAP), b.us.power0)
     end)
 
+    it("rests at the casting rate while the last spend's five-second window is open, then at the idle rate", function()
+        -- spirit 2/s, mp5 1/s: idle 3/s, casting 1/s
+        local L = loop.new(stub(0, { level = 60, max = 100, mobHealth = 1e9, power = 100, fsr = { [0] = { 2, 1 } } }))
+        local spentAt
+        local o = {
+            duration = 4,
+            on = function(run, _, t)
+                if t >= 4.9 and t < 5.1 then -- a spend 2 s before the fight's end
+                    local us = run.us
+                    run.W.emit({ kind = "gain", src = us, rage = 10 - us.power })
+                    us.spentAt[0], spentAt = run.W.t, run.W.t
+                end
+            end,
+        }
+        local a = loop.run(L, 1, o, { { H = L.us } })
+        local b = loop.run(L, 2, { duration = 1 }, { { H = L.us } })
+        local left = spentAt + 5 - a.W.t
+        assert.is_true(math.abs(left - 3) < 0.15, "window left " .. left)
+        local want = math.min(100, a.us.power + 1 * left + 3 * (loop.GAP - left))
+        assert.is_true(math.abs(b.us.power0 - want) < 1e-6, ("start %.3f, want %.3f"):format(b.us.power0, want))
+    end)
+
     it("decays a pool by the world's stepped out-of-combat decay through the gap", function()
         local decay = { pt = 1, rate = 1, interval = 1 }
         local L = loop.new(stub(1, { level = 60, max = 100, mobHealth = 1e9, decay = decay }))

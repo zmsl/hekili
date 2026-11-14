@@ -238,14 +238,20 @@ function M.unmatched(key, q, react)
     return not (q and q.name[1] == key and q.time[1] <= react)
 end
 
---- What pool `pt` of `e` at `v` (cap `max`) reaches over the out-of-combat gap between two fights (M.GAP): its idle
---- regen (the world's rate, the five-second rule open), else the world's out-of-combat `decay` ({ pt, rate, interval }:
---- stepped, the first quantum at combat's end: already taken when the world's own stop came, else now), else nil (the
---- content's start: combo points go with their target).
+--- What pool `pt` of `e` at `v` (cap `max`) reaches over the out-of-combat gap between two fights (M.GAP): its regen
+--- (the world's rates: casting while the five-second window our last spend or a paid channel opened is still open, as
+--- the game, wowsims's mana.go:215-237 and the belief keep it with no combat condition; idle after), else the world's
+--- out-of-combat `decay` ({ pt, rate, interval }: stepped, the first quantum at combat's end: already taken when the
+--- world's own stop came, else now), else nil (the content's start: combo points go with their target).
 function M.rest(W, e, pt, v, decay, max)
     local rate = W.regenRate(e, pt, "idle")
     if rate > 0 then
-        return math.min(max, v + rate * M.GAP)
+        local left = 0
+        if W.fsr[pt] then
+            left = math.max(0, (e.spentAt[pt] or -1e9) + 5 - W.t, (e.heldUntil[pt] or 0) - W.t)
+            left = math.min(M.GAP, left)
+        end
+        return math.min(max, v + W.regenRate(e, pt, "casting") * left + rate * (M.GAP - left))
     elseif decay and decay.pt == pt then
         local q = math.floor(M.GAP / decay.interval) + (W.combat and 1 or 0)
         return math.max(0, v - q * decay.rate * decay.interval)
