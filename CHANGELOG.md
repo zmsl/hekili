@@ -17,7 +17,7 @@
 - The options' Priorities list now opens on your current spec, and marks the priority that is active with a green check.
 
 ### Fixed
-- With the Cooldown Manager on, a Rake or Faerie Fire that misses is now corrected from the Cooldown Manager even right after the Cooldown Manager reloads its data, so it no longer stays shown as up for its whole duration (usually the first one of a fight).
+- With the Cooldown Manager on, a debuff of yours that misses (for example Rake or Faerie Fire) is now corrected from the Cooldown Manager even right after the Cooldown Manager reloads its data, as it does when you change form before a pull, so the first one of a fight no longer stays shown as up for its whole duration.
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 

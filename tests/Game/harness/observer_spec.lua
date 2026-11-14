@@ -279,6 +279,44 @@ describe("the observer", function()
         end
     )
 
+    -- (L972) lostAvoid: only our presses' avoid rows on others (the world's `spell` outcomes, W.hit) are dropped; our
+    -- landed spell, our swing's avoid (`land`) and the mob's avoid of us still come; plain: all come
+    it("lostAvoid drops only our presses' avoid rows on others", function()
+        setup()
+        local function spell(t, src, dst, act)
+            W.emit({ t = t, kind = "spell", src = src, dst = dst, act = act, flag = "", amount = 0, school = 1 })
+        end
+        spell(2, us, mob, "MISS")
+        spell(3, us, mob, "WOUND")
+        spell(4, us, mob, "DODGE")
+        spell(5, mob, us, "PARRY")
+        local sw = W.emit({ t = 6, kind = "swing", src = us, dst = mob, hand = 2, speed = 2.5 })
+        W.emit({
+            t = 6.5,
+            kind = "land",
+            src = us,
+            dst = mob,
+            hand = 2,
+            act = "DODGE",
+            flag = "",
+            school = 1,
+            swing = sw,
+        })
+        local function rows(k)
+            local s, out = observer.observe(W, setmetatable(k, { __index = observer.DEFAULTS })), {}
+            for i = 1, s.n do
+                if s.ev[i] == "UNIT_COMBAT" and (s.a1[i] == "target" or s.a1[i] == "player") then
+                    out[#out + 1] = s.t[i] .. " " .. s.a1[i] .. " " .. s.a2[i]
+                end
+            end
+            return table.concat(out, ", ")
+        end
+        assert.are.equal("3 target WOUND, 5 player PARRY, 6.5 target DODGE", rows({ lostAvoid = true }))
+        local all = "2 target MISS, 3 target WOUND, 4 target DODGE, 5 player PARRY, 6.5 target DODGE"
+        assert.are.equal(all, rows({}))
+        assert.are.equal(all, rows({ lostAvoid = true, plain = true }))
+    end)
+
     it("makes the target's auras raise in combat, and answers UnitIsUnit secret under its knob", function()
         setup()
         W.emit({ t = 1.5, kind = "prepull" })

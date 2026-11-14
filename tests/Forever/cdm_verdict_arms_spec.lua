@@ -99,6 +99,51 @@ describe("the CDM verdict's harness arms #slow", function()
         assert.is_false(H2.ctl.viewer.reshuffleDark)
     end)
 
+    -- (L972, L1009) viewer-rebuild: the viewer's override event once per later fight, just before the pull (out of
+    -- combat, before the fight's PLAYER_REGEN_DISABLED), as live's pre-pull form shift; never in the first fight (its
+    -- map comes from the data-loaded event) and never on the plain oracle; lostAvoid on the driver's observer only
+    it("viewer-rebuild: an override build before each later pull, driver only", function()
+        local L = loop.new(dlw.Feral)
+        local log = {}
+        for _, who in ipairs({ "us", "oracle" }) do
+            local H = L[who]
+            local fire = H.Fire
+            local function wrap(ev, ...)
+                if ev == "COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED" or ev == "COOLDOWN_VIEWER_DATA_LOADED" then
+                    log[#log + 1] = who .. " " .. ev .. " " .. tostring(H.ns.VirtualStateInternal.inCombat)
+                elseif ev == "PLAYER_REGEN_DISABLED" and who == "us" then
+                    log[#log + 1] = "us pull"
+                end
+                return fire(ev, ...)
+            end
+            H.Fire, H.ctl.Fire = wrap, wrap
+        end
+        local builds = {}
+        for seed = 1, 3 do
+            local ok, run = pcall(loop.run, L, seed, { duration = 20, arm = "viewer-rebuild" }, {
+                { H = L.us },
+                { H = L.oracle, plain = true },
+            })
+            assert(ok, run)
+            builds[seed] = L.us.ns.VirtualStateInternal.PRESENCE.viewer.builds
+            log[#log + 1] = "end"
+        end
+        local O = "us COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED false"
+        assert.are.same({
+            "us COOLDOWN_VIEWER_DATA_LOADED false",
+            "us pull",
+            "end",
+            O,
+            "us pull",
+            "end",
+            O,
+            "us pull",
+            "end",
+        }, log)
+        assert.are.same({ builds[1] + 1, builds[1] + 2 }, { builds[2], builds[3] })
+        assert.is_true(ab.ARMS["viewer-rebuild"].observe.lostAvoid)
+    end)
+
     it("a -novd arm sets the belief's verdictOff on the driver; the next fight's arm clears it", function()
         local L = loop.new(ww)
         local _, H = fight("viewer-reshuffle-novd", 1, L)
