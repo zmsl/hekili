@@ -8,6 +8,7 @@
 - Retribution Paladin: a second priority, Holy Shock (wowsims.com), built from wowsims.com's Holy Shock list (Judgement, Consecration, Seal of Righteousness, Holy Strike, Divine Favor with Holy Shock, Hammer of Wrath). It is picked automatically when you have Holy Shock talented and the most points in Retribution; other Retribution builds keep Retribution (wowsims.com). `/hekili priority` still lets you choose either.
 - The priority editor (Action Lists) now has Label, Label Condition, Icon and Icon Condition fields under Caption, so labels and icon overrides can be set without importing a line. The Icon field previews the texture it resolves to and says so when a path is not a texture file.
 - Custom priorities: `interrupt_global=1` on a channeled spell's line now works. While you channel that spell, any line above it in the priority, in any list, may be recommended at once, breaking the channel.
+- Custom priorities: the Max Energy option (`max_energy=1`) on a Ferocious Bite line now works: the line waits until you have full energy, so Bite gets its whole bonus from extra energy.
 
 ### Changed
 - Warrior: Improved Berserker Rage now gives 5 or 10 rage, and Improved Intercept, Improved Shield Wall and Improved Disarm now shorten those cooldowns as the talents do.

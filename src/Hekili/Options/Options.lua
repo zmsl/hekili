@@ -6027,8 +6027,9 @@ packControl.actionID = format( "%04d", id ) end
                                     width = 1.5,
                                     desc = L["When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus."],
                                     hidden = function ()
-                                        local e = GetListEntry( pack )
-                                        return e.action ~= "ferocious_bite"
+                                        -- shown where the entry's ability declares the extra it converts (pack data)
+                                        local a = Registry.Abilities()[ GetListEntry( pack ).action ]
+                                        return not ( a and ( rawget( a, "excess_cap" ) ~= nil or a.funcs and a.funcs.excess_cap ) )
                                     end,
                                 },
 

@@ -1191,6 +1191,11 @@ spec:RegisterAbilities({
 
         spend = 35,
         spendType = "energy",
+        -- max_energy=1's cap: Bite converts all the energy it has, uncapped (wowsims ferocious_bite.go
+        -- `extra := CurrentEnergy()`), so the core's cost-plus-cap clamp at the pool's max means full energy
+        excess_cap = function()
+            return energy.max
+        end,
 
         startsCombat = true,
         known = knows(FEROCIOUS_BITE),

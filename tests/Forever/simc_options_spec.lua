@@ -10,6 +10,7 @@ local drive = require("Game.harness.drive")
 local ww = require("Forever.helpers.warrior_world")
 
 local CANNIBALIZE = 20577
+local DW = require("Forever.helpers.druid_loop_world")
 
 -- A Warrior booted Undead (Cannibalize, Hekili_Shared's race pack, is the channel), Primary subscribed, the pack's
 -- default list replaced by `list`; a world whose observer stream feeds the instance (as channel_engine_spec does).
@@ -108,5 +109,80 @@ describe("interrupt_global on a channel line", function()
     it("=0: nothing breaks the channel before it ends", function()
         local name, t = firstMidChannel(0)
         assert.is_true(t > 5, tostring(name) .. " at " .. tostring(t))
+    end)
+end)
+
+describe("max_energy on a line", function()
+    -- A Feral cat in combat with 5 combo points and `energy` (plain to the fake client), the list one Ferocious Bite
+    -- line; returns the first recommendation's name and time.
+    local function bite(energy, flag)
+        local c = DW.Feral.character()
+        c.power = { type = 3, token = "ENERGY", max = 100, value = energy }
+        local H = headless.new({ character = c, pack = DW.Feral.PACK })
+        assert.are.same({}, H.loadErrors)
+        local hk = H.Hekili
+        hk.DB.profile.packs[DW.Feral.PACK].lists = { default = { line("ferocious_bite", { max_energy = flag }) } }
+        hk:LoadScripts()
+        H.ctl.power[3], H.ctl.power[4] = energy, 5
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.is_true(hk.Engine.Subscribe("Primary", function() end))
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+        assert.are.same({}, H.errors)
+        local r = hk.Engine.Output.Primary.recs[1]
+        return r.actionName, r.time, hk
+    end
+
+    it("the pack declares Bite's excess cap: all the energy it holds (wowsims ferocious_bite.go)", function()
+        local _, _, hk = bite(100)
+        assert.is_not_nil(hk.Class.abilities.ferocious_bite.excess_cap)
+    end)
+
+    it("=1: waits for full energy (the cost plus every point Bite converts)", function()
+        local name, t = bite(60, 1)
+        assert.are.equal("ferocious_bite", name)
+        assert.is_true(t > 2, tostring(t))
+        name, t = bite(100, 1)
+        assert.are.equal("ferocious_bite", name)
+        assert.is_true(t < 0.5, tostring(t))
+    end)
+
+    it("the editor shows Max Energy where the line's ability declares excess_cap, not by name", function()
+        local _, _, hk = bite(100)
+        hk:EmbedPackOptions()
+        -- the max_energy toggle under the Feral pack's group in the options tree
+        local function find(t, inPack, seen)
+            if type(t) ~= "table" or seen[t] then
+                return nil
+            end
+            seen[t] = true
+            for k, v in pairs(t) do
+                if k == "max_energy" and inPack and type(v) == "table" and v.type == "toggle" then
+                    return v
+                end
+                local hit = find(v, inPack or k == DW.Feral.PACK, seen)
+                if hit then
+                    return hit
+                end
+            end
+        end
+        local toggle = assert(find(hk.Options, false, {}), "no max_energy toggle under the Feral pack")
+        local list = hk.DB.profile.packs[DW.Feral.PACK].lists.default
+        assert.is_false(toggle.hidden())
+        list[1].action = "rake"
+        assert.is_true(toggle.hidden())
+        list[1].action = "ferocious_bite" -- the same name without the field: hidden
+        hk.Class.abilities.ferocious_bite.funcs.excess_cap = nil
+        assert.is_true(toggle.hidden())
+    end)
+
+    it("absent and =0: Bite at its cost", function()
+        for _, flag in ipairs({ false, 0 }) do
+            local name, t = bite(60, flag or nil)
+            assert.are.equal("ferocious_bite", name)
+            assert.is_true(t < 0.5, tostring(flag) .. ": " .. tostring(t))
+        end
     end)
 end)

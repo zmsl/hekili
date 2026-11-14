@@ -7572,6 +7572,18 @@ function state:TimeToReady( action, pool )
         end
     end
 
+    -- max_energy=1 (SimC): wait for the cost plus the most extra the ability converts (its `excess_cap`, pack data), at
+    -- most the pool's maximum (an unknown maximum, 0, caps nothing). Readiness only: the cost and the handler's spend
+    -- stay the ability's own.
+    if spend and resource and self.safebool( self.args.max_energy ) then
+        z = ability.excess_cap
+        if z then
+            spend = spend + z
+            z = self[ resource ].max
+            if z and z > 0 and spend > z then spend = z end
+        end
+    end
+
     -- Okay, so we don't have enough of the resource.
     z = resource and self[ resource ]
     if z then
