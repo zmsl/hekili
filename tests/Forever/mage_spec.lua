@@ -48,6 +48,10 @@ local KIT = {
     arcane_intellect = { { 1459, 1460, 1461, 10156, 10157 }, 1510, 0, "spell" },
     dampen_magic = { { 604, 8450, 8451, 10173, 10174 }, 500, 0, "spell" },
     amplify_magic = { { 1008, 8455, 10169, 10170 }, 450, 0, "spell" },
+    -- the armors (fix round 1, review finding 4): one up at a time
+    mage_armor = { { 6117, 22782, 22783 }, 490, 0, "spell" },
+    ice_armor = { { 7302, 7320, 10219, 10220 }, 500, 0, "spell" },
+    frost_armor = { { 168, 7300, 7301 }, 170, 0, "spell" },
 }
 
 local function idsOf(a)
@@ -112,7 +116,7 @@ describe("Forever Mage", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(33, n)
+        assert.are.equal(36, n)
         for _, key in ipairs({ "arcane_power", "presence_of_mind", "combustion", "cold_snap" }) do
             assert.are.equal("cooldowns", w.abilities[key].toggle, key)
         end
@@ -683,6 +687,34 @@ describe("Forever Mage priorities", function()
         assert.are.equal(320, ld.run(w.abilities.fire_ward.spend, e))
         for _, k in ipairs({ "fire_ward", "frost_ward", "mana_shield", "blast_wave" }) do
             assert.is_not_nil(w.abilities[k].handler, k)
+        end
+    end)
+
+    it("casts one armor at a time, Frost Channeling cheapening Ice and Frost Armor (mask bit 19)", function()
+        local w = ld.load(nil, FILE, "MAGE")
+        w.game.known[22783], w.game.known[10220], w.game.known[7301] = true, true, true
+        local e = ld.env(w)
+        e.talent.frost_channeling = { rank = 3 }
+        assert.are.same(
+            { 490, 500 * 0.85, 170 * 0.85 },
+            {
+                ld.run(w.abilities.mage_armor.spend, e),
+                ld.run(w.abilities.ice_armor.spend, e),
+                ld.run(w.abilities.frost_armor.spend, e),
+            }
+        )
+        for _, key in ipairs({ "mage_armor", "ice_armor", "frost_armor" }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                e = ld.env(w)
+                ld.run(w.abilities[key][field], e)
+                local others = {}
+                for _, k in ipairs({ "mage_armor", "ice_armor", "frost_armor" }) do
+                    if k ~= key then
+                        others[#others + 1] = k
+                    end
+                end
+                assert.are.same({ { key }, others }, { e.applied, e.removed }, key .. " " .. field)
+            end
         end
     end)
 

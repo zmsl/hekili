@@ -58,6 +58,8 @@ local KIT = {
     curse_of_exhaustion = { { 18223 }, 0.08, 0, "spell" },
     fel_domination = { { 18708 }, 0, 300, "off" },
     subjugate_demon = { { 1098, 11725, 11726 }, 700, 0, "spell" }, -- 3 s cast, a Soul Shard; 300 s is its duration
+    health_funnel = { { 755, 3698, 3699, 3700, 11693, 11694, 11695 }, 0, 0, "spell" }, -- health, not mana (unmodelled)
+    drain_mana = { { 5138, 6226, 11703, 11704 }, 310, 0, "spell" },
 }
 
 local function idsOf(a)
@@ -135,7 +137,7 @@ describe("Forever Warlock", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(41, n)
+        assert.are.equal(43, n)
         assert.are.equal("cooldowns", w.abilities.amplify_curse.toggle)
         for _, key in ipairs({
             "summon_imp",
@@ -590,9 +592,17 @@ describe("Forever Warlock", function()
         assert.is_nil(lt.spend)
     end)
 
-    it("channels Drain Life, Drain Soul, Wrack, Rain of Fire and Hellfire, unhasted; Wrack's debuff", function()
+    it("channels Drain Life, Drain Soul, Wrack, Rain of Fire, Hellfire and the funnel and drain, unhasted", function()
         local out = {}
-        for _, key in ipairs({ "drain_life", "drain_soul", "wrack", "rain_of_fire", "hellfire" }) do
+        for _, key in ipairs({
+            "drain_life",
+            "drain_soul",
+            "wrack",
+            "rain_of_fire",
+            "hellfire",
+            "health_funnel",
+            "drain_mana",
+        }) do
             local a = w.abilities[key]
             out[#out + 1] = { key, a.channeled, a.cast, a.tick_time }
             assert.is_nil(a.handler, key) -- a channel's handler never runs in Hekili's simulation
@@ -603,6 +613,8 @@ describe("Forever Warlock", function()
             { "wrack", true, 6, 1 },
             { "rain_of_fire", true, 8, 2 },
             { "hellfire", true, 15, 1 },
+            { "health_funnel", true, 10, 1 },
+            { "drain_mana", true, 5, 1 },
         }, out)
         for _, field in ipairs({ "now", "start" }) do
             local e = env()

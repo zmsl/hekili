@@ -931,12 +931,30 @@ do
     local DAMPEN_MAGIC_COST = { 100, 200, 300, 400, 500 }
     local AMPLIFY_MAGIC = { 1008, 8455, 10169, 10170 }
     local AMPLIFY_MAGIC_COST = { 150, 250, 350, 450 }
+    local MAGE_ARMOR = { 6117, 22782, 22783 }
+    local MAGE_ARMOR_COST = { 270, 380, 490 }
+    local ICE_ARMOR = { 7302, 7320, 10219, 10220 }
+    local ICE_ARMOR_COST = { 240, 320, 410, 500 }
+    local FROST_ARMOR = { 168, 7300, 7301 }
+    local FROST_ARMOR_COST = { 60, 110, 170 }
+    local ARMORS = { "mage_armor", "ice_armor", "frost_armor" }
 
     -- The wards share a 30 s category cooldown (category 56): each sets the other's.
     local function warded(aura, other)
         return function()
             applyBuff(aura)
             setCooldown(other, 30)
+        end
+    end
+    -- An armor: one up at a time, so a cast ends the other two (the Warlock pack's armored()).
+    local function armored(aura)
+        return function()
+            for i = 1, #ARMORS do
+                if ARMORS[i] ~= aura then
+                    removeBuff(ARMORS[i])
+                end
+            end
+            applyBuff(aura)
         end
     end
     -- A buff cast on ourselves.
@@ -1191,6 +1209,65 @@ do
 
             now = buffed("amplify_magic"),
             handler = buffed("amplify_magic"),
+        },
+
+        -- The armors (the pin's rows: 30 min, on the GCD, no cooldown); Ice and Frost Armor share Frost Channeling's
+        -- mask bit 19 (their word 0 0x2080000), Mage Armor not.
+        mage_armor = {
+            id = 6117,
+            school = "arcane",
+            copy = rest(MAGE_ARMOR),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(MAGE_ARMOR_COST, MAGE_ARMOR),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(MAGE_ARMOR),
+            usable = unlocked("arcane"),
+
+            now = armored("mage_armor"),
+            handler = armored("mage_armor"),
+        },
+
+        ice_armor = {
+            id = 7302,
+            school = "frost",
+            copy = rest(ICE_ARMOR),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = frostChanneled(ICE_ARMOR_COST, ICE_ARMOR),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(ICE_ARMOR),
+            usable = unlocked("frost"),
+
+            now = armored("ice_armor"),
+            handler = armored("ice_armor"),
+        },
+
+        frost_armor = {
+            id = 168,
+            school = "frost",
+            copy = rest(FROST_ARMOR),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = frostChanneled(FROST_ARMOR_COST, FROST_ARMOR),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(FROST_ARMOR),
+            usable = unlocked("frost"),
+
+            now = armored("frost_armor"),
+            handler = armored("frost_armor"),
         },
     })
 

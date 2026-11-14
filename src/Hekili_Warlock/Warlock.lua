@@ -1078,6 +1078,9 @@ do
     local BANISH_COST = { 100, 200 }
     local SUBJUGATE_DEMON = { 1098, 11725, 11726 }
     local SUBJUGATE_DEMON_COST = { 300, 500, 700 }
+    local HEALTH_FUNNEL = { 755, 3698, 3699, 3700, 11693, 11694, 11695 }
+    local DRAIN_MANA = { 5138, 6226, 11703, 11704 }
+    local DRAIN_MANA_COST = { 95, 155, 225, 310 }
     local SHADOW_WARD = { 6229, 11739, 11740, 28610 }
     local SHADOW_WARD_COST = { 135, 195, 255, 320 }
     local DEMON_SKIN = { 687, 696 }
@@ -1194,6 +1197,48 @@ do
 
             now = debuffed("subjugate_demon"),
             handler = debuffed("subjugate_demon"),
+        },
+
+        -- The pin's channels (10 s and 5 s, a tick a second, unhasted as Drain Life). Health Funnel needs a demon out.
+        -- shortcut: Health Funnel's cost is health (the pin's Type -2 power: an initial cost and a cost a second), no
+        -- spend here (no health spend type), so Improved Health Funnel stays inert; upgrade if a priority casts it.
+        health_funnel = {
+            id = 755,
+            copy = rest(HEALTH_FUNNEL),
+            cast = 10,
+            channeled = true,
+            tick_time = 1,
+            cooldown = 0,
+            gcd = "spell",
+
+            startsCombat = false,
+            known = knows(HEALTH_FUNNEL),
+            usable = function()
+                local p = pet -- the simulation's; the belief's `now` context has none (the client's answer decides)
+                if p and not demonOut(p) then
+                    return false, "no demon"
+                end
+                return not locked_out_shadow, "shadow locked out"
+            end,
+        },
+
+        -- shortcut: the mana Drain Mana gains (a tick takes up to its rank's amount, capped by the target's mana, which
+        -- is unseen) is unmodelled; the live mana read corrects it. Upgrade if a priority casts it.
+        drain_mana = {
+            id = 5138,
+            copy = rest(DRAIN_MANA),
+            cast = 5,
+            channeled = true,
+            tick_time = 1,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(DRAIN_MANA_COST, DRAIN_MANA),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(DRAIN_MANA),
+            usable = unlocked("shadow"),
         },
 
         -- 30 s category cooldown; the absorb's size is unmodelled.
