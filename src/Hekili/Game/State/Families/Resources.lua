@@ -1865,10 +1865,10 @@ end
 --- set since the cast plus what the slot gained since that answer (the answer already saw the refunded pool; regen or
 --- a credit after it adds to the truth); lo takes it only when no usable answer raised lo since the cast, est only
 --- when none raised est (else that answer's bound already holds the refund). `held`: an answer since the cast raised
---- either, before a later spend reset those marks (a late refund: the CDM verdict's), so lo and est stay. Allocates
---- nothing.
+--- either, before a later spend reset those marks (a late refund: the CDM verdict's), so lo and est stay. Returns what
+--- est, lo and hi took (I.Unrefund's). Allocates nothing.
 function I.Refund(r, d, t, held)
-    local lo, e, top = R.lo0[r], R.est0[r], R.sinceShort[r]
+    local lo, e, top, hi = R.lo0[r], R.est0[r], R.sinceShort[r], R.hi0[r]
     if top < math.huge then
         local moved = e - R.sinceShortEst[r]
         top = top + (moved > 0 and moved or 0)
@@ -1895,6 +1895,24 @@ function I.Refund(r, d, t, held)
     if R.hi0[r] < R.est0[r] then
         R.hi0[r] = R.est0[r]
     end
+    return R.est0[r] - e, R.lo0[r] - lo, R.hi0[r] - hi
+end
+
+--- A refund `d` proven wrong (the CDM verdict's, struck: Families/Now.lua I.VerdictTakeBack) comes back out of slot r:
+--- est, lo and hi lose what it gave them (dE, dL, dH, I.Refund's returns). No spend: the ladder's marks, the spend
+--- serial and mana's five-second window stay. Allocates nothing.
+function I.Unrefund(r, d, dE, dL, dH, t)
+    local max = R.max[r]
+    R.est0[r], R.lo0[r], R.hi0[r] = clamp(R.est0[r] - dE, max), clamp(R.lo0[r] - dL, max), clamp(R.hi0[r] - dH, max)
+    if R.lo0[r] > R.est0[r] then
+        R.lo0[r] = R.est0[r]
+    end
+    if R.hi0[r] < R.est0[r] then
+        R.hi0[r] = R.est0[r]
+    end
+    norm(r)
+    R.gain[r], R.pinDelta[r] = R.gain[r] - d, R.pinDelta[r] - d
+    I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Avoided)
 end
 
 --- Our own cast set slot r to [v, v + width] (`width`: what a roll the belief does not see may add): the estimate

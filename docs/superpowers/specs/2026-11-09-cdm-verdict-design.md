@@ -122,7 +122,11 @@ verdict finds the record closed and does nothing (§2.3 keys on the record's app
   undoes and refunds nothing. Past another spend since the cast, an answer since the cast that raised the slot held the
   refund (`I.Refund`'s `held`: lo and est stay). Landed then removed: a record that read UP since the write refunds
   nothing; the error is a refresh into a still-lit item (the old application's light reads UP), whose miss is not
-  refunded. A wrong verdict (a strike) does not take the refund back.
+  refunded. A wrong verdict takes it back, once: the strike (§2.5: a light within STRIKE_WIN with no cast of ours
+  since) calls `I.VerdictTakeBack`, and `I.Unrefund` removes from est, lo and hi what the refund gave them (no spend:
+  the ladder's marks and mana's five-second window stay). A light past STRIKE_WIN is no strike and keeps the refund.
+  Player auras (seals and forms, the L727 families, any buff) never refund: the memory is kept for target records
+  only.
 - W per record: `I.AuraOurs(u, j, travel)` (Families/Now.lua passes `travel = rMax / velocity` seconds for an ability
   with `A.velocity[a] > 0`, else 0); `W[k] = max(W0, travel + TOL)`, W0 = 1.0 s, TOL = 0.3 s (viewer tail 0.12 s + one
   frame + margin; tune from Task 10's P1). A walk read or a CDM open sets `W[k] = W0`.

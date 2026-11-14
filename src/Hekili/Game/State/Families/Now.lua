@@ -100,6 +100,9 @@ end
 -- success time, the undo's undoT; vPaid; vAp the record's applied time then; vSpends / vRaised the slot's spend and
 -- raise serials after its spend), for the CDM verdict's refund (I.VerdictRefund). Filled at OnBuild.
 local vA, vT, vPaid, vAp, vSpends, vRaised = {}, {}, {}, {}, {}, {}
+-- And the refund the verdict gave on that record (bR its slot, 0 none; bD the share; bE/bL/bH what est, lo and hi took),
+-- until a strike takes it back (I.VerdictTakeBack) or another refund on the record replaces it.
+local bR, bD, bE, bL, bH = {}, {}, {}, {}, {}
 local refund = {} -- by resource slot: the class's default share (the resource meta's `refundOnAvoid`), 0 none
 A.refund = {} -- by ability index: the share of its cost an avoid gives back (the ability's `refundOnAvoid`), 0 none
 I.avoidsRun = 0
@@ -678,6 +681,7 @@ I.OnBuild(function(def)
         local key = def.auras[j].key
         auraSpell[j] = def.auraIds[j][1]
         vA[j], vT[j], vPaid[j], vAp[j], vSpends[j], vRaised[j] = 0, 0, 0, 0, 0, 0
+        bR[j], bD[j], bE[j], bL[j], bH[j] = 0, 0, 0, 0, 0
         local d = rawget(def.auras[j], "duration")
         auraDur[j] = type(d) == "number" and d or false
         auraFn[j] = type(d) == "function" and d or false
@@ -942,9 +946,22 @@ function I.VerdictRefund(j, ap, t)
     if undoA == a and undoT == castT then
         undoA = 0
     end
-    local R = I.res
-    I.Refund(r, vPaid[j] * A.refund[a], t, R.spends[r] ~= vSpends[j] and R.raised[r] ~= vRaised[j])
+    local R, d = I.res, vPaid[j] * A.refund[a]
+    bR[j], bD[j] = r, d
+    bE[j], bL[j], bH[j] = I.Refund(r, d, t, R.spends[r] ~= vSpends[j] and R.raised[r] ~= vRaised[j])
     return castT
+end
+
+--- The verdict that refunded target aura j's record was wrong (a strike, Sources/Auras.lua: the item lit with no cast
+--- of ours since): its refund comes back out, once. Returns whether there was one. Allocates nothing.
+function I.VerdictTakeBack(j, t)
+    local r = bR[j]
+    if not r or r == 0 then
+        return false
+    end
+    bR[j] = 0
+    I.Unrefund(r, bD[j], bE[j], bL[j], bH[j], t)
+    return true
 end
 
 -- The other settled outcomes reactions run on (re-pin design §3a): our white swing's (Obs.SwingSettled, Events/Rows.lua:
