@@ -1192,7 +1192,8 @@ do
             handler = buffed("shadow_ward"),
         },
 
-        -- 2 s cast, a 1 h cooldown (an Infernal Stone is the reagent: not read here); the demon is not modelled.
+        -- 2 s cast, a 1 h cooldown, 100% of base mana (the pin's CostPct 100; no summon modifier's mask reaches it); an
+        -- Infernal Stone is the reagent (not read here); the demon is not modelled.
         inferno = {
             id = 1122,
             school = "fire",
@@ -1201,6 +1202,10 @@ do
             end,
             cooldown = 3600,
             gcd = "spell",
+
+            spend = 1,
+            spendType = "mana",
+            spendBase = true, -- the 1 (100%) a fraction too
 
             startsCombat = true,
             toggle = "cooldowns",
