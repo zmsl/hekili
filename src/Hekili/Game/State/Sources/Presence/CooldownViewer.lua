@@ -71,6 +71,9 @@ local cDark, tDark = {}, {}
 -- suspended until it lights again). The item is the cooldownID, never the frame. The seen rule's memory stays per
 -- slot: a re-pointed frame starts with none (review S1).
 local provenCd, provenU, strikesCd, silentCd = {}, {}, {}, {}
+-- build()'s carry (decision 124 as amended, L972): each proven cooldownID's aura key and unit at the previous build, so
+-- a rebuild that maps it to the same aura keeps the proof. Reused across builds; defMap is the def that map was built from.
+local carryKey, carryU, defMap = {}, {}, nil
 local ambC = {} -- by k: the per-fight lights of ambiguous items naming aura j on unit u (§2.2; the snapshot's)
 local VBIT = { 1, 2, 4, 8 } -- a viewer's bit in Q.Via (§2.4)
 local touched, mark, nTouched = {}, {}, 0 -- the things a sweep moved, each once
@@ -145,16 +148,25 @@ end
 -- The map (§3.1), out of combat (allocates: the getters' tables, the candidate sets).
 local function build(api, def)
     Q.builds = Q.builds + 1
-    for k in pairs(cdvToJ) do
-        cdvToJ[k] = nil
+    for id in pairs(carryKey) do
+        carryKey[id], carryU[id] = nil, nil
     end
+    for id, m in pairs(cdvToJ) do
+        -- a proven id names one aura (m > 0); keyed by the aura, not j: a belief rebuild may reorder the def
+        local rec = provenCd[id] and defMap and defMap.auras[m]
+        if rec and rec.key ~= nil then
+            carryKey[id], carryU[id] = rec.key, provenU[id]
+        end
+        cdvToJ[id] = nil
+    end
+    defMap = def
     for k in pairs(amb) do
         amb[k] = nil
     end
     for k in pairs(mappable) do
         mappable[k] = nil
     end
-    for id in pairs(provenCd) do -- zeroed at every build: a new rank's map starts unproven (decision 124)
+    for id in pairs(provenCd) do -- zeroed at every build; the proof of an unchanged mapping comes back below (decision 124)
         provenCd[id], provenU[id], strikesCd[id], silentCd[id] = nil, nil, nil, nil
     end
     Q.struck, Q.suspended = 0, 0
@@ -207,8 +219,13 @@ local function build(api, def)
                     elseif one then
                         cdvToJ[id] = one
                     end
-                    if cdvToJ[id] then -- every mapped key preallocated: the sweep writes existing keys only
-                        provenCd[id], provenU[id], strikesCd[id], silentCd[id] = false, 0, 0, 0
+                    local m = cdvToJ[id]
+                    if m then -- every mapped key preallocated: the sweep writes existing keys only
+                        -- a proven id mapped to the same aura keeps its proof and unit (decision 124 as amended);
+                        -- strikes and silent verdicts start over, so a struck or suspended id (unproven) is not carried
+                        local rec = m > 0 and carryKey[id] ~= nil and def.auras[m]
+                        local carry = rec and rec.key == carryKey[id] or false
+                        provenCd[id], provenU[id], strikesCd[id], silentCd[id] = carry, carry and carryU[id] or 0, 0, 0
                     end
                 end
             end
