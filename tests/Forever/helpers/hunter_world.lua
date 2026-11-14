@@ -588,6 +588,9 @@ local function content(name)
         mobHealth = 1e9,
         distance = P.distance,
         script = hooks,
+        -- the tamed pet, out and alive from the start in every world: Bestial Wrath needs it out (wowsims's BM and
+        -- Survival Melee builds take one; the Lone Wolf builds none, but nothing of theirs reads it)
+        pet = { pt = 2, max = 100, power = 100, up = true },
     }
 
     -- No other power read (mana is secret in combat); our attack speed read out of combat (probe W PR2).

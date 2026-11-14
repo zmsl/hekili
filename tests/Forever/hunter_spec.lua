@@ -401,26 +401,29 @@ describe("Forever Hunter", function()
     -- L1058: The Beast Within (1223758; DB2 effects A_DUMMY 10 and -50 on the caster, no mask; the pin has no row):
     -- our Bestial Wrath's 18 s on us, every mana cost -50%. Bestial Wrath only with the pet out alive (wowsims's
     -- ExtraCastCondition pet.IsEnabled, talents_beast_mastery.go:136-138).
-    it("puts Bestial Wrath's 18 s on us at the cast, halving every mana cost, and casts it only with the pet out", function()
-        for _, field in ipairs({ "now", "handler" }) do
-            local e = ld.env(w)
-            ld.run(w.abilities.bestial_wrath[field], e)
-            assert.are.same({ "bestial_wrath" }, e.applied, field)
-        end
-        assert.are.same({ 19574, 18 }, { w.auras.bestial_wrath.id, w.auras.bestial_wrath.duration })
-        local mods = {}
-        for _, m in ipairs(w.costMods) do
-            if m.aura == "bestial_wrath" then
-                mods[#mods + 1] = { m.pct, m.charges or false, m.spells or false }
+    it(
+        "puts Bestial Wrath's 18 s on us at the cast, halving every mana cost, and casts it only with the pet out",
+        function()
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                ld.run(w.abilities.bestial_wrath[field], e)
+                assert.are.same({ "bestial_wrath" }, e.applied, field)
             end
+            assert.are.same({ 19574, 18 }, { w.auras.bestial_wrath.id, w.auras.bestial_wrath.duration })
+            local mods = {}
+            for _, m in ipairs(w.costMods) do
+                if m.aura == "bestial_wrath" then
+                    mods[#mods + 1] = { m.pct, m.charges or false, m.spells or false }
+                end
+            end
+            assert.are.same({ { -0.5, false, false } }, mods)
+            local e = ld.env(w)
+            e.pet_out = false
+            assert.is_false((ld.run(w.abilities.bestial_wrath.usable, e)))
+            e.pet_out = true
+            assert.is_true((ld.run(w.abilities.bestial_wrath.usable, e)))
         end
-        assert.are.same({ { -0.5, false, false } }, mods)
-        local e = ld.env(w)
-        e.pet_out = false
-        assert.is_false((ld.run(w.abilities.bestial_wrath.usable, e)))
-        e.pet_out = true
-        assert.is_true((ld.run(w.abilities.bestial_wrath.usable, e)))
-    end)
+    )
 
     it("shortens Rapid Fire's cooldown by Rapid Killing's curve {-60, -120} s (talents_marksmanship.go:100)", function()
         local e = ld.env(w)

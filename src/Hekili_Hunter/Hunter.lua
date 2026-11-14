@@ -24,6 +24,7 @@
 local Facade = Hekili.Client
 local UnitClassBase, GetTime = Facade.UnitClassBase, Facade.GetTime
 local IsSpellUsable, IsCurrentSpell = Facade.C_Spell.IsSpellUsable, Facade.C_Spell.IsCurrentSpell
+local UnitExists, UnitIsDead = Facade.UnitExists, Facade.UnitIsDead
 local L = Hekili:GetLocale("Hekili_Hunter")
 
 if UnitClassBase("player") ~= "HUNTER" then
@@ -351,6 +352,18 @@ spec:RegisterPets({
     hawk = { spell = "summon_hawk", duration = 18, cap = 2 },
 })
 
+-- The pet unit out and alive (UnitExists / UnitIsDead of "pet", plain in combat: W PR14). Not `pet.up`: the
+-- simulation's also counts Summon Hawk's guardians its forecast summons.
+spec:RegisterStateExpr("pet_out", function()
+    return UnitExists("pet") == true and not UnitIsDead("pet")
+end)
+
+-- The Beast Within (1223758, Forever; L1058): while the pet is under our Bestial Wrath we rage too, +10% damage (no
+-- read: the addon models no damage) and every mana cost -50% (DB2: A_DUMMY 10 and -50 on the caster, no class mask;
+-- the pin has no row, wowsims omits it). A passive with no skill line nor tree node: taken as Bestial Wrath's own
+-- (unprobed: IsPlayerSpell(1223758) on a Bestial Wrath Hunter, and a shot's cost under it).
+spec:RegisterCostMod({ aura = "bestial_wrath", pct = -0.5 })
+
 spec:RegisterGear("cryptstalker", unpack(CRYPTSTALKER))
 spec:RegisterSetBonus("cryptstalker_2pc", 28755)
 spec:RegisterSetBonus("cryptstalker_8pc", 28751)
@@ -358,6 +371,8 @@ spec:RegisterSetBonus("cryptstalker_8pc", 28751)
 spec:RegisterAuras({
     aspect_of_the_hawk = { id = 13165, copy = rest(ASPECT_OF_THE_HAWK), duration = 3600, max_stack = 1 },
     aspect_of_the_beast = { id = 13161, copy = rest(ASPECT_OF_THE_BEAST), duration = 3600, max_stack = 1 },
+    -- Bestial Wrath's 18 s (19574's duration), on us from our cast: the buff is the pet's (no walk of ours finds it)
+    bestial_wrath = { id = 19574, duration = 18, max_stack = 1 },
     rapid_fire = {
         id = 3045,
         duration = function() -- the Cryptstalker 2-piece: +4 s
@@ -634,7 +649,8 @@ spec:RegisterAbilities({
     },
 
     -- the Beast Mastery talent (2 min, off the GCD; 12% of base mana: the pin's row CostPct 12, wowsims's SpellConfig
-    -- charges it, the DB2 had it free); its 18 s rage is the pet's, so no player aura
+    -- charges it, the DB2 had it free); its 18 s rage is the pet's, The Beast Within's on us (the cost mod above); only
+    -- with the pet out (wowsims talents_beast_mastery.go:136-138)
     bestial_wrath = {
         id = 19574,
         cast = 0,
@@ -647,6 +663,12 @@ spec:RegisterAbilities({
         toggle = "cooldowns",
         startsCombat = false,
         known = knows({ 19574 }),
+        usable = function()
+            return pet_out, "no pet out"
+        end,
+
+        now = applies("bestial_wrath"),
+        handler = applies("bestial_wrath"),
     },
 
     serpent_sting = {
