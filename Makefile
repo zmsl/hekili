@@ -69,7 +69,7 @@ AB_ARMS ?= meter viewer-none viewer-buffs viewer-fixture viewer-mixed \
 	viewer-reshuffle viewer-reshuffle-novd viewer-nonland viewer-nonland-novd \
 	secret-viewer-buffs secret-viewer-buffs-novd secret-viewer-mixed secret-viewer-mixed-novd \
 	viewer-swap viewer-swap-novd viewer-late viewer-late-novd viewer-recast viewer-recast-novd \
-	viewer-swap-dark viewer-swap-dark-novd live-auras live-auras-none
+	viewer-swap-dark viewer-swap-dark-novd viewer-rebuild viewer-rebuild-novd live-auras live-auras-none
 gate-ab:
 	rm -rf .ab
 	$(MAKE) gate

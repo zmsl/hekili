@@ -401,6 +401,8 @@ function M.run(L, seed, o, drivers)
         if first and layout then -- the viewer is on from boot (no option), so its map predates the instance's first
             -- layout: the client's data-loaded event, once (as at login; later fights reuse the frames and the map)
             d.H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
+        elseif layout and arm.rebuild then -- (L972) a later fight: the map rebuilt first, out of combat, as on live
+            d.H.Fire("COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED")
         end
         ctl.combat, ctl.form, ctl.stealthed = false, L.form, false
         if aw.followCycle then -- option D's arms (ab.lua; every other arm leaves all this at the defaults)
