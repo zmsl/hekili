@@ -678,6 +678,14 @@ function T.Provisional(i, lri, act, t)
     lr[i], avoid[i], T.avoidT[i] = lri, act, t
 end
 
+--- (L972 option A) Swing ticket i's provisional avoid given back (Rows' handBack): open again, so its close is a swing
+--- with no row. shortcut: a swing the Outcomes provider assumed (refunded when it took the avoid) is not re-assumed;
+--- upgrade if a provider arm counts kind-only hand-backs. Allocates nothing.
+function T.Unhold(i)
+    move(i, OPEN)
+    lr[i], avoid[i] = 0, ""
+end
+
 --- Whether an UNMAPPED ticket's window holds t.
 function T.Unmapped(t)
     for i = 1, CAP do

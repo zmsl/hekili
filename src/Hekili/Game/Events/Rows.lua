@@ -42,14 +42,27 @@ local lastMain, lastW0, fresh = 0, -1, false
 -- MELEE tie arrived in (0 none), that ticket's and the swing's anchors (the slots' identities) and the avoid's time.
 -- The swing's own wound in its core band later gives the avoid back to that cast.
 local tieP, tieAt, tieSw, tieT = {}, {}, {}, {}
+-- (L972 option A) the tied cast's ability, kind, spell, GUID and school: its avoid still goes back after its ticket
+-- closed (a first swing's wound can come after the cast's landing window)
+local tieAb, tieK, tieX, tieG, tieSch = {}, {}, {}, {}, {}
+-- per spell ticket, the swing holding its tied avoid (0 none): a row that pays the cast as landed drops that hold
+local heldBy = {}
 -- The reversed order: per swing ticket, the white wound in its core band the LR refused (time, amount, flag, amount
 -- class then; wAt the swing's anchor, 0 none). An avoid in a cast's own frame then finds the swing landed: the avoid
 -- is the cast's.
 local wT, wAmt, wFlag, wAt, wCls = {}, {}, {}, {}, {}
+-- (L972 option A) the same for a white wound with a secret amount that passed the swing's landing test (time; kAt
+-- the swing's anchor, -1 none: an anchor may be 0): it pays nothing, it only says the swing landed
+local kT, kAt = {}, {}
 for k = 1, T.CAP do
     tieP[k], tieAt[k], tieSw[k], tieT[k] = 0, 0, 0, 0
+    tieAb[k], tieK[k], tieX[k], tieG[k], tieSch[k], heldBy[k] = 0, 0, 0, "", 0, 0
     wT[k], wAmt[k], wFlag[k], wAt[k], wCls[k] = 0, 0, "", 0, 0
+    kT[k], kAt[k] = 0, -1
 end
+-- The snapshot's `rows ties` line: own-frame avoids the tie gave a swing (held), given back to the cast (plain wound
+-- or kind-only), refused by the presence veto.
+L.tieHeld, L.tieBack, L.tieVeto = 0, 0, 0
 
 -- The PROV swing on `g` holding a tied avoid whose core band holds a white wound at t (its own: it landed), or nil.
 -- Allocates nothing.
@@ -275,6 +288,10 @@ end
 local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
     local divergent = (avoid or crit) and n > 1 and T.Divergent(p, t, pass, act, flag, amount, school, avoid)
     local kk, xx, dst, at0, sch = T.kind[p], T.x[p], T.guid[p], T.at[p], T.school[p]
+    local s = heldBy[p]
+    if s > 0 and tieP[s] == p and tieAt[s] == at0 then
+        tieP[s] = 0 -- a row of its own settled the cast (its crit: it landed): no swing's wound gives an avoid back
+    end
     local held = T.PayTentative(p, t, avoid, amount, flag, n == 1 and not rerouting, pass, act, school)
     if held then
         quiet[p] = divergent and avoid
@@ -327,6 +344,7 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
         L.avoidsBack = L.avoidsBack + 1 -- the avoid it held was someone else's after all
         local q = tieP[credited]
         if q > 0 and T.at[credited] == tieSw[credited] and T.state[q] == T.OPEN and T.at[q] == tieAt[credited] then
+            L.tieBack = L.tieBack + 1
             paySpell(q, 1, 1, tieT[credited], T.avoid[credited], "", 0, 1, true, false) -- the cast's, by the tie (AS)
         end
     end
@@ -543,6 +561,94 @@ local function foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
     end
 end
 
+-- (L972 option A, Fable decision 2026-11-14) Whether swing ticket i's landing is expected at t: the test that gave it
+-- a tied avoid without an amount class (a first swing's whole window, else its core band, or an off hand's main
+-- reference band). Allocates nothing.
+local function lands(i, t)
+    local d, h, rf = t - T.at[i], T.x[i], T.ref[i]
+    if T.first[i] and d >= 0 and d <= T.w[i] then
+        return true
+    end
+    return math.abs(d - L.med[h]) <= 2 * L.spr[h] or (rf > 0 and math.abs(t - rf - L.med[3]) <= 2 * L.spr[3])
+end
+
+-- Whether one of our own physical spell tickets on `g` explains a white wound at t (a due tick of a bleed, an
+-- instant's own frame): then the wound may be that spell's, no swing's evidence. A schedule's due tick by its phase at
+-- t, not its `done` (live, a non-crit tick's amount is secret: no tick is paid, so `done` stays put); else the
+-- ticket's pass-1 band. Allocates nothing.
+local function ownDue(t, g)
+    local K = I.Kinds
+    for j = 1, T.CAP do
+        local k, s = T.kind[j], T.school[j]
+        if T.state[j] >= T.OPEN and T.guid[j] == g and k ~= MELEE and k ~= X.UNMAPPED and (s == 1 or s == X.ANY) then
+            local period = (k == TICKS or k == CHANNEL) and T.period[j] or 0
+            if period > 0 then
+                local a0 = k == TICKS and T.anchor[j] or T.at[j]
+                local half = k == TICKS and T.TICK_BAND + T.wide[j] or 2 * T.TOL
+                local n = math.floor((t - a0) / period + 0.5) -- the nearest tick (period > 0)
+                if n >= 1 and math.abs(t - a0 - n * period) <= half then
+                    return true
+                end
+            elseif k ~= TICKS and k ~= CHANNEL then
+                local lo, hi = K.Band(j, 1, t, false, "WOUND", 1)
+                if lo and t >= lo and t <= hi then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+-- Swing ticket i's tied avoid goes back to its cast: the cast's ticket paid it (an avoid at its own frame: undo and
+-- refund through Obs.Avoided, its SPELL_MISSED), or, once that ticket closed, the same from the tie's copy; the swing
+-- is open again, so it closes as a swing with no row (SwingSettled c = -1, its expected rage). Allocates nothing.
+local function handBack(i)
+    local q, act = tieP[i], T.avoid[i]
+    tieP[i] = 0
+    L.tieBack, L.avoidsBack = L.tieBack + 1, L.avoidsBack + 1
+    T.Unhold(i)
+    if T.state[q] == T.OPEN and T.at[q] == tieAt[i] then
+        paySpell(q, 1, 1, tieT[i], act, "", 0, 1, true, false)
+        return
+    end
+    if (REFUSED[act] or REACTED[act]) and tieAb[i] > 0 then
+        S.Stage(Obs.Avoided, tieT[i], tieAb[i], tieAt[i], I.HitKind[act])
+    end
+    emit(tieK[i], tieX[i], tieG[i], act, "", 0, tieAt[i], tieSch[i] > 0 and tieSch[i] or 1)
+end
+
+-- (L607, L629, L972 option A) A white wound with a secret amount at t on `g` (live: our landed swing's row; it pays
+-- nothing, L505). In a tied cast's own frame on a physical cast it is that cast's hit: the tie stands, its hold is
+-- dropped. Else, when exactly one swing of ours expects its landing then (two: dual wield, no evidence) and no
+-- physical spell of ours explains it: that swing landed. Holding a tied avoid, the avoid goes back to the cast
+-- (handBack); still open, the wound is remembered for an own-frame avoid that comes after (route's tie). Allocates
+-- nothing.
+local function kindWound(t, g)
+    local hold, n, last = 0, 0, 0
+    for i = 1, T.CAP do
+        if T.state[i] ~= T.FREE and T.kind[i] == MELEE and T.guid[i] == g then
+            local held = tieP[i] > 0 and T.state[i] == T.PROV and T.at[i] == tieSw[i]
+            local d, s = t - tieAt[i], tieSch[i]
+            if held and d >= 0 and d <= SAME_FRAME and (s == 1 or s == X.ANY) then
+                tieP[i] = 0 -- the tied cast's own hit: it landed, the avoid was the swing's
+            elseif lands(i, t) then
+                n, last = n + 1, i
+                if held then
+                    hold = i
+                end
+            end
+        end
+    end
+    if n ~= 1 or ownDue(t, g) then
+        return
+    elseif hold > 0 then
+        handBack(hold)
+    elseif T.state[last] == T.OPEN then
+        kT[last], kAt[last] = t, T.at[last]
+    end
+end
+
 -- The row at `t` on unit `g`, in the consumption order (spec §3.4): (1) a spell ticket's narrow band, then for an
 -- avoid its widened and hard bands; a white avoid or crit a swing of ours explains is the swing's (MELEE wins a tie,
 -- today's Rows.lua:458-478 order); (2) the swing LR among the swing tickets on `g`; (3) a wound's widened then hard
@@ -563,6 +669,9 @@ local function route(t, g, uid, act, flag, amount, school)
     -- and a secret flag or school (unseen live) hides the row's kind: both only counted, as before.
     local secret = type(amount) ~= "number"
     if type(flag) ~= "string" or type(school) ~= "number" or (secret and not avoid and flag ~= "CRITICAL") then
+        if white and secret and not avoid and type(flag) == "string" and not I.tieWoundOff then
+            kindWound(t, g) -- a landed swing's evidence only: still counted below (L972 option A)
+        end
         if U.IsTarget(uid, t) then
             M.background(act, 0, "", false, avoid, false)
         end
@@ -627,6 +736,9 @@ local function route(t, g, uid, act, flag, amount, school)
                     local wk = M.thetaIndex(h, wCls[sw], h, wl)
                     creditSwing(sw, wT[sw], "WOUND", wFlag[sw], wAmt[sw], false, false, math.huge, h, wl, 0, wk)
                     wAt[sw] = 0
+                elseif own and kAt[sw] == T.at[sw] and kT[sw] < T.at[p] and not I.tieWoundOff then
+                    -- (L972 option A) its secret wound came before the cast: it landed, the avoid stays the cast's
+                    kAt[sw], L.tieBack = -1, L.tieBack + 1
                 else
                     if own then -- the cast's own frame: its again if the swing lands
                         frameSw, frameP = sw, p
@@ -734,6 +846,9 @@ local function route(t, g, uid, act, flag, amount, school)
     end
     if avoid and credited == frameSw then
         tieP[credited], tieAt[credited], tieSw[credited], tieT[credited] = frameP, T.at[frameP], T.at[credited], t
+        tieAb[credited], tieK[credited], tieX[credited] = T.ab[frameP], T.kind[frameP], T.x[frameP]
+        tieG[credited], tieSch[credited], heldBy[frameP] = T.guid[frameP], T.school[frameP], credited
+        L.tieHeld = L.tieHeld + 1
     end
     creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
 end
@@ -901,6 +1016,7 @@ I.OnSnapshot(function(out)
         o.soft,
         o.vetoed
     )
+    out[#out + 1] = string.format("rows ties held=%d back=%d vetoed=%d", L.tieHeld, L.tieBack, L.tieVeto)
     -- the providers audit (providers spec §4.3), two lines so each stays under 255 characters for VSCopy
     local f, a = L.fight, I.outcomes.Audit()
     local pn, pe = I.PinError()
