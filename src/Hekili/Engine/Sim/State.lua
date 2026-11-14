@@ -2649,7 +2649,7 @@ local mt_stat = {
         elseif k == "weapon_dps" or k == "weapon_offhand_dps" then
             local low, high, offlow, offhigh = Facade.UnitDamage( "player" )
             t.weapon_dps = 0.5 * ( low + high )
-            t.weapon_offhand_dps = 0.5 * ( low + high )
+            t.weapon_offhand_dps = 0.5 * ( ( offlow or 0 ) + ( offhigh or 0 ) ) -- the off hand's own range (L967)
 
         elseif k == "weapon_speed" or k == "weapon_offhand_speed" then
             local main, off = UnitAttackSpeed( "player" )
