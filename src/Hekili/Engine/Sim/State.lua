@@ -1372,17 +1372,18 @@ do
                     -- UnitAttackSpeed read: state.swings.mh_pending / oh_pending): its gain is forecast one poll after
                     -- the usability answers can show it (ORACLE_MIN), not lost as past; the icon keeps its line, and
                     -- nothing is pressable on it before an answer confirms it (the swings after it keep their own
-                    -- times: `resume`)
-                    v.resume = nil
+                    -- times: `resume`). `pending` records the pending swing time this forecast accepted (0: none), so
+                    -- a pack's `value` reads it instead of repeating this test.
+                    v.resume, v.pending = nil, 0
                     if v.swing and i > 0 then
                         local p
                         if v.swing == "offhand" then p = state.swings.oh_pending else p = state.swings.mh_pending end
-                        if p > 0 and l > p - i / 2 then
-                            v.next, v.resume = max( now, p + 2 * ns.ORACLE_MIN ), l + i
-                        elseif p > l then
-                            -- L872: a pending swing newer than the anchor (the opener's combat-start pseudo swing,
-                            -- the first swing landing over half a swing later): the swings after it run off it
-                            v.next, v.resume = max( now, p + 2 * ns.ORACLE_MIN ), p + i
+                        -- L872 / review I1: the swings after it run off the newer of the anchor and the pending swing.
+                        -- The pending one is newer whenever it lands before its row moves the anchor: the fight's
+                        -- first swing after the combat-start pseudo swing, however soon after the pull, or an early
+                        -- (hasted) swing mid-fight.
+                        if p > 0 then
+                            v.next, v.resume, v.pending = max( now, p + 2 * ns.ORACLE_MIN ), max( l, p ) + i, p
                         end
                     end
 
