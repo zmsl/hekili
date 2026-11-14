@@ -30,6 +30,8 @@
 - Warlock: with Soul Harvest, Hekili now counts the mana regeneration Soul Harvest gives for 10 seconds after you kill an enemy that gives experience while your Drain Soul is on it. Not in dungeons or raids, where the game hides who made the kill.
 
 ### Fixed
+- Beast Mastery Hunters: the Summon Hawk, Summon Hawk, Arcane Shot sequence now starts again in every fight. Before, it worked only in the first fight after a reload, then neither was recommended until the next reload.
+- Debug snapshots now list each rotation window: open or closed, its step, its last condition result and the last cast that skipped a step.
 - With the Cooldown Manager on, a debuff of yours that misses (for example Rake or Faerie Fire) is now corrected from the Cooldown Manager even right after the Cooldown Manager reloads its data, as it does when you change form before a pull, so the first one of a fight no longer stays shown as up for its whole duration.
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.

@@ -43,6 +43,9 @@ local W = {
     refreshes = {},
     step = {},
     last = {}, -- the last evaluation
+    devAb = {}, -- the snapshot's last deviation: the cast's ability index (0 none), its time and the due step it met
+    devAt = {},
+    devDue = {},
     raised = {}, -- the evaluator raised: it reads false and is not run again (counted once, as I.Eval)
 }
 I.win = W
@@ -145,6 +148,7 @@ function I.WindowCast(a, t)
                     end
                 end
                 if later > 0 then
+                    W.devAb[w], W.devAt[w], W.devDue[w] = a, t, due
                     local d = W.dev[w]
                     if d == SKIP then
                         advance(w, later)
@@ -184,6 +188,27 @@ end
 I.On(Obs.CombatEnd, function()
     for w = 1, W.n do
         close(w)
+    end
+end)
+
+I.OnSnapshot(function(out)
+    for k, w in pairs(W.byKey) do
+        local a = W.devAb[w]
+        out[#out + 1] = string.format(
+            "window %s up=%s step=%d/%d opened=%.2f expires=%.2f refreshes=%d eval=%s combat=%.2f dev=%s@%.2f due=%d",
+            k,
+            tostring(W.up[w]),
+            W.step[w],
+            W.nSteps[w],
+            W.openedAt[w],
+            W.expiresAt[w],
+            W.refreshes[w],
+            tostring(W.last[w]),
+            I.combatT,
+            a > 0 and tostring(A.key[a]) or "none",
+            W.devAt[w],
+            W.devDue[w]
+        )
     end
 end)
 
@@ -231,6 +256,7 @@ I.OnBuild(function(def)
         W.dev[w] = DEV[d.on_deviation] or STAY
         W.strict[w] = d.strict == true
         W.last[w], W.raised[w] = false, false
+        W.devAb[w], W.devAt[w], W.devDue[w] = 0, 0, 0
         close(w)
     end
 end)

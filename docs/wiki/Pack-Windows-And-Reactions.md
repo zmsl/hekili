@@ -38,7 +38,7 @@ The name must be unique across the class's specs. The belief owns the real windo
 | `on_deviation` | string | What a cast other than the due step does: `"stay"` (the default), `"skip"` or `"end"` |
 | `strict` | boolean | Any other cast on the GCD ends the window |
 
-A function `duration` and its `now_duration` are two functions for the same reason an ability has a `handler` and a `now`: one function cannot run in both layers ([Pack belief and simulation](Pack-Belief-And-Simulation)). A duration function that raises, returns a hidden value, or returns a value of 0 or less opens nothing. Combat ending closes every window.
+A function `duration` and its `now_duration` are two functions for the same reason an ability has a `handler` and a `now`: one function cannot run in both layers ([Pack belief and simulation](Pack-Belief-And-Simulation)). A duration function that raises, returns a hidden value, or returns a value of 0 or less opens nothing. Combat ending closes every window and keeps the evaluator's last result, so the window opens again only when its test next turns from false to true. In the `now` context `combat` is 0 out of combat, so a test such as `combat > 0` opens the window again at every pull.
 
 A `now` function can open and close windows with the verbs `openWindow(name)` and `closeWindow(name)`; the simulation has verbs of the same names for handlers.
 
