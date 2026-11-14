@@ -10,6 +10,7 @@
 
 ### Changed
 - Warrior: Improved Bloodrage now adds 25% a rank to the rage Bloodrage gives each second, not only to the first burst.
+- Paladin: your seal now follows the Cooldown Manager's Seals entry in combat, so Hekili notices a seal that ends or is removed early; which seal it is still comes from the one you cast last. Druid forms follow the same rule whenever the game hides your form.
 - Warrior: Improved Berserker Rage now gives 5 or 10 rage, and Improved Intercept, Improved Shield Wall and Improved Disarm now shorten those cooldowns as the talents do.
 - Hunter: the Turret priorities are now the default for Beast Mastery, Marksmanship and Survival; the melee-weave priorities and Survival Melee are still there to pick by hand. A Hunter who never picked a priority moves to the Turret one; a priority you picked stays.
 - Hunter: Bestial Wrath now costs the 12% of base mana it costs in game. The traps (Explosive, Freezing, Frost) share Immolation Trap's 30 second cooldown, and Survivalist's Discipline and Improved Stings shorten the trap, Deterrence and Viper Sting cooldowns. Scorpid and Viper Sting, Concussive, Scatter and Distracting Shot, Tranquilizing Shot, Volley, Intimidation, Counterattack, Deterrence, Disengage, Feign Death, Flare, Scare Beast, Trueshot Aura, Mend Pet and the Monkey, Pack, Wild and Viper aspects are now known to the addon, so casting one by hand spends its mana and starts its cooldown, and the Cooldown Manager shows their buffs.
@@ -38,6 +39,7 @@
 - `prev.last` in a priority condition now names the last ability you cast, and `prev.<ability>` is true when it was that ability. Before, for the ability Hekili shows first, `prev.last` read "none" and `prev.<ability>` was always false.
 - A priority line's `interrupt=` option now works: while you channel that spell, Hekili shows the next ability at the channel's next tick once your global cooldown is ready. Before, `interrupt=` did nothing.
 - Paladins: Judgement being usable now corrects Hekili's mana estimate, so abilities are held back less often after a seal. Rogue finishers being usable now correct the energy estimate the same way.
+- With the Cooldown Manager on, a buff that ended just as the Cooldown Manager lit it again could stay up in Hekili for its whole duration (a Paladin seal could be believed up with none on, so Judgement was suggested anyway). Hekili now takes it down when the Cooldown Manager shows it gone.
 
 ### Known issues
 - The Hunter Turret priorities have not been checked in the game yet.

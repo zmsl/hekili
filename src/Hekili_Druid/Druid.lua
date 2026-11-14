@@ -425,10 +425,13 @@ spec:RegisterSetBonus("haruspex_3pc", GEAR.haruspex_3pc)
 
 spec:RegisterAuras({
     serenity_field = { id = 1291103, duration = 15, max_stack = 1 },
+    -- The forms are one family (L727, owner: as the seals): the Cooldown Manager's Druid Forms entry says a form is up
+    -- or none is, our last form cast says which; the plain shapeshift read (Game/State/Sources/Forms.lua) wins.
     aquatic_form = {
         id = 1066,
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     barkskin = {
         id = 22812,
@@ -449,6 +452,7 @@ spec:RegisterAuras({
         copy = { 9634 },
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     berserk = {
         id = 417141,
@@ -491,6 +495,7 @@ spec:RegisterAuras({
         id = 768,
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     challenging_roar = {
         id = 5209,
@@ -654,6 +659,7 @@ spec:RegisterAuras({
         id = 24858,
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     natures_grace = {
         id = 16886,
@@ -718,6 +724,7 @@ spec:RegisterAuras({
         id = 783,
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     -- Auras the Cooldown Manager's buff entries link (cdm fixture, the owner's export): every rank, the pin's durations.
     -- Nothing reads them but the map; Wild Growth's and Abolish Poison's land on the healed ally.
