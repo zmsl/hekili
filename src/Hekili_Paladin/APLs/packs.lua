@@ -8,9 +8,11 @@
 
 return {
     class = "PALADIN",
-    packs = { "Retribution (wowsims.com)", "Protection (wowsims.com)" },
+    packs = { "Retribution (wowsims.com)", "Protection (wowsims.com)", "Holy Shock (wowsims.com)" },
     specs = {
         ["Retribution (wowsims.com)"] = "retribution",
         ["Protection (wowsims.com)"] = "protection",
+        -- Retribution's second (the Holy Shock build is 23 Holy points to 28 Retribution), picked by its talents
+        ["Holy Shock (wowsims.com)"] = "retribution",
     },
 }

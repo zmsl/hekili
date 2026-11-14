@@ -101,7 +101,7 @@ end)
 -- survives a target swap, but only the count on the current target is usable, GetComboPoints("player", "target")
 -- (plain in combat). With no target the client most likely answers 0 (a nil reads 0 too); a secret answer reads 0,
 -- never the pool: after a swap the pool is the stale count, and a hidden finisher beats one the game refuses.
--- Idempotent (PLAYER_TARGET_CHANGED fires twice a swap).
+-- Idempotent (PLAYER_TARGET_CHANGED fires twice a swap; COMBO_TARGET_CHANGED may follow it).
 local function readOnTarget(api, t, r)
     local raw = api.GetComboPoints("player", "target") -- secret: Plain next
     Note("GetComboPoints", S.StatusOf(api, raw))
@@ -109,14 +109,17 @@ local function readOnTarget(api, t, r)
     Direct(Obs.Read, t, r, type(v) == "number" and v or 0, ReadOf.Resource)
 end
 
-S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)
+local function onTargetChanged(api, t)
     local R = I.res
     for r = 1, R.n do
         if R.onTarget[r] then
             readOnTarget(api, t, r)
         end
     end
-end)
+end
+S.On("PLAYER_TARGET_CHANGED", nil, onTargetChanged)
+-- L103: the points moved to another target at the same count (no power event); session O, O15: registerable, no payload
+S.On("COMBO_TARGET_CHANGED", nil, onTargetChanged)
 
 -- Poll 1: readable resources (types plain in combat, e.g. combo points), maxima, the out-of-combat regen read.
 S.Poll(1, function(api, t)

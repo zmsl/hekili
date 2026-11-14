@@ -192,6 +192,7 @@ function M.new()
         actionInRange = {},
         pvp = nil,
         level = { player = 20 }, -- [unit] = UnitLevel (nil: a secret answer)
+        trivial = {}, -- [unit] = UnitIsTrivial (unset: false; SECRET: a secret answer)
         creature = {}, -- [unit] = UnitCreatureType's type as State.lua's key ("undead"; default "beast"; SECRET: secret)
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
         form = 0, -- GetShapeshiftForm (0: none)
@@ -559,7 +560,14 @@ function M.new()
     function api.IsInGroup() -- `ctl.inGroup` (the meter provider reads it at PLAYER_REGEN_DISABLED)
         return ctl.inGroup == true
     end
-    api.UnitIsTrivial, api.UnitInVehicle, api.UnitHasVehicleUI, api.UnitOnTaxi = no, no, no, no
+    function api.UnitIsTrivial(unit) -- ctl.trivial[unit] (SECRET: a secret answer; default false: every mob yields XP)
+        local v = ctl.trivial[unit]
+        if v == nil then
+            return false
+        end
+        return v
+    end
+    api.UnitInVehicle, api.UnitHasVehicleUI, api.UnitOnTaxi = no, no, no
     function api.UnitIsPVP() -- ctl.pvp: the player's flag (SECRET: a secret answer; default false)
         return ctl.pvp or false
     end

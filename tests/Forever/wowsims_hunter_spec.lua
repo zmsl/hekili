@@ -117,6 +117,80 @@ local PACKS = {
         0.7,
         "SurvivalRanged",
     },
+    -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): new rows, first measured on this lane (R6; the
+    -- replay is one fight at the log's seed). The Turret worlds know every ability their list casts (no extra kit);
+    -- Survival Melee's replay opens Mongoose Bite on Expose Prey as the weave's (REPLAY_EXTRA). Replay misses: the
+    -- Turrets' are Serpent Sting against Arcane Shot (the sting believed up at the cast, about 0.33 s before it lands:
+    -- the weave rows' class, no belief landing hook); Survival Melee's 5 (traced to the decision, not to the cause): the
+    -- log's immolation_trap against our wing_clip 2 and summon_hawk 1, summon_hawk against wing_clip 1, strider_kick against
+    -- wing_clip 1 (untraced).
+    -- Live limits over 6 s, TRACED per tick (2026-11-13, a probe over ws.live's own idle test, worst streak of the first
+    -- fight): the weave rows' R41 class, mana dry. Each worst streak starts with the pool at 2-17 of 5000 and ends when
+    -- it reaches Arcane Shot's cost (95 at L40 for Marksmanship Turret, 106 at L40 for Survival Melee, 167-190 at
+    -- L60: 2 -> 167 in 14.0 s, 17 -> 190 in 12.8 s, 2 -> 190 in 15.4 s, 3 -> 190 in 15.4 s), the regen of the pool
+    -- (about 10 mana a second at L40, 12-13 at L60) and nothing else. What the world answers usable meanwhile: Shatter
+    -- Curse from the first tick (no trap appears); Hunter's Mark and the Aspect are pack lines the probe did not trace
+    -- (possibly already up); Survival Melee's Wing Clip, Strider Kick and Mongoose Bite are pack lines held by the
+    -- melee range conditions at the live world's 11 yd (R63). Rows: MM Turret L40 9.4 (t 110.8-120.0) / L60 14.0 (t
+    -- 61.2-75.0), BM Turret L60 13.0 (12.8, t 65.0-77.6), SV Turret L60 15.4 (t 82.8-98.0), SV Melee L40 10.0 (t
+    -- 81.6-91.4) / L60 15.4 (t 65.8-81.0).
+    -- ON flicker ceilings, traced per tick: MM Turret 1.7 (5 flips) and SV Turret 1.0 (3 flips). 7 of the 8 flips drop
+    -- out once the log's own presses are applied (loop.flips with a press array: the replay passes none, so "shown, then
+    -- cast" counts here where a live run's press excludes it; Beast Mastery's note above, the no-press-exclusion lead):
+    -- 6 read ours aimed_shot -> arcane_shot -> aimed_shot against the log's arcane_shot, arcane_shot, aimed_shot (why
+    -- Arcane Shot is first only at the cast tick: not traced further), and the 110.2 s one (MM Turret) reads
+    -- arcane_shot -> serpent_sting -> arcane_shot against sting, sting, arcane, the log pressing the sting at the middle
+    -- tick (the Serpent Sting class of the misses is its other reason). The 1 that survives, MM Turret tick 288 (57.6 s;
+    -- ceiling 1.7 holds it): ours arcane -> aimed -> arcane while the log shows arcane x3, then aimed at 291. Traced
+    -- (per-tick queue dump): wowsims casts Sniper Shot at 57.65 (a decision our first icon missed: it showed Arcane
+    -- Shot, one of the profile's 3 decision misses), which spends 102 of the believed mana (467 -> 365: both shots stay
+    -- affordable) and applies an aura at tick 289. Then a cooldown near-tie at the EARLY_EXIT edge (gap DB): at tick 289
+    -- Arcane Shot, higher in the list, waits 0.26, over EARLY_EXIT's 0.2 (Core.lua:627, the list exit), and Aimed Shot
+    -- (wait 0.10) is more than 0.05 s sooner (Core.lua:786), so Aimed Shot takes the icon; at 290 Arcane Shot's 0.06 is
+    -- inside EARLY_EXIT and holds, and Aimed Shot returns at 291 after the log's Arcane Shot.
+    {
+        "hunter_beast_mastery_turret",
+        "BeastMasteryTurret",
+        "Beast Mastery Turret (wowsims.com)",
+        1.00, -- 1.000 (59)
+        { [10] = 6, [40] = 6, [60] = 13.0 }, -- 4.4 / 4.4 / 12.8
+        0, -- 0.00
+        nil,
+        {},
+        {},
+    },
+    {
+        "hunter_marksmanship_turret",
+        "MarksmanshipTurret",
+        "Marksmanship Turret (wowsims.com)",
+        0.95, -- 0.955 (66)
+        { [10] = 6, [40] = 9.4, [60] = 14.0 }, -- 4.4 / 9.4 / 14.0
+        1.7, -- 1.66
+        nil,
+        {},
+        {},
+    },
+    {
+        "hunter_survival_turret",
+        "SurvivalTurret",
+        "Survival Turret (wowsims.com)",
+        0.96, -- 0.962 (53)
+        { [10] = 6, [40] = 6, [60] = 15.4 }, -- 4.4 / 4.4 / 15.4
+        1.0, -- 1.00
+        nil,
+        {},
+        {},
+    },
+    {
+        "hunter_survival_melee",
+        "SurvivalMelee",
+        "Survival Melee (wowsims.com)",
+        0.94, -- 0.942 (86)
+        -- in melee 116.8 / 7.2 / 8.6: the live bars run W.SurvivalMeleeRanged (R63, hunter_world.lua): 4.4 / 10.0 / 15.4
+        { [10] = 6, [40] = 10.0, [60] = 15.4 },
+        0, -- 0.00
+        "SurvivalMeleeRanged",
+    },
 }
 
 describe("the Hunter wowsims.com packs #slow #wowsims", function()
@@ -125,12 +199,12 @@ describe("the Hunter wowsims.com packs #slow #wowsims", function()
         local spec, world, pack, FLOOR, LIVE, FLICKER = p[1], W[p[2]], p[3], p[4], p[5], p[6]
         local liveWorld = W[p[7] or p[2]]
         it(pack .. " follows wowsims's casts", function()
-            local r, line = ws.gate(pack, content(spec, world, pack, 60, REPLAY_EXTRA), spec, FLOOR, REPLAY)
+            local r, line = ws.gate(pack, content(spec, world, pack, 60, p[8] or REPLAY_EXTRA), spec, FLOOR, REPLAY)
             ab.check(r.flicker <= FLICKER + 1e-9, pack, "ON flicker ceiling: " .. line)
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
-                ws.live(pack, content(spec, liveWorld, pack, level, EXTRA), LIVE[level])
+                ws.live(pack, content(spec, liveWorld, pack, level, p[9] or EXTRA), LIVE[level])
             end)
         end
     end

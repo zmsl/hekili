@@ -126,7 +126,7 @@ local function provide(oName, pName, viewer, now, def)
             I.presence.Deactivate(now)
         end
         I.presence, I.presenceViewer = P, viewer
-        P.Activate(I.api, now, def or I.def, { viewer = viewer == true })
+        P.Activate(I.api, now, def or I.def, { viewer = viewer == true, build = def ~= nil })
         if I.OnPresence then
             I.OnPresence(P) -- Sources/Auras.lua: the provider's edges go there
         end

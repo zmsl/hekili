@@ -7,7 +7,6 @@ src/Hekili/UI/
 src/Hekili/Engine/Schema/Spec.lua
 src/Hekili/Engine/Schema/Spec/
 src/Hekili/Engine/Snapshot.lua
-archive/
 .claude/
 .lua/
 # The language files are written by tools/locales.py (one L[...] line per key, however long); Locales.lua is ours.

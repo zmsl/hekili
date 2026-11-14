@@ -133,6 +133,23 @@ local REGROWTH = { 8936, 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 }
 local REGROWTH_COST = { 70, 125, 170, 210, 250, 305, 370, 445, 525 }
 local REJUVENATION = { 774, 1058, 1430, 2090, 2091, 3627, 8910, 9839, 9840, 9841, 25299 }
 local REJUVENATION_COST = { 25, 40, 75, 105, 135, 160, 195, 235, 280, 335, 360 }
+-- The manual-press Restoration kit (wowsims pin spells_auto_gen.go: cast, cost, cooldown; a cost below 1 is a percent of
+-- base mana). Registered so a press costs what it costs and starts its cooldown; no priority recommends them.
+local SWIFTMEND = { 18562 }
+local WILD_GROWTH = { 408120, 1238214, 1238215 }
+local WILD_GROWTH_COST = { 550, 755, 1050 }
+local TRANQUILITY = { 740, 8918, 9862, 9863 }
+local TRANQUILITY_COST = { 375, 505, 695, 925 }
+local REBIRTH = { 20484, 20739, 20742, 20747, 20748 }
+local HIBERNATE = { 2637, 18657, 18658 }
+local HIBERNATE_COST = { 90, 120, 150 }
+local HIBERNATE_DURATION = { 20, 30, 40 }
+local SOOTHE_ANIMAL = { 2908, 8955, 9901 }
+local SOOTHE_ANIMAL_COST = { 50, 75, 100 }
+local ABOLISH_POISON = { 2893 }
+local CURE_POISON = { 8946 }
+local REMOVE_CURSE = { 2782 }
+local REVIVE = { 1237951 }
 
 -- Gear (gear-aware spec §4; r33 section 0): the item and set IDs the pack's set_bonus reads (wowsims/forever at
 -- e2842f0a78, db.json). Registered on the kit: every tree reads the same keys.
@@ -420,7 +437,8 @@ spec:RegisterAuras({
     },
     bash = {
         id = 5211,
-        copy = rest(BASH),
+        -- 1324487/8/90: the debuff ids the Cooldown Manager's Bash entry links
+        copy = { 6798, 8983, 1324487, 1324488, 1324490 },
         duration = function()
             return (BASH_STUN[knownRank(BASH)] or 2) + 0.5 * talent.brutal_impact.rank
         end,
@@ -541,6 +559,7 @@ spec:RegisterAuras({
     },
     feral_charge_effect = {
         id = 19675,
+        copy = { 414923 }, -- the Cooldown Manager's Feral Charge entry links it too
         duration = 4,
         max_stack = 1,
     },
@@ -557,6 +576,7 @@ spec:RegisterAuras({
     },
     frenzied_regeneration = {
         id = 22842,
+        copy = { 22845 }, -- the buff the Cooldown Manager links
         duration = 10,
         tick_time = 1,
         max_stack = 1,
@@ -699,6 +719,23 @@ spec:RegisterAuras({
         duration = 3600,
         max_stack = 1,
     },
+    -- Auras the Cooldown Manager's buff entries link (cdm fixture, the owner's export): every rank, the pin's durations.
+    -- Nothing reads them but the map; Wild Growth's and Abolish Poison's land on the healed ally.
+    wild_growth = { id = 408120, copy = { 1238214, 1238215 }, duration = 7, max_stack = 1 },
+    tranquility = { id = 740, copy = { 8918, 9862, 9863 }, duration = 10, max_stack = 1 },
+    hibernate = {
+        id = 2637,
+        copy = { 18657, 18658 },
+        duration = function()
+            return HIBERNATE_DURATION[knownRank(HIBERNATE)] or 20 -- the pin: 20 / 30 / 40 s by rank
+        end,
+        max_stack = 1,
+    },
+    soothe_animal = { id = 2908, copy = { 8955, 9901 }, duration = 15, max_stack = 1 },
+    abolish_poison = { id = 2893, duration = 8, max_stack = 1 },
+    starfire_stun = { id = 16922, duration = 3, max_stack = 1 }, -- Improved Starfire's stun
+    leader_of_the_pack = { id = 24932, duration = 3600, max_stack = 1 },
+    moonkin_aura = { id = 24907, duration = 3600, max_stack = 1 },
 })
 
 -- Clearcasting (16870): aura 108 misc 14 (cost) -100% on the abilities its class masks name (15973374 / 100664659 /
@@ -709,7 +746,7 @@ spec:RegisterAuras({
 --     join SpellPower p on p.SpellID=o.SpellID where o.SpellClassSet=7 and (p.ManaCost>0 or p.PowerCostPct>0) and not
 --     ((o.SpellClassMask_0 & 15973374)=0 and (o.SpellClassMask_1 & 100664659)=0 and (o.SpellClassMask_2 & 1024)=0
 --     and (o.SpellClassMask_3 & 142606400)=0)
--- Covered but unregistered: Tranquility, Swiftmend, the rune spells. Not covered: Wrath, Faerie Fire, Cower,
+-- Covered but unregistered: the rune spells. Wild Growth (408120, mask word 1 bit 26) is covered. Not covered: Wrath, Faerie Fire, Cower,
 -- Challenging Roar, Mark and Gift of the Wild, Shifting Power. Checkpoint Q6 confirms Primal Bite and Demoralizing Roar
 -- (usable at 0 rage with Clearcasting up).
 spec:RegisterCostMod({
@@ -741,6 +778,9 @@ spec:RegisterCostMod({
         16689,
         407995,
         99,
+        740,
+        18562,
+        408120,
     },
 })
 
@@ -855,7 +895,9 @@ spec:RegisterAbilities({
         id = 5211,
         copy = rest(BASH),
         cast = 0,
-        cooldown = 60, -- Brutal Impact's -30 s unmodelled (a cooldown modifier)
+        cooldown = function()
+            return 60 - 15 * talent.brutal_impact.rank -- Brutal Impact 16940 effect 1: -15 / -30 s on Bash
+        end,
         gcd = "spell",
 
         spend = 10,
@@ -1096,7 +1138,9 @@ spec:RegisterAbilities({
     entangling_roots = {
         id = 339,
         copy = rest(ROOTS),
-        cast = 1.5,
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 1.5
+        end,
         cooldown = 0,
         gcd = "spell",
 
@@ -1110,10 +1154,12 @@ spec:RegisterAbilities({
         nobuff = "feral_form",
 
         now = function()
+            removeBuff("natures_swiftness")
             applyDebuff("target", "entangling_roots", ROOTS_DURATION[knownRank(ROOTS)] or 12)
         end,
 
         handler = function()
+            removeBuff("natures_swiftness")
             applyDebuff("target", "entangling_roots")
         end,
     },
@@ -1286,19 +1332,32 @@ spec:RegisterAbilities({
         id = 5185,
         copy = rest(HEALING_TOUCH),
         cast = function()
-            return byRank(HEALING_TOUCH_CAST, HEALING_TOUCH)
+            if buff.natures_swiftness.up then
+                return 0
+            end
+            -- Naturalist 17069 effect 0: -0.1 s a rank on Healing Touch (and Wild Growth)
+            return byRank(HEALING_TOUCH_CAST, HEALING_TOUCH) - 0.1 * talent.improved_healing_touch.rank
         end,
         cooldown = 0,
         gcd = "spell",
 
         spend = function()
-            return byRank(HEALING_TOUCH_COST, HEALING_TOUCH)
+            -- Tranquil Spirit 24968: -2% a rank on Healing Touch and Tranquility
+            return byRank(HEALING_TOUCH_COST, HEALING_TOUCH) * (1 - 0.02 * talent.tranquil_spirit.rank)
         end,
         spendType = "mana",
 
         startsCombat = false,
         known = knows(HEALING_TOUCH),
         nobuff = "feral_form",
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
     },
 
     hurricane = {
@@ -1561,7 +1620,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(NATURES_GRASP_COST, NATURES_GRASP)
+            return byRank(NATURES_GRASP_COST, NATURES_GRASP) * moonglow(talent.moonglow.rank)
         end,
         spendType = "mana",
 
@@ -1713,7 +1772,9 @@ spec:RegisterAbilities({
     regrowth = {
         id = 8936,
         copy = rest(REGROWTH),
-        cast = 2,
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 2
+        end,
         cooldown = 0,
         gcd = "spell",
 
@@ -1725,6 +1786,14 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(REGROWTH),
         nobuff = "feral_form",
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
     },
 
     rejuvenation = {
@@ -1942,6 +2011,208 @@ spec:RegisterAbilities({
         end,
     },
 
+    -- Swiftmend (consumes a Rejuvenation or Regrowth: no HoT aura in the pack, so only the press is modelled).
+    swiftmend = {
+        id = 18562,
+        cast = 0,
+        cooldown = 15,
+        gcd = "spell",
+
+        spend = 0.2,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(SWIFTMEND),
+        nobuff = "feral_form",
+    },
+
+    wild_growth = {
+        id = 408120,
+        copy = rest(WILD_GROWTH),
+        cast = function()
+            return 3 - 0.1 * talent.improved_healing_touch.rank -- Naturalist's mask holds Wild Growth
+        end,
+        cooldown = 6,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(WILD_GROWTH_COST, WILD_GROWTH)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(WILD_GROWTH),
+        nobuff = "feral_form",
+    },
+
+    tranquility = {
+        id = 740,
+        copy = rest(TRANQUILITY),
+        cast = 10,
+        channeled = true,
+        cooldown = function()
+            return 300 * (1 - 0.3 * talent.improved_tranquility.rank) -- Improved Tranquility 17123 effect 1: -30 / -60%
+        end,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(TRANQUILITY_COST, TRANQUILITY) * (1 - 0.02 * talent.tranquil_spirit.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(TRANQUILITY),
+        nobuff = "feral_form",
+    },
+
+    rebirth = {
+        id = 20484,
+        copy = rest(REBIRTH),
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 2
+        end,
+        cooldown = 1800,
+        gcd = "spell",
+
+        spend = 0.85,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(REBIRTH),
+        nobuff = "feral_form",
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    hibernate = {
+        id = 2637,
+        copy = rest(HIBERNATE),
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 1.5
+        end,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(HIBERNATE_COST, HIBERNATE)
+        end,
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(HIBERNATE),
+        nobuff = "feral_form",
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    soothe_animal = {
+        id = 2908,
+        copy = rest(SOOTHE_ANIMAL),
+        cast = function()
+            return buff.natures_swiftness.up and 0 or 1.5
+        end,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return byRank(SOOTHE_ANIMAL_COST, SOOTHE_ANIMAL)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(SOOTHE_ANIMAL),
+        nobuff = "feral_form",
+
+        now = function()
+            removeBuff("natures_swiftness")
+        end,
+
+        handler = function()
+            removeBuff("natures_swiftness")
+        end,
+    },
+
+    abolish_poison = {
+        id = 2893,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.16,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(ABOLISH_POISON),
+        nobuff = "feral_form",
+    },
+
+    cure_poison = {
+        id = 8946,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.16,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(CURE_POISON),
+        nobuff = "feral_form",
+    },
+
+    remove_curse = {
+        id = 2782,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 0.1,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(REMOVE_CURSE),
+        nobuff = "feral_form",
+    },
+
+    revive = {
+        id = 1237951,
+        cast = 10,
+        cooldown = 0,
+        gcd = "off", -- the pin's row has no GCD
+
+        spend = 0.75,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(REVIVE),
+        nobuff = "feral_form",
+    },
+
+    -- Cat Form's Feral Charge (the pin's 414924: 30 s, the spell GCD, no cost, Cat stance only); the Bear Form charge
+    -- above spends 5 rage.
+    feral_charge_cat = {
+        id = 414924,
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        startsCombat = true,
+        known = knows(FERAL_CHARGE),
+        form = "cat_form",
+    },
+
     wrath = {
         id = 5176,
         expects = "travel",
@@ -2047,8 +2318,8 @@ spec:RegisterSetting(
 -- (tests/Forever/druid_spec.lua checks they match). Your talents pick one (the selector); /hekili priority <name> keeps another. Restoration is deferred.
 spec:RegisterPack(
     "Feral (wowsims.com)",
-    20261112001,
-    [[Hekili:TZvBVnoUr4Fl(lUYDtLFzJZMBX6a0IfxBkApuC(UVkzgjkB2ilzisfJSWW)2VH6vAkszjB5ehG7aUDTejh(mVQzihSwJT(nR5Uig26xMmAYDJhpEYOrJTMZEDd2A(gKZZOLWpcqRH)8NXri)9lm2gULswtnDcxpGpPx9drUCc9umXN9yG1tkPjDd2XA(3)1F)XV)vpoPSMVI46ItNpM6OEh(6(fSv49lYE3qVWi8l4O9lCXEOyF2(f)9)3)z)c417xKV(yYq(Urh6gftChMSBoi2q0gF6qKlAdJ8c2eEY8)tddgCdSfrOaQpaAx43H8TKq3Va56gg8xGF8m(vQ5(fFhXqFvbum(Vp(BarwXyBOFD4WLe2Q4N4OFO0uha0eqmEk6NCCNGM465aK9X1BcJyW28pJrrUeuGKiawentk8egb7NpHYOWgIdy4ioK3UI4Zhn2ZZKpfBy)wBgVXe0prHEWGwZromsyaDMdY33o9bBoHUHRDNXx1neVzviX()D2c)0SHEiCebB7rIW85AyKoKPW7nFoiCBqFxCcHehicVgrcOFB2Ob9n6LTsaDB9txZUEjlj9nXBgmOFVAbte6fW4mfhQi3HuRVblC5sFS56WxWRbbxFgkAjMzggZOex80DzpVfuEKGPhD7b7PKxNaG0PM)kyMD(2b2WHoKWyQ9tewgxxW2fBSaNlaMb99ilxXSl0aJ7dMvpfAVjKeWaBS4OiaIpmBs3lMW(XbykyOba4Myk2o0ZZEPJ7SXj8qgdioRmlOUgikfGmKpqAWkbdbScJE12LqDiB8jbytCa6jFSB)MlLvluVTKcrKnzloZ)G)ImTcx6dIFdJu66dSHdIYibl5Mt4aC0Yxn9dFy2DJgSl3Gt)SUhKi7muJOPW2Cuc8f(2CSjnD0a()15kl6kIhF7aOVfh1wR9ca(Tzt)s)SvDijbPoY91Uh4NNBQw1vdSt3jY1tLD5VV7zv6kan34f6etZCMBdRQYYc2XRqxYRrm9XmmrcWPygFguWUcmZC31lZSJqTt)vIpQp6viBPcdFYA4d5VGDTtm6mHK1Egee7uAe19w6G4pZoFsB9On0iB5A7sZkYAKVTxC0RjC2Sr70neW09ZgskEwMziOn1Om31Re2PsXumFWRYIkEqSJhMzC)NglKZM4Qnk0YFA8Obpu8b9054eszFsWOM)CQDqpblBWwrAdV)sOerpJpzTybCbIufV3DbGBA012gvvWNRII46ms21iM(ZORVLrxD8rBRKgHHA1D1iqG8P52gQdH1tsO1xVmBNEj23M0xP6CGMTTQRkxqKhIuHNC5WxLonxJy6JRJCh7JrcGD5f0PursOVlmKzbfsZriB)sap5hGrnWjRrbiE5hJVD0OIhmo4tL)vGf7dv)lCyqIvR95rQ9HKZpy80oweL82zfdXLshB2Pf7bjN5SIVrvpBdj8uz1pHIEM(mjGp3vyKpBL5gh23alYQ8MHeXkDceXqMwSqNDWyPP2nqwSubw1FGnz7AtoVM3qm7bEI)GaHJJWl5Mti(OsY1jtFxHioicPYkP4eWsgptwk5HyuCqRz1dWpBHCXEpDdvcyXHYWBDRlbiG7OIjK(1PDLFF(caiFKdxdQbnfJMxlX7Qwv(aXZ3NwFE4VJ8qUe9WIJYaCH4gccl)kkd5ajkcXILhPG1(87lR5IxhclJ8dEgCrHOirESiRpowzW)Bxz68I07LlkQmQOg8nLpRYOcoucrPv4C(2bYkyKULSbBNFptjUkVGTHW1RjyE(A9tUSoBilriqE6OVPs1M5y8oIN1OyFPpGiw2uwGsqsoQUGW6JCRj8CAoxJnNoOM1MV7)TSzWXAAi6huznMxLZvP4mrrRvaEiDSHID4LfGyTl7XY1XZeS(vwuNUxCuyXj91p)dJJhnOgARkVJYPxIE93kCj5Q)(Hnf32K7Dvr2os3XBT5KlspxeDvvYPA1wZFbhrbci1(bj3zEsxkath(7FjP3hYeMw)J87hpD8eYzn3jcu7reK18Q7Kfd2aojeqfNOclsYwUCleTxfXaqYpRdvzvlis)oTQHJ4nj7oXX6T1Z(z7vNxRqBrAHmuejsI9PAe7kRSqJo4SRWOTmgG77QxfCbRUOHzZRyHhV(ItTaJgIjPkmU0Ly0w1AP9AIwtYs9l6SullTqLfWBCjjTLNbg7EnmwU64aU6AP(K2YNZtsXG)LdGJ)jnCCLknez9RQYwAj7lX)JhPrai49Q4dkDDznTKjsqUUKhklYPIt4LUyNtHnM0gFU3u0DOHICwrcOQHL9Cw19CTv4ZPkmhxnxHCnoh3jI6B1kQ1kCfuwhJ(SS8RlYTVlZe)0jXXlXQi3CDmOQpwZ4XYt6szvSzjGQYsfKvUUS0czSt7i7K4m1W96Yj40tkO0gOSrBBsJ7wxPnPnY7Hau5(iv74rVbOMCfqf1XOay53e2bqRN8LK1D4qBrih0uHhkOkKusxL3LTjGBkh10YtAqjINeeAsPFAtOUoP(5Cv3N3DDFUx2DtVT7Z(6UB89D3r66AkH4WEL7KDG6Y(kUPSKUAe6OycNvhhF(TCCtLcARuiPJAK4(wW(QSqp7wzPXI525FFDIQpSrDu2UCNv)YDYnmxJ8ckZHVU6pb9Zjhl4e7v5ZQzL12TY6Ax5ZSFLFpBy5wPMNuB958(q(01ZDq3mFc8IU0)pZq4x0wE(cf086ev)zO83Oq5QoMLCVbEx(wXzqt3qRSDO13p0nTHOBxhrVR7Aj63ZEI(c5tDDIQp0E6DIl4HztP7GxkA65t(BTFG7F6gjhtoJZApm3U5uofoW4J33fnOlteVRjywshjKYd6T2JGU8U7q0vYhcmWoOy2QWiR5)l8ZeFY(fg)C2)GqKmS1F8]]
+    20261113000,
+    [[Hekili:TZvBpUnUr4Fl(lUYnBLFjXj7feVaxrW1MdThkQV(vjZvIYMDLLmePwdhy4F7Di1B0sKYs2YEDkUd4sSejh(mVQziheRXw)U1CxedB9Btgn5JJhp(9JgnYAoB3gS18niNxqlHFeGwd)5VGJq(hwySnClLSMA6eUEaFs78drUCc9CmXN9TaRNvst6gSJ18V(V)pF7RF2JtkR5RiUU4K5JPoQ3HpFybBf(WI03n0lmc)ko6WcxShk2NDyXp)V(hhwaV(WIS1htgY3n6q3OyI7qXU5GydrB8PdrUOnmYRyt4jZ)lnmyWdWweHcO(aODHFhY3sc9WcKRByWFc(Xl4DuZdl(kIH(ScOy8p)2VdezfJTH(5HdxsyRIFMJ(HLM6aGMaIXtr)KJ7e0exphGSFB9MWigSn)TyuKlbfusealIMkfEgJG9ZNqzuydXbmCehYBxr85Jg75zYNInSFRnJ3yc6NOqpyqR5ihgjmGoZb57BN8GnNqpW1UZ4R6bI3SkK4WVMUW3nBOhchrW2EKimFUggjdzk9EZxcc3g03fliK8ar41isa9lZgnOVrV0vcOBRFYA23tSKK3eVzWG(9QfmrOxbJZeCOIChtT(gSWLl9XMRdFfVgeC9zOOLyMzymJsCXt3N(8wq5rcMEYThSNeVwaGKPM9kyMD(2b2WHoKWyQ9ZewkxNZ25BSeNlbMb99ilxXSZ1aJ7dMvphAVjKeWaBS4OiaIpnBs3lMW(XbykyOba4Hyk2o0ZZEPJ7SXcEiLbKNvQfuxdeLcqgYhinyLGHawHr7SDjuhYgFsa2ehGE2h72V5sz1c1puqHiYM0fN6FWFrQwHl9bXVHrcD9b2WbrzKGLCZjCaoA5ot)WNM9Xrd2NzWPFwpcsK9gQr0uyBojb(eFBo1KMoAa))6CLfDfXJVDa03IJAR1Eoa)YSPFQF6QoMKGuh5UR7b(L5MQvD1a709YC90YU8p29SkDfGMh8cDIPPoZTHvvzzb74DOl59iM(XmmHa4umJpdkyxbMzU77LA2rO2j)s4J6J2bzlLB4twdFi)vSRTWOZesw7fqqSxPru3BPdI)u78jT1J2qJSLRTlmRiRr(2EXr7eC2Sr71neW09thQu8SuZqqBQrzUVxbStKIjy(OxLgv8OyhpnZ4X3nwkNn5vBKRLF34rdEk)d6jZXjKYENKrn)5e7GEsw2GTsPn8XRHse9c(S1I5Wfisv8(XRaCtIU22OQs(Cvue3NrYUhX0FeD9wgD1XhTTsAegQv3vJabYNMBBOoewVscT(6Lz71lX(YK(kvNd0STvDv5cISqKk8Klg(U0P5Eet)46i3X(yKayxEfDovKe67cdzMtHKCes3pb4jFhmQ5h5XAuaIx)X4pmAuFXdBCy2Wl41JKnOXrF78pd8C)LoUsNoKC5BVFKANQYjmmEAhlZeVDw(qCX2PMDs1Fq2AoR4Bu1d7OeEQS6NrrVqFHeWN7kmYNTIl)(cyIwL3mkrScVczmKQwZvIhnwsUEdklwQaR6pbN0DTjhGZneZEGR53jq85i8sU5eIpAj56KPVPqeheHuzLKFKyIXtLLL8qmYp510ce4h2qMyVNUHkaS8qP4TU1jac4oQycjFUAFXhSVcaYh5W1GAqt(Ozfx8MQvlFc5z7tRpG83qEitIEC1sPaoxCdbHl)kkd5azocXIlpsoR9(3wwZfVoewg578u6IcrrY8yEAGCSYG)3UY05vT3ltuuzuzn4nLpRYOsousrPv4CE7azfms3s2GTZU4jHRYRyBiC9AcMNaxFXT3zdPncbYtg9MkvBMJXBiEwJI9l9be56OsducsYr1fewFKBnHNtY5AS50b1S2SD)VKodowtcr)KkRXSYEUlfNcfTwb4X0XgQ(HxNaI1UShlwhptW6xzEH7EXrH5h9x)SpmoE0GAOTQ8okMEb61FnXfKR(lm2uEBfxeRISDkDPV1MtUm9Cr0vvjNQvBn)vCefiqP(rqCj6I2waMo83)MOzisfMw)1SlmpzCb5SM7ebQ9icYAE1DYIbBaNesOItuPfvYwUylKTxLXaqY3RdvPvlit)oTQHt4nv2DIJ1pup7NUxDETcTfP5YqzKusSpvJyxzLfA0bxCfgTLXaC)X6vbxXQlAy28kw4PRV4ClWOHyQufgx7smARATWEvO1kzP(jDwQfLwOYc4gxssB5zGXEudJLPooIRUxQpPT85Crkg8VCaC8pPHJRuPHmRFxv2slz)s8)4rAeasEVk(GsxxwtlzcbY1L8qrrovCcV2f7CoSXK24ZDtr3XgkLZkscvnSSNlQUN7TcFoxH54Q5kKPX54wiQ)GwrTwHRKY6u0NLMFDEU9DzM4NpjoDjw55MRJbv9XAgpwUOTLvXMfaQklLt2Y1LLuiJDslAlIZud3RlNGZpPGcBGIoVTjDYBDL2K0zVhdqL7tPAhp5na1KRakVogfal7QXocA9kFRzDho0weYrDz4XcQCjvP72762vWnLJAA5jnOeXZccnP0pTjuxNu)sU77l7YVV0B)UPx)9fF)3n(cW7iDDnLqCCZZD2oqDzJg3uwsxncDumHlQfKV8EqUPsbTvkiAXMsCFlyFvwOxCVT0yXC78VVpr1pSrDu2)Cxud0D2DqxJ8ckYHVU6pb9Zzhl4mBE5lQ7L12(Y66F5lSbMFl7G5wPMNuB958gt(81ZDq7nFg8IU0)VWq4x1EG(kf08(ev)rO8BuOCvhZsM3aVTFR4mOP9Ov2F06Bq6M2H0TRfP33D9i9BztsFL8PUpr1p0E6DIl4XztP7GxY7c6Z(BT))udv3ibR4qpR90D7MJ9u6eKpDJy0G2or(YNGzv6mIuEYV1EM0fxMhIUQ8PcdSdkMTkmYA(Fh)cXNCyHXVK(pzeIHT(Fd]]
 )
 spec:RegisterPack(
     "Balance (wowsims.com)",
@@ -2057,8 +2328,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Guardian (wowsims.com)",
-    20261112001,
-    [[Hekili:TZ1)pQTnu8)wUFHb7Uf(slxVvDCsBQQBDARAA09RjysCaVlKez7aIke)TVNtcHeJnesGE5KQQ6vUy7N)8(IF(5pbxZ(MFXCSdIJn)8GEdUVF)(d61RV5y(6qS54qK9ZOzWh8rlGF(BriQdb5VDs7vbRyKfmd7GfDe9BTxaYriRPrep(N8nNQuSSqST54p8p)7N(W7NLknZXZjoo4KHGz2ANN3VDcFoE7K0N11nGIxIPBN4GDrrE8Tt(L)(p3obE82j5erePRyAzDDOreNUUykYBkgr7Ic9yDroOqozj2a(nJ)Jf435oyAOiFMhaFh4ZbIPLW2ob54e4)dWhEgVMzSDYhqC07vaN2)1N(ciK5CEi79D7oJWNhnvObDL6AhqMaQXdr)STZa0ahxBqSFAryaLdtZhfivYgaJGLAgSfJ1JW4myYW(Cmva3vZjEqJtJCDnGEybt1cJOqdWjrdCH2mhJS5KaF2iBKNNvYVyjKZDcVm8u(De3rYcy7FKoSBh1vy9IFUOJTVjURzpd6BNw3CSHh7bSSNJOZW3fXWwbUUwZSDg1pwECXZ5gbrCgXbp8ecBkI(m7zIF8qNJrE85gH28hhDFVwT5bZM5HnweSeVaSqTKLDR23KijJ8yY4z)Gv(BSdc8CGpuSnkg5SUtNnPsAf4Cj(d7CcuI9I8XmWkpBoxHkNcI89kbenivWLI9)kb7yrXZW(G8eniB1hmSbHySpfPmclZEh3Huln0mmplqeF2JJGyNSEfsjlaOmLW311mf4GM2J)8nLc)JnUyG4f8OIoyhW4GU3(MRiG8q2cpQg0K1AcuedSX4KDrykbB5sO4c(2Cpp1i5GJLt(g27VBsQ0oZ9DUb2rSrds0R2P4pZzef2s(rmoSH9tJGCMYTKPPVPjPPo4fbGqiFL4pZIgGOfuzgMZHgygcOZH)ADq)bKc)jvzpO18(3VTQ9j07CRfZN)xXc7VHy(4qMTIeITe7YVFz2sSfStWccM90ObTIlVYAQhg2JiP1VT28QSOQXaVfqbSs7uLa00DSsZid25EhlBV(ijn7deV(4P(gd7CKXUB2)P0EiaBYEbpns7gwnjNVwRBsyGw75XeR4HJK39PYB(ShcbR8sTajZDYtGIQlmZGsrrlfL3uub2p6Id(qNHKVq2IkpB7mbI57aJsTLo4JdSjbrS95eZuQS5jNELBU70YvuVSvM5SpeRVyAGvyaSRbmbruOYvoSYP(gHJxgFkEltv8N58QY8WrEGKapmgoNDaDTLdHztc9i(yOWweKh2Pv5THQnzVDVeOKW0bNgklEWU8hGTTJOI5e56bBsyJyI9UfXgIdlmBDCYR77jQJ9u96HHIYDvJiiNXPfW7etZP60WEDuxk7z6ByZjUcXdqDfMEMHUz45XrdFxR0rvuIPP8QnoR1smToJsefUjVsouE56d1xZyZHzV42LLxZufMaP9BGRVAIy615A(yGND6IPyiQYzZnPrzeMvYNIxb6HwJPDYIZjlGDuxcf4ghZzqr(WXTgSrzqu9dSbZDXYvlTRTTgtPW5UpkkUAh3i66yfzuVn6AsuEFAtsjNsJ6aNNgF3MB2d7eJwcMl8O0uCfYm80O2pCB)CLgLF0TZCQ32VhufA7c9rua6T5IH3rBbSgkxGmeAinHpCj8zONXv1PLHoqghcV7VaOljv5zMIm3cOdmZnZ0snrm99uLxZuL2EOvYLa0wT39W0jG5O8HcQZhDJKnQLEt0g9gOhh0sP3RJMP9WvMc7q2bWpwZnY1inrm96DDBnxsr8bPUevHZkKsCtMas2Fpn0ogRKVcXWaWxG8rIdg0)T96L9lTlSV3pcAK8lNj3jkEtp1lzK3BV)WAArSGqsHZdXhfZQYHN)ViFnAgSG1BeBEXrVVV7NeTVD29Y6OVNwJ8tzDEJTNLGYs)d1ogKvEyRDVqP(9okvDfMkDV(ofd3C8smLbsq6RBq8Bhx8Tsa6n8pFo(B7qkMm)1DVjCZX5OLd6lfoFmLGmhFzPZtMpptoGwnakHBVcyrPilkXthGlhHlWWB0GHDw48OOcm)PAkFRo)qbokkO(6Y)CD5duf4hkaFUOsryvoKMcZQWc4bZwMHjV0YB5a4CFfSL1zt26TlBD3MTS7Zw7nAl9oTvWTcET3PXRv841vDfWLKwrvO)HkeZvE0xlYgRpBJQu4FwR7cWsr98muuvry1Ui4sBqpV1Nntu9QnRHYZvxRdwx5twF4UoXNJwSTge53VNUsuiHvDbEfzNSw0tQLFsDeuwtgkFjPOuRhDqShvxvWcAhRSl9cWD5jGTUALRxo4Rk5MxPSEntu99CXxHCXIaFThqZdTsoUxdNNkj9upRNLL2ZZJ3ZliXNVKmFELw(0mr1R6f1N9QTIv(OJLImEnR6MLVIzivrckEcvrzu3Lr0MEoskYe2ElB8tK43yGkrTBacQul2FU4sefFDGur43Eii7vYZ7vrIxtOr0k5kqbJ4y82LrfArQ7INStW3AgvC6nBYF)jvjL8Nfp7RnPKjvxG9U7stH58IENAoX3QZs816SemWD1Uonxa0xlg9uDdC05RQ9nX5cOS7456iUQR4vXPKx9ffd80xgNQEBCkjMKUoox77JZfWvVpUo2rkfrRLVqnV3LQ)IxEPTdhHRWDEnPs2BixRNlGUx84664n6GBPtb7rJ6o)CU2KtBu0r9sUSbQ2j7sFXGoxftDGUEgzYURqhUQ(AFNHUqQMUZCREr8lnIlgKjxExEKwY7ruTUirnTBs0f0a3x)rreQsS5FOEZVwd(XDQNAo5IeiYN(6cFQNCNV7kF(NAi2wv5BFs2jIo15vlD9oXEeueFEaKa83Xpt8iBN0(JP)N(qCZM))d]]
+    20261113000,
+    [[Hekili:TZ1)VjUnu8)w6VWG1UWx6rVEvLkTPt3wN2onnU9RemjoGxdjr2oG4eI)23ZjHqIXgcjW10PtNUE0y7N)8(IF(5pbFJ6o6lJgAJ44rFUxNE31TB3B70PZOH8vb4rddqwVGMcFWdnh(5VgIO2eK3MXnx6VKrMZmS8N3s0VvU(iBHSMesC5p7nAIsXYcWwJg(X)(FE(JpmnrAJgoJyBJJhcMzPDEEyZy(m8MXjpRTJpfVat3m2g7GcD5Bg)Z)1FSzm84nJZiIqsBX0YABtdj2TDWuK7emI2gf4YAJSrbCYcSb8Bg)lZ3R1nW0qrEmxa(2WN9ftlHTzmY2237hGp8cEfZyZ4pI4OhuaNM)5ZFbeYmopG9q72tj8zHteAqBPU2cKjGACF0hSS7H6z7ybI955b(uomnFsGujBamcwIzWsmwxcJZGjd7XXubCxoJ4cnoj0XXa6HjmvZncdmaNe13bAB0qKfN47XgyHCDnJ)ftHCUr4LHNYVH4mqwaB(9KHD9G2cRx0ZfDS5vrDn9zqFB14Qdn8ipGP1meDk(Mqg203XXCQL9GUrYJlEo3WpKZi24(hrytq0xyVq8Ig6mmYLpZiWI)4G760Oj3F6uxSXC)f45GfQHSSB08QyjzKftgV45V0BTLVVRn8H8TrXi7vTATorslbNlXRFRJGsSBOhMbw5PZ4ku5eqKTxXGOgPcouS3xjyBtkEk2dKNObzREV(1ieJ9OiLryP27OoKyPHMH5zoI4XECae7K2RakzoaLje(2UMQa710o8NTPe4FOXfbex)hv0blFgh09MxDbbKlYs4r1GM0wJHIyG1gNSdctjythcfNZ3M55jgjBCKCY2Wo)DDsL2AUVXX3kKnOxSE1mb)PoJWGgYpIXHnSFAaKZuULun926KMAJN7dcH8vI3utQpIMtLzyohAGziGoh(R5E9hqk8NeLDVwZ6F)2Q2hrVZSwmB(FflS)gI5ddz2ssa2uSl)ULzlWMWobZjy2td61iQ8kZjUyypI4w)2AZlZIQAd8MdfWkTtvmqt2XkjJmyN7COS96JK0Spq06JN6A0V1bg72z)Ns6HaSX7f80aTByvNC(ATUXHbATNhsSIhoqE3NsV5Zoi4V0nXcep3XpbkQo3mdkffTquEtEfy3OZp49Dgs(czlQ8ST1eiMV9mkvw6Gp23I4hY2LtmvPsNNm6vM5Uvdhr9YMPMZUqS(8j(Mb(WUgWeesHkx5WkNQBeoCz8j4TivXFIZRkZdh5csc8Wy4C2(0vM2eMfjWL4HHcBrqEy7gf3gQ2K9UDsGscsgCsOS4bBZFa22wIkMJLRlSjHfIj27weBioSW0vrjVURJOo2J1R77lk3vnIGCghxaVxmnhRt970sDPSNOVHnJ4iepa1Ly6jg6MINhh0)9nsgvEjMKYRY4SslX06mkqu46SkzF5LR3xDnJndM98BxwCntvycK2VgU(QoIP3MR5JaE6PlMGHOk71xLeLryMXFkAfOlAfM2knoNmh2rDbuGBumNbf5bh3Q3ALbrvpWgm35lxTWU2MAmLcN7UOOOQDCcPRIuKbDwRRjr59jnjLCkjQdCEA8DRVAhSJnAXyo3JssXLlZWtdAE)1DZuAu2r3m1PED3oqvOnZ1hrbOxNjgElTfWAOmbYqOH0eE)5WNHEbxwNwk6azSp8U7mGU4uLNykYmlG2ZmxptlvhX03tvEjtvA5Iwkxcqt1E39tNaMJIhkOoF0vs2Og6nrR1BGESxdLEVwAM29xzkSdPha)qnxlxJuhX0B31TvCjfXdK6cujoRqcXnPciE)9Kq7iSs(kedl4nyoYdjozq331PtJOFjWIBcpqCsHTn2m3gH)iOIYVTMmhX42oQxdjVzF3(v0ezcXOcVjIpiIML9jeipboAgSGgCeBw(rVRV7MeTVU2DY6GV4wJStzvEfUNKGs3pakM0pTEXgBFdtD7CqU7Ynv6EFEkg(OHlWugibPV)brVUCXxtbO3W)85OV(djyA0VS9vJpAygE6G(sHdmtjOrdpV87jtW3ioGwnakMSVCyrPiZlXJhGlhHlWWTAWWwlCwuucQavnLVtNFihPf5uFDjKUSeeQc89fGptuPiSkdstGzzOfCVzl1WKvAzTCaCURe2YQSRB122TQ77w0nER8oVfER3s4wbV27141YFE7YUc4CYZOk0FFjI5ko6Re7JvN(rvk8h06UaSKxppbfvvewLRkUWg0tB9z9evVzZAO8G2v6K2L(O27VRt0bRfBRbr(D7ORefsqzxGxs6kReFLAjSuhJLvKYYxtol16r7f5r1vfSGhYs7spdKzEeyRRw5QLd(IY25fkRx9evFpx8fixSiWx7b0CrlLJ71qcQswq1tdAr5b90ic9mYe6RjvOxOLp1tu9MEr9jVAlFLp6yPiLOZYUz5)NOmvrglEm3rPC5LY8MEstYtn2otD0tKi8ONkrTDacUvZ3FU4AgfDHHuXa4oii7MYsewEMyJ5v0m(ssbJ4qe5LYnAEU8IMSJqaBk3C6nBYFdlvjLShop9lwPKjvxK(2BBtU58SERBoY37Zc8f)SauYDXUWnNb0xjk(uDhD05RQ8D15mOSBj(6aUQl4L1PGxogfd84xxNYEFDkiMKUWox6BSZzWvVlUoYrkfrRLarnViMY)MyETTdhG8WTEnPA4Rjx8NZGUN)876isAV7Xto7rT6wbDQ2KJBu0XftMSbQ2j7CF1HovftDGUEkAsVnr7VQ(sFRIotQMUdHREr8RnIZhKjxExwKwWBAuLUQr1T7A0z0a3v)rreQsK5VVEZVwd(HDQhBo5IeiYN(6mFQNmNV7cF(Nki2gL5RJs6jIo25vlC9orEeuiFMpKa83WVqCjBg38tj)3cruZJ(V]]
 )
 
 -- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the

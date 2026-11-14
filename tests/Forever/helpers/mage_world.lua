@@ -46,6 +46,11 @@ local COST = {
     pyroblast = { 125, 150, 195, 240, 285, 335, 385, 440 },
     fire_blast = { 40, 75, 115, 165, 220, 280, 340 },
     frostfire_bolt = { 205, 285, 370 },
+    cone_of_cold = { 210, 290, 380, 465, 555 },
+    ice_lance = { 45, 55, 70, 105, 120, 160 },
+    ice_barrier = { 305, 360, 420, 480 },
+    blizzard = { 320, 520, 720, 935, 1160, 1400 },
+    cold_snap = 0,
     counterspell = 100,
     evocation = 0,
     arcane_power = 0,
@@ -75,6 +80,9 @@ local AMOUNT = {
     pyroblast = 1100,
     fire_blast = 500,
     frostfire_bolt = 750,
+    cone_of_cold = 600,
+    ice_lance = 300,
+    blizzard = 200, -- a tick
 }
 
 -- The schools' damage spells (Clearcasting's and Arcane Power's scope by the DB2 masks; Arcane Wrath's by wowsims's),
@@ -89,13 +97,25 @@ local CLEARCAST = {
     pyroblast = true,
     fire_blast = true,
     frostfire_bolt = true,
+    cone_of_cold = true, -- Frost's (the DB2's 12536 mask; Ice Barrier not)
+    ice_lance = true,
+    blizzard = true,
 }
 local POWERED = CLEARCAST
 local BARRAGE = { arcane_blast = 1, fireball = 0.5, frostbolt = 0.5, frostfire_bolt = 0.5, arcane_wrath = 0.5 }
 local HEATING = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true }
 local FIRE = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true, pyroblast = true }
-local CHILL = { frostbolt = true, frostfire_bolt = true } -- Permafrost's mask's (wowsims's chillFlags) the kit casts
-local FROST_CHANNELING = { frostbolt = true, frostfire_bolt = true } -- DB2 11160 effect 0's mask
+-- Permafrost's mask's (wowsims's chillFlags) the kit casts
+local CHILL = { frostbolt = true, frostfire_bolt = true, cone_of_cold = true }
+-- DB2 11160 effect 0's mask
+local FROST_CHANNELING = {
+    frostbolt = true,
+    frostfire_bolt = true,
+    cone_of_cold = true,
+    ice_lance = true,
+    ice_barrier = true,
+    blizzard = true,
+}
 
 -- The talents the world reads, by their DB2 (or wowsims's) rank-1 spells.
 local T = {
@@ -108,6 +128,7 @@ local T = {
     wake_of_fire = 11078,
     fingers_of_frost = 400647,
     frost_channeling = 11160,
+    winters_chill = 11180,
 }
 
 local W0
@@ -244,6 +265,47 @@ local PACKS = {
             [400647] = 2, -- Fingers of Frost
         },
         uptime = { "fire_vulnerability" },
+    },
+    -- presets.ts FrostIncinTalents 203205-5-053500011121331251 (15 Arcane, 5 Fire, 31 Frost), wowsims's own test build
+    -- (sim/mage/mage_test.go FrostTalents); the log's pool (6348) and regen (Mage Armor's half while casting).
+    Frost = {
+        pack = "Frost (wowsims.com)",
+        spec = 100083,
+        max = 6348,
+        casting = 0.5,
+        kit = {
+            "frostbolt",
+            "cone_of_cold",
+            "ice_lance",
+            "ice_barrier",
+            "cold_snap",
+            "blizzard",
+            "fireball",
+            "evocation",
+            "counterspell",
+        },
+        talents = {
+            [6057] = 2, -- Wand Specialization
+            [28574] = 3, -- Arcane Resilience
+            [11210] = 2, -- Arcane Subtlety
+            [11213] = 5, -- Arcane Concentration
+            [18459] = 5, -- Incineration
+            [11070] = 5, -- Improved Frostbolt
+            [29438] = 3, -- Elemental Precision
+            [11207] = 5, -- Ice Shards
+            [11160] = 1, -- Frost Channeling
+            [11185] = 1, -- Improved Blizzard
+            [1312002] = 1, -- Ice Lance
+            [16757] = 2, -- Arctic Reach
+            [11958] = 1, -- Ice Block
+            [11170] = 3, -- Shatter
+            [11190] = 3, -- Improved Cone of Cold
+            [12472] = 1, -- Cold Snap
+            [400647] = 2, -- Fingers of Frost
+            [11180] = 5, -- Winter's Chill
+            [11426] = 1, -- Ice Barrier
+        },
+        uptime = {},
     },
 }
 
@@ -418,7 +480,64 @@ M.MAP = {
         W.applyAura(e, a.id, c and c.expires - W.t or a.duration, 1, a.max_stack)
     end),
     arcane_wrath = spell("arcane_wrath"),
-    frostbolt = spell("frostbolt"),
+    -- Winter's Chill on the landed bolt (wowsims registerWinterChill; 5/5 is 100%: no roll, the kit's shortcut for fewer)
+    frostbolt = spell("frostbolt", function(W, e, X, H, landed)
+        if landed and talentRank(H, T.winters_chill) > 0 then
+            aura(W, X, e.target, "winters_chill")
+        end
+    end),
+    -- every Winter's Chill stack spent on the landed cone (wowsims consumeWintersChill)
+    cone_of_cold = spell("cone_of_cold", function(W, e, X, _, landed)
+        if landed then
+            drop(W, e.target, X, "winters_chill")
+        end
+    end),
+    -- on a Frozen target (a Fingers of Frost charge up as it is cast) a landed lance adds Winter's Chill
+    ice_lance = (function()
+        local frozen
+        local m = spell("ice_lance", function(W, e, X, H, landed)
+            if landed and frozen and talentRank(H, T.winters_chill) > 0 then
+                aura(W, X, e.target, "winters_chill")
+            end
+        end)
+        local effect = m.effect
+        m.effect = function(W, e, p, X, H)
+            frozen = onEntity(e, X)("fingers_of_frost")
+            effect(W, e, p, X, H)
+        end
+        return m
+    end)(),
+    ice_barrier = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "ice_barrier")
+            aura(W, X, e, "frigid_power")
+        end,
+    },
+    -- every Frost-only cooldown of the kit's ends (wowsims cold_snap.go)
+    cold_snap = {
+        effect = function(W, e, _, _, H)
+            for _, key in ipairs({ "cone_of_cold", "ice_barrier" }) do
+                local a = H.Hekili.Class.abilities[key]
+                local ids = { a.id }
+                for _, id in ipairs(a.copy) do
+                    ids[#ids + 1] = id
+                end
+                W.resetCooldown(e, key, ids)
+            end
+        end,
+    },
+    -- a channel of 8 s, a tick a second
+    blizzard = {
+        channel = function()
+            return {
+                length = 8,
+                tick = 1,
+                effect = function(W, e)
+                    W.hit(e, e.target, AMOUNT.blizzard, 16, "spell")
+                end,
+            }
+        end,
+    },
     fireball = spell("fireball"),
     frostfire_bolt = spell("frostfire_bolt"),
     fire_blast = spell("fire_blast"),
@@ -683,5 +802,6 @@ end
 M.Arcane = content("Arcane")
 M.Fire = content("Fire")
 M.Frostfire = content("Frostfire")
+M.Frost = content("Frost")
 
 return M

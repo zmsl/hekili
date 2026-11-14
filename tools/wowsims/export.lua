@@ -40,15 +40,27 @@ M.SPEC_PIN = {
 
     hunter_beast_mastery = NEW,
 
+    hunter_beast_mastery_turret = NEW,
+
     hunter_marksmanship = NEW,
 
+    hunter_marksmanship_turret = NEW,
+
     hunter_survival = NEW,
+
+    hunter_survival_melee = NEW,
+
+    hunter_survival_turret = NEW,
 
     mage_arcane = NEW,
 
     mage_fire = NEW,
 
+    mage_frost = NEW,
+
     mage_frostfire = NEW,
+
+    paladin_holy_shock = NEW,
 
     paladin_protection = NEW,
 

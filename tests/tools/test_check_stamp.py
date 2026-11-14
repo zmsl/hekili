@@ -456,6 +456,8 @@ class Repository(unittest.TestCase):
             ("CHANGELOG.md", 1),
             ("docs/publishing/README.md", 1),
             ("docs/publishing/x.md", 1),
+            ("docs/wiki/Home.md", 1),
+            ("docs/wiki/data/expressions.lua", 1),
             ("docs/dev/x.png", 1),
             ("docs", 1),
             ("src/Hekili/Libs/CREDITS.md", 1),

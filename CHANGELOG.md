@@ -12,6 +12,92 @@
 
 ### Upgrade notes
 
+## v0.8.2
+
+_Released 2026-11-14_
+
+Hekili Forever v0.8.2 adds new Hunter, Frost Mage and Retribution Paladin priorities, teaches the addon many more spells and talents for every class, and fixes Clash, priority imports and several display issues.
+
+### Druid
+- Swiftmend, Wild Growth, Tranquility, Rebirth, Hibernate, Soothe Animal, Abolish Poison, Cure Poison, Remove Curse, Revive and Cat Form's Feral Charge now spend their mana and start their cooldowns in Hekili when you cast them yourself.
+- Brutal Impact (Bash), Naturalist and Tranquil Spirit (Healing Touch), Improved Tranquility and Moonglow (Nature's Grasp) now change cooldowns and costs as they do in game.
+- Nature's Swiftness is now used up by Healing Touch, Regrowth, Rebirth, Entangling Roots, Hibernate and Soothe Animal, not only Wrath.
+- The Cooldown Manager now follows Bash, Feral Charge, Frenzied Regeneration, Improved Starfire, Leader of the Pack, Moonkin Aura and the new spells.
+
+### Hunter
+- New priorities from wowsims.com: Beast Mastery, Marksmanship and Survival Turret (stand and shoot, no melee) and Survival Melee (two weapons with Aspect of the Beast).
+- The Turret priorities are now the default for all three specs. If you never picked a priority, you move to Turret; a priority you picked stays. The melee-weave priorities can still be chosen.
+- Bestial Wrath now costs 12% of base mana. All traps share Immolation Trap's 30 second cooldown, and Survivalist's Discipline and Improved Stings shorten the trap, Deterrence and Viper Sting cooldowns.
+- Stings, utility shots, Volley, Intimidation, Counterattack, Deterrence, Disengage, Feign Death, Flare, Scare Beast, Trueshot Aura, Mend Pet and the other aspects now spend their mana and start their cooldowns when cast manually, and their buffs show in the Cooldown Manager.
+- Rapid Recuperation now counts its mana regeneration for 15 seconds after each Serpent Sting.
+
+### Mage
+- Frost now has its own priority, Frost (wowsims.com), and a Mage with the most points in Frost gets it automatically. It uses Frostbolt, Cone of Cold at 5 Winter's Chill stacks, Cold Snap, Ice Barrier for Frigid Power, and Ice Lance with Fingers of Frost.
+- Frost Nova and Ice Block are now tracked, and Cold Snap resets them. Ice Block is under the Defensives toggle.
+
+### Paladin
+- Retribution has a second priority, Holy Shock (wowsims.com), picked automatically when you have Holy Shock talented. Other Retribution builds keep the existing priority.
+- The heals, blessings, Divine Shield, Divine Protection, Hammer of Justice, Repentance, Divine Intervention and other utility spells now spend their mana and start their cooldowns when cast manually. Forbearance is applied, and Divine Shield and Divine Protection share a cooldown.
+- Purifying Power, Sacred Duty, Guardian's Favor, Improved Hammer of Justice, Turn Evil and Benediction now shorten cooldowns and costs, and Sanctified Judgement counts at every rank.
+- Hekili's mana estimate is now more accurate after a seal, so abilities are held back less often.
+
+### Priest
+- Heals, Fade, Psychic Scream, dispels and other utility spells now spend their mana and start their cooldowns when cast manually.
+- Soul Warding, Improved Healing, Divine Fury, Improved Mana Burn and Improved Psychic Scream now change costs, cast times and cooldowns.
+- With 5/5 Spirit Tap, Hekili counts its bonus Spirit and mana regeneration for 15 seconds after you kill an enemy that gives experience. This does not apply in dungeons or raids.
+
+### Rogue
+- Relentless Strikes now counts its average energy at every rank and combo-point count.
+- Feint, Gouge, Kidney Shot, Cheap Shot, Sap, Blind, Evasion, Sprint and Distract now spend their energy and start their cooldowns when used manually.
+- Elusiveness, Endurance, Camouflage, Dirty Tricks and Dirty Deeds now change cooldowns and costs, and Preparation finishes every other Rogue cooldown.
+- Hekili's energy estimate is now more accurate around finishers.
+
+### Shaman
+- Frost Shock (sharing the shock cooldown), Healing Wave, Lesser Healing Wave, Chain Heal, Riptide, Ghost Wolf, Purge, the cures and Totemic Call now spend their mana and start their cooldowns when cast manually.
+- Totemic Focus, Guardian Totems, Improved Healing Wave, Tidal Focus and Improved Ghost Wolf now apply. Nature's Swiftness is now used up by the heals and Ghost Wolf.
+- The Cooldown Manager now follows totems, Stormstrike, Flurry, Elemental Devastation, Improved Stormstrike and the new spells.
+
+### Warlock
+- With Soul Harvest, Hekili counts its mana regeneration for 10 seconds after your Drain Soul target dies and gives experience. This does not apply in dungeons or raids.
+
+### Warrior
+- Improved Bloodrage now boosts the rage from every tick of Bloodrage, not only the first.
+- Improved Berserker Rage now gives 5 or 10 rage, and Improved Intercept, Improved Shield Wall and Improved Disarm now shorten those cooldowns.
+- Fury: Reckless Swings' rage now arrives with each empowered swing instead of all at once when cast.
+
+### Core and display
+- Mana regeneration while casting now follows your talent ranks (Meditation, Mindfulness at its full 50%, Bestial Discipline, Reverence, Arcane Meditation at 3/3).
+- An ability that becomes affordable right after the global cooldown keeps its spot, so there are fewer brief icon flashes (for example Shifting Power for Feral).
+- The Clash setting now works as described. Items (trinkets, potions) now have their own working Clash setting.
+- With the Cooldown Manager on, a missed debuff (such as Rake or Faerie Fire) is no longer shown as up for its full duration after a form change before a pull.
+- In an instance with enemy nameplates off, Hekili now tells you once that it is counting only your target.
+- Rogues and Feral Druids: recommendations update immediately when your combo points move to a new target.
+- Melee specs: the Enemy Range Radius slider now shows 10 yards instead of an empty value.
+- Imported priorities no longer break lines that use min(), max() or ^.
+- In priority conditions, `prev.last` and `prev.<ability>` now work for the first icon, and the `interrupt=` option now works for channeled spells.
+- The priority editor has new Label, Label Condition, Icon and Icon Condition fields, with a texture preview for icons.
+- The Priorities list in the options opens on your current spec and marks the active priority with a green check.
+- The "SimC Wiki" link is now "APL Reference" and opens the Hekili Forever wiki page on priority expressions.
+
+### Known issues
+- The Hunter Turret priorities have not been tested in game yet, so their recommendations may be off.
+- Fury: the upcoming-ability icons do not yet count the rage from Reckless Swings' swings. The first icon is correct.
+
+## v0.8.1
+
+_Released 2026-11-13_
+
+This release stops several mana abilities from being recommended at full mana on lower-level characters.
+
+### Druid
+- Feral, and Guardian in Cat Form: Innervate is no longer recommended at full mana on characters below level 60. It now waits until your mana is low for your own mana pool.
+
+### Priest
+- Shadow: Dark Sacrifice is no longer recommended at full mana on characters below level 60. It now waits until your mana is low for your own mana pool.
+
+### Warlock
+- Affliction, Demonology and Destruction: Life Tap is no longer recommended every global cooldown at full mana on characters below level 60. It now waits until your mana is low for your own mana pool.
+
 ## v0.8.0
 
 _Released 2026-11-13_

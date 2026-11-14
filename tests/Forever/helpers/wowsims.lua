@@ -398,6 +398,13 @@ M.READY = {
     -- 2.34, wing_clip 6 max 2.80, immolation_trap 3): the walk the replay cannot forecast (triage Case 1) and the weave's omitted
     -- `wait` rows #2/#3 (CN19, second translator lane); the median fell as the set grew
     hunter_survival = { 0.29, 22 },
+    -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): first measurement (fixtures recorded once). Turrets:
+    -- Serpent Sting early (the cast-anchored dot) and Arcane Shot cost rows; Survival Melee: wing_clip 2 (max 3.10),
+    -- strider_kick 1
+    hunter_beast_mastery_turret = { 0.36, 4 },
+    hunter_marksmanship_turret = { 0.42, 4 },
+    hunter_survival_turret = { 0.30, 5 },
+    hunter_survival_melee = { 0.41, 3 },
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
     -- a cost after the truth), fire_blast 7 (max 0.76: the dry-mana waits on its 340)
     mage_arcane = { 0.76, 9 }, -- 0.760, 9 (ruling M13)
@@ -407,6 +414,8 @@ M.READY = {
     mage_fire = { 0.45, 10 }, -- 0.450, 10
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
     mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13)
+    mage_frost = { 0.23, 3 }, -- 0.230, 3 (new pack 2026-11-12, R6 first measurement: frostbolt late, cost class)
+    paladin_holy_shock = { 0.24, 5 }, -- 0.240, 5 (new pack 2026-11-12, R6 first measurement: cost and slack classes)
     -- { 0.86, 7 } -> { 0.00, 0 } re-pin e2842f0a78: real 0 once Holy Shield's block hits are procs (PROT_REPLAY)
     -- { 0.00, 0 } -> { 0.43, 1 } pin move 2 on CN8 (rank 4 log, PROT_REPLAY's rank-4 procs, steady icons): one row, holy_strike
     -- late 0.43 s, cost class: lo under the truth at the cost (-208 mana, the unmodelled Shieldsworn return, gaps.md CU)
@@ -444,7 +453,10 @@ M.READY = {
     -- GCD after the 32.20 Mutilate), 47.10 Eviscerate 0.71 (the same, behind the 46.08 unseen Energize), 63.60 Mutilate
     -- 1.12 (25 + Relentless Strikes 14179's 25 at 62.60 + regen = 60 = cost at the GCD's end; the belief's lo ~11 under,
     -- not traced further)
-    rogue_assassination = { 0.20, 35 }, -- 0.200, 35
+    -- 35 -> 36 (cov-rogue, follow-wowsims re-floor): the wowsims-true Relentless Strikes expected-value belief rule (25 x
+    -- min(1, 4% x rank x points) on every finisher, was 25 at 5/5 and 5 points only); fixture re-recorded, 37 rows moved,
+    -- most less late (lo-truth gaps shrink); median 0.200 -> 0.190, late 35 -> 36
+    rogue_assassination = { 0.20, 36 }, -- 0.190, 36
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)
     -- { 0.24, 20 } -> { 0.24, 21 } R42 (the replay answers fight_remains from the log): only rows that were

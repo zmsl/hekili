@@ -7,7 +7,6 @@ codes = true
 
 exclude_files = {
     "src/Hekili/Libs/",
-    "archive/",
     ".claude/",
     ".lua/",
     ".release/",
@@ -101,7 +100,7 @@ local nowEnv = {
     "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
     "runic_power", "totem", "action", "settings", "haste", "instant", "cast_start", "target",
-    "set_bonus", "equipped",
+    "set_bonus", "equipped", "victim_channel",
     "openWindow", "closeWindow", "lastSwing", "nextSwing", "usable", -- the windows (Families/Windows.lua)
 }
 files["tests/Game/State/"] = { std = "+busted", read_globals = nowEnv }
@@ -114,6 +113,7 @@ files["tests/Forever/"] = { std = "+busted" }
 local warriorEnv = {
     "rage", "cooldown", "combat", "active_enemies", "active_dot", "setDistance", "interrupt", "swap_stance",
     "mainhand_remains", "nextMH", "nextOH", "mainhand_speed", "offhand_speed", "weapon", "main_hand", "off_hand", "level",
+    "removeStack", -- the reaction's now (Reckless Swings)
 }
 for _, k in ipairs(stateEnv) do
     warriorEnv[#warriorEnv + 1] = k
@@ -169,7 +169,7 @@ end
 files["src/Hekili_Priest/Priest.lua"] = { globals = priestEnv }
 -- The Warlock's further `state` names.
 local warlockEnv = {
-    "mana", "instant",
+    "mana", "instant", "victim_channel",
     "min", "max", "level", "pet", "summonPet", "dismissPet", "soul_shards", "locked_out_shadow", "locked_out_fire",
 }
 for _, k in ipairs(stateEnv) do

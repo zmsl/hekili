@@ -306,6 +306,11 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
     (no on-all-targets read of a cast), the swap back to the main target (Hekili has none).
 21. A cast aimed at another target (`target` Target with an index above 0: wowsims's second target, Bane of Havoc)
     carries `other_target=1`: shown only with Recommend Target Swaps on, on another target, never on the current one.
+22. Our mana under an absolute amount N (`currentMana` `<` or `<=` a number) is `(mana.lo<N&mana.pct_lo<P)`, P the
+    amount's share of the kit's pool rounded up (the exported log's first "of <max> total" mana line of our
+    character, the replay's UnitPowerMax): unchanged at the kit's pool, the share on a smaller one (a v0.8.0 report:
+    a level 20 Warlock with 1132 mana shown Life Tap at full mana from `mana.lo<1800`). Packs at the pins: Affliction
+    29 (6277), Demonology and Shadow Brand 42 (6328), Destruction 48 (5503), Feral 55 (2584), Shadow 42 (4846).
 
 The second translator lane (0.7): `spellIsChanneling` is `action.<key>.channeling` for a kit ability declared
 `channeled`, false for any other (CN14: Affliction's Siphon Life line); `frontOfTarget` and `targetIsMobType` fold to

@@ -123,8 +123,8 @@ M.MAP = {
     judgement = {
         effect = function(W, e, _, X)
             W.hit(e, e.target, AMOUNT.judgement, 2, up(e, X, "seal_of_the_crusader") and "none" or nil)
-            -- shortcut: the world refunds only at 3/3 (the belief's rule) and has no proc chance below it; model the
-            -- 33/66% chance if a world build takes 1-2 ranks.
+            -- shortcut: the world refunds only at 3/3 (a sure 60%); at ranks 1-2 the belief counts the mean (33/66% x
+            -- 20/40%) while the truth would be a roll. No world build takes 1-2 ranks; model the roll if one does.
             if X.sanctified then -- Sanctified Judgement 3/3: 60% of the seal's base cost x (2 - its multiplier)
                 for _, key in ipairs(SEALS) do
                     if up(e, X, key) then
@@ -200,9 +200,10 @@ local PACKS = {
             "exorcism",
             "retribution_aura",
         },
-        talents = { [1310735] = 1, [20375] = 1 },
+        talents = { [1310735] = 1, [20375] = 1, [1310899] = 2 }, -- Reverence 2/2: its export's (paladin_retribution.log)
         weapon = { 150, 230, 3.6 },
-        fsr = { 13.65, 8.25 }, -- the true regen parts: wowsims's logs at 60 (the class file declares the same, per spec)
+        -- the true regen parts: wowsims's logs at 60 (the class file declares the same, per spec); they hold Reverence's 30%
+        fsr = { 13.65, 8.25, share = 0.3 },
         uptime = { "consecrated_ground" },
     },
     -- Seal of Fury, Holy Shield and Swift Judgement, a one-hander and a shield; the mob's swings at us blocked.
@@ -227,6 +228,52 @@ local PACKS = {
         fsr = { 17.38, 0 },
         uptime = { "consecrated_ground" },
     },
+    -- Holy Shock: Seal of Righteousness, Holy Shock under Divine Favor; wowsims/forever's builds/holy_shock.siml talents
+    -- (05025210221021--0523330110130033, 23 Holy to 28 Retribution: the selector's build), the log's pool (4667), its
+    -- regen parts (2.625 a 0.1 s tick outside the rule, 0.788 inside) and its main hand's swing (2.2 s; the amounts
+    -- UNMEASURED).
+    HolyShock = {
+        kit = {
+            "seal_of_command",
+            "seal_of_righteousness",
+            "seal_of_the_crusader",
+            "judgement",
+            "hammer_of_wrath",
+            "holy_strike",
+            "consecration",
+            "exorcism",
+            "holy_shock",
+            "divine_favor",
+            "retribution_aura",
+        },
+        talents = {
+            [20262] = 5, -- Divine Strength
+            [1310899] = 2, -- Reverence
+            [20224] = 5, -- Improved Seals
+            [429144] = 2, -- Purifying Power
+            [20216] = 1, -- Divine Favor
+            [1237268] = 2, -- Holy Conduit
+            [1310904] = 2, -- Divine Precision
+            [426065] = 1, -- Infusion of Light
+            [1310905] = 2, -- Consecrated Ground
+            [1311606] = 1, -- Holy Shock
+            [20101] = 5, -- Benediction
+            [25956] = 2, -- Improved Judgement
+            [20117] = 3, -- Conviction
+            [1311074] = 3, -- Sanctified Judgement
+            [9452] = 3, -- Vindication
+            [20375] = 1, -- Seal of Command
+            [26022] = 1, -- Pursuit of Justice
+            [1311087] = 1, -- Sacred Arbiter
+            [20111] = 3, -- Two-Handed Weapon Specialization
+            [20049] = 3, -- Vengeance
+            [1311084] = 3, -- Champion of the Light
+        },
+        weapon = { 100, 160, 2.2 },
+        fsr = { 18.37, 7.88, share = 0.3 }, -- Reverence 2/2 (its talents above): the parts hold its 30%
+        max = 4667,
+        uptime = { "consecrated_ground" },
+    },
 }
 
 -- Swift Judgement: a second Judgement on its own cooldown (hotfix 113554, wowsims swift_judgement.go).
@@ -248,7 +295,8 @@ local function classData(H, C)
         end
     end
     local talent = H.Hekili.State.talent
-    -- Sanctified Judgement's refund, as the class file believes it (only at 3/3, a sure one): the seals' cost multiplier
+    -- Sanctified Judgement's refund in the world: only at 3/3, a sure one (the class file counts the mean at 1-2, the
+    -- world builds take none there): the seals' cost multiplier
     X.S, X.sanctified = H.Hekili.State, (talent.sanctified_judgement.rank or 0) >= 3
     X.mult = 1 - 0.02 * (talent.benediction.rank or 0)
     return X
@@ -257,7 +305,7 @@ end
 local function content(name, pack)
     local P = PACKS[name]
     local C = { PACK = pack or name, IDS = {} }
-    C.SPEC = ({ Retribution = 100023, Protection = 100022 })[name]
+    C.SPEC = ({ Retribution = 100023, Protection = 100022, HolyShock = 100023 })[name]
 
     function C.character()
         local w = class()
@@ -281,7 +329,7 @@ local function content(name, pack)
             level = 60,
             known = known,
             talents = P.talents,
-            power = { type = MANA, token = "MANA", max = 6000 },
+            power = { type = MANA, token = "MANA", max = P.max or 6000 },
             speed = { P.weapon[3] },
             ranges = ranges,
         }
@@ -346,9 +394,9 @@ local function content(name, pack)
     C.WORLD = {
         level = 60,
         weapons = { P.weapon },
-        max = 6000,
+        max = P.max or 6000,
         fsr = { [MANA] = P.fsr },
-        power = 6000,
+        power = P.max or 6000,
         mobHealth = 15000,
         script = hooks,
     }
@@ -437,5 +485,6 @@ end
 
 M.Retribution, M.Protection =
     content("Retribution", "Retribution (wowsims.com)"), content("Protection", "Protection (wowsims.com)")
+M.HolyShock = content("HolyShock", "Holy Shock (wowsims.com)")
 
 return M

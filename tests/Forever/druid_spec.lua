@@ -99,6 +99,18 @@ local KIT = {
         0,
         "spell",
     },
+    -- the manual-press Restoration kit and Cat Form's charge (wowsims pin spells_auto_gen.go)
+    swiftmend = { { 18562 }, 248, "mana", 15, "spell" },
+    wild_growth = { { 408120, 1238214, 1238215 }, { 550, 755, 1050 }, "mana", 6, "spell" },
+    tranquility = { { 740, 8918, 9862, 9863 }, { 375, 505, 695, 925 }, "mana", 300, "spell" },
+    rebirth = { { 20484, 20739, 20742, 20747, 20748 }, 1057, "mana", 1800, "spell" },
+    hibernate = { { 2637, 18657, 18658 }, { 90, 120, 150 }, "mana", 0, "spell" },
+    soothe_animal = { { 2908, 8955, 9901 }, { 50, 75, 100 }, "mana", 0, "spell" },
+    abolish_poison = { { 2893 }, 199, "mana", 0, "spell" },
+    cure_poison = { { 8946 }, 199, "mana", 0, "spell" },
+    remove_curse = { { 2782 }, 124, "mana", 0, "spell" },
+    revive = { { 1237951 }, 933, "mana", 0, "off" },
+    feral_charge_cat = { { 414924 }, 0, nil, 30, "spell" },
 }
 
 -- The abilities whose cast changes the now-state beyond its declared cost, cooldown and GCD (spec §4).
@@ -128,6 +140,11 @@ local NOW = {
     "feral_charge",
     "faerie_fire",
     "wrath",
+    "healing_touch",
+    "regrowth",
+    "rebirth",
+    "hibernate",
+    "soothe_animal",
     "starfire",
     "moonfire",
     "insect_swarm",
@@ -167,6 +184,9 @@ local COVERED = {
     16689,
     407995,
     99,
+    740,
+    18562,
+    408120,
 }
 
 local function rank(n)
@@ -236,7 +256,7 @@ describe("Forever Druid", function()
                     assert.are.equal(want[2], priced(w, ld.run(a.spend, e), a.spendType) or 0, key)
                 end
             end
-            assert.are.equal(45, n)
+            assert.are.equal(56, n)
             local stale = { tigers_fury = true }
             for _, id in ipairs({
                 5217,
@@ -247,10 +267,8 @@ describe("Forever Druid", function()
                 439748,
                 408124,
                 408247,
-                408120,
                 410176,
                 411128,
-                414924,
             }) do
                 stale[id] = true
             end
@@ -263,10 +281,11 @@ describe("Forever Druid", function()
             assert.is_true(w.abilities.maul.onNextSwing)
             assert.are.same({ true, 10 }, { w.abilities.hurricane.channeled, w.abilities.hurricane.cast })
             -- Wrath's cast at its top rank (the cost loop above learned every rank)
-            assert.are.same(
-                { 2, 3.5, 2 },
-                { ld.run(w.abilities.wrath.cast, e), ld.run(w.abilities.starfire.cast, e), w.abilities.regrowth.cast }
-            )
+            assert.are.same({ 2, 3.5, 2 }, {
+                ld.run(w.abilities.wrath.cast, e),
+                ld.run(w.abilities.starfire.cast, e),
+                ld.run(w.abilities.regrowth.cast, e),
+            })
         end
     )
 
@@ -684,6 +703,75 @@ describe("Forever Druid", function()
                 assert.are.same({ "natures_swiftness" }, e.applied)
             end
         )
+
+        it("prices the talent-modified Restoration spells and Bash by rank", function()
+            local e = ld.env(w)
+            local function ranks(t)
+                return setmetatable(t, getmetatable(rank(0)))
+            end
+            for _, id in ipairs({ 25297, 9863, 17329 }) do
+                w.game.known[id] = true
+            end
+            e.talent = ranks({ brutal_impact = { rank = 2 }, improved_tranquility = { rank = 2 } })
+            assert.are.equal(30, ld.run(w.abilities.bash.cooldown, e))
+            assert.is_near(120, ld.run(w.abilities.tranquility.cooldown, e), 1e-9)
+            e.talent = ranks({ improved_healing_touch = { rank = 5 }, tranquil_spirit = { rank = 5 } })
+            assert.is_near(3.0, ld.run(w.abilities.healing_touch.cast, e), 1e-9)
+            assert.is_near(756, ld.run(w.abilities.healing_touch.spend, e), 1e-9) -- 840 x 0.9
+            assert.is_near(832.5, ld.run(w.abilities.tranquility.spend, e), 1e-9) -- 925 x 0.9
+            e.talent = ranks({ moonglow = { rank = 3 } })
+            assert.is_near(93.75, ld.run(w.abilities.natures_grasp.spend, e), 1e-9) -- 125 x 0.75
+        end)
+
+        it("spends Nature's Swiftness on every spell its mask holds, instant", function()
+            for _, key in ipairs({
+                "healing_touch",
+                "regrowth",
+                "rebirth",
+                "hibernate",
+                "soothe_animal",
+                "entangling_roots",
+            }) do
+                local e = ld.env(w)
+                e.buff = auras({ natures_swiftness = { up = true } })
+                assert.are.equal(0, ld.run(w.abilities[key].cast, e), key)
+                for _, f in ipairs({ "now", "handler" }) do
+                    e.removed = {}
+                    ld.run(w.abilities[key][f], e)
+                    assert.are.same({ "natures_swiftness" }, e.removed, key .. " " .. f)
+                end
+            end
+        end)
+
+        it("maps the Cooldown Manager's buff links onto the pack's auras", function()
+            local function has(a, id)
+                for _, v in ipairs(idsOf(a)) do
+                    if v == id then
+                        return true
+                    end
+                end
+            end
+            for aura, id in pairs({
+                bash = 1324490,
+                feral_charge_effect = 414923,
+                frenzied_regeneration = 22845,
+                starfire_stun = 16922,
+                leader_of_the_pack = 24932,
+                moonkin_aura = 24907,
+                wild_growth = 1238215,
+                tranquility = 9863,
+            }) do
+                assert.is_true(has(w.auras[aura], id), aura)
+            end
+        end)
+
+        it("lasts Hibernate by rank as the pin has it", function()
+            local e = ld.env(w)
+            for r, want in ipairs({ 20, 30, 40 }) do
+                w.game.known[({ 2637, 18657, 18658 })[r]] = true
+                assert.are.equal(want, ld.run(w.auras.hibernate.duration, e))
+            end
+        end)
 
         it('leaves any form but Moonkin on Innervate, as Classic\'s swap_form("") and wowsims/forever', function()
             for _, f in ipairs({ "now", "handler" }) do

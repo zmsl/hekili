@@ -52,9 +52,9 @@ The packager versions the zip from `git describe`. On a dirty tree, or with no r
 dry run.
 
 To try the zip in game, back up and remove the four `mklink /D` links first, or extraction writes into the WSL repo. In
-an elevated Windows `cmd` in `_classic_beta_\Interface\AddOns`: `rmdir Hekili Hekili_Shared Hekili_Druid
+an elevated Windows `cmd` in `_forever_\Interface\AddOns`: `rmdir Hekili Hekili_Shared Hekili_Druid
 Hekili_Warrior` (rmdir on a directory link removes only the link). Extract the zip there (from
-`\\wsl.localhost\personal\home\zack\src\hekili\.release\`), full client restart, log in a Druid or Warrior: displays
+the clone's `.release` folder), full client restart, log in a Druid or Warrior: displays
 show, `/hekili` opens, General page has the notice, no Lua errors. Then delete the four extracted folders and re-create
 the links, one per addon: `mklink /D <Addon> \\wsl.localhost\personal\home\zack\src\hekili\src\<Addon>`.
 

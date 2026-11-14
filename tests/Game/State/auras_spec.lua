@@ -1953,6 +1953,108 @@ describe("auras", function()
                 poll(14.5)
                 assert.is_nil(VS.Aura("player", fs.SPENDER_A, 14.5))
             end)
+
+            -- Decision 124 as amended (L972): a map build out of combat (here the viewer's override event) keeps the
+            -- proof of a cooldownID whose mapping is unchanged; strikes and silent counts start over. Back in combat on
+            -- a fresh target at 13.
+            local function rebuild()
+                local Q = I.PRESENCE.viewer
+                local n0 = Q.builds
+                ctl.now = 12
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.Fire("COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED")
+                assert.are.equal(n0 + 1, Q.builds)
+                ctl.now = 12.5
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+                ctl.auras.target.HARMFUL[1] = fake.SECRET
+                ctl.Fire("UNIT_AURA", "target")
+                swap("Creature-2", 13)
+                poll(13) -- the swap's frame: settling
+                poll(13.2) -- the first monitored sweep after it
+            end
+
+            it(
+                "L972: a rebuild with an unchanged map keeps the proof: a fresh target's missed cast closes at cast + W",
+                function()
+                    prove()
+                    rebuild()
+                    cast(2, REND, 13.5, 15) -- missed: the item stays dark
+                    for _, t in ipairs({ 13.7, 14.0, 14.4 }) do
+                        poll(t)
+                        assert.are.equal(28.5, est("target", fs.SPENDER_C, t), t)
+                    end
+                    poll(14.5)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 14.5))
+                    local Q = I.PRESENCE.viewer
+                    assert.are.same({ 1, true, 1, 0 }, { I.auraVerdict.n[kT()], Q.proven[502], Q.carried, Q.dropped })
+                end
+            )
+
+            it("L972: the snapshot counts the builds per trigger and the viewer's events in combat", function()
+                local by, n0 = { unpack(P.buildsBy) }, P.evInCombat
+                rebuild() -- one override build out of combat
+                ctl.Fire("COOLDOWN_VIEWER_DATA_LOADED") -- in combat: counted, its build waits for combat end
+                ctl.Fire("COOLDOWN_VIEWER_TABLE_HOTFIXED")
+                assert.are.equal(n0 + 2, P.evInCombat)
+                ctl.now = 14
+                ctl.Fire("PLAYER_REGEN_ENABLED") -- the waiting build: the latest trigger's
+                I.Build(I.def, 14) -- a belief rebuild
+                local Q = I.PRESENCE.viewer
+                local snap = VS.Snapshot()
+                local want = string.format(
+                    "builds=%d loaded=%d hotfixed=%d override=%d belief=%d other=%d evInCombat=%d carried=%d dropped=%d",
+                    Q.builds,
+                    by[1],
+                    by[2] + 1,
+                    by[3] + 1,
+                    by[4] + 1,
+                    by[5],
+                    n0 + 2,
+                    Q.carried,
+                    Q.dropped
+                )
+                assert.is_truthy(snap:find(want, 1, true), snap)
+                local sum = 0
+                for i = 1, 5 do
+                    sum = sum + P.buildsBy[i]
+                end
+                assert.are.equal(Q.builds, sum) -- every build has one trigger
+            end)
+
+            it("L972: a rebuild that changes the item's mapping carries no proof: no verdict", function()
+                prove()
+                ctl.viewer.infos[502] = { spellID = fs.SPENDER_A } -- now names the player aura
+                rebuild()
+                assert.is_false(I.PRESENCE.viewer.proven[502])
+                cast(2, REND, 13.5, 15)
+                for t = 13.7, 16, 0.3 do
+                    poll(t)
+                    assert.are.equal(28.5, est("target", fs.SPENDER_C, t), t)
+                end
+                assert.are.same({ 0, 0 }, { I.auraVerdict.n[kT()], I.auraVerdict.n[SHOUT] })
+            end)
+
+            it("L972: an item struck before the rebuild stays unproven until it lights again", function()
+                local Q = I.PRESENCE.viewer
+                ctl.ViewerAura(ti, "target")
+                poll(10.2)
+                P.Strike(REND, 2)
+                P.Strike(REND, 2) -- retired for the build (decision 122)
+                ctl.ViewerClear(ti)
+                poll(10.5)
+                assert.is_false(Q.proven[502])
+                rebuild()
+                assert.are.same({ false, 0 }, { Q.proven[502], Q.strikes[502] })
+                cast(2, REND, 13.5, 15)
+                for t = 13.7, 16, 0.3 do
+                    poll(t)
+                    assert.are.equal(28.5, est("target", fs.SPENDER_C, t), t)
+                end
+                assert.are.equal(0, I.auraVerdict.n[kT()])
+                ctl.ViewerAura(ti, "target") -- a light re-proves it, as before
+                poll(16.2)
+                assert.is_true(Q.proven[502])
+            end)
         end)
 
         it(

@@ -274,6 +274,13 @@
 -- 21. A castSpell or channelSpell aimed at another target (`target` Target with an index above 0: wowsims's second
 --    target, Bane of Havoc) carries `,other_target=1`: shown only on another target with Recommend Target Swaps on,
 --    never on the current one (the engine's forced cycle). Any other action aimed there stays omitted (rule 2).
+-- 22. Our mana under an absolute amount N (`currentMana` on Self `<` or `<=` a number, either side), an amount wowsims
+--    writes for its kit's pool, is `(mana.lo<N&mana.pct_lo<P)` (the op kept): P is N's share of the kit's pool, the
+--    spec's exported log's first "... mana ... of <max> total" line of our character (the replay's UnitPowerMax,
+--    tests/Game/harness/replay.lua M.pools), rounded up, so at the kit's pool the share never binds and a smaller
+--    pool (a lower level, whose N may exceed its whole pool) reads the share. No log: unsupported (rule 2). A `not` of
+--    our mana under a number is rewritten too (`!(mana.lo<N&mana.pct_lo<P)`), while a direct `>` or `>=` a number
+--    stays absolute; no APL at the pins has either form.
 -- 14b. A `sequence` (wowsims: its members in order, each once, once per reset; design §3a) is a stepped window `<w>`
 --    (the snake of its name) whose steps are its cast members: one line a cast, `<key>,if=window.<w>.next.<key>`, its
 --    own condition after, consecutive equal lines once. A distance-only waitUntil member is the next cast's range gate,
@@ -500,6 +507,16 @@ function M.autocasts(text)
     return { mcd = mcd, buffs = out }
 end
 
+--- Rule 22's kit pool from an exported log: our character's first mana line's maximum ("of N total"), or nil.
+function M.manaMax(text)
+    for line in text:gmatch("[^\n]+") do
+        local n = line:match("^%[%-?[%d.]+%] %[[^%]]- %(#1%)%] .- mana .- of (%d+) total%.$")
+        if n then
+            return tonumber(n)
+        end
+    end
+end
+
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, extra,
 --- settings, exclusive, requires, guard, condition, maintenance, select, auras), the spec's exported log text `log` (rule 13; nil: the
@@ -519,6 +536,7 @@ function M.context(set, r, log, player, encounter, tank)
         set = set,
         effects = {},
         autocast = log and M.autocasts(log),
+        manaMax = log and M.manaMax(log), -- rule 22
         keyOf = {},
         auraOf = {},
         icdOf = {},
@@ -1326,6 +1344,17 @@ local function bool(c, n)
         local u = nilOr(lu, ru)
         if u == true then
             return nil, nil, true
+        end
+        -- rule 22: our mana under a number, as the number's share of the kit's pool too
+        -- shortcut: a whole-number share with `<=` can miss lo == N at the kit's pool by float error (the engine's
+        -- 100*(lo/max)); none at the pins, add a margin if one appears.
+        local flip = r == "mana.lo" and tonumber(l) ~= nil
+        local under = flip and FLIP[v.op] or v.op
+        if (flip or l == "mana.lo" and tonumber(r)) and (under == "OpLt" or under == "OpLe") then
+            local n = flip and l or r
+            local max = c.manaMax or unsupported("currentMana against a number (no log: the kit's pool unknown)")
+            local o = M.OPS[under]
+            return ("(mana.lo%s%s&mana.pct_lo%s%d)"):format(o, n, o, math.ceil(100 * tonumber(n) / max)), nil, u
         end
         return l .. op .. r, nil, u
     elseif k == "auraIsActive" then

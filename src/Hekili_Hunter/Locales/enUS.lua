@@ -12,3 +12,7 @@ L["Survival"] = true
 L["Beast Mastery (wowsims.com)"] = true
 L["Marksmanship (wowsims.com)"] = true
 L["Survival (wowsims.com)"] = true
+L["Beast Mastery Turret (wowsims.com)"] = true
+L["Marksmanship Turret (wowsims.com)"] = true
+L["Survival Turret (wowsims.com)"] = true
+L["Survival Melee (wowsims.com)"] = true

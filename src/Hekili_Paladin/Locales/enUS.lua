@@ -11,3 +11,4 @@ L["Protection"] = true
 L["Retribution"] = true
 L["Retribution (wowsims.com)"] = true
 L["Protection (wowsims.com)"] = true
+L["Holy Shock (wowsims.com)"] = true

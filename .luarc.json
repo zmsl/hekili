@@ -18,7 +18,7 @@
     "${3rd}/busted/library",
     "${3rd}/luassert/library"
   ],
-  "workspace.ignoreDir": ["src/Hekili/Libs", "archive", ".claude", ".git", ".lua"],
+  "workspace.ignoreDir": ["src/Hekili/Libs", ".claude", ".git", ".lua"],
   "workspace.checkThirdParty": false,
   "diagnostics.globals": [
     "LibStub", "Hekili", "ns",

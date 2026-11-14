@@ -38,6 +38,9 @@ L["The %s, and |cFFFFD100%s|r priorities were reverted."] = true
 L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = true
 L["%s, picked from your talents."] = true
 
+-- Hekili/Engine/Sim/Targets.lua
+L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = true
+
 -- Hekili/Options/ChatCommands.lua
 L["Invalid command. Type '/hekili help' to see the available commands."] = true
 L["Target Swap minimum time to die set to %d seconds."] = true
@@ -585,6 +588,15 @@ L["When checked, this entry will require that the player have enough energy to t
 L["Caption"] = true
 L["Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display."] = true
 L["Caption text should be 20 characters or less."] = true
+L["Label"] = true
+L["Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note."] = true
+L["Label Condition"] = true
+L["If entered, the Label shows only while this is true."] = true
+L["Icon"] = true
+L["A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked."] = true
+L["Not a texture file; this line's icon is not overridden."] = true
+L["Icon Condition"] = true
+L["If entered, the Icon shows only while this is true."] = true
 L["This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended."] = true
 L["Variable Name"] = true
 L["Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore."] = true
@@ -759,7 +771,7 @@ L["|cFF00CCFFHekili Forever|r is a fork of the original |cFFFFD100Hekili|r proje
 L["Find Hekili Forever updates on GitHub."] = true
 L["Find Hekili Forever updates on CurseForge."] = true
 L["Report Issue"] = true
-L["SimC Wiki"] = true
+L["APL Reference"] = true
 L["Getting Started"] = true
 L["This section serves as a quick tutorial and explanation of the addon."] = true
 L["Welcome to Hekili Forever\n"] = true
@@ -813,6 +825,7 @@ L["Line %s: Converted '%s' to '%s'."] = true
 L["Line %s: Converted operations in '%s' to '%s'."] = true
 L["Line %s: Removed unnecessary expel_harm cooldown check from action entry for jab (%sx)."] = true
 L["Line %s: Removed unnecessary energy cap check from action entry for fists_of_fury (%sx)."] = true
+L["Line %s: Unclosed '(' in '%s'; split at every comma."] = true
 L["Line %s: Unsupported action '%s'."] = true
 L["Line %s: Unknown window '%s'; entry disabled."] = true
 L["Line %s: focus=%s is not a tier (a whole number, 1 highest); ignored."] = true

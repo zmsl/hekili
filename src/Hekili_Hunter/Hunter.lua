@@ -6,7 +6,7 @@
 -- the shared cooldowns (Arcane Shot and Summon Hawk; Aimed Shot and Multi-Shot), Raptor Strike on the next swing,
 -- Mongoose Bite's window from the plain usability read, Immolation Trap, Resourcefulness's cheaper strikes and traps,
 -- the time to the next main-hand swing (`mainhand_remains`, the weave's Multi-Shot gap), and the default priorities
--- (the wowsims.com packs, translated from wowsims/forever's Melee Weave; no in-game check yet).
+-- (the wowsims.com packs: the Turret lists are the default, the Melee Weave and Survival Melee are picked by hand; no in-game check yet).
 -- Research: docs/research/2026-10-15-forever-hunter/research.md and the class-completion research §5.
 -- Unmodelled: ranged haste on the auto-shot clock and Rapid Fire's +40% melee haste on the main-hand swing (Rapid Fire,
 -- Quick Shots; their haste on Aimed, Multi and Sniper Shot's casts is modelled; the core's aura field `swingHaste`
@@ -44,7 +44,8 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Beast Mastery (wowsims.com)",
+            package = "Beast Mastery Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
+            formerPackages = { ["Beast Mastery (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
@@ -55,7 +56,8 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Marksmanship (wowsims.com)",
+            package = "Marksmanship Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
+            formerPackages = { ["Marksmanship (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
@@ -66,7 +68,8 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Survival (wowsims.com)",
+            package = "Survival Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
+            formerPackages = { ["Survival (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
     },
@@ -107,6 +110,33 @@ local BASE_MANA = 1720 -- a fraction cost is of this (wowsims's ExtraClassBaseSt
 local CRYPTSTALKER = { 22436, 22437, 22438, 22439, 22440, 22441, 22442, 22443, 23067 }
 local IMMOLATION_TRAP = { 13795, 14302, 14303, 14304, 14305 }
 local IMMOLATION_TRAP_COST = { 50, 90, 135, 190, 245 }
+-- Lane A (coverage; the pin's sim/hunter/spell_data_auto_gen.go ladders, costs and cooldowns from its spells_auto_gen.go):
+-- every other ability a Hunter presses. A percent cost is a fraction of BASE_MANA. Forever's own Freezing Trap rows
+-- (1324500-2, as the Cooldown Manager links them) lead, the classic rows follow with the same costs.
+local EXPLOSIVE_TRAP = { 13813, 14316, 14317 }
+local EXPLOSIVE_TRAP_COST = { 275, 395, 520 }
+local FREEZING_TRAP = { 1324500, 1324501, 1324502, 1499, 14310, 14311 }
+local FREEZING_TRAP_COST = { 50, 75, 100, 50, 75, 100 }
+local FROST_TRAP = { 13809 }
+local FROST_TRAP_COST = { 60 }
+local VIPER_STING = { 3034, 14279, 14280 }
+local VIPER_STING_COST = { 135, 175, 215 }
+local COUNTERATTACK = { 19306, 1242634, 20909, 20910 }
+local COUNTERATTACK_COST = { 30, 45, 65, 85 }
+local DISENGAGE = { 781, 14272, 14273 }
+local DISENGAGE_COST = { 50, 100, 150 }
+local DISTRACTING_SHOT = { 20736, 14274, 15629, 15630, 15631, 15632 }
+local DISTRACTING_SHOT_COST = { 20, 30, 50, 70, 90, 110 }
+local VOLLEY = { 1510, 14294, 14295 }
+local VOLLEY_COST = { 350, 420, 490 }
+local SCARE_BEAST = { 1513, 14326, 14327 }
+local SCARE_BEAST_COST = { 35, 50, 75 }
+local TRUESHOT_AURA = { 1299346, 1299348, 19506, 20905, 20906 }
+local TRUESHOT_AURA_COST = { 180, 245, 325, 425, 525 }
+local MEND_PET = { 136, 3111, 3661, 3662, 13542, 13543, 13544 }
+local MEND_PET_COST = { 50, 90, 155, 225, 300, 385, 480 }
+local ASPECT_OF_THE_WILD = { 20043, 20190 }
+local ASPECT_OF_THE_WILD_COST = { 90, 115 }
 
 local function rest(ids)
     local out = {}
@@ -165,16 +195,28 @@ local function rangedCast(base)
     end
 end
 
--- One aspect at a time (wowsims aspects.go): each removes the other.
-local function aspectEffect(key, other, other2)
+-- One aspect at a time (wowsims aspects.go): each removes every other.
+local ASPECTS = {
+    "aspect_of_the_hawk",
+    "aspect_of_the_beast",
+    "aspect_of_the_cheetah",
+    "aspect_of_the_monkey",
+    "aspect_of_the_pack",
+    "aspect_of_the_wild",
+    "aspect_of_the_viper",
+}
+local function aspectEffect(key)
     return function()
-        removeBuff(other)
-        removeBuff(other2)
+        for i = 1, #ASPECTS do
+            if ASPECTS[i] ~= key then
+                removeBuff(ASPECTS[i])
+            end
+        end
         applyBuff(key)
     end
 end
 
-local function aspect(key, other, other2, ids, costs)
+local function aspect(key, ids, costs)
     return {
         id = ids[1],
         copy = rest(ids),
@@ -188,8 +230,8 @@ local function aspect(key, other, other2, ids, costs)
         startsCombat = false,
         known = knows(ids),
 
-        now = aspectEffect(key, other, other2),
-        handler = aspectEffect(key, other, other2),
+        now = aspectEffect(key),
+        handler = aspectEffect(key),
     }
 end
 
@@ -221,21 +263,70 @@ local function removes(key)
     end
 end
 
+-- The traps share one 30 s category cooldown (DB2 SpellCooldowns: Immolation, Explosive, Freezing and Frost Trap), which
+-- Survivalist's Discipline (1310496: curve {-20, -40} %, mask every trap placement and Deterrence) shortens, as does
+-- Deterrence's own 300 s. `base` is the unshortened cooldown.
+local function trapCooldown(base)
+    base = base or 30
+    return function()
+        return base * (1 - 0.2 * talent.survivalists_discipline.rank)
+    end
+end
+local TRAPS = { "immolation_trap", "explosive_trap", "freezing_trap", "frost_trap" }
+local function trapCast(me)
+    return function()
+        local cd = 30 * (1 - 0.2 * talent.survivalists_discipline.rank)
+        for i = 1, #TRAPS do
+            if TRAPS[i] ~= me then
+                setCooldown(TRAPS[i], cd)
+            end
+        end
+        if me == "immolation_trap" then
+            applyDebuff("target", "immolation_trap")
+        end
+    end
+end
+-- Serpent Sting's dot, and Rapid Recuperation's buff when talented (wowsims grants it on a landed sting; no damage
+-- needed). shortcut: no landed signal reaches a sting on live, and an avoid undoes only target auras
+-- (Families/Now.lua),
+-- so a missed sting keeps the buff in the belief: 15 s of +50% spirit regen while casting the game did not give, ready
+-- while short; the player aura read where plain (not under the Map restriction) corrects it, upgrade with a landed
+-- signal for a sting. A new function each call: an ability's `now` must not be its handler (Families/Now.lua).
+local function stings()
+    return function()
+        applyDebuff("target", "serpent_sting")
+        if talent.rapid_recuperation.rank > 0 then
+            applyBuff("rapid_recuperation")
+        end
+    end
+end
+
+-- Bestial Discipline (19590): 25/50% of the spirit regen while casting by rank (its effect 2, wowsims's curve).
+local BESTIAL_DISCIPLINE = { 0.25, 0.5 }
+
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace, as wowsims's logs measure them at 60: hunter_beast_mastery 7.94 a second while
 -- casting (Bestial Discipline 2/2's 50% share of 15.88) and 15.88 outside, so spirit 7.94, mp5 7.94 and share 0.5;
 -- hunter_marksmanship and hunter_survival 0 while casting and 15.88 outside. Forever's Spirit regen is `6.25 + Spirit/8`
 -- a second for every class (wowsims mana.go:75-76), not Classic's formula.
--- Resourcefulness (1242688, DB2 aura 134) and Rapid Recuperation (1242512) are +50% of Spirit regen while casting.
--- shortcut: Rapid Recuperation's share is 25/50% on a Serpent Sting hit and 50/100% on spending Rapid Killing by rank,
--- one aura ID for both (wowsims talents_marksmanship.go:160-200); 0.5 is the common rank; upgrade if a build's rank or
--- source differs.
+-- Resourcefulness (1242688, DB2 aura 134): +50% of Spirit regen while casting after a melee or ranged ability's crit
+-- (wowsims: proc flags 0x110). shortcut: the belief does not open it (an `onCrit` at 2/2 moved the Hunter loops'
+-- flicker and live brackets past their bars, Lane R); the out-of-combat read and calibration carry it.
+-- Rapid Recuperation (1242512): 25/50% by rank, opened at a Serpent Sting's cast (wowsims
+-- talents_marksmanship.go:183-230; the sting's `shortcut:` above names the missed-sting over-count).
+-- shortcut: wowsims also grants it at 50/100% when Rapid Killing (a kill proc the belief does not open) is spent, one aura ID for both; that source is unmodelled (the sting's share holds);
+-- upgrade with Rapid Killing's kill reaction and a second share if a build relies on it.
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
 spec:RegisterResource(
     Enum.PowerType.Mana,
     {
         resourcefulness = { aura = "resourcefulness", share = 0.5 },
-        rapid_recuperation = { aura = "rapid_recuperation", share = 0.5 },
+        rapid_recuperation = {
+            aura = "rapid_recuperation",
+            share = function()
+                return 0.25 * talent.rapid_recuperation.rank
+            end,
+        },
     },
     nil,
     {
@@ -246,8 +337,8 @@ spec:RegisterResource(
             mp5 = function()
                 return state.spec.beast_mastery and 7.94 or 0
             end,
-            share = function()
-                return state.spec.beast_mastery and 0.5 or 0
+            share = function() -- Bestial Discipline's rank (the belief reads it after its talent walk), never the spec
+                return BESTIAL_DISCIPLINE[talent.bestial_discipline.rank] or 0
             end,
         },
         base = BASE_MANA, -- a fraction cost is of base mana (Spec.lua)
@@ -285,7 +376,8 @@ spec:RegisterAuras({
     -- Aspect of the Hawk's proc (Deadly Aspects) on an Auto Shot: +30% ranged haste.
     quick_shots = { id = 6150, duration = 12, max_stack = 1 },
     -- Resourcefulness (talent 440529): a melee or ranged ability's crit gives +50% Spirit regen while casting (the mana
-    -- entry). Rapid Recuperation (talent 1223987): the same share on a Serpent Sting hit or spending Rapid Killing.
+    -- entry; not opened by the belief: the mana entry's note). Rapid Recuperation (talent 1223987): 25/50% by rank at a Serpent
+    -- Sting (its `now`), or 50/100% spending Rapid Killing (unmodelled: the mana entry's note).
     resourcefulness = { id = 1242688, duration = 30, max_stack = 1 },
     rapid_recuperation = { id = 1242512, duration = 15, max_stack = 1 },
     -- Rapid Killing's buff (415407, a kill proc: +20% on the next Shot, 20 s, one charge), Sniper Shot's (1310786: 10 s,
@@ -293,11 +385,35 @@ spec:RegisterAuras({
     -- Kick's speed (1317257, 3 s), Lacerating Strikes' bleed and Immolation Trap's burn (target debuffs, from our casts):
     -- registered as the pin states them (wowsims sim/hunter); no list reads them, so only the burn has a handler.
     rapid_killing = { id = 415407, duration = 20, max_stack = 1 },
-    sniper_shot = { id = 1310786, duration = 10, max_stack = 3 },
+    sniper_shot = { id = 1310786, copy = { 1310687, 1310785 }, duration = 10, max_stack = 3 }, -- the Cooldown Manager links all three
     expose_prey = { id = 1310726, duration = 10, max_stack = 1 },
     strider_kick = { id = 1317257, duration = 3, max_stack = 1 },
     lacerating_strikes = { id = 1310536, duration = 21, tick_time = 3, dot = "debuff", max_stack = 1 },
-    immolation_trap = { id = 14301, duration = 15, dot = "debuff", max_stack = 1 },
+    immolation_trap = {
+        id = 14301,
+        copy = { 13797, 14298, 14299, 14300 },
+        duration = 15,
+        dot = "debuff",
+        max_stack = 1,
+    },
+    -- The auras the abilities below apply, under the spell IDs the Cooldown Manager links (cdm/hunter.lua); durations from
+    -- the pin's rows (Freezing Trap's by rank, Deterrence's 10 s, Trueshot Aura's 30 min), the Forever-only ones as the
+    -- pin's talents state them. None is applied by a handler but Deterrence's and Trueshot Aura's: a trap's effect lands
+    -- when its target springs it, the rest are the target's.
+    freezing_trap = { id = 3355, copy = { 14308, 14309, 1324500, 1324501, 1324502 }, duration = 20, max_stack = 1 },
+    frost_trap = { id = 13810, duration = 30, max_stack = 1 },
+    scare_beast = { id = 1324506, copy = { 1324507, 1324510 }, duration = 20, max_stack = 1 },
+    intimidation = { id = 1324494, duration = 3, max_stack = 1 }, -- the pet's stun
+    scatter_shot = { id = 1324499, duration = 4, max_stack = 1 },
+    deterrence = { id = 19263, duration = 10, max_stack = 1 },
+    entrapment = { id = 19185, duration = 4, max_stack = 1 },
+    improved_concussive_shot = { id = 1324511, duration = 3, max_stack = 1 },
+    frenzy = { id = 19621, duration = 8, max_stack = 1 }, -- the pet's haste
+    trueshot_aura = { id = 1299346, copy = rest(TRUESHOT_AURA), duration = 1800, max_stack = 1 },
+    aspect_of_the_monkey = { id = 13163, duration = 3600, max_stack = 1 },
+    aspect_of_the_pack = { id = 13159, duration = 3600, max_stack = 1 },
+    aspect_of_the_wild = { id = 20043, copy = { 20190 }, duration = 3600, max_stack = 1 },
+    aspect_of_the_viper = { id = 415423, duration = 3600, max_stack = 1 },
     -- Mongoose Bite's window after we dodge (Defensive State, 5 s), timed from the plain usability flip (reset_precast).
     defensive_state = { id = 5302, duration = 5, max_stack = 1 },
     -- Raptor Strike queued on the next main-hand swing (C_Spell.IsCurrentSpell, applied in reset_precast).
@@ -492,27 +608,13 @@ spec:RegisterAbilities({
         handler = applies("hunters_mark", true),
     },
 
-    aspect_of_the_hawk = aspect(
-        "aspect_of_the_hawk",
-        "aspect_of_the_beast",
-        "aspect_of_the_cheetah",
-        ASPECT_OF_THE_HAWK,
-        ASPECT_OF_THE_HAWK_COST
-    ),
-    aspect_of_the_beast = aspect(
-        "aspect_of_the_beast",
-        "aspect_of_the_hawk",
-        "aspect_of_the_cheetah",
-        ASPECT_OF_THE_BEAST,
-        ASPECT_OF_THE_BEAST_COST
-    ),
-    aspect_of_the_cheetah = aspect(
-        "aspect_of_the_cheetah",
-        "aspect_of_the_hawk",
-        "aspect_of_the_beast",
-        ASPECT_OF_THE_CHEETAH,
-        ASPECT_OF_THE_CHEETAH_COST
-    ),
+    aspect_of_the_hawk = aspect("aspect_of_the_hawk", ASPECT_OF_THE_HAWK, ASPECT_OF_THE_HAWK_COST),
+    aspect_of_the_beast = aspect("aspect_of_the_beast", ASPECT_OF_THE_BEAST, ASPECT_OF_THE_BEAST_COST),
+    aspect_of_the_cheetah = aspect("aspect_of_the_cheetah", ASPECT_OF_THE_CHEETAH, ASPECT_OF_THE_CHEETAH_COST),
+    aspect_of_the_monkey = aspect("aspect_of_the_monkey", { 13163 }, { 20 }),
+    aspect_of_the_pack = aspect("aspect_of_the_pack", { 13159 }, { 100 }),
+    aspect_of_the_wild = aspect("aspect_of_the_wild", ASPECT_OF_THE_WILD, ASPECT_OF_THE_WILD_COST),
+    aspect_of_the_viper = aspect("aspect_of_the_viper", { 415423 }, { 0 }), -- a rune: no cost row
 
     rapid_fire = {
         id = 3045,
@@ -533,12 +635,16 @@ spec:RegisterAbilities({
         handler = applies("rapid_fire"),
     },
 
-    -- the Beast Mastery talent (DB2 19574: 2 min, free, off the GCD); its 18 s rage is the pet's, so no player aura
+    -- the Beast Mastery talent (2 min, off the GCD; 12% of base mana: the pin's row CostPct 12, wowsims's SpellConfig
+    -- charges it, the DB2 had it free); its 18 s rage is the pet's, so no player aura
     bestial_wrath = {
         id = 19574,
         cast = 0,
         cooldown = 120,
         gcd = "off",
+
+        spend = 0.12,
+        spendType = "mana",
 
         toggle = "cooldowns",
         startsCombat = false,
@@ -561,8 +667,8 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(SERPENT_STING),
 
-        now = applies("serpent_sting", true),
-        handler = applies("serpent_sting", true),
+        now = stings(),
+        handler = stings(),
     },
 
     volley = {
@@ -768,7 +874,7 @@ spec:RegisterAbilities({
         id = 13795,
         copy = rest(IMMOLATION_TRAP),
         cast = 0,
-        cooldown = 30,
+        cooldown = trapCooldown(),
         gcd = "spell",
 
         spend = discounted(cost(IMMOLATION_TRAP_COST, IMMOLATION_TRAP), true, false),
@@ -777,8 +883,296 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(IMMOLATION_TRAP),
 
-        now = applies("immolation_trap", true),
-        handler = applies("immolation_trap", true),
+        now = trapCast("immolation_trap"),
+        handler = trapCast("immolation_trap"),
+    },
+
+    -- Lane A (coverage): the other traps (one 30 s category cooldown, Survivalist's Discipline cuts it), the stings, the
+    -- shots and the utility the pin carries (spells_auto_gen.go rows; sim/hunter ladders). Resourcefulness's mask takes
+    -- the traps and Counterattack, Efficiency's the stings, Concussive, Scatter, Distracting, Tranquilizing, Volley and
+    -- Counterattack. No priority casts them: registered so a manual press costs mana and starts its cooldown.
+    explosive_trap = {
+        id = 13813,
+        copy = rest(EXPLOSIVE_TRAP),
+        cast = 0,
+        cooldown = trapCooldown(),
+        gcd = "spell",
+
+        spend = discounted(cost(EXPLOSIVE_TRAP_COST, EXPLOSIVE_TRAP), true, false),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(EXPLOSIVE_TRAP),
+
+        now = trapCast("explosive_trap"),
+        handler = trapCast("explosive_trap"),
+    },
+
+    freezing_trap = {
+        id = 1324500,
+        copy = rest(FREEZING_TRAP),
+        cast = 0,
+        cooldown = trapCooldown(),
+        gcd = "spell",
+
+        spend = discounted(cost(FREEZING_TRAP_COST, FREEZING_TRAP), true, false),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(FREEZING_TRAP),
+
+        now = trapCast("freezing_trap"),
+        handler = trapCast("freezing_trap"),
+    },
+
+    frost_trap = {
+        id = 13809,
+        cast = 0,
+        cooldown = trapCooldown(),
+        gcd = "spell",
+
+        spend = discounted(cost(FROST_TRAP_COST, FROST_TRAP), true, false),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(FROST_TRAP),
+
+        now = trapCast("frost_trap"),
+        handler = trapCast("frost_trap"),
+    },
+
+    scorpid_sting = {
+        id = 3043,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = discounted(0.09, false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 3043 }),
+    },
+
+    -- Improved Stings (1310661): -2 s a rank.
+    viper_sting = {
+        id = 3034,
+        copy = rest(VIPER_STING),
+        cast = 0,
+        cooldown = function()
+            return 15 - 2 * talent.improved_stings.rank
+        end,
+        gcd = "spell",
+
+        spend = discounted(cost(VIPER_STING_COST, VIPER_STING), false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(VIPER_STING),
+    },
+
+    concussive_shot = {
+        id = 5116,
+        cast = 0,
+        cooldown = 12,
+        gcd = "spell",
+
+        spend = discounted(0.08, false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 5116 }),
+    },
+
+    scatter_shot = {
+        id = 19503,
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = discounted(0.08, false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 19503 }),
+    },
+
+    -- The pet's stun: 8% of base mana, 60 s (no talent mask touches its price).
+    intimidation = {
+        id = 19577,
+        cast = 0,
+        cooldown = 60,
+        gcd = "spell",
+
+        spend = 0.08,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 19577 }),
+    },
+
+    -- Usable after a parry (like Mongoose Bite's window; no window is modelled: the usability read decides).
+    counterattack = {
+        id = 19306,
+        copy = rest(COUNTERATTACK),
+        cast = 0,
+        cooldown = 5,
+        gcd = "spell",
+
+        spend = discounted(cost(COUNTERATTACK_COST, COUNTERATTACK), true, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(COUNTERATTACK),
+    },
+
+    -- Survivalist's Discipline (1310496): -20/-40% cooldown; off the GCD, no cost.
+    deterrence = {
+        id = 19263,
+        cast = 0,
+        cooldown = trapCooldown(300),
+        gcd = "off",
+
+        startsCombat = false,
+        known = knows({ 19263 }),
+
+        now = applies("deterrence"),
+        handler = applies("deterrence"),
+    },
+
+    disengage = {
+        id = 781,
+        copy = rest(DISENGAGE),
+        cast = 0,
+        cooldown = 5,
+        gcd = "spell",
+
+        spend = cost(DISENGAGE_COST, DISENGAGE),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(DISENGAGE),
+    },
+
+    feign_death = {
+        id = 5384,
+        cast = 0,
+        cooldown = 30,
+        gcd = "off",
+
+        spend = 80,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 5384 }),
+    },
+
+    flare = {
+        id = 1543,
+        cast = 0,
+        cooldown = 15,
+        gcd = "spell",
+
+        spend = 50,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows({ 1543 }),
+    },
+
+    distracting_shot = {
+        id = 20736,
+        copy = rest(DISTRACTING_SHOT),
+        cast = 0,
+        cooldown = 8,
+        gcd = "spell",
+
+        spend = discounted(cost(DISTRACTING_SHOT_COST, DISTRACTING_SHOT), false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(DISTRACTING_SHOT),
+    },
+
+    tranquilizing_shot = {
+        id = 19801,
+        cast = 0,
+        cooldown = 20,
+        gcd = "spell",
+
+        spend = discounted(270, false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows({ 19801 }),
+    },
+
+    -- A 6 s channel, a tick a second.
+    volley = {
+        id = 1510,
+        copy = rest(VOLLEY),
+        cast = 6,
+        channeled = true,
+        tick_time = 1,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = discounted(cost(VOLLEY_COST, VOLLEY), false, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(VOLLEY),
+    },
+
+    scare_beast = {
+        id = 1513,
+        copy = rest(SCARE_BEAST),
+        cast = 1.5,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = cost(SCARE_BEAST_COST, SCARE_BEAST),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(SCARE_BEAST),
+    },
+
+    -- Raid ranged attack power; the ranged-power half is no resource, the 30 min aura is for display.
+    trueshot_aura = {
+        id = 1299346,
+        copy = rest(TRUESHOT_AURA),
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = cost(TRUESHOT_AURA_COST, TRUESHOT_AURA),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(TRUESHOT_AURA),
+
+        now = applies("trueshot_aura"),
+        handler = applies("trueshot_aura"),
+    },
+
+    -- A 5 s channel on the pet; Improved Mend Pet (19572): -10% cost a rank.
+    mend_pet = {
+        id = 136,
+        copy = rest(MEND_PET),
+        cast = 5,
+        channeled = true,
+        tick_time = 1,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return (MEND_PET_COST[knownRank(MEND_PET)] or MEND_PET_COST[1]) * (1 - 0.1 * talent.improved_mend_pet.rank)
+        end,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(MEND_PET),
     },
 })
 
@@ -875,6 +1269,26 @@ spec:RegisterPack(
     "Survival (wowsims.com)",
     20261110000,
     [[Hekili:LR13poQnq4)w2xsjQBjBY296ERAwPw1wDxv7QtLTVcXbBsCdGr2MeTsN4V9oM8lWjqCa27fUhorGXFZN)S9mdZI7y3xDDWijX9Lj3n5dJhp(o4FUoY3siUoji)vOfWfXOi4)Ds5RPRrHzZS2W2iOrcBFw0qLDVfYqyfwZtPHYph7o)SWksi(UoF6FF51F)FEsSdoxNLumMSDmeHFLo6PSzYLKSz7U3OagNSMWZMHjbO0qz2SF5l)v2m42zZkarkDKYVIrltJLe(iCIyKIMyXiXAVne0AInGx4WBb85OyriqCmCnt5pQiBgcJzXFhCXkYBc7Sz)gsIE6m8W6V)8RailLYeXtJgTGkxMoxr9rAMoeWeOl5b0h9XtqtWb(2GmYzb0qqOr(sklwyNWjWGNJKt3sDHxeIV6wAW0BWK5Pbb2fVVDAs2FEYq)(PJqQPV0Jf4bYN3s0MTqKdWPpRimt5Oek2lGYj3MkiGzbEl8XthRaqI4lisBwQuqXKhgiPrKNN(WHbdEMeMgteEH0flLNbGTdyGgqfbyEiJb(pL)wZgoOne(kA8IgnCmjIft994WSOraeH(pghwCIrEjm1nBekLw8dy(PIPtmztamuy9tcmqi50v6tHTivCPCdSHLgxY3QrIjCVvu)v1BjivlymWdZPss9MsJIyWHm4xEWbUK6nEdS655hsZnZ6MTpWUiVSxfZ2e)vRkF0aFgledxu(zCseIglEES9ddhoOgnGWtiXsqfvBKkiB7xakzaScOTy(yrWqCFumXtSKjp9qujlJGqAutmS2dPSflcj2rS1KiGIdSut5LOyS3Uz)pF4gqKac(hu7hhyDJ1bLUaH3j0N5b0ypiY5cYWbww5xCe)P391Y355P7nzRhl)RY2oC4q9rxY67adg2Iip9a15QdN230etYr0Z0edt81ZuLRjBEptAAqkYEMcPN3VNn91kMPNn7VMk0UXsNyL5LMYORCDz5qTMkTT2JULanirFNsGMLvTtPqlsH1P8O95l6u6CHGZDQVQpsyN6ktF7Fno0oguB3dE380PDF4DZvNR7fVBo7Bw3p64zGRZAiClqiToahsfsrEtN32Zw4YxYBcnjgnpKGD)vxNcBuvpCx7qDDoMf11XNdRZCkY1PI2q6kbpBiWfZowc6Z3Bof03Bi0hZ6ziW)OPaFiBMHa)GHaxmlLHq)bdH(KSpgI)pPH)Xbvrlqp6YIpW1jpONAFba6JvcA5obEyuJRDN5XaTkW)Og47nS4jWACjGW47QaIsr6Uag6NS2JHwiSlGI(XO9OCi2uXXxxmQwhK6uUPFo80TgxQ5SfwCkAzHLDLF0pwUFmfQCO6GspMdH(bWdlOhki4siy65Skcu(o8sxx)BD1Yx76YV3vXeaJ1JC04ma9dTlxZ0dm2WuB9iftpAFdZz3FuSj6j3ACXi9inZ0YKnRkREKWPx)Ij1i0tKhtQ9zIEnwxQ2NEI2PKMQklSIA66rkJPVUPz1Q262IvQTaMwh91wvyRzzo7mTM1RR(RUHBgxB4vvPt3WntRc7ARPOty39MwXtJYE3nuuVaJgKNS9eXKms3xvhjmmJu7zPIevLw0Sy)Ddh0Z)uT)AN3AutWUVQoEuzxW6woROGEO(dlsv2fTUNd6b03ZH66cx3Zc9q37zX3(U411ZnP6tNE3N7S7z(7jSFMwUxWxUjYYt)liCiqJq)ZMUeGv)PvNtxGWOu5sg315tKv0qA2mR)y3xgE(JD)))]]
+)
+spec:RegisterPack(
+    "Beast Mastery Turret (wowsims.com)",
+    20261112000,
+    [[Hekili:nAzuVTjmqC8pl7P1QfbHS1U1iXKw12060A10i7vdg8rWlGnY2SO8cF23zOJqibvRiLyzF3pF35)NDibKnKig1aKNwTC1TbbbRwUCjjYCOgir10SD0T4abTc)(EGQnTjpIFdQdTjBAukaN4Q9Y9AEL2ltwDT1RdLskZsoTHxAEqqsV4MORHms03(9tB(YVwNAHhx1ZMevWzmO3rqN54EVUnXuaTjppNFUub)fuTjmiN2uIM)PF(J2eC62Kzb2W9TbM2VOrGl5ZQ1(28GH)u5HClVEbUpkQqxI5edhlT7lx3MqzmP414GDWbTxBYNPg66lepx94dBqifgtTETV)wUPOj1Mc(tm9AKjguWn07YyRORy5zEyfwjZ5L4jcnZWLcTxTcqNtPMW(GwJfs1Uf88WxXG0M8CVXZ71u3(9ZC9nH(uBIBIL5XyzmUGUVhrhGZxBwmAbVguX6cPzWGqOSra64s(2cZIgnGKYJ3MXcdS7HHxbFm8MbZrkPLsjloVrDWnZXSdu74IToAU2WPLX7vutHtEOO1CmE4kWjZzqLuWZIvyA7Kdv0)iv45JGgxlTt6KxNCENlZA0HRC5C3EmbQAqyIXcbw069nySVNyWeNPQmQao9m2ongHSZM9ebbjc11ACLj3guY1gD31r9nR4WN6UEce00sGrUNenQIyx8z9pAYiXfjktXXCMtXRX6lyedUxoI6OSBgqV1vqdcYza9oNbnsQodRBCK1rr8mGU1rqJL3ZG69oI6mH)m8(WeEhnAgX(XTy8cKOoPUvrGqV7fHoTl4i1twzaBGfBWYjC)VpJ6B6SBQcFWUHgPoZMQEhcHJDwe7NOH7HVu7ZLlhVCD8cTpdX5zplCcW5F64sTsZLvyErBmfsf(VfGD8so(c6xF(bYULj)7d]]
+)
+spec:RegisterPack(
+    "Marksmanship Turret (wowsims.com)",
+    20261112000,
+    [[Hekili:nwz0oUPoqy4NLEv3OgbHC6UTBK4i1Q2QUvDxvvsV1WaEi4gWgzB6QCdp7DCskHqcArrkYY(F(8mJ)THfWwZI4GfzpTCXY7cccwUyXcwKDxnYIQHSTWgAGeQO)Fe0BnvG0uiQBtw3O1OTn5MNvpBevgVmv1mxm7kva3XnTruAFqYsV6wyQXmw0x)1tR)8pxv1dnlQqW54H4qt2K24vTj2cSn54C(5kn(hu3MWXCOPKK)HF892eA62KrW1i8D5KXVOrArTpV247kbUXVQYJOwoBoTlAkWsQC40yLBxfM2eGZvYxtd2I7mETjFcSWQRKn384dRjifwBTzLV)gHTOj1va(dKoJysjfElCFgFjSKNN5rnxTkxushfqMvOKgVAnsbNc2WdjTj21jNlYdFfhtBYZ96pVxtD73Ui03e6dUc3gRYJPMyCb88be7bC5AJIXif1Oo2uOSDccXYgjAIlfBkSZBmirkpEtgpmWThwrf()H32jNOKwQu848g9UPjNQouVvi3mj5AOwq0fACsY5yLskYI1urmPaQGFR0u3wcX1k3KtkQZo9YvznMWLt5u010rDnkTXgRRfCi2G(XEMGbbd6mqINFI5MMYq(fZE2XllICPgALbxRlfgRz)RkhU4rdFA)RmOeslro7JSOEDe3IhDZKKEwfwuMwq1SaOxJo0WywAVMiQtMOra9FtfuN9AeqVDIGoz8gb0TteuFl5iOUBIOUWSocV3nG3jrJyqpTf9xGfT3E6ofjOV)fHo05EI6zR0HnWH9(by)xi9S6ozblgtxN3FVSHE3Um40LbM7xu3dHxZXF9UXl3gVIJVlpV4D5Zao(B3xZ9pwvr1f0yluA6l14wrPG(e2xo(fQ9lZ(7p]]
+)
+spec:RegisterPack(
+    "Survival Turret (wowsims.com)",
+    20261112000,
+    [[Hekili:nw5BVTjmqy8pl7vRrRcczRDRrIjTPTP1QTOPr2BnyWhbVa2i)NuL3WN9DojJqiGkksrw2p3pF35hBibK1Kig1aKvlMV4(GGGfZNpNez2xdKOAA2w6gCGGwH)hzv747OLnjRTkfyAsU5z5ZAEL2ltwnZPFFPKYCmtT8sZJcs6G411qgj67)z16V(7L6tyjrfCgdogdOZEXnCztIPaAsonNFUub7avtcdYP2su(N(1pAsWPBsgaLL77YdTFHvyaLpRw77sBM2xVZdjwo7wChuuHUelbgow62rUUjHYysXRXbBH9AVMKVqn0LdKj38ZhxJqkmMA9sF)nCtHn1L8(9KodzIjfCh9Hm2c6cwEMh2qvYCEj26PzgUuO9QvagCk1eEmP1Xvu12B55HVIbP28CVUZ7zRBE6QqFtOp1v4MyzEm2aJlOpFeXbaxV2Oy0cEnOI1fstRGqO0kaDCjFtH5wRgqs5XBYyHbU9WWRGpgExRCKsAPuYIZTQ9ttowDGAlxSzsYv0AosNRGjjNbvsbplwHfXKcOI(xPc72cACT0n5KI6ItVCzMvhUykNIUMoOQbHjwBCTGJXg0n2le0lyQkJkGlpXCtJzi7QzV44LeHUunUsVRYLCTrF4vKJx6WHRo8QciOPLaJ8zsuNoIBXtUzushRcjktXXAMtXxFo2WigCVMiQZMOra92PcQ1EncO3nrqNnEJa6UjcQRLCeu3pruxzwhH377X7SOrmON3IUlqIoypDNIi0p8Iq77Cpt9IvAXg4W(qpS)pKowDNSG5JPR17FqwFVBBgC(YaX9lQ9HWHC8d3nE524ao(288Q3LVa44VDpK7FSQcRlQ1uiv4xNHT8so(jSVD6luhwM8Vp]]
+)
+spec:RegisterPack(
+    "Survival Melee (wowsims.com)",
+    20261112000,
+    [[Hekili:LJvupoQnq4Fl7lBjQBHK0Ux7TQCsTQT6UQ7wvv2(kgdEG4cyJSnjALoXV9ooHKaeijxV32vR0kh7z(8mJnFFJC4IWNcdyude(4Y5lFZIflwoF(8WaZZvqyqfnjNMHde0s8)b1Q1810IMOpbfa0e5SrUrZl1UjYYzwZFUqszwiJR5fMpicJhfDDfKeg8()5XN(9)(bDlQHbR4mgSZhqNCP97HMiZkCY258sLkynOAIyqkTUW0e9l)1hBIWPBIofPAUNnk0ERQfgq5XQ0E2GMP90RjLwRCrylMDhUnkQqxGPbdhlTBlx3erzmP4BWb5WZA3MOFJAOpms448Pp8ecYkJPs)GNxg3SQo2MbEdmDgIjg1W903MWwsxYstCXIQsMYlWQpnXWLcTBLcqNJPg)DHUMusv53Xt9VHbX1PPUDN3TUQ5ppX1V13JAtFdrMsWQijgOAZwm2IWil2fiFOOwaAsbpBL5UAnGwMsYsy(lSyy4LW78V)G54UfxiLmsAT65RZCm8bvoxKDvMxs)xPctxbLujTtEvEXGsPGNquyUCvoOOvCmj4QR2CdgwAJINp0JuzsTU1tQkdmUBW7fCrpa6D(UZJLxZ58xWElZYka3s5AOeeMBDAdgzTrZzW936CJJZn7G1LQsOcGOxjnU5c5gXNhzbUGGFTKbZU1Xz7agrbLuUq)Z(Z)C)zEN)EtWRBa776)R(2oB2SHE3Z65ObZ6DNqkYKsmXJ5g4fEUApMzGIKZtYFHNQBqobssbV6fEEMqlki7(jsZICZwjy)n0ICcx0H2yFQE(R(tsXCYnNjTKxwkrnqB8G6H9iB014AcYk6M8PpQghy32mYhP7RWJqKXYs63HIApzxpd6PQ1cHvt74j5ylxIDfWBxnmavC1ObdAnXwR12oyADdh(42MKabnUayH)AyqIcRRkonmyQGBVAn2Qt3vcd2Mywen4(oa29U0jlSM99ty2XSj0(xqBBpJfWD4)TlEaIUY4DtRwXSXcYPG6Oa)eanmnMeOds)ta0pCLaDstbtG39xjEDBxycOEZvc1XgjMaOFCYBC9)oQZfQZTzhBfWc(pDXRZdAS4iwDx4WEV0c6BNoI)6iP)YzP)kPPVmp9)RQ(I5t9DCx26x4foBDyi50bMYosrVckdtX(Fq18vqnyOMWj0C7ZVJLNH9fTtXMS7bk2RzBXEOmXL)CRpZQfJHsdx8Q6PqmusypedANARTdz9pSDh7VARDdjWp)vNHXKX(McTVdWynlmox)LfjoxhnN(Cc9q8mV5qyB3n0AZkPkm49qoVG3e58hTpAY2Ld)V]]
 )
 
 -- The hand-built lists the wowsims.com packs replaced: a saved choice of one falls back to the spec's default.

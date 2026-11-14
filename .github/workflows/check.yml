@@ -27,3 +27,4 @@ jobs:
       - run: make api-check
       - run: make packs-check
       - run: make tools-test
+      - run: make wiki-check

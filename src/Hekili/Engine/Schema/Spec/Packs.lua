@@ -181,7 +181,7 @@ function Hekili:RestoreDefault( name )
 end
 
 
-ns.restoreDefaults = function( category, purge )
+ns.restoreDefaults = function( category )
 end
 
 

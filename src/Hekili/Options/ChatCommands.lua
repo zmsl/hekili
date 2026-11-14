@@ -32,6 +32,50 @@ function Hekili:countPriorities()
     return priorities
 end
 
+-- Alias maps for argument substitutions
+local arg1Aliases = {
+    prio        = "priority",
+    snap        = "snapshot"
+}
+local arg2Aliases = {
+    cd          = "cooldowns",
+    cds         = "cooldowns",
+    pot         = "potions",
+    display     = "mode",
+    target_swap = "cycle",
+    swap        = "cycle",
+    apl         = "pack",
+    rotation    = "pack",
+    lost        = "lostmyui",
+
+}
+local arg3Aliases = {
+    auto        = "automatic",
+    pi          = "infusion",
+}
+
+-- Command handlers mapping, each called as handler( self, args, input )
+local commandHandlers = {
+    set      = function ( self, args ) self:HandleSetCommand( args ) end,
+    profile  = function ( self, args ) self:HandleProfileCommand( args ) end,
+    priority = function ( self, args ) self:HandlePriorityCommand( args ) end,
+    spec     = function ( self, args ) self:HandleSpecCommand( args ) end,
+    enable   = function ( self, args ) self:HandleEnableDisableCommand( args ) end,
+    disable  = function ( self, args ) self:HandleEnableDisableCommand( args ) end,
+    move     = function ( self, args ) self:HandleMoveCommand( args ) end,
+    unlock   = function ( self, args ) self:HandleMoveCommand( args ) end,
+    lock     = function ( self, args ) self:HandleMoveCommand( args ) end,
+    stress   = function ( self ) self:RunStressTest() end,
+    dotinfo  = function ( self, args ) self:DumpDotInfo( args[2] ) end,
+    recover  = function ( self ) self:HandleRecoverCommand() end,
+    fix      = function ( self, args ) self:HandleFixCommand( args ) end,
+    snapshot = function ( self ) self:MakeSnapshot() end,
+    skeleton = function ( self, args, input ) self:HandleSkeletonCommand( input ) end
+}
+
+-- Readable by tools (the wiki's Slash-Commands table, tools/wiki/collect/commands.lua).
+ns.ChatCommands = { handlers = commandHandlers, aliases = { arg1Aliases, arg2Aliases, arg3Aliases } }
+
 function Hekili:CmdLine( input )
     -- Trim the input once and handle empty or 'skeleton' input
     input = input and input:trim() or ""
@@ -48,28 +92,6 @@ function Hekili:CmdLine( input )
         table.insert( args, arg )
     end
 
-    -- Alias maps for argument substitutions
-    local arg1Aliases = {
-        prio        = "priority",
-        snap        = "snapshot"
-    }
-    local arg2Aliases = {
-        cd          = "cooldowns",
-        cds         = "cooldowns",
-        pot         = "potions",
-        display     = "mode",
-        target_swap = "cycle",
-        swap        = "cycle",
-        apl         = "pack",
-        rotation    = "pack",
-        lost        = "lostmyui",
-
-    }
-    local arg3Aliases = {
-        auto        = "automatic",
-        pi          = "infusion",
-    }
-
     -- Apply aliases to arguments
     if args[1] and arg1Aliases[ args[1]:lower() ] then args[1] = arg1Aliases[ args[1]:lower() ] end
     if args[2] and arg2Aliases[ args[2]:lower() ] then args[2] = arg2Aliases[ args[2]:lower() ] end
@@ -77,28 +99,9 @@ function Hekili:CmdLine( input )
 
     local command = args[1]
 
-    -- Command handlers mapping
-    local commandHandlers = {
-        set      = function () self:HandleSetCommand( args ) end,
-        profile  = function () self:HandleProfileCommand( args ) end,
-        priority = function () self:HandlePriorityCommand( args ) end,
-        spec     = function () self:HandleSpecCommand( args ) end,
-        enable   = function () self:HandleEnableDisableCommand( args ) end,
-        disable  = function () self:HandleEnableDisableCommand( args ) end,
-        move     = function () self:HandleMoveCommand( args ) end,
-        unlock   = function () self:HandleMoveCommand( args ) end,
-        lock     = function () self:HandleMoveCommand( args ) end,
-        stress   = function () self:RunStressTest() end,
-        dotinfo  = function () self:DumpDotInfo( args[2] ) end,
-        recover  = function () self:HandleRecoverCommand() end,
-        fix      = function () self:HandleFixCommand( args ) end,
-        snapshot = function () self:MakeSnapshot() end,
-        skeleton = function () self:HandleSkeletonCommand( input ) end
-    }
-
     -- Execute the corresponding command handler or show error message
     if commandHandlers[ command ] then
-        commandHandlers[ command ]()
+        commandHandlers[ command ]( self, args, input )
         self:UpdateDisplayVisibility()
         return true
     elseif command == "help" then

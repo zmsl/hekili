@@ -106,7 +106,7 @@ describe("caster range: a melee spec's plate count (10 yd default), unchanged", 
 
     it("counts near plates out of combat and no far plate in combat", function()
         local H = boot({ character = ww.character, PACK = ww.PACK })
-        assert.is_nil(H.Hekili.DB.profile.specs[ww.SPEC].nameplateRange)
+        assert.are.equal(10, H.Hekili.DB.profile.specs[ww.SPEC].nameplateRange)
         plates(H, { { 8, false }, { 8, false } })
         H.ctl.distance.nameplate1 = 8
         assert.are.equal(3, count(H))

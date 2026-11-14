@@ -335,7 +335,7 @@ local PACKS = {
         -- Troll): 5650 mana, 31.13 a second while casting (OtherID 2 Tag 1, Mana Spring Totem and Mindfulness's share
         -- included: 26.13 without the totem's 5) and 45.25 outside the five-second rule (Tag 2)
         mana = 5650,
-        fsr = { 14.12, 26.13, share = 0.15, auras = { [10494] = { mp5 = 5 } } },
+        fsr = { 14.12, 26.13, share = 0.5, auras = { [10494] = { mp5 = 5 } } }, -- Mindfulness 3/3: 50% (wowsims's curve)
         distance = 20, -- the build's distanceFromTarget: the shocks reach 20 yd
         uptime = { "flame_shock" },
     },

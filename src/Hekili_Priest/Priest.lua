@@ -17,10 +17,12 @@
 -- Where the DB2 and wowsims's newer data (build 70450) disagree and wowsims's log casts its own (the Mage lane's ruling
 -- M9 precedent; wowsims packs Task 14; in-game checks): Devouring Plague's cooldown 24 s (DB2 60 s), Shadow Word:
 -- Death's 18 s (DB2 15 s).
--- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap on a kill, Shadow Weaving: unseen; the
--- player aura walk reads the player's where plain). Dark Inspiration is applied by a Mind Blast (in the mana regen
+-- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap below 5/5, Shadow Weaving: unseen; the
+-- player aura walk reads the player's where plain). Spirit Tap 5/5 opens at our kill (the "kill" reaction, below).
+-- Dark Inspiration is applied by a Mind Blast (in the mana regen
 -- and the world; a Mind Flay's full channel is not: a channel's handler never runs, and the full-channel roll is unseen:
--- accepted, the aura read corrects it). Also unmodelled: the DoTs' resists, Shadow Word: Death's backlash, Inner Focus's crit, pushback, the healing spells Shadowform forbids (no
+-- accepted, the aura read corrects it). Also unmodelled: the DoTs' resists, Shadow Word: Death's backlash, Inner
+-- Focus's crit, pushback, the healing spells Shadowform forbids (no
 -- priority casts one).
 -- Credits: Hekili (registration API and pack format). wowsims/forever (MIT, https://github.com/wowsims/forever:
 -- ui/specs/priest/dps/builds/*.build.json and sim/priest/) is the reference for the abilities and the talent, proc,
@@ -99,6 +101,11 @@ local FADE = { 586, 9578, 9579, 9592, 10941, 10942 }
 local RENEW = { 139, 6074, 6075, 6076, 6077, 6078, 10927, 10928, 10929, 25315 }
 local POWER_WORD_FORTITUDE = { 1243, 1244, 1245, 2791, 10937, 10938 }
 local INNER_FIRE = { 588, 7128, 602, 1006, 10951, 10952 }
+local FEEDBACK = { 13896, 19271, 19273, 19274, 19275 }
+local TOUCH_OF_WEAKNESS = { 2652, 19261, 19262, 19264, 19265, 19266 }
+local HEX_OF_WEAKNESS = { 9035, 19281, 19282, 19283, 19284, 19285 }
+local PSYCHIC_SCREAM = { 8122, 8124, 10888, 10890 }
+local FORTITUDE_BUFF = { 1244, 1245, 2791, 10937, 10938, 21562, 21564 } -- Power Word: Fortitude's and Prayer of Fortitude's
 local INNER_FIRE_COST = { 30, 65, 105, 165, 235, 315 }
 
 -- The talents' per-rank values (wowsims's data; the DB2 carries the top rank's on rank 1): Mental Agility -3 / -7 /
@@ -147,6 +154,28 @@ local function agile(values, ids)
     end
 end
 
+-- Improved Healing's -5 / -10 / -15% (DB2 14912 effect 0: aura 108 misc 14; its mask names Lesser Heal, Heal, Greater
+-- Heal, Penance and Prayer of Mending, not Flash Heal or Prayer of Healing); Soul Warding's -15% on Power Word: Shield.
+local IMPROVED_HEALING = { 0.05, 0.1, 0.15 }
+
+-- A cost by known rank (a fraction is a share of base mana), less the talents the flags name. Cost mods multiply
+-- (wowsims spell_mod.go). A new closure per ability, none per call.
+local function price(values, ids, agility, healing, warding)
+    return function()
+        local c = values[knownRank(ids)] or values[1]
+        if agility then
+            c = c * (1 - perRank(MENTAL_AGILITY, talent.mental_agility.rank))
+        end
+        if healing then
+            c = c * (1 - perRank(IMPROVED_HEALING, talent.improved_healing.rank))
+        end
+        if warding and talent.soul_warding.rank > 0 then
+            c = c * 0.85
+        end
+        return c
+    end
+end
+
 -- Each spell refuses while an interrupt has its school locked out (Hekili_Shared's locked_out_<school>, C10). A new
 -- closure per ability: each field function runs in the environment the engine gives it (in the belief's `now` context
 -- the names are absent: never locked).
@@ -185,6 +214,9 @@ local function pain()
     end
 end
 
+-- Meditation (14521): 17/33/50% of the spirit regen while casting by rank (wowsims's curve, e5a9cd2a2d).
+local MEDITATION = { 0.17, 0.33, 0.5 }
+
 -- The five-second rule (C3): the regen per second the declared starting point the out-of-combat read and the in-combat
 -- calibration replace, per spec as wowsims's logs measure it at 60 (Forever's Spirit regen is `6.25 + Spirit/8` a
 -- second for every class, wowsims mana.go:75-76). Shadow (testing.build.json, priest_shadow.log): 2.688 a 0.1 s tick
@@ -208,6 +240,16 @@ spec:RegisterResource(
                 local _, s = stat("UnitStat", 5)
                 return s > 0 and 1 + 0.15 * (s / 8) / (6.25 + s / 8) or 1
             end,
+        },
+        -- Spirit Tap (15271, 15 s): Spirit +100% (aura 137) and 50% of the regen while casting (aura 134): the spirit
+        -- part x (6.25 + 2 x Spirit/8) / (6.25 + Spirit/8), Spirit the belief's out-of-combat read (1 before it)
+        spirit_tap = {
+            aura = "spirit_tap",
+            spirit = function()
+                local _, s = stat("UnitStat", 5)
+                return s > 0 and 1 + (s / 8) / (6.25 + s / 8) or 1
+            end,
+            share = 0.5,
         },
         dark_sacrifice = {
             aura = "dark_sacrifice",
@@ -233,8 +275,8 @@ spec:RegisterResource(
             mp5 = function()
                 return state.spec.shadow and 26.88 or 35.73
             end,
-            share = function()
-                return state.spec.shadow and 0.5 or 0
+            share = function() -- Meditation's rank (the belief reads it after its talent walk), never the spec
+                return MEDITATION[talent.meditation.rank] or 0
             end,
         },
         base = 1376, -- a fraction cost is of base mana (wowsims's priest base mana at 60, base_stats_auto_gen.go)
@@ -254,7 +296,53 @@ spec:RegisterCostMod({
     aura = "inner_focus",
     pct = -1,
     charges = 1,
-    spells = { 17, 585, 588, 589, 2944, 8092, 10060, 10797, 14914, 15237, 15286, 15407, 15473, 18137, 402174, 1309595 },
+    spells = {
+        17,
+        585,
+        588,
+        589,
+        2944,
+        8092,
+        10060,
+        10797,
+        14914,
+        15237,
+        15286,
+        15407,
+        15473,
+        18137,
+        402174,
+        1309595,
+        139,
+        453,
+        527,
+        528,
+        552,
+        586,
+        596,
+        724,
+        976,
+        1243,
+        2006,
+        2050,
+        2054,
+        2060,
+        2061,
+        2651,
+        2652,
+        6346,
+        8122,
+        8129,
+        9035,
+        9484,
+        13896,
+        14752,
+        15487,
+        21562,
+        27681,
+        401859,
+        1277331,
+    },
 })
 spec:RegisterCostMod({ aura = "holy_purpose", pct = -1, charges = 1, spells = { 15237 } })
 
@@ -286,17 +374,42 @@ spec:RegisterAuras({
     inner_focus = { id = 14751, duration = 3600, max_stack = 1 }, -- until the next spell (DB2 -1)
     power_word_shield = { id = 17, copy = rest(POWER_WORD_SHIELD), duration = 30, max_stack = 1 },
     weakened_soul = { id = 6788, duration = 15, max_stack = 1 },
-    -- The procs (unseen, observed only: no producer, the player aura walk reads them where plain): Spirit Tap on a kill, Dark Inspiration from Mind
-    -- Blast and a full Mind Flay (wowsims's: absent from the DB2), Holy Purpose from Holy Fire's ticks (Searing Light).
-    spirit_tap = { id = 15271, duration = 15, max_stack = 1 },
+    -- The procs (unseen, observed only: no producer, the player aura walk reads them where plain): Spirit Tap below
+    -- 5/5 (5/5 opens at our kill: the "kill" reaction), Dark Inspiration from Mind Blast and a full Mind Flay (wowsims's:
+    -- absent from the DB2), Holy Purpose from Holy Fire's ticks (Searing Light).
+    spirit_tap = { id = 15271, copy = { 15270 }, duration = 15, max_stack = 1 },
     dark_inspiration = { id = 1326168, duration = 10, max_stack = 1 },
     -- The utility spells' auras (no priority casts them; registered for the displays and custom priorities).
     fade_buff = { id = 586, copy = rest(FADE), duration = 10, max_stack = 1 },
     renew = { id = 139, copy = rest(RENEW), duration = 15, tick_time = 3, max_stack = 1 },
     elunes_grace = { id = 2651, duration = 15, max_stack = 1 },
-    power_word_fortitude = { id = 1243, copy = rest(POWER_WORD_FORTITUDE), duration = 3600, max_stack = 1 },
-    divine_aegis = { id = 431624, duration = 12, max_stack = 1 },
-    holy_purpose = { id = 1284536, duration = 10, max_stack = 1 },
+    feedback = { id = 13896, copy = rest(FEEDBACK), duration = 15, max_stack = 1 },
+    touch_of_weakness = { id = 2943, copy = { 19249, 19251, 19252, 19253, 19254 }, duration = 120, max_stack = 1 }, -- the buff's ID, not the cast's
+    -- The Cooldown Manager's items (the owner's live export, tests/Forever/fixtures/cdm): the ally and target effects
+    -- and the passive talents' buffs it links, each under every ID it names, ranks and the talent's own.
+    prayer_of_mending = {
+        id = 401877,
+        copy = { 1240848, 1240849, 401859, 1240826, 1240827 },
+        duration = 30,
+        max_stack = 1,
+    },
+    shackle_undead = { id = 9484, copy = { 9485, 10955, 1324415, 1324420, 1324422 }, duration = 50, max_stack = 1 },
+    psychic_scream = { id = 8122, copy = rest(PSYCHIC_SCREAM), duration = 8, max_stack = 1 },
+    silence = { id = 15487, copy = { 1324427 }, duration = 5, max_stack = 1 },
+    fear_ward = { id = 6346, duration = 180, max_stack = 1 },
+    abolish_disease = { id = 552, duration = 20, max_stack = 1 },
+    mind_soothe = { id = 453, copy = { 8192, 10953 }, duration = 15, max_stack = 1 },
+    shadow_protection = { id = 976, copy = { 10957, 10958, 27683 }, duration = 600, max_stack = 1 },
+    divine_spirit = { id = 14752, copy = { 14818, 14819, 27841, 27681 }, duration = 3600, max_stack = 1 },
+    blessed_recovery = { id = 27811, copy = { 27813 }, duration = 6, max_stack = 1 },
+    inspiration = { id = 14892, copy = { 14893 }, duration = 15, max_stack = 1 },
+    spirit_of_redemption = { id = 20711, copy = { 27827 }, duration = 15, max_stack = 1 },
+    blackout = { id = 15326, copy = { 15269 }, duration = 3600, max_stack = 1 },
+    focused_casting = { id = 27828, duration = 6, max_stack = 1 }, -- Martyrdom's
+    hex_of_weakness = { id = 9035, copy = rest(HEX_OF_WEAKNESS), duration = 120, max_stack = 1 },
+    power_word_fortitude = { id = 1243, copy = FORTITUDE_BUFF, duration = 3600, max_stack = 1 }, -- the Prayer's ranks too (the CDM links them)
+    divine_aegis = { id = 431624, copy = { 431622 }, duration = 12, max_stack = 1 },
+    holy_purpose = { id = 1284536, duration = 10, max_stack = 1 }, -- not Searing Light 14909 (the CDM links it): the pack translator would read it as that talent, changing the Smite priority
     dark_sacrifice = { id = 1277324, copy = rest(DARK_SACRIFICE), duration = 15, tick_time = 3, max_stack = 1 },
     -- The target's (unreadable in combat), modelled from our casts.
     shadow_word_pain = {
@@ -309,7 +422,7 @@ spec:RegisterAuras({
     devouring_plague = { id = 2944, copy = rest(DEVOURING_PLAGUE), duration = 24, tick_time = 3, max_stack = 1 },
     holy_fire = { id = 14914, copy = rest(HOLY_FIRE), duration = 10, tick_time = 2, max_stack = 1 },
     vampiric_embrace = { id = 15286, duration = 30, max_stack = 1 },
-    shadow_weaving = { id = 15258, duration = 15, max_stack = 5 },
+    shadow_weaving = { id = 15258, copy = { 15257 }, duration = 15, max_stack = 5 },
     -- The channels' auras on the target (wowsims's logs key each by the cast's ID; the client's Penance channel aura is
     -- the DB2's 1316994-family child: unmeasured).
     mind_flay = { id = 15407, copy = rest(MIND_FLAY), duration = 3, tick_time = 1, max_stack = 1 },
@@ -601,7 +714,7 @@ spec:RegisterAbilities({
         cooldown = 12,
         gcd = "spell",
 
-        spend = byRank(PENANCE_COST, PENANCE),
+        spend = price(PENANCE_COST, PENANCE, false, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -628,15 +741,18 @@ spec:RegisterAbilities({
         usable = unlocked("holy"),
     },
 
-    -- 4 s (category 56); Weakened Soul for 15 s.
+    -- 4 s (category 56), 0 with Soul Warding, which also cuts its cost 15% (DB2 402000: aura 107 misc 11 -4000, aura 108
+    -- misc 14 -15); Weakened Soul for 15 s.
     power_word_shield = {
         id = 17,
         copy = rest(POWER_WORD_SHIELD),
         cast = 0,
-        cooldown = 4,
+        cooldown = function()
+            return talent.soul_warding.rank > 0 and 0 or 4
+        end,
         gcd = "spell",
 
-        spend = agile(POWER_WORD_SHIELD_COST, POWER_WORD_SHIELD),
+        spend = price(POWER_WORD_SHIELD_COST, POWER_WORD_SHIELD, true, false, true),
         spendType = "mana",
 
         startsCombat = false,
@@ -744,6 +860,135 @@ spec:RegisterAbilities({
     },
 })
 
+-- The heals and utility a Shadow or Discipline build can press (wowsims/forever's sim/priest registers the same set;
+-- ranks, costs, cast times and cooldowns from its spell data, the DB2's): registered for their mana and cooldowns, none
+-- in a priority. Mental Agility's mask (DB2 14520: Renew, Fade, Scream, Chastise, Prayer of Mending, the buffs, and
+-- every spell with the class's instant bit) and Improved Healing's are the flags. A heal lands on an ally, so only the
+-- self buffs (Fade, Elune's Grace, Feedback, Touch and Hex of Weakness) get a handler.
+-- Keys `heal_spell` and `fade_spell`: the core's boundary test bans the bare words (a hit kind, a visual). No school
+-- lockout (`unlocked`): no priority casts them, and the belief reads no locked_out_*.
+-- Unregistered: Mind Control and Mind Vision (channels of unmeasured shape), Levitate (a reagent), Binding Heal and
+-- Pain Suppression (absent from wowsims's Priest kit), Prayer of Shadow Protection (ID unknown).
+-- Improved Psychic Scream: -2 s a rank (the wowsims pin's rank curve for 15392 is {-2000, -4000} ms).
+local function selfBuff(key)
+    return function()
+        applyBuff(key)
+    end
+end
+
+local function utility(ids, costs, o)
+    local a = {
+        id = ids[1],
+        cast = o.cast or 0,
+        cooldown = o.cooldown or 0,
+        gcd = "spell",
+        startsCombat = o.combat or false,
+        known = knows(ids),
+    }
+    if #ids > 1 then
+        a.copy = rest(ids)
+    end
+    if costs then
+        a.spend = price(costs, ids, o.agile, o.healing)
+        a.spendType = "mana"
+    end
+    if o.buff then
+        a.now = selfBuff(o.buff)
+        a.handler = selfBuff(o.buff)
+    end
+    return a
+end
+
+-- A cast of `base` seconds, hasted, less `per` of a talent's rank (no talent: key nil).
+local function castTime(base, key, per)
+    return function()
+        return (base - (key and per * talent[key].rank or 0)) * haste
+    end
+end
+
+local LESSER_HEAL = { 2050, 2052, 2053 }
+local LESSER_HEAL_CAST = { 1.5, 2, 2.5 }
+local HEAL = { 2054, 2055, 6063, 6064 }
+local GREATER_HEAL = { 2060, 10963, 10964, 10965, 25314 }
+local FLASH_HEAL = { 2061, 9472, 9473, 9474, 10915, 10916, 10917 }
+local PRAYER_OF_HEALING = { 596, 996, 10960, 10961, 25316 }
+local PRAYER_OF_MENDING = { 401859, 1240826, 1240827 }
+local MANA_BURN = { 8129, 8131, 10874, 10875, 10876 }
+local DESPERATE_PRAYER = { 13908, 19236, 19238, 19240, 19241, 19242, 19243 }
+local DISPEL_MAGIC = { 527, 988 }
+local CHASTISE = { 1277331, 1277332, 1277333, 1277334, 1277335 }
+local PRAYER_OF_FORTITUDE = { 21562, 21564 }
+local DIVINE_SPIRIT = { 14752, 14818, 14819, 27841 }
+local SHADOW_PROTECTION = { 976, 10957, 10958 }
+local SHACKLE_UNDEAD = { 9484, 9485, 10955 }
+local RESURRECTION = { 2006, 2010, 10880, 10881, 20770 }
+local MIND_SOOTHE = { 453, 8192, 10953 }
+local LIGHTWELL = { 724, 27870, 27871 }
+
+spec:RegisterAbilities({
+    -- Divine Fury's -0.1 s a rank on Heal and Greater Heal (DB2 18530's mask), Improved Healing's cost on the three
+    -- ranked heals; Flash Heal and Prayer of Healing outside both.
+    lesser_heal = utility(LESSER_HEAL, { 30, 45, 75 }, {
+        cast = function()
+            return (LESSER_HEAL_CAST[knownRank(LESSER_HEAL)] or LESSER_HEAL_CAST[1]) * haste
+        end,
+        healing = true,
+    }),
+    heal_spell = utility(HEAL, { 155, 205, 255, 305 }, { cast = castTime(3, "divine_fury", 0.1), healing = true }),
+    greater_heal = utility(
+        GREATER_HEAL,
+        { 370, 455, 545, 655, 710 },
+        { cast = castTime(3, "divine_fury", 0.1), healing = true }
+    ),
+    flash_heal = utility(FLASH_HEAL, { 125, 155, 185, 215, 265, 315, 380 }, { cast = castTime(1.5) }),
+    renew = utility(RENEW, { 30, 65, 105, 140, 170, 205, 250, 305, 365, 410 }, { agile = true }),
+    prayer_of_healing = utility(PRAYER_OF_HEALING, { 410, 560, 770, 1030, 1070 }, { cast = castTime(3) }),
+    prayer_of_mending = utility(PRAYER_OF_MENDING, { 210, 305, 390 }, { cooldown = 10, agile = true, healing = true }),
+    -- Improved Mana Burn: -0.5 s a rank (DB2 14750: aura 107 misc 10 -1000 at 2/2).
+    mana_burn = utility(
+        MANA_BURN,
+        { 95, 140, 185, 225, 270 },
+        { cast = castTime(3, "improved_mana_burn", 0.5), combat = true }
+    ),
+    -- Improved Psychic Scream: -2 s a rank on its 30 s (DB2 15392: aura 107 misc 11 -4000 at 2/2).
+    psychic_scream = utility(PSYCHIC_SCREAM, { 100, 140, 180, 210 }, {
+        cooldown = function()
+            return 30 - 2 * talent.improved_psychic_scream.rank
+        end,
+        agile = true,
+        combat = true,
+    }),
+    fade_spell = utility(FADE, { 40, 75, 125, 175, 225, 275 }, { cooldown = 30, agile = true, buff = "fade_buff" }),
+    desperate_prayer = utility(DESPERATE_PRAYER, nil, { cooldown = 600 }),
+    dispel_magic = utility(DISPEL_MAGIC, { 0.18, 0.18 }, { agile = true }),
+    cure_disease = utility({ 528 }, { 0.15 }, { agile = true }),
+    abolish_disease = utility({ 552 }, { 0.15 }, { agile = true }),
+    elunes_grace = utility({ 2651 }, { 0.03 }, { cooldown = 300, agile = true, buff = "elunes_grace" }),
+    fear_ward = utility({ 6346 }, { 100 }, { cooldown = 180, agile = true }),
+    feedback = utility(FEEDBACK, { 55, 100, 140, 190, 230 }, { cooldown = 180, agile = true, buff = "feedback" }),
+    chastise = utility(CHASTISE, { 50, 100, 135, 180, 225 }, { cooldown = 120, agile = true, combat = true }),
+    silence = utility({ 15487 }, { 225 }, { cooldown = 45, agile = true, combat = true }),
+    touch_of_weakness = utility(
+        TOUCH_OF_WEAKNESS,
+        { 25, 45, 75, 105, 145, 195 },
+        { agile = true, buff = "touch_of_weakness" }
+    ),
+    hex_of_weakness = utility(
+        HEX_OF_WEAKNESS,
+        { 35, 55, 90, 130, 180, 240 },
+        { agile = true, buff = "hex_of_weakness" }
+    ),
+    power_word_fortitude = utility(POWER_WORD_FORTITUDE, { 60, 155, 400, 745, 1170, 1695 }, { agile = true }),
+    prayer_of_fortitude = utility(PRAYER_OF_FORTITUDE, { 2600, 3400 }, { agile = true }),
+    divine_spirit = utility(DIVINE_SPIRIT, { 285, 420, 785, 970 }, { agile = true }),
+    prayer_of_spirit = utility({ 27681 }, { 1940 }, { agile = true }),
+    shadow_protection = utility(SHADOW_PROTECTION, { 250, 450, 650 }, { agile = true }),
+    shackle_undead = utility(SHACKLE_UNDEAD, { 90, 120, 150 }, { cast = castTime(1.5), combat = true }),
+    resurrection = utility(RESURRECTION, { 0.75, 0.75, 0.75, 0.75, 0.75 }, { cast = castTime(10) }),
+    mind_soothe = utility(MIND_SOOTHE, { 50, 70, 90 }, { agile = true, combat = true }),
+    lightwell = utility(LIGHTWELL, { 225, 295, 365 }, { cast = castTime(1.5), cooldown = 600 }),
+})
+
 -- Talents: { talent tree (1 Discipline, 2 Holy, 3 Shadow: the dominant tree picks the spec), rank 1's spell, max rank
 -- }: Forever's tree as wowsims/forever's ui/sim/talents/trees/priest.json lists it (tools/wowsims/talents.lua writes it;
 -- tests/Forever/talent_trees_spec.lua checks it and the spec detection over it). A key is Classic's where the talent
@@ -823,11 +1068,27 @@ spec:RegisterSetting("prefer_starshards", false, {
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/priest_*.lua).
 spec:RegisterPack(
     "Shadow (wowsims.com)",
-    20261110000,
-    [[Hekili:9EvuVTTnq4Fl5LmBSajlV2oxJ6cSH1HLHTIIQ8mLOfpzZAjrbsQyeGc9BFhPvKPKLI9AsRFWqI3DF3XJh)(GibK7iHmQgiFC(S5Vjiiyg(JeQFOeiHL0KD0n4df0C8)WTuMyFD8K9I9kEUYlrKp141dzckZG06kEM(2cY6bbvvcjKWp95B)q4DlvwWiHB5mgCicqLmsswwhR3c1XnR5NkKW9GSoMbP0QmDD8V9P)PogxUoUfGkUVjJk)sjhuAFwPY3uGmLVgFNxSXZ(Q3xuIIP3GPqsluzyDZWNfMuYv1Xugtu8t4d7GhuE1X)bvtxoqPm5FV9oeKTADPAPV)gUEB1At173Z1PiMyfdVM(2e2C6CwAIh2fLIuEg2LPjAUOq5vkbm41u9QdTQnvuj7gE6QRwxLM65SOxv51hIQZQ7ke7lQ)7tW7Nx5NZlyrRZOkDR9MSG1yE)KywdZrRRiamQCxKIMi5P8eWeqoTG6LjE3Q54zTRRqwvbOIY4B2QVPsbrI00OnjSvbMWM0u4UEDOYVEc6KNeYP8c17wn76jx1ztgTxizrLO1d()vg4uZowBG49RcMn9iim4ErLehcIkZOBQGgqMm5jTFDtsoXQBs(6zWiriYWsCa7TOSyQ5xN2yLe2rFIgO1(3Rw3IFaDUfFFACRbPcK7qN728C9XyGRHC14UWGCrbpjsIZPJ7vo9lczK5UquPWS44U2VzFtQiPsTAU923yhi9Uf2RnmeeN0Q6cXamb9Qngq1BDnYlkazKnv9ghpK(U7snvIOjzktrPaTH31sgLIGC06XXRJvuZGv7PUJL2Z7xn9KDtAg9b7nJhNMCk4Mbjm937f4AaN9UAm3NoCo6SnZXXhBB3Dxy86rAysis9Rqt9efZ4kTYQcFqkdF8JwvzOGUodyKF)rjbuaTLoMeIuVAqYPKWbOQjAmlJasxQBxG6qHBG4x6bHZPTPiBH0L82fWxqY9ZtrDjS7pFskd9(lgnLPh)QlThB53hS7(Cy(pFF9cO(F(T1fVWD1xFHD1JIdMOEZfgvRCHjOF9cdYvaXe3IlmUtKumb)2Eb7WgmU0rFIKJgjHw6odPbcEWSZI(aQkU70Ug7H(ySBhP3TUng)1jAtwVVuQkhY92YkWIq)lIT5RvJYTr8nPKDoPmBD0F0Tt7XOO0Hd4)Ng3tkYzZE)RaNMDJx9N5B7vgzWoZldlhsmhXHTFrY518SFrZyIEN9JGEk5WotD2YIwP3kKKW)c2XZ44h29NnF3M1m5)(]]
+    20261113000,
+    [[Hekili:9EvupoQnq4Fl7lPjQRGqU9UMB1Lk1Q2QUvTNov2Nn4Ghs8faJSnB0kDIF7DSdlXqGnPD3T5HiWZmFZ4XJ)(eKaY9KqgvdKpVy(Ipeee8U5ZNtc1pwcKWsAYo6g8HcAo(F4wktSVoE6EXEfpx5LiYNz86XmbLzqADfptFxbz9GGQkHes4x(77(1W7VvzbJeULZyWHiavYij526y9wOoUzn)uHeEaK1XmiLwLPRJ)PV8N1X4Y1XTauX9nzu5xk5Gs7Zkv(McKP81478InE2x9(Qsum7AmfsAHkdRBg(SWKsUQoMYyIIVdFyh8OYRo(xOA6Tdukt)R7UhbzRwxQU13FdxVTATP69756metSIH3t)ycBbDblnXd7Isrkpd7Y0enxuO8kLag8AQE1Hw1MkQKDnpD1vRRst9Cw0RQCYHO6S6UcX(I6)4e8((v(58cw06mQs3AVjlynM3pjM1WC06kcaJk3fPOjsEkpbmbmnNwq9YeFA1c8WEI9TYeDKzLBwmZnyiRQaurz8nB1xxPGirAA0Me2QalqnBfxVoSxMmfDYtc5uEH6tRMpz6vD22r7fswujA9G)FJbo7chRnq8JRcMp7iim4brLehlIkZOBQGgqMo9zTpPjjNy1njF7myKiezyjoG9wuwoZ8RtBSsc7Optd0A)TQ1T8)Ho3Y3Mg3AqQa5o05UnpxFmg4AixnUlmixuWtIK4C64ELt)QqgzUoevkmloUR9B2xNksQuRwyVpo2bsV7L9AddbXjTQUqma3qVAJbu9wxJ8IcqgztvVXXdPV7UutLiAsMYuukqByIT0tPiihTEC86yf1my1EQ7yP98(MzNSBsZOpAVz800Ktb3miHP)bVaxd4S3vJ5(SHZrNTzoo(yB7U7cJxprmtcrXafAQNmzgxPvwD5dIB4JF2Qtdf01zaJ8ZpjsGsQTe0KqKmwdsoLeoa5nrJzzeq6sM7c0zi1nG(UEG6C(Bk72K4sN3jfVE09NN06s47F50wgc)xnIltp(MlThBz8hS7(s0coFF9cedE5T1LVYD13FHD1JYfMO(WfgvRaIjOF4cdYvsXe3YlmUtezmb)XEb7WpmUysFQLJgjHwcqdnccEW8ZI(a6mU70Ug7H(y8Dhj8TUngJ2jQvwVVuQkh6(2YkWIq)lIT5Rv1YTr8FsB7CIB26O)OBN2JrJPdhW)ovVNv2ZM9(xbon7gV6pZ32RmcJDMxgwGKyoIdB)QLZRcA)QNXKbp7hk9CcKDM6SLfTsVvijH)oSJNXXp(73A(2oRzY)8]]
 )
 spec:RegisterPack(
     "Smite (wowsims.com)",
     20261107001,
     [[Hekili:LsvyVnnmq0Fl8fyvuLKMX2GkYKabi2emnH3NDIJ9LgZsTTSDwv)s(TZ5SSUMs7yaQsvw39U37YDpB6m6nuIG5b6vPjPNoBwYzjjZOe)Adqjgg)w2c8GITe)NSu6HUIJwPx5KlDrC9YjbqRB0mrGOYwzJ)cfTCVC6maNsU(hx8zYnZfshxAAKkK3APqa3xf447xN5Df(Am4qS4kTfUdSDfcOI1247k(W1FRRad3v8q9TY4GMUyJvcoFSW4IdTOWf7cqY9yuPAruFWOF60QjtrDSmLRb7FbEwh0v66kycHw9k8WTWAxuxXNyE2890ph99lUbjP27nU5XXlK(62YWNq8oqNGCITnCc7DCrklvuXJWPPvxjBWHcJ7LALlYybS4sMpZOxb2CPQQ1HzM26GCDvv(cUiBw3Ld4ZC1ATFCYPYQSLmflYW95n63Nnlzd(xNfxRBwNxjTW0knV1LLgWF0leqzBvv0MSrTMxoIL0Kj))0C(EPrPVJ1x(J1AATgTRV8a47GCqblX965zhpIaxntOxLVsBf5gMuTD78q3SlgK1TPWakMIdHkUpy0qKilWeRhPwWi9Bd40KFdt3LucU1dRUDUx0iDEx)9W7TY4XR6VxIAw2ac6hPKT2NHKdUd8ovyBtjClQGvYOKD2Zupk2oC9i4)42PFj)OABGrj9d1a3Oah)VlW5plbEZocmcEWRmsZNPNjq8jhSZFcNY2t)Xjh31NEGUEWlTTA7ZLfO4SdqrVJ6GR90(1(BFYA94pYM3w(BSCJFgQNiKkwRVwBPKVc3kBK4ZGFz4vU(00F9]]
 )
+
+-- Spirit Tap (15270, 5 ranks: 20-100% chance; wowsims talents_shadow.go applySpiritTap): its buff after a kill that
+-- yields XP. The belief opens it at our kill (the "kill" reaction: the client's grey line, UnitIsTrivial)
+-- at 5/5 only, where the chance is 100%; the lower ranks' rolls stay unassumed (dim). shortcut: wowsims and the tooltip
+-- also grant it when an enemy afflicted by our Vampiric Embrace dies (any killer; the pin: always, at any rank), which
+-- needs a death of a unit holding our debuff: not modelled, upgrade with a "death" reaction outcome if a VE build
+-- matters. Under the Map restriction no kill is seen (the GUIDs are secret): nothing opens.
+spec:RegisterReaction("spirit_tap", {
+    who = "target",
+    outcome = "kill",
+    now = function()
+        if talent.spirit_tap.rank >= 5 then
+            applyBuff("spirit_tap")
+        end
+    end,
+})

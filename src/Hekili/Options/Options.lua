@@ -2573,7 +2573,7 @@ do
 
         local comment
 
-        for line in apl:gmatch( "\n([^\n^$]*)") do
+        for line in apl:gmatch( "\n([^\n]*)") do
             local newComment = line:match( "^# (.+)" )
             if newComment then
                 if comment then
@@ -2583,7 +2583,7 @@ do
                 end
             end
 
-            local list, action = line:match( "^[ +]?actions%.(%S-)%+?=/?([^\n^$]*)" )
+            local list, action = line:match( "^[ +]?actions%.(%S-)%+?=/?([^\n]*)" )
 
             if list and action then
                 lists[ list ] = lists[ list ] or ""
@@ -2731,6 +2731,7 @@ end
 -- path length): the tree (0) sees "tree" and only the priorities; the spec's page (2: packs, spec) sees "tab" and only
 -- the tabs. If another AceConfigDialog replaces FeedGroup, feedDepth stays nil and the priorities show as further tabs
 -- of their spec.
+local ACTIVE_MARK = "|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t " -- before the active priority's name in the tree
 local feedDepth
 local specNodeMeta = {
     __index = function( _, k )
@@ -2779,6 +2780,9 @@ local function FeedGroup( dialog, appName, options, container, rootframe, path, 
         status.groups = status.groups or {}
         status.groups.groups = status.groups.groups or {}
         if status.groups.groups.packs == nil then status.groups.groups.packs = true end
+        -- the current spec's row opens too (set once: a later manual collapse stays)
+        local key = Status.specKey and ( "packs\001" .. Status.specKey )
+        if key and status.groups.groups[ key ] == nil then status.groups.groups[ key ] = true end
     end
     local outer = feedDepth
     feedDepth = #path
@@ -3505,6 +3509,18 @@ found = true end
                 step = 1,
                 order = 6,
             },
+
+            clash = {
+                type = "range",
+                name = L["Clash"],
+                desc = format( L["If set above zero, the addon will pretend %s has come off cooldown this much sooner than it actually has.  " ..
+                    "This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner."], k ),
+                width = 1.5,
+                min = -1.5,
+                max = 1.5,
+                step = 0.05,
+                order = 7,
+            },
         }
 
         db.args.items.plugins.equipment[ v ] = option
@@ -3609,6 +3625,18 @@ found = true end
                         max = 15,
                         step = 1,
                         order = 6,
+                    },
+
+                    clash = {
+                        type = "range",
+                        name = L["Clash"],
+                        desc = format( L["If set above zero, the addon will pretend %s has come off cooldown this much sooner than it actually has.  " ..
+                            "This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner."], ( ability.item and ability.link or k ) ),
+                        width = 1.5,
+                        min = -1.5,
+                        max = 1.5,
+                        step = 0.05,
+                        order = 7,
                     },
                 }
             }
@@ -4534,7 +4562,23 @@ found = true end
         use_while_casting = true
     }
 
-    local function GetListEntry( pack )
+    -- the file ID an icon= value names (a bare number as given, a path resolved), nil if the client has none
+    local function iconFileID( v )
+        local id = tonumber( v ) or ns.Facade.GetFileIDFromPath( tostring( v ) )
+        if ns.Facade.issecretvalue( id ) then return nil end
+        return id
+    end
+
+    local GetListEntry
+
+    -- the label and icon fields sit with the caption, hidden where it is (a pseudo-ability has no icon to mark)
+    local function hideNoAbility( pack )
+        local e = GetListEntry( pack )
+        local ability = e.action and Registry.Abilities()[ e.action ]
+        return not ability or ( ability.id < 0 and ability.id > -10 )
+    end
+
+    function GetListEntry( pack )
         local entry = rawget( Hekili.DB.profile.packs, pack )
 
         if rawget( entry.lists, packControl.listName ) == nil then
@@ -5120,8 +5164,11 @@ found = true end
                     hidden = under and SpecPackHidden or nil,
                     name = function ()
                         local p = rawget( Hekili.DB.profile.packs, pack )
-                        if p.builtIn then return '|cFF00B4FF' .. Registry.PackLabel( pack ) .. '|r' end
-                        return pack
+                        local sp = Hekili.DB.profile.specs[ p.spec ]
+                        -- the current spec's active priority wears a ready check
+                        local on = sp and sp.package == pack and Status.specID == p.spec and ACTIVE_MARK or ""
+                        if p.builtIn then return on .. '|cFF00B4FF' .. Registry.PackLabel( pack ) .. '|r' end
+                        return on .. pack
                     end,
                     icon = function()
                         return Registry.Specs()[ data.spec ].texture
@@ -6036,6 +6083,70 @@ packControl.actionID = format( "%04d", id ) end
 
                                         return not ability or ( ability.id < 0 and ability.id > -10 )
                                     end,
+                                },
+
+                                label = {
+                                    type = "input",
+                                    name = L["Label"],
+                                    desc = L["Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note."],
+                                    order = 3.203,
+                                    width = 1.5,
+                                    hidden = function() return hideNoAbility( pack ) end,
+                                },
+
+                                label_if = {
+                                    type = "input",
+                                    name = L["Label Condition"],
+                                    desc = L["If entered, the Label shows only while this is true."],
+                                    order = 3.2031,
+                                    width = "full",
+                                    multiline = 2,
+                                    dialogControl = "HekiliCustomEditor",
+                                    arg = function( info )
+                                        return Hekili.Engine.Evaluate( pack, packControl.listName, tonumber( packControl.actionID ), "label_if", {} )
+                                    end,
+                                    hidden = function() return hideNoAbility( pack ) end,
+                                },
+
+                                icon = {
+                                    type = "input",
+                                    name = L["Icon"],
+                                    desc = L["A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked."],
+                                    order = 3.2032,
+                                    width = 1.5,
+                                    hidden = function() return hideNoAbility( pack ) end,
+                                },
+
+                                iconPreview = {
+                                    type = "description",
+                                    name = function()
+                                        local v = GetListEntry( pack ).icon
+                                        if v and not iconFileID( v ) then return L["Not a texture file; this line's icon is not overridden."] end
+                                        return ""
+                                    end,
+                                    image = function()
+                                        local v = GetListEntry( pack ).icon
+                                        return v and iconFileID( v ) or nil
+                                    end,
+                                    imageWidth = 24,
+                                    imageHeight = 24,
+                                    order = 3.2033,
+                                    width = 1.5,
+                                    hidden = function() return hideNoAbility( pack ) or not GetListEntry( pack ).icon end,
+                                },
+
+                                icon_if = {
+                                    type = "input",
+                                    name = L["Icon Condition"],
+                                    desc = L["If entered, the Icon shows only while this is true."],
+                                    order = 3.2034,
+                                    width = "full",
+                                    multiline = 2,
+                                    dialogControl = "HekiliCustomEditor",
+                                    arg = function( info )
+                                        return Hekili.Engine.Evaluate( pack, packControl.listName, tonumber( packControl.actionID ), "icon_if", {} )
+                                    end,
+                                    hidden = function() return hideNoAbility( pack ) end,
                                 },
 
                                 description = {
@@ -7581,9 +7692,9 @@ do
                     },
                     simulationcraft = {
                         type = "input",
-                        name = L["SimC Wiki"],
+                        name = L["APL Reference"],
                         order = 22,
-                        get = function () return "https://github.com/simulationcraft/simc/wiki" end,
+                        get = function () return "https://github.com/zmsl/hekili/wiki/APL-Expression-Reference" end,
                         set = function () end,
                         width = "full",
                         dialogControl = "SFX-Info-URL",
@@ -8444,24 +8555,35 @@ do
         return output
     end
 
-    local function strsplit( str, delimiter )
-        local result = {}
-        local from = 1
+    -- A line's options: split at the commas outside parentheses, so min(a,b) and max(a,b) stay in their condition.
+    -- Quotes are not counted: conditions have no string literals, and an apostrophe in label= text must not swallow
+    -- the commas after it. A `(` still open at the line's end (in label= or caption text) would swallow the options
+    -- after it, if= included: then every comma splits, and the second return is true so the caller warns.
+    local function splitOptions( str )
+        local result, from, depth = {}, 1, 0
 
-        if not delimiter or delimiter == "" then
-            result[1] = str
-            return result
+        for pos, c in str:gmatch( "()([(),])" ) do
+            if c == "(" then
+                depth = depth + 1
+            elseif c == ")" then
+                if depth > 0 then depth = depth - 1 end
+            elseif depth == 0 then
+                insert( result, str:sub( from, pos - 1 ) )
+                from = pos + 1
+            end
         end
 
-        local delim_from, delim_to = string.find( str, delimiter, from )
-
-        while delim_from do
-            insert( result, string.sub( str, from, delim_from - 1 ) )
-            from = delim_to + 1
-            delim_from, delim_to = string.find( str, delimiter, from )
+        if depth > 0 then
+            result, from = {}, 1
+            for pos in str:gmatch( "()," ) do
+                insert( result, str:sub( from, pos - 1 ) )
+                from = pos + 1
+            end
+            insert( result, str:sub( from ) )
+            return result, true
         end
 
-        insert( result, string.sub( str, from ) )
+        insert( result, str:sub( from ) )
         return result
     end
 
@@ -8515,7 +8637,7 @@ do
         end
 
         -- TODO: Revise to start from beginning of string.
-        for i in list:gmatch( "action.-=/?([^\n^$]*)") do
+        for i in list:gmatch( "action.-=/?([^\n]*)") do
             line = line + 1
 
             if i:sub(1, 3) == 'jab' then
@@ -8559,8 +8681,12 @@ do
                 end
             end
 
-            local components = strsplit( i, "," )
+            local components, unclosed = splitOptions( i )
             local result = {}
+
+            if unclosed then
+                insert( warnings, format( L["Line %s: Unclosed '(' in '%s'; split at every comma."], line, i ) )
+            end
 
             for a, str in ipairs( components ) do
                 -- First element is the action, if supported.

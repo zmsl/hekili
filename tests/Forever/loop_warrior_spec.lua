@@ -32,6 +32,40 @@ describe("the Warrior world mapping", function()
         H = headless.new({ character = ww.character(), pack = ww.PACK })
     end)
 
+    it(
+        "drops Reckless Swings' charges another world left at a pull; this world's own precombat charges stay",
+        function()
+            local old, new = {}, {}
+            ww.charges, ww.chargesW = 2, old
+            ww.WORLD.script(new)
+            assert.are.equal(0, ww.charges)
+            ww.charges, ww.chargesW = 4, new
+            ww.WORLD.script(new)
+            assert.are.equal(4, ww.charges)
+            ww.charges, ww.chargesW = 0, nil
+        end
+    )
+
+    it("ends the Reckless Swings aura when the last charge is spent", function()
+        local emitted, id = {}, 1329555
+        local e = { auras = { [id] = { stacks = 4 } } }
+        local W = {
+            t = 1,
+            at = function(_, f)
+                f()
+            end,
+            emit = function(ev)
+                emitted[#emitted + 1] = ev
+            end,
+        }
+        ww.charges, ww.chargesW, ww.chargesE, ww.chargesX = 1, W, e, { aura = { reckless_swings = { id = id } } }
+        ww.Fury.gain(nil, 1, nil, "HIT", { talents = {} })
+        assert.are.equal(0, ww.charges)
+        assert.is_nil(e.auras[id])
+        assert.are.equal(0, emitted[1].stacks)
+        ww.charges, ww.chargesW, ww.chargesE, ww.chargesX = 0, nil, nil, nil
+    end)
+
     it("maps every ability the Arms pack can recommend that the character knows; an unmapped key fails", function()
         local unmapped = {}
         for _, list in pairs(H.Hekili.DB.profile.packs[ww.PACK].lists) do

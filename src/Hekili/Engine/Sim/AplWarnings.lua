@@ -27,10 +27,10 @@ local ROWS = {
     { "target.health_current", TARGET_HP, ALWAYS_100 },
 }
 
-local DOT, UNDERSCORE = 46, 95
+local DOT, UNDERSCORE, LOWER_Z = 46, 95, ("z"):byte()
 
 local function isIdent(b) -- a letter, digit or "_"
-    return b ~= nil and (b == UNDERSCORE or (b >= 48 and b <= 57) or (b >= 65 and b <= 90) or (b >= 97 and b <= 122))
+    return b ~= nil and (b == UNDERSCORE or (b >= 48 and b <= 57) or (b >= 65 and b <= 90) or (b >= 97 and b <= LOWER_Z))
 end
 
 --- The first listed health token `condition` reads as a whole name (`pet.health.pct` is not

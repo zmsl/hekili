@@ -512,6 +512,17 @@ describe("resources", function()
             within(20 - I.EPS, VS.Power(ENERGY, 11).est)
         end)
 
+        it("takes a `ladder = false` ability's usable answer as a floor, never its short one", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- 20, under noladder's 50
+            obs(Obs.Usable, 10, NOLADDER, 1, 0) -- usable: at least 50, whatever else it needs
+            I.Fold(10, false)
+            assert.are.same({ 50, 50 }, { VS.Power(ENERGY, 10).est, I.res.lo0[1] })
+            obs(Obs.Usable, 10, NOLADDER, 0, 1) -- short: maybe its other requirement, no cap
+            I.Fold(10, false)
+            assert.are.same({ 50, 50 }, { VS.Power(ENERGY, 10).est, I.res.lo0[1] })
+        end)
+
         it("allocates nothing evaluating the precondition", function()
             local t = 10
             assert.are.equal(
@@ -2292,6 +2303,27 @@ describe("resources", function()
             obs(Obs.CombatStart, 12, 0, 0, 0)
             I.Fold(12, false)
             within(500 + 7 + 9, VS.Power(MANA, 14).est)
+        end)
+
+        it("reads a function `share` of a rate entry at the build and each combat start (a rank's value)", function()
+            local s = 0.25
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, {
+                {
+                    aura = "focus",
+                    share = function()
+                        return s
+                    end,
+                },
+            })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 2, 10, 1e6, 1, 10, 0) -- focus up
+            -- inside: M + S x (0.5 + 0.25) = 2 + 15
+            assert.are.equal(17, VS.Regen(MANA, 12).est)
+            s = 2 -- out of range: inert after the next combat start
+            obs(Obs.CombatStart, 13, 0, 0, 0)
+            I.Fold(13, false)
+            assert.are.equal(12, VS.Regen(MANA, 14).est)
         end)
 
         it("caps a `share` aura's casting share at all of the spirit regen with the slot's static share", function()

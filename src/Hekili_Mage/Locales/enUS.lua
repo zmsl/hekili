@@ -12,3 +12,4 @@ L["Frost"] = true
 L["Arcane (wowsims.com)"] = true
 L["Fire (wowsims.com)"] = true
 L["Frostfire (wowsims.com)"] = true
+L["Frost (wowsims.com)"] = true

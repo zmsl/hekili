@@ -124,6 +124,10 @@ function M.load()
             w.auras[k] = v
         end
     end
+    w.reactions = {} -- RegisterReaction's records by name
+    for _, call in ipairs(reg.RegisterReaction or {}) do
+        w.reactions[call[1]] = call[2]
+    end
     w.talents = reg.RegisterTalents and reg.RegisterTalents[1][1]
     w.resource = reg.RegisterResource and reg.RegisterResource[1]
     w.events = {}
@@ -200,6 +204,10 @@ function M.env(w)
     end
     function e.removeBuff(key)
         table.insert(e.removed, key)
+    end
+    e.stackRemoved = {}
+    function e.removeStack(key)
+        table.insert(e.stackRemoved, key)
     end
     function e.spend(n)
         table.insert(e.spent, n)

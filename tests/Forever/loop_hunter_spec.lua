@@ -11,9 +11,19 @@ local hw = require("Forever.helpers.hunter_world")
 
 -- pack, the label its line prints
 local PACKS = { { "BeastMastery", "Beast Mastery" }, { "Marksmanship", "Marksmanship" }, { "Survival", "Survival" } }
+-- every pack: the weave packs, then wowsims's non-weave builds (owner 2026-11-12, ledger L661)
+local ALL = {
+    PACKS[1],
+    PACKS[2],
+    PACKS[3],
+    { "BeastMasteryTurret", "Beast Mastery Turret" },
+    { "MarksmanshipTurret", "Marksmanship Turret" },
+    { "SurvivalTurret", "Survival Turret" },
+    { "SurvivalMelee", "Survival Melee" },
+}
 
 describe("the Hunter loop worlds", function()
-    for _, pk in ipairs(PACKS) do
+    for _, pk in ipairs(ALL) do
         local name = pk[1]
         it(name .. ": boots, and maps every ability the pack can recommend that the character knows", function()
             local C = hw[name]
@@ -85,7 +95,7 @@ describe("the Hunter loop worlds", function()
 end)
 
 describe("the headless Hunter gates, 3 fights a pack #slow", function()
-    for _, pk in ipairs(PACKS) do
+    for _, pk in ipairs(ALL) do
         it(
             pk[2] .. " solo, level 60, one mob, 3 fights of up to 3 minutes: the first icon against the oracle's",
             function()
