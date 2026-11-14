@@ -181,6 +181,127 @@ describe("aura families on the Cooldown Manager (L727)", function()
             assert.is_nil(VS.Aura("player", C, 20.5))
         end)
 
+        -- (lane C review I1/m4) A close by the Cooldown Manager (rule 1 or the verdict) is healed by a light within
+        -- STRIKE_WIN as for a one-aura item (cdm-verdict §2.7): the member re-opens, and after a verdict it strikes.
+        it("a rule-1 close, then a light within STRIKE_WIN: the member re-opens as a one-aura item's does", function()
+            cast(M1, 10, 30)
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            for t = 10.2, 12, 0.2 do
+                poll(t)
+            end
+            ctl.ViewerAuraBySpell("player", A, false, "player") -- dark ~2 s while truly up
+            for t = 12.2, 14, 0.2 do
+                poll(t)
+                assert.is_nil(VS.Aura("player", A, t), t) -- rule 1 closed it at the first NONE
+            end
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            poll(14.2)
+            assert.is_true((est(A, 14.2) or 0) > 14.2) -- re-opened (rule 3), as the one-aura control does
+            assert.is_nil(VS.Aura("player", C, 14.2))
+            assert.are.same({ 0, 0 }, { I.auraVerdict.n[M1], I.auraVerdict.strikes[M1] }) -- no verdict: no strike
+        end)
+
+        it("a rule-1 close, then a light past STRIKE_WIN: no member is named, nothing opens", function()
+            cast(M1, 10, 30)
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            for t = 10.2, 12, 0.2 do
+                poll(t)
+            end
+            ctl.ViewerAuraBySpell("player", A, false, "player")
+            for t = 12.2, 14.6, 0.2 do
+                poll(t)
+            end
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            poll(14.8)
+            poll(15)
+            assert.is_nil(VS.Aura("player", A, 15))
+            assert.is_nil(VS.Aura("player", C, 15))
+        end)
+
+        -- The item proven on an earlier application, then our recast while it is dark (the seen rule cannot close
+        -- it): the verdict closes it after W.
+        local function prove()
+            cast(M1, 10, 30)
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            poll(10.2)
+            poll(11)
+            ctl.ViewerAuraBySpell("player", A, false, "player")
+            poll(11.2)
+            assert.is_true(Q.proven[601])
+        end
+        local function verdictAfter(c)
+            cast(M1, c, 30)
+            for t = c + 0.2, c + 1.4, 0.2 do
+                poll(t)
+            end
+            assert.is_nil(VS.Aura("player", A, c + 1.4)) -- the verdict
+        end
+
+        it("a verdict, then a light within STRIKE_WIN: re-opened, one strike; two strikes retire the item", function()
+            prove()
+            verdictAfter(13)
+            ctl.ViewerAuraBySpell("player", A, true, "player") -- the late light (> W): no cast of ours since
+            poll(14.6)
+            assert.is_true((est(A, 14.6) or 0) > 14.6) -- re-opened (BY_CDM)
+            poll(14.8) -- (review M2) judged at the next poll
+            assert.are.same({ 1, 1, 1 }, { I.auraVerdict.n[M1], I.auraVerdict.strikes[M1], Q.strikes[601] })
+            ctl.ViewerAuraBySpell("player", A, false, "player")
+            poll(15)
+            verdictAfter(20)
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            poll(21.6)
+            poll(21.8)
+            assert.are.same({ 2, 2, 2, false }, {
+                I.auraVerdict.n[M1],
+                I.auraVerdict.strikes[M1],
+                Q.strikes[601],
+                Q.proven[601],
+            })
+            ctl.ViewerAuraBySpell("player", A, false, "player")
+            poll(22)
+            cast(M1, 30, 30) -- retired: belief-only, the cap of 2 holds
+            for t = 30.2, 32, 0.2 do
+                poll(t)
+                assert.are.equal(60, est(A, t), t)
+            end
+            assert.are.same({ 2, 2 }, { I.auraVerdict.n[M1], I.auraVerdict.strikes[M1] })
+        end)
+
+        it("a verdict, then the light of our cast of another member in the same drain: no re-open, no strike", function()
+            prove()
+            verdictAfter(13)
+            -- the client lights the item for M2; the poll stages before our cast's event folds in this drain
+            ctl.ViewerAuraBySpell("player", C, true, "player")
+            ctl.now = 14.6
+            ctl.Tick(14.6)
+            S.RunPolls(14.6)
+            cast(M2, 14.5, 30)
+            I.Fold(14.6, false)
+            I.Settle(14.6)
+            for t = 14.8, 16, 0.2 do
+                poll(t)
+                assert.is_nil(VS.Aura("player", A, t), t)
+                assert.are.equal(44.5, est(C, t), t)
+            end
+            assert.are.same({ 1, 0, 0 }, { I.auraVerdict.n[M1], I.auraVerdict.strikes[M1], Q.strikes[601] })
+        end)
+
+        it("a sweep naming a member a close took down allocates nothing", function()
+            cast(M1, 10, 30)
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            poll(10.2)
+            poll(11)
+            ctl.ViewerAuraBySpell("player", A, false, "player")
+            poll(11.2) -- closed: inside its late window from here
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            local t = 11.3
+            local bytes = alloc.bytes(function()
+                t = t + 0.001
+                Q.Sweep(t)
+            end, 1000)
+            assert.are.equal(0, bytes)
+        end)
+
         it("with no member applied yet the item is counted ambiguous and opens nothing", function()
             ctl.ViewerAuraBySpell("player", A, true, "player")
             for t = 10.5, 13, 0.5 do
