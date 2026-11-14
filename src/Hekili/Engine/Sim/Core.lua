@@ -367,13 +367,26 @@ function Hekili:CheckChannel( ability, prio )
         return true
     end
 
+    local modifiers = scripts.Channels[ state.system.packName ]
+    modifiers = modifiers and modifiers[ channel ] or default_modifiers
+
+    -- interrupt_global=1 on the channel's line: break_any for that line; any line above it in the whole priority (the
+    -- walk stops at the channel's own line) may break the channel, at once (Hekili 09cfecf33's meaning).
+    if channel ~= ability and modifiers.interrupt_global then
+        local act = state.this_action
+        state.this_action = channel
+        local val = state.safebool( modifiers.interrupt_global() )
+        state.this_action = act
+        if val then
+            if self.ActiveDebug then self:Debug( "CC: %s's interrupt_global is true; break it.", channel ) end
+            return true
+        end
+    end
+
     if not a.tick_time and ( not aura or not aura.tick_time ) then
         if self.ActiveDebug then self:Debug( "CC: No aura / no aura.tick_time to forecast channel breaktimes; don't break it." ) end
         return false
     end
-
-    local modifiers = scripts.Channels[ state.system.packName ]
-    modifiers = modifiers and modifiers[ channel ] or default_modifiers
 
     local tick_time = a.tick_time or aura.tick_time
     local remains = state.channel_remains

@@ -411,7 +411,7 @@ function M.new()
         if not c then
             return nil
         end
-        return "Channel", "", 0, c[1], c[2]
+        return "Channel", "", 0, c[1], c[2], nil, nil, c.spell -- `spell`: a spec's own channel ID (the drive sets none)
     end
     local stats = { 0, 0, 0, 0, 0, 0, 0 }
     local function zeros()
