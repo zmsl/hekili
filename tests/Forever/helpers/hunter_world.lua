@@ -126,8 +126,8 @@ local function drop(W, e, X, key) -- aura `key` off us, if up
 end
 
 -- Resourcefulness: a landed ability of a build that has the talent (`rate`: its measured crit rate) crits. The hit's row
--- stays a plain wound (the shots' damage has no crits here), so the belief's crit route (the abilities' `onCrit`) is not
--- exercised by these worlds: their belief never opens the aura (as before); the replays feed the log's crits.
+-- stays a plain wound (the shots' damage has no crits here); the belief opens no Resourcefulness (onCrit carved out,
+-- L992): only the client's aura read and calibration carry it; the replays feed the log's crits.
 local function resourceful(W, e, rate, X)
     if rate and W.rng.chance(rate) then
         aura(W, X, e, "resourcefulness")

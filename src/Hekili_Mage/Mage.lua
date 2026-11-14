@@ -225,7 +225,8 @@ local ARCANE_MEDITATION_FULL = 3
 -- the in-combat calibration replace, as wowsims's logs measure them at 60 (the P1 gear, 29.13 a second outside the
 -- rule in every build): Arcane all of it while casting (Arcane Meditation 3/3's 50% + Mage Armor 50%: share 1), so
 -- spirit 0 and mp5 29.13; Fire and Frostfire half (Mage Armor's 50%: share 0.5), 14.57 / 14.56 (the logs' Tag 2 /
--- Tag 1). The share follows Arcane Meditation's rank (3/3 only, above; the belief reads it after its talent walk), the seeds the spec's
+-- Tag 1). The share follows Arcane Meditation's rank (3/3 only, above; the belief reads it after its talent walk), the
+-- seeds the spec's
 -- build (gear and its talents; the out-of-combat read replaces them).
 -- Forever's Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76). UNMEASURED in game.
 -- shortcut: Mage Armor assumed up, as every wowsims export pre-buffs it (30 min): its aura is registered (below) but the

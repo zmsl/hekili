@@ -120,7 +120,7 @@ describe("Forever Hunter", function()
     end)
 
     -- Rapid Recuperation (1223987, wowsims talents_marksmanship.go): 25/50% of the spirit regen while casting by rank for
-    -- 15 s when Serpent Sting is cast (the listener needs no damage); the belief opens it at the cast
+    -- 15 s when a Serpent Sting lands (the listener needs no damage); the belief opens it at the cast
     it("opens Rapid Recuperation at a Serpent Sting, its casting share 25/50% by rank", function()
         local rr = w.resources[0].models.rapid_recuperation
         local got = {}
@@ -131,6 +131,16 @@ describe("Forever Hunter", function()
             got[#got + 1] = { ld.run(rr.share, e), #e.applied }
         end
         assert.are.same({ { 0, 1 }, { 0.25, 2 }, { 0.5, 2 } }, got) -- the sting's dot, and the buff once talented
+    end)
+
+    -- shortcut (Hunter.lua stings()): a missed sting keeps the buff, as no landed signal reaches it on live; a landed
+    -- signal that fixes this changes this expectation on purpose
+    it("keeps Rapid Recuperation in the belief on a missed Serpent Sting (the named over-count)", function()
+        local e = ld.env(w)
+        e.talent.rapid_recuperation = { rank = 2 }
+        ld.run(w.abilities.serpent_sting.now, e) -- the cast; no landed signal follows on a miss
+        assert.are.same(2, #e.applied)
+        assert.are.same(0.5, ld.run(w.resources[0].models.rapid_recuperation.share, e))
     end)
 
     -- Resourcefulness (440529): the belief opens it at no crit (Lane R's onCrit carved out: the loops' bars), so no

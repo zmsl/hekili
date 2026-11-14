@@ -67,8 +67,8 @@ VS.Obs = {
     Landed = 42, -- a: ability index; b: its cast's time: our cast's direct hit settled as landed (Events/Rows.lua: a
     -- wound or crit paid to its ticket, at its row or once final); Families/Now.lua runs `onLand`
     Kill = 43, -- a: the victim's UnitIsTrivial (plain, of a token bound to it; 1 trivial, 0 not); b: 1 the victim is
-    -- our target: our PARTY_KILL
-    -- (Sources/Units.lua); Families/Now.lua runs the target "kill" reactions when it yields XP (0)
+    -- our target: our PARTY_KILL (Sources/Units.lua);
+    -- Families/Now.lua runs the target "kill" reactions when it yields XP (0)
 }
 
 --- What a `PlayerHit` observation reports (its `a`), and each kind's name (the `taken` and `consumedBy` keys): a WOUND

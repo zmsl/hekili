@@ -436,7 +436,8 @@ local MINDFULNESS = { 0.17, 0.33, 0.5 }
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace, as wowsims's logs measure them at 60: shaman_elemental 31.13 a second while casting
--- (Mana Spring Totem, Mindfulness 3/3's 50% share and gear: S = 28.24, the parts below are the log's two rates) and 45.25 outside the rule, so spirit 14.12 (the outside
+-- (Mana Spring Totem, Mindfulness 3/3's 50% share and gear: S = 28.24, the parts below are the log's two rates) and
+-- 45.25 outside the rule, so spirit 14.12 (the outside
 -- rate less the casting one) and mp5 31.13 (the e2842f0a78 log, Windshaper Skyborne; was 29.75 / 42.5 as a Troll);
 -- shaman_enhancement 17.8 / 49.05, so spirit 31.25 and mp5 17.8 (the e2842f0a78 log, Windshaper Skyborne; was 9.8 /
 -- 38.42 as an Orc). Forever's

@@ -18,9 +18,11 @@
 -- M9 precedent; wowsims packs Task 14; in-game checks): Devouring Plague's cooldown 24 s (DB2 60 s), Shadow Word:
 -- Death's 18 s (DB2 15 s).
 -- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap below 5/5, Shadow Weaving: unseen; the
--- player aura walk reads the player's where plain). Spirit Tap 5/5 opens at our kill (the "kill" reaction, below). Dark Inspiration is applied by a Mind Blast (in the mana regen
+-- player aura walk reads the player's where plain). Spirit Tap 5/5 opens at our kill (the "kill" reaction, below).
+-- Dark Inspiration is applied by a Mind Blast (in the mana regen
 -- and the world; a Mind Flay's full channel is not: a channel's handler never runs, and the full-channel roll is unseen:
--- accepted, the aura read corrects it). Also unmodelled: the DoTs' resists, Shadow Word: Death's backlash, Inner Focus's crit, pushback, the healing spells Shadowform forbids (no
+-- accepted, the aura read corrects it). Also unmodelled: the DoTs' resists, Shadow Word: Death's backlash, Inner
+-- Focus's crit, pushback, the healing spells Shadowform forbids (no
 -- priority casts one).
 -- Credits: Hekili (registration API and pack format). wowsims/forever (MIT, https://github.com/wowsims/forever:
 -- ui/specs/priest/dps/builds/*.build.json and sim/priest/) is the reference for the abilities and the talent, proc,

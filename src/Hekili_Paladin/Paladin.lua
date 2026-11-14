@@ -228,7 +228,8 @@ local REVERENCE = { 0.15, 0.3 }
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace, as wowsims's logs measure them at 60: Retribution 13.65 spirit + 8.25 casting =
--- 21.9 outside (Reverence 2/2's share is inside the 8.25: the share below is the static share those parts hold), Protection 0 while casting and 17.38 outside. Forever's Spirit regen is `6.25 + Spirit/8` a second for every class
+-- 21.9 outside (Reverence 2/2's share is inside the 8.25: the share below is the static share those parts hold),
+-- Protection 0 while casting and 17.38 outside. Forever's Spirit regen is `6.25 + Spirit/8` a second for every class
 -- (wowsims mana.go:75-76), not Classic's formula.
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {

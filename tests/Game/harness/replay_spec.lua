@@ -973,6 +973,45 @@ describe("the replay's mana regen (wowsims's regen lines)", function()
         assert.is_true(math.abs(R.manaCasting - 2) < 1e-9, tostring(R.manaCasting)) -- the 0.5 share's unboosted rate
     end)
 
+    it("fails when a share function raises (the replay must not seed from a wrong share)", function()
+        local text = table.concat({
+            "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+            line(0.5, 0.2, 1),
+            "[1.00] [Tester (#1)] Aura gained: {SpellID: 77}",
+            line(1.1, 0.794, 1),
+            line(1.2, 0.794, 1),
+            "[2.00] [Tester (#1)] Aura faded: {SpellID: 77}",
+            line(2.1, 0.2, 1),
+            line(2.2, 1.588, 2),
+        }, "\n")
+        local HC = {
+            Hekili = {
+                Class = {
+                    abilities = {},
+                    auras = { boost = { id = 77, duration = 15 } },
+                    resources = {
+                        mana = {
+                            state = {
+                                regenMult = {
+                                    {
+                                        aura = "boost",
+                                        share = function()
+                                            error("no rank")
+                                        end,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                State = { talent = { boosting = { rank = 2 } } },
+            },
+        }
+        assert.has_error(function()
+            replay.new(text, HC, {})
+        end)
+    end)
+
     it(
         "keeps the content's mp5 auras that the log gains out of the part A, the client's read following them",
         function()

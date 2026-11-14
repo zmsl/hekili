@@ -222,8 +222,12 @@ local function removes(key)
     end
 end
 
--- Serpent Sting's dot, and Rapid Recuperation's buff when talented (wowsims: the cast, no damage needed). A new
--- function each call: an ability's `now` must not be its handler (Families/Now.lua).
+-- Serpent Sting's dot, and Rapid Recuperation's buff when talented (wowsims grants it on a landed sting; no damage
+-- needed). shortcut: no landed signal reaches a sting on live, and an avoid undoes only target auras
+-- (Families/Now.lua),
+-- so a missed sting keeps the buff in the belief: 15 s of +50% spirit regen while casting the game did not give, ready
+-- while short; the player aura read where plain (not under the Map restriction) corrects it, upgrade with a landed
+-- signal for a sting. A new function each call: an ability's `now` must not be its handler (Families/Now.lua).
 local function stings()
     return function()
         applyDebuff("target", "serpent_sting")
@@ -242,10 +246,11 @@ local BESTIAL_DISCIPLINE = { 0.25, 0.5 }
 -- hunter_marksmanship and hunter_survival 0 while casting and 15.88 outside. Forever's Spirit regen is `6.25 + Spirit/8`
 -- a second for every class (wowsims mana.go:75-76), not Classic's formula.
 -- Resourcefulness (1242688, DB2 aura 134): +50% of Spirit regen while casting after a melee or ranged ability's crit
--- (wowsims: proc flags 0x110). shortcut: the belief does not open it (an `onCrit` at 2/2 moved the Hunter loops' flicker
--- and live brackets past their bars, Lane R); the out-of-combat read and calibration carry it. Rapid Recuperation (1242512): 25/50% by rank, opened at a Serpent Sting
--- (wowsims talents_marksmanship.go:183-230). shortcut: wowsims also grants it at 50/100% when Rapid Killing (a kill
--- proc the belief does not open) is spent, one aura ID for both; that source is unmodelled (the sting's share holds);
+-- (wowsims: proc flags 0x110). shortcut: the belief does not open it (an `onCrit` at 2/2 moved the Hunter loops'
+-- flicker and live brackets past their bars, Lane R); the out-of-combat read and calibration carry it.
+-- Rapid Recuperation (1242512): 25/50% by rank, opened at a Serpent Sting's cast (wowsims
+-- talents_marksmanship.go:183-230; the sting's `shortcut:` above names the missed-sting over-count).
+-- shortcut: wowsims also grants it at 50/100% when Rapid Killing (a kill proc the belief does not open) is spent, one aura ID for both; that source is unmodelled (the sting's share holds);
 -- upgrade with Rapid Killing's kill reaction and a second share if a build relies on it.
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
 spec:RegisterResource(
