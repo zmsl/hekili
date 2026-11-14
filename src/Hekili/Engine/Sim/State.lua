@@ -3683,7 +3683,7 @@ do
                 prev_lookup.index = k
                 return prev_lookup
             elseif k == "last" then
-                if t.meta == "castAll" then t.last = state.player.lastcast
+                if t.meta == "castsAll" then t.last = state.player.lastcast
                 elseif t.meta == "castsOn" then t.last = state.player.lastgcd
                 elseif t.meta == "castsOff" then t.last = state.player.lastoffgcd end
                 return rawget( t, "last" ) or "none"
