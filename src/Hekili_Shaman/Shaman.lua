@@ -472,8 +472,11 @@ spec:RegisterResource(
             mp5 = function()
                 return state.spec.elemental and 26.13 or 12.8
             end,
-            share = function() -- Mindfulness's rank (the belief reads it after its talent walk), never the spec
-                return MINDFULNESS[talent.mindfulness.rank] or 0
+            -- Mindfulness's rank (the belief reads it after its talent walk), never the spec; + 8% with the Polished
+            -- Driftwood Icon relic (its equip aura 1248756: aura 134 +8, wowsims item_totems.go:13-20)
+            share = function()
+                return (MINDFULNESS[talent.mindfulness.rank] or 0)
+                    + (set_bonus.polished_driftwood_icon > 0 and 0.08 or 0)
             end,
         },
         base = 1520, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
@@ -927,6 +930,8 @@ spec:RegisterTalents({
 
 -- Burning Totem (272433, the relic; wowsims item_totems.go:70-77): +3 s on Flame Shock, read as `set_bonus.burning_totem`.
 spec:RegisterGear("burning_totem", 272433)
+-- Polished Driftwood Icon (249398, the relic): 8% of the spirit regen while casting (the mana `fsr` share).
+spec:RegisterGear("polished_driftwood_icon", 249398)
 
 -- Improved Stormstrike's rank effect 2 (wowsims talents_enhancement.go:218-231): a dodge or parry of an attack on us
 -- resets Stormstrike's cooldown. The rows are the victim side's (plain live); the reset stands from the dodge until the

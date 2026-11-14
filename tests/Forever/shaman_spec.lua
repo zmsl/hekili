@@ -178,6 +178,11 @@ describe("Forever Shaman", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
+        e.set_bonus = setmetatable({}, { -- no relic equipped
+            __index = function()
+                return 0
+            end,
+        })
         assert.are.same({ 14.12, 26.13, 0 }, seed("elemental")) -- no totem; re-pin log
         -- the static share follows Mindfulness's rank (17/33/50%, wowsims's curve; was 15% at 3/3), never the spec
         local shares = {}
@@ -185,8 +190,13 @@ describe("Forever Shaman", function()
             e.talent.mindfulness = { rank = rank }
             shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
         end
+        -- the Polished Driftwood Icon relic (249398; its equip aura 1248756: aura 134 +8, wowsims item_totems.go:13-20)
+        -- adds 8% of the spirit regen while casting
+        e.set_bonus.polished_driftwood_icon = 1
+        shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
         e.talent.mindfulness = nil
-        assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares)
+        e.set_bonus.polished_driftwood_icon = nil
+        assert.are.same({ 0, 0.17, 0.33, 0.5, 0.58 }, shares)
         assert.are.same({ 31.25, 12.8, 0 }, seed("enhancement")) -- re-pin log (Windshaper Skyborne)
         assert.are.same({ aura = "improved_stormstrike", share = 0.5 }, r.models.improved_stormstrike)
         assert.are.same({ 2, 1223031, 2 }, w.talents.improved_stormstrike)
@@ -625,7 +635,8 @@ describe("Forever Shaman", function()
 
     -- sim/shaman/item_totems.go:70-77: the relic Burning Totem (272433, the aura 1291077) adds 3 s to Flame Shock.
     it("lengthens Flame Shock by 3 s while the Burning Totem relic is equipped", function()
-        assert.are.same({ { "burning_totem", 272433 } }, w.gear) -- RegisterGear's calls, in order
+        -- RegisterGear's calls, in order
+        assert.are.same({ { "burning_totem", 272433 }, { "polished_driftwood_icon", 249398 } }, w.gear)
         local e = ld.env(w)
         assert.are.equal(12, ld.run(w.auras.flame_shock.duration, e))
         e.set_bonus = setmetatable({ burning_totem = 1 }, {
