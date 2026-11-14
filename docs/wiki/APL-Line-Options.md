@@ -39,6 +39,7 @@ An option written `=1` is on; `=0` or leaving it out is off. Options that hold a
 | `caption` | Text, 20 characters at most | Short text that can appear on the icon, when the display shows captions | **Caption** |
 | `description` | Text | Shown when the display is paused and the icon is hovered | **Description** |
 | `interrupt_if`, `interrupt_immediate`, `chain`, `early_chain_if` | Condition | On the line of a channeled ability: when the channel may be broken for another line, or recast at its last tick | none |
+| `interrupt` | Condition | On the line of a channeled ability: while it holds, another line may break the channel, once the GCD is ready and at a channel tick | none |
 
 From Feral (wowsims.com):
 
@@ -79,7 +80,7 @@ These options are accepted and stored, but nothing in Hekili Forever reads them:
 | `wait` on `pool_resource` | **Pooling Time** | Pooling for a fixed time is not implemented. |
 | `max_energy` | **Max Energy** | Shown only for Ferocious Bite, left from an older pooling option |
 | `use_while_casting` | **Use While Casting** | |
-| `interrupt`, `interrupt_global` | none | The channel-breaking options that work are `interrupt_if`, `interrupt_immediate`, `chain` and `early_chain_if`. |
+| `interrupt_global` | none | The channel-breaking options that work are `interrupt`, `interrupt_if`, `interrupt_immediate`, `chain` and `early_chain_if`. |
 | `strict`, `strict_if` on an ability line | **Test Conditions Immediately**, **Additional Immediate Criteria** | They act only on `call_action_list`, `run_action_list` and `use_items` lines. |
 
 The importer drops SimulationCraft lines for `snapshot_stats`, `flask`, `food` and `augmentation` without a warning.

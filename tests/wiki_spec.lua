@@ -357,18 +357,21 @@ describe("the options collector", function()
         return out
     end
 
-    it("keeps an option hidden only in some states, and leaves out the always-hidden one named in the manifest", function()
-        local rows = byLabel(options.rows(manifest["options-spec"]))
-        assert.is_nil(rows["Filter by Time-to-Die"], "the always-hidden option is not a row")
-        assert.is_true(options.labels()["Filter by Time-to-Die"], "its label is still a known option label")
-        assert.are.equal("In some cases", rows["Enemy Range Radius"].shown)
-        assert.are.equal("In some cases", rows["Count Targets Near Your Pet"].shown)
-        assert.are.equal("Yes", rows["Frame Budget"].shown)
-        local editor = byLabel(options.rows(manifest["options-editor"]))
-        for _, field in ipairs({ "Use Off GCD", "Focus Tier", "Label", "Cycle Targets", "Variable Name" }) do
-            assert.are.equal("In some cases", editor[field] and editor[field].shown, field)
+    it(
+        "keeps an option hidden only in some states, and leaves out the always-hidden one named in the manifest",
+        function()
+            local rows = byLabel(options.rows(manifest["options-spec"]))
+            assert.is_nil(rows["Filter by Time-to-Die"], "the always-hidden option is not a row")
+            assert.is_true(options.labels()["Filter by Time-to-Die"], "its label is still a known option label")
+            assert.are.equal("In some cases", rows["Enemy Range Radius"].shown)
+            assert.are.equal("In some cases", rows["Count Targets Near Your Pet"].shown)
+            assert.are.equal("Yes", rows["Frame Budget"].shown)
+            local editor = byLabel(options.rows(manifest["options-editor"]))
+            for _, field in ipairs({ "Use Off GCD", "Focus Tier", "Label", "Cycle Targets", "Variable Name" }) do
+                assert.are.equal("In some cases", editor[field] and editor[field].shown, field)
+            end
         end
-    end)
+    )
 
     it("prints a colour default as hex", function()
         local n = 0
@@ -395,7 +398,10 @@ describe("the options collector", function()
 
     it("does not end a description's first sentence at e.g. or i.e.", function()
         local text = require("tools.wiki.text")
-        assert.are.equal("Shown while it holds, e.g. a buff is up.", text.sentence("Shown while it holds, e.g. a buff is up. More."))
+        assert.are.equal(
+            "Shown while it holds, e.g. a buff is up.",
+            text.sentence("Shown while it holds, e.g. a buff is up. More.")
+        )
         assert.are.equal("One.", text.sentence("One. Two."))
     end)
 end)

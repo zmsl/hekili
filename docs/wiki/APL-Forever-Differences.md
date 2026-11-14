@@ -62,7 +62,7 @@ The importer converts these SimulationCraft forms, or drops them, and lists each
 | `target_if=min:<expression>` or `max:<expression>` | The `min:` or `max:` is removed and the rest becomes the condition when the line has no `if=`; the target is not sorted |
 | `cancel_if=` | Becomes `interrupt_if=` |
 | `use_item,name=<item>` | Becomes the item's ability key; an item the addon does not know switches the line off |
-| `%` and `%%` | Become `/` (division) and `%` (remainder) |
+| `%`, `%%` and `//` | `%` becomes `/` (division); `%%` and `//` become `%` (remainder) |
 | `snapshot_stats`, `flask`, `food`, `augmentation` | Dropped |
 | An action the specialization does not have | Kept, with an "Unsupported action" warning; the walk skips it |
 | `open_window` or `close_window` with a window the class does not register | Kept switched off, with an "Unknown window" warning |

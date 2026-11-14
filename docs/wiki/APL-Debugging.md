@@ -49,7 +49,7 @@ An ability that needs a toggle that is off, such as **Major Cooldowns** for a co
 - **The line tests a range that is not known yet.** While Hekili Forever cannot bracket the distance, `target.withinN` and `target.outsideN` are both true. Add `action.<key>.in_range` when the line must wait for range.
 - **A line above it always wins.** The walk keeps the line that is ready soonest. Move the line up, or narrow the condition of the line above.
 - **A `precombat` line in combat.** Lines of `precombat`, and of the lists it calls, are skipped once combat starts.
-- **A pasted line lost part of its condition.** The importer splits at commas and stops at `^` ([Line edge cases](APL-Syntax-Reference#line-edge-cases)). Compare the **Conditions** box with the text you pasted.
+- **A pasted line reads differently after import.** The importer converts some forms, such as `%`, `%%` and `//`, and lists each change in the **Import Log** ([APL Forever differences](APL-Forever-Differences)). Compare the **Conditions** box with the text you pasted.
 
 ## Avoid flicker
 

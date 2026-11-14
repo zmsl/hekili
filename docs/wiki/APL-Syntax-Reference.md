@@ -40,8 +40,8 @@ actions+=/shifting_power,if=((!action.cat_form.known|buff.cat_form.up)&energy.lo
 
 ### Line edge cases
 
-- The importer splits a line at every comma, so a condition pasted into the importer cannot contain a comma. Write `min(a,b)` and `max(a,b)` in the editor instead, or use the `<?` and `>?` operators.
-- The importer ends a line at a `^` or `$` character. Use `^` only in the editor.
+- The importer splits a line's options only at commas outside parentheses, so a condition such as `min(a,b)` or `max(a,b)` imports whole.
+- The importer keeps a line to its end, including any `^` or `$`.
 - A priority source accepts only the options `tools/make_pack.lua` knows, and stops the build on any other.
 
 ## Operators and precedence
@@ -86,7 +86,7 @@ actions+=/innervate,if=((!action.cat_form.known|buff.cat_form.up)&cooldown.inner
 
 - `/` is division. The WoW client raises an error on division by zero, unlike standard Lua, so a value that can be zero must not be a divisor.
 - In the editor and in a priority source, `%` is the remainder (modulo), as in Lua.
-- The importer follows SimulationCraft: it turns `%` into `/` (division) and `%%` into `%` (remainder), and notes each change in the **Import Log**.
+- The importer follows SimulationCraft: it turns `%` into `/` (division) and `%%` into `%` (remainder), and notes each change in the **Import Log**. A literal `//` in imported text also becomes `%` (remainder).
 
 ### Short forms
 

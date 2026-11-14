@@ -216,6 +216,7 @@ A setting key that the specialization does not have reads as missing, which coun
 | `prev.<key>` | boolean | The same as `prev.1.<key>` | `prev.rake` |
 | `prev_gcd.<N>.<key>` | boolean | The same, counting only abilities on the GCD | `prev_gcd.1.rake` |
 | `prev_off_gcd.<N>.<key>` | boolean | The same, counting only abilities off the GCD | `prev_off_gcd.1.prowl` |
+| `prev.last`, `prev_gcd.last`, `prev_off_gcd.last` | text | The key of the player's last cast (of any kind, on the GCD, or off it); `none` before the first | `prev_gcd.last='rake'` |
 
 From Shadow (wowsims.com):
 
