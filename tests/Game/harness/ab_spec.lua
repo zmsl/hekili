@@ -49,6 +49,7 @@ describe("the A/B harness", function()
             "viewer-late",
             "viewer-recast",
             "viewer-swap-dark",
+            "viewer-rebuild",
         }
         assert.are.same(names, ab.VERDICT)
         for _, name in ipairs(names) do
