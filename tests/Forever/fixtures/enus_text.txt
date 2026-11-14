@@ -15213,7 +15213,7 @@ options.general.minimapIcon	desc	If checked, the minimap icon will be hidden.
 options.general.minimapIcon	name	Hide Minimap Icon
 options.general.monitorPerformance	desc	If checked, the addon will track processing time and volume of events.
 options.general.monitorPerformance	name	|cFF00B4FFMonitor Performance|r
-options.general.simulationcraft	name	SimC Wiki
+options.general.simulationcraft	name	APL Reference
 options.general.updaterSpace	name	\032
 options.gettingStarted	desc	This section serves as a quick tutorial and explanation of the addon.
 options.gettingStarted	name	Getting Started

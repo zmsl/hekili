@@ -777,7 +777,7 @@ L["|cFF00CCFFHekili Forever|r is a fork of the original |cFFFFD100Hekili|r proje
 L["Find Hekili Forever updates on GitHub."] = "在 GitHub 上获取 Hekili Forever 更新。"
 L["Find Hekili Forever updates on CurseForge."] = "在 CurseForge 上获取 Hekili Forever 更新。"
 L["Report Issue"] = "报告问题"
-L["SimC Wiki"] = "SimC Wiki"
+-- L["APL Reference"] = ""
 L["Getting Started"] = "入门"
 L["This section serves as a quick tutorial and explanation of the addon."] = "本部分是插件的快速教程和说明。"
 L["Welcome to Hekili Forever\n"] = "欢迎使用 Hekili Forever\n"
@@ -1026,6 +1026,7 @@ L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴�
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
 
 -- No longer used (the English changed or went away): reuse or delete
+L["SimC Wiki"] = "SimC Wiki"
 L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Discouraged for ranged specializations."] = "勾选后，你角色周围指定半径内的敌方姓名板会被计为敌方目标。\n\n%s 推荐攻击范围在 10 码以内的近战专精使用\n\n%s 不建议远程专精使用。"
 L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = "如果启用了|cFFFFD100统计你附近的姓名板|r，此范围内的敌人将被计入目标数。\n\n仅在同时启用|cFFFFD100显示敌方姓名板|r和|cFFFFD100显示所有姓名板|r时，此设置才可用。"
 L["Preferences for Blizzard action button glows (not SpellFlash)."] = "暴雪动作条按钮发光的偏好设置（非 SpellFlash）。"

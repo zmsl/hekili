@@ -7668,9 +7668,9 @@ do
                     },
                     simulationcraft = {
                         type = "input",
-                        name = L["SimC Wiki"],
+                        name = L["APL Reference"],
                         order = 22,
-                        get = function () return "https://github.com/simulationcraft/simc/wiki" end,
+                        get = function () return "https://github.com/zmsl/hekili/wiki/APL-Expression-Reference" end,
                         set = function () end,
                         width = "full",
                         dialogControl = "SFX-Info-URL",
