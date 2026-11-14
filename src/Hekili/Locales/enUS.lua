@@ -771,7 +771,7 @@ L["|cFF00CCFFHekili Forever|r is a fork of the original |cFFFFD100Hekili|r proje
 L["Find Hekili Forever updates on GitHub."] = true
 L["Find Hekili Forever updates on CurseForge."] = true
 L["Report Issue"] = true
-L["SimC Wiki"] = true
+L["APL Reference"] = true
 L["Getting Started"] = true
 L["This section serves as a quick tutorial and explanation of the addon."] = true
 L["Welcome to Hekili Forever\n"] = true

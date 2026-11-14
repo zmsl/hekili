@@ -47,9 +47,9 @@ Cooldowns, Minor Cooldowns, Defensives, Interrupts and Potions can each be switc
 ## Install
 - **CurseForge:** install **Hekili Forever** (https://www.curseforge.com/wow/addons/hekili-forever).
 - **GitHub:** download the zip from https://github.com/zmsl/hekili/releases and extract it into
-  `_classic_beta_\Interface\AddOns\`. It holds eleven folders: `Hekili`, `Hekili_Shared`, `Hekili_Druid`,
-  `Hekili_Warrior`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`, `Hekili_Hunter`, `Hekili_Mage`,
-  `Hekili_Priest`, `Hekili_Warlock`.
+  `_forever_\Interface\AddOns\` in the World of Warcraft folder. It holds eleven folders: `Hekili`,
+  `Hekili_Shared`, `Hekili_Druid`, `Hekili_Warrior`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`,
+  `Hekili_Hunter`, `Hekili_Mage`, `Hekili_Priest`, `Hekili_Warlock`.
 - Remove any old `Hekili` folder first. Hekili Forever keeps the original's folder name and saved settings (`HekiliDB`),
   so your settings carry over. `/hekili` opens the options.
 

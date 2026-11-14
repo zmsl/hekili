@@ -7,6 +7,7 @@ return {
             "tests/Game/harness",
             "tests/Forever",
             "tests/boundary_spec.lua",
+            "tests/wiki_spec.lua",
         },
         pattern = "_spec",
         lpath = "./src/Hekili/?.lua;./tests/?.lua;./?.lua",

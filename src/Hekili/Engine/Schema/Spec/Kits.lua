@@ -109,8 +109,9 @@ end
 --- talents as { tree (1-3, 0 unknown), spell, max rank }, resources, hooks, packs, settings) is the class's, read by
 --- each of its specs. `def.specs` lists the specs in order, each { key, name, tree (the talent tree it rides), icon,
 --- role ("attack"|"tank"|"healer": shown, not simulated), ranged, nameplateRange (its Enemy Range Radius default in
---- yards; a ranged spec's is 30 unless set), package (its default priority), movement (true: its
---- priorities read the Movement toggle, whose options row it then shows), unsupported (true: no
+--- yards; a ranged spec's is 30 unless set, a melee spec's 10, the radius the target count falls back to), package
+--- (its default priority), movement (true: its priorities read the Movement toggle, whose options row it then
+--- shows), unsupported (true: no
 --- priorities on Forever; the engine idles and the options page says so) }. Ids are ours: ns.TreeSpecID(client class
 --- id, slot), the kit at slot 0. Nil when `token` is not the player's class.
 function Hekili:NewClass( token, def )
@@ -135,7 +136,7 @@ function Hekili:NewClass( token, def )
             melee = not d.ranged,
             kit = kit,
             settings = {},
-            options = { package = d.package, formerPackages = d.formerPackages, movement = d.movement, nameplateRange = d.nameplateRange or ( d.ranged and 30 ) or nil }, -- per spec: the kit's RegisterOptions reaches every tree
+            options = { package = d.package, formerPackages = d.formerPackages, movement = d.movement, nameplateRange = d.nameplateRange or ( d.ranged and 30 ) or 10 }, -- per spec: the kit's RegisterOptions reaches every tree
         }, { __index = kit } )
         if d.unsupported then s.options.enabled = false end -- no priorities: no displays
 

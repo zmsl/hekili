@@ -131,7 +131,7 @@ For a fast edit loop, `make test-fast` skips the long harness gates. To run one 
 
 ### Link the addons into the game client
 
-Each addon in `src/` gets its own directory link in the client's `_classic_beta_\Interface\AddOns` folder. There are
+Each addon in `src/` gets its own directory link in the client's `_forever_\Interface\AddOns` folder. There are
 nine: `Hekili` (the core), `Hekili_Shared`, and one per class: `Hekili_Druid`, `Hekili_Hunter`, `Hekili_Mage`,
 `Hekili_Paladin`, `Hekili_Rogue`, `Hekili_Shaman` and `Hekili_Warrior`.
 
@@ -139,7 +139,7 @@ With the clone in WSL, the script `scripts/Link-Addons.ps1` makes every link in 
 PowerShell (pass the client folder or its AddOns folder):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "\\wsl.localhost\<distro>\home\<user>\src\hekili\scripts\Link-Addons.ps1" -WowPath "C:\Program Files (x86)\World of Warcraft\_classic_beta_"
+powershell -ExecutionPolicy Bypass -File "\\wsl.localhost\<distro>\home\<user>\src\hekili\scripts\Link-Addons.ps1" -WowPath "C:\Program Files (x86)\World of Warcraft\_forever_"
 ```
 
 By hand instead, open an elevated Windows command prompt in the AddOns folder and link each addon to its folder in

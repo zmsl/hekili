@@ -1,0 +1,2911 @@
+{
+  "version": "v0.8.0",
+  "wowsimsAsOf": "2026-11-07",
+  "specs": {
+    "1": {
+      "class": "Druid",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.928,
+        "replay": 0.835443,
+        "solo": 0.91856
+      },
+      "loop": {
+        "crowdTickRatio": 0.912,
+        "crowdedTarget39": {
+          "agreement": 0.968,
+          "bytes": 29,
+          "calibration": 10.16,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.29,
+          "dps": 0.995,
+          "flicker": 0,
+          "heldReady": 137,
+          "oracleFlicker": 0,
+          "ratio": 0.331,
+          "readyShort": 0,
+          "ticks": 15914,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 27,
+          "calibration": 9.95,
+          "cpuMs": 2.7,
+          "ratio": 0.279
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.997134,
+            "bytes": 27,
+            "calibration": 9.95,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.7,
+            "dps": 1.02,
+            "flicker": 0,
+            "heldReady": 147,
+            "oracleFlicker": 0.02,
+            "ratio": 0.279,
+            "readyShort": 0,
+            "ticks": 17444,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.992705,
+            "bytes": 30,
+            "calibration": 9.55,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.76,
+            "dps": 0.978,
+            "flicker": 0,
+            "heldReady": 154,
+            "oracleFlicker": 0,
+            "ratio": 0.301,
+            "readyShort": 0,
+            "ticks": 17408,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.996331,
+            "bytes": 26,
+            "calibration": 9.53,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.93,
+            "dps": 1.02,
+            "flicker": 0,
+            "heldReady": 136,
+            "oracleFlicker": 0.02,
+            "ratio": 0.317,
+            "readyShort": 0,
+            "ticks": 17171,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.992705,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.978,
+          "flicker": 0,
+          "heldReady": 154,
+          "oracleFlicker": 0.02,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Balance",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0.2,
+          "40": 0.2,
+          "60": 0.2
+        },
+        "readyFloor": 0.26,
+        "readyMedian": 0.26,
+        "readyNever": 2,
+        "replay": 0.974684,
+        "replayFloor": 0.97
+      }
+    },
+    "10": {
+      "class": "Paladin",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 1,
+        "replay": 0.958333,
+        "solo": 0.999942
+      },
+      "loop": {
+        "crowdTickRatio": 0.974,
+        "crowdedTarget39": {
+          "agreement": 1,
+          "bytes": 23,
+          "calibration": 10.46,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 2.46,
+          "dps": 1.05,
+          "flicker": 0,
+          "heldReady": 347,
+          "oracleFlicker": 0,
+          "ratio": 0.239,
+          "readyShort": 0,
+          "ticks": 16769,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 22,
+          "calibration": 10.05,
+          "cpuMs": 2.23,
+          "ratio": 0.227
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.999942,
+            "bytes": 22,
+            "calibration": 10.05,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.23,
+            "dps": 1.02,
+            "flicker": 0,
+            "heldReady": 287,
+            "oracleFlicker": 0,
+            "ratio": 0.227,
+            "readyShort": 0,
+            "ticks": 17221,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.999942,
+            "bytes": 28,
+            "calibration": 9.59,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.39,
+            "dps": 1.043,
+            "flicker": 0,
+            "heldReady": 265,
+            "oracleFlicker": 0,
+            "ratio": 0.255,
+            "readyShort": 0,
+            "ticks": 17371,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.999943,
+            "bytes": 16,
+            "calibration": 8.57,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.48,
+            "dps": 1.05,
+            "flicker": 0,
+            "heldReady": 233,
+            "oracleFlicker": 0,
+            "ratio": 0.303,
+            "readyShort": 0,
+            "ticks": 17568,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.999942,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 1.02,
+          "flicker": 0,
+          "heldReady": 287,
+          "oracleFlicker": 0,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Protection",
+      "wowsims": {
+        "liveIdle": {
+          "10": 8.4,
+          "40": 8.4,
+          "60": 4.6
+        },
+        "readyFloor": 0.43,
+        "readyMedian": 0.43,
+        "readyNever": 2,
+        "replay": 0.958333,
+        "replayFloor": 0.95
+      }
+    },
+    "11": {
+      "class": "Paladin",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.95,
+        "replay": 0.822222,
+        "solo": 0.977273
+      },
+      "loop": {
+        "crowdTickRatio": 0.994,
+        "crowdedTarget39": {
+          "agreement": 0.996,
+          "bytes": 20,
+          "calibration": 10.18,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.44,
+          "dps": 1.008,
+          "flicker": 0,
+          "heldReady": 76,
+          "oracleFlicker": 0.02,
+          "ratio": 0.344,
+          "readyShort": 0,
+          "ticks": 15369,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 25,
+          "calibration": 10.67,
+          "cpuMs": 2.73,
+          "ratio": 0.26
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.995925,
+            "bytes": 25,
+            "calibration": 10.67,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.73,
+            "dps": 1.014,
+            "flicker": 0,
+            "heldReady": 92,
+            "oracleFlicker": 1.28,
+            "ratio": 0.26,
+            "readyShort": 0,
+            "ticks": 15459,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.998655,
+            "bytes": 31,
+            "calibration": 9.43,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.84,
+            "dps": 1.013,
+            "flicker": 0,
+            "heldReady": 87,
+            "oracleFlicker": 0.02,
+            "ratio": 0.312,
+            "readyShort": 0,
+            "ticks": 15618,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.994725,
+            "bytes": 24,
+            "calibration": 9.4,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.01,
+            "dps": 1.011,
+            "flicker": 0.02,
+            "heldReady": 72,
+            "oracleFlicker": 0,
+            "ratio": 0.333,
+            "readyShort": 0,
+            "ticks": 15736,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.994725,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 1.011,
+          "flicker": 0.02,
+          "heldReady": 92,
+          "oracleFlicker": 0,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Retribution",
+      "wowsims": {
+        "liveIdle": {
+          "10": 8.6,
+          "40": 5.2,
+          "60": 5.2
+        },
+        "readyFloor": 0.1,
+        "readyMedian": 0.1,
+        "readyNever": 3,
+        "replay": 0.933333,
+        "replayFloor": 0.93
+      }
+    },
+    "12": {
+      "class": "Priest",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.994,
+        "replay": 1,
+        "solo": 0.996448
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.996,
+          "bytes": 23,
+          "calibration": 10.11,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.24,
+          "dps": 1.015,
+          "flicker": 0,
+          "heldReady": 399,
+          "oracleFlicker": 0.07,
+          "ratio": 0.329,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 42,
+          "calibration": 10.13,
+          "cpuMs": 2.78,
+          "ratio": 0.281
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.997281,
+            "bytes": 42,
+            "calibration": 10.13,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.78,
+            "dps": 0.995,
+            "flicker": 0.02,
+            "heldReady": 400,
+            "oracleFlicker": 0.03,
+            "ratio": 0.281,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.996837,
+            "bytes": 50,
+            "calibration": 8.68,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3,
+            "dps": 1.005,
+            "flicker": 0.02,
+            "heldReady": 400,
+            "oracleFlicker": 0.03,
+            "ratio": 0.365,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.997725,
+            "bytes": 42,
+            "calibration": 9.93,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.13,
+            "dps": 0.995,
+            "flicker": 0,
+            "heldReady": 403,
+            "oracleFlicker": 0.02,
+            "ratio": 0.321,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.996837,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.995,
+          "flicker": 0.02,
+          "heldReady": 403,
+          "oracleFlicker": 0.03,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Shadow",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0,
+          "40": 0,
+          "60": 0
+        },
+        "readyFloor": 1.5,
+        "readyMedian": 0,
+        "readyNever": 0,
+        "replay": 1,
+        "replayFloor": 1
+      }
+    },
+    "13": {
+      "class": "Priest",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.95,
+        "replay": 0.931818,
+        "solo": 0.944895
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.95,
+          "bytes": 23,
+          "calibration": 9.38,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 2.05,
+          "dps": 0.971,
+          "flicker": 0,
+          "heldReady": 1,
+          "oracleFlicker": 0,
+          "ratio": 0.228,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 63,
+          "calibration": 9.85,
+          "cpuMs": 1.92,
+          "ratio": 0.2
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.954717,
+            "bytes": 63,
+            "calibration": 9.85,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 1.92,
+            "dps": 0.996,
+            "flicker": 0.02,
+            "heldReady": 0,
+            "oracleFlicker": 0.08,
+            "ratio": 0.2,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.944895,
+            "bytes": 67,
+            "calibration": 9.44,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.12,
+            "dps": 0.99,
+            "flicker": 0,
+            "heldReady": 0,
+            "oracleFlicker": 0,
+            "ratio": 0.231,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.951443,
+            "bytes": 64,
+            "calibration": 9.84,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.17,
+            "dps": 1.041,
+            "flicker": 0.02,
+            "heldReady": 0,
+            "oracleFlicker": 0,
+            "ratio": 0.224,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.944895,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.99,
+          "flicker": 0.02,
+          "heldReady": 0,
+          "oracleFlicker": 0.08,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Smite",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0.2,
+          "40": 0.2,
+          "60": 0
+        },
+        "readyFloor": 0.7,
+        "readyMedian": 0.7,
+        "readyNever": 3,
+        "replay": 0.931818,
+        "replayFloor": 0.93
+      }
+    },
+    "14": {
+      "class": "Rogue",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.993,
+        "replay": 0.978022,
+        "solo": 0.989853
+      },
+      "loop": {
+        "crowdTickRatio": 0.988,
+        "crowdedTarget39": {
+          "agreement": 0.992,
+          "bytes": 49,
+          "calibration": 9.25,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.07,
+          "dps": 0.982,
+          "flicker": 0,
+          "heldReady": 141,
+          "oracleFlicker": 0.03,
+          "ratio": 0.357,
+          "readyShort": 0,
+          "ticks": 10322,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 37,
+          "calibration": 9.51,
+          "cpuMs": 2.81,
+          "ratio": 0.307
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.989853,
+            "bytes": 37,
+            "calibration": 9.51,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.81,
+            "dps": 0.974,
+            "flicker": 0,
+            "heldReady": 159,
+            "oracleFlicker": 0,
+            "ratio": 0.307,
+            "readyShort": 0,
+            "ticks": 10446,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.990123,
+            "bytes": 42,
+            "calibration": 9.07,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.94,
+            "dps": 0.998,
+            "flicker": 0,
+            "heldReady": 156,
+            "oracleFlicker": 0,
+            "ratio": 0.338,
+            "readyShort": 0,
+            "ticks": 10428,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.992587,
+            "bytes": 38,
+            "calibration": 9.33,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.06,
+            "dps": 0.993,
+            "flicker": 0,
+            "heldReady": 150,
+            "oracleFlicker": 0,
+            "ratio": 0.346,
+            "readyShort": 0,
+            "ticks": 10657,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.989853,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.974,
+          "flicker": 0,
+          "heldReady": 159,
+          "oracleFlicker": 0,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Assassination",
+      "wowsims": {
+        "liveIdle": {
+          "10": 3.6,
+          "40": 5,
+          "60": 5
+        },
+        "readyFloor": 0.2,
+        "readyMedian": 0.2,
+        "readyNever": 2,
+        "replay": 0.978022,
+        "replayFloor": 0.97
+      }
+    },
+    "15": {
+      "class": "Rogue",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.989,
+        "replay": 0.990741,
+        "solo": 0.986513
+      },
+      "loop": {
+        "crowdTickRatio": 0.978,
+        "crowdedTarget39": {
+          "agreement": 0.988,
+          "bytes": 38,
+          "calibration": 10.12,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.23,
+          "dps": 0.99,
+          "flicker": 0,
+          "heldReady": 145,
+          "oracleFlicker": 0.03,
+          "ratio": 0.329,
+          "readyShort": 0,
+          "ticks": 9984,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 35,
+          "calibration": 9.66,
+          "cpuMs": 2.85,
+          "ratio": 0.309
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.994514,
+            "bytes": 35,
+            "calibration": 9.66,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.85,
+            "dps": 0.995,
+            "flicker": 0.03,
+            "heldReady": 156,
+            "oracleFlicker": 0.12,
+            "ratio": 0.309,
+            "readyShort": 0,
+            "ticks": 10207,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.989345,
+            "bytes": 49,
+            "calibration": 10.86,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.46,
+            "dps": 1,
+            "flicker": 0.03,
+            "heldReady": 153,
+            "oracleFlicker": 0.15,
+            "ratio": 0.34,
+            "readyShort": 0,
+            "ticks": 10230,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.992781,
+            "bytes": 34,
+            "calibration": 9.95,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.46,
+            "dps": 1.002,
+            "flicker": 0.03,
+            "heldReady": 152,
+            "oracleFlicker": 0.2,
+            "ratio": 0.353,
+            "readyShort": 0,
+            "ticks": 10251,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.989345,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.995,
+          "flicker": 0.03,
+          "heldReady": 156,
+          "oracleFlicker": 0.12,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Combat",
+      "wowsims": {
+        "liveIdle": {
+          "10": 3.6,
+          "40": 3.2,
+          "60": 3
+        },
+        "readyFloor": 0.24,
+        "readyMedian": 0.23,
+        "readyNever": 1,
+        "replay": 0.990741,
+        "replayFloor": 0.99
+      }
+    },
+    "16": {
+      "class": "Rogue",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.98,
+        "replay": 0.99,
+        "solo": 0.98377
+      },
+      "loop": {
+        "crowdTickRatio": 0.987,
+        "crowdedTarget39": {
+          "agreement": 0.985,
+          "bytes": 42,
+          "calibration": 9.86,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.31,
+          "dps": 0.981,
+          "flicker": 0,
+          "heldReady": 248,
+          "oracleFlicker": 0,
+          "ratio": 0.343,
+          "readyShort": 0,
+          "ticks": 10715,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 45,
+          "calibration": 9.95,
+          "cpuMs": 3.28,
+          "ratio": 0.347
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.990139,
+            "bytes": 45,
+            "calibration": 9.95,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.28,
+            "dps": 0.982,
+            "flicker": 0.03,
+            "heldReady": 201,
+            "oracleFlicker": 0.08,
+            "ratio": 0.347,
+            "readyShort": 0,
+            "ticks": 10851,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.982503,
+            "bytes": 58,
+            "calibration": 11.33,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.46,
+            "dps": 0.98,
+            "flicker": 0,
+            "heldReady": 192,
+            "oracleFlicker": 0.11,
+            "ratio": 0.315,
+            "readyShort": 0,
+            "ticks": 10859,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.992944,
+            "bytes": 48,
+            "calibration": 9.29,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.4,
+            "dps": 0.997,
+            "flicker": 0,
+            "heldReady": 168,
+            "oracleFlicker": 0,
+            "ratio": 0.383,
+            "readyShort": 0,
+            "ticks": 10771,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.982503,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.98,
+          "flicker": 0.03,
+          "heldReady": 201,
+          "oracleFlicker": 0.08,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Subtlety",
+      "wowsims": {
+        "liveIdle": {
+          "10": 3.8,
+          "40": 8.2,
+          "60": 3
+        },
+        "readyFloor": 0.17,
+        "readyMedian": 0.17,
+        "readyNever": 1,
+        "replay": 0.99,
+        "replayFloor": 0.98
+      }
+    },
+    "17": {
+      "class": "Shaman",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.974,
+        "replay": 0.895833,
+        "solo": 0.971032
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.995,
+          "bytes": 21,
+          "calibration": 8.45,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.09,
+          "dps": 0.979,
+          "flicker": 0,
+          "heldReady": 309,
+          "oracleFlicker": 0.32,
+          "ratio": 0.378,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 23,
+          "calibration": 11.41,
+          "cpuMs": 3.45,
+          "ratio": 0.333
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.994784,
+            "bytes": 23,
+            "calibration": 11.41,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.45,
+            "dps": 1.021,
+            "flicker": 0,
+            "heldReady": 285,
+            "oracleFlicker": 0.1,
+            "ratio": 0.333,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.996115,
+            "bytes": 30,
+            "calibration": 9.23,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.38,
+            "dps": 0.974,
+            "flicker": 0,
+            "heldReady": 294,
+            "oracleFlicker": 0.18,
+            "ratio": 0.379,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.993507,
+            "bytes": 25,
+            "calibration": 8.73,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.28,
+            "dps": 1.031,
+            "flicker": 0,
+            "heldReady": 274,
+            "oracleFlicker": 0.23,
+            "ratio": 0.397,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.993507,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.974,
+          "flicker": 0,
+          "heldReady": 294,
+          "oracleFlicker": 0.1,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Elemental",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0,
+          "40": 0,
+          "60": 5
+        },
+        "readyFloor": 2.2,
+        "readyMedian": 2.2,
+        "readyNever": 10,
+        "replay": 0.895833,
+        "replayFloor": 0.89
+      }
+    },
+    "18": {
+      "class": "Shaman",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.177,
+        "replay": 0.762887,
+        "solo": 0.174639
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.948,
+          "bytes": 23,
+          "calibration": 7.87,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.17,
+          "dps": 1.001,
+          "flicker": 0.15,
+          "heldReady": 137,
+          "oracleFlicker": 4.28,
+          "ratio": 0.423,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 24,
+          "calibration": 10.37,
+          "cpuMs": 3.49,
+          "ratio": 0.345
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.95283,
+            "bytes": 24,
+            "calibration": 10.37,
+            "cooldown": 0,
+            "cost": 0.1,
+            "cpuMs": 3.49,
+            "dps": 1.015,
+            "flicker": 0.13,
+            "heldReady": 136,
+            "oracleFlicker": 3.75,
+            "ratio": 0.345,
+            "readyShort": 1,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.958324,
+            "bytes": 31,
+            "calibration": 9.07,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.29,
+            "dps": 0.992,
+            "flicker": 0.1,
+            "heldReady": 138,
+            "oracleFlicker": 4,
+            "ratio": 0.377,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.957492,
+            "bytes": 28,
+            "calibration": 8.47,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.27,
+            "dps": 1.006,
+            "flicker": 0.05,
+            "heldReady": 126,
+            "oracleFlicker": 4.06,
+            "ratio": 0.404,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.95283,
+          "cooldown": 0,
+          "cost": 0.1,
+          "dps": 0.992,
+          "flicker": 0.13,
+          "heldReady": 138,
+          "oracleFlicker": 3.75,
+          "readyShort": 1,
+          "unmatched": 0
+        }
+      },
+      "spec": "Enhancement",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0,
+          "40": 2.8,
+          "60": 4.6
+        },
+        "readyFloor": 0.4,
+        "readyMedian": 0.4,
+        "readyNever": 3,
+        "replay": 0.969072,
+        "replayFloor": 0.96
+      }
+    },
+    "19": {
+      "class": "Warlock",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.833,
+        "replay": 0.75,
+        "solo": 0.844118
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.987,
+          "bytes": 29,
+          "calibration": 7.42,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.14,
+          "dps": 0.993,
+          "flicker": 0,
+          "heldReady": 1,
+          "oracleFlicker": 0.02,
+          "ratio": 0.438,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 44,
+          "calibration": 9.81,
+          "cpuMs": 3.52,
+          "ratio": 0.37
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.989567,
+            "bytes": 44,
+            "calibration": 9.81,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.52,
+            "dps": 0.999,
+            "flicker": 0,
+            "heldReady": 0,
+            "oracleFlicker": 0,
+            "ratio": 0.37,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.992675,
+            "bytes": 49,
+            "calibration": 9.39,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.49,
+            "dps": 1,
+            "flicker": 0,
+            "heldReady": 0,
+            "oracleFlicker": 0,
+            "ratio": 0.389,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.988291,
+            "bytes": 46,
+            "calibration": 8.88,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.45,
+            "dps": 0.999,
+            "flicker": 0,
+            "heldReady": 0,
+            "oracleFlicker": 0,
+            "ratio": 0.421,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.988291,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.999,
+          "flicker": 0,
+          "heldReady": 0,
+          "oracleFlicker": 0,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Affliction",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0.2,
+          "40": 0,
+          "60": 0
+        },
+        "readyFloor": 0,
+        "readyMedian": 0,
+        "readyNever": 10,
+        "replay": 0.833333,
+        "replayFloor": 0.83
+      }
+    },
+    "2": {
+      "class": "Druid",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.938,
+        "replay": 0.929412,
+        "solo": 0.956475
+      },
+      "loop": {
+        "crowdTickRatio": 1.004,
+        "crowdedTarget39": {
+          "agreement": 0.952,
+          "bytes": 29,
+          "calibration": 10.27,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 4.29,
+          "dps": 0.984,
+          "flicker": 0,
+          "heldReady": 437,
+          "oracleFlicker": 0.77,
+          "ratio": 0.432,
+          "readyShort": 0,
+          "ticks": 15542,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 36,
+          "calibration": 9.82,
+          "cpuMs": 3.76,
+          "ratio": 0.395
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.971381,
+            "bytes": 36,
+            "calibration": 9.82,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.76,
+            "dps": 0.966,
+            "flicker": 0.02,
+            "heldReady": 369,
+            "oracleFlicker": 0.68,
+            "ratio": 0.395,
+            "readyShort": 0,
+            "ticks": 15479,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.947271,
+            "bytes": 49,
+            "calibration": 9.79,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.94,
+            "dps": 0.987,
+            "flicker": 0,
+            "heldReady": 407,
+            "oracleFlicker": 0.81,
+            "ratio": 0.417,
+            "readyShort": 0,
+            "ticks": 15646,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.975278,
+            "bytes": 37,
+            "calibration": 9.03,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 4.1,
+            "dps": 0.987,
+            "flicker": 0,
+            "heldReady": 479,
+            "oracleFlicker": 0.89,
+            "ratio": 0.47,
+            "readyShort": 0,
+            "ticks": 15573,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.947271,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.966,
+          "flicker": 0.02,
+          "heldReady": 479,
+          "oracleFlicker": 0.68,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Feral",
+      "wowsims": {
+        "liveIdle": {
+          "20": 3,
+          "40": 3.2,
+          "60": 3.2
+        },
+        "readyFloor": 0.45,
+        "readyMedian": 0.45,
+        "readyNever": 3,
+        "replay": 0.964706,
+        "replayFloor": 0.96
+      }
+    },
+    "20": {
+      "class": "Warlock",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.945,
+        "replay": 0.82906,
+        "solo": 0.949168
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.945,
+          "bytes": 25,
+          "calibration": 6.93,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 2.95,
+          "dps": 0.997,
+          "flicker": 0,
+          "heldReady": 8,
+          "oracleFlicker": 0,
+          "ratio": 0.441,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 35,
+          "calibration": 9.88,
+          "cpuMs": 3.56,
+          "ratio": 0.375
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.949168,
+            "bytes": 35,
+            "calibration": 9.88,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.56,
+            "dps": 1.007,
+            "flicker": 0,
+            "heldReady": 0,
+            "oracleFlicker": 0,
+            "ratio": 0.375,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.95172,
+            "bytes": 34,
+            "calibration": 9.08,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.51,
+            "dps": 0.995,
+            "flicker": 0,
+            "heldReady": 0,
+            "oracleFlicker": 0,
+            "ratio": 0.404,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.952719,
+            "bytes": 33,
+            "calibration": 7.82,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.54,
+            "dps": 1.002,
+            "flicker": 0,
+            "heldReady": 0,
+            "oracleFlicker": 0,
+            "ratio": 0.477,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.949168,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.995,
+          "flicker": 0,
+          "heldReady": 0,
+          "oracleFlicker": 0,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Demonology",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0.2,
+          "40": 0.2,
+          "60": 0
+        },
+        "readyFloor": 0,
+        "readyMedian": 0,
+        "readyNever": 11,
+        "replay": 0.871795,
+        "replayFloor": 0.87
+      }
+    },
+    "21": {
+      "class": "Warlock",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.985,
+        "replay": 0.908257,
+        "solo": 0.984573
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.985,
+          "bytes": 33,
+          "calibration": 7.5,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.21,
+          "dps": 1.013,
+          "flicker": 0,
+          "heldReady": 9,
+          "oracleFlicker": 0,
+          "ratio": 0.448,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 41,
+          "calibration": 9.75,
+          "cpuMs": 3.79,
+          "ratio": 0.397
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.984573,
+            "bytes": 41,
+            "calibration": 9.75,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.79,
+            "dps": 0.996,
+            "flicker": 0.02,
+            "heldReady": 0,
+            "oracleFlicker": 0.02,
+            "ratio": 0.397,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.984739,
+            "bytes": 38,
+            "calibration": 8.71,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.7,
+            "dps": 0.997,
+            "flicker": 0,
+            "heldReady": 0,
+            "oracleFlicker": 0,
+            "ratio": 0.444,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.988679,
+            "bytes": 41,
+            "calibration": 8.27,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.79,
+            "dps": 0.998,
+            "flicker": 0,
+            "heldReady": 0,
+            "oracleFlicker": 0.05,
+            "ratio": 0.479,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.984573,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.996,
+          "flicker": 0.02,
+          "heldReady": 0,
+          "oracleFlicker": 0.02,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Destruction",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0,
+          "40": 0.2,
+          "60": 0.2
+        },
+        "readyFloor": 0,
+        "readyMedian": 0,
+        "readyNever": 10,
+        "replay": 0.908257,
+        "replayFloor": 0.9
+      }
+    },
+    "22": {
+      "class": "Warlock",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.951,
+        "replay": 0.787234,
+        "solo": 0.963319
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.972,
+          "bytes": 31,
+          "calibration": 8.42,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 2.59,
+          "dps": 1.001,
+          "flicker": 0,
+          "heldReady": 36,
+          "oracleFlicker": 0,
+          "ratio": 0.325,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 41,
+          "calibration": 10.04,
+          "cpuMs": 2.64,
+          "ratio": 0.266
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.986238,
+            "bytes": 41,
+            "calibration": 10.04,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.64,
+            "dps": 1.002,
+            "flicker": 0.02,
+            "heldReady": 5,
+            "oracleFlicker": 0.02,
+            "ratio": 0.266,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.981243,
+            "bytes": 45,
+            "calibration": 8.87,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.72,
+            "dps": 0.997,
+            "flicker": 0,
+            "heldReady": 3,
+            "oracleFlicker": 0,
+            "ratio": 0.323,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.98657,
+            "bytes": 39,
+            "calibration": 8.91,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.49,
+            "dps": 1.002,
+            "flicker": 0.02,
+            "heldReady": 1,
+            "oracleFlicker": 0.02,
+            "ratio": 0.296,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.981243,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.997,
+          "flicker": 0.02,
+          "heldReady": 5,
+          "oracleFlicker": 0.02,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "SM Ruin",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0,
+          "40": 0,
+          "60": 0
+        },
+        "readyFloor": 0.2,
+        "readyMedian": 0.2,
+        "readyNever": 19,
+        "replay": 0.797872,
+        "replayFloor": 0.78
+      }
+    },
+    "23": {
+      "class": "Warlock",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.967,
+        "replay": 0.718447,
+        "solo": 0.984073
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.967,
+          "bytes": 28,
+          "calibration": 7.85,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 2.95,
+          "dps": 0.992,
+          "flicker": 0,
+          "heldReady": 71,
+          "oracleFlicker": 0,
+          "ratio": 0.397,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 34,
+          "calibration": 9.77,
+          "cpuMs": 3.34,
+          "ratio": 0.35
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.987569,
+            "bytes": 34,
+            "calibration": 9.77,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.34,
+            "dps": 1.003,
+            "flicker": 0,
+            "heldReady": 11,
+            "oracleFlicker": 0,
+            "ratio": 0.35,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.989734,
+            "bytes": 37,
+            "calibration": 8.43,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.32,
+            "dps": 0.998,
+            "flicker": 0,
+            "heldReady": 11,
+            "oracleFlicker": 0,
+            "ratio": 0.415,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.984073,
+            "bytes": 34,
+            "calibration": 7.72,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.33,
+            "dps": 1,
+            "flicker": 0,
+            "heldReady": 10,
+            "oracleFlicker": 0,
+            "ratio": 0.451,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.984073,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.998,
+          "flicker": 0,
+          "heldReady": 11,
+          "oracleFlicker": 0,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Shadow Brand",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0.2,
+          "40": 0,
+          "60": 0.2
+        },
+        "readyFloor": 0.2,
+        "readyMedian": 0.2,
+        "readyNever": 24,
+        "replay": 0.718447,
+        "replayFloor": 0.71
+      }
+    },
+    "24": {
+      "class": "Warrior",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.859,
+        "replay": 0.885714,
+        "solo": 0.958369
+      },
+      "loop": {
+        "crowdTickRatio": 0.975,
+        "crowdedTarget39": {
+          "agreement": 0.862,
+          "bytes": 20,
+          "calibration": 6.52,
+          "cooldown": 0,
+          "cost": 0.1,
+          "cpuMs": 4.09,
+          "dps": 0.899,
+          "flicker": 0.04,
+          "heldReady": 252,
+          "oracleFlicker": 0.35,
+          "ratio": 0.633,
+          "readyShort": 1,
+          "ticks": 14753,
+          "unmatched": 0.1
+        },
+        "once": {
+          "bytes": 27,
+          "calibration": 9.58,
+          "cpuMs": 5.49,
+          "ratio": 0.618
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.958369,
+            "bytes": 27,
+            "calibration": 9.58,
+            "cooldown": 0,
+            "cost": 0.3,
+            "cpuMs": 5.49,
+            "dps": 1.027,
+            "flicker": 0.02,
+            "heldReady": 271,
+            "oracleFlicker": 0.2,
+            "ratio": 0.618,
+            "readyShort": 3,
+            "ticks": 15133,
+            "unmatched": 0.3
+          },
+          "2": {
+            "agreement": 0.966576,
+            "bytes": 35,
+            "calibration": 8.6,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 5.26,
+            "dps": 0.998,
+            "flicker": 0.04,
+            "heldReady": 237,
+            "oracleFlicker": 0.08,
+            "ratio": 0.647,
+            "readyShort": 0,
+            "ticks": 15079,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.966139,
+            "bytes": 21,
+            "calibration": 8.28,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 5.05,
+            "dps": 1,
+            "flicker": 0.08,
+            "heldReady": 240,
+            "oracleFlicker": 0.27,
+            "ratio": 0.633,
+            "readyShort": 0,
+            "ticks": 15593,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.958369,
+          "cooldown": 0,
+          "cost": 0.3,
+          "dps": 0.998,
+          "flicker": 0.08,
+          "heldReady": 271,
+          "oracleFlicker": 0.27,
+          "readyShort": 3,
+          "unmatched": 0.3
+        }
+      },
+      "spec": "Arms",
+      "wowsims": {
+        "liveIdle": {
+          "10": 7.4,
+          "40": 10,
+          "60": 6.2
+        },
+        "readyFloor": 1.81,
+        "readyMedian": 1.81,
+        "readyNever": 7,
+        "replay": 0.885714,
+        "replayFloor": 0.88
+      }
+    },
+    "25": {
+      "class": "Warrior",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.845,
+        "replay": 0.868687,
+        "solo": 0.922469
+      },
+      "loop": {
+        "crowdTickRatio": 0.997,
+        "crowdedTarget39": {
+          "agreement": 0.835,
+          "bytes": 27,
+          "calibration": 7.57,
+          "cooldown": 0,
+          "cost": 0.7,
+          "cpuMs": 4.94,
+          "dps": 1.004,
+          "flicker": 0.58,
+          "heldReady": 131,
+          "oracleFlicker": 0.68,
+          "ratio": 0.686,
+          "readyShort": 8,
+          "ticks": 8837,
+          "unmatched": 0.7
+        },
+        "once": {
+          "bytes": 24,
+          "calibration": 9.6,
+          "cpuMs": 5.11,
+          "ratio": 0.547
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.922469,
+            "bytes": 24,
+            "calibration": 9.6,
+            "cooldown": 0,
+            "cost": 2.4,
+            "cpuMs": 5.11,
+            "dps": 0.983,
+            "flicker": 0.24,
+            "heldReady": 150,
+            "oracleFlicker": 0.51,
+            "ratio": 0.547,
+            "readyShort": 26,
+            "ticks": 8861,
+            "unmatched": 2.4
+          },
+          "2": {
+            "agreement": 0.930599,
+            "bytes": 34,
+            "calibration": 9,
+            "cooldown": 0,
+            "cost": 0.7,
+            "cpuMs": 5.16,
+            "dps": 1.006,
+            "flicker": 0.32,
+            "heldReady": 136,
+            "oracleFlicker": 0.53,
+            "ratio": 0.592,
+            "readyShort": 7,
+            "ticks": 8559,
+            "unmatched": 0.7
+          },
+          "3": {
+            "agreement": 0.928298,
+            "bytes": 21,
+            "calibration": 8.83,
+            "cooldown": 0,
+            "cost": 0.1,
+            "cpuMs": 4.93,
+            "dps": 1.005,
+            "flicker": 0.4,
+            "heldReady": 228,
+            "oracleFlicker": 0.47,
+            "ratio": 0.592,
+            "readyShort": 1,
+            "ticks": 8898,
+            "unmatched": 0.1
+          }
+        },
+        "worst": {
+          "agreement": 0.922469,
+          "cooldown": 0,
+          "cost": 2.4,
+          "dps": 0.983,
+          "flicker": 0.4,
+          "heldReady": 228,
+          "oracleFlicker": 0.47,
+          "readyShort": 26,
+          "unmatched": 2.4
+        }
+      },
+      "spec": "Fury",
+      "wowsims": {
+        "liveIdle": {
+          "10": 10.4,
+          "40": 6.6,
+          "60": 4.2
+        },
+        "readyFloor": 0.42,
+        "readyMedian": 0.4,
+        "readyNever": 12,
+        "replay": 0.868687,
+        "replayFloor": 0.86
+      }
+    },
+    "26": {
+      "class": "Warrior",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.85,
+        "replay": "none",
+        "solo": 0.925537
+      },
+      "loop": {
+        "crowdTickRatio": 0.995,
+        "crowdedTarget39": {
+          "agreement": 0.853,
+          "bytes": 35,
+          "calibration": 9.38,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 4.59,
+          "dps": 0.995,
+          "flicker": 0.14,
+          "heldReady": 428,
+          "oracleFlicker": 0.4,
+          "ratio": 0.516,
+          "readyShort": 0,
+          "ticks": 10489,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 35,
+          "calibration": 10.19,
+          "cpuMs": 4.6,
+          "ratio": 0.475
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.924208,
+            "bytes": 35,
+            "calibration": 10.19,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 4.6,
+            "dps": 0.963,
+            "flicker": 0.43,
+            "heldReady": 309,
+            "oracleFlicker": 0.51,
+            "ratio": 0.475,
+            "readyShort": 0,
+            "ticks": 10542,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.926603,
+            "bytes": 45,
+            "calibration": 9.32,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 4.53,
+            "dps": 1.014,
+            "flicker": 0.38,
+            "heldReady": 305,
+            "oracleFlicker": 0.73,
+            "ratio": 0.503,
+            "readyShort": 0,
+            "ticks": 10341,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.936906,
+            "bytes": 28,
+            "calibration": 8.92,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 4.5,
+            "dps": 1.001,
+            "flicker": 0.25,
+            "heldReady": 370,
+            "oracleFlicker": 0.45,
+            "ratio": 0.536,
+            "readyShort": 0,
+            "ticks": 10730,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.924208,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.963,
+          "flicker": 0.43,
+          "heldReady": 370,
+          "oracleFlicker": 0.51,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Fury L24",
+      "wowsims": "n/a"
+    },
+    "27": {
+      "class": "Warrior",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.87,
+        "replay": 0.92,
+        "solo": 0.841024
+      },
+      "loop": {
+        "crowdTickRatio": 0.929,
+        "crowdedTarget39": {
+          "agreement": 0.873,
+          "bytes": 30,
+          "calibration": 6.16,
+          "cooldown": 0,
+          "cost": 0.4,
+          "cpuMs": 3.54,
+          "dps": 0.975,
+          "flicker": 0.15,
+          "heldReady": 309,
+          "oracleFlicker": 0.62,
+          "ratio": 0.577,
+          "readyShort": 5,
+          "ticks": 16471,
+          "unmatched": 0.4
+        },
+        "once": {
+          "bytes": 21,
+          "calibration": 8.37,
+          "cpuMs": 4.61,
+          "ratio": 0.581
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.899402,
+            "bytes": 21,
+            "calibration": 8.37,
+            "cooldown": 0,
+            "cost": 0.1,
+            "cpuMs": 4.61,
+            "dps": 1.027,
+            "flicker": 0.12,
+            "heldReady": 321,
+            "oracleFlicker": 0.17,
+            "ratio": 0.581,
+            "readyShort": 1,
+            "ticks": 17724,
+            "unmatched": 0.1
+          },
+          "2": {
+            "agreement": 0.892987,
+            "bytes": 29,
+            "calibration": 9.09,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 4.62,
+            "dps": 0.96,
+            "flicker": 0,
+            "heldReady": 333,
+            "oracleFlicker": 0.27,
+            "ratio": 0.54,
+            "readyShort": 0,
+            "ticks": 17624,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.89423,
+            "bytes": 28,
+            "calibration": 8.15,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 4.29,
+            "dps": 1.029,
+            "flicker": 0.22,
+            "heldReady": 342,
+            "oracleFlicker": 0.52,
+            "ratio": 0.546,
+            "readyShort": 0,
+            "ticks": 17869,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.892987,
+          "cooldown": 0,
+          "cost": 0.1,
+          "dps": 0.96,
+          "flicker": 0.22,
+          "heldReady": 342,
+          "oracleFlicker": 0.52,
+          "readyShort": 1,
+          "unmatched": 0.1
+        }
+      },
+      "spec": "Protection",
+      "wowsims": {
+        "liveIdle": {
+          "10": 5.6,
+          "40": 10.2,
+          "60": 14.6
+        },
+        "readyFloor": 0.37,
+        "readyMedian": 0.18,
+        "readyNever": 8,
+        "replay": 0.92,
+        "replayFloor": 0.92
+      }
+    },
+    "3": {
+      "class": "Druid",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.888,
+        "replay": 0.606838,
+        "solo": 0.864907
+      },
+      "loop": {
+        "crowdTickRatio": 0.924,
+        "crowdedTarget39": {
+          "agreement": 0.894,
+          "bytes": 29,
+          "calibration": 10.34,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 4.12,
+          "dps": 0.98,
+          "flicker": 0.09,
+          "heldReady": 285,
+          "oracleFlicker": 0.79,
+          "ratio": 0.411,
+          "readyShort": 0,
+          "ticks": 16043,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 27,
+          "calibration": 10.51,
+          "cpuMs": 3.3,
+          "ratio": 0.322
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.892024,
+            "bytes": 27,
+            "calibration": 10.51,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.3,
+            "dps": 1.002,
+            "flicker": 0.19,
+            "heldReady": 299,
+            "oracleFlicker": 0.26,
+            "ratio": 0.322,
+            "readyShort": 0,
+            "ticks": 17365,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.875998,
+            "bytes": 33,
+            "calibration": 9.76,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.39,
+            "dps": 0.996,
+            "flicker": 0.17,
+            "heldReady": 285,
+            "oracleFlicker": 0.28,
+            "ratio": 0.364,
+            "readyShort": 0,
+            "ticks": 17161,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.910615,
+            "bytes": 23,
+            "calibration": 8.39,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 3.59,
+            "dps": 1.005,
+            "flicker": 0.07,
+            "heldReady": 293,
+            "oracleFlicker": 0.41,
+            "ratio": 0.453,
+            "readyShort": 0,
+            "ticks": 17419,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.875998,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.996,
+          "flicker": 0.19,
+          "heldReady": 299,
+          "oracleFlicker": 0.26,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Guardian",
+      "wowsims": {
+        "liveIdle": {
+          "10": 8.2,
+          "40": 8.4,
+          "60": 4.4
+        },
+        "readyFloor": 1.76,
+        "readyMedian": 1.751,
+        "readyNever": 39,
+        "replay": 0.632479,
+        "replayFloor": 0.63
+      }
+    },
+    "4": {
+      "class": "Hunter",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.997,
+        "replay": 0.958333,
+        "solo": 0.993926
+      },
+      "loop": {
+        "crowdTickRatio": 1.001,
+        "crowdedTarget39": {
+          "agreement": 0.997,
+          "bytes": 26,
+          "calibration": 9.97,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.09,
+          "dps": 1,
+          "flicker": 0,
+          "heldReady": 155,
+          "oracleFlicker": 0,
+          "ratio": 0.316,
+          "readyShort": 0,
+          "ticks": 16669,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 26,
+          "calibration": 9.5,
+          "cpuMs": 2.55,
+          "ratio": 0.283
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.997418,
+            "bytes": 26,
+            "calibration": 9.5,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.55,
+            "dps": 0.987,
+            "flicker": 0.02,
+            "heldReady": 147,
+            "oracleFlicker": 0,
+            "ratio": 0.283,
+            "readyShort": 0,
+            "ticks": 16654,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.993926,
+            "bytes": 32,
+            "calibration": 9.27,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.72,
+            "dps": 1.003,
+            "flicker": 0.03,
+            "heldReady": 147,
+            "oracleFlicker": 0,
+            "ratio": 0.31,
+            "readyShort": 0,
+            "ticks": 16628,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.997417,
+            "bytes": 22,
+            "calibration": 9.66,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.81,
+            "dps": 0.99,
+            "flicker": 0,
+            "heldReady": 155,
+            "oracleFlicker": 0,
+            "ratio": 0.304,
+            "readyShort": 0,
+            "ticks": 16646,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.993926,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.987,
+          "flicker": 0.03,
+          "heldReady": 155,
+          "oracleFlicker": 0,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Beast Mastery",
+      "wowsims": {
+        "liveIdle": {
+          "10": 4.4,
+          "40": 7.8,
+          "60": 12.2
+        },
+        "readyFloor": 0.46,
+        "readyMedian": 0.46,
+        "readyNever": 3,
+        "replay": 0.958333,
+        "replayFloor": 0.95
+      }
+    },
+    "5": {
+      "class": "Hunter",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.999,
+        "replay": 0.988636,
+        "solo": 0.999877
+      },
+      "loop": {
+        "crowdTickRatio": 1.002,
+        "crowdedTarget39": {
+          "agreement": 0.999,
+          "bytes": 25,
+          "calibration": 9.67,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 2.15,
+          "dps": 1.008,
+          "flicker": 0,
+          "heldReady": 103,
+          "oracleFlicker": 0,
+          "ratio": 0.233,
+          "readyShort": 0,
+          "ticks": 16614,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 25,
+          "calibration": 9.66,
+          "cpuMs": 1.98,
+          "ratio": 0.214
+        },
+        "seeds": {
+          "1": {
+            "agreement": 1,
+            "bytes": 25,
+            "calibration": 9.66,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 1.98,
+            "dps": 0.993,
+            "flicker": 0,
+            "heldReady": 113,
+            "oracleFlicker": 0,
+            "ratio": 0.214,
+            "readyShort": 0,
+            "ticks": 16580,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 1,
+            "bytes": 30,
+            "calibration": 9.88,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.16,
+            "dps": 1.011,
+            "flicker": 0,
+            "heldReady": 105,
+            "oracleFlicker": 0,
+            "ratio": 0.226,
+            "readyShort": 0,
+            "ticks": 16673,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.99994,
+            "bytes": 24,
+            "calibration": 9.78,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.06,
+            "dps": 1,
+            "flicker": 0,
+            "heldReady": 111,
+            "oracleFlicker": 0,
+            "ratio": 0.218,
+            "readyShort": 0,
+            "ticks": 16773,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.99994,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.993,
+          "flicker": 0,
+          "heldReady": 113,
+          "oracleFlicker": 0,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Marksmanship",
+      "wowsims": {
+        "liveIdle": {
+          "10": 4.4,
+          "40": 7.6,
+          "60": 15.4
+        },
+        "readyFloor": 0.32,
+        "readyMedian": 0.32,
+        "readyNever": 1,
+        "replay": 0.988636,
+        "replayFloor": 0.98
+      }
+    },
+    "6": {
+      "class": "Hunter",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.721,
+        "replay": 0.945652,
+        "solo": 0.700166
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.966,
+          "bytes": 26,
+          "calibration": 10.07,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 3.96,
+          "dps": 0.994,
+          "flicker": 0.15,
+          "heldReady": 282,
+          "oracleFlicker": 1.23,
+          "ratio": 0.415,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 20,
+          "calibration": 10.01,
+          "cpuMs": 3.21,
+          "ratio": 0.331
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.966204,
+            "bytes": 20,
+            "calibration": 10.01,
+            "cooldown": 0,
+            "cost": 0.1,
+            "cpuMs": 3.21,
+            "dps": 0.995,
+            "flicker": 0.08,
+            "heldReady": 267,
+            "oracleFlicker": 1.05,
+            "ratio": 0.331,
+            "readyShort": 1,
+            "ticks": 18020,
+            "unmatched": 0.1
+          },
+          "2": {
+            "agreement": 0.96465,
+            "bytes": 26,
+            "calibration": 10.02,
+            "cooldown": 0,
+            "cost": 0.1,
+            "cpuMs": 3.41,
+            "dps": 0.962,
+            "flicker": 0.05,
+            "heldReady": 294,
+            "oracleFlicker": 0.77,
+            "ratio": 0.348,
+            "readyShort": 1,
+            "ticks": 18020,
+            "unmatched": 0.1
+          },
+          "3": {
+            "agreement": 0.95505,
+            "bytes": 23,
+            "calibration": 9.01,
+            "cooldown": 0,
+            "cost": 0.1,
+            "cpuMs": 3.55,
+            "dps": 1.028,
+            "flicker": 0.13,
+            "heldReady": 299,
+            "oracleFlicker": 1.76,
+            "ratio": 0.414,
+            "readyShort": 1,
+            "ticks": 18020,
+            "unmatched": 0.1
+          }
+        },
+        "worst": {
+          "agreement": 0.95505,
+          "cooldown": 0,
+          "cost": 0.1,
+          "dps": 0.962,
+          "flicker": 0.13,
+          "heldReady": 299,
+          "oracleFlicker": 1.76,
+          "readyShort": 1,
+          "unmatched": 0.1
+        }
+      },
+      "spec": "Survival",
+      "wowsims": {
+        "liveIdle": {
+          "10": 4.4,
+          "40": 7.6,
+          "60": 14
+        },
+        "readyFloor": 0.29,
+        "readyMedian": 0.29,
+        "readyNever": 5,
+        "replay": 0.945652,
+        "replayFloor": 0.94
+      }
+    },
+    "7": {
+      "class": "Mage",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.606,
+        "replay": 0.848485,
+        "solo": 0.580688
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.982,
+          "bytes": 18,
+          "calibration": 9.68,
+          "cooldown": 0,
+          "cost": 2.1,
+          "cpuMs": 2.9,
+          "dps": 0.947,
+          "flicker": 0,
+          "heldReady": 88,
+          "oracleFlicker": 0,
+          "ratio": 0.309,
+          "readyShort": 18,
+          "ticks": 18020,
+          "unmatched": 2.1
+        },
+        "once": {
+          "bytes": 21,
+          "calibration": 9.76,
+          "cpuMs": 2.39,
+          "ratio": 0.256
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.988346,
+            "bytes": 21,
+            "calibration": 9.76,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.39,
+            "dps": 0.954,
+            "flicker": 0,
+            "heldReady": 97,
+            "oracleFlicker": 0,
+            "ratio": 0.256,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.987458,
+            "bytes": 30,
+            "calibration": 9.18,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.55,
+            "dps": 1.041,
+            "flicker": 0,
+            "heldReady": 85,
+            "oracleFlicker": 0,
+            "ratio": 0.294,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.986737,
+            "bytes": 21,
+            "calibration": 9.55,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.67,
+            "dps": 0.94,
+            "flicker": 0,
+            "heldReady": 84,
+            "oracleFlicker": 0,
+            "ratio": 0.291,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.986737,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.94,
+          "flicker": 0,
+          "heldReady": 97,
+          "oracleFlicker": 0,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Arcane",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0.4,
+          "40": 0.2,
+          "60": 9.2
+        },
+        "readyFloor": 0.76,
+        "readyMedian": 0.22,
+        "readyNever": 3,
+        "replay": 0.954545,
+        "replayFloor": 0.95
+      }
+    },
+    "8": {
+      "class": "Mage",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.803,
+        "replay": 0.814815,
+        "solo": 0.779967
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.992,
+          "bytes": 21,
+          "calibration": 9.45,
+          "cooldown": 0,
+          "cost": 0.1,
+          "cpuMs": 2.77,
+          "dps": 0.992,
+          "flicker": 0,
+          "heldReady": 172,
+          "oracleFlicker": 0,
+          "ratio": 0.301,
+          "readyShort": 1,
+          "ticks": 18020,
+          "unmatched": 0.1
+        },
+        "once": {
+          "bytes": 21,
+          "calibration": 10.05,
+          "cpuMs": 2.46,
+          "ratio": 0.25
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.994728,
+            "bytes": 21,
+            "calibration": 10.05,
+            "cooldown": 0,
+            "cost": 0.1,
+            "cpuMs": 2.46,
+            "dps": 1.029,
+            "flicker": 0,
+            "heldReady": 169,
+            "oracleFlicker": 0,
+            "ratio": 0.25,
+            "readyShort": 1,
+            "ticks": 18020,
+            "unmatched": 0.1
+          },
+          "2": {
+            "agreement": 0.994284,
+            "bytes": 33,
+            "calibration": 9.62,
+            "cooldown": 0,
+            "cost": 0.1,
+            "cpuMs": 2.58,
+            "dps": 0.978,
+            "flicker": 0,
+            "heldReady": 173,
+            "oracleFlicker": 0,
+            "ratio": 0.278,
+            "readyShort": 1,
+            "ticks": 18020,
+            "unmatched": 0.1
+          },
+          "3": {
+            "agreement": 0.996115,
+            "bytes": 20,
+            "calibration": 8.96,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.74,
+            "dps": 1.011,
+            "flicker": 0,
+            "heldReady": 175,
+            "oracleFlicker": 0,
+            "ratio": 0.325,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.994284,
+          "cooldown": 0,
+          "cost": 0.1,
+          "dps": 0.978,
+          "flicker": 0,
+          "heldReady": 175,
+          "oracleFlicker": 0,
+          "readyShort": 1,
+          "unmatched": 0.1
+        }
+      },
+      "spec": "Fire",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0,
+          "40": 0.2,
+          "60": 6.2
+        },
+        "readyFloor": 0.45,
+        "readyMedian": 0.4,
+        "readyNever": 3,
+        "replay": 0.962963,
+        "replayFloor": 0.96
+      }
+    },
+    "9": {
+      "class": "Mage",
+      "liveLike": {
+        "arm": "live-auras-none",
+        "crowd": 0.813,
+        "replay": 0.859649,
+        "solo": 0.830411
+      },
+      "loop": {
+        "crowdTickRatio": 1,
+        "crowdedTarget39": {
+          "agreement": 0.956,
+          "bytes": 19,
+          "calibration": 9.75,
+          "cooldown": 0,
+          "cost": 0,
+          "cpuMs": 2.39,
+          "dps": 1.008,
+          "flicker": 0.03,
+          "heldReady": 121,
+          "oracleFlicker": 2.88,
+          "ratio": 0.252,
+          "readyShort": 0,
+          "ticks": 18020,
+          "unmatched": 0
+        },
+        "once": {
+          "bytes": 18,
+          "calibration": 10.68,
+          "cpuMs": 2.09,
+          "ratio": 0.197
+        },
+        "seeds": {
+          "1": {
+            "agreement": 0.960821,
+            "bytes": 18,
+            "calibration": 10.68,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.09,
+            "dps": 0.973,
+            "flicker": 0.02,
+            "heldReady": 97,
+            "oracleFlicker": 2.01,
+            "ratio": 0.197,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "2": {
+            "agreement": 0.934684,
+            "bytes": 28,
+            "calibration": 9.95,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.25,
+            "dps": 0.976,
+            "flicker": 0.03,
+            "heldReady": 121,
+            "oracleFlicker": 2.8,
+            "ratio": 0.231,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          },
+          "3": {
+            "agreement": 0.937014,
+            "bytes": 21,
+            "calibration": 8.95,
+            "cooldown": 0,
+            "cost": 0,
+            "cpuMs": 2.34,
+            "dps": 0.982,
+            "flicker": 0,
+            "heldReady": 111,
+            "oracleFlicker": 1.88,
+            "ratio": 0.275,
+            "readyShort": 0,
+            "ticks": 18020,
+            "unmatched": 0
+          }
+        },
+        "worst": {
+          "agreement": 0.934684,
+          "cooldown": 0,
+          "cost": 0,
+          "dps": 0.973,
+          "flicker": 0.03,
+          "heldReady": 121,
+          "oracleFlicker": 2.8,
+          "readyShort": 0,
+          "unmatched": 0
+        }
+      },
+      "spec": "Frostfire",
+      "wowsims": {
+        "liveIdle": {
+          "10": 0,
+          "40": 0.2,
+          "60": 11.8
+        },
+        "readyFloor": 0.42,
+        "readyMedian": 0.3,
+        "readyNever": 2,
+        "replay": 0.964912,
+        "replayFloor": 0.96
+      }
+    }
+  }
+}
