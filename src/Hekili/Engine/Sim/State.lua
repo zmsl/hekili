@@ -1375,6 +1375,10 @@ do
                         if v.swing == "offhand" then p = state.swings.oh_pending else p = state.swings.mh_pending end
                         if p > 0 and l > p - i / 2 then
                             v.next, v.resume = max( now, p + 2 * ns.ORACLE_MIN ), l + i
+                        elseif p > l then
+                            -- L872: a pending swing newer than the anchor (the opener's combat-start pseudo swing,
+                            -- the first swing landing over half a swing later): the swings after it run off it
+                            v.next, v.resume = max( now, p + 2 * ns.ORACLE_MIN ), p + i
                         end
                     end
 
