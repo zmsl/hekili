@@ -15,19 +15,19 @@ As of the current release, the tables list every difference known. The pages the
 | `<resource>.current`, `.pct`, `.deficit` | The simulated amount | The amount the game reports | An estimate while the game hides the resource |
 | `<resource>.lo`, `.hi`, `.pct_lo` | Not available | Not available | The low and high ends of the estimate ([Resources](APL-Expression-Reference#resources)) |
 | `fight_remains`, `target.time_to_die`, `target.time_to_pct_<N>` | From the simulated fight | Worked out from target health | Always 3600 seconds, meaning unknown |
-| `target.health.pct` and the other target health values | The simulated health | The health the game reports | 100, with a warning in **Warnings** when the priority loads |
+| `target.health.pct` and the other target health values | The simulated health | The health the game reports | 100 until an ability usable only at low target health narrows it; always 100 on a specialization without one. A warning in **Warnings** when the priority loads. |
 | `health.pct` | The simulated health | The health the game reports | The reported value, or 100 while the game hides it |
 | `cooldown.<key>.remains` | Simulated | The time the game reports | Estimated from the last cast; `cooldown.<key>.ready` is read from the game |
 | `buff.<key>.remains`, `debuff.<key>.remains` | Simulated | The time the game reports | Estimated from the cast and the aura's length |
 | `target.within<N>`, `target.outside<N>`, `target.range<A>to<B>` | The simulated distance | From the game's range checks | From the range checks of the abilities Hekili Forever tracks; while the range is unknown, all are true |
-| `active_dot.<key>` | Simulated | <!-- UNVERIFIED: retail active_dot source --> Counted from the combat log | The target and the enemies Hekili Forever remembers; while unknown, every enemy counts as carrying the aura |
+| `active_dot.<key>` | Simulated | Counted from the combat log | The target and the enemies Hekili Forever remembers; while unknown, every enemy counts as carrying the aura |
 | `target.is_targeting_player` | Simulated | Read from the game | Read; false while the game hides it |
-| `target.creature_type`, `target.is_undead`, `target.is_demon` | Not available | <!-- UNVERIFIED: whether retail had creature_type --> Not available | The target's creature type; `unknown` while hidden |
-| `main_hand.<kind>`, `off_hand.<kind>` | Not available | <!-- UNVERIFIED: retail weapon kind keys --> Not available | The kind and size of the worn weapon, such as `dagger` or `two_handed` |
-| `buff.<key>.icd_ready`, `buff.<key>.icd_remains` | Not available | <!-- UNVERIFIED: retail icd keys --> Not available | A proc aura's internal cooldown, when the class pack gives one |
+| `target.creature_type`, `target.is_undead`, `target.is_demon` | Not available | Not available | The target's creature type; `unknown` while hidden |
+| `main_hand.<kind>`, `off_hand.<kind>` | Not available | The size only: `two_handed`, `one_handed` | The size and the kind of the worn weapon, such as `two_handed` or `dagger` |
+| `buff.<key>.icd_ready`, `buff.<key>.icd_remains` | Not available | Not available | A proc aura's internal cooldown, when the class pack gives one |
 | `window.<name>.*` | Not available | Not available | Rotation windows ([APL windows](APL-Windows)) |
 | `toggle.movement` | Not available | Not available | The **Movement** toggle |
-| `toggle.essences` | Not available | A toggle of its own | Read as `toggle.minor_cooldowns` |
+| `toggle.essences` | Not available | Its name for the minor cooldowns toggle | Read as `toggle.minor_cooldowns` |
 
 > [!NOTE]
 > **On Forever:** A line that waits for a target to be nearly dead, such as `fight_remains<8`, never fires. A line such as `fight_remains>60` always passes.
@@ -37,7 +37,7 @@ As of the current release, the tables list every difference known. The pages the
 | Option | SimulationCraft | Retail Hekili | Hekili Forever |
 |---|---|---|---|
 | `pool_resource,for_next=1` | Pools for the next line | Delays the walk until the next line is affordable | The same, testing the low end of the resource |
-| `pool_resource,wait=<seconds>` and `pool_resource` without `for_next` | Pools for the time given | <!-- UNVERIFIED: inferred from the inherited NYI branch in Core.lua --> Accepted and ignored | Accepted and ignored ([Pooling](APL-Line-Options#pooling)) |
+| `pool_resource,wait=<seconds>` and `pool_resource` without `for_next` | Pools for the time given | Accepted and ignored | Accepted and ignored ([Pooling](APL-Line-Options#pooling)) |
 | `focus=<tier>` | Not available | Not available | A focus tier for the Timeline display style |
 | `label=`, `label_if=` | Not available | Not available | Text on the recommended icon |
 | `icon=`, `icon_if=` | Not available | Not available | An icon override |

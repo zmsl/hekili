@@ -70,7 +70,7 @@ If the condition has a typing error, an error appears in **Warnings** and the li
 2. Click in **Priority Export String**, press Ctrl+A to select the string, then Ctrl+C to copy it.
 3. Paste the string where you want to share it.
 
-Another player imports it in **/hekili > Priorities > Import / Export**, on the **Import** tab: paste it into **Import String** and click **Import Priority**.
+Another player imports it in **/hekili > Priorities > Import / Export**, on the **Import** tab: paste it into **Import String** and click **Import Priority**. The priority's name, date and specialization then show in **Pack Name**, **Pack Date** and **Pack Specialization**; **Apply Changes** adds it, after a confirmation that names it. Like any copy, it then has to be made **Active**.
 
 ## Next steps
 

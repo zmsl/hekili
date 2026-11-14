@@ -55,7 +55,7 @@ When a comparison asks a resource to reach a value, as in `energy.lo>=60` or `60
 | `buff.<key>.duration` | seconds | The aura's full length | Modelled | `buff.cat_form.duration>0` |
 | `buff.<key>.stack` | number | Stacks; 0 when down | Estimated | `buff.heating_up.stack=3` |
 | `buff.<key>.max_stack` | number | The most stacks the aura can have | Modelled | `buff.heating_up.max_stack>1` |
-| `buff.<key>.refreshable` | boolean | The aura is down, or close enough to its end to recast it | Estimated | `buff.battle_shout.refreshable` |
+| `buff.<key>.refreshable` | boolean | The aura is down, or has less than 30% of its duration left | Estimated | `buff.battle_shout.refreshable` |
 | `buff.<key>.react` | number | Stacks, for a proc aura | Estimated | `buff.clearcasting.react>0` |
 | `buff.<key>.icd_ready` | boolean | The aura's internal cooldown has passed, for a proc aura the pack gives one | Modelled | `buff.clearcasting.icd_ready` |
 | `buff.<key>.icd_remains` | seconds | Time until that internal cooldown passes | Modelled | `buff.clearcasting.icd_remains<1` |
@@ -63,7 +63,7 @@ When a comparison asks a resource to reach a value, as in `energy.lo>=60` or `60
 | `debuff.<key>.remains` | seconds | Time until it ends on the target | Estimated | `debuff.rip.remains>=2` |
 | `debuff.<key>.stack` | number | Stacks on the target | Estimated | `debuff.winters_chill.stack=5` |
 | `debuff.<key>.duration` | seconds | The aura's full length | Modelled | `debuff.rake.duration>0` |
-| `debuff.<key>.refreshable` | boolean | Down, or close enough to its end to recast | Estimated | `debuff.rake.refreshable` |
+| `debuff.<key>.refreshable` | boolean | Less than 30% of its duration left, or down | Estimated | `debuff.rake.refreshable` |
 | `debuff.<key>.ticking` | boolean | A damage-over-time aura is ticking | Estimated | `debuff.rake.ticking` |
 | `active_dot.<key>` | number | How many enemies carry the aura | Estimated | `active_dot.bane_of_havoc>0` |
 
@@ -110,7 +110,7 @@ actions+=/swift_judgement,use_off_gcd=1,if=(!action.judgement.known|cooldown.jud
 |---|---|---|---|---|
 | `action.<key>.known` | boolean | The character has learned the ability, and it is not disabled | Read | `action.cat_form.known` |
 | `action.<key>.enabled` | boolean | The same as `known` | Read | `action.shred.enabled` |
-| `action.<key>.disabled` | boolean | The player disabled the ability in the options | Read | `!action.shred.disabled` |
+| `action.<key>.disabled` | boolean | The ability is switched off: in the options, by a toggle that is off, or by the class pack | Read | `!action.shred.disabled` |
 | `action.<key>.ready` | boolean | Usable and ready now | Estimated | `action.shifting_power.ready` |
 | `action.<key>.usable_in` | seconds | Time until its cooldown ends | Estimated | `action.rake.usable_in<1` |
 | `action.<key>.cost` | number | Its cost now, after modifiers | Modelled | `energy.lo>=action.shred.cost` |
@@ -162,7 +162,7 @@ A talent key the class pack does not know reads as not taken and adds a warning 
 | `target.creature_type` | text | The target's creature type in snake case, such as `beast` or `undead`; `unknown` when hidden | Read | `target.creature_type='undead'` |
 | `target.is_undead`, `target.is_demon` | boolean | The creature type is undead, or demon | Read | `target.is_undead` |
 | `target.moving` | boolean | The target is moving | Read | `!target.moving` |
-| `target.health.pct` | percent | The target's health | Always 100 | `target.health.pct<20` |
+| `target.health.pct` | percent | The target's health | 100 unless narrowed (see below) | `target.health.pct<20` |
 
 From Feral (wowsims.com), shortened:
 
@@ -174,7 +174,7 @@ actions+=/cat_form,if=!buff.cat_form.up&(toggle.movement&target.outside5|target.
 > **On Forever:** The game gives addons no distance to the target, only whether each spell is in range. Hekili Forever brackets the distance between the ranges of the abilities it tracks. While the bracket is unknown, `target.withinN`, `target.outsideN` and `target.rangeAtoB` are all true, so a range test never blocks a line on its own.
 
 > [!NOTE]
-> **On Forever:** The game hides target health. `target.health.pct` reads 100, and a priority that uses it gets a "target health is secret" warning in **Warnings** when it loads.
+> **On Forever:** The game hides target health. `target.health.pct` reads 100 until an ability that is usable only at low target health shows that the target is below that point; on a specialization without such an ability it always reads 100. A priority that reads target health gets a "target health is secret" warning in **Warnings** when it loads.
 
 ## Toggles
 

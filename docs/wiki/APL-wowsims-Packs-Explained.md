@@ -37,6 +37,8 @@ The translation follows wowsims.com as closely as the Forever client allows. Whe
 - **Distance.** wowsims.com knows the distance in yards. Hekili Forever brackets it with range checks, so a distance test becomes `target.within<N>` or `target.outside<N>`.
 - **Movement.** wowsims.com walks the character. Hekili Forever cannot move the player, so movement terms are dropped, and the **Movement** toggle decides whether an ability out of range is shown ([Why a built-in looks verbose](#why-a-built-in-looks-verbose)).
 
+A few debuffs that pay off only in a long raid fight, such as Guardian's Demoralizing Roar, are settings that are off in game. wowsims.com keeps them up, so the measurements turn them on.
+
 The [Accuracy](Accuracy) page measures, for each specialization, how often the built-in priority recommends what wowsims.com would cast.
 
 Some groups of a wowsims.com rotation can be switched on and off in the simulator. They become settings of the specialization, read in the priority as `settings.wowsims_<name>` and shown in the specialization's options ([Specialization options](Specializations-Reference)). From Arms (wowsims.com):

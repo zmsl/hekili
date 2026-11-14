@@ -32,7 +32,7 @@ An option written `=1` is on; `=0` or leaving it out is off. Options that hold a
 | `line_cd` | Seconds | After the ability is cast in combat, the line waits this long before it can be chosen again. | **Entry Cooldown** |
 | `sync` | Ability key | The line waits until that ability is ready too. | none |
 | `moving` | 1 or 0 | 1: only while the player moves. 0: only while the player stands still. | **Check Movement**, **Movement** |
-| `only_cwc` | 1 | Only while the player channels another spell that allows casting during it | **During Channel** |
+| `only_cwc` | 1 | Only while the player channels a spell, for an ability the class pack allows during a channel | **During Channel** |
 | `strict` | 1 | On a list call: test the condition now only, with no look ahead | **Test Conditions Immediately** |
 | `strict_if` | Condition | On a list call: a condition that must hold now before `if=` is tested | **Additional Immediate Criteria** |
 | `target_if` | Condition | Read by the importer as `if=` when the line has none; a leading `min:` or `max:` is removed | none |

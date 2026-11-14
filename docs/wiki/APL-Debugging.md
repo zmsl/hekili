@@ -45,7 +45,7 @@ An ability that needs a toggle that is off, such as **Major Cooldowns** for a co
 ## Common causes
 
 - **The line waits for the target to die.** `fight_remains`, `target.time_to_die` and `target.time_to_pct_<N>` always read 3600 on Forever, so `fight_remains<8` never passes.
-- **The line reads target health.** It reads 100.
+- **The line reads target health.** It reads 100 unless an ability usable only at low target health has narrowed it, so a test such as `target.health.pct<20` rarely passes.
 - **The line tests a range that is not known yet.** While Hekili Forever cannot bracket the distance, `target.withinN` and `target.outsideN` are both true. Add `action.<key>.in_range` when the line must wait for range.
 - **A line above it always wins.** The walk keeps the line that is ready soonest. Move the line up, or narrow the condition of the line above.
 - **A `precombat` line in combat.** Lines of `precombat`, and of the lists it calls, are skipped once combat starts.
