@@ -1358,6 +1358,36 @@ describe("now handlers", function()
             assert.are.equal(1, I.avoidsRun)
         end)
 
+        -- the brief's item 4: presence evidence (the Cooldown Manager read the debuff UP since the cast, when it was down
+        -- before it) says the cast landed, so the swing's wound gives nothing back (counted as a veto)
+        it("the debuff read UP since the cast, down before it, vetoes that hand-back", function()
+            begin()
+            ctl.now = 4.526
+            ctl.Fire("PLAYER_SWING", 3.6, 0)
+            castOutcome(fs.SPENDER_C, 5, "DODGE", 0, fake.SECRET)
+            I.auraUpAt[I.AURA_UNIT + I.auras.bySpell[fs.SPENDER_C]] = 5.04 -- a poll's UP fact after the cast
+            ctl.now = 5.08
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+            ctl.Tick(5.1)
+            VS.Drain(5.1)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.2).est)
+            assert.are.same({ 0, 0, 1 }, { I.avoidsRun, I.Log.tieBack, I.Log.tieVeto })
+        end)
+
+        it("an UP read that is the earlier application's (the debuff was up before the cast) vetoes nothing", function()
+            begin()
+            castOutcome(fs.SPENDER_C, 3, "WOUND", 0, fake.SECRET) -- up to 18 before the second cast
+            ctl.now = 4.526
+            ctl.Fire("PLAYER_SWING", 3.6, 0)
+            castOutcome(fs.SPENDER_C, 5, "DODGE", 0, fake.SECRET)
+            I.auraUpAt[I.AURA_UNIT + I.auras.bySpell[fs.SPENDER_C]] = 5.04 -- still lit from the first application
+            ctl.now = 5.08
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+            ctl.Tick(5.1)
+            VS.Drain(5.1)
+            assert.are.same({ 1, 1, 0 }, { I.avoidsRun, I.Log.tieBack, I.Log.tieVeto })
+        end)
+
         it("a white swing's miss due 0.3 s after the cast is the swing's: the debuff stays, no SPELL_MISSED", function()
             begin()
             ctl.now = 4.83
