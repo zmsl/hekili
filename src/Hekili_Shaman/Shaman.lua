@@ -393,11 +393,27 @@ local function costed(costs, ids, convection, focus)
     end
 end
 
--- Chain Lightning's `now` or `handler`: spends Revelation (one charge: the next Lightning Bolt or Chain Lightning) and
--- Nature's Swiftness.
-local function revealed()
+-- Revelation's charge goes to a Lightning Bolt or Chain Lightning only when it was up at the cast's start: one gained
+-- mid-cast (the last bolt landing) survives the cast and the next Earth Shock takes it (wowsims: shaman_elemental.log
+-- 29.19 -> 30.90, 137.44 -> 139.15, 165.87 -> 167.59; L486). The belief's `now` reads the cast's start (`cast_start`;
+-- `instant`: none seen), the sim's `handler` its casting buff (up through a hard cast's CAST_FINISH, down for an
+-- instant). Each test is written out in its function: a helper would run outside the handler's environment.
+-- Chain Lightning's `now` (`belief`) or `handler`: spends Revelation (one charge: the next Lightning Bolt or Chain
+-- Lightning) and Nature's Swiftness.
+local function revealed(belief)
+    if belief then
+        return function()
+            if instant or buff.revelation.applied <= cast_start then
+                removeBuff("revelation")
+            end
+            removeBuff("natures_swiftness")
+            removeDebuff("target", "stormstrike")
+        end
+    end
     return function()
-        removeBuff("revelation")
+        if not buff.casting.up or buff.revelation.applied <= buff.casting.applied then
+            removeBuff("revelation")
+        end
         removeBuff("natures_swiftness")
         removeDebuff("target", "stormstrike")
     end
@@ -646,7 +662,9 @@ spec:RegisterAbilities({
         -- a pack reads it.
         now = function()
             removeBuff("maelstrom_weapon")
-            removeBuff("revelation")
+            if instant or buff.revelation.applied <= cast_start then -- a charge up at the start (`revealed`)
+                removeBuff("revelation")
+            end
             removeBuff("natures_swiftness")
             if debuff.stormstrike.up then
                 applyDebuff("target", "stormstrike", min(2, debuff.stormstrike.remains))
@@ -654,7 +672,9 @@ spec:RegisterAbilities({
         end,
         handler = function()
             removeBuff("maelstrom_weapon")
-            removeBuff("revelation")
+            if not buff.casting.up or buff.revelation.applied <= buff.casting.applied then
+                removeBuff("revelation")
+            end
             removeBuff("natures_swiftness")
             if debuff.stormstrike.up then
                 applyDebuff("target", "stormstrike", min(2, debuff.stormstrike.remains))
@@ -683,7 +703,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(CHAIN_LIGHTNING),
 
-        now = revealed(),
+        now = revealed(true),
         handler = revealed(),
     },
 

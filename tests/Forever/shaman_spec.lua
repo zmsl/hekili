@@ -802,6 +802,43 @@ describe("Forever Shaman", function()
         end
     end)
 
+    -- L486: a Lightning Bolt or Chain Lightning spends only a charge up at its cast's start; one gained mid-cast (the
+    -- last bolt landing) survives and the next Earth Shock takes it (shaman_elemental.log 29.19 -> 30.90, 137.44 ->
+    -- 139.15, 165.87 -> 167.59). The belief reads `cast_start`, the sim its casting buff.
+    it("keeps a Revelation charge gained during a Lightning Bolt or Chain Lightning cast (L486)", function()
+        local function spends(key, field, revealedAt, set)
+            local e = ld.env(w)
+            e.buff = setmetatable({
+                revelation = { up = true, stack = 1, remains = 10, applied = revealedAt },
+            }, { __index = e.buff })
+            set(e)
+            ld.run(w.abilities[key][field], e)
+            for _, k in ipairs(e.removed) do
+                if k == "revelation" then
+                    return true
+                end
+            end
+            return false
+        end
+        local function hard(e) -- the belief: a cast started at 10
+            e.instant, e.cast_start = false, 10
+        end
+        local function casting(e) -- the sim: the casting buff from 10, up through CAST_FINISH
+            e.buff.casting = { up = true, applied = 10, remains = 0, stack = 1 }
+        end
+        local function instant(e)
+            e.instant, e.cast_start = true, 0
+        end
+        for _, key in ipairs({ "lightning_bolt", "chain_lightning" }) do
+            assert.is_false(spends(key, "now", 10.5, hard), key .. " now: gained mid-cast")
+            assert.is_true(spends(key, "now", 9, hard), key .. " now: up at the start")
+            assert.is_true(spends(key, "now", 9, instant), key .. " now: instant")
+            assert.is_false(spends(key, "handler", 10.5, casting), key .. " handler: gained mid-cast")
+            assert.is_true(spends(key, "handler", 9, casting), key .. " handler: up at the start")
+            assert.is_true(spends(key, "handler", 9, function() end), key .. " handler: instant (no casting buff)")
+        end
+    end)
+
     -- Enchant IDs: DB2 70707 SpellEffect.EffectMiscValue_0 of each rank's Effect 360, lowest rank first (weapon buffs
     -- review §1); Rockbiter rank 2's 6 read in game (probe 2026-11-05, Shaman L10). 60 minutes: the tooltip and that
     -- probe (3578906 ms left at the first read), not the effect's 1800.

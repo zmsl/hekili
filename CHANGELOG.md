@@ -20,6 +20,7 @@
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 - Hunter: Serpent Sting is now counted from when it lands on the target, not from the cast, so its refresh is no longer shown about a third of a second early.
+- Elemental Shaman: a Revelation charge gained while a Lightning Bolt or Chain Lightning is still casting is now kept for your next spell (such as Earth Shock) instead of being counted as spent by that cast.
 
 ### Known issues
 

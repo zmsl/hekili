@@ -144,7 +144,7 @@ for _, k in ipairs(stateEnv) do
 end
 files["src/Hekili_Paladin/Paladin.lua"] = { globals = paladinEnv }
 -- The Shaman's further `state` names.
-local shamanEnv = { "totem", "summonTotem", "combat", "nextMH", "nextOH", "mainhand_speed", "offhand_speed" }
+local shamanEnv = { "totem", "summonTotem", "combat", "instant", "cast_start", "nextMH", "nextOH", "mainhand_speed", "offhand_speed" }
 for _, k in ipairs(stateEnv) do
     shamanEnv[#shamanEnv + 1] = k
 end
