@@ -267,24 +267,27 @@ describe("aura families on the Cooldown Manager (L727)", function()
             assert.are.same({ 2, 2 }, { I.auraVerdict.n[M1], I.auraVerdict.strikes[M1] })
         end)
 
-        it("a verdict, then the light of our cast of another member in the same drain: no re-open, no strike", function()
-            prove()
-            verdictAfter(13)
-            -- the client lights the item for M2; the poll stages before our cast's event folds in this drain
-            ctl.ViewerAuraBySpell("player", C, true, "player")
-            ctl.now = 14.6
-            ctl.Tick(14.6)
-            S.RunPolls(14.6)
-            cast(M2, 14.5, 30)
-            I.Fold(14.6, false)
-            I.Settle(14.6)
-            for t = 14.8, 16, 0.2 do
-                poll(t)
-                assert.is_nil(VS.Aura("player", A, t), t)
-                assert.are.equal(44.5, est(C, t), t)
+        it(
+            "a verdict, then the light of our cast of another member in the same drain: no re-open, no strike",
+            function()
+                prove()
+                verdictAfter(13)
+                -- the client lights the item for M2; the poll stages before our cast's event folds in this drain
+                ctl.ViewerAuraBySpell("player", C, true, "player")
+                ctl.now = 14.6
+                ctl.Tick(14.6)
+                S.RunPolls(14.6)
+                cast(M2, 14.5, 30)
+                I.Fold(14.6, false)
+                I.Settle(14.6)
+                for t = 14.8, 16, 0.2 do
+                    poll(t)
+                    assert.is_nil(VS.Aura("player", A, t), t)
+                    assert.are.equal(44.5, est(C, t), t)
+                end
+                assert.are.same({ 1, 0, 0 }, { I.auraVerdict.n[M1], I.auraVerdict.strikes[M1], Q.strikes[601] })
             end
-            assert.are.same({ 1, 0, 0 }, { I.auraVerdict.n[M1], I.auraVerdict.strikes[M1], Q.strikes[601] })
-        end)
+        )
 
         it("a sweep naming a member a close took down allocates nothing", function()
             cast(M1, 10, 30)

@@ -114,8 +114,14 @@ local W0, TOL, STRIKE_WIN = 1.0, 0.3, 2.0
 local W, verdictAt, verdictN, strikeN, darkN, strikePend = {}, {}, {}, {}, {}, {}
 I.auraVerdict = { W = W, at = verdictAt, n = verdictN, strikes = strikeN } -- read-only views for the tests
 I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (loop.lua sums them per unit)
+-- lateTo[k]: STRIKE_WIN past the last close of k by the Cooldown Manager (rule 1's stage or a verdict's fold), 0 none. A
+-- family item lit before it with no member up names that member (the leaf's member()): its late light re-opens and
+-- strikes as a one-aura item's does (cdm-verdict §2.7).
+local lateTo = {}
+I.auraLateTo = lateTo
+local FAM = {} -- aura index -> the pack's family name (compared, never interpreted), false none
 local function zeroVerdict(k)
-    W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k] = W0, 0, 0, 0, 0, 0
+    W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], lateTo[k] = W0, 0, 0, 0, 0, 0, 0
 end
 -- The class's talent spells (def.talents) that a tracked aura lists as a `copy` (not its own ID), set at the build: an
 -- aura that copies its talent's ID (the Cooldown Manager links both) must not read the talent's own passive aura, which
@@ -163,6 +169,7 @@ I.OnBuild(function(def)
     playerPlain, targetPlain = true, true
     for j = 1, U.nAura do
         KEY[j] = tostring(def.auras[j].key)
+        FAM[j] = type(def.auras[j].family) == "string" and def.auras[j].family
         local d = rawget(def.auras[j], "duration")
         DUR[j], floor[j] = type(d) == "number" and d or -1, 0
         facts[j], disagree[j], staged[j], exitFix[j], ours[j], oursAp[j], upAt[j], claimT[j] = 0, 0, 0, 0, 0, 0, 0, 0
@@ -475,6 +482,9 @@ local function apply(j, u, up, t, edge)
         return false -- staged already in this drain (an edge, then the poll): the fold has not taken it yet
     end
     facts[k], staged[k] = facts[k] + 1, t
+    if not up then
+        lateTo[k] = t + STRIKE_WIN -- rule 1's close
+    end
     if (e > t) ~= up then
         disagree[k] = disagree[k] + 1
     end
@@ -588,13 +598,32 @@ end
 --- debounce's memory, so a late light re-opens at once (rule 4) instead of waiting on the old expiry. The provider
 --- counts it against the items dark for the thing (review M3: silent verdicts suspend a proof). Allocates nothing.
 function I.AuraVerdictClosed(k, t)
-    verdictAt[k], verdictN[k] = t, verdictN[k] + 1
+    verdictAt[k], verdictN[k], lateTo[k] = t, verdictN[k] + 1, t + STRIKE_WIN
     lastE[k], lastSt[k], longE[k] = 0, 0, 0
     local P = I.presence
     if P and P.Silent then
         local u = k > I.AURA_UNIT and 2 or 1
         P.Silent(k - (u - 1) * I.AURA_UNIT, u)
     end
+end
+
+--- A Cooldown Manager open of j on unit u staged at t inside its late window (lateTo) while another member of j's family
+--- is up: the light is that member's (our cast of it folded first in this drain, before the open), so the fold drops
+--- the open and no strike is judged for j. Called by the fold for an open only. Allocates nothing.
+function I.AuraLateMember(u, j, t)
+    local k = (u - 1) * I.AURA_UNIT + j
+    local f = lateTo[k] >= t and FAM[j]
+    if not f then
+        return false
+    end
+    local e = I.auras.exp0[u]
+    for i = 1, I.auras.nAura do
+        if i ~= j and FAM[i] == f and e[i] > t then
+            strikePend[k], verdictAt[k] = 0, 0
+            return true
+        end
+    end
+    return false
 end
 
 local function onEdge(j, u, up, t)
@@ -696,7 +725,7 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
             clamp(j, 2, t)
         end
         longE[k], lastE[k], lastSt[k], cyT[k] = 0, 0, 0, 0
-        verdictAt[k], strikePend[k] = 0, 0 -- (review S1) a light on the next mob says nothing of mob A's verdict
+        verdictAt[k], strikePend[k], lateTo[k] = 0, 0, 0 -- (review S1) a light on the next mob says nothing of mob A's verdict
     end
 end)
 
@@ -705,7 +734,7 @@ S.On("PLAYER_REGEN_DISABLED", nil, function()
         facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
         lastE[k], lastSt[k], longE[k] = 0, 0, 0 -- out of combat the walk answered
         emcN[k], emcSum[k], emcLast[k], cyT[k], cyN[k], cySum[k], cyObs[k], cyMod[k] = 0, 0, 0, 0, 0, 0, 0, 0
-        verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k] = 0, 0, 0, 0, 0
+        verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], lateTo[k] = 0, 0, 0, 0, 0, 0
     end
     holdN.waits, holdN.fires = 0, 0
     anyLong, anyLast = false, false

@@ -250,8 +250,10 @@ I.On(Obs.Read, function(o, t)
     local event = kind == ReadOf.Aura and Obs.Read or kind == ReadOf.AuraOpen and CDM_OPEN or 0
     if o.b == 0 then
         set(u, j, 0, 0, 0, t, "observed", event)
-    elseif kind == ReadOf.AuraOpen and U.exp0[u][j] > o.t then
-        return -- a CDM UP staged while the record was down; our cast's write, folded first in this drain, stands (F3)
+    elseif kind == ReadOf.AuraOpen and (U.exp0[u][j] > o.t or I.AuraLateMember(u, j, o.t)) then
+        -- a CDM UP staged while the record was down; our cast's write, folded first in this drain, stands (F3), also
+        -- a write of another member of its family inside its late window (Sources/Auras.lua)
+        return
     else
         local expires = o.b < 0 and HUGE or o.t + o.b
         local was, icd = U.exp0[u][j], U.icd[j]

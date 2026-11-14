@@ -13,8 +13,10 @@
 -- Aura families (owner rule L727): an ambiguous item whose every candidate names a member of one family (the packs'
 -- aura field `family`) is a family item. The client's light says some member is up and its silence that none is, but
 -- not which (probes L725/L726: identity goes secret after an in-combat change), so the sweep counts it for the member
--- the belief holds up (our last cast, or a later plain read): a one-aura item of that member while it is up. With no
--- member up it stays an ambiguous item: a light then may be another member's, so it never opens or re-establishes one.
+-- the belief holds up (our last cast, or a later plain read): a one-aura item of that member while it is up, and for
+-- STRIKE_WIN after the Cooldown Manager closed it (a late light re-opens it and strikes, cdm-verdict §2.7). Otherwise,
+-- with no member up, it stays an ambiguous item: a light then may be another member's, so it opens or re-establishes
+-- none.
 -- The idea of reading the viewer's items for presence, the all-viewers presence bit, the hidden-viewer rule and the
 -- spell mapping are TellMeWhen's (Cybeloras), GPL-3.0; ideas only, no code copied.
 
@@ -427,24 +429,31 @@ local function reduce(t)
     nTouched = 0
 end
 
--- Family f's identity on unit u at t (L727): the member believed up with the latest application; 0 none. A light only
--- confirms that member within its modelled duration: once it is down the light may be another member's (a cast we did
--- not see), so it names none and opens nothing. Allocates nothing.
+-- Family f's identity on unit u at t (L727): the member believed up with the latest application; with none up, the
+-- member the Cooldown Manager closed last within STRIKE_WIN (I.auraLateTo), so a late light re-opens it and strikes as
+-- for a one-aura item (cdm-verdict §2.7); 0 none. Past its modelled duration, or fallen by a cast or the model, a member
+-- is not named: the light may be another member's (a cast we did not see), so it opens nothing. Allocates nothing.
 local function member(f, u, t)
     local U = I.auras
     if u < 1 or u > U.n then
         return 0
     end
-    local e, ap = U.exp0[u], U.applied[u]
-    local list, best, bt = famJs[f], 0, 0
+    local e, ap, late, base = U.exp0[u], U.applied[u], I.auraLateTo, (u - 1) * I.AURA_UNIT
+    local list, best, bt, lj, lt = famJs[f], 0, 0, 0, 0
     for n = 1, #list do
         local j = list[n]
         -- (4a review m5) an in-combat rebuild may shrink the set under this map
-        if j <= U.nAura and e[j] > t and ap[j] >= bt then
-            best, bt = j, ap[j]
+        if j <= U.nAura then
+            if e[j] > t then
+                if ap[j] >= bt then
+                    best, bt = j, ap[j]
+                end
+            elseif late and late[base + j] >= t and late[base + j] > lt then
+                lj, lt = j, late[base + j]
+            end
         end
     end
-    return best
+    return best > 0 and best or lj
 end
 
 -- One sweep (§3.2), under one pcall: each viewer's visibility and growth, then every slot's reading against what it is

@@ -103,6 +103,7 @@ These fields tell the belief where to read an aura that the game hides or report
 | `weaponEnchant` | number | On an aura without `id`: up while that weapon slot (0 main hand, 1 off hand) carries a lasting enchant, such as an imbue or a poison |
 | `enchants` | list | On an aura without `id`: up while either weapon carries one of these enchant IDs |
 | `swingHaste` | number | While the aura is up in combat, every melee hand swings this many times faster |
+| `family` | string | A name the pack gives each aura of a set the game shows as one Cooldown Manager entry, one of them up at a time (the Paladin seals, the Druid forms). The entry's light says some member is up and its silence that none is; the member is the one the belief holds up (the last cast). A member the entry took down comes back if the entry lights again within 2 seconds. The name is only compared. |
 
 > [!NOTE]
 > **On Forever:** The game hides aura durations during combat. The belief times an aura from the cast that applied it and the registered `duration`, and corrects it from what the game still shows, including the game's Cooldown Manager ([Cooldown Manager](Cooldown-Manager)). A wrong `duration` shows up as an aura that falls too early or too late in the forecast.

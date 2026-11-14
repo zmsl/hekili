@@ -342,8 +342,11 @@ or secret candidate, no member switched off in the Cooldown Manager panel) is a 
 (`Game/State/Sources/Presence/CooldownViewer.lua`): the client shows whether some member is up but, after an
 in-combat change, not which (probes L725/L726), so each sweep counts the item for the member the belief holds up (our
 last cast, or a later plain read) and treats it as that member's one-aura item while it is up (rules 1-4, the seen
-rule, the verdict). With no member up it stays ambiguous: a light then may be another member's (a cast we did not
-see), so it opens nothing and never re-establishes a member past its modelled duration. A plain
+rule, the verdict). A member the Cooldown Manager closed (rule 1 or the verdict) stays named for `STRIKE_WIN`, so a
+late light re-opens it and, after a verdict, strikes as for a one-aura item; a write of another member of its family
+folded first in the light's drain (our cast) drops that open and its strike. Otherwise, with no member up, it stays
+ambiguous: a light then may be another member's (a cast we did not see), so it opens nothing and never re-establishes a
+member past its modelled duration. A plain
 direct read still wins: a form aura the shapeshift read owns is never judged by the Cooldown Manager. The family name
 is the pack's own; the core only compares it.
 
