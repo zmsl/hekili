@@ -230,3 +230,30 @@ describe("use_while_casting on a line", function()
         end)
     end
 end)
+
+describe("the three options through the importer", function()
+    it("survive a SimC import, the compiled line and a priority share string", function()
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        assert.are.same({}, H.loadErrors)
+        local hk = H.Hekili
+        local list = hk:ParseActionList(
+            "actions+=/ferocious_bite,max_energy=1\n"
+                .. "actions+=/bloodrage,use_while_casting=1\n"
+                .. "actions+=/cannibalize,interrupt_global=1\n"
+        )
+        assert.are.same({ 1, 1, 1 }, { list[1].max_energy, list[2].use_while_casting, list[3].interrupt_global })
+
+        hk.DB.profile.packs[ww.PACK].lists = { default = list }
+        hk:LoadScripts()
+        local DB = hk.Scripts.DB
+        for i, k in ipairs({ "max_energy", "use_while_casting", "interrupt_global" }) do
+            local mod = DB[ww.PACK .. ":default:" .. i].Modifiers[k]
+            assert.is_function(mod, k)
+            assert.are.equal(1, mod(), k)
+        end
+
+        local e = hk.DeserializeActionPack(hk.SerializeActionPack(ww.PACK)).payload.lists.default
+        assert.are.same({ 1, 1, 1 }, { e[1].max_energy, e[2].use_while_casting, e[3].interrupt_global })
+        assert.are.same({}, H.errors)
+    end)
+end)

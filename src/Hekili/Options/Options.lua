@@ -8707,6 +8707,7 @@ do
             if result.cycle_targets then result.cycle_targets = tonumber( result.cycle_targets ) end
             if result.other_target then result.other_target = tonumber( result.other_target ) end
             if result.max_energy then result.max_energy = tonumber( result.max_energy ) end
+            if result.interrupt_global then result.interrupt_global = tonumber( result.interrupt_global ) end
 
             if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end
             if result.focus then
