@@ -44,4 +44,87 @@ describe("the rage forecast of a pending swing (GAP AK)", function()
         local t = swings(false)
         assert.is_true(math.abs(t[1] - 2.6) < 1e-3, tostring(t[1]))
     end)
+
+    -- L872 (3): Reckless Swings' charges (wowsims talents_fury.go:360-391) pay 5 rage at each landed white swing of
+    -- either hand; the belief pays them by its reaction at the swing's row, so the pending swing still holds its charge
+    -- and is the first to pay it in the forecast, then the swings after it until the charges are gone.
+    -- The forecast rage at `p + dt` for each dt (the last slice at or before it), from 0 at a swing at p.
+    local function rageAt(hand, charges, dts)
+        local p, speed = st.now - 0.05, 2.6
+        local main = hand == "main"
+        st.swings.mh_actual, st.swings.mh_speed, st.mainhand_speed =
+            main and p or 0, main and speed or 0, main and speed or 0
+        st.swings.oh_actual, st.swings.oh_speed, st.offhand_speed =
+            main and 0 or p, main and 0 or speed, main and 0 or speed
+        st.swings.mh_pending, st.swings.oh_pending = main and p or 0, main and 0 or p
+        if charges > 0 then
+            st.applyBuff("reckless_swings", 8, charges)
+        else
+            st.removeBuff("reckless_swings")
+        end
+        st.rage.actual = 0
+        st:ForecastSwingbasedResources()
+        local out = {}
+        for k, dt in ipairs(dts) do
+            out[k] = 0
+            for i = 1, st.rage.fcount do
+                local f = st.rage.forecast[i]
+                if f.t <= p + dt + 1e-9 then
+                    out[k] = f.v
+                end
+            end
+        end
+        return out
+    end
+
+    for _, hand in ipairs({ "main", "off" }) do
+        it(
+            "forecasts Reckless Swings' 5 rage on the pending " .. hand .. "-hand swing, then per charge (L872 (3))",
+            function()
+                local dts = { 0.25, 2.65, 5.25 } -- the pending swing, the next, the one after
+                local base = rageAt(hand, 0, dts)
+                assert.is_true(base[1] > 0, "the pending swing's own rage") -- the swing entries themselves
+                local two = rageAt(hand, 2, dts)
+                for k, extra in ipairs({ 5, 10, 10 }) do -- two charges: the pending swing's and the next one's
+                    assert.is_true(
+                        math.abs(two[k] - base[k] - extra) < 1e-6,
+                        ("%s dt %.2f: %.3f vs %.3f + %d"):format(hand, dts[k], two[k], base[k], extra)
+                    )
+                end
+            end
+        )
+    end
+
+    -- L872 (2) with (3): a pending swing newer than the anchor (the opener's combat-start pseudo swing, the first swing
+    -- landing over half a swing later) is forecast too, so it still holds the first charge: with one charge, the
+    -- pending main-hand swing (0.09 s ago) pays the 5, not the off hand's next swing 0.05 s from now.
+    it("gives a pending swing newer than the anchor the first Reckless charge (L872 (2) + (3))", function()
+        local speed, p = 2.1, st.now - 0.09
+        st.swings.mh_actual, st.swings.mh_pseudo = 0, st.now - 1.3
+        st.swings.mh_speed, st.mainhand_speed, st.swings.mh_pending = speed, speed, p
+        st.swings.oh_actual, st.swings.oh_speed, st.offhand_speed, st.swings.oh_pending = st.now - 2.05, speed, speed, 0
+        st.applyBuff("reckless_swings", 8, 1)
+        local model = st.rage.regenModel
+        local orc = 2 * H.ns.VirtualStateInternal.Log.ORACLE_MIN
+        assert.are.equal(5, model.reckless_mainhand.value(p + orc), "the pending main-hand swing")
+        assert.are.equal(0, model.reckless_offhand.value(st.now + 0.05), "the off hand's next swing")
+        assert.are.equal(0, model.reckless_mainhand.value(p + speed), "the main hand's next swing")
+    end)
+
+    -- flicker-085 review I1 (5922dc27d): a pending swing that is the last swing row's own (mh_actual, within 1 ms) is
+    -- the anchor's swing: a parry-haste pull moved the anchor (mh_pseudo), and the swings after it keep the pulled phase.
+    it("keeps a parry-pulled anchor's phase after the anchor's own pending swing (flicker-085 I1)", function()
+        local speed = 2.6
+        local actual = st.now - 0.05
+        local pseudo = actual - 0.4 -- a parry-haste pull of 0.4 s
+        st.swings.mh_actual, st.swings.mh_pseudo, st.swings.mh_pending = actual, pseudo, actual
+        st.swings.mh_speed, st.mainhand_speed = speed, speed
+        st.swings.oh_actual, st.swings.oh_speed, st.offhand_speed, st.swings.oh_pending = 0, 0, 0, 0
+        st.applyBuff("reckless_swings", 8, 2)
+        local model = st.rage.regenModel
+        local orc = 2 * H.ns.VirtualStateInternal.Log.ORACLE_MIN
+        assert.are.equal(5, model.reckless_mainhand.value(actual + orc), "the pending swing: the first charge")
+        assert.are.equal(5, model.reckless_mainhand.value(pseudo + speed), "the pulled grid's next swing: the second")
+        assert.are.equal(0, model.reckless_mainhand.value(pseudo + 2 * speed), "the one after: no charge left")
+    end)
 end)

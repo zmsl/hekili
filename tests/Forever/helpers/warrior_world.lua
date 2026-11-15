@@ -199,13 +199,16 @@ M.MAP = {
             aura(W, X, e, "battle_shout")
         end,
     },
-    bloodrage = { -- 10 at once, then 1 a second for 10 s (the class file's tick aura)
+    -- 10 at once, then 1 a second for 10 s (the class file's tick aura), each x (1 + 0.25 x Improved Bloodrage's rank)
+    -- (wowsims bloodrage.go:21-23)
+    bloodrage = {
         effect = function(W, e, _, X)
+            local m = 1 + 0.25 * X.talent.improved_bloodrage.rank
             aura(W, X, e, "bloodrage")
-            W.gain(e, 10)
+            W.gain(e, 10 * m)
             for k = 1, 10 do
                 W.at(W.t + k, function()
-                    W.gain(e, 1)
+                    W.gain(e, m)
                 end)
             end
         end,
@@ -246,7 +249,15 @@ M.MAP = {
     recklessness = selfAura("recklessness"),
     sweeping_strikes = selfAura("sweeping_strikes"),
     death_wish = selfAura("death_wish"),
-    berserker_rage = selfAura("berserker_rage"), -- Improved Berserker Rage's rage not modelled (not this build)
+    berserker_rage = { -- Improved Berserker Rage: 5 rage a rank (wowsims berserker_rage.go:16)
+        effect = function(W, e, _, X)
+            aura(W, X, e, "berserker_rage")
+            local n = 5 * X.talent.improved_berserker_rage.rank
+            if n > 0 then
+                W.gain(e, n)
+            end
+        end,
+    },
     blood_fury = selfAura("blood_fury"), -- the Orc racial (Hekili_Shared/Races/Orc.lua; the wowsims Arms build's race)
     shield_block = selfAura("shield_block"),
     last_stand = selfAura("last_stand"), -- its health gain not modelled
@@ -345,7 +356,7 @@ local function classData(H)
     if cache[H] then
         return cache[H]
     end
-    local X = { aura = {} }
+    local X = { aura = {}, talent = H.Hekili.State.talent }
     cache[H] = X
     for key, a in pairs(H.Hekili.Class.auras) do
         if type(key) == "string" and type(a) == "table" and a.id then

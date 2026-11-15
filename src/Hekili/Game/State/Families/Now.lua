@@ -26,6 +26,7 @@ A.now = {} -- by ability index: the `now` function, bound to the context, or fal
 A.onCrit = {} -- by ability index: the `onCrit` function (run at the cast's own crit, Obs.Crit), bound, or false
 A.onLand = {} -- by ability index: the `onLand` function (run once its cast landed, Obs.Landed), bound, or false
 A.finish = {} -- by ability index: the `now_finish` function (run at a channel's stop at its end), bound, or false
+A.lands = {} -- by ability index: true when its `now`'s target auras start at its landing (`startsAtLanding`, L482)
 A.extra = {} -- by ability index: a `track_<id>` extra (VS.Track): no ability, no effects
 A.known = A.known or {} -- by ability index: any rank in the spellbook (Sources/Spellbook.lua)
 
@@ -83,6 +84,7 @@ I.nowErrors, I.nowError, I.nowRuns, I.castsRun = 0, nil, 0, 0
 -- The cast's belief time and ability while its effects run; `live` only then: a `now` called from anywhere else (Hekili
 -- keeps it in `ability.funcs`, where RunStressTest or an APL reading `action.x.now` can call it) writes nothing.
 local T, curA, live = 0, 0, false
+local flight = 0 -- the running cast's travel (s): its target aura writes start this long after T (`startsAtLanding`)
 -- True while a reaction runs: it is folded after its outcome's time T (a swing's row comes ~0.47 s after the swing, an
 -- avoid at its window's close), so its aura reads answer as of T (I.AuraAsOf), not the belief's latest.
 local asOf = false
@@ -370,7 +372,7 @@ local function aura(u, key, duration, stacks)
         if type(d) ~= "number" then
             return -- no number: a raising duration (counted by I.Eval) writes nothing
         end
-        after = T + d
+        after = (u == 2 and T + flight or T) + d
     end
     if u == 2 and journal and undoN < UNDO then
         local first = true
@@ -382,7 +384,7 @@ local function aura(u, key, duration, stacks)
             undoJ[undoN], undoE[undoN], undoAp[undoN], undoSt[undoN] = j, before, applied or 0, have or 0
         end
     end
-    I.AuraModel(u, j, T, after, stacks or 1, T, CAST, u == 2)
+    I.AuraModel(u, j, u == 2 and T + flight or T, after, stacks or 1, T, CAST, u == 2)
     -- cdm-default rule 2.5.1: this application is ours (Sources/Auras.lua); a projectile's travel widens the
     -- verdict's window (cdm-verdict §2.3; velocity > 0 only: the client raises on x/0)
     local v = A.velocity[curA] or 0
@@ -644,6 +646,7 @@ I.OnBuild(function(def)
             fin = false
         end
         A.finish[a] = type(fin) == "function" and setfenv(fin, ctx) or false
+        A.lands[a] = obj.startsAtLanding == true
         rawset(NAMES.action, A.key[a], setmetatable({ a = a }, actionMeta))
     end
     rawset(NAMES, "settings", def.settings or NO_SETTINGS) -- the spec's settings as plain values, the core's copy
@@ -785,6 +788,18 @@ local function fire(w, o, t, hand)
     journal, asOf = true, false
 end
 
+-- Ability a's travel to the target (s): the believed distance (the range bracket's middle, Families/Enemies.lua) over
+-- its velocity (wowsims's TravelTime: distance / missile speed); 0 with no velocity or no range known.
+-- shortcut: an unknown range lands at the cast (the old timing, early by the flight); upgrade with the ticket's learned
+-- lag (Events/Tickets.lua T.LagOf) if a live trace shows ranged casts with no bracket
+local function travel(a)
+    local v, r = A.velocity[a] or 0, VS.TargetRange()
+    if v > 0 and (r.conf or 0) > 0 then
+        return r.est / v
+    end
+    return 0
+end
+
 local function run(o, t)
     local a = o.a
     if not A.obj[a] or not A.key[a] or A.extra[a] then
@@ -800,7 +815,9 @@ local function run(o, t)
     if A.now[a] then
         rawset(NAMES, "cast_start", started)
         rawset(NAMES, "instant", started == 0)
+        flight = A.lands[a] and travel(a) or 0
         call(A.now[a], a, t)
+        flight = 0
         rawset(NAMES, "cast_start", 0)
         rawset(NAMES, "instant", false)
         I.ShareRead() -- the `now` may have moved what a regen share reads (Families/Resources.lua)

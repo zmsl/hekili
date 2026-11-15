@@ -51,10 +51,12 @@
 - Paladins: Judgement being usable now corrects Hekili's mana estimate, so abilities are held back less often after a seal. Rogue finishers being usable now correct the energy estimate the same way.
 - With the Cooldown Manager on, a buff that ended just as the Cooldown Manager lit it again could stay up in Hekili for its whole duration (a Paladin seal could be believed up with none on, so Judgement was suggested anyway). Hekili now takes it down when the Cooldown Manager shows it gone.
 - A buff that shares its talent's spell ID (Soul Harvest, Nature's Grace, Spirit Tap and others) is no longer read as always up if the game lists the talent's own passive on you.
+- Hunter: Serpent Sting is now counted from when it lands on the target, not from the cast, so its refresh is no longer shown about a third of a second early.
+- Elemental Shaman: a Revelation charge gained while a Lightning Bolt or Chain Lightning is still casting is now kept for your next spell (such as Earth Shock) instead of being counted as spent by that cast.
+- Fury Warriors: Hekili's forecast now counts Reckless Swings' rage on your coming swings, including one that has just landed, so a rage spender waiting on it is shown on time.
 
 ### Known issues
 - The Hunter Turret priorities have not been checked in the game yet.
-- Fury: when Hekili looks ahead to your next few abilities, it does not yet add the rage Reckless Swings gives on each swing; the icon for now is right.
 
 ### Upgrade notes
 

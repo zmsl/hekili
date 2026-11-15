@@ -74,6 +74,10 @@ local REPLAY = { hidden = { [1310726] = true } }
 -- -> 4.6 with the recipe's leveling Arcane Shot (wowsims's non-hawk line, below Summon Hawk's 25). Survival's live bars
 -- run at 11 yd with a ranged weapon (R63, W.SurvivalRanged): at melee the shots sit inside their 8-35 band and Raptor
 -- Strike is off the GCD, so the GCD-idle metric read 116.8 s at L10; its loop and replay worlds stay melee.
+-- Re-floored (0.8.5 accuracy-timing item 1, controller-approved 2026-11-14): MM L40 7.6 -> 9.4, SV L60 14.0 -> 15.4,
+-- SV Melee L40 10.0 -> 10.2. Cause: the R41 mana-dry regen wait from a lower pool. Serpent Sting now lands after its
+-- travel time (W.distance / 40, belief and world), which moves its recasts and so the one 120 s fight's mana timeline:
+-- the worst streak dries out at 12.1 (was 14.5), 1.8 (14.7) and 1.8 (4.8) mana and waits for Arcane Shot's cost.
 local PACKS = {
     {
         "hunter_beast_mastery",
@@ -192,7 +196,7 @@ local PACKS = {
         "Survival Melee (wowsims.com)",
         0.94, -- 0.942 (86)
         -- in melee 116.8 / 7.2 / 8.6: the live bars run W.SurvivalMeleeRanged (R63, hunter_world.lua): 4.4 / 10.0 / 15.4
-        { [10] = 6, [40] = 10.0, [60] = 15.4 },
+        { [10] = 6, [40] = 10.2, [60] = 15.4 },
         0, -- 0.00
         "SurvivalMeleeRanged",
     },
