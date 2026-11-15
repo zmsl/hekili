@@ -354,7 +354,12 @@ M.FLICKER = {
     -- phase (L667, cause harness), seeds 1-20 / 21-40 / 41-60 flicker 0 each, retracted 0, readyShort 0; floors the
     -- worst of the two measurements (first, then after L667)
     ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 128 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
-    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 118 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    -- Marksmanship Turret, 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60
+    -- heldReady 132 / 115 / 108, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 118 -> 132
+    -- (the worst set). Cause harness: ladder-usable-085 cc02f47e5's between-fight rest window (fights start at the true
+    -- mana, re-timed; the same cause as Balance, L1118; bisected 113 at its parent -> 132); the Hunter cost-crossing
+    -- class, seeds 1-20 held ticks arcane_shot 100 -> 118, rapid_fire 4 -> 8, hunters_mark 9 -> 6, +1..+4 a fight
+    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 132 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 117 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
     ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 183 }, -- heldReady 166 / 183 / 177; after L667 173 / 169 / 174
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
@@ -537,7 +542,13 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 285 / 294 / 274):
     -- heldReady 284 -> 294
-    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 294, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
+    -- 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60 heldReady 300 / 292 /
+    -- 299, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 294 -> 300 (the worst set). Cause
+    -- flicker-085 b4036d424 (P1: a mana pool with no tick seen pads nothing; bisected 275 at its parent -> 300): every
+    -- mana wait is re-timed, the same cost-crossing class as above (gap BT, lo / est 2-6 under the truth at the cost,
+    -- our wait 0.07-0.20 s, the oracle ready); seeds 1-20 held ticks lightning_bolt 169 -> 191, flame_shock 73 -> 80,
+    -- searing_totem 33 -> 29, every fight the same length
+    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 300, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996
