@@ -122,7 +122,10 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- up, so the pack correctly does not recast it: nothing useful to cast (R41)
     -- L60 6.0 -> 6.2 (regen phase lane, R22 LIVE60 = the pack's own worst idle at 60; cause harness: the indexed poll
     -- clock (ledger L606/L667; a rage world has no regen grid) re-times the fight: worst idle 6.2 s, presses 49)
-    local ARMS_LIVE = { [10] = 7.4, [40] = 10.0, [60] = 6.2 } -- 7.4 / 10.0 / 6.2
+    -- L60 6.2 -> 9.6 (0.8.5 accuracy-timing, controller L1098): rage-starved (R41), 33.6-43.0 s: truth 4.1 rage, only
+    -- the racial defensive (Shatter Curse) usable; Mortal Strike cooling, then Rend waiting on rage. The fight is
+    -- re-timed because the live world now accepts Overpower (731c670e2: the world's own dodge rule)
+    local ARMS_LIVE = { [10] = 7.4, [40] = 10.0, [60] = 9.6 } -- 7.4 / 10.0 / 9.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(
