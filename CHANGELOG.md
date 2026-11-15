@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- Rogue: Shank is no longer recommended while on cooldown after learning rank 2.
+
 ### Known issues
 
 ### Upgrade notes

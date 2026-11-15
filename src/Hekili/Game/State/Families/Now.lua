@@ -300,8 +300,10 @@ I.On(Obs.Usable, function(o)
 end)
 
 --- The known rank's spell ID for any rank ID of a tracked ability with a known rank, else `spellID` unchanged (nil,
---- untracked or unknown). The client answers range only for a known rank: the facade's C_Spell.IsSpellInRange asks
---- by it (Game/API/Facade.lua). Allocates nothing.
+--- untracked or unknown). The client answers range, cooldown and usability only for a known rank (a superseded rank,
+--- Shank's 1329283 once 1329549 is learned, reads not active and unusable): the facade's C_Spell.IsSpellInRange,
+--- GetSpellCooldown, GetSpellCharges, IsSpellUsable and Display GetSpellCooldownDuration ask by it
+--- (Game/API/Facade.lua). Allocates nothing.
 function VS.KnownID(spellID)
     local a = spellID and A.bySpell[spellID]
     if a and A.known[a] then

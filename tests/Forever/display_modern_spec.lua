@@ -9,6 +9,11 @@ local fake = require("Game.State.helpers.fake_api")
 
 local overlayed, durations = {}, {}
 local fx = { n = 0, ignore = {} } -- GetSpellCooldownDuration: calls, and the last ignoreGCD per spell
+-- The instance's VS.KnownID: the cases key the client's answers by the known rank (ids below), the facade's asks for
+-- cooldown, duration and usability; the core asks the overlay by the ability's id, so the fake maps it the same way.
+local knownOf = function(id)
+    return id
+end
 
 local rec = {}
 function rec.Show(self)
@@ -70,7 +75,7 @@ local function boot(style, truth)
     fake.new = function(...)
         local api, ctl = saved(...)
         api.C_SpellActivationOverlay.IsSpellOverlayed = function(id)
-            return overlayed[id] == true
+            return overlayed[knownOf(id)] == true
         end
         api.C_Spell.GetSpellCooldownDuration = function(id, ignoreGCD)
             fx.n = fx.n + 1
@@ -82,6 +87,7 @@ local function boot(style, truth)
     local H = headless.new({ character = ww.character(), pack = ww.PACK })
     fake.new = saved
     assert.are.same({}, H.loadErrors)
+    knownOf = H.ns.VirtualState.KnownID
     H.ctl.inRange.target, H.ctl.level.target = true, 60
     H.Fire("PLAYER_TARGET_CHANGED")
     assert(headless.cycle(H, H.ctl.now + 0.2))
@@ -110,10 +116,11 @@ local function boot(style, truth)
     return H, d
 end
 
+-- Each ability's known rank: the ID the client answers for (the facade asks it by VS.KnownID).
 local function ids(H)
     local out = {}
     for k, a in pairs(H.Hekili.Engine.Registry.Abilities()) do
-        out[k] = a.id
+        out[k] = H.ns.VirtualState.KnownID(a.id)
     end
     return out
 end
