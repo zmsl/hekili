@@ -558,6 +558,7 @@ local function content(name)
         -- something takes it. So a covered press is priced from the world's aura when it succeeds (`price`: a hard
         -- cast's landing, an instant's press, a queued strike's swing), never by its own proc. The press is still
         -- checked at `c` (0 when free, as the client answers).
+        -- proc is shared by the queue effect and the swing price; correct while resolve runs once per press
         local price, proc
         if cpt and X.covered[a.id] then
             local base = free and declared(a) or c
