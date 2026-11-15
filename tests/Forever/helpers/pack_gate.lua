@@ -163,7 +163,18 @@ M.FLICKER = {
     -- regen phase lane, cause harness: the indexed poll clock (ledger L606/L667; a rage world has no regen grid) (R6;
     -- seeds 1-20 / 21-40 / 41-60 flicker 0.12 / 0.00 / 0.22, retracted 0.00 / 0.00 / 0.00, readyShort 1 / 0 / 0,
     -- heldReady 321 / 333 / 342): flicker 0.16 -> 0.22, heldReady 383 -> 342
-    ["Warrior Protection"] = { flicker = 0.22, retracted = 0.1, readyShort = 1, heldReady = 342 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
+    -- 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60 heldReady 344 / 362 /
+    -- 359, flicker 0.17 / 0.05 / 0.17, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 342 -> 362 (worst set);
+    -- cause harness, the world made more correct (L966): accuracy-085-timing dc913a80e pays Bloodrage by Improved
+    -- Bloodrage's rank (this build rank 1: 12.5 at once and 1.25 a tick, was 10 and 1, wowsims bloodrage.go), as the
+    -- class file already did; ablation (that world change reverted on the same tree) 322 / 336 / 341. Then +2 at
+    -- flicker-085 P3 (the opener's swing credit). Seeds 1-20 held ticks in the first 10 s 18 -> 39: the opener's
+    -- Bloodrage tick now crosses Demoralizing Shout's 7 (truth 6.2 -> 7.5, t 4.2) with our lo / est / hi at 7.0, so
+    -- ours waits one poll (w 1.00, to the next tick) in 12 of 20 fights: the cost-crossing class one poll late. Heroic
+    -- Strike's long waits (seed 6 t 124.4-125.4, w 0.99 -> 0.19): its line needs rage.lo >= 20 while our lo sits at
+    -- 17.0 (Shield Slam's cost) under the truth 21.9, so it waits for the next swing's credit (lo 27 the poll after
+    -- it); the same shape is in the ablated tree (seeds 12, 15) and before the change (seeds 12, 15, 18)
+    ["Warrior Protection"] = { flicker = 0.22, retracted = 0.1, readyShort = 1, heldReady = 362 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
