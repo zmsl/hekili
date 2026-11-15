@@ -225,6 +225,46 @@ describe("the stat split (L971)", function()
         near(260, spirit(100))
     end)
 
+    -- Re-review O1, M1's haste twin: UNIT_SPELL_HASTE a frame before (or after) the UNIT_AURA that walks a `spellHaste`
+    -- gain or fall. The player's UNIT_AURA out of combat reads the haste again too, so the read is never older.
+    for _, hasteFirst in ipairs({ true, false }) do
+        for _, gain in ipairs({ true, false }) do
+            local name = (gain and "gain" or "fall") .. (hasteFirst and ", haste first" or ", aura first")
+            it("counts a `spellHaste` " .. name .. " once across frames (O1)", function()
+                build({ duration = 3600, spellHaste = 1.1 })
+                ctl.spellHaste = gain and 0 or 10 -- the aura's 10% in the read while it is up
+                row(not gain and fs.SPENDER_A or nil, 3690)
+                at(95)
+                VS.Start(api)
+                ctl.Fire("UNIT_AURA", "player") -- the first clean walk
+                drain(95)
+                local function haste(t)
+                    at(t)
+                    ctl.spellHaste = gain and 10 or 0
+                    ctl.Fire("UNIT_SPELL_HASTE", "player")
+                    drain(t)
+                end
+                local function aura(t)
+                    at(t)
+                    row(gain and fs.SPENDER_A or nil, 3690)
+                    ctl.Fire("UNIT_AURA", "player")
+                    drain(t)
+                end
+                if hasteFirst then
+                    haste(96)
+                    aura(96.1)
+                else
+                    aura(96)
+                    haste(96.1)
+                end
+                at(99)
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+                drain(99)
+                near(gain and 10 or 0, VS.SpellHaste(100).est)
+            end)
+        end
+    end
+
     -- M3: no plain spell haste read at all (a reload in combat): no base is derived, the belief keeps its default.
     it("derives no haste base without a plain read, so a `spellHaste` fall leaves no negative haste (M3)", function()
         build({ duration = 15, spellHaste = 1.1 })
