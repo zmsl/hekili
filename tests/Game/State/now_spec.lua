@@ -1561,7 +1561,7 @@ describe("now handlers", function()
         end
         -- the target item (cooldownID 502) for spender_c's debuff, rage plain at `pool` out of combat, then secret in
         -- combat, the target walk secret; the item proven by a light the dark then closes (mob A, 4 - 4.5)
-        local function begin(pool, off)
+        local function begin(pool, off, extra)
             h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 }
             h.Class.abilities.spender_c.refundOnAvoid = true
             h.cdmOff = off
@@ -1581,10 +1581,30 @@ describe("now handlers", function()
             ctl.Fire("UNIT_AURA", "target")
             drain(3)
             ctl.ViewerAura(ti, "target")
+            if extra then -- a second target item, proven with the first
+                ctl.ViewerAura(extra, "target")
+            end
             drain(4)
             ctl.ViewerClear(ti)
+            if extra then
+                ctl.ViewerClear(extra)
+            end
             drain(4.5)
             assert.are.equal(pool, rage(4.5).est)
+        end
+        -- spender_c's cast writes two target debuffs (a stun and a bleed): spender_c's own (item 502) and spender_a's
+        -- record on the target (item 503). Returns the second item and its key.
+        local function two()
+            h.Class.abilities.spender_c.funcs.now = function()
+                applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+                applyDebuff("target", "spender_a", 15) -- luacheck: ignore 113
+            end
+            table.insert(ctl.viewer.sets[2], 503)
+            ctl.viewer.infos[503] = { spellID = fs.SPENDER_A }
+            return ctl.ViewerItem("BuffIconCooldownViewer", 2, 503)
+        end
+        local function key2()
+            return I.AURA_UNIT + I.auras.bySpell[fs.SPENDER_A]
         end
 
         it("a missed cast the verdict closes: 80% of its cost back, once", function()
@@ -1651,6 +1671,80 @@ describe("now handlers", function()
                 assert.are.equal(0, I.avoidsRun)
             end
         )
+
+        it("a cast's two target debuffs: one lit proves it landed, the other's verdict refunds nothing", function()
+            local si = two()
+            begin(40, nil, si)
+            cast(fs.SPENDER_C, 5)
+            ctl.ViewerAura(si, "target") -- the second debuff lights (the bleed); spender_c's item stays dark (the stun)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(30, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
+
+        it("a cast's two target debuffs, one lit in the cast's own drain: no refund either", function()
+            local si = two()
+            begin(40, nil, si)
+            ctl.ViewerAura(si, "target") -- read UP by the cast's drain's polls, before its write folds
+            cast(fs.SPENDER_C, 5)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(30, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
+
+        it("a cast's two target debuffs, neither lit: the two verdicts refund the cast once", function()
+            local si = two()
+            begin(40, nil, si)
+            local k2 = key2()
+            cast(fs.SPENDER_C, 5)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(1, I.auraVerdict.n[k2])
+            assert.are.equal(38, rage(7.5).est) -- not 46
+            assert.are.equal(1, I.auraVerdict.refunds[k] + I.auraVerdict.refunds[k2])
+        end)
+
+        it("an avoid refunded a two-debuff cast first: neither verdict refunds", function()
+            local si = two()
+            begin(40, nil, si)
+            local k2 = key2()
+            cast(fs.SPENDER_C, 5)
+            I.curSwapN = I.curSwapN + 1 -- the records stay up past the avoid (as a swap's fold moves them)
+            ctl.now = 5.05
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.Tick(5.06)
+            VS.Drain(5.07)
+            I.curSwapN = I.curSwapN - 1
+            assert.are.equal(1, I.avoidsRun)
+            assert.are.equal(38, rage(5.1).est)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(1, I.auraVerdict.n[k2])
+            assert.are.equal(38, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k] + I.auraVerdict.refunds[k2])
+        end)
+
+        it("a deflected or evaded cast (no refund on the avoid): the verdict refunds nothing either", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            I.Sources.Direct(VS.Obs.Avoided, 5.05, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DEFLECT)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(30, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
 
         it("a target change after the cast's success, folded before its staged write: no refund", function()
             begin(40)
