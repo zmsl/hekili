@@ -343,9 +343,9 @@ M.READY = {
     -- { 0.26, 22 } -> { 0.35, 22 } (flicker-085 P1, L755 / ruling L960: a mana pool with no tick seen pads nothing, so
     -- the waits count down with the clock and run less late): real 17 -> 7 (late 7), the median of the ones left
     -- 0.260 -> 0.350
-    -- integ/0.8.5-w2 merge (lane-r2-mage + lane-r2-dh + flicker-085): the larger value per cell, PROVISIONAL until
-    -- re-measured on the merged tree
-    druid_balance = { 0.35, 22 },
+    -- integ/0.8.5-w2 merge (lane-r2-mage + lane-r2-dh + flicker-085), measured on the merged tree: real 1 (late 1),
+    -- median 0.230, so integ's accepted { 0.27, 22 } holds and stays
+    druid_balance = { 0.27, 22 },
     -- 0.26 -> 0.43: 0.26 rested on the Innervate miscalibration that ran the mana belief ~31 high before the 107.74 s
     -- Shifting Power; with regen correct the floor (lo) reaches the cost ~0.4 s after the truth (gap BQ); owner ruling
     -- 2026-10-26
@@ -371,8 +371,8 @@ M.READY = {
     -- (early 2, late 4), the median of the ones left 0.450 -> 0.500. Part of the gain comes through a harness-only path:
     -- in game UNIT_POWER_FREQUENT sets energy's last_tick, so P1 reaches only Feral's mana there; the replay's energy
     -- pool sits at last_tick 0 (review M5; harness follow-up: the world fires the energy power event)
-    -- integ/0.8.5-w2 merge (lane-r2-mage + lane-r2-dh + flicker-085): the larger value per cell, PROVISIONAL until
-    -- re-measured on the merged tree
+    -- integ/0.8.5-w2 merge (lane-r2-mage + lane-r2-dh + flicker-085), measured on the merged tree: real 6 (early 2,
+    -- late 4), median 0.500: flicker's accepted { 0.50, 9 }
     druid_feral = { 0.50, 9 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
