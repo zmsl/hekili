@@ -2372,16 +2372,20 @@ describe("auras", function()
         -- L1075/L1076: the raw Cooldown Manager read beside the conclusions, so "believed up but wasn't" is answerable
         -- from the snapshot alone: per slot in viewer then slot order, and per mapped aura on the layout or not.
         it("the snapshot lists every viewer slot's raw read and each mapped aura's place on the layout", function()
-            ctl.viewer.sets[0] = { 503, 504, 800 }
-            ctl.viewer.infos[503] = { spellID = fs.SPENDER_M } -- mapped, no item: not on the layout
+            ctl.viewer.sets[0] = { 503, 504, 505, 700, 800 }
+            ctl.viewer.infos[505] = { spellID = fs.SPENDER_H } -- mapped, no item: not on the layout
+            ctl.viewer.infos[503] = { spellID = fs.SPENDER_M } -- mapped, no item: on the layout only ambiguously
+            ctl.viewer.infos[700] = { spellID = 9999, linkedSpellIDs = { fs.SPENDER_M, 9998 } } -- ambiguous
             ctl.viewer.infos[504] = { spellID = fs.SPENDER_S } -- on the layout, never lit
             ctl.viewer.infos[800] = { spellID = 9997 } -- unmapped
             ctl.ViewerItem("EssentialCooldownViewer", 1, fake.SECRET) -- a secret cooldownID
             ctl.ViewerItem("EssentialCooldownViewer", 2, 504).shown = true
+            local amb = ctl.ViewerItem("EssentialCooldownViewer", 3, 700)
             ctl.ViewerItem("UtilityCooldownViewer", 1, 800).shown = true
             start(fs.def(fs.new(9, nil, nil, true)))
             ctl.ViewerAura(pi, "player")
             ctl.ViewerAura(ti, "target")
+            ctl.ViewerAura(amb, "target")
             poll(10.5)
             ctl.ViewerClear(ti) -- lit, then dark from 11
             poll(11)
@@ -2391,13 +2395,15 @@ describe("auras", function()
                 -- slots 1-2 (pi, ti) were collected by before_each's start: the order is the viewers', not the slots'
                 "presence-slot E s=3 i=1 cd=S aura=? shown=no lit=no ans=- light=- dark=- unit=-",
                 "presence-slot E s=4 i=2 cd=504 aura=spender_s shown=yes lit=no ans=- light=- dark=- unit=-",
-                "presence-slot U s=5 i=1 cd=800 aura=- shown=yes lit=no ans=- light=- dark=- unit=-",
+                "presence-slot E s=5 i=3 cd=700 aura=amb shown=yes lit=yes ans=amb light=- dark=- unit=-",
+                "presence-slot U s=6 i=1 cd=800 aura=- shown=yes lit=no ans=- light=- dark=- unit=-",
                 "presence-slot B s=1 i=1 cd=501 aura=spender_a shown=yes lit=yes ans=up light=0.00 dark=- unit=player",
                 "presence-slot B s=2 i=2 cd=502 aura=spender_c shown=no lit=no ans=- light=1.50 dark=1.00 unit=target",
                 "presence-layout spender_a on=yes neverLit=no",
                 "presence-layout spender_c on=yes neverLit=no",
-                "presence-layout spender_m on=no neverLit=yes",
+                "presence-layout spender_m on=amb neverLit=yes", -- an ambiguous light never proves it
                 "presence-layout spender_s on=yes neverLit=yes",
+                "presence-layout spender_h on=no neverLit=yes",
             }
             local at = 0
             for _, line in ipairs(want) do
@@ -2406,8 +2412,7 @@ describe("auras", function()
                 assert.is_true(i > at, line) -- in order
                 at = i
             end
-            assert.is_falsy(snap:find("presence-layout spender_h", 1, true), snap) -- not mapped: no line
-            assert.is_truthy(snap:find("presence-proof mappedNeverLit=spender_m,spender_s\n", 1, true), snap)
+            assert.is_truthy(snap:find("presence-proof mappedNeverLit=spender_m,spender_s,spender_h\n", 1, true), snap)
             for line in snap:gmatch("[^\n]+") do
                 assert.is_true(#line < 255, line)
             end
