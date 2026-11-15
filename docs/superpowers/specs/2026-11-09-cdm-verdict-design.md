@@ -127,6 +127,9 @@ verdict finds the record closed and does nothing (§2.3 keys on the record's app
   the ladder's marks and mana's five-second window stay). A light past STRIKE_WIN is no strike and keeps the refund.
   Player auras (seals and forms, the L727 families, any buff) never refund: the memory is kept for target records
   only.
+  A cast whose target changed at or after its success, with that swap folded before the cast's staged write
+  (`I.curSwapT >= ` its success time), keeps no memory: its write went to the new target's record, and a verdict on
+  that record says nothing of the cast (viewer-swap trace, 2026-11-14).
 - W per record: `I.AuraOurs(u, j, travel)` (Families/Now.lua passes `travel = rMax / velocity` seconds for an ability
   with `A.velocity[a] > 0`, else 0); `W[k] = max(W0, travel + TOL)`, W0 = 1.0 s, TOL = 0.3 s (viewer tail 0.12 s + one
   frame + margin; tune from Task 10's P1). A walk read or a CDM open sets `W[k] = W0`.
