@@ -217,12 +217,13 @@ local TOTEMS = {
         duration = { 300, 300, 300 },
     },
     tremor_totem = { element = "earth", ids = { 8143 }, cost = { 60 }, duration = { 300 } },
-    -- 10% of base mana (wowsims's CostPct). -- shortcut: the flat level-60 value (base mana 1520), less below 60; upgrade when the engine has percent-of-level-base-mana costs or after the launch in-game cost check
-    poison_cleansing_totem = { element = "water", ids = { 8166 }, cost = { 152 }, duration = { 300 } },
-    disease_cleansing_totem = { element = "water", ids = { 8170 }, cost = { 152 }, duration = { 300 } },
+    -- 10% of base mana (wowsims's CostPct): a fraction, priced from the mana meta's `base` (1520 at 60), which the
+    -- client's plain cost reads re-learn at the player's level (Families/Casts.lua I.LearnBases; L41)
+    poison_cleansing_totem = { element = "water", ids = { 8166 }, cost = { 0.1 }, duration = { 300 } },
+    disease_cleansing_totem = { element = "water", ids = { 8170 }, cost = { 0.1 }, duration = { 300 } },
     sentry_totem = { element = "air", ids = { 6495 }, cost = { 65 }, duration = { 300 } },
-    -- 6% of base mana, 45 s, 15 s cooldown. -- shortcut: the flat level-60 value (base mana 1520), less below 60; upgrade when the engine has percent-of-level-base-mana costs or after the launch in-game cost check
-    earthbind_totem = { element = "earth", ids = { 2484 }, cost = { 91 }, duration = { 45 }, cooldown = 15 },
+    -- 6% of base mana (a fraction, as the cleansers'), 45 s, 15 s cooldown
+    earthbind_totem = { element = "earth", ids = { 2484 }, cost = { 0.06 }, duration = { 45 }, cooldown = 15 },
     stoneclaw_totem = {
         element = "earth",
         ids = { 5730, 6390, 6391, 6392, 10427, 10428 },
@@ -230,8 +231,8 @@ local TOTEMS = {
         duration = { 15, 15, 15, 15, 15, 15 },
         cooldown = 30,
     },
-    -- 6% of base mana, 45 s, 15 s cooldown. -- shortcut: the flat level-60 value (base mana 1520), less below 60; upgrade when the engine has percent-of-level-base-mana costs or after the launch in-game cost check
-    grounding_totem = { element = "air", ids = { 8177 }, cost = { 91 }, duration = { 45 }, cooldown = 15 },
+    -- 6% of base mana (a fraction, as the cleansers'), 45 s, 15 s cooldown
+    grounding_totem = { element = "air", ids = { 8177 }, cost = { 0.06 }, duration = { 45 }, cooldown = 15 },
 }
 
 -- The buff each totem leaves on us (the aura keys below). A summon applies its own for the totem's life and takes down
@@ -311,6 +312,8 @@ local function summon(key)
     end
 end
 
+-- Totemic Focus (16173, aura 108 misc 14: -5% a rank on mask 0x20081018, every totem here; wowsims pin
+-- spells_auto_gen.go:13198): on the fraction too, so the client's cut cost read teaches the true base (I.LearnBases).
 local function totemAbility(key)
     local t = TOTEMS[key]
     return {
@@ -324,7 +327,6 @@ local function totemAbility(key)
         gcd = "totem",
 
         spend = function()
-            -- Totemic Focus 16173: -5% a rank on every totem
             return byRank(t.cost, t.ids) * (1 - 0.05 * talent.totemic_focus.rank)
         end,
         spendType = "mana",
@@ -864,8 +866,8 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         -- wowsims spell data, absent from DB2 (wowdb spell 17364 costs 125 flat): 8% of base mana, 121 at level 60
-        -- (its log). shortcut: 121 at every level; below 60 it is less. IN-GAME CHECK: Stormstrike's cost.
-        spend = 121,
+        -- (its log): a fraction of the mana meta's `base`, which the client's plain cost read re-learns below 60.
+        spend = 0.08,
         spendType = "mana",
 
         startsCombat = true,

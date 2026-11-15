@@ -19,7 +19,7 @@ local KIT = {
     earth_shock = { { 8042, 8044, 8045, 8046, 10412, 10413, 10414 }, 450, 6, "spell" },
     flame_shock = { { 8050, 8052, 8053, 10447, 10448, 29228 }, 410, 6, "spell" },
     fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 375, 10, "spell" }, -- the game's (owner's tooltips, every rank; DB2 520)
-    stormstrike = { { 17364 }, 121, 6, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
+    stormstrike = { { 17364 }, 0.08, 6, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
     searing_totem = { { 3599, 6363, 6364, 6365, 10437, 10438 }, 170, 0, "totem" },
     flametongue_totem = { { 8227, 8249, 10526, 16387 }, 275, 0, "totem" },
     strength_of_earth_totem = { { 8075, 8160, 8161, 10442, 25361 }, 275, 0, "totem" },
@@ -46,12 +46,12 @@ local KIT = {
     nature_resistance_totem = { { 10595, 10600, 10601 }, 180, 0, "totem" },
     windwall_totem = { { 15107, 15111, 15112 }, 225, 0, "totem" },
     tremor_totem = { { 8143 }, 60, 0, "totem" },
-    poison_cleansing_totem = { { 8166 }, 152, 0, "totem" },
-    disease_cleansing_totem = { { 8170 }, 152, 0, "totem" },
+    poison_cleansing_totem = { { 8166 }, 0.1, 0, "totem" },
+    disease_cleansing_totem = { { 8170 }, 0.1, 0, "totem" },
     sentry_totem = { { 6495 }, 65, 0, "totem" },
-    earthbind_totem = { { 2484 }, 91, 15, "totem" },
+    earthbind_totem = { { 2484 }, 0.06, 15, "totem" },
     stoneclaw_totem = { { 5730, 6390, 6391, 6392, 10427, 10428 }, 140, 30, "totem" },
-    grounding_totem = { { 8177 }, 91, 15, "totem" },
+    grounding_totem = { { 8177 }, 0.06, 15, "totem" },
     -- the manual-press kit (wowsims pin spells_auto_gen.go); a percent cost is the fraction
     frost_shock = { { 8056, 8058, 10472, 10473 }, 430, 6, "spell" },
     healing_wave = { { 331, 332, 547, 913, 939, 959, 8005, 10395, 10396, 25357 }, 620, 0, "spell" },
@@ -1062,6 +1062,50 @@ describe("Forever Shaman through the engine", function()
             assert.is_nil(auras.tremor_totem)
         end
     )
+
+    -- L41: the percent-of-base costs price from the level-60 base 1520 (the mana meta's) before any cost read.
+    it("prices the percent-of-base costs at 60 from base mana 1520: 152, 91, 121", function()
+        local S, VS = H.Hekili.State, H.ns.VirtualState
+        assert.are.same({ 1520, 152, 152, 91, 91, 121 }, {
+            VS.BasePower(0),
+            S.action.poison_cleansing_totem.cost,
+            S.action.disease_cleansing_totem.cost,
+            S.action.earthbind_totem.cost,
+            S.action.grounding_totem.cost,
+            S.action.stormstrike.cost,
+        })
+    end)
+
+    -- Totemic Focus (16173, aura 108 misc 14, -5% a rank on mask 0x20081018: every totem, not Stormstrike; wowsims pin
+    -- spells_auto_gen.go:13198): the client's totem cost read carries the cut, so the base it teaches (I.LearnBases)
+    -- stays 1520 only when the totem's declared cost carries it too.
+    it("keeps base mana 1520 and Stormstrike at 121 under a Totemic Focus 5/5 totem cost read", function()
+        local c = character()
+        c.talents = { [16173] = 5 }
+        local T = headless.new({ character = c, pack = "Enhancement (wowsims.com)" })
+        local S, VS, I = T.Hekili.State, T.ns.VirtualState, T.ns.VirtualStateInternal
+        T.ctl.costs[8166] = { { type = 0, cost = 114 } } -- Poison Cleansing Totem: floor(0.1 x 1520) x 0.75
+        T.Fire("SPELLS_CHANGED")
+        local function belief(key) -- the belief's price at the cast (I.CostOf)
+            for a = 1, I.ab.n do
+                if I.ab.key[a] == key then
+                    return I.CostOf(a)
+                end
+            end
+        end
+        assert.are.same({ 1520, 121, 114, 65 * 0.75 }, {
+            VS.BasePower(0),
+            belief("stormstrike"),
+            belief("poison_cleansing_totem"),
+            belief("sentry_totem"),
+        })
+        -- the simulation's prices alike
+        assert.are.same(
+            { 121, 114, 65 * 0.75 },
+            { S.action.stormstrike.cost, S.action.poison_cleansing_totem.cost, S.action.sentry_totem.cost }
+        )
+        assert.are.same({}, T.loadErrors)
+    end)
 
     it("reads a totem buff through the engine by either name without an error", function()
         local S = H.Hekili.State

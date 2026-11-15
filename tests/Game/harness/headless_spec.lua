@@ -228,6 +228,20 @@ describe("headless Hekili", function()
             assert.is_number(S.stat.crit) -- `stat` stays Hekili's stat table; calling it reads the client's stats
         end)
 
+        -- L967 side bug: the off hand's average was computed from the main hand's damage (State.lua weapon_dps)
+        it("averages each hand's own UnitDamage range for stat.weapon_dps and stat.weapon_offhand_dps", function()
+            local ctl = H.ctl
+            local was = ctl.damage
+            ctl.damage = { 10, 20, 4, 6 }
+            rawset(S.stat, "weapon_dps", nil)
+            rawset(S.stat, "weapon_offhand_dps", nil)
+            local main, off = S.stat.weapon_dps, S.stat.weapon_offhand_dps
+            ctl.damage = was
+            rawset(S.stat, "weapon_dps", nil)
+            rawset(S.stat, "weapon_offhand_dps", nil)
+            assert.are.same({ 15, 5 }, { main, off })
+        end)
+
         it("answers knownRank, swingBase and healthMax through the facade in a sim handler's `state`", function()
             facadeAnswers(setfenv(probe, S)())
         end)

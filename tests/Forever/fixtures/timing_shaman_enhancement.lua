@@ -72,7 +72,7 @@ return {
     { 116.580, "flame_shock", "cost", "on", nil, 4.341, "never", -2.553, 0.654 },
     { 120.050, "stormstrike", "cost", "on", 0.090, 0.090, "in:cost", -4.791, -4.176 },
     { 121.550, "major_mana_potion", "gcd", "off", nil, nil, "never", nil, nil },
-    { 121.550, "magma_totem", "cost", "on", nil, nil, "never", -1899.032, -1897.082 },
+    { 121.550, "magma_totem", "cost", "on", 0.000, nil, "in:grain", -549.032, -97.082 },
     { 122.550, "earth_shock", "gcd", "on", 0.000, -0.010, "in:grain", nil, nil },
     { 124.020, "lightning_bolt", "gcd", "on", -0.020, 0.030, "in:grain", nil, nil },
     { 125.490, "fire_nova", "gcd", "on", 0.000, 0.030, "in:grain", nil, nil },

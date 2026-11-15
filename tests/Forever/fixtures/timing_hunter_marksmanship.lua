@@ -99,7 +99,7 @@ return {
     { 128.930, "raptor_strike", "queue", "off", nil, nil, "never", nil, nil },
     { 129.500, "major_mana_potion", "slack", "off", nil, nil, "never", nil, nil },
     { 129.500, "blood_fury", "slack", "off", -0.200, -0.000, "in:reaction", nil, nil },
-    { 129.500, "serpent_sting", "cost", "on", nil, nil, "never", -1722.819, -1722.570 },
+    { 129.500, "serpent_sting", "cost", "on", -0.000, -0.000, "in:grain", -372.819, 77.430 },
     { 130.500, "raptor_strike", "queue", "off", nil, nil, "never", nil, nil },
     { 131.670, "raptor_strike", "landing", "off", nil, nil, "scope", nil, nil },
     { 131.670, "wing_clip", "aura", "on", -0.370, -0.000, "early", nil, nil },

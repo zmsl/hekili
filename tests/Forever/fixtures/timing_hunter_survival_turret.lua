@@ -41,7 +41,7 @@ return {
     { 117.210, "arcane_shot", "cost", "on", 0.210, 0.210, "late", -8.725, -7.309 },
     { 125.200, "major_mana_potion", "slack", "off", nil, nil, "never", nil, nil },
     { 125.200, "blood_fury", "slack", "off", -0.100, -0.000, "in:reaction", nil, nil },
-    { 125.200, "serpent_sting", "cost", "on", nil, nil, "never", -1712.835, -1711.012 },
+    { 125.200, "serpent_sting", "cost", "on", -0.000, -0.000, "in:grain", -362.835, 88.988 },
     { 126.700, "arcane_shot", "gcd", "on", -0.000, 0.000, "in:grain", nil, nil },
     { 128.200, "aimed_shot", "gcd", "on", 0.000, 0.000, "in:grain", nil, nil },
     { 132.400, "arcane_shot", "cooldown", "on", 0.000, 0.000, "in:grain", nil, nil },

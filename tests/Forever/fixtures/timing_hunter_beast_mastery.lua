@@ -86,7 +86,7 @@ return {
     { 121.850, "raptor_strike", "landing", "off", nil, nil, "scope", nil, nil },
     { 121.850, "immolation_trap", "aura", "on", -0.150, -0.000, "in:reaction", nil, nil },
     { 125.760, "major_mana_potion", "slack", "off", nil, nil, "never", nil, nil },
-    { 125.760, "bestial_wrath", "cost", "off", nil, nil, "never", -1393.139, -1392.445 },
+    { 125.760, "bestial_wrath", "cost", "off", nil, nil, "never", -43.139, 407.555 },
     { 125.760, "blood_fury", "slack", "off", nil, nil, "never", nil, nil },
     { 125.850, "wing_clip", "slack", "on", -0.150, -0.090, "in:reaction", nil, nil },
     { 127.350, "serpent_sting", "gcd", "on", -0.050, -0.000, "in:grain", nil, nil },

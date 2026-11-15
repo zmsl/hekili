@@ -40,6 +40,12 @@
 - Beast Mastery Hunters: the Summon Hawk, Summon Hawk, Arcane Shot sequence now starts again in every fight. Before, it worked only in the first fight after a reload, then neither was recommended until the next reload.
 - Debug snapshots now list each rotation window: open or closed, its step, its last condition result and the last cast that skipped a step.
 - With the Cooldown Manager on, a debuff of yours that misses (for example Rake or Faerie Fire) is now corrected from the Cooldown Manager even right after the Cooldown Manager reloads its data, as it does when you change form before a pull, so the first one of a fight no longer stays shown as up for its whole duration.
+- Shaman: Stormstrike, Poison and Disease Cleansing Totem, Earthbind Totem and Grounding Totem now cost their percent of your base mana at your level, as the game charges, instead of the level-60 amount.
+- Shaman: Totemic Focus now lowers your totems' mana cost in Hekili's forecast, and no longer makes Stormstrike look cheaper than it is.
+- Hekili now notices a Spirit, spell power or rating change out of combat (a buff, food, a talent) right away, so a Life Tap or a Spirit-based effect before the pull is worked out from your current stats instead of older ones.
+- Custom priorities: `weapon_offhand_dps` now reads your off-hand weapon's damage instead of the main hand's.
+- Hunters and wand users: a change to your ranged attack speed out of combat (a new ranged weapon, quiver or buff) is now picked up at once for the shot timer.
+- Mana users: drinking a Major Mana Potion or using a Demonic Rune now adds its mana to Hekili's mana estimate (the average of what it can restore), so spells you can afford again after one are recommended right away.
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - Mana users: the first moment of a mana burst such as Evocation no longer makes Hekili lower its estimate of your mana regeneration for the rest of the fight.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.

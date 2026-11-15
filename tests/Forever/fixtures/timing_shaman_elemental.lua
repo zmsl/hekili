@@ -31,7 +31,7 @@ return {
     { 32.360, "lightning_bolt", "gcd", "on", 0.000, 0.030, "in:grain", nil, nil },
     { 34.320, "lightning_bolt", "gcd", "on", 0.000, 0.002, "in:grain", nil, nil },
     { 36.280, "lightning_bolt", "gcd", "on", 0.000, 0.002, "in:grain", nil, nil },
-    { 38.240, "chain_lightning", "gcd", "on", nil, nil, "never", nil, nil },
+    { 38.240, "chain_lightning", "gcd", "on", -0.040, 0.002, "in:grain", nil, nil },
     { 40.200, "lightning_bolt", "gcd", "on", -0.000, 0.002, "in:grain", nil, nil },
     { 42.160, "lightning_bolt", "gcd", "on", 0.000, 0.002, "in:grain", nil, nil },
     { 44.130, "lightning_bolt", "slack", "on", 0.000, -0.008, "in:grain", nil, nil },

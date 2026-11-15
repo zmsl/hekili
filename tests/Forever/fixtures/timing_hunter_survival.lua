@@ -99,7 +99,7 @@ return {
     { 124.840, "strider_kick", "slack", "on", -2.340, -0.140, "early", nil, nil },
     { 126.450, "major_mana_potion", "slack", "off", nil, nil, "never", nil, nil },
     { 126.450, "blood_fury", "slack", "off", -0.950, -0.000, "early", nil, nil },
-    { 126.450, "serpent_sting", "cost", "on", nil, nil, "never", -2138.168, -2138.061 },
+    { 126.450, "serpent_sting", "cost", "on", -0.000, -0.000, "in:grain", -788.168, -338.061 },
     { 127.850, "raptor_strike", "queue", "off", nil, nil, "never", nil, nil },
     { 127.950, "arcane_shot", "gcd", "on", 0.000, 0.000, "in:grain", nil, nil },
     { 129.020, "raptor_strike", "landing", "off", nil, nil, "scope", nil, nil },
