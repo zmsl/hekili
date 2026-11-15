@@ -205,7 +205,12 @@ M.FLICKER = {
     -- 154 -> 188. The world now regenerates 12.61 a second while casting (the export's Reflection 3/3 share; was 0), so
     -- the OOM phase runs Wrath to Wrath at 120 mana; each cost crossing shows one poll late (gap BT / G7: est 1-3 under
     -- the truth, one tick per episode): Wrath held ticks 144 -> 181 at seeds 1-20
-    ["Balance"] = { flicker = 0, retracted = 0, heldReady = 188 }, -- 0.03 / 0.05 / 0.07, 0
+    -- 0.8.5 close (ledger L1118, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60 heldReady 200 / 184 /
+    -- 180, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 188 -> 200. Cause harness: the
+    -- integ rest window (047aa7e82 + 97ba2a8e9, fights start at the true mana) adds to the Reflection share's OOM phase
+    -- above, the same cost-crossing class one poll late; reverting the rest change gives 188 (L1118). Balance-cc
+    -- (021dece2f, L1119) leaves it flat (199 -> 200)
+    ["Balance"] = { flicker = 0, retracted = 0, heldReady = 200 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
     -- is lacerate:swing/cost). Applied on the reported branch: Guardian clears M.gate's agreement (0.900 / 0.896 /
@@ -225,7 +230,15 @@ M.FLICKER = {
     -- flicker-085 P3 (L872 (2), the opener: the fight's first swing, newer than the combat-start anchor, is credited
     -- one poll after it; seeds 1-20 / 21-40 / 41-60 heldReady 300 / 285 / 294): heldReady 299 -> 300, one event, seed 8
     -- tick 9 (t 4.6): lacerate waiting 0.12 s on that swing's confirmation, truth 19.25 over its 15 cost
-    ["Guardian"] = { flicker = 0.2, retracted = 0.7, readyShort = 0, heldReady = 300 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- 0.8.5 close (ledger L1110 / L1119, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60 flicker 0.23
+    -- / 0.09 / 0.10, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 284 / 307 / 286): flicker 0.2 -> 0.24 (the
+    -- measured worst + 0.01: the line rounds to two decimals), heldReady 300 -> 307 (the worst set). Cause harness:
+    -- the Druid loop world grants Clearcasting at its cast's success (owner in game, L1110; a queued Maul's at its
+    -- swing, after the strike), not 0.25 s later (balance-cc 021dece2f), so the fights are re-timed. Traced flips 11 ->
+    -- 13 at seeds 1-20: 10 the lacerate <-> primal_bite swing-paid rage class above, one new maul -> primal_bite -> maul
+    -- (seed 6 t 122.0-122.6, both free under Clearcasting, swapped one poll at the swing); held ticks the same icons
+    -- (lacerate, maul, primal_bite) spread +0..+5 a fight, no single event (balance-cc-085 report)
+    ["Guardian"] = { flicker = 0.24, retracted = 0.7, readyShort = 0, heldReady = 307 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
