@@ -348,8 +348,19 @@ local PACKS = {
             "thorns",
         },
         -- Eclipse (the placeholder node): Wrath's charges; Reflection 3/3 (the log header's 17106=3): half the spirit
-        -- regen while casting
-        talents = { [408248] = 1, [17106] = 3 },
+        -- regen while casting. The header's Balance ranks the pack reads nowhere (Genesis, Improved Moonfire, Nature's
+        -- Majesty, Nature's Reach, Vengeance, Moonfury: 18 points) keep Balance the dominant tree, as the export's 47 do
+        -- (Reflection's 3 alone made it Restoration: a spec re-pick left the Balance pack); the read ones stay out
+        talents = {
+            [408248] = 1,
+            [17106] = 3,
+            [1223081] = 2,
+            [16821] = 2,
+            [1223082] = 2,
+            [16819] = 2,
+            [16909] = 5,
+            [16896] = 5,
+        },
         power = { type = MANA, token = TOKENS[MANA], max = 4000 },
         res = {},
         form = "moonkin_form",
