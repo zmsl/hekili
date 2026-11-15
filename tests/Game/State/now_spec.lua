@@ -1610,4 +1610,370 @@ describe("now handlers", function()
             assert.is_true(I.avoidsRun >= 1000)
         end)
     end)
+
+    -- L1029 (owner, reverses L318(3)): the CDM verdict's close of our missed cast's target aura refunds the cast's
+    -- `refundOnAvoid` share once, through the avoid's own refund (I.Refund); an avoid or a hand-back of the same cast
+    -- refunds it at most once with the verdict, whichever comes first.
+    describe("the CDM verdict's refund (L1029)", function()
+        local ti, k
+        local function drain(t)
+            ctl.now = t
+            ctl.Tick(t)
+            VS.Drain(t)
+        end
+        local function rage(t)
+            return VS.Power(fs.RAGE, t)
+        end
+        -- the target item (cooldownID 502) for spender_c's debuff, rage plain at `pool` out of combat, then secret in
+        -- combat, the target walk secret; the item proven by a light the dark then closes (mob A, 4 - 4.5)
+        local function begin(pool, off, extra)
+            h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 }
+            h.Class.abilities.spender_c.refundOnAvoid = true
+            h.cdmOff = off
+            table.insert(ctl.viewer.sets[2], 502)
+            ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
+            ti = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            start()
+            k = I.AURA_UNIT + I.auras.bySpell[fs.SPENDER_C]
+            ctl.power[fs.RAGE] = pool
+            ctl.now = 2
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.Fire("UNIT_POWER_FREQUENT", "player", "RAGE")
+            drain(2)
+            ctl.power[fs.RAGE] = nil -- secret from here
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.auras.target.HARMFUL[1] = fake.SECRET
+            ctl.Fire("UNIT_AURA", "target")
+            drain(3)
+            ctl.ViewerAura(ti, "target")
+            if extra then -- a second target item, proven with the first
+                ctl.ViewerAura(extra, "target")
+            end
+            drain(4)
+            ctl.ViewerClear(ti)
+            if extra then
+                ctl.ViewerClear(extra)
+            end
+            drain(4.5)
+            assert.are.equal(pool, rage(4.5).est)
+        end
+        -- spender_c's cast writes two target debuffs (a stun and a bleed): spender_c's own (item 502) and spender_a's
+        -- record on the target (item 503). Returns the second item and its key.
+        local function two()
+            h.Class.abilities.spender_c.funcs.now = function()
+                applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+                applyDebuff("target", "spender_a", 15) -- luacheck: ignore 113
+            end
+            table.insert(ctl.viewer.sets[2], 503)
+            ctl.viewer.infos[503] = { spellID = fs.SPENDER_A }
+            return ctl.ViewerItem("BuffIconCooldownViewer", 2, 503)
+        end
+        local function key2()
+            return I.AURA_UNIT + I.auras.bySpell[fs.SPENDER_A]
+        end
+
+        it("a missed cast the verdict closes: 80% of its cost back, once", function()
+            begin(40)
+            assert.is_true(I.PRESENCE.viewer.proven[502])
+            cast(fs.SPENDER_C, 5) -- no row, the item stays dark
+            assert.are.equal(30, rage(5.1).est)
+            for t = 5.3, 6.9, 0.2 do
+                drain(t)
+            end
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 7))
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(38, rage(7).est)
+            for t = 7.2, 9, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(38, rage(9).est)
+            assert.are.equal(1, I.auraVerdict.refunds[k])
+        end)
+
+        it("another cast of ours between the miss and the verdict: the miss is still refunded, once", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            cast(fs.SPENDER_A, 5.9) -- the next GCD's press, before the verdict: the latest cast is no longer the miss
+            assert.are.equal(20, rage(5.95).est)
+            for t = 6.1, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(28, rage(7.5).est)
+        end)
+
+        it("an avoid refunded the cast first: the later verdict refunds nothing", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            I.curSwapN = I.curSwapN + 1 -- the record stays up past the avoid (as a swap's fold moves it, lane A)
+            ctl.now = 5.05
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.Tick(5.06)
+            VS.Drain(5.07)
+            I.curSwapN = I.curSwapN - 1
+            assert.are.equal(1, I.avoidsRun)
+            assert.are.equal(38, rage(5.1).est)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(38, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
+
+        it(
+            "the verdict refunded first: a later avoid of the same cast (a hand-back) undoes and refunds nothing",
+            function()
+                begin(40)
+                cast(fs.SPENDER_C, 5)
+                for t = 5.3, 6.9, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(38, rage(6.9).est)
+                I.Sources.Direct(VS.Obs.Avoided, 7, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE)
+                drain(7.1)
+                assert.are.equal(38, rage(7.1).est)
+                assert.are.equal(0, I.avoidsRun)
+            end
+        )
+
+        it("a cast's two target debuffs: one lit proves it landed, the other's verdict refunds nothing", function()
+            local si = two()
+            begin(40, nil, si)
+            cast(fs.SPENDER_C, 5)
+            ctl.ViewerAura(si, "target") -- the second debuff lights (the bleed); spender_c's item stays dark (the stun)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(30, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
+
+        it("a cast's two target debuffs, one lit in the cast's own drain: no refund either", function()
+            local si = two()
+            begin(40, nil, si)
+            ctl.ViewerAura(si, "target") -- read UP by the cast's drain's polls, before its write folds
+            cast(fs.SPENDER_C, 5)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(30, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
+
+        it("a cast's two target debuffs, neither lit: the two verdicts refund the cast once", function()
+            local si = two()
+            begin(40, nil, si)
+            local k2 = key2()
+            cast(fs.SPENDER_C, 5)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(1, I.auraVerdict.n[k2])
+            assert.are.equal(38, rage(7.5).est) -- not 46
+            assert.are.equal(1, I.auraVerdict.refunds[k] + I.auraVerdict.refunds[k2])
+        end)
+
+        it("an avoid refunded a two-debuff cast first: neither verdict refunds", function()
+            local si = two()
+            begin(40, nil, si)
+            local k2 = key2()
+            cast(fs.SPENDER_C, 5)
+            I.curSwapN = I.curSwapN + 1 -- the records stay up past the avoid (as a swap's fold moves them)
+            ctl.now = 5.05
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.Tick(5.06)
+            VS.Drain(5.07)
+            I.curSwapN = I.curSwapN - 1
+            assert.are.equal(1, I.avoidsRun)
+            assert.are.equal(38, rage(5.1).est)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(1, I.auraVerdict.n[k2])
+            assert.are.equal(38, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k] + I.auraVerdict.refunds[k2])
+        end)
+
+        it("a deflected or evaded cast (no refund on the avoid): the verdict refunds nothing either", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            I.Sources.Direct(VS.Obs.Avoided, 5.05, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DEFLECT)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(30, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
+
+        it("a target change after the cast's success, folded before its staged write: no refund", function()
+            begin(40)
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- on mob A
+            ctl.now = 5.05
+            ctl.guid.target = "Creature-2" -- tab to mob B in the same drain: the swap (direct) folds first
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.Tick(5.06)
+            VS.Drain(5.07)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(30, rage(7.5).est) -- the cast landed on A: nothing to give back
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
+
+        it("landed, then removed (the item lit after the cast): the verdict's close refunds nothing", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            ctl.ViewerAura(ti, "target")
+            drain(5.3) -- lit once, inside D14's REFRESH_LAG: rule 1 does not close it
+            ctl.ViewerClear(ti)
+            for t = 5.5, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 7.5))
+            assert.are.equal(1, I.auraVerdict.n[k])
+            assert.are.equal(30, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
+
+        it(
+            "a usable answer since the cast already holds the refund: no over-count, no floor above the truth",
+            function()
+                begin(20) -- the truth: 20, 10 paid, 8 back at the miss: 18
+                cast(fs.SPENDER_C, 5)
+                ctl.usable[fs.SPENDER_B] = { true, false } -- the client shows 18: spender_b (15) usable
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.5)
+                ctl.usable[fs.SPENDER_B] = nil
+                assert.is_true(rage(5.5).lo >= 15)
+                for t = 5.7, 7.1, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(1, I.auraVerdict.n[k])
+                local r = rage(7.1)
+                assert.is_true(r.lo <= 18 and r.est <= 18 + 1e-9, ("lo %.2f est %.2f, truth 18"):format(r.lo, r.est))
+            end
+        )
+
+        it("an answer since the cast, then another spend before the verdict: still no floor above the truth", function()
+            begin(20)
+            cast(fs.SPENDER_C, 5) -- truth 18 after the miss
+            ctl.usable[fs.SPENDER_B] = { true, false }
+            ctl.Fire("SPELL_UPDATE_USABLE")
+            drain(5.5) -- at least 15
+            ctl.usable[fs.SPENDER_B] = nil
+            cast(fs.SPENDER_A, 5.8) -- 10 more: truth 8
+            for t = 6.1, 7.3, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.auraVerdict.n[k])
+            local r = rage(7.3)
+            assert.is_true(r.lo <= 8 and r.est <= 8 + 1e-9, ("lo %.2f est %.2f, truth 8"):format(r.lo, r.est))
+        end)
+
+        it(
+            "a late light with no cast of ours (a strike) proves the verdict wrong: the refund comes back out, once",
+            function()
+                begin(40)
+                cast(fs.SPENDER_C, 5)
+                for t = 5.3, 6.9, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(38, rage(6.9).est)
+                ctl.ViewerAura(ti, "target") -- the item lights late (decision 122): it did land
+                for t = 7, 7.6, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(1, I.auraVerdict.strikes[k])
+                assert.are.equal(30, rage(7.6).est) -- the post-cast value
+                assert.are.equal(1, I.auraVerdict.back[k])
+                ctl.ViewerClear(ti)
+                for t = 7.8, 10, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(30, rage(10).est)
+                assert.are.equal(1, I.auraVerdict.back[k])
+            end
+        )
+
+        it("our recast's light after the verdict is no strike: the refund stands", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            for t = 5.3, 6.3, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(38, rage(6.3).est)
+            cast(fs.SPENDER_C, 6.5) -- pressed again: 10 more
+            ctl.ViewerAura(ti, "target")
+            for t = 6.7, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(0, I.auraVerdict.strikes[k])
+            assert.are.equal(28, rage(7.5).est)
+        end)
+
+        -- aura families (L727) and other player auras: the refund is for our missed cast's target aura only
+        local function player(family)
+            h.Class.abilities.spender_a.refundOnAvoid = true
+            h.Class.auras.spender_a.family = family
+            table.insert(ctl.viewer.sets[2], 501)
+            ctl.viewer.infos[501] = family and { spellID = 9000, linkedSpellIDs = { fs.SPENDER_A } }
+                or { spellID = fs.SPENDER_A }
+            local pi = ctl.ViewerItem("BuffIconCooldownViewer", 2, 501)
+            begin(40)
+            ctl.auras.player.HELPFUL[1] = fake.SECRET
+            ctl.Fire("UNIT_AURA", "player")
+            cast(fs.SPENDER_A, 4.6) -- the item proven on our buff up, then dark
+            ctl.ViewerAura(pi, "player")
+            drain(4.8)
+            ctl.ViewerClear(pi)
+            drain(5)
+            return pi, I.auras.bySpell[fs.SPENDER_A]
+        end
+
+        it("a player buff our cast wrote, closed by the verdict (dark from the cast), refunds nothing", function()
+            local _, kp = player(nil)
+            cast(fs.SPENDER_A, 5.2)
+            local spent = rage(5.3).est
+            for t = 5.5, 8, 0.25 do
+                drain(t)
+            end
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 8))
+            assert.is_true(I.auraVerdict.n[kp] >= 1)
+            assert.are.equal(spent, rage(8).est)
+            assert.are.equal(0, I.auraVerdict.refunds[kp])
+        end)
+
+        it("a family member on the player closed by its entry's silence after a light refunds nothing", function()
+            local pi, kp = player("set_a")
+            cast(fs.SPENDER_A, 5.2)
+            local spent = rage(5.3).est
+            ctl.ViewerAura(pi, "player")
+            drain(5.4)
+            ctl.ViewerClear(pi)
+            for t = 5.6, 8, 0.2 do
+                drain(t)
+            end
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 8))
+            assert.are.equal(spent, rage(8).est)
+            assert.are.equal(0, I.auraVerdict.refunds[kp])
+        end)
+
+        it("the Cooldown Manager off (Hekili.cdmOff): no verdict, no refund, the record stands", function()
+            begin(40, true)
+            cast(fs.SPENDER_C, 5)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 7.5).est)
+            assert.are.equal(30, rage(7.5).est)
+            assert.are.equal(0, I.auraVerdict.n[k])
+        end)
+    end)
 end)

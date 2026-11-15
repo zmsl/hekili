@@ -645,6 +645,22 @@ describe("resources", function()
             assert.are.same({ 10, 10 }, { r.lo, r.est }) -- not 18: the answer's bound already holds the refund
         end)
 
+        it("takes a struck refund out of pinDelta only while no pin came since it (I.Unrefund)", function()
+            local R = I.res
+            R.est0[1], R.lo0[1], R.hi0[1] = 12, 10, 20
+            I.ResourceShift(1, -10, 5, Obs.CastSuccess) -- 2 [0, 10]
+            local before, p0 = R.pinDelta[1], R.pinT[1]
+            local dE, dL, dH = I.Refund(1, 8, 5.3)
+            I.Unrefund(1, 8, dE, dL, dH, 5.4, p0) -- no pin since: the refund leaves the measurement too
+            assert.are.equal(before, R.pinDelta[1])
+            dE, dL, dH = I.Refund(1, 8, 5.5)
+            obs(Obs.Read, 5.6, 1, 2, I.ReadOf.Resource) -- an exact read: the pin measures from here
+            I.Fold(5.6, false)
+            assert.are.equal(0, R.pinDelta[1])
+            I.Unrefund(1, 8, dE, dL, dH, 5.7, p0) -- the pin since already saw the pool without it
+            assert.are.equal(0, R.pinDelta[1])
+        end)
+
         it("lets a short answer right after a refund cap it: a refund is no declared gain (I.GAIN_SHOWS)", function()
             local R = I.res
             R.est0[1], R.lo0[1], R.hi0[1] = 12, 10, 20
