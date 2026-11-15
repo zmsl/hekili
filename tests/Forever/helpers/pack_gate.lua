@@ -190,7 +190,11 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 147 / 154 / 136):
     -- heldReady 140 -> 154
-    ["Balance"] = { flicker = 0, retracted = 0, heldReady = 154 }, -- 0.03 / 0.05 / 0.07, 0
+    -- Lane R2 (ledger L1082; seeds 1-20 / 21-40 / 41-60 heldReady 188 / 183 / 171, flicker 0 / 0 / 0): heldReady
+    -- 154 -> 188. The world now regenerates 12.61 a second while casting (the export's Reflection 3/3 share; was 0), so
+    -- the OOM phase runs Wrath to Wrath at 120 mana; each cost crossing shows one poll late (gap BT / G7: est 1-3 under
+    -- the truth, one tick per episode): Wrath held ticks 144 -> 181 at seeds 1-20
+    ["Balance"] = { flicker = 0, retracted = 0, heldReady = 188 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
     -- is lacerate:swing/cost). Applied on the reported branch: Guardian clears M.gate's agreement (0.900 / 0.896 /
