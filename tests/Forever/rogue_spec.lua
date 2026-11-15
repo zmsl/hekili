@@ -947,7 +947,6 @@ describe("Forever Rogue Shank after learning rank 2", function()
         H.Fire("PLAYER_REGEN_DISABLED")
         t = t + 1
         assert.is_true(headless.cycle(H, t))
-        assert.are.equal(2, S.knownRank({ R1, R2 }))
         -- a Shank: the client's cooldown runs on the rank it cast (times secret in combat), rank 1 reads not active
         H.ctl.now = t
         H.ctl.cooldown[R2] = { isActive = true, isOnGCD = false, startTime = SECRET, duration = SECRET }
@@ -960,6 +959,36 @@ describe("Forever Rogue Shank after learning rank 2", function()
         assert.is_true((F.C_Spell.IsSpellUsable(R1)))
         S.reset("Primary", true)
         assert.is_true(S.cooldown.shank.remains > 5, tostring(S.cooldown.shank.remains))
+        assert.are.same({}, H.errors)
+    end)
+
+    -- The pack's own rank list (its knownRank memo, cleared at SPELLS_CHANGED): 15 energy at rank 1, 25 at rank 2.
+    it("gives rank 2's energy in the sim's handler once rank 2 is learned", function()
+        local C = require("Forever.helpers.rogue_world").Combat
+        local ch = C.character()
+        for i = #ch.known, 1, -1 do
+            if ch.known[i] == R2 then
+                table.remove(ch.known, i)
+            end
+        end
+        local H = headless.new({ character = ch, pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        local S, shank = H.Hekili.State, H.Hekili.Class.abilities.shank
+        H.ctl.power[3] = 20 -- out of combat: plain, and room for the gain
+        local t = H.ctl.now + 1
+        local function gained()
+            t = t + 1
+            assert.is_true(headless.cycle(H, t))
+            S.reset("Primary", true)
+            local e0 = S.energy.current
+            shank.handler()
+            return S.energy.current - e0
+        end
+        local fos = 3 * S.talent.flash_of_steel.rank
+        assert.are.equal(15 + fos, gained())
+        H.ctl.known[R1], H.ctl.known[R2] = nil, true
+        H.Fire("SPELLS_CHANGED")
+        assert.are.equal(25 + fos, gained())
         assert.are.same({}, H.errors)
     end)
 end)

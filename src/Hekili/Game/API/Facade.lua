@@ -1022,8 +1022,8 @@ local function cooldownPolicy(spellID)
     end
     return CD
 end
--- Asked by the known rank (as range, H10): a superseded rank the client no longer knows reads plain not active, which
--- the policy would take over the belief's running cooldown (Shank rank 2).
+-- Asked by the known rank (as range, H10): a superseded rank reads plain not active while the cast rank runs (Shank's
+-- 1329283 once 1329549 is learned, user snapshot v0.8.0), which the policy would take over the belief's cooldown.
 kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
     spellID = VS.KnownID(spellID)
     local info = realGetSpellCooldown and realGetSpellCooldown(spellID)
@@ -1138,7 +1138,7 @@ kept("GetTalentInfoByID", "virtual", function(talent)
     local rank = VS.Talent(spell)
     return spell, "", 0, rank > 0, true, spell, nil, 0, 0, rank > 0, false, rank
 end, "dead on Forever [W PR5]; VirtualState.Talent (the C_Traits walk)")
--- Asked by the known rank, as GetSpellCooldown: a superseded rank the client no longer knows reads unusable.
+-- Asked by the known rank, as GetSpellCooldown (the answer for a superseded rank is unprobed).
 local function isUsable(spellID)
     if realIsSpellUsable then
         return realIsSpellUsable(VS.KnownID(spellID))
