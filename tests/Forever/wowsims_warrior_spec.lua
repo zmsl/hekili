@@ -310,7 +310,12 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- seeds 1-20 stretch the cause names is rage-starved (gap CK: rage 0.9-9, only Shield Wall usable), not re-swept here
     -- Release fix (batch review B S5): 21.8 -> 10.2 (L40) / 14.6 (L60), the worst idle this check measures (seed 1) at the new pin; the older
     -- 21.8 was the re-timed fight under CN8 D2 and no longer happens, so the limit follows the measurement (a larger idle fails)
-    local PROT_LIVE = { [10] = 6, [40] = 10.2, [60] = 14.6 }
+    -- 0.8.5 accuracy-timing (controller L1077): L10 6.0 -> 10.4 (49.6-60.0 s), L40 10.2 -> 21.8 and L60 14.6 -> 21.8
+    -- (90.6-112.6 s), rage-starved (R41): truth 1-9 rage, only the racial defensive (Shatter Curse), Shield Wall or the
+    -- Shield Bash interrupt usable (L10's last two ticks Rend, not a Protection line). The fights are re-timed by the
+    -- loop world's Bloodrage paid by talent rank (dc913a80e: 12.5 + 1.25 a tick at Improved Bloodrage 1, as the class
+    -- file and wowsims pay; it was a flat 10 + 1)
+    local PROT_LIVE = { [10] = 10.4, [40] = 21.8, [60] = 21.8 }
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             ws.live(
