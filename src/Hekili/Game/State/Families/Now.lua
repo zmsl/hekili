@@ -396,7 +396,9 @@ local function aura(u, key, duration, stacks)
     I.AuraOurs(u, j, v > 0 and (A.rMax[curA] or 0) / v or 0)
     if u == 2 and journal then -- the cast's own write: what a verdict that it missed gives back (L1029)
         local r = curA > 0 and A.slot[curA] or 0
-        if after > 0 and r > 0 and paid > 0 and A.refund[curA] > 0 then
+        -- a swap at or after the cast's success folded first (the success is staged): the cast was on the old
+        -- target, this record is the new one's, and a verdict on it says nothing of the cast (viewer-swap trace)
+        if after > 0 and r > 0 and paid > 0 and A.refund[curA] > 0 and I.curSwapT < undoT then
             vA[j], vT[j], vPaid[j], vAp[j] = curA, undoT, paid, I.auras.applied[2][j]
             vSpends[j], vRaised[j] = I.res.spends[r], I.res.raised[r]
         else

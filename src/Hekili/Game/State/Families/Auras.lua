@@ -61,6 +61,7 @@ I.curSlot = 0
 -- The serial of the swap folded last (Sources/Target.lua's I.targetSwapN, copied, never incremented: a swap the log
 -- dropped before its fold must not leave the target waiting for ever). Unequal: a swap waits to fold.
 I.curSwapN = 0
+I.curSwapT = -1 -- and that swap's time (Families/Now.lua: a cast whose staged write folds after it was on the old target)
 
 -- The player auras with a `consumedBy` (a set of I.HitKind names): their indices, and each one's kinds by I.HitKind;
 -- each one's `consumeIcd` (seconds, 0 none) and its last spend's time.
@@ -383,7 +384,7 @@ end
 -- TargetSwap: a is the new target's memory slot (0: none). TargetGone: forget slot a.
 I.On(Obs.TargetSwap, function(o)
     save(I.curSlot)
-    I.curSlot, I.curSwapN = o.a, I.targetSwapN
+    I.curSlot, I.curSwapN, I.curSwapT = o.a, I.targetSwapN, o.t
     load(o.a)
 end)
 
