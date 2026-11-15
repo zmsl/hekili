@@ -431,8 +431,9 @@ end
 
 -- Family f's identity on unit u at t (L727): the member believed up with the latest application; with none up, the
 -- member the Cooldown Manager closed last within STRIKE_WIN (I.auraLateTo), so a late light re-opens it and strikes as
--- for a one-aura item (cdm-verdict §2.7); 0 none. Past its modelled duration, or fallen by a cast or the model, a member
--- is not named: the light may be another member's (a cast we did not see), so it opens nothing. Allocates nothing.
+-- for a one-aura item (cdm-verdict §2.7), even if its modelled duration ends inside that window; 0 none. A member that
+-- fell by a cast or the model is not named: the light may be another member's (a cast we did not see), so it opens
+-- nothing. Allocates nothing.
 local function member(f, u, t)
     local U = I.auras
     if u < 1 or u > U.n then

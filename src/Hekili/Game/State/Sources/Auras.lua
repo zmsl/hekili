@@ -483,7 +483,9 @@ local function apply(j, u, up, t, edge)
     end
     facts[k], staged[k] = facts[k] + 1, t
     if not up then
-        lateTo[k] = t + STRIKE_WIN -- rule 1's close
+        -- rule 1's close; like any close it drops the debounce's memory (§2.6), so a light at the next poll re-opens
+        -- at once instead of waiting on the old expiry (review I-1)
+        lateTo[k], lastE[k], lastSt[k], longE[k] = t + STRIKE_WIN, 0, 0, 0
     end
     if (e > t) ~= up then
         disagree[k] = disagree[k] + 1
