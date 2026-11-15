@@ -9,10 +9,10 @@ local fake = require("Game.State.helpers.fake_api")
 
 local overlayed, durations = {}, {}
 local fx = { n = 0, ignore = {} } -- GetSpellCooldownDuration: calls, and the last ignoreGCD per spell
--- The instance's VS.KnownID: the cases key the client's answers by the known rank (ids below), the facade's asks for
--- cooldown, duration and usability; the core asks the overlay by the ability's id, so the fake maps it the same way.
-local knownOf = function(id)
-    return id
+-- The client's overlay answer for ability `key`, keyed by the ability's id: the facade asks the overlay untranslated
+-- (cooldown, duration and usability are asked by the known rank: ids below).
+local function lit(H, key)
+    overlayed[H.Hekili.Engine.Registry.Abilities()[key].id] = true
 end
 
 local rec = {}
@@ -75,7 +75,7 @@ local function boot(style, truth)
     fake.new = function(...)
         local api, ctl = saved(...)
         api.C_SpellActivationOverlay.IsSpellOverlayed = function(id)
-            return overlayed[knownOf(id)] == true
+            return overlayed[id] == true
         end
         api.C_Spell.GetSpellCooldownDuration = function(id, ignoreGCD)
             fx.n = fx.n + 1
@@ -87,7 +87,6 @@ local function boot(style, truth)
     local H = headless.new({ character = ww.character(), pack = ww.PACK })
     fake.new = saved
     assert.are.same({}, H.loadErrors)
-    knownOf = H.ns.VirtualState.KnownID
     H.ctl.inRange.target, H.ctl.level.target = true, 60
     H.Fire("PLAYER_TARGET_CHANGED")
     assert(headless.cycle(H, H.ctl.now + 0.2))
@@ -944,7 +943,8 @@ describe("Modern's proc mark (R3, M11)", function()
         local H, d = boot("classic", true)
         local A = ids(H)
         usableAll(H)
-        overlayed[A.mortal_strike], overlayed[A.overpower] = true, true
+        lit(H, "mortal_strike")
+        lit(H, "overpower")
         publish(H, SET)
         frame(H, d, 0.2)
         local ov = d.truthState.ov
@@ -958,7 +958,7 @@ describe("Modern's proc mark (R3, M11)", function()
         local A = ids(H)
         usableAll(H)
         for _, e in ipairs(SET_FOCUS) do
-            overlayed[A[e[1]]] = true
+            lit(H, e[1])
         end
         publish(H, SET_FOCUS)
         frame(H, d, 0.2)
@@ -979,7 +979,7 @@ describe("Modern's proc mark (R3, M11)", function()
         local A = ids(H)
         usableAll(H)
         H.ns.Output.hold = 3
-        overlayed[A.mortal_strike] = true
+        lit(H, "mortal_strike")
         publish(H, SET)
         frame(H, d, 0.2)
         local ov = d.truthState.ov[1]
@@ -1022,7 +1022,7 @@ describe("Modern's proc mark (R3, M11)", function()
             usableAll(H)
             H.ctl.cooldown[A.mortal_strike] = ACTIVE
             durations[A.mortal_strike] = fake.SECRET
-            overlayed[A.mortal_strike] = true
+            lit(H, "mortal_strike")
             H.ctl.usable[A.slam] = { false, true }
             publish(H, SET)
             for _ = 1, 3 do
@@ -1107,10 +1107,11 @@ describe("Modern's proc mark: only a published spell, settled, keyed apart (Task
         local H, d = boot("classic", true)
         local A = ids(H)
         usableAll(H)
-        overlayed[A.mortal_strike] = true
+        lit(H, "mortal_strike")
         local s = H.ns.Output.Begin("Primary")
         local r = s[1]
-        r.actionName, r.actionID, r.texture, r.keybind = "mortal_strike", A.mortal_strike, "tex1", "K1"
+        r.actionName, r.actionID, r.texture, r.keybind =
+            "mortal_strike", H.Hekili.Engine.Registry.Abilities().mortal_strike.id, "tex1", "K1"
         r.time, r.exact_time, r.item = 0.5, H.ctl.now + 0.5, 1
         H.ns.Output.Publish("Primary", 1)
         for _ = 1, 3 do
@@ -1126,7 +1127,7 @@ describe("Modern's proc mark: only a published spell, settled, keyed apart (Task
         local A = ids(H)
         usableAll(H)
         H.ns.Output.hold = 3
-        overlayed[A.mortal_strike] = true
+        lit(H, "mortal_strike")
         local FOCUS_FIRST = { { "overpower", 0.5, 1 }, { "mortal_strike", 1.0 }, { "slam", 2.0 }, { "rend", 3.0 } }
         local MS_FIRST = { { "mortal_strike", 0.5 }, { "slam", 1.0 }, { "overpower", 2.0, 1 }, { "rend", 3.0 } }
         publish(H, FOCUS_FIRST)
@@ -1158,7 +1159,7 @@ describe("Modern's proc mark: only a published spell, settled, keyed apart (Task
         local tl = H.Hekili.DB.profile.displays.Primary.timeline
         tl.focusReadyStyle, tl.nowFallback = "glow", "empty"
         tl.glow.enabled, tl.glow.mode = true, "autocast" -- the style's own glow: unkeyed
-        overlayed[A.overpower] = true
+        lit(H, "overpower")
         publish(H, { { "overpower", 0, 1 }, { "mortal_strike", 1.0 }, { "slam", 2.0 }, { "rend", 3.0 } })
         frame(H, d, 0.2)
         local b, ov = d.Buttons[1], d.truthState.ov[1]

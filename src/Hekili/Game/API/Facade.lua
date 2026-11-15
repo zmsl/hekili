@@ -1022,8 +1022,8 @@ local function cooldownPolicy(spellID)
     end
     return CD
 end
--- Asked by the known rank (as range, H10): a superseded rank reads plain not active while the cast rank runs (Shank's
--- 1329283 once 1329549 is learned, user snapshot v0.8.0), which the policy would take over the belief's cooldown.
+-- Asked by the known rank (as range, H10): a rank that a later rank supersedes is no longer known and reads plain not
+-- active while the known rank's cooldown runs, which the policy would take over the belief's cooldown.
 kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
     spellID = VS.KnownID(spellID)
     local info = realGetSpellCooldown and realGetSpellCooldown(spellID)
@@ -1145,8 +1145,8 @@ local function isUsable(spellID)
     end
     return false
 end
-kept("C_Spell.IsSpellUsable", "passthrough", isUsable, "plain [W PR14; SU]; asked by the known rank's ID (KnownID)")
-kept("IsUsableSpell", "passthrough", isUsable, "absent on Forever; alias of C_Spell.IsSpellUsable (plain [W PR14; SU])")
+kept("C_Spell.IsSpellUsable", "hybrid", isUsable, "plain [W PR14; SU]; asked by the known rank's ID (KnownID)")
+kept("IsUsableSpell", "hybrid", isUsable, "absent on Forever; alias of C_Spell.IsSpellUsable (plain [W PR14; SU])")
 kept("GetSpellBaseCooldown", "virtual", nothing, "absent on Forever")
 kept("GetSpellLink", "virtual", nothing, "absent on Forever")
 kept("IsHarmfulSpell", "virtual", isFalse, "absent on Forever")
