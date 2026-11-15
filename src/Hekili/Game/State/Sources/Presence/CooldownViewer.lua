@@ -655,6 +655,72 @@ function Q.NeverLit(j)
     return mapped
 end
 
+--- Whether a slot on the layout (a plain cooldownID and layoutIndex, the sweep's configured rule) holds an item mapped
+--- to aura j, alone or among an ambiguous item's candidates (the snapshot's presence-layout). Loops the slots: debug
+--- only.
+function Q.OnLayout(j)
+    local api = api0
+    for s = 1, active and Q.nSlots or 0 do
+        local item = sFrame[s]
+        local id = Plain(api, rawget(item, "cooldownID"))
+        local m = id ~= nil and Plain(api, rawget(item, "layoutIndex")) ~= nil and cdvToJ[id]
+        if m == j then
+            return true
+        elseif m and m < 0 then
+            for _, x in ipairs(amb[-m]) do
+                if x == j then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+local VNAME = { "E", "U", "B", "BB" }
+local ANS = { [NOT] = "-", [UP] = "up", [NONE] = "none", [STALE] = "stale" }
+local UNAME = { [0] = "-", "player", "target" }
+local function age(now, t) -- seconds before now, "-" none
+    return t > 0 and string.format("%.2f", now - t) or "-"
+end
+
+--- Appends one line per slot holding a cooldownID (plain or secret), viewer then slot order (L1075): the raw read now
+--- (cooldownID, layoutIndex, IsShown, the sweep's held test on auraInstanceID) beside what the sweep counts it as and
+--- its last light (sSeen), dark (sDark) and held unit (sUnit); resets clear the last three. `key` names an aura index.
+--- Debug only: allocates, and calls IsShown once per slot (the sweep never does: pcall, secret printed S).
+function Q.SnapshotSlots(out, now, key)
+    local api = api0
+    local issecret = api and api.issecretvalue
+    for v = 1, active and #VIEWERS or 0 do
+        for s = 1, Q.nSlots do
+            local item = sFrame[s]
+            local raw = sV[s] == v and rawget(item, "cooldownID")
+            local sec = issecret(raw)
+            if sec or raw then
+                local m = not sec and cdvToJ[raw]
+                local idx = rawget(item, "layoutIndex")
+                local aid = rawget(item, "auraInstanceID")
+                local ok, shown = pcall(item.IsShown or error, item)
+                shown = not ok and "?" or issecret(shown) and "S" or shown and "yes" or "no"
+                out[#out + 1] = string.format(
+                    "presence-slot %s s=%d i=%s cd=%s aura=%s shown=%s lit=%s ans=%s light=%s dark=%s unit=%s",
+                    VNAME[v],
+                    s,
+                    issecret(idx) and "S" or tostring(idx),
+                    sec and "S" or tostring(raw),
+                    sec and "?" or not m and "-" or m < 0 and "amb" or tostring(key[m]),
+                    shown,
+                    (issecret(aid) or aid ~= nil) and "yes" or "no", -- secret: only tested, never compared
+                    sAmb[s] == 1 and "amb" or ANS[sAns[s]],
+                    age(now, sSeen[s]),
+                    age(now, sDark[s]),
+                    UNAME[sUnit[s]] or "-"
+                )
+            end
+        end
+    end
+end
+
 --- Builds the map and collects every viewer's children (out of combat), then sweeps once: the state now.
 function Q.Activate(api, t, def)
     api0, active = api, api ~= nil and not broken -- off after an error until /reload
