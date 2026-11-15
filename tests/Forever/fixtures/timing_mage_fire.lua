@@ -70,7 +70,7 @@ return {
     { 121.000, "scorch", "gcd", "on", 0.000, 0.001, "in:grain", nil, nil },
     { 122.500, "fire_blast", "gcd", "on", -0.000, 0.001, "in:grain", nil, nil },
     { 124.000, "scorch", "gcd", "on", 0.000, -0.000, "in:grain", nil, nil },
-    { 130.000, "scorch", "cost", "on", 0.460, 0.450, "late", -8.143, -5.220 },
+    { 130.000, "scorch", "cost", "on", 0.360, 0.350, "late", -8.143, -5.220 },
     { 135.000, "mana_gem", "cooldown", "off", nil, nil, "never", nil, nil },
     { 135.000, "pyroblast", "cost", "on", nil, nil, "never", -803.481, -800.979 },
     { 136.500, "fire_blast", "gcd", "on", 0.000, nil, "in:grain", nil, nil },

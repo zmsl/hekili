@@ -54,6 +54,9 @@
 - Hunter: Serpent Sting is now counted from when it lands on the target, not from the cast, so its refresh is no longer shown about a third of a second early.
 - Elemental Shaman: a Revelation charge gained while a Lightning Bolt or Chain Lightning is still casting is now kept for your next spell (such as Earth Shock) instead of being counted as spent by that cast.
 - Fury Warriors: Hekili's forecast now counts Reckless Swings' rage on your coming swings, including one that has just landed, so a rage spender waiting on it is shown on time.
+- When a fight starts, the first icon now switches to its in-combat choice at once instead of one update late.
+- An ability waiting on mana now counts down evenly and turns ready closer to when you really have the mana, instead of jumping by up to a tenth of a second from one update to the next.
+- Warriors and Bear Druids: the rage from your first swing of a fight is now expected when that swing lands, so the first icons of a pull follow it.
 
 ### Known issues
 - The Hunter Turret priorities have not been checked in the game yet.

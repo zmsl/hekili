@@ -1284,9 +1284,16 @@ end
 -- Central fix 29: a slice on a tick reads a phase of 0 or a hair under L through the clock's rounding; the latter
 -- padded about 1e-11 s, under the clock's own rounding, so the forecast at the answer read X a rounding error short and
 -- a `>=` recheck there failed. The pad is at least 1e-6 s (the tick after instead moved Feral and Balance's flicker up).
+-- L755 / owner ruling L960: with no tick seen (last_tick 0: a secret pool) the phase was read off the poll clock, an
+-- arbitrary grid, so the pad jumped between nothing and a whole tick from one poll to the next. It pads nothing there
+-- (fix 29's 1e-6): measured against the world's ticks the shown waits run late, and no pad is the truest fixed choice.
+-- Review M4: it is truest only because the believed floor lags the truth at cost waits (est - truth -0.5 to -3.6);
+-- with an exact floor no pad is early by half a tick on average and a half-tick pad is the unbiased one. Re-measure
+-- none against half a tick when the floor-lag fix lands.
 local function tickReach( t, a, dt )
     local L = rawget( t, "tick_rate" )
     if not L or L <= 0 then return a + dt end
+    if ( rawget( t, "last_tick" ) or 0 ) <= 0 then return a + 1e-6 + dt end
     return a + max( 1e-6, L - ( ( a - ( rawget( t, "last_tick" ) or 0 ) ) % L ) ) + dt
 end
 
@@ -1368,13 +1375,24 @@ do
                     -- UnitAttackSpeed read: state.swings.mh_pending / oh_pending): its gain is forecast one poll after
                     -- the usability answers can show it (ORACLE_MIN), not lost as past; the icon keeps its line, and
                     -- nothing is pressable on it before an answer confirms it (the swings after it keep their own
-                    -- times: `resume`)
-                    v.resume = nil
+                    -- times: `resume`). `pending` records the pending swing time this forecast accepted (0: none), so
+                    -- a pack's `value` reads it instead of repeating this test.
+                    v.resume, v.pending = nil, 0
                     if v.swing and i > 0 then
-                        local p
-                        if v.swing == "offhand" then p = state.swings.oh_pending else p = state.swings.mh_pending end
-                        if p > 0 and l > p - i / 2 then
-                            v.next, v.resume = max( now, p + 2 * ns.ORACLE_MIN ), l + i
+                        local p, a
+                        if v.swing == "offhand" then
+                            p, a = state.swings.oh_pending, state.swings.oh_actual
+                        else
+                            p, a = state.swings.mh_pending, state.swings.mh_actual
+                        end
+                        -- L872 / review I1: a pending swing newer than the last swing row (mh_actual / oh_actual,
+                        -- within the parry pull's 1 ms) is not the anchor's swing: the swings after it run off it.
+                        -- That is the fight's first swing after the combat-start pseudo swing, however soon after the
+                        -- pull, or an early (hasted) swing mid-fight. Else it is the anchor's own swing, and the
+                        -- anchor keeps its phase (a parry-haste pull moves it).
+                        if p > 0 then
+                            local from = p > a + 0.001 and p or l
+                            v.next, v.resume, v.pending = max( now, p + 2 * ns.ORACLE_MIN ), from + i, p
                         end
                     end
 
@@ -6682,7 +6700,8 @@ do
             -- a pull taken before this fight's first swing (from: 0 or an older fight's swing; CombatEnd clears it)
             -- moves the combat-start anchor; nextMH stays 0 as E8 has it
             if pull > 0 and pullFrom < state.combat then state.swings.mh_pseudo = state.combat - pull end
-            if state.offhand_speed > 0 then state.swings.oh_pseudo = state.combat + state.offhand_speed / 2 end
+            -- review R3: only until the off hand's own first swing row lands (it may swing before the main hand)
+            if state.offhand_speed > 0 and state.swings.oh_actual == 0 then state.swings.oh_pseudo = state.combat + state.offhand_speed / 2 end
             state:ForecastSwingbasedResources()
         end
 

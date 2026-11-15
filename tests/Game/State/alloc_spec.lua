@@ -209,8 +209,8 @@ describe("zero allocation", function()
         assert.are.equal(0, bytes)
     end)
 
-    -- gcdFn: spender_t's `gcd` declared as a function (its kind by state at each opening, Families/Casts.lua kindAt; the
-    -- druid-ff review's open item), else the plain "totem" string
+    -- gcdFn: spender_t's `gcd` declared as a function (its kind by state at each opening, Families/Casts.lua kindAt: a
+    -- GCD kind that follows a form), else the plain "totem" string
     local function gcdKinds(gcdFn)
         return function()
             local api, ctl = fake.new()

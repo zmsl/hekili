@@ -340,7 +340,12 @@ M.READY = {
     -- { 0.26, 22 } -> { 0.27, 22 } (Lane R2 Mage, PROPOSED: the calibration skips the two intervals holding Serenity
     -- Field's edges; at share 1 its spirit multiplier has no part to scale, so the EMA learns its gain one interval
     -- later each way: 17 real, median 0.270; lane-r2-dh's Reflection by rank (c 0.5) models the window, re-check there)
-    druid_balance = { 0.27, 22 },
+    -- { 0.26, 22 } -> { 0.35, 22 } (flicker-085 P1, L755 / ruling L960: a mana pool with no tick seen pads nothing, so
+    -- the waits count down with the clock and run less late): real 17 -> 7 (late 7), the median of the ones left
+    -- 0.260 -> 0.350
+    -- integ/0.8.5-w2 merge (lane-r2-mage + lane-r2-dh + flicker-085): the larger value per cell, PROVISIONAL until
+    -- re-measured on the merged tree
+    druid_balance = { 0.35, 22 },
     -- 0.26 -> 0.43: 0.26 rested on the Innervate miscalibration that ran the mana belief ~31 high before the 107.74 s
     -- Shifting Power; with regen correct the floor (lo) reaches the cost ~0.4 s after the truth (gap BQ); owner ruling
     -- 2026-10-26
@@ -362,7 +367,13 @@ M.READY = {
     -- { 0.45, 9 } -> { 0.49, 9 } (Lane R2 Mage, PROPOSED: the calibration skips the 22.5-39.7 s interval holding
     -- Innervate's end; the estimate at shifting_power 111.89 is truer (+0.9 over the log, was +1.7) but the lower band
     -- 0.8 under, so that floor-driven row reads 0.04 s later): real 9, median 0.490
-    druid_feral = { 0.49, 9 },
+    -- { 0.45, 9 } -> { 0.50, 9 } (flicker-085 P1, L755 / L960: no tick pad on a pool with no tick seen): real 9 -> 6
+    -- (early 2, late 4), the median of the ones left 0.450 -> 0.500. Part of the gain comes through a harness-only path:
+    -- in game UNIT_POWER_FREQUENT sets energy's last_tick, so P1 reaches only Feral's mana there; the replay's energy
+    -- pool sits at last_tick 0 (review M5; harness follow-up: the world fires the energy power event)
+    -- integ/0.8.5-w2 merge (lane-r2-mage + lane-r2-dh + flicker-085): the larger value per cell, PROVISIONAL until
+    -- re-measured on the merged tree
+    druid_feral = { 0.50, 9 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
@@ -381,7 +392,9 @@ M.READY = {
     -- on `ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)`, shots otherwise): 28 real rows, 26 early (slack 26,
     -- gcd 25, aura 10: wing_clip 22, max 3.32), the walk the replay cannot forecast (triage Case 1) plus the melee range
     -- read as unknown (wing_clip:unknown 40; hotfix-0.6.2's maxRange 0 bug, probable, untraced); median is the larger set's
-    hunter_beast_mastery = { 0.46, 28 }, -- was { 1.09, 13 }; before that { 0.32, 5 }: wing_clip 27.49 / 115.64 early (-1.59 / -0.74)
+    -- { 0.46, 28 } -> { 0.49, 28 } (flicker-085 P1, L755 / L960: a mana pool with no tick seen pads nothing): real
+    -- 28 -> 26 (all early), the median of the ones left 0.460 -> 0.490
+    hunter_beast_mastery = { 0.49, 28 }, -- was { 1.09, 13 }; before that { 0.32, 5 }: wing_clip 27.49 / 115.64 early (-1.59 / -0.74)
     -- { 0.15, 7 } -> { 0.38, 13 } (re-pin 8b-2, the weave cause above): six strike rows early, strider_kick 11.40 -0.10 -> -0.70
     -- { 0.38, 13 } -> { 0.98, 10 } re-pin e2842f0a78 (Task 19, the new log, R51): the weave cause above, strike rows
     -- 0.48 to 1.32 s early at 11.67 yd
@@ -408,7 +421,9 @@ M.READY = {
     -- Serpent Sting early (the cast-anchored dot) and Arcane Shot cost rows; Survival Melee: wing_clip 2 (max 3.10),
     -- strider_kick 1
     hunter_beast_mastery_turret = { 0.36, 4 },
-    hunter_marksmanship_turret = { 0.42, 4 },
+    -- { 0.42, 4 } -> { 0.43, 4 } (flicker-085 P1, L755 / L960: no tick pad on a mana pool with no tick seen): real
+    -- 4 -> 3 (early 2, late 1), the median of the ones left 0.420 -> 0.430
+    hunter_marksmanship_turret = { 0.43, 4 },
     hunter_survival_turret = { 0.30, 5 },
     hunter_survival_melee = { 0.41, 3 },
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
@@ -462,7 +477,11 @@ M.READY = {
     -- 35 -> 36 (cov-rogue, follow-wowsims re-floor): the wowsims-true Relentless Strikes expected-value belief rule (25 x
     -- min(1, 4% x rank x points) on every finisher, was 25 at 5/5 and 5 points only); fixture re-recorded, 37 rows moved,
     -- most less late (lo-truth gaps shrink); median 0.200 -> 0.190, late 35 -> 36
-    rogue_assassination = { 0.20, 36 }, -- 0.190, 36
+    -- { 0.20, 36 } -> { 0.28, 36 } (flicker-085 P1, L755 / L960: no tick pad on a pool with no tick seen): real
+    -- 36 -> 10 (early 1, late 9), the median of the ones left 0.190 -> 0.280. The gain comes through a harness-only
+    -- path: in game UNIT_POWER_FREQUENT sets energy's last_tick, so P1 reaches only mana there; the replay's energy pool
+    -- sits at last_tick 0 (review M5; harness follow-up: the world fires the energy power event)
+    rogue_assassination = { 0.28, 36 }, -- 0.280, 10
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)
     -- { 0.24, 20 } -> { 0.24, 21 } R42 (the replay answers fight_remains from the log): only rows that were

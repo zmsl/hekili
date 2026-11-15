@@ -56,7 +56,7 @@ return {
     { 141.460, "demonic_rune", "slack", "off", nil, nil, "never", nil, nil },
     { 141.460, "serpent_sting", "slack", "on", -0.160, -0.000, "in:reaction", nil, nil },
     { 143.950, "aimed_shot", "slack", "on", 0.000, 0.000, "in:grain", nil, nil },
-    { 145.690, "arcane_shot", "gcd", "on", 0.000, 3.390, "in:grain", nil, nil },
+    { 145.690, "arcane_shot", "gcd", "on", 0.000, 3.380, "in:grain", nil, nil },
     { 150.790, "arcane_shot", "cooldown", "on", 0.000, 0.000, "in:grain", nil, nil },
     { 152.290, "aimed_shot", "gcd", "on", 0.000, 0.000, "in:grain", nil, nil },
     { 155.890, "arcane_shot", "cooldown", "on", 0.000, 0.000, "in:grain", nil, nil },
