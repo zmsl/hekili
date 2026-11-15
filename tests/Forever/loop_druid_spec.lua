@@ -66,6 +66,33 @@ describe("the Guardian loop world's press", function()
         assert.is_true(ok, tostring(why))
         assert.are.equal(5, us.power)
     end)
+
+    -- L1110: a queued strike's own Omen proc comes at its swing, after its strike, so it never takes it
+    it("pays a Maul in full at its swing and raises its own Clearcasting after the strike", function()
+        local C = dlw.Guardian
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local cc = H.Hekili.Class.auras.clearcasting.id
+        local p = C.resolve("maul", H)
+        local W = scenarios.world(setmetatable({ power = 60, form = C.character().form }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1
+        local omen = dlw.OMEN
+        dlw.OMEN = 1
+        local ok, why = W.press(us, "maul", p)
+        dlw.OMEN = omen
+        assert.is_true(ok, tostring(why))
+        W.run(8)
+        local out = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "strike" and ev.src == us and ev.spell then
+                out[#out + 1] = "strike " .. tostring(ev.cost)
+            elseif ev.kind == "aura" and ev.aura == cc then
+                out[#out + 1] = "cc " .. ev.stacks
+            end
+        end
+        assert.is_true(p.cost > 0)
+        assert.are.same({ "strike " .. p.cost, "cc 1" }, { out[1], out[2] })
+    end)
 end)
 
 -- Owner ruling L1110 (in game): Omen of Clarity procs on the cast, at its success, so a hard cast started right after
@@ -82,7 +109,8 @@ describe("the Balance loop world's Clearcasting", function()
             dlw.OMEN = procs and 1 or 0
             W.t = t
             local p = C.resolve(key, H) -- the instance never hears the world here: its press price is always full
-            assert.is_true(W.press(us, key, p))
+            local c0, ok, why = p.cost, W.press(us, key, p)
+            assert.is_true(ok, key .. " " .. tostring(why) .. " at " .. t)
             local n = #W.truth
             W.run(t + (p.cast or 0) + 0.3)
             dlw.OMEN = omen
@@ -95,7 +123,7 @@ describe("the Balance loop world's Clearcasting", function()
                     out[#out + 1] = ("cc %d %.2f"):format(ev.stacks, ev.t)
                 end
             end
-            return table.concat(out, ", "), p
+            return table.concat(out, ", "), p, c0
         end
         local a, pa = press("starfire", true, 1)
         local land = 1 + pa.cast
@@ -105,8 +133,8 @@ describe("the Balance loop world's Clearcasting", function()
         local wrath, pw = press("wrath", false, land + 0.3)
         assert.are.equal(("cast %s %.2f"):format(tostring(pw.cost), land + 0.3 + pw.cast), wrath) -- full, kept
         local t = land + 0.3 + pw.cast
-        local b, pb = press("starfire", false, t) -- priced full at its press (the instance saw nothing)
-        assert.is_true(pb.cost > 0)
+        local b, pb, cb = press("starfire", false, t) -- priced full at its press (the instance saw nothing)
+        assert.is_true(cb > 0)
         assert.are.equal(("cast 0 %.2f, cc 0 %.2f"):format(t + pb.cast, t + pb.cast), b) -- free at its landing
     end)
 end)
