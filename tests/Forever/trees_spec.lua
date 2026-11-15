@@ -261,8 +261,9 @@ describe("Hekili:NewClass (the engine headless)", function()
         assert.is_nil(kit.specs.heal.options.package)
     end)
 
-    -- caster range (L644): a ranged tree's Enemy Range Radius defaults to 30 yd, a pack's own value wins, melee none
-    it("defaults a ranged tree's nameplateRange to 30, keeps a pack's own and leaves a melee tree's unset", function()
+    -- caster range (L644): a ranged tree's Enemy Range Radius defaults to 30 yd, a pack's own value wins; a melee tree's
+    -- is 10, the radius Targets.lua counts with, so the slider shows what the engine uses
+    it("defaults a ranged tree's nameplateRange to 30, keeps a pack's own and gives a melee tree 10", function()
         local env = engine.load("WARRIOR")
         local kit = env.Hekili:NewClass("WARRIOR", {
             specs = {
@@ -271,7 +272,7 @@ describe("Hekili:NewClass (the engine headless)", function()
                 { key = "own", name = "Own", tree = 3, role = "attack", ranged = true, nameplateRange = 35 },
             },
         })
-        assert.is_nil(kit.specs.one.options.nameplateRange)
+        assert.are.equal(10, kit.specs.one.options.nameplateRange)
         assert.are.equal(30, kit.specs.two.options.nameplateRange)
         assert.are.equal(35, kit.specs.own.options.nameplateRange)
     end)

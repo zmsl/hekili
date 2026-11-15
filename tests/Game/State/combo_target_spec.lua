@@ -1,7 +1,8 @@
 -- tests/Game/State/combo_target_spec.lua: a resource the game binds to one target (L90; the owner's probes 2026-11-06,
 -- memory forever-combo-points-plain): the pool (UnitPower) survives a target swap, but only the points on the current
 -- target (GetComboPoints("player", "target")) are usable, so the belief's value is that answer: at every poll and at
--- once on PLAYER_TARGET_CHANGED (fired twice per swap: the read is idempotent). No target, or a secret answer: 0.
+-- once on PLAYER_TARGET_CHANGED (fired twice per swap: the read is idempotent) and COMBO_TARGET_CHANGED. No target,
+-- or a secret answer: 0.
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local alloc = require("Game.State.helpers.alloc")
@@ -93,6 +94,19 @@ describe("a target-bound resource", function()
         assert.are.same({ 0, 0 }, swap("Creature-B", 1, 0))
         assert.are.equal(1, drain(1, 1)) -- the generator on B: the pool restarts at 1, all of it on B
         assert.are.same({ 0, 0 }, swap("Creature-1", 1, 0))
+    end)
+
+    -- L103: points moved to a new target at the same count fire no power event; COMBO_TARGET_CHANGED does (session O,
+    -- O15: registerable on Forever, no payload). The read follows it at once, before the next poll.
+    it("re-reads the points on the current target at once on COMBO_TARGET_CHANGED", function()
+        assert.are.equal(0, drain(1, 0)) -- the pool on A, the target B holds none
+        ctl.comboPoints.target = 1 -- a generator on B: the count stays 1, now on B
+        t = t + 0.01
+        ctl.now = t
+        ctl.Fire("COMBO_TARGET_CHANGED")
+        I.Sources.Flush()
+        I.Fold(t)
+        assert.are.equal(1, VS.Power(POINTS, t).est)
     end)
 
     it("reads 0 with no target (no answer) and on a secret answer, never the pool", function()

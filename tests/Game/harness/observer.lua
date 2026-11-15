@@ -76,6 +76,10 @@ M.DEFAULTS = {
     -- Manager shows them. On (the live-auras arms, aura audit C1): "@auraError player" from the pull to combat's end,
     -- as the target's. Off by default: the gates' streams list our auras plain. Never on the plain oracle.
     secretPlayerAuras = false,
+    -- (L972, the viewer-rebuild arm) our presses' avoid rows on others reach no ticket of the cast, as live's opener
+    -- does (its row goes to the first swing's tie and the secret hit row never hands it back): no undo, so only the
+    -- Cooldown Manager's verdict can close the missed debuff. Never on the plain oracle.
+    lostAvoid = false,
 }
 
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
@@ -809,6 +813,14 @@ function M.new(W, k)
         elseif kind == "proc" and ev.src == us then -- G5: the wound on the target, then a heal of the same amount on us, same ms
             outcome(t, ev, 1)
             outcome(t, { dst = us, onUs = ev.onUs, act = "HEAL", amount = ev.amount, school = 1 }, 0)
+        elseif
+            k.lostAvoid
+            and not k.plain
+            and ev.src == us
+            and ev.dst ~= us
+            and ev.act ~= "WOUND"
+            and ev.act ~= "HEAL"
+        then -- (lostAvoid) our press's avoid row: none
         elseif ev.act and ev.dst then -- another source's outcome, our DoT's tick, a hit on us or on someone else
             local tr = t
             if (k.takenLag or 0) > 0 and ev.dst == us and ev.act == "WOUND" then -- the hit row on us, later (DM §2)

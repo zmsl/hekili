@@ -361,4 +361,7 @@ function M.dump()
     return lines
 end
 
+-- The boot and the class table, for the wiki's collectors (tools/wiki/boot.lua).
+M.CLASSES, M.boot = CLASSES, boot
+
 return M

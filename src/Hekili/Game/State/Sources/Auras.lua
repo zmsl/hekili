@@ -116,6 +116,11 @@ I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (
 local function zeroVerdict(k)
     W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k] = W0, 0, 0, 0, 0, 0
 end
+-- The class's talent spells (def.talents) that a tracked aura lists as a `copy` (not its own ID), set at the build: an
+-- aura that copies its talent's ID (the Cooldown Manager links both) must not read the talent's own passive aura, which
+-- has no expiry, as the buff (the walk below). An aura whose own ID is the talent's (a form, an until-used buff) reads
+-- as before.
+local TALENT_COPY = {}
 local function zeroEdge(k)
     anAp[k], emcN[k], emcSum[k], emcLast[k] = 0, 0, 0, 0
     cyT[k], cyD[k], cyAp[k], cyE[k], cyN[k], cySum[k], cyObs[k], cyMod[k], seedAp[k] = 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -123,6 +128,21 @@ end
 
 I.OnBuild(function(def)
     local U = I.auras
+    for id in pairs(TALENT_COPY) do
+        TALENT_COPY[id] = nil
+    end
+    local talent = {}
+    for k = 1, #(def.talents or talent) do
+        talent[def.talents[k].spell] = true
+    end
+    for j = 1, U.nAura do
+        local ids, own = def.auraIds[j], rawget(def.auras[j], "id")
+        for i = 1, #ids do
+            if ids[i] ~= own and talent[ids[i]] then
+                TALENT_COPY[ids[i]] = true
+            end
+        end
+    end
     for u = 1, U.n do
         WALK[u] = "aura walk " .. tostring(def.units[u])
         local f, s = {}, {}
@@ -198,6 +218,9 @@ local function walk(api, u, unit, t)
                 break
             end
             local j = U.bySpell[id]
+            if j and u == 1 and TALENT_COPY[id] and Plain(api, data.expirationTime) == 0 then
+                j = nil -- the talent's passive aura (no expiry), not the buff that copies its ID
+            end
             if j then
                 local exp, apps = Plain(api, data.expirationTime), Plain(api, data.applications)
                 if type(exp) ~= "number" then
@@ -681,6 +704,7 @@ end)
 -- itemDisagree: the router's transitions of its items to disagreement (§2.3). Debugging only: it allocates.
 local FROM = { [0] = "model", "viewer" }
 local OURS = { [0] = "no", "cast", "cdm", "walk" }
+local NO_BY = {} -- a provider without per-trigger build counts (the Default)
 local VIA = { "E", "U", "B", "R" } -- bit 1 Essential, 2 Utility, 4 Buff icon, 8 Buff bar (§2.4)
 local function via(n)
     local s, b = "", 1
@@ -793,11 +817,21 @@ I.OnSnapshot(function(out, now)
         end
     end
     out[#out + 1] = string.format("presence-proof mappedNeverLit=%s", never == "" and "-" or never)
+    local by = P.buildsBy or NO_BY -- the builds per trigger and the viewer's events in combat (L972)
     out[#out + 1] = string.format(
-        "presence-proof repoints=%d struck=%d suspended=%d builds=%d",
+        "presence-proof repoints=%d struck=%d suspended=%d builds=%d loaded=%d hotfixed=%d override=%d belief=%d"
+            .. " other=%d evInCombat=%d carried=%d dropped=%d",
         leaf.repoints or 0,
         leaf.struck or 0,
         leaf.suspended or 0,
-        leaf.builds or 0
+        leaf.builds or 0,
+        by[1] or 0,
+        by[2] or 0,
+        by[3] or 0,
+        by[4] or 0,
+        by[5] or 0,
+        P.evInCombat or 0,
+        leaf.carried or 0,
+        leaf.dropped or 0
     )
 end)

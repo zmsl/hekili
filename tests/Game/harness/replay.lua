@@ -311,8 +311,7 @@ end
 --- reads an item's cast). notTargeted: the client answers our target's target as not us (UnitIsUnit("targettarget",
 --- "player") false) though the mob still swings at us: wowsims's melee stands behind a mob that attacks the raid's tank.
 --- alias ({ [logged spell ID] = kit spell ID }): a cast (its Casting and Completed lines) wowsims logs under an ID the
---- client does not cast, replayed as the kit's (Holy Shock's damage row 25902 as its rank 3, 20930: DB2 20930 is a dummy
---- the server turns into 25902 or the heal 25903).
+--- client does not cast, replayed as the kit's (a cast the log reports under another spell ID than the client's).
 function M.new(text, H, o)
     o = o or {}
     local p = M.parse(text)
@@ -664,9 +663,16 @@ function M.new(text, H, o)
     local shares, Class = {}, H.Hekili.Class
     for _, rs in pairs(Class.resources or {}) do
         for _, m in ipairs(rs.state and rs.state.regenMult or {}) do
-            local a = m.share and m.aura and Class.auras[m.aura]
-            if a and a.id then
-                shares[a.id] = m.share
+            local a, sh = m.share and m.aura and Class.auras[m.aura], m.share
+            if type(sh) == "function" then -- a rank's value: the booted character's answer (its talents set at boot)
+                local env = getfenv(sh)
+                setfenv(sh, H.Hekili.State)
+                local ok, v = pcall(sh)
+                setfenv(sh, env)
+                sh = assert(ok and tonumber(v), "replay: a casting share's function raised or answered no number")
+            end
+            if a and a.id and sh then
+                shares[a.id] = sh
             end
         end
     end

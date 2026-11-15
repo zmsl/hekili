@@ -215,16 +215,23 @@ local function chilled(spends)
     end
 end
 
+-- Arcane Meditation (18462): 17/33/50% of the spirit regen while casting by rank (wowsims's curve, e5a9cd2a2d).
+-- shortcut: only 3/3 counts (its 50% on Mage Armor's: share 1); ranks 1 and 2 keep the armor's 0.5, the share the
+-- spec-keyed one gave every export. At 1/3 (c 0.67) the Fire replay's rows after its Evocation moved away and the Fire
+-- loop's heldReady rose (Lane R): use the curve once the belief's handling of a share between 0.5 and 1 is traced.
+local ARCANE_MEDITATION_FULL = 3
+
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
 -- the in-combat calibration replace, as wowsims's logs measure them at 60 (the P1 gear, 29.13 a second outside the
--- rule in every build): Arcane all of it while casting (Arcane Meditation 50% + Mage Armor 50%: share 1), so spirit 0
--- and mp5 29.13; Fire and Frostfire half (Mage Armor's 50%: share 0.5), 14.57 / 14.56 (the logs' Tag 2 / Tag 1).
+-- rule in every build): Arcane all of it while casting (Arcane Meditation 3/3's 50% + Mage Armor 50%: share 1), so
+-- spirit 0 and mp5 29.13; Fire and Frostfire half (Mage Armor's 50%: share 0.5), 14.57 / 14.56 (the logs' Tag 2 /
+-- Tag 1). The share follows Arcane Meditation's rank (3/3 only, above; the belief reads it after its talent walk), the
+-- seeds the spec's
+-- build (gear and its talents; the out-of-combat read replaces them).
 -- Forever's Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76). UNMEASURED in game.
 -- shortcut: Mage Armor assumed up, as every wowsims export pre-buffs it (30 min): its aura is registered (below) but the
--- share does not read it. A share function is read once at the build with no belief (Engine/Schema/Tracked.lua), and a
--- regen entry on the aura would stop the out-of-combat read from calibrating the split (Resources.lua readAt: a share
--- entry up is a mixed pair, never stored): a Mage in Ice Armor still has its Evocation counted double (gaps.md BX).
--- Upgrade with a core static share the belief re-reads (needs a central item) when such a build matters.
+-- static share does not read it: a Mage in Ice Armor still has its Evocation counted double (gaps.md BX). Upgrade with
+-- a share entry on the aura when such a build matters.
 -- Evocation (12051, 8 s): spirit regen +1500% (aura 110) and all of it while casting (aura 134): the learned spirit
 -- regen x 16 in and out of the rule (wowsims evocation.go:11-27; its logs 466 a second).
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
@@ -243,7 +250,7 @@ spec:RegisterResource(
                 return state.spec.arcane and 29.13 or 14.56
             end,
             share = function()
-                return state.spec.arcane and 1 or 0.5
+                return talent.arcane_meditation.rank >= ARCANE_MEDITATION_FULL and 1 or 0.5
             end,
         },
         base = 1213, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)

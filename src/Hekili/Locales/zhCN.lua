@@ -47,6 +47,9 @@ L["The %s, and |cFFFFD100%s|r priorities were reverted."] = "%s和|cFFFFD100%s|r
 -- L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = ""
 -- L["%s, picked from your talents."] = ""
 
+-- Hekili/Engine/Sim/Targets.lua
+-- L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = ""
+
 -- Hekili/Options/ChatCommands.lua
 L["Invalid command. Type '/hekili help' to see the available commands."] = "无效的命令。输入“/hekili help”查看可用命令。"
 L["Target Swap minimum time to die set to %d seconds."] = "切换目标的最短存活时间已设为 %d 秒。"
@@ -777,7 +780,7 @@ L["|cFF00CCFFHekili Forever|r is a fork of the original |cFFFFD100Hekili|r proje
 L["Find Hekili Forever updates on GitHub."] = "在 GitHub 上获取 Hekili Forever 更新。"
 L["Find Hekili Forever updates on CurseForge."] = "在 CurseForge 上获取 Hekili Forever 更新。"
 L["Report Issue"] = "报告问题"
-L["SimC Wiki"] = "SimC Wiki"
+-- L["APL Reference"] = ""
 L["Getting Started"] = "入门"
 L["This section serves as a quick tutorial and explanation of the addon."] = "本部分是插件的快速教程和说明。"
 L["Welcome to Hekili Forever\n"] = "欢迎使用 Hekili Forever\n"
@@ -831,6 +834,7 @@ L["Line %s: Converted '%s' to '%s'."] = "第 %s 行：已将“%s”转换为“
 L["Line %s: Converted operations in '%s' to '%s'."] = "第 %s 行：已将“%s”中的运算转换为“%s”。"
 L["Line %s: Removed unnecessary expel_harm cooldown check from action entry for jab (%sx)."] = "第 %s 行：已从 jab 的动作条目中移除不必要的 expel_harm 冷却检查（%sx）。"
 L["Line %s: Removed unnecessary energy cap check from action entry for fists_of_fury (%sx)."] = "第 %s 行：已从 fists_of_fury 的动作条目中移除不必要的能量上限检查（%sx）。"
+-- L["Line %s: Unclosed '(' in '%s'; split at every comma."] = ""
 L["Line %s: Unsupported action '%s'."] = "第 %s 行：不支持的动作“%s”。"
 -- L["Line %s: Unknown window '%s'; entry disabled."] = ""
 L["Line %s: focus=%s is not a tier (a whole number, 1 highest); ignored."] = "第 %s 行：focus=%s 不是有效等级（应为整数，1 为最高）；已忽略。"
@@ -1026,6 +1030,7 @@ L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴�
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
 
 -- No longer used (the English changed or went away): reuse or delete
+L["SimC Wiki"] = "SimC Wiki"
 L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Discouraged for ranged specializations."] = "勾选后，你角色周围指定半径内的敌方姓名板会被计为敌方目标。\n\n%s 推荐攻击范围在 10 码以内的近战专精使用\n\n%s 不建议远程专精使用。"
 L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = "如果启用了|cFFFFD100统计你附近的姓名板|r，此范围内的敌人将被计入目标数。\n\n仅在同时启用|cFFFFD100显示敌方姓名板|r和|cFFFFD100显示所有姓名板|r时，此设置才可用。"
 L["Preferences for Blizzard action button glows (not SpellFlash)."] = "暴雪动作条按钮发光的偏好设置（非 SpellFlash）。"

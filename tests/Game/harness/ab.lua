@@ -85,6 +85,23 @@ M.ARMS = {
             mobAvoid = { miss = 0.08, dodge = 0.08, parry = 0.04, block = 0, spellMiss = 0.2 },
         },
     },
+    -- (L972) the non-landing world with live's secret amounts, our avoid rows lost (observer lostAvoid: no undo, as
+    -- live's opener) and a map build before each fight but the first (the owner's live session rebuilt 1-3 times a
+    -- fight: loop.lua `rebuild`): a missed debuff before the item's first light of the fight is closed only if the
+    -- proof survived the build
+    ["viewer-rebuild"] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = true,
+        layout = "buffs",
+        edge = true,
+        rebuild = true,
+        observe = { secretAmount = true, lostAvoid = true },
+        world = {
+            auraOnAvoid = false,
+            mobAvoid = { miss = 0.08, dodge = 0.08, parry = 0.04, block = 0, spellMiss = 0.2 },
+        },
+    },
     ["secret-viewer-buffs"] = {
         outcomes = "default",
         presence = "router",
@@ -169,6 +186,7 @@ M.VERDICT = {
     "viewer-late",
     "viewer-recast",
     "viewer-swap-dark",
+    "viewer-rebuild",
 }
 for _, name in ipairs(M.VERDICT) do -- each with the verdict off (`novd`: loop.lua sets VI.verdictOff on the driver)
     local a = { novd = true }

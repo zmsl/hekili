@@ -154,4 +154,18 @@ describe("the Clash setting on a booted Mage", function()
         local slot = first(0, nil, scorchClash(0), OFF)
         assert.are.equal("fireball", slot.actionName)
     end)
+
+    -- L864: an item's options live in specs[spec].items (Options.lua SetItemOption), not .abilities
+    it("reads an item's Clash from its item options", function()
+        first(0, nil, function(H)
+            local S = H.Hekili.State
+            local spec = H.Hekili.Engine.settings.specs[S.spec.id]
+            assert.is_truthy(H.Hekili.Class.abilities.mana_gem.item)
+            spec.items.mana_gem.clash = 0.4
+            assert.are.equal(0.4, S:ClashOffset("mana_gem"))
+            spec.items.mana_gem.clash = 0
+            spec.abilities.mana_gem.clash = 0.4 -- the ability table is not an item's
+            assert.are.equal(0, S:ClashOffset("mana_gem"))
+        end)
+    end)
 end)

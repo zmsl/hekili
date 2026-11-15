@@ -137,11 +137,13 @@ end
 
 -- The five-second rule's parts as numbers, read here: they depend on the spec's tree, the core's fact (a function of
 -- a pack names `state.spec`), and only a spec change moves them. A raise is reported and leaves the part out (inert).
+-- The static `share` stays a function: it follows talent ranks, which only the belief's talent walk knows at the build
+-- (ns.updateTalents runs after it); the belief reads it in its own context (Families/Resources.lua refresh).
 local function fsrOf(meta)
     local fsr = plain(meta.fsr, {})
     if type(fsr) == "table" then
         for k, v in pairs(fsr) do
-            if type(v) == "function" then
+            if type(v) == "function" and k ~= "share" then
                 local ok, n = pcall(v)
                 if not ok then
                     ns.Error("Tracked: fsr." .. tostring(k) .. ": " .. tostring(n))

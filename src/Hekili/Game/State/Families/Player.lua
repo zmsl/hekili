@@ -42,6 +42,11 @@ I.On(Obs.CombatStart, function(o, t)
     healthUnknown(t, Obs.CombatStart)
 end)
 
+-- `combat` reads 0 out of combat, as the sim's does: an evaluator on it falls here and rises at the next pull
+I.On(Obs.CombatEnd, function()
+    I.combatT = 0
+end)
+
 local function decay(rec, now)
     local age = now - rec.last.observed.t
     if age < 0 then

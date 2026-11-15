@@ -213,7 +213,6 @@ describe("pkgmeta", function()
             "tools",
             "docs",
             "scripts",
-            "archive",
             ".superpowers",
             ".github",
         }) do

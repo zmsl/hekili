@@ -1377,6 +1377,11 @@ do
         state.target.updated = true
         Hekili:ForceUpdate( event, true )
     end )
+
+    -- L103: combo points moved to another target (the belief re-reads them on the same event)
+    RegisterEvent( "COMBO_TARGET_CHANGED", function( event )
+        Hekili:ForceUpdate( event, true )
+    end )
 end
 
 

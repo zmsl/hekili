@@ -282,6 +282,34 @@ describe("rotation windows (belief)", function()
             assert.is_false(W("w")[1])
         end)
 
+        -- `combat` reads 0 out of combat (as the sim's), so an evaluator `combat > 0` falls at combat end and rises again
+        -- at the next pull: a "combat" window reopens each fight (a kept pull start left it closed after the first)
+        it("an evaluator on `combat` falls at combat end and reopens at the next pull", function()
+            declare("w", {
+                evaluator = function()
+                    return combat > 0 -- luacheck: ignore 113 (the now context)
+                end,
+                duration = "combat",
+            })
+            start()
+            ctl.now = 2
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            drain(2.1)
+            assert.are.same({ true, 2.1, math.huge, 0, 0 }, W("w"))
+            ctl.now = 4
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            drain(4.1)
+            drain(5)
+            assert.is_false(W("w")[1])
+            -- the snapshot names a window's state and its evaluator's last value
+            local line = "window w up=false step=0/0 opened=0.00 expires=0.00 refreshes=0 eval=false combat=0.00"
+            assert.is_truthy(VS.Snapshot():find(line, 1, true), VS.Snapshot())
+            ctl.now = 6
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            drain(6.1)
+            assert.are.same({ true, 6.1, math.huge, 0, 0 }, W("w"))
+        end)
+
         it("a raising evaluator counts in I.nowErrors and reads false", function()
             declare("w", {
                 duration = 6,
@@ -458,6 +486,8 @@ describe("rotation windows (belief)", function()
                 open(2)
                 cast(TWO, 3)
                 assert.are.same({ true, 1 }, { W("w")[1], W("w")[5] })
+                assert.is_truthy(VS.Snapshot():find("step=1/3", 1, true))
+                assert.is_truthy(VS.Snapshot():find("dev=w_two@3.00 due=1", 1, true), VS.Snapshot())
                 drain(31.99)
                 assert.is_true(W("w")[1])
                 drain(32)

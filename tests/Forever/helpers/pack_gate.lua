@@ -375,7 +375,13 @@ M.FLICKER = {
     -- mana short until the regen tick at 96.8; truth 80.0) -> Holy Strike (0.2 s cooldown left) for one poll; fight 6 t 21.8: Exorcism (mana
     -- wait) <-> Judgement (0.4 s left). The seeded regen phase moved where the ticks fall against the costs. Core, not
     -- the pack (wowsims's own order; no pack line reads the tie)
-    ["Holy Shock"] = { flicker = 0.07, retracted = 0, readyShort = 0, heldReady = 80 },
+    -- cov-hunter-paladin (controller-approved re-floor; seeds 1-20 / 21-40 / 41-60 heldReady 94 / 96 / 104, agreement
+    -- .980 / .983 / .987, flicker 0.00 / 0.00 / 0.00, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 80 -> 110 (the
+    -- worst set + 6). Cause: Purifying Power's game-true Exorcism cadence (2/2: 15 -> 10.05 s, pin 429144) exposes gap
+    -- AB, a mana wait racing a cooldown or seal countdown with the belief 0-5 mana under truth (judgement -> holy_strike,
+    -- exorcism -> seal_of_righteousness / holy_strike / judgement). Traced (now-state, seeds 1-6 and 41-60): the belief's
+    -- cooldowns and seal timers match the oracle in all 307 confused ticks; only mana differs. Flicker floor unchanged
+    ["Holy Shock"] = { flicker = 0.07, retracted = 0, readyShort = 0, heldReady = 110 },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was

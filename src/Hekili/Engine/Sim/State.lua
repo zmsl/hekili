@@ -3683,7 +3683,7 @@ do
                 prev_lookup.index = k
                 return prev_lookup
             elseif k == "last" then
-                if t.meta == "castAll" then t.last = state.player.lastcast
+                if t.meta == "castsAll" then t.last = state.player.lastcast
                 elseif t.meta == "castsOn" then t.last = state.player.lastgcd
                 elseif t.meta == "castsOff" then t.last = state.player.lastoffgcd end
                 return rawget( t, "last" ) or "none"
@@ -7731,7 +7731,7 @@ function state:ClashOffset( action )
     local spec = rawget( Hekili.Engine.settings.specs, state.spec.id )
     if not spec then return 0 end
 
-    local option = spec.abilities[ action ]
+    local option = a.item and spec.items[ action ] or spec.abilities[ action ]
 
     return ns.callHook( "clash", option.clash, action )
 end

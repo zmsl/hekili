@@ -12,7 +12,7 @@
 -- costs (Snapshot cost= / read=).
 -- Credits: Hekili (registration API and pack format); the abilities, auras and stance swap are ported
 -- from Hekili's Classic profile (origin/classic:Classic/Warrior.lua); call shapes from
--- archive/TheWarWithin/WarriorArms.lua; the priorities are translated from wowsims/forever's APLs (MIT,
+-- upstream Hekili's TheWarWithin/WarriorArms.lua; the priorities are translated from wowsims/forever's APLs (MIT,
 -- https://github.com/wowsims/forever; tools/wowsims/specs/warrior_*.lua).
 -- The one- and two-hander rage rates as in Taco Dog Forever's Warrior pack
 -- (src/TacoDogForever_Warrior/Warrior.lua:21-24).

@@ -1024,8 +1024,8 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             sweep(t)
             assert.are.equal(0, dark(1, 1))
         end
-        Q.Activate(api, 7, d) -- a new build: proof and strikes start over
-        assert.are.same({ 0, 0 }, { Q.strikes[502], Q.struck })
+        Q.Activate(api, 7, d) -- a new build: strikes start over; a struck id is unproven, so no proof is carried (L972)
+        assert.are.same({ 0, 0, false }, { Q.strikes[502], Q.struck, Q.proven[502] })
     end)
 
     it(
@@ -1068,8 +1068,58 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
             up(A)
             sweep(9)
             assert.are.same({ false, 1, 1 }, { Q.proven[502], Q.struck, Q.suspended }) -- a light does not undo strikes
-            Q.Activate(api, 10, d) -- a new build: the counts start over
-            assert.are.same({ 0, 0 }, { Q.silent[502], Q.suspended })
+            -- a new build: the counts start over; retired, it carries no proof (L972), but it is lit, so the build's own
+            -- sweep proves it again
+            Q.Activate(api, 10, d)
+            assert.are.same({ 0, 0, true }, { Q.silent[502], Q.suspended, Q.proven[502] })
+        end
+    )
+
+    it("L972: a build keeps a proven id's proof and unit while it maps to the same aura, by key", function()
+        ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        start()
+        up(A, "target")
+        sweep(2)
+        Q.Strike(1, 2) -- one strike: still proven
+        down(A, "target")
+        sweep(3)
+        assert.are.same({ true, 2, 1 }, { Q.proven[502], Q.provenU[502], Q.strikes[502] })
+        Q.Activate(api, 4, d) -- an unchanged map
+        assert.are.same({ true, 2, 0, 0 }, { Q.proven[502], Q.provenU[502], Q.strikes[502], Q.silent[502] })
+        assert.are.same({ 1, 0 }, { Q.carried, Q.dropped })
+        assert.are.same({ 1, 4 }, { dark(1, 2), since(1, 2) }) -- dark from the build's own sweep
+        -- a belief rebuild refills the same def in place (Tracked.lua buildDef): the auras reordered, 502's aura is j = 2
+        d.auras[1], d.auras[2] = d.auras[2], d.auras[1]
+        d.auraIds[1], d.auraIds[2] = d.auraIds[2], d.auraIds[1]
+        Q.Activate(api, 5, d)
+        assert.are.same({ 2, true, 2 }, { Q.map[502], Q.proven[502], Q.provenU[502] }) -- same aura key: carried
+        assert.are.same({ 1, 0 }, { Q.carried, Q.dropped })
+        d.auras[2] = { key = "another", id = A } -- refilled in place: another aura at the same index, same spell
+        Q.Activate(api, 6, d)
+        assert.are.same({ 2, false, 0 }, { Q.map[502], Q.proven[502], Q.provenU[502] }) -- another key: dropped
+        assert.are.same({ 0, 1 }, { Q.carried, Q.dropped })
+        assert.is_true(Q.NeverLit(2))
+    end)
+
+    it(
+        "L1025: a carried proof keeps its silent count (no light at a build): the second silent verdict suspends",
+        function()
+            ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+            start()
+            up(A, "target")
+            sweep(2)
+            down(A, "target")
+            sweep(3)
+            assert.are.equal(1, dark(1, 2))
+            Q.Silent(1, 2) -- one silent verdict
+            assert.are.same({ 1, true }, { Q.silent[502], Q.proven[502] })
+            Q.Activate(api, 4, d) -- an unchanged map: carried with its count
+            assert.are.same({ true, 1, 0 }, { Q.proven[502], Q.silent[502], Q.suspended })
+            assert.are.equal(1, dark(1, 2))
+            Q.Silent(1, 2) -- the second, with no light between: suspended as before
+            assert.are.same({ false, 2, 1 }, { Q.proven[502], Q.silent[502], Q.suspended })
+            Q.Activate(api, 5, d) -- suspended (unproven): not carried
+            assert.are.same({ false, 0 }, { Q.proven[502], Q.silent[502] })
         end
     )
 

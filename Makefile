@@ -7,7 +7,7 @@ LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
 .PHONY: accuracy gate gate-ab gate-body gate-ab-body bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check cdv-coverage syntax api-check \
-	packs-check tools-test check check-full packs package package-check wowsims-cli wowsims-sim-cli wowsims-export wowsims-siml wowsims-learn shared-auras wowsims-packs test-wowsims
+	packs-check tools-test wiki-build wiki-tables wiki-check check check-full packs package package-check wowsims-cli wowsims-sim-cli wowsims-export wowsims-siml wowsims-learn shared-auras wowsims-packs test-wowsims
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -69,7 +69,7 @@ AB_ARMS ?= meter viewer-none viewer-buffs viewer-fixture viewer-mixed \
 	viewer-reshuffle viewer-reshuffle-novd viewer-nonland viewer-nonland-novd \
 	secret-viewer-buffs secret-viewer-buffs-novd secret-viewer-mixed secret-viewer-mixed-novd \
 	viewer-swap viewer-swap-novd viewer-late viewer-late-novd viewer-recast viewer-recast-novd \
-	viewer-swap-dark viewer-swap-dark-novd live-auras live-auras-none
+	viewer-swap-dark viewer-swap-dark-novd viewer-rebuild viewer-rebuild-novd live-auras live-auras-none
 gate-ab:
 	rm -rf .ab
 	$(MAKE) gate
@@ -158,6 +158,20 @@ api-check:
 packs-check: wowsims-packs packs
 	git diff --exit-code src
 
+# The wiki's generated tables (docs/wiki/README.md): wiki-build writes a copy of docs/wiki/ to build/wiki/ with the
+# regions between GENERATED markers filled (one headless boot per class, the collectors tools/wiki/manifest.lua names);
+# docs/wiki/ keeps its regions empty. wiki-check fails on a malformed or unknown marker, a dead link, a bold label or
+# command that names nothing, an expression that no longer evaluates, an unreviewed command or banned content (open
+# TODO placeholders are warnings).
+WIKI_OUT ?= build/wiki
+wiki-build:
+	$(LUA) tools/wiki/gen.lua build "$(WIKI_OUT)"
+
+wiki-tables: wiki-build
+
+wiki-check:
+	$(LUA) tools/wiki/gen.lua check
+
 # Offline tests of the release tools (tools/release_notes.py, cf_upload.py, changelog_release.py): no network, no keys.
 tools-test:
 	python3 -m unittest discover -s tests/tools -t tests/tools
@@ -167,6 +181,8 @@ tools-test:
 # exit code. The begin and write lines hold no $(MAKE), so `make -n` never runs them; make stops at the first failing
 # line, so write (the stamp) runs only after both stages pass. A command-line override other than FULL (a subset or
 # another tool) or -i/-e (errors ignored, environment over the Makefile) never skips and never stamps.
+# FULL=1 also runs the Warlock 20-fight gate (make test-warlock, L633): a lane that edits it sees its red before integration
+# does; `make gate` runs every tag itself, so a plain check-full leaves it out (`make gate FULL=1` runs the Warlock gate twice, plain gate once).
 # shortcut: a failed or killed run leaves its start manifest in /tmp; harmless, write is the only reader.
 STAMP_START := $(shell mktemp -u /tmp/hekili-check-start.XXXXXX)
 STAMP_OFF := $(strip $(filter-out FULL=%,$(MAKEOVERRIDES)) $(findstring i,$(firstword -$(MAKEFLAGS))) $(findstring e,$(firstword -$(MAKEFLAGS))))
@@ -176,7 +192,8 @@ check:
 check-full:
 	@$(if $(STAMP_OFF),echo "check: command-line overrides or -i/-e; this run leaves no stamp",scripts/check_stamp.sh begin $(STAMP_START))
 	$(MAKE) -j4 -Otarget lint fmt-check typecheck test
-	$(MAKE) syntax api-check packs-check tools-test
+	$(if $(FULL),$(MAKE) test-warlock)
+	$(MAKE) syntax api-check packs-check tools-test wiki-check
 	@$(if $(STAMP_OFF),:,scripts/check_stamp.sh write $(STAMP_START))
 
 # Rewrites each class file's RegisterPack blocks from its APLs/ (tools/make_pack.lua write), re-dating a class (today,

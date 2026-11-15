@@ -208,7 +208,7 @@ local PACKS = {
         pack = "Smite (wowsims.com)",
         spec = 100051,
         max = 6151,
-        fsr = { 20.12, 35.73 },
+        fsr = { 20.12, 35.73, share = 0.5 }, -- Meditation 3/3 (its talents below): the parts hold its 50%
         stats = { [5] = 272 },
         kit = {
             "smite",

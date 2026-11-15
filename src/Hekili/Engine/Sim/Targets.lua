@@ -14,6 +14,7 @@ local UnitIsTrivial, UnitIsUnit, UnitLevel, UnitName = Facade.UnitIsTrivial, Fac
 local UnitPhaseReason, UnitTokenFromGUID = Facade.UnitPhaseReason, Facade.UnitTokenFromGUID
 local issecretvalue = Facade.issecretvalue
 local Hekili = _G[addon]
+local L = ns.L
 
 local class = Hekili.Class
 local state = Hekili.State
@@ -405,6 +406,12 @@ do
         return invert and ( not result ) or result
     end
 
+    -- L675: in an instance with the plate CVars off, a nameplate-counting spec counts its target only; say so once
+    -- each time that starts (the Warnings page text stays English, as every Hekili:Error)
+    local PLATES_OFF = "Enemy nameplates are off, so in this instance Hekili Forever counts only your target. "
+        .. "Turn on Show Enemy Nameplates and Show All Nameplates."
+    local platesOffShown = false
+
     -- New Nameplate Proximity System
     function ns.getNumberTargets( forceUpdate )
         if not forceUpdate then
@@ -429,6 +436,14 @@ do
         local inGroup = GetNumGroupMembers() > 0
 
         local FriendCheck = inRaid and UnitInRaid or UnitInParty
+
+        local platesOff = not showNPs and spec and spec.nameplates and IsInInstance() and true or false
+        if platesOff and not platesOffShown then
+            Hekili:Notify( L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. "
+                .. "Turn on Show Enemy Nameplates and Show All Nameplates."], 10 )
+            Hekili:Error( PLATES_OFF )
+        end
+        platesOffShown = platesOff
 
         local checkPets = showNPs and spec and spec.petbased and Hekili:PetBasedTargetDetectionIsReady()
 

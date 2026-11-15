@@ -104,7 +104,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   `race` is nil. So the translator's keys, off-GCD flags and talent links, the learn table, the leveling check's
   ability keys and the gates' racials all agree with the engine. The replay (`tests/Game/harness/replay.lua`) maps
   the log through the booted instance's own `Hekili.Class`, booted as the request's race (`wowsims.race(spec)`).
-- `tools/`, `docs/` and `archive/` stay at the repository root, with the lint, test and type-check configs
+- `tools/` and `docs/` stay at the repository root, with the lint, test and type-check configs
   (`.busted`, `.luacheckrc`, `.luarc.json`). Run every tool and `busted` from the root.
 
 ## Checks
