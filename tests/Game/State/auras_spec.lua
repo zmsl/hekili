@@ -69,6 +69,40 @@ describe("auras", function()
         assert.are.equal(20, readA(21, 35.2)) -- within I.AURA_REFRESH: the same application
     end)
 
+    -- An aura may copy its talent's spell ID (the Cooldown Manager links both): the talent's own passive aura, if the
+    -- client lists it, reads permanent (no expiry) and is not the buff
+    it(
+        "skips a talent's spell read permanent on the player; the same ID with an expiry, or the aura's own, counts",
+        function()
+            local def = fs.def(fs.new(9))
+            def.auraIds[SHOUT] = { fs.SPENDER_A, 1011 } -- 1011: talent_a's spell
+            I.Build(def, 1)
+            local function walk(t, id, expires)
+                ctl.now = t
+                ctl.auras.player.HELPFUL[1] = { spellId = id, expirationTime = expires, applications = 0 }
+                ctl.Fire("UNIT_AURA", "player")
+                fold(t)
+                return VS.Aura("player", fs.SPENDER_A, t)
+            end
+            assert.is_nil(walk(10, 1011, 0)) -- the talent's passive
+            assert.are.equal(25, walk(11, 1011, 25).est) -- a timed one under the talent's ID: the buff
+            ctl.auras.player.HELPFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "player")
+            fold(12)
+            assert.is_not_nil(walk(13, fs.SPENDER_A, 0)) -- the aura's own ID, permanent: up
+            -- an aura whose own ID is the talent's (a form, an until-used buff): its permanent read is the buff
+            def = fs.def(fs.new(9))
+            def.auras[SHOUT] = setmetatable({ id = 1011 }, { __index = def.auras[SHOUT] })
+            def.auraIds[SHOUT] = { 1011 }
+            I.Build(def, 20)
+            ctl.now = 21
+            ctl.auras.player.HELPFUL[1] = { spellId = 1011, expirationTime = 0, applications = 0 }
+            ctl.Fire("UNIT_AURA", "player")
+            fold(21)
+            assert.is_not_nil(VS.Aura("player", 1011, 21))
+        end
+    )
+
     it("finds a tracked aura past the 40th slot of one filter", function()
         ctl.now = 10
         for i = 1, 40 do
