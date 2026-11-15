@@ -914,7 +914,7 @@ end
 I.On(Obs.Avoided, function(o, t)
     fire(2, OUTCOME_OF[o.c] or 0, o.t) -- first: the target's reactions, at the outcome's row
     if o.c == DEFLECT or o.c == EVADE then -- staged for reactions only (Events/Rows.lua REACTED): no undo, no refund
-        forget(o.a, o.b) -- and no refund by the verdict either: the game gives none
+        forget(o.a, o.b) -- nor by the verdict: the avoid path refunds none here (review 1b)
         return
     elseif o.a ~= undoA or o.b ~= undoT then
         return

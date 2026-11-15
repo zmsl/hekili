@@ -124,7 +124,7 @@ verdict finds the record closed and does nothing (§2.3 keys on the record's app
   (`I.VerdictLit`, at every UP: the polls run before the fold) clears the cast's memory on all of them, so a cast whose
   one debuff lights and whose other never does (a stun and a bleed) is not refunded; the error is a refresh into a
   still-lit item (the old application's light reads UP), whose miss is not refunded. A deflected or evaded cast
-  (`Obs.Avoided` DEFLECT/EVADE: the game refunds nothing) clears it too. Limit (owner, L1096, accepted): a cast that
+  (`Obs.Avoided` DEFLECT/EVADE, which the avoid path refunds nothing) clears it too. Limit (owner, L1096, accepted): a cast that
   lands on a target immune to its own debuff reads as a miss and is refunded; it is bounded: two unlit verdicts
   suspend the item's proof until it lights again, so at most about two wrong refunds per item per immune target.
   Limit: a short answer between the cast and a later spend no longer caps the late refund (that spend reset
