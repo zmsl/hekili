@@ -6049,10 +6049,11 @@ packControl.actionID = format( "%04d", id ) end
                                     name = L["Max Energy"],
                                     order = 3.2,
                                     width = 1.5,
-                                    desc = L["When checked, this entry will require that the player have enough energy to trigger Ferocious Bite's full damage bonus."],
+                                    desc = L["When checked, this entry waits until the player has enough energy for the ability's full bonus from extra energy."],
                                     hidden = function ()
-                                        local e = GetListEntry( pack )
-                                        return e.action ~= "ferocious_bite"
+                                        -- shown where the entry's ability declares the extra it converts (pack data)
+                                        local a = Registry.Abilities()[ GetListEntry( pack ).action ]
+                                        return not ( a and ( rawget( a, "excess_cap" ) ~= nil or a.funcs and a.funcs.excess_cap ) )
                                     end,
                                 },
 
@@ -8745,6 +8746,7 @@ do
             if result.cycle_targets then result.cycle_targets = tonumber( result.cycle_targets ) end
             if result.other_target then result.other_target = tonumber( result.other_target ) end
             if result.max_energy then result.max_energy = tonumber( result.max_energy ) end
+            if result.interrupt_global then result.interrupt_global = tonumber( result.interrupt_global ) end
 
             if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end
             if result.focus then

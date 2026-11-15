@@ -1755,7 +1755,8 @@ function scripts:LoadScripts()
             self.PackInfo[ pack ] = {
                 items = {},
                 auras = {},
-                hasOffGCD = false
+                hasOffGCD = false,
+                hasWhileCasting = false
             }
 
             for list, lData in pairs( pData.lists ) do
@@ -1820,6 +1821,10 @@ function Hekili.Scripts:LoadItemScripts()
 
             if data.use_off_gcd and data.use_off_gcd ~= 0 then
                 self.PackInfo[ pack ].hasOffGCD = true
+            end
+
+            if data.use_while_casting and data.use_while_casting ~= 0 then
+                self.PackInfo[ pack ].hasWhileCasting = true
             end
 
             if data.action == "call_action_list" or data.action == "run_action_list" then
@@ -1939,6 +1944,10 @@ function Hekili:LoadScript( pack, list, id )
 
     if data.use_off_gcd and data.use_off_gcd ~= 0 then
         scripts.PackInfo[ pack ].hasOffGCD = true
+    end
+
+    if data.use_while_casting and data.use_while_casting ~= 0 then
+        scripts.PackInfo[ pack ].hasWhileCasting = true
     end
 
     if data.action == "call_action_list" or data.action == "run_action_list" then
