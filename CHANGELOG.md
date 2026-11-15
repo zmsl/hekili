@@ -13,7 +13,8 @@
 
 ### Changed
 - Hunter: during Bestial Wrath, The Beast Within now halves your mana costs in Hekili's forecast, so shots are no longer held back for mana you have; Bestial Wrath is only suggested while your pet is out and alive.
-- Paladin: your seal now follows the Cooldown Manager's Seals entry in combat, so Hekili notices a seal that ends or is removed early, and a seal it took down when the entry went dark for a moment comes back as soon as the entry lights again; which seal it is still comes from the one you cast last. Druid forms follow the same rule whenever the game hides your form.
+- Paladin: your seal now follows the Cooldown Manager's Seals entry in combat, so Hekili notices a seal that ends or is removed early, and a seal it took down when the entry went dark for a moment comes back as soon as the entry lights again; which seal it is still comes from the one you cast last.
+- Druid: whenever the game hides your form, your form now follows the Cooldown Manager the same way as a Paladin's seal.
 - Mage: Arcane Meditation now counts at every rank (17/33/50% of your Spirit regeneration while casting), not only at 3/3.
 - Mage: Hekili now counts mana regeneration while casting by the armor you wear: Mage Armor's 50% only while it is up, none for Ice Armor or Frost Armor. Casting a different armor in combat changes it at once.
 - Druid: Reflection now counts 17/33/50% of your Spirit regeneration while casting, by rank, so a Druid with Reflection is no longer shown short of mana too long, and Innervate is valued in full.
@@ -29,7 +30,8 @@
 - Hunters and wand users: a change to your ranged attack speed out of combat (a new ranged weapon, quiver or buff) is now picked up at once for the shot timer.
 - Mana users: drinking a Major Mana Potion or using a Demonic Rune now adds its mana to Hekili's mana estimate (the average of what it can restore), so spells you can afford again after one are recommended right away.
 - Mana users: the first moment of a mana burst such as Evocation no longer makes Hekili lower its estimate of your mana regeneration for the rest of the fight.
-- Trolls: Berserking used in combat now shortens your global cooldown, cast times and swings in Hekili's forecast while it is up (the game hides your haste in combat). In the same way, Divine Spirit, Prayer of Spirit and Mark or Gift of the Wild now stop counting toward your Spirit as soon as they fall mid-fight, on every class and at the buff's own rank (a Warlock's Life Tap follows a Priest's Divine Spirit), and so does a Priest's Spirit Tap.
+- Trolls: Berserking used in combat now shortens your global cooldown, cast times and swings in Hekili's forecast while it is up (the game hides your haste in combat).
+- Divine Spirit, Prayer of Spirit and Mark or Gift of the Wild now stop counting toward your Spirit as soon as they fall mid-fight, on every class and at the buff's own rank (a Warlock's Life Tap follows a Priest's Divine Spirit), and so does a Priest's Spirit Tap.
 - With the Cooldown Manager on, when it shows that a debuff of yours missed (for example Rake), Hekili now also gives back the energy or rage the game refunds for the miss, so your next ability is not shown as unaffordable for a moment.
 - With the Cooldown Manager on, a buff that ended just as the Cooldown Manager lit it again could stay up in Hekili for its whole duration (a Paladin seal could be believed up with none on, so Judgement was suggested anyway). Hekili now takes it down when the Cooldown Manager shows it gone.
 - Hunter: Serpent Sting is now counted from when it lands on the target, not from the cast, so its refresh is no longer shown about a third of a second early.
