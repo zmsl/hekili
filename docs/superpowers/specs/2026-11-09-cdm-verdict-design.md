@@ -120,11 +120,19 @@ verdict finds the record closed and does nothing (§2.3 keys on the record's app
   serials). Exactly once: an avoid or a hand-back of the cast (`Obs.Avoided`) refunded first clears it; the verdict's
   refund clears every record of that cast and consumes the latest-cast undo when it still names it, so a later avoid
   undoes and refunds nothing. Past another spend since the cast, an answer since the cast that raised the slot held the
-  refund (`I.Refund`'s `held`: lo and est stay). Landed then removed: a record that read UP since the write refunds
-  nothing; the error is a refresh into a still-lit item (the old application's light reads UP), whose miss is not
-  refunded. A wrong verdict takes it back, once: the strike (§2.5: a light within STRIKE_WIN with no cast of ours
+  refund (`I.Refund`'s `held`: lo and est stay). Landed: an UP read since the write of ANY target record the cast wrote
+  (`I.VerdictLit`, at every UP: the polls run before the fold) clears the cast's memory on all of them, so a cast whose
+  one debuff lights and whose other never does (a stun and a bleed) is not refunded; the error is a refresh into a
+  still-lit item (the old application's light reads UP), whose miss is not refunded. A deflected or evaded cast
+  (`Obs.Avoided` DEFLECT/EVADE: the game refunds nothing) clears it too. Limit (owner, L1096, accepted): a cast that
+  lands on a target immune to its own debuff reads as a miss and is refunded; it is bounded: two unlit verdicts
+  suspend the item's proof until it lights again, so at most about two wrong refunds per item per immune target.
+  Limit: a short answer between the cast and a later spend no longer caps the late refund (that spend reset
+  `sinceShort`); off by at most the share until the next answer. A wrong verdict takes it back, once: the strike (§2.5: a light within STRIKE_WIN with no cast of ours
   since) calls `I.VerdictTakeBack`, and `I.Unrefund` removes from est, lo and hi what the refund gave them (no spend:
-  the ladder's marks and mana's five-second window stay). A light past STRIKE_WIN is no strike and keeps the refund.
+  the ladder's marks and mana's five-second window stay; a pin since the refund keeps `pinDelta`, which it reset). A
+  light past STRIKE_WIN is no strike and keeps the refund. A strike is per record: a sibling record lit after the
+  refunding verdict takes nothing back.
   Player auras (seals and forms, the L727 families, any buff) never refund: the memory is kept for target records
   only.
   A cast whose target changed at or after its success, with that swap folded before the cast's staged write

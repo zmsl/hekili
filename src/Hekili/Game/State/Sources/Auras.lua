@@ -436,6 +436,9 @@ local function apply(j, u, up, t, edge)
     local k = (u - 1) * I.AURA_UNIT + j
     if up then
         upAt[k] = t
+        if u == 2 and I.VerdictLit then -- any record of our cast lit: it landed, no verdict refunds it (L1029)
+            I.VerdictLit(j, t)
+        end
     end
     if not judgeable(j, u) then
         return false

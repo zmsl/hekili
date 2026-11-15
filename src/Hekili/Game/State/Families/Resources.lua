@@ -1900,8 +1900,9 @@ end
 
 --- A refund `d` proven wrong (the CDM verdict's, struck: Families/Now.lua I.VerdictTakeBack) comes back out of slot r:
 --- est, lo and hi lose what it gave them (dE, dL, dH, I.Refund's returns). No spend: the ladder's marks, the spend
---- serial and mana's five-second window stay. Allocates nothing.
-function I.Unrefund(r, d, dE, dL, dH, t)
+--- serial and mana's five-second window stay. `pinT0`: the slot's pin time at the refund; a pin since reset pinDelta
+--- with the refund in it, so the measurement keeps nothing of it. Allocates nothing.
+function I.Unrefund(r, d, dE, dL, dH, t, pinT0)
     local max = R.max[r]
     R.est0[r], R.lo0[r], R.hi0[r] = clamp(R.est0[r] - dE, max), clamp(R.lo0[r] - dL, max), clamp(R.hi0[r] - dH, max)
     if R.lo0[r] > R.est0[r] then
@@ -1911,7 +1912,10 @@ function I.Unrefund(r, d, dE, dL, dH, t)
         R.hi0[r] = R.est0[r]
     end
     norm(r)
-    R.gain[r], R.pinDelta[r] = R.gain[r] - d, R.pinDelta[r] - d
+    R.gain[r] = R.gain[r] - d
+    if R.pinT[r] == pinT0 then
+        R.pinDelta[r] = R.pinDelta[r] - d
+    end
     I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Avoided)
 end
 

@@ -100,9 +100,10 @@ end
 -- success time, the undo's undoT; vPaid; vAp the record's applied time then; vSpends / vRaised the slot's spend and
 -- raise serials after its spend), for the CDM verdict's refund (I.VerdictRefund). Filled at OnBuild.
 local vA, vT, vPaid, vAp, vSpends, vRaised = {}, {}, {}, {}, {}, {}
--- And the refund the verdict gave on that record (bR its slot, 0 none; bD the share; bE/bL/bH what est, lo and hi took),
--- until a strike takes it back (I.VerdictTakeBack) or another refund on the record replaces it.
-local bR, bD, bE, bL, bH = {}, {}, {}, {}, {}
+-- And the refund the verdict gave on that record (bR its slot, 0 none; bD the share; bE/bL/bH what est, lo and hi took;
+-- bP the slot's pin time then), until a strike takes it back (I.VerdictTakeBack) or another refund on the record
+-- replaces it.
+local bR, bD, bE, bL, bH, bP = {}, {}, {}, {}, {}, {}
 local refund = {} -- by resource slot: the class's default share (the resource meta's `refundOnAvoid`), 0 none
 A.refund = {} -- by ability index: the share of its cost an avoid gives back (the ability's `refundOnAvoid`), 0 none
 I.avoidsRun = 0
@@ -683,7 +684,7 @@ I.OnBuild(function(def)
         local key = def.auras[j].key
         auraSpell[j] = def.auraIds[j][1]
         vA[j], vT[j], vPaid[j], vAp[j], vSpends[j], vRaised[j] = 0, 0, 0, 0, 0, 0
-        bR[j], bD[j], bE[j], bL[j], bH[j] = 0, 0, 0, 0, 0
+        bR[j], bD[j], bE[j], bL[j], bH[j], bP[j] = 0, 0, 0, 0, 0, 0
         local d = rawget(def.auras[j], "duration")
         auraDur[j] = type(d) == "number" and d or false
         auraFn[j] = type(d) == "function" and d or false
@@ -901,19 +902,25 @@ end)
 -- the latest's to undo). The cooldown,
 -- the GCD and the player auras stay (an avoided ability still triggers them). Allocates nothing.
 local DEFLECT, EVADE = I.HitKind.DEFLECT, I.HitKind.EVADE
+-- Forgets the CDM verdict's refund memory of the cast of ability a at castT on every target record it wrote (L1029):
+-- refunded, avoided with no refund, or proven landed. Allocates nothing.
+local function forget(a, castT)
+    for j = 1, I.auras.nAura do
+        if vA[j] == a and vT[j] == castT then
+            vA[j] = 0
+        end
+    end
+end
 I.On(Obs.Avoided, function(o, t)
     fire(2, OUTCOME_OF[o.c] or 0, o.t) -- first: the target's reactions, at the outcome's row
     if o.c == DEFLECT or o.c == EVADE then -- staged for reactions only (Events/Rows.lua REACTED): no undo, no refund
+        forget(o.a, o.b) -- and no refund by the verdict either: the game gives none
         return
     elseif o.a ~= undoA or o.b ~= undoT then
         return
     end
     undoA = 0
-    for j = 1, I.auras.nAura do -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
-        if vA[j] == o.a and vT[j] == o.b then
-            vA[j] = 0
-        end
-    end
+    forget(o.a, o.b) -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
     for k = 1, I.curSwapN == undoSwap and undoN or 0 do -- another target since the cast: its auras are not these
         local j = undoJ[k]
         local rec = VS.Aura("target", auraSpell[j], t)
@@ -940,16 +947,19 @@ function I.VerdictRefund(j, ap, t)
         return nil
     end
     local castT, r = vT[j], A.slot[a]
-    for i = 1, I.auras.nAura do
-        if vA[i] == a and vT[i] == castT then
-            vA[i] = 0
-        end
-    end
+    forget(a, castT)
     if undoA == a and undoT == castT then
         undoA = 0
     end
+    -- shortcut: a target immune to this debuff only (the cast landed, its record never lights) reads as a miss and is
+    -- refunded; accepted as bounded by the owner (L1096): two unlit verdicts suspend the item's proof until it lights
+    -- again, so at most ~2 wrong refunds per item per immune target. Upgrade if an immune flag becomes readable.
+    -- shortcut: a short answer heard between the cast and a later spend no longer caps this late refund (that spend
+    -- reset sinceShort; the cap is valid only for answers after the cast's own spend); the error is at most the share,
+    -- until the next answer. Upgrade (a per-cast cap carried across spends) if traces show est above the truth after
+    -- a verdict refund.
     local R, d = I.res, vPaid[j] * A.refund[a]
-    bR[j], bD[j] = r, d
+    bR[j], bD[j], bP[j] = r, d, R.pinT[r]
     bE[j], bL[j], bH[j] = I.Refund(r, d, t, R.spends[r] ~= vSpends[j] and R.raised[r] ~= vRaised[j])
     return castT
 end
@@ -962,8 +972,18 @@ function I.VerdictTakeBack(j, t)
         return false
     end
     bR[j] = 0
-    I.Unrefund(r, bD[j], bE[j], bL[j], bH[j], t)
+    I.Unrefund(r, bD[j], bE[j], bL[j], bH[j], t, bP[j])
     return true
+end
+
+--- Target aura j read UP at t (Sources/Auras.lua, every UP: the polls run before the fold): when the memory names a
+--- cast whose write it was (an UP since that write), the cast landed, so no verdict refunds it on any record it wrote
+--- (a stun and a bleed of one cast: the bleed lights, the stun's item never does). Allocates nothing.
+function I.VerdictLit(j, t)
+    local a = vA[j]
+    if a ~= 0 and t >= vAp[j] then
+        forget(a, vT[j])
+    end
 end
 
 -- The other settled outcomes reactions run on (re-pin design §3a): our white swing's (Obs.SwingSettled, Events/Rows.lua:
