@@ -47,7 +47,7 @@ return {
     { 126.010, "major_mana_potion", "gcd", "off", nil, nil, "never", nil, nil },
     { 126.010, "bestial_wrath", "cost", "off", nil, nil, "never", -1982.728, -1981.867 },
     { 126.010, "blood_fury", "gcd", "off", -0.910, -0.000, "early", nil, nil },
-    { 126.010, "serpent_sting", "cost", "on", -0.000, -0.000, "in:grain", -1504.363, -1504.363 },
+    { 126.010, "serpent_sting", "cost", "on", -0.000, -0.000, "in:grain", -1659.363, -1659.363 },
     { 127.510, "aimed_shot", "gcd", "on", -0.010, -0.000, "in:grain", nil, nil },
     { 129.610, "arcane_shot", "cooldown", "on", 0.000, 0.000, "in:grain", nil, nil },
     { 134.710, "arcane_shot", "cooldown", "on", -0.010, 0.000, "in:grain", nil, nil },

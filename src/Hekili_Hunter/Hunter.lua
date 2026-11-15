@@ -24,6 +24,7 @@
 local Facade = Hekili.Client
 local UnitClassBase, GetTime = Facade.UnitClassBase, Facade.GetTime
 local IsSpellUsable, IsCurrentSpell = Facade.C_Spell.IsSpellUsable, Facade.C_Spell.IsCurrentSpell
+local UnitExists, UnitIsDead = Facade.UnitExists, Facade.UnitIsDead
 local L = Hekili:GetLocale("Hekili_Hunter")
 
 if UnitClassBase("player") ~= "HUNTER" then
@@ -135,6 +136,7 @@ local MEND_PET = { 136, 3111, 3661, 3662, 13542, 13543, 13544 }
 local MEND_PET_COST = { 50, 90, 155, 225, 300, 385, 480 }
 local ASPECT_OF_THE_WILD = { 20043, 20190 }
 local ASPECT_OF_THE_WILD_COST = { 90, 115 }
+local CALL_PET, REVIVE_PET = { 883 }, { 982 }
 
 local function rest(ids)
     local out = {}
@@ -359,6 +361,20 @@ spec:RegisterPets({
     hawk = { spell = "summon_hawk", duration = 18, cap = 2 },
 })
 
+-- The pet unit out and alive (UnitExists / UnitIsDead of "pet", plain in combat: W PR14). Not `pet.up`: the
+-- simulation's also counts Summon Hawk's guardians its forecast summons. A plain function too: `usable` runs in the
+-- belief's context as well, which has no `pet_out`.
+local function petOut()
+    return UnitExists("pet") == true and not UnitIsDead("pet")
+end
+spec:RegisterStateExpr("pet_out", petOut)
+
+-- The Beast Within (1223758, Forever; L1058): while the pet is under our Bestial Wrath we rage too, +10% damage (no
+-- read: the addon models no damage) and every mana cost -50% (DB2: A_DUMMY 10 and -50 on the caster, no class mask;
+-- the pin has no row, wowsims omits it). A passive with no skill line nor tree node: taken as Bestial Wrath's own
+-- (unprobed: IsPlayerSpell(1223758) on a Bestial Wrath Hunter, and a shot's cost under it).
+spec:RegisterCostMod({ aura = "bestial_wrath", pct = -0.5 })
+
 spec:RegisterGear("cryptstalker", unpack(CRYPTSTALKER))
 spec:RegisterSetBonus("cryptstalker_2pc", 28755)
 spec:RegisterSetBonus("cryptstalker_8pc", 28751)
@@ -366,6 +382,8 @@ spec:RegisterSetBonus("cryptstalker_8pc", 28751)
 spec:RegisterAuras({
     aspect_of_the_hawk = { id = 13165, copy = rest(ASPECT_OF_THE_HAWK), duration = 3600, max_stack = 1 },
     aspect_of_the_beast = { id = 13161, copy = rest(ASPECT_OF_THE_BEAST), duration = 3600, max_stack = 1 },
+    -- Bestial Wrath's 18 s (19574's duration), on us from our cast: the buff is the pet's (no walk of ours finds it)
+    bestial_wrath = { id = 19574, duration = 18, max_stack = 1 },
     rapid_fire = {
         id = 3045,
         duration = function() -- the Cryptstalker 2-piece: +4 s
@@ -642,7 +660,8 @@ spec:RegisterAbilities({
     },
 
     -- the Beast Mastery talent (2 min, off the GCD; 12% of base mana: the pin's row CostPct 12, wowsims's SpellConfig
-    -- charges it, the DB2 had it free); its 18 s rage is the pet's, so no player aura
+    -- charges it, the DB2 had it free); its 18 s rage is the pet's, The Beast Within's on us (the cost mod above); only
+    -- with the pet out (wowsims talents_beast_mastery.go:136-138)
     bestial_wrath = {
         id = 19574,
         cast = 0,
@@ -655,6 +674,12 @@ spec:RegisterAbilities({
         toggle = "cooldowns",
         startsCombat = false,
         known = knows({ 19574 }),
+        usable = function()
+            return petOut(), "no pet out"
+        end,
+
+        now = applies("bestial_wrath"),
+        handler = applies("bestial_wrath"),
     },
 
     serpent_sting = {
@@ -1171,6 +1196,49 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(MEND_PET),
     },
+
+    -- L1059 (owner): the pet's calls, each only while the client calls it usable (IsSpellUsable, plain: no tamed pet,
+    -- no corpse, the pet already out answer no; unprobed). The pin's rows: Call Pet (883) free and instant; Revive Pet
+    -- (982) 100% of base mana and a 10 s cast, Improved Revive Pet (24443) -3 s and -20% a rank (its curve
+    -- {-3000, -6000} ms, {-20, -40}%).
+    -- shortcut: neither brings a pet into the forecast (pet_out reads the client), so the queue may show it twice while
+    -- none is out; summon one in the handlers if that matters.
+    call_pet = {
+        id = 883,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        startsCombat = false,
+        known = knows(CALL_PET),
+        usable = function()
+            return knownRank(CALL_PET) > 0 and IsSpellUsable(883) == true, "not usable"
+        end,
+    },
+    revive_pet = {
+        id = 982,
+        cast = function()
+            return 10 - 3 * talent.improved_revive_pet.rank
+        end,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            return 1 - 0.2 * talent.improved_revive_pet.rank
+        end,
+        spendBase = true,
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(REVIVE_PET),
+        usable = function()
+            if knownRank(REVIVE_PET) == 0 then
+                return false, "not usable"
+            end
+            local usable, noMana = IsSpellUsable(982)
+            return usable == true or noMana == true, "not usable"
+        end,
+    },
 })
 
 -- Talents: { talent tree (1 Beast Mastery, 2 Marksmanship, 3 Survival: the dominant tree picks the spec), rank 1's
@@ -1254,38 +1322,38 @@ spec:RegisterWindow("hha", {
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/hunter_*.lua).
 spec:RegisterPack(
     "Beast Mastery (wowsims.com)",
-    20261110000,
-    [[Hekili:LVvutUPnq4Fl3lU2tVIp7lxAYn13mntBNKon30PK(kyzq2Oya5bjo3BMm8BVRW2yHSbldI8c5bhojTF7NwjT7YQbNjoFXX2hXXopp9UPVDYKj3b)ZXM)6gSJ9gK3A0k4Hyue87hWigpB(NHFXjVMnF4w6wgjIz5rJgjg9RHuKVaXfPKq(NIDwCwWzBWEo2F8FF(l)()84cbOUr7W0XoG47J3jiM5DbD(y2CEaoB((2gVKMGFbNKn3hVeLgcY9R)9FLnhAoB(jaLsglicBCqAm00y)nSXcE7d)xK7wm6fSfGA4OBbTKGIzHWmXhEMk0kHLnh57tJ)b4H14xzwzZ)neh94zyZWp)PVaGeW5BypoE8kcpiDHycmwzOJamboIFa9Ep)POP(l9Sa7AcDjjeS)ipoHgZS2KGbHxG4Z2rDgy(swFlz5SB8XlsxU0sUDR0nz)5jI(JZgJetFUlDPlyeDdqB3broaN2NmmZsqBi(Uljj4BtzyyylDx55pBIaaokzfMBrt5mIp(HbCse(PzpuimOzCyAmM5gswfWpda7eyGcqYaSiKsb9NM8AZehSn4K1K4vnuCgNGcD3MG4bncbFCenM45Ma2Hgbqe6R0ey5ng5UHkASrOuA7ZsQxkB2uD2gbIc7a4ady8eYA1PWoKK3mSf2YtIlPBHK(4e31eV11psWuTIsbnSGWX1pusuefoMc)LlCKDt9dElS(76fsYh2WB21HLmVSwht3g)THv21apkn0hEOCFj4iejM90eRhgnAqn2aCYgCmhSIITIsMTdlaLgaScOSy(UsGLct(4IZXWSdiMvqaYkg)FClPULLcL4HIXUSak)Csj1DD6ocC2skaPMbwRJd6QvHyRi6l4iyspyOWigGI9D3Bp)LIgaVty)FsSdFWWBgwS2jX29lDNPdsSl4nFfE0GHdZF4i(ZU7BLB5PzhgYonw(Vkp2rJgPkDPrFhmGrTWBypW6C1U47B2eDIB17Sj6fmUNzw0mdJEMv5AsBQNzAAqUi9ml01KQupZ0OK)xpB2Fnj1EZqvIvMxkwgvlNjZGS1uPTPRzwc0GCJmmbAuIigLdnlQVrPqlcXAuE0(4zgLoTi4Hr5r9EQnQQ0TerkCODmO2sm1zA60su1zQ6CL4QZu23TsK1zZaLZDftHJvdBpnpPOvo2VaHuGbRC7fHegNLFTj7UKb4XNZVgfCmAri235do2sB2fDUVY9o2hZuWX2lb2RKqqo2vuXChoOznbwodGsqF(IalG(EnH(yKDnb(n6cCreBnb(bTbwksSMy)wnXwocRMq)ZAc9jro1e)3PG)rHQOo(hvPCho25oLf75aqFFLGwUC2fsnP2D9hdeiaFYDkOFyKYUiQrNciupYvyfLDfFbmupDDadfFSxaf1dshqPW5PS815eT1ErpLBQNfpDVXLUIbPfh5rkTUl0J6rZczo6Nvw51C5e5WPEA8aCsEZRdUAU1IC4vprwS3Pi5OQDpVdb1ZCxPd)o4fKV(3qULVI8LFhz5aztuDO04iz9dBxEWFv3KnmeDpYIPBIyxi3JEKft3mmVCsv9iJMU5oFXSf7r2mDFTa9sdUhz4uZTsNC46jMhDYnDQjtMSNyxfMTRmj5EKLXSj)36AUwQErDvA2TML5LCQBsO1mCRBsD0mCRZssZm0RRshYmSRtt8Wmu0aH4Bpr0jy69DyW02pdeeSDHTmdhQUISM9IoAuXxVxnerXYEvfF1SCgOWBQQ(Vvx8wZZHQkGCDf)18SOQsq)9V4XMFUvvHXRWxH23nhaox8zXS)tzX5mxa3bvv(coo1TQ6nJWp9k3kynt9tIPeGv)zZKtxGWOuEanXX(J41Kqs28H)X(V6N8UD())]]
+    20261114000,
+    [[Hekili:LVvBpoQnq4Fl7xstu3sEz396DRAwPEQT6UQERQA2(vioytWnagHnB6kDk)27yscX4eioa5KQ4l7sGzEMhp2EMHXc7X2VypdJee7NNmAY7gpE89JgnYEM4TyI9SyK7k0s4Iiui83psqCXM5Fb(lj5TnZ7VMTMtd5wUSWbsPFlGHWsexKsdeFoYEXjbNhtCTN9P)(5x(1)6XfsqDc3IP9mFkgt2QiH7EgB(4M5cFYM57U3qpwc5vsYM5yIhkna07N)Z)yZC42BMFeqP0HsIWh6Ngb3AioMpuYBm8VqN1e0Rela1Gb3cwjbfXdGrcgUMjTkLVzocJzrFhCXkYBCRnZ)fKa94jyt)V85xaq8fIy(JdhUKk8txihad1eDaGjWrYdOp4INGMG9CTa)AcZJga(FKRGYI4wXjeq5fiXuxuqGtmrCl1B6nW)DyPIEYlSWeeU3ncuajsyfWIioRzbEwKi0Iayu87hH13pDiWb6RK94ThLtl7wNghM4swLzDmzrQNNL69TsJpTYiPJhiRNdm954JwVfImao(zQW08r85hNsjqXuSJhnHCBkNaKXZzPlE6yP8cuYsqfWUCkM8qpbnK800huvNeKgr4ob0L(ItaWwf6PbKkalcymW(PjVvp1HzasYkA0YAQoxqrboRtqc)AHaMeYIOUojGFOwaeI(hwcSikc5eZK3SwOuyrQhZnLpDIjlw3UcqamGlsOR0hcBrsDXWAylnnQGTLAIjjoROURQwsWvTKXalSGkivlknmKbHHGF5aHKIRw41W8VJBantS(3S9bwQ8YAveBD0x7x6J65Yyby4IIplHeIOr8NgB9WGb9QWhqsIHDJGxuUuuXTTFcOGaWmG2K57lawkm4JYJwaJoGyw((iRiY)kSuESQwOexeekG7ZeNslLhxLTdHKj0CqQqWkdCWwUmGyfYELecd6E9LorFue2zN)8NYVbedKG)b5k8E9VPF(CNcB3n1DIhqJCGSvljd61VF2fhWF6OVw8opnDViBTyXFvu2bdgORDbPhbcmObrd7aENloeFxZNysERoNpXSKXDm3IHvy0X8kxsztDmxtnQfPJ5HUKsL6yUgT6)6yJ(lPO2B6RtSI8sZZO75AZkiBmvAA5ATlbQrTrTmbQvHiTkhQxw)wLcnifBRYJMNpRvPtdsE0Q8O6i1TQPmTfrACOzmOYwmD1S0XTO6QzQt1IRRMX(M1ISR2iqBFx(q4q3W2rZJAAL9SxHukGWANotaLl4zhl02drbU85SJjAxN0T)4(tIWE2(UXdxLaRmsOi7zxsx5TfGXlb7dDPxf99yk18onnv2ckP8bKYRFrfPs6JVe47ney16ska9PBnTe6hme6d1ByiWVZuGZRJWqG)rJbwP(adX(9gITAEFdH(dgc9r5Zne)XJ0mGYoGtF8chSP6dSNLLRqUpqIQ(oTJwVURn75QnUY19hsqLHEz71udDvHnLqOVPl3pQMI4myOV)ApgAX(pdk6BL2JsEqDv9Rk4EJJUFm303nE8IJZD0hktoQsQmVlTJ(MZCDoe)x14vCOjzWPVFCpCkzzQcUkonLm413tMV2jVOTYdqNHWe9nDxyi)RWlUF5V5EdF19Z)U7QPYMOhqP25Y6g(UmFMEyYAMKUd5XmTuSZu9rhYJzAnMNVSQoKtZ0QNpB9IDiFMPVyGzfc3HCC61wzsnCDe3Jj1MoPnlMSJ4xLUTlSi5UJN5U2T4)g3ly1YSV7AvMDJzzg7Uof02oC76u6y7WTRwrATd9UwLd1oS7Qw4r7qXwifFZjIjjtV7kMmT5JajbBwARwHd3xElzB3dGPwnF9(YoeLsB(A7YzjfkR)VL3822NdL1a5QA(B7ZIYAb93(Mh3(JTYAmEjXkm(mdbWfYphPDFip2)V5Gb3RzXZD54G96hyJ44Jcm3xY1)mLkay5FktzorG5OuHplXE2NiROb0nZ7)B7(gWYES9)n]]
 )
 spec:RegisterPack(
     "Marksmanship (wowsims.com)",
-    20261110000,
-    [[Hekili:9MvxVTQrq0Fl5LuB1ui2T(2CJKVsTQT6ER6nQQK(k41SdWwdSODxIvKQ43EN1FcRn4TetYdry2zoZHDyoZSc)j(p77rjkW)PP3p9dtMm5E8pFp1RfGVxbjCfjgViNKH))ReXkzgjxMWkQwmAnFTKLjDc5zJ12(AkNq14TSKLQ(sU)YZcTSac99(8F)0Z)6F9ywni99syukS1pqg2zaFSAHkbQwS7EUrCb8ciQwqHiszQQAXp9N)r1c82vlmGPK5Q5G0nPmxbcxAH0vtzQ0nllynqEbCqmthFhgdb6wk(qqXR56yYKvliukp)BWlwbVkDQw8lef5XZWLrF9lpJGKOufYhDDJzQKYLA67Ay6yetKYWmYhdPtjtPrHo4wQGhXsXnEsOIXZLofcaDEjrnFl1Lb69V7yrZVHcllJICQFFNYIQF)ex)25Ue9JVkGhfGBHbjK1BHydaNUwDyMlifmAqeta3vkb0SOG4q68jAauermOC4LkjJcZo4egriTmhKbPS4e1zCKLbFA(SB7aGLPCog3sXR9ZDCpbeRy5X9YDkKXZzHbc8POxaKr(hUatk5KGcU(M9cLgj9iEyPC(uBs(ORyEtHmqQeSvMpcBrQEkCn(IklVrS1EsbrWkw4QUTe3QI5CmclzkOBtzzzCS4c)vawOv0TXRXSxqykBJzJUz7co15LZQC(68)DuRlDBiNNsXlAUMaYiSC5NM4mB84B7ypaefqUc3f1VivBBBFcOHbygWiz(qDWiIqsoeit4QtlEAyzgkNXSXWolo5XXPGtg)fidP4T3mcv2IbAW(h(57(nw)d0VBK(MjK89)(Wp3z(4X9O8EiPGvcedkbSrIzijGLIudjf()iZnK8OhfQdjDml1hYyziwmKHY2EkgC4TXGo7jnyr60EAdwOoxpXblyVB9uVYpb(E4qZsKqgNTiLjvYnhPz7PaWlFAZrCGCYYuG6)Z(E1ErvV4UHR99o2903luG5zbJGheQ54y(kmIwcy9UInG88t6PH(7Te6JD7Se4FWwGp0fZsGNzjW17ozj0FWsOpPRJL4)Jg4F0PwgO(yiRVGV3gXo97fiOp0kOnNR8Gxt68nYJcSAW)Ob47nSELxhHeryY9TardfUlGHzf1EmmKUUakMLr7r5GMuD)7sB6nloDk3mRdp9vJlnQFTKtDlRL21XXSSCVp1MyODXOh2aHzb4He6HbbUec2wN1Ia51EeJnCYS2S3ASdc7mlY7Pm9GWntnIEQ0peCBQP4tVBwmiSZ2bfSRFZGqrtntB0LU6eXgLTPMkOxsz7QZsnjAtETfTXbHdM6ZThV3w061aftn1(V4efxxoRPGPu)LNi56ZbtbDBMO56ZI2gV79FIOR9ZMs)Xm29bio3zYo)C1xEG8ZCASdcnsZpKrdaB)JDSHUiHjLQeUW37ZWkwkRAXOFB33QzZY()h]]
+    20261114000,
+    [[Hekili:vN17VTTnq0)wYx8SXYKJDR7sdGlWg2gAhwdgM7(QKPfPK4mLOajvmcWG(BFhLTCOPLKzvSkW(scT0DV7XFCV7iK)m)V4VcJue)hNF383nB2S3E3D35Vs9CoXFvokClkggKHsH)(zKyRmfLjtO5LRhVJVtstLEH80jABFMXrynEBkOm1NY830i0YCsO)Qp(3p(LF9VEi1as)vjumMS3pImSZa(q5AvcPC9HNnnIlipreLRXKiubtvU(N(Z)OCn84Y1wWuqNQ5GCAsrMIiMIZLt1uglNMMgSJGEI4byYMCledb4gdMeyymxhtQSCncJ5zFhmyl5zPx56FbPqp0axg)5p9faKeLkx(W0PXuvsXgn9NAz6eatGYKfO3hINJMJJc9GLubpIYGfEuOIYZKE5cc48gKAziIXcYjQBPrlVb(FaVqnspWdtq4r3OqmsMYJXZib74SipsgAddMf)(zy99lNcCG(ePgVAuA229lAYa9oxv0XKnfrrEMp3RiVzNr6fEGSrbWMxqcA3EiQa483zcZRFgF55P2cuofherfKBlKeGmrbXH4LZ02RqIyWfiUskMSW0ncRiJidy04evdostjFy5IrDaWggNdXTq8C)Chw5jIT0S4E5oMKYZOHbcyw0lasr)dxaB9zOGCU(H9cLtoAfXdlKlN7YrS97BkGbsLGU1EkShjZTWDqIin7KyR9etebBPHB72syPkMZHiSHQiDBknnLdIhWVcaHK8UnEhS7feYOvMn(M9VWZKxEBZ47Y(3XT(QrHCodddo9DcskIMj)WmVftMmQJ1aIihYHGvr9bjJLT6nGtma2bS2mV3emKiebPIYeU68KNtSmfKRPUyyNjN84ygXlL)ejfO4OBgdk3XeCq9KF5HFdQme8pmw)Weuw9Vp(ZdMpzspsVhsk4KaXGsaxKygsc4Oi1qsHVgzUHKh9irDiPJDQ(qgllXIHmuUwtXIdVog0znPblsNxtBWcvt1ehSG9nRM6vEg4VcUuGeiK1DNyuPswDLT93Ybg(y1v4o0SR)pxFzb)v1nmdJeWUQGI8x9104SVccEly)sJ0MOxJP2Z3y5Pr6JMYVG0XA6Miz1KOgW36iGM1QpbYM7)ud9chH(LAWoc87Cf4J1wDe4F0rGnRz6i037i0Nvl0r8FVf(ghoBUn)xcP5l8xvjbRpIcGo7Uwr902Dp62Sops(IUFf6TLIzQi0rm1q0wM0jkVxad7CQAmSKuVak2js1OCuR00)U0mF1IMNZn7mXZpCCPRGyS5yAPX(Uoo2jM1(y0jt7Yr3xbHDk4Xn0JnOCjeCntRfjYRDRpvCYo7S3QSdb7MBNL3tH6bHB2Ae9uRFq4MT4tVlxmiSZ1wfCRIZGqrBntx0LU6eXfLT52kOxsz7QZsnjAtETfTXbHd26ZThVxx06vhfZT1(VyhfxxoRPGTu)L7i5QZH3ylO7shnxFw0w7DF77i6Ap3u6pI0Hp)Y)FURyZ97F5lk0WTepk)jT)4sNay7FaQQfrG5Ocvcx4V6JKTugTC94F7WxUR61()3p]]
 )
 spec:RegisterPack(
     "Survival (wowsims.com)",
-    20261110000,
-    [[Hekili:LR13poQnq4)w2xsjQBjBY296ERAwPw1wDxv7QtLTVcXbBsCdGr2MeTsN4V9oM8lWjqCa27fUhorGXFZN)S9mdZI7y3xDDWijX9Lj3n5dJhp(o4FUoY3siUoji)vOfWfXOi4)Ds5RPRrHzZS2W2iOrcBFw0qLDVfYqyfwZtPHYph7o)SWksi(UoF6FF51F)FEsSdoxNLumMSDmeHFLo6PSzYLKSz7U3OagNSMWZMHjbO0qz2SF5l)v2m42zZkarkDKYVIrltJLe(iCIyKIMyXiXAVne0AInGx4WBb85OyriqCmCnt5pQiBgcJzXFhCXkYBc7Sz)gsIE6m8W6V)8RailLYeXtJgTGkxMoxr9rAMoeWeOl5b0h9XtqtWb(2GmYzb0qqOr(sklwyNWjWGNJKt3sDHxeIV6wAW0BWK5Pbb2fVVDAs2FEYq)(PJqQPV0Jf4bYN3s0MTqKdWPpRimt5Oek2lGYj3MkiGzbEl8XthRaqI4lisBwQuqXKhgiPrKNN(WHbdEMeMgteEH0flLNbGTdyGgqfbyEiJb(pL)wZgoOne(kA8IgnCmjIft994WSOraeH(pghwCIrEjm1nBekLw8dy(PIPtmztamuy9tcmqi50v6tHTivCPCdSHLgxY3QrIjCVvu)v1BjivlymWdZPss9MsJIyWHm4xEWbUK6nEdS655hsZnZ6MTpWUiVSxfZ2e)vRkF0aFgledxu(zCseIglEES9ddhoOgnGWtiXsqfvBKkiB7xakzaScOTy(yrWqCFumXtSKjp9qujlJGqAutmS2dPSflcj2rS1KiGIdSut5LOyS3Uz)pF4gqKac(hu7hhyDJ1bLUaH3j0N5b0ypiY5cYWbww5xCe)P391Y355P7nzRhl)RY2oC4q9rxY67adg2Iip9a15QdN230etYr0Z0edt81ZuLRjBEptAAqkYEMcPN3VNn91kMPNn7VMk0UXsNyL5LMYORCDz5qTMkTT2JULanirFNsGMLvTtPqlsH1P8O95l6u6CHGZDQVQpsyN6ktF7Fno0oguB3dE380PDF4DZvNR7fVBo7Bw3p64zGRZAiClqiToahsfsrEtN32Zw4YxYBcnjgnpKGD)vxNcBuvpCx7qDDoMf11XNdRZCkY1PI2q6kbpBiWfZowc6Z3Bof03Bi0hZ6ziW)OPaFiBMHa)GHaxmlLHq)bdH(KSpgI)pPH)Xbvrlqp6YIpW1jpONAFba6JvcA5obEyuJRDN5XaTkW)Og47nS4jWACjGW47QaIsr6Uag6NS2JHwiSlGI(XO9OCi2uXXxxmQwhK6uUPFo80TgxQ5SfwCkAzHLDLF0pwUFmfQCO6GspMdH(bWdlOhki4siy65Skcu(o8sxx)BD1Yx76YV3vXeaJ1JC04ma9dTlxZ0dm2WuB9iftpAFdZz3FuSj6j3ACXi9inZ0YKnRkREKWPx)Ij1i0tKhtQ9zIEnwxQ2NEI2PKMQklSIA66rkJPVUPz1Q262IvQTaMwh91wvyRzzo7mTM1RR(RUHBgxB4vvPt3WntRc7ARPOty39MwXtJYE3nuuVaJgKNS9eXKms3xvhjmmJu7zPIevLw0Sy)Ddh0Z)uT)AN3AutWUVQoEuzxW6woROGEO(dlsv2fTUNd6b03ZH66cx3Zc9q37zX3(U411ZnP6tNE3N7S7z(7jSFMwUxWxUjYYt)liCiqJq)ZMUeGv)PvNtxGWOu5sg315tKv0qA2mR)y3xgE(JD)))]]
+    20261114000,
+    [[Hekili:LVvBpoQnq4Fl7xsjQBjVS7EDVvnRuRARURQDv1X2VcXbBsCdGrytIwPt53EhtcjgNqIdWEsv8LDDGzEMhp2EMHje3rUV66GrcI7lJho(dJgn6(Hdh66iElH46KG8xIMddIrrWFDYsxrxHc3m1AnBnNgXT9zr9LY9widHLynlJgk(CS7StclpH4768P)5Lx)TV8eFhCUolOymzRoeUFLg6PntfliBMU7AdcyPKvK0ntXKauwOyZ0F(V)ZntHlVzQcez0bs7YhSilwqshGt4dK0eZhWx5TMGwrSb8c7FlGFkkMhcehdJzs7r5BMIWyw83bdwsEJBVz6VIeONobpS(Rp)kaYcHiH)0GbZPIfzZKuFGMO9bmb6sEa9rF8y0yCGVn4gtzb0qWrJ8fuwm3ojLakpdjM4Jcd9siIBPbtUb(Vhlt0toWgtq4E3iqHKyHDilM4TMfgytIrZcHzXFCewF)KbahORif4vGYPLDRtJ7fHsxMBDmzwwqGT61TZsoTYiPJhiBGhSW5TaTEle5aC89uHP5Z4lppLsGsOyVaAk52mobitG3CF8Krs5fO05GkGD5um5HEcAe55jpOQojmlMW9cPZxiobaBvONgqQamlKXa7NL(w9uhwbiPlPXZRL6yselM67LcZIAbqe6FzPWwGyKxctEXAHsPTybm)m(KXMSvB76NayaxKsxQpf2IK6s5A4ajnUKTLAIjPElP(lpVKGRAoJbwygvqoVO0Oigeeb(Kheqj58cVgw988dP5IzDZ2ByRYl7LXS1XF1QYB1ZNXcXWGY3lLeHOX8Nhz)q)(9oJpGKMaNLaVOCJKIBRybOKaWkG2I5JQGHs9rWrs(cM44drLKmccztnrWZEiLnFEiXoITIebuSNLCkVafJ92n7)P9xaI3qW)GC)ypRBS27Pvi8oh9jUbn2dYmmN0VNLv(Gd4pz4xlFLNNuiYwlw(tLLTF)(6Axs6HGa9BqKNoG35QdN218jMKJOJ5tmmXxhZRCnzZ7yUMAKISJ5H0Z73XM(AfZ0XM9xtfA3yPtSY8sZZO75AZYHAmvAAThTlbQrI(wLa1lRARsHgKcRv5rZZx0Q05cbNBvBD(iHTQPm9P)14qZyWz7EW7MLoU7dVBM6uDV4DZyFZ6(rlpdCDwbHBbcP1H7qkxWZBQ(2EsddFjVj77ApP7Vu0ExxNIwCcJsHv1ukY15AA1PRamEfyFO1NQOxGPuZ700u54JKYhqAFUDvKQO5OsGV3qGvZzxc6t3Xqj0pyi0hYfBiWFWuG3NJ1qG)rdbwn3PHq)OHqFuordX)JA4RSj90nM9GjvVHRtEOy5wva0rdRe1YnOCVAJo7wZdX)ZrVQJAQrgoJnLqu1jQsrGVag6NTkWql06fqr)Gubk7JzQQ)5ID24GNhZn9tIhV54snnwzXrvsL1DPD0pywOJsfnvhw6XCi0pcUFbDFHkxcbtpPvrOY3Hhg86FAWg(4Gx(5bvtbmsp2rTZb0n8D5zY1JmwZKBDipME0(AM1Ud5X0tUv7Yr6q(mtlu2S6S6qoo96xmPgHoI7XKAFgRxJ1LQ9PJ47KUMQklSIA66qEgtFGtZQvTXTRtTQWXMwh91wvyJzzo7mTM1RR(RwHB3zCTHxvLoTd3mTkSRTMI2HDMwXtTYE3ouuVaJAKNS5eXKms3vvhjmmJuZzPKevLw0Sy)Tdh0Z)uT9AM1QvxWURQoEuzxWAxolPGEO(9lsv2fT2Nd6b0l4W56cxRZI71dDxWIV9DXRTNBc5RS(Ux2B3)389CuOz5EuFCmx9MBlo(B2yF4pU(RYEjaR(1Dp3jcmhLjwWsDD(ezjnKUzQ1VV73jq(TD)V]]
 )
 spec:RegisterPack(
     "Beast Mastery Turret (wowsims.com)",
-    20261112000,
-    [[Hekili:nAzuVTjmqC8pl7P1QfbHS1U1iXKw12060A10i7vdg8rWlGnY2SO8cF23zOJqibvRiLyzF3pF35)NDibKnKig1aKNwTC1TbbbRwUCjjYCOgir10SD0T4abTc)(EGQnTjpIFdQdTjBAukaN4Q9Y9AEL2ltwDT1RdLskZsoTHxAEqqsV4MORHms03(9tB(YVwNAHhx1ZMevWzmO3rqN54EVUnXuaTjppNFUub)fuTjmiN2uIM)PF(J2eC62Kzb2W9TbM2VOrGl5ZQ1(28GH)u5HClVEbUpkQqxI5edhlT7lx3MqzmP414GDWbTxBYNPg66lepx94dBqifgtTETV)wUPOj1Mc(tm9AKjguWn07YyRORy5zEyfwjZ5L4jcnZWLcTxTcqNtPMW(GwJfs1Uf88WxXG0M8CVXZ71u3(9ZC9nH(uBIBIL5XyzmUGUVhrhGZxBwmAbVguX6cPzWGqOSra64s(2cZIgnGKYJ3MXcdS7HHxbFm8MbZrkPLsjloVrDWnZXSdu74IToAU2WPLX7vutHtEOO1CmE4kWjZzqLuWZIvyA7Kdv0)iv45JGgxlTt6KxNCENlZA0HRC5C3EmbQAqyIXcbw069nySVNyWeNPQmQao9m2ongHSZM9ebbjc11ACLj3guY1gD31r9nR4WN6UEce00sGrUNenQIyx8z9pAYiXfjktXXCMtXRX6lyedUxoI6OSBgqV1vqdcYza9oNbnsQodRBCK1rr8mGU1rqJL3ZG69oI6mH)m8(WeEhnAgX(XTy8cKOoPUvrGqV7fHoTl4i1twzaBGfBWYjC)VpJ6B6SBQcFWUHgPoZMQEhcHJDwe7NOH7HVu7ZLlhVCD8cTpdX5zplCcW5F64sTsZLvyErBmfsf(VfGD8so(c6xF(bYULj)7d]]
+    20261114000,
+    [[Hekili:vBzyVTjpqC8pl9nDTAvqiRTBnszsRABADAnAAKN3AWGpc(jgmY20O8g(SVZKecHaQmTxnfPGL9D)857(FgiEKLeFg1aKftNm9EppVBNmzcX3STai(f0410v4GCAg()JavBQcFg)huBRcxwQuaoXvBKB08mTtSm7ARxBfskZsoQKlmpLtI6Dt0fqmX)B)3ILF5xZISWdY2XM4NYzmyNJGoEK79SQqtkufUFo3ePcEbuvHmiHwkqZ)0p)rvioDv4Gal5U2at7MwMJl5Yk0U2ZbdFK5GCfxFdUpkAUwGNjgowA3xUUkKYyY83GdwdB1ovHFMAOZ6jEU65NwIqsnMc9mx3vCtAzK9i42X0RrMyqb3rFiMnLoLLe7GzyLmHlWkcn2WL5ANcfGohrnZJPcrqbyUHNm)c8zGS0CPDGddOSlVWqfqUXriZHGnsrIdKtJe4P47NX6TZDXyG)cCG3bk9B7U0LglHQ117odIktsCApVtzr)otTPCmytcWcyqkDZoe1aoFTbXOZ5fGkqNknng83NsE9ebAbikZbDGGVk1CtPgW4njyvmBUN1ddpd(487A7qKqkzbjLQTJZCmhcQ188vJ0CTHtfbBuut6O8qrl4y8WvWOmNbzYCECGcp2JYHm6)lvOkiNguiTtokVorvLiJl1ZNog1LvmaQcSWgGjcmPTZxV2(EIbDCMQIPOE4eLKDAmczNn7jYoIp23QXv6CBNGRn66RB3DzeoCr91V7LBKhp0pt8pizXrkoE(4uI)FI0LyWnFa2hLYTPFGP1Z31XZw1jBi3qQTKVnR9LrlQBhjQJndda6UXcQPnzaq3pAqTAGgG17hjRJTwda6dJeu7MUbq9WirDw74a88M0bylfz)9Gh3J2lq8R7aT6sl1Uk)ZP2T78i2twPHRxn3Hu9T6NRTRRgVXUMg8AZ6QFBcHJD8e7p)M3c9VtBD)vPxV82tBDt27SxvFcWHFDEFT4dLRXdiT0Kkv43ocR5co(9uFD)NlvVm53d]]
 )
 spec:RegisterPack(
     "Marksmanship Turret (wowsims.com)",
-    20261112000,
-    [[Hekili:nwz0oUPoqy4NLEv3OgbHC6UTBK4i1Q2QUvDxvvsV1WaEi4gWgzB6QCdp7DCskHqcArrkYY(F(8mJ)THfWwZI4GfzpTCXY7cccwUyXcwKDxnYIQHSTWgAGeQO)Fe0BnvG0uiQBtw3O1OTn5MNvpBevgVmv1mxm7kva3XnTruAFqYsV6wyQXmw0x)1tR)8pxv1dnlQqW54H4qt2K24vTj2cSn54C(5kn(hu3MWXCOPKK)HF892eA62KrW1i8D5KXVOrArTpV247kbUXVQYJOwoBoTlAkWsQC40yLBxfM2eGZvYxtd2I7mETjFcSWQRKn384dRjifwBTzLV)gHTOj1va(dKoJysjfElCFgFjSKNN5rnxTkxushfqMvOKgVAnsbNc2WdjTj21jNlYdFfhtBYZ96pVxtD73Ui03e6dUc3gRYJPMyCb88be7bC5AJIXif1Oo2uOSDccXYgjAIlfBkSZBmirkpEtgpmWThwrf()H32jNOKwQu848g9UPjNQouVvi3mj5AOwq0fACsY5yLskYI1urmPaQGFR0u3wcX1k3KtkQZo9YvznMWLt5u010rDnkTXgRRfCi2G(XEMGbbd6mqINFI5MMYq(fZE2XllICPgALbxRlfgRz)RkhU4rdFA)RmOeslro7JSOEDe3IhDZKKEwfwuMwq1SaOxJo0WywAVMiQtMOra9FtfuN9AeqVDIGoz8gb0TteuFl5iOUBIOUWSocV3nG3jrJyqpTf9xGfT3E6ofjOV)fHo05EI6zR0HnWH9(by)xi9S6ozblgtxN3FVSHE3Um40LbM7xu3dHxZXF9UXl3gVIJVlpV4D5Zao(B3xZ9pwvr1f0yluA6l14wrPG(e2xo(fQ9lZ(7p]]
+    20261114000,
+    [[Hekili:vBzBVnnmqC8pl7nJnXustzBWQurceGyiycrkV1jUXxAm1XoYpqvFt(SZ50NsBt0cIxHQuJL9D)857U)oHerMrIzulqEA8OX3hffD7OrJiX21vajUIMTKUahiPL4)FJQxAkPstbVQoDMtRbBD6vRuRm8stqMQ8AVpRfkkZZDUJlSpkjZ7Clmvqgj(Z)8PzF8htkBHMexWzmyJFGjBqB8K6uBbuNUDUWCLg(nORtzqo1jqZF33)ADkoDDAp4C8qFmzclCslOdzvMq)rGzclldqQIRVb3fn6OapomCSYVRCtDkLXuYxGdwcRnb1PFGAPt6iAU6BpodHuyTvMjHHl42c3C)bi8etVgzIbfCh9Hm2y6ywEwaMC1QCUalf0mlxjnbvAaDEo1onJkejvG9gE(0lWNjkN9s)GagqzxEHLkaPnqOKqYkLipaK05c8u8LZy9YPHymW)nSJ3okDB7M0LjXxdB2Dgm3LNh0E(axv3ot9PCmyZtWYxsbD1genaoFTEXyK8kqNyku29g8VNsE(ebAbiCsWKi4lkS34magV5jlYytJ8Ey5LWBNExBhMlukwsUtVEyMJ5qqVKlxmiZ10kosNRHbzodkvsEwIgpedYHs6VuASMkPjvk)KdYRJ6rYvzoZ0XdPxXxAbDfwMsmwFkyJVrT99idoXzQoJIv3J6l8tJri7SzpQjIeJQqdUYjxBj4gRP5wZnxSGdFQ5w0TnpK3VtDsI31aIJ0C88XPK4)MgrIf38EyFOXSn9Dm9E(Qt8SvDYhY7j1UbUnRTLrpQBhiQdT29a6UHcAFtFpGUFGGoih6b0RhiO2cLEq9MbI6mjup8E4eETAI6w2CylAVajUr04BLqOrJEwQNkOoG9Ov2ZnQHBFIGwsWg76RH(GMSXSt7E3hchePe)V49Vg4)hLy3vPNV82HsCF27S3vEeW(FFAxQY(Y14bK6Sfkn(DBWsUGJFqZN2(9knlt(Z]]
 )
 spec:RegisterPack(
     "Survival Turret (wowsims.com)",
-    20261112000,
-    [[Hekili:nw5BVTjmqy8pl7vRrRcczRDRrIjTPTP1QTOPr2BnyWhbVa2i)NuL3WN9DojJqiGkksrw2p3pF35hBibK1Kig1aKvlMV4(GGGfZNpNez2xdKOAA2w6gCGGwH)hzv747OLnjRTkfyAsU5z5ZAEL2ltwnZPFFPKYCmtT8sZJcs6G411qgj67)z16V(7L6tyjrfCgdogdOZEXnCztIPaAsonNFUub7avtcdYP2su(N(1pAsWPBsgaLL77YdTFHvyaLpRw77sBM2xVZdjwo7wChuuHUelbgow62rUUjHYysXRXbBH9AVMKVqn0LdKj38ZhxJqkmMA9sF)nCtHn1L8(9KodzIjfCh9Hm2c6cwEMh2qvYCEj26PzgUuO9QvagCk1eEmP1Xvu12B55HVIbP28CVUZ7zRBE6QqFtOp1v4MyzEm2aJlOpFeXbaxV2Oy0cEnOI1fstRGqO0kaDCjFtH5wRgqs5XBYyHbU9WWRGpgExRCKsAPuYIZTQ9ttowDGAlxSzsYv0AosNRGjjNbvsbplwHfXKcOI(xPc72cACT0n5KI6ItVCzMvhUykNIUMoOQbHjwBCTGJXg0n2le0lyQkJkGlpXCtJzi7QzV44LeHUunUsVRYLCTrF4vKJx6WHRo8QciOPLaJ8zsuNoIBXtUzushRcjktXXAMtXxFo2WigCVMiQZMOra92PcQ1EncO3nrqNnEJa6UjcQRLCeu3pruxzwhH377X7SOrmON3IUlqIoypDNIi0p8Iq77Cpt9IvAXg4W(qpS)pKowDNSG5JPR17FqwFVBBgC(YaX9lQ9HWHC8d3nE524ao(288Q3LVa44VDpK7FSQcRlQ1uiv4xNHT8so(jSVD6luhwM8Vp]]
+    20261114000,
+    [[Hekili:vBzxpUPoqy4Fl7nB3vDfes3DB3iLk1Q2QUvTRo6q6Tgm4HGBmyK)ir5g(T3XKVijGcv9QQifSSN5XJNzEnqciZiHmQbiVmE04hdccUF0OrKqZ6kGewrtxqNJdkPf4)Hw1s(sQOoEMvPatD8nRKR08cTxQS4wN9RfskZXmXYfMNljjDIxxbPKWV(ZxM95)FIElwsyoNXGn(a60lUHtQJn5qD8258ZKkyjOQJzqg1kqZ)W)996yC664oqz5(U4q7NBlnGYNvP9DHnt7Rx6Hef3EhUdkAPwGhbgow62rUUoMYyYYxHdwaR1E1XFIAOt6isU5hppdHKBmv6j((Z5MCBIl49pX0BrMyqbpqFkLnMoMLL6HjuLmJlWupn1WLLAVkfGoNqnttPcrufyUJNn9k8zK0AU2nWJbu21xzOcO04jKLq0kPiZdkPjc8u8TZy96P(ymWxc74TJs32UjDPJkOQfn7odsSzzETN3Zw1TZuxkhd2SiS0fLtxTbrdGZxRxm6sEfOI05sZEd(7tjxorGwacBjOJe855M7SAaJ3SO5PSPbopm8c49tFOTdjcPKfLzvRhM5yoeul4LZhK5kAfhPZvWGmNbfYsEAKcpedYHc6VKkSMwsJQKUjhKxh1JKjtT6PJhsVIR0cQkSmfPnUuWgFdA77rgCIZuvkfRUh1x4MgJq2zZEutejevHACLtUQsW1gDZTKBUubh(sZTMBBEiFCN6KeURbehP445JtjH)jnIedU59W(qJzB67y688nN4zR6KlK3tQDdCBwBlJou3pquhAT7b0ddf0(M(Ea94abDqo0dO3oqqTfk9G6Dde1zsOE490j8A1e1TS5Ww0EbsyJOX1kHqdgDrQNkOoG9Ov2ZnOHBFIGwsWg76RH(GMSXSt7E3hchePe3VW9Vg4FhLy3vPlxE7qjUp7D27kpcy)VpTlvzF5A8asTMCPc)wnybxWXpO5lB)ELMLj)o]]
 )
 spec:RegisterPack(
     "Survival Melee (wowsims.com)",
-    20261112000,
-    [[Hekili:LJvupoQnq4Fl7lBjQBHK0Ux7TQCsTQT6UQ7wvv2(kgdEG4cyJSnjALoXV9ooHKaeijxV32vR0kh7z(8mJnFFJC4IWNcdyude(4Y5lFZIflwoF(8WaZZvqyqfnjNMHde0s8)b1Q1810IMOpbfa0e5SrUrZl1UjYYzwZFUqszwiJR5fMpicJhfDDfKeg8()5XN(9)(bDlQHbR4mgSZhqNCP97HMiZkCY258sLkynOAIyqkTUW0e9l)1hBIWPBIofPAUNnk0ERQfgq5XQ0E2GMP90RjLwRCrylMDhUnkQqxGPbdhlTBlx3erzmP4BWb5WZA3MOFJAOpms448Pp8ecYkJPs)GNxg3SQo2MbEdmDgIjg1W903MWwsxYstCXIQsMYlWQpnXWLcTBLcqNJPg)DHUMusv53Xt9VHbX1PPUDN3TUQ5ppX1V13JAtFdrMsWQijgOAZwm2IWil2fiFOOwaAsbpBL5UAnGwMsYsy(lSyy4LW78V)G54UfxiLmsAT65RZCm8bvoxKDvMxs)xPctxbLujTtEvEXGsPGNquyUCvoOOvCmj4QR2CdgwAJINp0JuzsTU1tQkdmUBW7fCrpa6D(UZJLxZ58xWElZYka3s5AOeeMBDAdgzTrZzW936CJJZn7G1LQsOcGOxjnU5c5gXNhzbUGGFTKbZU1Xz7agrbLuUq)Z(Z)C)zEN)EtWRBa776)R(2oB2SHE3Z65ObZ6DNqkYKsmXJ5g4fEUApMzGIKZtYFHNQBqobssbV6fEEMqlki7(jsZICZwjy)n0ICcx0H2yFQE(R(tsXCYnNjTKxwkrnqB8G6H9iB014AcYk6M8PpQghy32mYhP7RWJqKXYs63HIApzxpd6PQ1cHvt74j5ylxIDfWBxnmavC1ObdAnXwR12oyADdh(42MKabnUayH)AyqIcRRkonmyQGBVAn2Qt3vcd2Mywen4(oa29U0jlSM99ty2XSj0(xqBBpJfWD4)TlEaIUY4DtRwXSXcYPG6Oa)eanmnMeOds)ta0pCLaDstbtG39xjEDBxycOEZvc1XgjMaOFCYBC9)oQZfQZTzhBfWc(pDXRZdAS4iwDx4WEV0c6BNoI)6iP)YzP)kPPVmp9)RQ(I5t9DCx26x4foBDyi50bMYosrVckdtX(Fq18vqnyOMWj0C7ZVJLNH9fTtXMS7bk2RzBXEOmXL)CRpZQfJHsdx8Q6PqmusypedANARTdz9pSDh7VARDdjWp)vNHXKX(McTVdWynlmox)LfjoxhnN(Cc9q8mV5qyB3n0AZkPkm49qoVG3e58hTpAY2Ld)V]]
+    20261114000,
+    [[Hekili:LJvupoQnq4Fl7lPjQBHK0BV2BvZj1Q2Q7Q6T6uz7Rao4bIlgBKTjrR0j(T3XeydqGnSDFQ7PvAJXEMppZ4XZ8j7VY)EFpkXa(3TE563UA1Q3SC5sFpZd5GVxojkLKGdeKm8)EfQ9S9eEz4NaoaLHZpipOzzANiz2cR4pWLeQfYTfmU5Jc)TdIUohI89(WFF39)2FDRUgvFVDmkfoQdOJU0(DBzOzhoz9CUXsfShuLHuiMuWnLH)8N)ZYqC6YWZrQG5ATcT7UcHbuU0CTR1OPAx9(GmRuoiS8fxJBJIi0C0nO4yPDBz6YqcLkfFdoifEq7ug(Red52bmN5F6J3JGSZyY1366MWm7k2A9a3EIUaXeTA4gY7IORjRPXroyqvjJzCm6tImmPq7KRau5TeZMicNhKdMRzXBUc)nqwyMzh4qbcD2vgcheghUuabhK8yhqq2YrV4podRVDJlAdS9qdEnOmSShdA6GmIkTA3PW2I4yN2Z7uKpSYeBGhn24a88lylq0h9GkegyX2a9Y95l7POeaVqa6aolzN56cnG2tCqseDZkRggwg8(n30wHTCPKgexOEyAIJbjqLYejts8mY)ivyqvqcYL2jNKwuitkyrbk0xMKcksodDcMAYIBqZsBuS0(AelJk01Asujyi(aM3ZeDaOtw0rnwpLSPNXElts4GtMCpKHPfZMxBmysJMrHBMn)Q5ZV6iSoevebZA07KgNuH8G4ldSateGvdsGfZMpVAanqbzeMq)tBw(LUZ8(nnIGj1a976(vxzxSyrFT7i9suGfDYjKIePeD8Tmd8k3xThZuqfKYIsFL7QhWAcbrCw(RC)SQo(XpXYSyhalfJnhi80aMOvzJgx9Pt9hTeZzzoJkjlltI94T2d2VVtXgDbUMiyh5q64hvddStThTbl3NJhHyflBr)wLOAk21rGo9oRHW2580j5qlNHSEy1R67Hmk0Oa9OEzJ1AldTA1WH3vrcSUpP)V47fPW4QIr89gZ4AyJGu5AVIVxLJzr0G7BpyBuPLxyf77hrStEJV9pVAADdzWnQ0qoOJl8mij8uw9jsdTrVbZHCKwDLSM8Ji1MCrBSQBXAH6nteQt0ogbOBMkqpsizeGE7eb6mQkJG3pmr8AtIzeO(Xjc1j6nJa07g9Eq3B3TsZFQn7ebfl4RwEXBz947CcS2l84MVUc1XV7(cBE887E8cBFC5(h)3I7JDHUtxKx5boBCyS6STBr(vqyOFP1MWWJDZ)kig0VRWzf6A8VETwp(rfFTJmjco(WqnCjSy3VrXLVU1T2QfJ(nhUyQ65q0VPqde9O5vjB)6(pUDN49vXmOFf8No1PVnzSVLt9RG8)hsmd3c6Y9UgGetdud8epDq8jEhi)AUGKcZoPY37dqkJZkdN)71pHw1Y()7p]]
 )
 
 -- The hand-built lists the wowsims.com packs replaced: a saved choice of one falls back to the spec's default.

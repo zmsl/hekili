@@ -63,4 +63,7 @@ return {
     -- keyed on Summon Hawk being known, not on the setting (R41: a real rotation shot, silent at 60); its range gate
     -- written in (rule 19 reaches APL lines only)
     leveling = { "arcane_shot,if=!action.summon_hawk.known&target.outside8" },
+    -- L1059 (owner): no pet out, call it; the pet dead, revive it: both lead the lists (levelingFirst puts them first
+    -- in precombat and default). A Lone Wolf Hunter wants none out.
+    levelingFirst = { "call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled", "revive_pet,if=pet.dead" },
 }

@@ -1552,6 +1552,39 @@ options.abilities.bloodthirst.toggle	values.interrupts	Interrupts
 options.abilities.bloodthirst.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.bloodthirst.toggle	values.none	None
 options.abilities.bloodthirst.toggle	values.potions	Potions
+options.abilities.call_pet	name	Spell 883
+options.abilities.call_pet.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 883 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 883 can be recommended in any type of fight.
+options.abilities.call_pet.boss	name	Boss Encounter Only
+options.abilities.call_pet.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 883 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.call_pet.clash	name	Clash
+options.abilities.call_pet.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 883.
+options.abilities.call_pet.disabled	name	Disable |T136000:0|t Spell 883
+options.abilities.call_pet.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.call_pet.dotCap	name	Maximum Applications
+options.abilities.call_pet.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.call_pet.hasIcon	name	Icon Replacement
+options.abilities.call_pet.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.call_pet.keybind	name	Override Keybind Text
+options.abilities.call_pet.lineBreak1	name	\032
+options.abilities.call_pet.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.call_pet.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.call_pet.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.call_pet.noIcon	name	Icon Replacement
+options.abilities.call_pet.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 883 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.call_pet.targetMax	name	Maximum Targets
+options.abilities.call_pet.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 883 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.call_pet.targetMin	name	Minimum Targets
+options.abilities.call_pet.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.call_pet.toggle	name	Require Toggle
+options.abilities.call_pet.toggle	values.cooldowns	Cooldowns
+options.abilities.call_pet.toggle	values.custom1	Custom 1
+options.abilities.call_pet.toggle	values.custom2	Custom 2
+options.abilities.call_pet.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.call_pet.toggle	values.defensives	Defensives
+options.abilities.call_pet.toggle	values.interrupts	Interrupts
+options.abilities.call_pet.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.call_pet.toggle	values.none	None
+options.abilities.call_pet.toggle	values.potions	Potions
 options.abilities.cat_form	name	Spell 768
 options.abilities.cat_form.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 768 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 768 can be recommended in any type of fight.
 options.abilities.cat_form.boss	name	Boss Encounter Only
@@ -9362,6 +9395,39 @@ options.abilities.revive.toggle	values.interrupts	Interrupts
 options.abilities.revive.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.revive.toggle	values.none	None
 options.abilities.revive.toggle	values.potions	Potions
+options.abilities.revive_pet	name	Spell 982
+options.abilities.revive_pet.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 982 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 982 can be recommended in any type of fight.
+options.abilities.revive_pet.boss	name	Boss Encounter Only
+options.abilities.revive_pet.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 982 has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.revive_pet.clash	name	Clash
+options.abilities.revive_pet.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 982.
+options.abilities.revive_pet.disabled	name	Disable |T136000:0|t Spell 982
+options.abilities.revive_pet.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.revive_pet.dotCap	name	Maximum Applications
+options.abilities.revive_pet.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.revive_pet.hasIcon	name	Icon Replacement
+options.abilities.revive_pet.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.revive_pet.keybind	name	Override Keybind Text
+options.abilities.revive_pet.lineBreak1	name	\032
+options.abilities.revive_pet.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.revive_pet.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.revive_pet.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.revive_pet.noIcon	name	Icon Replacement
+options.abilities.revive_pet.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 982 to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.revive_pet.targetMax	name	Maximum Targets
+options.abilities.revive_pet.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 982 to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.revive_pet.targetMin	name	Minimum Targets
+options.abilities.revive_pet.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.revive_pet.toggle	name	Require Toggle
+options.abilities.revive_pet.toggle	values.cooldowns	Cooldowns
+options.abilities.revive_pet.toggle	values.custom1	Custom 1
+options.abilities.revive_pet.toggle	values.custom2	Custom 2
+options.abilities.revive_pet.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.revive_pet.toggle	values.defensives	Defensives
+options.abilities.revive_pet.toggle	values.interrupts	Interrupts
+options.abilities.revive_pet.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.revive_pet.toggle	values.none	None
+options.abilities.revive_pet.toggle	values.potions	Potions
 options.abilities.righteous_fury	name	Spell 25780
 options.abilities.righteous_fury.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 25780 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 25780 can be recommended in any type of fight.
 options.abilities.righteous_fury.boss	name	Boss Encounter Only
@@ -20586,6 +20652,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.aspe
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.call_pet	|T136000:0|t Spell 883
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -20615,6 +20682,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.pool
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -20636,49 +20704,51 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.wait
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	name	Entry
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 3045 - |cFFFFD100|cffffd100target.outside5&time>=5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1293241 - |cFFFFD100|cffffd100window.hha.next.summon_hawk|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&target.outside8|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))&time>=5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))&time>=5|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0033	|cFFFFD10033.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0034	|cFFFFD10034.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0035	|cFFFFD10035.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0036	|cFFFFD10036.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0037	|cFFFFD10037.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0038	|cFFFFD10038.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0039	|cFFFFD10039.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0040	|cFFFFD10040.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0041	|cFFFFD10041.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0042	|cFFFFD10042.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0043	|cFFFFD10043.|r Spell 3044 - |cFFFFD100|cffffd100!action.summon_hawk.known&target.outside8|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 883 - |cFFFFD100|cffffd100!pet_out&!pet.dead&!talent.lone_wolf.enabled|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 982 - |cFFFFD100|cffffd100pet.dead|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 3045 - |cFFFFD100|cffffd100target.outside5&time>=5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1293241 - |cFFFFD100|cffffd100window.hha.next.summon_hawk|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&target.outside8|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))&time>=5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))&time>=5|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0033	|cFFFFD10033.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0034	|cFFFFD10034.|r Spell 19574 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0035	|cFFFFD10035.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0036	|cFFFFD10036.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0037	|cFFFFD10037.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0038	|cFFFFD10038.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0039	|cFFFFD10039.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0040	|cFFFFD10040.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0041	|cFFFFD10041.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0042	|cFFFFD10042.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0043	|cFFFFD10043.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0044	|cFFFFD10044.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.actionID	values.0045	|cFFFFD10045.|r Spell 3044 - |cFFFFD100|cffffd100!action.summon_hawk.known&target.outside8|r|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	name	Action Name
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -20693,6 +20763,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.call_pet	|T136000:0|t Spell 883
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -20722,6 +20793,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -20749,6 +20821,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.a
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.aspect_of_the_monkey	|T136000:0|t Spell 13163
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.aspect_of_the_pack	|T136000:0|t Spell 13159
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.aspect_of_the_viper	|T136000:0|t Spell 415423
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
@@ -20822,7 +20895,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modMoving.moving	v
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1259799)
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -20911,6 +20984,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	valu
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.call_pet	|T136000:0|t Spell 883
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -20940,6 +21014,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	valu
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -20961,18 +21036,20 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	valu
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	name	Entry
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 19574 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 3044
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 19434
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1310687
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 883 - |cFFFFD100|cffffd100!pet_out&!pet.dead&!talent.lone_wolf.enabled|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 982 - |cFFFFD100|cffffd100pet.dead|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 19574 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 3044
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 19434
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1310687
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	name	Action Name
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -20987,6 +21064,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.call_pet	|T136000:0|t Spell 883
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -21016,6 +21094,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -21043,6 +21122,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	v
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.aspect_of_the_monkey	|T136000:0|t Spell 13163
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.aspect_of_the_pack	|T136000:0|t Spell 13159
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.aspect_of_the_viper	|T136000:0|t Spell 415423
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
@@ -21116,7 +21196,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modMoving.m
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 20572)
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -25913,6 +25993,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.aspect
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.call_pet	|T136000:0|t Spell 883
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -25942,6 +26023,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.pool_r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -25963,35 +26045,37 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.wait	|
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	name	Entry
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 3045 - |cFFFFD100|cffffd100target.outside5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 3044 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 883 - |cFFFFD100|cffffd100!pet_out&!pet.dead&!talent.lone_wolf.enabled|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 982 - |cFFFFD100|cffffd100pet.dead|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 3045 - |cFFFFD100|cffffd100target.outside5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 3044 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	name	Action Name
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -26006,6 +26090,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.a
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.call_pet	|T136000:0|t Spell 883
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -26035,6 +26120,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.p
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -26062,6 +26148,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.asp
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.aspect_of_the_monkey	|T136000:0|t Spell 13163
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.aspect_of_the_pack	|T136000:0|t Spell 13159
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.aspect_of_the_viper	|T136000:0|t Spell 415423
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
@@ -26135,7 +26222,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.modMoving.moving	val
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.marksmanship.Marksmanship (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1259799)
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -26224,6 +26311,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.call_pet	|T136000:0|t Spell 883
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -26253,6 +26341,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -26274,17 +26363,19 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	name	Entry
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 3044
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 19434
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1310687
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 883 - |cFFFFD100|cffffd100!pet_out&!pet.dead&!talent.lone_wolf.enabled|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 982 - |cFFFFD100|cffffd100pet.dead|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 3044
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 19434
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1310687
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	name	Action Name
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -26299,6 +26390,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	v
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.call_pet	|T136000:0|t Spell 883
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -26328,6 +26420,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	v
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -26355,6 +26448,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	val
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.aspect_of_the_monkey	|T136000:0|t Spell 13163
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.aspect_of_the_pack	|T136000:0|t Spell 13159
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.aspect_of_the_viper	|T136000:0|t Spell 415423
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
@@ -26428,7 +26522,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modMoving.mov
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 20572)
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -28544,6 +28638,7 @@ options.packs.survival.Survival (wowsims.com).lists.action	values.aspect_of_the_
 options.packs.survival.Survival (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.survival.Survival (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.survival.Survival (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival (wowsims.com).lists.action	values.call_pet	|T136000:0|t Spell 883
 options.packs.survival.Survival (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -28573,6 +28668,7 @@ options.packs.survival.Survival (wowsims.com).lists.action	values.pool_resource	
 options.packs.survival.Survival (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
 options.packs.survival.Survival (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -28594,44 +28690,46 @@ options.packs.survival.Survival (wowsims.com).lists.action	values.wait	|T136243:
 options.packs.survival.Survival (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.survival.Survival (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.survival.Survival (wowsims.com).lists.actionID	name	Entry
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 3045 - |cFFFFD100|cffffd100target.outside5&time>=5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 3044 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))&time>=5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))&time>=5|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0033	|cFFFFD10033.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0034	|cFFFFD10034.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0035	|cFFFFD10035.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0036	|cFFFFD10036.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0037	|cFFFFD10037.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
-options.packs.survival.Survival (wowsims.com).lists.actionID	values.0038	|cFFFFD10038.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 883 - |cFFFFD100|cffffd100!pet_out&!pet.dead&!talent.lone_wolf.enabled|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 982 - |cFFFFD100|cffffd100pet.dead|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 3045 - |cFFFFD100|cffffd100target.outside5&time>=5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&target.outside5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 13795 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&target.within5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&target.outside8|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 3044 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 2643 - |cFFFFD100|cffffd100target.outside8|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))&time>=5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&(mainhand_remains<mainhand_speed-time&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 3045 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))&time>=5|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 20572 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 20554 - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r [Item 12662] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r [Item 13444] - |cFFFFD100|cffffd100time>=5&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0033	|cFFFFD10033.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up&toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0034	|cFFFFD10034.|r Spell 3044 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0035	|cFFFFD10035.|r Spell 2643 - |cFFFFD100|cffffd100toggle.movement&!(ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains))|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0036	|cFFFFD10036.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0037	|cFFFFD10037.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0038	|cFFFFD10038.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0039	|cFFFFD10039.|r Spell 13795 - |cFFFFD100|cffffd100toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
+options.packs.survival.Survival (wowsims.com).lists.actionID	values.0040	|cFFFFD10040.|r Spell 2974 - |cFFFFD100|cffffd100(!action.strider_kick.known||(action.strider_kick.known&cooldown.strider_kick.remains>1.5))&toggle.movement&ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)|r|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.survival.Survival (wowsims.com).lists.action_name	name	Action Name
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -28646,6 +28744,7 @@ options.packs.survival.Survival (wowsims.com).lists.action_name	values.aspect_of
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival (wowsims.com).lists.action_name	values.call_pet	|T136000:0|t Spell 883
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -28675,6 +28774,7 @@ options.packs.survival.Survival (wowsims.com).lists.action_name	values.pool_reso
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -28702,6 +28802,7 @@ options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_t
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_the_monkey	|T136000:0|t Spell 13163
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_the_pack	|T136000:0|t Spell 13159
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.aspect_of_the_viper	|T136000:0|t Spell 415423
+options.packs.survival.Survival (wowsims.com).lists.buff_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
@@ -28775,7 +28876,7 @@ options.packs.survival.Survival (wowsims.com).lists.modMoving.moving	values.1	Mo
 options.packs.survival.Survival (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.survival.Survival (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.survival.Survival (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.survival.Survival (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1259799)
+options.packs.survival.Survival (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
 options.packs.survival.Survival (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.survival.Survival (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.survival.Survival (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -28864,6 +28965,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.action	values.aspect_o
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.call_pet	|T136000:0|t Spell 883
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -28893,6 +28995,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.action	values.pool_res
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -28914,24 +29017,26 @@ options.packs.survival.Survival Melee (wowsims.com).lists.action	values.wait	|T1
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.survival.Survival Melee (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.survival.Survival Melee (wowsims.com).lists.actionID	name	Entry
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2974 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffwalk_in|r, if |cffffd100target.outside5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 13795
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1293241
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 2974 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 883 - |cFFFFD100|cffffd100!pet_out&!pet.dead&!talent.lone_wolf.enabled|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 982 - |cFFFFD100|cffffd100pet.dead|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2974 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffwalk_in|r, if |cffffd100target.outside5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 13795
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1293241
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 2974 - |cFFFFD100|cffffd100target.within5|r|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	name	Action Name
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -28946,6 +29051,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.asp
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.call_pet	|T136000:0|t Spell 883
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -28975,6 +29081,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.poo
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -29002,6 +29109,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.aspec
 options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.aspect_of_the_monkey	|T136000:0|t Spell 13163
 options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.aspect_of_the_pack	|T136000:0|t Spell 13159
 options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.aspect_of_the_viper	|T136000:0|t Spell 415423
+options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
 options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
 options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
@@ -29077,7 +29185,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.modMoving.moving	value
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 20572)
+options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.survival.Survival Melee (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -29166,6 +29274,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.action	values.aspect_
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.auto_shot	|T136000:0|t Spell 75
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.call_pet	|T136000:0|t Spell 883
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -29195,6 +29304,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.action	values.pool_re
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -29216,17 +29326,19 @@ options.packs.survival.Survival Turret (wowsims.com).lists.action	values.wait	|T
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.wing_clip	|T136000:0|t Spell 2974
 options.packs.survival.Survival Turret (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.survival.Survival Turret (wowsims.com).lists.actionID	name	Entry
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 3044
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 19434
-options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1310687
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 883 - |cFFFFD100|cffffd100!pet_out&!pet.dead&!talent.lone_wolf.enabled|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 982 - |cFFFFD100|cffffd100pet.dead|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1259799 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 20572 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 3044
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 19434
+options.packs.survival.Survival Turret (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1310687
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	name	Action Name
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
@@ -29241,6 +29353,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.as
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.auto_shot	|T136000:0|t Spell 75
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.call_action_list	|T136243:0|t |cff00ccff[Call Action List]|r
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.call_pet	|T136000:0|t Spell 883
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.cancel_action	|T136243:0|t |cff00ccff[Cancel Action]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.cancel_buff	|T136243:0|t |cff00ccff[Cancel Buff]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.close_window	|T136243:0|t |cff00ccff[Close Window]|r
@@ -29270,6 +29383,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.po
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -29297,6 +29411,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.aspe
 options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.aspect_of_the_monkey	|T136000:0|t Spell 13163
 options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.aspect_of_the_pack	|T136000:0|t Spell 13159
 options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.aspect_of_the_viper	|T136000:0|t Spell 415423
+options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.bestial_wrath	|T136000:0|t Spell 19574
 options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.cryptstalker_2pc	|T136000:0|t Spell 28755
 options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.cryptstalker_8pc	|T136000:0|t Spell 28751
 options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.dazed	|T136000:0|t Spell 15571
@@ -29370,7 +29485,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.modMoving.moving	valu
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 20572)
+options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.survival.Survival Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry

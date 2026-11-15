@@ -10,9 +10,13 @@
 # Omitted: walk_in #5: wait
 # Omitted: precombat: empty group move_to_starting_range
 
-actions.precombat=hunters_mark,if=!debuff.hunters_mark.up
+actions.precombat=call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled
+actions.precombat+=/revive_pet,if=pet.dead
+actions.precombat+=/hunters_mark,if=!debuff.hunters_mark.up
 actions.precombat+=/aspect_of_the_beast,if=!buff.aspect_of_the_beast.up
-actions=elunes_light,use_off_gcd=1,if=time>=5
+actions=call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled
+actions+=/revive_pet,if=pet.dead
+actions+=/elunes_light,use_off_gcd=1,if=time>=5
 actions+=/blood_fury,use_off_gcd=1,if=time>=5
 actions+=/berserking,use_off_gcd=1,if=time>=5
 actions+=/major_mana_potion,use_off_gcd=1,if=time>=5

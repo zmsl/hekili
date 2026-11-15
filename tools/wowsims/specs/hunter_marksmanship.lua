@@ -58,4 +58,7 @@ return {
         serpent_sting = { 8, 35 },
     },
     leveling = {},
+    -- L1059 (owner): no pet out, call it; the pet dead, revive it: both lead the lists (levelingFirst puts them first
+    -- in precombat and default). A Lone Wolf Hunter wants none out.
+    levelingFirst = { "call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled", "revive_pet,if=pet.dead" },
 }
