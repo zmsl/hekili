@@ -26,7 +26,7 @@ A.now = {} -- by ability index: the `now` function, bound to the context, or fal
 A.onCrit = {} -- by ability index: the `onCrit` function (run at the cast's own crit, Obs.Crit), bound, or false
 A.onLand = {} -- by ability index: the `onLand` function (run once its cast landed, Obs.Landed), bound, or false
 A.finish = {} -- by ability index: the `now_finish` function (run at a channel's stop at its end), bound, or false
-A.lands = {} -- by ability index: true when its `now`'s target auras start at its landing (`landsAfterTravel`, L482)
+A.lands = {} -- by ability index: true when its `now`'s target auras start at its landing (`startsAtLanding`, L482)
 A.extra = {} -- by ability index: a `track_<id>` extra (VS.Track): no ability, no effects
 A.known = A.known or {} -- by ability index: any rank in the spellbook (Sources/Spellbook.lua)
 
@@ -81,7 +81,7 @@ I.nowErrors, I.nowError, I.nowRuns, I.castsRun = 0, nil, 0, 0
 -- The cast's belief time and ability while its effects run; `live` only then: a `now` called from anywhere else (Hekili
 -- keeps it in `ability.funcs`, where RunStressTest or an APL reading `action.x.now` can call it) writes nothing.
 local T, curA, live = 0, 0, false
-local flight = 0 -- the running cast's travel (s): its target aura writes start this long after T (`landsAfterTravel`)
+local flight = 0 -- the running cast's travel (s): its target aura writes start this long after T (`startsAtLanding`)
 -- True while a reaction runs: it is folded after its outcome's time T (a swing's row comes ~0.47 s after the swing, an
 -- avoid at its window's close), so its aura reads answer as of T (I.AuraAsOf), not the belief's latest.
 local asOf = false
@@ -642,7 +642,7 @@ I.OnBuild(function(def)
             fin = false
         end
         A.finish[a] = type(fin) == "function" and setfenv(fin, ctx) or false
-        A.lands[a] = obj.landsAfterTravel == true
+        A.lands[a] = obj.startsAtLanding == true
         rawset(NAMES.action, A.key[a], setmetatable({ a = a }, actionMeta))
     end
     rawset(NAMES, "settings", def.settings or NO_SETTINGS) -- the spec's settings as plain values, the core's copy

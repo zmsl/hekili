@@ -114,16 +114,16 @@ describe("now handlers", function()
         assert.are.equal(1.0, I.auraVerdict.W[k])
     end)
 
-    -- L482: a cast that `landsAfterTravel` starts its `now`'s target auras at its landing, the target's believed
+    -- L482: a cast that `startsAtLanding` starts its `now`'s target auras at its landing, the target's believed
     -- distance over its velocity after the cast (wowsims's WaitTravelTime); with no range known, at the cast as before.
-    describe("an ability that lands after its travel (landsAfterTravel)", function()
+    describe("an ability that lands after its travel (startsAtLanding)", function()
         local function begin()
             register("sting_test", {
                 id = 2688,
                 expects = "travel",
                 school = "nature",
                 velocity = 40,
-                landsAfterTravel = true,
+                startsAtLanding = true,
                 now = function()
                     applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
                 end,
