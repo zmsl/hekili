@@ -68,6 +68,49 @@ describe("the Guardian loop world's press", function()
     end)
 end)
 
+-- Owner ruling L1110 (in game): Omen of Clarity procs on the cast, at its success, so a hard cast started right after
+-- takes it; a cast never takes its own proc, and Wrath never takes one.
+describe("the Balance loop world's Clearcasting", function()
+    it("procs at the cast's success; the next hard cast pays at its landing, free; Wrath keeps it", function()
+        local C = dlw.Balance
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local cc = H.Hekili.Class.auras.clearcasting.id
+        local W = scenarios.world(setmetatable({ form = C.character().form }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        local omen = dlw.OMEN
+        local function press(key, procs, t)
+            dlw.OMEN = procs and 1 or 0
+            W.t = t
+            local p = C.resolve(key, H) -- the instance never hears the world here: its press price is always full
+            assert.is_true(W.press(us, key, p))
+            local n = #W.truth
+            W.run(t + (p.cast or 0) + 0.3)
+            dlw.OMEN = omen
+            local out = {}
+            for i = n + 1, #W.truth do
+                local ev = W.truth[i]
+                if ev.kind == "cast" and ev.src == us then
+                    out[#out + 1] = ("cast %s %.2f"):format(tostring(ev.cost), ev.t)
+                elseif ev.kind == "aura" and ev.aura == cc then
+                    out[#out + 1] = ("cc %d %.2f"):format(ev.stacks, ev.t)
+                end
+            end
+            return table.concat(out, ", "), p
+        end
+        local a, pa = press("starfire", true, 1)
+        local land = 1 + pa.cast
+        -- A pays in full and procs at its success, not later
+        assert.are.equal(("cast %s %.2f, cc 1 %.2f"):format(tostring(pa.cost), land, land), a)
+        assert.is_true(pa.cost > 0)
+        local wrath, pw = press("wrath", false, land + 0.3)
+        assert.are.equal(("cast %s %.2f"):format(tostring(pw.cost), land + 0.3 + pw.cast), wrath) -- full, kept
+        local t = land + 0.3 + pw.cast
+        local b, pb = press("starfire", false, t) -- priced full at its press (the instance saw nothing)
+        assert.is_true(pb.cost > 0)
+        assert.are.equal(("cast 0 %.2f, cc 0 %.2f"):format(t + pb.cast, t + pb.cast), b) -- free at its landing
+    end)
+end)
+
 describe("the headless Druid gates, 3 fights a pack #slow", function()
     for _, name in ipairs(PACKS) do
         it(
