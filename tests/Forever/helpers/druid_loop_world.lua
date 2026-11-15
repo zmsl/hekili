@@ -29,7 +29,7 @@ local GROUP = { feral_form = { [FORM.cat_form] = true, [FORM.bear_form] = true }
 
 -- UNMEASURED: Omen of Clarity's chance per press of ours (about one Clearcasting every 10 presses) and the hits'
 -- amounts.
-local OMEN = 0.1
+M.OMEN = 0.1
 -- Innervate (29166) as wowsims/forever applies it: the spirit regen x 5, inside the five-second rule too (its Feral
 -- log: 108.75 = 5 x 21.75 a second over 22-41 s); W.regenRate's `fsr` auras, in the worlds that keep mana
 local function manaFsr(spirit, mp5, share)
@@ -554,19 +554,30 @@ local function content(name)
         local X = classData(H)
         local S = H.Hekili.State
         local c, cpt, free = cost(key, a, H, X)
-        local price
-        if a.onNextSwing and cpt then
-            -- priced at its swing, as the game (and the belief) does: Clearcasting then, not at the queue. The press
-            -- is still checked at `c` (0 when free, as the client answers); nothing is consumed at the queue.
+        -- Clearcasting (owner L1110, in game): it procs on a cast, at its success, and the next covered cast that costs
+        -- something takes it. So a covered press is priced from the world's aura when it succeeds (`price`: a hard
+        -- cast's landing, an instant's press, a queued strike's swing), never by its own proc. The press is still
+        -- checked at `c` (0 when free, as the client answers).
+        local price, proc
+        if cpt and X.covered[a.id] then
             local base = free and declared(a) or c
             free = false
             price = function(W, e)
-                local cc = X.covered[a.id] and e.auras[X.aura.clearcasting.id]
-                if cc and cc.stacks > 0 then
-                    setStacks(W, e, X.aura.clearcasting.id, 0)
-                    return 0
+                local cc = e.auras[X.aura.clearcasting.id]
+                free = base > 0 and cc ~= nil and cc.stacks > 0
+                local paid = free and 0 or base
+                if a.onNextSwing then -- at its swing (behaviours.lua), long after the queue's effect
+                    if free then
+                        setStacks(W, e, X.aura.clearcasting.id, 0)
+                    end
+                    if proc and e.power >= paid then -- swung, not dropped short: its proc after its strike
+                        W.at(W.t, function()
+                            aura(W, X, e, "clearcasting")
+                        end)
+                    end
+                    proc = false
                 end
-                return base
+                return paid
             end
         end
         local p = {
@@ -599,19 +610,20 @@ local function content(name)
             return ok, why
         end
         p.effect = function(W, e)
-            if free then -- Clearcasting used
+            if free and not a.onNextSwing then -- Clearcasting taken (`price` decided it; a strike's at its swing)
                 setStacks(W, e, X.aura.clearcasting.id, 0)
             end
             if m.effect then
                 m.effect(W, e, p, X)
             end
-            -- shortcut: the proc lands a tick after the cast it rolled on, so the belief prices that cast before it
-            -- sees Clearcasting (in game both can arrive in one frame: the in-game check); upgrade with a measured
-            -- order.
-            if W.rng.chance(OMEN) then
-                W.at(W.t + 0.25, function()
+            -- Omen of Clarity: rolled here (the rng stream as before), up at once, after the cast's own price; a queued
+            -- strike's at its swing (`price`)
+            if W.rng.chance(M.OMEN) then
+                if a.onNextSwing and price then
+                    proc = true
+                else
                     aura(W, X, e, "clearcasting")
-                end)
+                end
             end
         end
         return p
