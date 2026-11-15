@@ -929,14 +929,23 @@ describe("Forever Druid", function()
                 { w.resources[3].models, w.resources[3].meta }
             )
             -- wowsims/forever's logs: 2.2 mana a 0.1 s tick outside the rule, none inside it (Feral, Balance)
-            assert.are.same({ spirit = 22, mp5 = 0 }, w.resources[0].meta.fsr)
+            local fsr, e = w.resources[0].meta.fsr, ld.env(w)
+            assert.are.same({ 22, 0 }, { fsr.spirit, fsr.mp5 })
+            -- the static share follows Reflection's rank (17/33/50%, wowsims's curve)
+            local shares = {}
+            for rank = 0, 3 do
+                e.talent.reflection = { rank = rank }
+                shares[#shares + 1] = ld.run(fsr.share, e)
+            end
+            assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares)
             assert.is_nil(w.resources[1].meta.max)
         end
     )
 
-    it("declares Innervate as wowsims applies it: the spirit regen x 5, inside the five-second rule too", function()
-        local m = w.resources[0].models
-        assert.are.same({ aura = "innervate", spirit = 5, share = 1 }, m.innervate)
+    -- Innervate's regen is the shared entry every mana user has (Hekili_Shared/Shared/Auras.lua; tests/Forever/
+    -- shared_spec.lua): the Druid's own would count it twice (x 25)
+    it("leaves Innervate's regen to the shared entry (spirit x 5, inside the five-second rule too)", function()
+        assert.is_nil(w.resources[0].models.innervate)
     end)
 
     it("declares the Serenity Field trinket's Spirit: +72 Spirit, 9 a second, from the read Spirit", function()

@@ -97,7 +97,10 @@ local PACKS = {
         "Marksmanship",
         "Marksmanship (wowsims.com)",
         0.98,
-        { [10] = 6, [40] = 7.6, [60] = 15.4 },
+        -- live L40 7.6 -> 10.0 (Lane R2, controller-accepted): Resourcefulness opens only at an ability's crit now
+        -- (the export's crit share), so the fight's worst OOM wait can start with it down: 5 s at 0 regen while casting,
+        -- then the outside rate to the next shot's cost; the belief tracks the truth within 3 mana throughout (traced)
+        { [10] = 6, [40] = 10.0, [60] = 15.4 },
         -- 0 -> 1.0 (1.00 measured = 3 flips; same with the v0.6.2 range fix): traced per tick (131, 429, 469): one-tick
         -- bounce of the filler (wing_clip, immolation_trap) to arcane_shot / strider_kick, which the log casts 1-2 ticks
         -- later: the replay's no-press-exclusion lead (BM's note)
@@ -112,7 +115,9 @@ local PACKS = {
         -- work, no landing hook; not worked around); the 5th is the strike ordering (strider_kick -> multi_shot), the walk
         -- the replay cannot forecast (omitted weave waits, CN19). Ledger L160.
         0.94,
-        { [10] = 6, [40] = 7.6, [60] = 14.0 },
+        -- live L40 7.6 -> 10.0, L60 14.0 -> 15.4 (Lane R2, controller-accepted): as Marksmanship's (above); at L60
+        -- the OOM wait runs to a 190-mana shot with the aura down
+        { [10] = 6, [40] = 10.0, [60] = 15.4 },
         -- 2.4 -> 0.7 (0.67 measured): R51's weave position bounces (above) are gone with the new weave
         0.7,
         "SurvivalRanged",

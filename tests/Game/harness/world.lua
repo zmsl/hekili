@@ -626,6 +626,7 @@ function M.new(seed)
             refund = p.refund,
             pt = p.pt,
             price = p.price,
+            crits = p.crits,
         }
         W.emit({ kind = "queue", src = e, spell = p.spell, ids = p.ids })
     end

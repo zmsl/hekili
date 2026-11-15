@@ -168,9 +168,13 @@ describe("shared content", function()
         shared:RegisterResourceMod({ max = 0.05 })
         local def = { aura = "x", pct = -0.1 }
         shared:RegisterCostMod(def)
+        local regen = { resource = "pool_a", aura = "x", spirit = 2 }
+        shared:RegisterRegenMod(regen)
+        shared:RegisterRegenMod({ aura = "x", spirit = 2 }) -- no resource: ignored
         assert.are.same({ a, b }, { all.abilities.x, all.auras.x })
         assert.are.same({ { pct = 0.05 } }, ns.raceMods.maxMods)
         assert.are.equal(def, ns.raceMods.costMods[1])
+        assert.are.same({ regen }, ns.raceMods.regenMods)
     end)
 
     it("registers exactly Forever's shared auras: the external ones on the player and the stubs core reads", function()
@@ -183,6 +187,7 @@ describe("shared content", function()
             "dispellable_disease",
             "dispellable_magic",
             "dispellable_poison",
+            "innervate",
             "main_hand_enchant",
             "off_hand_enchant",
             "power_infusion",
@@ -206,6 +211,13 @@ describe("shared content", function()
             assert.are.same({ id, 15, 1 }, { a.id, a.duration, a.max_stack })
         end
         assert.are.same({ 10060, 15 }, { all.auras.power_infusion.id, all.auras.power_infusion.duration })
+        -- Innervate on any mana user (another Druid's too, DB2 29166): the spirit regen x 5, all of it while casting
+        -- (aura 110 +400%, aura 134 100%: wowsims parse_effects_table.go), one shared regen entry for every class
+        assert.are.same(
+            { 29166, 20, "player" },
+            { all.auras.innervate.id, all.auras.innervate.duration, all.auras.innervate.shared }
+        )
+        assert.are.same({ { resource = "mana", aura = "innervate", spirit = 5, share = 1 } }, ns.raceMods.regenMods)
         assert.are.same(
             { 0, 1 },
             { all.auras.main_hand_enchant.weaponEnchant, all.auras.off_hand_enchant.weaponEnchant }

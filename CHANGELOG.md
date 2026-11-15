@@ -29,6 +29,10 @@
 - Priest: with 5/5 Spirit Tap, Hekili now counts the Spirit and mana regeneration Spirit Tap gives for 15 seconds after you kill an enemy that gives experience. Not in dungeons or raids, where the game hides who made the kill.
 - Mage: Hekili now counts mana regeneration while casting by the armor you wear: Mage Armor's 50% only while it is up, none for Ice Armor or Frost Armor. Casting a different armor in combat changes it at once.
 - Warlock: with Soul Harvest, Hekili now counts the mana regeneration Soul Harvest gives for 10 seconds after you kill an enemy that gives experience while your Drain Soul is on it. Not in dungeons or raids, where the game hides who made the kill.
+- Druid: Reflection now counts 17/33/50% of your Spirit regeneration while casting, by rank, so a Druid with Reflection is no longer shown short of mana too long, and Innervate is valued in full.
+- Hunter: Resourcefulness now counts for 30 seconds after a melee or ranged ability crits (not Auto Shot or white swings), 50% of your Spirit regeneration while casting at 2/2.
+- Innervate now counts for every mana user, not only the Druid who casts it on themselves: an Innervate from another Druid that is on you when a fight starts raises your mana regeneration (in combat Hekili cannot see one cast on you).
+- Shaman: the Polished Driftwood Icon relic now counts its 8% of your Spirit regeneration while casting.
 
 ### Fixed
 - Beast Mastery Hunters: the Summon Hawk, Summon Hawk, Arcane Shot sequence now starts again in every fight. Before, it worked only in the first fight after a reload, then neither was recommended until the next reload.
@@ -46,6 +50,7 @@
 - A priority line's `interrupt=` option now works: while you channel that spell, Hekili shows the next ability at the channel's next tick once your global cooldown is ready. Before, `interrupt=` did nothing.
 - Paladins: Judgement being usable now corrects Hekili's mana estimate, so abilities are held back less often after a seal. Rogue finishers being usable now correct the energy estimate the same way.
 - With the Cooldown Manager on, a buff that ended just as the Cooldown Manager lit it again could stay up in Hekili for its whole duration (a Paladin seal could be believed up with none on, so Judgement was suggested anyway). Hekili now takes it down when the Cooldown Manager shows it gone.
+- A buff that shares its talent's spell ID (Soul Harvest, Nature's Grace, Spirit Tap and others) is no longer read as always up if the game lists the talent's own passive on you.
 
 ### Known issues
 - The Hunter Turret priorities have not been checked in the game yet.
