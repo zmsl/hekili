@@ -1950,7 +1950,8 @@ function Hekili.Update()
                             state.setCooldown( "global_cooldown", gcdLength( action ) )
                         end
 
-                        if state.buff.casting.up and not ability.dual_cast and not state.safebool( state.args.use_while_casting ) then
+                        -- use_while_casting keeps the player's cast going only for an instant; a cast time ends it
+                        if state.buff.casting.up and not ability.dual_cast and not ( cast == 0 and state.safebool( state.args.use_while_casting ) ) then
                             state.stopChanneling( false, action )
                             state.removeBuff( "casting" )
                         end
