@@ -39,6 +39,8 @@ function M.load(vs, file, class)
         base = { 0, 0 }, -- VS.SwingBase: each hand's unhasted speed (0: no plain read yet)
         now = 0, -- GetTime()
         row = {}, -- the combat-log row CombatLogGetCurrentEventInfo answers
+        exists = {}, -- UnitExists: [unit] = true
+        dead = {}, -- UnitIsDead: [unit] = true
     }
     local w = { game = game, abilities = {}, auras = {}, resources = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { buff = {}, swings = {} }
@@ -86,6 +88,12 @@ function M.load(vs, file, class)
         end,
         GetTime = function()
             return game.now
+        end,
+        UnitExists = function(unit)
+            return game.exists[unit] == true
+        end,
+        UnitIsDead = function(unit)
+            return game.dead[unit] == true
         end,
         CombatLogGetCurrentEventInfo = function()
             return unpack(game.row, 1, 24)

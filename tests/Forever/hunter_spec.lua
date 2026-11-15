@@ -420,11 +420,11 @@ describe("Forever Hunter", function()
                 end
             end
             assert.are.same({ { -0.5, false, false } }, mods)
-            local e = ld.env(w)
-            e.pet_out = false
-            assert.is_false((ld.run(w.abilities.bestial_wrath.usable, e)))
-            e.pet_out = true
-            assert.is_true((ld.run(w.abilities.bestial_wrath.usable, e)))
+            local function usable(exists, dead)
+                w.game.exists.pet, w.game.dead.pet = exists, dead
+                return (ld.run(w.abilities.bestial_wrath.usable, ld.env(w)))
+            end
+            assert.are.same({ false, false, true }, { usable(false, false), usable(true, true), usable(true, false) })
         end
     )
 
@@ -442,6 +442,7 @@ describe("Forever Hunter", function()
                 out[#out + 1] = { ld.run(rp.cast, e), math.floor(ld.run(rp.spend, e) * 100 + 0.5) / 100 }
             end
             assert.are.same({ { 10, 1 }, { 7, 0.8 }, { 4, 0.6 } }, out)
+            w.game.known[883], w.game.known[982] = true, true
             local function usable(key, id, u)
                 w.game.usable[id] = u
                 return (ld.run(w.abilities[key].usable, ld.env(w)))

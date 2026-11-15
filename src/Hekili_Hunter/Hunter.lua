@@ -136,6 +136,7 @@ local MEND_PET = { 136, 3111, 3661, 3662, 13542, 13543, 13544 }
 local MEND_PET_COST = { 50, 90, 155, 225, 300, 385, 480 }
 local ASPECT_OF_THE_WILD = { 20043, 20190 }
 local ASPECT_OF_THE_WILD_COST = { 90, 115 }
+local CALL_PET, REVIVE_PET = { 883 }, { 982 }
 
 local function rest(ids)
     local out = {}
@@ -353,10 +354,12 @@ spec:RegisterPets({
 })
 
 -- The pet unit out and alive (UnitExists / UnitIsDead of "pet", plain in combat: W PR14). Not `pet.up`: the
--- simulation's also counts Summon Hawk's guardians its forecast summons.
-spec:RegisterStateExpr("pet_out", function()
+-- simulation's also counts Summon Hawk's guardians its forecast summons. A plain function too: `usable` runs in the
+-- belief's context as well, which has no `pet_out`.
+local function petOut()
     return UnitExists("pet") == true and not UnitIsDead("pet")
-end)
+end
+spec:RegisterStateExpr("pet_out", petOut)
 
 -- The Beast Within (1223758, Forever; L1058): while the pet is under our Bestial Wrath we rage too, +10% damage (no
 -- read: the addon models no damage) and every mana cost -50% (DB2: A_DUMMY 10 and -50 on the caster, no class mask;
@@ -664,7 +667,7 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows({ 19574 }),
         usable = function()
-            return pet_out, "no pet out"
+            return petOut(), "no pet out"
         end,
 
         now = applies("bestial_wrath"),
@@ -1190,9 +1193,9 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         startsCombat = false,
-        known = knows({ 883 }),
+        known = knows(CALL_PET),
         usable = function()
-            return IsSpellUsable(883) == true, "not usable"
+            return knownRank(CALL_PET) > 0 and IsSpellUsable(883) == true, "not usable"
         end,
     },
     revive_pet = {
@@ -1210,8 +1213,11 @@ spec:RegisterAbilities({
         spendType = "mana",
 
         startsCombat = false,
-        known = knows({ 982 }),
+        known = knows(REVIVE_PET),
         usable = function()
+            if knownRank(REVIVE_PET) == 0 then
+                return false, "not usable"
+            end
             local usable, noMana = IsSpellUsable(982)
             return usable == true or noMana == true, "not usable"
         end,
