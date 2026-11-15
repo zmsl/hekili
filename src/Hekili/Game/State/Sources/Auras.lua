@@ -907,4 +907,18 @@ I.OnSnapshot(function(out, now)
         leaf.carried or 0,
         leaf.dropped or 0
     )
+    if leaf.SnapshotSlots then -- the raw bars (L1075): per slot, then per mapped aura on the layout or not
+        leaf.SnapshotSlots(out, now, KEY)
+        for j = 1, U.nAura do
+            if leaf.Mappable(j) then
+                local never, single = leaf.NeverLit(j) -- no single mapping: "-", the proof never covers it
+                out[#out + 1] = string.format(
+                    "presence-layout %s on=%s neverLit=%s",
+                    KEY[j],
+                    leaf.OnLayout(j),
+                    not single and "-" or never and "yes" or "no"
+                )
+            end
+        end
+    end
 end)

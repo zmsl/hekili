@@ -2368,5 +2368,79 @@ describe("auras", function()
             poll(11)
             assert.is_truthy(VS.Snapshot():find("leaf=off(error", 1, true))
         end)
+
+        -- L1075/L1076: the raw Cooldown Manager read beside the conclusions, so "believed up but wasn't" is answerable
+        -- from the snapshot alone: per slot in viewer then slot order, and per mapped aura on the layout or not.
+        local function lines(snap, want) -- each line present, in order, and every line under 255 characters
+            local at = 0
+            for _, line in ipairs(want) do
+                local i = snap:find(line .. "\n", 1, true)
+                assert.is_truthy(i, line .. "\n" .. snap)
+                assert.is_true(i > at, line) -- in order
+                at = i
+            end
+            for line in snap:gmatch("[^\n]+") do
+                assert.is_true(#line < 255, line)
+            end
+        end
+
+        it("the snapshot lists every viewer slot's raw read and each mapped aura's place on the layout", function()
+            ctl.viewer.sets[0] = { 504, 505, 700, 800 }
+            ctl.viewer.infos[504] = { spellID = fs.SPENDER_S } -- on the layout, never lit
+            ctl.viewer.infos[505] = { spellID = fs.SPENDER_H } -- mapped, no item: not on the layout
+            ctl.viewer.infos[700] = { spellID = 9999, linkedSpellIDs = { fs.SPENDER_M, 9998 } } -- ambiguous only
+            ctl.viewer.infos[800] = { spellID = 9997 } -- unmapped
+            ctl.ViewerItem("EssentialCooldownViewer", 1, 504).shown = true
+            local amb = ctl.ViewerItem("EssentialCooldownViewer", 2, 700)
+            ctl.ViewerItem("UtilityCooldownViewer", 1, 800).shown = true
+            start(fs.def(fs.new(9, nil, nil, true)))
+            ctl.ViewerAura(pi, "player")
+            ctl.ViewerAura(ti, "target")
+            ctl.ViewerAura(amb, "target")
+            poll(10.5)
+            ctl.ViewerClear(ti) -- lit, then dark from 11
+            poll(11)
+            poll(12)
+            local snap = VS.Snapshot()
+            lines(snap, {
+                -- slots 1-2 (pi, ti) were collected by before_each's start: the order is the viewers', not the slots'
+                "presence-slot E s=3 i=1 cd=504 aura=spender_s shown=yes lit=no ans=- light=- dark=- unit=-",
+                "presence-slot E s=4 i=2 cd=700 aura=amb shown=yes lit=yes ans=amb light=- dark=- unit=-",
+                "presence-slot U s=5 i=1 cd=800 aura=- shown=yes lit=no ans=- light=- dark=- unit=-",
+                "presence-slot B s=1 i=1 cd=501 aura=spender_a shown=yes lit=yes ans=up light=0.00 dark=- unit=player",
+                "presence-slot B s=2 i=2 cd=502 aura=spender_c shown=no lit=no ans=- light=1.50 dark=1.00 unit=target",
+                "presence-layout spender_a on=yes neverLit=no",
+                "presence-layout spender_c on=yes neverLit=no",
+                "presence-layout spender_m on=amb neverLit=-", -- no single mapping: neverLit has nothing to say
+                "presence-layout spender_s on=yes neverLit=yes",
+                "presence-layout spender_h on=no neverLit=yes",
+            })
+            assert.is_truthy(snap:find("presence-proof mappedNeverLit=spender_s,spender_h\n", 1, true), snap)
+        end)
+
+        it("the snapshot's slot lines print secrets as S, a failed IsShown as ?, and a family item's member", function()
+            ctl.viewer.sets[0] = { 504, 710 }
+            ctl.viewer.infos[504] = { spellID = fs.SPENDER_S }
+            ctl.viewer.infos[710] = { spellID = 9999, linkedSpellIDs = { fs.SPENDER_M, fs.SPENDER_H } } -- a family
+            local def = fs.def(fs.new(9, nil, nil, true))
+            def.auras[3].family, def.auras[5].family = "fam", "fam" -- spender_m, spender_h
+            ctl.ViewerItem("EssentialCooldownViewer", 1, fake.SECRET).IsShown = function()
+                return fake.SECRET
+            end
+            ctl.ViewerItem("EssentialCooldownViewer", fake.SECRET, 504).IsShown = nil -- no method: the call raises, ?
+            local fam = ctl.ViewerItem("UtilityCooldownViewer", 1, 710)
+            start(def)
+            cast(2, 3, 10, 12) -- our spender_m on the target: the family item counts for it
+            ctl.ViewerAura(fam, "target")
+            poll(10.5)
+            lines(VS.Snapshot(), {
+                "presence-slot E s=3 i=1 cd=S aura=? shown=S lit=no ans=- light=- dark=- unit=-",
+                "presence-slot E s=4 i=S cd=504 aura=spender_s shown=? lit=no ans=- light=- dark=- unit=-",
+                "presence-slot U s=5 i=1 cd=710 aura=amb>spender_m shown=yes lit=yes ans=up light=0.00 dark=- unit=target",
+                "presence-layout spender_a on=yes neverLit=yes", -- a plain single item beats the secret ones
+                "presence-layout spender_m on=? neverLit=-", -- a secret slot may be it: not "not on your bars"
+                "presence-layout spender_s on=? neverLit=yes",
+            })
+        end)
     end)
 end)

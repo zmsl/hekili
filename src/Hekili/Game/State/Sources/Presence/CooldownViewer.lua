@@ -651,18 +651,93 @@ function Q.Silent(j, u)
 end
 
 --- Whether aura j is mapped (alone) by some cooldownID and none of them lit this build (the snapshot's
---- mappedNeverLit; an item struck or suspended did light: provenU). Loops the map: debug only.
+--- mappedNeverLit; an item struck or suspended did light: provenU), and whether one maps it alone at all (the
+--- snapshot's presence-layout). Loops the map: debug only.
 function Q.NeverLit(j)
     local mapped = false
     for id, m in pairs(cdvToJ) do
         if m == j then
             if provenCd[id] or provenU[id] ~= 0 then
-                return false
+                return false, true
             end
             mapped = true
         end
     end
-    return mapped
+    return mapped, mapped
+end
+
+--- Where aura j is on the layout (the snapshot's presence-layout): "yes" a slot configured as the sweep counts it (a
+--- plain cooldownID and layoutIndex) holds an item mapped to j alone, "amb" only an ambiguous or family item naming j
+--- (no part of NeverLit's single-item proof), "?" no "yes" but some slot's cooldownID or layoutIndex is secret (it may
+--- be j's), "no" none. Loops the slots: debug only.
+function Q.OnLayout(j)
+    local api, on, sec = api0, "no", false
+    for s = 1, active and Q.nSlots or 0 do
+        local item = sFrame[s]
+        local rawId, rawIdx = rawget(item, "cooldownID"), rawget(item, "layoutIndex")
+        sec = sec or api.issecretvalue(rawId) or api.issecretvalue(rawIdx)
+        local id = Plain(api, rawId)
+        local m = id ~= nil and Plain(api, rawIdx) ~= nil and cdvToJ[id]
+        if m == j then
+            return "yes"
+        elseif m and m < 0 then
+            for _, x in ipairs(amb[-m]) do
+                if x == j then
+                    on = "amb"
+                end
+            end
+        end
+    end
+    return sec and "?" or on
+end
+
+local VNAME = { "E", "U", "B", "BB" }
+local ANS = { [NOT] = "-", [UP] = "up", [NONE] = "none", [STALE] = "stale" }
+local UNAME = { [0] = "-", "player", "target" }
+local function age(now, t) -- seconds before now, "-" none
+    return t > 0 and string.format("%.2f", now - t) or "-"
+end
+
+--- Appends one line per slot holding a cooldownID (plain or secret), viewer then slot order (L1075): the raw read now
+--- (cooldownID, layoutIndex, IsShown, the sweep's held test on auraInstanceID) beside what the sweep counts it as and
+--- its last light (sSeen), dark (sDark) and held unit (sUnit); resets clear the last three. `key` names an aura index.
+--- Debug only: allocates, and calls IsShown once per slot (the sweep never does: pcall, secret printed S).
+function Q.SnapshotSlots(out, now, key)
+    local api = api0
+    local issecret = api and api.issecretvalue
+    for v = 1, active and #VIEWERS or 0 do
+        for s = 1, Q.nSlots do
+            local item = sFrame[s]
+            local raw = sV[s] == v and rawget(item, "cooldownID")
+            local sec = issecret(raw)
+            if sec or raw then
+                local m = not sec and cdvToJ[raw]
+                local idx = rawget(item, "layoutIndex")
+                local aid = rawget(item, "auraInstanceID")
+                local ok, shown = pcall(item.IsShown or error, item)
+                shown = not ok and "?" or issecret(shown) and "S" or shown and "yes" or "no"
+                out[#out + 1] = string.format(
+                    "presence-slot %s s=%d i=%s cd=%s aura=%s shown=%s lit=%s ans=%s light=%s dark=%s unit=%s",
+                    VNAME[v],
+                    s,
+                    issecret(idx) and "S" or tostring(idx),
+                    sec and "S" or tostring(raw),
+                    -- a family item counted for the member believed up names it
+                    sec and "?"
+                        or not m and "-"
+                        or m > 0 and tostring(key[m])
+                        or sAns[s] == NOT and "amb"
+                        or "amb>" .. tostring(key[sJ[s]]),
+                    shown,
+                    (issecret(aid) or aid ~= nil) and "yes" or "no", -- secret: only tested, never compared
+                    sAmb[s] == 1 and "amb" or ANS[sAns[s]],
+                    age(now, sSeen[s]),
+                    age(now, sDark[s]),
+                    UNAME[sUnit[s]] or "-"
+                )
+            end
+        end
+    end
 end
 
 --- Builds the map and collects every viewer's children (out of combat), then sweeps once: the state now.

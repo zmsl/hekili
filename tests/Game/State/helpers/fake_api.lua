@@ -939,6 +939,9 @@ function M.new()
             item.writes[#item.writes + 1] = what
         end
     end
+    local function isShown(item) -- the frame method the snapshot reads (the sweep never does)
+        return item.shown == true
+    end
     --- A child of viewer `name` tracking cooldown `id` at `layoutIndex` (`id` nil: an unconfigured slot), hidden.
     function ctl.ViewerItem(name, layoutIndex, id)
         local list = ctl.viewer.items[name]
@@ -949,6 +952,7 @@ function M.new()
             hooks = {},
             writes = {},
             HookScript = hookScript,
+            IsShown = isShown,
         }
         list[#list + 1] = item
         return item

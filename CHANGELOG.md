@@ -9,6 +9,7 @@
 - Custom priorities: `interrupt_global=1` on a channeled spell's line now works. While you channel that spell, any line above it in the priority, in any list, may be recommended as soon as it is ready, breaking the channel. When the line also has `interrupt_if` or `interrupt=1`, those still decide when the channel breaks.
 - Custom priorities: the Max Energy option (`max_energy=1`) on a Ferocious Bite line now works: the line waits until you have full energy, so Bite gets its whole bonus from extra energy.
 - Custom priorities: the Use While Casting option (`use_while_casting=1`) now works: on an instant ability, that line can be recommended while you are casting or channeling, instead of after the cast ends. Lines without it, and abilities with a cast time, still wait for the cast.
+- Debug snapshots now show your Cooldown Manager bars as Hekili reads them: each icon, whether it is lit or shown, when it last lit and went dark since the icon was last reset (a new target, a changed bar or a reload resets it), and for each effect Hekili follows whether it is on your bars at all.
 
 ### Changed
 - Hunter: during Bestial Wrath, The Beast Within now halves your mana costs in Hekili's forecast, so shots are no longer held back for mana you have; Bestial Wrath is only suggested while your pet is out and alive.
