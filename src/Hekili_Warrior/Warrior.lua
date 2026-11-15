@@ -229,11 +229,10 @@ end
 -- the stack as the reset read it, so the swings count from the reset (state.now); an unpaid pending swing (the reset's
 -- mh_pending / oh_pending, forecast by State.lua's GAP AK branch) still holds its charge (the reaction runs at its row)
 -- and is counted at its own time, before the forecast's own swings. Allocates nothing.
--- shortcut: hand() repeats forecastResources' pending-swing rule as flicker-085 5922dc27d has it (every pending swing
--- forecast; the swings after it run off it when it is newer than the last swing row, mh_actual / oh_actual + 1 ms, else
--- off the anchor's grid, keeping a parry-haste pull), and a pending event is told from the grid swings by its time off
--- the hand's grid (GRID); MERGE DEPENDENCY: once flicker-085 is in, read the regen entry's `pending` (the accepted
--- pending swing time, 0: none) and `resume` the core sets on reckless_mainhand / reckless_offhand, and drop the copy.
+-- hand() reads the pending swing forecastResources accepted from the regen entry's `pending` (flicker-085); shortcut:
+-- it still repeats the core's origin test (newer than the last swing row, mh_actual / oh_actual + 1 ms: the swings
+-- after it run off it, else off the anchor's grid), and a pending event is told from the grid swings by its time off
+-- the hand's grid (GRID); read the entry's `resume` instead if the core's origin rule changes again.
 local GRID = 0.005 -- the forecast rounds each swing step to 1 ms (State.lua's roundDown)
 
 -- Hand h's forecast swings: its speed, its grid's origin (0: none) and its pending swing's time (0: none), as
@@ -245,7 +244,8 @@ local function hand(h)
     if s <= 0 or a <= 0 then
         return s, 0, 0
     end
-    local p = (h == 1 and state.swings.mh_pending or state.swings.oh_pending) or 0
+    local e = state.rage.regenModel[h == 1 and "reckless_mainhand" or "reckless_offhand"]
+    local p = e and e.pending or 0 -- the pending swing this forecast accepted (State.lua's GAP AK branch; 0: none)
     if p > 0 then
         local actual = (h == 1 and state.swings.mh_actual or state.swings.oh_actual) or 0
         return s, p > actual + 0.001 and p or a, p
