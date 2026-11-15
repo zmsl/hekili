@@ -24,9 +24,10 @@
 - Shaman: Frost Shock (sharing the other shocks' cooldown), Healing Wave, Lesser Healing Wave, Chain Heal, Riptide, Ghost Wolf, Purge, Cure Poison, Cure Disease and Totemic Call are now known to the addon, so casting one by hand spends its mana and starts its cooldown. Totemic Focus now cuts totem costs, Guardian Totems shortens Grounding Totem, Improved Healing Wave, Tidal Focus and Improved Ghost Wolf cut their spells, and Nature's Swiftness is used up by the healing spells and Ghost Wolf. The Cooldown Manager entries for the totems, Stormstrike, Flurry, Elemental Devastation, Improved Stormstrike and the new spells are now followed.
 - The options' Priorities list now opens on your current spec, and marks the priority that is active with a green check.
 - The options' "SimC Wiki" link is now "APL Reference" and opens the Hekili Forever wiki's page on the expressions a priority can test.
-- Hekili now counts mana regeneration while casting by your talent ranks instead of your spec: Meditation and Mindfulness (17/33/50%), Bestial Discipline (25/50%), Reverence (15/30%) and Arcane Meditation at 3/3. Hekili now counts Mindfulness's full 50% at 3/3.
+- Hekili now counts mana regeneration while casting by your talent ranks instead of your spec: Meditation, Mindfulness and Arcane Meditation (17/33/50%), Bestial Discipline (25/50%) and Reverence (15/30%). Hekili now counts Mindfulness's full 50% at 3/3.
 - Hunter: Rapid Recuperation now counts for 15 seconds after each Serpent Sting (25% or 50% of your Spirit regeneration while casting, by rank).
 - Priest: with 5/5 Spirit Tap, Hekili now counts the Spirit and mana regeneration Spirit Tap gives for 15 seconds after you kill an enemy that gives experience. Not in dungeons or raids, where the game hides who made the kill.
+- Mage: Hekili now counts mana regeneration while casting by the armor you wear: Mage Armor's 50% only while it is up, none for Ice Armor or Frost Armor. Casting a different armor in combat changes it at once.
 - Warlock: with Soul Harvest, Hekili now counts the mana regeneration Soul Harvest gives for 10 seconds after you kill an enemy that gives experience while your Drain Soul is on it. Not in dungeons or raids, where the game hides who made the kill.
 
 ### Fixed
@@ -34,6 +35,7 @@
 - Debug snapshots now list each rotation window: open or closed, its step, its last condition result and the last cast that skipped a step.
 - With the Cooldown Manager on, a debuff of yours that misses (for example Rake or Faerie Fire) is now corrected from the Cooldown Manager even right after the Cooldown Manager reloads its data, as it does when you change form before a pull, so the first one of a fight no longer stays shown as up for its whole duration.
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
+- Mana users: the first moment of a mana burst such as Evocation no longer makes Hekili lower its estimate of your mana regeneration for the rest of the fight.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 - Items (trinkets, potions and other usable items) now have a Clash setting on their options page, and it now takes effect; before, an item's Clash was always 0.
 - In a dungeon, raid or other instance with enemy nameplates turned off, the addon now tells you once that it counts only your target, instead of silently staying on single-target.

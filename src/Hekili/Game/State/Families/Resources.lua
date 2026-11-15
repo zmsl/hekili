@@ -826,16 +826,47 @@ local function ema(r, m, ref, E, L, H, D, bound)
     return true
 end
 
+-- Whether x (a time, 0: none) lies in [from, to]: an edge at the interval's first instant still moves the game's
+-- first tick after it.
+local function within(x, from, to)
+    return x > 0 and x >= from and x <= to
+end
+
+-- Whether a regen entry of slot r was applied or ended in [from, to]: the rate changed inside the interval. A record
+-- already swept keeps its latest fall (fellAt, fellFrom). Allocates nothing.
+local function edged(r, from, to)
+    local U = I.auras
+    for i = 1, M.n do
+        if M.slot[i] == r then
+            local j = M.aura[i]
+            if
+                within(U.applied[1][j], from, to)
+                or within(U.exp0[1][j], from, to)
+                or within(U.fellAt[1][j], from, to)
+                or within(U.fellFrom[1][j], from, to)
+            then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 -- One regen measurement m (per second, between two pins ending at t) into the slot's regen (the EMA, TDF
 -- calibrate). A swing-paid slot calibrates its step scale against the spec's value per second of swinging. A shaped
 -- slot's m is the gain over the pins' interval, split by its weights (pinA, pinB; spans): with no time outside the
 -- window it measures the mp5 part (or the whole unscaled rate) as gain / pinA; with at least I.PIN_GAP outside, the
--- spirit part as (gain - mp5 x pinA) / pinB; a shorter time outside is no measurement.
+-- spirit part as (gain - mp5 x pinA) / pinB; a shorter time outside is no measurement. On an `fsr` slot an interval
+-- holding a regen entry's edge is none either: the game lands the new rate on its tick grid, so the gain is off by up
+-- to one tick of it, and a multiplied spirit rate's tick (Evocation's 55 mana) dwarfs the parts it would measure (a
+-- plain slot's whole-rate `mult` keeps its tick error small next to the interval's gain, and still measures).
 local function calibrate(r, m, t)
     if R.shaped[r] then
         local a, b = R.pinA[r], R.pinB[r]
         local ok
-        if b <= 0 and a > 0 then
+        if R.fsr[r] and edged(r, R.pinT[r], t) then
+            return -- the game's ticks put the new rate on a grid the belief does not see: off by up to a tick of it
+        elseif b <= 0 and a > 0 then
             local bound = R.fsr[r] and R.decl[r] + R.spDecl[r] or nil
             ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound) -- nonzero: a > 0 checked
         elseif b >= I.PIN_GAP then
@@ -1708,6 +1739,36 @@ function VS.TakenRate(powerType, now)
         end
     end
     return sum / I.TAKEN_WINDOW -- nonzero: a constant
+end
+
+-- One band's parts (casting reg = M + cS, spirit sp = (1 - c)S) at static share n instead of c: S as coefAt takes it
+-- (shortcut there: at c = 1 the mp5 part is all of S, exact without mp5).
+local function reshare(reg, sp, c, n)
+    local s = c < 1 and sp / (1 - c) or reg -- nonzero: c < 1
+    return reg + (n - c) * s, (1 - n) * s
+end
+
+--- (L961/L963) Re-reads each slot's function static share after our own cast's `now` (Families/Now.lua): the cast may
+--- have changed what it reads (an armor's casting share). In combat a change from c to n moves (n - c) x S between the
+--- parts, every band and the declared rates alike, and the interval across it measures nothing; out of combat only the
+--- share moves (the poll's out-of-combat regen read keeps the parts the game's). A raise keeps c. The stored parts are
+--- the game's pair as read, so the combat start's re-read (refresh) moves none. Allocates nothing.
+function I.ShareRead()
+    for r = 1, R.n do
+        local n = type(R.shareDef[r]) == "function" and finite(R.shareDef[r])
+        if n then
+            n = n < 0 and 0 or n > 1 and 1 or n
+            local c = R.share[r]
+            if n ~= c and fighting then
+                R.regE[r], R.spE[r] = reshare(R.regE[r], R.spE[r], c, n)
+                R.regL[r], R.spL[r] = reshare(R.regL[r], R.spL[r], c, n)
+                R.regH[r], R.spH[r] = reshare(R.regH[r], R.spH[r], c, n)
+                R.decl[r], R.spDecl[r] = reshare(R.decl[r], R.spDecl[r], c, n)
+                R.pinValid[r] = false
+            end
+            R.share[r] = n
+        end
+    end
 end
 
 I.On(Obs.CombatStart, function(o, t)

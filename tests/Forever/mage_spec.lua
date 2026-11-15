@@ -142,19 +142,27 @@ describe("Forever Mage", function()
                 w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
                 return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
             end
-            assert.are.same({ 0, 29.13, 0.5 }, seed("arcane"))
-            assert.are.same({ 14.57, 14.56, 0.5 }, seed("fire")) -- Mage Armor's 50% (Fire and Frostfire)
-            -- the static share: Arcane Meditation 3/3's 50% (ranks 1-2 carved out, Lane R), never the spec, + the armor's
-            local shares = {}
-            for rank = 0, 3 do
-                e.talent.arcane_meditation = { rank = rank }
-                shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
+            assert.are.same({ 0, 29.13, 0 }, seed("arcane"))
+            assert.are.same({ 14.57, 14.56, 0 }, seed("fire")) -- no armor up, no talent: none while casting
+            -- the static share (L961): the armor believed up (Mage Armor 50% on every rank, the pin's aura 134; Ice
+            -- and Frost Armor none) + Arcane Meditation's rank (17/33/50%, wowsims's curve), never the spec
+            local function shares(armor)
+                e.buff = buffs(armor and { [armor] = 1 } or {})
+                local out = {}
+                for rank = 0, 3 do
+                    e.talent.arcane_meditation = { rank = rank }
+                    out[#out + 1] = ld.run(r.meta.fsr.share, e)
+                end
+                return out
             end
-            assert.are.same({ 0.5, 0.5, 0.5, 1 }, shares)
+            assert.are.same({ 0.5, 0.17 + 0.5, 0.33 + 0.5, 1 }, shares("mage_armor"))
+            assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares("ice_armor"))
+            assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares("frost_armor"))
+            assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares(nil))
             assert.are.equal(1213, r.meta.base)
             assert.are.same({ aura = "evocation", spirit = 16, share = 1 }, r.models.evocation) -- DB2 12051: 110, 134
-            -- B2: the armor is a registered aura only; the share assumes it up (a regen entry would end the out-of-combat
-            -- read's calibration: Resources.lua readAt)
+            -- B2: the armor is no regen entry (one would end the out-of-combat read's calibration: Resources.lua
+            -- readAt); the static share reads it at the combat start and after our own cast (I.ShareRead)
             assert.is_nil(r.models.mage_armor)
         end
     )
