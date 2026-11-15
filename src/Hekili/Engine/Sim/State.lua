@@ -7579,7 +7579,9 @@ function state:TimeToReady( action, pool )
     -- max_energy=1 (SimC): wait for the cost plus the most extra the ability converts (its `excess_cap`, pack data), at
     -- most the pool's maximum (an unknown maximum, 0, caps nothing). Readiness only: the cost and the handler's spend
     -- stay the ability's own.
-    if spend and resource and self.safebool( self.args.max_energy ) then
+    -- The declaration is read raw first (no field call), so the line's args are read only for an ability that has one.
+    if spend and resource and ( rawget( ability, "excess_cap" ) ~= nil or ability.funcs.excess_cap )
+        and self.safebool( self.args.max_energy ) then
         z = ability.excess_cap
         if z then
             spend = spend + z
