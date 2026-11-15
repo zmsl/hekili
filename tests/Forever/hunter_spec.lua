@@ -985,6 +985,29 @@ describe("Forever Hunter through the engine", function()
         assert.is_false((F.Window("hha")))
     end)
 
+    -- User report (v0.7.3): after the first fight the hawk sequence never came back until a reload; the belief's
+    -- `combat` kept the old pull's start, so the evaluator never saw a new false->true edge.
+    it("reopens Beast Mastery's hha at the next pull, out of combat closed", function()
+        local S, F = weaveWorld(11)
+        local t = H.ctl.now
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_true((F.Window("hha")))
+        H.ctl.now, H.ctl.combat = t + 30, false
+        H.Fire("PLAYER_REGEN_ENABLED")
+        assert.is_true(headless.cycle(H, t + 30.1))
+        assert.is_true(headless.cycle(H, t + 35))
+        assert.is_false((F.Window("hha")))
+        H.ctl.now, H.ctl.combat = t + 40, true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.is_true(headless.cycle(H, t + 40.1))
+        local up, _, _, _, step = F.Window("hha")
+        assert.is_true(up)
+        assert.are.equal(1, step)
+        S.reset("Primary", true)
+        assert.is_true(S.window.hha.next.summon_hawk)
+        assert.are.same({}, H.errors)
+    end)
+
     it("forecasts no weave open at the pull, before any shot", function()
         local S, F = weaveWorld(11)
         lines(

@@ -24,6 +24,7 @@ local NONE = {} -- a hand-built def may carry no `windows`
 local W = {
     n = 0,
     byKey = {},
+    key = {}, -- by window index: its name
     eval = {}, -- the evaluator bound to the `now` context, or false
     dur = {}, -- seconds (math.huge: "combat")
     durFn = {}, -- `now_duration` bound to the `now` context, or false
@@ -43,6 +44,9 @@ local W = {
     refreshes = {},
     step = {},
     last = {}, -- the last evaluation
+    devAb = {}, -- the snapshot's last deviation: the cast's ability index (0 none), its time and the due step it met
+    devAt = {},
+    devDue = {},
     raised = {}, -- the evaluator raised: it reads false and is not run again (counted once, as I.Eval)
 }
 I.win = W
@@ -145,6 +149,7 @@ function I.WindowCast(a, t)
                     end
                 end
                 if later > 0 then
+                    W.devAb[w], W.devAt[w], W.devDue[w] = a, t, due
                     local d = W.dev[w]
                     if d == SKIP then
                         advance(w, later)
@@ -187,6 +192,27 @@ I.On(Obs.CombatEnd, function()
     end
 end)
 
+I.OnSnapshot(function(out)
+    for w = 1, W.n do
+        local a = W.devAb[w]
+        out[#out + 1] = string.format(
+            "window %s up=%s step=%d/%d opened=%.2f expires=%.2f refreshes=%d eval=%s combat=%.2f dev=%s@%.2f due=%d",
+            W.key[w],
+            tostring(W.up[w]),
+            W.step[w],
+            W.nSteps[w],
+            W.openedAt[w],
+            W.expiresAt[w],
+            W.refreshes[w],
+            tostring(W.last[w]),
+            I.combatT,
+            a > 0 and tostring(A.key[a]) or "none",
+            W.devAt[w],
+            W.devDue[w]
+        )
+    end
+end)
+
 --- (Facade.Window) Window `name`: up, the open's time, its expiry, its refreshes and its step (0 unstepped); false, 0,
 --- 0, 0, 0 for a closed or unknown name. Plain values. Allocates nothing.
 function VS.Window(name)
@@ -205,7 +231,7 @@ I.OnBuild(function(def)
     W.n = #list
     for w = 1, W.n do
         local d = list[w]
-        W.byKey[d.key] = w
+        W.byKey[d.key], W.key[w] = w, d.key
         local f = d.evaluator
         W.eval[w] = type(f) == "function" and setfenv(f, I.nowCtx) or false
         W.dur[w] = d.duration == "combat" and math.huge or type(d.duration) == "number" and d.duration or 0
@@ -231,6 +257,7 @@ I.OnBuild(function(def)
         W.dev[w] = DEV[d.on_deviation] or STAY
         W.strict[w] = d.strict == true
         W.last[w], W.raised[w] = false, false
+        W.devAb[w], W.devAt[w], W.devDue[w] = 0, 0, 0
         close(w)
     end
 end)
