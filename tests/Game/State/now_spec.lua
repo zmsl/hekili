@@ -1652,6 +1652,22 @@ describe("now handlers", function()
             end
         )
 
+        it("a target change after the cast's success, folded before its staged write: no refund", function()
+            begin(40)
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- on mob A
+            ctl.now = 5.05
+            ctl.guid.target = "Creature-2" -- tab to mob B in the same drain: the swap (direct) folds first
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.Tick(5.06)
+            VS.Drain(5.07)
+            for t = 5.3, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(30, rage(7.5).est) -- the cast landed on A: nothing to give back
+            assert.are.equal(0, I.auraVerdict.refunds[k])
+        end)
+
         it("landed, then removed (the item lit after the cast): the verdict's close refunds nothing", function()
             begin(40)
             cast(fs.SPENDER_C, 5)
