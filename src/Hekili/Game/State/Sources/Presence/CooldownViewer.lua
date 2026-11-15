@@ -641,29 +641,33 @@ function Q.Silent(j, u)
 end
 
 --- Whether aura j is mapped (alone) by some cooldownID and none of them lit this build (the snapshot's
---- mappedNeverLit; an item struck or suspended did light: provenU). Loops the map: debug only.
+--- mappedNeverLit; an item struck or suspended did light: provenU), and whether one maps it alone at all (the
+--- snapshot's presence-layout). Loops the map: debug only.
 function Q.NeverLit(j)
     local mapped = false
     for id, m in pairs(cdvToJ) do
         if m == j then
             if provenCd[id] or provenU[id] ~= 0 then
-                return false
+                return false, true
             end
             mapped = true
         end
     end
-    return mapped
+    return mapped, mapped
 end
 
 --- Where aura j is on the layout (the snapshot's presence-layout): "yes" a slot configured as the sweep counts it (a
---- plain cooldownID and layoutIndex) holds an item mapped to j alone, "amb" only an ambiguous item naming j (its light
---- never proves j), "no" neither. Loops the slots: debug only.
+--- plain cooldownID and layoutIndex) holds an item mapped to j alone, "amb" only an ambiguous or family item naming j
+--- (no part of NeverLit's single-item proof), "?" no "yes" but some slot's cooldownID or layoutIndex is secret (it may
+--- be j's), "no" none. Loops the slots: debug only.
 function Q.OnLayout(j)
-    local api, on = api0, "no"
+    local api, on, sec = api0, "no", false
     for s = 1, active and Q.nSlots or 0 do
         local item = sFrame[s]
-        local id = Plain(api, rawget(item, "cooldownID"))
-        local m = id ~= nil and Plain(api, rawget(item, "layoutIndex")) ~= nil and cdvToJ[id]
+        local rawId, rawIdx = rawget(item, "cooldownID"), rawget(item, "layoutIndex")
+        sec = sec or api.issecretvalue(rawId) or api.issecretvalue(rawIdx)
+        local id = Plain(api, rawId)
+        local m = id ~= nil and Plain(api, rawIdx) ~= nil and cdvToJ[id]
         if m == j then
             return "yes"
         elseif m and m < 0 then
@@ -674,7 +678,7 @@ function Q.OnLayout(j)
             end
         end
     end
-    return on
+    return sec and "?" or on
 end
 
 local VNAME = { "E", "U", "B", "BB" }
@@ -708,7 +712,12 @@ function Q.SnapshotSlots(out, now, key)
                     s,
                     issecret(idx) and "S" or tostring(idx),
                     sec and "S" or tostring(raw),
-                    sec and "?" or not m and "-" or m < 0 and "amb" or tostring(key[m]),
+                    -- a family item counted for the member believed up names it
+                    sec and "?"
+                        or not m and "-"
+                        or m > 0 and tostring(key[m])
+                        or sAns[s] == NOT and "amb"
+                        or "amb>" .. tostring(key[sJ[s]]),
                     shown,
                     (issecret(aid) or aid ~= nil) and "yes" or "no", -- secret: only tested, never compared
                     sAmb[s] == 1 and "amb" or ANS[sAns[s]],

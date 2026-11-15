@@ -851,11 +851,12 @@ I.OnSnapshot(function(out, now)
         leaf.SnapshotSlots(out, now, KEY)
         for j = 1, U.nAura do
             if leaf.Mappable(j) then
+                local never, single = leaf.NeverLit(j) -- no single mapping: "-", the proof never covers it
                 out[#out + 1] = string.format(
                     "presence-layout %s on=%s neverLit=%s",
                     KEY[j],
                     leaf.OnLayout(j),
-                    leaf.NeverLit(j) and "yes" or "no"
+                    not single and "-" or never and "yes" or "no"
                 )
             end
         end
