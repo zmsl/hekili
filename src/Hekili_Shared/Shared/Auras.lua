@@ -119,8 +119,8 @@ local auras = {
     -- The Spirit buffs another class puts on the player, here so every class's belief knows them (the stat split, L971:
     -- a fall in combat takes its Spirit out of what a cast reads, Life Tap's; the regen entries read Spirit only at the
     -- build and the pull), each one's Spirit by the aura's own spell ID, which names its rank (wowsims
-    -- spells_auto_gen.go, aura 29 A_MOD_STAT): Divine Spirit misc 4, +17/23/33/40, Prayer of Spirit +40; Mark of the Wild misc -1 (every stat), +3/5/8/11/14/16 at ranks 2-7 (rank 1 is armor only),
-    -- Gift of the Wild +14/16. The Priest and Druid packs cast them (their abilities apply these keys).
+    -- spells_auto_gen.go, aura 29 A_MOD_STAT): Divine Spirit misc 4, +17/23/33/40, Prayer of Spirit +40; Mark of the
+    -- Wild misc -1 (every stat), +3/5/8/11/14/16 at ranks 2-7 (rank 1 is armor only), Gift of the Wild +14/16. The Priest and Druid packs cast them (their abilities apply these keys).
     divine_spirit = {
         id = 14752,
         copy = { 14818, 14819, 27841, 27681 }, -- 27681: Prayer of Spirit
