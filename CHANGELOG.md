@@ -7,13 +7,29 @@
 ### Changed
 
 ### Fixed
-- Beast Mastery Hunters: the Summon Hawk, Summon Hawk, Arcane Shot sequence now starts again in every fight. Before, it worked only in the first fight after a reload, then neither was recommended until the next reload.
-- Priests with Spirit Tap and Shamans with Improved Stormstrike (and a few other talents whose buff shares the talent's spell): if the game lists the talent itself as a permanent buff, Hekili no longer treats that buff as always up, which would have overestimated mana regen.
-- Debug snapshots now list each rotation window: open or closed, its step, its last condition result and the last cast that skipped a step.
 
 ### Known issues
 
 ### Upgrade notes
+
+## v0.8.3
+
+_Released 2026-11-15_
+
+This release fixes a Beast Mastery Hunter sequence that stopped after the first fight, and buffs that could be read as always up for some Priest and Shaman talents.
+
+### Hunter
+- Beast Mastery: the Summon Hawk, Summon Hawk, Arcane Shot sequence now starts again in every fight. Before, it was recommended only in the first fight after a reload.
+
+### Priest
+- Spirit Tap: if the game lists the talent itself as a permanent buff, Hekili no longer treats the Spirit Tap buff as always up, which overestimated your mana regen.
+
+### Shaman
+- Improved Stormstrike: if the game lists the talent itself as a permanent buff, Hekili no longer treats the buff as always up, which overestimated your mana regen.
+
+### Core and display
+- The same fix applies to a few other talents whose buff shares the talent's spell. Those buffs now count as up only while they are actually active.
+- Debug snapshots now show each multi-step sequence, such as the Beast Mastery opener. Each entry shows whether the sequence is active, which step it is on, its last check result and the last cast that broke the sequence.
 
 ## v0.8.2
 
