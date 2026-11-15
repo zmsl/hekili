@@ -73,8 +73,8 @@ describe("interrupt_global on a channel line", function()
     -- Bloodrage above the channel's line, Battle Shout below it; mid-channel (4 s into Cannibalize's 10 s) the
     -- first recommendation is Bloodrage now only when the channel's line carries interrupt_global=1.
     -- `mods`: more options on the channel's line; `ticks`: give Cannibalize a 2 s tick_time, so its interrupt and
-    -- interrupt_if checks (which need tick data) can run
-    local function firstMidChannel(flag, noneAbove, mods, ticks)
+    -- interrupt_if checks (which need tick data) can run; `at`: the world time sampled (default 5, 4 s in: a tick)
+    local function firstMidChannel(flag, noneAbove, mods, ticks, at)
         local chan = line("cannibalize", mods)
         chan.interrupt_global = flag
         local list = { line("bloodrage"), chan, line("battle_shout") }
@@ -90,7 +90,7 @@ describe("interrupt_global on a channel line", function()
             W.press(us, "cannibalize", { spell = CANNIBALIZE, gcd = 1.5, channel = { length = 10, tick = 2 } })
         )
         W.run(20)
-        local out = upTo(5)
+        local out = upTo(at or 5)
         local name, t = out.recs[1].actionName, out.recs[1].time
         H.Hekili.State.reset("Primary", true)
         assert.is_true(H.Hekili.State.channeling, "still channeling at the update")
@@ -130,6 +130,15 @@ describe("interrupt_global on a channel line", function()
         local name, t = firstMidChannel("1", false, { interrupt_if = "time>=0" }, true)
         assert.are.equal("bloodrage", name)
         assert.is_true(t < 0.5, tostring(t))
+    end)
+
+    it("=1 with interrupt=1: interrupt decides, the channel breaks at its next tick", function()
+        local name, t = firstMidChannel("1", false, { interrupt = "1" }, true) -- 4 s in: at a tick
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.1, tostring(t))
+        name, t = firstMidChannel("1", false, { interrupt = "1" }, true, 4.5) -- 3.5 s in: mid-tick
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 0.5) < 0.1, tostring(t))
     end)
 
     it("=1 with interrupt=0: breaks as the flag alone", function()
