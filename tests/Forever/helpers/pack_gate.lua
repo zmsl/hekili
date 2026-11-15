@@ -262,7 +262,12 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.08 / 0.05 / 0.13, retracted 0.00 / 0.00 / 0.00, readyShort 1 / 1 / 1, heldReady 267 / 294 / 299):
     -- flicker 0.04 -> 0.14, heldReady 400 -> 299
-    ["Survival"] = { flicker = 0.14, retracted = 0, readyShort = 1, heldReady = 299 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- rest window lane (L987 addendum, L1069), cause harness: the between-fight rest keeps the five-second window
+    -- (047aa7e82): fights start at the true mana, so fights are re-timed; same cost/cooldown near-tie class (seeds 1-20
+    -- / 21-40 / 41-60 flicker 0.18 / 0.05 / 0.08, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 1 / 1, heldReady 280 /
+    -- 280 / 276): flicker 0.14 -> 0.19 PROVISIONAL (final Survival floors set on integ/0.8.5-w2 after the
+    -- Survival-moving lanes merge, L1037)
+    ["Survival"] = { flicker = 0.19, retracted = 0, readyShort = 1, heldReady = 299 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- 0 / 112 -> 0.1 / 116 (re-pin e2842f0a78, Task 19, R6; seeds 1-20 / 21-40 / 41-60: flicker 0.02 / 0.02 / 0, oracle
     -- 0 / 0 / 0, held 116 / 110 / 106, agreement 1.000 each; identical with R61 7a8972d4c): the flip (one a set) is
     -- multi_shot@0.50 -> serpent_sting@0.40 -> multi_shot@0 (seed 1, 48.4-48.8 s): Multi-Shot's last 0.5 s under
@@ -401,7 +406,11 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.13 / 0.10 / 0.05, retracted 0.00 / 0.00 / 0.00, readyShort 1 / 0 / 0, heldReady 136 / 138 / 126):
     -- flicker 0 -> 0.14, readyShort 0 -> 1, heldReady 152 -> 138
-    ["Enhancement"] = { flicker = 0.14, retracted = 0, heldReady = 138, readyShort = 1 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
+    -- rest window lane (L987 addendum, L1069), cause harness: the between-fight rest keeps the five-second window
+    -- (047aa7e82): fights start at the true mana, so fights are re-timed; same cost/cooldown near-tie class (seeds 1-20
+    -- / 21-40 / 41-60 flicker 0.20 / 0.15 / 0.07, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 1 / 0, heldReady 127 /
+    -- 128 / 132): flicker 0.14 -> 0.21
+    ["Enhancement"] = { flicker = 0.21, retracted = 0, heldReady = 138, readyShort = 1 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
@@ -440,7 +449,11 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 / 0), retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0,
     -- heldReady 112 / 111 / 109, agreement .996 / .998 / .998): heldReady 113 -> 112, flicker kept
-    ["Frost"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 112 },
+    -- rest window lane (L987 addendum, L1069), cause harness: the between-fight rest keeps the five-second window
+    -- (047aa7e82): fights start at the true mana, so fights are re-timed; same cost/cooldown near-tie class (seeds 1-20
+    -- / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 116 /
+    -- 117 / 110, agreement .995 / .997 / .998): heldReady 112 -> 117
+    ["Frost"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 117 },
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 396 / 398 / 399):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- Priest re-pin lane (pin e5a9cd2a2dfc, CN8 merged, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, readyShort 0, heldReady 395 / 395 / 397):
