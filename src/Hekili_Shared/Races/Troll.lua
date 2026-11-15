@@ -5,8 +5,10 @@
 -- off the GCD), which replaces `all`'s stock entry and aura
 -- (26297, absent on Forever), and Rapid Regeneration (1260270: heals 50% of maximum health over 6 s; a self-channel,
 -- SPELL_ATTR1_IS_SELF_CHANNELLED, broken by movement, action or damage; 180 s, off the GCD), registered as a 6 s
--- channel so the simulation does not recommend breaking it. The haste itself is the game's (Hekili reads haste); a
--- priority reads `buff.berserking.up`. Regeneration and Beast Slaying are passives. No resource or cost modifier. No
+-- channel so the simulation does not recommend breaking it. The haste is declared (`spellHaste`, `swingHaste`: x1.1,
+-- wowsims racials.go AttachMultiplyCastSpeed/AttachMultiplyAttackSpeed): spell haste is secret in combat, where the
+-- belief composes it (the stat split, L971), and the swing clocks rescale at its edges; a priority reads
+-- `buff.berserking.up`. Regeneration and Beast Slaying are passives. No resource or cost modifier. No
 -- pack names either. Unknown for any other race (Engine/Schema/Races.lua).
 
 local race = Hekili:NewRace("Troll")
@@ -32,6 +34,8 @@ race:RegisterAura("berserking", {
     id = 20554,
     duration = 15,
     max_stack = 1,
+    spellHaste = 1.1,
+    swingHaste = 1.1,
 })
 
 race:RegisterAbility("rapid_regeneration", {

@@ -594,12 +594,7 @@ spec:RegisterAuras({
         tick_time = 1,
         max_stack = 1,
     },
-    gift_of_the_wild = {
-        id = 21849,
-        copy = rest(GIFT_OF_THE_WILD),
-        duration = 3600,
-        max_stack = 1,
-    },
+    -- mark_of_the_wild and gift_of_the_wild are Hekili_Shared/Shared/Auras.lua's: every class carries them (L971).
     growl = {
         id = 6795,
         duration = 3,
@@ -638,13 +633,6 @@ spec:RegisterAuras({
         duration = 15,
         tick_time = 3,
         max_stack = 5,
-    },
-    mark_of_the_wild = {
-        id = 1126,
-        -- 1291335/1310503: Forever's own rank 7 (level 60) beside 9885, same name
-        copy = { 5232, 6756, 5234, 8907, 9884, 9885, 1291335, 1310503 },
-        duration = 3600,
-        max_stack = 1,
     },
     -- Maul queued on the next swing (C_Spell.IsCurrentSpell, applied in reset_precast), a full swing long.
     maul = {

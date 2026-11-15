@@ -85,6 +85,13 @@ describe("Forever Priest", function()
         w = ld.load(nil, FILE, "PRIEST")
     end)
 
+    -- The stat split (L971): Spirit Tap's +100% (15271: aura 137, misc 4). Divine Spirit is Hekili_Shared's
+    -- (tests/Forever/shared_spec.lua: its Spirit by the aura's own spell ID).
+    it("declares Spirit Tap's x2 Spirit and leaves Divine Spirit to Hekili_Shared (L971)", function()
+        assert.are.same({ [5] = 2 }, w.auras.spirit_tap.statsPct)
+        assert.is_nil(w.auras.divine_spirit)
+    end)
+
     it("declares Discipline and Shadow on trees 1 and 3 with their wowsims.com packs, Holy unsupported", function()
         assert.are.equal("PRIEST", w.class)
         local out = {}
@@ -528,7 +535,6 @@ describe("Forever Priest", function()
                 divine_aegis = { 431622, 431624 },
                 mind_soothe = { 453, 8192, 10953 },
                 shadow_protection = { 976, 10957, 10958, 27683 },
-                divine_spirit = { 14752, 14818, 14819, 27841, 27681 },
                 touch_of_weakness = { 19252, 2943, 19254, 19253, 19249, 19251 },
             }
             for key, ids in pairs(LINKED) do

@@ -48,6 +48,7 @@
 - Mana users: drinking a Major Mana Potion or using a Demonic Rune now adds its mana to Hekili's mana estimate (the average of what it can restore), so spells you can afford again after one are recommended right away.
 - Fury Warriors: Reckless Swings' rage now arrives with each swing it empowers, not all at once when you cast it.
 - Mana users: the first moment of a mana burst such as Evocation no longer makes Hekili lower its estimate of your mana regeneration for the rest of the fight.
+- Trolls: Berserking used in combat now shortens your global cooldown, cast times and swings in Hekili's forecast while it is up (the game hides your haste in combat). In the same way, Divine Spirit, Prayer of Spirit and Mark or Gift of the Wild now stop counting toward your Spirit as soon as they fall mid-fight, on every class and at the buff's own rank (a Warlock's Life Tap follows a Priest's Divine Spirit), and so does a Priest's Spirit Tap.
 - An ability's Clash setting now works as described: an ability with Clash set is no longer replaced by one that becomes ready only slightly sooner.
 - Items (trinkets, potions and other usable items) now have a Clash setting on their options page, and it now takes effect; before, an item's Clash was always 0.
 - In a dungeon, raid or other instance with enemy nameplates turned off, the addon now tells you once that it counts only your target, instead of silently staying on single-target.

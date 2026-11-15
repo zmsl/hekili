@@ -499,7 +499,9 @@ describe("Forever Druid", function()
         for _, list in ipairs({ e.applied, e.removed, e.added }) do
             for _, k in ipairs(list) do
                 k = type(k) == "table" and k[1] or k
-                assert.is_not_nil(w.auras[k], "unregistered aura " .. tostring(k))
+                -- Mark and Gift of the Wild: Hekili_Shared's (every class carries them, L971), merged in at login
+                local shared = k == "mark_of_the_wild" or k == "gift_of_the_wild"
+                assert.is_true(w.auras[k] ~= nil or shared, "unregistered aura " .. tostring(k))
             end
         end
     end)

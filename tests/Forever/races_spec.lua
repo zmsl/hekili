@@ -527,3 +527,40 @@ describe("the Dwarf's Stoneform through the engine", function()
         end
     end)
 end)
+
+-- The stat split (L971, accuracy-085 item 4), worked example 1: the Troll's Berserking (20554, wowsims racials.go: x1.1
+-- casting and attack speed) used in combat, where UnitSpellHaste is secret. The belief composes its out-of-combat read
+-- with the aura's declared `spellHaste`, so the engine's haste, the GCD and every cast shrink at once.
+describe("the Troll's Berserking through the engine", function()
+    it("declares x1.1 cast and swing speed, and shortens the GCD and the casts in combat", function()
+        local headless = require("Game.harness.headless")
+        local mw = require("Forever.helpers.mage_world")
+        local c = mw.Frost.character()
+        c.race = "Troll"
+        local H = headless.new({ character = c, pack = mw.Frost.PACK })
+        assert.are.same({}, H.loadErrors)
+        local aura = H.Hekili.Class.auras.berserking
+        assert.are.same({ 1.1, 1.1 }, { aura.spellHaste, aura.swingHaste })
+        local st = H.Hekili.State
+        H.ctl.spellHaste = 5 -- the out-of-combat read
+        H.Fire("UNIT_SPELL_HASTE", "player")
+        local t = H.ctl.now + 1
+        H.ctl.now, H.ctl.combat = t, true -- secret from here
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.is_true(headless.cycle(H, t + 0.1))
+        st.reset("Primary", true)
+        local cast0 = st.action.frostbolt.cast_time
+        assert.is_true(math.abs(st.haste - 1 / 1.05) < 1e-6, tostring(st.haste))
+        H.ctl.now = t + 1
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 20554)
+        assert.is_true(headless.cycle(H, t + 1.1))
+        st.reset("Primary", true)
+        assert.is_true(math.abs(st.haste - 1 / 1.155) < 1e-6, tostring(st.haste))
+        assert.is_true(math.abs(st.gcd.max - 1.5 / 1.155) < 1e-6, tostring(st.gcd.max))
+        assert.is_true(math.abs(st.action.frostbolt.cast_time - cast0 / 1.1) < 1e-6)
+        assert.is_true(headless.cycle(H, t + 16.2)) -- 15 s later it ran out
+        st.reset("Primary", true)
+        assert.is_true(math.abs(st.haste - 1 / 1.05) < 1e-6, tostring(st.haste))
+        assert.are.same({}, H.errors)
+    end)
+end)

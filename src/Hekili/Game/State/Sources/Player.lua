@@ -184,6 +184,16 @@ S.On("UNIT_ATTACK_POWER", "player", onPlayerStats)
 -- a talent): read again, so a pre-pull `now` (this cache) and the simulation (the plain read) price one amount (L967;
 -- all three events are Forever's: wow-ui-source's forever branch). The last two carry no unit.
 S.On("UNIT_STATS", "player", onPlayerStats)
+-- The player's UNIT_AURA out of combat too, the stats and the spell haste (the stat split, L971): the reads then land at
+-- the walk's own time, never older, so a buff's UNIT_STATS or UNIT_SPELL_HASTE a frame before its UNIT_AURA is neither
+-- counted twice nor taken out twice. Registered for every unit (nil), as Sources/Auras.lua's walk: a "player"
+-- registration would narrow the client's.
+S.On("UNIT_AURA", nil, function(api, t, unit)
+    if unit == "player" and not I.inCombat then
+        readStats(api, t)
+        readSpellHaste(api, t)
+    end
+end)
 -- The attack speed and the ranged weapon (UnitRangedDamage's speed is the ranged hand's: Sources/Swing.lua reads it
 -- from this cache on the same events, after this file's handlers, the TOC order).
 S.On("UNIT_ATTACK_SPEED", "player", onPlayerStats)
