@@ -1759,7 +1759,7 @@ describe("now handlers", function()
             assert.are.equal(28, rage(7.5).est)
         end)
 
-        -- seals and forms (L727 families) are player auras: the refund is for our missed cast's target aura only
+        -- aura families (L727) and other player auras: the refund is for our missed cast's target aura only
         local function player(family)
             h.Class.abilities.spender_a.refundOnAvoid = true
             h.Class.auras.spender_a.family = family
@@ -1791,8 +1791,8 @@ describe("now handlers", function()
             assert.are.equal(0, I.auraVerdict.refunds[kp])
         end)
 
-        it("a seal of a family closed by its entry's silence after a light refunds nothing", function()
-            local pi, kp = player("seals")
+        it("a family member on the player closed by its entry's silence after a light refunds nothing", function()
+            local pi, kp = player("set_a")
             cast(fs.SPENDER_A, 5.2)
             local spent = rage(5.3).est
             ctl.ViewerAura(pi, "player")
