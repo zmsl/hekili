@@ -139,7 +139,11 @@ M.FLICKER = {
     -- regen phase lane, cause harness: the indexed poll clock (ledger L606/L667; a rage world has no regen grid) (R6;
     -- seeds 1-20 / 21-40 / 41-60 flicker 0.43 / 0.38 / 0.25, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0,
     -- heldReady 309 / 305 / 370): flicker 0.5 -> 0.43, heldReady 439 -> 370
-    ["Fury L24"] = { flicker = 0.43, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 370 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
+    -- flicker-085 P3 (L872 (2): the opener counts the fight's first off-hand swing, newer than the combat-start
+    -- anchor; seeds 1-20 / 21-40 / 41-60 heldReady 309 / 306 / 371, the same after review R3): heldReady 370 -> 371, one
+    -- event, seed 58 tick 4: the forecast now equals the truth (15.05 with the off hand's rage), so ours shows the
+    -- oracle's sunder_armor waiting 0.20 s for the swing's confirmation where it showed rend before (a disagreement)
+    ["Fury L24"] = { flicker = 0.43, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 371 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
