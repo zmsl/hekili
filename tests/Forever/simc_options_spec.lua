@@ -13,15 +13,19 @@ local CANNIBALIZE = 20577
 local DW = require("Forever.helpers.druid_loop_world")
 
 -- A Warrior booted Undead (Cannibalize, Hekili_Shared's race pack, is the channel), Primary subscribed, the pack's
--- default list replaced by `list`; a world whose observer stream feeds the instance (as channel_engine_spec does).
-local function rig(list)
+-- default list replaced by `list` (`lists`: more named lists beside it); a world whose observer stream feeds the
+-- instance (as channel_engine_spec does).
+local function rig(list, lists)
     local c = ww.character()
     c.race = "Scourge"
     c.known[#c.known + 1] = CANNIBALIZE
     local H = headless.new({ character = c, pack = ww.PACK })
     assert.are.same({}, H.loadErrors)
-    H.Hekili.DB.profile.packs[ww.PACK].lists = { default = list }
+    lists = lists or {}
+    lists.default = list
+    H.Hekili.DB.profile.packs[ww.PACK].lists = lists
     H.Hekili:LoadScripts()
+    H.Hekili:ReviewPacks() -- marks the new lists active (a called list is walked only then)
     assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
     local W = world.new(1)
     local us = W.add(entities.new({ guid = "Player-1", weapons = entities.weapons(22) }))
@@ -115,20 +119,21 @@ describe("interrupt_global on a channel line", function()
     end)
 
     -- SimC: interrupt_global widens interrupt / interrupt_if to the whole priority (Hekili's already are), never
-    -- overrides them; on its own, or beside interrupt=0, it breaks the channel itself
+    -- overrides them; on its own, or beside interrupt=0, it breaks the channel itself. Values are strings, as the
+    -- editor stores them.
     it("=1 with a false interrupt_if: the condition holds the channel", function()
-        local name, t = firstMidChannel(1, false, { interrupt_if = "time<0" }, true)
+        local name, t = firstMidChannel("1", false, { interrupt_if = "time<0" }, true)
         assert.is_true(t > 5, tostring(name) .. " at " .. tostring(t))
     end)
 
     it("=1 with a true interrupt_if: the channel breaks for the higher line", function()
-        local name, t = firstMidChannel(1, false, { interrupt_if = "time>=0" }, true)
+        local name, t = firstMidChannel("1", false, { interrupt_if = "time>=0" }, true)
         assert.are.equal("bloodrage", name)
         assert.is_true(t < 0.5, tostring(t))
     end)
 
     it("=1 with interrupt=0: breaks as the flag alone", function()
-        local name, t = firstMidChannel(1, false, { interrupt = 0 }, true)
+        local name, t = firstMidChannel("1", false, { interrupt = "0" }, true)
         assert.are.equal("bloodrage", name)
         assert.is_true(t < 0.5, tostring(t))
     end)
@@ -305,6 +310,49 @@ describe("use_while_casting on a line", function()
         st.scriptID = ww.PACK .. ":default:1"
         local t = st:TimeToReady("slam")
         assert.is_true(t > st.channel_remains - 0.1, tostring(t) .. " vs " .. tostring(st.channel_remains))
+    end)
+
+    -- the cast-stop site in the recommendation loop: a flagged ability with a cast time, recommended as the channel
+    -- breaks (interrupt_global), still ends the channel, so the next recommendation follows its cast, not the old
+    -- channel's end
+    it("=1 on an ability with a cast time: casting it still ends the channel", function()
+        local function next(flag)
+            local H, W, us, upTo = rig({
+                line("slam", { use_while_casting = flag }),
+                line("cannibalize", { interrupt_global = "1" }),
+                line("battle_shout"),
+            })
+            H.Hekili.Class.abilities.slam.spend = 0 -- rage is secret here: free Slam
+            W.t = 1
+            assert.is_true(
+                W.press(us, "cannibalize", { spell = CANNIBALIZE, gcd = 1.5, channel = { length = 10, tick = 2 } })
+            )
+            W.run(20)
+            local recs = upTo(4.5).recs
+            assert.are.equal("slam", recs[1].actionName)
+            assert.is_true(recs[1].time < 0.3, tostring(recs[1].time))
+            return recs[2].actionName, recs[2].time
+        end
+        local name, t = next(nil)
+        assert.are.equal("cannibalize", name)
+        assert.is_true(t < 2, "unflagged: " .. tostring(t))
+        assert.are.same({ name, t }, { next("1") })
+    end)
+
+    -- an option on a line inside a called list is that line's own (args per entry)
+    it("=1 on a line inside a called list: recommended during the cast", function()
+        local H, W, us, upTo = rig({ line("call_action_list", { list_name = "sub" }), line("battle_shout") }, {
+            sub = { line("bloodrage", { use_off_gcd = "1", use_while_casting = "1" }) },
+        })
+        W.t = 1
+        local slam = H.Hekili.Class.abilities.slam
+        assert.is_true(W.press(us, "slam", { spell = slam.id, gcd = 1.5, cast = 1.5 }))
+        W.run(20)
+        local recs = upTo(1.5).recs
+        assert.are.equal("bloodrage", recs[1].actionName)
+        assert.is_true(recs[1].time < 0.3, tostring(recs[1].time))
+        assert.are.equal("battle_shout", recs[2].actionName)
+        assert.is_true(recs[2].time > 0.9, tostring(recs[2].time))
     end)
 end)
 
