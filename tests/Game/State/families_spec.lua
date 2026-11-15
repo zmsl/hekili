@@ -297,12 +297,33 @@ describe("aura families on the Cooldown Manager (L727)", function()
             ctl.ViewerAuraBySpell("player", A, false, "player")
             poll(11.2) -- closed: inside its late window from here
             ctl.ViewerAuraBySpell("player", A, true, "player")
+            Q.Sweep(11.3)
+            assert.is_nil(VS.Aura("player", A, 11.3)) -- the record is down
+            local nLive, nUp = Q.Counts(M1, 1)
+            assert.are.same({ 1, 1 }, { nLive, nUp }) -- the lit item is counted for the closed member
             local t = 11.3
             local bytes = alloc.bytes(function()
                 t = t + 0.001
                 Q.Sweep(t)
             end, 1000)
             assert.are.equal(0, bytes)
+        end)
+
+        -- (review I-1) dark for one poll: rule 1's close drops the debounce memory like any close (§2.6), so the
+        -- light at the next poll re-opens at once instead of waiting on the old expiry
+        it("dark for one poll: the rule-1 close re-opens at the next light", function()
+            cast(M1, 10, 30)
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            for t = 10.2, 12, 0.2 do
+                poll(t)
+            end
+            ctl.ViewerAuraBySpell("player", A, false, "player")
+            poll(12.2)
+            assert.is_nil(VS.Aura("player", A, 12.2)) -- rule 1
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            poll(12.4)
+            assert.is_true((est(A, 12.4) or 0) > 12.4)
+            assert.is_nil(VS.Aura("player", C, 12.4))
         end)
 
         it("with no member applied yet the item is counted ambiguous and opens nothing", function()
@@ -326,6 +347,27 @@ describe("aura families on the Cooldown Manager (L727)", function()
                 Q.Sweep(t)
             end, 1000)
             assert.are.equal(0, bytes)
+        end)
+    end)
+
+    describe("the one-aura control (no family)", function()
+        it("dark for one poll: the rule-1 close re-opens at the next light (review I-1)", function()
+            ctl.viewer.sets[2] = { 603 }
+            ctl.viewer.infos[603] = { spellID = 9002, linkedSpellIDs = { A } }
+            ctl.ViewerItem("BuffIconCooldownViewer", 1, 603)
+            start(def(nil, nil))
+            assert.is_true(Q.map[603] > 0) -- one aura
+            cast(M1, 10, 30)
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            for t = 10.2, 12, 0.2 do
+                poll(t)
+            end
+            ctl.ViewerAuraBySpell("player", A, false, "player")
+            poll(12.2)
+            assert.is_nil(VS.Aura("player", A, 12.2)) -- rule 1
+            ctl.ViewerAuraBySpell("player", A, true, "player")
+            poll(12.4)
+            assert.is_true((est(A, 12.4) or 0) > 12.4)
         end)
     end)
 
