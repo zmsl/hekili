@@ -12,7 +12,7 @@
 
 ### Changed
 - Hunter: during Bestial Wrath, The Beast Within now halves your mana costs in Hekili's forecast, so shots are no longer held back for mana you have; Bestial Wrath is only suggested while your pet is out and alive.
-- Paladin: your seal now follows the Cooldown Manager's Seals entry in combat, so Hekili notices a seal that ends or is removed early; which seal it is still comes from the one you cast last. Druid forms follow the same rule whenever the game hides your form.
+- Paladin: your seal now follows the Cooldown Manager's Seals entry in combat, so Hekili notices a seal that ends or is removed early, and a seal it took down when the entry went dark for a moment comes back as soon as the entry lights again; which seal it is still comes from the one you cast last. Druid forms follow the same rule whenever the game hides your form.
 - Mage: Arcane Meditation now counts at every rank (17/33/50% of your Spirit regeneration while casting), not only at 3/3.
 - Mage: Hekili now counts mana regeneration while casting by the armor you wear: Mage Armor's 50% only while it is up, none for Ice Armor or Frost Armor. Casting a different armor in combat changes it at once.
 - Druid: Reflection now counts 17/33/50% of your Spirit regeneration while casting, by rank, so a Druid with Reflection is no longer shown short of mana too long, and Innervate is valued in full.
