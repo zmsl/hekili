@@ -21,8 +21,6 @@
 - Shaman: the Polished Driftwood Icon relic now counts its 8% of your Spirit regeneration while casting.
 
 ### Fixed
-- Beast Mastery Hunters: the Summon Hawk, Summon Hawk, Arcane Shot sequence now starts again in every fight. Before, it worked only in the first fight after a reload, then neither was recommended until the next reload.
-- Debug snapshots now list each rotation window: open or closed, its step, its last condition result and the last cast that skipped a step.
 - Shaman: Stormstrike, Poison and Disease Cleansing Totem, Earthbind Totem and Grounding Totem now cost their percent of your base mana at your level, as the game charges, instead of the level-60 amount.
 - Shaman: Totemic Focus now lowers your totems' mana cost in Hekili's forecast, and no longer makes Stormstrike look cheaper than it is.
 - Hekili now notices a Spirit, spell power or rating change out of combat (a buff, food, a talent) right away, so a Life Tap or a Spirit-based effect before the pull is worked out from your current stats instead of older ones.
@@ -39,11 +37,30 @@
 - When a fight starts, the first icon now switches to its in-combat choice at once instead of one update late.
 - An ability waiting on mana now counts down evenly and turns ready closer to when you really have the mana, instead of jumping by up to a tenth of a second from one update to the next.
 - Warriors and Bear Druids: the rage from your first swing of a fight is now expected when that swing lands, so the first icons of a pull follow it.
-- Priests with Spirit Tap and Shamans with Improved Stormstrike (and a few other talents whose buff shares the talent's spell): if the game lists the talent itself as a permanent buff, Hekili no longer treats that buff as always up, which would have overestimated mana regen.
+- Rogue: Shank is no longer recommended while on cooldown after learning rank 2.
 
 ### Known issues
 
 ### Upgrade notes
+
+## v0.8.3
+
+_Released 2026-11-15_
+
+This release fixes a Beast Mastery Hunter sequence that stopped after the first fight, and buffs that could be read as always up for some Priest and Shaman talents.
+
+### Hunter
+- Beast Mastery: the Summon Hawk, Summon Hawk, Arcane Shot sequence now starts again in every fight. Before, it was recommended only in the first fight after a reload.
+
+### Priest
+- Spirit Tap: if the game lists the talent itself as a permanent buff, Hekili no longer treats the Spirit Tap buff as always up, which overestimated your mana regen.
+
+### Shaman
+- Improved Stormstrike: if the game lists the talent itself as a permanent buff, Hekili no longer treats the buff as always up, which overestimated your mana regen.
+
+### Core and display
+- The same fix applies to a few other talents whose buff shares the talent's spell. Those buffs now count as up only while they are actually active.
+- Debug snapshots now show each multi-step sequence, such as the Beast Mastery opener. Each entry shows whether the sequence is active, which step it is on, its last check result and the last cast that broke the sequence.
 
 ## v0.8.2
 

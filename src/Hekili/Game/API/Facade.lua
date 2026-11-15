@@ -1022,7 +1022,10 @@ local function cooldownPolicy(spellID)
     end
     return CD
 end
+-- Asked by the known rank (as range, H10): a rank that a later rank supersedes is no longer known and reads plain not
+-- active while the known rank's cooldown runs, which the policy would take over the belief's cooldown.
 kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
+    spellID = VS.KnownID(spellID)
     local info = realGetSpellCooldown and realGetSpellCooldown(spellID)
     if plainTimes(info, "startTime", "duration") then
         return info
@@ -1046,6 +1049,7 @@ local function chargesPolicy(spellID)
     return CHARGES
 end
 kept("C_Spell.GetSpellCharges", "hybrid", function(spellID)
+    spellID = VS.KnownID(spellID) -- the known rank, as GetSpellCooldown
     local info = realGetSpellCharges and realGetSpellCharges(spellID)
     if not issecretvalue(info) and info == nil then
         return nil -- not a charge spell (plain)
@@ -1134,12 +1138,15 @@ kept("GetTalentInfoByID", "virtual", function(talent)
     local rank = VS.Talent(spell)
     return spell, "", 0, rank > 0, true, spell, nil, 0, 0, rank > 0, false, rank
 end, "dead on Forever [W PR5]; VirtualState.Talent (the C_Traits walk)")
-kept("IsUsableSpell", "passthrough", function(spellID)
+-- Asked by the known rank, as GetSpellCooldown (the answer for a superseded rank is unprobed).
+local function isUsable(spellID)
     if realIsSpellUsable then
-        return realIsSpellUsable(spellID)
+        return realIsSpellUsable(VS.KnownID(spellID))
     end
     return false
-end, "absent on Forever; alias of C_Spell.IsSpellUsable (plain [W PR14; SU])")
+end
+kept("C_Spell.IsSpellUsable", "hybrid", isUsable, "plain [W PR14; SU]; asked by the known rank's ID (KnownID)")
+kept("IsUsableSpell", "hybrid", isUsable, "absent on Forever; alias of C_Spell.IsSpellUsable (plain [W PR14; SU])")
 kept("GetSpellBaseCooldown", "virtual", nothing, "absent on Forever")
 kept("GetSpellLink", "virtual", nothing, "absent on Forever")
 kept("IsHarmfulSpell", "virtual", isFalse, "absent on Forever")
@@ -1234,7 +1241,6 @@ local PASSTHROUGH = {
     { "C_Spell.IsSpellHarmful", "plain [W sweep 2026-10-16]" },
     { "C_Spell.IsSpellHelpful", "plain [W sweep 2026-10-16]" },
     { "C_Spell.IsSpellPassive", "plain [W sweep 2026-10-16]" },
-    { "C_Spell.IsSpellUsable", "plain [W PR14; SU]" },
     { "C_Spell.RequestLoadSpellData", "plain [W sweep 2026-10-16]" },
     { "C_SpellActivationOverlay.IsSpellOverlayed", "plain [W PR11]" },
     { "C_SpellBook.FindSpellBookSlotForSpell", "plain [W sweep 2026-10-16]" },
@@ -1398,6 +1404,12 @@ display(
     "C_Spell.GetSpellCooldownDuration",
     "a duration object (userdata; its getters secret in combat), 56 B per call [W PR11, PR28]; MayReturnNothing [SP:327-343]; for a widget only (Cooldown:SetCooldownFromDurationObject), UI/Truth.lua"
 )
+do -- asked by the known rank, as GetSpellCooldown (a superseded rank has no cooldown of its own)
+    local raw = Facade.Display.C_Spell.GetSpellCooldownDuration
+    Facade.Display.C_Spell.GetSpellCooldownDuration = function(spellID, ...)
+        return raw(VS.KnownID(spellID), ...)
+    end
+end
 
 ----------------------------------------------------------------------------------------------------------------------
 
