@@ -858,8 +858,8 @@ end
 -- window it measures the mp5 part (or the whole unscaled rate) as gain / pinA; with at least I.PIN_GAP outside, the
 -- spirit part as (gain - mp5 x pinA) / pinB; a shorter time outside is no measurement. On an `fsr` slot an interval
 -- holding a regen entry's edge is none either: the game lands the new rate on its tick grid, so the gain is off by up
--- to one tick of it, and a multiplied spirit rate's tick (Evocation's 55 mana) dwarfs the parts it would measure (a
--- plain slot's whole-rate `mult` keeps its tick error small next to the interval's gain, and still measures).
+-- to one tick of it, and a multiplied spirit rate's first tick dwarfs the parts it would measure (a plain slot's
+-- whole-rate `mult` keeps its tick error small next to the interval's gain, and still measures).
 local function calibrate(r, m, t)
     if R.shaped[r] then
         local a, b = R.pinA[r], R.pinB[r]
@@ -1755,10 +1755,15 @@ end
 --- the game's pair as read, so the combat start's re-read (refresh) moves none. Allocates nothing.
 function I.ShareRead()
     for r = 1, R.n do
-        local n = type(R.shareDef[r]) == "function" and finite(R.shareDef[r])
+        local f = R.shareDef[r]
+        -- no retry (finite's): a share that raised waits for the next build or combat start, not every cast
+        local n = type(f) == "function" and finite((I.Eval(f, I.clock)))
         if n then
             n = n < 0 and 0 or n > 1 and 1 or n
             local c = R.share[r]
+            -- shortcut: out of combat only c moves, so a swap then a pull before the next out-of-combat regen poll
+            -- fights with the old pair under the new c (casting part off by (n - c) x S until the EMA moves it); move
+            -- the parts out of combat too (when the stored pair predates the swap) once a trace or report shows it.
             if n ~= c and fighting then
                 R.regE[r], R.spE[r] = reshare(R.regE[r], R.spE[r], c, n)
                 R.regL[r], R.spL[r] = reshare(R.regL[r], R.spL[r], c, n)

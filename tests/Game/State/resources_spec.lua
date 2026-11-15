@@ -2657,7 +2657,7 @@ describe("resources", function()
     describe("a static share our own cast changes (spirit regen S 20, mp5 M 2)", function()
         local MANA = 0
 
-        local function bootShare(full)
+        local function bootShare(full, share)
             boot({
                 abilities = {
                     {
@@ -2686,7 +2686,7 @@ describe("resources", function()
                         fsr = {
                             spirit = full and 0 or 10,
                             mp5 = full and 20 or 12,
-                            share = function()
+                            share = share or function()
                                 return (buff.ward.up and 0.5 or 0) + (full and 0.5 or 0) -- luacheck: ignore 113
                             end,
                         },
@@ -2744,6 +2744,20 @@ describe("resources", function()
             obs(Obs.CastSuccess, 11, 2)
             I.Fold(11, false)
             assert.are.same({ 0, 12, 10, 12, 10 }, parts())
+        end)
+
+        it("runs a share that raised no more at our casts (the build and combat start retry it)", function()
+            local calls = 0
+            bootShare(false, function()
+                calls = calls + 1
+                error("TacoDog: no stat yet")
+            end)
+            local before = calls
+            obs(Obs.CastSuccess, 11, 2)
+            I.Fold(11, false)
+            obs(Obs.CastSuccess, 12, 1)
+            I.Fold(12, false)
+            assert.are.equal(before, calls)
         end)
     end)
 
