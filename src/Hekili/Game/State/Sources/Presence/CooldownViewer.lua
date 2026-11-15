@@ -655,26 +655,26 @@ function Q.NeverLit(j)
     return mapped
 end
 
---- Whether a slot on the layout (a plain cooldownID and layoutIndex, the sweep's configured rule) holds an item mapped
---- to aura j, alone or among an ambiguous item's candidates (the snapshot's presence-layout). Loops the slots: debug
---- only.
+--- Where aura j is on the layout (the snapshot's presence-layout): "yes" a slot configured as the sweep counts it (a
+--- plain cooldownID and layoutIndex) holds an item mapped to j alone, "amb" only an ambiguous item naming j (its light
+--- never proves j), "no" neither. Loops the slots: debug only.
 function Q.OnLayout(j)
-    local api = api0
+    local api, on = api0, "no"
     for s = 1, active and Q.nSlots or 0 do
         local item = sFrame[s]
         local id = Plain(api, rawget(item, "cooldownID"))
         local m = id ~= nil and Plain(api, rawget(item, "layoutIndex")) ~= nil and cdvToJ[id]
         if m == j then
-            return true
+            return "yes"
         elseif m and m < 0 then
             for _, x in ipairs(amb[-m]) do
                 if x == j then
-                    return true
+                    on = "amb"
                 end
             end
         end
     end
-    return false
+    return on
 end
 
 local VNAME = { "E", "U", "B", "BB" }

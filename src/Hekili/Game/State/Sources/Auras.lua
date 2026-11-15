@@ -854,7 +854,7 @@ I.OnSnapshot(function(out, now)
                 out[#out + 1] = string.format(
                     "presence-layout %s on=%s neverLit=%s",
                     KEY[j],
-                    leaf.OnLayout(j) and "yes" or "no",
+                    leaf.OnLayout(j),
                     leaf.NeverLit(j) and "yes" or "no"
                 )
             end
