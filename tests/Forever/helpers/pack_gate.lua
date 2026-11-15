@@ -307,14 +307,15 @@ M.FLICKER = {
     -- rest window lane (L987 addendum, L1069), cause harness: the between-fight rest keeps the five-second window
     -- (047aa7e82): fights start at the true mana, so fights are re-timed; same cost/cooldown near-tie class (seeds 1-20
     -- / 21-40 / 41-60 flicker 0.18 / 0.05 / 0.08, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 1 / 1, heldReady 280 /
-    -- 280 / 276): flicker 0.14 -> 0.19 PROVISIONAL (final Survival floors set on integ/0.8.5-w2 after the
-    -- Survival-moving lanes merge, L1037)
+    -- 280 / 276): flicker 0.14 -> 0.19
     -- flicker-085 P1 (L755 / ruling L960: a mana pool with no tick seen pads nothing; seeds 1-20 / 21-40 / 41-60
     -- heldReady 292 / 313 / 323): heldReady 299 -> 323. At the gap BT cost crossing (floor pinned at cost - 1.01,
     -- truth just over) raptor_strike's wait no longer jumps a tick, so ours shows the oracle's raptor_strike waiting
-    -- 0.23 s where strider_kick showed before (agreement rises). provisional: final value set on integ/0.8.5-w2 after
-    -- the Survival-moving lanes merge (L1037)
-    ["Survival"] = { flicker = 0.19, retracted = 0, readyShort = 1, heldReady = 323 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- 0.23 s where strider_kick showed before (agreement rises).
+    -- 0.19 -> 0.03, heldReady 323 -> 314: FINAL, measured on integ/0.8.5-w2 after the Survival-moving lanes merged
+    -- (Serpent Sting debuff at landing, flicker-085, timing merges; L1037/L1103; close-085 seeds 1-20 / 21-40 / 41-60
+    -- flicker 0 / 0 / 0.017, heldReady 314 / 283 / 313): the worst printed + 0.01, the worst set
+    ["Survival"] = { flicker = 0.03, retracted = 0, readyShort = 1, heldReady = 314 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- 0 / 112 -> 0.1 / 116 (re-pin e2842f0a78, Task 19, R6; seeds 1-20 / 21-40 / 41-60: flicker 0.02 / 0.02 / 0, oracle
     -- 0 / 0 / 0, held 116 / 110 / 106, agreement 1.000 each; identical with R61 7a8972d4c): the flip (one a set) is
     -- multi_shot@0.50 -> serpent_sting@0.40 -> multi_shot@0 (seed 1, 48.4-48.8 s): Multi-Shot's last 0.5 s under
@@ -466,7 +467,9 @@ M.FLICKER = {
     -- (047aa7e82): fights start at the true mana, so fights are re-timed; same cost/cooldown near-tie class (seeds 1-20
     -- / 21-40 / 41-60 flicker 0.20 / 0.15 / 0.07, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 1 / 0, heldReady 127 /
     -- 128 / 132): flicker 0.14 -> 0.21
-    ["Enhancement"] = { flicker = 0.21, retracted = 0, heldReady = 138, readyShort = 1 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
+    -- 0.21 -> 0.08: FINAL, measured on integ/0.8.5-w2 after the merges (close-085 seeds 1-20 / 21-40 / 41-60 flicker
+    -- 0.033 / 0.05 / 0.067): the worst printed (0.07) + 0.01; the lanes' flicker-085 no-tick-pad change settled it
+    ["Enhancement"] = { flicker = 0.08, retracted = 0, heldReady = 138, readyShort = 1 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)

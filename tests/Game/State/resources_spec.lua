@@ -2376,7 +2376,7 @@ describe("resources", function()
         end)
 
         -- the game credits regen in ticks, so a rate change (an entry's edge) lands on a grid the belief does not see:
-        -- the interval across it is off by up to a tick of the new rate (the Fire replay's first Evocation tick, 55 mana
+        -- the interval across it is off by up to a tick of the new rate (a replay's first channel tick, 55 mana
         -- under a x 16 entry, cut the spirit part 11.43 -> 10.58)
         it("takes no measurement across a regen entry's edge, and measures inside it", function()
             shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", spirit = 16, share = 1 } })

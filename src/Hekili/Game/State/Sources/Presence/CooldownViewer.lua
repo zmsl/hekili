@@ -9,7 +9,7 @@
 -- (§2.2a, decision 115): a silent slot answers NONE only for an application it was seen holding (its record up, sSeen >= applied, its last held
 -- unit). A target change makes target and NONE slots settle for its frame: target answers stale (§3.4). A raise
 -- in the sweep, or in the router's reduction it calls, turns the leaf off for the session (§3.5). Read, never write: rawget on items, on Blizzard frames only
--- GetChildren, GetNumChildren and IsVisible; no hooks of any kind (§3.3, §3.5).
+-- GetChildren, GetNumChildren and IsVisible (the Debug dump below also calls IsShown); no hooks of any kind (§3.3, §3.5).
 -- Aura families (owner rule L727): an ambiguous item whose every candidate names a member of one family (the packs'
 -- aura field `family`) is a family item. The client's light says some member is up and its silence that none is, but
 -- not which (probes L725/L726: identity goes secret after an in-combat change), so the sweep counts it for the member

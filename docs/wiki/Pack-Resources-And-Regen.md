@@ -55,6 +55,7 @@ A swing entry pays the resource on each white melee swing, as rage is paid. The 
 |---|---|---|
 | `swing` | Both | `"mainhand"` or `"offhand"`: the hand that pays |
 | `aura` | Both | A player aura that must be up for a swing to pay, such as `"bear_form"` |
+| `forecastOnly` | Simulation | True when the belief pays this entry another way (a reaction), so only the simulation's forecast reads it |
 | `value` | Both | The amount one landed swing pays: a number or a function |
 | `crit` | Both | The amount a critical swing pays instead |
 | `taken` | Belief | `function(kind, amount, attacker)`: the resource gained from a hit on the player, as an expected gain and its half-width. The simulation forecasts the rate the belief learns from it. `kind` is `"WOUND"`, `"BLOCKED"`, `"BLOCK"`, `"DODGE"`, `"PARRY"` or `"MISS"`. |

@@ -280,7 +280,7 @@ function M.new(seed)
         local hard = (p.cast or 0) > 0 and not p.onNextSwing
         local function land(chanEnds)
             local gcd = not hard and gcdLen or nil -- a hard cast's GCD rose at its start
-            -- shortcut: Clearcasting expiring mid-cast at low mana clamps the cost instead of failing the cast; upgrade if a harness case needs it
+            -- shortcut: a free-cast aura expiring mid-cast at low mana clamps the cost instead of failing the cast; upgrade if a harness case needs it
             if p.price then -- priced at its success (a free-cast aura up then counts, as in game: L1110)
                 p.cost = p.price(W, e)
             end

@@ -103,6 +103,9 @@ These fields tell the belief where to read an aura that the game hides or report
 | `weaponEnchant` | number | On an aura without `id`: up while that weapon slot (0 main hand, 1 off hand) carries a lasting enchant, such as an imbue or a poison |
 | `enchants` | list | On an aura without `id`: up while either weapon carries one of these enchant IDs |
 | `swingHaste` | number | While the aura is up in combat, every melee hand swings this many times faster |
+| `spellHaste` | number | A multiplier the aura puts on spell haste while it is up. The belief splits each out-of-combat haste read into a base plus the parts of the auras up, so an aura that falls in combat removes exactly its part. |
+| `stats` | table | Flat points the aura adds to a stat, by UnitStat index 1-5: a number, a function of the talent ranks, or a table by spell ID (the rank the aura was last found under). Split from the base the same way. |
+| `statsPct` | table | A multiplier by UnitStat index 1-5, applied after the flat parts |
 | `family` | string | A name the pack gives each aura of a set the game shows as one Cooldown Manager entry, one of them up at a time (the Paladin seals, the Druid forms). The pack's contract: each member's cast takes the other members down, in both `now` and `handler`. The entry's light says some member is up and its silence that none is; the member is the one the belief holds up (the last cast). A member the entry took down comes back if the entry lights again within 2 seconds. The name is only compared. |
 
 > [!NOTE]

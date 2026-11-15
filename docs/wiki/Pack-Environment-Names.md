@@ -74,7 +74,7 @@ The verbs write the effect of a cast. In a `handler` they change the simulated s
 
 | Verb | Meaning | Belief | Simulation |
 |---|---|---|---|
-| `gain(amount, resource)` | Adds to a resource | Yes | Yes |
+| `gain(amount, resource, extra)` | Adds to a resource. In a `now`, `extra` is the half-width of a roll the belief cannot see: the floor takes `amount - extra` and the top `amount + extra`. In a `handler`, it is the overcap. | Yes | Yes |
 | `spend(amount, resource)` | Takes from a resource | Yes | Yes |
 | `resetResource(resource, amount, upto)` | Sets a resource to `amount`, or up to `upto` more by a roll the belief cannot see | Yes | No |
 | `applyBuff(aura, duration, stacks)` | Puts a player aura up. Without `duration`, the aura's registered one. | Yes | Yes |

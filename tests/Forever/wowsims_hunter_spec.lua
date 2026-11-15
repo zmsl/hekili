@@ -122,15 +122,18 @@ local PACKS = {
         -- nothing, so the waits run less late; loop Survival wait error +.19 -> +.13 s, est - truth unchanged): one more
         -- miss, wowsims casts Mongoose Bite where ours shows Strider Kick (mana) at a near-tie with Mongoose Bite's
         -- cooldown.
-        0.93,
+        -- 0.93 -> 0.96 (0.967 of 92 measured on integ/0.8.5-w2, the merged tree): the Serpent Sting debuff now starts at
+        -- its landing (startsAtLanding, L1103) and flicker-085 and the timing merges are in (L1037); 3 misses remain.
+        0.96,
         -- live L40 7.6 -> 10.0, L60 14.0 -> 15.4 (Lane R2, controller-accepted): as Marksmanship's (above); at L60
         -- the OOM wait runs to a 190-mana shot with the aura down
         { [10] = 6, [40] = 10.0, [60] = 15.4 },
         -- 2.4 -> 0.7 (0.67 measured): R51's weave position bounces (above) are gone with the new weave
         -- 0.7 -> 1.1 (1.00 measured, 3 flips, was 2; flicker-085 P1, L755 / ruling L960: a mana pool with no tick seen
-        -- pads nothing, at the gap BT cost crossing; not traced per tick). provisional: final value set on
-        -- integ/0.8.5-w2 after the Survival-moving lanes merge (L1037)
-        1.1,
+        -- pads nothing, at the gap BT cost crossing; not traced per tick).
+        -- 1.1 -> 1.0 (1.00 measured on integ/0.8.5-w2, the merged tree, L1037/L1103): the Serpent Sting debuff at its
+        -- landing, flicker-085 and the timing merges are all in; one flip a minute remains.
+        1.0,
         "SurvivalRanged",
     },
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): new rows, first measured on this lane (R6; the
