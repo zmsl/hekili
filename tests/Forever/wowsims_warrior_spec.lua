@@ -44,6 +44,10 @@ local ARMS_CHAR = setmetatable({
 -- Fury: the same Overpower window (its Overpower Weaving group reads 1282733); Berserker Rage is a trained ability the
 -- loop kit lacks. The base is the dual-wield world (ww.Fury), the log's own weapon speeds.
 local FURY = { kit = { "berserker_rage", "reckless_swings" }, requires = ARMS.requires }
+-- A live loop (no replay) keeps the world's own Overpower rule, as fury_gate.lua's loops do: `requires` reads aura
+-- 1282733, which only a replay's log writes. With it, a dodge opened the belief's window out of Battle Stance, the
+-- client then refused Overpower in it, and Fury swapped stances every ~1.2 s until the dodge aged out (L1077).
+local ARMS_LIVE_KIT, FURY_LIVE_KIT = { kit = ARMS.kit }, { kit = FURY.kit }
 -- Whirlwind's off-hand hit (1680 Tag 15, the off hand's item slot) is logged as its own Casting line: a hit of the one cast, not a decision.
 -- wowsims logs the Heroic Strike queue (25286 Tag 1) as an aura the client never shows (the client sees
 -- IsCurrentSpell): hidden.
@@ -123,7 +127,7 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(
                 "Arms (wowsims.com)",
-                content("warrior_arms", ww, "Arms (wowsims.com)", level, ARMS),
+                content("warrior_arms", ww, "Arms (wowsims.com)", level, ARMS_LIVE_KIT),
                 ARMS_LIVE[level]
             )
         end)
@@ -163,7 +167,7 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
         it("Fury (wowsims.com) stays live at level " .. level, function()
             ws.live(
                 "Fury (wowsims.com)",
-                content("warrior_fury", ww.Fury, "Fury (wowsims.com)", level, FURY),
+                content("warrior_fury", ww.Fury, "Fury (wowsims.com)", level, FURY_LIVE_KIT),
                 FURY_LIVE[level]
             )
         end)
@@ -173,8 +177,8 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- icon is never Sunder while the target's true 5 stacks have more than 15 s left (past any wait the queue shows)
     -- and the fifth is older than one tick (the cast's frame, before its success folds in).
     for _, case in ipairs({
-        { "warrior_arms", ww, "Arms (wowsims.com)", ARMS },
-        { "warrior_fury", ww.Fury, "Fury (wowsims.com)", FURY },
+        { "warrior_arms", ww, "Arms (wowsims.com)", ARMS_LIVE_KIT },
+        { "warrior_fury", ww.Fury, "Fury (wowsims.com)", FURY_LIVE_KIT },
     }) do
         it(case[3] .. " stops Sunder Armor at 5 stacks at level 30", function()
             local L = loop.new(content(case[1], case[2], case[3], 30, case[4]))
