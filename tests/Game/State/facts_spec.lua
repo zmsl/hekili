@@ -151,6 +151,15 @@ describe("facts and polls", function()
         assert.is_true(math.abs(I.CostOf(3) - 111 * 0.91) < 1e-9, tostring(I.CostOf(3)))
     end)
 
+    it("learns the base from a read two passive talents' cost modifiers cut, their factors multiplied", function()
+        passiveCut({ talent = "talent_a", pct = -0.5, spells = { fs.SPENDER_A } })
+        -- the true base 800: 88 whole, cut to 88 x 0.91 x 0.5 = 40.04, read 40; 87 (39.585) and 89 (40.495) read 40 too,
+        -- so the wholes 87..89 and the base nearest 88 / 0.11 = 800
+        ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 40 } }
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.same({ 3, 800 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
+    end)
+
     it("learns no base from a read a passive talent's flat cost modifier cuts", function()
         passiveCut({ talent = "talent_a", flat = -5, spells = { fs.SPENDER_A } })
         ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 75 } }
