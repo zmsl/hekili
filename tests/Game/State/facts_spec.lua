@@ -124,6 +124,69 @@ describe("facts and polls", function()
         assert.are.same({ 124, 9 }, { I.CostOf(1), I.CostOf(3) })
     end)
 
+    -- A passive talent's cost modifier (talent-gated, no aura) is always in scope: the read is the whole price cut by
+    -- its known factor, so it still teaches the base (cost / (f x the factor)); an aura's modifier, which comes and goes,
+    -- still blocks the read.
+    local function passiveCut(auraMod)
+        local h = fs.new(9)
+        h.Class.abilities.spender_a.spend, h.Class.abilities.spender_c.spend = 0.11, 0.139
+        local def = fs.def(h)
+        def.resources[1].base = 1720 -- the pack's top-level base
+        local cut = { talent = "talent_a", pct = { -0.03, -0.06, -0.09 }, spells = { fs.SPENDER_A, fs.SPENDER_C } }
+        def.resources[1].costMods = { cut, auraMod }
+        I.Build(def, 1)
+        ctl.known[fs.SPENDER_A] = true
+        ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 1011 } }
+        ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 3 }
+    end
+
+    it("learns the base from a read a passive talent's cost modifier cuts", function()
+        passiveCut()
+        -- the true base 800: spender_a costs 0.11 x 800 = 88 whole, cut 9% = 80.08, read 80
+        ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 80 } }
+        ctl.Fire("SPELLS_CHANGED")
+        -- 80 is only 88 cut (87 reads 79, 89 reads 81), so the base nearest 88 / 0.11 = 800; spender_c then 0.139 x 800
+        -- = 111 whole, cut 101.01
+        assert.are.same({ 3, 800 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
+        assert.is_true(math.abs(I.CostOf(3) - 111 * 0.91) < 1e-9, tostring(I.CostOf(3)))
+    end)
+
+    it("learns the base from a read two passive talents' cost modifiers cut, their factors multiplied", function()
+        passiveCut({ talent = "talent_a", pct = -0.5, spells = { fs.SPENDER_A } })
+        -- the true base 800: 88 whole, cut to 88 x 0.91 x 0.5 = 40.04, read 40; 87 (39.585) and 89 (40.495) read 40 too,
+        -- so the wholes 87..89 and the base nearest 88 / 0.11 = 800
+        ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 40 } }
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.same({ 3, 800 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
+    end)
+
+    it("learns no base from a read a passive talent's flat cost modifier cuts", function()
+        passiveCut({ talent = "talent_a", flat = -5, spells = { fs.SPENDER_A } })
+        ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 75 } }
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.same({ 3, 1720 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
+    end)
+
+    it("keeps the pack's base when a cut read is that base's whole price cut and rounded either way", function()
+        passiveCut()
+        -- at the true base 1720: 189 whole, cut 9% = 171.99, a read of 172 (to the nearest) or 171 (truncated)
+        for _, read in ipairs({ 172, 171 }) do
+            ctl.costs[fs.SPENDER_A] = { { type = 1, cost = read } }
+            ctl.Fire("SPELLS_CHANGED")
+            assert.are.equal(1720, VS.BasePower(fs.RAGE), read)
+        end
+    end)
+
+    it("learns no base from a read an aura's cost modifier cuts", function()
+        passiveCut({ aura = "spender_c", pct = -0.5, spells = { fs.SPENDER_A } })
+        I.AuraModel(1, I.auras.bySpell[fs.SPENDER_C], 1, 20, 1, 1, Obs.CastSuccess, false)
+        I.clock = 1
+        ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 40 } } -- 80 halved: no read of the base alone
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.same({ 3, 1720 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
+        assert.is_true(math.abs(I.CostOf(1) - 189 * 0.91 * 0.5) < 1e-9, tostring(I.CostOf(1))) -- the aura is up
+    end)
+
     it("walks the talent tree into ranks by registered spell ID, and defers a walk in combat", function()
         ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 1011 } }
         ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 2 }
