@@ -288,3 +288,18 @@ describe("check_wowsims_pin", function()
         assert.are.same({ true, 2200 }, { tanks.tank, tanks.healingModel.hps })
     end)
 end)
+
+-- Every shipped wowsims pack is the translator's output for its checked-in request at its spec's pin (the in-memory
+-- twin of `make packs-check`): a translator change that moves a pack fails here until the pack is re-exported.
+describe("the shipped wowsims packs #slow", function()
+    local apl = require("tools.wowsims.apl")
+    for _, spec in ipairs(recipes()) do
+        it(spec .. "'s pack is its request's translation", function()
+            local path, text = apl.render(spec, ex)
+            local f = assert(io.open(path, "rb"))
+            local shipped = f:read("*a")
+            f:close()
+            assert.are.equal(shipped, text)
+        end)
+    end
+end)

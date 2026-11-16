@@ -466,6 +466,15 @@ describe("the wowsims APL translator", function()
                         end),
                     },
                     plain = { key = "plain", id = 1010, gcd = "spell", cooldown = 0 },
+                    swing = {
+                        key = "swing",
+                        id = 1011,
+                        gcd = "off",
+                        cooldown = 60,
+                        handler = h(function()
+                            applyBuff("swing")
+                        end),
+                    },
                 },
                 auras = {
                     shout = { id = 2001, duration = 120 },
@@ -477,6 +486,22 @@ describe("the wowsims APL translator", function()
                     stance = { id = 2008, duration = 3600 },
                     other_stance = { id = 2018, duration = 3600 },
                     boom = { id = 2009, duration = 30 },
+                    -- CN21: the engine keeps a function duration in `funcs` and runs it on read, in the stub state,
+                    -- which raises on a key it lacks (Guardian's prepull Maul: mainhand_speed)
+                    swing = setmetatable({
+                        id = 2010,
+                        funcs = {
+                            duration = function()
+                                error('stub state lacks "mainhand_speed"')
+                            end,
+                        },
+                    }, {
+                        __index = function(t, k)
+                            if t.funcs[k] then
+                                return t.funcs[k]()
+                            end
+                        end,
+                    }),
                 },
                 talents = {},
             }
@@ -516,6 +541,14 @@ describe("the wowsims APL translator", function()
             )
             assert.are.equal(1, #omitted)
             assert.matches("^precombat #7: no guard: boom's handler raised", omitted[1])
+        end)
+
+        -- CN21: a duration the kit computes (a function, run in the stub state) is unknown, never moot: the guard stays,
+        -- and its read never raises (Guardian's prepull Maul, whose aura lasts the main hand's swing)
+        it("keeps the guard of an aura whose duration is a function, without reading it", function()
+            local text, omitted = apl.translate({ prepullActions = { at(1011, "-1s") } }, guardCtx())
+            assert.are.equal("actions.precombat=swing,use_off_gcd=1,if=!buff.swing.up", text)
+            assert.are.same({}, omitted)
         end)
 
         it(
@@ -2096,7 +2129,7 @@ describe("the wowsims APL translator's re-pin reads", function()
         )
         assert.are.same({
             "default #4: targetIsActive of Target",
-            "default #5: timeUntilTargetDies of Target",
+            "default #5: timeUntilTargetDies of Target: Forever gives no other target's time to die", -- CN24
             "default #6: numActiveAdds",
             "default #7: remainingCastTime",
             "default #8: isExecutePhase of Target",
@@ -3363,6 +3396,38 @@ describe("the wowsims APL translator's target swaps (option D)", function()
             "default #3: " .. next,
             "default #4: " .. next,
             "default #5: changeTarget Target: no main target in Hekili",
+        }, omitted)
+    end)
+
+    -- CN24 (API-forced): Forever gives no other target's time to die, so an entry that reads another target's death
+    -- (Feral's 2/3-target lists, through their variables) or compares the current target's with the fight's end
+    -- (Guardian's, both fight_remains here) is omitted with its reason, never folded into an always-false term
+    it("CN24: omits another target's death, a swap to it, and the target's death against the fight's end", function()
+        local next = { timeUntilTargetDies = { targetUnit = { type = "NextTarget" } } }
+        local dies = { timeUntilTargetDies = { targetUnit = { type = "CurrentTarget" } } }
+        local text, omitted = apl.translate({
+            priorityList = {
+                cast(100, cmp("OpGt", next, const("10s"))),
+                cast(100, { variableRef = { name = "Next target lives" } }),
+                swap({ variableRef = { name = "Next target lives" } }),
+                swap(nil, "PreviousTarget"),
+                cast(200, AND(cmp("OpLt", dies, const("3s")), cmp("OpLt", dies, { remainingTime = {} }))),
+                cast(200, cmp("OpGt", { remainingTime = {} }, { timeUntilTargetDies = {} })),
+                cast(200, cmp("OpLt", dies, const("3s"))),
+            },
+            valueVariables = { { name = "Next target lives", value = cmp("OpGt", next, const("6s")) } },
+        }, ctx({}))
+        assert.are.equal("actions=big_hit,if=fight_remains<3", text)
+        local other = "timeUntilTargetDies of NextTarget: Forever gives no other target's time to die"
+        local fight = "timeUntilTargetDies against remainingTime: Forever gives no other target's time to die"
+            .. " (one target: both are fight_remains)"
+        assert.are.same({
+            "default #1: " .. other,
+            "default #2: " .. other,
+            "default #3: changeTarget NextTarget: no on-all-targets read of a cast before it in this list",
+            "default #4: changeTarget PreviousTarget: no previous target in Hekili",
+            "default #5: " .. fight,
+            "default #6: " .. fight,
         }, omitted)
     end)
 
