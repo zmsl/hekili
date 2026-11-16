@@ -215,6 +215,8 @@ describe("Forever Shaman", function()
         -- Mana Spring Totem's buff: 10 every 2 s at rank 4 (DB2 aura 24), +5% a rank of Restorative Totems
         local ms = r.models.mana_spring
         assert.are.equal("mana_spring", ms.aura)
+        -- both totems' buffs are periodic energizes: Innervate leaves their mp5 unscaled (CN23, wowsims mana.go:176-183)
+        assert.are.same({ true, true }, { ms.energize, r.models.mana_tide.energize })
         assert.are.same(
             { 10494, { "mana_spring_totem", 5677, 10491, 10493, 5678, 5675, 10495, 10496, 10497 } },
             { w.auras.mana_spring.id, w.auras.mana_spring.copy }
@@ -1078,10 +1080,12 @@ describe("Forever Shaman through the engine", function()
         end
     )
 
-    -- L41: the percent-of-base costs price from the level-60 base 1520 (the mana meta's) before any cost read.
-    it("prices the percent-of-base costs at 60 from base mana 1520: 152, 91, 121", function()
+    -- L41: the percent-of-base costs price from the level-60 base 1520 (the mana meta's) before any cost read, each
+    -- the nearest whole mana (CN22: wowsims e4ef929e54 mana.go rounds, from the game's form costs): Stormstrike's 8% is
+    -- 121.6, so 122.
+    it("prices the percent-of-base costs at 60 from base mana 1520: 152, 91, 122", function()
         local S, VS = H.Hekili.State, H.ns.VirtualState
-        assert.are.same({ 1520, 152, 152, 91, 91, 121 }, {
+        assert.are.same({ 1520, 152, 152, 91, 91, 122 }, {
             VS.BasePower(0),
             S.action.poison_cleansing_totem.cost,
             S.action.disease_cleansing_totem.cost,
@@ -1094,12 +1098,12 @@ describe("Forever Shaman through the engine", function()
     -- Totemic Focus (16173, aura 108 misc 14, -5% a rank on mask 0x20081018: every totem, not Stormstrike; wowsims pin
     -- spells_auto_gen.go:13198): the client's totem cost read carries the cut, so the base it teaches (I.LearnBases)
     -- stays 1520 only when the totem's declared cost carries it too.
-    it("keeps base mana 1520 and Stormstrike at 121 under a Totemic Focus 5/5 totem cost read", function()
+    it("keeps base mana 1520 and Stormstrike at 122 under a Totemic Focus 5/5 totem cost read", function()
         local c = character()
         c.talents = { [16173] = 5 }
         local T = headless.new({ character = c, pack = "Enhancement (wowsims.com)" })
         local S, VS, I = T.Hekili.State, T.ns.VirtualState, T.ns.VirtualStateInternal
-        T.ctl.costs[8166] = { { type = 0, cost = 114 } } -- Poison Cleansing Totem: floor(0.1 x 1520) x 0.75
+        T.ctl.costs[8166] = { { type = 0, cost = 114 } } -- Poison Cleansing Totem: 0.1 x 1520 x 0.75
         T.Fire("SPELLS_CHANGED")
         local function belief(key) -- the belief's price at the cast (I.CostOf)
             for a = 1, I.ab.n do
@@ -1108,7 +1112,7 @@ describe("Forever Shaman through the engine", function()
                 end
             end
         end
-        assert.are.same({ 1520, 121, 114, 65 * 0.75 }, {
+        assert.are.same({ 1520, 122, 114, 65 * 0.75 }, {
             VS.BasePower(0),
             belief("stormstrike"),
             belief("poison_cleansing_totem"),
@@ -1116,7 +1120,7 @@ describe("Forever Shaman through the engine", function()
         })
         -- the simulation's prices alike
         assert.are.same(
-            { 121, 114, 65 * 0.75 },
+            { 122, 114, 65 * 0.75 },
             { S.action.stormstrike.cost, S.action.poison_cleansing_totem.cost, S.action.sentry_totem.cost }
         )
         assert.are.same({}, T.loadErrors)

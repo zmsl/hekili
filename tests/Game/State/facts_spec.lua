@@ -66,12 +66,12 @@ describe("facts and polls", function()
         def.resources[1].base = 200 -- the pack's fallback
         I.Build(def, 1)
         ctl.known[fs.SPENDER_C] = true
-        assert.are.same({ 11, 200 }, { I.CostOf(3), VS.BasePower(fs.RAGE) }) -- floor(0.055 x 200), before any read
+        assert.are.same({ 11, 200 }, { I.CostOf(3), VS.BasePower(fs.RAGE) }) -- 0.055 x 200, before any read
         ctl.costs[fs.SPENDER_C] = { { type = 1, cost = 12 } }
         ctl.Fire("SPELLS_CHANGED")
-        assert.are.same({ 12, 219 }, { I.CostOf(3), VS.BasePower(fs.RAGE) }) -- the least whole base pricing it 12
+        assert.are.same({ 12, 218 }, { I.CostOf(3), VS.BasePower(fs.RAGE) }) -- the base nearest 12 / 0.055 = 218.2
         ctl.Fire("SPELLS_CHANGED") -- a read the base prices keeps it
-        assert.are.equal(219, VS.BasePower(fs.RAGE))
+        assert.are.equal(218, VS.BasePower(fs.RAGE))
         ctl.costs[fs.SPENDER_C] = { { type = 1, cost = 14 } }
         ctl.Fire("PLAYER_LEVEL_UP", 21) -- a new level's base
         assert.are.same({ 14, 255 }, { I.CostOf(3), VS.BasePower(fs.RAGE) })
@@ -95,7 +95,7 @@ describe("facts and polls", function()
         local def = fs.def(h)
         def.resources[1].base = 200
         I.Build(def, 1)
-        assert.are.same({ 280, 280 }, { I.CostOf(1), I.CostOf(3) }) -- floor(1.4 x 200), not 1.4 points
+        assert.are.same({ 280, 280 }, { I.CostOf(1), I.CostOf(3) }) -- 1.4 x 200, not 1.4 points
         c.spend, c.spendBase = 0.5, nil
         a.spend, a.declaredSpend, a.spendBase = 40, nil, nil
         I.Build(def, 1)
@@ -113,7 +113,7 @@ describe("facts and polls", function()
         local def = fs.def(h)
         def.resources[1].base = 200
         I.Build(def, 1)
-        -- the true base 310: at rank 2 spender_a costs floor(0.4 x 310) = 124, spender_c floor(0.03 x 310) = 9
+        -- the true base 310: at rank 2 spender_a costs 0.4 x 310 = 124, spender_c 0.03 x 310 = 9.3, so 9
         ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
         ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 124 } }
         ctl.costs[fs.SPENDER_C] = { { type = 1, cost = 9 } }
