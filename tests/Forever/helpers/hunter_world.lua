@@ -21,7 +21,6 @@ local M = {}
 
 M.CLIENT_SPEC, M.CLASS_ID = 1484, 3 -- the client's Hunter pseudo-spec
 local MANA = 0 -- Enum.PowerType
-local MAX = 5000
 local GCD = { spell = 1.5, off = 0 }
 -- The default regen parts (a pack's `fsr` replaces them; the class file declares them per spec, as wowsims's logs).
 local FSR = { 18, 3 }
@@ -228,7 +227,13 @@ M.MAP = {
     strider_kick = shot("strider_kick", true),
     wing_clip = shot("wing_clip", true), -- a main-hand special that crits (wowsims wing_clip.go): Resourcefulness
     immolation_trap = {}, -- the trap's burn is unmodelled (no read of it)
-    bestial_wrath = {}, -- the BM talent: its rage is the pet's (no pet modelled), nothing on us
+    -- the BM talent: its rage is the pet's; The Beast Within's window on us (owner L1105: every cost -50%, costOf's
+    -- callers), opened after its own full-price spend
+    bestial_wrath = {
+        effect = function(W, e, _, X)
+            e.beastWithin = W.t + X.aura.bestial_wrath.duration
+        end,
+    },
     -- the Orc racial (Hekili_Shared, the wowsims build's race): its buff on us; the attack power it adds is unmodelled
     blood_fury = {
         effect = function(W, e, _, X)
@@ -275,7 +280,10 @@ local PACKS = {
         weapon = { 180, 260, 3.8 }, -- prebis_weave's Arcanite Reaper (wowsims db: 3.8 s)
         aspect = "aspect_of_the_hawk", -- the pack's (its precombat Aspect of the Hawk)
         talents = { [440529] = 2 }, -- the export's Resourcefulness 2/2 (hunter_survival.json)
-        fsr = { 15.88, 0, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
+        -- its log (Pre-BiS weave gear): 1.200 a tick casting (mp5 part 12.00 a second), 2.950 outside (spirit part
+        -- 29.50 - 12.00 = 17.50), 2.075 casting under Resourcefulness (12.00 + 0.5 x 17.50 = 20.75); 3555 mana
+        fsr = { 17.5, 12, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
+        max = 3555,
         uptime = { "hunters_mark" },
     },
 }
@@ -304,6 +312,9 @@ local function header(spec) -- the export's talents: { [rank-1 spell] = rank }
     end
     return out
 end
+-- The turret builds' logs (one gear set, 3330 mana): 1.240 a tick casting with no share (mp5 part 12.40 a second), 2.990
+-- outside (spirit part 29.90 - 12.40 = 17.50), 2.115 casting under a 50% share (12.40 + 0.5 x 17.50 = 21.15).
+local TURRET_FSR = { 17.5, 12.4 }
 local function turret(pack, spec, extra, fsr, uptime)
     local kit = {
         "auto_shot",
@@ -326,6 +337,7 @@ local function turret(pack, spec, extra, fsr, uptime)
         aspect = "aspect_of_the_hawk",
         talents = header(spec),
         fsr = fsr,
+        max = 3330,
         uptime = uptime or { "serpent_sting", "hunters_mark" },
     }
 end
@@ -333,22 +345,23 @@ PACKS.BeastMasteryTurret = turret(
     "Beast Mastery Turret (wowsims.com)",
     "hunter_beast_mastery_turret",
     { "bestial_wrath", "summon_hawk" }, -- the hawk list (e4ef929e54)
-    -- Bestial Discipline 2/2 (19590=2): wowsims's 7.94 a second while casting (its 50% of the 15.88 outside)
-    { 7.94, 7.94, share = 0.5 }
+    -- Bestial Discipline 2/2 (19590=2): a static 50% share, so the casting rate 21.15 (the log's 2.115 a tick) and the
+    -- spirit part outside it (1 - 0.5) x 17.50 = 8.75 (outside 29.90: 2.990)
+    { 8.75, 21.15, share = 0.5 }
 )
 PACKS.MarksmanshipTurret = turret(
     "Marksmanship Turret (wowsims.com)",
     "hunter_marksmanship_turret",
     { "sniper_shot" },
     -- no Resourcefulness in this build; its Rapid Recuperation 2/2 (the log header's 1223987=2): half the spirit regen
-    -- while casting for 15 s after each landed Serpent Sting (the log's 2.554 a tick casting under it, 1.36 without)
-    { 15.88, 0, auras = { [1242512] = { share = 0.5 } } }
+    -- while casting for 15 s after each landed Serpent Sting (the log's 2.115 a tick casting under it, 1.240 without)
+    { TURRET_FSR[1], TURRET_FSR[2], auras = { [1242512] = { share = 0.5 } } }
 )
 PACKS.SurvivalTurret = turret(
     "Survival Turret (wowsims.com)",
     "hunter_survival_turret",
     {},
-    PACKS.Survival.fsr -- Resourcefulness 2/2, as the weave build
+    { TURRET_FSR[1], TURRET_FSR[2], auras = { [RESOURCEFULNESS] = { share = 0.5 } } } -- Resourcefulness 2/2
 )
 PACKS.SurvivalMelee = {
     pack = "Survival Melee (wowsims.com)",
@@ -372,7 +385,10 @@ PACKS.SurvivalMelee = {
     offhand = { 49, 92, 1.4 }, -- its Bonescraper (1.4 s)
     aspect = "aspect_of_the_beast",
     talents = header("hunter_survival_melee"),
-    fsr = { 15.88, 0 }, -- no Resourcefulness in this build
+    -- no Resourcefulness in this build; its log (Pre-BiS melee gear, 3270 mana): 1.240 a tick casting (12.40 a second),
+    -- 2.915 outside (spirit part 29.15 - 12.40 = 16.75)
+    fsr = { 16.75, 12.4 },
+    max = 3270,
     uptime = { "hunters_mark" },
 }
 -- Survival Melee's live bars only, at the weave's range with a ranged weapon (R63, as SurvivalRanged): in melee at
@@ -446,6 +462,12 @@ local function costOf(key, ids, H)
     return c * (1 - res) * (1 - (EFFICIENT[key] and 0.03 * talentRank(H, 19416) or 0))
 end
 
+-- The Beast Within (1223758, owner L1105): every mana cost x 0.5 while `e`'s window is open at `t`, unrounded (the
+-- kit's cost mod; wowsims omits it, so its logs pay full).
+local function beastWithin(cost, e, t)
+    return (e.beastWithin or 0) > t and cost * 0.5 or cost
+end
+
 -- The ranged haste on us at `now` in belief `VS`: Rapid Fire's 1.4 times Quick Shots' 1.3.
 local function haste(VS, now, X)
     local rf, qs = VS.Aura("player", X.aura.rapid_fire.id, now), VS.Aura("player", X.aura.quick_shots.id, now)
@@ -500,7 +522,7 @@ local function content(name)
             level = 60,
             known = known,
             talents = P.talents or {},
-            power = { type = MANA, token = "MANA", max = MAX },
+            power = { type = MANA, token = "MANA", max = P.max },
             speed = { P.weapon[3], P.offhand and P.offhand[3] },
             ranges = ranges,
         }
@@ -542,7 +564,7 @@ local function content(name)
         W.at(W.t, roll)
     end
 
-    -- Level 60 against a level 60 mob in melee range swinging at us, 5000 mana full and under the five-second rule.
+    -- Level 60 against a level 60 mob in melee range swinging at us, the log's pool full and under the five-second rule.
     -- Neither side dies (the mob's health here, ours in `hooks`): each fight ends at its stop, out of combat. A kill
     -- ends the loop before the client sees it, so the next fight's prepull would be believed in combat (the harness
     -- quirk shaman_world works around the same way).
@@ -550,9 +572,9 @@ local function content(name)
         level = 60,
         weapons = { P.weapon, P.offhand },
         ranged = P.ranged,
-        max = MAX,
+        max = P.max,
         fsr = { [MANA] = P.fsr or FSR },
-        power = MAX,
+        power = P.max,
         mobHealth = 1e9,
         distance = P.distance,
         script = hooks,
@@ -605,10 +627,15 @@ local function content(name)
                 end
             end
         end
+        local full = costOf(key, idsOf(key), H)
         local p = {
             spell = VS.KnownID(a.id),
             ids = ids,
-            cost = costOf(key, idsOf(key), H),
+            -- the press checked at the oracle's (true) belief of The Beast Within, the charge at the world's (`price`)
+            cost = VS.Aura("player", X.aura.bestial_wrath.id, now) and full * 0.5 or full,
+            price = function(W, e)
+                return beastWithin(full, e, W.t)
+            end,
             pt = MANA,
             -- Improved Arcane Shot (19454): -0.3 s a rank, as the kit
             -- Survivalist's Discipline (1310496): -20% a rank on the trap (the world's truth, restated from the pin's curve)
@@ -675,7 +702,8 @@ local function content(name)
                     if m.requires and not m.requires(W, e, X) then
                         return false, false
                     end
-                    return power >= cost, power < cost
+                    local c = beastWithin(cost, e, W.t)
+                    return power >= c, power < c
                 end
                 for _, id in ipairs(C.IDS[key]) do
                     out[#out + 1] = { id, answer }

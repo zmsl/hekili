@@ -365,10 +365,11 @@ end
 local BESTIAL_DISCIPLINE = { 0.25, 0.5 }
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace, as wowsims's weave logs measured them at 60 (e5a9cd2a2d): Beast Mastery 7.94 a
--- second while casting (Bestial Discipline 2/2's 50% share of 15.88) and 15.88 outside, so spirit 7.94, mp5 7.94 and
--- share 0.5; Marksmanship and Survival 0 while casting and 15.88 outside. Forever's Spirit regen is `6.25 + Spirit/8`
--- a second for every class (wowsims mana.go:75-76), not Classic's formula.
+-- the in-combat calibration replace, as wowsims's turret logs measure them at 60 (e4ef929e54, Pre-BiS turret gear):
+-- 1.240 a tick casting with no share (mp5 12.40 a second), 2.990 outside (Spirit regen 29.90 - 12.40 = 17.50), so
+-- Marksmanship and Survival spirit 17.50, mp5 12.40; Beast Mastery under Bestial Discipline 2/2's 50% share 21.15
+-- casting (12.40 + 0.5 x 17.50: the log's 2.115) and 29.90 outside, so spirit 8.75, mp5 21.15 and share 0.5. Forever's
+-- Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not Classic's formula.
 -- Resourcefulness (1242688, DB2 aura 134): +50% of Spirit regen while casting, opened by a melee or ranged ability's
 -- crit at 2/2 (the abilities' `onCrit`, below).
 -- Rapid Recuperation (1242512): 25/50% by rank, opened at a Serpent Sting's cast (wowsims
@@ -391,10 +392,10 @@ spec:RegisterResource(
     {
         fsr = {
             spirit = function()
-                return state.spec.beast_mastery and 7.94 or 15.88
+                return state.spec.beast_mastery and 8.75 or 17.5
             end,
             mp5 = function()
-                return state.spec.beast_mastery and 7.94 or 0
+                return state.spec.beast_mastery and 21.15 or 12.4
             end,
             share = function() -- Bestial Discipline's rank (the belief reads it after its talent walk), never the spec
                 return BESTIAL_DISCIPLINE[talent.bestial_discipline.rank] or 0

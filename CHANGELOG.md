@@ -14,6 +14,7 @@
 - Hunter: Hekili now tracks Strider Kick's speed after your Strider Kick, and Lacerating Strikes' bleed after your Mongoose Bite.
 - Hunter: Beast Mastery Turret now follows wowsims.com's hawk rotation: Summon Hawk twice, then Arcane Shot, and no longer suggests Sniper Shot. Until you have Summon Hawk, it suggests Arcane Shot on its own (not yet checked in game).
 - Hunter: Survival Melee now runs out to reapply Serpent Sting while Strider Kick's speed is up and you have more than 30% mana, as wowsims.com does, and no longer suggests a Major Mana Potion (not yet checked in game).
+- Hunter: before it learns your own mana regeneration, Hekili now starts from the regeneration of wowsims.com's current level 60 gear, so early fights forecast mana closer to the game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 ### Fixed
