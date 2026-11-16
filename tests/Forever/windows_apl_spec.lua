@@ -12,6 +12,8 @@ local DISPLAYS = { "Primary", "AOE", "Cooldowns", "Interrupts", "Defensives" }
 
 local H, S, VS, VSI, ops, t
 local flags = {}
+local flaps = 0 -- the one-time flapping-pair warnings seen (L1205), taken out of H.errors by tick()
+local FLAP = "opened and closed by lines in the same recommendation"
 
 -- Boots Arms, registers the Lua windows `lua` (name -> RegisterWindow data) and the test flags (state expressions
 -- reading `flags`), targets a mob and records every WindowOp the core sends.
@@ -78,6 +80,12 @@ local function tick()
     ops = {}
     t = t + 0.2
     assert(headless.cycle(H, t))
+    for i = #H.errors, 1, -1 do
+        if H.errors[i]:find(FLAP, 1, true) then
+            flaps = flaps + 1
+            table.remove(H.errors, i)
+        end
+    end
     assert.are.same({}, H.errors)
     return H.Hekili.Engine.Output.Primary.recs, ops
 end
@@ -501,6 +509,7 @@ end
 -- Runs `c.lists` for `c.ticks` ticks (flags per tick from `c.flags[i]`); returns the operations sent per tick.
 local function forecastRun(c)
     load(c.lists)
+    flaps = 0
     assert.are.equal(c.loadErrors or 0, #H.errors) -- C01: its compile errors, reported once at load
     for k in pairs(H.errors) do
         H.errors[k] = nil
@@ -587,6 +596,8 @@ local function forecastRun(c)
         copy = {}
     end
     H.Hekili.GetNextPrediction = gnp
+    -- L1205: a window opened and closed by lines within one slot warns once per pack and window a session
+    assert.are.equal(c.flaps or 0, flaps, c.id .. ": flapping-pair warnings")
     -- the last tick's sends too: one more Drain (no pass) must leave the belief equal to the last copy
     t = t + 0.2
     H.ctl.now = t
@@ -684,6 +695,7 @@ local FORECAST = {
     },
     {
         id = "W09",
+        flaps = 1, -- one warning for the whole run (L1205)
         lists = {
             windows = W1,
             default = "actions+=/open_window,name=x\nactions+=/close_window,name=x\nactions+=/berserker_stance",
@@ -694,6 +706,7 @@ local FORECAST = {
     },
     {
         id = "W10",
+        flaps = 1, -- one warning for the whole run (L1205)
         lists = {
             windows = W1,
             default = "actions+=/close_window,name=x\nactions+=/open_window,name=x\nactions+=/berserker_stance",
@@ -705,6 +718,7 @@ local FORECAST = {
     },
     {
         id = "W11",
+        flaps = 1, -- one warning for the whole run (L1205)
         lists = {
             windows = W1,
             default = "actions+=/open_window,name=x\nactions+=/close_window,name=x\nactions+=/open_window,name=x\nactions+=/berserker_stance",
@@ -721,6 +735,7 @@ local FORECAST = {
     },
     {
         id = "W12",
+        flaps = 1, -- slot 1 ends at the ready pick; a later slot walks to the bottom line and flaps (L1205: any slot)
         lists = {
             windows = W1,
             default = "actions+=/open_window,name=x\nactions+=/bloodrage\nactions+=/close_window,name=x\nactions+=/berserker_stance",

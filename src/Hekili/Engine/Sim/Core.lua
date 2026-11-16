@@ -572,7 +572,10 @@ local walkRestart, slotRestarts = false, 0
 -- Scripts.lua) is what times the weave's open; here the `<`/`<=` direction.
 local OP_OPEN, OP_CLOSE = 1, 2 -- VS.WindowOp's codes (Game/State/Families/Windows.lua)
 
-local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap )
+-- (L1205) pack -> window name -> true: the flapping-pair warning already given this session
+local flapWarned = {}
+
+local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap, packName )
     local name = state.args.window_name
     local verb = isOpen and "open_window" or "close_window"
     if state.WindowFired( scriptID ) then
@@ -603,7 +606,17 @@ local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap )
     end
     local key = changed and atNow and state.WindowSendKey( name )
     if key then ns.VirtualState.WindowOp( key, isOpen and OP_OPEN or OP_CLOSE ) end
-    if changed then state.WindowFired( scriptID, true ) end
+    if changed then
+        state.WindowFired( scriptID, true )
+        -- (L1205) opened and closed by lines within one slot: the author's flapping pair, warned once per pack and window
+        if state.WindowFlap( name, isOpen ) and not ( flapWarned[ packName ] and flapWarned[ packName ][ name ] ) then
+            flapWarned[ packName ] = flapWarned[ packName ] or {}
+            flapWarned[ packName ][ name ] = true
+            Hekili:Error( "Priority '%s': window '%s' was opened and closed by lines in the same recommendation; every such "
+                .. "recommendation walks the priority again (windows restart). Check the open_window and close_window conditions.",
+                tostring( packName ), tostring( name ) )
+        end
+    end
 
     if debug then
         self:Debug( " - %s %s: %s at +%.2f%s.", verb, tostring( name ), pass and "PASS" or "FAIL", state.delay,
@@ -930,7 +943,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                     end
 
                                 elseif action == "open_window" or action == "close_window" then
-                                    walkRestart = windowLine( self, scriptID, script, action == "open_window", debug, rWait, spec.throttleForecastingTime or 0 )
+                                    walkRestart = windowLine( self, scriptID, script, action == "open_window", debug, rWait, spec.throttleForecastingTime or 0, packName )
 
                                 else
                                     -- Target Cycling.

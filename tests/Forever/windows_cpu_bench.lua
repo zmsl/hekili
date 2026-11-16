@@ -131,12 +131,13 @@ describe("windows CPU bench: W09, R03, W05", function()
                     walks = walks + (listName == "default" and 1 or 0)
                     return apl(self, dispName, packName, listName, ...)
                 end
-                local r1, r2 = 0, 0
+                local r1, r2, r3 = 0, 0, 0
                 local c = os.clock()
                 for _ = 1, N do
                     step(H)
                     local recs = H.Hekili.Engine.Output.Primary.recs
                     r1, r2 = r1 + (recs[1].restarts or 0), r2 + (recs[2] and recs[2].restarts or 0)
+                    r3 = r3 + (recs[3] and recs[3].restarts or 0)
                 end
                 local ms = (os.clock() - c) / N * 1000
                 H.ns.VirtualState.WindowOp, hk.GetNextPrediction, hk.GetPredictionFromAPL = op, gnp, apl
@@ -148,7 +149,7 @@ describe("windows CPU bench: W09, R03, W05", function()
                 else
                     assert.are.equal(0, ops)
                 end
-                return ms, { r1 / N, r2 / N, ops / N, Q.refused - refused, picks / N, walks / N }
+                return ms, { r1 / N, r2 / N, ops / N, Q.refused - refused, picks / N, walks / N, r3 / N }
             end
             local ratios, sOn, sOff = {}, 0, 0
             local von, voff
@@ -170,7 +171,7 @@ describe("windows CPU bench: W09, R03, W05", function()
             print(
                 string.format(
                     "CPU %s: with %.3f ms, without %.3f ms per Update (mean of %d pairs x %d); ratio median %.3f, range %.3f-%.3f;"
-                        .. " restarts per slot: slot1 %.2f slot2 %.2f; operations per Update %.2f; refused %d;"
+                        .. " restarts per slot: slot1 %.2f slot2 %.2f slot3 %.2f; operations per Update %.2f; refused %d;"
                         .. " picks per Update %.1f vs %.1f; default-list walks per Update %.1f vs %.1f (last pair)",
                     case.id,
                     sOn / PAIRS,
@@ -182,6 +183,7 @@ describe("windows CPU bench: W09, R03, W05", function()
                     hi,
                     von[1],
                     von[2],
+                    von[7],
                     von[3],
                     von[4],
                     von[5],
@@ -190,6 +192,11 @@ describe("windows CPU bench: W09, R03, W05", function()
                     voff[6]
                 )
             )
+            for i = #H.errors, 1, -1 do -- the one-time flapping-pair warning (L1205) is W09's expected output
+                if H.errors[i]:find("opened and closed by lines in the same recommendation", 1, true) then
+                    table.remove(H.errors, i)
+                end
+            end
             assert.are.same({}, H.errors)
         end)
     end

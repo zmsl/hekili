@@ -1621,6 +1621,7 @@ local WIN = {
     up = {}, openedAt = {}, expiresAt = {}, refreshes = {}, step = {},
     name = {}, keys = {}, key = {}, -- by index: the window's name; an APL window's keys by display, and this pass's key
     fired = {}, -- by a window line's script ID: it changed the copy in this slot (the per-slot mark, §4.3, ruling 20)
+    slotOpened = {}, slotClosed = {}, -- by index: a line opened / closed the copy in this slot (the flapping pair, L1205)
     send = false, -- the slot walking now sends its changes (Core.lua's slot 1; never the alternatives probe)
 }
 
@@ -1772,6 +1773,16 @@ do
     function state.WindowSlot( send )
         WIN.send = send
         for id in pairs( WIN.fired ) do WIN.fired[ id ] = false end
+        for w = 1, WIN.n do WIN.slotOpened[ w ], WIN.slotClosed[ w ] = false, false end
+    end
+
+    --- Core.lua's window line opened (`isOpen`) or closed window `name`'s copy: true when lines both opened and closed
+    --- it in this slot (L1205: the flapping pair, which the core warns about once). Allocates nothing.
+    function state.WindowFlap( name, isOpen )
+        local w = WIN.byKey[ name ]
+        if not w then return false end
+        if isOpen then WIN.slotOpened[ w ] = true else WIN.slotClosed[ w ] = true end
+        return WIN.slotOpened[ w ] and WIN.slotClosed[ w ] or false
     end
 
     --- Core.lua's window line `scriptID`: true when it already changed the copy in this slot; `mark` sets it.

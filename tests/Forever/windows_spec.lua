@@ -238,7 +238,8 @@ describe("the core's windows", function()
     end
 
     -- Loads `apl` (simc lines) as the pack's default list and runs one cycle; returns the Primary display's slots.
-    local function run(apl)
+    -- `flap`: the priority flaps a window (opened and closed by lines in one slot): its one-time warning (L1205)
+    local function run(apl, flap)
         local lines, warnings = H.Hekili:ParseActionList(apl)
         assert.are.same({}, warnings or {})
         for _, l in ipairs(lines) do
@@ -249,6 +250,11 @@ describe("the core's windows", function()
         H.Fire("PLAYER_REGEN_DISABLED")
         assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
         assert(headless.cycle(H, H.ctl.now + 0.2))
+        if flap then
+            assert.are.equal(1, #H.errors)
+            assert.is_truthy(H.errors[1]:find("opened and closed by lines in the same recommendation", 1, true))
+            table.remove(H.errors, 1)
+        end
         assert.are.same({}, H.errors)
         return H.Hekili.Engine.Output.Primary.recs
     end
@@ -436,7 +442,8 @@ describe("the core's windows", function()
     it("closes with close_window", function()
         core({ w = { duration = 6 } })
         local recs = run(
-            "actions+=/open_window,name=w\nactions+=/close_window,name=w\nactions+=/bloodrage,if=window.w.up\nactions+=/berserker_stance"
+            "actions+=/open_window,name=w\nactions+=/close_window,name=w\nactions+=/bloodrage,if=window.w.up\nactions+=/berserker_stance",
+            true
         )
         assert.are.equal("berserker_stance", recs[1] and recs[1].actionName)
     end)

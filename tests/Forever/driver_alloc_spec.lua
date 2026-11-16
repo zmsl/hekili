@@ -129,7 +129,9 @@ describe("Engine/Driver.lua through the engine frame", function()
         assert.are.equal(2, H.Hekili.Engine.Output.Primary.recs[1].restarts)
         assert.is_true(sent >= 160, tostring(sent)) -- OPEN and CLOSE per Update (Primary and AOE may both send)
         assert.are.equal(0, bytes)
-        assert.are.same({}, H.errors)
+        -- the flapping pair's warning (L1205), once for the session: its message is built only then
+        assert.are.equal(1, #H.errors)
+        assert.is_truthy(H.errors[1]:find("opened and closed by lines in the same recommendation", 1, true))
     end)
 
     -- Option D review I1: Recommend Target Swaps on, three mobs all carrying the DoT (the feature's resting state): the
