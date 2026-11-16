@@ -115,11 +115,21 @@ describe("windows CPU bench: W09, R03, W05", function()
                 end
                 local Q = VSI.winOps
                 local applied, dropped, refused = Q.applied, Q.dropped, Q.refused
-                local ops = 0
-                local op = H.ns.VirtualState.WindowOp
+                local ops, walks, picks = 0, 0, 0
+                local hk, op = H.Hekili, H.ns.VirtualState.WindowOp
+                local gnp, apl = hk.GetNextPrediction, hk.GetPredictionFromAPL
                 H.ns.VirtualState.WindowOp = function(...)
                     ops = ops + 1
                     return op(...)
+                end
+                -- every pick (slots, the alternatives probes) and every walk of the default list (restarts included)
+                hk.GetNextPrediction = function(...)
+                    picks = picks + 1
+                    return gnp(...)
+                end
+                hk.GetPredictionFromAPL = function(self, dispName, packName, listName, ...)
+                    walks = walks + (listName == "default" and 1 or 0)
+                    return apl(self, dispName, packName, listName, ...)
                 end
                 local r1, r2 = 0, 0
                 local c = os.clock()
@@ -129,49 +139,27 @@ describe("windows CPU bench: W09, R03, W05", function()
                     r1, r2 = r1 + (recs[1].restarts or 0), r2 + (recs[2] and recs[2].restarts or 0)
                 end
                 local ms = (os.clock() - c) / N * 1000
-                H.ns.VirtualState.WindowOp = op
-                if on then -- the windows are live: the bound set, operations applied, none dropped
+                H.ns.VirtualState.WindowOp, hk.GetNextPrediction, hk.GetPredictionFromAPL = op, gnp, apl
+                if on then -- the windows are live: the bound set, operations sent and applied, none dropped
                     assert.is_true(VSI.def.aplOpCap > 0, case.id .. ": no operations bound")
-                    if os.getenv("BENCH_DEBUG") then
-                        local DB = H.Hekili.Scripts.DB
-                        print(
-                            case.id,
-                            "ops",
-                            ops,
-                            "applied",
-                            Q.applied - applied,
-                            "refused",
-                            Q.refused - refused,
-                            "cap",
-                            VSI.def.aplOpCap,
-                            "pick",
-                            H.Hekili.Engine.Output.Primary.recs[1].actionName,
-                            "line1",
-                            tostring(DB[ww.PACK .. ":default:1"] and DB[ww.PACK .. ":default:1"].Error),
-                            "action1",
-                            tostring(lists.default[1].action),
-                            "combat",
-                            tostring(VSI.inCombat)
-                        )
-                    end
                     assert.is_true(ops > 0, case.id .. ": no operation sent")
                     assert.is_true(Q.applied > applied, case.id .. ": the belief applied nothing")
                     assert.are.equal(dropped, Q.dropped, case.id .. ": operations dropped")
                 else
                     assert.are.equal(0, ops)
                 end
-                return ms, r1 / N, r2 / N, ops / N, Q.refused - refused
+                return ms, { r1 / N, r2 / N, ops / N, Q.refused - refused, picks / N, walks / N }
             end
             local ratios, sOn, sOff = {}, 0, 0
-            local r1, r2, opsPer, refused
+            local von, voff
             for p = 1, PAIRS do
                 local on, off
                 if p % 2 == 1 then
-                    off = arm(false)
-                    on, r1, r2, opsPer, refused = arm(true)
+                    off, voff = arm(false)
+                    on, von = arm(true)
                 else
-                    on, r1, r2, opsPer, refused = arm(true)
-                    off = arm(false)
+                    on, von = arm(true)
+                    off, voff = arm(false)
                 end
                 ratios[p], sOn, sOff = on / off, sOn + on, sOff + off
             end
@@ -182,7 +170,8 @@ describe("windows CPU bench: W09, R03, W05", function()
             print(
                 string.format(
                     "CPU %s: with %.3f ms, without %.3f ms per Update (mean of %d pairs x %d); ratio median %.3f, range %.3f-%.3f;"
-                        .. " restarts per slot: slot1 %.2f slot2 %.2f; operations per Update %.2f; refused %d (last pair)",
+                        .. " restarts per slot: slot1 %.2f slot2 %.2f; operations per Update %.2f; refused %d;"
+                        .. " picks per Update %.1f vs %.1f; default-list walks per Update %.1f vs %.1f (last pair)",
                     case.id,
                     sOn / PAIRS,
                     sOff / PAIRS,
@@ -191,10 +180,14 @@ describe("windows CPU bench: W09, R03, W05", function()
                     median(ratios),
                     lo,
                     hi,
-                    r1,
-                    r2,
-                    opsPer,
-                    refused
+                    von[1],
+                    von[2],
+                    von[3],
+                    von[4],
+                    von[5],
+                    voff[5],
+                    von[6],
+                    voff[6]
                 )
             )
             assert.are.same({}, H.errors)
