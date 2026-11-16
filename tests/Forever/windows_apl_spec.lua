@@ -213,7 +213,7 @@ describe("the windows compiler (windows design v6 §3.4, §9)", function()
         local function reported() -- the window compile errors reported (the harness keeps Error's format string)
             local n = 0
             for _, e in ipairs(H.errors) do
-                n = n + (e:find("entry disabled", 1, true) and 1 or 0)
+                n = n + (e:find("the line is skipped", 1, true) and 1 or 0)
             end
             return n
         end
@@ -221,6 +221,11 @@ describe("the windows compiler (windows design v6 §3.4, §9)", function()
         H.Hekili:LoadScripts() -- an options edit loads the scripts again: marked again, not reported again (M3)
         assert.is_truthy(H.Hekili.Scripts.DB[ww.PACK .. ":default:1"].Error)
         assert.are.equal(1, reported())
+        -- a CHANGED error on the same line is a new report
+        local lists = H.Hekili.DB.profile.packs[ww.PACK].lists
+        lists.default = parse("actions+=/open_window,name=x,duration=3\nactions+=/berserker_stance")
+        H.Hekili:LoadScripts()
+        assert.are.equal(2, reported())
         for k in pairs(H.errors) do
             H.errors[k] = nil
         end
@@ -582,6 +587,17 @@ local function forecastRun(c)
         copy = {}
     end
     H.Hekili.GetNextPrediction = gnp
+    -- the last tick's sends too: one more Drain (no pass) must leave the belief equal to the last copy
+    t = t + 0.2
+    H.ctl.now = t
+    VS.Drain(t)
+    for _, n in ipairs(names) do
+        local want, b = closedAt(prev[n], VSI.clock), belief(n)
+        assert.is_true(
+            sameState(want, b),
+            string.format("%s final drain %s: copy %s belief %s", c.id, n, show(want), show(b))
+        )
+    end
     return perTick
 end
 
@@ -615,6 +631,16 @@ local FORECAST = {
             return i == 1 and { { "x", OPEN } } or { { "x", CLOSE } }
         end,
         sends = { 1, 1, 0, 0 },
+    },
+    {
+        id = "W02",
+        lists = { windows = W1, default = "actions+=/open_window,name=x,if=test_fa\nactions+=/berserker_stance" },
+        ticks = 3,
+        flags = { { fa = true }, { fa = false } },
+        cand = function(i)
+            return i == 1 and { { "x", OPEN } } or {} -- no close line: the window just runs on
+        end,
+        sends = { 1, 0, 0 },
     },
     {
         id = "W05",
@@ -711,6 +737,17 @@ local FORECAST = {
         },
         ticks = 2,
         cand = always({}), -- true only at a recheck time: the copy opens then, never at now
+        sends = { 0, 0 },
+    },
+    {
+        id = "W04",
+        lists = {
+            windows = W1,
+            default = "actions+=/call_action_list,name=sub,if=test_swing_remains<0.5\nactions+=/berserker_stance",
+            sub = "actions+=/open_window,name=x",
+        },
+        ticks = 2,
+        cand = always({}), -- the call is true only at a recheck time: the line inside re-reads its stack at its own time, so no open at now
         sends = { 0, 0 },
     },
     {

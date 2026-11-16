@@ -37,7 +37,7 @@ and 13 below read with this amendment. Settled with it (L1180-L1182): an OPEN th
 as `refused`; the core sends nothing for a refusal its forecast makes; the refresh is refused once the expiry sits at
 the `max_duration` cap (APL windows only; Lua windows keep their rule); every APL record carries a positive duration
 or `combat` (a sequence's is `combat`); OP5 is the one named carve-out of forecast == apply (5.4); a strict sequence
-record carries `on_deviation = "end"` (rule 17).
+record carries `on_deviation = "end"` (rule 17). Owner ruling L1226 (2026-11-16): a new APL window set is applied in combat only when the belief has no APL window yet; any change to existing windows waits for combat end (section 9, L01-first and L01 in section 13).
 
 ## 0. Decided
 
@@ -184,7 +184,7 @@ below. That is why ruling 26 has three values: `mode=wait` is SimC's, `mode=cont
 | Declared | `spec:RegisterWindow` (Engine/Schema/Spec.lua:434) | the `windows` list, or a sequence line |
 | What drives it | an evaluator the belief runs every Drain, with edge rules (Families/Windows.lua:164-182) | operations replayed from the display's now pass; no evaluator |
 | Instances | one | one per display, each its own key (five fixed displays, Engine/Sim/Core.lua:1384-1390) |
-| Registered | SpecializationChanged (Schema/Spec/Activation.lua:336) | at script load, applied out of combat (section 9) |
+| Registered | SpecializationChanged (Schema/Spec/Activation.lua:336) | at script load, applied out of combat, or in combat when the belief has no APL window yet (section 9) |
 | Steps | require an evaluator (L773) | a sequence's members |
 | Target change | nothing, unless `reset_on_target_change = true` | nothing, unless `reset_on_target_change=1` |
 
@@ -558,7 +558,7 @@ In the pass:
   - With the defaults, sequences run in Primary and AOE, and the filter bypass above shows a separated cooldown
     member there. Turning the setting on for Cooldowns restores "starts where it is chosen" in that display.
   - Changing the setting is a registration change: it goes through the same generation bump as a priority edit
-    (section 9), at once out of combat, else at combat end.
+    (section 9), at once out of combat, else at combat end (in combat at once only while the belief has no APL window yet).
   - With Cooldowns shown separately and Sequences off there (the default), a sequence whose first member is a
     separated cooldown starts in Primary through the start-line exception above, and is skipped in Cooldowns.
 
@@ -624,8 +624,9 @@ the same enemy counts as a change.
   duration (a sequence's: `combat`; OPEN carries none, v6.1), refresh, caps, steps, strict, `allow_skip`,
   `reset_on_target_change`, `step_timeout`, `on_deviation`: `"end"` on a strict sequence's record, none on a plain
   one, L1181) into `def.aplWindows`, bumps a generation, and the belief rebuilds only those rows and the operations buffer at its next Drain out of combat, else at combat
-  end. `state:BuildWindows` (State.lua:1662) re-runs with it.
-- Edits or pack switches in combat apply at combat end; until then an unknown key reads "down"
+  end; in combat the one exception is a belief with no APL window yet (a /reload in combat, an in-combat switch from a
+  pack without windows), which applies the new set at once (owner, L1226). `state:BuildWindows` (State.lua:1662) re-runs with it.
+- Edits or pack switches in combat apply at combat end, except onto a belief with no APL window yet (L1226); until then an unknown key reads "down"
   (Families/Now.lua:538-541 in the belief; `VS.Window` already returns false for an unknown name, Windows.lua:193-198)
   and its operations are dropped and counted.
 
@@ -788,7 +789,7 @@ actions.move_to_melee+=/close_window,name=move2,if=...
    as steps: read the `windows` list; collect sequences; check (a red side box listing undeclared, duplicate, class
    name clash); make keys; generate lines and the hidden list. Right: a fan-out from `burst` to five keys
    (`pack:burst#Primary` ... `#Interrupts`), then the generation bump and the belief applying it out of combat or at
-   combat end. Below: export and the editor showing only plain names.
+   combat end (at once in combat if it has no APL window yet). Below: export and the editor showing only plain names.
 
 ## 12. Phased plan
 
@@ -1151,6 +1152,7 @@ Group L, lifecycle, naming and replay (unit only):
 
 | id | Shape | What it proves |
 |---|---|---|
+| L01-first | /reload in combat, or a switch in combat from a pack without windows | the belief has no APL window yet: the set applies at once, operations land, nothing dropped |
 | L01 | edit in combat adds a window | reads "down", operations dropped and counted, applied at combat end, allocation only there |
 | L02 | pack switch out of combat | old keys gone, new keys closed |
 | L03 | spec switch | full rebuild; Lua windows per spec; no APL key survives |

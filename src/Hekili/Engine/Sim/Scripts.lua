@@ -1888,7 +1888,7 @@ function scripts:LoadScripts()
                 local seen = pack .. ":" .. e.list .. ":" .. e.line .. " " .. text
                 if not reportedWindowErrors[ seen ] then -- once per line and error a session: every options edit loads again
                     reportedWindowErrors[ seen ] = true
-                    Hekili:Error( "Priority '%s' list '%s' line %d: %s: %s; entry disabled.", pack, e.list, e.line, e.code, e.text )
+                    Hekili:Error( "Priority '%s' list '%s' line %d: %s: %s; the line is skipped.", pack, e.list, e.line, e.code, e.text )
                 end
             end
         end
