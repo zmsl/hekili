@@ -502,9 +502,9 @@ function M.new(W, k)
     -- secret but to a secret-free client
     local function cooldown(t, id, d)
         local gcdFlag = id == k.gcdSpell
-        -- a GCD pressed on the last one's end: that end's float sum can land a ulp after this rise, so it moves
-        -- back to it (its lower seq keeps it first)
-        if gcdFlag and gcdEnd and gcdEnd[1][1] > t and gcdEnd[1][1] - t < 1e-6 then
+        -- a GCD pressed on the last one's end: that end's float sum can land a ulp after this rise, or up to a log step
+        -- in a replay (W.logStep: each cast's time printed rounded), so it moves back to it (its lower seq keeps it first)
+        if gcdFlag and gcdEnd and gcdEnd[1][1] > t and gcdEnd[1][1] - t < (W.logStep or 0) + 1e-6 then
             gcdEnd[1][1], gcdEnd[2][1] = t, t
         end
         if not gcdFlag then

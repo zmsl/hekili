@@ -161,6 +161,33 @@ describe("the replay world", function()
         assert.is_true(flag)
     end)
 
+    it("keeps the GCD flag up when the last GCD's end prints a log step after the next cast's rise", function()
+        -- wowsims prints 10 ms: the shout's GCD (1.501 s, or 1.509 s, from 1.00) truly ends where the strike is cast,
+        -- printed 2.50; its end at 2.501 (2.509) must not clear the strike's GCD flag (risen at 2.500)
+        for _, gcd in ipairs({ "1.501", "1.509" }) do
+            local log = table.concat({
+                "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+                "[1.00] [Tester (#1)] Casting {SpellID: 900002} (Cost = 0.000, Cast Time = 0s, GCD = "
+                    .. gcd
+                    .. "s, Effective Time = 1.5s)",
+                "[1.00] [Tester (#1)] Completed cast {SpellID: 900002}",
+                "[2.50] [Tester (#1)] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+                "[2.50] [Tester (#1)] Completed cast {SpellID: 900001}",
+            }, "\n")
+            local R = replay.new(log, H, O)
+            local W = at(R.world(setmetatable({ tag = "-gcd" }, { __index = WO }), 1), R.pull + 5)
+            local GCD = 900
+            local s = observer.observe(W, setmetatable({ gcdSpell = GCD }, { __index = observer.DEFAULTS }))
+            local flag -- the GCD flag after the strike's rise, before its own end (4.00)
+            for i = 1, s.n do
+                if s.ev[i] == "@cooldown" and s.a1[i] == GCD and s.t[i] <= R.pull + 3.9 then
+                    flag = s.a2[i] ~= nil
+                end
+            end
+            assert.is_true(flag, gcd)
+        end
+    end)
+
     it("scores a decision inside a reacted aura's reaction window as of just before its gain (o.reacted)", function()
         local log = table.concat({
             "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
