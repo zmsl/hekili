@@ -472,13 +472,19 @@ M.FLICKER = {
     -- re-pin e5a9cd2a2d -> e4ef929e54 (lane repin-shaman-09, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.02 / 0.00, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 146 / 128 / 130, agreement .990 / .992 / .996, react p90 0 / 0 / 0):
     -- flicker 0.08 -> 0.03 (the worst, 0.017, + 0.01), readyShort 1 -> 0, heldReady 138 -> 146 (the worst set). Cause:
-    -- Stormstrike 8 s (hotfix push 113722), Maelstrom Weapon 10 a minute at 5/5, the world's Windfury Totem strike and the
-    -- Five Thunders gear's 6250 mana / 25.75 / 12.0 re-time every fight; the held ticks are the same Flame Shock cost
-    -- crossing against Stormstrike's cooldown (top flame_shock -> stormstrike 112 of 18020 ticks; at cost lo-truth -3.4,
-    -- gap BT). A/B on seeds 1-20 with the strike's chance 0 (the same draws): agreement .995, heldReady 144, flame_shock
-    -- -> stormstrike 36 (112 with it): the strike's anonymous outcome rows (no spell, no cast) move the belief (blocker
-    -- repin-shaman-09-2). May move with lane mana-09's Stormstrike price 122 (ours 121)
-    ["Enhancement"] = { flicker = 0.03, retracted = 0, heldReady = 146, readyShort = 0 },
+    -- Stormstrike 8 s (hotfix push 113722), the world's Windfury Totem strike and the Five Thunders gear's 6250 mana /
+    -- 25.75 / 12.0 re-time every fight; the held ticks are the same Flame Shock cost crossing against Stormstrike's
+    -- cooldown (top flame_shock -> stormstrike 112 of 18020 ticks; at cost lo-truth -3.4, gap BT). Draw-identical A/B on
+    -- seeds 1-20 (the strike's outcome rolled, its row dropped; repin-shaman-09-2): flame_shock -> stormstrike 51 with
+    -- the rows / 47 without on a fresh boot a fight, 144 / 79 on one boot (the tally), episodes either way by seed: the
+    -- rows perturb a near tie, and the traced episodes (seed 19, 140.4 / 145.6 s) are that tie (belief and truth agree
+    -- Flame Shock down and Stormstrike's cooldown; lo 5 under the truth puts Flame Shock's cost 0.1 s past Stormstrike's
+    -- ready), no avoid row paying a Flame Shock ticket
+    -- CN22 nearest rounding: Stormstrike 121 -> 122 (lane mana-09 merged into repin-shaman-09, R6; seeds 1-20 / 21-40 /
+    -- 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 1, heldReady 153 / 166 / 155, agreement .987 /
+    -- .992 / .995, react p90 0 / 0 / 0): heldReady 146 -> 166, readyShort 0 -> 1 (the worst set; the same cost-crossing
+    -- class one mana dearer, at cost lo-truth -3.2; not traced row by row); flicker 0.03 kept
+    ["Enhancement"] = { flicker = 0.03, retracted = 0, heldReady = 166, readyShort = 1 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
@@ -574,6 +580,9 @@ M.FLICKER = {
     -- re-pin e5a9cd2a2d -> e4ef929e54 (lane repin-shaman-09, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 /
     -- 0, readyShort 0 / 0 / 0, heldReady 300 / 292 / 299, agreement .996 / .996 / .997): readyShort 1 -> 0; heldReady
     -- 300 unchanged (the request is unchanged; the world models no Searing Totem attack, resist or item cooldown)
+    -- the world's mana and regen from the e4ef929e54 log (5950 / 26.31 / 31.31 / 45.62, was 5650 / 26.13 / 31.13 /
+    -- 45.25; repin-shaman-09 fix round 1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, readyShort 0 / 0
+    -- / 0, heldReady 277 / 290 / 300, agreement .997 / .997 / .997), the same after the mana-09 merge: floors unchanged
     ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 300, readyShort = 0 }, -- 0.00 / 0.00 / 0.00, 0
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana

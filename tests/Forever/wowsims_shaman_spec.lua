@@ -71,7 +71,8 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     -- (hotfix push 113722) and Maelstrom Weapon's 10 a minute (was 20) leave fewer on-GCD decisions; three single
     -- misses [earth_shock -> flame_shock, flame_shock -> lightning_bolt, flame_shock -> magma_totem]: the Flame Shock
     -- cost crossing (gap BT). The log's 22 Windfury Totem strikes (`Casting {SpellID: 10610}`) map to no ability and are
-    -- not scored. May move with lane mana-09's Stormstrike price 122 (ours 121)
+    -- not scored. CN22 nearest rounding: Stormstrike 121 -> 122 (the log's price): 0.963 (80) unchanged
+    -- LIVE60 below likewise: 5.8 unchanged at Stormstrike 122
     it(PACK .. " follows wowsims's casts", function()
         local C = content("shaman_enhancement", sw.Enhancement, PACK, 60)
         ws.gate(PACK, C, "shaman_enhancement", 0.96, ENH_REPLAY)
