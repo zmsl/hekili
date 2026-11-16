@@ -92,8 +92,9 @@ describe("a percent-of-base cost rounds to the nearest whole, in both layers", f
     end)
 
     -- A passive talent's percent cut m (talent-gated, no aura) is applied to the whole price: a read R is W = nearest(f x
-    -- base) cut by m and made whole again, to the nearest or (unprobed) truncated. The learned base, R / (f m) rounded,
-    -- is within (0.5 / m + 0.5) / f + 0.5 of the truth under nearest, (1 / m + 0.5) / f + 0.5 under truncation.
+    -- base) cut by m and made whole again, to the nearest or (unprobed) truncated. The learned base, the middle of the
+    -- wholes the read allows over f, rounded, is within 0.5 / f + 0.5 of the truth when the read pins the whole price,
+    -- (0.5 / m + 0.5) / f + 0.5 under nearest, (1.5 / m + 0.5) / f + 0.5 under truncation.
     it("learns back from a read a passive talent's percent cut, within the two roundings' bounds", function()
         local h = fs.new(9)
         local def = fs.def(h)
@@ -115,7 +116,11 @@ describe("a percent-of-base cost rounds to the nearest whole, in both layers", f
                         ctl.costs[fs.SPENDER_C] = { { type = 1, cost = read } }
                         ctl.Fire("SPELLS_CHANGED")
                         local learned = VS.BasePower(fs.RAGE)
-                        local bound = ((trunc == 1 and 1 or 0.5) / m + 0.5) / f + 0.5
+                        local function reads(w) -- the read a whole price w gives, to the nearest
+                            return math.floor(w * m + 0.5 + 1e-6)
+                        end
+                        local pinned = trunc == 0 and reads(whole - 1) ~= read and reads(whole + 1) ~= read
+                        local bound = pinned and 0.5 / f + 0.5 or ((trunc == 1 and 1.5 or 0.5) / m + 0.5) / f + 0.5
                         local why = ("%g x %d x %g reads %d (trunc %d), learned %d"):format(
                             f,
                             b,

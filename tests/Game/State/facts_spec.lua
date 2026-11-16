@@ -145,9 +145,17 @@ describe("facts and polls", function()
         -- the true base 800: spender_a costs 0.11 x 800 = 88 whole, cut 9% = 80.08, read 80
         ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 80 } }
         ctl.Fire("SPELLS_CHANGED")
-        -- the base nearest 80 / (0.11 x 0.91) = 799.2; spender_c then 0.139 x 799 = 111 whole (as at 800), cut 101.01
-        assert.are.same({ 3, 799 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
+        -- 80 is only 88 cut (87 reads 79, 89 reads 81), so the base nearest 88 / 0.11 = 800; spender_c then 0.139 x 800
+        -- = 111 whole, cut 101.01
+        assert.are.same({ 3, 800 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
         assert.is_true(math.abs(I.CostOf(3) - 111 * 0.91) < 1e-9, tostring(I.CostOf(3)))
+    end)
+
+    it("learns no base from a read a passive talent's flat cost modifier cuts", function()
+        passiveCut({ talent = "talent_a", flat = -5, spells = { fs.SPENDER_A } })
+        ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 75 } }
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.same({ 3, 1720 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
     end)
 
     it("keeps the pack's base when a cut read is that base's whole price cut and rounded either way", function()
