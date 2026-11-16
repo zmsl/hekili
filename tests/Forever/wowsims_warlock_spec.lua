@@ -72,9 +72,11 @@ end
 --   (202831a0a0: no Bane of Doom on one target, Agony and Amplify Curse no longer wait on Doom, the Cooldowns Wrack
 --   line gone, racials on the Amp Agony variables); top [wrack -> life_tap 3; siphon_life -> corruption 1].
 --   SM Ruin 0.78 -> 0.85 (0.851, 94), Demonology 0.87 -> 0.94 (0.940, 117), Destruction 0.90 -> 0.95 (0.954, 109),
---   Shadow Brand 0.71 (0.718, 103) unchanged: each IDENTICAL on the old log and pack (the re-pin moves only the Weakness
---   Analyzer's second use, an unscored item row); the floors follow the measurement (R6), the rise is the lanes since
---   the 0.7 re-pin that did not re-floor these rows. LIVE60 Destruction 0.4 -> 0.2 (worst idle 0.2 s at 60).
+--   Shadow Brand 0.71 (0.718, 103) unchanged: each identical at the old log and pack on this tree (BASE run; the re-pin
+--   moves only the Weakness Analyzer's second use, an unscored item row); the rise predates this re-pin, not bisected;
+--   floor follows the measurement (R6). LIVE60 Destruction 0.4 -> 0.2 (worst idle 0.2 s at 60): identical at the old
+--   log and pack on this tree (BASE run); the fall predates this re-pin, not bisected; floor follows the measurement
+--   (R6).
 -- The replay flicker ceiling (per minute, the last column): plain flicker bars, 0 in all five, measured 0.00/min (oracle
 -- 0.00) at the re-pin e2842f0a78. They say nothing about Movement: Demonology and Shadow Brand replay with it ON (R8) but
 -- every replay is single-target and the Hellfire line needs active_enemies>=3.

@@ -12,7 +12,9 @@
 -- Amplify Curse used within its duration + 1.5 s, or waiting would cost a use over the fight left); the Cooldowns
 -- Wrack line is gone (Life Tap moves up). In game `fight_remains` reads 3600 (API-forced), so every "Waiting Costs"
 -- term is false there and the racials fire on Amp Agony Up (or 2+ targets); the replay answers it from the log.
--- The Major Mana Potion line goes (rule 13: wowsims's autocast no longer uses the potion in the 180 s fight); the
+-- The Major Mana Potion line goes (rule 13: wowsims's autocast no longer uses the potion in the 180 s fight): the new
+-- APL drinks Major Spellblasting Potion 250937 (cooldowns #2, at 4.41 and 124.41) on the shared potion cooldown, and
+-- 250937 has no key in our data (the pack omits its line); the
 -- Weakness Analyzer's cooldown is 6 min (was 90 s: one use, was two). Wrack (6de4dee7b9 and on) no longer raises the
 -- damage the other DoTs deal: while it channels, Corruption, Siphon Life and Bane of Agony tick on their half
 -- points too (the loop world models it; the kit reads no tick). wowsims's expected tick now counts its crits
@@ -33,8 +35,9 @@
 -- `curseOptions: Elements`, so `select` stays (no Bane rule); the request drops executeProportion25/45/90 and sends
 -- Greater Blessing of Wisdom at 2, the top rank (R25; the build's rank 1 measured 0.977). Omitted 2 -> 2.
 -- Follow-up: the world and kit regen were not refreshed from the new log (the world's pool 5353, the log's 6277 at
--- e5a9cd2a2d; casting tick 1.12, was 1.04; warlock_world.lua and Warlock.lua keep the old values): within tolerance,
--- lane 10's precedent.
+-- e5a9cd2a2d; casting tick 1.12, was 1.04): within tolerance, lane 10's precedent. The 0.9 re-pin's fix round moved
+-- the loop world to the build (35/11/5, instant Corruption, the Imp sacrificed, pool 6277, Spirit 235, regen 35.625 /
+-- 15.2: warlock_world.lua); the kit's fsr seed stays the Human logs' { 38.13, 15.2 }.
 -- Fix 31 (G4: an outcome past an unmapped cast's frame is nobody's) took the dynamite's two misses off Corruption:
 -- 0.728 -> 0.877.
 -- Worked (P6): Corruption's `now` passes its rank's duration (the belief wrote nothing for a function duration);

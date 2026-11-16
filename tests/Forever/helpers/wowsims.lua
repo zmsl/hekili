@@ -510,12 +510,9 @@ M.READY = {
     -- never 10 -> 8; median 1.00 unchanged
     -- { 1.00, 23 } -> { 0.00, 0 } (Task 16, R6 and L82 M5: the floor follows the measurement; the fixture's 83 timed
     -- decisions all in grain since 5049ede22 and R42; the kit's fsr seed moves 142.50 wrack never -> in grain)
-    -- { 0.00, 0 } -> { 1.13, 1 } (re-pin e4ef929e54, R6; 60 decisions, 56 timed, 1 real): wowsims's new APL holds Blood
-    -- Fury for Amp Agony and casts it with Wrack at 127.13, the end of a Shadow Trance Shadow Bolt's GCD; Blood Fury's
-    -- cooldown (cast 5.88) ends at 125.88, inside that GCD, and our queue shows Wrack ready from 126.00 (traced:
-    -- wrack@1.33 at 125.80, @0.00 at 126.00). Central, not the kit: blocker note repin-warlock-09-1 (a cooldown's end
-    -- inside a GCD drops the believed GCD); back to { 0.00, 0 } when that is fixed
-    warlock_affliction = { 1.13, 1 },
+    -- Re-pin e4ef929e54: the one real row (127.13 wrack, 1.13 s early) is a replay artefact, not raised here: a GCD end
+    -- 1 ms past the next GCD's rise clears the client's GCD flag (central harness-gcd-edge-09, note repin-warlock-09-1)
+    warlock_affliction = { 0.00, 0 },
     -- Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is absorbed at the grain. 0.10, 3 -> 0.20, 1,
     -- owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by decision none worse and
     -- none new; the median of the rest rose (the one left: life_tap 0.2 s early)
