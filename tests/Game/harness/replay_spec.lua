@@ -188,6 +188,40 @@ describe("the replay world", function()
         end
     end)
 
+    -- the bridge is bounded: an end a log step or more past the rise is a real end and clears the flag
+    for _, case in ipairs({
+        { "1.511", true, "11 ms past the rise" },
+        { "1.525", true, "25 ms past the rise" },
+        { "1.501", false, "a world without W.logStep bridges only a float ulp (1 ms is not bridged)" },
+    }) do
+        it("clears the GCD flag when the last GCD's end trails the next rise: " .. case[3], function()
+            local log = table.concat({
+                "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+                "[1.00] [Tester (#1)] Casting {SpellID: 900002} (Cost = 0.000, Cast Time = 0s, GCD = "
+                    .. case[1]
+                    .. "s, Effective Time = 1.5s)",
+                "[1.00] [Tester (#1)] Completed cast {SpellID: 900002}",
+                "[2.50] [Tester (#1)] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+                "[2.50] [Tester (#1)] Completed cast {SpellID: 900001}",
+            }, "\n")
+            local R = replay.new(log, H, O)
+            local W = R.world(setmetatable({ tag = "-gcd" }, { __index = WO }), 1)
+            if not case[2] then
+                W.logStep = nil -- a loop world
+            end
+            at(W, R.pull + 5)
+            local GCD = 900
+            local s = observer.observe(W, setmetatable({ gcdSpell = GCD }, { __index = observer.DEFAULTS }))
+            local flag
+            for i = 1, s.n do
+                if s.ev[i] == "@cooldown" and s.a1[i] == GCD and s.t[i] <= R.pull + 2.6 then
+                    flag = s.a2[i] ~= nil
+                end
+            end
+            assert.is_false(flag)
+        end)
+    end
+
     it("scores a decision inside a reacted aura's reaction window as of just before its gain (o.reacted)", function()
         local log = table.concat({
             "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
