@@ -175,6 +175,29 @@ describe("resource modifiers", function()
         assert.is_true(math.abs(I.CostOf(spender_c) - 166.32) < 1e-9, tostring(I.CostOf(spender_c)))
     end)
 
+    -- A talent-gated modifier (`talent`, no aura): active while the talent has a rank, its `pct` by rank (a list) or
+    -- one value; the cut lands on the whole price, unrounded (wowsims e4ef929e54 spell_mod.go:909 on a passive talent:
+    -- 11% of 1720 is 189, a 12% rank 166.32), as the simulation applies it (spend_base_spec.lua).
+    it("cuts a cost by a talent's rank with no aura, and not at rank 0", function()
+        local spender_c = I.ab.bySpell[fs.SPENDER_C]
+        h.Class.abilities.spender_c.spend = 0.11
+        ns.raceMods.costMods = { { talent = "talent_a", pct = { -0.04, -0.08, -0.12 } } }
+        ns.BuildTracked()
+        I.basePow[I.ab.slot[spender_c]] = 1720
+        I.clock = 5
+        local got = {}
+        for rank = 0, 3 do
+            I.SetTalentRank(1, rank)
+            got[#got + 1] = I.CostOf(spender_c)
+        end
+        assert.are.same({ 189, 181.44 }, { got[1], got[2] })
+        assert.is_true(math.abs(got[3] - 173.88) < 1e-9 and math.abs(got[4] - 166.32) < 1e-9, table.concat(got, " "))
+        ns.raceMods.costMods = { { talent = "talent_a", pct = -0.5, spells = { fs.SPENDER_B } } } -- one value, any rank
+        ns.BuildTracked()
+        I.SetTalentRank(1, 2)
+        assert.are.equal(7.5, I.CostOf(I.ab.bySpell[fs.SPENDER_B]))
+    end)
+
     -- `unless` (CN11): while the named aura is believed up on the player, the modifier neither prices nor takes a
     -- charge; the other modifier's spend in the same cast never decides it, whichever comes first in the list.
     local function unlessMods(first)

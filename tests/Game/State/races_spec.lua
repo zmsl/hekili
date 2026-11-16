@@ -194,6 +194,19 @@ describe("Engine/Schema/Races.lua", function()
         assert.are.same({ 0.2, 18 }, { a.spend, ns.costMods.Apply(20, a, true) })
     end)
 
+    it(
+        "cuts by a talent's rank with no aura (`talent`, `pct` by rank), never at rank 0, and takes no charge",
+        function()
+            load("Fake", nil, { talent = "talent_x", pct = { -0.04, -0.08, -0.12 }, charges = 1 })
+            state.talent = { talent_x = { rank = 3 } }
+            local a = ability("spender_b", { id = 1012, spend = 0.11, spendType = "resource_a" })
+            assert.is_true(math.abs(ns.costMods.Apply(189, a, true) - 166.32) < 1e-9) -- 189 x 0.88, unrounded
+            ns.costMods.Spend(a.baseSpend, "spender_b") -- no aura: nothing to charge, no error
+            state.talent.talent_x.rank = 0
+            assert.are.equal(189, ns.costMods.Apply(189, a, true))
+        end
+    )
+
     it("covers every ability without `spells`, and spends a charge on a cast made free (pct = -1)", function()
         load("Fake", nil, { aura = "racial_a", pct = -1, charges = 1 })
         local a = ability("spender_b", { id = 1012, spend = 10, spendType = "resource_a" })

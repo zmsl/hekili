@@ -78,11 +78,13 @@ function Race:RegisterResourceMod(def)
     end
 end
 
---- { aura = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil, unless = key | nil }: an ability
---- whose spell ID (or one of its `copy` ranks) is listed (every ability paid from the resource when `spells` is nil)
---- costs less while the aura is up; with charges, each such cast whose declared cost is above 0 takes a stack. While
---- the player's aura `unless` is up (as the cast starts: another modifier's spend in the same cast never decides it),
---- the modifier neither prices nor takes a stack. Also a class file's
+--- { aura = key, talent = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil, unless = key | nil }:
+--- an ability whose spell ID (or one of its `copy` ranks) is listed (every ability paid from the resource when `spells`
+--- is nil) costs less while the aura is up; with charges, each such cast whose declared cost is above 0 takes a stack.
+--- With `talent` (a talent key) the modifier also needs that talent's rank above 0, and needs no `aura` (a passive
+--- talent's cut); `pct` or `flat` may then be a list by rank (value at the rank) or one number. While the player's aura
+--- `unless` is up (as the cast starts: another modifier's spend in the same cast never decides it), the modifier neither
+--- prices nor takes a stack. Also a class file's
 --- `spec:RegisterCostMod` (Engine/Schema/Spec.lua): the class file has returned for any other class, so its append is the player's.
 function ns.RegisterCostMod(def)
     mods.costMods[#mods.costMods + 1] = def
@@ -178,14 +180,24 @@ function M.Apply(cost, a, points)
     if not points and (cost < 1 or rawget(a, "spendBase")) then
         return cost
     end
-    local buff = Hekili.State.buff
+    local state = Hekili.State
+    local buff = state.buff
     for i = 1, #list do
         local m = list[i]
-        if buff[m.aura].up and not (m.unless and buff[m.unless].up) and inScope(m, a) then
-            if type(m.pct) == "number" then
-                cost = cost * (1 + m.pct)
-            elseif type(m.flat) == "number" then
-                cost = cost + m.flat
+        -- the talent gate and the value by rank: the belief's I.CostMod (Game/State/Families/Modifiers.lua) alike
+        local rank = m.talent and state.talent[m.talent].rank or 1
+        if
+            rank > 0
+            and (m.aura and buff[m.aura].up or not m.aura and m.talent)
+            and not (m.unless and buff[m.unless].up)
+            and inScope(m, a)
+        then
+            local p, f = m.pct, m.flat
+            p, f = type(p) == "table" and p[rank] or p, type(f) == "table" and f[rank] or f
+            if type(p) == "number" then
+                cost = cost * (1 + p)
+            elseif type(f) == "number" then
+                cost = cost + f
             end
         end
     end
@@ -231,7 +243,7 @@ function M.Spend(base, key)
     end
     for i = 1, #list do
         local m = list[i]
-        if m.charges and not held[i] and state.buff[m.aura].up and inScope(m, a) then
+        if m.charges and m.aura and not held[i] and state.buff[m.aura].up and inScope(m, a) then
             state.removeStack(m.aura)
         end
     end
