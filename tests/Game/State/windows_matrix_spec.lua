@@ -18,7 +18,7 @@ local CASES = {
         timeline = {
             { t = 2, ops = { { "x", "OPEN" } } },
             { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 5 } }, ops = { { "x", "OPEN" } } },
-            { t = 2.4, counts = { applied = 2, dropped = 0 } },
+            { t = 2.4, counts = { applied = 1, refused = 1, dropped = 0 } },
             { t = 5, expect = { x = C } },
         },
     },
@@ -31,7 +31,7 @@ local CASES = {
             { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 5 } }, ops = { { "x", "OPEN" } } },
             { t = 2.4, expect = { x = { expiresAt = 5.2, refreshes = 1 } }, ops = { { "x", "OPEN" } } },
             { t = 2.6, expect = { x = { expiresAt = 5.4, refreshes = 2 } }, ops = { { "x", "OPEN" } } },
-            { t = 2.8, counts = { applied = 4, dropped = 0 }, ops = { { "x", "OPEN" } } },
+            { t = 2.8, counts = { applied = 3, refused = 1, dropped = 0 }, ops = { { "x", "OPEN" } } },
             { t = 5.4, expect = { x = C } },
         },
     },
@@ -47,6 +47,25 @@ local CASES = {
             { t = 3.7, expect = { x = { expiresAt = 6, refreshes = 2 } }, ops = { { "x", "OPEN" } } },
             { t = 3.9, ops = { { "x", "OPEN" } } },
             { t = 6, expect = { x = C } },
+        },
+    },
+    {
+        id = "N1-duration",
+        what = "a record with no duration: its OPEN is dropped and opens nothing (belief and oracle)",
+        apl = { x = { duration = false } },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, counts = { applied = 0, refused = 0, dropped = 1 } },
+        },
+    },
+    {
+        id = "N1-refresh",
+        what = "a record whose refresh is not `true` (refresh=1 as a number) is never refreshed",
+        apl = { x = { duration = 3, refresh = 1 } },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 5 } }, ops = { { "x", "OPEN" } } },
+            { t = 2.4, counts = { applied = 1, refused = 1 } },
         },
     },
     {
@@ -462,6 +481,18 @@ describe("windows matrix (belief columns)", function()
     it("a full Build counts the operations still waiting as dropped (M4)", function()
         local env = mx.setup({ apl = { x = { duration = 5 } } })
         local key, Q = mx.key({}, "x"), env.I.winOps
+        local lines = {}
+        env.VS.SetLog({
+            active = function()
+                return true
+            end,
+            write = function(fmt, ...)
+                local s = string.format(fmt, ...)
+                if s:find("^%[vs%] windowop") then
+                    lines[#lines + 1] = s
+                end
+            end,
+        })
         env.VS.WindowOp(key, mx.OP.OPEN)
         env.VS.WindowOp(key, mx.OP.CLOSE)
         env.ns.BuildTracked()
@@ -470,6 +501,37 @@ describe("windows matrix (belief columns)", function()
         local up = env.ns.Facade.Window(key)
         mx.teardown(env)
         assert.are.same({ 0, 2, key, false }, { n, dropped, lastDrop, up })
+        assert.are.same({ -- traced apart from replay drops: a replay skips them
+            "[vs] windowop discarded kit:x#Primary OPEN 0 t=1.500",
+            "[vs] windowop discarded kit:x#Primary CLOSE 0 t=1.500",
+        }, lines)
+    end)
+
+    it("a refused OPEN is traced and counted as refused, and the snapshot line shows it (L1182)", function()
+        local env = mx.setup({ apl = { x = { duration = 5 } } })
+        local lines = {}
+        env.VS.SetLog({
+            active = function()
+                return true
+            end,
+            write = function(fmt, ...)
+                local s = string.format(fmt, ...)
+                if s:find("^%[vs%] windowop") then
+                    lines[#lines + 1] = s
+                end
+            end,
+        })
+        local key = mx.key({}, "x")
+        env.VS.WindowOp(key, mx.OP.OPEN)
+        env.VS.WindowOp(key, mx.OP.OPEN)
+        env.VS.Drain(2)
+        local snap = env.VS.Snapshot()
+        mx.teardown(env)
+        assert.are.same({
+            "[vs] windowop applied kit:x#Primary OPEN 0 t=1.500",
+            "[vs] windowop refused kit:x#Primary OPEN 0 t=1.500",
+        }, lines)
+        assert.is_truthy(snap:find("windowops applied=1 refused=1 dropped=0", 1, true), snap)
     end)
 
     it("an operation over the buffer's bound is written to the trace, apart from the replayed ones (M6)", function()
@@ -560,12 +622,13 @@ describe("windows matrix (belief columns)", function()
             end)
             mx.teardown(env)
             -- each line: "[vs] windowop <applied|dropped> <key> <OP> <arg> t=<the stamp: the sending tick's cut-off>";
-            -- an `overflow` line (dropped at send, over the bound) is not replayed: it never reached the buffer
+            -- an `overflow` line (dropped at send, over the bound) or a `discarded` one (waiting at a full Build) is not
+            -- replayed: neither was replayed from the buffer
             local logged = {}
             for _, s in ipairs(lines) do
                 local word, key, op, arg, at = s:match("^%[vs%] windowop (%a+) (%S+) (%u+) (%S+) t=([%d.]+)$")
                 assert(key, s)
-                if word ~= "overflow" then
+                if word ~= "overflow" and word ~= "discarded" then
                     logged[#logged + 1] = { key, mx.OP[op], arg == "inf" and HUGE or tonumber(arg), tonumber(at) }
                 end
             end

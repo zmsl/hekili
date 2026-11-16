@@ -70,7 +70,7 @@ I.win = W
 -- at the build by `def.aplOpCap` (the compiler's exact bound, §5.5); over it an operation is dropped and counted.
 local OPEN, CLOSE, STEP = 1, 2, 3
 local OPNAME = { "OPEN", "CLOSE", "STEP" }
-local Q = { n = 0, cap = 0, key = {}, op = {}, arg = {}, applied = 0, dropped = 0, lastDrop = "" }
+local Q = { n = 0, cap = 0, key = {}, op = {}, arg = {}, applied = 0, refused = 0, dropped = 0, lastDrop = "" }
 I.winOps = Q
 
 local function close(w)
@@ -236,7 +236,7 @@ I.On(Obs.CombatEnd, function()
 end)
 
 I.On(Obs.CombatStart, function()
-    Q.applied, Q.dropped, Q.lastDrop = 0, 0, "" -- the snapshot's counts are since combat start
+    Q.applied, Q.refused, Q.dropped, Q.lastDrop = 0, 0, 0, "" -- the snapshot's counts are since combat start
 end)
 
 -- A target swap (a re-selection too; under Map by plate index, no GUID read) resets each row declared with it. Also
@@ -252,50 +252,52 @@ I.On(Obs.TargetSwap, function()
     end
 end)
 
--- One operation on APL row w at t: true when it applies (L1165). OPEN: a closed or run-out row opens fresh for its
--- declared duration; an open one restarts its expiry only with `refresh`, below `max_refresh` and below openedAt +
--- `max_duration` (a refused refresh still applies: it is the declared rule). CLOSE: down. STEP: the due step `arg`
--- (1..steps + 1) on an up stepped row, as a write. tests/Game/State/helpers/windows_matrix.lua M.apply is its oracle.
+-- One operation on APL row w at t (L1165): "applied", "refused" (an OPEN the refresh rule refuses, L1182) or
+-- "dropped". OPEN: a closed or run-out row opens fresh for its declared duration (none: dropped); an open one restarts
+-- its expiry only with `refresh`, below `max_refresh` and below openedAt + `max_duration`. CLOSE: down. STEP: the due
+-- step `arg` (1..steps + 1) on an up stepped row, as a write. tests/Game/State/helpers/windows_matrix.lua M.apply is
+-- its oracle.
 local function write(w, op, arg, t)
     if op == OPEN then
         local d = W.dur[w]
         if not (d > 0) then
-            return false
+            return "dropped"
         end
         if W.up[w] and lapsed(w, t) then
             close(w)
         end
         if not W.up[w] then
             fresh(w, t, d)
-            return true
+            return "applied"
         end
         local cap = W.maxDur[w] > 0 and W.openedAt[w] + W.maxDur[w] or math.huge
-        if W.refresh[w] and (W.maxRef[w] < 0 or W.refreshes[w] < W.maxRef[w]) and W.expiresAt[w] < cap then
-            local e = t + d
-            W.expiresAt[w], W.refreshes[w] = e < cap and e or cap, W.refreshes[w] + 1
+        if not (W.refresh[w] and (W.maxRef[w] < 0 or W.refreshes[w] < W.maxRef[w]) and W.expiresAt[w] < cap) then
+            return "refused"
         end
-        return true
+        local e = t + d
+        W.expiresAt[w], W.refreshes[w] = e < cap and e or cap, W.refreshes[w] + 1
+        return "applied"
     elseif op == CLOSE then
         if W.up[w] then
             close(w)
         end
-        return true
+        return "applied"
     elseif op == STEP then
         local n = W.nSteps[w]
         if not W.up[w] or n == 0 or type(arg) ~= "number" or arg < 1 or arg > n + 1 or arg % 1 ~= 0 then
-            return false
+            return "dropped"
         end
         W.step[w] = arg
         if W.timeout[w] > 0 then
             W.deadline[w] = t + W.timeout[w]
         end
-        return true
+        return "applied"
     end
-    return false
+    return "dropped"
 end
 
--- One `[vs] windowop` trace line while the core's trace is open: `word` applied, dropped or overflow (dropped at send,
--- over the bound: never buffered, so a replay skips it).
+-- One `[vs] windowop` trace line while the core's trace is open: `word` applied, refused or dropped (replayed), overflow
+-- (dropped at send, over the bound) or discarded (waiting at a full Build); a replay skips the last two.
 local function trace(word, key, op, arg, t)
     local h = I.logger
     if h and h.active() then
@@ -325,12 +327,12 @@ function VS.WindowOp(key, op, arg)
 end
 
 -- Builds rows nLua+1.. from `def.aplWindows` and sizes the buffer (allocates; a build or a generation change only).
--- Operations still waiting (a full Build: a generation change replays them first) are dropped and counted.
+-- Operations still waiting (a full Build: a generation change replays them first) are discarded: counted dropped.
 local declare
 local function applyApl(def)
     for i = 1, Q.n do
         Q.dropped, Q.lastDrop = Q.dropped + 1, Q.key[i]
-        trace("dropped", Q.key[i], Q.op[i], Q.arg[i], I.clock)
+        trace("discarded", Q.key[i], Q.op[i], Q.arg[i], I.clock)
         Q.key[i] = false
     end
     for w = W.nLua + 1, W.n do
@@ -356,13 +358,15 @@ function I.WindowOps()
     for i = 1, Q.n do
         local key, op, arg = Q.key[i], Q.op[i], Q.arg[i]
         local w = W.byKey[key]
-        local ok = w ~= nil and w > W.nLua and write(w, op, arg, t)
-        if ok then
+        local word = w ~= nil and w > W.nLua and write(w, op, arg, t) or "dropped"
+        if word == "applied" then
             Q.applied = Q.applied + 1
+        elseif word == "refused" then
+            Q.refused = Q.refused + 1
         else
             Q.dropped, Q.lastDrop = Q.dropped + 1, key
         end
-        trace(ok and "applied" or "dropped", key, op, arg, t)
+        trace(word, key, op, arg, t)
         Q.key[i] = false -- drop the reference
     end
     Q.n = 0
@@ -392,8 +396,9 @@ I.OnSnapshot(function(out)
         )
     end
     out[#out + 1] = string.format(
-        "windowops applied=%d dropped=%d lastDrop=%s pending=%d cap=%d gen=%s",
+        "windowops applied=%d refused=%d dropped=%d lastDrop=%s pending=%d cap=%d gen=%s",
         Q.applied,
+        Q.refused,
         Q.dropped,
         tostring(Q.lastDrop),
         Q.n,

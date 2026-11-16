@@ -251,18 +251,20 @@ context once per `Drain` after the fold (its edges open, refresh or close), a re
 `openWindow(name)`/`closeWindow(name)`, a stepped window advances on our observed cast of its due step, and combat end
 closes all. APL windows (windows design v6) are rows of the same store with no evaluator, one per key, from
 `def.aplWindows` (records `{ key, duration, refresh?, max_duration?, max_refresh?, steps? (ability indexes), strict?,
-step_timeout?, reset_on_target_change? }`), with `def.aplOpCap` (the operations buffer's bound per update) and
+step_timeout?, reset_on_target_change?, on_deviation? }`), with `def.aplOpCap` (the operations buffer's bound per update) and
 `def.aplGen` (a changed generation rebuilds only these rows and the buffer, at the next `Drain` out of combat, else
 after combat end; until then an unknown key reads down and its operations are dropped). `Drain` replays the buffered
 `WindowOp`s first (Flush, operations, polls, fold, settle, Lua evaluators, aura deltas), stamped with the previous
 cut-off: OPEN a fresh open for the declared duration on a closed or run-out row, and on an open row the declared
 refresh rule (with `refresh`, below `max_refresh` and below openedAt + `max_duration`: the expiry restarts, capped
-there, refreshes + 1; else nothing, still counted applied); CLOSE; STEP the due step as a write (on an up stepped
-row; else dropped). An unknown key, a Lua window's key, an unknown operation, an operation over the bound and one
-still waiting at a full `Build` are dropped and counted (applied, dropped, the last drop's key, since combat start:
-the belief's snapshot line `windowops`); each replayed or discarded operation is a `[vs] windowop applied|dropped`
-line of the trace, one over the bound a `[vs] windowop overflow` line at send (a replay skips those). A plain sequence (steps, not strict) parks past its last step (step = steps + 1)
-until a STEP or combat end; a strict one closes after its last step, at another on-GCD cast, and when the due step is
+there, refreshes + 1; else nothing, counted refused); CLOSE; STEP the due step as a write (on an up stepped row;
+else dropped). An unknown key, a Lua window's key, an unknown operation, a record with no positive duration (its
+OPEN), an operation over the bound and one still waiting at a full `Build` are dropped and counted (applied,
+refused, dropped, the last drop's key, since combat start: the belief's snapshot line `windowops`); each replayed
+operation is a `[vs] windowop applied|refused|dropped` line of the trace, one over the bound an `overflow` line at
+send and one waiting at a full `Build` a `discarded` line (a replay skips those two). A plain sequence (steps, not strict) parks past its last step (step = steps + 1)
+until a STEP or combat end; a strict one closes after its last step, at another on-GCD cast, at a later step's cast
+when its record says `on_deviation = "end"`, and when the due step is
 not cast within `step_timeout` (default 4 s, restarted at each advance; Lua windows have none). The core is stateless: every reset copies the windows from `Facade.Window`, and within a cycle
 `actions+=/open_window,name=<w>,if=<c>[,refresh=1][,duration=<s>]` and `actions+=/close_window,name=<w>,if=<c>` (list
 order, no icon, like `variable`; an unregistered name is a `ParseActionList` warning with its line and the entry

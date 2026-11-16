@@ -83,7 +83,6 @@ function M.setup(case)
     ctl.Tick(1)
     I.ObsLog.Clear(I.log)
     local env = { api = api, ctl = ctl, ns = ns, VS = VS, I = I, saved = saved, case = case, gen = 0, guid = 0 }
-    env.apl = case.apl or {} -- the declarations in effect (an edit tick replaces them): the oracle's
     M.edit(env, case.apl or {}, case.displays, case.cap)
     ctl.now = 1.5
     ctl.Tick(1.5)
@@ -99,14 +98,15 @@ function M.teardown(env)
 end
 
 --- The build's APL records for `apl` (name -> declaration; `steps` as kit keys) in each of `displays` (Primary), as
---- the compiler writes them: steps as ability indexes, a new generation, the buffer's bound.
+--- the compiler writes them: steps as ability indexes, a new generation, the buffer's bound. `duration` defaults to
+--- "combat" (`false` writes none). `env.recs`: the records in effect by plain name, the oracle's declarations.
 function M.edit(env, apl, displays, cap)
     local I = env.I
     local index = {}
     for a = 1, I.ab.n do
         index[I.ab.key[a]] = a
     end
-    local list = {}
+    local list, recs = {}, {}
     local names = {}
     for name in pairs(apl) do
         names[#names + 1] = name
@@ -126,8 +126,10 @@ function M.edit(env, apl, displays, cap)
                 rec.steps = steps
             end
             list[#list + 1] = rec
+            recs[name] = recs[name] or rec
         end
     end
+    env.recs = recs
     env.gen = env.gen + 1
     I.def.aplWindows, I.def.aplGen, I.def.aplOpCap = list, env.gen, cap or 16
 end
@@ -145,17 +147,21 @@ local function same(a, b)
 end
 
 --- (L1165 forecast == apply) The oracle: operation `code` (M.OP) with `arg` applied at T, as the belief applies it, to
---- state `s` (the FIELDS) of a row declared `decl` (a case's declaration; `duration` defaults to "combat", as M.edit
---- writes it). OPEN opens a closed or run-out row for the declared duration (capped by max_duration); on an up row it
---- restarts the timer only when `refresh` and `max_refresh` / `max_duration` leave room (refreshes + 1), else nothing.
+--- state `s` (the FIELDS) of a row whose record is `decl` (read as the belief reads it: `duration` seconds or "combat",
+--- else none; `refresh == true`). OPEN with no positive duration changes nothing (the belief drops it); else it opens
+--- a closed or run-out row for the duration (capped by max_duration); on an up row it restarts the timer only when
+--- `refresh` and `max_refresh` / `max_duration` leave room (refreshes + 1), else nothing.
 --- CLOSE closes; STEP sets the step on an up stepped row (1..steps + 1). Pure: Phase 2 asserts the core's forecast
 --- against it. A strict row's step deadline is not a Facade.Window field: the oracle does not model it.
 function M.apply(s, code, arg, decl, T)
-    local d = decl.duration or "combat"
-    d = d == "combat" and math.huge or d
-    local maxDur, maxRef = decl.max_duration or 0, decl.max_refresh or -1
-    local nSteps = decl.steps and #decl.steps or 0
+    local d = decl.duration == "combat" and math.huge or type(decl.duration) == "number" and decl.duration or 0
+    local maxDur = type(decl.max_duration) == "number" and decl.max_duration or 0
+    local maxRef = type(decl.max_refresh) == "number" and decl.max_refresh or -1
+    local nSteps = type(decl.steps) == "table" and #decl.steps or 0
     if code == M.OP.OPEN then
+        if not (d > 0) then
+            return
+        end
         if s.up and s.expiresAt <= T then
             for _, f in ipairs(FIELDS) do
                 s[f] = M.CLOSED[f]
@@ -167,7 +173,7 @@ function M.apply(s, code, arg, decl, T)
             s.step = nSteps > 0 and 1 or 0
         else
             local cap = maxDur > 0 and s.openedAt + maxDur or math.huge
-            if decl.refresh and (maxRef < 0 or s.refreshes < maxRef) and s.expiresAt < cap then
+            if decl.refresh == true and (maxRef < 0 or s.refreshes < maxRef) and s.expiresAt < cap then
                 s.expiresAt, s.refreshes = math.min(T + d, cap), s.refreshes + 1
             end
         end
@@ -223,7 +229,6 @@ local function events(env, k, t)
     end
     if k.edit then
         M.edit(env, k.edit, case.displays, case.cap)
-        env.apl = k.edit
     end
 end
 
@@ -278,7 +283,7 @@ function M.run(case)
                 -- the replay invariant: no event between the sending pass and this Drain
                 local quiet = not (k.cast or k.swap or k.combat or k.edit or k.diff)
                 if sent and quiet and sent[name] then
-                    local m = model(seed[name], sent[name], sentT, k.t, env.apl[name:match("^[^#]+")])
+                    local m = model(seed[name], sent[name], sentT, k.t, env.recs[name:match("^[^#]+")])
                     for _, f in ipairs(FIELDS) do
                         if not same(got[f], m[f]) then
                             rows[#rows + 1] = string.format(

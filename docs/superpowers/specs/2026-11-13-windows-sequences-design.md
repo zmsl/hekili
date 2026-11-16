@@ -33,7 +33,11 @@ forecast for its own pass: it decides whether the copy changed, so whether the w
 later lines and slots see. One pure statement of the rule serves both sides as the test oracle
 (tests/Game/State/helpers/windows_matrix.lua `M.apply`): the belief's replay is asserted against it in Phase 1, the
 core's forecast in Phase 2 (W05, W06, R09). Sections 0 (rulings 18, 19), 1 (rules 7, 8), 4.2, 4.3, 5.1, 5.4, 11, 12
-and 13 below read with this amendment.
+and 13 below read with this amendment. Settled with it (L1180-L1182): an OPEN the rule refuses is traced and counted
+as `refused`; the core sends nothing for a refusal its forecast makes; the refresh is refused once the expiry sits at
+the `max_duration` cap (APL windows only; Lua windows keep their rule); every APL record carries a positive duration
+or `combat` (a sequence's is `combat`); OP5 is the one named carve-out of forecast == apply (5.4); a strict sequence
+record carries `on_deviation = "end"` (rule 17).
 
 ## 0. Decided
 
@@ -152,7 +156,8 @@ below. That is why ruling 26 has three values: `mode=wait` is SimC's, `mode=cont
     Nothing is inferred from the abilities. An import adds nothing to a line. The wowsims translator writes the
     wowsims settings on every sequence it emits. An option an entry does not take is a compile error.
 17. A window also closes at its duration, at `max_duration`, at combat end, on a `closeWindow` from a real cast,
-    and (strict) on any other on-GCD cast or at the step deadline. A target change closes nothing, unless the
+    and (strict) on any other on-GCD cast, on a later member's cast out of order (on or off the GCD), or at the step
+    deadline. A target change closes nothing, unless the
     window's declaration (sequence line, `windows` entry or `RegisterWindow`) says `reset_on_target_change`.
 18. While a sequence's window is up in a display, that display shows the sequence's members even when it would
     normally filter them out. In Primary and AOE the start line also skips the "toggle shown separately" test, so
@@ -343,7 +348,10 @@ display, so no string is built per cycle. Priority text keeps reading `window.bu
 | either, false or not reached | nothing | nothing |
 
 The copy's open and close are the existing ones (`state.openWindow`, `state.closeWindow`, State.lua:1696-1706), whose
-caps are the belief's written again.
+caps are the belief's written again, with one difference: `state.openWindow` counts a refresh at the `max_duration`
+cap, where the belief refuses it for an APL window. Phase 2 gives the copy's open a per-kind branch (APL windows
+refuse there; Lua windows keep that rule, L1182). The reference for an APL window's OPEN is the oracle `M.apply` in
+tests/Game/State/helpers/windows_matrix.lua.
 
 4.3 Restart. After any line that actually changed the copy (an open, a granted refresh, a close or a sequence's STEP), the
 slot's walk restarts from the top with time unchanged (wowsims re-picks from the top after every executed action,
@@ -417,8 +425,9 @@ applied before anything else in the next one, so the core's forecast of the rule
 one place the two can differ is a window that expired between T and the display's own "now": the copy saw it
 closed and opened it fresh; the belief at T still has it up, so the OPEN is a refresh where `refresh=1` allows one
 and nothing where it does not. A window without `refresh=1` then runs out at that Drain and a still-true open line
-opens it again at the next pass. An OPEN the rule refuses counts as applied. An operation for an unknown key (an
-edit in combat) is dropped and counted.
+opens it again at the next pass; if that line is false on the next pass, the open is lost (L1180: accepted, no
+channel change). This is the matrix's one named carve-out of forecast == apply (OP5). An OPEN the rule refuses is
+traced and counted as `refused` (L1182). An operation for an unknown key (an edit in combat) is dropped and counted.
 
 5.5 Buffer size. Exact, not a guess: a line fires at most once per slot and only slot 1 sends, so one display sends at most (window
 lines + sequence-generated lines) operations per pass. The buffer is sized as the sum of that over the displays (sequence lines count only where Sequences is on,
@@ -430,7 +439,8 @@ nothing back" changes. `Facade.Window` stays the only window read.
 
 5.7 What the belief still does by itself, as for any window: expiry, `max_duration`, combat end closing all
 (Windows.lua:184-188), `closeWindow` from an ability's `now()` on an observed cast (Families/Now.lua:487-491), steps
-advancing on observed casts (Windows.lua:128-160), strict deviation (another on-GCD cast ends a strict window),
+advancing on observed casts (Windows.lua:128-160), strict deviation (another on-GCD cast ends a strict window, and
+a later member's cast out of order ends it through the record's `on_deviation = "end"`, L1181),
 `step_timeout`, and the target-swap reset for rows declared with it (section 8).
 
 ## 6. Sequences on the operations model
@@ -612,7 +622,8 @@ the same enemy counts as a change.
 - No rebuild: belief windows are built only at SpecializationChanged (Tracked.lua:437-442). Follow
   `Hekili:CdmSwitchChanged` (Tracked.lua:427-435): LoadScripts writes the active pack's window records (key,
   duration (a sequence's: `combat`; OPEN carries none, v6.1), refresh, caps, steps, strict, `allow_skip`,
-  `reset_on_target_change`, `step_timeout`) into `def.aplWindows`, bumps a generation, and the belief rebuilds only those rows and the operations buffer at its next Drain out of combat, else at combat
+  `reset_on_target_change`, `step_timeout`, `on_deviation`: `"end"` on a strict sequence's record, none on a plain
+  one, L1181) into `def.aplWindows`, bumps a generation, and the belief rebuilds only those rows and the operations buffer at its next Drain out of combat, else at combat
   end. `state:BuildWindows` (State.lua:1662) re-runs with it.
 - Edits or pack switches in combat apply at combat end; until then an unknown key reads "down"
   (Families/Now.lua:538-541 in the belief; `VS.Window` already returns false for an unknown name, Windows.lua:193-198)
@@ -909,7 +920,8 @@ fixture priorities.
 - Replay invariant, checked by the runner on every case and every tick, not written per case: after the next
   Drain, the belief's state for each key equals the copy's state at the end of the slot-1 now walk that sent the
   operations, except where a scripted cast, target swap or expiry falls in between (then the case lists the
-  expected difference).
+  expected difference). One named carve-out (L1180): OP5, a window that runs out between the stamp and the pass's
+  now, where the copy opened it fresh and the belief judged the OPEN as still open (5.4).
 - Compile cases have no timeline: they assert the error list (code and line) and which lines are disabled.
 - One runner (`tests/Forever/windows_matrix_spec.lua`, proposed) loads each fixture into the headless engine plus
   belief, plays the timeline, and prints the first differing tick as a row diff.
