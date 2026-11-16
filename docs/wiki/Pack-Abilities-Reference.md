@@ -88,7 +88,7 @@ These fields decide whether the ability is known, usable and shown.
 | `debuff` | string or list | Target auras that must be up |
 | `nobuff` | string or list | Player auras that must be down; the simulation waits until they fall |
 | `nodebuff` | string or list | Target auras that must be down; the simulation waits until they fall |
-| `usable_on` | list | The target creature types it works on, such as `{ "undead", "demon" }`. Usable only on an attackable target of a confirmed type: a readable type decides; while the type is hidden (in dungeons and raids, or for a moment after a target change) the client's range answer for `rangeSpell` (else the ability) must confirm it. |
+| `usable_on` | list | The target creature types it works on, such as `{ "undead", "demon" }`, or `{ "any" }` for any type. Usable only on a living attackable target of a confirmed type: a readable type decides; in dungeons and raids, or while the client gives no type, the client's range answer for `rangeSpell` (else the ability) must confirm it. |
 | `healthGate` | number | The client allows the ability only at or below this share of the target's health. The belief reads the client's answers for it as bounds on the target's health. |
 | `range` | number | The greatest range in yards, checked when the range filter is on |
 | `rangeSpell` | number or function | The spell ID to ask the client about for range (and for `usable_on`'s type confirmation); a function returns the ID, or nil for the ability's own |

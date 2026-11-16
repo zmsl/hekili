@@ -75,7 +75,7 @@ describe("the target's creature type", function()
 
         after_each(function()
             H.ctl.exists.target, H.ctl.friendly.target, H.ctl.guid.target = true, nil, "Creature-1"
-            H.ctl.distance.target, H.ctl.ranges[id] = nil, nil
+            H.ctl.distance.target, H.ctl.ranges[id], H.ctl.dead.target = nil, nil, nil
         end)
 
         local function range(answer) -- the client's IsSpellInRange for the ability at 3 yd
@@ -105,8 +105,74 @@ describe("the target's creature type", function()
             assert.are.same(NO_TARGET, { cycle("undead"):IsUsable("hamstring") })
             H.ctl.exists.target, H.ctl.friendly.target = true, true
             assert.are.same(NO_TARGET, { cycle("undead"):IsUsable("hamstring") })
+            H.ctl.friendly.target = SECRET -- open world: a secret answer refuses
+            assert.are.same(NO_TARGET, { cycle(SECRET):IsUsable("hamstring") })
+            H.ctl.friendly.target, H.ctl.dead.target = nil, true -- a dead target
+            assert.are.same(NO_TARGET, { cycle("undead"):IsUsable("hamstring") })
+            restricted(true)
+            assert.are.same(NO_TARGET, { cycle(SECRET):IsUsable("hamstring") })
+            H.ctl.dead.target = SECRET -- unknown: the type or range answer decides
+            assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+            restricted(false)
+            assert.is_true(cycle("undead"):IsUsable("hamstring"))
+            assert.are.same({}, H.errors)
+        end)
+
+        -- L1161: in a restricted area UnitCanAttack's secrecy is unknown (L515); a secret answer does not refuse there,
+        -- the range answer alone decides (a plain nil also answers a target the spell cannot be cast at).
+        it("restricted, UnitCanAttack secret: the range answer decides; a plain false still refuses", function()
+            restricted(true)
+            H.ctl.friendly.target = SECRET
+            range(true)
+            assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+            range(false)
+            assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+            range(nil)
+            assert.are.same(NIL, { cycle(SECRET):IsUsable("hamstring") })
+            range(SECRET)
+            assert.are.same(SECRET_RANGE, { cycle(SECRET):IsUsable("hamstring") })
+            H.ctl.friendly.target = true
+            range(true)
+            assert.are.same(NO_TARGET, { cycle(SECRET):IsUsable("hamstring") })
+            H.ctl.exists.target = SECRET
             H.ctl.friendly.target = SECRET
             assert.are.same(NO_TARGET, { cycle(SECRET):IsUsable("hamstring") })
+            assert.are.same({}, H.errors)
+        end)
+
+        -- L1160: usable_on { "any" }: any attackable target, no type check; restricted, the range answer still decides.
+        it('"any": an attackable living target of any type; restricted, the range answer decides', function()
+            hamstring.usable_on = { "any" }
+            range(nil)
+            assert.is_true(cycle("humanoid"):IsUsable("hamstring"))
+            assert.is_true(cycle("unknown"):IsUsable("hamstring"))
+            H.ctl.exists.target = false
+            assert.are.same(NO_TARGET, { cycle("unknown"):IsUsable("hamstring") })
+            H.ctl.exists.target, H.ctl.friendly.target = true, true
+            assert.are.same(NO_TARGET, { cycle("humanoid"):IsUsable("hamstring") })
+            H.ctl.friendly.target, H.ctl.dead.target = nil, true
+            assert.are.same(NO_TARGET, { cycle("humanoid"):IsUsable("hamstring") })
+            H.ctl.dead.target = nil
+            restricted(true)
+            range(true)
+            assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+            range(nil)
+            assert.are.same(NIL, { cycle(SECRET):IsUsable("hamstring") })
+            range(SECRET)
+            assert.are.same(SECRET_RANGE, { cycle(SECRET):IsUsable("hamstring") })
+            assert.are.same({}, H.errors)
+        end)
+
+        -- Review M8: one pass can span a target change (the update yields across frames); the type is the client's
+        -- answer at the check, not the one read earlier in the pass.
+        it("a target change mid-pass: the new target's type decides", function()
+            range(true)
+            local st = cycle("undead")
+            assert.is_true(st:IsUsable("hamstring"))
+            assert.is_true(st.target.is_undead)
+            H.ctl.creature.target = "humanoid" -- no refresh: the same pass
+            assert.are.same(MISS, { st:IsUsable("hamstring") })
+            assert.are.same({ "humanoid", false }, { st.target.creature_type, st.target.is_undead })
             assert.are.same({}, H.errors)
         end)
 
@@ -128,6 +194,10 @@ describe("the target's creature type", function()
             assert.are.same(NIL, { cycle("unknown"):IsUsable("hamstring") })
             range(SECRET)
             assert.are.same(SECRET_RANGE, { cycle("unknown"):IsUsable("hamstring") })
+            range(true) -- a readable GUID, the type secret: the range answer decides too
+            assert.is_true(cycle(SECRET):IsUsable("hamstring"))
+            range(nil)
+            assert.are.same(NIL, { cycle(SECRET):IsUsable("hamstring") })
             assert.are.same({}, H.errors)
         end)
 
@@ -180,8 +250,12 @@ describe("the target's creature type", function()
                 { SECRET, nil, true },
                 { SECRET, SECRET, true },
                 { "undead", nil, true },
+                { "humanoid", nil, false, { "any" } },
+                { SECRET, true, true, { "any" } },
+                { SECRET, nil, true, { "any" } },
             }
             for i, c in ipairs(cases) do
+                hamstring.usable_on = c[4] or hamstring.usable_on
                 restricted(c[3])
                 range(c[2])
                 local st = cycle(c[1])

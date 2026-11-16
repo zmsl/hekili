@@ -3130,7 +3130,15 @@ do
             -- LibRangeCheck's about 5 yd brackets): GetRange answers nil while unknown, and a lower bound alone past
             -- the library's last check. Unknown never blocks: within and outside are both true,
             -- distance and minR/maxR keep upstream's defaults.
-            if k == "distance" then t[k] = ( t.minR + t.maxR ) / 2
+            -- The type is not kept: a pass can span a target change (the update yields across frames). First in the
+            -- chain: the k:sub keys below build strings.
+            if k == "creature_type" then
+                local _, id = UnitCreatureType( "target" )
+                if issecretvalue( id ) or not CREATURE_TYPES[ id ] then return "unknown" end
+                return CREATURE_TYPES[ id ]
+            elseif k == "is_demon" then return t.creature_type == "demon"
+            elseif k == "is_undead" then return t.creature_type == "undead"
+            elseif k == "distance" then t[k] = ( t.minR + t.maxR ) / 2
             elseif k == "in_range" then return t.distance <= 8
             elseif k == "minR" or k == "maxR" then
                 local minR, maxR = RC:GetRange( "target" )
@@ -3168,10 +3176,6 @@ do
                     if c then t[k] = strlower( c )
                     else t[k] = "unknown" end
                 end
-            elseif k == "creature_type" then
-                local _, id = UnitCreatureType( "target" )
-                if issecretvalue( id ) or not CREATURE_TYPES[ id ] then t[k] = "unknown"
-                else t[k] = CREATURE_TYPES[ id ] end
             elseif k == "exists" then t[k] = UnitExists( "target" )
             elseif k == "health_current" then return t.health.current
             elseif k == "health_max" then return t.health.max
@@ -3188,7 +3192,6 @@ do
                     t[k] = ( UnitCanAttack( "player", "target" ) and ( UnitClassification( "target" ) == "worldboss" or UnitLevel( "target" ) == -1 ) )
                 end
             elseif k == "is_dead" then t[k] = UnitIsDeadOrGhost("target")
-            elseif k == "is_demon" then t[k] = t.creature_type == "demon"
             elseif k == "is_friendly" then t[k] = Facade.UnitCanAssist( "player", "target" )
             elseif k == "is_in_party" then t[k] = Facade.UnitInParty( "target" )
             elseif k == "is_in_raid" then t[k] = Facade.UnitInRaid( "target" ) ~= nil
@@ -3201,7 +3204,6 @@ do
                 t[k] = UnitIsUnit( "targettarget", "player" ) == true
 
             elseif k == "is_dummy" then t[k] = ( TargetDummies[ t.npcid ] ~= nil )
-            elseif k == "is_undead" then t[k] = t.creature_type == "undead"
 
             elseif k == "level" then t[k] = UnitLevel( "target" ) or UnitLevel( "player" ) or MAX_PLAYER_LEVEL
             elseif k == "moving" then t[k] = GetUnitSpeed( "target" ) > 0
@@ -7400,20 +7402,27 @@ do
             return false, "not usable in combat"
         end
 
-        -- `usable_on`: the target creature types the ability works on (`target.creature_type`'s keys); usable only on a
-        -- confirmed type (L1141). It needs a plainly attackable target. A plain type decides. Under the Map restriction
-        -- (a dungeon or raid) the target's GUID reads secret (nil here) and no type read is trusted (L1142); there, and
-        -- while the type reads unknown, the client's range answer for `rangeSpell` (else the ability) decides: plain
-        -- true or false is a type the spell can hit, a plain nil one it cannot (L238), a secret one is unconfirmed.
+        -- `usable_on`: the target creature types the ability works on (`target.creature_type`'s keys), or { "any" } for
+        -- any type; usable only on a living attackable target of a confirmed type (L1141, L1160). The target must
+        -- plainly exist, not plainly be dead, and be plainly attackable outside the Map restriction. Under it (a dungeon
+        -- or raid) the target's GUID reads secret (nil here): no type read is trusted (L1142) and a secret UnitCanAttack
+        -- does not refuse (L1161). A plain type decides outside it ("any": no type check). Under it, and while the type
+        -- reads unknown, the client's range answer for `rangeSpell` (else the ability) decides: plain true or false is
+        -- a target the spell can hit, a plain nil one it cannot (L238), a secret one is unconfirmed.
         z = ability.usable_on
         if z then
             local issecretvalue = Facade.issecretvalue
-            local e, hostile = UnitExists( "target" ), UnitCanAttack( "player", "target" )
-            if issecretvalue( e ) or not e or issecretvalue( hostile ) or not hostile then
-                return false, "usable_on: no attackable target"
-            end
-            local ct = UnitGUID( "target" ) and self.target.creature_type or "unknown"
-            if ct ~= "unknown" then
+            local e = UnitExists( "target" )
+            if issecretvalue( e ) or not e then return false, "usable_on: no attackable target" end
+            local restricted = not UnitGUID( "target" )
+            local hostile, dead = UnitCanAttack( "player", "target" ), UnitIsDead( "target" )
+            if issecretvalue( hostile ) then
+                if not restricted then return false, "usable_on: no attackable target" end
+            elseif not hostile then return false, "usable_on: no attackable target" end
+            if not issecretvalue( dead ) and dead then return false, "usable_on: no attackable target" end
+            local ct = restricted and "unknown" or z[ 1 ] == "any" and "any" or self.target.creature_type
+            if ct == "any" then -- any type: the target checks above decide
+            elseif ct ~= "unknown" then
                 local ok = false
                 for i = 1, #z do
                     if z[ i ] == ct then ok = true; break end

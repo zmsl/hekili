@@ -87,6 +87,7 @@ local CONSECRATION_COST = { 135, 235, 320, 435, 565 }
 local EXORCISM = { 879, 5614, 5615, 10312, 10313, 10314, 415068, 415069, 415070, 415071, 415072, 415073 }
 local EXORCISM_ANY = 7 -- 415068's place in EXORCISM: the first rank that hits any target
 local UNDEAD_DEMON = { "undead", "demon" }
+local ANY_TYPE = { "any" } -- usable_on: a living attackable target of any type
 local EXORCISM_COST = { 85, 135, 180, 235, 285, 345, 85, 135, 180, 235, 285, 345 }
 local HOLY_SHOCK = { 1311606, 20473, 20929, 20930 } -- rank 1 Forever-only
 local HOLY_SHOCK_COST = { 160, 225, 275, 325 }
@@ -820,11 +821,12 @@ spec:RegisterAbilities({
         known = knows(EXORCISM),
 
         -- The 879 ranks (Holy) hit only an Undead or Demon target (the DB2 tooltip; wowsims casts none at its
-        -- Mechanical target); the 415068 ranks any target.
+        -- Mechanical target); the 415068 ranks any target, still a living attackable one (L1160).
         usable_on = function()
             if knownRank(EXORCISM) < EXORCISM_ANY then
                 return UNDEAD_DEMON
             end
+            return ANY_TYPE
         end,
     },
 
@@ -988,6 +990,7 @@ spec:RegisterAbilities({
         usable_on = function()
             return UNDEAD_DEMON
         end,
+        range = 20, -- the radius around the caster (the pin: RadiusMax 20); checked by the range filter
         -- Self-centred: its own range answer is nil on every target (L187). A known 879 Exorcism rank (the same two
         -- types) confirms the target's type while it reads secret; a 415068 rank hits any target, so it confirms none.
         rangeSpell = function()

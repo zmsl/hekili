@@ -451,7 +451,7 @@ describe("Forever Paladin", function()
         w.game.known[10314] = true
         assert.are.same({ "undead", "demon" }, ld.run(x.usable_on, ld.env(w)))
         w.game.known[415073] = true
-        assert.is_nil(ld.run(x.usable_on, ld.env(w)))
+        assert.are.same({ "any" }, ld.run(x.usable_on, ld.env(w))) -- an attackable target of any type (L1160)
     end)
 
     it(
@@ -1300,5 +1300,36 @@ describe("Exorcism's 879 ranks with the creature type hidden", function()
             assert.are.same({ true }, usable("undead"), #known)
             assert.are.same({}, H.errors)
         end
+    end)
+
+    -- L1160 (owner: "All Exorcism ranks"): the 415068 ranks hit any type, but need an attackable living target too.
+    it("Exorcism's 415068 ranks: any type, but no target, a friendly or a dead one refuses them", function()
+        local H, usable = paladin({ 879, 10314, 415068, 415073 })
+        local function exorcism(creature)
+            usable(creature)
+            return { H.Hekili.State:IsUsable("exorcism") }
+        end
+        local NO_TARGET = { false, "usable_on: no attackable target" }
+        H.ctl.ranges[415073] = { 0, 30 }
+        assert.are.same({ true }, exorcism("humanoid"))
+        assert.are.same({ true }, exorcism("undead"))
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        H.ctl.exists.target = false
+        assert.are.same(NO_TARGET, exorcism("unknown"))
+        H.ctl.exists.target, H.ctl.friendly.target = true, true
+        assert.are.same(NO_TARGET, exorcism("humanoid"))
+        H.ctl.friendly.target, H.ctl.dead.target = nil, true
+        assert.are.same(NO_TARGET, exorcism("humanoid"))
+        H.ctl.dead.target, H.ctl.guid.target = nil, SECRET -- restricted: the range answer decides
+        assert.are.same({ true }, exorcism(SECRET))
+        H.ctl.ranges[415073] = { 0, 0 }
+        assert.are.same(NIL, exorcism(SECRET))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("Holy Wrath's range is its 20 yd radius", function()
+        local H = paladin(UNDEAD_RANKS)
+        assert.are.equal(20, H.Hekili.Class.abilities.holy_wrath.range)
     end)
 end)

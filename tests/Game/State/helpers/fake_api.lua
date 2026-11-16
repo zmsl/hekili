@@ -56,8 +56,9 @@ function M.secretsIn(t)
     end
     return n
 end
--- UnitCreatureType's IDs (CreatureType.db2) by State.lua's `target.creature_type` key.
-local CREATURE_IDS = {}
+-- UnitCreatureType's IDs (CreatureType.db2) and English names by State.lua's `target.creature_type` key (the names
+-- built once: the fake allocates nothing per call).
+local CREATURE_IDS, CREATURE_NAMES = {}, {}
 for id, key in ipairs({
     "beast",
     "dragonkin",
@@ -76,6 +77,7 @@ for id, key in ipairs({
     "aberration",
 }) do
     CREATURE_IDS[key] = id
+    CREATURE_NAMES[key] = (key:gsub("_", " "):gsub("^%l", string.upper))
 end
 local NO_ENCHANTS = {} -- an unenchanted weapon slot's list (shared: the fake allocates nothing per call)
 -- The Cooldown Manager's four viewer frames (providers spec §4.2; CV research §2), in category order 0-3.
@@ -662,7 +664,7 @@ function M.new()
         end
         local id = CREATURE_IDS[key]
         if id then -- the client's English name and its CreatureType ID
-            return (key:gsub("_", " "):gsub("^%l", string.upper)), id
+            return CREATURE_NAMES[key], id
         end
     end
     function api.UnitIsConnected()
