@@ -469,7 +469,14 @@ M.FLICKER = {
     -- 128 / 132): flicker 0.14 -> 0.21
     -- 0.21 -> 0.08: FINAL, measured on integ/0.8.5-w2 after the merges (close-085 seeds 1-20 / 21-40 / 41-60 flicker
     -- 0.033 / 0.05 / 0.067): the worst printed (0.07) + 0.01; the lanes' flicker-085 no-tick-pad change settled it
-    ["Enhancement"] = { flicker = 0.08, retracted = 0, heldReady = 138, readyShort = 1 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (lane repin-shaman-09, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.02 / 0.00, retracted
+    -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 146 / 128 / 130, agreement .990 / .992 / .996, react p90 0 / 0 / 0):
+    -- flicker 0.08 -> 0.03 (the worst, 0.017, + 0.01), readyShort 1 -> 0, heldReady 138 -> 146 (the worst set). Cause:
+    -- Stormstrike 8 s (hotfix push 113722), Maelstrom Weapon 10 a minute at 5/5, the world's Windfury Totem strike and the
+    -- Five Thunders gear's 6250 mana / 25.75 / 12.0 re-time every fight; the held ticks are the same Flame Shock cost
+    -- crossing against Stormstrike's cooldown (top flame_shock -> stormstrike 112 of 18020 ticks; at cost lo-truth -3.4,
+    -- gap BT). May move with lane mana-09's Stormstrike price 122 (ours 121)
+    ["Enhancement"] = { flicker = 0.03, retracted = 0, heldReady = 146, readyShort = 0 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
@@ -562,7 +569,10 @@ M.FLICKER = {
     -- mana wait is re-timed, the same cost-crossing class as above (gap BT, lo / est 2-6 under the truth at the cost,
     -- our wait 0.07-0.20 s, the oracle ready); seeds 1-20 held ticks lightning_bolt 169 -> 191, flame_shock 73 -> 80,
     -- searing_totem 33 -> 29, every fight the same length
-    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 300, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (lane repin-shaman-09, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 /
+    -- 0, readyShort 0 / 0 / 0, heldReady 300 / 292 / 299, agreement .996 / .996 / .997): readyShort 1 -> 0; heldReady
+    -- 300 unchanged (the request is unchanged; the world models no Searing Totem attack, resist or item cooldown)
+    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 300, readyShort = 0 }, -- 0.00 / 0.00 / 0.00, 0
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996

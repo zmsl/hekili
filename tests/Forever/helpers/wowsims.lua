@@ -497,12 +497,22 @@ M.READY = {
     -- lost. Not traced row by row (deferral)
     -- { 0.38, 34 } -> { 0.40, 34 } (regen phase lane, R6, cause harness: the indexed poll clock (ledger L606/L667;
     -- the replay world ticks no regen): the decision window moved, timing fixture re-recorded; median 0.400, 34 real)
-    shaman_enhancement = { 0.40, 34 },
+    -- { 0.40, 34 } -> { 1.05, 7 } re-pin e5a9cd2a2d -> e4ef929e54 (lane repin-shaman-09, R6): Stormstrike 8 s (hotfix push
+    -- 113722), Maelstrom Weapon 10 a minute at 5/5 (was 20) and the Five Thunders gear (6250 mana) re-time the list: 75
+    -- decisions, 7 real (5 early: earth_shock, fire_nova x2, stormstrike x2 shown 0.37-1.23 s before wowsims's cast at
+    -- its GCD's end, the gcd/slack class above; 2 late: flame_shock at 114.54 / 136.81, cost class, lo 3.9 / 5.5 under
+    -- the truth at the crossing, gap BT), median 1.050: fewer, larger rows. May move with lane mana-09's Stormstrike
+    -- price 122 (the log's; ours 121: the belief spends 1 less a Stormstrike, so lo sits 1 nearer the truth a cast)
+    shaman_enhancement = { 1.05, 7 },
     -- { 0.48, 54 } -> { 2.20, 3 } re-pin 0.7 (lane shaman, R6): 91 decisions, 3 real (all late, cost class: the Major
     -- Mana Potion / Demonic Rune refills the belief cannot see leave lo ~2630 under the truth, gaps.md "Potion mana
     -- refill"; Lightning Bolt at its top rank's 198 where wowsims down-ranks, gap BL), median 2.20; the count falls from
     -- 54 with the new build's list (Lava Burst gone)
-    shaman_elemental = { 2.20, 3 },
+    -- { 2.20, 3 } -> { 1.22, 2 } re-pin e5a9cd2a2d -> e4ef929e54 (lane repin-shaman-09, R6): the request is unchanged; the log moves
+    -- with Searing Totem's 2.425 s cadence, the resist constant 8L + 19 and the Weakness Analyzer's 6 min cooldown (one
+    -- use): 90 decisions, 2 real, both late lightning_bolt (104.93 cost class, lo 2.3 under the truth; 176.89 the
+    -- fight's end), median 1.220
+    shaman_elemental = { 1.22, 2 },
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready
     -- at the GCD's end inside it (Shadow's Mind Flay likewise). Count 18 -> 21 on fix 31 (06eec227): G4 keeps
     -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s.
