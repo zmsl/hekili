@@ -1386,6 +1386,26 @@ function M.new()
     function ctl.Fire(event, ...)
         api.frame:Fire(event, ...)
     end
+    -- EventRegistry (CallbackRegistryMixin): one callback per owner and event; ctl.Callback(event, ...) runs each as
+    -- TriggerEvent's function callbacks do, func(owner, ...). `ctl.callbacks[event][owner]` is the registry.
+    ctl.callbacks = {}
+    api.EventRegistry = {
+        RegisterCallback = function(_, event, func, owner)
+            ctl.callbacks[event] = ctl.callbacks[event] or {}
+            ctl.callbacks[event][owner] = func
+            return owner
+        end,
+        UnregisterCallback = function(_, event, owner)
+            if ctl.callbacks[event] then
+                ctl.callbacks[event][owner] = nil
+            end
+        end,
+    }
+    function ctl.Callback(event, ...)
+        for owner, func in pairs(ctl.callbacks[event] or {}) do
+            func(owner, ...)
+        end
+    end
     return api, ctl
 end
 
