@@ -53,7 +53,6 @@ local function forgetMeNots( str )
    -- Such as !5>2+(1*3).
    -- So we'll start from the !, then go through the string until it's time to stop.
 
-   local i = 1
    local substring
 
    while( str:find("!") ) do
@@ -86,10 +85,8 @@ local function forgetMeNots( str )
       substring = str:sub( start + 1, finish )
       substring = substring:trim()
 
+      -- each pass turns one `!` into `not`, so the loop ends (CN25: a cap at 100 left the rest in the Lua text)
       str = format( "%s not ( %s ) %s", str:sub( 1, start - 1 ) or "", substring, str:sub( finish + 1, str:len() ) or "" )
-
-      i = i + 1
-      if i >= 100 then Hekili:Debug( "Was unable to convert '!' to 'not' in string [%s].", str ); break end
    end
 
    str = str:gsub( "%s%s", " " )

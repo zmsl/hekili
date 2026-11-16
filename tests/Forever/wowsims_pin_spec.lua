@@ -369,4 +369,42 @@ describe("every pack line within the engine's limits (CN25) #slow", function()
             worst("Guardian", target("druid_guardian", idols))
         end)
     end
+
+    -- Loaded in the engine, the hoisted target Feral pack's lines compile and its single-target builders fire: a Cat
+    -- in melee range, in combat, 100 energy, no combo points (the re-pinned pack before CN25: its Shred and Claw lines
+    -- did not compile, and Faerie Fire was the first icon).
+    it("lets the hoisted Feral pack at the target recommend Shred or Claw", function()
+        local headless = require("Game.harness.headless")
+        local dlw = require("Forever.helpers.druid_loop_world")
+        local PACK = "Feral (wowsims.com)"
+        local body = {}
+        for line in target("druid_feral", false):gmatch("[^\n]+") do
+            if line:sub(1, 1) ~= "#" then
+                body[#body + 1] = line
+            end
+        end
+        local H = headless.new({ character = dlw.Feral.character(), pack = PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, 3
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.Hekili.DB.profile.packs[PACK].lists = mp.parse(table.concat(body, "\n"))
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks() -- the new lists and entries active
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local VS = H.ns.VirtualState
+        local power, fixed = VS.Power, { est = 100, lo = 100, hi = 100, conf = 1 }
+        VS.Power = function(pt, now)
+            return pt == 3 and fixed or power(pt, now)
+        end
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+        assert.are.same({}, H.errors)
+        local picks, builder = {}, false
+        for j = 1, 3 do
+            local r = H.Hekili.Engine.Output.Primary.recs[j]
+            picks[j] = tostring(r and r.actionName)
+            builder = builder or picks[j] == "shred" or picks[j] == "claw"
+        end
+        assert.is_true(builder, table.concat(picks, " "))
+    end)
 end)

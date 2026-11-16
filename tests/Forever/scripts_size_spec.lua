@@ -35,7 +35,8 @@ describe("a pure variable reads as its inlined text (CN25)", function()
             for _, name in ipairs({ "precombat", "default" }) do
                 for _, e in ipairs(lists[name] or {}) do
                     if (e.criteria or "") ~= "" then
-                        defs[#defs + 1] = { action = "variable", enabled = true, var_name = "v" .. #defs + 1, value = e.criteria }
+                        defs[#defs + 1] =
+                            { action = "variable", enabled = true, var_name = "v" .. #defs + 1, value = e.criteria }
                         e.criteria = "variable.v" .. #defs
                     end
                 end
@@ -45,6 +46,7 @@ describe("a pure variable reads as its inlined text (CN25)", function()
                 table.insert(lists.default, 1, defs[i])
             end
             H.Hekili:LoadScripts()
+            H.Hekili:ReviewPacks() -- the moved entries active (actsActive is keyed by index)
         end
         H.ctl.inRange.target, H.ctl.level.target = true, 60
         H.Fire("PLAYER_TARGET_CHANGED")

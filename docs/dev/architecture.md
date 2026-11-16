@@ -587,6 +587,15 @@ queue slot's state; the value is taken verbatim (Scripts.lua's `text` modifier t
 Both default renderers draw the record's icon through `ns.UI.SetRecTexture` (UI.lua): `iconOverride` when set, else
 `texture`. A style that ignores overrides sets `texture` itself. Example: `starfire,label=R6,label_if=mana.pct<20`.
 
+**Pure variables.** `variable,name=<v>,value=<expression>` with no `if=`, `value_else=` or `op` other than `set`,
+enabled, and the only line of that name in the pack, is a pure variable (`scripts:LoadScripts` in `Sim/Scripts.lua`
+marks them in `PackInfo[pack].pure`). A read `variable.<v>` evaluates its compiled value in the reader's own state, as
+the expression written in its place would: no cache, no registration (`Sim/Core.lua` skips the line in the walk), no
+string built (`state.variable` in `Sim/State.lua`). The reader's recheck times are its value's (`recurseRechecks`
+follows it), never a time of the bare read, and the time-sensitivity of a line reads through it. Any other `variable`
+line keeps the inherited Hekili path (registered per walk, cached per `query_time`). The wowsims translator emits
+pure variables for its large shared conditions (`tools/wowsims/apl.lua` rule 1), so no line exceeds Lua 5.1's limits.
+
 **Pre-pull guards.** Upstream Hekili walks `precombat` before `default` on every refresh and skips its non-essential
 entries once `time > 0`; out of combat it is a plain priority. The fork keeps it so (owner ruling 2026-10-21: "a guard
 against recasting"; the player decides when to press): the engine holds no schedule and no per-episode state, and a
