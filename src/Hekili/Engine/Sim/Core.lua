@@ -557,16 +557,31 @@ local invalidActionWarnings = {}
 -- line out of combat, its guard against recasting written into the line (tools/wowsims/apl.lua rule 1).
 local inPrecombat = false
 
--- (re-pin design §3a) An `open_window`/`close_window` line, in list order like `variable` (no icon): it changes the
--- cycle's forecast copy only (State.lua's windows). An open line whose condition fails now is rechecked like any entry
--- (its BuildRecheck times), so "true in t" opens the window at t and a later line reading it waits for t (State.lua
--- state.WindowRecheck). Each open line remembers its last result in the cycle: a held condition opens (or, with
--- refresh=1, restarts) once. A close line acts at the line's time only. Task 8b: R6 (the `>`/`>=` wrap branch of a
--- decreasing clock, Scripts.lua) is what times the weave's open; here the `<`/`<=` direction.
+-- (windows design v6 §4.3) A window line changed the copy: every list's walk unwinds (like `stop`) and
+-- GetNextPrediction walks again from the top with time unchanged. `slotRestarts`: the restarts in the current slot.
+local walkRestart, slotRestarts = false, 0
+
+-- (windows design v6 §4) An `open_window`/`close_window` line, in list order like `variable` (no icon): a command on the
+-- pass's copy of the window (State.lua). A true open line opens a closed window, or restarts an open one by its
+-- declared refresh rule; a true close line closes an open one. An open line whose condition fails now is rechecked
+-- like any entry (its BuildRecheck times), so "true in t" opens the window at t and a later line reading it waits for
+-- t (State.lua state.WindowRecheck). A line that changed the copy takes the slot's mark (it does nothing more in this
+-- slot, State.lua WindowSlot) and returns true: the walk restarts from the top (GetNextPrediction). A change made at now
+-- (offset and delay 0, not a recheck) in slot 1 of a display pass goes to the belief under the display's key (§5.1: an
+-- APL window only; a Lua window follows its evaluator). Task 8b: R6 (the `>`/`>=` wrap branch of a decreasing clock,
+-- Scripts.lua) is what times the weave's open; here the `<`/`<=` direction.
+local OP_OPEN, OP_CLOSE = 1, 2 -- VS.WindowOp's codes (Game/State/Families/Windows.lua)
+
 local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap )
     local name = state.args.window_name
+    local verb = isOpen and "open_window" or "close_window"
+    if state.WindowFired( scriptID ) then
+        if debug then self:Debug( " - %s %s: already fired this slot.", verb, tostring( name ) ) end
+        return false
+    end
     local base = state.delay
-    local pass = scripts:CheckScript( scriptID )
+    local pass = self:CheckStack() and scripts:CheckScript( scriptID )
+    local atNow = pass and base == 0 and state.offset == 0
 
     if isOpen and not pass and script.Recheck then
         state.recheck( "open_window", script, Stack, Block )
@@ -582,15 +597,22 @@ local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap )
         end
     end
 
-    if debug then self:Debug( " - %s %s: %s at +%.2f.", isOpen and "open_window" or "close_window", tostring( name ), pass and "PASS" or "FAIL", state.delay ) end
+    local changed = false
+    if pass then
+        if isOpen then changed = state.openWindow( name ) else changed = state.closeWindow( name ) end
+    end
+    local key = changed and atNow and state.WindowSendKey( name )
+    if key then ns.VirtualState.WindowOp( key, isOpen and OP_OPEN or OP_CLOSE ) end
+    if changed then state.WindowFired( scriptID, true ) end
 
-    if not isOpen then
-        if pass then state.closeWindow( name ) end
-    elseif not state.WindowLine( scriptID, pass ) and pass then
-        state.openWindow( name, state.args.duration, state.args.refresh == 1 )
+    if debug then
+        self:Debug( " - %s %s: %s at +%.2f%s.", verb, tostring( name ), pass and "PASS" or "FAIL", state.delay,
+            not pass and "" or not changed and ( isOpen and ", already open" or ", already closed" )
+            or ( isOpen and ", opened" or ", closed" ) .. ( key and ", sent" or ", forecast only" ) .. ", restart" )
     end
 
     state.delay = base
+    return changed
 end
 
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )
@@ -640,7 +662,10 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                 break
 
             else ]]
-            if rWait <= EARLY_EXIT then -- Forever: 0.2 s and a hair (EARLY_EXIT)
+            if walkRestart then
+                break
+
+            elseif rWait <= EARLY_EXIT then -- Forever: 0.2 s and a hair (EARLY_EXIT)
                 if debug then self:Debug( "The recommended action (%s) is ready in less than 0.2s; exiting list (%s).", rAction, listName ) end
                 break
 
@@ -905,7 +930,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                     end
 
                                 elseif action == "open_window" or action == "close_window" then
-                                    windowLine( self, scriptID, script, action == "open_window", debug, rWait, spec.throttleForecastingTime or 0 )
+                                    walkRestart = windowLine( self, scriptID, script, action == "open_window", debug, rWait, spec.throttleForecastingTime or 0 )
 
                                 else
                                     -- Target Cycling.
@@ -1296,7 +1321,8 @@ end
 Hekili:ProfileCPU( "GetPredictionFromAPL", Hekili.GetPredictionFromAPL )
 
 
-function Hekili:GetNextPrediction( dispName, packName, slot )
+-- One walk of the priority (precombat, then default) from a clean slate: GetNextPrediction below repeats it.
+local function nextPrediction( self, dispName, packName, slot )
     local debug = self.ActiveDebug
     state.nearAction = false -- no pick yet (mana-regen plan, Task 4a)
     state.nearHoldFrom = 0
@@ -1375,6 +1401,24 @@ function Hekili:GetNextPrediction( dispName, packName, slot )
     return action, wait, depth
 end
 
+-- (windows design v6 §4.3) After a window line changed the copy the walk starts again from the top, time unchanged:
+-- the partial pick, the delay and its bounds, the stacks and the near-cost hold are dropped (nextPrediction's own
+-- reset). No cap: every restart follows a line taking its per-slot mark, so a slot restarts at most once per window
+-- line. Allocates nothing.
+function Hekili:GetNextPrediction( dispName, packName, slot )
+    local dMin, dMax, delay = state.delayMin, state.delayMax, state.delay
+    walkRestart = false
+    local action, wait, depth = nextPrediction( self, dispName, packName, slot )
+    while walkRestart do
+        walkRestart = false
+        slotRestarts = slotRestarts + 1
+        if self.ActiveDebug then self:Debug( "Window restart %d in this slot: walking again from the top.", slotRestarts ) end
+        state.delayMin, state.delayMax, state.delay = dMin, dMax, delay
+        action, wait, depth = nextPrediction( self, dispName, packName, slot )
+    end
+    return action, wait, depth
+end
+
 Hekili:ProfileCPU( "GetNextPrediction", Hekili.GetNextPrediction )
 
 
@@ -1441,6 +1485,7 @@ local function altPick( dispName, packName, rec, i, bound, value, maxTime, abili
     if dt > 0 then state.advance( dt ) end
 
     altProbe.index, state.index = i, i
+    state.WindowSlot( false ) -- the probe's lines act on its copy only: nothing sent (windows design v6 §5.1)
     state.delay = 0
     state:SetConstraint( 0, maxTime )
     local action = Hekili:GetNextPrediction( dispName, packName, altProbe )
@@ -1508,6 +1553,13 @@ function Hekili.Update()
 
     local pack = rawget( settings.packs, packName )
     if not pack then return end
+
+    -- (windows design v6 §9) the active pack (or its scripts) changed: its APL windows go to the belief (a new
+    -- generation, applied out of combat) and the core's copy. A table identity test per update: no allocation.
+    if ( scripts.Windows[ packName ] or scripts.NoWindows ) ~= scripts.appliedWindows then
+        scripts:ApplyWindows( packName )
+        state:BuildWindows()
+    end
 
     -- VirtualState: fold what was observed since the last cycle and apply our casts through the spec, after the guards
     -- above and before any reset (docs/superpowers/specs/2026-10-14-hekili-virtualstate-design.md §5.1).
@@ -1587,6 +1639,8 @@ function Hekili.Update()
                 local slot = Queue[ i ]
                 slot.index = i
                 state.index = i
+                state.WindowSlot( i == 1 ) -- the per-slot marks cleared; slot 1 sends its changes at now (windows design v6 §4.3, §5.1)
+                slotRestarts = 0
 
                 if debug then Hekili:Debug( 0, "\nRECOMMENDATION #%d ( Offset: %.2f, GCD: %.2f, %s: %.2f ).\n", i, state.offset, state.cooldown.global_cooldown.remains, ( state.buff.casting.v3 == 1 and "Channeling" or "Casting" ), state.buff.casting.remains ) end
 
@@ -1881,9 +1935,10 @@ function Hekili.Update()
                 end
 
                 state.delay = wait
+                slot.restarts = slotRestarts -- the window restarts of this slot (windows design v6 §15, ruling 24)
 
                 if debug then
-                    Hekili:Debug( "Recommendation #%d is %s at %.2fs (%.2fs).", i, action or "NO ACTION", wait or state.delayMax, state.offset + state.delay )
+                    Hekili:Debug( "Recommendation #%d is %s at %.2fs (%.2fs); window restarts: %d.", i, action or "NO ACTION", wait or state.delayMax, state.offset + state.delay, slotRestarts )
                 end
 
                 if action then
@@ -2064,6 +2119,8 @@ function Hekili.Update()
                     break
                 end
             end
+
+            state.WindowSlot( false ) -- nothing after the slot loop sends (a one-icon display's slot 1 included)
 
             -- After passes, the next reset must be full: a full reset rebuilds the state whatever the passes left, as
             -- it would from the main loop's end (offset > 0). shortcut: skipped when the main loop ends at offset 0 (the

@@ -4,13 +4,19 @@
 
 ### New
 
+- A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
+
 ### Changed
+
+- `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
 
 ### Fixed
 
 ### Known issues
 
 ### Upgrade notes
+
+- A priority list named `windows` is now reserved for window declarations: a custom priority with an ordinary list of that name shows an error on that list until it is renamed.
 
 ## v0.8.5
 

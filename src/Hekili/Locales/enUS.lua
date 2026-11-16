@@ -828,6 +828,7 @@ L["Line %s: Removed unnecessary energy cap check from action entry for fists_of_
 L["Line %s: Unclosed '(' in '%s'; split at every comma."] = true
 L["Line %s: Unsupported action '%s'."] = true
 L["Line %s: Unknown window '%s'; entry disabled."] = true
+L["List '%s' line %d: %s: %s; entry disabled."] = true
 L["Line %s: focus=%s is not a tier (a whole number, 1 highest); ignored."] = true
 L["Line %s: Unsupported use_item action [ %s]; entry disabled."] = true
 L["Line %s: Unable to convert wait_for_cooldown,name=X to wait,sec=cooldown.X.remains; entry disabled."] = true
