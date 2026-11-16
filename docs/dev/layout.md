@@ -251,7 +251,7 @@ Paladin.lua's `holy_shock` selector: Hammer of Wrath at tier 1, the seal and Con
 `loop_paladin_holy_shock_spec.lua`, its world `HolyShock` with wowsims's builds/holy_shock.siml talents, pool 4667).
 The mob swings at us in every world: Holy Shield raises the block chance and
 each block spends a charge (the world's class-neutral `taking`/`took`); our landed swing spends an Echo (`landed`); mana
-runs under the five-second rule (`fsr`: wowsims's logs, Retribution 13.65 spirit / 8.25 mp5, Protection 17.38 / 0, an
+runs under the five-second rule (`fsr`: wowsims's logs, Retribution 11.9 spirit / 5.1 mp5, Protection 16.5 / 0, an
 empty pool; Task 7 floored Retribution 0.9 and Protection 0.8 for gap AB, 0.6 and 0.2 since gap CE). Both packs are gated by `pack_gate.gate`; both
 are wowsims.com packs since the wowsims packs plan, Task 9 (the hand-built lists retired). Retribution (wowsims.com)'s
 swing-gap fillers carry wowsims's own `mana.pct>=10`, judged on the secret-mana belief; each fight starts with the mana

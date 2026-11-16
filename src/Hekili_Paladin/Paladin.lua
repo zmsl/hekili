@@ -251,18 +251,18 @@ end
 local REVERENCE = { 0.15, 0.3 }
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace, as wowsims's logs measure them at 60: Retribution 13.65 spirit + 8.25 casting =
--- 21.9 outside (Reverence 2/2's share is inside the 8.25: the share below is the static share those parts hold),
--- Protection 0 while casting and 17.38 outside. Forever's Spirit regen is `6.25 + Spirit/8` a second for every class
+-- the in-combat calibration replace, as wowsims's e4ef929e54 logs measure them at 60: Retribution 11.9 spirit + 5.1
+-- casting = 17.0 outside (Reverence 2/2's share is the 5.1: the share below is the static share those parts hold; was
+-- 13.65 + 8.25 before its gear lost the Soulforge pieces), Protection 0 while casting and 16.5 outside (was 17.38). Forever's Spirit regen is `6.25 + Spirit/8` a second for every class
 -- (wowsims mana.go:75-76), not Classic's formula.
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
     fsr = {
         spirit = function()
-            return state.spec.retribution and 13.65 or 17.38
+            return state.spec.retribution and 11.9 or 16.5
         end,
         mp5 = function()
-            return state.spec.retribution and 8.25 or 0
+            return state.spec.retribution and 5.1 or 0
         end,
         share = function() -- Reverence's rank (the belief reads it after its talent walk), never the spec
             return REVERENCE[talent.reverence.rank] or 0

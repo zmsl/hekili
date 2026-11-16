@@ -81,9 +81,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     pw.Protection.character()
 
     -- Mana: its regen per second, { from 5 s after the last spend, inside the five-second rule }
-    -- (Retribution: 2.252 and 0.844 each 0.1 s in the e2842f0a78 log, was 2.19 and 0.825; Protection: 1.73 and 0.08 in
-    -- the e2842f0a78 log, was 1.738 and none).
-    local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { fsr = { [0] = { 22.52, 8.44 } } })
+    -- (Retribution: 1.700 and 0.510 each 0.1 s in the e4ef929e54 log, was 2.252 and 0.844; Protection: 1.650 and none
+    -- in the e4ef929e54 log, was 1.73 and 0.08). The replay's log regen wins over these (replay.lua's R.manaIdle).
+    local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { fsr = { [0] = { 17.0, 5.1 } } })
     local RET_LIVE = wowsims(pw.Retribution, set(EXORCISM_ANY), {})
 
     -- the replay floor: 0.860 measured on central fix 13 (49/57: removals shown as removals, the cooldown restart); 0.877
@@ -138,8 +138,8 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     -- Holy Shock (wowsims.com): the Holy Shock build (wowsims/forever's builds/holy_shock.siml) on its own list. Its
     -- casts log as rank 3's damage row 25902, replayed as the kit's 20930 (replay.lua's alias; the recipe's header).
-    -- Mana: the e5a9cd2a2d log's 2.625 and 0.788 each 0.1 s.
-    local HS = wowsims(pw.HolyShock, set(EXORCISM_ANY), { fsr = { [0] = { 26.25, 7.88 } } })
+    -- Mana: the e4ef929e54 log's 2.513 and 0.754 each 0.1 s (was 2.625 and 0.788).
+    local HS = wowsims(pw.HolyShock, set(EXORCISM_ANY), { fsr = { [0] = { 25.13, 7.54 } } })
     local HS_LIVE = wowsims(pw.HolyShock, set(EXORCISM_ANY), {})
     local HS_REPLAY = { alias = { [25902] = 20930 } }
     it("Holy Shock (wowsims.com) follows wowsims's casts", function()
@@ -157,7 +157,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- The build takes no Holy Shock.
     local PROT_DROP = set(pw.Protection.IDS.holy_shock, EXORCISM_ANY)
     local PROT = wowsims(pw.Protection, PROT_DROP, {
-        fsr = { [0] = { 17.3, 0.8 } },
+        fsr = { [0] = { 16.5, 0 } },
     })
     local PROT_LIVE = wowsims(pw.Protection, PROT_DROP, {})
 

@@ -73,7 +73,7 @@ describe("the oracle's regen", function()
         })
         assert.is_true(#rates > 0)
         for _, r in ipairs(rates) do
-            assert.is_true(math.abs(r - 17.38) < 1e-9, r) -- the world's rate
+            assert.is_true(math.abs(r - 16.5) < 1e-9, r) -- the world's rate
         end
     end)
 end)

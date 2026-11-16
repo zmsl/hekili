@@ -144,8 +144,8 @@ describe("Forever Paladin", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(fsr.spirit, e), ld.run(fsr.mp5, e) }
         end
-        assert.are.same({ 13.65, 8.25 }, seed("retribution")) -- wowsims's logs: 21.9 outside, 8.25 while casting
-        assert.are.same({ 17.38, 0 }, seed("protection"))
+        assert.are.same({ 11.9, 5.1 }, seed("retribution")) -- the e4ef929e54 log: 17.00 outside, 5.10 while casting
+        assert.are.same({ 16.5, 0 }, seed("protection")) -- the e4ef929e54 log: 16.50 outside, none while casting
         -- the static share follows Reverence's rank (15/30%, wowsims's curve), never the spec
         local shares = {}
         for rank = 0, 2 do
