@@ -68,6 +68,17 @@ describe("the world's resources", function()
         assert.are.equal(22, us.cdUntil.k)
     end)
 
+    -- mana-09 fix round 1 (loop_paladin HolyShock seed 3, 69.8 s: Exorcism refused "cooldown" at our ready edge): a
+    -- press exactly W.QUEUE before the end, on the loop's poll clock (polls x tick), is held as the decimal says; the
+    -- floats put 162 x 0.2 one ulp under 26.45 + 6 - 0.05
+    it("holds a press exactly the spell queue window early on the poll clock, whatever the float sums", function()
+        setup()
+        W.t = 26.45
+        assert.is_true(W.press(us, "k", { spell = 5, gcd = 0, cooldown = 6 }))
+        W.t = 162 * 0.2
+        assert.is_true(W.press(us, "k", { spell = 5, gcd = 0, cooldown = 6 }))
+    end)
+
     it("starts a queued strike's cooldown at the swing that takes it, and the client answers it then", function()
         setup()
         W.emit({ kind = "pull" })

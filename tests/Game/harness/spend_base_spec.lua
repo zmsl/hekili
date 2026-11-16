@@ -84,4 +84,34 @@ describe("the sim's percent-of-base cost (spendBase)", function()
         assert.are.same({ 189, 94.5 }, { got[1], got[2] })
         assert.is_true(math.abs(got[3] - 166.32) < 1e-9, tostring(got[3]))
     end)
+
+    -- A test-only talent-gated modifier (no aura), its `pct` by rank: a passive talent's cut on the whole price, as
+    -- wowsims e4ef929e54 applies one (spell_mod.go:909): 11% of 1720 is 189, a 12% rank 166.32.
+    it("cuts a fraction's whole price by a talent's rank, with no aura", function()
+        local spec = class.specs[0]
+        spec:RegisterAbility("pct_talented", { id = -9106, spend = 0.11, spendType = "mana" })
+        class.abilities.pct_talented = spec.abilities.pct_talented
+        spec:RegisterCostMod({ talent = "cut_rank", pct = { -0.04, -0.08, -0.12 }, spells = { -9106 } })
+        S.mana.base = 1720
+        local a, got, buff = class.abilities.pct_talented, {}, rawget(S, "buff")
+        rawset(
+            S,
+            "buff",
+            setmetatable({}, { -- the earlier test's modifiers' auras, never registered: down
+                __index = function()
+                    return { up = false }
+                end,
+            })
+        )
+        rawset(S.talent, "cut_rank", { rank = 3 })
+        got[1] = H.ns.SpendPoints(a.spend, S.mana, a)
+        rawset(S.talent, "cut_rank", { rank = 0 })
+        got[2] = H.ns.SpendPoints(a.spend, S.mana, a)
+        rawset(S.talent, "cut_rank", nil)
+        rawset(S, "buff", buff)
+        S.mana.base = BASE
+        assert.is_true(math.abs(got[1] - 166.32) < 1e-9, tostring(got[1]))
+        assert.are.equal(189, got[2])
+        assert.are.same({}, H.errors)
+    end)
 end)
