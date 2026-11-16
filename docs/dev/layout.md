@@ -320,8 +320,8 @@ e4ef929e54): replay floor 0.93 (the table below), live L10 0.2,
 L40 0.0, L60 5.0 s (LIVE60 5.0), flicker floor 0.6. The lines:
 
 ```
-Enhancement solo: fights=3 agreement 0.997 (2703 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 20; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ... [seeds 1-3]
-Enhancement solo: fights=20 agreement 0.987 (18020 ticks); react median 0 p90 0 never 0.009; ready while short 0; held while ready 153; refused per 100 [], episodes 0.00/min; dps A/B 1.016; ...
+Enhancement solo: fights=3 agreement 0.999 (2703 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 22; refused per 100 [], episodes 0.00/min; dps A/B 1.032; ... [seeds 1-3]
+Enhancement solo: fights=20 agreement 0.990 (18020 ticks); react median 0 p90 0 never 0.001; ready while short 0; held while ready 146; refused per 100 [], episodes 0.00/min; dps A/B 1.019; ...
 Elemental solo: fights=3 agreement 0.999 (2703 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 39; refused per 100 [], episodes 0.00/min; dps A/B 1.013; ... [seeds 1-3]
 Elemental solo: fights=20 agreement 0.997 (18020 ticks); react median 0 p90 1 never 0.000; ready while short 0; held while ready 277; refused per 100 [], episodes 0.00/min; dps A/B 1.026; ...
 ```

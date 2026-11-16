@@ -501,9 +501,9 @@ M.READY = {
     -- 113722), Maelstrom Weapon 10 a minute at 5/5 (was 20) and the Five Thunders gear (6250 mana) re-time the list: 75
     -- decisions, 7 real (5 early: earth_shock, fire_nova x2, stormstrike x2 shown 0.37-1.23 s before wowsims's cast at
     -- its GCD's end, the gcd/slack class above; 2 late: flame_shock at 114.54 / 136.81, cost class, lo 3.9 / 5.5 under
-    -- the truth at the crossing, gap BT), median 1.050: fewer, larger rows. CN22 nearest rounding: Stormstrike 121 ->
-    -- 122 (the log's price): fixture re-recorded, 14 cost-class rows moved by <= 0.07 s (late flame_shock 114.54 0.94 ->
-    -- 0.90, 136.81 1.28 -> 1.30); still 7 real, median 1.050: floor kept
+    -- the truth at the crossing, gap BT), median 1.050: fewer, larger rows. READY FOR FLOORS (L1196): with lane
+    -- mana-09 merged (Stormstrike 122) 14 cost-class rows move by <= 0.07 s (late flame_shock 114.54 0.94 -> 0.90,
+    -- 136.81 1.28 -> 1.30), still 7 real, median 1.050; the fixture stays the pre-mana-09 recording
     shaman_enhancement = { 1.05, 7 },
     -- { 0.48, 54 } -> { 2.20, 3 } re-pin 0.7 (lane shaman, R6): 91 decisions, 3 real (all late, cost class: the Major
     -- Mana Potion / Demonic Rune refills the belief cannot see leave lo ~2630 under the truth, gaps.md "Potion mana
