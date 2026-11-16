@@ -611,8 +611,8 @@ the same enemy counts as a change.
   slots, pet commands, `wait`: rejected at parse with a warning. An unlearned member is dropped when applied.
 - No rebuild: belief windows are built only at SpecializationChanged (Tracked.lua:437-442). Follow
   `Hekili:CdmSwitchChanged` (Tracked.lua:427-435): LoadScripts writes the active pack's window records (key,
-  duration, refresh, caps, steps, strict, `allow_skip`, `reset_on_target_change`, `step_timeout`) into `def.aplWindows`, bumps a generation,
-  and the belief rebuilds only those rows and the operations buffer at its next Drain out of combat, else at combat
+  duration (a sequence's: `combat`; OPEN carries none, v6.1), refresh, caps, steps, strict, `allow_skip`,
+  `reset_on_target_change`, `step_timeout`) into `def.aplWindows`, bumps a generation, and the belief rebuilds only those rows and the operations buffer at its next Drain out of combat, else at combat
   end. `state:BuildWindows` (State.lua:1662) re-runs with it.
 - Edits or pack switches in combat apply at combat end; until then an unknown key reads "down"
   (Families/Now.lua:538-541 in the belief; `VS.Window` already returns false for an unknown name, Windows.lua:193-198)
@@ -755,7 +755,7 @@ actions.move_to_melee+=/close_window,name=move2,if=...
    keys only: no displays, no lines". Mark the operations arrow as the only new crossing.
 2. Operations replay (replaces v3's edge state machine). Two lanes on one time axis. Top lane, a display's pass at
    now: the copy seeded closed, then the walk with three marks, "line 1 true: OPEN", "restart", "line 9 true:
-   CLOSE", "restart", "pass ends", and beside it the growing list [OPEN burst#Primary 12, CLOSE burst#Primary].
+   CLOSE", "restart", "pass ends", and beside it the growing list [OPEN burst#Primary, CLOSE burst#Primary].
    Bottom lane, the belief: Drain N (cutoff T), then Drain N+1 drawn as a row of steps "Flush | replay operations
    stamped T | polls | fold newer observations | settle | Lua evaluators | deliver". An arrow carries the list from
    the top lane into the "replay" step. A small inset: the same list with an observed cast arriving during the pass,
@@ -902,7 +902,7 @@ fixture priorities.
 - Asserted at every tick, for every display that is on (unlisted fields must be unchanged from the previous tick,
   so a surprise fails):
   1. belief, per key: `up`, `step`, `expiresAt`;
-  2. operations sent by this tick's pass, per display, as an ordered list (`OPEN burst 12`, `CLOSE burst`);
+  2. operations sent by this tick's pass, per display, as an ordered list (`OPEN burst`, `CLOSE burst`);
   3. forecast copy after each asserted slot: per window `up`, `step`; restarts in that slot (slot 1 always; later
      slots where the case names them);
   4. published records: slot 1 action and whether it is ready; slot 2 where the case is about the queue.
