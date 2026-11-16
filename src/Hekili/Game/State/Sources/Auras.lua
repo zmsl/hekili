@@ -633,6 +633,13 @@ function I.AuraVerdictClosed(k, t, ap)
     end
 end
 
+--- Our cast's avoid undo closed target record j (Families/Now.lua): like any close it drops the debounce's memory, so
+--- a still-lit item re-opens it at the next poll instead of HOLD past the undone cast's expiry. Allocates nothing.
+function I.AuraUndone(j)
+    local k = I.AURA_UNIT + j
+    lastE[k], lastSt[k], longE[k] = 0, 0, 0
+end
+
 --- A Cooldown Manager open of j on unit u staged at t inside its late window (lateTo) while another member of j's family
 --- is up: the light is that member's (our cast of it folded first in this drain, before the open), so the fold drops
 --- the open and no strike is judged for j. Called by the fold for an open only. Allocates nothing.

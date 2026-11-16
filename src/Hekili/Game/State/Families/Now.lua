@@ -953,6 +953,9 @@ I.On(Obs.Avoided, function(o, t)
         local rec = VS.Aura("target", auraSpell[j], t)
         local was, back = rec and rec.est or 0, undoE[k] > t and undoE[k] or 0
         I.AuraModel(2, j, undoAp[k], back, back > 0 and undoSt[k] or 0, t, Obs.Avoided, true)
+        if back == 0 then
+            I.AuraUndone(j) -- a close: a lit item re-opens it at once (Sources/Auras.lua)
+        end
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
     end
     local r = A.slot[o.a]

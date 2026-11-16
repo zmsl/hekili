@@ -1831,6 +1831,30 @@ describe("auras", function()
                 assert.are.same({ 1, 1 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
             end)
 
+            -- Hotfix 0.8.6 (L1239 cause 2): an avoid credited to a cast that landed (its item lit) undoes the cast's
+            -- write; like any close it drops the debounce's memory, so the still-lit item re-opens at the next poll
+            -- instead of HOLD past the undone cast's expiry.
+            it("an avoid undo's close drops the debounce's memory: the lit item re-opens at the next poll", function()
+                local def = fs.def(fs.new(9))
+                for _, ab in ipairs(def.abilities) do
+                    ab.now = ab.funcs and ab.funcs.now
+                end
+                start(def)
+                ctl.now = 11
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.ViewerAura(ti, "target") -- it landed and lights
+                drain(11)
+                drain(11.2) -- an UP on the record up: the debounce remembers its expiry
+                assert.are.equal(26, est("target", fs.SPENDER_C, 11.2))
+                ctl.now = 11.3
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- credited to the cast: the undo closes it
+                drain(11.3)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.3))
+                assert.are.equal(1, I.avoidsRun)
+                drain(11.5)
+                assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 11.5)) -- not debounced against the old 26
+            end)
+
             it("F52-A (review M1): a recast folded in the verdict's own drain stands: no close, no strike", function()
                 local def = fs.def(fs.new(9))
                 for _, ab in ipairs(def.abilities) do
