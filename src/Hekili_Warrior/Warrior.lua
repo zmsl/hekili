@@ -165,7 +165,8 @@ end
 -- Rage from damage taken: wowsims/forever's rule (MIT, sim/core/rage.go:11-49 and 91-103; owner ruling 2026-10-25,
 -- "stick with wowsims": armor does not change it): 2.5 x (1 - A) x the hit before every mitigation / c, A and c by the
 -- attacker's level only (our health, level and armor play no part), x 2 under Berserker Rage
--- (sim/warrior/berserker_rage.go). A blocked hit lands, so it gives the rage of its unblocked amount. The client
+-- (sim/warrior/berserker_rage.go). A partly blocked hit gives the rage of its unblocked amount; a hit blocked in full
+-- gives none (rage.go:112-115; 6 of 6 in wowsims's in-game logs, 144ca5865f). The client
 -- reports the hit after armor, so the pre-armor amount is rebuilt as post / (1 - armor / (armor + 400 + 85 x attacker
 -- level)), the armor the belief's out-of-combat cached armor times the armor buffs it sees on us (ARMOR_BUFFS), the
 -- block value the cached one. Defensive Stance's 10% and Shield Wall's reduction stay off: rage is from the hit after
@@ -173,9 +174,10 @@ end
 -- Specialization (a 20% chance a rank to gain 5 on a block) and Master of Defense (50% a rank on a dodge or parry with a shield) as their
 -- expected values, the band carrying the spread (tooltips read in game 2026-10-16).
 local TAKEN_RAGE_FACTOR = 2.5
--- A by the attacker's level: wowsims's measured rows (20% up to 42, 40% from 63), interpolated between two rows.
-local ASSUMED_LEVEL = { 42, 44, 46, 50, 63 }
-local ASSUMED_REDUCTION = { 0.20, 0.30, 0.36, 0.38, 0.40 }
+-- A by the attacker's level: wowsims's measured rows at e4ef929e54 (rage.go:34-46: 21.8% up to 38, 40% from 63),
+-- interpolated between two rows.
+local ASSUMED_LEVEL = { 38, 42, 44, 46, 47, 50, 55, 59, 63 }
+local ASSUMED_REDUCTION = { 0.218, 0.239, 0.31, 0.36, 0.377, 0.38, 0.381, 0.38, 0.40 }
 local BERSERKER_RAGE_TAKEN = 2
 local TAKEN_SPREAD = 0.15 -- a stale cached armor or block value, and an unseen armor buff or debuff
 -- The armor buffs on us the rebuild multiplies the cached armor by (aura key, multiplier): Inspiration (14893, the
@@ -186,12 +188,6 @@ local ARMOR_BUFFS = { "inspiration" }
 local ARMOR_BUFF_MULTIPLIER = { 1.25 }
 local PROC_RAGE = 5
 local SHIELD_SPECIALIZATION_CHANCE, MASTER_OF_DEFENSE_CHANCE = 0.2, 0.5 -- a rank
-local unblockedAvg, UNBLOCKED_WEIGHT = 0, 0.2 -- an EMA of the unblocked post-armor amounts (a full block's estimate)
--- Each fight learns its own mobs' hits: a full block before the fight's first unblocked hit estimates 0.
-spec:RegisterEvent("PLAYER_REGEN_ENABLED", function()
-    unblockedAvg = 0
-end)
-
 -- wowsims's A at an attacker's level (damageTakenRageArmorReduction).
 local function assumedReduction(level)
     local n = #ASSUMED_LEVEL
@@ -338,12 +334,8 @@ spec:RegisterResource(
                     if kind == "BLOCKED" then
                         post = post + stat("GetShieldBlock") -- the unblocked amount
                     end
-                    unblockedAvg = unblockedAvg + UNBLOCKED_WEIGHT * (post - unblockedAvg)
                     gain = rageTaken(post, attacker, level, reduced, armor)
                     width = TAKEN_SPREAD * gain
-                elseif kind == "BLOCK" then
-                    gain = rageTaken(min(stat("GetShieldBlock"), unblockedAvg), attacker, level, reduced, armor)
-                    width = gain
                 end
                 local rank = talent.shield_specialization.rank
                 if (kind == "BLOCK" or kind == "BLOCKED") and rank > 0 then
@@ -826,18 +818,23 @@ spec:RegisterAuras({
         max_stack = 1,
         shared = "target", -- any warrior's Thunder Clap slows the target (read from the target since GAP AJ)
     },
+    -- A shaman's Windfury Totem raid aura on us (its three ranks). Its proc is a weapon strike (10610, wowsims
+    -- core/buffs/drivers.go): main-hand weapon damage on the special's table, no extra swing and no swing reset; a landed
+    -- strike pays rage as a main-hand swing does (rage.go:155, SpellFlagSwingRage). The belief does not pay that rage:
+    -- the strike is a target row, secret live (shortcut: upgrade if a strike row turns plain).
     windfury = {
         id = 8515,
         copy = { 10609, 10612 },
         duration = 300,
         max_stack = 1,
     },
-    -- Weaponmaster's three branches (talent 1290261; wowsims talents_arms.go:276-383 registers one aura each, tags 1/2/3 of
+    -- Weaponmaster's three branches (talent 1290261; wowsims talents_arms.go:276-384 registers one aura each, tags 1/2/3 of
     -- the one spell id, so ours are id-less): up while the talent is known and either hand holds the branch's weapon kind
     -- (the gear scan's main_hand.sword and kin), applied at reset_precast. Display and custom priorities only; the sim-only
     -- auras are not tracked by the belief. Axe/polearm crit and mace/staff armor ignore are damage-only effects no
     -- priority consumes. The sword branch's extra attack (a chance roll on a landed melee hit, Whirlwind/Cleave once a
-    -- cast, none from Sweeping Strikes or a Windfury Totem swing) stays unmodelled: the roll is unseen, and an observed
+    -- cast, none from Sweeping Strikes; Windfury Totem's strike rolls it as a white swing does) stays unmodelled: the roll
+    -- is unseen, and an observed
     -- extra swing already pays its rage through the swing rows. Needs in-game check: whether PLAYER_SWING fires for it.
     weaponmaster_axe_polearm = { duration = 3600, max_stack = 1 },
     weaponmaster_mace_staff = { duration = 3600, max_stack = 1 },
@@ -1418,7 +1415,9 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
-        refundOnAvoid = true, -- wowsims execute.go; DB2 Discount Power On Miss
+        -- An avoid costs the base rage alone, none of it back, and keeps the extra rage (wowsims execute.go at e4ef929e54,
+        -- 7025f28b98: 36 avoided Executes in in-game logs), so no `refundOnAvoid`. The extra the `now` below spends stays
+        -- spent on an avoid in the belief: no field gives a `now`'s spend back (central need repin-warrior-09-1).
         known = knows(EXECUTE),
         nobuff = "defensive_stance",
         healthGate = 0.2, -- usable at or below 20% of the target's health: the belief's target health reads it

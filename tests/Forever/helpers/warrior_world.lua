@@ -327,15 +327,18 @@ M.MAP = {
             W.hit(e, e.target, weapon(W, e, 35), 1)
         end,
     },
-    execute = { -- the target's true health under 20%; rank 5: 600, and 15 a point of the rage it spends past its cost
+    -- the target's true health under 20%; rank 5: 600, and 15 a point of the rage past its cost, spent only by a landed
+    -- strike: an avoided one keeps it (wowsims execute.go at e4ef929e54; the kit gives no refund of the cost)
+    execute = {
         requires = function(_, e)
             local v = e.target
             return v ~= nil and v.health <= 0.2 * v.healthMax, "not in execute range"
         end,
         effect = function(W, e)
             local extra = e.power
-            W.gain(e, -extra)
-            W.hit(e, e.target, 600 + 15 * extra, 1)
+            if W.hit(e, e.target, 600 + 15 * extra, 1).act == "WOUND" then
+                W.gain(e, -extra)
+            end
         end,
     },
     victory_rush = { -- a kill of ours within 20 s

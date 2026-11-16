@@ -751,9 +751,12 @@ describe("Forever Warrior", function()
             w.game.healthMax = 5000 -- our health plays no part
             near(g, (run("WOUND", 1000, 63)))
             w.game.stat.UnitArmor = { 0, 0 }
-            near(1000 * perPoint(0.38 + 0.02 * 10 / 13, 230.60000004), (run("WOUND", 1000, 60))) -- A between 50 and 63
-            near(1000 * perPoint(0.37, 180.0852468984), (run("WOUND", 1000, 48))) -- between 46 (0.36) and 50 (0.38)
-            near(1000 * perPoint(0.2, 37.43235079), (run("WOUND", 1000, 10))) -- 0.20 up to 42
+            -- A by wowsims's rows at e4ef929e54 (rage.go:34-46): 38 0.218, 42 0.239, 44 0.31, 46 0.36, 47 0.377,
+            -- 50 0.38, 55 0.381, 59 0.38, 63 0.40
+            near(1000 * perPoint(0.38 + 0.02 / 4, 230.60000004), (run("WOUND", 1000, 60))) -- A between 59 and 63
+            near(1000 * perPoint(0.377 + 0.003 / 3, 180.0852468984), (run("WOUND", 1000, 48))) -- 47 0.377, 50 0.38
+            near(1000 * perPoint(0.218 + 0.021 / 2, 147.86647018), (run("WOUND", 1000, 40))) -- 38 0.218, 42 0.239
+            near(1000 * perPoint(0.218, 37.43235079), (run("WOUND", 1000, 10))) -- 0.218 up to 38
             near(1000 * perPoint(0.4, 274.70000005), (run("WOUND", 1000, 70))) -- 0.40 from 63
         end)
 
@@ -774,24 +777,17 @@ describe("Forever Warrior", function()
             near(2 * open, (run("WOUND", 1000, 63)))
         end)
 
-        it(
-            "adds the cached block value to a partial block, and estimates a full block from the unblocked amounts",
-            function()
-                w.game.stat.UnitArmor = { 0, 0 }
-                w.game.healthMax = 100
-                w.game.stat.GetShieldBlock = { 20 }
-                local k = perPoint(0.2, 20.621051355) -- a level-5 attacker's
-                local g, wd = run("BLOCKED", 10, 5) -- 10 + 20 unblocked
-                near(30 * k, g)
-                near(0.15 * g, wd)
-                -- min(block value 20, the average unblocked amount 0.2 x 30)
-                near(6 * k, (run("BLOCK", 0, 5)))
-                local g, wd = run("BLOCK", 0, 5)
-                assert.are.equal(g, wd) -- a full block's band is its whole estimate
-                w.events.PLAYER_REGEN_ENABLED() -- the fight ends: the next fight learns its own unblocked amounts
-                assert.are.same({ 0, 0 }, { run("BLOCK", 0, 5) })
-            end
-        )
+        it("adds the cached block value to a partial block, and gives a full block no rage", function()
+            w.game.stat.UnitArmor = { 0, 0 }
+            w.game.healthMax = 100
+            w.game.stat.GetShieldBlock = { 20 }
+            local k = perPoint(0.218, 20.621051355) -- a level-5 attacker's
+            local g, wd = run("BLOCKED", 10, 5) -- 10 + 20 unblocked
+            near(30 * k, g)
+            near(0.15 * g, wd)
+            -- a hit blocked in full gives none (wowsims rage.go:112-115; 6 of 6 in its in-game logs)
+            assert.are.same({ 0, 0 }, { run("BLOCK", 0, 5) })
+        end)
 
         it("takes the rage from the hit after Defensive Stance's and Shield Wall's reduction (W2, wowsims)", function()
             local open = run("WOUND", 50, 20)
@@ -810,7 +806,7 @@ describe("Forever Warrior", function()
             assert.are.same({ 0, 0 }, { run("DODGE", 0, 20) })
             w.game.stat.UnitArmor = { 0, 0 }
             ctx({}, { shield_specialization = 1 })
-            local hit = 30 * perPoint(0.2, 72.4215672) -- a level-20 attacker's
+            local hit = 30 * perPoint(0.218, 72.4215672) -- a level-20 attacker's
             local g, wd = run("BLOCKED", 30, 20) -- a partial block: the hit's, plus the proc
             near(hit + 1, g)
             near(0.15 * hit + 4, wd)
@@ -894,8 +890,10 @@ describe("Forever Warrior", function()
     end)
 
     it(
-        "gives back 80% of an avoided ability's rage where wowsims does, per ability (not Cleave or Whirlwind)",
+        "gives back 80% of an avoided ability's rage where wowsims does, per ability (not Cleave, Whirlwind or Execute)",
         function()
+            -- Execute: an avoid costs the base rage, none of it back (wowsims execute.go at e4ef929e54, 7025f28b98:
+            -- 36 avoided Executes in in-game logs)
             assert.are.equal(0.8, w.resource[4].refundOnAvoid)
             local yes = {}
             for key, a in pairs(w.abilities) do
@@ -908,7 +906,6 @@ describe("Forever Warrior", function()
                 "bloodthirst",
                 "concussion_blow",
                 "disarm",
-                "execute",
                 "hamstring",
                 "heroic_strike",
                 "mocking_blow",
