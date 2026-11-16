@@ -10,6 +10,22 @@ local sw = require("Forever.helpers.shaman_world")
 local PACKS = { "Enhancement", "Elemental" }
 
 describe("the Shaman loop worlds", function()
+    -- Each world's pool and regen are its wowsims log's (OtherID 2 regen ticks, 0.1 s apart): the max mana, the casting
+    -- tick without and with Mana Spring Totem's 5 a second (Tag 1) and the tick outside the five-second rule (Tag 2)
+    for _, key in ipairs(PACKS) do
+        it(key .. ": the pool and the five-second rule's rates are its wowsims log's", function()
+            local Wd = sw[key].WORLD
+            local f = Wd.fsr[0]
+            local log = assert(io.open("tests/Forever/wowsims/shaman_" .. key:lower() .. ".log")):read("*a")
+            local spirit, mp5, totem = f[1], f[2], f.auras[10494].mp5
+            assert.are.equal(Wd.max, tonumber(log:match("of (%d+) total")))
+            for _, t in ipairs({ { 1, mp5 }, { 1, mp5 + totem }, { 2, spirit + mp5 + totem } }) do
+                local row = ("Gained %.3f mana from {OtherID: 2, Tag: %d}"):format(t[2] / 10, t[1])
+                assert.is_truthy(log:find(row, 1, true), row)
+            end
+        end)
+    end
+
     -- wowsims e4ef929e54: Maelstrom Weapon's rate is its rank's 6..10 a minute (curve 408498), and our Windfury Totem
     -- standing rolls a weapon strike (20%, a 0.1 s ICD) on a landed main-hand swing, which stacks no Maelstrom Weapon
     it(

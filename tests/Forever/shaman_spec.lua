@@ -195,7 +195,7 @@ describe("Forever Shaman", function()
                 return 0
             end,
         })
-        assert.are.same({ 14.12, 26.13, 0 }, seed("elemental")) -- no totem; re-pin log
+        assert.are.same({ 14.31, 26.31, 0 }, seed("elemental")) -- no totem; re-pin e4ef929e54 log
         -- the static share follows Mindfulness's rank (17/33/50%, wowsims's curve; was 15% at 3/3), never the spec
         local shares = {}
         for rank = 0, 3 do
@@ -550,12 +550,21 @@ describe("Forever Shaman", function()
         end
     )
 
-    -- the regen entry's `mp5` is a rate a second (Engine/Schema/Spec/Regen.lua), as Mana Spring's value / 2: 290 every
-    -- 3 s is 96.7 a second (1325257 effect 1, PeriodMs 3000), never 290 / 3 x 5 = 483.3 (ledger L1156 b)
-    it("declares Mana Tide's mana: 290 every 3 s (96.7 a second) while mana_tide is up", function()
+    -- the regen entry's `mp5` is a rate a second (Engine/Schema/Spec/Regen.lua), as Mana Spring's value / 2: the buff's
+    -- mana every 3 s by the totem's known rank (16191 / 17355 / 17360 / 1325257 effect 1: 88 / 133 / 197 / 290, PeriodMs
+    -- 3000; wowsims spell data), so 96.7 a second at rank 4, never 290 / 3 x 5 = 483.3 (ledger L1156 b)
+    it("declares Mana Tide's mana: its rank's every 3 s (96.7 a second at rank 4) while mana_tide is up", function()
         local m = w.resources[0].models.mana_tide
-        assert.are.same({ "mana_tide", 290 / 3 }, { m.aura, m.mp5 })
-        assert.is_true(math.abs(m.mp5 - 96.67) < 0.005)
+        assert.are.equal("mana_tide", m.aura)
+        local ids, got = { 16190, 17354, 17359, 1325256 }, {}
+        for rank = 1, 4 do
+            for i, id in ipairs(ids) do
+                w.game.known[id] = i == rank
+            end
+            got[rank] = setfenv(m.mp5, w.state)()
+        end -- left at rank 4 known, as the kit test leaves it
+        assert.are.same({ 88 / 3, 133 / 3, 197 / 3, 290 / 3 }, got)
+        assert.is_true(math.abs(got[4] - 96.67) < 0.005)
     end)
 
     -- wowsims talents_enhancement.go:218-231: rank effect 2 resets Stormstrike's cooldown on a dodge or parry taken

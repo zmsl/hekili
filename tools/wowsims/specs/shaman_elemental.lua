@@ -46,7 +46,9 @@
 -- Re-pin 0.9 (e4ef929e54, lane repin-shaman-09): the request and the pack's lines are unchanged; the log moves with
 -- upstream's Searing Totem cadence (an attack every 2.425 s, the first at 2.2 s: 91a36310d6, its Tag 1 rows are no
 -- choice), the spell resistance constant 8L + 19 (dffbd4b05a) and the Weakness Analyzer's on-use cooldown (90 s -> 6
--- min in the item db: one use a fight, the ~91 s one gone).
+-- min in the item db: one use a fight, the ~91 s one gone). The shaman world's Elemental mana and regen follow this
+-- log (5950; 26.31 a second casting without Mana Spring Totem's buff, 31.31 with it, 45.62 outside the five-second
+-- rule; the kit's seeds likewise, spirit 14.31 and mp5 26.31): no replay decision moved.
 return {
     class = "SHAMAN",
     pack = "Elemental (wowsims.com)",

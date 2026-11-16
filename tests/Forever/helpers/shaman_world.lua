@@ -370,11 +370,12 @@ local PACKS = {
             [1223033] = 3, -- Mindfulness (wowsims's tree; not in the DB2's Talent table)
         },
         weapon = { 40, 70, 3.0 },
-        -- wowsims's log (shaman_elemental.log, re-pin e2842f0a78: Windshaper Skyborne, was 5590 / 29.75 / 42.5 as a
-        -- Troll): 5650 mana, 31.13 a second while casting (OtherID 2 Tag 1, Mana Spring Totem and Mindfulness's share
-        -- included: 26.13 without the totem's 5) and 45.25 outside the five-second rule (Tag 2)
-        mana = 5650,
-        fsr = { 14.12, 26.13, share = 0.5, auras = { [10494] = { mp5 = 5 } } }, -- Mindfulness 3/3: 50% (wowsims's curve)
+        -- wowsims's log (shaman_elemental.log, re-pin e4ef929e54; 5650 / 31.13 / 45.25 at e2842f0a78): 5950 mana, 31.31
+        -- a second while casting (OtherID 2 Tag 1, 3.131 a tick: Mana Spring Totem and Mindfulness's share included;
+        -- 26.31 without the totem's 5, 2.631 a tick before it stands) and 45.62 outside the five-second rule (Tag 2,
+        -- 4.562 a tick), so the spirit part 45.62 - 31.31 = 14.31
+        mana = 5950,
+        fsr = { 14.31, 26.31, share = 0.5, auras = { [10494] = { mp5 = 5 } } }, -- Mindfulness 3/3: 50% (wowsims's curve)
         distance = 20, -- the build's distanceFromTarget: the shocks reach 20 yd
         uptime = { "flame_shock" },
     },

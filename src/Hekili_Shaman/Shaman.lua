@@ -262,6 +262,9 @@ end
 
 -- Mana Spring's buff on us (DB2 aura 24), mana every 2 s by totem rank.
 local MANA_SPRING = { 4, 6, 8, 10 }
+-- Mana Tide's buff on us (16191 / 17355 / 17360 / 1325257 effect 1, PeriodMs 3000; wowsims spell data), mana every 3 s
+-- by totem rank.
+local MANA_TIDE = { 88, 133, 197, 290 }
 
 -- Totemic Recall's takedown: the four elements and every totem buff (sorted: a fixed order).
 local ELEMENTS = { "fire", "earth", "water", "air" }
@@ -324,6 +327,8 @@ end
 
 -- Totemic Recall's: each element's slot ends now (a zero-length summon, Hekili's summonTotem) and every totem buff
 -- goes (two closures, as summon's).
+-- shortcut: every totem buff goes, a party Shaman's identical one too (wowsims drops only its own totems' auras);
+-- upgrade when the buff read tells our totem's buff from a party member's.
 local function recall()
     return function()
         for i = 1, #ELEMENTS do
@@ -503,16 +508,15 @@ end
 local MINDFULNESS = { 0.17, 0.33, 0.5 }
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace, as wowsims's logs measure them at 60: shaman_elemental 31.13 a second while casting
--- (Mana Spring Totem, Mindfulness 3/3's 50% share and gear: S = 28.24, the parts below are the log's two rates) and
--- 45.25 outside the rule, so spirit 14.12 (the outside
--- rate less the casting one) and mp5 31.13 (the e2842f0a78 log, Windshaper Skyborne; was 29.75 / 42.5 as a Troll);
--- shaman_enhancement 17.0 / 42.75, so spirit 25.75 and mp5 17.0 (the e4ef929e54 log: its gear lost the Five Thunders
--- pieces; was 17.8 / 49.05 at e2842f0a78, 9.8 / 38.42 as an Orc). Forever's
--- Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not Classic's formula.
--- The seeds' mp5 is the rate without the totem's buff (the logs' casting rate a tick before it: 2.613 a tick in
--- shaman_elemental.log before -2.0 s, 1.200 in shaman_enhancement.log before -3.0 s), so 26.13 and 12.0; the totem's
--- own entry (below) adds its mp5 while the buff is up, as wowsims models it (totems.go:105-109).
+-- the in-combat calibration replace, as wowsims's e4ef929e54 logs measure them at 60. The mp5 is the casting rate
+-- without Mana Spring Totem's buff (the casting tick before the totem stands), the spirit part the rate outside the
+-- rule less the casting one, both with the totem: shaman_elemental 2.631 a tick before -2.0 s (26.31 a second), 31.31
+-- with the totem (Mindfulness 3/3's 50% share inside), 45.62 outside, so spirit 14.31 and mp5 26.31 (5950 mana; was
+-- 14.12 / 26.13 at e2842f0a78); shaman_enhancement 1.200 a tick before -3.0 s (12.0), 17.0 with the totem, 42.75
+-- outside, so spirit 25.75 and mp5 12.0 (its gear lost the Five Thunders pieces; was 17.8 / 49.05 at e2842f0a78, 9.8 /
+-- 38.42 as an Orc). Forever's Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not
+-- Classic's formula. The totem's own entry (below) adds its mp5 while the buff is up, as wowsims models it
+-- (totems.go:105-109).
 -- Improved Stormstrike (1238931, DB2 aura 134 = 50): +50% of Spirit regen while casting for 15 s.
 -- Mana Spring (DB2 aura 24, 4/6/8/10 every 2 s by rank, +5% a rank of Restorative Totems 16187): mp5 = value / 2.
 -- state.spec: the functions run in the state's environment (the file's `spec` is the class).
@@ -520,8 +524,13 @@ spec:RegisterResource(
     Enum.PowerType.Mana,
     {
         improved_stormstrike = { aura = "improved_stormstrike", share = 0.5 },
-        -- Mana Tide Totem's buff (1325257 effect 1: 290 every 3 s, 13 s; wowsims spell data): a rate a second
-        mana_tide = { aura = "mana_tide", mp5 = 290 / 3 },
+        -- Mana Tide Totem's buff (13 s): its rank's mana every 3 s as a rate a second
+        mana_tide = {
+            aura = "mana_tide",
+            mp5 = function()
+                return (MANA_TIDE[knownRank(TOTEMS.mana_tide_totem.ids)] or MANA_TIDE[1]) / 3
+            end,
+        },
         mana_spring = {
             aura = "mana_spring",
             mp5 = function()
@@ -536,10 +545,10 @@ spec:RegisterResource(
     {
         fsr = {
             spirit = function()
-                return state.spec.elemental and 14.12 or 25.75
+                return state.spec.elemental and 14.31 or 25.75
             end,
             mp5 = function()
-                return state.spec.elemental and 26.13 or 12.0
+                return state.spec.elemental and 26.31 or 12.0
             end,
             -- Mindfulness's rank (the belief reads it after its talent walk), never the spec; + 8% with the Polished
             -- Driftwood Icon relic (its equip aura 1248756: aura 134 +8, wowsims item_totems.go:13-20)
