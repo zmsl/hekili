@@ -27,4 +27,30 @@ describe("wowsims drift", function()
         assert.are.equal("Talent(5923, 5)", l.HolyPower)
         assert.is_true(l["# Holy Shield: rank 4, spell 1239570, has no SpellMisc row"])
     end)
+
+    it("hands the request's tank slot to the translation context, as the pack build does", function()
+        local got
+        local stub = {
+            context = function(_, _, _, _, _, tank)
+                got = tank
+                return {}
+            end,
+            translate = function()
+                return "", {}
+            end,
+        }
+        local apl = require("tools.wowsims.apl")
+        local tankReq = { raid = { tanks = { { type = "Player", index = 0 } } } }
+        assert.is_true(apl.isTank(tankReq))
+        assert.is_false(apl.isTank({ raid = { tanks = { { type = "Player", index = 1 } } } }))
+        assert.is_false(apl.isTank({ raid = {} }))
+        drift.translate(stub, {}, {}, "", { rotation = {} }, {}, apl.isTank(tankReq))
+        assert.is_true(got)
+    end)
+
+    it("parses a pin-side .siml with WOWSIMS_PIN_CLI, and a new-rev one with WOWSIMS_NEW_CLI", function()
+        assert.are.equal("newcli", drift.pinCli("n", "n", "newcli", "pincli"))
+        assert.are.equal("pincli", drift.pinCli("p", "n", "newcli", "pincli"))
+        assert.is_nil(drift.pinCli("p", "n", "newcli", nil))
+    end)
 end)

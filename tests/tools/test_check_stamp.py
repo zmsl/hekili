@@ -317,6 +317,7 @@ NOT_INPUTS = {
     "WOWSIMS_NEW": "tools/wowsims/drift.lua: a dev-only report, not check",
     "WOWSIMS_NEW_TREE": "tools/wowsims/drift.lua: a dev-only report, not check",
     "WOWSIMS_NEW_CLI": "tools/wowsims/drift.lua: a dev-only report, not check",
+    "WOWSIMS_PIN_CLI": "tools/wowsims/drift.lua: a dev-only report, not check",
     "LUACHECK": "set by the Makefile on api-check's line (a := variable)",
     "FULL": "only forces a full run",
     "MAKE": "make itself",
