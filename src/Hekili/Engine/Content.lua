@@ -54,7 +54,7 @@ local format = string.format
 -- and its `pct` / `flat` as a list by rank: an older core indexes the simulation's buff table with a nil aura key
 -- (raises) and ignores a list value.
 --   Since then, without a bump: the `now` name `cast_id` (item-restores-09); an older core reads nil, so a ranked
---   restore credits its first rank, as a mana gem's Ruby.
+--   restore credits its first rank.
 local CONTENT_API = 15
 
 local done, notice = false, nil
