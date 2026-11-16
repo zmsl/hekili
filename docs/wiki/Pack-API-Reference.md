@@ -68,7 +68,7 @@ The shared and race objects offer `RegisterResourceMod({ max = pct })`, which ra
 race:RegisterResourceMod({ max = 0.05 })
 ```
 
-The race object and the shared object offer `RegisterRegenMod({ resource, aura, mult | spirit | share | mp5 })`, a regeneration entry on the class's resource while a player aura is up. A shared entry applies to every class (Innervate's is in `src/Hekili_Shared/Shared/Auras.lua`). From `src/Hekili_Shared/Races/HighOrderSkyborne.lua`:
+The race object and the shared object offer `RegisterRegenMod({ resource, aura, mult | spirit | share | mp5 | mp5Mult })`, a regeneration entry on the class's resource while a player aura is up. A shared entry applies to every class (Innervate's is in `src/Hekili_Shared/Shared/Auras.lua`). From `src/Hekili_Shared/Races/HighOrderSkyborne.lua`:
 
 ```lua
 race:RegisterRegenMod({ resource = "mana", aura = "energized", mult = 1.5 })

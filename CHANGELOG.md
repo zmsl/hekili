@@ -7,6 +7,8 @@
 ### Changed
 
 ### Fixed
+- Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
+- Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
 
 ### Known issues
 

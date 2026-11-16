@@ -514,12 +514,13 @@ state.select = select
 -- `stat.<field>` (stat.crit) is the sim's stat table, as upstream; calling it, stat(name, arg), is the client's stat
 -- API of that name (mt_stat's __call below). In a `now` handler `stat` is only the plain function.
 
---- A cost `c` between 0 and 1 of resource state `res`, as power: that fraction of the pool's base power, floored, when
---- the reset's UnitPowerMax read carried one (`res.base`: the pack's declared or the one learned from the client's
---- cost read; nil until then), else of its `modmax` (Hekili's). Allocates nothing.
+--- A cost `c` between 0 and 1 of resource state `res`, as power: that fraction of the pool's base power to the nearest
+--- whole, a half up (the client's percent-of-base price; the belief's `nearest`, Game/State/Families/Casts.lua, is the
+--- same expression), when the reset's UnitPowerMax read carried one (`res.base`: the pack's declared or the one learned
+--- from the client's cost read; nil until then), else of its `modmax` (Hekili's). Allocates nothing.
 function ns.FractionCost( c, res )
     local b = rawget( res, "base" )
-    if b then return math.floor( c * b + 1e-6 ) end
+    if b then return math.floor( c * b + 0.5 + 1e-6 ) end
     return c * res.modmax
 end
 

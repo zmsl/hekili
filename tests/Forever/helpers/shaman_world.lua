@@ -47,7 +47,7 @@ local COST = {
     earth_shock = { 30, 50, 85, 145, 240, 345, 450 },
     flame_shock = { 55, 95, 160, 250, 345, 410 },
     fire_nova = { 65, 120, 210, 290, 375 }, -- wowsims/forever's spell data (R57a: in game 375; the DB2's 520)
-    stormstrike = { 121 }, -- wowsims/forever's: 8% of base mana, 121 at 60 (the DB2's: 125)
+    stormstrike = { 122 }, -- wowsims/forever's: 8% of base mana, 121.6 at 60 to the nearest (the DB2's: 125)
     searing_totem = { 25, 45, 75, 110, 145, 170 },
     flametongue_totem = { 90, 140, 200, 275 },
     strength_of_earth_totem = { 25, 65, 125, 225, 275 },
@@ -290,7 +290,7 @@ local PACKS = {
         -- adds half the spirit part while casting (33.42: the log's 3.342 a tick); the 17.8 is 12.8 without Mana Spring
         -- Totem's buff (10494: 5 a second, up while the totem stands)
         mana = 6565,
-        fsr = { 31.25, 12.8, auras = { [1238931] = { share = 0.5 }, [10494] = { mp5 = 5 } } },
+        fsr = { 31.25, 12.8, auras = { [1238931] = { share = 0.5 }, [10494] = { mp5 = 5, energize = true } } },
         uptime = { "flame_shock" },
     },
     -- wowsims/forever's Elemental build (builds/testing.build.json, talents 5500331023001351-05500001-053): the casts,
@@ -335,7 +335,7 @@ local PACKS = {
         -- Troll): 5650 mana, 31.13 a second while casting (OtherID 2 Tag 1, Mana Spring Totem and Mindfulness's share
         -- included: 26.13 without the totem's 5) and 45.25 outside the five-second rule (Tag 2)
         mana = 5650,
-        fsr = { 14.12, 26.13, share = 0.5, auras = { [10494] = { mp5 = 5 } } }, -- Mindfulness 3/3: 50% (wowsims's curve)
+        fsr = { 14.12, 26.13, share = 0.5, auras = { [10494] = { mp5 = 5, energize = true } } }, -- Mindfulness 3/3: 50% (wowsims's curve)
         distance = 20, -- the build's distanceFromTarget: the shocks reach 20 yd
         uptime = { "flame_shock" },
     },

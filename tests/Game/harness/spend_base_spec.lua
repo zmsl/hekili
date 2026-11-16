@@ -1,5 +1,6 @@
 -- tests/Game/harness/spend_base_spec.lua (central fix 22, gap BB): an ability declaring `spendBase = true` prices its
--- `spend`, scalar or function, as a fraction of its pool's base power at any magnitude (floor(c x base)); without the
+-- `spend`, scalar or function, as a fraction of its pool's base power at any magnitude (c x base to the nearest whole,
+-- a half up: percent_cost_round_spec.lua); without the
 -- flag a cost between 0 and 1 is still a fraction and any other cost is points (Engine/Sim/State.lua ns.SpendPoints).
 local headless = require("Game.harness.headless")
 
@@ -42,13 +43,13 @@ describe("the sim's percent-of-base cost (spendBase)", function()
         H.ns.VirtualState.BasePower = basePower
     end)
 
-    it("prices a declared fraction of 1.4, scalar or function, at floor(1.4 x base)", function()
-        local want = math.floor(1.4 * BASE + 1e-6)
+    it("prices a declared fraction of 1.4, scalar or function, at 1.4 x base to the nearest whole", function()
+        local want = 1698 -- 1698.2
         assert.are.same({ want, want }, { S.action.base_scalar.cost, S.action.base_fn.cost })
         assert.are.same({ want, want }, { H.ns.SpendPoints(1.4, S.mana, class.abilities.base_fn), want })
     end)
 
     it("keeps a 0.5 cost without the flag a fraction and a 40 cost flat", function()
-        assert.are.same({ math.floor(0.5 * BASE + 1e-6), 40 }, { S.action.half.cost, S.action.flat.cost })
+        assert.are.same({ 607, 40 }, { S.action.half.cost, S.action.flat.cost }) -- 606.5: a half rounds up
     end)
 end)
