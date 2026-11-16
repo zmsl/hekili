@@ -321,9 +321,9 @@ end
 local BESTIAL_DISCIPLINE = { 0.25, 0.5 }
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace, as wowsims's logs measure them at 60: hunter_beast_mastery 7.94 a second while
--- casting (Bestial Discipline 2/2's 50% share of 15.88) and 15.88 outside, so spirit 7.94, mp5 7.94 and share 0.5;
--- hunter_marksmanship and hunter_survival 0 while casting and 15.88 outside. Forever's Spirit regen is `6.25 + Spirit/8`
+-- the in-combat calibration replace, as wowsims's weave logs measured them at 60 (e5a9cd2a2d): Beast Mastery 7.94 a
+-- second while casting (Bestial Discipline 2/2's 50% share of 15.88) and 15.88 outside, so spirit 7.94, mp5 7.94 and
+-- share 0.5; Marksmanship and Survival 0 while casting and 15.88 outside. Forever's Spirit regen is `6.25 + Spirit/8`
 -- a second for every class (wowsims mana.go:75-76), not Classic's formula.
 -- Resourcefulness (1242688, DB2 aura 134): +50% of Spirit regen while casting, opened by a melee or ranged ability's
 -- crit at 2/2 (the abilities' `onCrit`, below).
