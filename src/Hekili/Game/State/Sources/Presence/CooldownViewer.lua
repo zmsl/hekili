@@ -55,9 +55,14 @@ local sLit, sDark = {}, {}
 -- (0 none), sDarkT the t of its first monitored dark sweep (0 none): the two move together (darkTo), so every point
 -- where the monitoring restarts restarts the start. Never live: nLive, covered and the reducer do not see it.
 local sDarkT, sDk = {}, {}
+-- The snapshot's history (L1087 item 5): sOn the last sweep that saw a mapped slot held, sOnU the unit it was held for
+-- (0 none we track), sOff the first silent sweep after it. Zeroed only here and at Activate, never by reset(): a target
+-- swap, a re-point or a hidden sweep keeps them, so a snapshot taken right after one still shows the slot's last edges.
+local sOn, sOff, sOnU = {}, {}, {}
 for s = 1, MAX_SLOTS do
     sFrame[s], sV[s], sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = false, 0, 0, 0, 0, 0, 0
     sSeen[s], sCd[s], sSettle[s], sLit[s], sDark[s], sDarkT[s], sDk[s] = 0, 0, -1, 0, 0, 0, 0
+    sOn[s], sOff[s], sOnU[s] = 0, 0, 0
 end
 
 local NOT, UP, NONE, STALE = 0, 1, 2, 3
@@ -505,6 +510,7 @@ local function sweep(t)
             if issecret(aid) or aid ~= nil then -- secret: only tested, never compared
                 local unit = Plain(api, rawget(item, "auraDataUnit"))
                 u = unit ~= nil and UNIT[unit] or 0 -- a secret, nil or other unit: not live for either
+                sOn[s], sOnU[s] = t, u
                 if u > 0 then
                     if u ~= sUnit[s] then -- sSeen pairs with sUnit: a stale light for another unit must not inherit it
                         sSeen[s] = 0
@@ -523,6 +529,9 @@ local function sweep(t)
                 end
             else -- silent: NONE only for the application this slot was seen holding (§2.2a)
                 j, u, seenAs = m, sUnit[s], 2
+                if sOn[s] > sOff[s] then
+                    sOff[s] = t
+                end
                 -- (4a review m5) m <= U.nAura: an in-combat rebuild may shrink the set under this map
                 if
                     u > 0
@@ -700,7 +709,8 @@ end
 
 --- Appends one line per slot holding a cooldownID (plain or secret), viewer then slot order (L1075): the raw read now
 --- (cooldownID, layoutIndex, IsShown, the sweep's held test on auraInstanceID) beside what the sweep counts it as and
---- its last light (sSeen), dark (sDark) and held unit (sUnit); resets clear the last three. `key` names an aura index.
+--- its history (sOn, sOff, sOnU): its last held sweep as a mapped item, the first silent one after it and the unit it
+--- was held for, kept through resets (L1087 item 5). `key` names an aura index.
 --- Debug only: allocates, and calls IsShown once per slot (the sweep never does: pcall, secret printed S).
 function Q.SnapshotSlots(out, now, key)
     local api = api0
@@ -731,9 +741,9 @@ function Q.SnapshotSlots(out, now, key)
                     shown,
                     (issecret(aid) or aid ~= nil) and "yes" or "no", -- secret: only tested, never compared
                     sAmb[s] == 1 and "amb" or ANS[sAns[s]],
-                    age(now, sSeen[s]),
-                    age(now, sDark[s]),
-                    UNAME[sUnit[s]] or "-"
+                    age(now, sOn[s]),
+                    age(now, sOff[s]),
+                    UNAME[sOnU[s]] or "-"
                 )
             end
         end
@@ -755,6 +765,7 @@ function Q.Activate(api, t, def)
     for s = 1, Q.nSlots do -- a new map: every slot counted afresh, its seen rule started over (§2.2a)
         sJ[s], sAmb[s], sAns[s], sUnit[s], sT[s] = 0, 0, NOT, 0, 0
         sSeen[s], sCd[s], sSettle[s], sLit[s], sDark[s], sDarkT[s], sDk[s] = 0, 0, -1, 0, 0, 0, 0
+        sOn[s], sOff[s], sOnU[s] = 0, 0, 0
     end
     Q.repoints = 0
     local nAura = def and #def.auraIds or 0

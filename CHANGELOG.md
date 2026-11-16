@@ -5,6 +5,7 @@
 ### New
 
 ### Changed
+- Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 ### Fixed
 
