@@ -378,10 +378,13 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   the player, who cannot be behind it, and Claw out-damages Shred per energy below 2 ranks of Shredding Attacks (Claw
   r2 140% + 39 for 40 energy with Ferocity, Shred r2 200% + 32 for 60, -6 a rank; both free under Clearcasting, where
   Shred wins). `guard = { shred = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)" }`
-  on every Shred line; `condition = { claw = ... }` is wowsims's translated Claw condition with `!action.shred.ready`
-  replaced by `(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up)` and
+  on every Shred line; wowsims's single_target list has two adjacent Claw lines (A, the builder of a build without
+  Shredding Attacks; B, "Claw can replace Shred"), and a recipe condition is keyed by action, so
+  `condition = { claw = "(A)|(B')" }` gives both lines one condition (two adjacent lines of one action are their
+  conditions' OR): A as generated, B' with `!action.shred.ready` replaced by
+  `(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up)` and
   `energy.lo>=action.shred.cost` by `energy.lo>=action.claw.cost` (no recipe key edits part of a line, so the rest is
-  the generated text, re-copied on a re-pin). `target.is_targeting_player` is the core's
+  the generated text, re-derived on a re-pin from a translation without the key). `target.is_targeting_player` is the core's
   UnitIsUnit("targettarget", "player"), false when secret or unknown (assume behind); `settings.behind` is the class's
   "Always Behind" option. The replay world answers that the target attacks someone else (wowsims stands behind;
   replay knob `notTargeted`) and the build has 3/3, so the replay is unchanged; the loops' mob attacks the player.

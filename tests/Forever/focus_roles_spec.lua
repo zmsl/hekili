@@ -101,7 +101,21 @@ local PACKS = {
     },
     ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" },
     -- re-pin e2842f0a78 (R66): the adaptive list's order; Claw's one line is wowsims's "Claw can replace Shred" fallback
-    ["Druid/APLs/Feral"] = { "shred=1", "rip=2", "rake=2", "claw=1" },
+    -- re-pin e4ef929e54: the 2/3-target lists keep their Rake upkeep (2); single_target's two Claw lines share the
+    -- fallback's condition (the recipe's `(A)|(B)`), both 1
+    ["Druid/APLs/Feral"] = {
+        "rake=2",
+        "rake=2",
+        "rake=2",
+        "rake=2",
+        "shred=1",
+        "rip=2",
+        "rake=2",
+        "claw=1",
+        "claw=1",
+        "rake=2",
+        "rake=2",
+    },
     -- re-pin e5a9cd2a2d: the adaptive list puts the upkeep Lacerate and Roar first, the rage dump (Maul) last
     ["Druid/APLs/Guardian"] = { "lacerate=2", "demoralizing_roar=2", "lacerate=2", "maul=1", "maul=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },

@@ -33,15 +33,15 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local C = ws.logged(content("druid_balance", W.Balance, "Balance (wowsims.com)", 60), "druid_balance")
         local L = loop.new(C)
         local R = replay.new(ws.log("druid_balance"), L.oracle, ws.replayOptions(C, "druid_balance"))
-        local up, down = 0, math.huge -- the belief's casting rate at the log's 116-125 s and 130-170 s
+        local up, down = 0, math.huge -- the belief's casting rate at the log's 21.5-24.5 s and 50-170 s
         loop.replay(L, R, {
             on = function(_, steps, t)
                 local st = steps[1]
                 local VS = st.H.ns.VirtualState
                 local rate, at = VS.Regen(0, st.base + t, VS.CASTING).est, t - R.pull
-                if at > 116 and at < 125 then
+                if at > 21.5 and at < 24.5 then
                     up = math.max(up, rate)
-                elseif at > 130 and at < 170 then
+                elseif at > 50 and at < 170 then
                     down = math.min(down, rate)
                 end
             end,
@@ -50,7 +50,11 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         -- Tag 1 (Reflection 3/3 in the new build); was Tag 2's 31 and 22 (up > 30, down < 24). Lane R2: the casting
         -- rate is the one the log shows (it never leaves the rule); the not-casting rate this read before (up > 16,
         -- down < 13) was the replay world's, which answered a casting-only log with no spirit part (now M + S, 24.4)
-        assert.is_true(math.abs(up - 17.11) < 0.5 and math.abs(down - 12.61) < 0.5, up .. " vs " .. down)
+        -- re-pin e4ef929e54: Serenity Field's passive Spirit 14 -> 7 (the 11-13 item nerf) moves the log's casting
+        -- regen to 12.11 a second and 16.61 inside the one Serenity Field window left (21.09-36.09 s; Innervate from
+        -- 24.86 s, so the window read is 21.5-24.5 s); the log has no second use (was 112.21 s; the pack omits the
+        -- trinket, so not traced)
+        assert.is_true(math.abs(up - 16.61) < 0.5 and math.abs(down - 12.11) < 0.5, up .. " vs " .. down)
     end)
 
     it("Feral's replay world reports the energy rate the client reads", function()

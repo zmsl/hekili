@@ -5,6 +5,8 @@
 ### New
 
 ### Changed
+- Feral: the default priority follows wowsims's new Feral build (Rend and Tear 5/5) and has its own lists for two and three enemies; for now those lists only keep up Rake, Shifting Power and Innervate, and they are not yet checked against wowsims's fights.
+- Feral: a dodged or missed Ferocious Bite now gives back 28 energy, and the Idol of Ferocity (Claw and Rake cost 2 less) and the Idol of the Dream (Rip lasts 2 seconds longer) are counted. Not yet checked in game.
 
 ### Fixed
 

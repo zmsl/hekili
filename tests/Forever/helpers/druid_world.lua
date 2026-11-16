@@ -162,13 +162,16 @@ local function hit(key)
         W.hit(e, e.target, AMOUNT[key], SCHOOL[key] or 1)
     end
 end
+-- shortcut: a function duration is its ungeared value (Faerie Fire's set bonus 40 s, Rip's Idol of the Dream 12 s);
+-- upgrade if a world wears gear
+local UNGEARED = { faerie_fire = 40, rip = 12 }
 local function debuff(key, alsoHit) -- the debuff when its hit (for `key`'s amount, or none) lands
     return function(W, e)
         local w = class()
         local a = w.auras[key]
         if W.hit(e, e.target, alsoHit and AMOUNT[key] or nil, SCHOOL[key] or 1).act == "WOUND" then
-            -- shortcut: a function duration (Faerie Fire's set bonus) is its ungeared 40 s; upgrade if a world wears gear
-            W.applyAura(e.target, a.id, type(a.duration) == "function" and 40 or a.duration, 1, a.max_stack)
+            local d = type(a.duration) == "function" and assert(UNGEARED[key], key) or a.duration
+            W.applyAura(e.target, a.id, d, 1, a.max_stack)
         end
     end
 end
