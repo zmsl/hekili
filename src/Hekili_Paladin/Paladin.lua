@@ -392,7 +392,8 @@ spec:RegisterAuras({
     consecrated_ground = { id = 1280353, duration = 8.6, max_stack = 1 },
 
     -- Judgement's debuffs on the target (B4; wowsims judgement.go, buffs/paladin.go): 40 s (Justice's 10 s, Fury's taunt
-    -- 3 s), refreshed by our landed melee hits (unmodelled: Judgement itself recasts every cooldown).
+    -- 3 s), refreshed by our landed white swings and Windfury Totem's strike, not by Holy Strike, Seal of Command or the
+    -- judgements (wowsims 016f21f4cc, EV-0117; unmodelled: Judgement itself recasts every cooldown).
     judgement_of_the_crusader = {
         id = 20188,
         copy = { 20300, 20301, 20302, 20303, 21183 },
@@ -422,8 +423,8 @@ spec:RegisterAuras({
         consumedBy = { BLOCK = true, BLOCKED = true },
     },
     reckoning = { id = 1326084, copy = { 20177 }, duration = 3600, max_stack = 4 },
-    -- Iron Creed's 6 s (-2/4/6% damage taken, a Holy Strike under Righteous Fury) and Shieldsworn's spell block (6 s, a
-    -- landed Holy Strike with a shield): modelled from our Holy Strikes, neither has a Cooldown Manager item.
+    -- Iron Creed's 6 s (-2/4/6% damage taken, a Holy Strike under Righteous Fury) and Shieldsworn's spell block (6 s, every
+    -- Holy Strike with a shield, landed or avoided: wowsims 61607b27d7): modelled from our Holy Strikes, neither has a Cooldown Manager item.
     iron_creed = { id = 1311033, copy = { 440668 }, duration = 6, max_stack = 1 }, -- 440668: the ID the Cooldown Manager links
     shieldsworn_block = { id = 1328551, duration = 6, max_stack = 1 },
 
@@ -567,6 +568,11 @@ local ECHOES = {
 }
 -- The Echoes at a landed main-hand swing, and only there (the Retribution log stores no Echo at a Holy Strike's hit,
 -- 3.50 and 13.50). The core runs it as of the swing's time (a seal swapped before its row is not yet up).
+-- Unsealed Wrath's proc cooldown, 0.1 s (1310735's ICDMs on 70938, hotfix push 114060; wowsims 8f7ad04996): every
+-- proc refreshes the own Echo to its full 15 s, so one with more than 14.9 s left was stored under 0.1 s ago, and an
+-- extra attack in that swing's instant (Windfury Totem's, an item's) neither stores nor spends.
+-- shortcut: a proc under another seal inside those 0.1 s is not seen; upgrade if reactions get their own cooldown.
+local ECHO_TIME, UNSEALED_WRATH_ICD = 15, 0.1
 local function landing()
     if not talent.twist_of_light.enabled then
         return
@@ -577,7 +583,7 @@ local function landing()
             own = ECHO_OF[SEALS[i]]
         end
     end
-    if not own then
+    if not own or buff[own].remains > ECHO_TIME - UNSEALED_WRATH_ICD then
         return
     end
     for i = 1, #ECHOES do
@@ -593,7 +599,7 @@ spec:RegisterReaction("unsealed_wrath", { who = "target", outcome = "land", hand
 -- A Holy Strike's effects, the `now` and the `handler` (two closures). A Shieldsworn Holy Strike with a shield restores
 -- 4% of the maximum mana only when it lands (the Shield Specialization trigger, wowsims talents_protection.go:137-174: its
 -- chance is 100% at rank 2 only; 105 at 2627 in the Protection log, none on the log's misses and dodges) and grants the
--- spell block for 6 s; under Righteous Fury it grants Iron Creed's 6 s. `landed` (the `handler`'s: the simulation's
+-- spell block for 6 s on every strike, avoided too (wowsims 61607b27d7); under Righteous Fury it grants Iron Creed's 6 s. `landed` (the `handler`'s: the simulation's
 -- forecast) adds the mana. The belief's `now` does not: an avoid undoes only a target aura (Families/Now.lua), so a
 -- gain at the cast would stay on a miss and promote a cast we cannot afford; its `onLand` (audit C10, run at a paid
 -- wound or crit) adds the mana. Live that is idle until target rows are plain again (gaps.md).

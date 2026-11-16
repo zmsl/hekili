@@ -107,10 +107,10 @@ local function selfAura(key)
 end
 
 -- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's paladin/*.go):
--- a judgement (the seal's, OutcomeMeleeSpecialNoBlockDodgeParry) and Hammer of Wrath (OutcomeRangedHitAndCrit) can be
--- missed only, except Seal of the Crusader's judgement, which always hits (seal_of_the_crusader.go, OutcomeAlwaysHit:
--- the judgement's effect picks it); the holy spells are magic hits (OutcomeMagicHit*). Consecration's ground stays
--- (its ticks roll).
+-- a judgement (Righteousness's and Fury's OutcomeRangedHitAndCrit since 70938, wowsims 8f7ad04996; Command's
+-- OutcomeMeleeSpecialNoBlockDodgeParry) and Hammer of Wrath (OutcomeRangedHitAndCrit) can be missed only, except Seal
+-- of the Crusader's judgement, which always hits (seal_of_the_crusader.go, OutcomeAlwaysHit: the judgement's effect
+-- picks it); the holy spells are magic hits (OutcomeMagicHit*). Consecration's ground stays (its ticks roll).
 M.OUTCOMES =
     { judgement = "miss", hammer_of_wrath = "miss", exorcism = "spell", holy_shock = "spell", holy_wrath = "spell" }
 

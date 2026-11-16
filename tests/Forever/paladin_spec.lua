@@ -644,6 +644,35 @@ describe("Forever Paladin", function()
         end
     end)
 
+    -- Unsealed Wrath's proc cooldown (0.1 s, hotfix push 114060 on 70938; wowsims 8f7ad04996): a landed swing under 0.1 s
+    -- after the last proc (an extra attack in the swing's instant) neither stores nor spends; at 0.1 s it procs again.
+    it("stores no Echo and spends none inside Unsealed Wrath's 0.1 s proc cooldown", function()
+        local f = w.reactions.unsealed_wrath.now
+        local function hit(ownRemains)
+            local e = ld.env(w)
+            e.talent = talents({ twist_of_light = 1 })
+            e.buff = setmetatable({}, {
+                __index = function(_, k)
+                    if k == "seal_of_command" then
+                        return { up = true, remains = 20 }
+                    elseif k == "echo_of_command" then
+                        return { up = true, remains = ownRemains }
+                    elseif k == "echo_of_righteousness" then
+                        return { up = true, remains = 10 }
+                    end
+                    return { up = false, remains = 0 }
+                end,
+            })
+            ld.run(f, e)
+            return e
+        end
+        local e = hit(14.95) -- the own Echo stored 0.05 s ago
+        assert.are.same({ {}, {} }, { e.added, e.removed })
+        e = hit(14.9) -- 0.1 s ago: the cooldown is over
+        assert.are.same({ "echo_of_command" }, { e.added[1] and e.added[1][1] })
+        assert.are.same({ "echo_of_righteousness" }, e.removed)
+    end)
+
     it(
         "gives a landed Shieldsworn Holy Strike with a shield 4% of the maximum mana in `onLand` and the simulation's handler (audit C10), and Iron Creed's and the spell block's auras",
         function()
