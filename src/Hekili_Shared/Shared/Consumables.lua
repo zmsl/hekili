@@ -131,7 +131,7 @@ shared:RegisterAbility("healthstone", {
 -- `now` credits the rank the cast was (`cast_id`), the simulation's `handler` the best one in the bags. The roll is
 -- unseen, so it credits the average (owner L969): the `now` puts the estimate at the midpoint and the floor and top at
 -- the ends, the `handler` gains the midpoint. `worn`: an equipped item (offered only while worn, the core's `equipped`
--- test), under Cooldowns.
+-- test), also under Potions (owner L1235).
 local function consume(key, items, cooldown, name, spells, mids, spreads, worn)
     local function best()
         return inBags(items)
@@ -155,7 +155,7 @@ local function consume(key, items, cooldown, name, spells, mids, spreads, worn)
         bagItem = not worn,
 
         startsCombat = false,
-        toggle = worn and "cooldowns" or "potions",
+        toggle = "potions",
 
         usable = function()
             if worn then

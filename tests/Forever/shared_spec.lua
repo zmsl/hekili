@@ -427,6 +427,7 @@ describe("shared content", function()
             robe.gcd,
         })
         assert.is_falsy(robe.bagItem) -- the core offers it only while worn (Sim/State.lua `equipped`)
+        assert.are.equal("potions", robe.toggle) -- a resource consumable like the gems (owner L1235), not Cooldowns
         assert.are.equal(robe, all.abilities[18385])
         local got = {}
         local env = {
