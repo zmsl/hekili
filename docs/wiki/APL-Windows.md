@@ -81,6 +81,30 @@ actions.windows+=/window,name=pool,duration=6,refresh=1,max_refresh=2,max_durati
 | `max_duration` | seconds | The longest the window stays open from its first opening |
 | `reset_on_target_change` | 0 or 1 | 1: a target change closes the window |
 
+## Sequences
+
+A `sequence` or `strict_sequence` line declares a window named by its `name=` and holds its members as steps, in
+SimC's syntax: options in the first colon-separated part, then one member per part, each with its own options.
+
+```
+actions+=/restart_sequence,name=opener,if=window.opener.done
+actions+=/sequence,name=opener,mode=continue:summon_hawk:arcane_shot,if=target.outside8
+actions+=/strict_sequence,name=burst,start_on_first=1,hold_off_gcd=1:bloodrage,use_off_gcd=1:mortal_strike
+```
+
+- A plain `sequence` opens when its line is reached and its `if=` is true, shows its due member, and parks after the
+  last one (`window.<name>.done` is true while parked) until `restart_sequence` or combat end. `mode=skip` (the
+  default, SimC) drops a member that cannot be cast; `mode=wait` (or `wait_on_ready=1`) shows the due member and
+  nothing below the line; `mode=continue` stays on the member and lets the list carry on.
+- A `strict_sequence` opens when its line is the pick at now. By default every member must be castable then;
+  `start_on_first=1` tests only the first member, within the spell queue window; `allow_skip=1` starts on the first
+  member that can be cast and skips members that cannot. While it is open the display shows its members; outside lines
+  marked `use_off_gcd=1` still show unless the line says `hold_off_gcd=1`. A member that cannot be cast when the GCD is
+  ready ends it; so do another on-GCD cast, a later member cast out of order and `step_timeout=` (4 s by default).
+- An unnamed plain sequence is `default` (further ones `default_2`, ...); an unnamed strict one `strict_1`, ...
+- Each display has a Sequences setting, on for Primary and AOE. Where it is off, the display skips every sequence line
+  as if it were not in the priority. Free-form windows work in every display.
+
 ## Errors
 
 | Code | Where | What |

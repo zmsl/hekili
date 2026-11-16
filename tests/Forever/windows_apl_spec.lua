@@ -902,3 +902,392 @@ describe("a /reload in combat (windows design v6 §9; review M1)", function()
         assert.are.equal(dropped, VSI.winOps.dropped)
     end)
 end)
+
+-- windows design v6 slice 2: sequences (§3.3, §6, §7). Members over the Arms kit: bloodrage (off the GCD, a cooldown)
+-- and berserker_stance (no cost); in the walk tests defensive_stance is the line below that answers when nothing above does.
+describe("the sequences compiler (windows design v6 §3.3, §3.4, §9)", function()
+    before_each(function()
+        boot({ luaw = { duration = 6 } })
+    end)
+
+    local function check(lists)
+        local out = {}
+        for name, text in pairs(lists) do
+            out[name] = parse(text)
+        end
+        return H.Hekili.Scripts.CheckWindows(out, "pk"), out
+    end
+
+    local function codes(cw)
+        local c = {}
+        for _, e in ipairs(cw.errors) do
+            c[#c + 1] = e.code .. " " .. e.list .. ":" .. e.line
+        end
+        return c
+    end
+
+    it("parses the colon syntax: options in the first token, each member with its own options", function()
+        local l = parse(
+            "actions+=/strict_sequence,name=s,start_on_first=1,if=test_fa:bloodrage,use_off_gcd=1:battle_shout,if=test_fb"
+        )
+        assert.are.equal("strict_sequence", l[1].action)
+        assert.are.equal("s", l[1].window_name)
+        assert.are.equal("1", l[1].start_on_first)
+        assert.are.equal("test_fa", l[1].criteria)
+        assert.are.equal(2, #l[1].steps)
+        assert.are.equal("bloodrage", l[1].steps[1].action)
+        assert.are.equal(1, l[1].steps[1].use_off_gcd)
+        assert.are.equal("battle_shout", l[1].steps[2].action)
+        assert.are.equal("test_fb", l[1].steps[2].criteria)
+    end)
+
+    it("L07: a member that is not an ability is a parse warning and disables the line", function()
+        local lines, warnings = H.Hekili:ParseActionList("actions+=/sequence,name=x:bloodrage:potion", true)
+        assert.is_truthy(warnings and warnings[1]:find("not an ability", 1, true))
+        assert.is_false(lines[1].enabled)
+    end)
+
+    it("P15/P16: unnamed plain sequences are default, default_2; an unnamed strict one strict_1", function()
+        local cw = check({
+            default = "actions+=/restart_sequence\nactions+=/sequence:bloodrage:battle_shout\nactions+=/sequence:battle_shout\n"
+                .. "actions+=/strict_sequence:bloodrage:battle_shout",
+        })
+        assert.are.same({}, codes(cw))
+        local names = {}
+        for _, d in ipairs(cw.decls) do
+            names[#names + 1] = d.name
+        end
+        assert.are.same({ "default", "default_2", "strict_1" }, names)
+    end)
+
+    it("C03/E2: a window entry and a sequence share a name; two sequences share one", function()
+        local cw = check({
+            windows = "actions+=/window,name=x,duration=6",
+            default = "actions+=/sequence,name=x:bloodrage\nactions+=/sequence,name=y:bloodrage\nactions+=/strict_sequence,name=y:bloodrage",
+        })
+        assert.are.same({ "E2 default:1", "E2 default:3" }, codes(cw))
+    end)
+
+    it("P17/P25: options a sequence does not take are E7; a non-positive step_timeout is E6", function()
+        local cw = check({
+            default = "actions+=/sequence,name=a,unready=skip:bloodrage\nactions+=/sequence,name=b,mode=hold:bloodrage\n"
+                .. "actions+=/strict_sequence,name=c,mode=wait:bloodrage\nactions+=/strict_sequence,name=d,wait_on_ready=1:bloodrage\n"
+                .. "actions+=/sequence,name=e,mode=continue,wait_on_ready=1:bloodrage\nactions+=/sequence,name=f,step_timeout=2:bloodrage\n"
+                .. "actions+=/strict_sequence,name=g,step_timeout=0:bloodrage\nactions+=/sequence,name=h,allow_skip=1:bloodrage\n"
+                .. "actions+=/strict_sequence,name=i,step_timeout=2,allow_skip=1,start_on_first=1,hold_off_gcd=1,reset_on_target_change=1:bloodrage\n"
+                .. "actions+=/sequence,name=j,wait_on_ready=1,reset_on_target_change=1:bloodrage",
+        })
+        assert.are.same({
+            "E7 default:1",
+            "E7 default:2",
+            "E7 default:3",
+            "E7 default:4",
+            "E7 default:5",
+            "E7 default:6",
+            "E6 default:7",
+            "E7 default:8",
+        }, codes(cw))
+    end)
+
+    it("restart_sequence names a plain sequence of the priority (E1 otherwise)", function()
+        local cw = check({
+            default = "actions+=/restart_sequence,name=s\nactions+=/restart_sequence,name=nope\nactions+=/restart_sequence,name=p\n"
+                .. "actions+=/strict_sequence,name=s:bloodrage\nactions+=/sequence,name=p:bloodrage",
+        })
+        assert.are.same({ "E1 default:1", "E1 default:2" }, codes(cw))
+    end)
+
+    it(
+        "D12/C09/L1181/L1182: sequences keyed in Primary and AOE only; every record lasts a positive time or combat; strict ends on deviation",
+        function()
+            local cw = check({
+                windows = "actions+=/window,name=w,duration=6",
+                default = "actions+=/open_window,name=w\nactions+=/sequence,name=p:bloodrage:battle_shout\nactions+=/strict_sequence,name=s:bloodrage:battle_shout",
+            })
+            assert.are.same({}, codes(cw))
+            local keys = {}
+            for _, r in ipairs(cw.records) do
+                keys[#keys + 1] = r.key
+                assert.is_true(r.duration == "combat" or type(r.duration) == "number" and r.duration > 0, r.key)
+                if r.key:find(":s#", 1, true) then
+                    assert.are.equal("end", r.on_deviation)
+                    assert.is_true(r.strict)
+                    assert.are.same({ "bloodrage", "battle_shout" }, r.steps)
+                else
+                    assert.is_nil(r.on_deviation)
+                end
+            end
+            assert.are.same({
+                "pk:w#Primary",
+                "pk:w#AOE",
+                "pk:w#Cooldowns",
+                "pk:w#Interrupts",
+                "pk:w#Defensives",
+                "pk:p#Primary",
+                "pk:p#AOE",
+                "pk:s#Primary",
+                "pk:s#AOE",
+            }, keys)
+            -- the Sequences setting on for Cooldowns adds its keys (§7)
+            H.Hekili.Engine.settings.displays.Cooldowns.sequences = true
+            local cw2 = check({ default = "actions+=/sequence,name=p:bloodrage" })
+            assert.are.equal(3, #cw2.records)
+            assert.are.equal("pk:p#Cooldowns", cw2.records[3].key)
+            assert.are.equal(4 * 3, cw2.cap) -- the open, the skip, the chosen OPEN and its STEP per key (§5.5)
+        end
+    )
+end)
+
+local BR, BS = 2687, 2458 -- Bloodrage, Berserker Stance: the casts the belief observes
+
+local function cast(id)
+    H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-seq-" .. id .. "-" .. t, id)
+end
+
+local function seqState(name, display)
+    local up, _, _, _, step = VS.Window(key(name, display))
+    return up, step
+end
+
+describe("plain sequences (windows design v6 §6, rulings 12, 15, 26, 28)", function()
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+    end)
+
+    it("S17/P14: opens when reached, members in order, parks with done true and sends nothing more", function()
+        load({
+            default = "actions+=/sequence,name=x:bloodrage:berserker_stance\nactions+=/defensive_stance,if=!window.x.done|window.x.done",
+        })
+        local recs, sent = tick()
+        assert.are.same({ { key("x"), OPEN } }, sent)
+        assert.are.equal("bloodrage", recs[1].actionName)
+        assert.are.equal(1, recs[1].restarts)
+        recs, sent = tick()
+        assert.are.same({}, sent)
+        assert.are.same({ true, 1 }, { seqState("x") })
+        cast(BR)
+        recs = tick()
+        assert.are.same({ true, 2 }, { seqState("x") })
+        assert.are.equal("berserker_stance", recs[1].actionName)
+        cast(BS)
+        recs, sent = tick()
+        assert.are.same({ true, 3 }, { seqState("x") }) -- parked: up, step past the last
+        assert.are.same({}, sent)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+        S.delay = 0
+        assert.is_true(S.window.x.done)
+        assert.is_true(S.window.x.up)
+        assert.are.same({ false, 0 }, { seqState("x", "AOE") }) -- AOE was not walked
+    end)
+
+    it(
+        "S15/P01 skip (default): a due member that cannot be cast is dropped with STEP, the next one is shown",
+        function()
+            load({
+                default = "actions+=/sequence,name=x:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance",
+            })
+            local recs, sent = tick()
+            assert.are.same({ { key("x"), OPEN }, { key("x"), 3 } }, sent)
+            assert.are.equal("berserker_stance", recs[1].actionName)
+            assert.are.equal(2, recs[1].restarts)
+            tick()
+            assert.are.same({ true, 2 }, { seqState("x") })
+        end
+    )
+
+    it("P23: skip with no later member castable burns the sequence out (STEP past the last: parked)", function()
+        load({
+            default = "actions+=/sequence,name=x:bloodrage,if=test_fa:berserker_stance,if=test_fb\nactions+=/defensive_stance",
+        })
+        local recs, sent = tick()
+        assert.are.same({ { key("x"), OPEN }, { key("x"), 3 } }, sent)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+        tick()
+        assert.are.same({ true, 3 }, { seqState("x") })
+    end)
+
+    it("S14/P01 continue: stays on the due member and the list carries on below; no STEP", function()
+        load({
+            default = "actions+=/sequence,name=x,mode=continue:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance",
+        })
+        local recs, sent = tick()
+        assert.are.same({ { key("x"), OPEN } }, sent)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+        tick()
+        assert.are.same({ true, 1 }, { seqState("x") })
+    end)
+
+    it(
+        "S14/P01/P24 wait and its wait_on_ready=1 alias: nothing below the line is recommended; a line above still is",
+        function()
+            for _, opt in ipairs({ "mode=wait", "wait_on_ready=1" }) do
+                load({
+                    default = "actions+=/berserker_stance,if=test_fb\nactions+=/sequence,name=x,"
+                        .. opt
+                        .. ":bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance",
+                })
+                local recs, sent = tick()
+                assert.are.same({ { key("x"), OPEN } }, sent)
+                assert.is_nil(recs[1].actionName, opt)
+                flags.fb = true
+                recs = tick()
+                assert.are.equal("berserker_stance", recs[1].actionName, opt)
+                flags.fb = false
+                H.Fire("PLAYER_REGEN_ENABLED") -- the next case starts closed
+                H.Hekili.DB.profile.packs[ww.PACK].lists = { precombat = {}, default = {} }
+            end
+        end
+    )
+
+    it("P21: an inactive sequence line (if= false) opens, skips and shows nothing", function()
+        load({
+            default = "actions+=/sequence,name=x,if=test_fb:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance",
+        })
+        local recs, sent = tick()
+        assert.are.same({}, sent)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+        flags.fb = true
+        recs, sent = tick()
+        assert.are.same({ { key("x"), OPEN }, { key("x"), 3 } }, sent) -- active: opens, then the skip
+        assert.are.equal("berserker_stance", recs[1].actionName)
+    end)
+
+    it("S18/P13: restart_sequence sends STEP 1 on a parked sequence and the first member is due again", function()
+        load({
+            default = "actions+=/restart_sequence,name=x,if=window.x.done&test_fa\nactions+=/sequence,name=x,mode=continue:berserker_stance\n"
+                .. "actions+=/defensive_stance",
+        })
+        tick()
+        tick()
+        cast(BS)
+        local recs, sent = tick()
+        assert.are.same({ true, 2 }, { seqState("x") }) -- parked
+        assert.are.same({}, sent)
+        flags.fa = true
+        recs, sent = tick()
+        assert.are.same({ { key("x"), 3 } }, sent)
+        assert.are.equal(1, recs[1].restarts)
+        tick()
+        assert.are.same({ true, 1 }, { seqState("x") })
+    end)
+
+    it("D16: a display with Sequences off skips every sequence line; free-form windows still work there", function()
+        load({ default = "actions+=/sequence,name=x:bloodrage\nactions+=/defensive_stance" })
+        local cw = H.Hekili.Scripts.appliedWindows
+        assert.is_nil(cw.byName.x.keys.Cooldowns)
+        assert.are.equal("pk", "pk") -- the walk test: Cooldowns has no key, its pass never opens x
+        S.CopyWindows("Cooldowns")
+        S.delay = 0
+        assert.is_false(S.openWindow("x"))
+        assert.is_false(S.window.x.up)
+    end)
+end)
+
+describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", function()
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+    end)
+
+    it(
+        "S01: chosen at now opens it (OPEN after slot 1 is final); the hold shows each member; closes after the last",
+        function()
+            load({
+                default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance,if=!test_fa\nactions+=/defensive_stance",
+            })
+            local recs, sent = tick()
+            assert.are.same({ { key("s"), OPEN } }, sent)
+            assert.are.equal("bloodrage", recs[1].actionName)
+            assert.are.equal("berserker_stance", recs[2].actionName) -- the forecast cast advanced the copy: slot 2 holds step 2
+            recs, sent = tick()
+            assert.are.same({}, sent)
+            assert.are.same({ true, 1 }, { seqState("s") })
+            assert.are.equal("bloodrage", recs[1].actionName)
+            cast(BR)
+            recs = tick()
+            assert.are.same({ true, 2 }, { seqState("s") })
+            assert.are.equal("berserker_stance", recs[1].actionName)
+            cast(BS)
+            recs = tick()
+            assert.is_false((seqState("s")))
+        end
+    )
+
+    it("S05/P04: the default start test fails while a member cannot be cast: never chosen, nothing sent", function()
+        load({
+            default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance,if=test_fa\nactions+=/defensive_stance",
+        })
+        local recs, sent = tick()
+        assert.are.same({}, sent)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+    end)
+
+    it("P09: allow_skip starts on the first member that can be cast (OPEN then STEP)", function()
+        load({
+            default = "actions+=/strict_sequence,name=s,allow_skip=1:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance",
+        })
+        local recs, sent = tick()
+        assert.are.same({ { key("s"), OPEN }, { key("s"), 3 } }, sent)
+        assert.are.equal("berserker_stance", recs[1].actionName)
+    end)
+
+    it("S04: give-up: the due member cannot be cast with the GCD ready: CLOSE, the normal list answers", function()
+        load({
+            default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance,if=!test_fa\nactions+=/defensive_stance",
+        })
+        tick()
+        tick()
+        cast(BR)
+        tick()
+        assert.are.same({ true, 2 }, { seqState("s") })
+        flags.fa = true
+        local recs, sent = tick()
+        assert.are.same({ { key("s"), CLOSE } }, sent)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+    end)
+
+    it(
+        "S03/P06: the default hold lets an outside use_off_gcd=1 off-GCD line through; hold_off_gcd=1 holds it",
+        function()
+            for _, opt in ipairs({ "", ",hold_off_gcd=1" }) do
+                load({
+                    default = "actions+=/strict_sequence,name=s"
+                        .. opt
+                        .. ":berserker_stance:defensive_stance\nactions+=/bloodrage,use_off_gcd=1,if=test_fb\n"
+                        .. "actions+=/defensive_stance",
+                })
+                tick()
+                flags.fb = true
+                local recs = tick() -- open at step 1 (berserker_stance, on the GCD)
+                assert.are.same({ true, 1 }, { seqState("s") })
+                -- default: the ready off-GCD line is weaved ahead of the member; hold_off_gcd=1: the member alone
+                assert.are.equal(opt == "" and "bloodrage" or "berserker_stance", recs[1].actionName, opt)
+                flags.fb = false
+                H.Fire("PLAYER_REGEN_ENABLED")
+            end
+        end
+    )
+
+    it("L1181: a later member cast out of order ends a strict sequence", function()
+        load({ default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance" })
+        tick()
+        tick()
+        assert.are.same({ true, 1 }, { seqState("s") })
+        cast(BR) -- the second member, out of order (off the GCD)
+        tick()
+        assert.is_false((seqState("s")))
+    end)
+
+    it("L1181: a plain sequence stays on its step when a later member is cast out of order", function()
+        load({
+            default = "actions+=/sequence,name=p,mode=continue:berserker_stance:bloodrage\nactions+=/defensive_stance",
+        })
+        tick()
+        tick()
+        assert.are.same({ true, 1 }, { seqState("p") })
+        cast(BR)
+        tick()
+        assert.are.same({ true, 1 }, { seqState("p") })
+    end)
+end)

@@ -1618,6 +1618,7 @@ state.rawSpend = rawSpend
 local WIN = {
     n = 0, byKey = {}, tables = {}, of = {}, -- of: a window's table (or its `next` table) -> its index
     dur = {}, maxDur = {}, maxRef = {}, refresh = {}, steps = {}, nSteps = {}, lastAt = {}, loop = {}, dev = {}, strict = {},
+    park = {}, -- an APL plain sequence: past its last step it stays up at step nSteps + 1 (`done`, §6)
     up = {}, openedAt = {}, expiresAt = {}, refreshes = {}, step = {},
     name = {}, keys = {}, key = {}, -- by index: the window's name; an APL window's keys by display, and this pass's key
     fired = {}, -- by a window line's script ID: it changed the copy in this slot (the per-slot mark, §4.3, ruling 20)
@@ -1669,6 +1670,7 @@ do
     local function advance( w, s )
         if s < WIN.nSteps[ w ] then WIN.step[ w ] = s + 1
         elseif WIN.loop[ w ] then WIN.step[ w ] = 1
+        elseif WIN.park[ w ] then WIN.step[ w ] = WIN.nSteps[ w ] + 1
         else close( w ) end
     end
 
@@ -1679,7 +1681,8 @@ do
         elseif k == "down" then return not up
         elseif k == "remains" then return up and WIN.expiresAt[ w ] - q or 0
         elseif k == "elapsed" then return up and q - WIN.openedAt[ w ] or 0
-        elseif k == "step" then return up and WIN.step[ w ] or 0 end
+        elseif k == "step" then return up and WIN.step[ w ] or 0
+        elseif k == "done" then return up and WIN.park[ w ] and WIN.step[ w ] == WIN.nSteps[ w ] + 1 or false end
     end }
 
     local mtNext = { __index = function( t, key )
@@ -1712,6 +1715,7 @@ do
         WIN.lastAt[ n ], WIN.loop[ n ] = lastAt, d.loop == true
         WIN.dev[ n ], WIN.strict[ n ] = DEV[ d.on_deviation ] or STAY, d.strict == true
         WIN.keys[ n ], WIN.key[ n ] = d.keys or false, false
+        WIN.park[ n ] = d.seq == true and not d.strict
         close( n )
     end
 
@@ -1752,18 +1756,40 @@ do
     --- The verbs (handlers, and Core.lua's lines): open or close window `name` at query_time, true when the copy
     --- changed. `duration` (a handler's) overrides the registered one; `refresh`, else the registered `refresh`, lets
     --- an open window restart, within its caps. A close acts only on an open window.
+    -- An APL window with no key in the display being walked (a sequence where Sequences is off, §7) does not exist there.
+    local function absent( w )
+        return WIN.keys[ w ] and not WIN.key[ w ]
+    end
+
     function state.openWindow( name, duration, refresh )
         local w = WIN.byKey[ name ]
-        if not w then return false end
+        if not w or absent( w ) then return false end
         if refresh == nil then refresh = WIN.refresh[ w ] end
         return open( w, state.query_time, type( duration ) == "number" and duration > 0 and duration or nil, refresh )
     end
 
     function state.closeWindow( name )
         local w = WIN.byKey[ name ]
-        if w and upAt( w, state.query_time ) then
+        if w and not absent( w ) and upAt( w, state.query_time ) then
             close( w )
             return true
+        end
+        return false
+    end
+
+    --- (§6) A sequence's step on the copy: `s` (1..steps + 1) on an up stepped window; true when the copy changed.
+    function state.WindowStep( name, s )
+        local w = WIN.byKey[ name ]
+        if not w or absent( w ) or not WIN.steps[ w ] or not upAt( w, state.query_time ) or WIN.step[ w ] == s then return false end
+        WIN.step[ w ] = s
+        return true
+    end
+
+    --- (§6) The strict sequence up in this display's copy at now (its name), else false: the hold. Allocates nothing.
+    function state.WindowHold()
+        local t = state.now + state.offset
+        for w = 1, WIN.n do
+            if WIN.strict[ w ] and WIN.key[ w ] and upAt( w, t ) then return WIN.name[ w ] end
         end
         return false
     end

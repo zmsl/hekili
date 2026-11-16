@@ -969,6 +969,11 @@ local function UpdateSpellQueueWindow( event, variable, value )
     end
 end
 
+--- The client's spell queue window in seconds (the strict sequence start's NOW_TOL, windows design v6 ruling 27).
+function ns.SpellQueueWindow()
+    return SpellQueueWindow
+end
+
 RegisterEvent( "CVAR_UPDATE", UpdateSpellQueueWindow )
 RegisterEvent( "VARIABLES_LOADED", UpdateSpellQueueWindow )
 

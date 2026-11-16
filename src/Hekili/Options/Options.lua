@@ -1320,6 +1320,21 @@ return end
                                 hidden = function () return _G["ElvUI"] == nil or notClassic() end,
                             },
 
+                            -- (windows design v6 §7, rulings 10, 19) sequences exist only in displays with this on; a change
+                            -- reloads the scripts (new keys, applied as a priority edit is)
+                            sequences = {
+                                type = "toggle",
+                                name = L["Sequences"],
+                                desc = L["When on, this display runs the priority's sequence and strict_sequence lines. When off, it skips them as if they were not in the priority. Free-form windows work either way.\n\nOn by default for Primary and AOE."],
+                                width = "full",
+                                order = 1.5,
+                                get = function() return Hekili.Scripts.SequencesOn( name ) end,
+                                set = function( _, val )
+                                    Hekili.DB.profile.displays[ name ].sequences = val
+                                    Hekili:LoadScripts()
+                                end,
+                            },
+
                             numIcons = {
                                 type = 'range',
                                 name = L["Icons Shown"],
@@ -8608,8 +8623,14 @@ do
         open_window = "window_name",
         close_window = "window_name",
         window = "window_name", -- the `windows` list's declarations (windows design v6 §3.1)
+        sequence = "window_name", -- a sequence names its own window (windows design v6 §3.3)
+        strict_sequence = "window_name",
+        restart_sequence = "window_name",
         op = "op",
     }
+
+    -- (windows design v6 §3.3) the sequence entries: not abilities, handled by the walk (Engine/Sim/Core.lua)
+    local SEQ_LINE = { sequence = true, strict_sequence = true, restart_sequence = true }
 
     -- (re-pin design §3a) a window line's name: one any spec of the loaded class registered (RegisterWindow)
     local function knownWindow( name )
@@ -8618,6 +8639,162 @@ do
             if w and name and w[ name ] then return true end
         end
         return false
+    end
+
+    -- One entry's text (after `actions...=/`) into its table; `line`: its line number for the warnings.
+    local function parseEntry( i, line, warnings, whole )
+        local components, unclosed = splitOptions( i )
+        local result = {}
+
+        if unclosed then
+            insert( warnings, format( L["Line %s: Unclosed '(' in '%s'; split at every comma."], line, i ) )
+        end
+
+        for a, str in ipairs( components ) do
+            -- First element is the action, if supported.
+            if a == 1 then
+                local ability = str:trim()
+
+                if ability and ( ability == "use_item" or ability == "window" or SEQ_LINE[ ability ] or Registry.Abilities()[ ability ] ) then
+                    result.action = ability
+                elseif not ignore_actions[ ability ] then
+                    insert( warnings, format( L["Line %s: Unsupported action '%s'."], line, ability ) )
+                    result.action = ability
+                end
+
+            else
+                local key, value = str:match( "^(.-)=(.-)$" )
+
+                if key and value then
+                    -- TODO:  Automerge multiple criteria.
+                    if key == 'if' or key == 'condition' then key = 'criteria' end
+
+                    if key == 'criteria' or key == 'target_if' or key == 'value' or key == 'value_else' or key == 'sec' or key == 'wait' or key == 'strict_if' or key == 'label_if' or key == 'icon_if' then
+                        value = Sanitize( 'c', value, line, warnings )
+                        value = SpaceOut( value )
+                    end
+
+                    -- an empty value is no option: label= would draw nothing, icon= would name no file, and an
+                    -- empty label_if= or icon_if= would compile `return ` (Scripts.lua)
+                    if value == "" and ( key == 'label' or key == 'label_if' or key == 'icon' or key == 'icon_if' ) then value = nil end
+
+                    if key == 'caption' then
+                        value = value:gsub( "||", "|" ):gsub( ";", "," )
+                    end
+
+                    if key == 'description' then
+                        value = value:gsub( ";", "," )
+                    end
+
+                    result[ key ] = value
+                end
+            end
+        end
+
+        if nameMap[ result.action ] then
+            result[ nameMap[ result.action ] ] = result.name
+            result.name = nil
+        end
+
+        if not whole and ( result.action == "open_window" or result.action == "close_window" ) and not knownWindow( result.window_name ) then
+            insert( warnings, format( L["Line %s: Unknown window '%s'; entry disabled."], line, tostring( result.window_name ) ) )
+            result.enabled = false
+        end
+
+        if result.target_if then result.target_if = result.target_if:gsub( "min:", "" ):gsub( "max:", "" ) end
+
+        if result.for_next then result.for_next = tonumber( result.for_next ) end
+        if result.cycle_targets then result.cycle_targets = tonumber( result.cycle_targets ) end
+        if result.other_target then result.other_target = tonumber( result.other_target ) end
+        if result.max_energy then result.max_energy = tonumber( result.max_energy ) end
+        if result.interrupt_global then result.interrupt_global = tonumber( result.interrupt_global ) end
+
+        if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end
+        if result.focus then
+            local tier = tonumber( result.focus )
+            if not tier or tier < 0 or tier % 1 ~= 0 then
+                insert( warnings, format( L["Line %s: focus=%s is not a tier (a whole number, 1 highest); ignored."], line, result.focus ) )
+                tier = nil
+            elseif tier == 0 then
+                tier = nil -- focus=0 is off
+            end
+            result.focus = tier
+        end
+        if result.use_while_casting then result.use_while_casting = tonumber( result.use_while_casting ) end
+        if result.strict then result.strict = tonumber( result.strict ) end
+        if result.moving then
+            result.enable_moving = true
+            result.moving = tonumber( result.moving )
+        end
+
+        if result.target_if and not result.criteria then
+            result.criteria = result.target_if
+            result.target_if = nil
+        end
+
+        if result.action == "use_item" then
+            if result.effect_name and Registry.Abilities()[ result.effect_name ] then
+                result.action = Registry.Abilities()[ result.effect_name ].key
+            elseif result.name and Registry.Abilities()[ result.name ] then
+                result.action = result.name
+            elseif ( result.slot or result.slots ) and Registry.Abilities()[ result.slot or result.slots ] then
+                result.action = result.slot or result.slots
+            end
+
+            if result.action == "use_item" then
+                insert( warnings, format( L["Line %s: Unsupported use_item action [ %s]; entry disabled."], line, ( result.effect_name or result.name or L["unknown"] ) ) )
+                result.action = nil
+                result.enabled = false
+            end
+        end
+
+        if result.action == "wait_for_cooldown" then
+            if result.name then
+                result.action = "wait"
+                result.sec = "cooldown." .. result.name .. ".remains"
+                result.name = nil
+            else
+                insert( warnings, format( L["Line %s: Unable to convert wait_for_cooldown,name=X to wait,sec=cooldown.X.remains; entry disabled."], line ) )
+                result.action = "wait"
+                result.enabled = false
+            end
+        end
+
+        if result.action == 'use_items' and ( result.slot or result.slots ) then
+            result.action = result.slot or result.slots
+        end
+
+        if result.action == 'variable' and not result.op then
+            result.op = 'set'
+        end
+
+        if result.cancel_if and not result.interrupt_if then
+            result.interrupt_if = result.cancel_if
+            result.cancel_if = nil
+        end
+
+        return result
+    end
+
+    -- (windows design v6 §3.3) `sequence` / `strict_sequence` take their options in the first colon-separated token
+    -- and one member per further token, each with its own options after a comma (SimC's syntax). Colons inside
+    -- parentheses stay. Returns nil for any other line.
+    local SEQ_ACTION = { sequence = true, strict_sequence = true }
+    local function splitSequence( i )
+        local head = i:match( "^%s*([%w_]+)" )
+        if not SEQ_ACTION[ head ] then return nil end
+        local out, depth, from = {}, 0, 1
+        for k = 1, #i do
+            local c = i:sub( k, k )
+            if c == "(" then depth = depth + 1
+            elseif c == ")" then depth = depth - 1
+            elseif c == ":" and depth == 0 then
+                insert( out, i:sub( from, k - 1 ) )
+                from = k + 1
+            end
+        end
+        insert( out, i:sub( from ) )
+        return out
     end
 
     -- `whole`: the caller checks the whole priority's windows afterwards (Scripts.lua CheckWindows: a name the
@@ -8691,134 +8868,24 @@ do
                 end
             end
 
-            local components, unclosed = splitOptions( i )
-            local result = {}
-
-            if unclosed then
-                insert( warnings, format( L["Line %s: Unclosed '(' in '%s'; split at every comma."], line, i ) )
-            end
-
-            for a, str in ipairs( components ) do
-                -- First element is the action, if supported.
-                if a == 1 then
-                    local ability = str:trim()
-
-                    if ability and ( ability == "use_item" or ability == "window" or Registry.Abilities()[ ability ] ) then
-                        result.action = ability
-                    elseif not ignore_actions[ ability ] then
-                        insert( warnings, format( L["Line %s: Unsupported action '%s'."], line, ability ) )
-                        result.action = ability
+            local tokens = splitSequence( i )
+            local result = parseEntry( tokens and tokens[ 1 ] or i, line, warnings, whole )
+            if tokens then
+                -- the members: abilities only (an item, a potion, a trinket slot or `wait` is no step, §9)
+                result.steps = {}
+                for k = 2, #tokens do
+                    local m = parseEntry( tokens[ k ], line, warnings, whole )
+                    local ab = m.action and Registry.Abilities()[ m.action ]
+                    if not ab or ab.item or m.action == "potion" or m.action == "wait" or m.action == "trinket1" or m.action == "trinket2" or SEQ_ACTION[ m.action ] then
+                        insert( warnings, format( L["Line %s: sequence member '%s' is not an ability; entry disabled."], line, tostring( m.action ) ) )
+                        result.enabled = false
                     end
-
-                else
-                    local key, value = str:match( "^(.-)=(.-)$" )
-
-                    if key and value then
-                        -- TODO:  Automerge multiple criteria.
-                        if key == 'if' or key == 'condition' then key = 'criteria' end
-
-                        if key == 'criteria' or key == 'target_if' or key == 'value' or key == 'value_else' or key == 'sec' or key == 'wait' or key == 'strict_if' or key == 'label_if' or key == 'icon_if' then
-                            value = Sanitize( 'c', value, line, warnings )
-                            value = SpaceOut( value )
-                        end
-
-                        -- an empty value is no option: label= would draw nothing, icon= would name no file, and an
-                        -- empty label_if= or icon_if= would compile `return ` (Scripts.lua)
-                        if value == "" and ( key == 'label' or key == 'label_if' or key == 'icon' or key == 'icon_if' ) then value = nil end
-
-                        if key == 'caption' then
-                            value = value:gsub( "||", "|" ):gsub( ";", "," )
-                        end
-
-                        if key == 'description' then
-                            value = value:gsub( ";", "," )
-                        end
-
-                        result[ key ] = value
-                    end
+                    insert( result.steps, m )
                 end
-            end
-
-            if nameMap[ result.action ] then
-                result[ nameMap[ result.action ] ] = result.name
-                result.name = nil
-            end
-
-            if not whole and ( result.action == "open_window" or result.action == "close_window" ) and not knownWindow( result.window_name ) then
-                insert( warnings, format( L["Line %s: Unknown window '%s'; entry disabled."], line, tostring( result.window_name ) ) )
-                result.enabled = false
-            end
-
-            if result.target_if then result.target_if = result.target_if:gsub( "min:", "" ):gsub( "max:", "" ) end
-
-            if result.for_next then result.for_next = tonumber( result.for_next ) end
-            if result.cycle_targets then result.cycle_targets = tonumber( result.cycle_targets ) end
-            if result.other_target then result.other_target = tonumber( result.other_target ) end
-            if result.max_energy then result.max_energy = tonumber( result.max_energy ) end
-            if result.interrupt_global then result.interrupt_global = tonumber( result.interrupt_global ) end
-
-            if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end
-            if result.focus then
-                local tier = tonumber( result.focus )
-                if not tier or tier < 0 or tier % 1 ~= 0 then
-                    insert( warnings, format( L["Line %s: focus=%s is not a tier (a whole number, 1 highest); ignored."], line, result.focus ) )
-                    tier = nil
-                elseif tier == 0 then
-                    tier = nil -- focus=0 is off
-                end
-                result.focus = tier
-            end
-            if result.use_while_casting then result.use_while_casting = tonumber( result.use_while_casting ) end
-            if result.strict then result.strict = tonumber( result.strict ) end
-            if result.moving then
-                result.enable_moving = true
-                result.moving = tonumber( result.moving )
-            end
-
-            if result.target_if and not result.criteria then
-                result.criteria = result.target_if
-                result.target_if = nil
-            end
-
-            if result.action == "use_item" then
-                if result.effect_name and Registry.Abilities()[ result.effect_name ] then
-                    result.action = Registry.Abilities()[ result.effect_name ].key
-                elseif result.name and Registry.Abilities()[ result.name ] then
-                    result.action = result.name
-                elseif ( result.slot or result.slots ) and Registry.Abilities()[ result.slot or result.slots ] then
-                    result.action = result.slot or result.slots
-                end
-
-                if result.action == "use_item" then
-                    insert( warnings, format( L["Line %s: Unsupported use_item action [ %s]; entry disabled."], line, ( result.effect_name or result.name or L["unknown"] ) ) )
-                    result.action = nil
+                if #result.steps == 0 then
+                    insert( warnings, format( L["Line %s: a sequence needs at least one member; entry disabled."], line ) )
                     result.enabled = false
                 end
-            end
-
-            if result.action == "wait_for_cooldown" then
-                if result.name then
-                    result.action = "wait"
-                    result.sec = "cooldown." .. result.name .. ".remains"
-                    result.name = nil
-                else
-                    insert( warnings, format( L["Line %s: Unable to convert wait_for_cooldown,name=X to wait,sec=cooldown.X.remains; entry disabled."], line ) )
-                    result.action = "wait"
-                    result.enabled = false
-                end
-            end
-
-            if result.action == 'use_items' and ( result.slot or result.slots ) then
-                result.action = result.slot or result.slots
-            end
-
-            if result.action == 'variable' and not result.op then
-                result.op = 'set'
-            end
-
-            if result.cancel_if and not result.interrupt_if then
-                result.interrupt_if = result.cancel_if
-                result.cancel_if = nil
             end
 
             insert( output, result )

@@ -241,6 +241,7 @@ local function cdmOf(rec)
     return nil
 end
 
+local resolveApl -- below: the APL windows' records with this build's ability indexes
 local function buildDef()
     for _, name in ipairs(LISTS) do
         wipe(def[name])
@@ -417,6 +418,7 @@ local function buildDef()
         insert(def.reactions, recordOf(class.reactions[k])) -- its `now` crosses as the function itself
     end
     def.units[1], def.units[2] = "player", "target"
+    resolveApl() -- this build's ability indexes for the sequences' steps
     settingsOf()
 end
 
@@ -441,8 +443,34 @@ end
 --- (windows design v6 §9) The active pack's APL window records (Engine/Sim/Scripts.lua CheckWindows) and the
 --- operations bound: a new generation, which the belief applies at its next Drain out of combat (after combat end
 --- otherwise; a full Build at once). Never a rebuild here.
+-- A sequence's `steps` (ability keys, Scripts.lua) as ability indexes of this build (0: untracked, never due), into
+-- new records: the compiler's own records are never changed (they are re-applied after a spec change).
+resolveApl = function()
+    local src, indexOf, out = def.aplSource or {}, {}, {}
+    for i = 1, #def.abilities do
+        indexOf[def.abilities[i].key] = i
+    end
+    for i, r in ipairs(src) do
+        if r.steps then
+            local rec = {}
+            for k, v in pairs(r) do
+                rec[k] = v
+            end
+            rec.steps = {}
+            for k, key in ipairs(r.steps) do
+                rec.steps[k] = indexOf[key] or 0
+            end
+            out[i] = rec
+        else
+            out[i] = r
+        end
+    end
+    def.aplWindows = out
+end
+
 function ns.SetAplWindows(records, cap)
-    def.aplWindows, def.aplOpCap, def.aplGen = records, cap, (def.aplGen or 0) + 1
+    def.aplSource, def.aplOpCap, def.aplGen = records, cap, (def.aplGen or 0) + 1
+    resolveApl()
 end
 
 --- Rebuilds the belief's tracked set from the active spec (decision 8). Called at the end of

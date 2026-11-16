@@ -283,6 +283,8 @@ L["If disabled, this display will not appear under any circumstances."] = true
 L["Select how this display draws its recommendations.  Each style has its own settings tabs."] = true
 L["Apply ElvUI Cooldown Style to Primary Icon"] = true
 L["If ElvUI is installed, you can apply the ElvUI cooldown style to your queued icons.\n\nDisabling this setting requires you to reload your UI (|cFFFFD100/reload|r)."] = true
+L["Sequences"] = true
+L["When on, this display runs the priority's sequence and strict_sequence lines. When off, it skips them as if they were not in the priority. Free-form windows work either way.\n\nOn by default for Primary and AOE."] = true
 L["Icons Shown"] = true
 L["Specify the number of recommendations to show.  Each icon shows an additional step forward in time."] = true
 L["Forecast Period"] = true
@@ -824,14 +826,16 @@ L["Unable to restore Style from the provided string."] = true
 L["Line %s: Converted '%s' to '%s' (%sx)."] = true
 L["Line %s: Converted '%s' to '%s'."] = true
 L["Line %s: Converted operations in '%s' to '%s'."] = true
-L["Line %s: Removed unnecessary expel_harm cooldown check from action entry for jab (%sx)."] = true
-L["Line %s: Removed unnecessary energy cap check from action entry for fists_of_fury (%sx)."] = true
 L["Line %s: Unclosed '(' in '%s'; split at every comma."] = true
 L["Line %s: Unsupported action '%s'."] = true
 L["Line %s: Unknown window '%s'; entry disabled."] = true
 L["Line %s: focus=%s is not a tier (a whole number, 1 highest); ignored."] = true
 L["Line %s: Unsupported use_item action [ %s]; entry disabled."] = true
 L["Line %s: Unable to convert wait_for_cooldown,name=X to wait,sec=cooldown.X.remains; entry disabled."] = true
+L["Line %s: Removed unnecessary expel_harm cooldown check from action entry for jab (%sx)."] = true
+L["Line %s: Removed unnecessary energy cap check from action entry for fists_of_fury (%sx)."] = true
+L["Line %s: sequence member '%s' is not an ability; entry disabled."] = true
+L["Line %s: a sequence needs at least one member; entry disabled."] = true
 L["The following auras were used in the action list but were not found in the addon database:"] = true
 L["UNPAUSED."] = true
 L["PAUSED."] = true

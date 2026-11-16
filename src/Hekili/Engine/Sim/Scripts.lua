@@ -1712,9 +1712,22 @@ end
 local WINDOW_DISPLAYS = { "Primary", "AOE", "Cooldowns", "Interrupts", "Defensives" }
 local ENTRY_META = { action = true, window_name = true, enabled = true, description = true, caption = true }
 local WINDOW_OPTS = { duration = true, refresh = true, max_duration = true, max_refresh = true, reset_on_target_change = true }
-local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {} }
+local PLAIN_OPTS = { mode = true, wait_on_ready = true, reset_on_target_change = true }
+local STRICT_OPTS = { allow_skip = true, start_on_first = true, hold_off_gcd = true, step_timeout = true, reset_on_target_change = true }
+local MODES = { skip = true, wait = true, continue = true }
+local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {}, byName = {}, seqByID = {}, startByID = {}, nStrict = 0 }
+
+-- (windows design v6 §7, rulings 10, 19) a display's Sequences setting: on by default for Primary and AOE only
+local SEQ_DEFAULT = { Primary = true, AOE = true }
+function scripts.SequencesOn( disp )
+    local d = rawget( Hekili.Engine.settings.displays, disp )
+    local v = d and d.sequences
+    if v == nil then return SEQ_DEFAULT[ disp ] == true end
+    return v == true
+end
 scripts.NoWindows = NO_APL_WINDOWS
 scripts.Windows = {} -- pack name -> its CheckWindows result (LoadScripts)
+scripts.HiddenLists = {} -- pack name -> list name -> entries: the sequences' generated lists (never saved, §6)
 scripts.declaredWindows = {} -- every loaded priority's declared window names (State.lua: read closed when not active)
 scripts.appliedWindows = NO_APL_WINDOWS
 
@@ -1781,6 +1794,97 @@ function scripts.CheckWindows( lists, packName )
         if list ~= "windows" then names[ #names + 1 ] = list end
     end
     table.sort( names )
+
+    -- (§3.3, §9) the sequences, before any line names one: each declares its window, keyed only in the displays with
+    -- Sequences on (§7); an unnamed plain one is `default`, further ones `default_2`, ..., an unnamed strict one
+    -- `strict_1`, ... (ruling 31, in list-name then line order). Its record lasts the fight ("combat", L1182); a strict
+    -- one ends at a later member cast out of order (on_deviation "end", L1181), a plain one has none (stay).
+    local seqOn, nSeqKeys = {}, 0
+    for _, disp in ipairs( WINDOW_DISPLAYS ) do
+        if scripts.SequencesOn( disp ) then seqOn[ #seqOn + 1 ] = disp end
+    end
+    local nPlain, nStrict, nStrictDecl, seqByID, startByID = 0, 0, 0, {}, {}
+    for _, list in ipairs( names ) do
+        for i, e in ipairs( lists[ list ] ) do
+            local a = e.action
+            if e.enabled ~= false and ( a == "sequence" or a == "strict_sequence" ) then
+                local strict = a == "strict_sequence"
+                local name = e.window_name
+                if name == nil or name == "" then
+                    if strict then
+                        nStrict = nStrict + 1
+                        name = "strict_" .. nStrict
+                    else
+                        nPlain = nPlain + 1
+                        name = nPlain == 1 and "default" or ( "default_" .. nPlain )
+                    end
+                end
+                local bad
+                for k in pairs( e ) do
+                    if not ENTRY_META[ k ] and k ~= "criteria" and k ~= "steps" and not ( strict and STRICT_OPTS or PLAIN_OPTS )[ k ] then bad = k break end
+                end
+                local st = tonumber( e.step_timeout )
+                local fl = flag( e.reset_on_target_change ) == false or flag( e.wait_on_ready ) == false or flag( e.allow_skip ) == false
+                    or flag( e.start_on_first ) == false or flag( e.hold_off_gcd ) == false
+                if bad then err( "E7", list, i, e, a .. " does not take " .. bad .. "=" )
+                elseif e.mode ~= nil and not MODES[ e.mode ] then err( "E7", list, i, e, "mode= takes skip, wait or continue" )
+                elseif e.mode ~= nil and e.wait_on_ready ~= nil then err( "E7", list, i, e, "mode= and wait_on_ready= together" )
+                elseif e.step_timeout ~= nil and not ( st and st > 0 ) then err( "E6", list, i, e, name .. ": step_timeout= must be positive seconds" )
+                elseif fl then err( "E6", list, i, e, name .. ": a flag takes 0 or 1" )
+                elseif byName[ name ] then err( "E2", list, i, e, name .. " is declared twice" )
+                elseif luaWindow( name ) then err( "E3", list, i, e, name .. " is a class window" )
+                else
+                    -- the members as ability keys; one the class does not have is dropped (both sides drop it alike)
+                    local steps, members = {}, {}
+                    for _, m in ipairs( e.steps or NO_APL_WINDOWS.decls ) do
+                        if m.action and class.abilities[ m.action ] then
+                            steps[ #steps + 1 ], members[ #members + 1 ] = class.abilities[ m.action ].key, m
+                        end
+                    end
+                    local mode = e.mode or ( flag( e.wait_on_ready ) == 1 and "wait" ) or "skip"
+                    local decl = { name = name, duration = "combat", steps = steps, strict = strict, seq = true,
+                        mode = not strict and mode or nil, allow_skip = strict and flag( e.allow_skip ) == 1,
+                        start_on_first = strict and flag( e.start_on_first ) == 1, hold_off_gcd = strict and flag( e.hold_off_gcd ) == 1,
+                        step_timeout = st, reset_on_target_change = flag( e.reset_on_target_change ) == 1, keys = {},
+                        on_deviation = strict and "end" or nil,
+                        entry = e, list = list, line = i }
+                    byName[ name ] = decl
+                    decls[ #decls + 1 ] = decl
+                    -- the generated lines (§6): script IDs and the hidden lists, compiled by LoadScripts. `memberIDs`: each
+                    -- member's own if=; `seq:<name>`: one line per member under `window.<name>.next.<member>` (the plain
+                    -- sequence's in-place lines and the strict hold); `seqstart:<name>` (strict): the start line's members
+                    local id = tostring( packName ) .. ":" .. list .. ":" .. i
+                    decl.id, decl.members, decl.memberIDs = id, members, {}
+                    decl.skipID, decl.giveID, decl.hidden, decl.startList = id .. ":skip", id .. ":give", "seq:" .. name, "seqstart:" .. name
+                    decl.hiddenEntries, decl.startEntries, decl.hiddenIDs, decl.startIDs = {}, {}, {}, {}
+                    for k, m in ipairs( members ) do
+                        decl.memberIDs[ k ] = id .. ":" .. k
+                        local h, st = {}, {}
+                        for f, v in pairs( m ) do h[ f ], st[ f ] = v, v end
+                        local own = m.criteria and m.criteria ~= "" and ( "&(" .. m.criteria .. ")" ) or ""
+                        h.criteria, h.enabled, st.enabled = "window." .. name .. ".next." .. steps[ k ] .. own, true, true
+                        decl.hiddenEntries[ k ], decl.startEntries[ k ] = h, st
+                        decl.hiddenIDs[ k ] = tostring( packName ) .. ":" .. decl.hidden .. ":" .. k
+                        decl.startIDs[ k ] = tostring( packName ) .. ":" .. decl.startList .. ":" .. k
+                        startByID[ decl.startIDs[ k ] ] = decl
+                    end
+                    seqByID[ id ] = decl
+                    if strict then nStrictDecl = nStrictDecl + 1 end
+                    for _, disp in ipairs( seqOn ) do
+                        local key = tostring( packName ) .. ":" .. name .. "#" .. disp
+                        decl.keys[ disp ] = key
+                        nSeqKeys = nSeqKeys + 1
+                        records[ #records + 1 ] = { key = key, duration = "combat", steps = steps, strict = strict or nil,
+                            allow_skip = decl.allow_skip or nil, step_timeout = st, on_deviation = strict and "end" or nil,
+                            reset_on_target_change = decl.reset_on_target_change or nil }
+                    end
+                end
+            end
+        end
+    end
+    -- a pass sends at most: the open, the skip (plain) or the give-up (strict), the chosen OPEN and its STEP (§5.5)
+    cap = cap + 4 * nSeqKeys
+
     for _, list in ipairs( names ) do
         for i, e in ipairs( lists[ list ] ) do
             local a = e.action
@@ -1796,12 +1900,19 @@ function scripts.CheckWindows( lists, packName )
                 if bad then err( "E4", list, i, e, a .. " takes only name= and if= (" .. bad .. "=)" )
                 elseif byName[ name ] then cap = cap + #WINDOW_DISPLAYS
                 elseif not luaWindow( name ) then err( "E1", list, i, e, "window " .. tostring( name ) .. " is not declared" ) end
+            elseif a == "restart_sequence" then
+                local name = e.window_name
+                if name == nil or name == "" then name = "default" end -- SimC: a bare restart_sequence restarts `default`
+                local d = byName[ name ]
+                if not ( d and d.seq and not d.strict ) then err( "E1", list, i, e, "restart_sequence: " .. name .. " is not a plain sequence" )
+                else cap = cap + #WINDOW_DISPLAYS end
             end
         end
     end
 
     if #decls == 0 and #errors == 0 then return NO_APL_WINDOWS end
-    return { decls = decls, records = records, cap = cap, errors = errors }
+    return { decls = decls, records = records, cap = cap, errors = errors, byName = byName, seqByID = seqByID,
+        startByID = startByID, nStrict = nStrictDecl }
 end
 
 --- The active pack's APL windows into the belief's def (Tracked.lua ns.SetAplWindows: a new generation) and as the
@@ -1853,6 +1964,7 @@ function scripts:LoadScripts()
     wipe( self.PackInfo )
     wipe( self.Windows )
     wipe( self.declaredWindows )
+    wipe( self.HiddenLists )
 
     Hekili.LoadingScripts = true
 
@@ -1877,6 +1989,24 @@ function scripts:LoadScripts()
             for list, lData in pairs( pData.lists ) do
                 for action, _ in ipairs( lData ) do
                     Hekili:LoadScript( pack, list, action )
+                end
+            end
+
+            -- (windows design v6 §6) each sequence's generated lines: its members' own conditions and its hidden lists
+            self.HiddenLists[ pack ] = {}
+            for _, d in ipairs( cw.decls ) do
+                if d.seq then
+                    self.HiddenLists[ pack ][ d.hidden ], self.HiddenLists[ pack ][ d.startList ] = d.hiddenEntries, d.startEntries
+                    for k, m in ipairs( d.members ) do
+                        self.DB[ d.memberIDs[ k ] ] = ConvertScript( m, false, d.memberIDs[ k ] )
+                        for _, h in ipairs( { { d.hiddenEntries, d.hiddenIDs }, { d.startEntries, d.startIDs } } ) do
+                            local sid = h[ 2 ][ k ]
+                            recordID( h[ 1 ], k, sid )
+                            local script = ConvertScript( h[ 1 ][ k ], true, sid )
+                            script.action, script.ReadsWindow = h[ 1 ][ k ].action, true
+                            self.DB[ sid ] = script
+                        end
+                    end
                 end
             end
 

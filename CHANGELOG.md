@@ -7,6 +7,10 @@
 
 - A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
 
+- Priorities can use SimC `sequence` and `strict_sequence` lines (with `restart_sequence` and `window.<name>.done`); each display has a Sequences setting, on for Primary and AOE.
+
+- A priority whose lines open and close the same window in one recommendation gets a one-time warning.
+
 ### Changed
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 

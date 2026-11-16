@@ -1348,6 +1348,8 @@ do
         end
     end
 
+    local SEQ_LINE = { sequence = true, strict_sequence = true, restart_sequence = true }
+
     function Hekili:ReviewPacks()
         local profile = self.DB.profile
 
@@ -1366,7 +1368,8 @@ do
 
                     -- NYI:  We can cache if abilities are disabled here as well to reduce checking in ProcessHooks.
                     for a, entry in ipairs( list ) do
-                        if entry.enabled and entry.action and Registry.Abilities()[ entry.action ] then
+                        -- a sequence line is the engine's, not an ability (windows design v6 §6, Engine/Sim/Core.lua)
+                        if entry.enabled and entry.action and ( Registry.Abilities()[ entry.action ] or SEQ_LINE[ entry.action ] ) then
                             actsActive[ packName .. ":" .. listName .. ":" .. a ] = true
                         end
                     end
