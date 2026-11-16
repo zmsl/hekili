@@ -239,7 +239,7 @@ function M.new(seed)
             return false, "casting"
         elseif not offGcd and t < e.gcdUntil - 1e-9 then -- the loop's ticks are a float sum: a 1.0 s GCD ends on one
             return false, "gcd"
-        elseif t < (e.cdUntil[key] or 0) - W.QUEUE then
+        elseif t < (e.cdUntil[key] or 0) - W.QUEUE - 1e-9 then -- the GCD's slack: a press exactly W.QUEUE early is held
             return false, "cooldown"
         elseif p.range and W.distance and (W.distance < p.range[1] or W.distance > p.range[2]) then
             return false, "range"
