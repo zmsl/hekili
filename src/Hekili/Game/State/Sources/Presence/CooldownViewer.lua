@@ -9,7 +9,8 @@
 -- (§2.2a, decision 115): a silent slot answers NONE only for an application it was seen holding (its record up, sSeen >= applied, its last held
 -- unit). A target change makes target and NONE slots settle for its frame: target answers stale (§3.4). A raise
 -- in the sweep, or in the router's reduction it calls, turns the leaf off for the session (§3.5). Read, never write: rawget on items, on Blizzard frames only
--- GetChildren, GetNumChildren and IsVisible (the Debug dump below also calls IsShown); no hooks of any kind (§3.3, §3.5).
+-- GetChildren, GetNumChildren and IsVisible (the Debug dump below also calls IsShown); no hooks of any kind (§3.3, §3.5):
+-- the Cooldown Manager settings' two EventRegistry callbacks (proof across sessions, below) only set a flag.
 -- Aura families (owner rule L727): an ambiguous item whose every candidate names a member of one family (the packs'
 -- aura field `family`) is a family item. The client's light says some member is up and its silence that none is, but
 -- not which (probes L725/L726: identity goes secret after an in-combat change), so the sweep counts it for the member
@@ -90,6 +91,19 @@ local provenCd, provenU, strikesCd, silentCd = {}, {}, {}, {}
 -- carryKey/carryU/carryS each proven id's key, unit and silent count, so a rebuild that maps it to the same aura keeps
 -- the proof and its silent count (a build is no light). Reused across builds.
 local mapKey, carryKey, carryU, carryS = {}, {}, {}, {}
+-- Proof across sessions (L1113-L1115): pV[id] the viewer a cooldownID was proven on (0 none), carried with its proof;
+-- onV[id] a bitmask (VBIT) of the viewers a configured slot showed it on at the last layout read. Both by cooldownID,
+-- preallocated at build() to the map's keys. laid[v] visible viewer v's configured slots at that read (-1 not read:
+-- hidden, or a secret ID or index). relayout: the Cooldown Manager's settings changed (OnDataChanged), so the next
+-- sweep out of combat reads the layout; editing: an edit is open (OnPendingChanges), so the read waits until it is
+-- saved or reverted; built: the map holds the def's items.
+local pV, onV, carryV = {}, {}, {}
+local laid = { 0, 0, 0, 0 }
+local relayout, editing, built, api1 = false, false, false, nil
+-- The saved store: the belief's own per-character saved global (Hekili.toc SavedVariablesPerCharacter), read and
+-- written only here through `api`; the core never names it. { v = SAVED_V, items = { [cooldownID] = { key, viewer,
+-- unit, silent } } }: the proofs at the last logout, and the entries no layout read has judged yet.
+local SAVED, SAVED_V = "HekiliCDMProof", 1
 local ambC = {} -- by k: the per-fight lights of ambiguous items naming aura j on unit u (§2.2; the snapshot's)
 local VBIT = { 1, 2, 4, 8 } -- a viewer's bit in Q.Via (§2.4)
 local touched, mark, nTouched = {}, {}, 0 -- the things a sweep moved, each once
@@ -120,6 +134,8 @@ local Q = {
     struck = 0, -- per build: cooldownIDs whose proof the strikes dropped (§2.5)
     suspended = 0, -- per build: the times silent verdicts suspended a cooldownID's proof (§2.5, review M3)
     builds = 0, -- per session, never reset: the map's builds (review S2)
+    restored = 0, -- per session: saved proofs restored by a layout read (L1113)
+    unlaid = 0, -- per session: proofs dropped because a settings edit moved or removed their item (L1114)
     -- at the last build (L972): the proven cooldownIDs whose proof it kept (same aura) and dropped (another or none)
     carried = 0,
     dropped = 0,
@@ -169,13 +185,13 @@ end
 local function build(api, def)
     Q.builds = Q.builds + 1
     for id in pairs(carryKey) do
-        carryKey[id], carryU[id], carryS[id] = nil, nil, nil
+        carryKey[id], carryU[id], carryS[id], carryV[id] = nil, nil, nil, nil
     end
     local nProven = 0
     for id in pairs(cdvToJ) do
         -- a proven id names one aura; keyed by the aura, not j: a belief rebuild may reorder the def
         if provenCd[id] and mapKey[id] ~= nil then
-            carryKey[id], carryU[id], carryS[id] = mapKey[id], provenU[id], silentCd[id]
+            carryKey[id], carryU[id], carryS[id], carryV[id] = mapKey[id], provenU[id], silentCd[id], pV[id]
             nProven = nProven + 1
         end
         cdvToJ[id], mapKey[id] = nil, nil
@@ -190,7 +206,7 @@ local function build(api, def)
         mappable[k] = nil
     end
     for id in pairs(provenCd) do -- zeroed at every build; the proof of an unchanged mapping comes back below (decision 124)
-        provenCd[id], provenU[id], strikesCd[id], silentCd[id] = nil, nil, nil, nil
+        provenCd[id], provenU[id], strikesCd[id], silentCd[id], pV[id], onV[id] = nil, nil, nil, nil, nil, nil
     end
     Q.struck, Q.suspended, Q.carried, Q.dropped = 0, 0, 0, nProven
     local CV = api.C_CooldownViewer
@@ -267,6 +283,7 @@ local function build(api, def)
                         local carry = key ~= nil and key == carryKey[id]
                         provenCd[id], provenU[id], strikesCd[id], silentCd[id] =
                             carry, carry and carryU[id] or 0, 0, carry and carryS[id] or 0
+                        pV[id], onV[id] = carry and carryV[id] or 0, 0
                         if carry then
                             Q.carried, Q.dropped = Q.carried + 1, Q.dropped - 1
                         end
@@ -462,6 +479,79 @@ local function member(f, u, t)
     return best > 0 and best or lj
 end
 
+-- The layout read (L1113-L1115), from sweep() out of combat after a settings change: every configured slot (a plain
+-- cooldownID and layoutIndex) of a visible viewer marks its id on that viewer. Once some viewer shows an item (a layout
+-- not filled yet judges nothing: the next sweep out of combat reads again while saved entries wait), each read viewer
+-- is judged: a proof whose viewer no longer shows its id (moved or removed) is dropped, and a saved entry is judged
+-- once: restored when its viewer shows the id and the id still maps to the saved aura alone, else dropped. A restore
+-- is no light: the item is a proven source again (its dark counts), nothing is up or down by it. Allocates nothing.
+local function relay(api)
+    local issecret = api.issecretvalue
+    relayout = false
+    for id in pairs(onV) do
+        onV[id] = 0
+    end
+    for v = 1, #VIEWERS do
+        laid[v] = vis[v] and 0 or -1
+    end
+    local read = false
+    for s = 1, Q.nSlots do
+        local v = sV[s]
+        if laid[v] >= 0 then
+            local item = sFrame[s]
+            local id, idx = rawget(item, "cooldownID"), rawget(item, "layoutIndex")
+            if issecret(id) or issecret(idx) then
+                laid[v] = -1 -- a secret one may be any item: the viewer is not judged
+            elseif id ~= nil and idx ~= nil then
+                laid[v], read = laid[v] + 1, true
+                local on, b = onV[id], VBIT[v]
+                if on and on % (2 * b) < b then
+                    onV[id] = on + b
+                end
+            end
+        end
+    end
+    local sv = api[SAVED]
+    local items = type(sv) == "table" and sv.v == SAVED_V and type(sv.items) == "table" and sv.items or nil
+    if not read then
+        relayout = items ~= nil and next(items) ~= nil
+        return
+    end
+    for id, v in pairs(pV) do
+        if v > 0 and laid[v] >= 0 and onV[id] % (2 * VBIT[v]) < VBIT[v] then -- moved or removed
+            pV[id], provenCd[id], provenU[id], silentCd[id] = 0, false, 0, 0
+            Q.unlaid = Q.unlaid + 1
+        end
+    end
+    if not items then
+        return
+    end
+    for id, e in pairs(items) do
+        local v = type(e) == "table" and e.viewer
+        local b = VBIT[v]
+        if
+            not (
+                type(id) == "number"
+                and b
+                and type(e.key) == "string"
+                and (e.unit == 1 or e.unit == 2)
+                and type(e.silent) == "number"
+                and e.silent >= 0
+                and e.silent < STRIKES_MAX
+            )
+        then
+            items[id] = nil -- not an entry this version writes: ignored
+        elseif laid[v] >= 0 then
+            local on = onV[id]
+            if on and on % (2 * b) >= b and mapKey[id] == e.key and not provenCd[id] and provenU[id] == 0 then
+                provenCd[id], provenU[id], silentCd[id], pV[id] = true, e.unit, e.silent, v
+                Q.restored = Q.restored + 1
+            end
+            items[id] = nil
+        end
+    end
+end
+
 -- One sweep (§3.2), under one pcall: each viewer's visibility and growth, then every slot's reading against what it is
 -- counted as. Un-count before count, so a raise between the two leaves the slot not counted, never counted twice.
 local function sweep(t)
@@ -481,6 +571,9 @@ local function sweep(t)
             known[v] = n
         end
         vis[v] = f ~= nil and f.IsVisible ~= nil and Plain(api, f:IsVisible()) == true
+    end
+    if relayout and built and not editing and not I.inCombat then -- out of combat only: an ID may be secret in it
+        relay(api)
     end
     for s = 1, Q.nSlots do
         local item = sFrame[s]
@@ -519,7 +612,7 @@ local function sweep(t)
                     -- proof (cdm-verdict §2.1): a visible light for the item's one aura; none after STRIKES_MAX
                     -- strikes. Any such light ends a suspension: the silent verdicts are counted since it (M3)
                     if vis[sV[s]] then
-                        provenU[id], silentCd[id] = u, 0
+                        provenU[id], silentCd[id], pV[id] = u, 0, sV[s]
                         if strikesCd[id] < STRIKES_MAX then
                             provenCd[id] = true
                         end
@@ -779,8 +872,10 @@ function Q.Activate(api, t, def)
             touched[(u - 1) * nAura + j] = touched[(u - 1) * nAura + j] or 0
         end
     end
+    built = false
     if active then
-        if build(api, def) then
+        built = build(api, def)
+        if built then
             collect(api, true)
             Q.Sweep(t)
         end
@@ -879,6 +974,48 @@ end)
 S.On("PLAYER_REGEN_ENABLED", nil, function()
     if active then
         collect(api0, true)
+    end
+end)
+
+-- The Cooldown Manager's settings (L1113-L1115): OnDataChanged fires on every edit (saved or not, reverted too) and
+-- once when the client loads the layout at login (after PLAYER_ENTERING_WORLD); OnPendingChanges (true, false)
+-- brackets an edit. Registered at VS.Start (PLAYER_LOGIN), before that load, whatever the leaf's state: the handlers
+-- only set a flag the sweep reads (the client runs them through securecallfunction).
+local function onData()
+    relayout = true
+end
+local function onPending(_, _, pending)
+    editing = not api1.issecretvalue(pending) and pending == true
+end
+S.OnStart(function(api)
+    api1 = api
+    local ER = Plain(api, api.EventRegistry)
+    if type(ER) == "table" and ER.RegisterCallback then
+        pcall(ER.RegisterCallback, ER, "CooldownViewerSettings.OnDataChanged", onData, Q)
+        pcall(ER.RegisterCallback, ER, "CooldownViewerSettings.OnPendingChanges", onPending, Q)
+    end
+end)
+
+-- The logout's save (a /reload too): every proven id mapped to one aura, with the viewer it was proven on, its unit
+-- and its silent count (what a build carries); an id that lit this session but is unproven now (struck, suspended or
+-- moved) leaves the store; the entries no read judged stay. With the leaf off or stopped the store stays as it was.
+-- Allocates (once, at logout).
+S.On("PLAYER_LOGOUT", nil, function(api)
+    if not active or not built then
+        return
+    end
+    local sv = api[SAVED]
+    if type(sv) ~= "table" or sv.v ~= SAVED_V or type(sv.items) ~= "table" then
+        sv = { v = SAVED_V, items = {} }
+        api[SAVED] = sv
+    end
+    local items = sv.items
+    for id, ok in pairs(provenCd) do
+        if ok and mapKey[id] ~= nil and pV[id] > 0 then
+            items[id] = { key = mapKey[id], viewer = pV[id], unit = provenU[id], silent = silentCd[id] }
+        elseif provenU[id] ~= 0 then
+            items[id] = nil
+        end
     end
 end)
 
