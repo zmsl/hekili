@@ -54,7 +54,7 @@ return {
     player = {
         race = "RaceHuman",
         class = "ClassMage",
-        gear = "ui/specs/mage/dps/gear_sets/p1Arcane.gear.json",
+        gear = "ui/specs/mage/dps/gear_sets/preraid.gear.json",
         talentsString = "-5550000123011303-2035010311013002",
         specKey = "mage",
         options = { classOptions = { defaultMageArmor = "MageArmorMageArmor" } },
@@ -63,9 +63,9 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    -- the Talisman of Ephemeral Power (ItemSparse 18820: a trinket, InventoryType 12; the re-pin gear, was the Mind
+    -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear, was the Talisman 18820 and the Mind
     -- Quickening Gem 19339)
-    map = { ["item:18820"] = "use_items" },
+    map = { ["item:272438"] = "use_items" },
     focus = { pyroblast = 1, scorch = 2, evocation = 2, fire_blast = 1, counterspell = 1 },
     leveling = { "fireball,if=!action.frostfire_bolt.known" },
 }

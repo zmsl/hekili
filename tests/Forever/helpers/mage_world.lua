@@ -69,6 +69,10 @@ local CAST = {
     frostfire_bolt = 3,
 }
 
+-- Arcane Concentration's chance split over an Arcane Missiles channel: its start and each of its 5 missiles take a sixth
+-- (wowsims 5ad9515c15, arcane_missiles.go's book rank: 5 s over a 1 s period + 1).
+local MISSILES_SHARE = 1 / 6
+
 -- UNMEASURED: the hits' amounts.
 local AMOUNT = {
     arcane_missiles = 250, -- a missile
@@ -587,9 +591,9 @@ M.MAP = {
                 drop(W, e, X, "clearcasting")
             end
             drop(W, e, X, "missile_barrage")
-            -- the channel start rolls Arcane Concentration too (53b0b6a80e), after the spend
+            -- the channel start rolls Arcane Concentration too (53b0b6a80e), after the spend, at a sixth of the chance
             local ac = talentRank(H, T.arcane_concentration)
-            if ac > 0 and W.t >= (e.clearcastingIcd or 0) and W.rng.chance(0.02 * ac) then
+            if ac > 0 and W.t >= (e.clearcastingIcd or 0) and W.rng.chance(0.02 * ac * MISSILES_SHARE) then
                 e.clearcastingIcd = W.t + 1
                 aura(W, X, e, "clearcasting")
             end
@@ -610,9 +614,9 @@ M.MAP = {
                     -- each missile rolls its own hit; a landed one spends a Fingers of Frost charge
                     if W.hit(e, e.target, AMOUNT.arcane_missiles, 64, "spell").act == "WOUND" then
                         unstack(W, e, X, "fingers_of_frost")
-                        -- each landed missile rolls Arcane Concentration under the row's 1 s ICD (ef6fb99ee1)
+                        -- each landed missile rolls a sixth of Arcane Concentration under the row's 1 s ICD (ef6fb99ee1, 5ad9515c15)
                         local ac = talentRank(H, T.arcane_concentration)
-                        if ac > 0 and W.t >= (e.clearcastingIcd or 0) and W.rng.chance(0.02 * ac) then
+                        if ac > 0 and W.t >= (e.clearcastingIcd or 0) and W.rng.chance(0.02 * ac * MISSILES_SHARE) then
                             e.clearcastingIcd = W.t + 1
                             aura(W, X, e, "clearcasting")
                         end

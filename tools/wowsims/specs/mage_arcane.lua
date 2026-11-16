@@ -69,7 +69,7 @@ return {
     player = {
         race = "RaceHuman",
         class = "ClassMage",
-        gear = "ui/specs/mage/dps/gear_sets/p1Arcane.gear.json",
+        gear = "ui/specs/mage/dps/gear_sets/preraid.gear.json",
         talentsString = "050205223101311531-5500003-003",
         specKey = "mage",
         options = { classOptions = { defaultMageArmor = "MageArmorMageArmor" } },
@@ -78,9 +78,9 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    -- the Talisman of Ephemeral Power (ItemSparse 18820: a trinket, InventoryType 12; the re-pin gear, was the Mind
+    -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear, was the Talisman 18820 and the Mind
     -- Quickening Gem 19339)
-    map = { ["item:18820"] = "use_items" },
+    map = { ["item:272438"] = "use_items" },
     focus = { arcane_missiles = 1 }, -- by role (docs/dev/wowsims-packs.md)
     leveling = { "frostbolt,if=!talent.arcane_instability.enabled" },
 }

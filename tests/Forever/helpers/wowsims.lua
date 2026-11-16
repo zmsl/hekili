@@ -428,14 +428,18 @@ M.READY = {
     hunter_survival_melee = { 0.41, 3 },
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
     -- a cost after the truth), fire_blast 7 (max 0.76: the dry-mana waits on its 340)
-    mage_arcane = { 0.76, 9 }, -- 0.760, 9 (ruling M13)
+    -- { 0.76, 9 } -> { 0.22, 2 } re-pin e4ef929e54 (lane mage 0.9, R6): preraid gear's Robe of the Archmage (14152, +540-610 mana at 4.5/16.5 s) and the mana gems' restores are not believed (the replay emits no cast for an item use), so the cost-class rows sit under the truth: 2 real, fire_blast late 0.22
+    mage_arcane = { 0.22, 2 }, -- 0.220, 2 (ruling M13)
     -- { 0.37, 31 } -> { 0.45, 10 } re-pin e2842f0a78: cost class, scorch 10; the median is gap BQ's size, but the
     -- max 2.23 s rows sit about 50 mana under the truth, past BQ's ~0.4 s (untraced: an unseen Master of Elements
     -- refund is the candidate)
-    mage_fire = { 0.45, 10 }, -- 0.450, 10
+    -- { 0.45, 10 } -> { 0.69, 3 } re-pin e4ef929e54 (lane mage 0.9, R6): preraid gear's Robe of the Archmage (14152, +540-610 mana at 4.5/16.5 s) and the mana gems' restores are not believed (the replay emits no cast for an item use), so the cost-class rows sit under the truth: 3 real, all late, scorch (max 1.61)
+    mage_fire = { 0.69, 3 }, -- 0.690, 3
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
-    mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13)
-    mage_frost = { 0.23, 3 }, -- 0.230, 3 (new pack 2026-11-12, R6 first measurement: frostbolt late, cost class)
+    -- { 0.42, 9 } -> { 1.51, 3 } re-pin e4ef929e54 (lane mage 0.9, R6): preraid gear's Robe of the Archmage (14152, +540-610 mana at 4.5/16.5 s) and the mana gems' restores are not believed (the replay emits no cast for an item use), so the cost-class rows sit under the truth: 3 real, all late (frostfire_bolt 1.51, scorch 2.51)
+    mage_frostfire = { 1.51, 3 }, -- 1.510, 3 (Task FFB, ruling M13)
+    -- { 0.23, 3 } -> { 0.29, 3 } re-pin e4ef929e54 (lane mage 0.9): frostbolt late, cost class, median 0.23 -> 0.29 (new log)
+    mage_frost = { 0.29, 3 }, -- 0.290, 3 (new pack 2026-11-12, R6 first measurement: frostbolt late, cost class)
     paladin_holy_shock = { 0.24, 5 }, -- 0.240, 5 (new pack 2026-11-12, R6 first measurement: cost and slack classes)
     -- { 0.86, 7 } -> { 0.00, 0 } re-pin e2842f0a78: real 0 once Holy Shield's block hits are procs (PROT_REPLAY)
     -- { 0.00, 0 } -> { 0.43, 1 } pin move 2 on CN8 (rank 4 log, PROT_REPLAY's rank-4 procs, steady icons): one row, holy_strike

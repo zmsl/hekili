@@ -72,11 +72,20 @@ local REPLAY = {
 -- of 57; fire_blast -> frostfire_bolt, fire_blast -> scorch). Flicker ceilings 1.4 / 0.7 -> 0.34 (measured 0.33, S:
 -- steady icons on by default; the line rounds up) for Arcane and Fire, Frostfire 0. LIVE60 unchanged (Arcane 10.0,
 -- Fire 6.2, Frostfire 11.8: re-measured, the same).
+-- Re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6, replay measured once: the replay is one fixed fight): Arcane 0.95 ->
+-- 0.93 (0.938, 60 of 64) and Fire 0.96 -> 0.91 (0.918, 67 of 73); Frostfire 0.981 and Frost 0.944 keep 0.96 / 0.93. Cause:
+-- the preraid gear (wowsims 410e4bea57) wears the Robe of the Archmage (14152), an on-use mana restore (+610 Arcane, +543
+-- Fire at 4.5 / 16.5 s) beside the mana gems; the replay emits no cast for an item use, so the belief runs ~1.6k mana under
+-- the truth and shows Evocation / Scorch where wowsims casts Arcane Blast / Fireball (Arcane misses 32.50, 45.00, 46.50
+-- evocation, 139.00 fire_blast after the Citrine; Fire 23.00, 29.00, 70.00, 89.00 scorch for fireball, 36.50, 143.00).
+-- Arcane Concentration's 1/6 share per missile (5ad9515c15) moves the random stream. Flicker ceilings 0.34 -> 0.67 for
+-- Arcane and Fire (one more A-B-A on the re-timed fights: Arcane's at 100.8 and 149.2 s are fire_blast / arcane_missiles at
+-- Fire Blast's cooldown end, as the earlier ceiling named; Fire's pairs not traced further).
 local PACKS = {
-    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.95, 10.0, 0.34 },
+    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.93, 10.0, 0.67 },
     -- LIVE60 6.0 -> 6.2 (CN8 D2): the same dry-pool wait for Scorch (96.4-102.4 s, mana 49-153), one poll longer on
     -- the re-timed fight
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.96, 6.2, 0.34 },
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.91, 6.2, 0.67 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
     -- Frost (new pack, 2026-11-12, R6 first measurement): 0.93 (0.934, 57 of 61; the recipe's header names the misses),
     -- LIVE60 6.0 (the 6 s bar: 6.0 measured, L10 0.2, L40 0.0), flicker 0 (0.00/min measured). LIVE60's cause (traced
