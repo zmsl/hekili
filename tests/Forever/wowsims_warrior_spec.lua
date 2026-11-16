@@ -153,7 +153,15 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- Re-pin 4b0030a44b/e5a9cd2a2d (R6): 0.86 (86 of 99; measured 0.869) from 0.85: Overpower weaves (the R46 latency, and
             -- the stance keep fixed to 25: 4 overpower -> bloodthirst), 3 Reckless Swings (the 20-rage shortcut moves the belief's
             -- rage, blocker note warrior-1), execute -> death_wish, execute -> reckless_swings
-            0.86,
+            -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6): 0.82 (82 of 100; measured 0.820, after the Overpower
+            -- window fix f2812da55; 0.800 before it) from 0.86: wowsims's new Fury gear (3 slots) and its Execute avoid rule
+            -- re-time the fight after 43.5 s (the first 7 misses are the old log's): Overpower weaves (R46: 10.50, 19.43,
+            -- 32.00, 98.06, 155.94; 167.34 cast 0.05 s after the swing's rage), an own main-hand miss just before the GCD
+            -- (its rage still forecast, Sunder over Execute: 171.84, 175.84, 177.34), gap AS (a Sunder avoid credited
+            -- across our own swings, blocker note repin-warrior-09-2: 94.00, 123.24, 135.24), Reckless Swings (13.50, 43.50,
+            -- 154.74), 79.00 rend -> sunder_armor (Sunder fades at the Rend's own timestamp), execute -> death_wish 149.88,
+            -- whirlwind -> sunder_armor 0.00. The one avoided Execute (145.09) moves no decision (belief 12 vs truth 14.9)
+            0.82,
             FURY_REPLAY
         )
     end)
@@ -298,7 +306,14 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- Re-pin 4b0030a44b/e5a9cd2a2d (R6): 0.92 (92 of 100; measured 0.920) from 0.98: the new rotation (Revenge reorder, Retaliation
             -- precombat) leaves Shield Slam ties at the cooldown's edge (sunder_armor -> shield_slam x2, rend -> shield_slam),
             -- shatter_curse -> revenge (our health is not replayed: the old class), shield_slam -> thunder_clap 5.50
-            0.92,
+            -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6): 0.91 (91 of 99; measured 0.919) from 0.92: wowsims's
+            -- pre-raid Protection gear (14 slots) and healing 770 (L1154(4)) re-time the fight; every miss is an old class:
+            -- Shield Slam at its cooldown edge (shield_slam -> thunder_clap 3.03, rend -> shield_slam 60.12), a cast 0.08-0.09 s
+            -- after a hit taken's or a block's rage, before its row reaches the belief (shield_slam -> sunder_armor 16.03,
+            -- -> demoralizing_shout 42.43, revenge -> sunder_armor 78.42; the old log had 2 of its 11 such casts),
+            -- shatter_curse -> revenge 6.43 (health not replayed), rend -> battle_shout 166.92 (the pack's remains <= 10 vs
+            -- wowsims recasting after the fade), sunder_armor -> battle_shout 179.19 (the log's fight-end fade at 180.00)
+            0.91,
             PROT_REPLAY
         )
     end)
