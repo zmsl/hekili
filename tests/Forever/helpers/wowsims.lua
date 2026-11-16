@@ -436,14 +436,21 @@ M.READY = {
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
     mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13)
     mage_frost = { 0.23, 3 }, -- 0.230, 3 (new pack 2026-11-12, R6 first measurement: frostbolt late, cost class)
-    paladin_holy_shock = { 0.24, 5 }, -- 0.240, 5 (new pack 2026-11-12, R6 first measurement: cost and slack classes)
+    -- { 0.24, 5 } -> { 0.00, 0 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log, the GCD-edge replay fix): real 0; the
+    -- one late row left, judgement 154.44 (0.20 s, cost), is off the GCD
+    paladin_holy_shock = { 0.00, 0 }, -- was { 0.24, 5 } (new pack 2026-11-12, R6 first measurement: cost and slack classes)
     -- { 0.86, 7 } -> { 0.00, 0 } re-pin e2842f0a78: real 0 once Holy Shield's block hits are procs (PROT_REPLAY)
     -- { 0.00, 0 } -> { 0.43, 1 } pin move 2 on CN8 (rank 4 log, PROT_REPLAY's rank-4 procs, steady icons): one row, holy_strike
     -- late 0.43 s, cost class: lo under the truth at the cost (-208 mana, the unmodelled Shieldsworn return, gaps.md CU)
-    paladin_protection = { 0.43, 1 }, -- 0.430, 1
+    -- { 0.43, 1 } -> { 0.32, 2 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log): two holy_strike rows late, cost class:
+    -- 37.90 (0.32 s, lo 5.6 under the truth) and 98.81 (0.71 s, lo 12.1 under; 16.5 mana/s outside the rule), the old
+    -- 90.90 row's class re-timed (lo reaches the cost after the truth)
+    paladin_protection = { 0.32, 2 }, -- 0.320, 2
     -- { 0.29, 10 } -> { 0.10, 7 } re-pin e2842f0a78 (fresh floor, Task 17: the Unsealed Wrath APL and the opener move):
     -- holy_strike 5 (max 0.10), seal_of_command 1 (0.23), seal_of_righteousness 1 (0.17)
-    paladin_retribution = { 0.10, 7 }, -- 0.100, 7
+    -- { 0.10, 7 } -> { 0.07, 2 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log, the GCD-edge replay fix): real 2, cost
+    -- class: seal_of_righteousness 149.65 late 0.38 (lo 6.2 under the truth), holy_strike 158.17 early 0.07
+    paladin_retribution = { 0.07, 2 }, -- 0.070, 2
     -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at
     -- the GCD's end inside it (Arcane's Missiles likewise, about 0.9 s)
     priest_shadow = { 1.50, 36 },
