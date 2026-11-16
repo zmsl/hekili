@@ -1855,6 +1855,41 @@ describe("auras", function()
                 assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 11.5)) -- not debounced against the old 26
             end)
 
+            -- Hotfix 0.8.6 fix round 1 (review I1): a light that began before the undone cast is the earlier
+            -- application's, still shown by the viewer's lag; the undo's close must not let it re-open the record.
+            it("an avoid undo's close keeps a light from before the cast debounced: no re-open", function()
+                local def = fs.def(fs.new(9))
+                for _, ab in ipairs(def.abilities) do
+                    ab.now = ab.funcs and ab.funcs.now
+                end
+                start(def)
+                ctl.now = 11
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.ViewerAura(ti, "target")
+                drain(11)
+                drain(11.2)
+                assert.are.equal(26, est("target", fs.SPENDER_C, 11.2))
+                for t = 12, 25, 1 do
+                    drain(t)
+                end
+                drain(26.05) -- expired in the model; the item still lit (viewer lag)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 26.05))
+                ctl.now = 26.1
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C) -- the recast
+                drain(26.15)
+                assert.are.equal(41.1, est("target", fs.SPENDER_C, 26.15))
+                ctl.now = 26.3
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- a true dodge: the undo closes it
+                drain(26.3)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 26.3))
+                assert.are.equal(1, I.avoidsRun)
+                drain(26.45) -- the old light, still lit: no re-open
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 26.45))
+                ctl.ViewerClear(ti)
+                drain(26.6)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 26.6))
+            end)
+
             it("F52-A (review M1): a recast folded in the verdict's own drain stands: no close, no strike", function()
                 local def = fs.def(fs.new(9))
                 for _, ab in ipairs(def.abilities) do
