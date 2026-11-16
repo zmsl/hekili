@@ -1592,6 +1592,29 @@ describe("the Hunter talent cost cuts through the engine", function()
         })
         assert.are.same({}, H.errors)
     end)
+
+    -- no wowsims log takes both talents: the engine's own product of the two talent mods (Raptor Strike rank 8's 100
+    -- x (1 - 0.6) x (1 - 0.06) = 37.6, not the added 34), in the belief and the simulation
+    it("multiplies Resourcefulness 2/2 and Efficiency 2/5 in both layers (Raptor Strike 37.6)", function()
+        local c = hw.Survival.character()
+        c.talents = { [440529] = 2, [19416] = 2 }
+        local H = headless.new({ character = c, pack = "Survival (wowsims.com)" })
+        local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
+        local t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        VS.Drain(t)
+        S.reset("Primary", true)
+        local function r(x)
+            return math.floor(x * 1000 + 0.5) / 1000
+        end
+        assert.are.same({ 2, 2, 37.6, 37.6 }, {
+            S.talent.resourcefulness.rank,
+            S.talent.efficiency.rank,
+            r(I.CostOf(I.ab.bySpell[VS.KnownID(H.Hekili.Class.abilities.raptor_strike.id)])),
+            r(S.action.raptor_strike.cost),
+        })
+        assert.are.same({}, H.errors)
+    end)
 end)
 
 describe("the retired Hunter weave packs", function()
