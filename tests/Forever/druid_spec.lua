@@ -1725,10 +1725,13 @@ end)
 describe("Forever Druid Ravage opener (R69)", function()
     local headless = require("Game.harness.headless")
     local dlw = require("Forever.helpers.druid_loop_world")
+    local SECRET = require("Game.State.helpers.fake_api").SECRET
     local PACK = "Feral (wowsims.com)"
 
-    -- The icons of a Cat at `yd` yards, energy full, Prowled or not; `combat` seconds into combat (nil: out of it).
-    local function recs(yd, prowled, combat)
+    -- The icons of a Cat at `yd` yards, energy full, Prowled or not; `combat` seconds into combat (nil: out of it);
+    -- `caught` (nil: none): IsStealthed's answer at the pull, with UPDATE_STEALTH and the in-combat walk secret (a mob
+    -- that attacks first breaks Prowl: false). The instance too.
+    local function recs(yd, prowled, combat, caught)
         local c = dlw.Feral.character()
         c.known[#c.known + 1] = 9867 -- Ravage rank 4 and Prowl rank 3 (the loop world's kit lists neither)
         c.known[#c.known + 1] = 9913
@@ -1738,6 +1741,7 @@ describe("Forever Druid Ravage opener (R69)", function()
         if prowled then
             H.ctl.auras.player.HELPFUL[1] = { spellId = 9913, expirationTime = H.ctl.now + 3600, applications = 0 }
         end
+        H.ctl.stealthed = prowled == true -- Prowl is a stealth: IsStealthed reads it (Sources/Forms.lua)
         H.Fire("UNIT_AURA", "player")
         H.Fire("PLAYER_TARGET_CHANGED")
         local VS = H.ns.VirtualState
@@ -1749,6 +1753,12 @@ describe("Forever Druid Ravage opener (R69)", function()
         assert(headless.cycle(H, t))
         if combat then
             H.Fire("PLAYER_REGEN_DISABLED")
+            if caught ~= nil then
+                H.ctl.auras.player.HELPFUL[1] = SECRET
+                H.Fire("UNIT_AURA", "player")
+                H.ctl.stealthed = caught
+                H.Fire("UPDATE_STEALTH")
+            end
             t = t + combat
         else
             t = t + 0.2
@@ -1760,7 +1770,7 @@ describe("Forever Druid Ravage opener (R69)", function()
         for i, r in ipairs(H.Hekili.Engine.Output.Primary.recs) do
             names[i] = r.actionName
         end
-        return names
+        return names, H
     end
 
     local function none(list, key)
@@ -1782,6 +1792,21 @@ describe("Forever Druid Ravage opener (R69)", function()
         assert.are.equal("faerie_fire", list[1], table.concat(list, " "))
         none(list, "ravage")
         none(list, "cancel_buff")
+    end)
+
+    -- Player report 2 (hotfix 0.8.6, L1239): caught from Prowl, IsStealthed reads false at UPDATE_STEALTH: the
+    -- believed Prowl goes down, so neither Ravage nor Pounce is usable. A secret answer changes nothing and raises
+    -- nothing (Sources/Forms.lua): the believed Prowl stands.
+    it("drops the believed Prowl when IsStealthed reads false in combat; a secret answer leaves it", function()
+        local list, H = recs(5, true, 0.2, false)
+        none(list, "ravage")
+        local S = H.Hekili.State
+        S.reset("Primary", true)
+        assert.are.same({ false, false, false }, { S.buff.prowl.up, (S:IsUsable("ravage")), (S:IsUsable("pounce")) })
+        list, H = recs(5, true, 0.2, SECRET)
+        assert.are.equal("ravage", list[1], table.concat(list, " "))
+        H.Hekili.State.reset("Primary", true)
+        assert.is_true(H.Hekili.State.buff.prowl.up)
     end)
 end)
 

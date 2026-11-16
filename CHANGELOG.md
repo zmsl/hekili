@@ -10,6 +10,7 @@
 - Rake, Rip and other damage over time effects are no longer recommended again while still on the target after a recast missed.
 - A damage over time effect lit on the Cooldown Manager is now followed again at once after Hekili wrongly counted your cast of it as dodged, parried or missed.
 - Rogue: Garrote and Ambush are no longer recommended out of stealth after a Ghostly Strike that was dodged, parried or missed.
+- Feral: Ravage and Pounce are no longer recommended after a mob breaks your Prowl.
 
 ### Known issues
 
