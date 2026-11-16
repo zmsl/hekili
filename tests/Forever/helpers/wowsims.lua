@@ -510,8 +510,9 @@ M.READY = {
     -- never 10 -> 8; median 1.00 unchanged
     -- { 1.00, 23 } -> { 0.00, 0 } (Task 16, R6 and L82 M5: the floor follows the measurement; the fixture's 83 timed
     -- decisions all in grain since 5049ede22 and R42; the kit's fsr seed moves 142.50 wrack never -> in grain)
-    -- Re-pin e4ef929e54: the one real row (127.13 wrack, 1.13 s early) is a replay artefact, not raised here: a GCD end
-    -- 1 ms past the next GCD's rise clears the client's GCD flag (central harness-gcd-edge-09, note repin-warlock-09-1)
+    -- Re-pin e4ef929e54 (60 decisions, 56 timed, real 0): the 127.13 Wrack row read 1.13 s early before
+    -- harness-gcd-edge-09 5654d9dad (a replay GCD end 1 ms past the next rise cleared the client's GCD flag); in grain
+    -- since, fixture re-recorded
     warlock_affliction = { 0.00, 0 },
     -- Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is absorbed at the grain. 0.10, 3 -> 0.20, 1,
     -- owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by decision none worse and
@@ -533,7 +534,9 @@ M.READY = {
     -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28). -> { 0.20, 8 } re-pin e2842f0a78 (Task
     -- 16, R6, L82 M5; R49's stand-in DoT lines): 93 decisions, 8 real all early (shadow_bolt 4 max 0.30, life_tap 2,
     -- immolate 1), never 20
-    warlock_sm_ruin = { 0.20, 8 },
+    -- { 0.20, 8 } -> { 0.00, 0 } (re-pin e4ef929e54, R6): 93 decisions, real 0; the 8 early rows were the replay GCD
+    -- edge (a GCD end a log step past the next rise), fixed by harness-gcd-edge-09 5654d9dad; fixture re-recorded
+    warlock_sm_ruin = { 0.00, 0 },
     -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never
     -- 0.680, 6 (fix 40): a short answer read before our own gain shows is no rung, so 177.88 sunder never -> early 0.68
     -- { 0.68, 6 } -> { 1.21, 4 } (re-pin e2842f0a78, lane 14, R6): after the replay's GCD fix every early row is in

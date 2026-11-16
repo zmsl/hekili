@@ -644,7 +644,7 @@ beside the number (DEVELOPMENT.md).
 | Shadow (wowsims.com) | 1.00 | 1.50, 36 |
 | Smite (wowsims.com) | 0.93 | 0.70, 11 |
 | Affliction (wowsims.com) | 0.93 | 0.00, 0 |
-| SM Ruin (wowsims.com) | 0.85 | 0.20, 8 |
+| SM Ruin (wowsims.com) | 0.85 | 0.00, 0 |
 | Demonology (wowsims.com) | 0.94 | 0.00, 0 |
 | Shadow Brand (wowsims.com) | 0.71 | 0.20, 1 |
 | Destruction (wowsims.com) | 0.95 | 0.00, 0 |
