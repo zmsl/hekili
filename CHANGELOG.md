@@ -3,48 +3,80 @@
 ## Unreleased
 
 ### New
-- Warlock: Fear, Howl of Terror, Banish, Subjugate Demon, Shadow Ward, Inferno, Demon Skin, Demon Armor, Detect Invisibility, Curse of Tongues, Curse of Exhaustion, Health Funnel, Drain Mana and Fel Domination are now known to the addon, so using one by hand spends its mana and starts its cooldown in Hekili's forecast, and Fel Domination makes your next summon 5.5 seconds faster for half the mana. Hekili can now read their effects, Soul Harvest, Aftermath and Bane of Havoc from the Cooldown Manager.
-- Mage: Arcane Explosion, Flamestrike, Blast Wave, Blink, Mana Shield, Fire Ward, Frost Ward, Frost Blast, Polymorph, Arcane Intellect, Dampen Magic, Amplify Magic, Mage Armor, Ice Armor and Frost Armor are now known to the addon, so using one by hand spends its mana and starts its cooldown in Hekili's forecast; Clearcasting, Arcane Power and Frost Channeling reach the ones they apply to, and casting an armor ends the other one. Hekili can now read their buffs and debuffs (and Ignite, Frostbite, Impact, Chilled and Improved Counterspell) from the Cooldown Manager.
-- Hunter: every Hunter priority now starts with Call Pet when your pet is not out and Revive Pet when it is dead, shown only when the game says you can cast them (a Lone Wolf Marksman is never asked to call a pet). Improved Revive Pet makes Revive Pet faster and cheaper by rank.
-- Custom priorities: `interrupt_global=1` on a channeled spell's line now works. While you channel that spell, any line above it in the priority, in any list, may be recommended as soon as it is ready, breaking the channel. When the line also has `interrupt_if` or `interrupt=1`, those still decide when the channel breaks.
-- Custom priorities: the Max Energy option (`max_energy=1`) on a Ferocious Bite line now works: the line waits until you have full energy, so Bite gets its whole bonus from extra energy.
-- Custom priorities: the Use While Casting option (`use_while_casting=1`) now works: on an instant ability, that line can be recommended while you are casting or channeling, instead of after the cast ends. Lines without it, and abilities with a cast time, still wait for the cast.
-- Debug snapshots now show your Cooldown Manager bars as Hekili reads them: each icon, whether it is lit or shown, when it last lit and went dark since the icon was last reset (a new target, a changed bar or a reload resets it), and for each effect Hekili follows whether it is on your bars at all.
 
 ### Changed
-- Hunter: during Bestial Wrath, The Beast Within now halves your mana costs in Hekili's forecast, so shots are no longer held back for mana you have; Bestial Wrath is only suggested while your pet is out and alive.
-- Paladin: your seal now follows the Cooldown Manager's Seals entry in combat, so Hekili notices a seal that ends or is removed early, and a seal it took down when the entry went dark for a moment comes back as soon as the entry lights again; which seal it is still comes from the one you cast last.
-- Druid: whenever the game hides your form, your form now follows the Cooldown Manager the same way as a Paladin's seal.
-- Mage: Arcane Meditation now counts at every rank (17/33/50% of your Spirit regeneration while casting), not only at 3/3.
-- Mage: Hekili now counts mana regeneration while casting by the armor you wear: Mage Armor's 50% only while it is up, none for Ice Armor or Frost Armor. Casting a different armor in combat changes it at once.
-- Druid: Reflection now counts 17/33/50% of your Spirit regeneration while casting, by rank, so a Druid with Reflection is no longer shown short of mana too long, and Innervate is valued in full.
-- Hunter: Resourcefulness now counts for 30 seconds after a melee or ranged ability crits (not Auto Shot or white swings), 50% of your Spirit regeneration while casting at 2/2.
-- Innervate now counts for every mana user, not only the Druid who casts it on themselves: an Innervate from another Druid that is on you when a fight starts raises your mana regeneration (in combat Hekili cannot see one cast on you).
-- Shaman: the Polished Driftwood Icon relic now counts its 8% of your Spirit regeneration while casting.
 
 ### Fixed
-- Shaman: Stormstrike, Poison and Disease Cleansing Totem, Earthbind Totem and Grounding Totem now cost their percent of your base mana at your level, as the game charges, instead of the level-60 amount.
-- Shaman: Totemic Focus now lowers your totems' mana cost in Hekili's forecast, and no longer makes Stormstrike look cheaper than it is.
-- Hekili now notices a Spirit, spell power or rating change out of combat (a buff, food, a talent) right away, so a Life Tap or a Spirit-based effect before the pull is worked out from your current stats instead of older ones.
-- Custom priorities: `weapon_offhand_dps` now reads your off-hand weapon's damage instead of the main hand's.
-- Hunters and wand users: a change to your ranged attack speed out of combat (a new ranged weapon, quiver or buff) is now picked up at once for the shot timer.
-- Mana users: drinking a Major Mana Potion or using a Demonic Rune now adds its mana to Hekili's mana estimate (the average of what it can restore), so spells you can afford again after one are recommended right away.
-- Mana users: the first moment of a mana burst such as Evocation no longer makes Hekili lower its estimate of your mana regeneration for the rest of the fight.
-- Trolls: Berserking used in combat now shortens your global cooldown, cast times and swings in Hekili's forecast while it is up (the game hides your haste in combat).
-- Divine Spirit, Prayer of Spirit and Mark or Gift of the Wild now stop counting toward your Spirit as soon as they fall mid-fight, on every class and at the buff's own rank (a Warlock's Life Tap follows a Priest's Divine Spirit), and so does a Priest's Spirit Tap.
-- With the Cooldown Manager on, when it shows that a debuff of yours missed (for example Rake), Hekili now also gives back the energy or rage the game refunds for the miss, so your next ability is not shown as unaffordable for a moment.
-- With the Cooldown Manager on, a buff that ended just as the Cooldown Manager lit it again could stay up in Hekili for its whole duration (a Paladin seal could be believed up with none on, so Judgement was suggested anyway). Hekili now takes it down when the Cooldown Manager shows it gone.
-- Hunter: Serpent Sting is now counted from when it lands on the target, not from the cast, so its refresh is no longer shown about a third of a second early.
-- Elemental Shaman: a Revelation charge gained while a Lightning Bolt or Chain Lightning is still casting is now kept for your next spell (such as Earth Shock) instead of being counted as spent by that cast.
-- Fury Warriors: Hekili's forecast now counts Reckless Swings' rage on your coming swings, including one that has just landed, so a rage spender waiting on it is shown on time.
-- When a fight starts, the first icon now switches to its in-combat choice at once instead of one update late.
-- An ability waiting on mana now counts down evenly and turns ready closer to when you really have the mana, instead of jumping by up to a tenth of a second from one update to the next.
-- Warriors and Bear Druids: the rage from your first swing of a fight is now expected when that swing lands, so the first icons of a pull follow it.
-- Rogue: Shank is no longer recommended while on cooldown after learning rank 2.
 
 ### Known issues
 
 ### Upgrade notes
+
+## v0.8.5
+
+_Released 2026-11-16_
+
+This release teaches Hekili many more Mage and Warlock spells, brings Hunter pet handling and more accurate mana and rage forecasts, and makes three custom-priority options work.
+
+### Druid
+- Whenever the game hides your form, Hekili now follows your form from the Cooldown Manager, as it does for a Paladin's seal.
+- Reflection now counts 17/33/50% of your Spirit regeneration while casting, by rank, so you are no longer shown short of mana for too long, and Innervate is valued in full.
+- Bear: the rage from your first swing of a fight is now expected when that swing lands, so the first icons of a pull follow it.
+- Feral: the Max Energy option on a Ferocious Bite line in a custom priority now works: the line waits for full energy, so Bite gets its whole bonus.
+
+### Hunter
+- Every Hunter priority now starts with Call Pet when your pet is not out and Revive Pet when it is dead, shown only when you can cast them; a Lone Wolf Marksman is never asked to call a pet.
+- Improved Revive Pet now makes Revive Pet faster and cheaper by rank.
+- During Bestial Wrath, The Beast Within now halves your mana costs, so shots are no longer held back for mana you have.
+- Bestial Wrath is now suggested only while your pet is out and alive.
+- Resourcefulness now counts for 30 seconds after a melee or ranged ability crits (not Auto Shot or white swings), worth 50% of your Spirit regeneration while casting at 2/2.
+- Serpent Sting is now timed from when it lands on the target, so its refresh is no longer shown about a third of a second early.
+
+### Mage
+- Hekili now knows these spells: Arcane Explosion, Flamestrike, Blast Wave, Blink, Mana Shield, Fire Ward, Frost Ward, Frost Blast, Polymorph, Arcane Intellect, Dampen Magic, Amplify Magic, Mage Armor, Ice Armor and Frost Armor. Casting one yourself now spends its mana and starts its cooldown in the recommendations.
+- Clearcasting, Arcane Power and Frost Channeling now apply to these spells, and casting an armor ends the other one.
+- Hekili can now read their buffs and debuffs, plus Ignite, Frostbite, Impact, Chilled and Improved Counterspell, from the Cooldown Manager.
+- Arcane Meditation now counts at every rank (17/33/50% of your Spirit regeneration while casting), not only at 3/3.
+- Mana regeneration while casting now depends on your armor: Mage Armor adds 50% only while it is up, and Ice Armor and Frost Armor add none. Changing armor in combat takes effect at once.
+
+### Paladin
+- Your seal now follows the Cooldown Manager's Seals entry in combat, so Hekili notices a seal that ends or is removed early. Which seal you have still comes from the one you cast last.
+- A seal that briefly disappears from the Cooldown Manager now comes back as soon as it shows again.
+- Fixed a seal sometimes being treated as active with none on, which led to Judgement being suggested anyway.
+
+### Rogue
+- Shank is no longer recommended while on cooldown after you learn rank 2.
+
+### Shaman
+- Stormstrike, Poison and Disease Cleansing Totem, Earthbind Totem and Grounding Totem now cost the right mana at your level, not the level-60 amount.
+- Totemic Focus now lowers your totems' mana cost and no longer makes Stormstrike look cheaper than it is.
+- The Polished Driftwood Icon relic now counts its 8% of your Spirit regeneration while casting.
+- Elemental: a Revelation charge gained while a Lightning Bolt or Chain Lightning is still casting is now kept for your next spell, such as Earth Shock.
+
+### Warlock
+- Hekili now knows these spells: Fear, Howl of Terror, Banish, Subjugate Demon, Shadow Ward, Inferno, Demon Skin, Demon Armor, Detect Invisibility, Curse of Tongues, Curse of Exhaustion, Health Funnel, Drain Mana and Fel Domination. Casting one yourself now spends its mana and starts its cooldown in the recommendations.
+- Fel Domination now makes your next summon 5.5 seconds faster for half the mana.
+- Hekili can now read these spells' effects, plus Soul Harvest, Aftermath and Bane of Havoc, from the Cooldown Manager.
+
+### Warrior
+- Fury: Reckless Swings' rage is now counted on your coming swings, including one that just landed, so a rage spender waiting on it shows on time.
+- The rage from your first swing of a fight is now expected when that swing lands, so the first icons of a pull follow it.
+
+### Core and display
+- When a fight starts, the first icon now switches to its in-combat choice at once instead of one update late.
+- An ability waiting on mana now counts down evenly and turns ready closer to when you have the mana.
+- Innervate now counts for every mana user: one cast on you by another Druid before the fight raises your mana regeneration. One cast on you in combat is not seen.
+- Divine Spirit, Prayer of Spirit, Mark of the Wild, Gift of the Wild and Spirit Tap now stop counting toward your Spirit as soon as they fall mid-fight, at the buff's own rank.
+- Spirit, spell power and rating changes out of combat (buffs, food, talents) are now picked up at once, so pre-pull Life Taps and Spirit-based effects use your current stats.
+- Ranged attack speed changes out of combat (a new ranged weapon, quiver or buff) now update the shot timer at once.
+- Drinking a Major Mana Potion or using a Demonic Rune now adds its average mana, so spells you can afford again are recommended right away.
+- The first moment of a mana burst such as Evocation no longer lowers Hekili's estimate of your mana regeneration for the rest of the fight.
+- Trolls: Berserking used in combat now shortens your global cooldown, cast times and swings in the recommendations while it is up.
+- When the Cooldown Manager shows that a debuff of yours missed (such as Rake), the refunded energy or rage is now given back, so your next ability no longer looks unaffordable for a moment.
+- Custom priorities: `interrupt_global=1` on a channeled spell's line now lets any higher line break the channel once it is ready. Any `interrupt_if` or `interrupt=1` on the same line still decides when the channel breaks.
+- Custom priorities: the Use While Casting option now works. An instant ability's line can be recommended during your cast or channel; abilities with a cast time still wait.
+- Custom priorities: off-hand weapon DPS now reads your off-hand weapon instead of your main hand.
+- Debug snapshots now show your Cooldown Manager bars as Hekili reads them, including which tracked effects are on your bars.
 
 ## v0.8.3
 
