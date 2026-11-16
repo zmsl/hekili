@@ -6,6 +6,16 @@ local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
 local alloc = require("Game.State.helpers.alloc")
 
+-- A `now` that spends the rest of the pool (after an optional target debuff), out of reach of the spec's local `rage`.
+local function spendRest(debuff)
+    return function()
+        if debuff then
+            applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+        end
+        spend(rage.hi, "rage") -- luacheck: ignore 113 (the `now` context's verb and resource)
+    end
+end
+
 describe("now handlers", function()
     local ns, VS, I, api, ctl, h, state, saved, rows, cleu
 
@@ -1626,9 +1636,9 @@ describe("now handlers", function()
         end
         -- the target item (cooldownID 502) for spender_c's debuff, rage plain at `pool` out of combat, then secret in
         -- combat, the target walk secret; the item proven by a light the dark then closes (mob A, 4 - 4.5)
-        local function begin(pool, off, extra)
+        local function begin(pool, off, extra, share)
             h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 }
-            h.Class.abilities.spender_c.refundOnAvoid = true
+            h.Class.abilities.spender_c.refundOnAvoid = share ~= false or nil -- false: no share of the cost
             h.cdmOff = off
             table.insert(ctl.viewer.sets[2], 502)
             ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
@@ -1974,6 +1984,141 @@ describe("now handlers", function()
             assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 7.5).est)
             assert.are.equal(30, rage(7.5).est)
             assert.are.equal(0, I.auraVerdict.n[k])
+        end)
+
+        -- L1237: an ability declaring `refundNowOnAvoid` gets back, at its own avoid, what its `now` took from its own
+        -- slot (here a strike whose `now` spends the rest of the pool past its cost: an avoid costs the cost alone),
+        -- once with its cost share, and never twice with the verdict's refund.
+        describe("what the `now` took, back at the cast's avoid (refundNowOnAvoid, L1237)", function()
+            -- spender_c (cost 10) spends the rest of the pool in its `now`; `field` sets refundNowOnAvoid, `share`
+            -- its cost share (false: none), `debuff` its target debuff (the verdict's record)
+            local function rest(field, share, debuff)
+                h.Class.abilities.spender_c.refundNowOnAvoid = field or nil
+                h.Class.abilities.spender_c.funcs.now = spendRest(debuff)
+                begin(40, nil, nil, share)
+            end
+            local function outcome(t, act)
+                ctl.now = t
+                ctl.Fire("UNIT_COMBAT", "target", act, "", act == "WOUND" and 100 or 0, 1)
+                ctl.Tick(t + 0.01)
+                VS.Drain(t + 0.02)
+            end
+
+            it("an avoided cast keeps the pool past its cost: 40 - 10 = 30, not 0", function()
+                rest(true, false)
+                cast(fs.SPENDER_C, 5)
+                assert.are.equal(0, rage(5.04).est)
+                outcome(5.05, "DODGE")
+                local r = rage(5.1)
+                assert.are.equal(1, I.avoidsRun)
+                assert.are.same({ 30, 30, 30 }, { r.est, r.lo, r.hi })
+                assert.are.same({ "modelled", VS.Obs.Avoided }, { r.basis, r.last.modelled.event })
+            end)
+
+            it("a landed cast, or one with no row, keeps nothing back: 0", function()
+                rest(true, false)
+                cast(fs.SPENDER_C, 5)
+                outcome(5.05, "WOUND")
+                assert.are.equal(0, rage(5.1).est)
+                drain(9)
+                ctl.power[fs.RAGE] = 40
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.Fire("UNIT_POWER_FREQUENT", "player", "RAGE")
+                drain(9.5)
+                ctl.power[fs.RAGE] = nil
+                assert.are.equal(40, rage(9.5).est)
+                cast(fs.SPENDER_C, 10)
+                drain(11)
+                assert.are.equal(0, rage(11).est)
+                assert.are.equal(0, I.avoidsRun)
+            end)
+
+            it("without the field the avoid gives back none of the `now`'s spend", function()
+                rest(false, false)
+                cast(fs.SPENDER_C, 5)
+                outcome(5.05, "MISS")
+                assert.are.equal(1, I.avoidsRun)
+                assert.are.equal(0, rage(5.1).est)
+            end)
+
+            it("with the cost share: one refund of both (30 + 8), and the later verdict adds nothing", function()
+                rest(true, true, true)
+                cast(fs.SPENDER_C, 5)
+                I.curSwapN = I.curSwapN + 1 -- the record stays up past the avoid, for the verdict to close
+                outcome(5.05, "PARRY")
+                I.curSwapN = I.curSwapN - 1
+                assert.are.equal(38, rage(5.1).est)
+                for t = 5.3, 7.5, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(1, I.auraVerdict.n[k])
+                assert.are.equal(0, I.auraVerdict.refunds[k])
+                assert.are.equal(38, rage(7.5).est)
+                I.Sources.Direct(VS.Obs.Avoided, 7.6, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- again
+                drain(7.7)
+                assert.are.equal(38, rage(7.7).est)
+                assert.are.equal(1, I.avoidsRun)
+            end)
+
+            it("with the cost share, the verdict first: its share alone, and a later avoid adds nothing", function()
+                rest(true, true, true)
+                cast(fs.SPENDER_C, 5)
+                for t = 5.3, 6.9, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(1, I.auraVerdict.refunds[k])
+                assert.are.equal(8, rage(6.9).est) -- the verdict's refund is the cost share only (Now.lua shortcut)
+                I.Sources.Direct(VS.Obs.Avoided, 7, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- a hand-back
+                drain(7.1)
+                assert.are.equal(8, rage(7.1).est)
+                assert.are.equal(0, I.avoidsRun)
+            end)
+
+            it("no cost share: the verdict refunds nothing, the avoid after it gives the `now`'s back once", function()
+                rest(true, false, true)
+                cast(fs.SPENDER_C, 5)
+                for t = 5.3, 6.9, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(1, I.auraVerdict.n[k])
+                assert.are.equal(0, I.auraVerdict.refunds[k])
+                assert.are.equal(0, rage(6.9).est)
+                I.Sources.Direct(VS.Obs.Avoided, 7, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE)
+                drain(7.1)
+                assert.are.equal(30, rage(7.1).est)
+                I.Sources.Direct(VS.Obs.Avoided, 7.2, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- again
+                drain(7.3)
+                assert.are.equal(30, rage(7.3).est)
+                assert.are.equal(1, I.avoidsRun)
+            end)
+
+            it("a band: the floor and the top each get back what the `now` took from them", function()
+                rest(true, false)
+                local s = I.res.slotOf[fs.RAGE]
+                I.res.lo0[s], I.res.est0[s], I.res.hi0[s] = 30, 40, 50 -- a secret pool between 30 and 50
+                cast(fs.SPENDER_C, 5)
+                outcome(5.05, "DODGE")
+                local r = rage(5.1) -- the truth 20-40 (the pool less the cost)
+                assert.are.same({ 20, 30, 40 }, { r.lo, r.est, r.hi })
+            end)
+
+            it("allocates nothing across 1000 avoided casts", function()
+                rest(true, true)
+                function h:ForceUpdate() end
+                cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+                local t = 50
+                local bytes = alloc.bytes(function()
+                    t = t + 1
+                    ctl.now = t
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                    ctl.Tick(t + 0.01)
+                    VS.Drain(t + 0.02)
+                    ctl.Tick(t + 0.03)
+                end, 1000)
+                assert.are.equal(0, bytes)
+                assert.is_true(I.avoidsRun >= 1000)
+            end)
         end)
     end)
 end)
