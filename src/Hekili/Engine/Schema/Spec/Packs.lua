@@ -20,6 +20,7 @@ function Hekili:RestoreDefaults()
     local reverted = {}
     local changed = {}
     local retired = {}
+    local moved = {} -- retired pack -> the default a spec that had chosen it now runs
     local decoded = {} -- specID -> a built-in decoded for it this call
 
     -- A retired built-in pack (kit:RetirePacks) leaves the profile; a spec that chose it falls back to its default.
@@ -30,6 +31,7 @@ function Hekili:RestoreDefaults()
                 -- AceDB copies a scalar default in (no __index), so nil would stay nil until the next login.
                 if type( sp ) == "table" and rawget( sp, "package" ) == k then
                     sp.package, sp.packManual, sp.packAuto = ns.DefaultPackage( id ), nil, nil
+                    moved[ k ] = sp.package or moved[ k ]
                 end
             end
             insert( retired, k )
@@ -85,22 +87,26 @@ function Hekili:RestoreDefaults()
         self:LoadScripts()
     end
 
-    -- A retired list is gone, not updated: say so, and where its specs went.
-    if #retired > 0 then
+    -- A retired list is gone: tell a profile that had chosen it where its spec went (a profile that never did, nothing).
+    if next( moved ) then
         table.sort( retired )
         local label = Hekili.Engine.Registry.PackLabel
-        local names = "|cFFFFD100" .. label( retired[1] ) .. "|r"
-        for i = 2, #retired do
-            names = names .. ( i == #retired and L[" and "] or ", " ) .. "|cFFFFD100" .. label( retired[i] ) .. "|r"
+        local msgs = {}
+        for i = 1, #retired do
+            local to = moved[ retired[i] ]
+            if to then
+                insert( msgs, string.format( L["The %s priority was retired; a spec that used it now runs %s."], "|cFFFFD100" .. label( retired[i] ) .. "|r", "|cFFFFD100" .. label( to ) .. "|r" ) )
+            end
         end
-        local msg = #retired == 1
-            and string.format( L["The %s priority was retired; a spec that used it now runs its default priority."], names )
-            or string.format( L["The %s priorities were retired; a spec that used one now runs its default priority."], names )
         C_Timer.After( 5, function()
             Hekili:ReviewPacks() -- the active-list cache drops the retired pack's lists
-            if Hekili.Engine.settings.notifications.enabled then Hekili:Notify( msg, 6 ) end
-            Hekili:Print( msg )
+            for i = 1, #msgs do
+                if Hekili.Engine.settings.notifications.enabled then Hekili:Notify( msgs[i], 6 ) end
+                Hekili:Print( msgs[i] )
+            end
         end )
+    elseif #retired > 0 then
+        C_Timer.After( 5, function() Hekili:ReviewPacks() end )
     end
 
     if #changed > 0 then

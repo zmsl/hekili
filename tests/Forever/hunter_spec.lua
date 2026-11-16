@@ -1555,9 +1555,39 @@ describe("the retired Hunter weave packs", function()
             H.RunTimers(H.ctl.now + 6)
             local said = table.concat(lines, "\n")
             assert.is_truthy(said:find(old .. "|r priority was retired", 1, true), said)
+            assert.is_truthy(said:find("runs |cFFFFD100" .. new .. "|r", 1, true), said) -- names the replacement
+            assert.is_falsy(said:find("default priority", 1, true), said)
             lines = {}
             H.Hekili:RestoreDefaults() -- the next login: nothing retired is left to say
             H.RunTimers(H.ctl.now + 12)
+            assert.is_falsy(table.concat(lines, "\n"):find("retired", 1, true))
+        end)
+
+        it("says nothing to a profile that never picked " .. old .. " (the pack still leaves)", function()
+            local hw = require("Forever.helpers.hunter_world")
+            local saved = {
+                profiles = {
+                    Default = {
+                        packs = {
+                            [old] = { builtIn = true, spec = id, version = 1, date = 1, lists = {}, profile = "" },
+                        },
+                    },
+                },
+            }
+            local lines = {}
+            local H = headless.new({
+                character = hw[world].character(),
+                saved = saved,
+                beforeLogin = function(core)
+                    core.Print = function(_, m)
+                        lines[#lines + 1] = m
+                    end
+                    core.Notify = function() end
+                end,
+            })
+            assert.are.same({}, H.loadErrors)
+            assert.is_nil(rawget(H.Hekili.DB.profile.packs, old))
+            H.RunTimers(H.ctl.now + 6)
             assert.is_falsy(table.concat(lines, "\n"):find("retired", 1, true))
         end)
     end

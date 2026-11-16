@@ -208,6 +208,11 @@ local function restoreNotices(H, out)
         break
     end
     local packs, retired = class.packs, class.retiredPacks
+    local specIDs = {}
+    for id in pairs(class.specs) do
+        specIDs[#specIDs + 1] = id
+    end
+    table.sort(specIDs)
     for n = 1, 3 do
         local names = { "Alpha", "Beta", "Gamma" }
         for _, kind in ipairs({ "updated", "reverted", "retired" }) do
@@ -218,6 +223,8 @@ local function restoreNotices(H, out)
                 if kind == "retired" then
                     class.retiredPacks[name] = true
                     p.packs[name] = { builtIn = true, lists = {} }
+                    -- a spec that chose it: the notice names where it went
+                    p.specs[specIDs[i]] = { package = name }
                 else
                     fresh[name] = { version = any.version, import = any.import }
                     p.packs[name] = kind == "reverted" and { version = any.version + 1, builtIn = true, lists = {} }
@@ -231,6 +238,7 @@ local function restoreNotices(H, out)
             end)
             for i = 1, n do
                 p.packs[names[i]] = nil
+                p.specs[specIDs[i]] = nil
             end
         end
     end

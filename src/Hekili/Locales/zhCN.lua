@@ -34,8 +34,7 @@ L["Hekili Forever is designed for level %s content.\nIt may not work as expected
 
 -- Hekili/Engine/Schema/Spec/Packs.lua
 L[" and "] = " 和 "
-L["The %s priority was retired; a spec that used it now runs its default priority."] = "%s优先级已停用；使用它的专精现在将运行其默认优先级。"
-L["The %s priorities were retired; a spec that used one now runs its default priority."] = "%s优先级已停用；使用其中之一的专精现在将运行其默认优先级。"
+L["The %s priority was retired; a spec that used it now runs %s."] = "%s优先级已停用；使用它的专精现在将运行%s。"
 L["The |cFFFFD100%s|r priority was updated."] = "|cFFFFD100%s|r优先级已更新。"
 L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were updated."] = "|cFFFFD100%s|r和|cFFFFD100%s|r优先级已更新。"
 L["The %s, and |cFFFFD100%s|r priorities were updated."] = "%s和|cFFFFD100%s|r优先级已更新。"
