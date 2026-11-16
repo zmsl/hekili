@@ -382,6 +382,7 @@ L["There is already a style with the name '%s' -- overwrite it?"] = true
 L["Restart"] = true
 L["Paste your SimulationCraft action priority list or profile here."] = true
 L["The import for '%s' required some automated changes."] = true
+L["List '%s' line %d: %s: %s; entry disabled."] = true
 L["This profile is missing support for generic trinkets.  It is recommended that every priority includes either:\n - [Use Items], which includes any trinkets not explicitly included in the priority; or\n - [Trinket 1] and [Trinket 2], which will recommend the trinket for the numbered slot."] = true
 L["No action lists were imported from this profile."] = true
 L["Imported %s action lists."] = true
@@ -828,7 +829,6 @@ L["Line %s: Removed unnecessary energy cap check from action entry for fists_of_
 L["Line %s: Unclosed '(' in '%s'; split at every comma."] = true
 L["Line %s: Unsupported action '%s'."] = true
 L["Line %s: Unknown window '%s'; entry disabled."] = true
-L["List '%s' line %d: %s: %s; entry disabled."] = true
 L["Line %s: focus=%s is not a tier (a whole number, 1 highest); ignored."] = true
 L["Line %s: Unsupported use_item action [ %s]; entry disabled."] = true
 L["Line %s: Unable to convert wait_for_cooldown,name=X to wait,sec=cooldown.X.remains; entry disabled."] = true
