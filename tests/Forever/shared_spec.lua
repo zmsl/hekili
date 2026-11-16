@@ -214,13 +214,17 @@ describe("shared content", function()
             assert.are.same({ id, 15, 1 }, { a.id, a.duration, a.max_stack })
         end
         assert.are.same({ 10060, 15 }, { all.auras.power_infusion.id, all.auras.power_infusion.duration })
-        -- Innervate on any mana user (another Druid's too, DB2 29166): the spirit regen x 5, all of it while casting
-        -- (aura 110 +400%, aura 134 100%: wowsims parse_effects_table.go), one shared regen entry for every class
+        -- Innervate on any mana user (another Druid's too, DB2 29166): the spirit regen and the gear and buff MP5 x 5,
+        -- all of the spirit regen while casting (aura 110 +400% as Innervate's multiplier, aura 134 100%: wowsims
+        -- e4ef929e54 parse_effects_table.go, mana.go:176-183), one shared regen entry for every class
         assert.are.same(
             { 29166, 20, "player" },
             { all.auras.innervate.id, all.auras.innervate.duration, all.auras.innervate.shared }
         )
-        assert.are.same({ { resource = "mana", aura = "innervate", spirit = 5, share = 1 } }, ns.raceMods.regenMods)
+        assert.are.same(
+            { { resource = "mana", aura = "innervate", spirit = 5, share = 1, mp5Mult = 5 } },
+            ns.raceMods.regenMods
+        )
         -- The Spirit buffs another class puts on us (the stat split, L971): every rank's ID (the DB2's families,
         -- Forever's own Mark rank 7 IDs included), each one's Spirit by its own ID (wowsims spells_auto_gen.go aura 29).
         local function ids(a)

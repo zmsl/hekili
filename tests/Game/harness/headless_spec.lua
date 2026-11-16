@@ -302,6 +302,13 @@ describe("headless Hekili", function()
             end
         )
 
+        it("moves an `mp5Mult`-only regen entry out of the forecast's model too", function()
+            local spec, entry = H.Hekili.Class.specs[0], { aura = "rate_aura", mp5Mult = 5 }
+            spec:RegisterResource(H.env.Enum.PowerType.Energy, { surge = entry }, nil, {})
+            local st = spec.resources.energy.state
+            assert.are.same({ {}, { entry } }, { st.regenModel, st.regenMult })
+        end)
+
         it("calls stat without allocating", function()
             local alloc = require("Game.State.helpers.alloc")
             assert.are.equal(

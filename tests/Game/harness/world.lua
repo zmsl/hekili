@@ -239,7 +239,7 @@ function M.new(seed)
             return false, "casting"
         elseif not offGcd and t < e.gcdUntil - 1e-9 then -- the loop's ticks are a float sum: a 1.0 s GCD ends on one
             return false, "gcd"
-        elseif t < (e.cdUntil[key] or 0) - W.QUEUE then
+        elseif t < (e.cdUntil[key] or 0) - W.QUEUE - 1e-9 then -- the GCD's slack: a press exactly W.QUEUE early is held
             return false, "cooldown"
         elseif p.range and W.distance and (W.distance < p.range[1] or W.distance > p.range[2]) then
             return false, "range"
@@ -524,9 +524,11 @@ function M.new(seed)
     --- `e`'s regen per second of `pt` now: the rate, times `W.regenAfter.k` after `W.regenAfter.s` seconds in one form.
     --- An `fsr` type's is its mp5 part A (wowsims's casting rate), plus its spirit part B from 5 s after our last cast
     --- that spent it and after a paid channel's end (held however it ends, mana.go:236-241); `mode` "idle" or "casting" (the out-of-combat read's two returns) asks for both parts or A alone.
-    --- While an entry's `auras` are up on `e`, wowsims's PseudoStats rule runs (mana.go:186-206): S = B / (1 - c) (c the
-    --- entry's `share`; A - `mp5` when c >= 1), M = A - c x S (or `mp5`); inside the window M + sum(mp5) + S x prod(spirit)
-    --- x min(c + sum(share), 1), outside it M + sum(mp5) + S x prod(spirit); "idle" reads the outside rate.
+    --- While an entry's `auras` are up on `e`, wowsims's PseudoStats rule runs (e4ef929e54 mana.go:176-206): S = B / (1 -
+    --- c) (c the entry's `share`; A - `mp5` when c >= 1), M = A - c x S (or `mp5`); the spirit regen R inside the window
+    --- S x prod(spirit) x min(c + sum(share), 1), outside it S x prod(spirit); then multipliedManaRegen: (M + sum(mp5) +
+    --- R) x n - E x (n - 1), n = prod(regen) (an aura's `regen`: wowsims's all-regen multiplier) and E the sum of the
+    --- `energize` auras' mp5 (a periodic energize ticks its own amount); "idle" reads the outside rate.
     --- `W.regenPause[pt]` (a form): none while `e` is in it.
     function W.regenRate(e, pt, mode)
         if W.regenPause and W.regenPause[pt] == e.form then
@@ -538,18 +540,19 @@ function M.new(seed)
                 mode == "idle"
                 or (mode ~= "casting" and W.t - (e.spentAt[pt] or -1e9) >= 5 and W.t >= (e.heldUntil[pt] or 0))
             )
-        local m, x, s, any = 1, 0, 0, false
+        local m, x, s, n, E, any = 1, 0, 0, 1, 0, false
         for id, a in pairs(f and f.auras or {}) do
             local up = e.auras[id]
             if up and up.expires > W.t then
-                any, m, x, s = true, m * (a.spirit or 1), x + (a.mp5 or 0), s + (a.share or 0)
+                any, m, x, s, n = true, m * (a.spirit or 1), x + (a.mp5 or 0), s + (a.share or 0), n * (a.regen or 1)
+                E = E + (a.energize and a.mp5 or 0)
             end
         end
         if any then
             local c = f.share or 0
             local S = c < 1 and f[1] / (1 - c) or f[2] - (f.mp5 or 0)
             local M = c < 1 and f[2] - c * S or (f.mp5 or 0)
-            return M + x + S * m * (open and 1 or math.min(c + s, 1))
+            return (M + x + S * m * (open and 1 or math.min(c + s, 1))) * n - E * (n - 1)
         elseif f then
             return f[2] + (open and f[1] or 0)
         end

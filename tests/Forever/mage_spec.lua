@@ -588,9 +588,9 @@ describe("Forever Mage through the engine", function()
             S.reset("Primary", true)
             out[#out + 1] = { n, S.buff.arcane_blast.stack, I.CostOf(a), S.action.arcane_blast.cost }
         end
-        -- each the declared fraction x 1213, floored (0.3, 0.45, 0.6, 0.75)
+        -- each the declared fraction x 1213 to the nearest whole (0.3, 0.45, 0.6, 0.75; CN22: wowsims e4ef929e54 rounds)
         assert.are.same(
-            { { 1, 1, 363, 363 }, { 2, 2, 545, 545 }, { 3, 3, 727, 727 }, { 4, 4, 909, 909 }, { 4, 4, 909, 909 } },
+            { { 1, 1, 364, 364 }, { 2, 2, 546, 546 }, { 3, 3, 728, 728 }, { 4, 4, 910, 910 }, { 4, 4, 910, 910 } },
             out
         )
         assert.are.same({}, H.errors)

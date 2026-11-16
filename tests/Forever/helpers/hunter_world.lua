@@ -35,13 +35,15 @@ local DEADLY_ASPECTS = 19552 -- wowsims aspects.go: Quick Shots' chance is Deadl
 local AUTO_SHOT = 75
 
 -- Each rank's mana cost (DB2), lowest rank first, the world's truth the class file's costs are measured against (a
--- level's highest known rank pays its own: the leveling brackets); a percent-of-base cost (PowerCostPct) as the class
--- file prices it, a fraction of its base mana (1720), never of the pool (gaps.md CG). Audited by value against the
--- pack's tables and wowsims's logs, each spec's world against its own log (2026-10-31, fix round 5): every rank list is
--- the pack's; every cast ability's logged spend (Efficiency 2/5 BM, Resourcefulness 2/2 MM/SV) matches its world's
--- charge to the mana. The fractions wowsims floors and the world keeps: Multi-Shot 239.08 vs 239 (224.74 vs 224.66
--- under BM's Efficiency), Strider Kick 39.97 vs 39.6 (99.93 floored to 99): 0.08 and 0.37 over, the dim side, the pack
--- prices both whole (239, 39).
+-- level's highest known rank pays its own: the leveling brackets); a percent-of-base cost (PowerCostPct) as the game
+-- prices it, the fraction of its base mana (1720), never of the pool (gaps.md CG), to the nearest whole before any cut
+-- (wowsims e4ef929e54 mana.go `math.Round`; its cost multipliers then scale the whole cost). Audited by value against
+-- the pack's tables and wowsims's logs, each spec's world against its own log (2026-10-31, fix round 5): every rank list
+-- is the pack's; every cast ability's logged spend (Efficiency 2/5 BM, Resourcefulness 2/2 MM/SV) matches its world's
+-- charge to the mana.
+local function pctOfBase(f)
+    return math.floor(f * 1720 + 0.5 + 1e-6)
+end
 local COST = {
     hunters_mark = { 15, 30, 45, 60, 60 },
     aspect_of_the_hawk = { 20, 35, 50, 70, 90, 110, 120 },
@@ -51,15 +53,15 @@ local COST = {
     arcane_shot = 0.11 * 1720, -- 189.2: 11% of base mana (wowsims e4ef929e54's CostPct 11; its logs pay 189)
     summon_hawk = 0.11 * 1720, -- the same 11% (was 80-190 by rank, as Arcane Shot's 25-190)
     aimed_shot = { 75, 115, 160, 210, 260, 310 },
-    multi_shot = 0.139 * 1720, -- 239.08, as the pack (239) and wowsims's log (239 MM/SV, 224.66 under BM's Efficiency); was 0.139 x 5000 = 695
+    multi_shot = pctOfBase(0.139), -- 239.08: 239, as wowsims's log (239 MM/SV, 224.66 under BM's Efficiency)
     sniper_shot = 365,
     raptor_strike = { 10, 25, 35, 45, 55, 70, 85, 100 },
     mongoose_bite = { 30, 40, 50, 65 },
-    strider_kick = 0.0581 * 1720, -- a fraction of the class file's base mana (1720), as its price
+    strider_kick = pctOfBase(0.0581), -- 99.93: 100
     wing_clip = { 40, 40, 60, 80 },
     immolation_trap = { 50, 90, 135, 190, 245 },
     blood_fury = 0,
-    bestial_wrath = 0.12 * 1720, -- 206.4: 12% of base mana (the pin row CostPct 12; wowsims pays 206.0 in hunter_beast_mastery_turret.log:429)
+    bestial_wrath = pctOfBase(0.12), -- 206.4: 206 (the pin row CostPct 12; wowsims pays 206.0 in hunter_beast_mastery_turret.log:429)
 }
 
 -- UNMEASURED: the hits' amounts.
