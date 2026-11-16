@@ -642,11 +642,11 @@ beside the number (DEVELOPMENT.md).
 | Frost (wowsims.com) | 0.93 | 0.23, 3 |
 | Shadow (wowsims.com) | 1.00 | 1.50, 36 |
 | Smite (wowsims.com) | 0.93 | 0.70, 11 |
-| Affliction (wowsims.com) | 0.83 | 0.00, 0 |
-| SM Ruin (wowsims.com) | 0.78 | 0.20, 8 |
-| Demonology (wowsims.com) | 0.87 | 0.00, 0 |
+| Affliction (wowsims.com) | 0.93 | 1.13, 1 |
+| SM Ruin (wowsims.com) | 0.85 | 0.20, 8 |
+| Demonology (wowsims.com) | 0.94 | 0.00, 0 |
 | Shadow Brand (wowsims.com) | 0.71 | 0.20, 1 |
-| Destruction (wowsims.com) | 0.90 | 0.00, 0 |
+| Destruction (wowsims.com) | 0.95 | 0.00, 0 |
 
 Recorded deviations (each one's reason in the named file):
 - Every pack (API-forced, `tools/wowsims/apl.lua` rules 10, 11, 13): `fight_remains` answers unknown (target health

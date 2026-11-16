@@ -950,6 +950,8 @@ describe("Forever Warlock through the engine", function()
         H.ctl.inRange.target, H.ctl.level.target = true, 60
         H.Fire("PLAYER_TARGET_CHANGED")
         assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        -- Havoc takes the GCD (wowsims e4ef929e54), so it queues behind the curse and Bane of Doom lines: fifth
+        H.Hekili.DB.profile.displays.Primary.numIcons = 8
         H.ns.getNumberTargets = function()
             return 2, 2
         end

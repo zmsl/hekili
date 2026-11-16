@@ -483,9 +483,11 @@ local function dot(W, e, X, H, key)
     v.dots = v.dots or {}
     local live = {}
     v.dots[key] = live
-    local after = key == "corruption" and function() -- Nightfall rolls on every Corruption tick, a half point's too
-        nightfall(W, e, X, H)
-    end or nil
+    local after = key == "corruption"
+            and function() -- Nightfall rolls on every Corruption tick, a half point's too
+                nightfall(W, e, X, H)
+            end
+        or nil
     for n = 1, d[2] and math.floor(d[1] / d[2] + 1e-9) or 0 do
         W.at(W.t + n * d[2], function()
             if v.dots[key] == live then
