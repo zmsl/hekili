@@ -1074,6 +1074,38 @@ local function sinceHand(c, n)
     return n.autoTimeSinceLast and SINCE[n.autoTimeSinceLast.autoType]
 end
 
+-- CN25: a variable's text is inlined where read unless it holds at least M.HOIST_TERMS term occurrences; then the
+-- read is `variable.<name>` and the text is emitted once as a `variable` line (see translate).
+M.HOIST_TERMS = 40
+
+--- The term occurrences of condition text `s` (Engine/Sim/Scripts.lua generateDebugPrint's tokens).
+function M.terms(s)
+    local n = 0
+    for _ in (s:gsub("'[^']*'", "")):gmatch("[a-zA-Z][A-Za-z0-9_%.]+") do
+        n = n + 1
+    end
+    return n
+end
+
+-- Variable `name`'s translated text `s` as read here (CN25). A text reading a window stays inline (the line's own
+-- window recheck, Scripts.lua ReadsWindow), as does one with a comma (the SimC line's separator).
+local function hoisted(c, name, s)
+    if s == nil or M.terms(s) < M.HOIST_TERMS or s:find("window.", 1, true) or s:find(",", 1, true) then
+        return s
+    end
+    local base, k = "v_" .. M.snake(name), 1
+    local x = base
+    while c.hoist[x] and c.hoist[x] ~= s do -- the same variable translated differently in another context
+        k = k + 1
+        x = base .. "_" .. k
+    end
+    if not c.hoist[x] then
+        c.hoist[x] = s
+        c.hoistOrder[#c.hoistOrder + 1] = x
+    end
+    return "variable." .. x
+end
+
 -- A value: its text and nil condition (`true`: nil, no text). `pct`: compared directly with a percent read (rule 8).
 local function value(c, n, pct)
     local k, v = next(n)
@@ -1098,7 +1130,7 @@ local function value(c, n, pct)
         local n0 = c.movedN or 0
         local s, u = value(c, c.vars[v.name] or unsupported("variable " .. v.name), pct)
         movedVar(c, v.name, n0, u)
-        return s, u
+        return hoisted(c, v.name, s), u
     elseif k == "unitMovementSpeed" or k == "unitDistance" then -- rule 18 (rule 11 compares yards in bool())
         return moved(c, k)
     elseif k == "math" and (isYards(c, v.lhs) or isYards(c, v.rhs)) then -- rule 18 (R17): a walk time is one
@@ -1584,7 +1616,7 @@ local function bool(c, n)
         local n0 = c.movedN or 0
         local s, b, u = bool(c, c.vars[v.name] or unsupported("variable " .. v.name))
         movedVar(c, v.name, n0, u)
-        return s, b, u
+        return hoisted(c, v.name, s), b, u
     elseif c.selectValue[k] then -- rule 16
         local kind, sel = c.selectValue[k][1], c.selectValue[k][2]
         sel.used = true
@@ -2751,6 +2783,7 @@ end
 --- ON/OFF groups in its order, then the recipe's `settings` by key).
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
+    c.hoist, c.hoistOrder = {}, {} -- CN25: { [variable] = text }, in first-read order
     c.dropNote = {}
     c.callers, c.deviated, c.deviations, c.moves, c.movedAll = {}, {}, {}, {}, {}
     c.held, c.windows, c.loops, c.moving = {}, {}, {}, {} -- rules 14b, 19
@@ -3070,6 +3103,34 @@ function M.translate(rotation, c)
                 l[2][i] = body:gsub(",focus=%d+", "", 1)
             end
             guard(c, l[1], l[2], origin[l[1]], omitted)
+        end
+    end
+    -- CN25: each hoisted variable an emitted line reads (directly or through another), in first-read order (a text
+    -- reads only variables hoisted before it), as `variable` lines heading the default list; rule 15 rewrites them too
+    local need = {}
+    local function reads(s)
+        for x in s:gmatch("variable%.([%w_]+)") do
+            if c.hoist[x] and not need[x] then
+                need[x] = true
+                reads(c.hoist[x])
+            end
+        end
+    end
+    for _, l in ipairs(lists) do
+        for _, body in ipairs(l[2]) do
+            reads(body)
+        end
+    end
+    local defs = {}
+    for _, x in ipairs(c.hoistOrder) do
+        if need[x] then
+            defs[#defs + 1] = "variable,name=" .. x .. ",value=" .. maintained(c, "x,if=" .. c.hoist[x], {}):sub(6)
+        end
+    end
+    if #defs > 0 then
+        local default = byName.default or error("CN25: hoisted variables but no default list", 0)
+        for i = #defs, 1, -1 do
+            table.insert(default, 1, defs[i])
         end
     end
     local text, cast = {}, {}

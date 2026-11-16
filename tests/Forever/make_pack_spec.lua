@@ -214,6 +214,15 @@ describe("tools/make_pack.lua", function()
             assert.is_false(ok)
             assert.matches("packs%.lua: pack Host imports Other's list sub as o_sub, a list it already has$", err)
         end)
+
+        it("refuses a variable the host pack defines too (CN25: one per name in a pack)", function()
+            local ok, err = load(MANIFEST, {
+                ["Host.simc"] = HOST .. "actions+=/variable,name=v_x,value=a\n",
+                ["Other.simc"] = OTHER .. "actions+=/variable,name=v_x,value=b\n",
+            })
+            assert.is_false(ok)
+            assert.matches("Other imports variable v_x, which the host pack has too$", err)
+        end)
     end)
 
     describe("write (the version changes only with the text)", function()
@@ -317,6 +326,16 @@ describe("tools/make_pack.lua", function()
         assert.has_error(function()
             mp.parse("actions=x,cycle_targets=yes\n")
         end, "bad value cycle_targets=yes in: actions=x,cycle_targets=yes")
+    end)
+
+    it("round-trips a variable line: name= as its var_name, value= verbatim with | stored doubled (CN25)", function()
+        local simc = "actions=variable,name=v_x,value=(a|!b)&c.d>=2\nactions+=/e,if=variable.v_x\n"
+        local lists = mp.parse(simc)
+        assert.are.same(
+            { action = "variable", enabled = true, var_name = "v_x", value = "(a||!b)&c.d>=2" },
+            lists.default[1]
+        )
+        assert.are.equal(simc, mp.unparse(lists))
     end)
 
     it("round-trips cancel_buff's buff_name as a string, written after name=", function()

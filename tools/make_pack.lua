@@ -42,13 +42,22 @@ local OPTIONS = {
     label_if = "label_if",
     icon = "icon",
     icon_if = "icon_if",
+    value = "value", -- a `variable` line's (CN25: name= is then its var_name)
 } -- plus if=, which runs to the end of the line
 -- kept as the line wrote them: text shown with the pick (label, icon) and its condition (label_if, icon_if)
-local VERBATIM = { name = true, buff_name = true, label = true, label_if = true, icon = true, icon_if = true }
+local VERBATIM =
+    { name = true, buff_name = true, label = true, label_if = true, icon = true, icon_if = true, value = true }
+
+-- a literal | as the in-game importer stores it: || (a lone | starts a WoW colour escape in the editor); the engine
+-- reads either form (Scripts.lua)
+local function piped(s)
+    return (s:gsub("(|)([^|])", "%1|%2"):gsub("|||", "||"))
+end
 
 -- SimC-style lines into their lists and entries:
 -- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,cycle_targets=N][,max_cycle_targets=N]
 -- [,other_target=N][,focus=N][,label=text][,label_if=cond][,icon=texture file id or path][,icon_if=cond][,if=criteria];
+-- variable,name=var,value=expression (CN25: a translated wowsims variable);
 -- focus is a tier, 1 highest; buff_name is cancel_buff's aura.
 local function parse(simc)
     local lists = {}
@@ -63,9 +72,7 @@ local function parse(simc)
         opts = "," .. opts -- if= only as a whole option, never the tail of label_if= or icon_if=
         e.criteria = opts:match(",if=(.*)$")
         if e.criteria then
-            -- stored as the in-game importer stores it: a literal | is || (a lone | starts a WoW colour escape in the
-            -- editor); the engine reads either form (Scripts.lua)
-            e.criteria = e.criteria:gsub("(|)([^|])", "%1|%2"):gsub("|||", "||")
+            e.criteria = piped(e.criteria)
         end
         opts = opts:gsub(",if=.*$", "")
         for opt in opts:gmatch("[^,]+") do
@@ -80,7 +87,10 @@ local function parse(simc)
             if value == nil then
                 error("bad value " .. opt .. " in: " .. line, 0)
             end
-            e[OPTIONS[k]] = value
+            if k == "value" then
+                value = piped(value)
+            end
+            e[(k == "name" and action == "variable") and "var_name" or OPTIONS[k]] = value
         end
         lists[list] = lists[list] or {}
         table.insert(lists[list], e)
@@ -107,6 +117,7 @@ local function unparse(lists)
                 .. (i == 1 and "=" or "+=/")
                 .. e.action
                 .. (e.list_name and ",name=" .. e.list_name or "")
+                .. (e.var_name and ",name=" .. e.var_name or "")
                 .. (e.buff_name and ",buff_name=" .. e.buff_name or "")
                 .. (e.use_off_gcd and ",use_off_gcd=" .. e.use_off_gcd or "")
                 .. (e.cycle_targets and ",cycle_targets=" .. e.cycle_targets or "")
@@ -117,6 +128,7 @@ local function unparse(lists)
                 .. (e.label_if and ",label_if=" .. e.label_if or "")
                 .. (e.icon and ",icon=" .. e.icon or "")
                 .. (e.icon_if and ",icon_if=" .. e.icon_if or "")
+                .. (e.value and ",value=" .. e.value:gsub("||", "|") or "")
                 .. (e.criteria and ",if=" .. e.criteria:gsub("||", "|") or "")
         end
     end
@@ -171,9 +183,12 @@ local function import(lists, src, imp, clash)
         return list == "default" and imp.as or imp.as .. "_" .. list
     end
     local up = "buff." .. imp.aura .. ".up"
-    local out = {}
+    local out, vars = {}, {}
     for name, entries in pairs(lists) do
         out[name] = entries
+        for _, e in ipairs(entries) do
+            vars[e.var_name or ""] = true
+        end
     end
     for name, entries in pairs(src) do
         local to = rename(name)
@@ -182,6 +197,9 @@ local function import(lists, src, imp, clash)
         end
         out[to] = {}
         for i, e in ipairs(entries) do
+            if e.var_name and vars[e.var_name] then -- CN25: one variable per name in a pack
+                error(("%s imports variable %s, which the host pack has too"):format(imp.from, e.var_name), 0)
+            end
             local c = copy(e)
             if c.list_name and (c.action == "call_action_list" or c.action == "run_action_list") then
                 c.list_name = rename(c.list_name)

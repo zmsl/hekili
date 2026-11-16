@@ -303,3 +303,70 @@ describe("the shipped wowsims packs #slow", function()
         end)
     end
 end)
+
+-- CN25: Lua 5.1 gives a function about 250 registers; the engine's debug print of a line takes one argument per term
+-- occurrence and its recheck one value per time, so a line of thousands of terms (Feral at the re-pin target, its
+-- variables inlined) loaded with errors. Every line of every built pack (make_pack's, imports merged in), and of the
+-- Feral and Guardian translations at the target (tests/Forever/fixtures/cn25, with and without the idol auras the
+-- Druid lane's kit adds), holds at most BOUND term occurrences in its if= or value=.
+describe("every pack line within the engine's limits (CN25) #slow", function()
+    local apl = require("tools.wowsims.apl")
+    local mp = assert(loadfile("tools/make_pack.lua"))("lib")
+    local engine = require("Forever.helpers.engine")
+    local BOUND = 200
+    local FIX = "tests/Forever/fixtures/cn25/"
+
+    -- The most term occurrences of one line of SimC text `simc` (asserting each within BOUND).
+    local function worst(name, simc)
+        local most = 0
+        for line in simc:gmatch("[^\n]+") do
+            local cond = line:sub(1, 1) ~= "#" and (line:match(",if=(.*)$") or line:match(",value=(.*)$"))
+            local n = cond and apl.terms(cond) or 0
+            assert.is_true(n <= BOUND, ("%s: %d terms in %s"):format(name, n, line:sub(1, 80)))
+            most = math.max(most, n)
+        end
+        return most
+    end
+
+    it("in every built pack", function()
+        local pipe = assert(io.popen("ls -d src/Hekili_*/APLs"))
+        for dir in pipe:lines() do
+            for _, p in ipairs(mp.load(dir:match("Hekili_(%a+)"):lower())) do
+                worst(p.name, p.simc)
+            end
+        end
+        pipe:close()
+    end)
+
+    -- The pack text of spec `spec` at the target (`idols`: the kit's set gains the Druid lane's two idol auras).
+    local function target(spec, idols)
+        local set = engine.abilitySet
+        engine.abilitySet = function(...)
+            local s = set(...)
+            if idols then
+                s.auras.idol_of_ferocity = { key = "idol_of_ferocity", id = 27851, duration = 3600, max_stack = 1 }
+                s.auras.idol_of_the_dream = { key = "idol_of_the_dream", id = 446212, duration = 3600, max_stack = 1 }
+            end
+            return s
+        end
+        local fx = setmetatable({ OUT = FIX }, { __index = ex })
+        if spec == "druid_feral" then
+            fx.recipe = function()
+                return dofile(FIX .. "druid_feral.lua")
+            end
+        end
+        local ok, _, text = pcall(apl.render, spec, fx)
+        engine.abilitySet = set
+        assert(ok, _)
+        return text
+    end
+
+    for _, idols in ipairs({ false, true }) do
+        it("in Feral and Guardian at the re-pin target" .. (idols and ", the idol auras known" or ""), function()
+            local feral = target("druid_feral", idols)
+            assert.is_true(worst("Feral", feral) > 40) -- hoisted: its variables hold the size
+            assert.is_truthy(feral:find("\nactions=variable,name=v_", 1, true))
+            worst("Guardian", target("druid_guardian", idols))
+        end)
+    end
+end)
