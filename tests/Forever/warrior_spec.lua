@@ -501,6 +501,22 @@ describe("Forever Warrior", function()
             assert.is_nil(e.durations.overpower_ready)
         end)
 
+        -- re-pin e4ef929e54 trace (Fury replay 157.70 / 161.44): a dodge 1.76 s after our Overpower opens a new window
+        -- (Classic's "5 s since the last Overpower" kept it shut); the row's own time, not its delivery, dates the dodge
+        it("opens a new window on a dodge after our last Overpower, dated by the row's own time", function()
+            row(10, "SWING_MISSED", ME, MOB, "DODGE")
+            row(10.5, "SPELL_CAST_SUCCESS", ME, MOB, 7384)
+            row(12, "SWING_MISSED", ME, MOB, "DODGE")
+            assert.are.equal(4, reset(13).durations.overpower_ready)
+            row(13.5, "SPELL_CAST_SUCCESS", ME, MOB, 7384)
+            w.game.now = 16 -- a held avoid's row (R46): delivered late, its dodge before that Overpower
+            w.game.row = { 13.2, "SWING_MISSED", false, ME, "", 0, 0, MOB, "", 0, 0, "DODGE", "", 1, 0 }
+            w.events.COMBAT_LOG_EVENT_UNFILTERED()
+            for _, k in ipairs(reset(16.2).applied) do
+                assert.are_not.equal("overpower_ready", k) -- spent by the 13.5 Overpower
+            end
+        end)
+
         it("gates Overpower on its window, not on the usability read", function()
             local e = lw.env(w)
             w.game.usable[7384] = true

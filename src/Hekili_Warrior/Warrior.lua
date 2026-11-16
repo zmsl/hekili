@@ -894,7 +894,7 @@ for _, id in ipairs(OVERPOWER) do
 end
 
 spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
-    local _, subtype, _, sourceGUID, _, _, _, destGUID, _, _, _, actionType, _, _, spellMissType, blocked =
+    local rowT, subtype, _, sourceGUID, _, _, _, destGUID, _, _, _, actionType, _, _, spellMissType, blocked =
         CombatLogGetCurrentEventInfo()
 
     if
@@ -902,7 +902,7 @@ spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
         and subtype:match("_MISSED$")
         and (actionType == "DODGE" or spellMissType == "DODGE")
     then
-        enemy_dodged = GetTime()
+        enemy_dodged = rowT -- the row's own time: a held avoid's row arrives late (R46), its dodge is still this old
         enemy_dodged_target = destGUID
     elseif
         destGUID == state.GUID
@@ -913,7 +913,7 @@ spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
     then
         enemy_revenge_trigger = GetTime()
     elseif sourceGUID == state.GUID and subtype == "SPELL_CAST_SUCCESS" and overpower_ids[actionType] then
-        last_overpower = GetTime()
+        last_overpower = rowT
     end
 end)
 
@@ -956,7 +956,7 @@ spec:RegisterHook("reset_precast", function()
                 enemy_dodged > 0
                 and query_time - enemy_dodged < 6
                 and target.unit == enemy_dodged_target
-                and (last_overpower == 0 or enemy_dodged - last_overpower > 5)
+                and enemy_dodged > last_overpower -- a dodge after our last Overpower (an earlier one was spent)
                 -- a dodge row can be another player's: in its stance the client's yes opens the window; out of it the client
                 -- says no either way, and Fury's stance weave needs the window to swap
                 and (usableNow(OVERPOWER) or not clientInBattle())
