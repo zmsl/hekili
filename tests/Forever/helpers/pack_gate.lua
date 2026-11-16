@@ -18,15 +18,7 @@ M.UNMATCHED_BY = {
 }
 
 -- The first-icon reaction bar's p90 (ticks) per label, 3 where not named (M.gate).
-M.REACT_P90_BY = {
-    -- 3 -> 8 (0.7 re-pin, R6, owner ruling option b, reversible; seeds 1-20 reactP90 8, agreement 0.912, was 0 / 0.963 before
-    -- CN8): a mana-wait tie. Flame Shock costs 410; the oracle's exact mana reaches it at the instant Stormstrike's
-    -- cooldown ends (it shows Flame Shock first by priority), our conservative lower bound runs 2-4 mana under the
-    -- truth (259.0 true vs 256.7 believed), so our Flame Shock is 0.04 s late and Stormstrike shows during the wait; at
-    -- the edge both press Flame Shock (no cast lost). CN8's world queue window re-times the fights so the tie recurs about
-    -- once per ~47 s cycle. The owner's "dim, never promote" rule losing a tie to an exact oracle, by design
-    ["Enhancement"] = 8,
-}
+M.REACT_P90_BY = {}
 
 -- The flicker floors at 20 fights: per label the first-icon flicker/min (loop.flips: an A -> B -> A over three ticks,
 -- not counted when the instance pressed B at the tick it showed or the next, owner rule 2026-10-26) and the
@@ -481,12 +473,14 @@ M.FLICKER = {
     -- fresh boot) are the gap BT tie (belief and truth agree Flame Shock down and Stormstrike's cooldown; lo 5 under the
     -- truth puts Flame Shock's cost 0.08 s past Stormstrike's ready) and no avoid row paid a Flame Shock ticket; how the
     -- rows raise the count across a boot's fights is not identified (swing-ticket payments unlogged)
-    -- READY FOR FLOORS (ledger L1196): with lane mana-09 merged (CN22 nearest rounding, Stormstrike 121 -> 122; CN23)
-    -- seeds 1-20 / 21-40 / 41-60 measure flicker 0 / 0 / 0, readyShort 0 / 0 / 1, heldReady 153 / 166 / 155, agreement
-    -- .987 / .992 / .995; the move is not traced to Stormstrike's price (the one readyShort event, seed 44 t 183.00, is
-    -- a Lightning Bolt our queue priced 0 with Maelstrom Weapon believed at 5 where the world priced 220), so these
-    -- floors stay the pre-mana-09 ones until the central mana-09 trace round names the cause
-    ["Enhancement"] = { flicker = 0.03, retracted = 0, heldReady = 146, readyShort = 0 },
+    -- lane mana-09 merged (8827f860d; CN22 nearest rounding, Stormstrike 121 -> 122; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 /
+    -- 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 1, heldReady 153 / 166 / 155, agreement .987 / .992 / .995, react p90 0 / 0 / 0):
+    -- heldReady 146 -> 166 (the worst set), readyShort 0 -> 1, flicker 0.03 -> 0.01 (the worst, 0, + 0.01). Cause: CN22 nearest
+    -- rounding (Stormstrike 121 -> 122) re-times the gap-BT near tie (flame_shock -> stormstrike, our lower mana bound ~4
+    -- under truth; traced seed 1 and seed 19). The one readyShort event (seed 44 t 183.00) is a Lightning Bolt our queue
+    -- priced 0 with Maelstrom Weapon believed at 5 where the world priced 220
+    -- react bar 8 -> 3 (owner L1205): the 0.7 mana-wait tie no longer occurs (react p90 0 on all seed sets)
+    ["Enhancement"] = { flicker = 0.01, retracted = 0, heldReady = 166, readyShort = 1 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
