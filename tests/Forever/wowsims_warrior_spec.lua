@@ -236,7 +236,7 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
         sunder_armor = { 7386, 7405, 8380, 11596, 11597 },
         thunder_clap = { 6343, 8198, 8204, 8205, 11580, 11581 },
     }
-    local HEAD = "# wowsims e2842f0a784d2f329dde0bc682a6b84202a780f2 warrior_protection seed 1 180 s target 63\n"
+    local HEAD = "# wowsims e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664 warrior_protection seed 1 180 s target 63\n"
     local CAST = "[%.2f] [Protection (#1)] Casting {SpellID: %d} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, "
         .. "Effective Time = 1.5s) APL: priority 1\n[%.2f] [Protection (#1)] Completed cast {SpellID: %d}\n"
     it("scores every rank of a Warrior ability as that ability (R30)", function()
