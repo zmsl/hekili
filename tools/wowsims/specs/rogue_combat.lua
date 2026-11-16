@@ -29,6 +29,8 @@
 -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9): two APL lines change (Eviscerate: no 4-point Slice and Dice branch, waits for Rupture >= 3 s
 -- under Serrated Blades; Hemorrhage: + energy >= 75), four gear slots (Darkmantle out: the darkmantle-set-512 oracle patch is inert),
 -- Poised's attribute word; no recipe key changes. Strict sequences (prev.1 chains) as before: no rule 14 in this build.
+-- For this build only the dropped 4-point branch acts (no Serrated Blades, no Hemorrhage): Eviscerate 10 at 4 points + 2 at 5 -> all
+-- at 5 in the log.
 return {
     class = "ROGUE",
     pack = "Combat (wowsims.com)",

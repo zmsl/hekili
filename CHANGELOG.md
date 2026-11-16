@@ -6,14 +6,13 @@
 - Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
 ### Changed
-- Rogue priorities follow the newest wowsims fights: Eviscerate waits for Rupture to have 3 seconds left when you have Serrated Blades (and no longer fires at 4 combo points just to refresh Slice and Dice), and Hemorrhage also shows when your energy is at 75 or more. Not yet checked in game.
+- Rogue priorities follow the newest wowsims fights: Eviscerate no longer shows at 4 combo points when Slice and Dice has 6 seconds or less left (Mutilate builds still finish at 4 combo points); with Serrated Blades, Eviscerate shows only while Rupture has at least 3 seconds left; and with Ghostly Strike, Hemorrhage also shows at 75 energy or more, not only while Garrote has at least 8 seconds left. Not yet checked in game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 ### Fixed
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
-
 - Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 
 ### Known issues

@@ -58,11 +58,16 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- Mutilate, 0.19 -> 0.20 s, among the few later), and the count floor 35 -> 36 (tests/Forever/helpers/wowsims.lua:447-450).
 -- Cause: the belief's Relentless Strikes rule (expected energy 25 x min(1, 4% x rank x points) on every finisher, was
 -- 25 at 5/5 and 5 points only); the wowsims log's procs are real rolls, the belief pays the mean.
--- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9; wowsims 41976091ed [Rogue] APL Improvements: the Eviscerate and Hemorrhage lines; the opener
--- shifts a GCD, Mutilate 5.00 once, Eviscerate 7.00): replay floors Assassination 0.97 -> 0.96 (0.963 of 82), Combat 0.99 -> 0.98
--- (0.981 of 108), Subtlety 0.98 -> 1.00 (1.000 of 99); each spec's one new miss is Slice and Dice's last second (Assassination log 162.77
--- mutilate vs SnD 1 s before its cast, Combat log 120.00 blade_flurry vs SnD, 0.65 s before it fades): with no 4-point Eviscerate branch refreshing it,
--- Slice and Dice runs to its edge more often; the other misses (Assassination opener 1.00/2.00, Combat 20.20) are in the old log too;
+-- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9; wowsims 41976091ed [Rogue] APL Improvements: the Eviscerate and Hemorrhage lines, and the
+-- builds' gear): replay floors Assassination 0.97 -> 0.96 (0.963 of 82), Combat 0.99 -> 0.98 (0.981 of 108), Subtlety 0.98 -> 1.00
+-- (1.000 of 99). Each spec's one new miss is Slice and Dice's last poll, an engine ranking class (traced, fix round 1): the belief's
+-- Slice and Dice remains equals the log's (Assassination log 162.77: 0.150 s, Combat log 20.20: 0.200 s), energy.lo covers the builder
+-- (73.7 vs Mutilate 60; 43.0 vs Sinister Strike 40), and Slice and Dice's `remains<=0` line, ready inside EARLY_EXIT (0.2 s,
+-- Engine/Sim/Core.lua), ends the list before the builder; wowsims casts the builder (mutilate, sinister_strike). What moved the rows:
+-- Assassination's pack is logically unchanged (the dropped branch is covered by `combo_points.current=4&action.mutilate.known`), its log
+-- re-timed by the gear change (four slots, Darkmantle out; log 3.93: 50 energy, was 65, so the 4.00 Mutilate drops); Combat's by the same gear change and the dropped
+-- 4-point branch (Eviscerates all at 5 points). The other misses are in the old log too (Assassination opener 1.00/2.00; Combat 120.00
+-- blade_flurry, the old 117.18 row: the Human build never shows Blade Flurry in combat, its line needs Blood Fury and default #9 is omitted).
 -- Subtlety LIVE40 8.2 -> the 6 s bar (4.2 measured; the new Hemorrhage `energy.lo>=75` term removes the garrote.remains>=8 shut that set 8.2); LIVE60 kept (L60 idle measured 5.0 / 3.0 / 3.0, all inside the 6 s bar that governs).
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.96, 5.2, MUTILATE_HANDS },
