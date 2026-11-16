@@ -4687,7 +4687,9 @@ do
             local pure = info and info.pure and info.pure[ var ]
             local script = pure and scripts.DB[ pure ]
             if script and script.Modifiers and script.Modifiers.value then
-                return script.Modifiers.value()
+                local v = script.Modifiers.value()
+                if debug then Hekili:Debug( " - variable.%s = %s (pure: %s)", var, tostring( v ), scripts:GetModifierValues( "value", pure ) or "?" ) end
+                return v
             end
 
             if not db[ var ] then

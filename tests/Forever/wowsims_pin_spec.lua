@@ -323,6 +323,8 @@ describe("every pack line within the engine's limits (CN25) #slow", function()
             local cond = line:sub(1, 1) ~= "#" and (line:match(",if=(.*)$") or line:match(",value=(.*)$"))
             local n = cond and apl.terms(cond) or 0
             assert.is_true(n <= BOUND, ("%s: %d terms in %s"):format(name, n, line:sub(1, 80)))
+            -- a variable line keeps no if= (an import's guard would make it a stock variable, not a pure one)
+            assert.is_falsy(line:find("variable,name=", 1, true) and line:find(",if=", 1, true), line:sub(1, 80))
             most = math.max(most, n)
         end
         return most
@@ -370,26 +372,76 @@ describe("every pack line within the engine's limits (CN25) #slow", function()
         end)
     end
 
-    -- Loaded in the engine, the hoisted target Feral pack's lines compile and its single-target builders fire: a Cat
-    -- in melee range, in combat, 100 energy, no combo points (the re-pinned pack before CN25: its Shred and Claw lines
-    -- did not compile, and Faerie Fire was the first icon).
-    it("lets the hoisted Feral pack at the target recommend Shred or Claw", function()
-        local headless = require("Game.harness.headless")
-        local dlw = require("Forever.helpers.druid_loop_world")
-        local PACK = "Feral (wowsims.com)"
-        local body = {}
-        for line in target("druid_feral", false):gmatch("[^\n]+") do
-            if line:sub(1, 1) ~= "#" then
-                body[#body + 1] = line
-            end
+    -- The Druid packs as make_pack builds them (imports merged both ways: Feral hosts the Bear lists, Guardian the Cat
+    -- lists), with Feral's file replaced by its target translation (`idols`: the kit knows the idol auras).
+    local function built(idols)
+        local root = os.tmpname()
+        os.remove(root)
+        assert(os.execute("mkdir -p " .. root .. " && cp src/Hekili_Druid/APLs/* " .. root .. "/") == 0)
+        local f = assert(io.open(root .. "/Feral (wowsims.com).simc", "wb"))
+        f:write(target("druid_feral", idols))
+        f:close()
+        local ok, packs = pcall(mp.load, "druid", root .. "/")
+        os.execute("rm -r " .. root)
+        assert(ok, packs)
+        local out = {}
+        for _, p in ipairs(packs) do
+            out[p.name] = p.simc
         end
-        local H = headless.new({ character = dlw.Feral.character(), pack = PACK })
+        return out
+    end
+
+    -- Bytes `H` allocates per cycle over n cycles from t, the collector stopped (scripts_size_spec's way).
+    local function perCycle(headless, H, t, n)
+        collectgarbage("collect")
+        collectgarbage("collect")
+        collectgarbage("stop")
+        headless.cycle(H, t)
+        local b = collectgarbage("count")
+        for i = 1, n do
+            headless.cycle(H, t + i * 0.2)
+        end
+        local d = (collectgarbage("count") - b) * 1024 / n
+        collectgarbage("restart")
+        return d
+    end
+
+    -- Pack `name` of the built set `packs` loaded in the engine for content `C` of druid_loop_world (`o.form`: the
+    -- client's form index, `o.shredding`: Shredding Attacks ranks, `o.tt`: the targettarget answer), a level 60 target
+    -- in melee, in combat, energy fixed at 100. Asserts the pack loads and runs with no error (`o.allow`: a pattern of
+    -- errors to let through), every variable line pure, its value compiled as its condition would be, nothing
+    -- registered and nothing allocated; returns the first three picks and the number of variable lines.
+    local function run(packs, name, C, o)
+        local headless = require("Game.harness.headless")
+        local c = C.character()
+        c.form = o.form or c.form
+        c.talents[16966] = o.shredding or c.talents[16966]
+        local H = headless.new({ character = c, pack = name })
         assert.are.same({}, H.loadErrors)
         H.ctl.level.target, H.ctl.distance.target = 60, 3
+        H.ctl.unitIs.targettarget = o.tt
         H.Fire("PLAYER_TARGET_CHANGED")
-        H.Hekili.DB.profile.packs[PACK].lists = mp.parse(table.concat(body, "\n"))
+        local lists = mp.parse(packs[name])
+        H.Hekili.DB.profile.packs[name].lists = lists
         H.Hekili:LoadScripts()
         H.Hekili:ReviewPacks() -- the new lists and entries active
+        local Sc = H.Hekili.Scripts
+        local info, vars = Sc.PackInfo[name], 0
+        for _, list in pairs(lists) do
+            for _, e in ipairs(list) do
+                if e.action == "variable" then
+                    vars = vars + 1
+                    assert.is_truthy(info.pure[e.var_name], e.var_name)
+                    -- read as a value, it is the condition it replaced (EmulateSyntax's numeric mode adds no safebool)
+                    local v = e.value:gsub("||", "|")
+                    assert.are.equal(
+                        Sc.SimToLua(Sc:EmulateSyntax(v)),
+                        Sc.SimToLua(Sc:EmulateSyntax(v, true)),
+                        e.var_name
+                    )
+                end
+            end
+        end
         H.Fire("PLAYER_REGEN_DISABLED")
         local VS = H.ns.VirtualState
         local power, fixed = VS.Power, { est = 100, lo = 100, hi = 100, conf = 1 }
@@ -398,13 +450,47 @@ describe("every pack line within the engine's limits (CN25) #slow", function()
         end
         assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
         assert(headless.cycle(H, H.ctl.now + 0.2))
-        assert.are.same({}, H.errors)
-        local picks, builder = {}, false
+        local picks = {}
         for j = 1, 3 do
             local r = H.Hekili.Engine.Output.Primary.recs[j]
             picks[j] = tostring(r and r.actionName)
-            builder = builder or picks[j] == "shred" or picks[j] == "claw"
         end
-        assert.is_true(builder, table.concat(picks, " "))
-    end)
+        assert.are.equal(0, perCycle(headless, H, H.ctl.now + 1, 20))
+        assert.is_nil(next(H.Hekili.State.varDB)) -- pure: read in place, never registered
+        for _, e in ipairs(H.errors) do -- every line's debug print and recheck generate, and nothing raises
+            assert.is_truthy(o.allow and e:find(o.allow), e)
+        end
+        return picks, vars
+    end
+
+    local function has(picks, ...)
+        for _, p in ipairs(picks) do
+            for _, k in ipairs({ ... }) do
+                if p == k then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+
+    -- Loaded in the engine as built, the hoisted target Feral pack's lines compile and its single-target builders fire
+    -- (the re-pinned pack before CN25: its Shred and Claw lines did not load cleanly, and Faerie Fire was the only
+    -- pick); Guardian's imported Cat lists likewise. With the idol auras, this kit lacks them: their reads raise.
+    for _, idols in ipairs({ false, true }) do
+        local title = "lets the built Feral and Guardian packs at the target recommend a builder"
+        it(title .. (idols and ", the idol auras known" or ""), function()
+            local dlw = require("Forever.helpers.druid_loop_world")
+            local packs = built(idols)
+            local allow = idols and "idol_" or nil
+            local picks, vars = run(packs, "Feral (wowsims.com)", dlw.Feral, { allow = allow })
+            assert.is_true(vars > 0)
+            assert.is_true(has(picks, "shred", "claw"), table.concat(picks, " "))
+            -- no Shredding Attacks and the target attacking us: Claw (wowsims's Claw line for that build)
+            picks = run(packs, "Feral (wowsims.com)", dlw.Feral, { allow = allow, shredding = 0, tt = "player" })
+            assert.is_true(has(picks, "claw"), table.concat(picks, " "))
+            picks = run(packs, "Guardian (wowsims.com)", dlw.Guardian, { allow = allow, form = 3 }) -- Cat Form
+            assert.is_true(has(picks, "shred", "claw"), table.concat(picks, " "))
+        end)
+    end
 end)

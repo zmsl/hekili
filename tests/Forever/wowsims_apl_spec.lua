@@ -3597,6 +3597,17 @@ describe("CN25: a variable of many terms is one variable line, read by name", fu
         assert.are.equal("actions+=/roar,use_off_gcd=1,if=!variable.v_big_one", lines[3])
     end)
 
+    -- fix round 1 (M2): rule 19 reads a line's own range terms (target.within/outside, in_range), so a text holding one
+    -- stays in the line
+    it("inlines a variable of M.HOIST_TERMS terms that reads the target's range", function()
+        local d = { unitDistance = { sourceUnit = { type = "Self" } } }
+        local text = run({ cast(100, { variableRef = { name = "Big near" } }) }, {
+            { name = "Big near", value = AND(cmp("OpLe", d, const("5")), big(apl.HOIST_TERMS)) },
+        })
+        assert.is_nil(text:find("variable", 1, true))
+        assert.is_truthy(text:find("^actions=strike,if=%(target%.within5&"), text:sub(1, 80))
+    end)
+
     it("inlines a variable under M.HOIST_TERMS terms, as before", function()
         local text = run({ cast(100, { variableRef = { name = "Small" } }) }, {
             { name = "Small", value = big(apl.HOIST_TERMS - 1) },

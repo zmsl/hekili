@@ -92,4 +92,37 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         end
         assert.are.equal(perCycle(A, t + 1, 30), perCycle(B, t + 1, 30))
     end)
+
+    -- CN25 fix round 1 (I2): the priority editor moves a line (Options.lua: the list reordered, then
+    -- scripts:SwapScripts) or edits one option (Hekili:LoadScript); which variables are pure follows the pack as it is.
+    it("follows the editor: a moved line, an if= given, a name given twice", function()
+        local H = boot(false)
+        local list = H.Hekili.DB.profile.packs[ww.PACK].lists.default
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "b", value = "2" })
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "a", value = "1" })
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        headless.cycle(H, H.ctl.now + 0.5)
+        local S, Sc, at = H.Hekili.State, H.Hekili.Scripts, ww.PACK .. ":default:"
+        local function pure()
+            local p = Sc.PackInfo[ww.PACK].pure
+            return { a = p.a and true or false, b = p.b and true or false }
+        end
+        assert.are.same({ 1, 2 }, { S.variable.a, S.variable.b })
+
+        table.insert(list, 2, table.remove(list, 1)) -- move a down, as the editor's button does
+        Sc:SwapScripts(at .. 1, at .. 2)
+        assert.are.same({ 1, 2 }, { S.variable.a, S.variable.b })
+        assert.are.same({ a = true, b = true }, pure())
+
+        list[1].criteria = "active_enemies>1" -- b (now first) gets an if=: a stock variable
+        H.Hekili:LoadScript(ww.PACK, "default", 1)
+        assert.are.same({ a = true, b = false }, pure())
+        assert.are.equal(1, S.variable.a)
+
+        list[1].criteria, list[1].var_name = nil, "a" -- b renamed a: two lines of one name, neither pure
+        H.Hekili:LoadScript(ww.PACK, "default", 1)
+        assert.are.same({ a = false, b = false }, pure())
+        assert.are.same({}, H.errors)
+    end)
 end)

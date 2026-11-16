@@ -214,7 +214,11 @@ local function import(lists, src, imp, clash)
         end
         for _, e in ipairs(lists[name] or {}) do
             local c = copy(e)
-            c.criteria = (c.criteria or "") ~= "" and "(" .. c.criteria .. ")&!" .. up or "!" .. up
+            -- CN25: a variable line stays unguarded (an if= would end its purity, Scripts.lua MarkPure): its readers
+            -- carry the guard, and a pure read does not depend on where the line sits
+            if c.action ~= "variable" then
+                c.criteria = (c.criteria or "") ~= "" and "(" .. c.criteria .. ")&!" .. up or "!" .. up
+            end
             guarded[#guarded + 1] = c
         end
         out[name] = guarded[1] and guarded or nil

@@ -223,6 +223,14 @@ describe("tools/make_pack.lua", function()
             assert.is_false(ok)
             assert.matches("Other imports variable v_x, which the host pack has too$", err)
         end)
+
+        -- CN25 fix round 1 (I1): a guard would give the line an if=, so it is no longer a pure variable (Scripts.lua);
+        -- its readers carry the guard, and a pure read does not depend on the line's position
+        it("leaves the host's variable lines unguarded (they stay pure)", function()
+            local ok, packs = load(MANIFEST, { ["Host.simc"] = HOST .. "actions+=/variable,name=v_x,value=a&b\n" })
+            assert.is_true(ok, packs)
+            assert.is_truthy(packs[1].simc:find("\nactions+=/variable,name=v_x,value=a&b\n", 1, true), packs[1].simc)
+        end)
     end)
 
     describe("write (the version changes only with the text)", function()

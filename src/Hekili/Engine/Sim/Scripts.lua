@@ -1735,6 +1735,43 @@ function scripts:SwapScripts( s1, s2 )
     local swap = scripts.DB[ s1 ]
     scripts.DB[ s1 ] = scripts.DB[ s2 ]
     scripts.DB[ s2 ] = swap
+
+    -- CN25: the editor moved a line (its list is already reordered): the pure variables' script IDs follow it
+    local pack = s1:match( "^(.*):[^:]*:%d+$" )
+    if pack then scripts:MarkPure( pack ) end
+end
+
+
+-- CN25: pack `pack`'s pure variables, each read in place (State.lua) and never registered (Core.lua): a `variable` line
+-- with a value and no if=, value_else= or op but set, enabled, the only line of its name. PackInfo[pack].pure maps each
+-- variable name to its line's script ID (false: not pure), pureText to its value. Returns whether a name's purity
+-- changed (a line's compiled rechecks and time-sensitivity read it: Hekili:LoadScript then reloads the pack).
+function scripts:MarkPure( pack )
+    local pData, info = Hekili.Engine.settings.packs[ pack ], self.PackInfo[ pack ]
+    if not ( pData and info ) then return false end
+
+    local pure, text = {}, {}
+    for list, lData in pairs( pData.lists ) do
+        for id, e in ipairs( lData ) do
+            local name = e.action == "variable" and e.var_name
+            if name then
+                pure[ name ] = pure[ name ] == nil and e.enabled ~= false and ( e.criteria or "" ) == ""
+                    and ( e.value_else or "" ) == "" and ( e.op or "set" ) == "set" and ( e.value or "" ) ~= ""
+                    and ( pack .. ":" .. list .. ":" .. id )
+                text[ name ] = e.value
+            end
+        end
+    end
+
+    local old = info.pure or {}
+    info.pure, info.pureText = pure, text
+    for name, v in pairs( pure ) do
+        if not v ~= not old[ name ] then return true end
+    end
+    for name, v in pairs( old ) do
+        if v and pure[ name ] == nil then return true end
+    end
+    return false
 end
 
 
@@ -1764,21 +1801,7 @@ function scripts:LoadScripts()
                 hasWhileCasting = false
             }
 
-            -- CN25: the pack's pure variables, each read in place (State.lua) and never registered (Core.lua): a
-            -- `variable` line with a value and no if=, value_else= or op but set, the only line of its name
-            local pure, text = {}, {}
-            for list, lData in pairs( pData.lists ) do
-                for id, e in ipairs( lData ) do
-                    local name = e.action == "variable" and e.var_name
-                    if name then
-                        pure[ name ] = pure[ name ] == nil and e.enabled ~= false and ( e.criteria or "" ) == ""
-                            and ( e.value_else or "" ) == "" and ( e.op or "set" ) == "set" and ( e.value or "" ) ~= ""
-                            and ( pack .. ":" .. list .. ":" .. id )
-                        text[ name ] = e.value
-                    end
-                end
-            end
-            self.PackInfo[ pack ].pure, self.PackInfo[ pack ].pureText = pure, text
+            self:MarkPure( pack )
 
             for list, lData in pairs( pData.lists ) do
                 for action, _ in ipairs( lData ) do
@@ -1961,6 +1984,17 @@ function Hekili:LoadScript( pack, list, id )
     local specData = pData.spec and class.specs[ pData.spec ]
     local scriptID = pack .. ":" .. list .. ":" .. id
     recordID( pData.lists[ list ], id, scriptID )
+
+    -- CN25: an edited `variable` line outside a full load: the pack's pure map follows it, and a change in which names
+    -- are pure reloads every line of the pack (their rechecks and time-sensitivity read through pure variables)
+    if not Hekili.LoadingScripts and data.action == "variable" and scripts:MarkPure( pack ) then
+        for l, lData in pairs( pData.lists ) do
+            for i in ipairs( lData ) do
+                Hekili:LoadScript( pack, l, i )
+            end
+        end
+        return
+    end
 
     local info = scripts.PackInfo[ pack ]
     loadingPure = info and info.pure

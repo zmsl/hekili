@@ -607,13 +607,22 @@ Both default renderers draw the record's icon through `ns.UI.SetRecTexture` (UI.
 `texture`. A style that ignores overrides sets `texture` itself. Example: `starfire,label=R6,label_if=mana.pct<20`.
 
 **Pure variables.** `variable,name=<v>,value=<expression>` with no `if=`, `value_else=` or `op` other than `set`,
-enabled, and the only line of that name in the pack, is a pure variable (`scripts:LoadScripts` in `Sim/Scripts.lua`
-marks them in `PackInfo[pack].pure`). A read `variable.<v>` evaluates its compiled value in the reader's own state, as
-the expression written in its place would: no cache, no registration (`Sim/Core.lua` skips the line in the walk), no
-string built (`state.variable` in `Sim/State.lua`). The reader's recheck times are its value's (`recurseRechecks`
-follows it), never a time of the bare read, and the time-sensitivity of a line reads through it. Any other `variable`
-line keeps the inherited Hekili path (registered per walk, cached per `query_time`). The wowsims translator emits
-pure variables for its large shared conditions (`tools/wowsims/apl.lua` rule 1), so no line exceeds Lua 5.1's limits.
+enabled, and the only line of that name in the pack, is a pure variable. `scripts:MarkPure` in `Sim/Scripts.lua` keeps
+the pack's map (`PackInfo[pack].pure`): at `LoadScripts`, after the priority editor moves a line (`SwapScripts`), and
+when one `variable` line is reloaded (`Hekili:LoadScript`; a change in which names are pure reloads the pack's lines).
+A read `variable.<v>` calls its compiled value in the reader's own state: no cache, no registration (`Sim/Core.lua`
+skips the line in the walk), no string built (`state.variable` in `Sim/State.lua`; under a debug snapshot it logs the
+value and the expression). The reader's recheck times are its value's (`recurseRechecks` follows it), never a time of
+the bare read, and the time-sensitivity of a line reads through it. It is the expression written in the reader's place
+in what it reads and when, with these limits: the value is compiled as a value (`EmulateSyntax`'s numeric mode, so a
+boolean expression must compile the same both ways: the wowsims packs' do, `tests/Forever/wowsims_pin_spec.lua`); a
+pure read does not make the reader a window reader (`ReadsWindow`: its own text only); a comparison of the read
+(`variable.<v><=x`) keeps the inherited recheck of a variable time; and the value ignores the list calls that reach the
+line (a stock variable is evaluated under its line's call conditions), so a pure variable must not depend on them. Any
+other `variable` line keeps the inherited Hekili path (registered per walk, cached per `query_time`). The wowsims
+translator emits pure variables for its large shared conditions (`tools/wowsims/apl.lua` rule 1: never a text that reads
+a window or the target's range), so no line exceeds Lua 5.1's limits; `tools/make_pack.lua`'s import guard leaves a
+host's `variable` lines unguarded so they stay pure.
 
 **Pre-pull guards.** Upstream Hekili walks `precombat` before `default` on every refresh and skips its non-essential
 entries once `time > 0`; out of combat it is a plain priority. The fork keeps it so (owner ruling 2026-10-21: "a guard

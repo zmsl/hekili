@@ -15,7 +15,8 @@
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced, except a text of M.HOIST_TERMS or more
 --    term occurrences (CN25: Lua 5.1's limits on one line, the engine's debug print and recheck): it is one
---    `variable,name=v_<snake>,value=<text>` line heading the default list and read as `variable.v_<snake>`.
+--    `variable,name=v_<snake>,value=<text>` line heading the default list and read as `variable.v_<snake>` (an
+--    engine pure variable; never a text reading a window, the target's range or holding a comma).
 --    The pre-pull guard (owner ruling 2026-10-21: a guard against recasting, the player decides when to press): each
 --    cast line of the precombat list, and of a list only pre-pull lists call, gets one term ahead of its condition,
 --    derived from what its ability's handler does (called once under pcall in the kit's stub state with the verbs
@@ -1102,9 +1103,18 @@ function M.terms(s)
 end
 
 -- Variable `name`'s translated text `s` as read here (CN25). A text reading a window stays inline (the line's own
--- window recheck, Scripts.lua ReadsWindow), as does one with a comma (the SimC line's separator).
+-- window recheck, Scripts.lua ReadsWindow), as does one reading the target's range (rule 19 scans the line's own
+-- `target.within`/`target.outside`/`in_range` terms) and one with a comma (the SimC line's separator).
 local function hoisted(c, name, s)
-    if s == nil or M.terms(s) < M.HOIST_TERMS or s:find("window.", 1, true) or s:find(",", 1, true) then
+    if
+        s == nil
+        or M.terms(s) < M.HOIST_TERMS
+        or s:find("window.", 1, true)
+        or s:find("target.within", 1, true)
+        or s:find("target.outside", 1, true)
+        or s:find(".in_range", 1, true)
+        or s:find(",", 1, true)
+    then
         return s
     end
     local base, k = "v_" .. M.snake(name), 1
