@@ -331,9 +331,10 @@ M.FLICKER = {
     -- heldReady 128 -> 132 (re-pin e5a9cd2a2d -> e4ef929e54: wowsims's hawk rotation, turret_hawk.apl.siml: Summon Hawk
     -- twice, then Arcane Shot, each 189 mana, Sniper Shot gone; seeds 1-20 / 21-40 / 41-60 heldReady 130 / 132 / 104,
     -- flicker 0 / 0 / 0, retracted 0, readyShort 0, agreement .994 / .995 / .997, refused [] (no on-cooldown Summon Hawk
-    -- since its 5.4 s after an Arcane Shot). The held ticks are the Hunter cost-crossing class (gap BT) at the new
-    -- spends: the lines' wait counters put them on summon_hawk 61 / 60 / 54 and arcane_shot 26 / 20 / 25 (the old list
-    -- pressed neither), the belief's floor 1.7-1.9 mana under the truth at the 189 crossing): the worst set
+    -- since its 5.4 s after an Arcane Shot). NOT traced per tick: the lines' wait counters put the held ticks on the new
+    -- list's summon_hawk 61 / 60 / 54 and arcane_shot 26 / 20 / 25 (class "unknown"; the old list pressed neither), with
+    -- est - truth at disagreements +19 / +34 / +33 (the opposite sign to the other Hunter rows), so the mechanism is
+    -- open; the move rides the hawk rotation): the worst set
     ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 132 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
     -- Marksmanship Turret, 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60
     -- heldReady 132 / 115 / 108, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 118 -> 132
