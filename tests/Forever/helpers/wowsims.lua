@@ -502,7 +502,7 @@ M.READY = {
     -- decisions, 7 real (5 early: earth_shock, fire_nova x2, stormstrike x2 shown 0.37-1.23 s before wowsims's cast at
     -- its GCD's end, the gcd/slack class above; 2 late: flame_shock at 114.54 / 136.81, cost class, lo 3.9 / 5.5 under
     -- the truth at the crossing, gap BT), median 1.050: fewer, larger rows. May move with lane mana-09's Stormstrike
-    -- price 122 (the log's; ours 121: the belief spends 1 less a Stormstrike, so lo sits 1 nearer the truth a cast)
+    -- price 122 (the log's; ours 121)
     shaman_enhancement = { 1.05, 7 },
     -- { 0.48, 54 } -> { 2.20, 3 } re-pin 0.7 (lane shaman, R6): 91 decisions, 3 real (all late, cost class: the Major
     -- Mana Potion / Demonic Rune refills the belief cannot see leave lo ~2630 under the truth, gaps.md "Potion mana

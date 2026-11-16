@@ -1146,6 +1146,39 @@ describe("Forever Shaman through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Totemic Recall (36936) through the real engine: a Windfury Totem cast in combat, then the recall: the air slot
+    -- ends at the recall in the belief and the simulation, and Windfury's buff goes with it.
+    it("ends a totem summoned in combat at a Totemic Recall, in the belief and the simulation", function()
+        local VS, S = H.ns.VirtualState, H.Hekili.State
+        local t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local S0 = require("Game.State.helpers.fake_api").SECRET -- GetTotemInfo is secret in combat
+        H.ctl.totems[4] = { name = S0, start = S0, duration = S0, icon = S0, spell = S0 }
+        t = t + 1
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 10614)
+        H.Fire("PLAYER_TOTEM_UPDATE", 4)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.are.equal(t + 300, VS.Totem(4, t + 0.1).est)
+        S.reset("Primary", true)
+        assert.is_true(S.totem.air.up)
+        assert.is_true(S.buff.windfury.up)
+        t = t + 2
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", 36936)
+        H.Fire("PLAYER_TOTEM_UPDATE", 4)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_nil(VS.Totem(4, t + 0.1))
+        S.reset("Primary", true)
+        assert.is_false(S.totem.air.up)
+        assert.is_false(S.buff.windfury.up)
+        assert.are.same({}, H.errors)
+        -- not asserted: VS.TotemFacts(4) still answers (36936, "totemic_recall", 0, start, 0), a zero-length slot: it
+        -- treats only an expiry <= 0 as empty (blocker repin-shaman-09-1)
+    end)
+
     -- Weapon buffs review §4.2: the engine's buff.<imbue> and main_hand_enchant follow the belief's reads and models
     -- (the same answer in both layers), whatever the hand's temporary layer holds.
     it("answers the imbue auras alike in the belief and the engine: reads, a cast in combat, a swap", function()

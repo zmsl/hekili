@@ -475,7 +475,9 @@ M.FLICKER = {
     -- Stormstrike 8 s (hotfix push 113722), Maelstrom Weapon 10 a minute at 5/5, the world's Windfury Totem strike and the
     -- Five Thunders gear's 6250 mana / 25.75 / 12.0 re-time every fight; the held ticks are the same Flame Shock cost
     -- crossing against Stormstrike's cooldown (top flame_shock -> stormstrike 112 of 18020 ticks; at cost lo-truth -3.4,
-    -- gap BT). May move with lane mana-09's Stormstrike price 122 (ours 121)
+    -- gap BT). A/B on seeds 1-20 with the strike's chance 0 (the same draws): agreement .995, heldReady 144, flame_shock
+    -- -> stormstrike 36 (112 with it): the strike's anonymous outcome rows (no spell, no cast) move the belief (blocker
+    -- repin-shaman-09-2). May move with lane mana-09's Stormstrike price 122 (ours 121)
     ["Enhancement"] = { flicker = 0.03, retracted = 0, heldReady = 146, readyShort = 0 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
