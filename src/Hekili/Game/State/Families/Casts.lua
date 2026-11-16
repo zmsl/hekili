@@ -545,34 +545,43 @@ function VS.BasePower(pt)
 end
 
 --- Each pool's base from the plain out-of-combat cost reads (A.readCost, Sources/Spellbook.lua) of its fraction-priced
---- abilities: the pack's value unless the read with the largest fraction (the finest: a read pins the base to an
---- interval 1 / f wide) misprices it, then the whole base nearest cost / f, the middle of that interval. A read rounds
---- f x base to the nearest whole, a half up, so the true base is in [(cost - 0.5) / f, (cost + 0.5) / f) and the
---- nearest whole to cost / f is within 0.5 / f + 0.5 of it; for f < 1 it prices the read again (f x it is within 0.5 f
---- of cost). A read is skipped while a cost modifier in scope changes its price (it is then not the base's). Runs after
---- the reads and again after a talent walk that changed a rank (Sources/Talents.lua), so a talent-scaled fraction is the
---- walked rank's. Allocates nothing.
--- shortcut: the base is exact only to 1 / f of the chosen read (a 55% read: within 1 mana); a smaller fraction's read
--- the result misprices by one is not reconciled; upgrade by intersecting every read's [(cost - 0.5) / f, (cost + 0.5) /
--- f).
+--- abilities whose price no cost modifier changes but a passive talent's percent (I.PassiveCostFactor: factor m, 1 with
+--- none; an aura's modifier comes and goes, so its read is skipped). A read R of fraction f is the whole price
+--- W = nearest(f, base) cut by m, then whole again: to the nearest (|R - W m| <= 0.5) or, unprobed, truncated
+--- (0 <= W m - R < 1). The pack's base stays while it prices the finest read either way (-0.5 <= W m - R < 1; with m = 1
+--- exactly W = R); else the base is the whole nearest R / (f m). Under nearest rounding the true base lies within
+--- (0.5 / m + 0.5) / f of R / (f m) (0.5 / f when m = 1, R = W exactly), so the learned base within that + 0.5; under
+--- truncation within (1 / m + 0.5) / f + 0.5. The finest read is the one with the smallest nearest half-width. Runs after
+--- the reads and again after a talent walk that changed a rank (Sources/Talents.lua), so a talent-scaled fraction and a
+--- talent's factor are the walked rank's. Allocates nothing.
+-- shortcut: the base is exact only to that half-width of the chosen read (a 55% read: within 1 mana; under a cut it
+-- may misprice its own read by one); a coarser read the result misprices is not reconciled; upgrade by intersecting
+-- every read's interval.
 function I.LearnBases()
     for r = 1, #I.baseDefault do
         I.basePow[r] = I.baseDefault[r]
     end
     for r = 1, #I.baseDefault do
         if I.basePow[r] > 0 then
-            local bestF, bestCost = 0, 0
+            local bestF, bestM, bestCost, bestW = 0, 1, 0, 0
             for a = 1, A.n do
                 local cost = A.readCost[a]
                 if A.slot[a] == r and cost > 0 then
                     local f = declaredCost(a)
-                    if f and f > bestF and isFraction(a, f) and I.CostOf(a) == I.BaseCostOf(a) then
-                        bestF, bestCost = f, cost
+                    local m = f
+                        and isFraction(a, f)
+                        and (I.PassiveCostFactor and I.PassiveCostFactor(a, r, I.clock) or 1)
+                    if m and m > 0 then
+                        local w = (m == 1 and 0.5 or 0.5 / m + 0.5) / f -- f > 0 (isFraction)
+                        if bestW == 0 or w < bestW then
+                            bestF, bestM, bestCost, bestW = f, m, cost, w
+                        end
                     end
                 end
             end
-            if bestF > 0 and nearest(bestF, I.basePow[r]) ~= bestCost then
-                I.basePow[r] = max(floor(bestCost / bestF + 0.5), 1) -- bestF > 0 checked; 0 would mean no base
+            local miss = bestF > 0 and nearest(bestF, I.basePow[r]) * bestM - bestCost
+            if miss and (miss < -0.5 - EPS or miss >= 1 - EPS) then
+                I.basePow[r] = max(floor(bestCost / (bestF * bestM) + 0.5), 1) -- f, m > 0 checked; 0 would mean no base
             end
         end
     end

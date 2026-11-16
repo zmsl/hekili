@@ -90,4 +90,45 @@ describe("a percent-of-base cost rounds to the nearest whole, in both layers", f
             end
         end
     end)
+
+    -- A passive talent's percent cut m (talent-gated, no aura) is applied to the whole price: a read R is W = nearest(f x
+    -- base) cut by m and made whole again, to the nearest or (unprobed) truncated. The learned base, R / (f m) rounded,
+    -- is within (0.5 / m + 0.5) / f + 0.5 of the truth under nearest, (1 / m + 0.5) / f + 0.5 under truncation.
+    it("learns back from a read a passive talent's percent cut, within the two roundings' bounds", function()
+        local h = fs.new(9)
+        local def = fs.def(h)
+        def.resources[1].base = 200
+        def.resources[1].costMods = { { talent = "talent_a", pct = { -0.03, -0.09, -0.6 } } }
+        for rank = 1, 3 do
+            local m = 1 + def.resources[1].costMods[1].pct[rank]
+            for _, f in ipairs({ 0.055, 0.11, 0.139, 0.35, 0.55 }) do
+                h.Class.abilities.spender_c.spend = f
+                for b = 900, 1800, 37 do
+                    local whole = math.floor(f * b + 0.5 + 1e-6)
+                    for trunc = 0, 1 do
+                        I.Build(def, 1)
+                        ctl.known[fs.SPENDER_C] = true
+                        ctl.traits =
+                            { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 1011 } }
+                        ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = rank }
+                        local read = math.floor(whole * m + 0.5 * (1 - trunc) + 1e-6)
+                        ctl.costs[fs.SPENDER_C] = { { type = 1, cost = read } }
+                        ctl.Fire("SPELLS_CHANGED")
+                        local learned = VS.BasePower(fs.RAGE)
+                        local bound = ((trunc == 1 and 1 or 0.5) / m + 0.5) / f + 0.5
+                        local why = ("%g x %d x %g reads %d (trunc %d), learned %d"):format(
+                            f,
+                            b,
+                            m,
+                            read,
+                            trunc,
+                            learned
+                        )
+                        assert.are.equal(rank, VS.Talent(1011), why)
+                        assert.is_true(math.abs(learned - b) <= bound + 1e-9, why)
+                    end
+                end
+            end
+        end
+    end)
 end)
