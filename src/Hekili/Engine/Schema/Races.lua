@@ -105,9 +105,10 @@ function Race:RegisterCostMod(def)
     end
 end
 
---- { resource = key, aura = key, mult = n | spirit = m | share = s | mp5 = x }: a regen entry (Engine/Schema/Spec/Regen.lua's
---- rate fields) on the class's resource `resource` while the player's aura `aura` is up; a class without that resource
---- ignores it (Tracked.lua). The belief's only: the sim's forecast reads the belief's rate.
+--- { resource = key, aura = key, mult = n | spirit = m | share = s | mp5 = x | mp5Mult = p }: a regen entry
+--- (Engine/Schema/Spec/Regen.lua's rate fields) on the class's resource `resource` while the player's aura `aura` is
+--- up; a class without that resource ignores it (Tracked.lua). The belief's only: the sim's forecast reads the belief's
+--- rate.
 function Race:RegisterRegenMod(def)
     if self.live and type(def.resource) == "string" and type(def.aura) == "string" then
         mods.regenMods[#mods.regenMods + 1] = def

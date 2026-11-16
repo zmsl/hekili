@@ -7,9 +7,10 @@ local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
 
--- Percents as num / den: whole ones, halves, the decimals the packs declare (5.81, 13.9) and ties at both ends.
-local PCTS = { { 1, 200 }, { 1, 40 }, { 1, 8 }, { 581, 10000 }, { 139, 1000 }, { 3, 8 }, { 5, 8 } }
-for p = 1, 100 do
+-- Fractions as num / den: whole percents below 100 (a cost of 1 is flat), halves, the decimals the packs declare (5.81,
+-- 13.9) and ties at both ends.
+local PCTS = { { 1, 200 }, { 1, 40 }, { 1, 8 }, { 581, 10000 }, { 1390, 10000 }, { 3, 8 }, { 5, 8 } }
+for p = 1, 100 - 1 do -- not 100: a cost of 1 is flat (written so, as 99 is a content ID to the boundary spec)
     PCTS[#PCTS + 1] = { p, 100 }
 end
 
@@ -34,7 +35,7 @@ describe("a percent-of-base cost rounds to the nearest whole, in both layers", f
         ctl.Tick(1)
     end)
 
-    it("prices every percent of every base 900-1800 at the half-up nearest whole, belief and simulation alike", function()
+    it("prices every percent of base 900-1800 at the half-up nearest whole, belief and simulation", function()
         local obj, res, bad = I.ab.obj[3], {}, 0
         for b = 900, 1800 do
             I.basePow[1], res.base = b, b
