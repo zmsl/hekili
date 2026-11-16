@@ -3565,20 +3565,22 @@ found = true end
         end
     end
 
-    local function CdmCoverage()
-        if InCombatLockdown() then return L["Cooldown Manager coverage: updates after combat."] end
+    -- The shared walk (the coverage line below, the Cooldown Manager panel): out of combat, from the client. nil and
+    -- the reason when it cannot read (in combat: "combat"; not available: the game's reason, or the plain text).
+    -- Else { auras, toKey (cooldownID -> aura key, or false: names several), mappable (key -> true), covered (key ->
+    -- true: some item of the key on a bar), onBar (cooldownID -> true), pool (cooldownIDs in category order), info
+    -- (cooldownID -> its info), off (the player turned the Cooldown Manager off) }. Allocates: on draw only.
+    local function CdmWalk()
+        if InCombatLockdown() then return nil, "combat" end
         local CV = Facade.C_CooldownViewer
         local ok, avail, reason = false, nil, nil
         if CV and CV.IsCooldownViewerAvailable then ok, avail, reason = pcall( CV.IsCooldownViewerAvailable ) end
         if not ok or CdmPlain( avail ) ~= true then -- not available to this player: the game's reason, no advice
             reason = ok and CdmPlain( reason )
             if type( reason ) == "string" and reason ~= "" then
-                return format( L["The Cooldown Manager is not available: %s"], reason )
+                return nil, format( L["The Cooldown Manager is not available: %s"], reason )
             end
-            return L["The Cooldown Manager is not available."]
-        end
-        if CdmPlain( GetCVar( "cooldownViewerEnabled" ) ) ~= "1" then -- available, but the player turned it off
-            return L["Turn on the Cooldown Manager in the game options: it tells Hekili when your buffs and debuffs are up."]
+            return nil, L["The Cooldown Manager is not available."]
         end
 
         local byId, auras = {}, Registry.Auras()
@@ -3595,7 +3597,7 @@ found = true end
             end
         end
 
-        local toKey, mappable = {}, {} -- cooldownID -> aura key, or false (names more than one); key -> true
+        local toKey, mappable, pool, infos = {}, {}, {}, {} -- cooldownID -> aura key, or false (names more than one)
         for c = 0, 8 do
             local okS, set = pcall( CV.GetCooldownViewerCategorySet, c, true )
             set = okS and CdmPlain( set )
@@ -3622,13 +3624,16 @@ found = true end
                                 one = one or k
                             end
                         end
-                        if one then toKey[ id ] = not ( many or keys[ 0 ] ) and one end
+                        if one then
+                            toKey[ id ] = not ( many or keys[ 0 ] ) and one
+                            pool[ #pool + 1 ], infos[ id ] = id, info
+                        end
                     end
                 end
             end
         end
 
-        local covered = {}
+        local covered, onBar = {}, {}
         for _, name in ipairs( CDM_VIEWERS ) do
             local f = CdmPlain( _G[ name ] )
             local n = type( f ) == "table" and f.GetNumChildren and CdmPlain( f:GetNumChildren() )
@@ -3638,12 +3643,28 @@ found = true end
                     local c = CdmPlain( kids[ i ] )
                     if type( c ) == "table" then
                         local id = CdmPlain( rawget( c, "cooldownID" ) )
-                        local k = id ~= nil and CdmPlain( rawget( c, "layoutIndex" ) ) ~= nil and toKey[ id ]
-                        if k then covered[ k ] = true end
+                        if id ~= nil and CdmPlain( rawget( c, "layoutIndex" ) ) ~= nil then
+                            onBar[ id ] = true
+                            local k = toKey[ id ]
+                            if k then covered[ k ] = true end
+                        end
                     end
                 end
             end
         end
+
+        return { auras = auras, toKey = toKey, mappable = mappable, covered = covered, onBar = onBar, pool = pool,
+            info = infos, off = CdmPlain( GetCVar( "cooldownViewerEnabled" ) ) ~= "1" }
+    end
+
+    local function CdmCoverage()
+        local W, why = CdmWalk()
+        if why == "combat" then return L["Cooldown Manager coverage: updates after combat."] end
+        if not W then return why end
+        if W.off then -- available, but the player turned it off
+            return L["Turn on the Cooldown Manager in the game options: it tells Hekili when your buffs and debuffs are up."]
+        end
+        local auras, mappable, covered = W.auras, W.mappable, W.covered
 
         local total, have, missing = 0, 0, {}
         for k in pairs( mappable ) do
@@ -3663,6 +3684,96 @@ found = true end
             text = text .. " " .. format( L["To cover %s, add them to any bar in the Cooldown Manager settings."], list )
         end
         return text
+    end
+
+    -- (cdm-panel, owner 2026-11-09) The Cooldown Manager panel: one switch per pack aura that an item of the class's
+    -- Cooldown Manager pool names alone (the coverage walk's toKey), stored per aura key and per spec in the profile
+    -- (profile.specs[ id ].cdm[ key ]; unset: the pack's `cdm`, else on) whether or not the item is on a bar. Gold: an
+    -- item of the aura on a bar; grey: in the pool only. Grouped by the item's info: selfAura "Buffs on you", hasAura
+    -- without selfAura "Debuffs on your target", neither: buffs. A change reaches the belief through
+    -- Hekili:CdmSwitchChanged (Tracked.lua): the leaf's map is rebuilt out of combat, at combat end otherwise.
+    -- Rebuilt when the options open (ns.StartConfiguration), out of combat; in combat the last cards stay.
+    local CDM_GOLD, CDM_GREY = "|cffffd100", "|cff808080"
+
+    local function CdmSpec()
+        local spec = Status.specID
+        local specs = Hekili.DB.profile.specs
+        return spec and type( specs[ spec ] ) == "table" and specs[ spec ]
+    end
+
+    local function CdmGet( info )
+        local key = info[ #info ]
+        local cdm = CdmSpec()
+        cdm = cdm and cdm.cdm
+        if type( cdm ) == "table" and type( cdm[ key ] ) == "boolean" then return cdm[ key ] end
+        local aura = Registry.Auras()[ key ]
+        return not ( aura and rawget( aura, "cdm" ) == false )
+    end
+
+    local function CdmSet( info, val )
+        local sp = CdmSpec()
+        if not sp then return end
+        sp.cdm = sp.cdm or {}
+        sp.cdm[ info[ #info ] ] = val == true
+        Hekili:CdmSwitchChanged()
+    end
+
+    function Hekili:EmbedCdmOptions( db )
+        db = db or self.Options
+        if not db then return end
+        local panel = db.args.cdm
+        local W, why = CdmWalk()
+        panel.args.state.name = W and W.off
+            and L["Turn on the Cooldown Manager in the game options: it tells Hekili when your buffs and debuffs are up."]
+            or why ~= "combat" and why or ""
+        if why == "combat" then return end -- keep the last cards
+
+        local buffs, debuffs = panel.args.buffs.args, panel.args.debuffs.args
+        wipe( buffs )
+        wipe( debuffs )
+        if not W then return end
+        local auras, getName, getIcon = W.auras, C_Spell.GetSpellName, C_Spell.GetSpellTexture
+        for _, id in ipairs( W.pool ) do
+            local key, info = W.toKey[ id ], W.info[ id ]
+            local aura = key and auras[ key ]
+            if aura then
+                local self_, has = CdmPlain( info.selfAura ), CdmPlain( info.hasAura )
+                local args = ( has == true and self_ ~= true ) and debuffs or buffs
+                local card = args[ key ] or buffs[ key ] or debuffs[ key ]
+                if card then -- one card per aura: gold when any of its items is on a bar
+                    if W.onBar[ id ] then card.name = CDM_GOLD .. card.label .. "|r" end
+                else
+                    local sid = CdmPlain( info.overrideSpellID ) or CdmPlain( info.spellID )
+                    local name = type( sid ) == "number" and getName and CdmPlain( getName( sid ) )
+                    if type( name ) ~= "string" or name == "" then
+                        name = type( aura.name ) == "string" and aura.name or key
+                    end
+                    local icon = type( sid ) == "number" and getIcon and CdmPlain( getIcon( sid ) )
+                    if not icon and type( aura.id ) == "number" and aura.id > 0 and getIcon then
+                        icon = CdmPlain( getIcon( aura.id ) )
+                    end
+                    args[ key ] = {
+                        type = "toggle",
+                        name = ( W.onBar[ id ] and CDM_GOLD or CDM_GREY ) .. name .. "|r",
+                        label = name,
+                        image = icon,
+                        imageWidth = 20,
+                        imageHeight = 20,
+                        width = 1,
+                        get = CdmGet,
+                        set = CdmSet,
+                    }
+                end
+            end
+        end
+        for _, args in ipairs( { buffs, debuffs } ) do -- by name
+            local keys = {}
+            for k in pairs( args ) do keys[ #keys + 1 ] = k end
+            sort( keys, function( a, b ) return args[ a ].label < args[ b ].label end )
+            for i, k in ipairs( keys ) do
+                args[ k ].order, args[ k ].label = i, nil
+            end
+        end
     end
 
     -- (spec tree) The right half of a spec page's top row: "Activate <Spec>" while another spec is active (as
@@ -7609,6 +7720,65 @@ do
                 plugins = {
                     equipment = {}
                 }
+            },
+
+            -- (cdm-panel) The Cooldown Manager panel: the cards come from Hekili:EmbedCdmOptions
+            cdm = {
+                type = "group",
+                name = L["Cooldown Manager"],
+                order = 82,
+                args = {
+                    intro = {
+                        type = "description",
+                        name = L["Hekili reads the Cooldown Manager to see when your buffs and debuffs are up. Turn a switch off and Hekili ignores that aura's items there. |cffffd100Gold|r: on a bar. |cff808080Grey|r: not on a bar; its switch applies when you add it."],
+                        fontSize = "medium",
+                        order = 1,
+                        width = "full",
+                    },
+                    state = { -- not available, or turned off (Hekili:EmbedCdmOptions)
+                        type = "description",
+                        name = "",
+                        fontSize = "medium",
+                        order = 2,
+                        width = "full",
+                        hidden = function( info ) return info.option.name == "" end,
+                    },
+                    combat = {
+                        type = "description",
+                        name = L["Changes apply after combat."],
+                        fontSize = "medium",
+                        order = 3,
+                        width = "full",
+                        hidden = function() return not InCombatLockdown() end,
+                    },
+                    reset = {
+                        type = "execute",
+                        name = L["Reset"],
+                        order = 4,
+                        width = 0.6,
+                        func = function()
+                            local spec = Status.specID and Hekili.DB.profile.specs[ Status.specID ]
+                            if type( spec ) == "table" then spec.cdm = nil end
+                            Hekili:CdmSwitchChanged()
+                        end,
+                    },
+                    buffs = {
+                        type = "group",
+                        inline = true,
+                        name = L["Buffs on you"],
+                        order = 10,
+                        args = {},
+                        hidden = function( info ) return next( info.option.args ) == nil end,
+                    },
+                    debuffs = {
+                        type = "group",
+                        inline = true,
+                        name = L["Debuffs on your target"],
+                        order = 11,
+                        args = {},
+                        hidden = function( info ) return next( info.option.args ) == nil end,
+                    },
+                },
             },
 
             snapshots = {

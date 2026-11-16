@@ -311,6 +311,7 @@ function ns.StartConfiguration( external )
 
     if not external then
         if not Hekili.OptionsReady then Hekili:RefreshOptions() end
+        Hekili:EmbedCdmOptions() -- the Cooldown Manager panel reads the client's layout as the options open (Options.lua)
 
         local ACD = LibStub( "AceConfigDialog-3.0" )
         Hekili:WrapOptionsDialog() -- the spec tree's view (Options.lua), on a newer AceConfigDialog too
