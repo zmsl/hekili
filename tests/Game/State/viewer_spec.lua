@@ -1233,7 +1233,7 @@ describe("the CooldownViewer leaf: proof across sessions (L1113-L1115)", functio
         assert.is_true(I.presence.fact.pdark[I.AURA_UNIT + 1])
         assert.is_false(Q.NeverLit(1))
         local snap = VS.Snapshot()
-        assert.is_truthy(snap:find(" restored=2 unlaid=0\n", 1, true), snap) -- the snapshot's presence-proof line
+        assert.is_truthy(snap:find(" restored=2 unlaid=0 reads=1\n", 1, true), snap) -- the presence-proof line
         ctl.Fire("PLAYER_LOGOUT") -- still proven: saved again
         assert.are.same({ key = "spender_a", viewer = 3, unit = 2, silent = 0 }, api[SAVED].items[502])
     end)
@@ -1259,37 +1259,55 @@ describe("the CooldownViewer leaf: proof across sessions (L1113-L1115)", functio
         assert.are.same({ false, true, 1 }, { Q.proven[502], Q.proven[501], Q.restored })
     end)
 
-    it("a saved proof waits while its viewer is hidden or the layout is not filled yet; combat defers it", function()
-        local saved = provenLastSession()
-        session(copy(saved))
-        ctl.viewer.shown.BuffIconCooldownViewer = false
-        loaded()
-        sweep(3) -- the Essential item is judged; the hidden viewer's waits
-        assert.are.same({ false, true }, { Q.proven[502], Q.proven[501] })
-        assert.is_not_nil(api[SAVED].items[502])
-        ctl.viewer.shown.BuffIconCooldownViewer = nil
-        ctl.Callback(DATA) -- shown again (an edit, or Edit Mode)
-        sweep(4)
-        assert.are.same({ true, 2 }, { Q.proven[502], Q.restored })
-        -- the frames still unconfigured at the load: nothing judged, read again at the next sweep out of combat
-        session(copy(saved), function()
-            e = ctl.ViewerItem("EssentialCooldownViewer", 1, nil)
-            b = ctl.ViewerItem("BuffIconCooldownViewer", 1, nil)
-        end)
-        e.layoutIndex, b.layoutIndex = nil, nil
-        loaded()
-        sweep(3)
-        assert.are.same({ false, false }, { Q.proven[502], Q.proven[501] })
-        e.cooldownID, e.layoutIndex, b.cooldownID, b.layoutIndex = 501, 1, 502, 1 -- the viewers fill
-        ctl.combat = true
-        ctl.Fire("PLAYER_REGEN_DISABLED")
-        sweep(4) -- in combat: no layout read (an ID may be secret)
-        assert.are.same({ false, false }, { Q.proven[502], Q.proven[501] })
-        ctl.combat = false
-        ctl.Fire("PLAYER_REGEN_ENABLED")
-        sweep(5)
-        assert.are.same({ true, true, 2 }, { Q.proven[502], Q.proven[501], Q.restored })
-    end)
+    it(
+        "a saved proof waits while its viewer is hidden, empty or not filled yet; a retry waits for combat end",
+        function()
+            local saved = provenLastSession()
+            session(copy(saved))
+            ctl.viewer.shown.BuffIconCooldownViewer = false -- shown in combat only
+            loaded()
+            sweep(3) -- the Essential item is judged; the hidden viewer's waits
+            assert.are.same({ false, true }, { Q.proven[502], Q.proven[501] })
+            assert.is_not_nil(api[SAVED].items[502])
+            ctl.combat = true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.viewer.shown.BuffIconCooldownViewer = nil -- the pull shows it: read at once (its IDs plain here)
+            sweep(4)
+            assert.are.same({ true, 2 }, { Q.proven[502], Q.restored })
+            -- shown but showing no item yet: its entry waits, the other viewer's is judged
+            session(copy(saved), function()
+                e = ctl.ViewerItem("EssentialCooldownViewer", 1, 501)
+                b = ctl.ViewerItem("BuffIconCooldownViewer", 1, nil)
+            end)
+            b.layoutIndex = nil
+            loaded()
+            sweep(3)
+            assert.are.same({ false, true }, { Q.proven[502], Q.proven[501] })
+            assert.is_not_nil(api[SAVED].items[502])
+            b.cooldownID, b.layoutIndex = 502, 1
+            ctl.Callback(DATA)
+            sweep(4)
+            assert.are.same({ true, 2 }, { Q.proven[502], Q.restored })
+            -- the frames still unconfigured at the load: nothing judged, read again at the next sweep out of combat
+            session(copy(saved), function()
+                e = ctl.ViewerItem("EssentialCooldownViewer", 1, nil)
+                b = ctl.ViewerItem("BuffIconCooldownViewer", 1, nil)
+            end)
+            e.layoutIndex, b.layoutIndex = nil, nil
+            loaded()
+            sweep(3)
+            assert.are.same({ false, false }, { Q.proven[502], Q.proven[501] })
+            e.cooldownID, e.layoutIndex, b.cooldownID, b.layoutIndex = 501, 1, 502, 1 -- the viewers fill
+            ctl.combat = true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            sweep(4) -- in combat: no retry (a secret ID would make it a read every sweep)
+            assert.are.same({ false, false }, { Q.proven[502], Q.proven[501] })
+            ctl.combat = false
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            sweep(5)
+            assert.are.same({ true, true, 2 }, { Q.proven[502], Q.proven[501], Q.restored })
+        end
+    )
 
     it("a settings edit drops only the items it moved or removed; reordering keeps every proof", function()
         session(nil)

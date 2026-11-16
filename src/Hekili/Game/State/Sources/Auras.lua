@@ -893,7 +893,7 @@ I.OnSnapshot(function(out, now)
     local by = P.buildsBy or NO_BY -- the builds per trigger and the viewer's events in combat (L972)
     out[#out + 1] = string.format(
         "presence-proof repoints=%d struck=%d suspended=%d builds=%d loaded=%d hotfixed=%d override=%d belief=%d"
-            .. " other=%d evInCombat=%d carried=%d dropped=%d restored=%d unlaid=%d",
+            .. " other=%d evInCombat=%d carried=%d dropped=%d restored=%d unlaid=%d reads=%d",
         leaf.repoints or 0,
         leaf.struck or 0,
         leaf.suspended or 0,
@@ -907,7 +907,8 @@ I.OnSnapshot(function(out, now)
         leaf.carried or 0,
         leaf.dropped or 0,
         leaf.restored or 0,
-        leaf.unlaid or 0
+        leaf.unlaid or 0,
+        leaf.reads or 0
     )
     if leaf.SnapshotSlots then -- the raw bars (L1075): per slot, then per mapped aura on the layout or not
         leaf.SnapshotSlots(out, now, KEY)

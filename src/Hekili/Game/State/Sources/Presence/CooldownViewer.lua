@@ -94,12 +94,14 @@ local mapKey, carryKey, carryU, carryS = {}, {}, {}, {}
 -- Proof across sessions (L1113-L1115): pV[id] the viewer a cooldownID was proven on (0 none), carried with its proof;
 -- onV[id] a bitmask (VBIT) of the viewers a configured slot showed it on at the last layout read. Both by cooldownID,
 -- preallocated at build() to the map's keys. laid[v] visible viewer v's configured slots at that read (-1 not read:
--- hidden, or a secret ID or index). relayout: the Cooldown Manager's settings changed (OnDataChanged), so the next
--- sweep out of combat reads the layout; editing: an edit is open (OnPendingChanges), so the read waits until it is
--- saved or reverted; built: the map holds the def's items.
+-- hidden, or a secret ID or index). relayout: the next sweep reads the layout: the Cooldown Manager's settings changed
+-- (OnDataChanged), or a viewer was shown (an in-combat-only one at the pull) after the client loaded the layout
+-- (loaded: the first OnDataChanged); retry: the last read found no configured item while saved entries wait, so each
+-- sweep out of combat reads again; editing: an edit is open (OnPendingChanges), so no read until it is saved or
+-- reverted; built: the map holds the def's items.
 local pV, onV, carryV = {}, {}, {}
 local laid = { 0, 0, 0, 0 }
-local relayout, editing, built, api1 = false, false, false, nil
+local relayout, retry, loaded, editing, built, api1 = false, false, false, false, false, nil
 -- The saved store: the belief's own per-character saved global (Hekili.toc SavedVariablesPerCharacter), read and
 -- written only here through `api`; the core never names it. { v = SAVED_V, items = { [cooldownID] = { key, viewer,
 -- unit, silent } } }: the proofs at the last logout, and the entries no layout read has judged yet.
@@ -135,6 +137,7 @@ local Q = {
     suspended = 0, -- per build: the times silent verdicts suspended a cooldownID's proof (§2.5, review M3)
     builds = 0, -- per session, never reset: the map's builds (review S2)
     restored = 0, -- per session: saved proofs restored by a layout read (L1113)
+    reads = 0, -- per session: layout reads (the snapshot's: 0 after a login means the client's load was not seen)
     unlaid = 0, -- per session: proofs dropped because a settings edit moved or removed their item (L1114)
     -- at the last build (L972): the proven cooldownIDs whose proof it kept (same aura) and dropped (another or none)
     carried = 0,
@@ -479,15 +482,16 @@ local function member(f, u, t)
     return best > 0 and best or lj
 end
 
--- The layout read (L1113-L1115), from sweep() out of combat after a settings change: every configured slot (a plain
--- cooldownID and layoutIndex) of a visible viewer marks its id on that viewer. Once some viewer shows an item (a layout
--- not filled yet judges nothing: the next sweep out of combat reads again while saved entries wait), each read viewer
--- is judged: a proof whose viewer no longer shows its id (moved or removed) is dropped, and a saved entry is judged
--- once: restored when its viewer shows the id and the id still maps to the saved aura alone, else dropped. A restore
--- is no light: the item is a proven source again (its dark counts), nothing is up or down by it. Allocates nothing.
+-- The layout read (L1113-L1115), from sweep() (relayout, or retry out of combat): every configured slot (a plain
+-- cooldownID and layoutIndex) of a visible viewer marks its id on that viewer; a viewer with a secret one (in combat,
+-- often) is not read. Once some viewer shows an item (a layout not filled yet judges nothing: retry while saved entries
+-- wait), each read viewer is judged: a proof whose viewer no longer shows its id (moved or removed) is dropped; a saved
+-- entry whose viewer shows some item is judged once: restored when that viewer shows the id and the id still maps to
+-- the saved aura alone, else dropped. A restore is no light: the item is a proven source again (its dark counts),
+-- nothing is up or down by it. Allocates nothing.
 local function relay(api)
     local issecret = api.issecretvalue
-    relayout = false
+    relayout, Q.reads = false, Q.reads + 1
     for id in pairs(onV) do
         onV[id] = 0
     end
@@ -513,8 +517,8 @@ local function relay(api)
     end
     local sv = api[SAVED]
     local items = type(sv) == "table" and sv.v == SAVED_V and type(sv.items) == "table" and sv.items or nil
+    retry = not read and items ~= nil and next(items) ~= nil
     if not read then
-        relayout = items ~= nil and next(items) ~= nil
         return
     end
     for id, v in pairs(pV) do
@@ -541,7 +545,7 @@ local function relay(api)
             )
         then
             items[id] = nil -- not an entry this version writes: ignored
-        elseif laid[v] >= 0 then
+        elseif laid[v] > 0 then -- a visible viewer showing no item may not be filled yet: it waits
             local on = onV[id]
             if on and on % (2 * b) >= b and mapKey[id] == e.key and not provenCd[id] and provenU[id] == 0 then
                 provenCd[id], provenU[id], silentCd[id], pV[id] = true, e.unit, e.silent, v
@@ -570,9 +574,13 @@ local function sweep(t)
             end
             known[v] = n
         end
-        vis[v] = f ~= nil and f.IsVisible ~= nil and Plain(api, f:IsVisible()) == true
+        local shown = f ~= nil and f.IsVisible ~= nil and Plain(api, f:IsVisible()) == true
+        if shown and not vis[v] and loaded then -- shown (an in-combat-only viewer at the pull): its frames refilled
+            relayout = true
+        end
+        vis[v] = shown
     end
-    if relayout and built and not editing and not I.inCombat then -- out of combat only: an ID may be secret in it
+    if (relayout or retry and not I.inCombat) and built and not editing then
         relay(api)
     end
     for s = 1, Q.nSlots do
@@ -982,7 +990,7 @@ end)
 -- brackets an edit. Registered at VS.Start (PLAYER_LOGIN), before that load, whatever the leaf's state: the handlers
 -- only set a flag the sweep reads (the client runs them through securecallfunction).
 local function onData()
-    relayout = true
+    relayout, loaded = true, true
 end
 local function onPending(_, _, pending)
     editing = not api1.issecretvalue(pending) and pending == true

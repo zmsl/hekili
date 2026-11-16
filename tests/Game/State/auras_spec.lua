@@ -1558,6 +1558,26 @@ describe("auras", function()
                 assert.are.equal(0, I.auraVerdict.n[kT()])
             end)
 
+            -- L1113: the item proven last session, its proof restored at this session's layout load (in combat here):
+            -- the first missed cast closes as for a proof lit this session; "an item never lit" below is the control.
+            it("a proof restored from the last session closes the session's first missed cast", function()
+                api.HekiliCDMProof =
+                    { v = 1, items = { [502] = { key = "spender_c", viewer = 3, unit = 2, silent = 0 } } }
+                ctl.Callback("CooldownViewerSettings.OnPendingChanges", {}, false)
+                ctl.Callback("CooldownViewerSettings.OnDataChanged")
+                poll(10.5)
+                assert.are.same({ true, 1 }, { I.PRESENCE.viewer.proven[502], I.PRESENCE.viewer.restored })
+                assert.are.equal(I.UNDECIDED, P.Presence(REND, 2)) -- a restore is no light: no fact
+                cast(2, REND, 11, 15) -- dodged: the item never lights
+                for _, t in ipairs({ 11.2, 11.5, 11.8 }) do
+                    poll(t)
+                    assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
+                end
+                poll(12)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12))
+                assert.are.same({ 1, 12 }, { I.auraVerdict.n[kT()], I.auraVerdict.at[kT()] })
+            end)
+
             it("an item never lit (unproven) gives no verdict", function()
                 cast(2, REND, 11, 15)
                 for t = 11.5, 14, 0.5 do
