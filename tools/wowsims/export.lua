@@ -44,7 +44,7 @@ M.SPEC_PIN = {
 
     hunter_survival = NEW,
 
-    hunter_survival_melee = OLD,
+    hunter_survival_melee = NEW,
 
     hunter_survival_turret = NEW,
 

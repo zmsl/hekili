@@ -10,6 +10,7 @@
 - Hunter: Sniper Shot's mana cost now includes the Efficiency talent's discount, as wowsims.com charges it (not yet checked in game).
 - Hunter: Hekili now tracks Strider Kick's speed after your Strider Kick, and Lacerating Strikes' bleed after your Mongoose Bite.
 - Hunter: Beast Mastery Turret now follows wowsims.com's hawk rotation: Summon Hawk twice, then Arcane Shot, and no longer suggests Sniper Shot. Until you have Summon Hawk, it suggests Arcane Shot on its own (not yet checked in game).
+- Hunter: Survival Melee now runs out to reapply Serpent Sting while Strider Kick's speed is up and you have more than 30% mana, as wowsims.com does, and no longer suggests a Major Mana Potion (not yet checked in game).
 
 ### Fixed
 

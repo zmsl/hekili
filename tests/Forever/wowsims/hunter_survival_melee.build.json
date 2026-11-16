@@ -11,55 +11,55 @@
     },
     "equipment":{
       "items":[{
-          "id":16677
+          "id":252605,
+          "enchant":1508
         },{
-          "id":19620,
+          "id":15411,
           "enchant":904
         },{
-          "id":16679
+          "id":272106
         },{
-          "id":18511,
-          "enchant":849
+          "id":13340,
+          "enchant":7667
         },{
-          "id":16674,
+          "id":252483,
           "enchant":1891
         },{
-          "id":16681,
+          "id":18375,
           "enchant":7656
         },{
-          "id":16676,
+          "id":15063,
           "enchant":2564
         },{
-          "id":16680
+          "id":22232
         },{
-          "id":16678,
-          "enchant":8491
+          "id":15062,
+          "enchant":1508
         },{
-          "id":16675,
+          "id":226881,
           "enchant":1887
         },{
           "id":272408
         },{
-          "id":11990,
-          "randomSuffix":12728
+          "id":13098
+        },{
+          "id":260205
         },{
           "id":272437
         },{
-          "id":19120
-        },{
           "id":12798,
+          "enchant":1900
+        },{
+          "id":13368,
           "enchant":2564
         },{
-          "id":12783,
-          "enchant":2564
-        },{
-          "id":22347,
-          "enchant":2523
+          "id":18680,
+          "enchant":8720
         }]
     },
     "reactionTimeMaxMs":350,
     "race":"RaceOrc",
-    "talentsString":"53200005001-005005-5302002300500221",
+    "talentsString":"53200005001-004-530200230050022151",
     "profession2":"Blacksmithing",
     "hunter":{
       "options":{
@@ -246,6 +246,52 @@
         },{
           "action":{
             "condition":{
+              "and":{
+                "vals":[{
+                    "auraIsActive":{
+                      "auraId":{
+                        "spellId":1317257
+                      }
+                    }
+                  },{
+                    "not":{
+                      "val":{
+                        "dotIsActive":{
+                          "spellId":{
+                            "spellId":13555,
+                            "rank":8
+                          }
+                        }
+                      }
+                    }
+                  },{
+                    "cmp":{
+                      "op":"OpGt",
+                      "rhs":{
+                        "const":{
+                          "val":"30%"
+                        }
+                      },
+                      "lhs":{
+                        "currentManaPercent":{
+                        }
+                      }
+                    }
+                  }]
+              }
+            },
+            "move":{
+              "rangeFromTarget":{
+                "variableRef":{
+                  "name":"Shoot spot"
+                }
+              }
+            }
+          },
+          "notes":"Strider Kick's speed is up, Serpent Sting is down and I have mana to spare: run out past the dead zone and sting."
+        },{
+          "action":{
+            "condition":{
               "cmp":{
                 "op":"OpGt",
                 "rhs":{
@@ -266,7 +312,7 @@
               "groupName":"Walk in"
             }
           },
-          "notes":"Start of the fight: walk into melee, shooting on the way without losing an Auto Shot."
+          "notes":"Start of the fight and back from the Sting: walk into melee, shooting on the way without losing an Auto Shot."
         },{
           "action":{
             "castSpell":{
@@ -370,6 +416,13 @@
           "value":{
             "const":{
               "val":"true"
+            }
+          }
+        },{
+          "name":"Shoot spot",
+          "value":{
+            "const":{
+              "val":"13.19"
             }
           }
         },{
