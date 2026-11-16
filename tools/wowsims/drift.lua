@@ -215,9 +215,11 @@ end
 
 M.newRequest = newRequest -- tests/Forever/wowsims_siml_spec.lua
 
--- `tank`: the checked-in request's tank slot (apl.isTank), as apl.lua's pack build passes it (rule 13's defensive racials)
-local function translate(apl, set, r, log, player, encounter, tank)
-    local text, omitted = apl.translate(player.rotation, apl.context(set, r, log, player, encounter, tank))
+-- `req`: the checked-in request, whose encounter and tank slot (apl.isTank) every side is translated with, as apl.lua's
+-- pack build does (rule 13's defensive racials)
+local function translate(apl, set, r, log, player, req)
+    local text, omitted =
+        apl.translate(player.rotation, apl.context(set, r, log, player, req.encounter, apl.isTank(req)))
     return text, omitted
 end
 
@@ -225,11 +227,11 @@ M.translate = translate -- tests/Forever/wowsims_drift_spec.lua
 
 -- the CLI a spec's pin-side .siml is parsed with: WOWSIMS_PIN_CLI (a CLI built at the spec's pin) when the pin is not the
 -- new rev; none otherwise (export.lua then reads WOWSIMS_CLI, else the git-archive dir, which holds no CLI)
-function M.pinCli(pin, new, newCli, pinCli)
-    if pin == new then
-        return newCli
+function M.pinCli(ctx, pin)
+    if pin == ctx.new then
+        return ctx.cli
     end
-    return pinCli
+    return ctx.pinCli
 end
 
 function M.spec(ctx, spec)
@@ -268,7 +270,6 @@ function M.spec(ctx, spec)
 
     local req = json.decode(slurp(ex.OUT .. spec .. ".json"))
     local player = req.raid.parties[1].players[1]
-    local tank = apl.isTank(req)
     emit("\n### Talents (the request's string on both trees)")
     local tree = "ui/sim/talents/trees/" .. r.talentTree .. ".json"
     local function decode(rev)
@@ -293,7 +294,7 @@ function M.spec(ctx, spec)
     emit("\n### Pack lines (translator on both revs)")
     local set = require("Forever.helpers.engine").abilitySet(r.class)
     local log = slurp(ex.OUT .. spec .. ".log")
-    local ok, old, oldOmit = pcall(translate, apl, set, r, log, player, req.encounter, tank)
+    local ok, old, oldOmit = pcall(translate, apl, set, r, log, player, req)
     if not ok then
         emit("- pin translation error: %s", tostring(old))
         old = nil
@@ -306,7 +307,7 @@ function M.spec(ctx, spec)
     -- shipped -> pin: the checked-in request against the recipe's request built from the pin's own files (a stale
     -- export, or a request edit the re-pin made by hand); pin -> new: the drift itself
     -- a .siml recipe path parses with its pin's CLI: WOWSIMS_NEW_CLI at the new rev, else WOWSIMS_PIN_CLI
-    local okp, preq = pcall(ex.request, r, ctx.treeAt(pin), spec, M.pinCli(pin, ctx.new, ctx.cli, ctx.pinCli))
+    local okp, preq = pcall(ex.request, r, ctx.treeAt(pin), spec, M.pinCli(ctx, pin))
     local notes = {}
     local ok2, nreq = pcall(newRequest, ex, r, spec, ctx.tree, ctx.cli, notes)
     for _, n in ipairs(notes) do
@@ -318,8 +319,8 @@ function M.spec(ctx, spec)
             emit("- request talents differ: `%s` -> `%s`", tostring(pa.talentsString), tostring(pb.talentsString))
         end
         -- the encounter is export.lua's M.ENCOUNTER on every side: the checked-in request's
-        local oka, ta, oa = pcall(translate, apl, set, r, log, pa, req.encounter, tank)
-        local okb, tb, ob = pcall(translate, apl, set, r, log, pb, req.encounter, tank)
+        local oka, ta, oa = pcall(translate, apl, set, r, log, pa, req)
+        local okb, tb, ob = pcall(translate, apl, set, r, log, pb, req)
         if not (oka and okb) then
             emit("- TRANSLATION ERROR: %s", tostring(oka and tb or ta))
         else

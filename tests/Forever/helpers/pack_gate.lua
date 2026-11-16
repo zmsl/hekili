@@ -477,8 +477,11 @@ M.FLICKER = {
     -- 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 1, heldReady 153 / 166 / 155, agreement .987 / .992 / .995, react p90 0 / 0 / 0):
     -- heldReady 146 -> 166 (the worst set), readyShort 0 -> 1, flicker 0.03 -> 0.01 (the worst, 0, + 0.01). Cause: CN22 nearest
     -- rounding (Stormstrike 121 -> 122) re-times the gap-BT near tie (flame_shock -> stormstrike, our lower mana bound ~4
-    -- under truth; traced seed 1 and seed 19). The one readyShort event (seed 44 t 183.00) is a Lightning Bolt our queue
-    -- priced 0 with Maelstrom Weapon believed at 5 where the world priced 220
+    -- under truth; traced seed 1 and seed 19). The one readyShort event (seed 44 t 183.00, traced on the seeds 41-60 boot:
+    -- the fight's last tick, Lightning Bolt shown ready at cost 0 with 5 Maelstrom Weapon stacks; belief and world both held
+    -- 5 from 182.20 (no lost decrement, no stack or consume at the 183.00 tick, so not gap CT's last-tick shape), and the
+    -- press's price (content.resolve in the loop) read no stack: 220 against 58.8 mana, a refusal for cost): the harness
+    -- pricing the press, not the belief
     -- react bar 8 -> 3 (owner L1205): the 0.7 mana-wait tie no longer occurs (react p90 0 on all seed sets)
     ["Enhancement"] = { flicker = 0.01, retracted = 0, heldReady = 166, readyShort = 1 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)

@@ -492,8 +492,8 @@ M.READY = {
     -- Fire Nova the filler at 375, Skyborne); 85 decisions, 16 real (10 early, 6 late); by class cooldown 15, cost 9, gcd 43
     -- { 0.71, 16 } -> { 0.38, 34 } 0.7 re-pin (e5a9cd2a2dfc, lane shaman, R6, owner ruling option b, reversible): 92
     -- decisions, early 26 / late 8, by class cooldown 23 / cost 10 / gcd 46 (earth_shock 11, stormstrike 6, fire_nova 6,
-    -- shown 0.2-0.8 s before wowsims's cast). Cause as the Enhancement loop bar (pack_gate M.REACT_P90_BY): the
-    -- conservative mana lower bound loses cost ties at the oracle's exact edge, re-timed by CN8's queue window; no cast
+    -- shown 0.2-0.8 s before wowsims's cast). Cause as the Enhancement loop bar then (a react p90 bar of 8, since
+    -- reverted to 3): the conservative mana lower bound loses cost ties at the oracle's exact edge, re-timed by CN8's queue window; no cast
     -- lost. Not traced row by row (deferral)
     -- { 0.38, 34 } -> { 0.40, 34 } (regen phase lane, R6, cause harness: the indexed poll clock (ledger L606/L667;
     -- the replay world ticks no regen): the decision window moved, timing fixture re-recorded; median 0.400, 34 real)

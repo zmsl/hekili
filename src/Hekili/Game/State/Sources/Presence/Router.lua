@@ -168,7 +168,9 @@ local function activate(t)
 end
 
 -- The viewer's events reach the client only while the router has the leaf: switch off is the Default to the digit
--- (decision 88), so it registers nothing new.
+-- (decision 88), so none of these is registered. The leaf's two Cooldown Manager settings callbacks
+-- (CooldownViewer.lua) register at VS.Start whatever the switch; with the leaf off they only set flags (read once it
+-- is on).
 local VIEWER_EVENTS = {
     "COOLDOWN_VIEWER_DATA_LOADED",
     "COOLDOWN_VIEWER_TABLE_HOTFIXED",

@@ -30,6 +30,11 @@ function M.kinds(omitted)
     return "[" .. table.concat(out, " ") .. "]"
 end
 
+-- the translation of a request's player, with its tank slot as apl.lua's pack build passes it
+function M.translate(apl, set, r, log, player, req)
+    return apl.translate(player.rotation, apl.context(set, r, log, player, req.encounter, apl.isTank(req)))
+end
+
 local function dry(ex, apl, root, spec)
     local r = ex.recipe(spec)
     local req = ex.request(r, root, spec)
@@ -40,7 +45,7 @@ local function dry(ex, apl, root, spec)
         lf:close()
     end
     local set = require("Forever.helpers.engine").abilitySet(r.class)
-    local text, omitted = apl.translate(player.rotation, apl.context(set, r, log, player, req.encounter))
+    local text, omitted = M.translate(apl, set, r, log, player, req)
     local lines = 0
     for _ in text:gmatch("[^\n]+") do
         lines = lines + 1

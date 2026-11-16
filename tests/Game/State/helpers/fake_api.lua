@@ -56,8 +56,9 @@ function M.secretsIn(t)
     end
     return n
 end
--- UnitCreatureType's IDs (CreatureType.db2) by State.lua's `target.creature_type` key.
-local CREATURE_IDS = {}
+-- UnitCreatureType's IDs (CreatureType.db2) and English names by State.lua's `target.creature_type` key (the names
+-- built once: the fake allocates nothing per call).
+local CREATURE_IDS, CREATURE_NAMES = {}, {}
 for id, key in ipairs({
     "beast",
     "dragonkin",
@@ -76,6 +77,7 @@ for id, key in ipairs({
     "aberration",
 }) do
     CREATURE_IDS[key] = id
+    CREATURE_NAMES[key] = (key:gsub("_", " "):gsub("^%l", string.upper))
 end
 local NO_ENCHANTS = {} -- an unenchanted weapon slot's list (shared: the fake allocates nothing per call)
 -- The Cooldown Manager's four viewer frames (providers spec §4.2; CV research §2), in category order 0-3.
@@ -200,6 +202,7 @@ function M.new()
         stealthed = false, -- IsStealthed (SECRET: a secret answer)
         enchants = {}, -- [weapon slot] = C_Item.GetWeaponEnchantInfo's list (SECRET: a secret answer; nil: none)
         enchantCalls = 0, -- C_Item.GetWeaponEnchantInfo calls
+        creatureCalls = 0, -- UnitCreatureType calls
         ranged = { 3.1, 30, 40, 0, 0, 1 }, -- UnitRangedDamage("player")
         damage = { 0, 0, 0, 0 }, -- UnitDamage's min and max main, min and max off (the harness's out-of-combat cache)
         classID = 0, -- UnitClass's third return
@@ -656,13 +659,14 @@ function M.new()
         return "normal"
     end
     function api.UnitCreatureType(unit)
+        ctl.creatureCalls = ctl.creatureCalls + 1
         local key = ctl.creature[unit] or "beast"
         if key == SECRET then
             return SECRET, SECRET
         end
         local id = CREATURE_IDS[key]
         if id then -- the client's English name and its CreatureType ID
-            return (key:gsub("_", " "):gsub("^%l", string.upper)), id
+            return CREATURE_NAMES[key], id
         end
     end
     function api.UnitIsConnected()
@@ -1385,6 +1389,26 @@ function M.new()
     end
     function ctl.Fire(event, ...)
         api.frame:Fire(event, ...)
+    end
+    -- EventRegistry (CallbackRegistryMixin): one callback per owner and event; ctl.Callback(event, ...) runs each as
+    -- TriggerEvent's function callbacks do, func(owner, ...). `ctl.callbacks[event][owner]` is the registry.
+    ctl.callbacks = {}
+    api.EventRegistry = {
+        RegisterCallback = function(_, event, func, owner)
+            ctl.callbacks[event] = ctl.callbacks[event] or {}
+            ctl.callbacks[event][owner] = func
+            return owner
+        end,
+        UnregisterCallback = function(_, event, owner)
+            if ctl.callbacks[event] then
+                ctl.callbacks[event][owner] = nil
+            end
+        end,
+    }
+    function ctl.Callback(event, ...)
+        for owner, func in pairs(ctl.callbacks[event] or {}) do
+            func(owner, ...)
+        end
     end
     return api, ctl
 end

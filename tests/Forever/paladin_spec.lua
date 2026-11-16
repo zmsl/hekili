@@ -451,7 +451,7 @@ describe("Forever Paladin", function()
         w.game.known[10314] = true
         assert.are.same({ "undead", "demon" }, ld.run(x.usable_on, ld.env(w)))
         w.game.known[415073] = true
-        assert.is_nil(ld.run(x.usable_on, ld.env(w)))
+        assert.are.same({ "any" }, ld.run(x.usable_on, ld.env(w))) -- an attackable target of any type (L1160)
     end)
 
     it(
@@ -1202,5 +1202,134 @@ describe("Exorcism's 879 ranks with the creature type hidden", function()
         H.ctl.ranges[10314] = { 0, 30 } -- in range: true
         assert.are.same({ true }, usable())
         assert.are.same({}, H.errors)
+    end)
+
+    -- L1142: Holy Wrath (Undead and Demons) is self-centred, so its own range answer is nil on every target (L187).
+    -- Its type is confirmed by the range answer of a known 879 (Undead/Demon) Exorcism rank; with none known, or with a
+    -- 415068 rank (any target, so its answer confirms nothing), it waits for a plain type. 3 yd from the target.
+    local function paladin(known)
+        local H = headless.new({
+            character = {
+                class = "PALADIN",
+                classID = 2,
+                specID = 1486,
+                level = 60,
+                known = known,
+                power = { type = 0, token = "MANA", max = 5000 },
+                speed = { 3.6 },
+            },
+            pack = "Retribution (wowsims.com)",
+        })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, 3
+        H.ctl.ranges[10318] = { 0, 0 } -- self-centred: the client's plain nil
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now
+        return H,
+            function(creature)
+                H.ctl.creature.target = creature
+                t = t + 0.2
+                H.ctl.now = t
+                assert.is_true(headless.cycle(H, t))
+                return { H.Hekili.State:IsUsable("holy_wrath") }
+            end
+    end
+    local UNDEAD_RANKS = { 879, 5614, 5615, 10312, 10313, 10314, 10318 }
+    local NIL = { false, "creature type unknown; range nil: wrong target type" }
+
+    it("Holy Wrath: a plain type decides in the open world; no target refuses it", function()
+        local H, usable = paladin(UNDEAD_RANKS)
+        assert.are.same({ true }, usable("undead"))
+        assert.are.same({ true }, usable("demon"))
+        assert.are.same({ false, "target's creature type not in usable_on" }, usable("humanoid"))
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        H.ctl.exists.target = false
+        assert.are.same({ false, "usable_on: no attackable target" }, usable("unknown"))
+        assert.is_true(H.Hekili.State.combat > 0)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("Holy Wrath's check allocates nothing: restricted, Exorcism true or nil, no 879 rank known", function()
+        for _, c in ipairs({ { UNDEAD_RANKS, { 0, 30 } }, { UNDEAD_RANKS, { 0, 0 } }, { { 2812, 10318 } } }) do
+            local H, usable = paladin(c[1])
+            H.ctl.guid.target, H.ctl.ranges[10314] = SECRET, c[2]
+            usable(SECRET)
+            local st = H.Hekili.State
+            st:IsUsable("holy_wrath")
+            collectgarbage("collect")
+            collectgarbage("stop")
+            local b = collectgarbage("count")
+            for _ = 1, 50 do
+                st:IsUsable("holy_wrath")
+            end
+            local d = (collectgarbage("count") - b) * 1024
+            collectgarbage("restart")
+            assert.are.equal(0, d, #c[1])
+        end
+    end)
+
+    it("Holy Wrath restricted (type and GUID secret): the known 879 Exorcism rank's range answer decides", function()
+        local H, usable = paladin(UNDEAD_RANKS)
+        H.ctl.guid.target = SECRET
+        H.ctl.ranges[10314] = { 0, 30 } -- Exorcism: true (an Undead or Demon target)
+        assert.are.same({ true }, usable(SECRET))
+        H.ctl.ranges[10314] = { 0, 2 } -- false: a valid type, out of reach
+        assert.are.same({ true }, usable(SECRET))
+        H.ctl.ranges[10314] = { 0, 0 } -- nil: a type Exorcism cannot hit
+        assert.are.same(NIL, usable(SECRET))
+        assert.are.same(NIL, usable("undead")) -- a plain type read under the restriction is not trusted
+        H.ctl.ranges[10314], H.ctl.distance.target = nil, SECRET
+        assert.are.same({ false, "creature type unknown; range secret: unconfirmed" }, usable(SECRET))
+        H.ctl.distance.target = 3
+        H.ctl.guid.target = "Creature-1" -- the target-swap poll in the open world: type plainly unknown
+        H.ctl.ranges[10314] = { 0, 30 }
+        assert.are.same({ true }, usable("unknown"))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("Holy Wrath restricted with no 879 Exorcism rank known, or a 415068 rank known: refused", function()
+        for _, known in ipairs({ { 2812, 10318 }, { 879, 5614, 10314, 415068, 10318 } }) do
+            local H, usable = paladin(known)
+            H.ctl.guid.target = SECRET
+            for _, q in ipairs(known) do
+                H.ctl.ranges[q] = q ~= 10318 and { 0, 30 } or { 0, 0 } -- every Exorcism rank answers true
+            end
+            assert.are.same(NIL, usable(SECRET), #known)
+            H.ctl.guid.target = "Creature-1" -- open world: the plain type decides
+            assert.are.same({ true }, usable("undead"), #known)
+            assert.are.same({}, H.errors)
+        end
+    end)
+
+    -- L1160 (owner: "All Exorcism ranks"): the 415068 ranks hit any type, but need an attackable living target too.
+    it("Exorcism's 415068 ranks: any type, but no target, a friendly or a dead one refuses them", function()
+        local H, usable = paladin({ 879, 10314, 415068, 415073 })
+        local function exorcism(creature)
+            usable(creature)
+            return { H.Hekili.State:IsUsable("exorcism") }
+        end
+        local NO_TARGET = { false, "usable_on: no attackable target" }
+        H.ctl.ranges[415073] = { 0, 30 }
+        assert.are.same({ true }, exorcism("humanoid"))
+        assert.are.same({ true }, exorcism("undead"))
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        H.ctl.exists.target = false
+        assert.are.same(NO_TARGET, exorcism("unknown"))
+        H.ctl.exists.target, H.ctl.friendly.target = true, true
+        assert.are.same(NO_TARGET, exorcism("humanoid"))
+        H.ctl.friendly.target, H.ctl.dead.target = nil, true
+        assert.are.same(NO_TARGET, exorcism("humanoid"))
+        H.ctl.dead.target, H.ctl.guid.target = nil, SECRET -- restricted: the range answer decides
+        assert.are.same({ true }, exorcism(SECRET))
+        H.ctl.ranges[415073] = { 0, 0 }
+        assert.are.same({ false, "range nil: not a valid target" }, exorcism(SECRET))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("Holy Wrath's range is its 20 yd radius", function()
+        local H = paladin(UNDEAD_RANKS)
+        assert.are.equal(20, H.Hekili.Class.abilities.holy_wrath.range)
     end)
 end)

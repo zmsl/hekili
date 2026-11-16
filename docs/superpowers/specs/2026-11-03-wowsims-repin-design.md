@@ -352,10 +352,15 @@ key>", ... }`, `loop = true|false` (default false) and `on_deviation = "stay" | 
     sequence is omitted and listed as a deviation.
   - `sequenceIsComplete(<name>)` becomes `!window.<name>.up`.
   - `resetSequence` becomes `loop`.
-  - `strictSequence` becomes a strict stepped window. Its start rule (wowsims: every step castable at once) becomes
-    the evaluator: each step's cooldown readiness read from the belief, and the sequence's own condition. A part not
-    readable in the belief (a secret resource, say) is omitted and listed as a deviation. Where rule 14's chain
-    already translates a shipped `strictSequence` (the Warrior stance swaps), it stays until its lane moves it, gated.
+  - `strictSequence` becomes a strict stepped window. Correction: wowsims's start rule at the pin is "the first step
+    is ready" (the GCD within the spell queue window and the first step ready, `apl_actions_sequences.go`
+    `APLActionStrictSequence.IsReady`), not "every step castable at once"; "every step castable now" is SimC's rule.
+    SimC is the default reference for sequence behaviour (windows ruling 14, L815): a sequence line that writes no
+    option behaves as in SimC, and the wowsims translator writes the wowsims options on every sequence it emits.
+    The build reference for windows and sequences is the windows design v6
+    (`2026-11-13-windows-sequences-design.md`), which supersedes this bullet's evaluator approach (APL sequences
+    carry no evaluator; a stepped Lua window needs one). Where rule 14's chain already translates a shipped
+    `strictSequence` (the Warrior stance swaps), it stays until its lane moves it, gated.
   - The actual sequences (Retribution's `move1`-`move3`, the Hunters' if any) are translated in their lanes, gated;
     the windows core only provides the mechanism.
 
