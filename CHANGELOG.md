@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- Rake, Rip and other damage over time effects are no longer recommended again while still on the target after a recast missed.
 
 ### Known issues
 

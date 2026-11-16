@@ -903,6 +903,35 @@ describe("Forever Warlock through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Hotfix 0.8.6 (L1239): a resist is no avoid the belief undoes (Rows.lua REFUSED), so the core's `missable` reset
+    -- hook takes the resisted Corruption down; it removes only the resisted cast's own application.
+    it("drops a resisted Corruption in the core at the next reset; a landed one stays", function()
+        local H = headless.new({ character = character() })
+        local S, VS, ctl = H.Hekili.State, H.ns.VirtualState, H.ctl
+        ctl.inRange.target, ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        local function corruption(act)
+            t = t + 2
+            ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. t, 25311)
+            H.Fire("UNIT_COMBAT", "target", act, "", act == "WOUND" and 100 or 0, 32)
+            assert.is_true(headless.cycle(H, t + 0.1))
+            assert.is_true(headless.cycle(H, t + 0.5))
+            S.reset("Primary", true)
+            return S.debuff.corruption.up, VS.Aura("target", 172, t + 0.5) ~= nil
+        end
+        assert.are.same({ false, true }, { corruption("RESIST") }) -- the belief keeps it; the core drops it
+        assert.are.same({ true, true }, { corruption("WOUND") })
+        -- shortcut: a resisted refresh drops the earlier, still-running application too (the belief wrote the
+        -- refresh and undoes no resist), as before; upgrade with a belief undo of a resisted cast's write.
+        assert.are.same({ false, true }, { corruption("RESIST") })
+        assert.are.same({}, H.errors)
+    end)
+
     -- The stat split's shared buffs (L971): a Priest's Divine Spirit on a Warlock. Hekili_Shared registers it for every
     -- class, its Spirit by the aura's own spell ID (27841, rank 4: +40; wowsims spells_auto_gen.go aura 29, misc 4). Up
     -- at the out-of-combat read (Spirit 261 = 221 + 40), it falls mid-fight: the belief's Spirit drops by its 40 at

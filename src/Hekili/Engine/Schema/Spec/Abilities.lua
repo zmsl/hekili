@@ -5,6 +5,7 @@
 local addon, ns = ...
 local Facade = ns.Facade
 local C_Item, C_Spell, GetTime = Facade.C_Item, Facade.C_Spell, Facade.GetTime
+local abs = math.abs
 local Hekili = _G[ addon ]
 local class = Hekili.Class
 local state = Hekili.State
@@ -28,22 +29,26 @@ local protectedFunctions = {
 
 -- A missable DoT (an ability's `missable`, C15): a dodged, parried or missed cast still raised SPELL_CAST_SUCCESS, so
 -- its `now` applied the debuff (`missable = true`: the ability's own key; a string: that debuff's key). Our
--- SPELL_MISSED row of any of its IDs (Game/Events/Rows.lua synthesizes it) removes it at the next reset, unless it was
--- applied again since. One combat-log hook and one reset hook per spec; neither allocates.
+-- SPELL_MISSED row of any of its IDs (Game/Events/Rows.lua synthesizes it) removes it at the next reset while it is
+-- still that cast's application: the row's time is its cast's (a direct ticket's anchor), the belief's applied time
+-- of the cast. A later application stands, and so does an earlier one the belief's avoid undo put back (an avoided
+-- recast of a DoT still running). One combat-log hook and one reset hook per spec; neither allocates.
+-- shortcut: a projectile DoT (`startsAtLanding`) is applied at its landing and a ticks or channel ticket's row carries
+-- its own time, so neither matches; no `missable` ability has either: compare with the flight if one ever does.
 local function trackMisses( spec, key, data )
     local missedAt, auraOf = spec.missedAt, spec.missAura
     if not missedAt then
         missedAt, auraOf = {}, {}
         spec.missedAt, spec.missAura = missedAt, auraOf
-        local function onRow( _, subtype, _, sourceGUID, _, _, _, _, _, _, _, spellID )
+        local function onRow( timestamp, subtype, _, sourceGUID, _, _, _, _, _, _, _, spellID )
             local aura = subtype == "SPELL_MISSED" and sourceGUID == state.GUID and auraOf[ spellID ]
-            if aura then missedAt[ aura ] = GetTime() end
+            if aura then missedAt[ aura ] = timestamp end
         end
         spec:RegisterHook( "COMBAT_LOG_EVENT_UNFILTERED", onRow )
         spec:RegisterHook( "reset_precast", function()
             if now == query_time then
                 for aura, t in pairs( missedAt ) do
-                    if t > 0 and debuff[ aura ].up and t >= debuff[ aura ].applied then
+                    if t > 0 and debuff[ aura ].up and abs( debuff[ aura ].applied - t ) < 0.01 then
                         removeDebuff( "target", aura )
                     end
                 end

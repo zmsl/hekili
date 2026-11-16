@@ -1172,24 +1172,26 @@ describe("Forever Druid's bleeds through the real engine's missable handling", f
         rawset(env.state, "GUID", ME)
     end)
 
-    it("removes a missed Rake or Rip at the next reset, not a hit or a newer application", function()
+    -- The row's time is its cast's (Rows.lua: a direct ticket's anchor), as the belief's applied time of that cast.
+    it("removes a missed Rake or Rip at the next reset, not a hit, a newer or an older application", function()
         assert.are.same({}, env.loadErrors)
         row(10, "SPELL_MISSED", 1823) -- Rake rank 2, dodged
-        assert.are.equal("target:rake", reset(11, { rake = { up = true, applied = 9.9 } }))
+        assert.are.equal("target:rake", reset(11, { rake = { up = true, applied = 10 } }))
         assert.are.equal("", reset(13, { rake = { up = true, applied = 12 } })) -- reapplied since
+        assert.are.equal("", reset(11, { rake = { up = true, applied = 7 } })) -- the earlier one the belief put back
         row(20, "SPELL_CAST_SUCCESS", 1079) -- a Rip that landed
         assert.are.equal("", reset(21, { rip = { up = true, applied = 20 } }))
         row(30, "SPELL_MISSED", 9827) -- Pounce: its bleed, not the stun
         assert.are.equal(
             "target:pounce_bleed",
-            reset(31, { pounce_bleed = { up = true, applied = 29.9 }, pounce = { up = true, applied = 29.9 } })
+            reset(31, { pounce_bleed = { up = true, applied = 30 }, pounce = { up = true, applied = 30 } })
         )
         row(40, "SPELL_MISSED", 1079)
         rawset(env.state, "GUID", "Player-2") -- another player's miss
         row(41, "SPELL_MISSED", 1822)
         assert.are.equal(
             "target:rip",
-            reset(42, { rip = { up = true, applied = 39 }, rake = { up = true, applied = 39 } })
+            reset(42, { rip = { up = true, applied = 40 }, rake = { up = true, applied = 41 } })
         )
     end)
 end)
@@ -1876,5 +1878,60 @@ describe("Forever Druid Claw vs Shred (L602)", function()
 
     it("reads a secret targettarget as behind", function()
         assert.are.equal("shred", first({ shredding = 3, tt = SECRET }))
+    end)
+end)
+
+-- Player report 3 (hotfix 0.8.6, L1239): an avoided recast of a running Rake. The belief's avoid undo puts the first
+-- application back; the core's `missable` reset hook must leave it (it removes only the missed cast's own application),
+-- so `debuff.rake.up` holds with the first application's remains and the next Rake waits. Through the real engine.
+describe("Forever Druid Rake after an avoided recast (hotfix 0.8.6)", function()
+    local headless = require("Game.harness.headless")
+    local dlw = require("Forever.helpers.druid_loop_world")
+    local H, S, VS, spec, t
+
+    before_each(function()
+        local C = dlw.Feral
+        H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        S, VS, spec = H.Hekili.State, H.ns.VirtualState, H.Hekili.Class.specs[C.SPEC]
+        H.ctl.inRange.target, H.ctl.level.target, H.ctl.power[3] = true, 60, 100
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+    end)
+
+    -- A Rake at t + dt with the target's outcome `act` in its frame, then one display cycle.
+    local function rake(dt, act)
+        t = t + dt
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. t, 9904)
+        H.Fire("UNIT_COMBAT", "target", act, "", act == "WOUND" and 40 or 0, 1)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        return t
+    end
+
+    it("keeps the first application up when the recast is dodged, with its remains", function()
+        local first = rake(1, "WOUND")
+        local expiry = VS.Aura("target", 1822, first + 0.1).est
+        rake(2, "DODGE")
+        assert.are.equal(expiry, VS.Aura("target", 1822, t + 0.1).est) -- the belief put the first one back
+        assert.is_true(spec.missedAt.rake > 0) -- the recast's SPELL_MISSED row reached the core's hook
+        t = t + 0.5
+        assert.is_true(headless.cycle(H, t))
+        S.reset("Primary", true)
+        assert.is_true(S.debuff.rake.up)
+        assert.is_true(math.abs(S.debuff.rake.remains - (expiry - t)) < 0.01, tostring(S.debuff.rake.remains))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("leaves a dodged first Rake down", function()
+        rake(1, "DODGE")
+        t = t + 0.5
+        assert.is_true(headless.cycle(H, t))
+        S.reset("Primary", true)
+        assert.is_false(S.debuff.rake.up)
+        assert.are.same({}, H.errors)
     end)
 end)
