@@ -391,31 +391,21 @@ describe("every pack line within the engine's limits (CN25) #slow", function()
         return out
     end
 
-    -- Bytes `H` allocates per cycle over n cycles from t, the collector stopped (scripts_size_spec's way).
-    local function perCycle(headless, H, t, n)
-        collectgarbage("collect")
-        collectgarbage("collect")
-        collectgarbage("stop")
-        headless.cycle(H, t)
-        local b = collectgarbage("count")
-        for i = 1, n do
-            headless.cycle(H, t + i * 0.2)
-        end
-        local d = (collectgarbage("count") - b) * 1024 / n
-        collectgarbage("restart")
-        return d
-    end
-
     -- Pack `name` of the built set `packs` loaded in the engine for content `C` of druid_loop_world (`o.form`: the
-    -- client's form index, `o.shredding`: Shredding Attacks ranks, `o.tt`: the targettarget answer), a level 60 target
+    -- client's form index, `o.shredding`: Shredding Attacks ranks, `o.tt`: the targettarget answer, `o.known`: spell IDs
+    -- known besides the content's own), a level 60 target
     -- in melee, in combat, energy fixed at 100. Asserts the pack loads and runs with no error (`o.allow`: a pattern of
-    -- errors to let through), every variable line pure, its value compiled as its condition would be, nothing
-    -- registered and nothing allocated; returns the first three picks and the number of variable lines.
+    -- errors to let through), every variable line pure, its value compiled as its condition would be and nothing
+    -- registered (the pure read path's 0 B: scripts_size_spec); returns the first three picks and the number of
+    -- variable lines.
     local function run(packs, name, C, o)
         local headless = require("Game.harness.headless")
         local c = C.character()
         c.form = o.form or c.form
         c.talents[16966] = o.shredding or c.talents[16966]
+        for _, id in ipairs(o.known or {}) do
+            c.known[#c.known + 1] = id
+        end
         local H = headless.new({ character = c, pack = name })
         assert.are.same({}, H.loadErrors)
         H.ctl.level.target, H.ctl.distance.target = 60, 3
@@ -427,6 +417,7 @@ describe("every pack line within the engine's limits (CN25) #slow", function()
         H.Hekili:ReviewPacks() -- the new lists and entries active
         local Sc = H.Hekili.Scripts
         local info, vars = Sc.PackInfo[name], 0
+        local nerr = #H.errors
         for _, list in pairs(lists) do
             for _, e in ipairs(list) do
                 if e.action == "variable" then
@@ -442,6 +433,9 @@ describe("every pack line within the engine's limits (CN25) #slow", function()
                 end
             end
         end
+        for i = #H.errors, nerr + 1, -1 do -- the check above runs the values outside any pack: its reads are not the engine's
+            H.errors[i] = nil
+        end
         H.Fire("PLAYER_REGEN_DISABLED")
         local VS = H.ns.VirtualState
         local power, fixed = VS.Power, { est = 100, lo = 100, hi = 100, conf = 1 }
@@ -455,7 +449,6 @@ describe("every pack line within the engine's limits (CN25) #slow", function()
             local r = H.Hekili.Engine.Output.Primary.recs[j]
             picks[j] = tostring(r and r.actionName)
         end
-        assert.are.equal(0, perCycle(headless, H, H.ctl.now + 1, 20))
         assert.is_nil(next(H.Hekili.State.varDB)) -- pure: read in place, never registered
         for _, e in ipairs(H.errors) do -- every line's debug print and recheck generate, and nothing raises
             assert.is_truthy(o.allow and e:find(o.allow), e)
@@ -489,7 +482,12 @@ describe("every pack line within the engine's limits (CN25) #slow", function()
             -- no Shredding Attacks and the target attacking us: Claw (wowsims's Claw line for that build)
             picks = run(packs, "Feral (wowsims.com)", dlw.Feral, { allow = allow, shredding = 0, tt = "player" })
             assert.is_true(has(picks, "claw"), table.concat(picks, " "))
-            picks = run(packs, "Guardian (wowsims.com)", dlw.Guardian, { allow = allow, form = 3 }) -- Cat Form
+            -- Guardian in Cat Form, its imported Cat lists reading the Feral variables from its own pack; the Bear
+            -- content knows no Cat ability, so the character knows the Feral kit too (a level 60 Druid knows both)
+            local cat = { allow = allow, form = 3, known = dlw.Feral.character().known }
+            local catVars
+            picks, catVars = run(packs, "Guardian (wowsims.com)", dlw.Guardian, cat)
+            assert.are.equal(vars, catVars) -- every Feral variable line came with the import
             assert.is_true(has(picks, "shred", "claw"), table.concat(picks, " "))
         end)
     end

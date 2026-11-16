@@ -93,6 +93,46 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         assert.are.equal(perCycle(A, t + 1, 30), perCycle(B, t + 1, 30))
     end)
 
+    -- The read path alone (State.lua state.variable on a pure name: its compiled value called in place), measured as
+    -- driver_alloc_spec measures an Update: the collector stopped across the window, one Update and one round of reads
+    -- absorb what the collect dropped, then each of 20 Updates (a new query time each) is followed by 10 reads of every
+    -- pure variable; only the reads' bytes count, and they are 0.
+    it("reads a pure variable in place: 10 reads of each per Update allocate 0 B", function()
+        local H = boot(true)
+        local t = H.ctl.now + 0.5
+        assert(headless.cycle(H, t))
+        local S, names = H.Hekili.State, {}
+        for name, id in pairs(H.Hekili.Scripts.PackInfo[ww.PACK].pure) do
+            if id then
+                names[#names + 1] = name
+            end
+        end
+        assert.is_true(#names > 5)
+        local function readAll(n)
+            for _ = 1, n do
+                for i = 1, #names do
+                    local _ = S.variable[names[i]]
+                end
+            end
+        end
+        collectgarbage("collect")
+        collectgarbage("collect")
+        collectgarbage("stop")
+        headless.cycle(H, t + 0.2)
+        readAll(1)
+        local bytes = 0
+        for i = 2, 21 do
+            headless.cycle(H, t + i * 0.2)
+            local b = collectgarbage("count")
+            readAll(10)
+            bytes = bytes + (collectgarbage("count") - b) * 1024
+        end
+        collectgarbage("restart")
+        assert.are.equal(0, bytes)
+        assert.is_nil(next(S.varDB))
+        assert.are.same({}, H.errors)
+    end)
+
     -- CN25 fix round 1 (I2): the priority editor moves a line (Options.lua: the list reordered, then
     -- scripts:SwapScripts) or edits one option (Hekili:LoadScript); which variables are pure follows the pack as it is.
     it("follows the editor: a moved line, an if= given, a name given twice", function()
