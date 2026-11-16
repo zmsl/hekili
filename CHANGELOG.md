@@ -10,6 +10,7 @@
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
+- Using a mana gem or Robe of the Archmage now adds its mana to Hekili's mana forecast, the gem's by the gem you used.
 
 ### Known issues
 

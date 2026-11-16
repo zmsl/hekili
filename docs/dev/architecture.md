@@ -209,10 +209,11 @@ Two environments have them:
   or its hybrid's out-of-combat cache when the read is secret);
 - the belief's `now` context (`Game/State/Families/Now.lua`, `NAMES`): the same names, where `stat` is only the
   plain function `stat(name, arg)` and the gear comes from the belief's own read of the weapon slots
-  (`Sources/Player.lua`). A `now` handler cannot read `stat.crit`, and `equipped` holds `shield` alone. Three names
-  are the `now` context's alone (aura audit C8; the sim's `state` answers none of them): `instant` (true inside an
-  instant cast's `now`: no start seen; false elsewhere), `cast_start` (the cast's start time, 0 for an instant) and
-  `target.health` (`known`, and the percent bounds `lo` and `hi` of the belief's target health interval,
+  (`Sources/Player.lua`). A `now` handler cannot read `stat.crit`, and `equipped` holds `shield` alone. Four names
+  are the `now` context's alone (the sim's `state` answers none of them): `instant` (true inside an instant cast's
+  `now`: no start seen; false elsewhere), `cast_start` (the cast's start time, 0 for an instant), `cast_id` (the
+  spell ID the cast was, one of the ability's `id` and `copy` IDs, so one ability credits by rank, as a mana gem's
+  restore by the gem used; 0 elsewhere) and `target.health` (`known`, and the percent bounds `lo` and `hi` of the belief's target health interval,
   `Families/TargetHealth.lua`; 0 and 100 while unknown). There is no `target.health.pct`: secret health is unknown,
   never 100 or 0, so a `now` tests a bound (`target.health.hi < 35`: proven below 35%).
 
