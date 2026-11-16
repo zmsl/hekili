@@ -33,7 +33,6 @@ L["Hekili Forever is designed for level %s content.\nIt may not work as expected
 -- L["%s\n\nThe wowsims gate runs this as %s."] = ""
 
 -- Hekili/Engine/Schema/Spec/Packs.lua
-L[" and "] = " 和 "
 L["The %s priority was retired; a spec that used it now runs %s."] = "%s优先级已停用；使用它的专精现在将运行%s。"
 L["The |cFFFFD100%s|r priority was updated."] = "|cFFFFD100%s|r优先级已更新。"
 L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were updated."] = "|cFFFFD100%s|r和|cFFFFD100%s|r优先级已更新。"
@@ -1029,6 +1028,7 @@ L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴�
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
 
 -- No longer used (the English changed or went away): reuse or delete
+L[" and "] = " 和 "
 L["SimC Wiki"] = "SimC Wiki"
 L["If checked, enemy nameplates within the specified radius of your character will be counted as enemy targets.\n\n%s Recommended for melee specializations using a range of 10 yds or fewer\n\n%s Discouraged for ranged specializations."] = "勾选后，你角色周围指定半径内的敌方姓名板会被计为敌方目标。\n\n%s 推荐攻击范围在 10 码以内的近战专精使用\n\n%s 不建议远程专精使用。"
 L["If |cFFFFD100Count Nameplates|r is enabled, enemies within this range will be included in target counts.\n\nThis setting is only available if |cFFFFD100Show Enemy Nameplates|r and |cFFFFD100Show All Nameplates|r are both enabled."] = "如果启用了|cFFFFD100统计你附近的姓名板|r，此范围内的敌人将被计入目标数。\n\n仅在同时启用|cFFFFD100显示敌方姓名板|r和|cFFFFD100显示所有姓名板|r时，此设置才可用。"
