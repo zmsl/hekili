@@ -9,7 +9,7 @@
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local Obs = VS.Obs
-local floor, ceil, abs, max = math.floor, math.ceil, math.abs, math.max
+local floor, abs, max = math.floor, math.abs, math.max
 
 -- By ability index a. `obj` is the spec's ability table (Hekili's `class.abilities[key]`): VirtualState reads its
 -- `spend`, `spendType`, `cooldown`, `charges`, `recharge`, `gcd`, `gcdTime`, `cast`, `onNextSwing` and `rangedSwing`
@@ -198,10 +198,17 @@ local function maxCharges(a)
 end
 
 -- By resource slot: the base power a cost between 0 and 1 is a fraction of, as the client prices a percent-of-base cost
--- (floored): the pack's `base` (its level's value; the meta field, Engine/Schema/Spec.lua) until a plain cost read
--- teaches it (I.LearnBases); 0 for a pool without one, whose fractions are of its maximum (Hekili's pricing).
+-- (to the nearest whole): the pack's `base` (its level's value; the meta field, Engine/Schema/Spec.lua) until a plain
+-- cost read teaches it (I.LearnBases); 0 for a pool without one, whose fractions are of its maximum (Hekili's pricing).
 I.basePow, I.baseDefault = {}, {}
-local EPS = 1e-6 -- a float product a hair under a whole cost (0.05 x 1240) floors to it, not below
+local EPS = 1e-6 -- a float product a hair under a half (0.5 x 1213 = 606.5) rounds up, as the true half does
+
+-- Fraction c of base b to the nearest whole, a half up: the client's percent-of-base price (wowsims e4ef929e54
+-- mana.go `math.Round`, from the game's form costs: 35% of 914 costs 320). The simulation's ns.FractionCost (Engine/Sim
+-- State.lua) is the same expression. Allocates nothing.
+local function nearest(c, b)
+    return floor(c * b + 0.5 + EPS)
+end
 
 I.OnBuild(function(def, now)
     for k in pairs(A.bySpell) do
@@ -515,8 +522,8 @@ local function isFraction(a, c)
 end
 
 --- Ability a's declared cost, before any cost modifier (0 when it has none); a fraction (isFraction: below 1, or any
---- magnitude under `spendBase`) is of its pool's base power, floored (I.basePow), else of its believed maximum, as
---- Hekili's simulation prices it (ns.SpendPoints). Allocates nothing.
+--- magnitude under `spendBase`) is of its pool's base power, to the nearest whole (I.basePow, nearest), else of its
+--- believed maximum, as Hekili's simulation prices it (ns.SpendPoints). Allocates nothing.
 function I.BaseCostOf(a)
     local c, r = declaredCost(a), A.slot[a]
     if not c then
@@ -524,7 +531,7 @@ function I.BaseCostOf(a)
     end
     if r > 0 and isFraction(a, c) then
         local b = I.basePow[r] or 0
-        c = b > 0 and floor(c * b + EPS) or c * I.res.max[r]
+        c = b > 0 and nearest(c, b) or c * I.res.max[r]
     end
     return c
 end
@@ -538,12 +545,16 @@ function VS.BasePower(pt)
 end
 
 --- Each pool's base from the plain out-of-combat cost reads (A.readCost, Sources/Spellbook.lua) of its fraction-priced
---- abilities: the pack's value unless the read with the largest fraction (the finest: a read pins the base to within
---- 1 / f) misprices it, then the least whole base that floors to that read. A read is skipped while a cost modifier in
---- scope changes its price (it is then not the base's). Runs after the reads and again after a talent walk that changed
---- a rank (Sources/Talents.lua), so a talent-scaled fraction is the walked rank's. Allocates nothing.
--- shortcut: the base is exact only to 1 / f of the chosen read (a 55% read: within 2 mana); a smaller fraction's read
--- the result misprices by one is not reconciled; upgrade by intersecting every read's [cost / f, (cost + 1) / f).
+--- abilities: the pack's value unless the read with the largest fraction (the finest: a read pins the base to an
+--- interval 1 / f wide) misprices it, then the whole base nearest cost / f, the middle of that interval. A read rounds
+--- f x base to the nearest whole, a half up, so the true base is in [(cost - 0.5) / f, (cost + 0.5) / f) and the
+--- nearest whole to cost / f is within 0.5 / f + 0.5 of it; for f < 1 it prices the read again (f x it is within 0.5 f
+--- of cost). A read is skipped while a cost modifier in scope changes its price (it is then not the base's). Runs after
+--- the reads and again after a talent walk that changed a rank (Sources/Talents.lua), so a talent-scaled fraction is the
+--- walked rank's. Allocates nothing.
+-- shortcut: the base is exact only to 1 / f of the chosen read (a 55% read: within 1 mana); a smaller fraction's read
+-- the result misprices by one is not reconciled; upgrade by intersecting every read's [(cost - 0.5) / f, (cost + 0.5) /
+-- f).
 function I.LearnBases()
     for r = 1, #I.baseDefault do
         I.basePow[r] = I.baseDefault[r]
@@ -560,8 +571,8 @@ function I.LearnBases()
                     end
                 end
             end
-            if bestF > 0 and floor(bestF * I.basePow[r] + EPS) ~= bestCost then
-                I.basePow[r] = ceil(bestCost / bestF - EPS) -- bestF > 0 checked
+            if bestF > 0 and nearest(bestF, I.basePow[r]) ~= bestCost then
+                I.basePow[r] = max(floor(bestCost / bestF + 0.5), 1) -- bestF > 0 checked; 0 would mean no base
             end
         end
     end

@@ -21,14 +21,18 @@ local mt_resource = ns.metatables.mt_resource
 --                                    as spirit + mp5 and mp5 (Sources/Power.lua). Mana is secret even out of combat:
 --                                    its lower bound (`mana.current`, `mana.pct`) is the build's rest (full), moved by
 --                                    our spends and the regen, until a short answer below it drops it to the ladder's.
--- A regen entry of rate fields (C3b), `{ aura = key, mult = n, spirit = m, share = s, mp5 = x }`, any of the four,
--- each one of wowsims's mana PseudoStats while the player's aura `key` is up (sim/core/mana.go:186-211): `mult` the
+-- A regen entry of rate fields (C3b), `{ aura = key, mult = n, spirit = m, share = s, mp5 = x, mp5Mult = p }`, any of
+-- the five, each one of wowsims's mana PseudoStats while the player's aura `key` is up (sim/core/mana.go): `mult` the
 -- whole rate x n (MultiplyManaRegenSpeed; an energy surge; 0 stops it: a form that pauses the pool); `spirit` the
 -- spirit regen x m (DB2 aura 110,
 -- SpiritRegenMultiplier); `share` + s of the spirit regen while casting (aura 134, SpiritRegenRateCasting), the total
--- with the `fsr` meta's `share` capped at all of it; `mp5` + x a second in and out of the window (an MP5 aura). On an
--- `fsr` resource the four combine as wowsims does: inside the window (MP5 + S x m x min(c + s, 1)) x f, outside
--- (MP5 + S x m) x f. Rate fields are no forecast event: they move out of the regen model into `state.regenMult` here.
+-- with the `fsr` meta's `share` capped at all of it; `mp5` + x a second in and out of the window (an MP5 aura; with
+-- `energize = true` a periodic energize, which ticks its own amount); `mp5Mult` (a number) the gear and buff MP5 x p,
+-- every MP5 but an `energize` entry's (wowsims mana.go:176-183 multipliedManaRegen). On an `fsr` resource they
+-- combine as wowsims does: inside the window (MP5 x p + S x m x min(c + s, 1) + E) x f, outside (MP5 x p + S x m + E)
+-- x f, E the energize entries' mp5; on any other resource `spirit`, `share`, `mp5Mult` and `energize` change nothing (f x
+-- (the learned rate + mp5)). Rate fields are no forecast event: they move out of the regen model into
+-- `state.regenMult` here.
 -- `fsr`'s `share` (c, 0-1) is the static casting share the learned split already holds (talents, by rank).
 -- An `fsr` `spirit` or `mp5` may be a function, read once at the build (Tracked.lua: it may name the spec's tree); a
 -- function `share` is the belief's, read in its context after its talent walk and at each combat start (a talent's
@@ -44,7 +48,8 @@ local mt_resource = ns.metatables.mt_resource
 --                                    Obs.Avoided); the sim does not predict avoidance and never reads it.
 -- base = n (a number)               The pool's base power at the class's top level (wowsims's base stats): a cost
 --                                    between 0 and 1 (or any cost of an ability declaring `spendBase = true`) is
---                                    that fraction of it, floored, as the client prices a percent-of-base cost, in
+--                                    that fraction of it to the nearest whole (a half up), as the client prices a
+--                                    percent-of-base cost, in
 --                                    both layers (ns.SpendPoints, Families/Casts.lua). The
 --                                    belief learns the player's own from a plain out-of-combat cost read (login,
 --                                    level-up, spell changes); without `base` a fraction is of the maximum (Hekili's).
@@ -177,7 +182,7 @@ local methods = {
 
         if r.state.regenModel then
             for k, v in pairs( r.state.regenModel ) do
-                if v.mult or v.spirit or v.share or v.mp5 then
+                if v.mult or v.spirit or v.share or v.mp5 or v.mp5Mult then
                     r.state.regenMult = r.state.regenMult or {}
                     insert( r.state.regenMult, v )
                     r.state.regenModel[ k ] = nil -- clearing a field mid-traversal is allowed
