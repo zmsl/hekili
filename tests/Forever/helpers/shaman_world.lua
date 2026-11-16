@@ -6,7 +6,8 @@
 -- the booted oracle's Hekili.Class and Hekili.State for the rest). The world's own, restated from the DB2 and
 -- wowsims/forever (so the class file's belief is measured against them): the totem slots and durations (W.summonTotem;
 -- slot order fire, earth, water, air: checkpoint), the shocks' shared cooldown, Fire Nova needing a fire totem,
--- Maelstrom Weapon stacked by our landed melee (10 a minute, wowsims's rate) and spent by Lightning Bolt, Elemental
+-- Maelstrom Weapon stacked by our landed melee (6..10 a minute by talent rank, wowsims's rate) and spent by Lightning
+-- Bolt, Windfury Totem's strike (ours standing: a 20% roll on each landed main-hand swing or Stormstrike), Elemental
 -- Focus's Clearcasting (10% after a Fire or Nature damage spell, spent by the next one), Lightning Shield's charges
 -- spent by the mob's hits on us, mana under the five-second rule; Elemental's casts (Lightning Bolt, Chain Lightning;
 -- Lava Burst is gone from the game) shortened by Elemental Alacrity and Elemental Mastery, Convection's cost cut, Chain Lightning's cooldown
@@ -25,7 +26,14 @@ local MANA = 0 -- Enum.PowerType
 local GCD = { totem = 1.0, spell = 1.5, off = 0 }
 -- The default regen parts (a pack's `fsr` replaces them; the class file declares them per spec, as wowsims's logs).
 local FSR = { 20, 3 }
-local MAELSTROM_PPM = 10 -- wowsims talents_enhancement.go (fits a 3.6 s weapon)
+-- Maelstrom Weapon's rate a minute by talent rank: the talent's effect 2 (wowsims e4ef929e54 curve 408498: 6, 7, 8, 9,
+-- 10; maelstromWeaponPPM in talents_enhancement.go; was a 20 constant before hotfix push 113722)
+local MAELSTROM_PPM = { 6, 7, 8, 9, 10 }
+-- Windfury Totem's proc (10612: ProcChance 20, ICDMs 100) on a landed main-hand swing or melee ability of ours while our
+-- totem stands: one main-hand weapon strike (10610) on the special table, in the same instant (wowsims e4ef929e54
+-- core/buffs/drivers.go NewWindfuryTotemProcTrigger, from hotfix push 114060). The strike stacks no Maelstrom Weapon
+-- (talents_enhancement.go: EV-0009), resets no swing and rolls no proc of its own (it lands inside the ICD).
+local WINDFURY = { chance = 0.2, icd = 0.1 }
 local CLEARCASTING = 0.1 -- Elemental Focus's chance (DB2 16164 ProcChance)
 
 -- The totems the kit summons at level 60: the slot (1 fire, 2 earth, 3 water, 4 air) and the top rank's duration (DB2).
@@ -73,6 +81,7 @@ local MASTERED = { lightning_bolt = true }
 -- UNMEASURED: the hits' amounts.
 local AMOUNT = {
     stormstrike = 400,
+    windfury_strike = 300,
     earth_shock = 500,
     flame_shock = 250,
     lightning_bolt = 550,
@@ -96,6 +105,16 @@ local function class()
     return W0
 end
 
+-- Windfury Totem's summon IDs, every rank (the class file's), as a set.
+local function windfuryIds()
+    local a, set = class().abilities.windfury_totem, {}
+    set[a.id] = true
+    for _, id in ipairs(a.copy or {}) do
+        set[id] = true
+    end
+    return set
+end
+
 local function aura(W, X, dst, key, duration, stacks)
     local a = X.aura[key]
     W.applyAura(dst, a.id, duration or a.duration, stacks or 1, a.max_stack)
@@ -108,10 +127,29 @@ local function drop(W, e, X, key) -- aura `key` off us, if up
     end
 end
 
--- A melee hit of ours that lands stacks Maelstrom Weapon at its rate a minute (by the main hand's speed).
+-- A melee hit of ours that lands stacks Maelstrom Weapon at its rank's rate a minute (by the main hand's speed); no
+-- talent, no roll.
 local function maelstrom(W, e, X)
-    if W.rng.chance(MAELSTROM_PPM * e.weapons[1][3] / 60) then
+    local ppm = MAELSTROM_PPM[X.maelstromRank or 0]
+    if ppm and W.rng.chance(ppm * e.weapons[1][3] / 60) then
         aura(W, X, e, "maelstrom_weapon")
+    end
+end
+
+-- A landed main-hand melee hit of ours with our Windfury Totem standing (its summon's ID in the air slot) rolls the
+-- totem's strike, off its ICD: W.hit's outcome on the special table, no Maelstrom Weapon. The rng draws only then, so a
+-- world without the totem or without melee keeps its seeded fights. The hit in progress's `lastHit` is kept (an
+-- ability's effect reads its own).
+local function windfuryStrike(W, e, X)
+    local t = W.totem(e, 4)
+    if not (t and X.windfury[t.spell]) or W.t < (e.windfuryReady or 0) then
+        return
+    end
+    if W.rng.chance(WINDFURY.chance) then
+        e.windfuryReady = W.t + WINDFURY.icd
+        local last = e.lastHit
+        W.hit(e, e.target, AMOUNT.windfury_strike, 1, "melee")
+        e.lastHit = last
     end
 end
 
@@ -213,6 +251,7 @@ M.MAP = {
             aura(W, X, e, "improved_stormstrike") -- every cast: rank 2's 100%, 15 s
             if W.hit(e, e.target, AMOUNT.stormstrike, 1).act == "WOUND" then
                 maelstrom(W, e, X)
+                windfuryStrike(W, e, X)
             end
         end,
     },
@@ -285,12 +324,12 @@ local PACKS = {
         -- build's 408498=5@2: the world stacks it on every landed swing, and the pack's Lightning Bolt line reads the talent
         -- since central-talents registered it)
         talents = { [1223031] = 2, [408498] = 5 },
-        -- wowsims's log (shaman_enhancement.log, re-pin e2842f0a78: Windshaper Skyborne, was 5000 / 9.8 / 38.42 as an
-        -- Orc): 6565 mana, 17.8 a second while casting, 49.05 outside; Improved Stormstrike (1238931, DB2 aura 134 = 50)
-        -- adds half the spirit part while casting (33.42: the log's 3.342 a tick); the 17.8 is 12.8 without Mana Spring
-        -- Totem's buff (10494: 5 a second, up while the totem stands)
-        mana = 6565,
-        fsr = { 31.25, 12.8, auras = { [1238931] = { share = 0.5 }, [10494] = { mp5 = 5 } } },
+        -- wowsims's log (shaman_enhancement.log, re-pin e4ef929e54: the gear lost the Five Thunders pieces; 6565 / 17.8 /
+        -- 49.05 at e2842f0a78, 5000 / 9.8 / 38.42 as an Orc): 6250 mana, 17.0 a second while casting, 42.75 outside;
+        -- Improved Stormstrike (1238931, DB2 aura 134 = 50) adds half the spirit part while casting (29.88: the log's
+        -- 2.988 a tick); the 17.0 is 12.0 without Mana Spring Totem's buff (10494: 5 a second, up while the totem stands)
+        mana = 6250,
+        fsr = { 25.75, 12.0, auras = { [1238931] = { share = 0.5 }, [10494] = { mp5 = 5 } } },
         uptime = { "flame_shock" },
     },
     -- wowsims/forever's Elemental build (builds/testing.build.json, talents 5500331023001351-05500001-053): the casts,
@@ -365,6 +404,8 @@ local function classData(H, C)
     X.magma = TOTEM.magma_totem[2] + 10 * T.improved_fire_nova.rank -- Trial by Fire: +10 s a rank (wowsims spell data)
     X.convection = T.convection.rank
     X.alacrity = ALACRITY[T.elemental_alacrity.rank] or 0
+    X.maelstromRank = T.maelstrom_weapon.rank
+    X.windfury = windfuryIds()
     return X
 end
 
@@ -410,10 +451,14 @@ local function content(name)
         for _, key in ipairs({ "maelstrom_weapon", "lightning_shield" }) do
             X.aura[key] = { id = A[key].id, duration = A[key].duration, max_stack = A[key].max_stack }
         end
+        X.maelstromRank, X.windfury = (P.talents or {})[408498], windfuryIds()
         local ls = A.lightning_shield.id
-        us.landed = function(W, act)
+        us.landed = function(W, act, hand)
             if act == "WOUND" then
                 maelstrom(W, us, X)
+                if hand == 1 then
+                    windfuryStrike(W, us, X)
+                end
             end
         end
         -- Improved Stormstrike's rank effect 2 (wowsims talents_enhancement.go:218-231): at 2/2 a dodge or parry of an

@@ -10,6 +10,51 @@ local sw = require("Forever.helpers.shaman_world")
 local PACKS = { "Enhancement", "Elemental" }
 
 describe("the Shaman loop worlds", function()
+    -- wowsims e4ef929e54: Maelstrom Weapon's rate is its rank's 6..10 a minute (curve 408498), and our Windfury Totem
+    -- standing rolls a weapon strike (20%, a 0.1 s ICD) on a landed main-hand swing, which stacks no Maelstrom Weapon
+    it(
+        "Enhancement: a landed main-hand swing rolls Maelstrom Weapon by rank and our Windfury Totem's strike",
+        function()
+            local us = { weapons = { { 180, 260, 3.6 } }, auras = {} }
+            local W = { t = 10, rolls = {}, hits = 0, slot = nil }
+            W.rng = {
+                chance = function(p)
+                    W.rolls[#W.rolls + 1] = p
+                    return false
+                end,
+            }
+            W.totem = function(_, slot)
+                return slot == 4 and W.slot or nil
+            end
+            W.hit = function()
+                W.hits = W.hits + 1
+                return { act = "WOUND" }
+            end
+            sw.Enhancement.WORLD.script(W, us)
+            us.target = {}
+            us.landed(W, "WOUND", 1) -- no totem: the Maelstrom Weapon roll only, 10 a minute at 5/5 on a 3.6 s weapon
+            assert.are.same({ 0.6 }, W.rolls)
+            W.rolls, W.slot = {}, { spell = 10614 } -- Windfury Totem rank 3 in the air slot
+            us.landed(W, "WOUND", 2) -- the off hand: no strike roll
+            us.landed(W, "DODGE", 1) -- not landed: no roll at all
+            assert.are.same({ 0.6 }, W.rolls)
+            W.rolls = {}
+            W.rng.chance = function(p)
+                W.rolls[#W.rolls + 1] = p
+                return p == 0.2 -- the strike procs; Maelstrom Weapon does not
+            end
+            us.landed(W, "WOUND", 1)
+            us.landed(W, "WOUND", 1) -- the same instant: inside the 0.1 s ICD
+            assert.are.same({ 0.6, 0.2, 0.6 }, W.rolls)
+            assert.are.equal(1, W.hits)
+            assert.are.same({}, us.auras) -- the strike stacked no Maelstrom Weapon
+            W.t, W.slot = 10.1, { spell = 25359 } -- Grace of Air Totem in the air slot: no strike
+            W.rolls = {}
+            us.landed(W, "WOUND", 1)
+            assert.are.same({ 0.6 }, W.rolls)
+        end
+    )
+
     -- A shock's press sends both shocks' ranks (the shared category) but is priced by its own rank: at level 30 the
     -- highest Flame Shock is rank 3 (8053, 160 mana in the DB2), not the top rank's 410.
     it("prices a shock by its own known rank", function()
