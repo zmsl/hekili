@@ -931,8 +931,9 @@ end)
 -- the cost it paid; both `modelled` at the outcome. Any other cast's avoid changes nothing (its effects are no longer
 -- the latest's to undo). The cooldown,
 -- the GCD and the player auras stay (an avoided ability still triggers them), except what the ability's `onAvoid`
--- takes back (a buff only its landing gives), run after the undo. Allocates nothing.
-local DEFLECT, EVADE = I.HitKind.DEFLECT, I.HitKind.EVADE
+-- takes back (a buff only its landing gives), run after the undo. A full resist or immunity (I.UNLANDED: the ability
+-- did not apply) gets the target undo only: no `onAvoid`, no refund (unmeasured in game). Allocates nothing.
+local DEFLECT, EVADE, UNLANDED = I.HitKind.DEFLECT, I.HitKind.EVADE, I.UNLANDED
 -- Forgets the CDM verdict's refund memory of the cast of ability a at castT on every target record it wrote (L1029):
 -- refunded, avoided with no refund, or proven landed. Allocates nothing.
 local function forget(a, castT)
@@ -962,6 +963,10 @@ I.On(Obs.Avoided, function(o, t)
         end
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
     end
+    I.avoidsRun = I.avoidsRun + 1
+    if o.c == UNLANDED then
+        return
+    end
     if A.onAvoid[o.a] then
         journal = false
         call(A.onAvoid[o.a], o.a, o.t)
@@ -971,7 +976,6 @@ I.On(Obs.Avoided, function(o, t)
     if r > 0 and paid > 0 and A.refund[o.a] > 0 then
         I.Refund(r, paid * A.refund[o.a], t) -- at the fold; the answers since the cast's spend already saw it
     end
-    I.avoidsRun = I.avoidsRun + 1
 end)
 
 --- The CDM verdict closed target aura j's application `ap` as missed (Sources/Auras.lua, L1029): the cast whose own

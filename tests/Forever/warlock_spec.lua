@@ -903,9 +903,10 @@ describe("Forever Warlock through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
-    -- Hotfix 0.8.6 (L1239): a resist is no avoid the belief undoes (Rows.lua REFUSED), so the core's `missable` reset
-    -- hook takes the resisted Corruption down; it removes only the resisted cast's own application.
-    it("drops a resisted Corruption in the core at the next reset; a landed one stays", function()
+    -- Hotfix 0.8.6 (L1239, fix round 1 I2): a full RESIST or IMMUNE of our latest cast undoes its target write as an
+    -- avoid does (Rows.lua UNLANDED): a resisted first Corruption goes down in both layers; a resisted refresh leaves
+    -- the earlier application running with its own remains (the core's `missable` hook no longer matches it).
+    it("drops a resisted first Corruption; a resisted refresh keeps the earlier application's remains", function()
         local H = headless.new({ character = character() })
         local S, VS, ctl = H.Hekili.State, H.ns.VirtualState, H.ctl
         ctl.inRange.target, ctl.level.target = true, 60
@@ -924,11 +925,13 @@ describe("Forever Warlock through the engine", function()
             S.reset("Primary", true)
             return S.debuff.corruption.up, VS.Aura("target", 172, t + 0.5) ~= nil
         end
-        assert.are.same({ false, true }, { corruption("RESIST") }) -- the belief keeps it; the core drops it
+        assert.are.same({ false, false }, { corruption("RESIST") })
+        assert.are.same({ false, false }, { corruption("IMMUNE") })
         assert.are.same({ true, true }, { corruption("WOUND") })
-        -- shortcut: a resisted refresh drops the earlier, still-running application too (the belief wrote the
-        -- refresh and undoes no resist), as before; upgrade with a belief undo of a resisted cast's write.
-        assert.are.same({ false, true }, { corruption("RESIST") })
+        local expires = t + 18
+        assert.are.same({ true, true }, { corruption("RESIST") }) -- the refresh resisted: the earlier one runs
+        assert.is_true(math.abs(S.debuff.corruption.remains - (expires - (t + 0.5))) < 0.01)
+        assert.are.equal(expires, VS.Aura("target", 172, t + 0.5).est)
         assert.are.same({}, H.errors)
     end)
 
