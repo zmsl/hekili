@@ -76,7 +76,8 @@ local PROT = {
         end,
     },
 }
-local PROT_REPLAY = { hidden = hideQueue({ [5302] = true, [25288] = true }), procs = {}, speed = 2.35 }
+-- speed: the log's main-hand period (2.40 s at e4ef929e54: the Pre-BiS gear; 2.35 s before)
+local PROT_REPLAY = { hidden = hideQueue({ [5302] = true, [25288] = true }), procs = {}, speed = 2.40 }
 
 describe("the Warrior wowsims.com packs #slow #wowsims", function()
     it("Arms (wowsims.com) follows wowsims's casts", function()

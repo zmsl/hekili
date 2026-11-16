@@ -521,16 +521,18 @@ M.Fury = setmetatable({
 }, { __index = M })
 
 -- The Protection base (wowsims packs plan, Task 6; ws.content's base for Protection (wowsims.com)): the world above with
--- wowsims/forever's prebis Protection gear (MIT, https://github.com/wowsims/forever): a one-hander (10271) at the 2.35 s
--- period of the first Tag 1 swing pairs of tests/Forever/wowsims/warrior_protection.log and a shield (15289); damage
--- UNMEASURED. Defensive Stance up (wowsims's defaultStance); Mortal Strike is an Arms talent, so the character does
--- not know it. The client's armor and block value (UnitArmor, GetShieldBlock) are the log's: Inspiration's "Armor *=
--- 1.25" line adds 1259, so 5036 armor; each damage-taken rage line then gives the hit before mitigation (wowsims's
--- rage.go) and the block value 0.9 x (1 - armor share) x that - the "Block for N" amount: 52-63 over the 41 blocks, 57.
-local PROT_SPEED = 2.35
+-- wowsims/forever's prebis Protection gear (MIT, https://github.com/wowsims/forever): a one-hander (10271) at the 2.40 s
+-- period of the swing pairs ({OtherID: 3, Tag: 14}) of tests/Forever/wowsims/warrior_protection.log (e4ef929e54) and a
+-- shield; damage UNMEASURED. Defensive Stance up (wowsims's defaultStance); Mortal Strike is an Arms talent, so the
+-- character does not know it. The client's armor and block value (UnitArmor, GetShieldBlock) are the log's:
+-- Inspiration's "Armor *= 1.25" line adds 1423.25, so 5693 armor; each damage-taken rage line then gives the hit after
+-- Defensive Stance and before armor (wowsims's rage.go, A 0.40 at 63) and the block value (1 - armor share) x that -
+-- the "Block for N" amount: 49-65 over the 48 partial blocks, mean 59.5, median 58.9: 59 (the same reading gives the
+-- old e5a9cd2a2d log's 57).
+local PROT_SPEED = 2.40
 M.Protection = setmetatable({
     WORLD = setmetatable(
-        { weapons = { { 60, 120, PROT_SPEED } }, stats = { armor = 5036, block = 57 } },
+        { weapons = { { 60, 120, PROT_SPEED } }, stats = { armor = 5693, block = 59 } },
         { __index = M.WORLD }
     ),
     character = function()
