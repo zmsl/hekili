@@ -350,6 +350,25 @@ member past its modelled duration. A plain
 direct read still wins: a form aura the shapeshift read owns is never judged by the Cooldown Manager. The family name
 is the pack's own; the core only compares it.
 
+**Cooldown Manager proof across sessions** (L1113-L1115). The verdict closes a record only through a proven item (one
+that lit for its aura). Each proven item that maps to one aura is saved at logout (and `/reload`) in the belief's own
+per-character saved global `HekiliCDMProof` (`Hekili.toc` `SavedVariablesPerCharacter`), with its aura key, the viewer
+it was proven on, its unit and its silent count; `Game/State/Sources/Presence/CooldownViewer.lua` reads and writes it
+through `api` only and the core never names it, so the store is no border crossing. The client's
+`CooldownViewerSettings.OnDataChanged` (EventRegistry; registered at `VS.Start`) fires once when the layout loads at
+login, on every settings edit, and when spells, talents or PvP talents change or a hotfix arrives; `OnPendingChanges`
+brackets an edit. After it, and when a viewer is shown after the load (an in-combat-only viewer at the pull), the
+leaf's next sweep with no edit open reads the layout (every configured slot of a visible viewer): a saved entry is
+restored when its viewer shows the item and the item still maps to the saved aura alone, else dropped; a proof whose
+viewer no longer shows its item (moved or removed) is dropped. A viewer that is hidden or shows a secret ID judges
+nothing, and a saved entry waits while its viewer shows no item. While saved entries wait and the layout shows no
+configured item yet on a visible viewer with plain IDs, it is read again at each sweep out of combat (with every
+viewer hidden it waits for one to be shown). A restored proof is no light: no fact goes up or down by it, only the
+item's dark counts again, so the first missed application of a session can be closed. The snapshot's `presence-proof`
+line counts `restored`, `unlaid` (dropped by an edit) and `reads` (layout reads). The snapshot's `presence-slot`
+light, dark and unit are each slot's last held sweep as a mapped item, the first silent sweep after it and its unit,
+kept through target swaps and re-points.
+
 **A charge spent by hits on us, with its own cooldown.** A player aura's `consumedBy` (a set of hit kinds:
 `WOUND`, `BLOCK`, `BLOCKED`, ...) makes each such hit on us spend one stack in the belief (`Families/Auras.lua`), and
 `consumeIcd = <seconds>` limits it to one stack a window from the last spend (wowsims's ICD timer: a recast keeps it

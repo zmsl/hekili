@@ -1134,6 +1134,322 @@ describe("the CooldownViewer leaf: the sweep (cdm-default §3.2)", function()
     end)
 end)
 
+-- Proof across sessions (L1113-L1115): each proven item's proof is saved per character (the belief's own saved global,
+-- never the core's profile) keyed by the layout it was proven on, and restored at the next login's layout load only for
+-- an item still on that viewer with the same aura; the Cooldown Manager's settings edits (OnDataChanged, bracketed by
+-- OnPendingChanges) drop only the items they moved or removed. A restored proof is no light: no UP, no DOWN, only the
+-- item's dark counts again, so the first missed application of the session can be closed.
+describe("the CooldownViewer leaf: proof across sessions (L1113-L1115)", function()
+    local SAVED = "HekiliCDMProof"
+    local DATA, PENDING = "CooldownViewerSettings.OnDataChanged", "CooldownViewerSettings.OnPendingChanges"
+    local A = fs.SPENDER_A
+    local VS, I, ctl, api, d, Q, e, b, c
+
+    -- The client's layout: 501 on Essential and 502 on the Buff icon viewer, both naming aura 1 (spender_a); 503 on
+    -- the Buff icon viewer names aura 2 (by its link).
+    local function onBars()
+        e = ctl.ViewerItem("EssentialCooldownViewer", 1, 501)
+        b = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+        c = ctl.ViewerItem("BuffIconCooldownViewer", 2, 503)
+    end
+    -- One session: a fresh client whose saved global is `saved` (as the client loads it before the addon runs), the
+    -- frames `layout` makes, a fresh module, its build and VS.Start (PLAYER_LOGIN); `off` the leaf off (the debug
+    -- session switch).
+    local function session(saved, layout, off)
+        api, ctl = fake.new()
+        ctl.now = 1
+        ctl.viewer.sets[0] = { 501 }
+        ctl.viewer.sets[2] = { 502, 503 }
+        ctl.viewer.infos[501] = { spellID = A }
+        ctl.viewer.infos[502] = { spellID = A }
+        ctl.viewer.infos[503] = { spellID = 9999, linkedSpellIDs = { fs.SPENDER_C_R2 } }
+        (layout or onBars)()
+        api[SAVED] = saved
+        local ns = load.module()
+        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        d = fs.def(fs.new(9))
+        d.providers = { presence = "router", viewer = not off }
+        I.Build(d, 1)
+        VS.Start(api)
+        Q = I.PRESENCE.viewer
+    end
+    local function sweep(t)
+        ctl.now = t
+        I.presence.Sweep(t)
+    end
+    -- The client's settings load (LoadCooldownSettings, after PLAYER_ENTERING_WORLD and the data): no pending edit,
+    -- then the listeners are told the data changed.
+    local function loaded()
+        ctl.Callback(PENDING, {}, false)
+        ctl.Callback(DATA)
+    end
+    local function copy(x)
+        if type(x) ~= "table" then
+            return x
+        end
+        local r = {}
+        for k, v in pairs(x) do
+            r[k] = copy(v)
+        end
+        return r
+    end
+    -- Session 1: 502 lights for the target and goes dark, 501 lights for the player; then the logout's save.
+    local function provenLastSession()
+        session(nil)
+        loaded()
+        ctl.ViewerAura(b, "target")
+        ctl.ViewerAura(e, "player")
+        sweep(2)
+        ctl.ViewerClear(b)
+        sweep(3)
+        assert.are.same({ true, 2, true, 1 }, { Q.proven[502], Q.provenU[502], Q.proven[501], Q.provenU[501] })
+        ctl.Fire("PLAYER_LOGOUT")
+        return copy(api[SAVED])
+    end
+
+    it("a proof is saved at logout, keyed by its viewer and aura, and restored at the next login's layout", function()
+        local saved = provenLastSession()
+        assert.are.equal(1, saved.v)
+        assert.are.same({ key = "spender_a", viewer = 3, unit = 2, silent = 0 }, saved.items[502])
+        assert.are.same({ key = "spender_a", viewer = 1, unit = 1, silent = 0 }, saved.items[501])
+        session(copy(saved))
+        sweep(2) -- before the client's layout has loaded: nothing restored
+        assert.are.same({ false, 0, 0 }, { Q.proven[502], Q.provenU[502], Q.restored })
+        loaded()
+        sweep(3)
+        assert.are.same({ true, 2, true, 1, 2 }, {
+            Q.proven[502],
+            Q.provenU[502],
+            Q.proven[501],
+            Q.provenU[501],
+            Q.restored,
+        })
+        assert.is_nil(next(api[SAVED].items)) -- each saved entry judged once
+        -- no light: no fact, no UP and no DOWN; only the dark a verdict needs (the first missed opener)
+        local nLive, nUp, nNone, _, _, _, nDark, tDark = Q.Counts(1, 2)
+        assert.are.same({ 0, 0, 0, 1, 3 }, { nLive, nUp, nNone, nDark, tDark })
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 2))
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
+        assert.is_true(I.presence.fact.pdark[I.AURA_UNIT + 1])
+        assert.is_false(Q.NeverLit(1))
+        local snap = VS.Snapshot()
+        assert.is_truthy(snap:find(" restored=2 unlaid=0 reads=1\n", 1, true), snap) -- the presence-proof line
+        ctl.Fire("PLAYER_LOGOUT") -- still proven: saved again
+        assert.are.same({ key = "spender_a", viewer = 3, unit = 2, silent = 0 }, api[SAVED].items[502])
+    end)
+
+    it("a saved proof is dropped for an item moved to another viewer, removed, or now another aura", function()
+        local saved = provenLastSession()
+        session(copy(saved), function() -- 502 moved to the bars; 501 removed (Essential still shows another item)
+            ctl.ViewerItem("EssentialCooldownViewer", 1, nil)
+            ctl.ViewerItem("UtilityCooldownViewer", 1, 503)
+            ctl.ViewerItem("BuffIconCooldownViewer", 1, 503)
+            ctl.ViewerItem("BuffBarCooldownViewer", 1, 502)
+            ctl.ViewerItem("EssentialCooldownViewer", 2, 503)
+        end)
+        loaded()
+        sweep(3)
+        assert.are.same({ false, false, 0 }, { Q.proven[502], Q.proven[501], Q.restored })
+        assert.is_nil(next(api[SAVED].items))
+        local other = copy(saved)
+        other.items[502].key = "another" -- the item now maps to another aura (a pack change)
+        session(other)
+        loaded()
+        sweep(3)
+        assert.are.same({ false, true, 1 }, { Q.proven[502], Q.proven[501], Q.restored })
+    end)
+
+    it(
+        "a saved proof waits while its viewer is hidden, empty or not filled yet; a retry waits for combat end",
+        function()
+            local saved = provenLastSession()
+            session(copy(saved))
+            ctl.viewer.shown.BuffIconCooldownViewer = false -- shown in combat only
+            loaded()
+            sweep(3) -- the Essential item is judged; the hidden viewer's waits
+            assert.are.same({ false, true }, { Q.proven[502], Q.proven[501] })
+            assert.is_not_nil(api[SAVED].items[502])
+            ctl.combat = true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.viewer.shown.BuffIconCooldownViewer = nil -- the pull shows it: read at once (its IDs plain here)
+            sweep(4)
+            assert.are.same({ true, 2 }, { Q.proven[502], Q.restored })
+            -- shown but showing no item yet: its entry waits, the other viewer's is judged
+            session(copy(saved), function()
+                e = ctl.ViewerItem("EssentialCooldownViewer", 1, 501)
+                b = ctl.ViewerItem("BuffIconCooldownViewer", 1, nil)
+            end)
+            b.layoutIndex = nil
+            loaded()
+            sweep(3)
+            assert.are.same({ false, true }, { Q.proven[502], Q.proven[501] })
+            assert.is_not_nil(api[SAVED].items[502])
+            b.cooldownID, b.layoutIndex = 502, 1
+            ctl.Callback(DATA)
+            sweep(4)
+            assert.are.same({ true, 2 }, { Q.proven[502], Q.restored })
+            -- the frames still unconfigured at the load: nothing judged, read again at the next sweep out of combat
+            session(copy(saved), function()
+                e = ctl.ViewerItem("EssentialCooldownViewer", 1, nil)
+                b = ctl.ViewerItem("BuffIconCooldownViewer", 1, nil)
+            end)
+            e.layoutIndex, b.layoutIndex = nil, nil
+            loaded()
+            sweep(3)
+            assert.are.same({ false, false }, { Q.proven[502], Q.proven[501] })
+            e.cooldownID, e.layoutIndex, b.cooldownID, b.layoutIndex = 501, 1, 502, 1 -- the viewers fill
+            ctl.combat = true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            sweep(4) -- in combat: no retry (a secret ID would make it a read every sweep)
+            assert.are.same({ false, false }, { Q.proven[502], Q.proven[501] })
+            ctl.combat = false
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            sweep(5)
+            assert.are.same({ true, true, 2 }, { Q.proven[502], Q.proven[501], Q.restored })
+        end
+    )
+
+    it("with every viewer hidden the layout is not read each poll; a viewer shown is read at once", function()
+        local saved = provenLastSession()
+        session(copy(saved))
+        for _, name in ipairs(fake.VIEWERS) do
+            ctl.viewer.shown[name] = false
+        end
+        loaded()
+        sweep(3)
+        local r = Q.reads
+        sweep(4)
+        sweep(5)
+        assert.are.same({ r, false, false }, { Q.reads, Q.proven[501], Q.proven[502] })
+        ctl.viewer.shown.EssentialCooldownViewer = nil -- shown out of combat
+        sweep(6)
+        assert.are.same({ r + 1, true, false, 1 }, { Q.reads, Q.proven[501], Q.proven[502], Q.restored })
+        assert.is_not_nil(api[SAVED].items[502]) -- its viewer still hidden: it waits
+        sweep(7)
+        assert.are.equal(r + 1, Q.reads)
+    end)
+
+    it("a viewer showing one secret ID among plain ones is not judged: nothing dropped or restored", function()
+        session(nil) -- a live proof on the Buff icon viewer, then its ID goes secret at a read
+        loaded()
+        ctl.ViewerAura(b, "target")
+        sweep(2)
+        b.cooldownID = fake.SECRET
+        ctl.Callback(DATA)
+        sweep(3)
+        assert.are.same({ true, 0 }, { Q.proven[502], Q.unlaid })
+        local saved = provenLastSession() -- a saved proof on the Buff icon viewer, another item's ID secret there
+        session(copy(saved))
+        c.cooldownID = fake.SECRET
+        loaded()
+        sweep(3)
+        assert.are.same({ false, true, 1 }, { Q.proven[502], Q.proven[501], Q.restored })
+        assert.are.same(saved.items[502], api[SAVED].items[502])
+    end)
+
+    it("a settings edit drops only the items it moved or removed; reordering keeps every proof", function()
+        session(nil)
+        loaded()
+        ctl.ViewerAura(b, "target")
+        ctl.ViewerAura(e, "player")
+        sweep(2)
+        b.layoutIndex, c.layoutIndex = 2, 1 -- reordered on its viewer
+        ctl.Callback(DATA)
+        sweep(3)
+        assert.are.same({ true, true, 0 }, { Q.proven[502], Q.proven[501], Q.unlaid })
+        ctl.ViewerRelease(e) -- 501 removed from the bars
+        ctl.Callback(DATA)
+        sweep(4)
+        assert.are.same({ true, false, 0, 1 }, { Q.proven[502], Q.proven[501], Q.provenU[501], Q.unlaid })
+        assert.is_true(Q.NeverLit(1) == false) -- 502 still proven for the aura
+        ctl.Fire("PLAYER_LOGOUT")
+        assert.are.same({ 502 }, { (next(api[SAVED].items)) })
+        assert.is_nil(next(api[SAVED].items, 502))
+    end)
+
+    it("an unsaved edit changes nothing until it is saved; a reverted one keeps every proof", function()
+        session(nil)
+        loaded()
+        ctl.ViewerAura(e, "player")
+        sweep(2)
+        ctl.Callback(PENDING, {}, true) -- an edit opens: 501 dragged off the bars
+        ctl.ViewerRelease(e)
+        ctl.Callback(DATA)
+        sweep(3)
+        assert.is_true(Q.proven[501])
+        e.cooldownID, e.layoutIndex = 501, 1 -- reverted
+        ctl.Callback(PENDING, {}, false)
+        ctl.Callback(DATA)
+        sweep(4)
+        assert.are.same({ true, 0 }, { Q.proven[501], Q.unlaid })
+        ctl.Callback(PENDING, {}, true) -- the same edit, saved this time
+        ctl.ViewerRelease(e)
+        ctl.Callback(DATA)
+        sweep(5)
+        assert.is_true(Q.proven[501])
+        ctl.Callback(PENDING, {}, false)
+        ctl.Callback(DATA)
+        sweep(6)
+        assert.are.same({ false, 1 }, { Q.proven[501], Q.unlaid })
+    end)
+
+    it("corrupt or old saved data is ignored and replaced at logout", function()
+        local saved = provenLastSession()
+        local good = saved.items[502]
+        local bad = {
+            "garbage",
+            7,
+            { v = 0, items = { [502] = good } }, -- an old version
+            { v = 1, items = "x" },
+            {
+                v = 1,
+                items = {
+                    [502] = { key = 5, viewer = 3, unit = 2, silent = 0 },
+                    [501] = { key = "spender_a", viewer = 1, unit = 3, silent = 0 },
+                    [503] = { key = "spender_c", viewer = 9, unit = 2, silent = 0 },
+                    x = good,
+                    [504] = "s",
+                    [505] = { key = "spender_a", viewer = 1.5, unit = 1, silent = 0 },
+                    [506] = { key = "spender_a", viewer = 3, unit = 2, silent = 2 }, -- suspended: never saved
+                },
+            },
+        }
+        for _, sv in ipairs(bad) do
+            session(copy(sv))
+            loaded()
+            sweep(3)
+            assert.are.same({ false, false, 0 }, { Q.proven[502], Q.proven[501], Q.restored })
+            ctl.Fire("PLAYER_LOGOUT")
+            assert.are.equal(1, api[SAVED].v)
+            assert.are.equal("table", type(api[SAVED].items))
+            for k, v in pairs(api[SAVED].items) do -- only well-formed entries are left
+                assert.is_true(type(k) == "number" and type(v) == "table" and type(v.key) == "string", tostring(k))
+            end
+        end
+    end)
+
+    it("a struck or suspended item leaves the saved store; with the leaf off nothing is read or written", function()
+        local saved = provenLastSession()
+        session(copy(saved))
+        loaded()
+        sweep(3)
+        ctl.ViewerAura(b, "target")
+        sweep(4)
+        Q.Strike(1, 2)
+        Q.Strike(1, 2) -- two wrong verdicts: its proof is dropped for the build
+        assert.is_false(Q.proven[502])
+        ctl.Fire("PLAYER_LOGOUT")
+        assert.is_nil(api[SAVED].items[502])
+        assert.is_not_nil(api[SAVED].items[501])
+        -- the leaf off (the debug session switch): the store stays as it was
+        session(copy(saved), nil, true)
+        loaded()
+        sweep(5)
+        ctl.Fire("PLAYER_LOGOUT")
+        assert.are.same(saved, api[SAVED])
+    end)
+end)
+
 -- The map and the collect (cdm-default spec §3.1-§3.2, decisions 97-98, 101; plan Task 3a), against the any-layout fake
 -- (fake_api.lua: ctl.viewer, ViewerItem, ViewerChild, ViewerAcquire, ViewerRemove).
 describe("the CooldownViewer leaf: the map (cdm-default §3.1)", function()

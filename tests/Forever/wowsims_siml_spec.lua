@@ -17,9 +17,9 @@ local function spit(path, s)
     f:close()
 end
 
--- the shared new-pin checkout and its oracle CLI (docs/dev/wowsims-packs.md "Moving the pin"); absent off this machine
-local NEW_ROOT = (os.getenv("HOME") or "") .. "/src/wowsims-pin-e5a9cd2a2d"
-local NEW_CLI = NEW_ROOT .. "/wowsimcli-sim-pin"
+-- the checkout at the OLD pin and its oracle CLI (docs/dev/wowsims-packs.md "Moving the pin"); absent off this machine
+local PIN_ROOT = (os.getenv("HOME") or "") .. "/src/wowsims-pin-e5a9cd2a2d"
+local PIN_CLI = PIN_ROOT .. "/wowsimcli-sim-pin"
 local function present(path)
     local f = io.open(path, "rb")
     return f ~= nil and f:close()
@@ -60,14 +60,14 @@ describe("export.lua .siml recipe paths", function()
         spit(dir .. "/gear.json", '{"items":[]}')
         local spec = "paladin_protection"
         local saved = ex.SPEC_PIN[spec]
-        ex.SPEC_PIN[spec] = ex.NEW_PIN
+        ex.SPEC_PIN[spec] = ex.OLD_PIN
         local r = { name = "S", apl = "a/default.apl.siml", player = { gear = "gear.json", specKey = "rogue" } }
         local ok, err = pcall(ex.request, r, dir, spec, cli)
         ex.SPEC_PIN[spec] = saved
         os.execute("rm -rf '" .. dir .. "'")
         assert.is_false(ok)
         err = tostring(err)
-        for _, want in ipairs({ spec, ex.NEW_PIN, "a/default.apl.siml", cli, head }) do
+        for _, want in ipairs({ spec, ex.OLD_PIN, "a/default.apl.siml", cli, head }) do
             assert.is_truthy(err:find(want, 1, true), want .. " in " .. err)
         end
     end)
@@ -134,17 +134,17 @@ describe("export.lua .siml recipe paths", function()
         assert.are.equal(3, p.raid.parties[1].players[1].equipment.items[1].id)
     end)
 
-    local real = present(NEW_CLI) and it or pending
+    local real = present(PIN_CLI) and it or pending
     real(
-        "parses the new pin's Retribution .apl.siml and .gear.siml (a scratch recipe) as the translator's fixture",
+        "parses the old pin's Retribution .apl.siml and .gear.siml (a scratch recipe) as the translator's fixture",
         function()
             local spec = "paladin_retribution"
             local saved = ex.SPEC_PIN[spec]
-            ex.SPEC_PIN[spec] = ex.NEW_PIN -- the scratch recipe is at the new pin; the checked-in line is the lane's flip
+            ex.SPEC_PIN[spec] = ex.OLD_PIN -- the scratch recipe is at the old pin (the checkout's)
             local r = ex.recipe(spec)
             r.apl = "ui/specs/paladin/retribution/apls/default.apl.siml"
             r.player.gear = "ui/specs/paladin/retribution/gear_sets/default.gear.siml"
-            local ok, req = pcall(ex.request, r, NEW_ROOT, spec, NEW_CLI)
+            local ok, req = pcall(ex.request, r, PIN_ROOT, spec, PIN_CLI)
             ex.SPEC_PIN[spec] = saved
             assert(ok, req)
             local p = req.raid.parties[1].players[1]
@@ -160,25 +160,25 @@ describe("export.lua .siml recipe paths", function()
                 { apl.translate(old.rotation, apl.context(set, r, log, old)) },
                 { apl.translate(p.rotation, apl.context(set, r, log, old)) }
             )
-            -- a spec left at the old pin refuses the new pin's CLI instead of parsing with it
-            ex.SPEC_PIN[spec] = ex.OLD_PIN -- explicit: the checked-in line is NEW once the lane has flipped this spec
-            local ok2, err = pcall(ex.request, r, NEW_ROOT, spec, NEW_CLI)
+            -- a spec at the new pin refuses the old pin's CLI instead of parsing with it
+            ex.SPEC_PIN[spec] = ex.NEW_PIN
+            local ok2, err = pcall(ex.request, r, PIN_ROOT, spec, PIN_CLI)
             ex.SPEC_PIN[spec] = saved
             assert.is_false(ok2)
-            assert.is_truthy(tostring(err):find(ex.OLD_PIN, 1, true), tostring(err))
+            assert.is_truthy(tostring(err):find(ex.NEW_PIN, 1, true), tostring(err))
         end
     )
 
     real("parses a whole .siml build over its defaults, with a .siml gear set (the Hunters' shape)", function()
         local spec = "hunter_survival"
         local saved = ex.SPEC_PIN[spec]
-        ex.SPEC_PIN[spec] = ex.NEW_PIN
+        ex.SPEC_PIN[spec] = ex.OLD_PIN
         local ok, req = pcall(ex.request, {
             name = "S",
             build = "ui/specs/hunter/dps/builds/sv_weave.siml",
             defaults = "ui/specs/hunter/dps/defaults.siml",
             gear = "ui/specs/hunter/dps/gear_sets/p1_melee.gear.siml",
-        }, NEW_ROOT, spec, NEW_CLI)
+        }, PIN_ROOT, spec, PIN_CLI)
         ex.SPEC_PIN[spec] = saved
         assert(ok, req)
         local p = req.raid.parties[1].players[1]

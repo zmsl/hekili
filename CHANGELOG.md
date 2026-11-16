@@ -3,8 +3,10 @@
 ## Unreleased
 
 ### New
+- Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
 ### Changed
+- Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 ### Fixed
 

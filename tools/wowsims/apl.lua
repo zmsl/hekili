@@ -526,6 +526,15 @@ function M.manaMax(text)
     end
 end
 
+--- wowsims's isTank for a request: the player (raid index 0) in a tank slot (sim/core/environment.go:123-128).
+function M.isTank(req)
+    local tank = false
+    for _, t in ipairs(req.raid.tanks or {}) do
+        tank = tank or (t.type == "Player" and (t.index or 0) == 0)
+    end
+    return tank
+end
+
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, extra,
 --- settings, exclusive, requires, guard, condition, maintenance, select, auras), the spec's exported log text `log` (rule 13; nil: the
@@ -3221,12 +3230,8 @@ function M.render(spec, ex)
         lf:close()
     end
     local player = req.raid.parties[1].players[1]
-    local tank = false -- wowsims's isTank: the player (raid index 0) in a tank slot (sim/core/environment.go:123-128)
-    for _, t in ipairs(req.raid.tanks or {}) do
-        tank = tank or (t.type == "Player" and (t.index or 0) == 0)
-    end
     local text, omitted, toggles, header =
-        M.translate(player.rotation, M.context(set, r, log, player, req.encounter, tank))
+        M.translate(player.rotation, M.context(set, r, log, player, req.encounter, M.isTank(req)))
     local Class = r.class:sub(1, 1) .. r.class:sub(2):lower()
     local out = {
         ("# %s: the wowsims/forever default APL for %s (%s), translated to this addon's keys."):format(

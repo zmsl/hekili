@@ -4,7 +4,8 @@
 --       .lua/bin/lua tools/wowsims/drift.lua all|<spec>... > drift.md   (all: every recipe in tools/wowsims/specs/)
 -- Env: WOWSIMS (the git repo the pin lives in [~/src/wowsims-forever]; only `git show`/`diff`/`log` run there),
 -- WOWSIMS_NEW (the rev to compare [upstream/master]; WOWSIMS_NEW_TREE's HEAD must be it), WOWSIMS_NEW_CLI (a CLI built
--- at the new rev, for `siml parse -json`; without it a recipe whose files moved to .siml is reported, not translated).
+-- at the new rev, for `siml parse -json`; without it a recipe whose files moved to .siml is reported, not translated),
+-- WOWSIMS_PIN_CLI (the CLI of a checkout at the spec's own pin, for a pin-side .siml recipe path).
 -- Per spec: the recipe's source files (changed / gone), its talent string decoded on both trees, the pack lines that
 -- would change (the pin side is the checked-in request, checked equal to the shipped .simc; the new side is
 -- export.lua's request from the new tree, translated with the pin's log, so automatic-action lines are the pin's),
@@ -214,9 +215,23 @@ end
 
 M.newRequest = newRequest -- tests/Forever/wowsims_siml_spec.lua
 
-local function translate(apl, set, r, log, player, encounter)
-    local text, omitted = apl.translate(player.rotation, apl.context(set, r, log, player, encounter))
+-- `req`: the checked-in request, whose encounter and tank slot (apl.isTank) every side is translated with, as apl.lua's
+-- pack build does (rule 13's defensive racials)
+local function translate(apl, set, r, log, player, req)
+    local text, omitted =
+        apl.translate(player.rotation, apl.context(set, r, log, player, req.encounter, apl.isTank(req)))
     return text, omitted
+end
+
+M.translate = translate -- tests/Forever/wowsims_drift_spec.lua
+
+-- the CLI a spec's pin-side .siml is parsed with: WOWSIMS_PIN_CLI (a CLI built at the spec's pin) when the pin is not the
+-- new rev; none otherwise (export.lua then reads WOWSIMS_CLI, else the git-archive dir, which holds no CLI)
+function M.pinCli(ctx, pin)
+    if pin == ctx.new then
+        return ctx.cli
+    end
+    return ctx.pinCli
 end
 
 function M.spec(ctx, spec)
@@ -279,7 +294,7 @@ function M.spec(ctx, spec)
     emit("\n### Pack lines (translator on both revs)")
     local set = require("Forever.helpers.engine").abilitySet(r.class)
     local log = slurp(ex.OUT .. spec .. ".log")
-    local ok, old, oldOmit = pcall(translate, apl, set, r, log, player, req.encounter)
+    local ok, old, oldOmit = pcall(translate, apl, set, r, log, player, req)
     if not ok then
         emit("- pin translation error: %s", tostring(old))
         old = nil
@@ -291,8 +306,8 @@ function M.spec(ctx, spec)
     end
     -- shipped -> pin: the checked-in request against the recipe's request built from the pin's own files (a stale
     -- export, or a request edit the re-pin made by hand); pin -> new: the drift itself
-    -- a .siml recipe path at a spec flipped to the new rev parses with WOWSIMS_NEW_CLI (its pin's CLI)
-    local okp, preq = pcall(ex.request, r, ctx.treeAt(pin), spec, pin == ctx.new and ctx.cli or nil)
+    -- a .siml recipe path parses with its pin's CLI: WOWSIMS_NEW_CLI at the new rev, else WOWSIMS_PIN_CLI
+    local okp, preq = pcall(ex.request, r, ctx.treeAt(pin), spec, M.pinCli(ctx, pin))
     local notes = {}
     local ok2, nreq = pcall(newRequest, ex, r, spec, ctx.tree, ctx.cli, notes)
     for _, n in ipairs(notes) do
@@ -304,8 +319,8 @@ function M.spec(ctx, spec)
             emit("- request talents differ: `%s` -> `%s`", tostring(pa.talentsString), tostring(pb.talentsString))
         end
         -- the encounter is export.lua's M.ENCOUNTER on every side: the checked-in request's
-        local oka, ta, oa = pcall(translate, apl, set, r, log, pa, req.encounter)
-        local okb, tb, ob = pcall(translate, apl, set, r, log, pb, req.encounter)
+        local oka, ta, oa = pcall(translate, apl, set, r, log, pa, req)
+        local okb, tb, ob = pcall(translate, apl, set, r, log, pb, req)
         if not (oka and okb) then
             emit("- TRANSLATION ERROR: %s", tostring(oka and tb or ta))
         else
@@ -503,6 +518,7 @@ function M.main(specs)
         new = new,
         tree = tree,
         cli = os.getenv("WOWSIMS_NEW_CLI"),
+        pinCli = os.getenv("WOWSIMS_PIN_CLI"),
         treeAt = treeAt,
         storeAt = storeAt,
         newStore = storeOf(new, json),
