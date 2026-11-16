@@ -315,14 +315,26 @@ M.FLICKER = {
     -- 0.19 -> 0.03, heldReady 323 -> 314: FINAL, measured on integ/0.8.5-w2 after the Survival-moving lanes merged
     -- (Serpent Sting debuff at landing, flicker-085, timing merges; L1037/L1103; close-085 seeds 1-20 / 21-40 / 41-60
     -- flicker 0 / 0 / 0.017, heldReady 314 / 283 / 313): the worst printed + 0.01, the worst set
-    ["Survival"] = { flicker = 0.03, retracted = 0, readyShort = 1, heldReady = 314 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- 0.03 -> 0.09 (re-pin e5a9cd2a2d -> e4ef929e54 with mana-09's CN22, the percent cost rounded to the nearest whole
+    -- before the cut; seeds 1-20 / 21-40 / 41-60 flicker 0.08 / 0.07 / 0.07, oracle 0.20 / 0.10 / 0.13, heldReady 269 /
+    -- 279 / 277, readyShort 0 / 1 / 0, agreement .977 / .983 / .978): Strider Kick 0.0581 of 1720 rounds to 100, so
+    -- under Resourcefulness 2/2 it costs 40 (was 39) and ties Raptor Strike's 40; a queued Raptor Strike's mana now shows
+    -- Strider Kick for one poll and flips() no longer excludes it. Traced in mana-09's review round (L1210/L1212: the
+    -- oracle shows the same flips, its own flicker rose 0.05 -> 0.13 with it); the measured worst + 0.01
+    ["Survival"] = { flicker = 0.09, retracted = 0, readyShort = 1, heldReady = 314 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661), first measured (R6; seeds 1-20 / 21-40 / 41-60, steady
     -- icons on): flicker 0 / 0 / 0 each (Survival Melee's oracle 0.02 / 0.03 / 0.02, the others' 0), retracted 0,
     -- readyShort 0; heldReady the Hunter rows' cost-crossing class (the floor a few units under the truth, gap BT),
     -- not traced per tick; agreement .993 or better each set (Survival Melee .993). Re-measured after the seeded regen
     -- phase (L667, cause harness), seeds 1-20 / 21-40 / 41-60 flicker 0 each, retracted 0, readyShort 0; floors the
     -- worst of the two measurements (first, then after L667)
-    ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 128 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
+    -- heldReady 128 -> 132 (re-pin e5a9cd2a2d -> e4ef929e54: wowsims's hawk rotation, turret_hawk.apl.siml: Summon Hawk
+    -- twice, then Arcane Shot, each 189 mana, Sniper Shot gone; seeds 1-20 / 21-40 / 41-60 heldReady 130 / 132 / 104,
+    -- flicker 0 / 0 / 0, retracted 0, readyShort 0, agreement .994 / .995 / .997, refused [] (no on-cooldown Summon Hawk
+    -- since its 5.4 s after an Arcane Shot). The held ticks are the Hunter cost-crossing class (gap BT) at the new
+    -- spends: the lines' wait counters put them on summon_hawk 61 / 60 / 54 and arcane_shot 26 / 20 / 25 (the old list
+    -- pressed neither), the belief's floor 1.7-1.9 mana under the truth at the 189 crossing): the worst set
+    ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 132 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
     -- Marksmanship Turret, 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60
     -- heldReady 132 / 115 / 108, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 118 -> 132
     -- (the worst set). Cause harness: ladder-usable-085 cc02f47e5's between-fight rest window (fights start at the true
