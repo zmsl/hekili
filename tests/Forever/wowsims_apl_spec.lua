@@ -3456,45 +3456,51 @@ describe("the wowsims APL translator's target swaps (option D)", function()
     -- (Guardian's, both fight_remains here) is omitted with its reason, never folded into an always-false term
     -- review M2: the target's death against the fight's end is a constant term (S4's fold), so `|`, `!` and
     -- `<=`/`>=`/`=` keep their meaning: false for `<`, `>`, `!=`; true for `<=`, `>=`, `=`
-    it("CN24: omits another target's death and a swap to it; folds the target's death against the fight's end", function()
-        local next = { timeUntilTargetDies = { targetUnit = { type = "NextTarget" } } }
-        local dies = { timeUntilTargetDies = { targetUnit = { type = "CurrentTarget" } } }
-        local text, omitted = apl.translate({
-            priorityList = {
-                cast(100, cmp("OpGt", next, const("10s"))),
-                cast(100, { variableRef = { name = "Next target lives" } }),
-                swap({ variableRef = { name = "Next target lives" } }),
-                swap(nil, "PreviousTarget"),
-                cast(200, AND(cmp("OpLt", dies, const("3s")), cmp("OpLt", dies, { remainingTime = {} }))),
-                cast(200, cmp("OpGt", { remainingTime = {} }, { timeUntilTargetDies = {} })),
-                cast(200, cmp("OpLt", dies, const("3s"))),
-                cast(300, OR(cmp("OpLt", dies, { remainingTime = {} }), cmp("OpLt", dies, const("2s")))),
-                cast(400, AND(cmp("OpLe", dies, { remainingTime = {} }), cmp("OpGt", { currentRage = {} }, const("5")))),
-                cast(500, NOT(cmp("OpLt", dies, { remainingTime = {} }))),
-            },
-            valueVariables = { { name = "Next target lives", value = cmp("OpGt", next, const("6s")) } },
-        }, ctx({}))
-        assert.are.equal(
-            table.concat({
-                "actions=big_hit,if=fight_remains<3",
-                "actions+=/roar,use_off_gcd=1,if=fight_remains<2",
-                "actions+=/dot,if=rage.lo>5",
-                "actions+=/starfire",
-            }, "\n"),
-            text
-        )
-        local other = "timeUntilTargetDies of NextTarget: Forever gives no other target's time to die"
-        local fight = "never: timeUntilTargetDies against remainingTime: the target's time to die is fight_remains here"
-            .. " (gap AN), so the comparison is a constant."
-        assert.are.same({
-            "default #1: " .. other,
-            "default #2: " .. other,
-            "default #3: changeTarget NextTarget: no on-all-targets read of a cast before it in this list",
-            "default #4: changeTarget PreviousTarget: no previous target in Hekili",
-            "default #5: " .. fight,
-            "default #6: " .. fight,
-        }, omitted)
-    end)
+    it(
+        "CN24: omits another target's death and a swap to it; folds the target's death against the fight's end",
+        function()
+            local next = { timeUntilTargetDies = { targetUnit = { type = "NextTarget" } } }
+            local dies = { timeUntilTargetDies = { targetUnit = { type = "CurrentTarget" } } }
+            local text, omitted = apl.translate({
+                priorityList = {
+                    cast(100, cmp("OpGt", next, const("10s"))),
+                    cast(100, { variableRef = { name = "Next target lives" } }),
+                    swap({ variableRef = { name = "Next target lives" } }),
+                    swap(nil, "PreviousTarget"),
+                    cast(200, AND(cmp("OpLt", dies, const("3s")), cmp("OpLt", dies, { remainingTime = {} }))),
+                    cast(200, cmp("OpGt", { remainingTime = {} }, { timeUntilTargetDies = {} })),
+                    cast(200, cmp("OpLt", dies, const("3s"))),
+                    cast(300, OR(cmp("OpLt", dies, { remainingTime = {} }), cmp("OpLt", dies, const("2s")))),
+                    cast(
+                        400,
+                        AND(cmp("OpLe", dies, { remainingTime = {} }), cmp("OpGt", { currentRage = {} }, const("5")))
+                    ),
+                    cast(500, NOT(cmp("OpLt", dies, { remainingTime = {} }))),
+                },
+                valueVariables = { { name = "Next target lives", value = cmp("OpGt", next, const("6s")) } },
+            }, ctx({}))
+            assert.are.equal(
+                table.concat({
+                    "actions=big_hit,if=fight_remains<3",
+                    "actions+=/roar,use_off_gcd=1,if=fight_remains<2",
+                    "actions+=/dot,if=rage.lo>5",
+                    "actions+=/starfire",
+                }, "\n"),
+                text
+            )
+            local other = "timeUntilTargetDies of NextTarget: Forever gives no other target's time to die"
+            local fight = "never: timeUntilTargetDies against remainingTime: the target's time to die is fight_remains here"
+                .. " (gap AN), so the comparison is a constant."
+            assert.are.same({
+                "default #1: " .. other,
+                "default #2: " .. other,
+                "default #3: changeTarget NextTarget: no on-all-targets read of a cast before it in this list",
+                "default #4: changeTarget PreviousTarget: no previous target in Hekili",
+                "default #5: " .. fight,
+                "default #6: " .. fight,
+            }, omitted)
+        end
+    )
 
     it("rule 17: multidot on more than one target is cycle_targets with max_cycle_targets", function()
         local function multidot(dots)
@@ -3587,7 +3593,7 @@ describe("CN25: a variable of many terms is one variable line, read by name", fu
         assert.are.equal(3, #lines)
         assert.is_truthy(lines[1]:find("^actions=variable,name=v_big_one,value=%(rage%.lo<1|rage%.lo<2|"))
         assert.are.equal(apl.HOIST_TERMS, apl.terms(lines[1]:match(",value=(.*)$")))
-        assert.are.equal("actions+=/strike,focus=1,if=variable.v_big_one", lines[2])
+        assert.are.equal("actions+=/strike,if=variable.v_big_one", lines[2])
         assert.are.equal("actions+=/roar,use_off_gcd=1,if=!variable.v_big_one", lines[3])
     end)
 
@@ -3596,7 +3602,7 @@ describe("CN25: a variable of many terms is one variable line, read by name", fu
             { name = "Small", value = big(apl.HOIST_TERMS - 1) },
         })
         assert.is_nil(text:find("variable", 1, true))
-        assert.are.equal(apl.HOIST_TERMS - 1, apl.terms(text))
+        assert.are.equal(apl.HOIST_TERMS - 1, apl.terms(text:match(",if=(.*)$")))
     end)
 
     it("emits a variable another reads before it, and none an emitted line never reads", function()
@@ -3614,6 +3620,6 @@ describe("CN25: a variable of many terms is one variable line, read by name", fu
         end
         assert.are.same({ "v_inner", "v_outer" }, names)
         assert.is_truthy(text:find("value=(variable.v_inner&(rage.lo<1|", 1, true))
-        assert.is_truthy(text:find("actions+=/strike,focus=1,if=(variable.v_outer&rage.lo>5)", 1, true))
+        assert.is_truthy(text:find("actions+=/strike,if=(variable.v_outer&rage.lo>5)", 1, true))
     end)
 end)

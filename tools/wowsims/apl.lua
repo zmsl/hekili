@@ -13,7 +13,9 @@
 --    `flightTime`, else the request's `distanceFromTarget` over its `velocity`, else 0: wowsims's distance over the
 --    missile speed, translator-2), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
---    order as first called; `valueVariables` are inlined where referenced.
+--    order as first called; `valueVariables` are inlined where referenced, except a text of M.HOIST_TERMS or more
+--    term occurrences (CN25: Lua 5.1's limits on one line, the engine's debug print and recheck): it is one
+--    `variable,name=v_<snake>,value=<text>` line heading the default list and read as `variable.v_<snake>`.
 --    The pre-pull guard (owner ruling 2026-10-21: a guard against recasting, the player decides when to press): each
 --    cast line of the precombat list, and of a list only pre-pull lists call, gets one term ahead of its condition,
 --    derived from what its ability's handler does (called once under pcall in the kit's stub state with the verbs
@@ -322,9 +324,10 @@
 --    up) and `timeUntilTargetDies` `fight_remains` (one target, no despawn schedule: wowsims's fight end, as
 --    `remainingTime`); another target unit is unsupported, for these and `isExecutePhase`. CN24, an API-forced
 --    deviation: Forever gives no other target's time to die, so an entry reading another target's (wowsims's
---    NextTarget, Feral's 2/3-target lists) is omitted with that reason, and so is one comparing the current target's
---    with `remainingTime` (both `fight_remains` here: a term always false, as Guardian's "dies before the fight
---    ends"), never folded. `numActiveAdds` (no boss/add
+--    NextTarget, Feral's 2/3-target lists) is omitted with that reason. A comparison of the current target's with
+--    `remainingTime` (both `fight_remains` here, gap AN: Guardian's "dies before the fight ends") is a constant term,
+--    folded as S4's: false for `<`, `>` and `!=`, true for `<=`, `>=` and `=`, with a `# Deviation:` line and the
+--    reason on an entry it empties. `numActiveAdds` (no boss/add
 --    split in the engine) and `remainingCastTime` (no read mapped; no APL uses it) stay unsupported.
 -- Absent enum fields (protojson omits a zero value; zeros from the pinned proto/*.proto): rule 16's option is its
 -- recipe `zero`; every other enum read here has an "unknown" zero that wowsims rejects, so an absent one is
@@ -973,6 +976,8 @@ local function currentTarget(k, v, why)
     end
 end
 local OTHER_DEATH = ": Forever gives no other target's time to die" -- CN24, API-forced
+local FIGHT_END = "timeUntilTargetDies against remainingTime: the target's time to die is fight_remains here (gap AN),"
+    .. " so the comparison is a constant."
 local FACING = "frontOfTarget is the request's in-front setting (%s the target); the client gives no facing."
 local MOB_TYPE = "targetIsMobType is the request's target type (%s); the client's creature type is not read."
 local PREPULL_CAST = "the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast."
@@ -1380,10 +1385,10 @@ local function bool(c, n)
         local l, lu = value(c, v.lhs, percentRead(c, v.rhs))
         local r, ru = value(c, v.rhs, percentRead(c, v.lhs))
         local op = M.OPS[v.op] or unsupported("op " .. tostring(v.op))
-        if l == M.VALUES.remainingTime and r == l then -- CN24: the target's death against the fight's end
-            unsupported(
-                "timeUntilTargetDies against remainingTime" .. OTHER_DEATH .. " (one target: both are fight_remains)"
-            )
+        if l == M.VALUES.remainingTime and r == l then -- CN24: the target's death against the fight's end, a constant
+            deviate(c, FIGHT_END)
+            c.folds[#c.folds + 1] = FIGHT_END -- S4: an entry this fold empties keeps the reason on its `never`
+            return nil, v.op == "OpLe" or v.op == "OpGe" or v.op == "OpEq", false
         end
         local u = nilOr(lu, ru)
         if u == true then
@@ -3200,10 +3205,9 @@ function M.translate(rotation, c)
     return text, omitted, read, header
 end
 
---- Writes spec `spec`'s pack: src/Hekili_<Class>/APLs/<recipe.pack>.simc from the checked-in request (`ex`:
---- export.lua's module), its description (with the recipe's `notes`, player-facing lines), toggles and omitted entries in
---- the header.
--- The pack file of recipe `spec` (`ex`: tools/wowsims/export.lua): its path, its text, its omitted and toggle counts.
+--- The pack file of recipe `spec` (`ex`: tools/wowsims/export.lua's module) from its checked-in request: its path
+--- (src/Hekili_<Class>/APLs/<recipe.pack>.simc), its text (the description with the recipe's `notes`, player-facing
+--- lines, the toggles and omitted entries in the header), its omitted and toggle counts.
 function M.render(spec, ex)
     local json = require("dkjson")
     local r = ex.recipe(spec)
@@ -3257,6 +3261,7 @@ function M.render(spec, ex)
     return ("src/Hekili_%s/APLs/%s.simc"):format(Class, r.pack), table.concat(out, "\n") .. "\n", #omitted, #toggles
 end
 
+--- Writes spec `spec`'s pack (M.render's text to its path) and prints its counts.
 function M.write(spec, ex)
     local path, text, omitted, toggles = M.render(spec, ex)
     local w = assert(io.open(path, "wb"))
