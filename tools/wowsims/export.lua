@@ -42,7 +42,7 @@ M.SPEC_PIN = {
 
     hunter_marksmanship_turret = NEW,
 
-    hunter_survival = OLD,
+    hunter_survival = NEW,
 
     hunter_survival_melee = OLD,
 
