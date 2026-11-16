@@ -3,15 +3,19 @@
 ## Unreleased
 
 ### New
+- Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
 ### Changed
 - Warlock, Affliction (wowsims.com): follows wowsims's new Wrack priority: Bane of Doom only with two or more enemies, Bane of Agony and Amplify Curse no longer wait for Doom, Blood Fury is saved for Amplify Curse, and the Major Mana Potion line is gone (not yet checked in game).
 - Warlock: Bane of Havoc now waits for the global cooldown, as in wowsims (not yet checked in game).
+- Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 ### Fixed
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
+
+- Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 
 ### Known issues
 

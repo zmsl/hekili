@@ -8,6 +8,7 @@
 ## X-Website: https://github.com/zmsl/hekili
 ## X-Curse-Project-ID: 1753387
 ## SavedVariables: HekiliDB
+## SavedVariablesPerCharacter: HekiliCDMProof
 ## OptionalDeps: ConsolePort, ElvUI, LibDualSpec-1.0, Masque, WeakAuras
 
 embeds.xml

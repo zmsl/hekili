@@ -1,0 +1,3 @@
+-- tools/check_border.sh must fail this core stand-in on line 3: a near-miss of the one new call
+local _, ns = ...
+ns.VirtualState.WindowOps("pack:x#Primary", 3, 2)
