@@ -167,6 +167,17 @@ local function inScope(m, a)
     return hit
 end
 
+-- Modifier m's talent rank in `state`: 1 without `talent`. Read raw: a key the class does not register (a shared or
+-- race modifier naming another class's talent) is rank 0 without the talent table's "Unknown talent" error.
+local function rankOf(state, m)
+    local key = m.talent
+    if key == nil then
+        return 1
+    end
+    local t = rawget(state.talent, key)
+    return t and t.rank or 0
+end
+
 --- A declared cost of ability `a` after the modifiers in scope whose buff is up in the simulated state. A fraction
 --- (ns.SpendPoints: below 1, or any magnitude under `spendBase`) is returned as declared: ns.SpendPoints prices it whole
 --- first and then calls this with `points` true, so a modifier cuts the whole price, unrounded, as the belief's
@@ -185,7 +196,9 @@ function M.Apply(cost, a, points)
     for i = 1, #list do
         local m = list[i]
         -- the talent gate and the value by rank: the belief's I.CostMod (Game/State/Families/Modifiers.lua) alike
-        local rank = m.talent and state.talent[m.talent].rank or 1
+        -- shortcut: modifiers apply in list order, so a flat listed after a pct lands after it; wowsims adds every flat
+        -- to the base before any percent (spell.go:1055). Upgrade when a pack gives one ability both kinds.
+        local rank = rankOf(state, m)
         if
             rank > 0
             and (m.aura and buff[m.aura].up or not m.aura and m.talent)
@@ -226,7 +239,8 @@ local held = {} -- M.Spend's per-modifier `unless` answers, decided before any s
 
 --- Ability `key` was cast in the simulation with declared cost `base` (ns.spendResources, before any discount): when
 --- `base` is above 0, a stack of each charged modifier in scope whose buff is up (gone at the last), even when the
---- discount brought the paid cost to 0; a modifier whose `unless` aura is up as the cast starts takes none.
+--- discount brought the paid cost to 0; a modifier whose `unless` aura is up as the cast starts, or whose talent has
+--- no rank, takes none.
 function M.Spend(base, key)
     local list = mods.costMods
     if #list == 0 or type(base) ~= "number" or base <= 0 then
@@ -243,7 +257,14 @@ function M.Spend(base, key)
     end
     for i = 1, #list do
         local m = list[i]
-        if m.charges and m.aura and not held[i] and state.buff[m.aura].up and inScope(m, a) then
+        if
+            m.charges
+            and m.aura
+            and not held[i]
+            and rankOf(state, m) > 0
+            and state.buff[m.aura].up
+            and inScope(m, a)
+        then
             state.removeStack(m.aura)
         end
     end

@@ -173,7 +173,9 @@ R.auraRegen = G
 -- spirit regen while casting (default 0; capped with the slot's static share at all of it), `mp5` + x a second in and
 -- out of the window (default 0); `spirit`, `share` and `mp5` may be functions (refresh). `mp5Mult` (a number, default 1)
 -- the gear and buff MP5 x p: the learned mp5 part and every other entry's `mp5` but an `energize` one's (`energize`:
--- a periodic energize ticks its own amount; wowsims mana.go:176-183 multipliedManaRegen). See coefAt.
+-- a periodic energize ticks its own amount; wowsims mana.go:176-183 multipliedManaRegen). `spirit`, `share`,
+-- `mp5Mult` and `energize` act on an `fsr` slot only: a slot without the rule has no learned parts to split, its rate is
+-- f x (the learned rate + every entry's mp5). See coefAt.
 local M = {
     n = 0,
     slot = {},

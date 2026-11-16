@@ -66,7 +66,7 @@ The content surface is everything a content addon may use: the registration API,
 ```text
 ## Dependencies: Hekili, Hekili_Shared
 ## LoadOnDemand: 1
-## X-Hekili-ContentAPI: 14
+## X-Hekili-ContentAPI: 15
 ```
 
 The core loads a class pack only when the two numbers are equal. This turns a core and a class pack from different releases into a clear notice ("update the older one") instead of an error in the middle of the class file. `CONTENT_API` and every content TOC change together, and only when the content surface changes: a new `Register*` call, a new ability or aura field the core reads, a new name in a content function's environment. `tests/Forever/content_spec.lua` checks that the TOCs and the constant agree. A class pack's own release changes its `## Version`, not the content API.
