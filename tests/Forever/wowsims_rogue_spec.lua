@@ -58,10 +58,16 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- Mutilate, 0.19 -> 0.20 s, among the few later), and the count floor 35 -> 36 (tests/Forever/helpers/wowsims.lua:447-450).
 -- Cause: the belief's Relentless Strikes rule (expected energy 25 x min(1, 4% x rank x points) on every finisher, was
 -- 25 at 5/5 and 5 points only); the wowsims log's procs are real rolls, the belief pays the mean.
+-- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9; wowsims 41976091ed [Rogue] APL Improvements: the Eviscerate and Hemorrhage lines; the opener
+-- shifts a GCD, Mutilate 5.00 once, Eviscerate 7.00): replay floors Assassination 0.97 -> 0.96 (0.963 of 82), Combat 0.99 -> 0.98
+-- (0.981 of 108), Subtlety 0.98 -> 1.00 (1.000 of 99); each spec's one new miss is Slice and Dice's last second (Assassination log 162.77
+-- mutilate vs SnD 1 s before its cast, Combat log 120.00 blade_flurry vs SnD, 0.65 s before it fades): with no 4-point Eviscerate branch refreshing it,
+-- Slice and Dice runs to its edge more often; the other misses (Assassination opener 1.00/2.00, Combat 20.20) are in the old log too;
+-- Subtlety LIVE40 8.2 -> the 6 s bar (4.2 measured; the new Hemorrhage `energy.lo>=75` term removes the garrote.remains>=8 shut that set 8.2); LIVE60 kept (L60 idle measured 5.0 / 3.0 / 3.0, all inside the 6 s bar that governs).
 local PACKS = {
-    { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.97, 5.2, MUTILATE_HANDS },
-    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.99, 3.0 },
-    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.98, 3.6, nil, 8.2 },
+    { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.96, 5.2, MUTILATE_HANDS },
+    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.98, 3.0 },
+    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 1.00, 3.6 },
 }
 
 describe("the Rogue wowsims.com packs #slow #wowsims", function()

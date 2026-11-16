@@ -625,9 +625,9 @@ beside the number (DEVELOPMENT.md).
 | Feral (wowsims.com) | 0.96 | 0.40, 10 |
 | Guardian (wowsims.com) | 0.63 | 1.76, 55 |
 | Balance (wowsims.com) | 0.97 | 0.26, 22 |
-| Assassination (wowsims.com) | 0.97 | 0.20, 35 |
-| Combat (wowsims.com) | 0.99 | 0.24, 21 |
-| Subtlety (wowsims.com) | 0.98 | 0.17, 40 |
+| Assassination (wowsims.com) | 0.96 | 0.20, 14 |
+| Combat (wowsims.com) | 0.98 | 0, 0 |
+| Subtlety (wowsims.com) | 1.00 | 0.07, 5 |
 | Retribution (wowsims.com) | 0.93 | 0.10, 7 |
 | Holy Shock (wowsims.com) | 0.97 | 0.24, 5 |
 | Protection (wowsims.com), Paladin | 0.95 | 0.43, 1 |

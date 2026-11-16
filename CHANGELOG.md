@@ -6,6 +6,7 @@
 - Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
 ### Changed
+- Rogue priorities follow the newest wowsims fights: Eviscerate waits for Rupture to have 3 seconds left when you have Serrated Blades (and no longer fires at 4 combo points just to refresh Slice and Dice), and Hemorrhage also shows when your energy is at 75 or more. Not yet checked in game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 ### Fixed
