@@ -474,17 +474,20 @@ M.FLICKER = {
     -- flicker 0.08 -> 0.03 (the worst, 0.017, + 0.01), readyShort 1 -> 0, heldReady 138 -> 146 (the worst set). Cause:
     -- Stormstrike 8 s (hotfix push 113722), the world's Windfury Totem strike and the Five Thunders gear's 6250 mana /
     -- 25.75 / 12.0 re-time every fight; the held ticks are the same Flame Shock cost crossing against Stormstrike's
-    -- cooldown (top flame_shock -> stormstrike 112 of 18020 ticks; at cost lo-truth -3.4, gap BT). Draw-identical A/B on
-    -- seeds 1-20 (the strike's outcome rolled, its row dropped; repin-shaman-09-2): flame_shock -> stormstrike 51 with
-    -- the rows / 47 without on a fresh boot a fight, 144 / 79 on one boot (the tally), episodes either way by seed: the
-    -- rows perturb a near tie, and the traced episodes (seed 19, 140.4 / 145.6 s) are that tie (belief and truth agree
-    -- Flame Shock down and Stormstrike's cooldown; lo 5 under the truth puts Flame Shock's cost 0.1 s past Stormstrike's
-    -- ready), no avoid row paying a Flame Shock ticket
+    -- cooldown (top flame_shock -> stormstrike 112 of 18020 ticks; at cost lo-truth -3.4, gap BT). Draw-identical A/B
+    -- (the strike's outcome rolled, its row dropped; repin-shaman-09-2), one boot per arm as here: flame_shock ->
+    -- stormstrike 144 / 128 / 31 with the rows, 79 / 37 / 15 without (agreement .987 / .992 / .995 vs .992 / .994 /
+    -- .997; heldReady 153 / 166 / 155 vs - / 179 / 171); on a fresh boot a fight 51 / 47. The traced episodes (seed 19,
+    -- fresh boot) are the gap BT tie (belief and truth agree Flame Shock down and Stormstrike's cooldown; lo 5 under the
+    -- truth puts Flame Shock's cost 0.08 s past Stormstrike's ready) and no avoid row paid a Flame Shock ticket; how the
+    -- rows raise the count across a boot's fights is not identified (swing-ticket payments unlogged)
     -- CN22 nearest rounding: Stormstrike 121 -> 122 (lane mana-09 merged into repin-shaman-09, R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 1, heldReady 153 / 166 / 155, agreement .987 /
-    -- .992 / .995, react p90 0 / 0 / 0): heldReady 146 -> 166, readyShort 0 -> 1 (the worst set; the same cost-crossing
-    -- class one mana dearer, at cost lo-truth -3.2; not traced row by row); flicker 0.03 kept
-    ["Enhancement"] = { flicker = 0.03, retracted = 0, heldReady = 166, readyShort = 1 },
+    -- .992 / .995, react p90 0 / 0 / 0): heldReady 146 -> 166 (the worst set); flicker 0.03 -> 0.01 (the worst, 0, +
+    -- 0.01); readyShort 0 -> 1: the one event (seed 44, t 183.00, the fight's last tick) is a Lightning Bolt pressed at
+    -- cost 0 in our queue (Maelstrom Weapon believed at 5) where the world prices it 220 (truth 58.8 mana, lo 53.3): a
+    -- Maelstrom stack belief at the fight's end, not a cost crossing (as gap CT's last-tick shape); not traced further
+    ["Enhancement"] = { flicker = 0.01, retracted = 0, heldReady = 166, readyShort = 1 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
