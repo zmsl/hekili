@@ -1951,6 +1951,9 @@ describe("Forever Druid Rake after an avoided recast (hotfix 0.8.6)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Review M2: the belief's avoid undo already closed this record, so the core's `missable` hook is not what takes it
+    -- down here. The real-chain proof that the hook removes a missed first cast is warlock_spec's EVADE case ("resisted
+    -- or evaded by a row 0.15 s after the cast": the belief keeps the record, the core's stamp match drops it).
     it("leaves a dodged first Rake down", function()
         rake(1, "DODGE")
         t = t + 0.5

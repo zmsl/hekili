@@ -935,6 +935,39 @@ describe("Forever Warlock through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Review M1: a row past the cast's own frame (0.15 s: a RESIST or EVADE is ours only inside the cast window, 0.2 s,
+    -- Kinds.lua; a later one is background) still takes the resisted Corruption down, and the core's miss stamp is the
+    -- cast's own time, not the row's. An EVADE is undone by no belief write (Rows.lua REACTED), so there the core's
+    -- stamp match alone takes it down.
+    it("drops a Corruption resisted or evaded by a row 0.15 s after the cast; the miss stamp is the cast's", function()
+        local H = headless.new({ character = character() })
+        local S, VS, ctl = H.Hekili.State, H.ns.VirtualState, H.ctl
+        local spec = H.Hekili.Class.specs[H.Hekili.State.spec.id]
+        ctl.inRange.target, ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        local function corruption(act)
+            t = t + 20
+            ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. t, 25311)
+            assert.is_true(headless.cycle(H, t + 0.1))
+            S.reset("Primary", true)
+            assert.is_true(S.debuff.corruption.up, act) -- before the row: up
+            ctl.now = t + 0.15
+            H.Fire("UNIT_COMBAT", "target", act, "", 0, 32)
+            assert.is_true(headless.cycle(H, t + 0.4))
+            S.reset("Primary", true)
+            assert.are.equal(t, spec.missedAt.corruption, act)
+            return S.debuff.corruption.up, VS.Aura("target", 172, t + 0.4) ~= nil
+        end
+        assert.are.same({ false, false }, { corruption("RESIST") })
+        assert.are.same({ false, true }, { corruption("EVADE") }) -- the belief keeps it; the core's stamp drops it
+        assert.are.same({}, H.errors)
+    end)
+
     -- The stat split's shared buffs (L971): a Priest's Divine Spirit on a Warlock. Hekili_Shared registers it for every
     -- class, its Spirit by the aura's own spell ID (27841, rank 4: +40; wowsims spells_auto_gen.go aura 29, misc 4). Up
     -- at the out-of-combat read (Spirit 261 = 221 + 40), it falls mid-fight: the belief's Spirit drops by its 40 at
