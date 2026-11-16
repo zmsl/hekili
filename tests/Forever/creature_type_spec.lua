@@ -94,8 +94,12 @@ describe("the target's creature type", function()
 
         it("no target, or one not attackable: refused whatever the type and range answer", function()
             range(true)
+            H.ctl.combat = true -- in combat (the owner's report: shown with no target mid-fight)
+            H.Fire("PLAYER_REGEN_DISABLED")
             H.ctl.exists.target = false
-            assert.are.same(NO_TARGET, { cycle("unknown"):IsUsable("hamstring") }) -- the live client's no target
+            local st = cycle("unknown")
+            assert.is_true(st.combat > 0)
+            assert.are.same(NO_TARGET, { st:IsUsable("hamstring") }) -- the live client's no target
             assert.are.same(NO_TARGET, { cycle("undead"):IsUsable("hamstring") })
             H.ctl.exists.target = SECRET
             assert.are.same(NO_TARGET, { cycle("undead"):IsUsable("hamstring") })

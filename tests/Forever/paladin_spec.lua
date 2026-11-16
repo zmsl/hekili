@@ -1242,9 +1242,31 @@ describe("Exorcism's 879 ranks with the creature type hidden", function()
         assert.are.same({ true }, usable("undead"))
         assert.are.same({ true }, usable("demon"))
         assert.are.same({ false, "target's creature type not in usable_on" }, usable("humanoid"))
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
         H.ctl.exists.target = false
         assert.are.same({ false, "usable_on: no attackable target" }, usable("unknown"))
+        assert.is_true(H.Hekili.State.combat > 0)
         assert.are.same({}, H.errors)
+    end)
+
+    it("Holy Wrath's check allocates nothing: restricted, Exorcism true or nil, no 879 rank known", function()
+        for _, c in ipairs({ { UNDEAD_RANKS, { 0, 30 } }, { UNDEAD_RANKS, { 0, 0 } }, { { 2812, 10318 } } }) do
+            local H, usable = paladin(c[1])
+            H.ctl.guid.target, H.ctl.ranges[10314] = SECRET, c[2]
+            usable(SECRET)
+            local st = H.Hekili.State
+            st:IsUsable("holy_wrath")
+            collectgarbage("collect")
+            collectgarbage("stop")
+            local b = collectgarbage("count")
+            for _ = 1, 50 do
+                st:IsUsable("holy_wrath")
+            end
+            local d = (collectgarbage("count") - b) * 1024
+            collectgarbage("restart")
+            assert.are.equal(0, d, #c[1])
+        end
     end)
 
     it("Holy Wrath restricted (type and GUID secret): the known 879 Exorcism rank's range answer decides", function()
