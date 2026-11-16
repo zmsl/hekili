@@ -278,21 +278,6 @@
         },{
           "action":{
             "condition":{
-              "variableRef":{
-                "name":"Use Sniper Shot"
-              }
-            },
-            "castSpell":{
-              "spellId":{
-                "spellId":1310786,
-                "rank":3
-              }
-            }
-          },
-          "notes":"The least damage per second of casting, so it waits until none of the shots above is ready."
-        },{
-          "action":{
-            "condition":{
               "cmp":{
                 "op":"OpNe",
                 "rhs":{
@@ -358,38 +343,6 @@
               "val":"-19s"
             }
           }
-        },{
-          "action":{
-            "condition":{
-              "variableRef":{
-                "name":"Use Sniper Shot"
-              }
-            },
-            "castSpell":{
-              "spellId":{
-                "spellId":1310786,
-                "rank":3
-              }
-            }
-          },
-          "doAtValue":{
-            "math":{
-              "op":"OpMul",
-              "rhs":{
-                "const":{
-                  "val":"-1"
-                }
-              },
-              "lhs":{
-                "spellCastTime":{
-                  "spellId":{
-                    "spellId":1310786,
-                    "rank":3
-                  }
-                }
-              }
-            }
-          }
         }],
       "valueVariables":[{
           "name":"Use Aimed Shot",
@@ -413,17 +366,10 @@
             }
           }
         },{
-          "name":"Use Sniper Shot",
-          "value":{
-            "const":{
-              "val":"true"
-            }
-          }
-        },{
           "name":"Use Summon Hawk",
           "value":{
             "const":{
-              "val":"false"
+              "val":"true"
             }
           }
         },{
@@ -514,7 +460,7 @@
       "elixirIds":[13452,250341],
       "explosiveId":18588
     },
-    "talentsString":"5320001505101251-0052050301-4",
+    "talentsString":"5320001505101251-00530502014",
     "profession2":"Blacksmithing",
     "hunter":{
       "options":{
@@ -530,48 +476,48 @@
     "race":"RaceOrc",
     "equipment":{
       "items":[{
-          "id":16677
+          "id":252605,
+          "enchant":1508
         },{
-          "id":19620,
+          "id":15411,
           "enchant":904
         },{
-          "id":16679
+          "id":272106
         },{
-          "id":18511,
-          "enchant":849
+          "id":13340,
+          "enchant":7667
         },{
-          "id":16674,
+          "id":252483,
           "enchant":1891
         },{
-          "id":16681,
+          "id":226885,
           "enchant":7656
         },{
-          "id":16676,
+          "id":15063,
           "enchant":2564
         },{
-          "id":16680
+          "id":22232
         },{
-          "id":16678,
-          "enchant":8491
+          "id":15062,
+          "enchant":1508
         },{
-          "id":16675,
+          "id":13967,
           "enchant":1887
         },{
           "id":272408
         },{
-          "id":11990,
-          "randomSuffix":12728
+          "id":18500
         },{
-          "id":272437
+          "id":13965
         },{
-          "id":19120
+          "id":280065
         },{
           "id":250619,
           "enchant":2646
         },{
         },{
-          "id":22347,
-          "enchant":2523
+          "id":13023,
+          "enchant":8720
         }]
     }
   }

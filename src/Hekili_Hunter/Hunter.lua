@@ -1314,12 +1314,12 @@ spec:RegisterTalents({
     lacerating_strikes = { 3, 1310533, 1 },
 })
 
--- Beast Mastery's HHA (re-pin ruling R15; wowsims bm_weave's default_hawks APL at e2842f0a78: a sequence of Summon
--- Hawk, Summon Hawk, Arcane Shot under "Use Summon Hawk" and "Use Arcane Shot", reset when complete): a stepped window
--- that loops, open for the fight ("combat": no timer). Its evaluator is the fight (`combat`), not a constant: a held
--- true opens once ever, since combat end closes every window and keeps the last evaluation. On the kit: a tree's own
--- registration would land in the kit's table anyway (a tree reads its fields through the kit), and only Beast
--- Mastery's pack reads it.
+-- Beast Mastery's HHA (re-pin ruling R15; wowsims's turret_hawk APL at e4ef929e54, the BM build's hawk rotation since
+-- 65b3f51f61: a sequence of Summon Hawk, Summon Hawk, Arcane Shot under "Use Summon Hawk" and "Use Arcane Shot", reset
+-- when complete): a stepped window that loops, open for the fight ("combat": no timer). Its evaluator is the fight
+-- (`combat`), not a constant: a held true opens once ever, since combat end closes every window and keeps the last
+-- evaluation. On the kit: a tree's own registration would land in the kit's table anyway (a tree reads its fields
+-- through the kit), and only Beast Mastery Turret's pack reads it.
 spec:RegisterWindow("hha", {
     evaluator = function()
         return combat > 0
@@ -1339,8 +1339,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Beast Mastery Turret (wowsims.com)",
-    20261114000,
-    [[Hekili:vBzyVTjpqC8pl9nDTAvqiRTBnszsRABADAnAAKN3AWGpc(jgmY20O8g(SVZKecHaQmTxnfPGL9D)857(FgiEKLeFg1aKftNm9EppVBNmzcX3STai(f0410v4GCAg()JavBQcFg)huBRcxwQuaoXvBKB08mTtSm7ARxBfskZsoQKlmpLtI6Dt0fqmX)B)3ILF5xZISWdY2XM4NYzmyNJGoEK79SQqtkufUFo3ePcEbuvHmiHwkqZ)0p)rvioDv4Gal5U2at7MwMJl5Yk0U2ZbdFK5GCfxFdUpkAUwGNjgowA3xUUkKYyY83GdwdB1ovHFMAOZ6jEU65NwIqsnMc9mx3vCtAzK9i42X0RrMyqb3rFiMnLoLLe7GzyLmHlWkcn2WL5ANcfGohrnZJPcrqbyUHNm)c8zGS0CPDGddOSlVWqfqUXriZHGnsrIdKtJe4P47NX6TZDXyG)cCG3bk9B7U0LglHQ117odIktsCApVtzr)otTPCmytcWcyqkDZoe1aoFTbXOZ5fGkqNknng83NsE9ebAbikZbDGGVk1CtPgW4njyvmBUN1ddpd(487A7qKqkzbjLQTJZCmhcQ188vJ0CTHtfbBuut6O8qrl4y8WvWOmNbzYCECGcp2JYHm6)lvOkiNguiTtokVorvLiJl1ZNog1LvmaQcSWgGjcmPTZxV2(EIbDCMQIPOE4eLKDAmczNn7jYoIp23QXv6CBNGRn66RB3DzeoCr91V7LBKhp0pt8pizXrkoE(4uI)FI0LyWnFa2hLYTPFGP1Z31XZw1jBi3qQTKVnR9LrlQBhjQJndda6UXcQPnzaq3pAqTAGgG17hjRJTwda6dJeu7MUbq9WirDw74a88M0bylfz)9Gh3J2lq8R7aT6sl1Uk)ZP2T78i2twPHRxn3Hu9T6NRTRRgVXUMg8AZ6QFBcHJD8e7p)M3c9VtBD)vPxV82tBDt27SxvFcWHFDEFT4dLRXdiT0Kkv43ocR5co(9uFD)NlvVm53d]]
+    20261115000,
+    [[Hekili:vB5xVTTnqa8pl5L0e0aj7S4MAd4b0ITHMG2GIPSxPeT4jlotrkqsfx)I(SVJY)Jwwkrd9P(Ifb5D)U)W7otYyYZKig1cKNUD0TFy84XtgnAejYUPeirL00v0L4cjTa)9Za1yRt(g(lO3uN8CLwd4gxTwT2WlmbPQIRDATrOOmh5fvCH9bjzrNgXucPKOV8pp98F(3Zw4GhxSLnjkNZyWwfbt6aT9S6eBouNSBVWmLgEb01jmiJwjqX)03)ADcUDDsVaR4HohZeMxjXJczLMqxCWWpfbixX13G2rtLgbgtmCTYzxUPoHYyk57WfRGnMG6K)GAPZ6WFU6Bp8mcj3AlnZcdxYT5vlCHqylrVgzIofChKn92PWK7UFAaMH1QmUaVrOPwUsAck1aQ8cQDEkviIlb7n8S5xGFJvv2lDlcyaLD5fwQaK2aHscXRvISaqsxiWO4XZy9(5HOpWFb2ZBpLULDB6YGxH6vnwNblQYYc83pOQSBLPUuo6SzX4fyCoD9wenao)mFm)8r8BhNOeGOscMybFzU9MkdGUtw8Yu28XonS8c43NpXxHfcLIfNvP3mmXXueOxXLlhO4glNkIxRP28bPHMwYr)HRHbjodkusEASgd7bPqb9FvA8swsJlvUnhKwNu0KPsRmZVDifpOQy6QeVyJXebM02Q7yFDprG2kxvGX3HcT1CjtToipNgiHFyd8o2xlQoLIvrMCLTlT8o(eTWWMD(UNY6ITN4B5Gvs1A5LwQEjwqIv1god(y9JKiCWGbfU14ub3ynnZZ3oTdx(uZ89Df8KpVFGbjAFtdUsZXmmNsI()08qSOX7H9XMjF67z6083APPxLIZLpqYVPZN1UcjhQ7giQJTJ9aAYqbDOrThqFyWG8AH7H19dK1XM7Ea9XbcYVTVhuthiQZgi0dVXJAb0RIS7PahTH)bKOMzaU6sh12v(NtT98HJyp5KdCh3WTVQEVgxFJ9ktwAW1UvypoVXdVgoFXC4A3oCa3HzqnI1Uy)nS6GhorC4Jo8h7)6mbQ7cQ3UsSJjqhYLN9SLta2)tBAsIONtRS5kn(azyfxWXhn(x7EtyZXK)7d]]
 )
 spec:RegisterPack(
     "Marksmanship Turret (wowsims.com)",
