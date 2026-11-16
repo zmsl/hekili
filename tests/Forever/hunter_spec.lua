@@ -94,6 +94,27 @@ local function idsOf(a)
     return out
 end
 
+-- Ability `a`'s declared cost in env `e` (class load `w`) under the class file's talent-gated cost modifiers
+-- (RegisterCostMod `talent`, no aura) in scope at e's ranks, each a factor (two SPELLMOD_COST pct rows multiply:
+-- wowsims spell_mod.go SpellMod_PowerCost_Pct). The engine's own pricing is checked in both layers below ("prices
+-- Efficiency's cut on the whole cost in both layers").
+local function cutCost(w, a, e)
+    local c, ids = ld.run(a.spend, e), idsOf(a)
+    for _, m in ipairs(w.costMods) do
+        local rank = m.talent and e.talent[m.talent].rank or 0
+        local hit = m.spells == nil
+        for _, s in ipairs(m.spells or {}) do
+            for _, id in ipairs(ids) do
+                hit = hit or s == id
+            end
+        end
+        if m.aura == nil and rank > 0 and hit then
+            c = c * (1 + (type(m.pct) == "table" and m.pct[rank] or m.pct))
+        end
+    end
+    return c
+end
+
 -- `buff` with the keys in `up` up.
 local function buffs(up)
     return setmetatable({}, {
@@ -280,7 +301,7 @@ describe("Forever Hunter", function()
                 e.talent.resourcefulness = { rank = res, enabled = res > 0 }
                 e.talent.efficiency = { rank = eff, enabled = eff > 0 }
                 e.talent.improved_mend_pet = { rank = mend or 0, enabled = (mend or 0) > 0 }
-                return math.floor(ld.run(w.abilities[key].spend, e) * 100000 + 0.5) / 100000
+                return math.floor(cutCost(w, w.abilities[key], e) * 100000 + 0.5) / 100000
             end
             -- Efficiency's mask (19416, 5/5 = -15%): the stings, Concussive, Scatter, Distracting, Tranquilizing, Counterattack,
             -- Volley; Sniper Shot (wowsims's MM logs: 321.2 of 365 under 4/5); not the traps
@@ -382,6 +403,22 @@ describe("Forever Hunter", function()
                 end
                 ld.run(w.abilities[case[1]][field], e)
                 assert.are.same({ { case[2], 6 } }, cds, case[1] .. " " .. field)
+            end
+        end
+        -- Improved Arcane Shot shortens the category recovery Arcane Shot puts on Summon Hawk too (wowsims's
+        -- hunter_beast_mastery_turret.log, 2/5: Summon Hawk 5.4 s after an Arcane Shot at the earliest, Arcane Shot 6.0 s
+        -- after a Summon Hawk); Summon Hawk's own stays 6
+        for _, case in ipairs({ { "arcane_shot", "summon_hawk", 5.4 }, { "summon_hawk", "arcane_shot", 6 } }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                e.talent.improved_arcane_shot = { rank = 2, enabled = true }
+                local cds = {}
+                e.setCooldown = function(k, v)
+                    cds[#cds + 1] = { k, math.floor(v * 1000 + 0.5) / 1000 }
+                end
+                e.summonPet = function() end
+                ld.run(w.abilities[case[1]][field], e)
+                assert.are.same({ { case[2], case[3] } }, cds, case[1] .. " " .. field)
             end
         end
     end)
@@ -592,9 +629,9 @@ describe("Forever Hunter", function()
     end)
 
     -- Resourcefulness (440529: 30% / 60% at ranks 1 / 2) and Efficiency (19416: 3% a rank) on each ability's top-rank
-    -- price, their percents added (one SPELLMOD_COST percent each). wowsims's logs: the 2/2 Resourcefulness builds pay
-    -- 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap, 39.6 Strider Kick; the 2/5 Efficiency BM
-    -- build 94 Raptor Strike, 75.2 Wing Clip, 235 Serpent Sting, 224.66 Multi-Shot (of 239).
+    -- price, each a talent-gated cost modifier (one SPELLMOD_COST percent each, multiplied). wowsims's logs: the 2/2
+    -- Resourcefulness builds pay 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap, 39.6 Strider
+    -- Kick; the 2/5 Efficiency BM build 94 Raptor Strike, 75.2 Wing Clip, 235 Serpent Sting, 224.66 Multi-Shot (of 239).
     it("prices the abilities under Resourcefulness and Efficiency by rank", function()
         local KEYS = {
             "raptor_strike",
@@ -620,7 +657,7 @@ describe("Forever Hunter", function()
             e.talent.efficiency = { rank = eff, enabled = eff > 0 }
             local out = {}
             for _, key in ipairs(KEYS) do
-                out[#out + 1] = math.floor(ld.run(w.abilities[key].spend, e) * 100000 + 0.5) / 100000
+                out[#out + 1] = math.floor(cutCost(w, w.abilities[key], e) * 100000 + 0.5) / 100000
             end
             return out
         end
@@ -631,7 +668,20 @@ describe("Forever Hunter", function()
         assert.are.same({ 40, 26, 32, 98, 0.02324, 0.11, 250, 0.139, 310, 0.11, 60, 100 }, costs(2, 0))
         -- Efficiency on Strider Kick since hotfix 113554 (19416's mask, wowsims)
         assert.are.same({ 94, 61.1, 75.2, 245, 0.05461, 0.1034, 235, 0.13066, 291.4, 0.1034, 60, 100 }, costs(0, 2))
-        assert.are.same({ 34, 22.1, 27.2, 98, 0.01975, 0.1034, 235, 0.13066, 291.4, 0.1034, 60, 100 }, costs(2, 2))
+        -- both talents: two cost rows, multiplied (0.4 x 0.94), not their percents added (wowsims spell_mod.go)
+        assert.are.same({ 37.6, 24.44, 30.08, 98, 0.02185, 0.1034, 235, 0.13066, 291.4, 0.1034, 60, 100 }, costs(2, 2))
+        -- the two talent-gated modifiers carry the cuts (no aura; the ability's own `spend` is the uncut price)
+        local mods = {}
+        for _, m in ipairs(w.costMods) do
+            if m.talent then
+                mods[#mods + 1] = { m.talent, m.aura or false, m.pct, #m.spells }
+            end
+        end
+        assert.are.same({
+            { "resourcefulness", false, { -0.3, -0.6 }, 9 },
+            { "efficiency", false, { -0.03, -0.06, -0.09, -0.12, -0.15 }, 18 },
+        }, mods)
+        assert.are.same({ 100, 0.11 }, { ld.run(w.abilities.raptor_strike.spend, e), w.abilities.arcane_shot.spend })
     end)
 
     -- Improved Arcane Shot (19454, 5 ranks): Arcane Shot's cooldown -0.3 s a rank (wowsims's 19454 curve
@@ -1518,6 +1568,32 @@ end)
 -- Ledger L1154 (owner, 0.9 re-pin): the Beast Mastery and Marksmanship weave packs are retired (wowsims deleted their
 -- builds and APLs, PR #1041). A player who picked one runs the same spec's Turret pack, the spec's default, and is told
 -- once (RestoreDefaults' retired notice); the next login says nothing.
+-- Efficiency (19416) as a talent-gated cost modifier (mana-09's RegisterCostMod `talent`): the cut lands on the whole
+-- price, unrounded, as wowsims e4ef929e54 (mana.go rounds 11% of 1720 to 189, spell.go then multiplies): the MM Turret
+-- build's 4/5 pays 189 x 0.88 = 166.32 for Arcane Shot in its log, and the belief and the simulation both price it so.
+describe("the Hunter talent cost cuts through the engine", function()
+    local hw = require("Forever.helpers.hunter_world")
+
+    it("prices Efficiency's cut on the whole cost in both layers (MM Turret Arcane Shot 166.32)", function()
+        local H =
+            headless.new({ character = hw.MarksmanshipTurret.character(), pack = "Marksmanship Turret (wowsims.com)" })
+        local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
+        local t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        VS.Drain(t)
+        S.reset("Primary", true)
+        local function r(x)
+            return math.floor(x * 1000 + 0.5) / 1000
+        end
+        assert.are.same({ 4, 166.32, 166.32 }, {
+            S.talent.efficiency.rank,
+            r(I.CostOf(I.ab.bySpell[3044])),
+            r(S.action.arcane_shot.cost),
+        })
+        assert.are.same({}, H.errors)
+    end)
+end)
+
 describe("the retired Hunter weave packs", function()
     for _, case in ipairs({
         { "BeastMasteryTurret", 100031, "Beast Mastery (wowsims.com)", "Beast Mastery Turret (wowsims.com)" },

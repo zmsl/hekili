@@ -106,6 +106,26 @@ describe("Forever priorities", function()
             assert.are.same({}, hits)
         end)
     end
+    -- mana-09 re-review: a talent-gated cost modifier whose `talent` key the class does not register is silently rank 0
+    -- in both layers (Races.lua rankOf reads it raw), so every key a class file's RegisterCostMod names is a talent of it
+    for _, class in ipairs({ "druid", "hunter", "mage", "paladin", "priest", "rogue", "shaman", "warlock", "warrior" }) do
+        it("names only its own talents in its talent-gated cost modifiers (" .. class .. ")", function()
+            local Class = class:sub(1, 1):upper() .. class:sub(2)
+            local w = LOADS[class] and LOADS[class]()
+                or require("Forever.helpers.load_druid").load(
+                    nil,
+                    "src/Hekili_" .. Class .. "/" .. Class .. ".lua",
+                    class:upper()
+                )
+            local hits = {}
+            for i, m in ipairs(w.costMods or {}) do
+                if m.talent ~= nil and not (w.talents and w.talents[m.talent]) then
+                    hits[#hits + 1] = "costMods[" .. i .. "] talent " .. tostring(m.talent)
+                end
+            end
+            assert.are.same({}, hits)
+        end)
+    end
     -- re-pin plan Task 7 (S1, R12): a spec opts into the Movement toggle (its NewClass entry's `movement = true`, what
     -- Registry.MovementSpec answers) exactly when one of its packs reads toggle.movement
     for _, class in ipairs({ "druid", "hunter", "mage", "paladin", "priest", "rogue", "shaman", "warlock", "warrior" }) do

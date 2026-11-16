@@ -46,7 +46,6 @@ local spec = Hekili:NewClass("HUNTER", {
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
             package = "Beast Mastery Turret (wowsims.com)", -- the default (owner 2026-11-13, L859)
-            movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
             key = "marksmanship",
@@ -57,7 +56,6 @@ local spec = Hekili:NewClass("HUNTER", {
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
             package = "Marksmanship Turret (wowsims.com)", -- the default (owner 2026-11-13, L859)
-            movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
             key = "survival",
@@ -160,11 +158,16 @@ local function cost(costs, ids)
     end
 end
 
--- The talents' cost cuts, their percents added (each a SPELLMOD_COST percent: DB2 aura 108, misc 14):
+-- The talents' cost cuts, each a talent-gated cost modifier (a SPELLMOD_COST percent: DB2 aura 108, misc 14), so both
+-- layers cut the whole price, unrounded (a percent-of-base cost is rounded to the whole mana first: wowsims
+-- e4ef929e54 mana.go, then spell.go's ApplyCostModifiers; MM Turret Arcane Shot 189 x 0.88 = 166.32 in its log). Two
+-- rows multiply, as in game (wowsims spell_mod.go SpellMod_PowerCost_Pct): 2/2 and 2/5 make Raptor Strike 100 x 0.4 x
+-- 0.94 = 37.6 (no wowsims log takes both talents).
 -- - Resourcefulness (440529, a Forever-only Survival talent, 2 ranks): 30% / 60% off the strikes and traps (DB2 mask
---   194: Raptor Strike and Mongoose Bite, Wing Clip, the traps). The DB2 carries only the top rank's -60; the rank-1
---   -30 is wowsims/forever's generated spell data (MIT, sim/core/spelldata/spells_auto_gen.go `440529: {{-30, -60}`).
---   Strider Kick takes it too, as wowsims's log shows (39.6), though its DB2 mask is outside 440529's.
+--   194: Raptor Strike and Mongoose Bite, Wing Clip, the traps, Counterattack). The DB2 carries only the top rank's
+--   -60; the rank-1 -30 is wowsims/forever's generated spell data (MIT, sim/core/spelldata/spells_auto_gen.go
+--   `440529: {{-30, -60}`). Strider Kick takes it too, as wowsims's log shows (39.6), though its DB2 mask is outside
+--   440529's.
 -- - Efficiency (19416, 5 ranks): 3% a rank off the shots, stings and strikes (DB2 mask: Raptor Strike, Mongoose Bite,
 --   Wing Clip, Arcane Shot, Multi-Shot, Serpent Sting, Aimed Shot, Summon Hawk, and Strider Kick since hotfix 113554
 --   (wowsims: mask word 2 8192 -> 2105344); not the traps, Hunter's Mark, Rapid Fire or the aspects). The DB2 carries
@@ -172,17 +175,56 @@ end
 --   logs show (321.2 of 365 under 4/5), though our DB2 mask lacks it: wowsims over the DB2.
 -- wowsims's logs: 2/2 Resourcefulness pays 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap; 2/5
 -- Efficiency 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting.
-local RESOURCEFUL = { 0.3, 0.6 }
-local function discounted(price, resourceful, efficient, flat8pc)
+spec:RegisterCostMod({
+    talent = "resourcefulness",
+    pct = { -0.3, -0.6 },
+    spells = {
+        RAPTOR_STRIKE[1],
+        MONGOOSE_BITE[1],
+        1317257, -- Strider Kick
+        WING_CLIP[1],
+        IMMOLATION_TRAP[1],
+        EXPLOSIVE_TRAP[1],
+        FREEZING_TRAP[1],
+        FROST_TRAP[1],
+        COUNTERATTACK[1],
+    },
+})
+spec:RegisterCostMod({
+    talent = "efficiency",
+    pct = { -0.03, -0.06, -0.09, -0.12, -0.15 },
+    spells = {
+        SERPENT_STING[1],
+        ARCANE_SHOT[1],
+        SUMMON_HAWK[1],
+        AIMED_SHOT[1],
+        2643, -- Multi-Shot
+        SNIPER_SHOT[1],
+        RAPTOR_STRIKE[1],
+        MONGOOSE_BITE[1],
+        1317257, -- Strider Kick
+        WING_CLIP[1],
+        3043, -- Scorpid Sting
+        VIPER_STING[1],
+        5116, -- Concussive Shot
+        19503, -- Scatter Shot
+        COUNTERATTACK[1],
+        DISTRACTING_SHOT[1],
+        19801, -- Tranquilizing Shot
+        VOLLEY[1],
+    },
+})
+
+-- Aimed Shot's and Multi-Shot's price with the Cryptstalker 8-piece's flat 20 off (before the talents' percents: wowsims
+-- adds a flat cut to the base first, spell.go ApplyCostModifiers).
+local function crypt8(price, flat)
     local priced = type(price) == "function" -- decided here: the returned function runs in the state's environment
     return function()
         local c = priced and price() or price
-        if flat8pc and set_bonus.cryptstalker_8pc > 0 then
-            c = c - flat8pc
+        if set_bonus.cryptstalker_8pc > 0 then
+            c = c - flat
         end
-        local off = (resourceful and RESOURCEFUL[talent.resourcefulness.rank] or 0)
-            + (efficient and 0.03 * talent.efficiency.rank or 0)
-        return c * (1 - off)
+        return c
     end
 end
 
@@ -235,11 +277,13 @@ local function aspect(key, ids, costs)
 end
 
 -- Two abilities on one category cooldown (DB2: Arcane Shot and Summon Hawk category 1173, Aimed Shot and Multi-Shot
--- category 2; 6 s each): each sets the other's. `hawk`: the cast also summons a hawk for 18 s. (A new closure for
--- each of `now` and `handler`: each runs in its own environment.)
-local function shares(other, hawk)
+-- category 2; 6 s each): each sets the other's. `hawk`: the cast also summons a hawk for 18 s. `improved`: Improved
+-- Arcane Shot's -0.3 s a rank shortens the recovery the cast puts on its partner too (wowsims's
+-- hunter_beast_mastery_turret.log, 2/5: Summon Hawk 5.4 s after an Arcane Shot at the earliest, 8 pairs; Arcane Shot
+-- 6.0 s after a Summon Hawk). (A new closure for each of `now` and `handler`: each runs in its own environment.)
+local function shares(other, hawk, improved)
     return function()
-        setCooldown(other, 6)
+        setCooldown(other, improved and 6 - 0.3 * talent.improved_arcane_shot.rank or 6)
         if hawk then
             summonPet("hawk", 18)
         end
@@ -701,7 +745,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = discounted(cost(SERPENT_STING_COST, SERPENT_STING), false, true),
+        spend = cost(SERPENT_STING_COST, SERPENT_STING),
         spendType = "mana",
 
         startsCombat = true,
@@ -725,14 +769,14 @@ spec:RegisterAbilities({
         end,
         gcd = "spell",
 
-        spend = discounted(0.11, false, true),
+        spend = 0.11,
         spendType = "mana",
 
         startsCombat = true,
         known = knows(ARCANE_SHOT),
 
-        now = shares("summon_hawk"),
-        handler = shares("summon_hawk"),
+        now = shares("summon_hawk", false, true),
+        handler = shares("summon_hawk", false, true),
     },
 
     -- The dive, then a hawk for 18 s (wowsims summon_hawk.go).
@@ -744,7 +788,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = discounted(0.11, false, true),
+        spend = 0.11,
         spendType = "mana",
 
         startsCombat = true,
@@ -765,7 +809,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = discounted(cost(AIMED_SHOT_COST, AIMED_SHOT), false, true, 20),
+        spend = crypt8(cost(AIMED_SHOT_COST, AIMED_SHOT), 20),
         spendType = "mana",
 
         startsCombat = true,
@@ -786,7 +830,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = discounted(0.139, false, true, 20 / BASE_MANA),
+        spend = crypt8(0.139, 20 / BASE_MANA),
         spendType = "mana",
 
         startsCombat = true,
@@ -807,7 +851,7 @@ spec:RegisterAbilities({
         cooldown = 15,
         gcd = "spell",
 
-        spend = discounted(365, false, true), -- Efficiency, as wowsims (the cost cuts above)
+        spend = 365, -- Efficiency cuts it too, as wowsims (the talents' cost cuts above)
         spendType = "mana",
 
         startsCombat = true,
@@ -823,7 +867,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "off",
 
-        spend = discounted(cost(RAPTOR_STRIKE_COST, RAPTOR_STRIKE), true, true),
+        spend = cost(RAPTOR_STRIKE_COST, RAPTOR_STRIKE),
         spendType = "mana",
 
         startsCombat = true,
@@ -854,7 +898,7 @@ spec:RegisterAbilities({
         cooldown = 5,
         gcd = "spell",
 
-        spend = discounted(cost(MONGOOSE_BITE_COST, MONGOOSE_BITE), true, true),
+        spend = cost(MONGOOSE_BITE_COST, MONGOOSE_BITE),
         spendType = "mana",
 
         startsCombat = true,
@@ -877,7 +921,7 @@ spec:RegisterAbilities({
         cooldown = 8,
         gcd = "spell",
 
-        spend = discounted(0.0581, true, true),
+        spend = 0.0581,
         spendType = "mana",
 
         startsCombat = true,
@@ -895,7 +939,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = discounted(cost(WING_CLIP_COST, WING_CLIP), true, true),
+        spend = cost(WING_CLIP_COST, WING_CLIP),
         spendType = "mana",
 
         startsCombat = true,
@@ -911,7 +955,7 @@ spec:RegisterAbilities({
         cooldown = trapCooldown(),
         gcd = "spell",
 
-        spend = discounted(cost(IMMOLATION_TRAP_COST, IMMOLATION_TRAP), true, false),
+        spend = cost(IMMOLATION_TRAP_COST, IMMOLATION_TRAP),
         spendType = "mana",
 
         startsCombat = false,
@@ -932,7 +976,7 @@ spec:RegisterAbilities({
         cooldown = trapCooldown(),
         gcd = "spell",
 
-        spend = discounted(cost(EXPLOSIVE_TRAP_COST, EXPLOSIVE_TRAP), true, false),
+        spend = cost(EXPLOSIVE_TRAP_COST, EXPLOSIVE_TRAP),
         spendType = "mana",
 
         startsCombat = false,
@@ -949,7 +993,7 @@ spec:RegisterAbilities({
         cooldown = trapCooldown(),
         gcd = "spell",
 
-        spend = discounted(cost(FREEZING_TRAP_COST, FREEZING_TRAP), true, false),
+        spend = cost(FREEZING_TRAP_COST, FREEZING_TRAP),
         spendType = "mana",
 
         startsCombat = false,
@@ -965,7 +1009,7 @@ spec:RegisterAbilities({
         cooldown = trapCooldown(),
         gcd = "spell",
 
-        spend = discounted(cost(FROST_TRAP_COST, FROST_TRAP), true, false),
+        spend = cost(FROST_TRAP_COST, FROST_TRAP),
         spendType = "mana",
 
         startsCombat = false,
@@ -981,7 +1025,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = discounted(0.09, false, true),
+        spend = 0.09,
         spendType = "mana",
 
         startsCombat = true,
@@ -998,7 +1042,7 @@ spec:RegisterAbilities({
         end,
         gcd = "spell",
 
-        spend = discounted(cost(VIPER_STING_COST, VIPER_STING), false, true),
+        spend = cost(VIPER_STING_COST, VIPER_STING),
         spendType = "mana",
 
         startsCombat = true,
@@ -1011,7 +1055,7 @@ spec:RegisterAbilities({
         cooldown = 12,
         gcd = "spell",
 
-        spend = discounted(0.08, false, true),
+        spend = 0.08,
         spendType = "mana",
 
         startsCombat = true,
@@ -1024,7 +1068,7 @@ spec:RegisterAbilities({
         cooldown = 30,
         gcd = "spell",
 
-        spend = discounted(0.08, false, true),
+        spend = 0.08,
         spendType = "mana",
 
         startsCombat = true,
@@ -1053,7 +1097,7 @@ spec:RegisterAbilities({
         cooldown = 5,
         gcd = "spell",
 
-        spend = discounted(cost(COUNTERATTACK_COST, COUNTERATTACK), true, true),
+        spend = cost(COUNTERATTACK_COST, COUNTERATTACK),
         spendType = "mana",
 
         startsCombat = true,
@@ -1121,7 +1165,7 @@ spec:RegisterAbilities({
         cooldown = 8,
         gcd = "spell",
 
-        spend = discounted(cost(DISTRACTING_SHOT_COST, DISTRACTING_SHOT), false, true),
+        spend = cost(DISTRACTING_SHOT_COST, DISTRACTING_SHOT),
         spendType = "mana",
 
         startsCombat = true,
@@ -1134,7 +1178,7 @@ spec:RegisterAbilities({
         cooldown = 20,
         gcd = "spell",
 
-        spend = discounted(270, false, true),
+        spend = 270,
         spendType = "mana",
 
         startsCombat = true,
@@ -1151,7 +1195,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = discounted(cost(VOLLEY_COST, VOLLEY), false, true),
+        spend = cost(VOLLEY_COST, VOLLEY),
         spendType = "mana",
 
         startsCombat = true,

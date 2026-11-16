@@ -50,8 +50,8 @@ local COST = {
     aspect_of_the_beast = { 50, 70, 90, 110 },
     rapid_fire = 100,
     serpent_sting = { 15, 30, 50, 80, 115, 150, 190, 230, 250 },
-    arcane_shot = 0.11 * 1720, -- 189.2: 11% of base mana (wowsims e4ef929e54's CostPct 11; its logs pay 189)
-    summon_hawk = 0.11 * 1720, -- the same 11% (was 80-190 by rank, as Arcane Shot's 25-190)
+    arcane_shot = pctOfBase(0.11), -- 189.2: 189, 11% of base mana (wowsims e4ef929e54's CostPct 11; its logs pay 189)
+    summon_hawk = pctOfBase(0.11), -- the same 11% (was 80-190 by rank, as Arcane Shot's 25-190)
     aimed_shot = { 75, 115, 160, 210, 260, 310 },
     multi_shot = pctOfBase(0.139), -- 239.08: 239, as wowsims's log (239 MM/SV, 224.66 under BM's Efficiency)
     sniper_shot = 365,
@@ -154,8 +154,8 @@ local function shot(key, crits)
         crits = crits, -- a landed hit may give Resourcefulness (C.resolve)
         effect = function(W, e, p, X)
             local other = SHARED[key]
-            if other then
-                e.cdUntil[other] = W.t + 6
+            if other then -- the pressed ability's own recovery (Arcane Shot's under Improved Arcane Shot: wowsims's log)
+                e.cdUntil[other] = W.t + p.cooldown
             end
             if AMOUNT[key] then
                 W.hit(e, e.target, AMOUNT[key], key == "arcane_shot" and 64 or 1) -- the rest physical (DB2)
@@ -401,7 +401,7 @@ local function classData(H)
 end
 
 -- The talents' cost cuts, restated from the DB2 masks and wowsims's data (the world's truth the class file's are
--- measured against), their percents added: Resourcefulness (440529) 30% / 60% a rank, Efficiency (19416) 3% a rank.
+-- measured against), multiplied: Resourcefulness (440529) 30% / 60% a rank, Efficiency (19416) 3% a rank.
 local RESOURCEFUL = { raptor_strike = true, mongoose_bite = true, wing_clip = true, immolation_trap = true }
 RESOURCEFUL.strider_kick = true -- wowsims's mask word 2 (0x200000) and log (39.6); our DB2 row lacks that word
 local EFFICIENT = {
@@ -441,9 +441,9 @@ local function costOf(key, ids, H)
         end
         c = c[rank]
     end
-    local off = (RESOURCEFUL[key] and ({ 0.3, 0.6 })[talentRank(H, 440529)] or 0)
-        + (EFFICIENT[key] and 0.03 * talentRank(H, 19416) or 0)
-    return c * (1 - off)
+    -- two cost rows multiply, as in game (wowsims spell_mod.go SpellMod_PowerCost_Pct)
+    local res = RESOURCEFUL[key] and ({ 0.3, 0.6 })[talentRank(H, 440529)] or 0
+    return c * (1 - res) * (1 - (EFFICIENT[key] and 0.03 * talentRank(H, 19416) or 0))
 end
 
 -- The ranged haste on us at `now` in belief `VS`: Rapid Fire's 1.4 times Quick Shots' 1.3.

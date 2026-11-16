@@ -8,6 +8,8 @@
 - Hunter: the Beast Mastery and Marksmanship weave priorities are retired, because wowsims.com no longer has them. If you had one selected, you now run that spec's Turret priority, and Hekili tells you once.
 - Hunter: Arcane Shot and Summon Hawk now cost 11% of your base mana at every rank, as wowsims.com prices them (not yet checked in game).
 - Hunter: Sniper Shot's mana cost now includes the Efficiency talent's discount, as wowsims.com charges it (not yet checked in game).
+- Hunter: Efficiency and Resourcefulness now take their discounts after a percent cost is rounded to whole mana, and with both talents the two discounts multiply instead of adding up, as wowsims.com prices them (not yet checked in game).
+- Hunter: after an Arcane Shot, Summon Hawk is ready again as soon as Arcane Shot is, since Improved Arcane Shot shortens both, as wowsims.com shows (not yet checked in game).
 - Hunter: Hekili now tracks Strider Kick's speed after your Strider Kick, and Lacerating Strikes' bleed after your Mongoose Bite.
 - Hunter: Beast Mastery Turret now follows wowsims.com's hawk rotation: Summon Hawk twice, then Arcane Shot, and no longer suggests Sniper Shot. Until you have Summon Hawk, it suggests Arcane Shot on its own (not yet checked in game).
 - Hunter: Survival Melee now runs out to reapply Serpent Sting while Strider Kick's speed is up and you have more than 30% mana, as wowsims.com does, and no longer suggests a Major Mana Potion (not yet checked in game).
