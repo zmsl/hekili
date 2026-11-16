@@ -466,8 +466,13 @@ local function tick(W, e, dst, school, after)
     end
 end
 
+-- Wrack (wowsims wrack.go at e4ef929e54): while our channel runs on the target, our Corruption, Siphon Life and Bane
+-- of Agony there also tick on the half points of their own grid, each tick full, the expiry unchanged.
+local WRACK, WRACKED = 1316697, { corruption = true, siphon_life = true, bane_of_agony = true }
+
 -- A DoT's, Bane's or Curse's landing: the others of its group off the target, its ticks (each while this application
--- is the target's: a refresh or a removal ends them; the last lands at the expiry, as wowsims's), its aura on.
+-- is the target's: a refresh or a removal ends them; the last lands at the expiry, as wowsims's; under our Wrack the
+-- half points too), its aura on.
 local function dot(W, e, X, H, key)
     local d, v = DOT[key], e.target
     for _, other in ipairs(d[4] and GROUP[d[4]] or {}) do
@@ -478,14 +483,25 @@ local function dot(W, e, X, H, key)
     v.dots = v.dots or {}
     local live = {}
     v.dots[key] = live
+    local after = key == "corruption" and function() -- Nightfall rolls on every Corruption tick, a half point's too
+        nightfall(W, e, X, H)
+    end or nil
     for n = 1, d[2] and math.floor(d[1] / d[2] + 1e-9) or 0 do
         W.at(W.t + n * d[2], function()
             if v.dots[key] == live then
-                tick(W, e, v, d[3], key == "corruption" and function()
-                    nightfall(W, e, X, H)
-                end)
+                tick(W, e, v, d[3], after)
             end
         end)
+        if WRACKED[key] then
+            -- shortcut: a half point at the channel's exact start or end instant follows the world's event order
+            -- (wowsims ticks both; its end is unmeasured, wrack.go's TODO); measure it if a count there ever matters
+            W.at(W.t + (n - 0.5) * d[2], function()
+                local ch = e.channel
+                if v.dots[key] == live and ch and ch.spell == WRACK and e.target == v then
+                    tick(W, e, v, d[3], after)
+                end
+            end)
+        end
     end
     aura(W, X, v, key, 1, d[1])
 end

@@ -36,6 +36,8 @@
 -- (docs/dev/wowsims-packs.md, Deviations by ruling).
 -- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in Shadow Bolt then Life Tap under its cost,
 -- so no bracket idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
+-- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9): the build, talents and gear are unchanged; the log moves on the Weakness
+-- Analyzer's 6 min cooldown (was 90 s: one use in the fight, was two).
 return {
     class = "WARLOCK",
     pack = "Shadow Brand (wowsims.com)",

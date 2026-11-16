@@ -101,6 +101,34 @@ describe("the Warlock loop worlds", function()
         assert.are.same({ 6, true }, { ticks, stop })
     end)
 
+    -- Wrack at e4ef929e54 (wowsims wrack.go): while the channel runs, our Corruption on the target also ticks on the half
+    -- points of its own 3 s grid; the expiry stays.
+    it("Affliction: under Wrack's channel, Corruption also ticks on its half points", function()
+        local C = ww.Affliction
+        local H = headless.new({ character = C.character() })
+        local W = scenarios.world(setmetatable({ fsr = C.WORLD.fsr, power = 5000 }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1
+        assert.is_true(W.press(us, "corruption", C.resolve("corruption", H)))
+        W.run(3)
+        assert.is_truthy(us.target.auras[172], "the seed lands Corruption")
+        local landed
+        for _, ev in ipairs(W.truth) do
+            landed = landed or (ev.kind == "cast" and ev.src == us and ev.t) -- the cast bar's end: the landing
+        end
+        local n0 = #W.truth
+        assert.is_true(W.press(us, "wrack", C.resolve("wrack", H))) -- channels 3 .. 9
+        W.run(9.5)
+        local at = {}
+        for i = n0 + 1, #W.truth do
+            local ev = W.truth[i]
+            if ev.kind == "tick" and ev.src == us and math.abs(ev.t - math.floor(ev.t + 0.5)) > 1e-6 then
+                at[#at + 1] = math.floor((ev.t - landed) * 10 + 0.5) / 10 -- Wrack's own ticks fall on whole seconds
+            end
+        end
+        assert.are.same({ 1.5, 3, 4.5, 6 }, at) -- 1.5 and 4.5 the channel's half points, 3 and 6 the normal grid
+    end)
+
     -- Fix 27's world: the Soul Shards in the bags (wowsims's 32), the demon and its mana, the Spirit Life Tap reads.
     it(
         "declares the shards, the demon and Spirit; the shard spells take a reagent, the summons and Sacrifice the pet",
