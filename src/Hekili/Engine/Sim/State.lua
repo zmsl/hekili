@@ -526,9 +526,14 @@ end
 
 --- The points declared cost `c` of resource state `res` costs `ability`: a fraction of base power (ns.FractionCost)
 --- at any magnitude when the ability declares `spendBase = true`, else when 0 < c < 1 (Hekili's reading), else `c`
---- itself. The one rule in both layers (the belief's I.BaseCostOf, Game/State/Families/Casts.lua). Allocates nothing.
+--- itself. The one rule in both layers (the belief's I.BaseCostOf, Game/State/Families/Casts.lua). A fraction's whole
+--- price then takes the cost modifiers in scope (Engine/Schema/Races.lua M.Apply, which left the fraction as declared),
+--- as the belief's I.CostOf does. Allocates nothing.
 function ns.SpendPoints( c, res, ability )
-    if c > 0 and ( c < 1 or ability and rawget( ability, "spendBase" ) ) then return ns.FractionCost( c, res ) end
+    if c > 0 and ( c < 1 or ability and rawget( ability, "spendBase" ) ) then
+        c = ns.FractionCost( c, res )
+        if ability then return ns.costMods.Apply( c, ability, true ) end
+    end
     return c
 end
 -- (audit E8) Through the facade: knownRank(ids) is the highest rank of the list the spellbook knows (0 none; memoised

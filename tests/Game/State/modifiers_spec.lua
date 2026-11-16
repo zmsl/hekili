@@ -157,6 +157,24 @@ describe("resource modifiers", function()
         assert.are.equal(15, I.CostOf(spender_b))
     end)
 
+    -- A percent-of-base cost is priced whole first, then cut by the modifiers, unrounded, as the simulation does
+    -- (spend_base_spec.lua; wowsims e4ef929e54 spell.go:1055): 11% of 1720 is 189, halved 94.5, cut 12% 166.32.
+    it("cuts a percent-of-base cost after pricing it whole, unrounded", function()
+        local spender_c = I.ab.bySpell[fs.SPENDER_C]
+        h.Class.abilities.spender_c.spend = 0.11
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.5 } }
+        ns.BuildTracked()
+        I.basePow[I.ab.slot[spender_c]] = 1720
+        I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        I.clock = 5
+        assert.are.same({ 189, 94.5 }, { I.BaseCostOf(spender_c), I.CostOf(spender_c) })
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.12 } }
+        ns.BuildTracked()
+        I.basePow[I.ab.slot[spender_c]] = 1720
+        I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        assert.is_true(math.abs(I.CostOf(spender_c) - 166.32) < 1e-9, tostring(I.CostOf(spender_c)))
+    end)
+
     -- `unless` (CN11): while the named aura is believed up on the player, the modifier neither prices nor takes a
     -- charge; the other modifier's spend in the same cast never decides it, whichever comes first in the list.
     local function unlessMods(first)

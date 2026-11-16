@@ -52,4 +52,36 @@ describe("the sim's percent-of-base cost (spendBase)", function()
     it("keeps a 0.5 cost without the flag a fraction and a 40 cost flat", function()
         assert.are.same({ 607, 40 }, { S.action.half.cost, S.action.flat.cost }) -- 606.5: a half rounds up
     end)
+
+    -- wowsims e4ef929e54 prices a percent-of-base cost whole first (mana.go:372 newManaCost, math.Round) and then
+    -- multiplies it by the cost modifiers, unrounded (spell.go:1055 ApplyCostModifiers): 11% of 1720 is 189, a halving
+    -- modifier makes it 94.5 (not 0.055 x 1720 = 94.6 priced whole) and a 12% cut 166.32 (not 0.0968 x 1720 = 166.5).
+    it("prices a fraction whole first, then cuts it by the cost modifiers in scope, unrounded", function()
+        local spec = class.specs[0]
+        spec:RegisterAbility("pct_spender", { id = -9105, spend = 0.11, spendType = "mana" })
+        class.abilities.pct_spender = spec.abilities.pct_spender
+        spec:RegisterCostMod({ aura = "cut_half", pct = -0.5, spells = { -9105 } })
+        spec:RegisterCostMod({ aura = "cut_some", pct = -0.12, spells = { -9105 } })
+        local buff, up = rawget(S, "buff"), {}
+        rawset(
+            S,
+            "buff",
+            setmetatable(up, {
+                __index = function()
+                    return { up = false }
+                end,
+            })
+        )
+        S.mana.base = 1720
+        local a = class.abilities.pct_spender
+        local got = { H.ns.SpendPoints(0.11, S.mana, a) }
+        up.cut_half = { up = true }
+        got[2] = H.ns.SpendPoints(a.spend, S.mana, a)
+        up.cut_half, up.cut_some = nil, { up = true }
+        got[3] = H.ns.SpendPoints(a.spend, S.mana, a)
+        rawset(S, "buff", buff)
+        S.mana.base = BASE
+        assert.are.same({ 189, 94.5 }, { got[1], got[2] })
+        assert.is_true(math.abs(got[3] - 166.32) < 1e-9, tostring(got[3]))
+    end)
 end)

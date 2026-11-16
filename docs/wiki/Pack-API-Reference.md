@@ -76,7 +76,7 @@ race:RegisterRegenMod({ resource = "mana", aura = "energized", mult = 1.5 })
 
 ### Cost and GCD modifiers
 
-`RegisterCostMod({ aura, pct | flat, charges, spells, unless })` makes the abilities in scope cheaper while the player's aura is up. `spells` lists spell IDs (an ability matches by its `id` or a `copy` rank); without it every ability paid from the resource is in scope. With `charges`, each cast whose declared cost is above 0 takes a stack. While the aura named by `unless` is up, the modifier does nothing. The class kit, the shared object and the race object all offer it. From `src/Hekili_Druid/Druid.lua`:
+`RegisterCostMod({ aura, pct | flat, charges, spells, unless })` makes the abilities in scope cheaper while the player's aura is up. `spells` lists spell IDs (an ability matches by its `id` or a `copy` rank); without it every ability paid from the resource is in scope. A cost that is a share of base mana is priced to the whole mana first and then cut, without rounding again (11% of 1720 is 189, halved 94.5). With `charges`, each cast whose declared cost is above 0 takes a stack. While the aura named by `unless` is up, the modifier does nothing. The class kit, the shared object and the race object all offer it. From `src/Hekili_Druid/Druid.lua`:
 
 ```lua
 spec:RegisterCostMod({

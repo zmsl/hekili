@@ -165,11 +165,17 @@ local function inScope(m, a)
     return hit
 end
 
---- A declared cost of ability `a` after the modifiers in scope whose buff is up in the simulated state; a fraction
---- (ns.SpendPoints: below 1, or any magnitude under `spendBase`) takes the same pct as the belief applies to it.
-function M.Apply(cost, a)
+--- A declared cost of ability `a` after the modifiers in scope whose buff is up in the simulated state. A fraction
+--- (ns.SpendPoints: below 1, or any magnitude under `spendBase`) is returned as declared: ns.SpendPoints prices it whole
+--- first and then calls this with `points` true, so a modifier cuts the whole price, unrounded, as the belief's
+--- I.CostOf and wowsims (e4ef929e54 mana.go:372 then spell.go:1055 ApplyCostModifiers) do: 11% of 1720 is 189, halved
+--- 94.5. Allocates nothing after each ability key's first scope read.
+function M.Apply(cost, a, points)
     local list = mods.costMods
     if #list == 0 or type(cost) ~= "number" or cost <= 0 then
+        return cost
+    end
+    if not points and (cost < 1 or rawget(a, "spendBase")) then
         return cost
     end
     local buff = Hekili.State.buff

@@ -185,11 +185,13 @@ describe("Engine/Schema/Races.lua", function()
         assert.are.equal(15, a.spend)
     end)
 
-    it("applies pct to a fraction-of-maximum cost", function()
+    -- a fraction keeps its declared value: ns.SpendPoints prices it whole and then cuts that price (`points`), as
+    -- wowsims does (spend_base_spec.lua)
+    it("leaves a fraction cost to its whole price, which takes the pct", function()
         load("Fake")
         local a = ability("spender_a", { id = 1011, spend = 0.2, spendType = "resource_a" })
         state.buff.racial_a = { up = true, count = 3 }
-        assert.is_true(math.abs(a.spend - 0.18) < 1e-9)
+        assert.are.same({ 0.2, 18 }, { a.spend, ns.costMods.Apply(20, a, true) })
     end)
 
     it("covers every ability without `spells`, and spends a charge on a cast made free (pct = -1)", function()
