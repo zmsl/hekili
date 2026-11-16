@@ -1,5 +1,5 @@
 # Protection (wowsims.com): the wowsims/forever default APL for Protection (ui/specs/warrior/protection/apls/default.apl.json), translated to this addon's keys.
-# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at e5a9cd2a2dfc.
+# Data: wowsims/forever (MIT, https://github.com/wowsims/forever) at e4ef929e5479.
 # Cooldowns toggle hides: Retaliation, Death Wish, Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).
 # Defensives toggle hides: Shield Wall, Last Stand, Healthstone and the racials Stoneform and Shatter Curse. No line here sits under the Potions toggle.
 # Last Stand, Shield Wall, Stoneform, Shatter Curse and Healthstone wait for low health, and the game hides your health from addons in combat, so they never show there: use them by hand.
@@ -19,12 +19,22 @@
 # Omitted: default #35: never
 # Omitted: default #36: hidden
 # Omitted: engineering #1: item 10646
-# Omitted: engineering #2: item 11566
-# Omitted: engineering #3: item 18588
+# Omitted: engineering #2: item 260817
+# Omitted: engineering #3: item 276145
+# Omitted: engineering #4: item 16005
+# Omitted: engineering #5: item 260816
+# Omitted: engineering #6: item 11566
+# Omitted: engineering #7: item 10830
+# Omitted: engineering #8: item 15993
+# Omitted: engineering #9: item 284868
+# Omitted: engineering #10: item 260814
+# Omitted: engineering #11: item 18588
 # Omitted: cd_offensive_trinkets #1: item 21670
 # Omitted: cd_offensive_trinkets #2: item 22954
 # Omitted: cd_offensive_trinkets #3: item 23041
 # Omitted: cd_offensive_trinkets #4: item 272440
+# Omitted: cd_offensive_trinkets #5: item 272437
+# Omitted: cd_offensive_trinkets #6: item 13965
 # Omitted: cd_shield_wall_dual_wield #1: strictSequence of itemSwap
 # Omitted: cd_shield_wall_dual_wield #2: itemSwap
 # Omitted: default: empty group engineering

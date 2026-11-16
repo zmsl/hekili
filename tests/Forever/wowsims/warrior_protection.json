@@ -35,7 +35,7 @@
             },
             "healingModel":{
               "inspirationUptime":0.25,
-              "hps":815,
+              "hps":770,
               "cadenceVariation":0.64,
               "cadenceSeconds":0.3,
               "absorbFrac":0.015,
@@ -43,49 +43,49 @@
             },
             "equipment":{
               "items":[{
-                  "id":10388,
-                  "randomSuffix":12736,
-                  "enchant":2543
+                  "id":12640,
+                  "enchant":1506
                 },{
-                  "id":22150
+                  "id":275736
                 },{
-                  "id":275737
+                  "id":10390,
+                  "randomSuffix":12736
                 },{
-                  "id":18413,
+                  "id":272414,
                   "enchant":7667
                 },{
-                  "id":252483,
+                  "id":10378,
+                  "randomSuffix":12736,
                   "enchant":1891
                 },{
-                  "id":10147,
-                  "randomSuffix":12727,
+                  "id":250582,
                   "enchant":8214
                 },{
-                  "id":250552,
-                  "enchant":8206
+                  "id":9410,
+                  "randomSuffix":13103,
+                  "enchant":8207
                 },{
-                  "id":21994
+                  "id":250572
                 },{
-                  "id":10389,
-                  "randomSuffix":12736,
-                  "enchant":2543
+                  "id":22385,
+                  "enchant":1506
                 },{
-                  "id":10376,
-                  "randomSuffix":12736,
+                  "id":287033,
                   "enchant":1887
+                },{
+                  "id":17713
                 },{
                   "id":272409
                 },{
-                  "id":15855
-                },{
                   "id":272440
                 },{
-                  "id":10779
+                  "id":19120
                 },{
                   "id":12798,
                   "enchant":1900
                 },{
-                  "id":16998,
+                  "id":10271,
+                  "randomSuffix":12736,
                   "enchant":1886
                 },{
                   "id":15289,
@@ -118,7 +118,71 @@
                       "action":{
                         "castSpell":{
                           "spellId":{
+                            "itemId":260817
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":276145
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":16005
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":260816
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
                             "itemId":11566
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":10830
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":15993
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":284868
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":260814
                           }
                         }
                       }
@@ -162,6 +226,22 @@
                         "castSpell":{
                           "spellId":{
                             "itemId":272440
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":272437
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":13965
                           }
                         }
                       }
