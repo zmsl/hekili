@@ -31,6 +31,7 @@ describe("wowsims drift", function()
     it("hands the request's tank slot to the translation context, as the pack build does", function()
         local got
         local stub = {
+            isTank = require("tools.wowsims.apl").isTank,
             context = function(_, _, _, _, _, tank)
                 got = tank
                 return {}
@@ -44,13 +45,14 @@ describe("wowsims drift", function()
         assert.is_true(apl.isTank(tankReq))
         assert.is_false(apl.isTank({ raid = { tanks = { { type = "Player", index = 1 } } } }))
         assert.is_false(apl.isTank({ raid = {} }))
-        drift.translate(stub, {}, {}, "", { rotation = {} }, {}, apl.isTank(tankReq))
+        drift.translate(stub, {}, {}, "", { rotation = {} }, tankReq)
         assert.is_true(got)
     end)
 
     it("parses a pin-side .siml with WOWSIMS_PIN_CLI, and a new-rev one with WOWSIMS_NEW_CLI", function()
-        assert.are.equal("newcli", drift.pinCli("n", "n", "newcli", "pincli"))
-        assert.are.equal("pincli", drift.pinCli("p", "n", "newcli", "pincli"))
-        assert.is_nil(drift.pinCli("p", "n", "newcli", nil))
+        local ctx = { new = "n", cli = "newcli", pinCli = "pincli" }
+        assert.are.equal("newcli", drift.pinCli(ctx, "n"))
+        assert.are.equal("pincli", drift.pinCli(ctx, "p"))
+        assert.is_nil(drift.pinCli({ new = "n", cli = "newcli" }, "p"))
     end)
 end)

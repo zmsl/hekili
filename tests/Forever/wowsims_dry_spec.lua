@@ -18,4 +18,22 @@ describe("wowsims dry run", function()
             })
         )
     end)
+
+    it("translates with the request's tank slot, as the pack build does", function()
+        local got
+        local stub = {
+            isTank = function()
+                return "tank"
+            end,
+            context = function(_, _, _, _, _, tank)
+                got = tank
+                return {}
+            end,
+            translate = function()
+                return "", {}
+            end,
+        }
+        dry.translate(stub, {}, {}, "", { rotation = {} }, {})
+        assert.are.equal("tank", got)
+    end)
 end)

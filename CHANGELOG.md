@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
 ### Changed
 - Hunter: the Beast Mastery and Marksmanship weave priorities are retired, because wowsims.com no longer has them. If you had one selected, you now run that spec's Turret priority, and Hekili tells you once.
@@ -13,11 +14,14 @@
 - Hunter: Hekili now tracks Strider Kick's speed after your Strider Kick, and Lacerating Strikes' bleed after your Mongoose Bite.
 - Hunter: Beast Mastery Turret now follows wowsims.com's hawk rotation: Summon Hawk twice, then Arcane Shot, and no longer suggests Sniper Shot. Until you have Summon Hawk, it suggests Arcane Shot on its own (not yet checked in game).
 - Hunter: Survival Melee now runs out to reapply Serpent Sting while Strider Kick's speed is up and you have more than 30% mana, as wowsims.com does, and no longer suggests a Major Mana Potion (not yet checked in game).
+- Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 ### Fixed
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
+
+- Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 
 ### Known issues
 
