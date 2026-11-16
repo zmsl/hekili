@@ -19,6 +19,22 @@ per-step deadline is 4 s with a `step_timeout=` option. A sequence's start line 
 filter in Primary and AOE. `reset_on_target_change` is built for Lua windows too. Hunter `hha` and Paladin
 `move1` / `move2` move from Lua windows to APL sequences in Phase 3, as real-world tests beside Warrior Arms.
 
+## v6.1 amendment (owner, L1165, 2026-11-16)
+
+Owner: "The window is registered with the behavior in belief, so the core open signals should be enough." The
+operations from the core to the belief carry only the author's intent: OPEN, CLOSE and STEP. There is no REFRESH
+operation. The belief holds each APL window's declaration (`duration`, `refresh`, `max_refresh`, `max_duration`) and
+applies the refresh rule itself when an OPEN lands on a window that is already open at the operation's stamp: if the
+window is declared `refresh=1`, its refreshes are below `max_refresh` and its expiry is below openedAt +
+`max_duration`, the timer restarts at the stamp for the declared duration (capped at openedAt + `max_duration`) and
+refreshes go up by one; otherwise nothing changes. An OPEN on a closed or run-out window is a fresh open for the
+declared duration; OPEN carries no argument. CLOSE and STEP stay writes. The core keeps the same rule only as a
+forecast for its own pass: it decides whether the copy changed, so whether the walk restarts (ruling 19) and what
+later lines and slots see. One pure statement of the rule serves both sides as the test oracle
+(tests/Game/State/helpers/windows_matrix.lua `M.apply`): the belief's replay is asserted against it in Phase 1, the
+core's forecast in Phase 2 (W05, W06, R09). Sections 0 (rulings 18, 19), 1 (rules 7, 8), 4.2, 4.3, 5.1, 5.4, 11, 12
+and 13 below read with this amendment.
+
 ## 0. Decided
 
 Each line is a ruling, with the owner's words where the ledger quotes them. Rows 1-17 stood in v5; rows 18-34 are
@@ -43,8 +59,8 @@ the answers to v5's questions 7-16 and derived rules D1-D8; rows 35-36 answer th
 | 15 | Q6: a finished plain sequence parks until `restart_sequence` or combat end. SimC and wowsims agree | (settled, L818) | L814, L818 |
 | 16 | Target changes do not reset windows or sequences by default; an option resets them. Supersedes L816 and L780 (2). Extended to Lua windows by row 33 | "because of potential sequences with target swap recommendations" | L817 |
 | 17 | Naming: SimC's native option names where they exist; Hekili-only options named in SimC's style | "simc is the spec we're writing against. Anything that is unique to hekili will come up with a name schemed on simc semantics" | L818 |
-| 18 | Q7 yes: operations are writes; the belief does not judge caps again on replay | (yes) | L821 |
-| 19 | Q8 yes: a granted REFRESH restarts the walk like an open or a close; its cost is measured in Phase 2 | (yes) | L821 |
+| 18 | Q7 yes: operations are writes; the belief does not judge caps again on replay. Amended by v6.1 (L1165): CLOSE and STEP are writes; an OPEN on an open window is judged by the belief's declared refresh rule | (yes) | L821, L1165 |
+| 19 | Q8 yes: a granted refresh restarts the walk like an open or a close; its cost is measured in Phase 2 | (yes) | L821 |
 | 20 | Q9: the fired mark resets per slot. Each line acts at most once per slot; only slot 1 sends operations | "so that future predictions can model windows opening/closing correctly" | L822 |
 | 21 | Q10, uniform rule: `open_window` / `close_window` lines carry only `name=` and `if=` for every window, Lua-registered or list-declared. Attributes live only in the declaration (`RegisterWindow` / `actions.windows`). An attribute on a line is a compile error. No shipped line changes (no shipped priority or recipe has such a line) | (ruling) | L824, L831 |
 | 22 | Q11 yes: `windows` is a reserved list name; a release note says so | (yes) | L825 |
@@ -107,8 +123,9 @@ below. That is why ruling 26 has three values: `mode=wait` is SimC's, `mode=cont
    fired mark is cleared at the start of every slot. There is no restart cap; restarts per slot cannot exceed the
    number of window lines.
 8. Only slot 1's walk at time = now talks to the belief. It sends the ordered list of operations that changed the
-   window (OPEN, CLOSE, REFRESH, and for sequences STEP). The belief replays them, in order, at the start of its
-   next update, as writes: it does not judge caps again. Forecast slots act on the copy and never send anything.
+   window (OPEN, CLOSE, and for sequences STEP). The belief replays them, in order, at the start of its next
+   update: CLOSE and STEP as writes, OPEN by the window's declared refresh rule (v6.1). Forecast slots act on the
+   copy and never send anything.
 9. Each display has its own copy of every APL window, under its own key (`<pack>:<name>#<display>`). The belief sees
    separate windows and knows nothing about displays or priority lines. Lua windows are one shared instance.
 10. Lua windows keep their evaluator and edge rules (a rise opens, a fall closes only with `close_on_false`). New
@@ -321,14 +338,14 @@ display, so no string is built per cycle. Priority text keeps reading `window.bu
 
 | Line | Copy closed | Copy open |
 |---|---|---|
-| `open_window`, true | open with the declared duration: operation OPEN | declared `refresh=1` and within `max_refresh` / `max_duration`: restart the timer, operation REFRESH. Otherwise nothing |
+| `open_window`, true | open with the declared duration: operation OPEN | declared `refresh=1` and within `max_refresh` / `max_duration`: restart the timer, operation OPEN (the belief applies the same rule). Otherwise nothing |
 | `close_window`, true | nothing | close: operation CLOSE |
 | either, false or not reached | nothing | nothing |
 
 The copy's open and close are the existing ones (`state.openWindow`, `state.closeWindow`, State.lua:1696-1706), whose
 caps are the belief's written again.
 
-4.3 Restart. After any line that actually changed the copy (an OPEN, CLOSE, REFRESH or a sequence's STEP), the
+4.3 Restart. After any line that actually changed the copy (an open, a granted refresh, a close or a sequence's STEP), the
 slot's walk restarts from the top with time unchanged (wowsims re-picks from the top after every executed action,
 sim/core/apl.go loop near line 552 with a 1000-pass guard [H]).
 
@@ -345,7 +362,7 @@ sim/core/apl.go loop near line 552 with a 1000-pass guard [H]).
   included), a number fixed at compile time. Nothing is truncated. The count of restarts per slot goes into the
   snapshot and the debug output (section 15). Phase 2's CPU gate measures the cost; if it is ever too high the
   answer is a warning to the author, never a silent stop.
-- A granted REFRESH restarts the walk like an OPEN or a CLOSE (ruling 19).
+- A granted refresh restarts the walk like an open or a close (ruling 19).
 - It applies at every slot and to future-dated opens (an open line that passes only at a recheck time opens the
   copy at that time, as today, Core.lua:555-566, and `state.WindowRecheck`, State.lua:1717-1725, gives a higher line
   its countdown).
@@ -374,8 +391,7 @@ delay 0 (not inside the recheck loop). Each change to the copy appends one opera
 
 | Operation | Argument | Belief's replay |
 |---|---|---|
-| OPEN | duration in effect, seconds | window up, opened at T, expires at T + duration (capped by `max_duration`), refreshes 0, step 1 if stepped |
-| REFRESH | duration in effect | expires at T + duration, capped at openedAt + `max_duration`; refreshes + 1. On a closed window: as OPEN |
+| OPEN | none | closed or run out at T: window up, opened at T, expires at T + the declared duration (capped by `max_duration`), refreshes 0, step 1 if stepped. Open at T: the declared refresh rule (v6.1): declared `refresh=1`, refreshes below `max_refresh` and expiry below openedAt + `max_duration`: expires at T + the declared duration, capped at openedAt + `max_duration`, refreshes + 1; otherwise nothing |
 | CLOSE | none | window down |
 | STEP | step number | sequences only: step set to that number (section 6) |
 
@@ -395,12 +411,14 @@ operations carry the previous cutoff, so "operations, then newer observations" i
 operation is written to the log (SetLog) so a recording replays the belief without the core. [H for the fold, M for
 the fix]
 
-5.4 Operations are writes (ruling 18). The copy already judged the caps with the same declaration, and it was seeded
+5.4 CLOSE and STEP are writes (ruling 18); OPEN is judged by the declared refresh rule (v6.1). The copy was seeded
 from the same belief state that the replay meets: the belief changes only inside Drain, and the operations are
-applied before anything else in the next one. So the belief does not judge again; it writes. The one place the two
-can differ is a window that expired between T and the display's own "now": the copy saw it closed and sent OPEN,
-the belief at T still has it up. As a write, OPEN gives a fresh open either way. An operation for an unknown key
-(an edit in combat) is dropped and counted.
+applied before anything else in the next one, so the core's forecast of the rule and the belief's apply agree. The
+one place the two can differ is a window that expired between T and the display's own "now": the copy saw it
+closed and opened it fresh; the belief at T still has it up, so the OPEN is a refresh where `refresh=1` allows one
+and nothing where it does not. A window without `refresh=1` then runs out at that Drain and a still-true open line
+opens it again at the next pass. An OPEN the rule refuses counts as applied. An operation for an unknown key (an
+edit in combat) is dropped and counted.
 
 5.5 Buffer size. Exact, not a guess: a line fires at most once per slot and only slot 1 sends, so one display sends at most (window
 lines + sequence-generated lines) operations per pass. The buffer is sized as the sum of that over the displays (sequence lines count only where Sequences is on,
@@ -732,7 +750,7 @@ actions.move_to_melee+=/close_window,name=move2,if=...
    evaluator beside them, and groups such as `pack:burst#Primary`, `pack:burst#AOE`, `pack:burst#Cooldowns`), Core,
    five display passes, Priority, Compiler, Class file. Arrows: Game -> Belief (observed casts, target swaps); Class
    file -> Belief (Lua registration with evaluator); Priority -> Compiler -> Belief (records by key); each display
-   pass -> Belief, one way, labelled "operations for my keys, in order: OPEN / CLOSE / REFRESH / STEP"; Belief ->
+   pass -> Belief, one way, labelled "operations for my keys, in order: OPEN / CLOSE / STEP"; Belief ->
    each display pass, labelled "state of my keys, read at the start of the next pass". Note on the belief: "knows
    keys only: no displays, no lines". Mark the operations arrow as the only new crossing.
 2. Operations replay (replaces v3's edge state machine). Two lanes on one time axis. Top lane, a display's pass at
@@ -768,15 +786,16 @@ step"), and say there that SimC is the default reference (ruling 14); record v6 
 explainer page; draft the release notes (`windows` is a reserved list name; a display in a sequence can show
 abilities outside its category; the Sequences setting).
 
-Phase 1, belief: APL rows by key from `def.aplWindows`, the operations buffer and `WindowOp`, Drain order, the four
-operations as writes, park at the end of a plain sequence, `reset_on_target_change` for every row that has it
-(APL rows and Lua windows, with the `RegisterWindow` field and its check), `step_timeout` (default 4 s),
+Phase 1, belief: APL rows by key from `def.aplWindows`, the operations buffer and `WindowOp`, Drain order, the three
+operations (CLOSE and STEP as writes, OPEN by the declared refresh rule, v6.1), park at the end of a plain
+sequence, `reset_on_target_change` for every row that has it (APL rows and Lua windows, with the `RegisterWindow` field and its check), `step_timeout` (default 4 s),
 RegisterWindow's steps-need-an-evaluator check (L773), the generation-bump apply, operation logging, counters
 (applied, dropped).
 - Tests (tests/Game/State/windows_spec.lua and neighbours): each operation on an open and on a closed window;
   a list replayed in order (OPEN, CLOSE ends closed; CLOSE, OPEN ends open); an operation and a cast in one Drain
-  apply in time order even when the cast was logged first; OPEN on a window that expired after T; a REFRESH past
-  the declared caps is still written (operations are writes); unknown key dropped and counted; a cast advances
+  apply in time order even when the cast was logged first; OPEN on a window that expired after T; an OPEN on an
+  open window refreshed by the declared rule and refused past `max_refresh` and at `max_duration`, asserted against
+  the forecast == apply oracle (W05, W06, R09); unknown key dropped and counted; a cast advances
   every open key; a stray first-step cast does nothing; park and STEP 1; target swap with and without the reset
   under a secret GUID, on an APL row and on a Lua window (closed, then reopened by a still-true evaluator);
   deadline restart on advance, default and `step_timeout=`; apply deferred in combat; 1000 Drains and 1000
@@ -863,7 +882,7 @@ restarts per slot, the three converted packs on an open-world mob.
 
 Harness gates: the drift guard keeps its meaning for Lua windows. APL windows are excluded from it and get two
 checks: after every Drain, each key's belief state equals the state the sending pass left in its copy (the replay
-invariant, section 13), and no APL window is ever up without a logged OPEN or REFRESH.
+invariant, section 13), and no APL window is ever up without a logged OPEN.
 
 ## 13. Test matrix
 
@@ -973,8 +992,8 @@ Group W, free-form windows (unit only unless marked):
 | W02 | `open_window,if=flag`, flag true for one tick | one OPEN; stays open to its duration after the flag falls |
 | W03 | W02 with a `close_window,if=!flag` line | CLOSE on the tick the flag falls: the author's replacement for close_on_false |
 | W04 | open line inside a list whose call goes false | no operation while not reached; window runs to its duration |
-| W05 | declared `refresh=1`, flag held true | REFRESH every pass; with `max_refresh=2` the third is refused and nothing is sent |
-| W06 | declared `refresh=1,max_duration=8` | span capped from the first open; REFRESH stops being sent at the cap |
+| W05 | declared `refresh=1`, flag held true | the timer restarts every pass (OPEN, belief and forecast agree); with `max_refresh=2` the third is refused and nothing is sent |
+| W06 | declared `refresh=1,max_duration=8` | span capped from the first open; at the cap the refresh is refused and nothing is sent |
 | W07 | `duration=combat` | no expiry; closes at combat end; reopens next fight only by a line |
 | W08 | two open lines for one window, both true | one OPEN, from the upper line; the lower finds it open |
 | W09 | open top, close bottom, both true (the owner's example) | operations OPEN, CLOSE; two restarts; ends closed in copy and belief; same again next tick |
@@ -1001,7 +1020,7 @@ Group R, restart and the fired mark (unit only). There are no cap tests: there i
 | R06 | two lines whose conditions read each other's window (`open A if !B`, `open B if !A`, with closes) | ends within the fired-mark bound (at most 4 restarts); deterministic end state asserted |
 | R07 | R01 with a near-cost pick held before the restart | `state.nearAction` cleared; pick is the reader |
 | R08 | W09 run 1000 ticks | no allocation; two operations and two restarts in slot 1 per tick, constant |
-| R09 | a REFRESH granted on a held-true line | one restart per slot while refreshes remain; none after `max_refresh` |
+| R09 | a refresh granted on a held-true line | one restart per slot while refreshes remain; none after `max_refresh` |
 | R10 | W09, slots 1 to 3 asserted | each slot: the mark is clear at its start, the pair fires again (open, close, two restarts), the copy ends closed; only slot 1's two operations are sent |
 | R11 | `open_window,if=flag` where the flag's forecast turns true at slot 2's time; a `close_window` true at slot 3's time | slot 1: closed, nothing sent; slot 2: the copy opens, readers see it up; slot 3: the copy closes. The forecast models the window opening and closing (ruling 20) |
 | R12 | a line that fired in slot 1 and whose condition is still true in slot 2, window closed again by an expiry between the slots | it fires again in slot 2 (copy only). Under the old per-cycle mark it would not |
@@ -1273,7 +1292,8 @@ For the builders. None is an owner question; each names the phase that must sett
    is bounded and fixed at compile time, but it is the author's to pay. Phase 2 measures it; the snapshot shows it.
 5. Determinism of replay. It rests on three things: the copy is seeded from exactly the state the replay meets
    (true only while the belief changes nowhere but in Drain, and one Drain precedes all five passes); operations are
-   writes (ruling 18); and the log holds them at the Drain head in order. If any breaks, belief and copy drift
+   writes or, for OPEN, the one declared refresh rule both sides apply (ruling 18, v6.1); and the log holds them
+   at the Drain head in order. If any breaks, belief and copy drift
    silently, because nothing compares them in play. The harness check "belief equals the sending copy after every
    Drain" (section 12) and L10/L11 are the guard. Belief-only replays must feed the logged operations.
 6. A press before the window is open. The belief opens one Drain after the pass (up to 0.2 s,

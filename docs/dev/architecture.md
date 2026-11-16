@@ -50,8 +50,8 @@ approved exceptions (`tools/check_border.sh` allows these and nothing else):
   which only the core can open (`{ active(), write(fmt, ...) }`; the belief fills `onOpen`, which `Hekili:SetupDebug`
   calls as each display's log opens). `SetLog` also fills `logger.debug` (§4);
 - `ns.VirtualState.WindowOp(key, op, arg)` (windows design v6 §5, `docs/superpowers/specs/2026-11-13-windows-sequences-design.md`):
-  an APL window's operation from a display pass at now, by key (`<pack>:<name>#<display>`): 1 OPEN (arg: the
-  duration in seconds, `math.huge` for "combat"), 2 REFRESH (arg: the duration), 3 CLOSE, 4 STEP (arg: the step).
+  an APL window's operation from a display pass at now, by key (`<pack>:<name>#<display>`): 1 OPEN, 2 CLOSE,
+  3 STEP (arg: the step); the author's intent only (v6.1, L1165): the belief holds each window's declaration.
   Three plain values into a preallocated buffer; the next `Drain` replays them first (see "Rotation windows"). No
   core file calls it yet: the display passes' operations are the windows rebuild's Phase 2.
 Those four are all the core names; the gate allows nothing else. The one belief read beside them is the window read
@@ -237,8 +237,9 @@ read. A file's `state.knownRank` local is the facade's function, safe in a helpe
 `spec:RegisterWindow(name, { evaluator, duration, now_duration?, refresh, max_duration?, max_refresh?, close_on_false?,
 steps?, loop?, on_deviation?, strict?, reset_on_target_change? })` (`Engine/Schema/Spec.lua`) crosses `Build(def)` as
 `def.windows` (plain records, `steps` as ability indexes). `steps` need an `evaluator` (a cast never opens a window,
-L773: RegisterWindow raises). `reset_on_target_change` (a boolean, default false): a target change (`Obs.TargetSwap`,
-a re-selection and a Map swap by plate index included) closes the window and forgets the evaluator's last value, so a
+L773: RegisterWindow raises). `reset_on_target_change` (a boolean, default false): a target change (`Obs.TargetSwap`:
+a re-selection, a Map swap by plate index, clearing the target, and the belief's own swap at `Start` and every
+`Build` included) closes the window and forgets the evaluator's last value, so a
 still-true evaluator reopens it at step 1 in the same `Drain`. `duration` is seconds, `"combat"` or a function. A function is the forecast's: it
 runs under `state` at each forecast open and each counted refresh. Its per-layer twin `now_duration` (required with a
 function `duration`, and only then) is the belief's, run in the `now` context at each belief open and each counted
@@ -254,11 +255,13 @@ step_timeout?, reset_on_target_change? }`), with `def.aplOpCap` (the operations 
 `def.aplGen` (a changed generation rebuilds only these rows and the buffer, at the next `Drain` out of combat, else
 after combat end; until then an unknown key reads down and its operations are dropped). `Drain` replays the buffered
 `WindowOp`s first (Flush, operations, polls, fold, settle, Lua evaluators, aura deltas), stamped with the previous
-cut-off and applied as writes: OPEN a fresh open whatever the row's state, REFRESH a restarted expiry (`max_duration`
-bounds it; `max_refresh` is not judged again; on a closed row an OPEN), CLOSE, STEP the due step (on an up row; else
-dropped). An unknown key, a Lua window's key and an operation over the bound are dropped and counted (applied,
-dropped, the last drop's key, since combat start: the belief's snapshot line `windowops`); each replayed operation is
-a `[vs] windowop` line of the trace. A plain sequence (steps, not strict) parks past its last step (step = steps + 1)
+cut-off: OPEN a fresh open for the declared duration on a closed or run-out row, and on an open row the declared
+refresh rule (with `refresh`, below `max_refresh` and below openedAt + `max_duration`: the expiry restarts, capped
+there, refreshes + 1; else nothing, still counted applied); CLOSE; STEP the due step as a write (on an up stepped
+row; else dropped). An unknown key, a Lua window's key, an unknown operation, an operation over the bound and one
+still waiting at a full `Build` are dropped and counted (applied, dropped, the last drop's key, since combat start:
+the belief's snapshot line `windowops`); each replayed or discarded operation is a `[vs] windowop applied|dropped`
+line of the trace, one over the bound a `[vs] windowop overflow` line at send (a replay skips those). A plain sequence (steps, not strict) parks past its last step (step = steps + 1)
 until a STEP or combat end; a strict one closes after its last step, at another on-GCD cast, and when the due step is
 not cast within `step_timeout` (default 4 s, restarted at each advance; Lua windows have none). The core is stateless: every reset copies the windows from `Facade.Window`, and within a cycle
 `actions+=/open_window,name=<w>,if=<c>[,refresh=1][,duration=<s>]` and `actions+=/close_window,name=<w>,if=<c>` (list
@@ -510,8 +513,9 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
   compares the English text with the golden written at the merge base.
 - `tools/check_border.sh` (in `make api-check`): the belief/core border (§1). Comments stripped, no file of `Game/`
   names `Hekili`, `class.`, `state.` or `ns.Output`; no file of `Engine/`, `UI/`, `Options/`, `Integrations/` or `Hekili.lua` names
-  `VS`, `ns.VirtualState` or `VirtualStateInternal` except the three calls `ns.VirtualState.Drain`, `.Build`,
-  `.SetLog`.
+  `VS`, `ns.VirtualState` or `VirtualStateInternal` except the four calls `ns.VirtualState.Drain`, `.Build`,
+  `.SetLog`, `.WindowOp`. Its optional arguments (for the spec) replace the `Game/` scan and add a path to the core
+  scan; a path that matches no file fails.
 - `tools/check_engine_reads.sh` (in `make api-check`), both directions: the engine files (`Sim/{Core,State,Targets,
   Scripts}`, `Output`, `Registry`, `Snapshot`, `Driver`) name no `HekiliDisplay*`, `ns.UI.` or
   `DisplayPool`, and nothing in `Engine/` names `Hekili.DB` or `.profile` (exempt: `Settings.lua`, comments). UI,

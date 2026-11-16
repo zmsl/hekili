@@ -1,6 +1,8 @@
 -- tests/Game/API/border_check_spec.lua (audit 2026-11-02 item 12): tools/check_border.sh on a Game/ stand-in fails
--- every way a belief file can reach the core, ns spelled any way but the three approved names included; on a core
--- stand-in (its second argument) it accepts exactly the approved calls, WindowOp the one new (windows design v6 §5.6).
+-- every way a belief file can reach the core, ns spelled any way but ns.Facade, ns.VirtualState and
+-- ns.VirtualStateInternal included; with a core stand-in (its second argument, scanned with the real core) it accepts
+-- exactly the four approved calls Drain, Build, SetLog and WindowOp (WindowOp: windows design v6 §5.6), and a stand-in
+-- path that matches no file fails.
 local function run(path, core)
     local p =
         assert(io.popen("bash tools/check_border.sh " .. (path or "") .. " " .. (core or "") .. " 2>&1; echo rc=$?"))
@@ -35,5 +37,11 @@ describe("tools/check_border.sh", function()
             assert.are.equal(1, rc, out)
             assert.is_truthy(out:find(name .. ".lua:3:", 1, true), out)
         end
+    end)
+
+    it("fails a core stand-in path that matches no file", function()
+        local rc, out = run("src/Hekili/Game", FIXTURES .. "missing")
+        assert.are.equal(1, rc, out)
+        assert.is_truthy(out:find("missing", 1, true), out)
     end)
 end)

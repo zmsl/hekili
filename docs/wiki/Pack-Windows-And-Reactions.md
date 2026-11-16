@@ -37,7 +37,7 @@ The name must be unique across the class's specs. The belief owns the real windo
 | `loop` | boolean | A stepped window starts its steps again after the last |
 | `on_deviation` | string | What a cast other than the due step does: `"stay"` (the default), `"skip"` or `"end"` |
 | `strict` | boolean | Any other cast on the GCD ends the window |
-| `reset_on_target_change` | boolean | A target change (re-selecting the same enemy included) closes the window; an evaluator that is still true opens it again at its first step. Off by default |
+| `reset_on_target_change` | boolean | A target change (re-selecting the same enemy and clearing the target included; a specialization change or reload counts as one too) closes the window; an evaluator that is still true opens it again at its first step. Off by default |
 
 A function `duration` and its `now_duration` are two functions for the same reason an ability has a `handler` and a `now`: one function cannot run in both layers ([Pack belief and simulation](Pack-Belief-And-Simulation)). A duration function that raises, returns a hidden value, or returns a value of 0 or less opens nothing. Combat ending closes every window and keeps the evaluator's last result, so the window opens again only when its test next turns from false to true. In the `now` context `combat` is 0 out of combat, so a test such as `combat > 0` opens the window again at every pull.
 

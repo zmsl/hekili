@@ -13,25 +13,71 @@ local C = mx.CLOSED
 local CASES = {
     {
         id = "OP1",
-        what = "OPEN on a closed row, then on an open one (a fresh open, operations are writes); expiry closes it",
+        what = "OPEN on a closed row opens it for the declared duration; on an open row without refresh it does nothing",
         apl = { x = { duration = 3 } },
         timeline = {
-            { t = 2, ops = { { "x", "OPEN", 3 } } },
-            { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 5 } }, ops = { { "x", "OPEN", 4 } } },
-            { t = 2.4, expect = { x = { openedAt = 2.2, expiresAt = 6.2 } } },
-            { t = 6.2, expect = { x = C } },
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 5 } }, ops = { { "x", "OPEN" } } },
+            { t = 2.4, counts = { applied = 2, dropped = 0 } },
+            { t = 5, expect = { x = C } },
         },
     },
     {
-        id = "OP2",
-        what = "REFRESH: on a closed row an OPEN; on an open one the expiry restarts, past max_refresh, max_duration bounding",
-        apl = { x = { duration = 3, refresh = true, max_refresh = 0, max_duration = 4 } },
+        id = "W05",
+        what = "a held-true OPEN on refresh=1: the timer restarts every pass; with max_refresh=2 the third is refused",
+        apl = { x = { duration = 3, refresh = true, max_refresh = 2 } },
         timeline = {
-            { t = 2, ops = { { "x", "REFRESH", 3 } } },
-            { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 5 } }, ops = { { "x", "REFRESH", 3 } } },
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 5 } }, ops = { { "x", "OPEN" } } },
+            { t = 2.4, expect = { x = { expiresAt = 5.2, refreshes = 1 } }, ops = { { "x", "OPEN" } } },
+            { t = 2.6, expect = { x = { expiresAt = 5.4, refreshes = 2 } }, ops = { { "x", "OPEN" } } },
+            { t = 2.8, counts = { applied = 4, dropped = 0 }, ops = { { "x", "OPEN" } } },
+            { t = 5.4, expect = { x = C } },
+        },
+    },
+    {
+        id = "W06",
+        what = "refresh=1,max_duration=4: the span is capped from the first open; at the cap an OPEN is refused",
+        apl = { x = { duration = 3, refresh = true, max_duration = 4 } },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 5 } }, ops = { { "x", "OPEN" } } },
             { t = 2.4, expect = { x = { expiresAt = 5.2, refreshes = 1 } } },
-            { t = 3.5, ops = { { "x", "REFRESH", 3 } } },
-            { t = 3.7, expect = { x = { expiresAt = 6, refreshes = 2 } } },
+            { t = 3.5, ops = { { "x", "OPEN" } } },
+            { t = 3.7, expect = { x = { expiresAt = 6, refreshes = 2 } }, ops = { { "x", "OPEN" } } },
+            { t = 3.9, ops = { { "x", "OPEN" } } },
+            { t = 6, expect = { x = C } },
+        },
+    },
+    {
+        id = "R09",
+        what = "OPEN every pass: one grant per pass while refreshes remain, none after; a reopen after expiry counts from 0",
+        apl = {
+            x = { duration = 2, refresh = true, max_refresh = 1 },
+            y = { duration = 2, refresh = true, max_refresh = 0 },
+            z = { duration = 2 },
+        },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" }, { "y", "OPEN" }, { "z", "OPEN" } } },
+            {
+                t = 2.2,
+                expect = {
+                    x = { up = true, openedAt = 2, expiresAt = 4 },
+                    y = { up = true, openedAt = 2, expiresAt = 4 },
+                    z = { up = true, openedAt = 2, expiresAt = 4 },
+                },
+                ops = { { "x", "OPEN" }, { "y", "OPEN" }, { "z", "OPEN" } },
+            },
+            {
+                t = 2.4,
+                expect = { x = { expiresAt = 4.2, refreshes = 1 } },
+                ops = { { "x", "OPEN" }, { "y", "OPEN" }, { "z", "OPEN" } },
+            },
+            { t = 2.6 },
+            { t = 4, expect = { y = C, z = C } },
+            { t = 4.2, expect = { x = C }, ops = { { "x", "OPEN" } } },
+            { t = 4.4, expect = { x = { up = true, openedAt = 4.2, expiresAt = 6.2 } }, ops = { { "x", "OPEN" } } },
+            { t = 4.6, expect = { x = { expiresAt = 6.4, refreshes = 1 } } },
         },
     },
     {
@@ -40,7 +86,7 @@ local CASES = {
         apl = { x = { steps = { "filler", "nuke" } } },
         timeline = {
             { t = 2, ops = { { "x", "CLOSE" } } },
-            { t = 2.2, counts = { applied = 1, dropped = 0 }, ops = { { "x", "OPEN", HUGE } } },
+            { t = 2.2, counts = { applied = 1, dropped = 0 }, ops = { { "x", "OPEN" } } },
             {
                 t = 2.4,
                 expect = { x = { up = true, step = 1, openedAt = 2.2, expiresAt = HUGE } },
@@ -51,16 +97,27 @@ local CASES = {
         },
     },
     {
+        id = "OP4",
+        what = "STEP on an open row without steps writes nothing and is dropped; an unknown operation code too",
+        apl = { x = { duration = 5 } },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 7 } }, ops = { { "x", "STEP", 1 } } },
+            { t = 2.4, counts = { applied = 1, dropped = 1, lastDrop = "kit:x#Primary" }, ops = { { "x", 4 } } },
+            { t = 2.6, counts = { applied = 1, dropped = 2 } },
+        },
+    },
+    {
         id = "W09/W10/W11",
         what = "a list replays in order: OPEN, CLOSE ends closed; CLOSE, OPEN ends open; OPEN, CLOSE, OPEN ends open",
         apl = { x = { duration = 5 } },
         timeline = {
-            { t = 2, ops = { { "x", "OPEN", 5 }, { "x", "CLOSE" } } },
-            { t = 2.2, ops = { { "x", "CLOSE" }, { "x", "OPEN", 5 } } },
+            { t = 2, ops = { { "x", "OPEN" }, { "x", "CLOSE" } } },
+            { t = 2.2, ops = { { "x", "CLOSE" }, { "x", "OPEN" } } },
             {
                 t = 2.4,
                 expect = { x = { up = true, openedAt = 2.2, expiresAt = 7.2 } },
-                ops = { { "x", "OPEN", 5 }, { "x", "CLOSE" }, { "x", "OPEN", 5 } },
+                ops = { { "x", "OPEN" }, { "x", "CLOSE" }, { "x", "OPEN" } },
             },
             { t = 2.6, expect = { x = { openedAt = 2.4, expiresAt = 7.4 } } },
         },
@@ -70,19 +127,25 @@ local CASES = {
         what = "an operation and a cast in one Drain apply in time order, the cast logged before the operation",
         apl = { x = { steps = { "burst", "nuke" }, strict = true } },
         timeline = {
-            { t = 2, ops = { { "x", "OPEN", HUGE } }, castAfter = "burst" },
+            { t = 2, ops = { { "x", "OPEN" } }, castAfter = "burst" },
             { t = 2.2, diff = true, expect = { x = { up = true, step = 2, openedAt = 2, expiresAt = HUGE } } },
         },
     },
     {
         id = "OP5",
-        what = "OPEN on a window that expires after T: a fresh open at T (the belief still had it up)",
-        apl = { x = { duration = 1 } },
+        what = "OPEN on a window that expires after T: the row is up at T, so the refresh rule applies (L1165)",
+        apl = { x = { duration = 1 }, y = { duration = 1, refresh = true } },
         timeline = {
-            { t = 2, ops = { { "x", "OPEN", 1 } } },
-            { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 3 } } },
-            { t = 2.8, ops = { { "x", "OPEN", 2 } } },
-            { t = 3.2, expect = { x = { openedAt = 2.8, expiresAt = 4.8 } } },
+            { t = 2, ops = { { "x", "OPEN" }, { "y", "OPEN" } } },
+            {
+                t = 2.2,
+                expect = {
+                    x = { up = true, openedAt = 2, expiresAt = 3 },
+                    y = { up = true, openedAt = 2, expiresAt = 3 },
+                },
+            },
+            { t = 2.8, ops = { { "x", "OPEN" }, { "y", "OPEN" } } },
+            { t = 3.2, expect = { x = C, y = { expiresAt = 3.8, refreshes = 1 } } },
         },
     },
     {
@@ -92,7 +155,7 @@ local CASES = {
         luaw = {},
         cap = 2,
         timeline = {
-            { t = 2, ops = { { "nope", "OPEN", 3 }, { "luaw", "OPEN", 3 }, { "x", "OPEN", 3 } } },
+            { t = 2, ops = { { "nope", "OPEN" }, { "luaw", "OPEN" }, { "x", "OPEN" } } },
             { t = 2.2, diff = true, counts = { applied = 0, dropped = 3, lastDrop = "luaw" } },
         },
     },
@@ -103,7 +166,7 @@ local CASES = {
         displays = { "Primary", "AOE", "Cooldowns" },
         keys = { "x", "x#AOE", "x#Cooldowns" },
         timeline = {
-            { t = 2, ops = { { "x", "OPEN", HUGE }, { "x#AOE", "OPEN", HUGE }, { "x#Cooldowns", "OPEN", HUGE } } },
+            { t = 2, ops = { { "x", "OPEN" }, { "x#AOE", "OPEN" }, { "x#Cooldowns", "OPEN" } } },
             {
                 t = 2.2,
                 expect = {
@@ -133,12 +196,12 @@ local CASES = {
         what = "strict: the due step advances, an off-GCD cast not due keeps it, the last step closes, another on-GCD cast ends it",
         apl = { x = { steps = { "burst", "nuke" }, strict = true } },
         timeline = {
-            { t = 2, ops = { { "x", "OPEN", HUGE } } },
+            { t = 2, ops = { { "x", "OPEN" } } },
             { t = 2.2, expect = { x = { up = true, step = 1, openedAt = 2, expiresAt = HUGE } } },
             { t = 2.4, cast = "burst", expect = { x = { step = 2 } } },
             { t = 2.6, cast = "burst" },
             { t = 2.8, cast = "nuke", expect = { x = C } },
-            { t = 3, ops = { { "x", "OPEN", HUGE } } },
+            { t = 3, ops = { { "x", "OPEN" } } },
             { t = 3.2, expect = { x = { up = true, step = 1, openedAt = 3, expiresAt = HUGE } } },
             { t = 3.4, cast = "filler", expect = { x = C } },
         },
@@ -156,7 +219,7 @@ local CASES = {
                 t = 2,
                 flag = { luaw = true },
                 expect = { luaw = { up = true, step = 1, openedAt = 2, expiresAt = 32 } },
-                ops = { { "x", "OPEN", HUGE }, { "y", "OPEN", HUGE } },
+                ops = { { "x", "OPEN" }, { "y", "OPEN" } },
             },
             {
                 t = 2.2,
@@ -179,7 +242,7 @@ local CASES = {
         what = "the first and second member in one frame: open, advance twice and close in one Drain",
         apl = { x = { steps = { "stance", "nuke" }, strict = true } },
         timeline = {
-            { t = 2, ops = { { "x", "OPEN", HUGE } } },
+            { t = 2, ops = { { "x", "OPEN" } } },
             { t = 2.2, cast = { "stance", "nuke" }, counts = { applied = 1 } },
         },
     },
@@ -188,7 +251,7 @@ local CASES = {
         what = "a plain sequence parks past its last step; STEP 1 restarts it, a burn-out STEP parks it; combat end closes",
         apl = { x = { steps = { "filler", "nuke", "dot" } } },
         timeline = {
-            { t = 2, combat = "start", ops = { { "x", "OPEN", HUGE } } },
+            { t = 2, combat = "start", ops = { { "x", "OPEN" } } },
             { t = 2.2, expect = { x = { up = true, step = 1, openedAt = 2, expiresAt = HUGE } } },
             { t = 2.4, cast = "filler", expect = { x = { step = 2 } } },
             { t = 2.6, cast = "nuke", expect = { x = { step = 3 } } },
@@ -214,11 +277,11 @@ local CASES = {
             {
                 t = 2,
                 ops = {
-                    { "a", "OPEN", HUGE },
-                    { "b", "OPEN", HUGE },
-                    { "c", "OPEN", HUGE },
-                    { "d", "OPEN", 10 },
-                    { "e", "OPEN", HUGE },
+                    { "a", "OPEN" },
+                    { "b", "OPEN" },
+                    { "c", "OPEN" },
+                    { "d", "OPEN" },
+                    { "e", "OPEN" },
                 },
             },
             {
@@ -233,7 +296,7 @@ local CASES = {
             },
             { t = 2.3, cast = "filler", expect = { a = { step = 2 }, b = { step = 2 }, c = C, e = { step = 2 } } },
             { t = 2.4, swap = "plain", expect = { b = C, d = C, e = C } },
-            { t = 2.6, ops = { { "b", "OPEN", HUGE }, { "c", "OPEN", HUGE } } },
+            { t = 2.6, ops = { { "b", "OPEN" }, { "c", "OPEN" } } },
             {
                 t = 2.8,
                 expect = {
@@ -277,11 +340,48 @@ local CASES = {
         },
     },
     {
+        id = "S20-strict",
+        what = "a swap closes an open strict row with the field under a plain GUID; a strict and a list row without it stay",
+        apl = {
+            c = { steps = { "burst", "nuke" }, strict = true, reset_on_target_change = true },
+            f = { steps = { "burst", "nuke" }, strict = true },
+            g = { duration = 10 },
+        },
+        timeline = {
+            { t = 2, ops = { { "c", "OPEN" }, { "f", "OPEN" }, { "g", "OPEN" } } },
+            {
+                t = 2.2,
+                expect = {
+                    c = { up = true, step = 1, openedAt = 2, expiresAt = HUGE },
+                    f = { up = true, step = 1, openedAt = 2, expiresAt = HUGE },
+                    g = { up = true, openedAt = 2, expiresAt = 12 },
+                },
+            },
+            { t = 2.3, cast = "burst", expect = { c = { step = 2 }, f = { step = 2 } } },
+            { t = 2.4, swap = "plain", expect = { c = C } },
+            { t = 2.6, swap = "map" },
+        },
+    },
+    {
+        id = "P12-map",
+        what = "a Lua window with reset_on_target_change under a secret GUID: closed and reopened at step 1 by a still-true evaluator",
+        luaw = { steps = { "filler", "nuke" }, reset_on_target_change = true },
+        timeline = {
+            {
+                t = 2,
+                flag = { luaw = true },
+                expect = { luaw = { up = true, step = 1, openedAt = 2, expiresAt = 32 } },
+            },
+            { t = 2.2, cast = "filler", expect = { luaw = { step = 2 } } },
+            { t = 2.4, swap = "map", expect = { luaw = { step = 1, openedAt = 2.4, expiresAt = 32.4 } } },
+        },
+    },
+    {
         id = "W17",
         what = "a real cast's closeWindow on an APL key closes it in the fold",
         apl = { x = { duration = 10 } },
         timeline = {
-            { t = 2, ops = { { "x", "OPEN", 10 } } },
+            { t = 2, ops = { { "x", "OPEN" } } },
             { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 12 } } },
             { t = 2.4, cast = "closer", expect = { x = C } },
         },
@@ -291,7 +391,7 @@ local CASES = {
         what = "duration=combat: no expiry, closed at combat end",
         apl = { x = {} },
         timeline = {
-            { t = 2, combat = "start", ops = { { "x", "OPEN", HUGE } } },
+            { t = 2, combat = "start", ops = { { "x", "OPEN" } } },
             { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = HUGE } } },
             { t = 50 },
             { t = 50.2, combat = "end", expect = { x = C } },
@@ -303,11 +403,11 @@ local CASES = {
         apl = { x = {} },
         keys = { "x", "z" },
         timeline = {
-            { t = 2, combat = "start", ops = { { "x", "OPEN", HUGE } } },
+            { t = 2, combat = "start", ops = { { "x", "OPEN" } } },
             { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = HUGE } } },
-            { t = 2.4, edit = { x = {}, z = { duration = 5 } }, ops = { { "z", "OPEN", 5 } } },
+            { t = 2.4, edit = { x = {}, z = { duration = 5 } }, ops = { { "z", "OPEN" } } },
             { t = 2.6, diff = true, counts = { applied = 1, dropped = 1 } },
-            { t = 2.8, combat = "end", expect = { x = C }, ops = { { "z", "OPEN", 5 } } },
+            { t = 2.8, combat = "end", expect = { x = C }, ops = { { "z", "OPEN" } } },
             { t = 3, expect = { z = { up = true, openedAt = 2.8, expiresAt = 7.8 } } },
         },
     },
@@ -317,10 +417,22 @@ local CASES = {
         apl = { x = { duration = 5 } },
         keys = { "x", "y" },
         timeline = {
-            { t = 2, ops = { { "x", "OPEN", 5 } } },
+            { t = 2, ops = { { "x", "OPEN" } } },
             { t = 2.2, expect = { x = { up = true, openedAt = 2, expiresAt = 7 } } },
-            { t = 2.4, edit = { y = { duration = 5 } }, expect = { x = C }, ops = { { "x", "OPEN", 5 } } },
+            { t = 2.4, edit = { y = { duration = 5 } }, expect = { x = C }, ops = { { "x", "OPEN" } } },
             { t = 2.6, diff = true, counts = { applied = 1, dropped = 1 } },
+        },
+    },
+    {
+        id = "L02-pending",
+        what = "a new generation with operations waiting: they replay against the old rows first, then the rebuild",
+        apl = { x = { duration = 5 } },
+        keys = { "x", "y" },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" }, { "x", "CLOSE" }, { "x", "OPEN" } } },
+            { t = 2.2, edit = { x = { duration = 5 }, y = { duration = 5 } }, counts = { applied = 3, dropped = 0 } },
+            { t = 2.4, ops = { { "y", "OPEN" } } },
+            { t = 2.6, expect = { y = { up = true, openedAt = 2.4, expiresAt = 7.4 } } },
         },
     },
 }
@@ -333,18 +445,56 @@ describe("windows matrix (belief columns)", function()
     end
 
     it("1000 Drains and 2000 operations allocate nothing", function()
-        local env = mx.setup({ apl = { x = { steps = { "filler", "nuke" } } } })
+        local env = mx.setup({ apl = { x = { steps = { "filler", "nuke" }, duration = 5, refresh = true } } })
         local key = mx.key({}, "x")
         local t = 2
         local ok, bytes = pcall(alloc.bytes, function(i)
             t = t + 0.2
-            env.VS.WindowOp(key, i % 3 == 0 and mx.OP.CLOSE or mx.OP.OPEN, 5)
+            env.VS.WindowOp(key, i % 3 == 0 and mx.OP.CLOSE or mx.OP.OPEN)
             env.VS.WindowOp(key, mx.OP.STEP, 2)
             env.VS.Drain(t)
         end, 1000)
         mx.teardown(env)
         assert(ok, bytes)
         assert.are.equal(0, bytes)
+    end)
+
+    it("a full Build counts the operations still waiting as dropped (M4)", function()
+        local env = mx.setup({ apl = { x = { duration = 5 } } })
+        local key, Q = mx.key({}, "x"), env.I.winOps
+        env.VS.WindowOp(key, mx.OP.OPEN)
+        env.VS.WindowOp(key, mx.OP.CLOSE)
+        env.ns.BuildTracked()
+        local n, dropped, lastDrop = Q.n, Q.dropped, Q.lastDrop
+        env.VS.Drain(2)
+        local up = env.ns.Facade.Window(key)
+        mx.teardown(env)
+        assert.are.same({ 0, 2, key, false }, { n, dropped, lastDrop, up })
+    end)
+
+    it("an operation over the buffer's bound is written to the trace, apart from the replayed ones (M6)", function()
+        local env = mx.setup({ apl = { x = { duration = 5 } }, cap = 1 })
+        local lines = {}
+        env.VS.SetLog({
+            active = function()
+                return true
+            end,
+            write = function(fmt, ...)
+                local s = string.format(fmt, ...)
+                if s:find("^%[vs%] windowop") then
+                    lines[#lines + 1] = s
+                end
+            end,
+        })
+        local key = mx.key({}, "x")
+        env.VS.WindowOp(key, mx.OP.OPEN)
+        env.VS.WindowOp(key, mx.OP.CLOSE)
+        env.VS.Drain(2)
+        mx.teardown(env)
+        assert.are.same({
+            "[vs] windowop overflow kit:x#Primary CLOSE 0 t=1.500",
+            "[vs] windowop applied kit:x#Primary OPEN 0 t=1.500",
+        }, lines)
     end)
 
     -- L10, L11: the operations the belief logs (the core's trace, SetLog) replayed into a belief alone, with the same
@@ -360,10 +510,10 @@ describe("windows matrix (belief columns)", function()
                 },
             }
             local script = {
-                { t = 2, ops = { { "x", "OPEN", HUGE }, { "y", "OPEN", 3 }, { "y", "CLOSE" }, { "z", "OPEN", HUGE } } },
-                { t = 2.2, cast = "burst", ops = { { "y", "OPEN", 3 }, { "y", "CLOSE" }, { "y", "OPEN", 3 } } },
-                { t = 2.4, cast = "filler", ops = { { "z", "STEP", 3 }, { "nope", "OPEN", 1 } } },
-                { t = 2.6, cast = "nuke", ops = { { "x", "OPEN", HUGE } } },
+                { t = 2, ops = { { "x", "OPEN" }, { "y", "OPEN" }, { "y", "CLOSE" }, { "z", "OPEN" } } },
+                { t = 2.2, cast = "burst", ops = { { "y", "OPEN" }, { "y", "CLOSE" }, { "y", "OPEN" } } },
+                { t = 2.4, cast = "filler", ops = { { "z", "STEP", 3 }, { "nope", "OPEN" } } },
+                { t = 2.6, cast = "nuke", ops = { { "x", "OPEN" } } },
                 { t = 2.8, cast = "burst", ops = { { "z", "STEP", 1 } } },
                 { t = 3 },
                 { t = 6 },
@@ -409,12 +559,15 @@ describe("windows matrix (belief columns)", function()
                 return out
             end)
             mx.teardown(env)
-            -- each line: "[vs] windowop <applied|dropped> <key> <OP> <arg> t=<the stamp: the sending tick's cut-off>"
+            -- each line: "[vs] windowop <applied|dropped> <key> <OP> <arg> t=<the stamp: the sending tick's cut-off>";
+            -- an `overflow` line (dropped at send, over the bound) is not replayed: it never reached the buffer
             local logged = {}
             for _, s in ipairs(lines) do
-                local key, op, arg, at = s:match("^%[vs%] windowop %a+ (%S+) (%u+) (%S+) t=([%d.]+)$")
+                local word, key, op, arg, at = s:match("^%[vs%] windowop (%a+) (%S+) (%u+) (%S+) t=([%d.]+)$")
                 assert(key, s)
-                logged[#logged + 1] = { key, mx.OP[op], arg == "inf" and HUGE or tonumber(arg), tonumber(at) }
+                if word ~= "overflow" then
+                    logged[#logged + 1] = { key, mx.OP[op], arg == "inf" and HUGE or tonumber(arg), tonumber(at) }
+                end
             end
             assert.are.equal(11, #logged) -- every operation sent before the last Drain
             local function replay()

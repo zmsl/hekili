@@ -15,7 +15,7 @@ local fs = require("Game.State.helpers.fake_spec")
 local M = {}
 
 M.PACK = "kit"
-M.OP = { OPEN = 1, REFRESH = 2, CLOSE = 3, STEP = 4 }
+M.OP = { OPEN = 1, CLOSE = 2, STEP = 3 }
 -- the kit (§13): on-GCD filler, nuke, dot; off-GCD burst, stance; a cooldown the Cooldowns display owns; one whose
 -- real cast closes the Primary copy of APL window `x` (W17)
 M.IDS = { filler = 4001, nuke = 4002, burst = 4003, stance = 4004, dot = 4005, classcd = 4006, closer = 4007 }
@@ -83,6 +83,7 @@ function M.setup(case)
     ctl.Tick(1)
     I.ObsLog.Clear(I.log)
     local env = { api = api, ctl = ctl, ns = ns, VS = VS, I = I, saved = saved, case = case, gen = 0, guid = 0 }
+    env.apl = case.apl or {} -- the declarations in effect (an edit tick replaces them): the oracle's
     M.edit(env, case.apl or {}, case.displays, case.cap)
     ctl.now = 1.5
     ctl.Tick(1.5)
@@ -143,30 +144,51 @@ local function same(a, b)
     return a == b or type(a) == "number" and type(b) == "number" and math.abs(a - b) < 1e-9
 end
 
--- The copy the scripted operations describe (§13 replay invariant): `ops` written onto `seed` at T, then expiry at t.
+--- (L1165 forecast == apply) The oracle: operation `code` (M.OP) with `arg` applied at T, as the belief applies it, to
+--- state `s` (the FIELDS) of a row declared `decl` (a case's declaration; `duration` defaults to "combat", as M.edit
+--- writes it). OPEN opens a closed or run-out row for the declared duration (capped by max_duration); on an up row it
+--- restarts the timer only when `refresh` and `max_refresh` / `max_duration` leave room (refreshes + 1), else nothing.
+--- CLOSE closes; STEP sets the step on an up stepped row (1..steps + 1). Pure: Phase 2 asserts the core's forecast
+--- against it. A strict row's step deadline is not a Facade.Window field: the oracle does not model it.
+function M.apply(s, code, arg, decl, T)
+    local d = decl.duration or "combat"
+    d = d == "combat" and math.huge or d
+    local maxDur, maxRef = decl.max_duration or 0, decl.max_refresh or -1
+    local nSteps = decl.steps and #decl.steps or 0
+    if code == M.OP.OPEN then
+        if s.up and s.expiresAt <= T then
+            for _, f in ipairs(FIELDS) do
+                s[f] = M.CLOSED[f]
+            end
+        end
+        if not s.up then
+            s.up, s.openedAt, s.refreshes = true, T, 0
+            s.expiresAt = math.min(T + d, maxDur > 0 and T + maxDur or math.huge)
+            s.step = nSteps > 0 and 1 or 0
+        else
+            local cap = maxDur > 0 and s.openedAt + maxDur or math.huge
+            if decl.refresh and (maxRef < 0 or s.refreshes < maxRef) and s.expiresAt < cap then
+                s.expiresAt, s.refreshes = math.min(T + d, cap), s.refreshes + 1
+            end
+        end
+    elseif code == M.OP.CLOSE then
+        for _, f in ipairs(FIELDS) do
+            s[f] = M.CLOSED[f]
+        end
+    elseif code == M.OP.STEP and s.up and nSteps > 0 and arg >= 1 and arg <= nSteps + 1 and arg % 1 == 0 then
+        s.step = arg
+    end
+end
+
+-- The copy the scripted operations describe (§13 replay invariant): `ops` applied by the oracle onto `seed` at T,
+-- then expiry at t.
 local function model(seed, ops, T, t, decl)
     local s = {}
     for _, f in ipairs(FIELDS) do
         s[f] = seed[f]
     end
-    local maxDur = decl and decl.max_duration or 0
     for _, o in ipairs(ops) do
-        local code, arg = o[2], o[3]
-        if code == "OPEN" or code == "REFRESH" and not s.up then
-            local cap = maxDur > 0 and T + maxDur or math.huge
-            s.up, s.openedAt, s.refreshes = true, T, 0
-            s.expiresAt = math.min(T + arg, cap)
-            s.step = decl and decl.steps and 1 or 0
-        elseif code == "REFRESH" then
-            local cap = maxDur > 0 and s.openedAt + maxDur or math.huge
-            s.expiresAt, s.refreshes = math.min(T + arg, cap), s.refreshes + 1
-        elseif code == "CLOSE" then
-            for _, f in ipairs(FIELDS) do
-                s[f] = M.CLOSED[f]
-            end
-        elseif code == "STEP" and s.up then
-            s.step = arg
-        end
+        M.apply(s, M.OP[o[2]] or o[2], o[3], decl or {}, T)
     end
     if s.up and s.expiresAt <= t then
         for _, f in ipairs(FIELDS) do
@@ -201,6 +223,7 @@ local function events(env, k, t)
     end
     if k.edit then
         M.edit(env, k.edit, case.displays, case.cap)
+        env.apl = k.edit
     end
 end
 
@@ -255,7 +278,7 @@ function M.run(case)
                 -- the replay invariant: no event between the sending pass and this Drain
                 local quiet = not (k.cast or k.swap or k.combat or k.edit or k.diff)
                 if sent and quiet and sent[name] then
-                    local m = model(seed[name], sent[name], sentT, k.t, case.apl and case.apl[name:match("^[^#]+")])
+                    local m = model(seed[name], sent[name], sentT, k.t, env.apl[name:match("^[^#]+")])
                     for _, f in ipairs(FIELDS) do
                         if not same(got[f], m[f]) then
                             rows[#rows + 1] = string.format(

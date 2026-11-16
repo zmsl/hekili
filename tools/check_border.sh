@@ -21,11 +21,13 @@ for f in $(find "${1:-src/Hekili/Game}" -name '*.lua' | sort); do
     [ -n "$hits" ] && { echo "$hits"; fail=1; }
 done
 # Engine/, UI/, Options/, Integrations/ and Hekili.lua: no VS, ns.VirtualState or VirtualStateInternal but the four
-# calls. An optional second path argument (a file or a tree) stands in for them, for the spec.
+# calls. An optional second path argument (a file or a tree, for the spec) is scanned with them; one that matches no
+# .lua file fails.
+core="$(find src/Hekili/Engine src/Hekili/UI src/Hekili/Options src/Hekili/Integrations -name '*.lua' | sort) src/Hekili/Hekili.lua"
 if [ -n "${2:-}" ]; then
-    core=$(find "$2" -name '*.lua' | sort)
-else
-    core="$(find src/Hekili/Engine src/Hekili/UI src/Hekili/Options src/Hekili/Integrations -name '*.lua' | sort) src/Hekili/Hekili.lua"
+    extra=$(find "$2" -name '*.lua' 2>/dev/null | sort)
+    [ -z "$extra" ] && { echo "$2: no .lua file to scan"; fail=1; }
+    core="$core $extra"
 fi
 for f in $core; do
     hits=$(sed -E 's/--.*$//' "$f" | sed -E 's/\bns\.VirtualState\.(Drain|Build|SetLog|WindowOp)\b//g' |

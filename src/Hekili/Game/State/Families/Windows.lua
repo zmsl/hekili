@@ -10,13 +10,14 @@
 -- new edge). A stepped window advances on our observed cast of its due step's ability (I.WindowCast, from the cast
 -- fold); a later step's cast follows `on_deviation`; with `strict`, any other on-GCD cast ends it. The core reads it
 -- only through Facade.Window (VS.Window). Everything preallocated at Build; nothing allocated per Drain or per cast.
--- APL rows (windows design v6 §5-§8): `def.aplWindows`, one row per key after the Lua rows, with no evaluator. The
--- core's display passes send operations by key (VS.WindowOp); Drain replays them first, stamped with the previous
--- cut-off, as writes (no cap is judged again). A plain sequence (steps, not strict) parks past its last step (step =
--- steps + 1) until a STEP or combat end; a strict one closes after its last step and when its `step_timeout` (default
--- 4 s, restarted at each advance) runs out. `reset_on_target_change` (any row, Lua ones too): a target swap closes the
--- row, and a Lua row also forgets its evaluator's last value, so a still-true evaluator reopens it at step 1 in the
--- same Drain. A new `def.aplGen` rebuilds the APL rows and the buffer only, at the next Drain out of combat.
+-- APL rows (windows design v6 §5-§8, v6.1): `def.aplWindows`, one row per key after the Lua rows, with no evaluator.
+-- The core's display passes send the author's operations by key (VS.WindowOp: OPEN, CLOSE, STEP); Drain replays them
+-- first, stamped with the previous cut-off: OPEN by the row's declared refresh rule, CLOSE and STEP as writes. A plain
+-- sequence (steps, not strict) parks past its last step (step = steps + 1) until a STEP or combat end; a strict one
+-- closes after its last step and when its `step_timeout` (default 4 s, restarted at each advance) runs out.
+-- `reset_on_target_change` (any row, Lua ones too): a target swap closes the row, and a Lua row also forgets its
+-- evaluator's last value, so a still-true evaluator reopens it at step 1 in the same Drain. A new `def.aplGen`
+-- rebuilds the APL rows and the buffer only, at the next Drain out of combat.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -67,8 +68,8 @@ I.win = W
 
 -- The operations buffer (design §5): VS.WindowOp fills it between two Drains, the next Drain's head replays it. Sized
 -- at the build by `def.aplOpCap` (the compiler's exact bound, §5.5); over it an operation is dropped and counted.
-local OPEN, REFRESH, CLOSE, STEP = 1, 2, 3, 4
-local OPNAME = { "OPEN", "REFRESH", "CLOSE", "STEP" }
+local OPEN, CLOSE, STEP = 1, 2, 3
+local OPNAME = { "OPEN", "CLOSE", "STEP" }
 local Q = { n = 0, cap = 0, key = {}, op = {}, arg = {}, applied = 0, dropped = 0, lastDrop = "" }
 I.winOps = Q
 
@@ -238,7 +239,8 @@ I.On(Obs.CombatStart, function()
     Q.applied, Q.dropped, Q.lastDrop = 0, 0, "" -- the snapshot's counts are since combat start
 end)
 
--- A target swap (a re-selection too; under Map by plate index, no GUID read) resets each row declared with it.
+-- A target swap (a re-selection too; under Map by plate index, no GUID read) resets each row declared with it. Also
+-- logged for a cleared target and by VS.Start / every Build (Sources/Target.lua): harmless, declare() closed every row.
 I.On(Obs.TargetSwap, function()
     for w = 1, W.n do
         if W.rtc[w] then
@@ -250,21 +252,28 @@ I.On(Obs.TargetSwap, function()
     end
 end)
 
--- One operation on APL row w at t, as a write: true when it applies. OPEN: a fresh open for `arg` seconds whatever the
--- row's state. REFRESH: the expiry restarts (max_duration still bounds the span; max_refresh is not judged again); on a
--- closed or run-out row, an OPEN. CLOSE: down. STEP: the due step `arg` (1..steps + 1) on an up stepped row.
+-- One operation on APL row w at t: true when it applies (L1165). OPEN: a closed or run-out row opens fresh for its
+-- declared duration; an open one restarts its expiry only with `refresh`, below `max_refresh` and below openedAt +
+-- `max_duration` (a refused refresh still applies: it is the declared rule). CLOSE: down. STEP: the due step `arg`
+-- (1..steps + 1) on an up stepped row, as a write. tests/Game/State/helpers/windows_matrix.lua M.apply is its oracle.
 local function write(w, op, arg, t)
-    if op == OPEN or op == REFRESH then
-        if type(arg) ~= "number" or not (arg > 0) then
+    if op == OPEN then
+        local d = W.dur[w]
+        if not (d > 0) then
             return false
         end
-        if op == OPEN or not W.up[w] or lapsed(w, t) then
-            fresh(w, t, arg)
+        if W.up[w] and lapsed(w, t) then
+            close(w)
+        end
+        if not W.up[w] then
+            fresh(w, t, d)
             return true
         end
-        local e = t + arg
-        local cap = W.maxDur[w] > 0 and W.openedAt[w] + W.maxDur[w] or e
-        W.expiresAt[w], W.refreshes[w] = e < cap and e or cap, W.refreshes[w] + 1
+        local cap = W.maxDur[w] > 0 and W.openedAt[w] + W.maxDur[w] or math.huge
+        if W.refresh[w] and (W.maxRef[w] < 0 or W.refreshes[w] < W.maxRef[w]) and W.expiresAt[w] < cap then
+            local e = t + d
+            W.expiresAt[w], W.refreshes[w] = e < cap and e or cap, W.refreshes[w] + 1
+        end
         return true
     elseif op == CLOSE then
         if W.up[w] then
@@ -272,7 +281,8 @@ local function write(w, op, arg, t)
         end
         return true
     elseif op == STEP then
-        if not W.up[w] or type(arg) ~= "number" or arg < 1 or arg > W.nSteps[w] + 1 or arg % 1 ~= 0 then
+        local n = W.nSteps[w]
+        if not W.up[w] or n == 0 or type(arg) ~= "number" or arg < 1 or arg > n + 1 or arg % 1 ~= 0 then
             return false
         end
         W.step[w] = arg
@@ -284,21 +294,45 @@ local function write(w, op, arg, t)
     return false
 end
 
---- (windows design v6 §5.1, the owner-approved crossing) The core's operation `op` on APL window `key`: 1 OPEN (arg:
---- its duration in seconds, math.huge for "combat"), 2 REFRESH (arg: the duration), 3 CLOSE, 4 STEP (arg: the step).
---- Buffered as three plain values; the next Drain replays them in order before anything else. Allocates nothing.
+-- One `[vs] windowop` trace line while the core's trace is open: `word` applied, dropped or overflow (dropped at send,
+-- over the bound: never buffered, so a replay skips it).
+local function trace(word, key, op, arg, t)
+    local h = I.logger
+    if h and h.active() then
+        pcall(
+            h.write,
+            "[vs] windowop %s %s %s %s t=%.3f",
+            word,
+            tostring(key),
+            OPNAME[op] or tostring(op),
+            tostring(arg),
+            t
+        )
+    end
+end
+
+--- (windows design v6 §5.1, v6.1; the owner-approved crossing) The core's operation `op` on APL window `key`: 1 OPEN,
+--- 2 CLOSE, 3 STEP (arg: the step). Buffered as three plain values; the next Drain replays them in order before
+--- anything else. Allocates nothing.
 function VS.WindowOp(key, op, arg)
     local n = Q.n + 1
     if n > Q.cap then
         Q.dropped, Q.lastDrop = Q.dropped + 1, key
+        trace("overflow", key, op, arg or 0, I.clock)
         return
     end
     Q.key[n], Q.op[n], Q.arg[n], Q.n = key, op, arg or 0, n
 end
 
 -- Builds rows nLua+1.. from `def.aplWindows` and sizes the buffer (allocates; a build or a generation change only).
+-- Operations still waiting (a full Build: a generation change replays them first) are dropped and counted.
 local declare
 local function applyApl(def)
+    for i = 1, Q.n do
+        Q.dropped, Q.lastDrop = Q.dropped + 1, Q.key[i]
+        trace("dropped", Q.key[i], Q.op[i], Q.arg[i], I.clock)
+        Q.key[i] = false
+    end
     for w = W.nLua + 1, W.n do
         W.byKey[W.key[w]] = nil
     end
@@ -318,7 +352,7 @@ end
 --- the previous cut-off (the belief clock), each logged while the core's trace is open, an unknown key (or a Lua
 --- window's) dropped and counted; then a new `def.aplGen`, out of combat. Allocates nothing but that rebuild.
 function I.WindowOps()
-    local t, h = I.clock, I.logger
+    local t = I.clock
     for i = 1, Q.n do
         local key, op, arg = Q.key[i], Q.op[i], Q.arg[i]
         local w = W.byKey[key]
@@ -328,17 +362,7 @@ function I.WindowOps()
         else
             Q.dropped, Q.lastDrop = Q.dropped + 1, key
         end
-        if h and h.active() then
-            pcall(
-                h.write,
-                "[vs] windowop %s %s %s %s t=%.3f",
-                ok and "applied" or "dropped",
-                tostring(key),
-                OPNAME[op] or tostring(op),
-                tostring(arg),
-                t
-            )
-        end
+        trace(ok and "applied" or "dropped", key, op, arg, t)
         Q.key[i] = false -- drop the reference
     end
     Q.n = 0
