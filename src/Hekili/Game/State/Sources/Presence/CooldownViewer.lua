@@ -96,9 +96,10 @@ local mapKey, carryKey, carryU, carryS = {}, {}, {}, {}
 -- preallocated at build() to the map's keys. laid[v] visible viewer v's configured slots at that read (-1 not read:
 -- hidden, or a secret ID or index). relayout: the next sweep reads the layout: the Cooldown Manager's settings changed
 -- (OnDataChanged), or a viewer was shown (an in-combat-only one at the pull) after the client loaded the layout
--- (loaded: the first OnDataChanged); retry: the last read found no configured item while saved entries wait, so each
--- sweep out of combat reads again; editing: an edit is open (OnPendingChanges), so no read until it is saved or
--- reverted; built: the map holds the def's items.
+-- (loaded: the first OnDataChanged); retry: the last read found no configured item but a visible viewer with plain IDs
+-- (it may still fill) while saved entries wait, so each sweep out of combat reads again (all hidden: the shown edge
+-- reads); editing: an edit is open (OnPendingChanges), so no read until it is saved or reverted; built: the map holds
+-- the def's items.
 local pV, onV, carryV = {}, {}, {}
 local laid = { 0, 0, 0, 0 }
 local relayout, retry, loaded, editing, built, api1 = false, false, false, false, false, nil
@@ -485,10 +486,10 @@ end
 -- The layout read (L1113-L1115), from sweep() (relayout, or retry out of combat): every configured slot (a plain
 -- cooldownID and layoutIndex) of a visible viewer marks its id on that viewer; a viewer with a secret one (in combat,
 -- often) is not read. Once some viewer shows an item (a layout not filled yet judges nothing: retry while saved entries
--- wait), each read viewer is judged: a proof whose viewer no longer shows its id (moved or removed) is dropped; a saved
--- entry whose viewer shows some item is judged once: restored when that viewer shows the id and the id still maps to
--- the saved aura alone, else dropped. A restore is no light: the item is a proven source again (its dark counts),
--- nothing is up or down by it. Allocates nothing.
+-- wait and a visible viewer with plain IDs shows none), each read viewer is judged: a proof whose viewer no longer
+-- shows its id (moved or removed) is dropped; a saved entry whose viewer shows some item is judged once: restored when
+-- that viewer shows the id and the id still maps to the saved aura alone, else dropped. A restore is no light: the item
+-- is a proven source again (its dark counts), nothing is up or down by it. Allocates nothing.
 local function relay(api)
     local issecret = api.issecretvalue
     relayout, Q.reads = false, Q.reads + 1
@@ -517,7 +518,11 @@ local function relay(api)
     end
     local sv = api[SAVED]
     local items = type(sv) == "table" and sv.v == SAVED_V and type(sv.items) == "table" and sv.items or nil
-    retry = not read and items ~= nil and next(items) ~= nil
+    local empty = false -- a visible viewer with plain IDs shows no configured item yet
+    for v = 1, #VIEWERS do
+        empty = empty or laid[v] == 0
+    end
+    retry = not read and empty and items ~= nil and next(items) ~= nil
     if not read then
         return
     end
@@ -985,10 +990,11 @@ S.On("PLAYER_REGEN_ENABLED", nil, function()
     end
 end)
 
--- The Cooldown Manager's settings (L1113-L1115): OnDataChanged fires on every edit (saved or not, reverted too) and
--- once when the client loads the layout at login (after PLAYER_ENTERING_WORLD); OnPendingChanges (true, false)
--- brackets an edit. Registered at VS.Start (PLAYER_LOGIN), before that load, whatever the leaf's state: the handlers
--- only set a flag the sweep reads (the client runs them through securecallfunction).
+-- The Cooldown Manager's settings (L1113-L1115): OnDataChanged fires on every edit (saved or not, reverted too), once
+-- when the client loads the layout at login (after PLAYER_ENTERING_WORLD), and on spell, talent and PvP-talent changes
+-- and hotfixes (each a cheap read); OnPendingChanges (true, false) brackets an edit. Registered at VS.Start
+-- (PLAYER_LOGIN), before that load, whatever the leaf's state: the handlers only set a flag the sweep reads (the client
+-- runs them through securecallfunction).
 local function onData()
     relayout, loaded = true, true
 end

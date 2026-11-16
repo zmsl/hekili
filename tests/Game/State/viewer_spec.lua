@@ -1309,6 +1309,44 @@ describe("the CooldownViewer leaf: proof across sessions (L1113-L1115)", functio
         end
     )
 
+    it("with every viewer hidden the layout is not read each poll; a viewer shown is read at once", function()
+        local saved = provenLastSession()
+        session(copy(saved))
+        for _, name in ipairs(fake.VIEWERS) do
+            ctl.viewer.shown[name] = false
+        end
+        loaded()
+        sweep(3)
+        local r = Q.reads
+        sweep(4)
+        sweep(5)
+        assert.are.same({ r, false, false }, { Q.reads, Q.proven[501], Q.proven[502] })
+        ctl.viewer.shown.EssentialCooldownViewer = nil -- shown out of combat
+        sweep(6)
+        assert.are.same({ r + 1, true, false, 1 }, { Q.reads, Q.proven[501], Q.proven[502], Q.restored })
+        assert.is_not_nil(api[SAVED].items[502]) -- its viewer still hidden: it waits
+        sweep(7)
+        assert.are.equal(r + 1, Q.reads)
+    end)
+
+    it("a viewer showing one secret ID among plain ones is not judged: nothing dropped or restored", function()
+        session(nil) -- a live proof on the Buff icon viewer, then its ID goes secret at a read
+        loaded()
+        ctl.ViewerAura(b, "target")
+        sweep(2)
+        b.cooldownID = fake.SECRET
+        ctl.Callback(DATA)
+        sweep(3)
+        assert.are.same({ true, 0 }, { Q.proven[502], Q.unlaid })
+        local saved = provenLastSession() -- a saved proof on the Buff icon viewer, another item's ID secret there
+        session(copy(saved))
+        c.cooldownID = fake.SECRET
+        loaded()
+        sweep(3)
+        assert.are.same({ false, true, 1 }, { Q.proven[502], Q.proven[501], Q.restored })
+        assert.are.same(saved.items[502], api[SAVED].items[502])
+    end)
+
     it("a settings edit drops only the items it moved or removed; reordering keeps every proof", function()
         session(nil)
         loaded()
