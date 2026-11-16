@@ -1324,7 +1324,7 @@ describe("Exorcism's 879 ranks with the creature type hidden", function()
         H.ctl.dead.target, H.ctl.guid.target = nil, SECRET -- restricted: the range answer decides
         assert.are.same({ true }, exorcism(SECRET))
         H.ctl.ranges[415073] = { 0, 0 }
-        assert.are.same(NIL, exorcism(SECRET))
+        assert.are.same({ false, "range nil: not a valid target" }, exorcism(SECRET))
         assert.are.same({}, H.errors)
     end)
 

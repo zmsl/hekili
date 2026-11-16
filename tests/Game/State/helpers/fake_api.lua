@@ -202,6 +202,7 @@ function M.new()
         stealthed = false, -- IsStealthed (SECRET: a secret answer)
         enchants = {}, -- [weapon slot] = C_Item.GetWeaponEnchantInfo's list (SECRET: a secret answer; nil: none)
         enchantCalls = 0, -- C_Item.GetWeaponEnchantInfo calls
+        creatureCalls = 0, -- UnitCreatureType calls
         ranged = { 3.1, 30, 40, 0, 0, 1 }, -- UnitRangedDamage("player")
         damage = { 0, 0, 0, 0 }, -- UnitDamage's min and max main, min and max off (the harness's out-of-combat cache)
         classID = 0, -- UnitClass's third return
@@ -658,6 +659,7 @@ function M.new()
         return "normal"
     end
     function api.UnitCreatureType(unit)
+        ctl.creatureCalls = ctl.creatureCalls + 1
         local key = ctl.creature[unit] or "beast"
         if key == SECRET then
             return SECRET, SECRET

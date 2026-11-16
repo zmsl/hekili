@@ -3131,8 +3131,10 @@ do
             -- the library's last check. Unknown never blocks: within and outside are both true,
             -- distance and minR/maxR keep upstream's defaults.
             -- The type is not kept: a pass can span a target change (the update yields across frames). First in the
-            -- chain: the k:sub keys below build strings.
+            -- chain: the k:sub keys below build strings. Under the Map restriction (the target's GUID secret, nil
+            -- here) no type read is trusted, so none is made (L1142): unknown.
             if k == "creature_type" then
+                if not UnitGUID( "target" ) then return "unknown" end
                 local _, id = UnitCreatureType( "target" )
                 if issecretvalue( id ) or not CREATURE_TYPES[ id ] then return "unknown" end
                 return CREATURE_TYPES[ id ]
@@ -7420,9 +7422,9 @@ do
                 if not restricted then return false, "usable_on: no attackable target" end
             elseif not hostile then return false, "usable_on: no attackable target" end
             if not issecretvalue( dead ) and dead then return false, "usable_on: no attackable target" end
-            local ct = restricted and "unknown" or z[ 1 ] == "any" and "any" or self.target.creature_type
-            if ct == "any" then -- any type: the target checks above decide
-            elseif ct ~= "unknown" then
+            local ct = z[ 1 ] == "any" and "any" or self.target.creature_type -- unknown while restricted
+            if ct == "any" and not restricted then -- any type: the target checks above decide
+            elseif ct ~= "unknown" and ct ~= "any" then
                 local ok = false
                 for i = 1, #z do
                     if z[ i ] == ct then ok = true; break end
@@ -7431,7 +7433,10 @@ do
             else
                 local r, secret = C_Spell.IsSpellInRange( ability.rangeSpell or ability.id, "target" )
                 if secret then return false, "creature type unknown; range secret: unconfirmed" end
-                if r == nil then return false, "creature type unknown; range nil: wrong target type" end
+                if r == nil then
+                    if ct == "any" then return false, "range nil: not a valid target" end
+                    return false, "creature type unknown; range nil: wrong target type"
+                end
             end
         end
 

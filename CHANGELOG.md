@@ -8,7 +8,7 @@
 
 ### Fixed
 
-- Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon, so they no longer show up with no target or with a target of another type.
+- Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 
 ### Known issues
 

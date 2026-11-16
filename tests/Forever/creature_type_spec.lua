@@ -40,6 +40,32 @@ describe("the target's creature type", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- L1142: under the Map restriction (the target's GUID secret) no plain type read is trusted, so none is made: a
+    -- plain answer there reads unknown too, and the client is not asked.
+    it("restricted (the target's GUID secret): unknown, not Undead or Demon, the client not asked", function()
+        H.ctl.guid.target = SECRET
+        local calls = H.ctl.creatureCalls
+        local st = cycle("undead")
+        assert.are.same(
+            { "unknown", false, false },
+            { st.target.creature_type, st.target.is_undead, st.target.is_demon }
+        )
+        assert.are.equal(calls, H.ctl.creatureCalls)
+        collectgarbage("collect")
+        collectgarbage("stop")
+        local b = collectgarbage("count")
+        for _ = 1, 50 do
+            local _ = st.target.creature_type, st.target.is_undead, st.target.is_demon
+        end
+        local d = (collectgarbage("count") - b) * 1024
+        collectgarbage("restart")
+        assert.are.equal(0, d)
+        H.ctl.guid.target = "Creature-1"
+        assert.are.equal("undead", st.target.creature_type)
+        assert.is_true(H.ctl.creatureCalls > calls)
+        assert.are.same({}, H.errors)
+    end)
+
     it(
         "usable_on: usable on a listed type, not on another; unknown, a plain range answer confirms; no field, any",
         function()
@@ -156,8 +182,8 @@ describe("the target's creature type", function()
             restricted(true)
             range(true)
             assert.is_true(cycle(SECRET):IsUsable("hamstring"))
-            range(nil)
-            assert.are.same(NIL, { cycle(SECRET):IsUsable("hamstring") })
+            range(nil) -- no type to be wrong: the client cannot cast it at this target
+            assert.are.same({ false, "range nil: not a valid target" }, { cycle(SECRET):IsUsable("hamstring") })
             range(SECRET)
             assert.are.same(SECRET_RANGE, { cycle(SECRET):IsUsable("hamstring") })
             assert.are.same({}, H.errors)
