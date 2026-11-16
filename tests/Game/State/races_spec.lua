@@ -207,6 +207,39 @@ describe("Engine/Schema/Races.lua", function()
         end
     )
 
+    -- an aura + talent modifier with charges needs the rank for its charge as for its price (the belief's
+    -- I.SpendCostCharges alike, modifiers_spec.lua)
+    it("takes no charge from an aura + talent modifier at talent rank 0", function()
+        load("Fake", nil, { aura = "racial_a", talent = "talent_x", pct = -0.10, charges = 3 })
+        state.talent = { talent_x = { rank = 0 } }
+        local a = ability("spender_b", { id = 1012, spend = 10, spendType = "resource_a" })
+        state.buff.racial_a = { up = true, count = 3 }
+        assert.are.equal(10, a.spend)
+        ns.costMods.Spend(a.baseSpend, "spender_b")
+        assert.are.equal(3, state.buff.racial_a.count)
+        state.talent.talent_x.rank = 1
+        state.changes = state.changes + 1 -- the next reset (the cost memo's key)
+        assert.are.equal(9, a.spend)
+        ns.costMods.Spend(a.baseSpend, "spender_b")
+        assert.are.equal(2, state.buff.racial_a.count)
+    end)
+
+    -- a talent key the class does not register never applies and is read raw, not through the talent table's
+    -- unknown-key path (Sim/State.lua mt_talents logs "Unknown talent" there): a shared or race modifier may name a
+    -- talent another class has
+    it("never applies a talent key the class lacks, and reads it raw", function()
+        load("Fake", nil, { talent = "not_a_talent", pct = -0.5 })
+        local unknown = 0
+        state.talent = setmetatable({}, {
+            __index = function()
+                unknown = unknown + 1
+                return { rank = 0 }
+            end,
+        })
+        local a = ability("spender_b", { id = 1012, spend = 0.11, spendType = "resource_a" })
+        assert.are.same({ 189, 0 }, { ns.costMods.Apply(189, a, true), unknown })
+    end)
+
     it("covers every ability without `spells`, and spends a charge on a cast made free (pct = -1)", function()
         load("Fake", nil, { aura = "racial_a", pct = -1, charges = 1 })
         local a = ability("spender_b", { id = 1012, spend = 10, spendType = "resource_a" })

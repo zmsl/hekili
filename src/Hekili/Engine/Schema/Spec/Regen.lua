@@ -30,7 +30,8 @@ local mt_resource = ns.metatables.mt_resource
 -- `energize = true` a periodic energize, which ticks its own amount); `mp5Mult` (a number) the gear and buff MP5 x p,
 -- every MP5 but an `energize` entry's (wowsims mana.go:176-183 multipliedManaRegen). On an `fsr` resource they
 -- combine as wowsims does: inside the window (MP5 x p + S x m x min(c + s, 1) + E) x f, outside (MP5 x p + S x m + E)
--- x f, E the energize entries' mp5. Rate fields are no forecast event: they move out of the regen model into
+-- x f, E the energize entries' mp5; on any other resource `spirit`, `share`, `mp5Mult` and `energize` change nothing (f x
+-- (the learned rate + mp5)). Rate fields are no forecast event: they move out of the regen model into
 -- `state.regenMult` here.
 -- `fsr`'s `share` (c, 0-1) is the static casting share the learned split already holds (talents, by rank).
 -- An `fsr` `spirit` or `mp5` may be a function, read once at the build (Tracked.lua: it may name the spec's tree); a
