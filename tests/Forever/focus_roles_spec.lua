@@ -16,9 +16,8 @@ end
 local ROGUE = { "garrote=1", "rupture=1", "slice_and_dice=1" } -- Slice and Dice and Rupture sort by soonest (Rupture first since the re-pin)
 -- the melee-weave strikes (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) rotational (the user)
 -- (R51: each move arm is its own line where its move is called, at its source line's tier: the re-pin's Hunter's Mark
--- leads, Raptor Strike's and Serpent Sting's in-range lines, then the arms: Beast Mastery and Survival walk in (walk_in
--- #1 reaches Serpent Sting) before the weave (#6: Raptor Strike; #7, the move back: Serpent Sting); Marksmanship's walk
--- in is never called)
+-- leads, Raptor Strike's and Serpent Sting's in-range lines, then the arms: Survival walks in (walk_in #1 reaches
+-- Serpent Sting) before the weave (#6: Raptor Strike; #7, the move back: Serpent Sting))
 local HUNTER = {
     "hunters_mark=2",
     "raptor_strike=1",
@@ -27,8 +26,6 @@ local HUNTER = {
     "serpent_sting=1",
     "raptor_strike=1",
 }
--- 0.7 re-pin: the weave is move #4 (the shots' move back) then #5 (the strikes), so the strike line comes last
-local HUNTER_MM = { "hunters_mark=2", "raptor_strike=1", "serpent_sting=1", "serpent_sting=1", "raptor_strike=1" }
 
 -- file order of the generated simc: the Banes, Searing Pain's Demonic Brand upkeep and the curses at 2, Soul Fire on Decimation at 1
 local WARLOCK_DEMO = {
@@ -67,8 +64,6 @@ local PACKS = {
     ["Rogue/APLs/Assassination"] = ROGUE,
     ["Rogue/APLs/Combat"] = { "riposte=1", "garrote=1", "rupture=1", "slice_and_dice=1" }, -- Riposte leads (owner R70)
     ["Rogue/APLs/Subtlety"] = ROGUE,
-    ["Hunter/APLs/Beast Mastery"] = HUNTER,
-    ["Hunter/APLs/Marksmanship"] = HUNTER_MM,
     ["Hunter/APLs/Survival"] = HUNTER,
     -- the non-weave builds (ledger L661): the Turret list has no strikes; Survival Melee's Raptor Strike leads, its
     -- move arm follows the Mark, and the walk in's Serpent Sting is the group's (file order)

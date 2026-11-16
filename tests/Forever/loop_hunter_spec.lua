@@ -10,12 +10,11 @@ local pack_gate = require("Forever.helpers.pack_gate")
 local hw = require("Forever.helpers.hunter_world")
 
 -- pack, the label its line prints
-local PACKS = { { "BeastMastery", "Beast Mastery" }, { "Marksmanship", "Marksmanship" }, { "Survival", "Survival" } }
--- every pack: the weave packs, then wowsims's non-weave builds (owner 2026-11-12, ledger L661)
+local PACKS = { { "Survival", "Survival" } }
+-- every pack: the weave pack, then wowsims's non-weave builds (owner 2026-11-12, ledger L661); the Beast Mastery and
+-- Marksmanship weave packs are retired (L1154)
 local ALL = {
     PACKS[1],
-    PACKS[2],
-    PACKS[3],
     { "BeastMasteryTurret", "Beast Mastery Turret" },
     { "MarksmanshipTurret", "Marksmanship Turret" },
     { "SurvivalTurret", "Survival Turret" },
@@ -43,9 +42,8 @@ describe("the Hunter loop worlds", function()
         end)
     end
 
-    -- Gap BV: the wowsims exports carry Resourcefulness (440529) 2/2 in Marksmanship and Survival, none in Beast
-    -- Mastery; wowsims cuts the strikes' cost 60% under it (its log's 40-mana Raptor Strike). Beast Mastery carries
-    -- Efficiency (19416) 2/5 instead: 6% off (its log's 94). World and belief agree.
+    -- Gap BV: the Survival weave export carries Resourcefulness (440529) 2/2; wowsims cuts the strikes' cost 60% under
+    -- it (its log's 40-mana Raptor Strike). World and belief agree.
     it("price Raptor Strike under the builds' Resourcefulness and Efficiency, the world and the pack alike", function()
         local out = {}
         for _, pk in ipairs(PACKS) do
@@ -53,7 +51,7 @@ describe("the Hunter loop worlds", function()
             local H = headless.new({ character = C.character(), pack = C.PACK })
             out[pk[1]] = { C.resolve("raptor_strike", H).cost, H.Hekili.State.action.raptor_strike.cost }
         end
-        assert.are.same({ BeastMastery = { 94, 94 }, Marksmanship = { 40, 40 }, Survival = { 40, 40 } }, out)
+        assert.are.same({ Survival = { 40, 40 } }, out)
         -- every Resourcefulness-cut ability of the Survival kit: the world's price is the pack's (the client pays whole
         -- mana, so the world's is floored)
         local C = hw.Survival

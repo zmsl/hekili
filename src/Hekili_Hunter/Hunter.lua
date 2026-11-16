@@ -45,8 +45,7 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Beast Mastery Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
-            formerPackages = { ["Beast Mastery (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
+            package = "Beast Mastery Turret (wowsims.com)", -- the default (owner 2026-11-13, L859)
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
@@ -57,8 +56,7 @@ local spec = Hekili:NewClass("HUNTER", {
             role = "attack",
             ranged = true,
             nameplateRange = 35, -- Auto Shot reaches 35 yd
-            package = "Marksmanship Turret (wowsims.com)", -- the default (owner 2026-11-13, L859); the weave is picked by hand
-            formerPackages = { ["Marksmanship (wowsims.com)"] = true }, -- the weave was the default: a profile that never picked moves
+            package = "Marksmanship Turret (wowsims.com)", -- the default (owner 2026-11-13, L859)
             movement = true, -- the pack reads toggle.movement: the weave's move reaches the strikes (R5/R12)
         },
         {
@@ -80,8 +78,9 @@ if not spec then
 end
 
 -- Rank IDs, lowest first (the DB2's; a Forever-only row where it adds a rank), and each rank's mana cost.
+-- Arcane Shot and Summon Hawk cost 11% of base mana at every rank (wowsims e4ef929e54's spell data, CostPct 11; their
+-- logs pay 189 at 60): a fraction of the mana meta's `base`, as Multi-Shot.
 local ARCANE_SHOT = { 3044, 14281, 14282, 14283, 14284, 14285, 14286, 14287 }
-local ARCANE_SHOT_COST = { 25, 35, 50, 80, 105, 135, 160, 190 }
 local AIMED_SHOT = { 19434, 20900, 20901, 20902, 20903, 20904 }
 local AIMED_SHOT_COST = { 75, 115, 160, 210, 260, 310 }
 local SERPENT_STING = { 1978, 13549, 13550, 13551, 13552, 13553, 13554, 13555, 25295 }
@@ -90,7 +89,6 @@ local HUNTERS_MARK = { 1130, 14323, 14324, 14325, 1213268 } -- 1213268: Forever'
 local HUNTERS_MARK_COST = { 15, 30, 45, 60, 60 }
 local SNIPER_SHOT = { 1310687, 1310785, 1310786 } -- Forever-only (D4)
 local SUMMON_HAWK = { 1293241, 1293525, 1293526, 1293527 } -- Forever-only (D4)
-local SUMMON_HAWK_COST = { 80, 105, 135, 190 }
 local RAPTOR_STRIKE = { 2973, 14260, 14261, 14262, 14263, 14264, 14265, 14266 }
 local RAPTOR_STRIKE_COST = { 10, 25, 35, 45, 55, 70, 85, 100 }
 local MONGOOSE_BITE = { 1495, 14269, 14270, 14271 }
@@ -170,7 +168,8 @@ end
 -- - Efficiency (19416, 5 ranks): 3% a rank off the shots, stings and strikes (DB2 mask: Raptor Strike, Mongoose Bite,
 --   Wing Clip, Arcane Shot, Multi-Shot, Serpent Sting, Aimed Shot, Summon Hawk, and Strider Kick since hotfix 113554
 --   (wowsims: mask word 2 8192 -> 2105344); not the traps, Hunter's Mark, Rapid Fire or the aspects). The DB2 carries
---   the 5/5 -15; wowsims's data `19416: {{-3, -6, -9, -12, -15}}`.
+--   the 5/5 -15; wowsims's data `19416: {{-3, -6, -9, -12, -15}}`. Sniper Shot takes it too, as wowsims's Marksmanship
+--   logs show (321.2 of 365 under 4/5), though our DB2 mask lacks it: wowsims over the DB2.
 -- wowsims's logs: 2/2 Resourcefulness pays 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap; 2/5
 -- Efficiency 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting.
 local RESOURCEFUL = { 0.3, 0.6 }
@@ -247,7 +246,7 @@ local function shares(other, hawk)
     end
 end
 
--- A `now` or `handler` that applies `key`: debuff on the target (`debuff` true) or buff on us; or removes buff `key`.
+-- A `now` or `handler` that applies `key`: debuff on the target (`debuff` true) or buff on us.
 local function applies(key, debuff)
     return function()
         if debuff then
@@ -255,11 +254,6 @@ local function applies(key, debuff)
         else
             applyBuff(key)
         end
-    end
-end
-local function removes(key)
-    return function()
-        removeBuff(key)
     end
 end
 
@@ -297,6 +291,19 @@ local function stings()
         applyDebuff("target", "serpent_sting")
         if talent.rapid_recuperation.rank > 0 then
             applyBuff("rapid_recuperation")
+        end
+    end
+end
+
+-- Mongoose Bite spends its window; with Lacerating Strikes (1310533) it bleeds the target (1310536, 21 s), a new bite
+-- replacing the bleed on a new timer (wowsims e4ef929e54, 774fc188dd). shortcut: the bleed starts at the cast, so a
+-- missed bite keeps it in the belief (no landed signal reaches a melee hit on live; no list reads it); upgrade with a
+-- landed signal if a list reads the bleed. A new function each call: an ability's `now` must not be its handler.
+local function bites()
+    return function()
+        removeBuff("defensive_state")
+        if talent.lacerating_strikes.rank > 0 then
+            applyDebuff("target", "lacerating_strikes")
         end
     end
 end
@@ -407,7 +414,8 @@ spec:RegisterAuras({
     -- Rapid Killing's buff (415407, a kill proc: +20% on the next Shot, 20 s, one charge), Sniper Shot's (1310786: 10 s,
     -- three charges, +10 yd range on the Shots), Expose Prey's Mongoose Bite window (1310726: 10 s, one charge), Strider
     -- Kick's speed (1317257, 3 s), Lacerating Strikes' bleed and Immolation Trap's burn (target debuffs, from our casts):
-    -- registered as the pin states them (wowsims sim/hunter); no list reads them, so only the burn has a handler.
+    -- registered as the pin states them (wowsims sim/hunter). The kick's speed (Survival Melee's run out for the Sting
+    -- reads it), the bleed and the burn have handlers; the rest no list reads.
     rapid_killing = { id = 415407, duration = 20, max_stack = 1 },
     sniper_shot = { id = 1310786, copy = { 1310687, 1310785 }, duration = 10, max_stack = 3 }, -- the Cooldown Manager links all three
     expose_prey = { id = 1310726, duration = 10, max_stack = 1 },
@@ -717,7 +725,7 @@ spec:RegisterAbilities({
         end,
         gcd = "spell",
 
-        spend = discounted(cost(ARCANE_SHOT_COST, ARCANE_SHOT), false, true),
+        spend = discounted(0.11, false, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -736,7 +744,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = discounted(cost(SUMMON_HAWK_COST, SUMMON_HAWK), false, true),
+        spend = discounted(0.11, false, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -799,7 +807,7 @@ spec:RegisterAbilities({
         cooldown = 15,
         gcd = "spell",
 
-        spend = 365,
+        spend = discounted(365, false, true), -- Efficiency, as wowsims (the cost cuts above)
         spendType = "mana",
 
         startsCombat = true,
@@ -856,11 +864,12 @@ spec:RegisterAbilities({
             return buff.defensive_state.up, "only usable after dodging"
         end,
 
-        now = removes("defensive_state"),
-        handler = removes("defensive_state"),
+        now = bites(),
+        handler = bites(),
     },
 
-    -- Forever-only (D4): 5.81% of base mana (DB2 PowerCostPct): a fraction of the mana meta's `base`.
+    -- Forever-only (D4): 5.81% of base mana (DB2 PowerCostPct): a fraction of the mana meta's `base`. Its speed (1317257,
+    -- 3 s) comes with every kick, hit or miss (wowsims talents_survival.go).
     strider_kick = {
         id = 1317257,
         onCrit = resourceful, -- Resourcefulness at 2/2
@@ -873,6 +882,9 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows({ 1317257 }),
+
+        now = applies("strider_kick"),
+        handler = applies("strider_kick"),
     },
 
     wing_clip = {
@@ -1321,16 +1333,6 @@ spec:RegisterWindow("hha", {
 -- run it, never this block (tests/Forever/hunter_spec.lua checks it matches). Each pack's .simc is generated from its
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/hunter_*.lua).
 spec:RegisterPack(
-    "Beast Mastery (wowsims.com)",
-    20261114000,
-    [[Hekili:LVvBpoQnq4Fl7xstu3sEz396DRAwPEQT6UQERQA2(vioytWnagHnB6kDk)27yscX4eioa5KQ4l7sGzEMhp2EMHXc7X2VypdJee7NNmAY7gpE89JgnYEM4TyI9SyK7k0s4Iiui83psqCXM5Fb(lj5TnZ7VMTMtd5wUSWbsPFlGHWsexKsdeFoYEXjbNhtCTN9P)(5x(1)6XfsqDc3IP9mFkgt2QiH7EgB(4M5cFYM57U3qpwc5vsYM5yIhkna07N)Z)yZC42BMFeqP0HsIWh6Ngb3AioMpuYBm8VqN1e0Rela1Gb3cwjbfXdGrcgUMjTkLVzocJzrFhCXkYBCRnZ)fKa94jyt)V85xaq8fIy(JdhUKk8txihad1eDaGjWrYdOp4INGMG9CTa)AcZJga(FKRGYI4wXjeq5fiXuxuqGtmrCl1B6nW)DyPIEYlSWeeU3ncuajsyfWIioRzbEwKi0Iayu87hH13pDiWb6RK94ThLtl7wNghM4swLzDmzrQNNL69TsJpTYiPJhiRNdm954JwVfImao(zQW08r85hNsjqXuSJhnHCBkNaKXZzPlE6yP8cuYsqfWUCkM8qpbnK800huvNeKgr4ob0L(ItaWwf6PbKkalcymW(PjVvp1HzasYkA0YAQoxqrboRtqc)AHaMeYIOUojGFOwaeI(hwcSikc5eZK3SwOuyrQhZnLpDIjlw3UcqamGlsOR0hcBrsDXWAylnnQGTLAIjjoROURQwsWvTKXalSGkivlknmKbHHGF5aHKIRw41W8VJBantS(3S9bwQ8YAveBD0x7x6J65Yyby4IIplHeIOr8NgB9WGb9QWhqsIHDJGxuUuuXTTFcOGaWmG2K57lawkm4JYJwaJoGyw((iRiY)kSuESQwOexeekG7ZeNslLhxLTdHKj0CqQqWkdCWwUmGyfYELecd6E9LorFue2zN)8NYVbedKG)b5k8E9VPF(CNcB3n1DIhqJCGSvljd61VF2fhWF6OVw8opnDViBTyXFvu2bdgORDbPhbcmObrd7aENloeFxZNysERoNpXSKXDm3IHvy0X8kxsztDmxtnQfPJ5HUKsL6yUgT6)6yJ(lPO2B6RtSI8sZZO75AZkiBmvAA5ATlbQrTrTmbQvHiTkhQxw)wLcnifBRYJMNpRvPtdsE0Q8O6i1TQPmTfrACOzmOYwmD1S0XTO6QzQt1IRRMX(M1ISR2iqBFx(q4q3W2rZJAAL9SxHukGWANotaLl4zhl02drbU85SJjAxN0T)4(tIWE2(UXdxLaRmsOi7zxsx5TfGXlb7dDPxf99yk18onnv2ckP8bKYRFrfPs6JVe47ney16ska9PBnTe6hme6d1ByiWVZuGZRJWqG)rJbwP(adX(9gITAEFdH(dgc9r5Zne)XJ0mGYoGtF8chSP6dSNLLRqUpqIQ(oTJwVURn75QnUY19hsqLHEz71udDvHnLqOVPl3pQMI4myOV)ApgAX(pdk6BL2JsEqDv9Rk4EJJUFm303nE8IJZD0hktoQsQmVlTJ(MZCDoe)x14vCOjzWPVFCpCkzzQcUkonLm413tMV2jVOTYdqNHWe9nDxyi)RWlUF5V5EdF19Z)U7QPYMOhqP25Y6g(UmFMEyYAMKUd5XmTuSZu9rhYJzAnMNVSQoKtZ0QNpB9IDiFMPVyGzfc3HCC61wzsnCDe3Jj1MoPnlMSJ4xLUTlSi5UJN5U2T4)g3ly1YSV7AvMDJzzg7Uof02oC76u6y7WTRwrATd9UwLd1oS7Qw4r7qXwifFZjIjjtV7kMmT5JajbBwARwHd3xElzB3dGPwnF9(YoeLsB(A7YzjfkR)VL3822NdL1a5QA(B7ZIYAb93(Mh3(JTYAmEjXkm(mdbWfYphPDFip2)V5Gb3RzXZD54G96hyJ44Jcm3xY1)mLkay5FktzorG5OuHplXE2NiROb0nZ7)B7(gWYES9)n]]
-)
-spec:RegisterPack(
-    "Marksmanship (wowsims.com)",
-    20261114000,
-    [[Hekili:vN17VTTnq0)wYx8SXYKJDR7sdGlWg2gAhwdgM7(QKPfPK4mLOajvmcWG(BFhLTCOPLKzvSkW(scT0DV7XFCV7iK)m)V4VcJue)hNF383nB2S3E3D35Vs9CoXFvokClkggKHsH)(zKyRmfLjtO5LRhVJVtstLEH80jABFMXrynEBkOm1NY830i0YCsO)Qp(3p(LF9VEi1as)vjumMS3pImSZa(q5AvcPC9HNnnIlipreLRXKiubtvU(N(Z)OCn84Y1wWuqNQ5GCAsrMIiMIZLt1uglNMMgSJGEI4byYMCledb4gdMeyymxhtQSCncJ5zFhmyl5zPx56FbPqp0axg)5p9faKeLkx(W0PXuvsXgn9NAz6eatGYKfO3hINJMJJc9GLubpIYGfEuOIYZKE5cc48gKAziIXcYjQBPrlVb(FaVqnspWdtq4r3OqmsMYJXZib74SipsgAddMf)(zy99lNcCG(ePgVAuA229lAYa9oxv0XKnfrrEMp3RiVzNr6fEGSrbWMxqcA3EiQa483zcZRFgF55P2cuofherfKBlKeGmrbXH4LZ02RqIyWfiUskMSW0ncRiJidy04evdostjFy5IrDaWggNdXTq8C)Chw5jIT0S4E5oMKYZOHbcyw0lasr)dxaB9zOGCU(H9cLtoAfXdlKlN7YrS97BkGbsLGU1EkShjZTWDqIin7KyR9etebBPHB72syPkMZHiSHQiDBknnLdIhWVcaHK8UnEhS7feYOvMn(M9VWZKxEBZ47Y(3XT(QrHCodddo9DcskIMj)WmVftMmQJ1aIihYHGvr9bjJLT6nGtma2bS2mV3emKiebPIYeU68KNtSmfKRPUyyNjN84ygXlL)ejfO4OBgdk3XeCq9KF5HFdQme8pmw)Weuw9Vp(ZdMpzspsVhsk4KaXGsaxKygsc4Oi1qsHVgzUHKh9irDiPJDQ(qgllXIHmuUwtXIdVog0znPblsNxtBWcvt1ehSG9nRM6vEg4VcUuGeiK1DNyuPswDLT93Ybg(y1v4o0SR)pxFzb)v1nmdJeWUQGI8x9104SVccEly)sJ0MOxJP2Z3y5Pr6JMYVG0XA6Miz1KOgW36iGM1QpbYM7)ud9chH(LAWoc87Cf4J1wDe4F0rGnRz6i037i0Nvl0r8FVf(ghoBUn)xcP5l8xvjbRpIcGo7Uwr902Dp62Sops(IUFf6TLIzQi0rm1q0wM0jkVxad7CQAmSKuVak2js1OCuR00)U0mF1IMNZn7mXZpCCPRGyS5yAPX(Uoo2jM1(y0jt7Yr3xbHDk4Xn0JnOCjeCntRfjYRDRpvCYo7S3QSdb7MBNL3tH6bHB2Ae9uRFq4MT4tVlxmiSZ1wfCRIZGqrBntx0LU6eXfLT52kOxsz7QZsnjAtETfTXbHd26ZThVxx06vhfZT1(VyhfxxoRPGTu)L7i5QZH3ylO7shnxFw0w7DF77i6Ap3u6pI0Hp)Y)FURyZ97F5lk0WTepk)jT)4sNay7FaQQfrG5Ocvcx4V6JKTugTC94F7WxUR61()3p]]
-)
-spec:RegisterPack(
     "Survival (wowsims.com)",
     20261114000,
     [[Hekili:LVvBpoQnq4Fl7xsjQBjVS7EDVvnRuRARURQDv1X2VcXbBsCdGrytIwPt53EhtcjgNqIdWEsv8LDDGzEMhp2EMHje3rUV66GrcI7lJho(dJgn6(Hdh66iElH46KG8xIMddIrrWFDYsxrxHc3m1AnBnNgXT9zr9LY9widHLynlJgk(CS7StclpH4768P)5Lx)TV8eFhCUolOymzRoeUFLg6PntfliBMU7AdcyPKvK0ntXKauwOyZ0F(V)ZntHlVzQcez0bs7YhSilwqshGt4dK0eZhWx5TMGwrSb8c7FlGFkkMhcehdJzs7r5BMIWyw83bdwsEJBVz6VIeONobpS(Rp)kaYcHiH)0GbZPIfzZKuFGMO9bmb6sEa9rF8y0yCGVn4gtzb0qWrJ8fuwm3ojLakpdjM4Jcd9siIBPbtUb(Vhlt0toWgtq4E3iqHKyHDilM4TMfgytIrZcHzXFCewF)KbahORif4vGYPLDRtJ7fHsxMBDmzwwqGT61TZsoTYiPJhiBGhSW5TaTEle5aC89uHP5Z4lppLsGsOyVaAk52mobitG3CF8Krs5fO05GkGD5um5HEcAe55jpOQojmlMW9cPZxiobaBvONgqQamlKXa7NL(w9uhwbiPlPXZRL6yselM67LcZIAbqe6FzPWwGyKxctEXAHsPTybm)m(KXMSvB76NayaxKsxQpf2IK6s5A4ajnUKTLAIjPElP(lpVKGRAoJbwygvqoVO0Oigeeb(Kheqj58cVgw988dP5IzDZ2ByRYl7LXS1XF1QYB1ZNXcXWGY3lLeHOX8Nhz)q)(9oJpGKMaNLaVOCJKIBRybOKaWkG2I5JQGHs9rWrs(cM44drLKmccztnrWZEiLnFEiXoITIebuSNLCkVafJ92n7)P9xaI3qW)GC)ypRBS27Pvi8oh9jUbn2dYmmN0VNLv(Gd4pz4xlFLNNuiYwlw(tLLTF)(6Axs6HGa9BqKNoG35QdN218jMKJOJ5tmmXxhZRCnzZ7yUMAKISJ5H0Z73XM(AfZ0XM9xtfA3yPtSY8sZZO75AZYHAmvAAThTlbQrI(wLa1lRARsHgKcRv5rZZx0Q05cbNBvBD(iHTQPm9P)14qZyWz7EW7MLoU7dVBM6uDV4DZyFZ6(rlpdCDwbHBbcP1H7qkxWZBQ(2EsddFjVj77ApP7Vu0ExxNIwCcJsHv1ukY15AA1PRamEfyFO1NQOxGPuZ700u54JKYhqAFUDvKQO5OsGV3qGvZzxc6t3Xqj0pyi0hYfBiWFWuG3NJ1qG)rdbwn3PHq)OHqFuordX)JA4RSj90nM9GjvVHRtEOy5wva0rdRe1YnOCVAJo7wZdX)ZrVQJAQrgoJnLqu1jQsrGVag6NTkWql06fqr)Gubk7JzQQ)5ID24GNhZn9tIhV54snnwzXrvsL1DPD0pywOJsfnvhw6XCi0pcUFbDFHkxcbtpPvrOY3Hhg86FAWg(4Gx(5bvtbmsp2rTZb0n8D5zY1JmwZKBDipME0(AM1Ud5X0tUv7Yr6q(mtlu2S6S6qoo96xmPgHoI7XKAFgRxJ1LQ9PJ47KUMQklSIA66qEgtFGtZQvTXTRtTQWXMwh91wvyJzzo7mTM1RR(RwHB3zCTHxvLoTd3mTkSRTMI2HDMwXtTYE3ouuVaJAKNS5eXKms3vvhjmmJuZzPKevLw0Sy)Tdh0Z)uT9AM1QvxWURQoEuzxWAxolPGEO(9lsv2fT2Nd6b0l4W56cxRZI71dDxWIV9DXRTNBc5RS(Ux2B3)389CuOz5EuFCmx9MBlo(B2yF4pU(RYEjaR(1Dp3jcmhLjwWsDD(ezjnKUzQ1VV73jq(TD)V]]
@@ -1358,3 +1360,6 @@ spec:RegisterPack(
 
 -- The hand-built lists the wowsims.com packs replaced: a saved choice of one falls back to the spec's default.
 spec:RetirePacks({ "BeastMastery", "Marksmanship", "Survival" })
+-- The Beast Mastery and Marksmanship weave packs, whose wowsims builds are gone (upstream PR #1041; owner L1154): a
+-- saved choice of one moves to the spec's default, its Turret pack, with the one-time retired notice (RestoreDefaults).
+spec:RetirePacks({ "Beast Mastery (wowsims.com)", "Marksmanship (wowsims.com)" })

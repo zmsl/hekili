@@ -45,7 +45,7 @@ describe("LibRangeCheck-3.0 in the headless client", function()
 
     -- Hekili Forever's library patch (upstream PR pending): a minimum-range spell (Auto Shot 8-35) adds a "within
     -- minRange" checker, so the library marks 8 yd beside its 5 and 10 yd items.
-    for _, name in ipairs({ "BeastMastery", "Marksmanship", "Survival" }) do
+    for _, name in ipairs({ "BeastMasteryTurret", "MarksmanshipTurret", "Survival" }) do
         it("gives a " .. name .. " Hunter's target an 8 yd edge from Auto Shot's minimum range", function()
             local C = hw[name]
             local H = boot(C.character(), C.PACK)
@@ -69,7 +69,7 @@ describe("LibRangeCheck-3.0 in the headless client", function()
     it(
         "adds the within-minRange checker to both checker lists; a spell with no answer defers to the next-larger",
         function()
-            local C = hw.BeastMastery
+            local C = hw.BeastMasteryTurret
             local H = boot(C.character(), C.PACK)
             local lib = H.env.LibStub("LibRangeCheck-3.0")
             at(H, 6) -- a read builds the checker lists (the library's init)
@@ -101,7 +101,7 @@ describe("LibRangeCheck-3.0 in the headless client", function()
 
     -- getRangeWithCheckerList binary-searches the list: within a smaller range must imply within every larger one
     it("keeps every harm list monotone whether Auto Shot answers in range, out of range or nothing", function()
-        local C = hw.BeastMastery
+        local C = hw.BeastMasteryTurret
         local H = boot(C.character(), C.PACK)
         local lib = H.env.LibStub("LibRangeCheck-3.0")
         at(H, 6)

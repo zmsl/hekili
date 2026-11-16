@@ -27,7 +27,7 @@ On every update the forecast copies the windows as they stand. Lines and simulat
 | `window.<name>.step` | number | The step that is due, from 1; 0 when closed or not stepped | `window.hha.step=3` |
 | `window.<name>.next.<key>` | boolean | The window is open and its due step is the ability `<key>` | `window.hha.next.summon_hawk` |
 
-From Beast Mastery (wowsims.com):
+From Beast Mastery Turret (wowsims.com):
 
 ```simc
 actions+=/summon_hawk,if=window.hha.next.summon_hawk
@@ -66,7 +66,7 @@ As of the current release, no built-in priority opens or closes a window with a 
 
 | Window | Class | Covers | Read by |
 |---|---|---|---|
-| `hha` | Hunter | Beast Mastery's sequence of Summon Hawk, Summon Hawk, Arcane Shot, repeated for the whole fight | Beast Mastery (wowsims.com) |
+| `hha` | Hunter | Beast Mastery's sequence of Summon Hawk, Summon Hawk, Arcane Shot, repeated for the whole fight | Beast Mastery Turret (wowsims.com) |
 | `weave` | Hunter | The moment after a ranged shot in which a melee strike fits before the next shot | No built-in priority |
 | `move1`, `move2` | Paladin | Retribution's opener: Judgement, then a seal, from the pull until the first melee swing | Retribution (wowsims.com) |
 | `riposte` | Rogue | The 5 seconds after a parry in which Riposte can be used | The class pack, to decide when Riposte is usable |

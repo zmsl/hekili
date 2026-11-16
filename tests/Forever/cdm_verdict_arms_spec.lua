@@ -49,13 +49,13 @@ describe("the CDM verdict's harness arms #slow", function()
         end
     end)
 
-    -- the truth check (loop.verdictTruth) on the retarget gap: Marksmanship's pre-pull Hunter's Mark (0.2 s) falls
+    -- the truth check (loop.verdictTruth) on the retarget gap: Marksmanship Turret's pre-pull Hunter's Mark (0.2 s) falls
     -- between the prepull's read (0.1 s) and its retarget (0.205 s); the retarget re-reads it, so the item stays lit and
     -- the verdict does not close it at the pull of fight 3 (before the observer fix: verdicts 0/1 wrong 0/1)
     it("viewer-reshuffle: a pre-pull debuff stays lit over the prepull's retarget, no wrong close", function()
         local hw = require("Forever.helpers.hunter_world")
         local function layout(arm)
-            local L, line, check = loop.new(hw.Marksmanship), nil, ab.check
+            local L, line, check = loop.new(hw.MarksmanshipTurret), nil, ab.check
             ab.check = function(ok, label, l)
                 line = label == "layout" and l or line
                 return check(ok, label, l, "default")

@@ -633,8 +633,6 @@ beside the number (DEVELOPMENT.md).
 | Protection (wowsims.com), Paladin | 0.95 | 0.43, 1 |
 | Enhancement (wowsims.com) | 0.96 | 0.38, 34 |
 | Elemental (wowsims.com) | 0.89 | 2.20, 3 |
-| Beast Mastery (wowsims.com) | 0.95 | 0.46, 28 |
-| Marksmanship (wowsims.com) | 0.98 | 0.32, 22 |
 | Survival (wowsims.com) | 0.94 | 0.29, 22 |
 | Arcane (wowsims.com) | 0.95 | 0.76, 9 |
 | Fire (wowsims.com) | 0.96 | 0.45, 10 |

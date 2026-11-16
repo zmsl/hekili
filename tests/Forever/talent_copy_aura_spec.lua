@@ -11,7 +11,7 @@ local CASES = {
     { "shaman_world", "Elemental", "elemental_devastation", 30160 },
     { "paladin_world", "Protection", "redoubt", 20127 },
     { "paladin_world", "Protection", "reckoning", 20177 },
-    { "hunter_world", "Marksmanship", "sniper_shot", 1310687 },
+    { "hunter_world", "MarksmanshipTurret", "sniper_shot", 1310687 },
 }
 
 describe("a talent's spell an aura lists as its copy", function()

@@ -2896,17 +2896,37 @@ describe("the wowsims APL translator's auto-attack clocks", function()
         end
     )
 
-    -- The converted weave build (re-pin e2842f0a78's bm_weave.siml, Task 19's request), its timing variables read by
+    -- The converted weave build (re-pin e5a9cd2a2d's bm_weave.siml, kept as a fixture: the build and its Beast Mastery
+    -- (wowsims.com) pack are retired, L1154), its timing variables read by
     -- a line each: "Windup close" on the ranged clock (the time since inside math as speed - remains), "Just shot"
     -- from the weave window (the recipe's windowVars; folded false at input delay 0), and "Weave fits" on the clocks:
     -- its "Weave done" keeps its timing addends, the walk times (yards over the run speed) drop alone (R17 refined).
     -- No walk term reaches the text; the build's waits and waitUntils give no line -- (decision 9).
     it("translates bm_weave's timing variables on the clocks and the window, no walk term, no wait line", function()
         local json = require("dkjson")
-        local f = assert(io.open("tests/Forever/wowsims/hunter_beast_mastery.build.json", "rb"))
+        local f = assert(io.open("tests/Forever/fixtures/hunter_bm_weave_e5a9cd2a2d.build.json", "rb"))
         local player = json.decode(f:read("*a")).player
         f:close()
-        local r = dofile("tools/wowsims/specs/hunter_beast_mastery.lua")
+        -- the retired recipe's translation fields (tools/wowsims/specs/hunter_beast_mastery.lua at e5a9cd2a2d)
+        local r = {
+            class = "HUNTER",
+            pack = "Beast Mastery (wowsims.com)",
+            spec = "beast_mastery",
+            name = "Beast Mastery",
+            map = {},
+            focus = { raptor_strike = 1, hunters_mark = 2, serpent_sting = 1 },
+            ranges = {
+                raptor_strike = { 0, 5 },
+                mongoose_bite = { 0, 5 },
+                strider_kick = { 0, 5 },
+                wing_clip = { 0, 5 },
+                arcane_shot = { 8, 35 },
+                multi_shot = { 8, 35 },
+                serpent_sting = { 8, 35 },
+            },
+            leveling = { "arcane_shot,if=!action.summon_hawk.known&target.outside8" },
+            levelingFirst = { "call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled", "revive_pet,if=pet.dead" },
+        }
         local set = require("Forever.helpers.engine").abilitySet(r.class)
         local rotation = { valueVariables = player.rotation.valueVariables, priorityList = {} }
         for _, name in ipairs({ "Windup close", "Just shot", "Weave fits" }) do

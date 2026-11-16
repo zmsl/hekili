@@ -5,6 +5,10 @@
 ### New
 
 ### Changed
+- Hunter: the Beast Mastery and Marksmanship weave priorities are retired, because wowsims.com no longer has them. If you had one selected, you now run that spec's Turret priority, and Hekili tells you once.
+- Hunter: Arcane Shot and Summon Hawk now cost 11% of your base mana at every rank, as wowsims.com prices them (not yet checked in game).
+- Hunter: Sniper Shot's mana cost now includes the Efficiency talent's discount, as wowsims.com charges it (not yet checked in game).
+- Hunter: Hekili now tracks Strider Kick's speed after your Strider Kick, and Lacerating Strikes' bleed after your Mongoose Bite.
 
 ### Fixed
 

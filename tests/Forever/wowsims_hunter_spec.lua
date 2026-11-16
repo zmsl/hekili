@@ -79,37 +79,7 @@ local REPLAY = { hidden = { [1310726] = true } }
 -- travel time (W.distance / 40, belief and world), which moves its recasts and so the one 120 s fight's mana timeline:
 -- the worst streak dries out at 12.1 (was 14.5), 1.8 (14.7) and 1.8 (4.8) mana and waits for Arcane Shot's cost.
 local PACKS = {
-    {
-        "hunter_beast_mastery",
-        "BeastMastery",
-        "Beast Mastery (wowsims.com)",
-        0.95,
-        { [10] = 6, [40] = 7.8, [60] = 12.2 },
-        -- ON flicker 0 -> 1.0 (CN8 D2, 1.00 measured, the same with steady icons off): the not-ready flag keeps the
-        -- modelled end, so Multi-Shot (n147) and Blood Fury (n631) lead for the tick before the log casts them; under the
-        -- old probe their last 0.5 s read 0.50 and never led. A replay has no press exclusion (the log presses)
-        -- 0.7 floors (e5a9cd2a2d, steady icons on): 1.0 -> 3.4 (3.33 measured = 10 flips in the 180 s fight, the same with
-        -- the v0.6.2 melee-range fix merged). Traced per tick (ticks 37, 127, 146, 169, 227, 249, 374, 729, 769, 791): the
-        -- first icon sits on the weave filler (wing_clip, immolation_trap) and bounces for ONE tick to the ability the log
-        -- casts within the next 1-2 ticks (summon_hawk x5, multi_shot x3, immolation_trap/wing_clip x2), then back until the
-        -- log's press lands: the same lead-before-the-log-casts mechanism as the CN8 note above (a replay has no press
-        -- exclusion); the new weave's strike/filler lines make it more often than the old weave's
-        3.4,
-    },
-    {
-        "hunter_marksmanship",
-        "Marksmanship",
-        "Marksmanship (wowsims.com)",
-        0.98,
-        -- live L40 7.6 -> 10.0 (Lane R2, controller-accepted): Resourcefulness opens only at an ability's crit now
-        -- (the export's crit share), so the fight's worst OOM wait can start with it down: 5 s at 0 regen while casting,
-        -- then the outside rate to the next shot's cost; the belief tracks the truth within 3 mana throughout (traced)
-        { [10] = 6, [40] = 10.0, [60] = 15.4 },
-        -- 0 -> 1.0 (1.00 measured = 3 flips; same with the v0.6.2 range fix): traced per tick (131, 429, 469): one-tick
-        -- bounce of the filler (wing_clip, immolation_trap) to arcane_shot / strider_kick, which the log casts 1-2 ticks
-        -- later: the replay's no-press-exclusion lead (BM's note)
-        1.0,
-    },
+    -- (the Beast Mastery and Marksmanship weave rows: retired with their packs, L1154)
     {
         "hunter_survival",
         "Survival",
@@ -237,8 +207,8 @@ describe("the Hunter replay at 20 yd #slow #wowsims", function()
     it("knows the target's range at the pull and reads the melee strike out of range", function()
         local loop = require("Game.harness.loop")
         local replay = require("Game.harness.replay")
-        local spec, pack = "hunter_beast_mastery", "Beast Mastery (wowsims.com)"
-        local C = ws.logged(content(spec, W.BeastMastery, pack, 60, REPLAY_EXTRA), spec)
+        local spec, pack = "hunter_survival", "Survival (wowsims.com)"
+        local C = ws.logged(content(spec, W.Survival, pack, 60, REPLAY_EXTRA), spec)
         local L = loop.new(C)
         local o = ws.replayOptions(C, spec, REPLAY)
         o.distance = 20
@@ -247,7 +217,7 @@ describe("the Hunter replay at 20 yd #slow #wowsims", function()
         loop.replay(L, R, {
             duration = 2,
             on = function(_, _, t)
-                if not seen and t >= R.pull and t < R.pull + 0.5 then -- the log's first move is 0.51 s in
+                if not seen and t >= R.pull and t < R.pull + 0.5 then -- the log's first move is 0.71 s in
                     seen = {
                         H.ns.VirtualState.TargetRange().basis ~= "unknown",
                         H.Hekili.State.action.raptor_strike.in_range,
