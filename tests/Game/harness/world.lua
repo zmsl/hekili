@@ -467,11 +467,13 @@ function M.new(seed)
     --- `e`'s pet regenerates `regen` a second from now, `tick` s at a time (its own declared rate).
     function W.startPetRegen(e)
         local p = e.pet
+        local t0, k = W.t, 1 -- indexed: t0 + k x tick, never a running sum (L606)
         local function step()
             W.petGain(e, p.regen * p.tick)
-            W.at(W.t + p.tick, step)
+            k = k + 1
+            W.at(t0 + k * p.tick, step)
         end
-        W.at(W.t + p.tick, step)
+        W.at(t0 + p.tick, step)
     end
 
     --- `e` changes form (after the shift's own cast): `sh` { form, speed (the main hand's new period; default
@@ -555,6 +557,7 @@ function M.new(seed)
         for pt, f in pairs(fsr or {}) do
             W.fsr[pt], W.rates[pt] = f, 0
         end
+        local t0, k = W.t, 1 -- indexed: t0 + k x every, never a running sum (the loop's polls meet it bitwise, L606)
         local function step()
             for pt in pairs(W.rates) do
                 local r = e.res[pt] or { cur = e.power, max = e.powerMax }
@@ -563,9 +566,10 @@ function M.new(seed)
                     W.emit({ kind = "regen", src = e, pt = pt, rage = add })
                 end
             end
-            W.at(W.t + every, step)
+            k = k + 1
+            W.at(t0 + k * every, step)
         end
-        W.at(W.t + every, step)
+        W.at(t0 + every, step)
     end
 
     --- `e`'s out-of-combat decay of power type `d.pt` from now (call it at the combat's end): `d.rate` a second, stepped

@@ -57,6 +57,37 @@ describe("the headless loop, class-neutral", function()
             assert.are.equal(0, m.focus) -- no pack, no flagged record
         end
     )
+
+    it("polls on an indexed clock, t = n x tick, no running sum (L606)", function()
+        local stub = {
+            character = function()
+                return { level = 60, power = { type = PT, token = TOKEN, max = 100 } }
+            end,
+            resolve = function()
+                return {}
+            end,
+            usable = function()
+                return {}
+            end,
+            uptime = function()
+                return {}
+            end,
+            gain = function()
+                return 0
+            end,
+            WORLD = { level = 60, max = 100, mobHealth = 1e9 },
+        }
+        local polls, last = 0, nil
+        loop.tally(loop.new(stub), 1, {
+            duration = 90,
+            on = function(run, _, t)
+                polls = run == last and polls + 1 or 1 -- each run (A, B) polls from its own 0
+                last = run
+                assert.are.equal(polls * 0.2, t)
+            end,
+        })
+        assert.is_true(polls > 450)
+    end)
 end)
 
 describe("the headless loop's CPU metric", function()

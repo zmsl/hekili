@@ -167,6 +167,40 @@ describe("the world's resources", function()
         assert.are.same({ "regen", POOL }, { last.kind, last.pt })
     end)
 
+    it("ticks regen on an indexed grid, so a tick on a poll always lands in that poll (L606)", function()
+        setup()
+        W.startRegen(us, { [POOL] = 0.001 }, 0.1) -- never capped over the run
+        local regens, seen = 0, 0
+        for n = 1, 1000 do -- polls at n x 0.2 (the loop's own indexed clock), 200 s
+            W.run(n * 0.2)
+            for i = seen + 1, #W.truth do
+                local ev = W.truth[i]
+                if ev.kind == "regen" then
+                    regens = regens + 1
+                    assert.are.equal(regens * 0.1, ev.t) -- t0 + k x every, no running sum
+                end
+            end
+            seen = #W.truth
+            assert.are.equal(2 * n, regens)
+        end
+        assert.are.equal(1000 * 0.2, 2000 * 0.1) -- the two grids meet bitwise
+    end)
+
+    it("ticks the pet's regen on an indexed grid (L606)", function()
+        setup()
+        us.pet = { up = true, power = 0, max = 1e9, regen = 1, tick = 0.1 }
+        W.startPetRegen(us)
+        local k = 0
+        W.emit = function(ev) -- the pet's power events, timed
+            if ev.kind == "petPower" then
+                k = k + 1
+                assert.are.equal(k * 0.1, W.t)
+            end
+        end
+        W.run(200)
+        assert.are.equal(2000, k)
+    end)
+
     it("runs wowsims's spirit multiplier and capped casting share while an fsr aura is up", function()
         setup()
         W.startRegen(

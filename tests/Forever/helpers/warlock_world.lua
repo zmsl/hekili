@@ -540,13 +540,15 @@ local function sacrificeOn(W, e, id)
     W.applyAura(e, id, 7200, 1, 1)
     if id == 18792 then -- Fel Energy: 2% of the pool every 4 s while it is up (DB2 aura 21; wowsims talents_demonology.go)
         local a = e.auras[id]
+        local t0, k = W.t, 1 -- indexed: t0 + k x 4, never a running sum (L606)
         local function step()
             if e.auras[id] == a then
                 W.emit({ kind = "gain", src = e, pt = MANA, rage = 0.02 * e.powerMax }) -- scenarios.world sets powerMax from WORLD.max
-                W.at(W.t + 4, step)
+                k = k + 1
+                W.at(t0 + k * 4, step)
             end
         end
-        W.at(W.t + 4, step)
+        W.at(t0 + 4, step)
     end
 end
 local function sacrificeOff(W, e, id)
