@@ -253,7 +253,9 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
-    ["Assassination"] = { flicker = 0, retracted = 0, heldReady = 159 }, -- 0 / 0 / 0, 0
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9; wowsims 41976091ed: the Eviscerate and Hemorrhage lines; R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0,
+    -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 130 / 142 / 126): heldReady 159 -> 142
+    ["Assassination"] = { flicker = 0, retracted = 0, heldReady = 142 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
     -- tree, flips match base's tick for tick; Sinister Strike's entry is gated on `!(buff.slice_and_dice.remains<=2)`,
@@ -263,13 +265,19 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.03 / 0.03 / 0.03, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 156 / 153 / 152):
     -- flicker 0.05 -> 0.03, heldReady 356 -> 156
-    ["Combat"] = { flicker = 0.03, retracted = 0, heldReady = 156 }, -- 0.15 / 0 / 0.02, 0
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9; the same two lines; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0,
+    -- readyShort 0 / 0 / 0, heldReady 155 / 160 / 152): flicker 0.03 -> 0.01 (the measured worst + 0.01), heldReady 156 -> 160 (the worst set:
+    -- Eviscerate now waits for Rupture >= 3 s under Serrated Blades, so a ready finisher is held behind the line before it more often)
+    ["Combat"] = { flicker = 0.01, retracted = 0, heldReady = 160 }, -- 0.15 / 0 / 0.02, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 382 / 364 / 363):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.03 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 201 / 192 / 168):
     -- flicker 0 -> 0.03, heldReady 382 -> 201
-    ["Subtlety"] = { flicker = 0.03, retracted = 0, heldReady = 201 }, -- 0.02 / 0 / 0, 0 (gap CE)
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9; the same two lines; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0,
+    -- readyShort 0 / 0 / 0, heldReady 194 / 239 / 197): flicker 0.03 -> 0.01, heldReady 201 -> 239 (the worst set: Eviscerate's Rupture wait
+    -- and Hemorrhage's energy.lo>=75 term hold a ready ability behind a priority wait more often; not traced per event)
+    ["Subtlety"] = { flicker = 0.01, retracted = 0, heldReady = 239 }, -- 0.02 / 0 / 0, 0 (gap CE)
     -- 0.1 -> 0.2 (Task 5b, gap BV: the world takes the export's Resourcefulness 2/2, so wowsims's 60% cut makes the
     -- strikes cheap; seeds 1-20 / 21-40 / 41-60: 0.20 / 0.02 / 0.07, was 0.05 / 0 / 0; oracle 2.18 / 1.68 / 2.26, was 0):
     -- no longer mana-gated, Raptor Strike comes up on its cooldown end beside Wing Clip or Strider Kick, and in its last
