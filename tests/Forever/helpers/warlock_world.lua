@@ -416,7 +416,7 @@ local function rankOf(H, ids, n)
 end
 
 -- The cost of `key` (`ids`: its ranks, lowest first): its rank's, less Cataclysm and Master Summoner; a fraction of
--- base floored (the kit's percent-of-base costs).
+-- base to the nearest whole, a half up (the kit's percent-of-base costs; wowsims e4ef929e54 mana.go rounds).
 local function costOf(key, ids, H)
     local c = COST[key] or 0
     if type(c) == "table" then
@@ -425,7 +425,7 @@ local function costOf(key, ids, H)
     if CATACLYSM[key] then
         c = c * (1 - CATACLYSM_CUT[math.min(talentRank(H, T.cataclysm), 3)])
     elseif SUMMON[key] then
-        c = math.floor(c * (1 - 0.2 * talentRank(H, T.master_summoner)) * BASE)
+        c = math.floor(c * (1 - 0.2 * talentRank(H, T.master_summoner)) * BASE + 0.5 + 1e-6)
     end
     return c
 end
