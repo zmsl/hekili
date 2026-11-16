@@ -77,7 +77,9 @@ local methods = {
     -- `now`: what a critical hit of the cast gives, written with the same verbs when the target's row shows our cast's
     -- own crit (Primal Fury's `gain( 5, "rage" )`); the belief's only, the sim does not predict crits. `onLand`, the
     -- same way: what only a landed hit gives (a mana return), run once the cast's hit is settled as landed, never on an
-    -- avoid (aura audit C10). `now_finish`: a channel's `finish` twin in the belief, run when the channel ran to its
+    -- avoid (aura audit C10). `onAvoid`, its mirror: what a dodged, parried or missed cast takes back (a buff only the
+    -- landing gives, granted by its `now`), run at the latest cast's own avoid after its target undo (L1239).
+    -- `now_finish`: a channel's `finish` twin in the belief, run when the channel ran to its
     -- end (aura audit C11). `startsAtLanding = true`, beside a `velocity`: the belief starts the auras its `now` puts on
     -- the target at the cast's landing, the target's believed distance over the velocity after the cast (a projectile
     -- DoT, L482); the sim's `handler` still applies at the cast. `spendBase = true`:

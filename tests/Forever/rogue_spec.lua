@@ -787,6 +787,33 @@ describe("Forever Rogue through the engine", function()
         assert.is_false(S.buff.deadly_poison.up)
         assert.are.same({}, H.errors)
     end)
+
+    -- Player report 1 (hotfix 0.8.6, L1239): Ghostly Strike's next-Garrote buff is its landing's; its `onAvoid` takes
+    -- it back on our own dodged, parried or missed strike, so Garrote and Ambush stay unusable out of stealth.
+    it("makes Garrote and Ambush usable after a landed Ghostly Strike, not after a missed one", function()
+        local S, VS = H.Hekili.State, H.ns.VirtualState
+        H.ctl.inRange.target, H.ctl.level.target, H.ctl.power[3] = true, 60, 100
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        local function strike(act)
+            t = t + 25 -- past its 20 s cooldown and the last strike's 7 s buff
+            H.ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. t, 14278)
+            H.Fire("UNIT_COMBAT", "target", act, "", act == "WOUND" and 100 or 0, 1)
+            assert.is_true(headless.cycle(H, t + 0.1))
+            S.reset("Primary", true)
+            local up = VS.Aura("player", 1329326, t + 0.1) ~= nil
+            return up, (S:IsUsable("garrote")), (S:IsUsable("ambush"))
+        end
+        assert.are.same({ true, true, true }, { strike("WOUND") })
+        for _, act in ipairs({ "DODGE", "PARRY", "MISS" }) do
+            assert.are.same({ false, false, false }, { strike(act) }, act)
+        end
+        assert.are.same({}, H.errors)
+    end)
 end)
 
 -- L90: combo points are bound to one target (owner probes 2026-11-06, memory forever-combo-points-plain). The pool
