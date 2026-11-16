@@ -29,6 +29,9 @@ M.PULL = 5 -- the least world time of the log's 0 (a log whose prepull starts af
 M.LEAD = 0.5 -- the world time of the log's first line at the latest: after the prepull read at 0.1
 M.EPS = 1e-6 -- a line's place within its timestamp, as time: a decision falls just before its Casting line
 M.STEP = 0.01 -- the log's time resolution: wowsims prints each line's time rounded to 10 ms
+-- The GCD-end bridge (observer.lua's cooldown) bound is safe because the log prints cast times in 10 ms steps AND each GCD
+-- in whole ms, so a rounding gap is GCD mod 10 ms (<= 9 ms, <= 10 ms with two roundings); a log format with finer GCD
+-- printing would need the bound re-derived.
 M.TAIL = 0.2 -- the exporter's execute proportion: the last 20% of the duration
 
 -- Our white swing's landing lag per hand: the main hand's median (P log 2, 474 ms) and the off hand's own-swing mode
