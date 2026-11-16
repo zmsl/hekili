@@ -541,19 +541,31 @@ M.READY = {
     -- 0.05 s before the cast; the belief's lo sits 1.5-6.9 under the truth)
     -- -> { 1.81, 2 } (0.7 warrior lane, R6; re-pin 4b0030a44b/e5a9cd2a2d, fixtures re-recorded): 67 decisions, 2 real, both late
     -- cost waits (Execute 2.01, Sunder Armor 1.81 on a same-instant gain wowsims casts on)
-    warrior_arms = { 1.81, 2 },
+    -- -> { 0.90, 2 } (re-pin e5a9cd2a2d -> e4ef929e54, 0.9 warrior lane, R6; harness-gcd-edge merged): 67 decisions, 2
+    -- real, both late cost waits (Mortal Strike 3.80, Spearing Strike 0.90)
+    warrior_arms = { 0.90, 2 },
     -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22); 0.44 (fix 40): Whirlwind at
     -- 57.09 and 117.06 late -> early 0.09 and 0.06
     -- { 0.52, 26 } -> { 0.90, 19 } (lane 14, replay world fix, as druid_guardian's): 6 early GCD-chain rows in grain,
     -- the 19 left all late; -> { 0.42, 13 } re-pin e2842f0a78 (R6: the new log's 87 decisions, 13 real, all late)
     -- -> { 0.42, 14 } (0.7 warrior lane, R6): 95 decisions, 14 real, all late (Bloodthirst x7, Whirlwind x3, Sunder x3), median 0.40
-    warrior_fury = { 0.42, 14 },
+    -- -> { 1.12, 5 } (re-pin e5a9cd2a2d -> e4ef929e54, 0.9 warrior lane, R6; harness-gcd-edge merged): 100 decisions, 5
+    -- real, all late cost waits on a gain wowsims casts on inside one poll: Bloodthirst 24.66 (0.21) and Whirlwind 50.51
+    -- (1.69), the old fixture's rows; Bloodthirst 70.00 (1.12, an Anger Management tick crosses 30 at the cast's
+    -- instant; the belief read 25-30 against 29.7), 99.90 (1.32, a swing's rage between two polls) and 142.09 (0.20).
+    -- The old log's 57.00-104.50 rows left with the new log's re-timing and the GCD-edge fix (not split per row); the
+    -- median rises because the small rows left, no row grew
+    warrior_fury = { 1.12, 5 },
     -- { 0.38, 11 } -> { 0.37, 3 } re-pin e2842f0a78 (lane 14, R6; after 5049ede22's GCD fix): 98 decisions, 3 real, all
     -- early, class aura: Shield Slam 49.84 (0.24), Sunder Armor 71.77 / 143.44 (0.37 / 0.44): wowsims queues Shield Block
     -- (`Queueing up 2565 to cast at`) and casts the on-GCD ability at that instant, after ours shows it ready
     -- -> { 0.37, 4 } (0.7 warrior lane, R6): 97 decisions, 4 real, all late, median 0.18 (Thunder Clap x2 0.32, Demoralizing
     -- Shout 0.31, Revenge 0.18: cost and cooldown edges at the cast's instant)
-    warrior_protection = { 0.37, 4 },
+    -- -> { 0.41, 6 } (re-pin e5a9cd2a2d -> e4ef929e54, 0.9 warrior lane, R6; harness-gcd-edge merged): 99 decisions, 6
+    -- real, all late, each a gain from a hit taken (or its block's +5) inside the poll before wowsims's cast: Rend 11.23
+    -- (0.81; 6.6 < 7 until the 11.14 partial block), Shield Slam 30.43 (0.81), 49.62 and 61.62 (0.41), Sunder Armor
+    -- 71.22 and Revenge 171.19 (0.41); the new log's Pre-BiS gear and 770 healing re-time the hits (the old log had 4)
+    warrior_protection = { 0.41, 6 },
 }
 
 --- The ready-time check of replay `R` (timing.lua) on spec `spec` after its run: prints "<label> wowsims timing:
