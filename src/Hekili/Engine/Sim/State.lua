@@ -1691,7 +1691,7 @@ do
     -- before its scripts by Scripts.lua LoadScripts) reads closed; any other unknown name stays an error.
     local closedNext = setmetatable( {}, { __index = function() return false end } )
     local closedWindow = setmetatable( {}, { __index = function( _, k )
-        if k == "up" then return false elseif k == "down" then return true elseif k == "next" then return closedNext end
+        if k == "up" or k == "done" then return false elseif k == "down" then return true elseif k == "next" then return closedNext end
         return 0
     end } )
     state.window = setmetatable( {}, { __index = function( _, k )

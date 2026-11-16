@@ -253,7 +253,8 @@ closes all. APL windows (windows design v6) are rows of the same store with no e
 `def.aplWindows` (records `{ key, duration, refresh?, max_duration?, max_refresh?, steps? (ability indexes), strict?,
 step_timeout?, reset_on_target_change?, on_deviation? }`), with `def.aplOpCap` (the operations buffer's bound per update) and
 `def.aplGen` (a changed generation rebuilds only these rows and the buffer, at the next `Drain` out of combat, else
-after combat end; until then an unknown key reads down and its operations are dropped). `Drain` replays the buffered
+after combat end; until then an unknown key reads down and its operations are dropped. While no APL row exists, as after
+a /reload in combat, whose scripts load after the Build, the next `Drain` applies it in combat too). `Drain` replays the buffered
 `WindowOp`s first (Flush, operations, polls, fold, settle, Lua evaluators, aura deltas), stamped with the previous
 cut-off: OPEN a fresh open for the declared duration on a closed or run-out row, and on an open row the declared
 refresh rule (with `refresh`, below `max_refresh` and below openedAt + `max_duration`: the expiry restarts, capped

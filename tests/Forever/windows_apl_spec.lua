@@ -5,6 +5,7 @@
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 local mx = require("Game.State.helpers.windows_matrix")
+local fake = require("Game.State.helpers.fake_api")
 
 local OPEN, CLOSE = mx.OP.OPEN, mx.OP.CLOSE
 local DISPLAYS = { "Primary", "AOE", "Cooldowns", "Interrupts", "Defensives" }
@@ -209,12 +210,33 @@ describe("the windows compiler (windows design v6 §3.4, §9)", function()
         load({ default = "actions+=/open_window,name=nope\nactions+=/berserker_stance" })
         local script = H.Hekili.Scripts.DB[ww.PACK .. ":default:1"]
         assert.is_truthy(script.Error and script.Error:find("E1", 1, true))
+        local function reported() -- the window compile errors reported (the harness keeps Error's format string)
+            local n = 0
+            for _, e in ipairs(H.errors) do
+                n = n + (e:find("entry disabled", 1, true) and 1 or 0)
+            end
+            return n
+        end
+        assert.are.equal(1, reported())
+        H.Hekili:LoadScripts() -- an options edit loads the scripts again: marked again, not reported again (M3)
+        assert.is_truthy(H.Hekili.Scripts.DB[ww.PACK .. ":default:1"].Error)
+        assert.are.equal(1, reported())
         for k in pairs(H.errors) do
             H.errors[k] = nil
         end
         local recs, sent = tick()
         assert.are.equal("berserker_stance", recs[1].actionName)
         assert.are.same({}, sent)
+    end)
+
+    it("a window another priority declares reads closed, done included (M4)", function()
+        H.Hekili.Scripts.declaredWindows.other = true
+        local w = S.window.other
+        assert.is_false(w.up)
+        assert.is_true(w.down)
+        assert.is_false(w.done)
+        assert.are.equal(0, w.remains)
+        H.Hekili.Scripts.declaredWindows.other = nil
     end)
 
     it("C10: every shipped pack compiles with no window error", function()
@@ -437,5 +459,394 @@ describe("APL window lines as commands (windows design v6 §4, §5)", function()
         local recs, sent = tick()
         assert.are.same({ { key("x"), OPEN } }, sent) -- the rows exist (no drop), closed after the Build
         assert.are.equal(1, recs[1].restarts)
+    end)
+end)
+
+-- (windows design v6 §13, L1180) The core's side of forecast == apply, per tick of a headless run: the operations the
+-- pass sends are exactly the oracle's (M.apply folded over the belief's state at the pass's now, in the order the
+-- lines fire: each one that changes the state is sent); the copy at the end of slot 1's now walk is the oracle's end
+-- state; after the next Drain the belief equals that copy (the replay invariant); and the belief applies every
+-- operation (refused and dropped stay 0). `cand(i)`: the lines true and reached at now on tick i, in firing order
+-- (a line the walk evaluates again after a restart is listed again). Named exemptions: L01 (operations to a key
+-- whose generation waits for combat end are dropped, asserted there) and OP5 (a window running out between the
+-- Drain's stamp and the pass's now: the headless pass's now is the stamp, asserted every tick, so it cannot arise).
+local FIELDS = { "up", "openedAt", "expiresAt" }
+
+local function closedAt(s, T)
+    if s.up and s.expiresAt <= T then
+        return { up = false, openedAt = 0, expiresAt = 0, refreshes = 0, step = 0 }
+    end
+    return s
+end
+
+local function sameState(a, b)
+    for _, f in ipairs(FIELDS) do
+        local x, y = a[f], b[f]
+        if not (x == y or type(x) == "number" and type(y) == "number" and math.abs(x - y) < 1e-6) then
+            return false
+        end
+    end
+    return true
+end
+
+local function show(s)
+    return string.format("up=%s opened=%s expires=%s", tostring(s.up), tostring(s.openedAt), tostring(s.expiresAt))
+end
+
+-- Runs `c.lists` for `c.ticks` ticks (flags per tick from `c.flags[i]`); returns the operations sent per tick.
+local function forecastRun(c)
+    load(c.lists)
+    assert.are.equal(c.loadErrors or 0, #H.errors) -- C01: its compile errors, reported once at load
+    for k in pairs(H.errors) do
+        H.errors[k] = nil
+    end
+    local decl, names = {}, {}
+    for _, r in ipairs(VSI.def.aplWindows) do
+        local name = r.key:match("^[^:]+:([^#]+)#Primary$")
+        if name then
+            decl[name], names[#names + 1] = r, name
+        end
+    end
+    local copy, captured = {}, false
+    local gnp = H.Hekili.GetNextPrediction
+    H.Hekili.GetNextPrediction = function(self, dispName, packName, slot)
+        local a, w, d = gnp(self, dispName, packName, slot)
+        if not captured and dispName == "Primary" and slot.index == 1 then -- slot 1's now walk, before any wait
+            captured = true
+            local delay = S.delay
+            S.delay = 0 -- read at now (query_time = now + offset + delay; slot 1's offset is 0)
+            for _, n in ipairs(names) do
+                local win = S.window[n]
+                local up = win.up
+                copy[n] =
+                    { up = up, openedAt = up and S.now - win.elapsed or 0, expiresAt = up and S.now + win.remains or 0 }
+            end
+            S.delay = delay
+        end
+        return a, w, d
+    end
+    local Q, prev, perTick = VSI.winOps, nil, {}
+    for i = 1, c.ticks do
+        for f, v in pairs(c.flags and c.flags[i] or {}) do
+            flags[f] = v
+        end
+        local refused, dropped = Q.refused, Q.dropped
+        captured = false
+        local _, sent = tick()
+        local T = VSI.clock
+        assert.are.equal(T, S.now, "the pass's now is the Drain's stamp (OP5 cannot arise)")
+        local seed = {}
+        for _, n in ipairs(names) do
+            local b = belief(n)
+            seed[n] = b
+            if prev then -- the replay invariant: the previous pass's copy, its expiry run at this stamp
+                local want = closedAt(prev[n], T)
+                assert.is_true(
+                    sameState(want, b),
+                    string.format("%s tick %d %s: copy %s belief %s", c.id, i, n, show(want), show(b))
+                )
+            end
+        end
+        local want, s = {}, {}
+        for _, n in ipairs(names) do
+            s[n] = {}
+            for k, v in pairs(closedAt(seed[n], T)) do
+                s[n][k] = v
+            end
+        end
+        for _, o in ipairs(c.cand(i)) do
+            local n, code = o[1], o[2]
+            local before = {}
+            for k, v in pairs(s[n]) do
+                before[k] = v
+            end
+            mx.apply(s[n], code, nil, decl[n], T)
+            local changed = false
+            for k, v in pairs(s[n]) do
+                changed = changed or before[k] ~= v
+            end
+            if changed then
+                want[#want + 1] = { key(n), code }
+            end
+        end
+        assert.are.same(want, sent, c.id .. " tick " .. i .. ": sends")
+        for _, n in ipairs(names) do
+            assert.is_true(
+                sameState(s[n], copy[n]),
+                string.format("%s tick %d %s: oracle %s copy %s", c.id, i, n, show(s[n]), show(copy[n]))
+            )
+        end
+        assert.are.equal(refused, Q.refused, c.id .. " tick " .. i .. ": refused")
+        assert.are.equal(dropped, Q.dropped, c.id .. " tick " .. i .. ": dropped")
+        prev, perTick[i] = copy, #sent
+        copy = {}
+    end
+    H.Hekili.GetNextPrediction = gnp
+    return perTick
+end
+
+local function always(list)
+    return function()
+        return list
+    end
+end
+
+local W1 = "actions+=/window,name=x,duration=6"
+local FORECAST = {
+    {
+        id = "W01",
+        lists = {
+            windows = "actions+=/window,name=x,duration=0.9",
+            default = "actions+=/open_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 12,
+        cand = always({ { "x", OPEN } }),
+        sends = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 }, -- open, nothing while open, open again once it ran out
+    },
+    {
+        id = "W02/W03",
+        lists = {
+            windows = W1,
+            default = "actions+=/open_window,name=x,if=test_fa\nactions+=/close_window,name=x,if=!test_fa\nactions+=/berserker_stance",
+        },
+        ticks = 4,
+        flags = { { fa = true }, { fa = false } },
+        cand = function(i)
+            return i == 1 and { { "x", OPEN } } or { { "x", CLOSE } }
+        end,
+        sends = { 1, 1, 0, 0 },
+    },
+    {
+        id = "W05",
+        lists = {
+            windows = "actions+=/window,name=x,duration=3,refresh=1,max_refresh=2",
+            default = "actions+=/open_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 6,
+        cand = always({ { "x", OPEN } }),
+        sends = { 1, 1, 1, 0, 0, 0 },
+    },
+    {
+        id = "W06",
+        lists = {
+            windows = "actions+=/window,name=x,duration=3,refresh=1,max_duration=4",
+            default = "actions+=/open_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 9,
+        cand = always({ { "x", OPEN } }),
+        sends = { 1, 1, 1, 1, 1, 1, 0, 0, 0 },
+    },
+    {
+        id = "W07",
+        lists = {
+            windows = "actions+=/window,name=x,duration=combat,refresh=1",
+            default = "actions+=/open_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 3,
+        cand = always({ { "x", OPEN } }),
+        sends = { 1, 0, 0 },
+    },
+    {
+        id = "W08",
+        lists = {
+            windows = W1,
+            default = "actions+=/open_window,name=x\nactions+=/open_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 3,
+        cand = always({ { "x", OPEN }, { "x", OPEN } }),
+        sends = { 1, 0, 0 },
+    },
+    {
+        id = "W09",
+        lists = {
+            windows = W1,
+            default = "actions+=/open_window,name=x\nactions+=/close_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 3,
+        cand = always({ { "x", OPEN }, { "x", CLOSE } }),
+        sends = { 2, 2, 2 },
+    },
+    {
+        id = "W10",
+        lists = {
+            windows = W1,
+            default = "actions+=/close_window,name=x\nactions+=/open_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 3,
+        -- walk 1: the close finds it closed, the open fires; walk 2: the close fires; walk 3: both marked
+        cand = always({ { "x", CLOSE }, { "x", OPEN }, { "x", CLOSE } }),
+        sends = { 2, 2, 2 },
+    },
+    {
+        id = "W11",
+        lists = {
+            windows = W1,
+            default = "actions+=/open_window,name=x\nactions+=/close_window,name=x\nactions+=/open_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 3,
+        cand = function(i)
+            if i == 1 then -- closed: each line fires in its own walk
+                return { { "x", OPEN }, { "x", CLOSE }, { "x", OPEN } }
+            end
+            -- open: walk 1, the first open finds it open, the close fires; walk 2, the first open fires, the last finds it open
+            return { { "x", OPEN }, { "x", CLOSE }, { "x", OPEN }, { "x", OPEN } }
+        end,
+        sends = { 3, 2, 2 },
+    },
+    {
+        id = "W12",
+        lists = {
+            windows = W1,
+            default = "actions+=/open_window,name=x\nactions+=/bloodrage\nactions+=/close_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 3,
+        cand = always({ { "x", OPEN } }), -- the ready pick ends each walk above the close
+        sends = { 1, 0, 0 },
+    },
+    {
+        id = "W13",
+        lists = {
+            windows = W1,
+            default = "actions+=/open_window,name=x,if=test_swing_remains<0.5\nactions+=/bloodrage,if=window.x.up",
+        },
+        ticks = 2,
+        cand = always({}), -- true only at a recheck time: the copy opens then, never at now
+        sends = { 0, 0 },
+    },
+    {
+        id = "R01",
+        lists = {
+            windows = W1,
+            default = "actions+=/bloodrage,if=window.x.up\nactions+=/open_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 3,
+        cand = function(i)
+            return i == 1 and { { "x", OPEN } } or {} -- once open, the reader is picked above the line
+        end,
+        sends = { 1, 0, 0 },
+    },
+    {
+        id = "R02",
+        lists = { windows = W1, default = "actions+=/open_window,name=x\nactions+=/bloodrage,if=window.x.up" },
+        ticks = 3,
+        cand = always({ { "x", OPEN } }),
+        sends = { 1, 0, 0 },
+    },
+    {
+        id = "R03",
+        lists = {
+            windows = "actions+=/window,name=a,duration=6\nactions+=/window,name=b,duration=6\nactions+=/window,name=c,duration=6",
+            default = "actions+=/open_window,name=c,if=window.b.up\nactions+=/open_window,name=b,if=window.a.up\n"
+                .. "actions+=/open_window,name=a\nactions+=/berserker_stance",
+        },
+        ticks = 3,
+        cand = function(i)
+            return i == 1 and { { "a", OPEN }, { "b", OPEN }, { "c", OPEN } }
+                or { { "c", OPEN }, { "b", OPEN }, { "a", OPEN } }
+        end,
+        sends = { 3, 0, 0 },
+    },
+    {
+        id = "R05",
+        lists = {
+            windows = W1,
+            default = "actions+=/bloodrage,if=window.x.up\nactions+=/call_action_list,name=sub\nactions+=/berserker_stance",
+            sub = "actions+=/open_window,name=x",
+        },
+        ticks = 3,
+        cand = function(i)
+            return i == 1 and { { "x", OPEN } } or {}
+        end,
+        sends = { 1, 0, 0 },
+    },
+    {
+        id = "C01",
+        lists = {
+            windows = W1,
+            default = "actions+=/open_window,name=nope\nactions+=/open_window,name=x,duration=3\nactions+=/open_window,name=x\nactions+=/berserker_stance",
+        },
+        ticks = 2,
+        cand = always({ { "x", OPEN } }), -- the E1 and E4 lines are marked and skipped
+        sends = { 1, 0 },
+        loadErrors = 2,
+    },
+}
+
+describe("forecast == apply, the core's side (windows design v6 §13, L1180)", function()
+    before_each(function()
+        boot()
+    end)
+
+    for _, c in ipairs(FORECAST) do
+        it(c.id, function()
+            for k in pairs(flags) do
+                flags[k] = false
+            end
+            local got = forecastRun(c)
+            assert.are.same(c.sends, got)
+        end)
+    end
+
+    it("L01: operations to a key whose generation waits for combat end are dropped, then applied after it", function()
+        local got = forecastRun({
+            id = "L01-before",
+            lists = { windows = W1, default = "actions+=/open_window,name=x\nactions+=/berserker_stance" },
+            ticks = 1,
+            cand = always({ { "x", OPEN } }),
+        })
+        assert.are.same({ 1 }, got)
+        -- an edit in combat adds window z (the options' edit: the scripts load again, Update applies the new generation)
+        local lists = H.Hekili.DB.profile.packs[ww.PACK].lists
+        lists.windows = parse("actions+=/window,name=x,duration=6\nactions+=/window,name=z,duration=6")
+        table.insert(lists.default, 1, parse("actions+=/open_window,name=z")[1])
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        local Q = VSI.winOps
+        local dropped = Q.dropped
+        local _, sent = tick()
+        assert.are.same({ { key("z"), OPEN } }, sent) -- the copy has z's key; the belief has no row for it yet
+        tick()
+        assert.are.equal(dropped + 1, Q.dropped) -- the named exemption: the waiting generation's key
+        assert.is_false(belief("z").up)
+        H.Fire("PLAYER_REGEN_ENABLED")
+        tick() -- the generation applies at this Drain (out of combat); this pass's OPEN goes to the new row
+        dropped = Q.dropped
+        tick()
+        assert.is_true(belief("z").up)
+        assert.are.equal(dropped, Q.dropped)
+    end)
+end)
+
+describe("a /reload in combat (windows design v6 §9; review M1)", function()
+    it("the active priority's windows work in the fight the reload lands in", function()
+        boot()
+        load({
+            windows = "actions+=/window,name=x,duration=6",
+            default = "actions+=/open_window,name=x\nactions+=/bloodrage,if=window.x.up\nactions+=/berserker_stance",
+        })
+        local saved = H.env.HekiliDB -- the profile as a /reload finds it
+        local fakeNew = fake.new
+        fake.new = function(...) -- the reload lands in combat: the client is in combat from the first event
+            local api, ctl = fakeNew(...)
+            ctl.combat = true
+            return api, ctl
+        end
+        local ok, H2 = pcall(headless.new, { character = ww.character(), pack = ww.PACK, saved = saved })
+        fake.new = fakeNew
+        assert(ok, H2)
+        assert.are.same({}, H2.loadErrors)
+        H, S, VS, VSI = H2, H2.Hekili.State, H2.ns.VirtualState, H2.ns.VirtualStateInternal
+        assert.is_true(VSI.inCombat)
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local dropped = VSI.winOps.dropped
+        local recs = tick()
+        assert.are.equal("bloodrage", recs[1].actionName)
+        tick()
+        assert.is_true(belief("x").up) -- the OPEN reached a row: the windows are live in this fight
+        assert.are.equal(dropped, VSI.winOps.dropped)
     end)
 end)

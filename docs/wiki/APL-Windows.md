@@ -53,13 +53,13 @@ actions+=/open_window,name=<window>[,if=<condition>]
 actions+=/close_window,name=<window>[,if=<condition>]
 ```
 
-- The lines are commands, run in list order like `variable` lines, with no icon. They carry only `name=` and `if=`; the window's length and refresh settings live where the window is declared. Any other option on the line is error E4 and switches the line off.
+- The lines are commands, run in list order like `variable` lines, with no icon. They carry only `name=` and `if=`; the window's length and refresh settings live where the window is declared. Any other option on the line is error E4 (see [Errors](#errors)).
 - A true `open_window` opens a closed window. On an open window it does nothing, unless the window is declared with `refresh=1`: then it restarts the window's timer, within `max_refresh` and `max_duration`. A true `close_window` closes an open window.
 - There are no edges: a condition that stays true keeps the window open, and opens it again after it runs out.
 - When a line changes the window, the walk starts again from the top at the same moment, so the lines above it see the change. Each line acts at most once per recommendation slot, so the walk restarts at most once per window line. The debug snapshot lists the restarts of each slot.
 - If the condition does not hold yet, an `open_window` line is rechecked like any other, so it can open the window later in the forecast.
 - For a window declared in the priority, the changes made by the first recommendation at the current moment are kept for the next update; everything else, and every change to a class pack's window, lasts only for the rest of the walk. Each display keeps its own copy of a window declared in the priority.
-- An `open_window` or `close_window` line that names a window neither the priority nor the class declares is error E1 and is switched off.
+- An `open_window` or `close_window` line that names a window neither the priority nor the class declares is error E1 (see [Errors](#errors)).
 
 As of the current release, no built-in priority opens or closes a window with a line: the built-in priorities only read windows that the class packs open.
 
@@ -81,7 +81,19 @@ actions.windows+=/window,name=pool,duration=6,refresh=1,max_refresh=2,max_durati
 | `max_duration` | seconds | The longest the window stays open from its first opening |
 | `reset_on_target_change` | 0 or 1 | 1: a target change closes the window |
 
-Errors in the list switch the entry off, with a warning in the **Import Log** and an error when the priority loads: a `window` entry outside the list, any other entry in it, a call of it or an `if=` on an entry (E5), a name declared twice (E2), a name a class pack registers (E3), a missing or non-positive `duration` or a bad cap (E6), and any other option (E7).
+## Errors
+
+| Code | Where | What |
+|---|---|---|
+| E1 | a line | `open_window` or `close_window` names a window neither the priority nor the class declares |
+| E2 | the list | a name declared twice |
+| E3 | the list | a name a class pack registers |
+| E4 | a line | an option other than `name=` and `if=` on `open_window` or `close_window` |
+| E5 | anywhere | a `window` entry outside the list, any other entry in it, a call of it, or an `if=` on an entry |
+| E6 | the list | a missing name, a missing or non-positive `duration`, or a bad cap |
+| E7 | the list | any other option on a `window` entry |
+
+When the priority loads, each error is reported once as an error message and its entry is marked with it: the walk skips a marked line, and an entry of the `windows` list with an error declares nothing. The entry itself stays as written and switched on. An import switches each entry with an error off and lists the error in the **Import Log**.
 
 ## Windows the class packs register
 

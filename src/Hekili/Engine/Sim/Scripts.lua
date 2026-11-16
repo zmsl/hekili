@@ -1813,6 +1813,8 @@ function scripts:ApplyWindows( packName )
     ns.SetAplWindows( cw.records, cw.cap )
 end
 
+local reportedWindowErrors = {} -- LoadScripts: the window compile errors already reported this session
+
 local function scriptLoader()
     if not Hekili.LoadingScripts and not scriptsLoaded then scripts:LoadScripts() end
 end
@@ -1881,8 +1883,13 @@ function scripts:LoadScripts()
             -- (windows design v6 §3.4) a window compile error disables its line (the walk skips a script with an Error)
             for _, e in ipairs( cw.errors ) do
                 local script = self.DB[ pack .. ":" .. e.list .. ":" .. e.line ]
-                if script then script.Error = e.code .. ": " .. e.text end
-                Hekili:Error( "Priority '%s' list '%s' line %d: %s: %s; entry disabled.", pack, e.list, e.line, e.code, e.text )
+                local text = e.code .. ": " .. e.text
+                if script then script.Error = text end
+                local seen = pack .. ":" .. e.list .. ":" .. e.line .. " " .. text
+                if not reportedWindowErrors[ seen ] then -- once per line and error a session: every options edit loads again
+                    reportedWindowErrors[ seen ] = true
+                    Hekili:Error( "Priority '%s' list '%s' line %d: %s: %s; entry disabled.", pack, e.list, e.line, e.code, e.text )
+                end
             end
         end
     end
