@@ -95,7 +95,12 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- ruled berserker_rage gate (1), Overpower weaves (overpower -> rend 9.55 and 92.45, -> sunder 65.85, -> slam 101.55:
             -- the usability answer's delay after a dodge), spearing_strike -> mortal_strike (50.65, 100.05) and mortal_strike
             -- slam (131.95) at the cooldown's edge
-            0.88,
+            -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6): 0.91 (61 of 67; measured 0.910) from 0.88: wowsims's new
+            -- Arms gear re-times the fight after 79.85 (the old log with today's kit still reads 0.886, so the Overpower window
+            -- fix f2812da55 moves none of its decisions): the shared four (berserker_rage -> battle_shout -4.50, overpower
+            -- -> rend 10.05, spearing_strike -> mortal_strike 57.00, overpower -> sunder_armor 79.85) and two of the old
+            -- classes (mortal_strike -> spearing_strike 144.45 at the cooldown's edge, overpower -> slam 163.45, R46)
+            0.91,
             ARMS_REPLAY
         )
     end)
@@ -154,13 +159,15 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- the stance keep fixed to 25: 4 overpower -> bloodthirst), 3 Reckless Swings (the 20-rage shortcut moves the belief's
             -- rage, blocker note warrior-1), execute -> death_wish, execute -> reckless_swings
             -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6): 0.82 (82 of 100; measured 0.820, after the Overpower
-            -- window fix f2812da55; 0.800 before it) from 0.86: wowsims's new Fury gear (3 slots) and its Execute avoid rule
-            -- re-time the fight after 43.5 s (the first 7 misses are the old log's): Overpower weaves (R46: 10.50, 19.43,
-            -- 32.00, 98.06, 155.94; 167.34 cast 0.05 s after the swing's rage), an own main-hand miss just before the GCD
-            -- (its rage still forecast, Sunder over Execute: 171.84, 175.84, 177.34), gap AS (a Sunder avoid credited
-            -- across our own swings, blocker note repin-warrior-09-2: 94.00, 123.24, 135.24), Reckless Swings (13.50, 43.50,
-            -- 154.74), 79.00 rend -> sunder_armor (Sunder fades at the Rend's own timestamp), execute -> death_wish 149.88,
-            -- whirlwind -> sunder_armor 0.00. The one avoided Execute (145.09) moves no decision (belief 12 vs truth 14.9)
+            -- window fix f2812da55; 0.800 before it) from 0.86. The old log with today's kit reads 0.879 (87 of 99), so the
+            -- drop is the new log (wowsims's new Fury gear, 3 slots, re-times the fight after 43.50). Misses by class, new
+            -- log 18 / old log 12: Overpower weaves (R46 latency) 5 / 5 (10.50, 19.43, 32.00, 98.06, 155.94); a cast on a
+            -- swing's rage inside one poll 1 / 1 (167.34); an own main-hand miss just before the GCD, its rage still
+            -- forecast (Sunder over Execute) 3 / 0 (171.84, 175.84, 177.34); gap AS, a Sunder avoid credited across our own
+            -- swings (central, blocker note repin-warrior-09-2) 3 / 0 (94.00, 123.24, 135.24); Reckless Swings (the 20-rage
+            -- shortcut, warrior-1) 3 / 3 (13.50, 43.50, 154.74); execute -> death_wish 1 / 1 (149.88); the opening
+            -- whirlwind -> sunder_armor 1 / 1 (0.00); a Sunder fade at or just before wowsims's cast 1 / 1 (79.00). Without
+            -- gap AS: 0.85. The one avoided Execute (145.09) moves no decision (belief 12 vs truth 14.9)
             0.82,
             FURY_REPLAY
         )
