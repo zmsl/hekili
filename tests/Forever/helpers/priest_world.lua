@@ -305,7 +305,7 @@ local function costOf(key, ids, H, up)
     if type(c) == "table" then
         c = c[rankOf(ids, H)]
     elseif c > 0 and c < 1 then
-        c = math.floor(c * BASE)
+        c = math.floor(c * BASE + 0.5 + 1e-6) -- a percent of base to the nearest whole (wowsims e4ef929e54 rounds)
     end
     if AGILE[key] then
         c = c * (1 - MENTAL_AGILITY[talentRank(H, T.mental_agility)])

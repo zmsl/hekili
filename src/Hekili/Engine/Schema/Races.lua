@@ -78,11 +78,13 @@ function Race:RegisterResourceMod(def)
     end
 end
 
---- { aura = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil, unless = key | nil }: an ability
---- whose spell ID (or one of its `copy` ranks) is listed (every ability paid from the resource when `spells` is nil)
---- costs less while the aura is up; with charges, each such cast whose declared cost is above 0 takes a stack. While
---- the player's aura `unless` is up (as the cast starts: another modifier's spend in the same cast never decides it),
---- the modifier neither prices nor takes a stack. Also a class file's
+--- { aura = key, talent = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil, unless = key | nil }:
+--- an ability whose spell ID (or one of its `copy` ranks) is listed (every ability paid from the resource when `spells`
+--- is nil) costs less while the aura is up; with charges, each such cast whose declared cost is above 0 takes a stack.
+--- With `talent` (a talent key) the modifier also needs that talent's rank above 0, and needs no `aura` (a passive
+--- talent's cut); `pct` or `flat` may then be a list by rank (value at the rank) or one number. While the player's aura
+--- `unless` is up (as the cast starts: another modifier's spend in the same cast never decides it), the modifier neither
+--- prices nor takes a stack. Also a class file's
 --- `spec:RegisterCostMod` (Engine/Schema/Spec.lua): the class file has returned for any other class, so its append is the player's.
 function ns.RegisterCostMod(def)
     mods.costMods[#mods.costMods + 1] = def
@@ -105,9 +107,10 @@ function Race:RegisterCostMod(def)
     end
 end
 
---- { resource = key, aura = key, mult = n | spirit = m | share = s | mp5 = x }: a regen entry (Engine/Schema/Spec/Regen.lua's
---- rate fields) on the class's resource `resource` while the player's aura `aura` is up; a class without that resource
---- ignores it (Tracked.lua). The belief's only: the sim's forecast reads the belief's rate.
+--- { resource = key, aura = key, mult = n | spirit = m | share = s | mp5 = x | mp5Mult = p }: a regen entry
+--- (Engine/Schema/Spec/Regen.lua's rate fields) on the class's resource `resource` while the player's aura `aura` is
+--- up; a class without that resource ignores it (Tracked.lua). The belief's only: the sim's forecast reads the belief's
+--- rate.
 function Race:RegisterRegenMod(def)
     if self.live and type(def.resource) == "string" and type(def.aura) == "string" then
         mods.regenMods[#mods.regenMods + 1] = def
@@ -164,21 +167,50 @@ local function inScope(m, a)
     return hit
 end
 
---- A declared cost of ability `a` after the modifiers in scope whose buff is up in the simulated state; a fraction
---- (ns.SpendPoints: below 1, or any magnitude under `spendBase`) takes the same pct as the belief applies to it.
-function M.Apply(cost, a)
+-- Modifier m's talent rank in `state`: 1 without `talent`. Read raw: a key the class does not register (a shared or
+-- race modifier naming another class's talent) is rank 0 without the talent table's "Unknown talent" error.
+local function rankOf(state, m)
+    local key = m.talent
+    if key == nil then
+        return 1
+    end
+    local t = rawget(state.talent, key)
+    return t and t.rank or 0
+end
+
+--- A declared cost of ability `a` after the modifiers in scope whose buff is up in the simulated state. A fraction
+--- (ns.SpendPoints: below 1, or any magnitude under `spendBase`) is returned as declared: ns.SpendPoints prices it whole
+--- first and then calls this with `points` true, so a modifier cuts the whole price, unrounded, as the belief's
+--- I.CostOf and wowsims (e4ef929e54 mana.go:372 then spell.go:1055 ApplyCostModifiers) do: 11% of 1720 is 189, halved
+--- 94.5. Allocates nothing after each ability key's first scope read.
+function M.Apply(cost, a, points)
     local list = mods.costMods
     if #list == 0 or type(cost) ~= "number" or cost <= 0 then
         return cost
     end
-    local buff = Hekili.State.buff
+    if not points and (cost < 1 or rawget(a, "spendBase")) then
+        return cost
+    end
+    local state = Hekili.State
+    local buff = state.buff
     for i = 1, #list do
         local m = list[i]
-        if buff[m.aura].up and not (m.unless and buff[m.unless].up) and inScope(m, a) then
-            if type(m.pct) == "number" then
-                cost = cost * (1 + m.pct)
-            elseif type(m.flat) == "number" then
-                cost = cost + m.flat
+        -- the talent gate and the value by rank: the belief's I.CostMod (Game/State/Families/Modifiers.lua) alike
+        -- shortcut: modifiers apply in list order, so a flat listed after a pct lands after it; wowsims adds every flat
+        -- to the base before any percent (spell.go:1055). Upgrade when a pack gives one ability both kinds.
+        local rank = rankOf(state, m)
+        if
+            rank > 0
+            and (m.aura and buff[m.aura].up or not m.aura and m.talent)
+            and not (m.unless and buff[m.unless].up)
+            and inScope(m, a)
+        then
+            local p, f = m.pct, m.flat
+            p, f = type(p) == "table" and p[rank] or p, type(f) == "table" and f[rank] or f
+            if type(p) == "number" then
+                cost = cost * (1 + p)
+            elseif type(f) == "number" then
+                cost = cost + f
             end
         end
     end
@@ -207,7 +239,8 @@ local held = {} -- M.Spend's per-modifier `unless` answers, decided before any s
 
 --- Ability `key` was cast in the simulation with declared cost `base` (ns.spendResources, before any discount): when
 --- `base` is above 0, a stack of each charged modifier in scope whose buff is up (gone at the last), even when the
---- discount brought the paid cost to 0; a modifier whose `unless` aura is up as the cast starts takes none.
+--- discount brought the paid cost to 0; a modifier whose `unless` aura is up as the cast starts, or whose talent has
+--- no rank, takes none.
 function M.Spend(base, key)
     local list = mods.costMods
     if #list == 0 or type(base) ~= "number" or base <= 0 then
@@ -224,7 +257,14 @@ function M.Spend(base, key)
     end
     for i = 1, #list do
         local m = list[i]
-        if m.charges and not held[i] and state.buff[m.aura].up and inScope(m, a) then
+        if
+            m.charges
+            and m.aura
+            and not held[i]
+            and rankOf(state, m) > 0
+            and state.buff[m.aura].up
+            and inScope(m, a)
+        then
             state.removeStack(m.aura)
         end
     end

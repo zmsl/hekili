@@ -2116,6 +2116,47 @@ describe("resources", function()
             within(10, I.res.spE[1])
         end)
 
+        -- CN23: an `mp5Mult` entry multiplies the gear and buff MP5 (the learned mp5 part and every other entry's `mp5`)
+        -- but not an `energize` entry's mp5, which ticks its own amount (wowsims e4ef929e54 mana.go:176-183
+        -- multipliedManaRegen: ((MP5 + spirit) x I - EnergizeMP5 / 5 x (I - 1)) x mult).
+        it("multiplies the gear and buff MP5 by an `mp5Mult` entry, an `energize` entry's mp5 at x 1", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, {
+                { aura = "surge", spirit = 5, share = 1, mp5Mult = 5 },
+                { aura = "focus", mp5 = 2 },
+                { aura = "spring", mp5 = 3, energize = true },
+            })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 2, 10, 50, 1, 10, 0) -- focus up 10 to 50
+            I.AuraModel(1, 3, 10, 50, 1, 10, 0) -- spring up 10 to 50
+            -- without surge: M + focus + spring + c x S inside, M + focus + spring + S outside
+            assert.are.same({ 17, 27 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 16).est })
+            I.AuraModel(1, 1, 20, 40, 1, 20, 0) -- surge up 20 to 40
+            I.ResourceShift(1, -10, 20, Obs.CastSuccess) -- the window to 25
+            -- 5 x (M + focus + S) + spring, in and out of the window: 5 x (2 + 2 + 20) + 3
+            assert.are.same({ 123, 123 }, { VS.Regen(MANA, 22).est, VS.Regen(MANA, 26).est })
+            assert.are.same({ 17, 27 }, { VS.Regen(MANA, 41, VS.CASTING).est, VS.Regen(MANA, 41).est }) -- surge gone
+        end)
+
+        it("multiplies the learned mp5 part alone by an `mp5Mult` entry with no `spirit`", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", mp5Mult = 2 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 1, 10, 40, 1, 10, 0) -- surge up 10 to 40
+            -- inside 2 x M + c x S = 4 + 10, outside 2 x M + S = 4 + 20
+            assert.are.same({ 14, 24 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 16).est })
+        end)
+
+        it("keeps the stored regen split when an out-of-combat read lands under an `mp5Mult` aura", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", mp5Mult = 2 } })
+            I.AuraModel(1, 1, 10, 30, 1, 10, 0) -- up 10 to 30
+            local before = { I.res.regE[1], I.res.spE[1], I.res.decl[1], I.res.spDecl[1] }
+            obs(Obs.Read, 12, 1, 24, I.ReadOf.Regen) -- the game's pair scales the mp5 part: no news
+            obs(Obs.Read, 12, 1, 10, I.ReadOf.RegenSpirit)
+            I.Fold(12, false)
+            assert.are.same(before, { I.res.regE[1], I.res.spE[1], I.res.decl[1], I.res.spDecl[1] })
+        end)
+
         it("runs a function that raised at the build again at the next combat edge, counted once", function()
             local ready = false
             boot({

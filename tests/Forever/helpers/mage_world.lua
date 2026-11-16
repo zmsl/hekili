@@ -380,7 +380,8 @@ end
 local function costOf(key, ids, H, up, stacks)
     local c
     if key == "arcane_blast" then
-        c = math.floor(0.15 * (1 + stacks("arcane_blast")) * BASE) -- as the kit's spendBase: floor(fraction x base)
+        -- as the kit's spendBase: fraction x base to the nearest whole (wowsims e4ef929e54 rounds)
+        c = math.floor(0.15 * (1 + stacks("arcane_blast")) * BASE + 0.5 + 1e-6)
     else
         c = COST[key] or 0
         if type(c) == "table" then
