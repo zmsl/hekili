@@ -194,7 +194,9 @@ bash = {
 },
 ```
 
-The refund is the belief's only. The simulation does not predict avoidance, so it never reads the field. When the client reports the avoid, the belief also removes the target debuffs the cast's `now` applied.
+An ability whose `now` spends more of its resource than the cost, such as a strike that puts all the remaining rage into its damage, declares `refundNowOnAvoid = true` when an avoid takes the cost alone. The belief then gives back what the cast's `now` took from the ability's resource when the target dodges, parries or misses that cast. It adds the cost share, if the ability has one, and gives both back once.
+
+The refund is the belief's only. The simulation does not predict avoidance, so it never reads either field. When the client reports the avoid, the belief also removes the target debuffs the cast's `now` applied.
 
 ## See also
 

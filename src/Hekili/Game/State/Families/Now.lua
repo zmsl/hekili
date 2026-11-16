@@ -11,7 +11,8 @@
 -- (Families/Windows.lua) runs in the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An `applyBuff`/`applyDebuff` with no duration writes the aura's registered one: its number, or its function evaluated
 -- in this context (gear-aware spec §5), so a pack writes a duration once.
--- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
+-- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share,
+-- and with `refundNowOnAvoid` what its `now` took from the ability's own resource.
 -- A channel that ran to its believed end runs the ability's `now_finish` (the sim's `finish`'s twin; aura audit C11).
 -- A reaction (RegisterReaction) runs in the same context at a settled outcome's row time, never through the cast fold.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
@@ -93,6 +94,9 @@ local asOf = false
 -- auras its `now` wrote, each as it was before (expiry 0: down), at most UNDO of them. Preallocated.
 local UNDO = 4
 local undoA, undoT, undoSwap, paid, undoN = 0, -1, 0, 0, 0
+-- And what its `now` took from the ability's own slot, from the estimate, the floor (lo0) and the top (L1237), for an
+-- ability with `refundNowOnAvoid`; 0 otherwise.
+local nowE, nowL, nowH = 0, 0, 0
 local journal = true -- false while an `onCrit` runs: a landed crit's writes are no avoid's to undo
 local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
@@ -108,6 +112,7 @@ local vA, vT, vPaid, vAp, vSpends, vRaised = {}, {}, {}, {}, {}, {}
 local bR, bD, bE, bL, bH, bP = {}, {}, {}, {}, {}, {}
 local refund = {} -- by resource slot: the class's default share (the resource meta's `refundOnAvoid`), 0 none
 A.refund = {} -- by ability index: the share of its cost an avoid gives back (the ability's `refundOnAvoid`), 0 none
+A.refundNow = {} -- by ability index: true when an avoid gives back what its `now` took (`refundNowOnAvoid`, L1237)
 I.avoidsRun = 0
 
 --- The context's reads answer at `t` from now on (a resource's `taken`, run at a hit: Families/Resources.lua); its
@@ -691,6 +696,7 @@ I.OnBuild(function(def)
             f = r > 0 and refund[r] or 0
         end
         A.refund[a] = type(f) == "number" and f > 0 and f <= 1 and f or 0
+        A.refundNow[a] = obj.refundNowOnAvoid == true
     end
     for j = 1, #def.auras do
         local key = def.auras[j].key
@@ -837,6 +843,7 @@ local function run(o, t)
     end
 
     undoA, undoT, undoSwap, paid, undoN = a, o.t, I.curSwapN, 0, 0
+    nowE, nowL, nowH = 0, 0, 0
     local started = o.kind == CAST and A.castStartT[a] or 0 -- read before `automatic` and the line after clear it
     automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
@@ -846,7 +853,13 @@ local function run(o, t)
         rawset(NAMES, "cast_start", started)
         rawset(NAMES, "instant", started == 0)
         flight = A.lands[a] and travel(a) or 0
+        local r, R = A.refundNow[a] and A.slot[a] or 0, I.res
+        local e, l, h = R.est0[r], R.lo0[r], R.hi0[r] -- nil with no slot (r 0): not read
         call(A.now[a], a, t)
+        if r > 0 then -- the belief's own numbers (never a secret); a gain nets nothing back
+            e, l, h = e - R.est0[r], l - R.lo0[r], h - R.hi0[r]
+            nowE, nowL, nowH = e > 0 and e or 0, l > 0 and l or 0, h > 0 and h or 0
+        end
         flight = 0
         rawset(NAMES, "cast_start", 0)
         rawset(NAMES, "instant", false)
@@ -925,8 +938,9 @@ end)
 
 -- Our cast's own avoid (Events/Rows.lua): the latest cast, when it is the one avoided, loses the target auras its `now`
 -- wrote (each back as it was, when the target is still the cast's) and gets back the ability's `refundOnAvoid` share of
--- the cost it paid; both `modelled` at the outcome. Any other cast's avoid changes nothing (its effects are no longer
--- the latest's to undo). The cooldown,
+-- the cost it paid, plus, with `refundNowOnAvoid`, what its `now` took from that slot (est, floor and top each their
+-- own: L1237), in one refund; both `modelled` at the outcome. Any other cast's avoid changes nothing (its effects are
+-- no longer the latest's to undo). The cooldown,
 -- the GCD and the player auras stay (an avoided ability still triggers them). Allocates nothing.
 local DEFLECT, EVADE = I.HitKind.DEFLECT, I.HitKind.EVADE
 -- Forgets the CDM verdict's refund memory of the cast of ability a at castT on every target record it wrote (L1029):
@@ -956,8 +970,9 @@ I.On(Obs.Avoided, function(o, t)
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
     end
     local r = A.slot[o.a]
-    if r > 0 and paid > 0 and A.refund[o.a] > 0 then
-        I.Refund(r, paid * A.refund[o.a], t) -- at the fold; the answers since the cast's spend already saw it
+    local d = r > 0 and paid * A.refund[o.a] or 0
+    if r > 0 and (d > 0 or nowH > 0) then -- at the fold; the answers since the cast's spend already saw it
+        I.Refund(r, d + nowE, t, false, d + nowL, d + nowH)
     end
     I.avoidsRun = I.avoidsRun + 1
 end)
@@ -981,6 +996,9 @@ function I.VerdictRefund(j, ap, t)
     -- shortcut: a target immune to this debuff only (the cast landed, its record never lights) reads as a miss and is
     -- refunded; accepted as bounded by the owner (L1096): two unlit verdicts suspend the item's proof until it lights
     -- again, so at most ~2 wrong refunds per item per immune target. Upgrade if an immune flag becomes readable.
+    -- shortcut: the cost share only, never what a `refundNowOnAvoid` cast's `now` took (L1237): an immune target's
+    -- wrong verdict (L1096 above) would give back a whole pool, not a share; the cast's avoid row, plain, still gives
+    -- it back when the verdict found nothing to refund (no share). Upgrade with the owner's ruling if a pack needs both.
     -- shortcut: a short answer heard between the cast and a later spend no longer caps this late refund (that spend
     -- reset sinceShort; the cap is valid only for answers after the cast's own spend); the error is at most the share,
     -- until the next answer. Upgrade (a per-cast cap carried across spends) if traces show est above the truth after

@@ -1931,15 +1931,20 @@ end
 --- set since the cast plus what the slot gained since that answer (the answer already saw the refunded pool; regen or
 --- a credit after it adds to the truth); lo takes it only when no usable answer raised lo since the cast, est only
 --- when none raised est (else that answer's bound already holds the refund). `held`: an answer since the cast raised
---- either, before a later spend reset those marks (a late refund: the CDM verdict's), so lo and est stay. Returns what
---- est, lo and hi took (I.Unrefund's). Allocates nothing.
-function I.Refund(r, d, t, held)
+--- either, before a later spend reset those marks (a late refund: the CDM verdict's), so lo and est stay. `dL`, `dH`
+--- (optional, default d): what lo and hi take instead (a `now`'s spend clamped each at 0 apart: Families/Now.lua).
+--- Returns what est, lo and hi took (I.Unrefund's). Allocates nothing.
+function I.Refund(r, d, t, held, dL, dH)
     local lo, e, top, hi = R.lo0[r], R.est0[r], R.sinceShort[r], R.hi0[r]
     if top < math.huge then
         local moved = e - R.sinceShortEst[r]
         top = top + (moved > 0 and moved or 0)
     end
     I.ResourceShift(r, d, t, Obs.Avoided)
+    if dL then
+        R.lo0[r], R.hi0[r] = clamp(lo + dL, R.max[r]), clamp(hi + dH, R.max[r])
+        norm(r)
+    end
     if held or R.sinceYes[r] then
         R.lo0[r] = lo
     end

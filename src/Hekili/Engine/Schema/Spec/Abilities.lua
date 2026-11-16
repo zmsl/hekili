@@ -68,7 +68,10 @@ local methods = {
     -- combo points pins no energy). `missable = true` or
     -- an aura key: a miss leaves that debuff off the target (trackMisses, above). `refundOnAvoid = true` (its resource
     -- meta's share) or a share 0-1: a dodged, parried or missed cast gives back that much of its cost (the belief's
-    -- only, Game/State/Families/Now.lua; the sim does not predict avoidance). `onCrit = function() ... end`, beside
+    -- only, Game/State/Families/Now.lua; the sim does not predict avoidance). `refundNowOnAvoid = true`: that avoid
+    -- also gives back what the cast's `now` spent from the ability's own resource (a strike whose `now` takes the
+    -- rest of the pool past its cost, an avoid costing the cost alone: L1237); the belief's only, the sim never reads
+    -- it (Engine/Schema/Tracked.lua copies it as a raw field). `onCrit = function() ... end`, beside
     -- `now`: what a critical hit of the cast gives, written with the same verbs when the target's row shows our cast's
     -- own crit (Primal Fury's `gain( 5, "rage" )`); the belief's only, the sim does not predict crits. `onLand`, the
     -- same way: what only a landed hit gives (a mana return), run once the cast's hit is settled as landed, never on an

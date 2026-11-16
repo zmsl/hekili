@@ -48,6 +48,8 @@ local format = string.format
 --   it and shifts the floor and the top by the average too.
 --   Also without a bump: the aura fields `spellHaste`, `stats` and `statsPct` (the stat split, L971); an older core
 --   ignores them and holds the out-of-combat spell haste and stats through a fight, as before.
+--   Also without a bump: the ability field `refundNowOnAvoid` (L1237); an older core ignores it and keeps what the
+--   ability's `now` spent after an avoid, as before.
 local CONTENT_API = 14
 
 local done, notice = false, nil
