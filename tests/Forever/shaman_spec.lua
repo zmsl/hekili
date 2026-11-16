@@ -19,7 +19,7 @@ local KIT = {
     earth_shock = { { 8042, 8044, 8045, 8046, 10412, 10413, 10414 }, 450, 6, "spell" },
     flame_shock = { { 8050, 8052, 8053, 10447, 10448, 29228 }, 410, 6, "spell" },
     fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 375, 10, "spell" }, -- the game's (owner's tooltips, every rank; DB2 520)
-    stormstrike = { { 17364 }, 0.08, 6, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
+    stormstrike = { { 17364 }, 0.08, 8, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat); 8 s (e4ef929e54)
     searing_totem = { { 3599, 6363, 6364, 6365, 10437, 10438 }, 170, 0, "totem" },
     flametongue_totem = { { 8227, 8249, 10526, 16387 }, 275, 0, "totem" },
     strength_of_earth_totem = { { 8075, 8160, 8161, 10442, 25361 }, 275, 0, "totem" },
@@ -63,6 +63,7 @@ local KIT = {
     cure_poison = { { 526 }, 0.09, 0, "spell" },
     cure_disease = { { 2870 }, 0.09, 0, "spell" },
     totemic_call = { { 437009 }, 0.25, 30, "spell" },
+    totemic_recall = { { 36936 }, 0, 0, "spell" }, -- wowsims e4ef929e54's row: no cost, a 1.5 s GCD
 }
 
 -- Each totem's element and its ranks' durations (DB2 duration_ms).
@@ -151,7 +152,7 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(46, n)
+        assert.are.equal(47, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
@@ -208,7 +209,7 @@ describe("Forever Shaman", function()
         e.talent.mindfulness = nil
         e.set_bonus.polished_driftwood_icon = nil
         assert.are.same({ 0, 0.17, 0.33, 0.5, 0.58 }, shares)
-        assert.are.same({ 31.25, 12.8, 0 }, seed("enhancement")) -- re-pin log (Windshaper Skyborne)
+        assert.are.same({ 25.75, 12.0, 0 }, seed("enhancement")) -- re-pin e4ef929e54 log (its gear lost Five Thunders)
         assert.are.same({ aura = "improved_stormstrike", share = 0.5 }, r.models.improved_stormstrike)
         assert.are.same({ 2, 1223031, 2 }, w.talents.improved_stormstrike)
         -- Mana Spring Totem's buff: 10 every 2 s at rank 4 (DB2 aura 24), +5% a rank of Restorative Totems
@@ -332,7 +333,7 @@ describe("Forever Shaman", function()
     )
 
     it(
-        "takes 4% a rank of Maelstrom Weapon off Lightning Bolt's cast and cost a stack, five at 5/5 making it free; the cast spends them",
+        "takes 20% a stack of Maelstrom Weapon off Lightning Bolt's cast and cost at every rank, five making it free; the cast spends them",
         function()
             local lb = w.abilities.lightning_bolt
             w.game.known[15208] = true
@@ -344,14 +345,16 @@ describe("Forever Shaman", function()
             assert.are.same({ 1, 88 }, { math.floor(cast * 1000 + 0.5) / 1000, math.floor(spend + 0.5) })
             e.buff = buffs({ maelstrom_weapon = 5 })
             assert.are.same({ 0, 0 }, { ld.run(lb.cast, e), ld.run(lb.spend, e) })
-            -- 3/5: 12% a stack, 36% off at three stacks, 60% at five (wowsims talents_enhancement.go:247-249)
-            e.talent.maelstrom_weapon = { rank = 3, enabled = true }
-            e.buff = buffs({ maelstrom_weapon = 3 })
-            cast, spend = ld.run(lb.cast, e), ld.run(lb.spend, e)
-            assert.are.same({ 1.6, 141 }, { math.floor(cast * 1000 + 0.5) / 1000, math.floor(spend + 0.5) })
-            e.buff = buffs({ maelstrom_weapon = 5 })
-            cast, spend = ld.run(lb.cast, e), ld.run(lb.spend, e)
-            assert.are.same({ 1, 88 }, { math.floor(cast * 1000 + 0.5) / 1000, math.floor(spend + 0.5) })
+            -- 1/5 and 3/5 too: the talent's effect 1 is -20% at every point (wowsims e4ef929e54: curve 408498 -20 at
+            -- each of the five ranks, talents_enhancement.go applyMaelstromWeapon); the rank moves only the rate (6..10 a minute)
+            for _, rank in ipairs({ 1, 3 }) do
+                e.talent.maelstrom_weapon = { rank = rank, enabled = true }
+                e.buff = buffs({ maelstrom_weapon = 3 })
+                cast, spend = ld.run(lb.cast, e), ld.run(lb.spend, e)
+                assert.are.same({ 1, 88 }, { math.floor(cast * 1000 + 0.5) / 1000, math.floor(spend + 0.5) }, rank)
+                e.buff = buffs({ maelstrom_weapon = 5 })
+                assert.are.same({ 0, 0 }, { ld.run(lb.cast, e), ld.run(lb.spend, e) }, rank)
+            end
             for _, field in ipairs({ "now", "handler" }) do
                 e = ld.env(w)
                 ld.run(lb[field], e)
@@ -547,10 +550,12 @@ describe("Forever Shaman", function()
         end
     )
 
-    it("declares Mana Tide's mana: 290 every 3 s (mp5 483.3) while mana_tide is up", function()
+    -- the regen entry's `mp5` is a rate a second (Engine/Schema/Spec/Regen.lua), as Mana Spring's value / 2: 290 every
+    -- 3 s is 96.7 a second (1325257 effect 1, PeriodMs 3000), never 290 / 3 x 5 = 483.3 (ledger L1156 b)
+    it("declares Mana Tide's mana: 290 every 3 s (96.7 a second) while mana_tide is up", function()
         local m = w.resources[0].models.mana_tide
-        assert.are.same({ "mana_tide", 290 / 3 * 5 }, { m.aura, m.mp5 })
-        assert.is_true(math.abs(m.mp5 - 483.3) < 0.05)
+        assert.are.same({ "mana_tide", 290 / 3 }, { m.aura, m.mp5 })
+        assert.is_true(math.abs(m.mp5 - 96.67) < 0.005)
     end)
 
     -- wowsims talents_enhancement.go:218-231: rank effect 2 resets Stormstrike's cooldown on a dodge or parry taken
@@ -610,7 +615,7 @@ describe("Forever Shaman", function()
     -- wowsims talents_enhancement.go:115-159, talents_elemental.go:78-104 (sd 13304, 22835): registered for the
     -- reads; crits are unobservable live, so nothing here applies them.
     it(
-        "registers flurry 16257 (15 s, 3 stacks), elemental_devastation 30165 (10 s), the Windfury Totem charge buff",
+        "registers flurry 16257 (15 s, 3 stacks), elemental_devastation 30165 (10 s), and no Windfury Totem charge buff",
         function()
             local a = w.auras
             assert.are.same({ 16257, 15, 3 }, { a.flurry.id, a.flurry.duration, a.flurry.max_stack })
@@ -618,11 +623,12 @@ describe("Forever Shaman", function()
                 { 30165, 10, 1 },
                 { a.elemental_devastation.id, a.elemental_devastation.duration, a.elemental_devastation.max_stack }
             )
-            -- core/buffs/drivers.go:245-275: 1 s, 2 charges (sd 7681: DurationMs 1000, ProcCharges 2)
-            assert.are.same(
-                { 10610, 1, 2 },
-                { a.windfury_attack.id, a.windfury_attack.duration, a.windfury_attack.max_stack }
-            )
+            -- Windfury Totem's proc is a weapon strike since hotfix push 114060 (wowsims 91aeeeebb3, core/buffs/drivers.go
+            -- newWindfuryTotemStrike): 10610 is the strike's row, no 1 s two-charge buff, so no aura registers it
+            assert.is_nil(a.windfury_attack)
+            for key, aura in pairs(a) do
+                assert.are_not.equal(10610, type(aura) == "table" and aura.id, key)
+            end
         end
     )
 
@@ -1310,6 +1316,43 @@ describe("Forever Shaman manual-press kit", function()
         assert.are.equal(13, ld.run(w.abilities.grounding_totem.cooldown, e))
         assert.are.equal(30, ld.run(w.abilities.stoneclaw_totem.cooldown, e))
         assert.is_near(0.25 * 0.75, ld.run(w.abilities.totemic_call.spend, e), 1e-9)
+    end)
+
+    -- wowsims e4ef929e54 totems.go registerTotemicRecallSpell (36936: level 20, a 1.5 s GCD, no cost): every totem
+    -- standing goes down (each element's slot ends at the cast) and with it every totem buff on us. Its refund (25% of
+    -- the standing totems' base costs) is not modelled: neither layer names the standing totem (blocker repin-shaman-09-1).
+    it("Totemic Recall takes down every totem slot and every totem buff, in both layers", function()
+        w.game.known[36936] = true
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            local slots = {}
+            e.summonTotem = function(_, elem, duration)
+                slots[#slots + 1] = { elem, duration }
+            end
+            ld.run(w.abilities.totemic_recall[field], e)
+            table.sort(slots, function(x, y)
+                return x[1] < y[1]
+            end)
+            assert.are.same({ { "air", 0 }, { "earth", 0 }, { "fire", 0 }, { "water", 0 } }, slots, field)
+            table.sort(e.removed)
+            assert.are.same({
+                "fire_resistance",
+                "flametongue",
+                "frost_resistance",
+                "grace_of_air",
+                "healing_stream",
+                "mana_spring",
+                "mana_tide",
+                "nature_resistance",
+                "stoneskin",
+                "strength_of_earth",
+                "windfury",
+                "windwall",
+            }, e.removed, field)
+            assert.are.same({}, e.applied, field)
+            assert.are.same({}, e.gained, field)
+        end
+        assert.is_true(ld.run(w.abilities.totemic_recall.known, ld.env(w)))
     end)
 
     it("spends Nature's Swiftness on every spell its mask holds, instant", function()

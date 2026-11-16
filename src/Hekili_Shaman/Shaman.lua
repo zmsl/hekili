@@ -9,12 +9,14 @@
 -- under the five-second rule (`fsr`), and the default priority, Enhancement (wowsims.com), translated from
 -- wowsims/forever's APL (tools/wowsims/specs/shaman_enhancement.lua). Research: the class-completion research §4.
 -- Unmodelled: the totems' effects (their buffs are applied on the summon, as wowsims does), Flametongue and Windfury
--- Weapon's procs, Windfury Totem's proc (its 1 s attack-power buff is registered, nothing applies it), Improved
+-- Weapon's procs, Windfury Totem's proc (a main-hand weapon strike, 10610, since hotfix push 114060: no buff, no
+-- Maelstrom Weapon stack, no swing reset; it spends a Flurry charge, which nothing here models), Improved
 -- Lightning Shield (+5% a rank on the shield's damage: not a charge), Rage of the Farseer's +30% attack speed (the swing
 -- family observes the hasted durations; only the swing in flight when it is cast lags one swing).
 -- Also here: Improved Stormstrike (rank 2 applied by Stormstrike; rank 1's 50% roll is observed only) and its reset of
 -- Stormstrike on a dodge or parry taken (rank 2), Nature's Swiftness, Flurry and Elemental Devastation (registered for
--- reads: their crits are unobservable), Burning Totem (the relic: +3 s on Flame Shock).
+-- reads: their crits are unobservable), Burning Totem (the relic: +3 s on Flame Shock), Totemic Recall (every totem
+-- down; its refund is not modelled).
 -- The Elemental kit (class-completion Task 17; its priority Elemental (wowsims.com)): what wowsims/forever's
 -- Elemental list casts (ui/specs/shaman/elemental/builds/testing.build.json): Chain Lightning (its 6 s cooldown lifted
 -- by Elemental Mastery), Elemental Mastery, Magma, Windfury and Mana Tide Totems (Windfury Totem only for a
@@ -261,6 +263,14 @@ end
 -- Mana Spring's buff on us (DB2 aura 24), mana every 2 s by totem rank.
 local MANA_SPRING = { 4, 6, 8, 10 }
 
+-- Totemic Recall's takedown: the four elements and every totem buff (sorted: a fixed order).
+local ELEMENTS = { "fire", "earth", "water", "air" }
+local ALL_TOTEM_BUFFS = {}
+for _, buff in pairs(TOTEM_BUFF) do
+    ALL_TOTEM_BUFFS[#ALL_TOTEM_BUFFS + 1] = buff
+end
+table.sort(ALL_TOTEM_BUFFS)
+
 local function rest(ids)
     local out = {}
     for i = 2, #ids do
@@ -308,6 +318,19 @@ local function summon(key)
         end
         if own then
             applyBuff(own, d)
+        end
+    end
+end
+
+-- Totemic Recall's: each element's slot ends now (a zero-length summon, Hekili's summonTotem) and every totem buff
+-- goes (two closures, as summon's).
+local function recall()
+    return function()
+        for i = 1, #ELEMENTS do
+            summonTotem("totemic_recall", ELEMENTS[i], 0)
+        end
+        for i = 1, #ALL_TOTEM_BUFFS do
+            removeBuff(ALL_TOTEM_BUFFS[i])
         end
     end
 end
@@ -484,11 +507,11 @@ local MINDFULNESS = { 0.17, 0.33, 0.5 }
 -- (Mana Spring Totem, Mindfulness 3/3's 50% share and gear: S = 28.24, the parts below are the log's two rates) and
 -- 45.25 outside the rule, so spirit 14.12 (the outside
 -- rate less the casting one) and mp5 31.13 (the e2842f0a78 log, Windshaper Skyborne; was 29.75 / 42.5 as a Troll);
--- shaman_enhancement 17.8 / 49.05, so spirit 31.25 and mp5 17.8 (the e2842f0a78 log, Windshaper Skyborne; was 9.8 /
--- 38.42 as an Orc). Forever's
+-- shaman_enhancement 17.0 / 42.75, so spirit 25.75 and mp5 17.0 (the e4ef929e54 log: its gear lost the Five Thunders
+-- pieces; was 17.8 / 49.05 at e2842f0a78, 9.8 / 38.42 as an Orc). Forever's
 -- Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not Classic's formula.
 -- The seeds' mp5 is the rate without the totem's buff (the logs' casting rate a tick before it: 2.613 a tick in
--- shaman_elemental.log before -2.0 s, 1.280 in shaman_enhancement.log before -3.0 s), so 26.13 and 12.8; the totem's
+-- shaman_elemental.log before -2.0 s, 1.200 in shaman_enhancement.log before -3.0 s), so 26.13 and 12.0; the totem's
 -- own entry (below) adds its mp5 while the buff is up, as wowsims models it (totems.go:105-109).
 -- Improved Stormstrike (1238931, DB2 aura 134 = 50): +50% of Spirit regen while casting for 15 s.
 -- Mana Spring (DB2 aura 24, 4/6/8/10 every 2 s by rank, +5% a rank of Restorative Totems 16187): mp5 = value / 2.
@@ -497,8 +520,8 @@ spec:RegisterResource(
     Enum.PowerType.Mana,
     {
         improved_stormstrike = { aura = "improved_stormstrike", share = 0.5 },
-        -- Mana Tide Totem's buff (1325257 effect 1: 290 every 3 s, 13 s; wowsims spell data)
-        mana_tide = { aura = "mana_tide", mp5 = 290 / 3 * 5 },
+        -- Mana Tide Totem's buff (1325257 effect 1: 290 every 3 s, 13 s; wowsims spell data): a rate a second
+        mana_tide = { aura = "mana_tide", mp5 = 290 / 3 },
         mana_spring = {
             aura = "mana_spring",
             mp5 = function()
@@ -513,10 +536,10 @@ spec:RegisterResource(
     {
         fsr = {
             spirit = function()
-                return state.spec.elemental and 14.12 or 31.25
+                return state.spec.elemental and 14.12 or 25.75
             end,
             mp5 = function()
-                return state.spec.elemental and 26.13 or 12.8
+                return state.spec.elemental and 26.13 or 12.0
             end,
             -- Mindfulness's rank (the belief reads it after its talent walk), never the spec; + 8% with the Polished
             -- Driftwood Icon relic (its equip aura 1248756: aura 134 +8, wowsims item_totems.go:13-20)
@@ -575,12 +598,12 @@ spec:RegisterAuras({
     flametongue_weapon = { enchants = { 5, 4, 3, 523, 1665, 1666 }, duration = 3600, max_stack = 1 },
     windfury_weapon = { enchants = { 283, 284, 525, 1669 }, duration = 3600, max_stack = 1 },
     frostbrand_weapon = { enchants = { 2, 12, 524, 1667, 1668 }, duration = 3600, max_stack = 1 },
-    -- Flurry (16257, wowsims: 15 s, 3 charges, set on a melee crit, spent by landed white swings) and Elemental
-    -- Devastation (30165: 10 s, +3/6/9% melee crit after a spell crit): registered for reads; crits are unobservable
-    -- live, so nothing here applies them. Windfury Totem's proc buff (10610: 1 s, 2 charges): the same.
+    -- Flurry (16257, wowsims e4ef929e54: 15 s, 3 charges, set on any melee crit; every white swing spends one whatever
+    -- its outcome, and so does a Windfury Weapon or Windfury Totem strike, 0.5 s apart; Stormstrike and spells spend
+    -- none) and Elemental Devastation (30165: 10 s, +3/6/9% melee crit after a spell crit): registered for reads; crits
+    -- are unobservable live, so nothing here applies them.
     flurry = { id = 16257, copy = { 16256 }, duration = 15, max_stack = 3 }, -- 16256: the talent's CDM item
     elemental_devastation = { id = 30165, copy = { 30160 }, duration = 10, max_stack = 1 },
-    windfury_attack = { id = 10610, duration = 1, max_stack = 2 },
     -- Nature's Swiftness (16188): until used (wowsims DurationMs -1), one charge; the next Lightning Bolt or Chain
     -- Lightning (its mask) is instant and spends it.
     natures_swiftness = { id = 16188, duration = 3600, max_stack = 1 },
@@ -650,7 +673,7 @@ spec:RegisterAuras({
         duration = 300,
         max_stack = 1,
     },
-    -- the party's proc-trigger auras (the 1 s attack-power buff Windfury's proc applies is windfury_attack, above)
+    -- the party's proc-trigger auras (Windfury's proc is a weapon strike, 10610: no buff of its own)
     flametongue = {
         id = 15036,
         copy = withTotem("flametongue_totem", { "flametongue_totem", 8230, 8250, 10521 }),
@@ -706,7 +729,8 @@ spec:RegisterCostMod({
 
 spec:RegisterAbilities({
     -- Maelstrom Weapon (408505 aura 108 base -20, two effects on Lightning Bolt's class mask): each stack takes 20% off
-    -- its cast time and cost; five make it instant and free. Elemental Alacrity and Elemental Mastery's flat cuts come
+    -- its cast time and cost at every talent rank (wowsims e4ef929e54: the talent's effect 1 is -20 at each of its five
+    -- points; was 4% a point); five make it instant and free. Elemental Alacrity and Elemental Mastery's flat cuts come
     -- off the cast first; Convection's -2% a rank off the cost.
     lightning_bolt = {
         id = 403,
@@ -722,14 +746,14 @@ spec:RegisterAbilities({
             if buff.elemental_mastery.up then
                 t = t - 0.5
             end
-            return max(0, t) * max(0, 1 - 0.04 * talent.maelstrom_weapon.rank * buff.maelstrom_weapon.stack)
+            return max(0, t) * max(0, 1 - 0.2 * buff.maelstrom_weapon.stack)
         end,
         cooldown = 0,
         gcd = "spell",
 
         spend = function()
             return byRank(LIGHTNING_BOLT_COST, LIGHTNING_BOLT)
-                * max(0, 1 - 0.04 * talent.maelstrom_weapon.rank * buff.maelstrom_weapon.stack)
+                * max(0, 1 - 0.2 * buff.maelstrom_weapon.stack)
                 * (1 - 0.02 * talent.convection.rank)
         end,
         spendType = "mana",
@@ -862,7 +886,7 @@ spec:RegisterAbilities({
     stormstrike = {
         id = 17364,
         cast = 0,
-        cooldown = 6, -- wowsims 4b0030a44b (was 8)
+        cooldown = 8, -- wowsims e4ef929e54 (hotfix push 113722, a63f2b37f0; 6 at 4b0030a44b)
         gcd = "spell",
 
         -- wowsims spell data, absent from DB2 (wowdb spell 17364 costs 125 flat): 8% of base mana, 121 at level 60
@@ -1080,7 +1104,7 @@ spec:RegisterAbilities({
         known = knows(CURE_DISEASE),
     },
 
-    -- Recalls the totems for a quarter of the base mana (its refund is not modelled).
+    -- Forever's Totemic Call (437009; wowsims's row: a summon, 25% of base mana, 30 s).
     totemic_call = {
         id = 437009,
         cast = 0,
@@ -1094,6 +1118,23 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(TOTEMIC_CALL),
+    },
+
+    -- Totemic Recall (36936; wowsims e4ef929e54 totems.go registerTotemicRecallSpell: level 20, a 1.5 s GCD, no cost):
+    -- every totem standing goes down, each element's slot ended at the cast, and with them every totem buff on us.
+    -- shortcut: its refund (25% of the standing totems' base costs as mana) is not modelled: neither layer's totem read
+    -- names the standing totem (blocker repin-shaman-09-1); add `gain` once `totem.<element>.spell` exists.
+    totemic_recall = {
+        id = 36936,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        startsCombat = false,
+        known = knows({ 36936 }),
+
+        now = recall(),
+        handler = recall(),
     },
 
     searing_totem = totemAbility("searing_totem"),

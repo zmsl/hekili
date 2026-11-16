@@ -43,6 +43,10 @@
 -- Levels (P8; learn_shaman.lua regenerated with the Elemental kit's ranks): L10 0.0, L40 0.0, L60 5.0 s, no leveling
 -- line needed. The spells the DB2 lacks (Lava Burst rank 4, 1326047; Elemental Mastery, 16166) still count as learned
 -- at level 1, so the lower brackets can press them early (the check's limit, docs/dev/wowsims-packs.md).
+-- Re-pin 0.9 (e4ef929e54, lane repin-shaman-09): the request and the pack's lines are unchanged; the log moves with
+-- upstream's Searing Totem cadence (an attack every 2.425 s, the first at 2.2 s: 91a36310d6, its Tag 1 rows are no
+-- choice), the spell resistance constant 8L + 19 (dffbd4b05a) and the Weakness Analyzer's on-use cooldown (90 s -> 6
+-- min in the item db: one use a fight, the ~91 s one gone).
 return {
     class = "SHAMAN",
     pack = "Elemental (wowsims.com)",

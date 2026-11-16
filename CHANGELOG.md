@@ -3,10 +3,13 @@
 ## Unreleased
 
 ### New
+- Shaman: Hekili now knows Totemic Recall; casting it takes your totems and their buffs down in the recommendations (the mana it gives back is not counted yet). Not yet checked in game.
 
 ### Changed
+- Enhancement Shaman: the Enhancement (wowsims.com) priority follows the latest wowsims.com: Stormstrike's cooldown is 8 seconds, and each Maelstrom Weapon stack takes 20% off Lightning Bolt's cast time and cost at every talent rank. Not yet checked in game.
 
 ### Fixed
+- Shaman: Mana Tide Totem now counts 290 mana every 3 seconds, not five times that, so your mana is no longer overestimated while it is up.
 
 ### Known issues
 
