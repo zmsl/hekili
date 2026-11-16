@@ -361,7 +361,7 @@ local methods = {
                     class.abilityByName[ a.name ] = class.abilities[ a.name ] or a
                 end
 
-                if a.rangeSpell and type( a.rangeSpell ) == "number" then
+                if type( rawget( a, "rangeSpell" ) ) == "number" then -- a function (a.funcs) is asked by ID each time
                     Hekili:ContinueOnSpellLoad( a.rangeSpell, function( success )
                         if success then
                             local info = GetSpellInfo( a.rangeSpell )

@@ -19,6 +19,8 @@ Without the Cooldown Manager, Hekili Forever estimates in combat whether each bu
 
 When one of the Cooldown Manager's bars shows one of the player's auras, Hekili Forever uses it to correct whether that aura is up. Hekili Forever learns only about the auras that are on a bar. An aura that the game offers but that sits in no bar teaches it nothing.
 
+An icon proves itself the first time it lights up for an aura. From then on, when it stays dark after one of your casts, Hekili Forever knows the aura did not land. Hekili Forever remembers the proven icons for each character across logouts and reloads, so a debuff that misses in your first pull is caught too. Moving an icon to another bar or removing it in the game's settings makes Hekili Forever forget that icon until it lights up again. Changes you discard are ignored.
+
 The game's Cooldown Manager must be turned on in the game's options. When it is off, the panel says so. When the game offers no Cooldown Manager to the character, the panel shows the game's reason.
 
 Hekili Forever always uses the Cooldown Manager this way; there is no setting that turns the whole feature off.

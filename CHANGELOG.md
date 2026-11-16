@@ -3,14 +3,18 @@
 ## Unreleased
 
 ### New
+- Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
 - A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
 
 ### Changed
+- Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
 
 ### Fixed
+
+- Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 
 ### Known issues
 

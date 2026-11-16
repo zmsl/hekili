@@ -1,10 +1,10 @@
 diff --git a/sim/core/apl_values_aura.go b/sim/core/apl_values_aura.go
-index f9850f9bc9..427185043e 100644
+index 1cb0cbd866aee12690cf06749daf7654e62fca3d..f0c6c0fc1de8f69a1cc2e401883addb1236c33ce 100644
 --- a/sim/core/apl_values_aura.go
 +++ b/sim/core/apl_values_aura.go
-@@ -35,7 +35,7 @@ func readDot(sim *Simulation, dot *Dot) auraReading {
- // stack up to its maximum, or one. Any other aura, a proc the cast triggers among them, reads as it is.
- func (unit *Unit) readLanding(sim *Simulation, aura *Aura, duration func() time.Duration) auraReading {
+@@ -40,7 +40,7 @@ func (unit *Unit) readLanding(sim *Simulation, aura *Aura, duration func() time.
+ 		return auraReading{landing: true, from: sim.CurrentTime}
+ 	}
  	hc := &unit.Hardcast
 -	if !unit.hardcastRuns(sim) || hc.IsChanneled || hc.Target != aura.Unit || hc.ActionID.IsEmptyAction() ||
 +	if noPickAtCastEnd || !unit.hardcastRuns(sim) || hc.IsChanneled || hc.Target != aura.Unit || hc.ActionID.IsEmptyAction() ||
@@ -12,7 +12,7 @@ index f9850f9bc9..427185043e 100644
  		return auraReading{active: aura.IsActive(), remaining: aura.RemainingDuration(sim), stacks: aura.GetStacks()}
  	}
 diff --git a/sim/core/gcd.go b/sim/core/gcd.go
-index 42f69a15f5..75f80a9827 100644
+index b2e59237f89704bfecbb9d5c5966fd74d6b81992..f377e5515140ce5f67cd7fc53b29f46146b416c6 100644
 --- a/sim/core/gcd.go
 +++ b/sim/core/gcd.go
 @@ -5,6 +5,10 @@ import (
@@ -45,7 +45,7 @@ index 42f69a15f5..75f80a9827 100644
  
  func (unit *Unit) SetRotationTimer(sim *Simulation, rotationReadyAt time.Duration) {
 diff --git a/sim/core/mana.go b/sim/core/mana.go
-index dcefd2f945..b13c6f39eb 100644
+index dcefd2f9451517b67dde91431ac1e1e1b0d0b3e1..b13c6f39eb29694cd032ddb2d085f232a2410d3e 100644
 --- a/sim/core/mana.go
 +++ b/sim/core/mana.go
 @@ -376,7 +376,7 @@ func newManaCost(spell *Spell, options ManaCostOptions) *SpellCost {

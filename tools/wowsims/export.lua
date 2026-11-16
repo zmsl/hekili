@@ -22,79 +22,79 @@ local json = require("dkjson")
 
 local M = {}
 
---- The two wowsims/forever commits of the per-spec pin (docs/dev/wowsims-packs.md "Moving the pin"): OLD, the 11-02
---- re-pin's, and NEW, upstream/master at the 0.7 re-pin (e5a9cd2a2d, 2026-11-07; moved from 4b0030a44b, CN18). Each
---- has its oracle patch set in tools/wowsims/sim-pin/<first 12 hex>/.
-local OLD, NEW = "e2842f0a784d2f329dde0bc682a6b84202a780f2", "e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664"
+--- The two wowsims/forever commits of the per-spec pin (docs/dev/wowsims-packs.md "Moving the pin"): OLD, the pin every
+--- spec still sits at (the 0.7 re-pin's, e5a9cd2a2d), and NEW, the re-pin's target (e4ef929e54, pin 3). Each has its
+--- oracle patch set in tools/wowsims/sim-pin/<first 12 hex>/.
+local OLD, NEW = "e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664", "e4ef929e54794ea16dc9a3c4b4f9d4688d500679"
 M.OLD_PIN, M.NEW_PIN = OLD, NEW
 --- The commit each spec's recipe, request and log come from (its checkout and oracle CLI;
 --- tests/Forever/wowsims_pin_spec.lua). A class lane flips its spec by re-exporting it at NEW and changing its own
---- line to NEW; once every line says NEW, OLD and its patch set go. One spec per line, a blank line between: two
---- lanes flipping neighbours then merge without a conflict.
+--- line to NEW; once every line says NEW, OLD and its patch set go. One spec per line, a blank line between: two lanes
+--- flipping neighbours then merge without a conflict.
 M.SPEC_PIN = {
-    druid_balance = NEW,
+    druid_balance = OLD,
 
-    druid_feral = NEW,
+    druid_feral = OLD,
 
-    druid_guardian = NEW,
+    druid_guardian = OLD,
 
-    hunter_beast_mastery = NEW,
+    hunter_beast_mastery = OLD,
 
-    hunter_beast_mastery_turret = NEW,
+    hunter_beast_mastery_turret = OLD,
 
-    hunter_marksmanship = NEW,
+    hunter_marksmanship = OLD,
 
-    hunter_marksmanship_turret = NEW,
+    hunter_marksmanship_turret = OLD,
 
-    hunter_survival = NEW,
+    hunter_survival = OLD,
 
-    hunter_survival_melee = NEW,
+    hunter_survival_melee = OLD,
 
-    hunter_survival_turret = NEW,
+    hunter_survival_turret = OLD,
 
-    mage_arcane = NEW,
+    mage_arcane = OLD,
 
-    mage_fire = NEW,
+    mage_fire = OLD,
 
-    mage_frost = NEW,
+    mage_frost = OLD,
 
-    mage_frostfire = NEW,
+    mage_frostfire = OLD,
 
-    paladin_holy_shock = NEW,
+    paladin_holy_shock = OLD,
 
-    paladin_protection = NEW,
+    paladin_protection = OLD,
 
-    paladin_retribution = NEW,
+    paladin_retribution = OLD,
 
-    priest_shadow = NEW,
+    priest_shadow = OLD,
 
-    priest_smite = NEW,
+    priest_smite = OLD,
 
-    rogue_assassination = NEW,
+    rogue_assassination = OLD,
 
-    rogue_combat = NEW,
+    rogue_combat = OLD,
 
-    rogue_subtlety = NEW,
+    rogue_subtlety = OLD,
 
-    shaman_elemental = NEW,
+    shaman_elemental = OLD,
 
-    shaman_enhancement = NEW,
+    shaman_enhancement = OLD,
 
-    warlock_affliction = NEW,
+    warlock_affliction = OLD,
 
-    warlock_demonology = NEW,
+    warlock_demonology = OLD,
 
-    warlock_destruction = NEW,
+    warlock_destruction = OLD,
 
-    warlock_shadow_brand = NEW,
+    warlock_shadow_brand = OLD,
 
-    warlock_sm_ruin = NEW,
+    warlock_sm_ruin = OLD,
 
-    warrior_arms = NEW,
+    warrior_arms = OLD,
 
-    warrior_fury = NEW,
+    warrior_fury = OLD,
 
-    warrior_protection = NEW,
+    warrior_protection = OLD,
 }
 
 --- The pin of spec `spec` (raises on a spec with no line in M.SPEC_PIN).

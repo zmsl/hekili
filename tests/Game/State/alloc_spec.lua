@@ -302,6 +302,8 @@ describe("zero allocation", function()
         local def = fs.def(fs.new(9))
         def.providers = { presence = "router", viewer = true }
         I.Build(def, 1)
+        -- a saved proof store (L1113) with an entry for a hidden-now-and-then viewer: judged by some reads, not others
+        api.HekiliCDMProof = { v = 1, items = { [501] = { key = "spender_a", viewer = 4, unit = 1, silent = 0 } } }
         ns.VirtualState.Start(api)
         local R = I.presence
         local n = 0
@@ -330,6 +332,9 @@ describe("zero allocation", function()
             end
             if i % 13 == 0 then -- a target switch: settle and reset
                 ctl.Fire("PLAYER_TARGET_CHANGED")
+            end
+            if i % 3 == 0 then -- a Cooldown Manager settings change: the sweep reads the layout (L1114)
+                ctl.Callback("CooldownViewerSettings.OnDataChanged")
             end
             R.Sweep(t)
             R.Presence(1, 1)
