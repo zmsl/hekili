@@ -39,7 +39,7 @@ from the core: it never names `Hekili`, `class`, `state` or `ns.Output`, and eve
 registrations arrives in the build's `def` (`Engine/Schema/Tracked.lua`: Hekili's ability and aura tables with their
 IDs and spender slots, the resources, talents, units, guardians, the experimental toggles as `providers`, and the core's
 `school`, `error`, `fsr`, `gcdSpell`, `oracleMin`). The core reads the belief through the facade's client-shaped rows
-and the API upgrades (trailing returns, event slots), and calls it by name in exactly three places, the owner's
+and the API upgrades (trailing returns, event slots), and may call it by name in exactly four places, the owner's
 approved exceptions (`tools/check_border.sh` allows these and nothing else):
 - `ns.VirtualState.Drain(GetTime())` (`Engine/Sim/Core.lua`, once per update, after Update's guards): the fold is the
   belief's own, and the core must say when its update starts so the belief folds to that cut-off before any reset;
@@ -48,12 +48,17 @@ approved exceptions (`tools/check_border.sh` allows these and nothing else):
   change is the one event allowed to ask for it (a toggle never does: `Drain` swaps the providers);
 - `ns.VirtualState.SetLog(logger)` (`Hekili.lua`, at load): the snapshot trace writes into the core's debug log,
   which only the core can open (`{ active(), write(fmt, ...) }`; the belief fills `onOpen`, which `Hekili:SetupDebug`
-  calls as each display's log opens). `SetLog` also fills `logger.debug` (§4).
-Those three are all the core names; the gate allows nothing else. The one belief read beside them is the window read
+  calls as each display's log opens). `SetLog` also fills `logger.debug` (§4);
+- `ns.VirtualState.WindowOp(key, op, arg)` (windows design v6 §5, `docs/superpowers/specs/2026-11-13-windows-sequences-design.md`):
+  an APL window's operation from a display pass at now, by key (`<pack>:<name>#<display>`): 1 OPEN (arg: the
+  duration in seconds, `math.huge` for "combat"), 2 REFRESH (arg: the duration), 3 CLOSE, 4 STEP (arg: the step).
+  Three plain values into a preallocated buffer; the next `Drain` replays them first (see "Rotation windows"). No
+  core file calls it yet: the display passes' operations are the windows rebuild's Phase 2.
+Those four are all the core names; the gate allows nothing else. The one belief read beside them is the window read
 (re-pin decision 11, owner "yes"): `ns.Facade.Window(name)` -> `up, openedAt, expiresAt, refreshes, step` (plain
 values; `false, 0, 0, 0, 0` closed or unknown), a belief-only facade function like `Facade.KnownRank`, never the aura
-copy; the core's `state.reset` copies every registered window through it (`Engine/Sim/State.lua` `CopyWindows`) and
-writes nothing back. The second is the debuff count (option D, owner decision 2, 2026-11-11):
+copy; the core's `state.reset` copies every registered window through it (`Engine/Sim/State.lua` `CopyWindows`);
+`WindowOp` is the only write back. The second is the debuff count (option D, owner decision 2, 2026-11-11):
 `ns.Facade.DebuffCount(spellID, now)` -> how many enemies the belief holds the aura up on (the target plus every
 remembered target slot, keyed by GUID in the open world and by nameplate under the Map restriction), or nil when unknown
 (the current target holds no memory slot, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on
@@ -230,8 +235,11 @@ read. A file's `state.knownRank` local is the facade's function, safe in a helpe
 
 **Rotation windows** (re-pin design §3a, decision 11: only for a span the client shows no aura for).
 `spec:RegisterWindow(name, { evaluator, duration, now_duration?, refresh, max_duration?, max_refresh?, close_on_false?,
-steps?, loop?, on_deviation?, strict? })` (`Engine/Schema/Spec.lua`) crosses `Build(def)` as `def.windows` (plain
-records, `steps` as ability indexes). `duration` is seconds, `"combat"` or a function. A function is the forecast's: it
+steps?, loop?, on_deviation?, strict?, reset_on_target_change? })` (`Engine/Schema/Spec.lua`) crosses `Build(def)` as
+`def.windows` (plain records, `steps` as ability indexes). `steps` need an `evaluator` (a cast never opens a window,
+L773: RegisterWindow raises). `reset_on_target_change` (a boolean, default false): a target change (`Obs.TargetSwap`,
+a re-selection and a Map swap by plate index included) closes the window and forgets the evaluator's last value, so a
+still-true evaluator reopens it at step 1 in the same `Drain`. `duration` is seconds, `"combat"` or a function. A function is the forecast's: it
 runs under `state` at each forecast open and each counted refresh. Its per-layer twin `now_duration` (required with a
 function `duration`, and only then) is the belief's, run in the `now` context at each belief open and each counted
 refresh: one function cannot run in both environments, the same rule as an ability's `now()` and `handler()`. A refused
@@ -240,7 +248,19 @@ expiry (`Facade.Window`'s, `window.<name>.remains`) reads `math.huge`, and only 
 its steps end it. The belief owns the real windows (`Game/State/Families/Windows.lua`): each evaluator runs in the `now`
 context once per `Drain` after the fold (its edges open, refresh or close), a real cast's `now()` may call
 `openWindow(name)`/`closeWindow(name)`, a stepped window advances on our observed cast of its due step, and combat end
-closes all. The core is stateless: every reset copies the windows from `Facade.Window`, and within a cycle
+closes all. APL windows (windows design v6) are rows of the same store with no evaluator, one per key, from
+`def.aplWindows` (records `{ key, duration, refresh?, max_duration?, max_refresh?, steps? (ability indexes), strict?,
+step_timeout?, reset_on_target_change? }`), with `def.aplOpCap` (the operations buffer's bound per update) and
+`def.aplGen` (a changed generation rebuilds only these rows and the buffer, at the next `Drain` out of combat, else
+after combat end; until then an unknown key reads down and its operations are dropped). `Drain` replays the buffered
+`WindowOp`s first (Flush, operations, polls, fold, settle, Lua evaluators, aura deltas), stamped with the previous
+cut-off and applied as writes: OPEN a fresh open whatever the row's state, REFRESH a restarted expiry (`max_duration`
+bounds it; `max_refresh` is not judged again; on a closed row an OPEN), CLOSE, STEP the due step (on an up row; else
+dropped). An unknown key, a Lua window's key and an operation over the bound are dropped and counted (applied,
+dropped, the last drop's key, since combat start: the belief's snapshot line `windowops`); each replayed operation is
+a `[vs] windowop` line of the trace. A plain sequence (steps, not strict) parks past its last step (step = steps + 1)
+until a STEP or combat end; a strict one closes after its last step, at another on-GCD cast, and when the due step is
+not cast within `step_timeout` (default 4 s, restarted at each advance; Lua windows have none). The core is stateless: every reset copies the windows from `Facade.Window`, and within a cycle
 `actions+=/open_window,name=<w>,if=<c>[,refresh=1][,duration=<s>]` and `actions+=/close_window,name=<w>,if=<c>` (list
 order, no icon, like `variable`; an unregistered name is a `ParseActionList` warning with its line and the entry
 disabled), a `handler()`'s `openWindow`/`closeWindow` (the same verbs as `now()`'s, written separately in

@@ -10,6 +10,13 @@
 -- new edge). A stepped window advances on our observed cast of its due step's ability (I.WindowCast, from the cast
 -- fold); a later step's cast follows `on_deviation`; with `strict`, any other on-GCD cast ends it. The core reads it
 -- only through Facade.Window (VS.Window). Everything preallocated at Build; nothing allocated per Drain or per cast.
+-- APL rows (windows design v6 §5-§8): `def.aplWindows`, one row per key after the Lua rows, with no evaluator. The
+-- core's display passes send operations by key (VS.WindowOp); Drain replays them first, stamped with the previous
+-- cut-off, as writes (no cap is judged again). A plain sequence (steps, not strict) parks past its last step (step =
+-- steps + 1) until a STEP or combat end; a strict one closes after its last step and when its `step_timeout` (default
+-- 4 s, restarted at each advance) runs out. `reset_on_target_change` (any row, Lua ones too): a target swap closes the
+-- row, and a Lua row also forgets its evaluator's last value, so a still-true evaluator reopens it at step 1 in the
+-- same Drain. A new `def.aplGen` rebuilds the APL rows and the buffer only, at the next Drain out of combat.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -19,6 +26,7 @@ local A = I.ab
 local STAY, SKIP, END = 1, 2, 3
 local DEV = { stay = STAY, skip = SKIP, ["end"] = END }
 local NONE = {} -- a hand-built def may carry no `windows`
+local STEP_TIMEOUT = 4 -- a strict APL row's default step_timeout (ruling 24)
 
 -- By window index: the declaration, then the state.
 local W = {
@@ -48,11 +56,39 @@ local W = {
     devAt = {},
     devDue = {},
     raised = {}, -- the evaluator raised: it reads false and is not run again (counted once, as I.Eval)
+    nLua = 0, -- rows 1..nLua: the Lua windows (def.windows); nLua+1..n: the APL rows (def.aplWindows)
+    gen = nil, -- the def.aplGen the APL rows were built from
+    rtc = {}, -- reset_on_target_change
+    park = {}, -- an APL plain sequence: past its last step it stays up at step nSteps + 1
+    timeout = {}, -- a strict APL row's step_timeout (s); 0: none
+    deadline = {}, -- when the due step's time runs out (math.huge: none)
 }
 I.win = W
 
+-- The operations buffer (design §5): VS.WindowOp fills it between two Drains, the next Drain's head replays it. Sized
+-- at the build by `def.aplOpCap` (the compiler's exact bound, §5.5); over it an operation is dropped and counted.
+local OPEN, REFRESH, CLOSE, STEP = 1, 2, 3, 4
+local OPNAME = { "OPEN", "REFRESH", "CLOSE", "STEP" }
+local Q = { n = 0, cap = 0, key = {}, op = {}, arg = {}, applied = 0, dropped = 0, lastDrop = "" }
+I.winOps = Q
+
 local function close(w)
     W.up[w], W.openedAt[w], W.expiresAt[w], W.refreshes[w], W.step[w] = false, 0, 0, 0, 0
+    W.deadline[w] = math.huge
+end
+
+-- Window w has run out at t: its expiry, or a strict APL row's step deadline.
+local function lapsed(w, t)
+    return W.expiresAt[w] <= t or W.deadline[w] <= t
+end
+
+-- A fresh open of w at t for d seconds (capped by max_duration): up, step 1 when stepped, the step deadline started.
+local function fresh(w, t, d)
+    local e, cap = t + d, W.maxDur[w] > 0 and t + W.maxDur[w] or math.huge
+    W.up[w], W.openedAt[w], W.refreshes[w] = true, t, 0
+    W.expiresAt[w] = e < cap and e or cap
+    W.step[w] = W.nSteps[w] > 0 and 1 or 0
+    W.deadline[w] = W.timeout[w] > 0 and t + W.timeout[w] or math.huge
 end
 
 -- Window w's length for an open at t: its seconds, or its `now_duration`'s plain positive answer (0: none).
@@ -79,24 +115,23 @@ end
 
 -- The edge rules' open: a closed window opens at t; an open one restarts with `refresh` within its caps.
 local function open(w, t)
-    if W.up[w] and W.expiresAt[w] <= t then
+    if W.up[w] and lapsed(w, t) then
         close(w) -- expired, not yet closed (expiry is applied after the fold): a fresh open, not a refresh
     end
-    local fresh = not W.up[w]
-    if not fresh and not (W.refresh[w] and (W.maxRef[w] < 0 or W.refreshes[w] < W.maxRef[w])) then
+    local isFresh = not W.up[w]
+    if not isFresh and not (W.refresh[w] and (W.maxRef[w] < 0 or W.refreshes[w] < W.maxRef[w])) then
         return
     end
     local d = length(w, t)
     if d <= 0 then
         return
     end
-    local e = t + d
-    if fresh then
-        W.up[w], W.openedAt[w], W.refreshes[w] = true, t, 0
-        W.step[w] = W.nSteps[w] > 0 and 1 or 0
-    else
-        W.refreshes[w] = W.refreshes[w] + 1
+    if isFresh then
+        fresh(w, t, d)
+        return
     end
+    local e = t + d
+    W.refreshes[w] = W.refreshes[w] + 1
     local cap = W.maxDur[w] > 0 and W.openedAt[w] + W.maxDur[w] or e
     W.expiresAt[w] = e < cap and e or cap
 end
@@ -115,14 +150,21 @@ function I.WindowClose(name)
     end
 end
 
--- Past step s of window w: the next step, or after the last a close (step 1 with `loop`).
-local function advance(w, s)
+-- Past step s of window w at t: the next step, or after the last a close (step 1 with `loop`; a plain APL sequence
+-- parks at nSteps + 1). A strict APL row's step deadline restarts.
+local function advance(w, s, t)
     if s < W.nSteps[w] then
         W.step[w] = s + 1
     elseif W.loop[w] then
         W.step[w] = 1
+    elseif W.park[w] then
+        W.step[w] = W.nSteps[w] + 1
     else
         close(w)
+        return
+    end
+    if W.timeout[w] > 0 then
+        W.deadline[w] = t + W.timeout[w]
     end
 end
 
@@ -131,14 +173,14 @@ end
 --- per stepped window. Allocates nothing.
 function I.WindowCast(a, t)
     for w = 1, W.n do
-        if W.up[w] and W.expiresAt[w] <= t then
+        if W.up[w] and lapsed(w, t) then
             close(w)
         end
         local steps = W.steps[w]
         if steps and W.up[w] then
             local due = W.step[w]
             if steps[due] == a then
-                advance(w, due)
+                advance(w, due, t)
             else
                 local later = 0
                 if W.lastAt[w][a] > due then -- the first of its steps after the due one
@@ -152,7 +194,7 @@ function I.WindowCast(a, t)
                     W.devAb[w], W.devAt[w], W.devDue[w] = a, t, due
                     local d = W.dev[w]
                     if d == SKIP then
-                        advance(w, later)
+                        advance(w, later, t)
                     elseif d == END then
                         close(w)
                     end
@@ -168,7 +210,7 @@ end
 --- t and its edge. Allocates nothing.
 function I.RunWindows(t)
     for w = 1, W.n do
-        if W.up[w] and W.expiresAt[w] <= t then
+        if W.up[w] and lapsed(w, t) then
             close(w)
         end
         local f = W.eval[w]
@@ -192,6 +234,120 @@ I.On(Obs.CombatEnd, function()
     end
 end)
 
+I.On(Obs.CombatStart, function()
+    Q.applied, Q.dropped, Q.lastDrop = 0, 0, "" -- the snapshot's counts are since combat start
+end)
+
+-- A target swap (a re-selection too; under Map by plate index, no GUID read) resets each row declared with it.
+I.On(Obs.TargetSwap, function()
+    for w = 1, W.n do
+        if W.rtc[w] then
+            if W.up[w] then
+                close(w)
+            end
+            W.last[w] = false -- a Lua row: a still-true evaluator is a new edge at this Drain's RunWindows
+        end
+    end
+end)
+
+-- One operation on APL row w at t, as a write: true when it applies. OPEN: a fresh open for `arg` seconds whatever the
+-- row's state. REFRESH: the expiry restarts (max_duration still bounds the span; max_refresh is not judged again); on a
+-- closed or run-out row, an OPEN. CLOSE: down. STEP: the due step `arg` (1..steps + 1) on an up stepped row.
+local function write(w, op, arg, t)
+    if op == OPEN or op == REFRESH then
+        if type(arg) ~= "number" or not (arg > 0) then
+            return false
+        end
+        if op == OPEN or not W.up[w] or lapsed(w, t) then
+            fresh(w, t, arg)
+            return true
+        end
+        local e = t + arg
+        local cap = W.maxDur[w] > 0 and W.openedAt[w] + W.maxDur[w] or e
+        W.expiresAt[w], W.refreshes[w] = e < cap and e or cap, W.refreshes[w] + 1
+        return true
+    elseif op == CLOSE then
+        if W.up[w] then
+            close(w)
+        end
+        return true
+    elseif op == STEP then
+        if not W.up[w] or type(arg) ~= "number" or arg < 1 or arg > W.nSteps[w] + 1 or arg % 1 ~= 0 then
+            return false
+        end
+        W.step[w] = arg
+        if W.timeout[w] > 0 then
+            W.deadline[w] = t + W.timeout[w]
+        end
+        return true
+    end
+    return false
+end
+
+--- (windows design v6 §5.1, the owner-approved crossing) The core's operation `op` on APL window `key`: 1 OPEN (arg:
+--- its duration in seconds, math.huge for "combat"), 2 REFRESH (arg: the duration), 3 CLOSE, 4 STEP (arg: the step).
+--- Buffered as three plain values; the next Drain replays them in order before anything else. Allocates nothing.
+function VS.WindowOp(key, op, arg)
+    local n = Q.n + 1
+    if n > Q.cap then
+        Q.dropped, Q.lastDrop = Q.dropped + 1, key
+        return
+    end
+    Q.key[n], Q.op[n], Q.arg[n], Q.n = key, op, arg or 0, n
+end
+
+-- Builds rows nLua+1.. from `def.aplWindows` and sizes the buffer (allocates; a build or a generation change only).
+local declare
+local function applyApl(def)
+    for w = W.nLua + 1, W.n do
+        W.byKey[W.key[w]] = nil
+    end
+    local list = def.aplWindows or NONE
+    W.n = W.nLua + #list
+    for k = 1, #list do
+        declare(W.nLua + k, list[k], true)
+    end
+    local cap = type(def.aplOpCap) == "number" and def.aplOpCap or 0
+    for i = Q.cap + 1, cap do
+        Q.key[i], Q.op[i], Q.arg[i] = false, 0, 0
+    end
+    Q.cap, Q.n, W.gen = cap, 0, def.aplGen
+end
+
+--- Drain's first windows step (Sources/Sources.lua VS.Drain, after the flush): the buffered operations in order at
+--- the previous cut-off (the belief clock), each logged while the core's trace is open, an unknown key (or a Lua
+--- window's) dropped and counted; then a new `def.aplGen`, out of combat. Allocates nothing but that rebuild.
+function I.WindowOps()
+    local t, h = I.clock, I.logger
+    for i = 1, Q.n do
+        local key, op, arg = Q.key[i], Q.op[i], Q.arg[i]
+        local w = W.byKey[key]
+        local ok = w ~= nil and w > W.nLua and write(w, op, arg, t)
+        if ok then
+            Q.applied = Q.applied + 1
+        else
+            Q.dropped, Q.lastDrop = Q.dropped + 1, key
+        end
+        if h and h.active() then
+            pcall(
+                h.write,
+                "[vs] windowop %s %s %s %s t=%.3f",
+                ok and "applied" or "dropped",
+                tostring(key),
+                OPNAME[op] or tostring(op),
+                tostring(arg),
+                t
+            )
+        end
+        Q.key[i] = false -- drop the reference
+    end
+    Q.n = 0
+    local def = I.def
+    if def and def.aplGen ~= W.gen and not I.inCombat then
+        applyApl(def)
+    end
+end
+
 I.OnSnapshot(function(out)
     for w = 1, W.n do
         local a = W.devAb[w]
@@ -211,6 +367,15 @@ I.OnSnapshot(function(out)
             W.devDue[w]
         )
     end
+    out[#out + 1] = string.format(
+        "windowops applied=%d dropped=%d lastDrop=%s pending=%d cap=%d gen=%s",
+        Q.applied,
+        Q.dropped,
+        tostring(Q.lastDrop),
+        Q.n,
+        Q.cap,
+        tostring(W.gen)
+    )
 end)
 
 --- (Facade.Window) Window `name`: up, the open's time, its expiry, its refreshes and its step (0 unstepped); false, 0,
@@ -223,41 +388,51 @@ function VS.Window(name)
     return true, W.openedAt[w], W.expiresAt[w], W.refreshes[w], W.step[w]
 end
 
+-- Row w from record d: a Lua window's (RegisterWindow's) or, with `apl`, an APL window's (no evaluator; steps as ability
+-- indexes; `strict`, `reset_on_target_change`, `step_timeout`).
+function declare(w, d, apl)
+    W.byKey[d.key], W.key[w] = w, d.key
+    local f = not apl and d.evaluator
+    W.eval[w] = type(f) == "function" and setfenv(f, I.nowCtx) or false
+    W.dur[w] = d.duration == "combat" and math.huge or type(d.duration) == "number" and d.duration or 0
+    local nd = not apl and d.now_duration
+    W.durFn[w] = type(nd) == "function" and setfenv(nd, I.nowCtx) or false
+    W.refresh[w] = d.refresh == true
+    W.maxDur[w] = type(d.max_duration) == "number" and d.max_duration or 0
+    W.maxRef[w] = type(d.max_refresh) == "number" and d.max_refresh or -1
+    W.cof[w] = d.close_on_false == true
+    local steps = type(d.steps) == "table" and #d.steps > 0 and d.steps or false
+    W.steps[w], W.nSteps[w] = steps, steps and #steps or 0
+    local lastAt = W.lastAt[w] or {}
+    for a = 1, A.n do
+        lastAt[a] = 0
+    end
+    for k = 1, W.nSteps[w] do
+        if steps[k] > 0 then
+            lastAt[steps[k]] = k
+        end
+    end
+    W.lastAt[w] = lastAt
+    W.loop[w] = not apl and d.loop == true
+    W.dev[w] = DEV[d.on_deviation] or STAY
+    W.strict[w] = d.strict == true
+    W.rtc[w] = d.reset_on_target_change == true
+    W.park[w] = apl and steps ~= false and not W.strict[w]
+    local st = d.step_timeout
+    W.timeout[w] = apl and W.strict[w] and (type(st) == "number" and st > 0 and st or STEP_TIMEOUT) or 0
+    W.last[w], W.raised[w] = false, false
+    W.devAb[w], W.devAt[w], W.devDue[w] = 0, 0, 0
+    close(w)
+end
+
 I.OnBuild(function(def)
     for k in pairs(W.byKey) do
         W.byKey[k] = nil
     end
     local list = def.windows or NONE
-    W.n = #list
-    for w = 1, W.n do
-        local d = list[w]
-        W.byKey[d.key], W.key[w] = w, d.key
-        local f = d.evaluator
-        W.eval[w] = type(f) == "function" and setfenv(f, I.nowCtx) or false
-        W.dur[w] = d.duration == "combat" and math.huge or type(d.duration) == "number" and d.duration or 0
-        local nd = d.now_duration
-        W.durFn[w] = type(nd) == "function" and setfenv(nd, I.nowCtx) or false
-        W.refresh[w] = d.refresh == true
-        W.maxDur[w] = type(d.max_duration) == "number" and d.max_duration or 0
-        W.maxRef[w] = type(d.max_refresh) == "number" and d.max_refresh or -1
-        W.cof[w] = d.close_on_false == true
-        local steps = type(d.steps) == "table" and #d.steps > 0 and d.steps or false
-        W.steps[w], W.nSteps[w] = steps, steps and #steps or 0
-        local lastAt = W.lastAt[w] or {}
-        for a = 1, A.n do
-            lastAt[a] = 0
-        end
-        for k = 1, W.nSteps[w] do
-            if steps[k] > 0 then
-                lastAt[steps[k]] = k
-            end
-        end
-        W.lastAt[w] = lastAt
-        W.loop[w] = d.loop == true
-        W.dev[w] = DEV[d.on_deviation] or STAY
-        W.strict[w] = d.strict == true
-        W.last[w], W.raised[w] = false, false
-        W.devAb[w], W.devAt[w], W.devDue[w] = 0, 0, 0
-        close(w)
+    W.nLua, W.n = #list, #list
+    for w = 1, W.nLua do
+        declare(w, list[w], false)
     end
+    applyApl(def)
 end)

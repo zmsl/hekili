@@ -430,7 +430,9 @@ local HekiliSpecMixin = {
     -- edge restart an open one; `max_duration` (s, from the first open) and `max_refresh` cap that, either, both or
     -- neither. `close_on_false`: the true->false edge closes it. `steps` (ability keys, registered before the window),
     -- `loop`, `on_deviation` ("stay", "skip", "end"; default "stay") and `strict` (any other on-GCD cast ends it) make
-    -- it a stepped window. A plain record (Engine/Schema/Tracked.lua hands it to the belief).
+    -- it a stepped window; steps need an `evaluator` (a cast never opens a window, L773). `reset_on_target_change`
+    -- (default false): a target change closes it and forgets the evaluator's last value, so a still-true evaluator
+    -- opens it again at step 1 in the same update. A plain record (Engine/Schema/Tracked.lua hands it to the belief).
     RegisterWindow = function( self, name, data )
         assert( type( name ) == "string" and type( data ) == "table", "RegisterWindow: needs a name and a table" )
         assert( self.windows[ name ] == nil, "RegisterWindow: " .. name .. " is already registered" )
@@ -453,9 +455,13 @@ local HekiliSpecMixin = {
         assert( maxR == nil or type( maxR ) == "number" and maxR >= 0, "RegisterWindow: " .. name .. "'s max_refresh" )
         local dev = data.on_deviation or "stay"
         assert( dev == "stay" or dev == "skip" or dev == "end", "RegisterWindow: " .. name .. "'s on_deviation" )
+        local rtc = data.reset_on_target_change
+        assert( rtc == nil or type( rtc ) == "boolean", "RegisterWindow: " .. name .. "'s reset_on_target_change is not a boolean" )
         local steps
         if data.steps ~= nil then
             assert( type( data.steps ) == "table" and #data.steps > 0, "RegisterWindow: " .. name .. "'s steps" )
+            -- L773: a press advances a sequence, never opens one; the evaluator is what opens a stepped window
+            assert( ev ~= nil, "RegisterWindow: " .. name .. " has steps but no evaluator" )
             steps = {}
             for i, key in ipairs( data.steps ) do
                 assert( self.abilities[ key ], "RegisterWindow: " .. name .. "'s step " .. tostring( key ) .. " is no registered ability" )
@@ -475,6 +481,7 @@ local HekiliSpecMixin = {
             loop = data.loop == true,
             on_deviation = dev,
             strict = data.strict == true,
+            reset_on_target_change = rtc == true,
         }
     end,
 

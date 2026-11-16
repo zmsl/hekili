@@ -1,0 +1,1019 @@
+<title>Rotation Windows Design</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column for prose, figures run full width of a 1080px frame; diagrams scroll sideways on phones. */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --zone: #e9edf2;
+  --fg: #1a2230;
+  --muted: #586476;
+  --line: #b9c3d0;
+  --accent: #0a756f;
+  --accent-soft: #dcf1ee;
+  --pending: #9a5a00;
+  --pending-soft: #fbecd2;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10141a; --surface: #19202a; --zone: #222b37; --fg: #e5e9ef; --muted: #9ba7b8; --line: #3d4858;
+    --accent: #45c9bf; --accent-soft: #123532; --pending: #f0b452; --pending-soft: #3a2a10; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10141a; --surface: #19202a; --zone: #222b37; --fg: #e5e9ef; --muted: #9ba7b8; --line: #3d4858;
+  --accent: #45c9bf; --accent-soft: #123532; --pending: #f0b452; --pending-soft: #3a2a10; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 600; letter-spacing: -0.01em; }
+h2 { font-size: 26px; font-weight: 600; }
+h3 { font-size: 18px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+code, .mono { font-family: var(--f-mono); font-size: 0.88em; }
+code { background: var(--zone); padding: 1px 5px; border-radius: 4px; }
+.eyebrow { font-family: var(--f-mono); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+header { display: grid; gap: 14px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+.lede { font-size: 18px; color: var(--fg); }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; }
+nav.toc a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent); border-color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+section { display: grid; gap: 16px; padding-block: 40px 8px; }
+.sec-head { display: grid; gap: 4px; }
+.sec-head .eyebrow { color: var(--accent); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.cols > * { min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+.card h3 { font-size: 16px; }
+.card p, .card li { font-size: 15px; }
+.note { border-left: 3px solid var(--pending); background: var(--pending-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 15px; display: grid; gap: 6px; }
+.note strong { color: var(--pending); }
+ul.tight, ol.tight { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+figure { margin: 0; display: grid; gap: 10px; }
+.fig-scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+figcaption { font-size: 14.5px; color: var(--muted); max-width: 80ch; }
+figcaption b { color: var(--fg); font-weight: 600; }
+.fig-notes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.fig-notes li { font-size: 14px; background: var(--zone); border-radius: 999px; padding: 3px 12px; }
+/* SVG diagram styling: strokes and text follow the theme tokens */
+svg.dg { display: block; width: 100%; height: auto; min-width: 980px; color: var(--fg); }
+.dg text { font-family: var(--f-body); font-size: 13px; fill: currentColor; }
+.dg text.sm { font-size: 12px; fill: var(--muted); }
+.dg text.b { font-weight: 600; }
+.dg text.hd { font-family: var(--f-display); font-size: 16px; font-weight: 600; }
+.dg text.mono { font-family: var(--f-mono); font-size: 12.5px; }
+.dg text.acc { fill: var(--accent); }
+.dg text.pend { fill: var(--pending); }
+.dg .mid { text-anchor: middle; }
+.dg .end { text-anchor: end; }
+.dg .zone { fill: var(--zone); stroke: var(--line); stroke-width: 1.5; }
+.dg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.dg .box-dash { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.dg .acc-box { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.dg .pend-box { fill: var(--pending-soft); stroke: var(--pending); stroke-width: 1.5; }
+.dg .ln { stroke: var(--fg); stroke-width: 1.5; fill: none; }
+.dg .ln-acc { stroke: var(--accent); stroke-width: 2.5; fill: none; }
+.dg .ln-mut { stroke: var(--muted); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+.dg .ln-faint { stroke: var(--line); stroke-width: 1; fill: none; }
+.dg .mk { fill: var(--fg); }
+.dg .mk-acc { fill: var(--accent); }
+.dg .mk-mut { fill: var(--muted); }
+.dg .dot-acc { fill: var(--accent); }
+.dg .dot-fg { fill: var(--fg); }
+.dg .ghost { opacity: 0.45; }
+/* Tables */
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font-family: var(--f-display); font-weight: 600; font-size: 14px; background: var(--zone); }
+td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.def { color: var(--accent); font-weight: 600; }
+/* Rules list */
+ol.rules { margin: 0; padding: 0; list-style: none; counter-reset: r; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px 22px; }
+ol.rules li { counter-increment: r; display: grid; grid-template-columns: 34px 1fr; gap: 8px; font-size: 15px; padding: 10px 0; border-top: 1px solid var(--line); }
+ol.rules li::before { content: counter(r); font-family: var(--f-mono); font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums; }
+/* Plan timeline */
+ol.plan { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+ol.plan li { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; font-size: 14px; }
+ol.plan li.cond { border-top-color: var(--pending); }
+ol.plan .ph { font-family: var(--f-mono); font-size: 12px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+ol.plan h3 { font-size: 16px; }
+ol.plan .gate { font-size: 13px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 6px; }
+/* Open questions */
+ol.qs { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+ol.qs li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; display: grid; grid-template-columns: 34px 1fr; gap: 4px 10px; }
+ol.qs .n { font-family: var(--f-mono); font-weight: 500; color: var(--muted); grid-row: span 3; }
+ol.qs .q { font-size: 15.5px; font-weight: 500; }
+ol.qs .r { font-size: 14.5px; color: var(--muted); }
+.pill { display: inline-block; font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 999px; padding: 1px 9px; margin-right: 8px; vertical-align: 1px; border: 1px solid; }
+.pill.pending { color: var(--pending); background: var(--pending-soft); border-color: var(--pending); }
+.pill.answered { color: var(--accent); background: var(--accent-soft); border-color: var(--accent); }
+.stats { display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.stat { display: grid; }
+.stat b { font-family: var(--f-display); font-size: 30px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 13px; color: var(--muted); }
+blockquote.say { margin: 0; font-size: 15px; border-left: 3px solid var(--accent); padding: 2px 0 2px 12px; color: var(--fg); }
+ol.decided { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+ol.decided li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; display: grid; gap: 6px; align-content: start; font-size: 15px; min-width: 0; }
+ol.decided .led { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+ol.decided li.new { border-color: var(--accent); }
+.tag { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 999px; padding: 1px 8px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.tag.simc { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+pre.apl { margin: 0; font-family: var(--f-mono); font-size: 13.5px; line-height: 1.7; overflow-x: auto; background: var(--zone); border-radius: 8px; padding: 12px 14px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Hekili Forever · 0.9 design · v6, final · 2026-11-13</div>
+  <h1>Rotation windows and APL sequences</h1>
+  <p class="lede">A picture of design v6, the build reference for the 0.9 lanes: where window state lives, how a display's pass sends its window operations, how the belief replays them, how a sequence opens, holds and ends, and every option with its default. Every design question now has an owner ruling. SimC is the default behaviour; the wowsims translator writes the wowsims behaviour on every sequence it emits.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="#intro">What a window is</a><a href="#decided">Decided</a><a href="#flow">Data flow</a><a href="#rules">Rules</a><a href="#declare">Declarations</a>
+    <a href="#restart">In-pass restart</a><a href="#replay">Operations replay</a><a href="#life">Sequence life</a><a href="#mods">Options and defaults</a><a href="#translator">Translator</a><a href="#displays">Sequences per display</a>
+    <a href="#compile">Registration</a><a href="#plan">Plan</a><a href="#matrix">Test matrix</a><a href="#open">Risks and notes</a>
+  </nav>
+</header>
+
+<section id="intro">
+  <div class="sec-head"><div class="eyebrow">Intro</div><h2>What a window is, and why sequences need one</h2></div>
+  <p>A window is a named span of fight time the priority can read: <code>window.W.up</code>, when it expires, and for a sequence which step is due next. The core rebuilds its picture from scratch on every update and keeps nothing between updates, so anything that must be remembered across updates (a sequence is at step 2, a burst window opened 3 s ago) has to live in the belief. Today a strict sequence is approximated with <code>prev.1</code> chains; the design turns every sequence into a window with steps, advanced by the casts the belief observes.</p>
+  <div class="cols">
+    <div class="card">
+      <h3>Lua-led window</h3>
+      <p>Declared in the class file with <code>spec:RegisterWindow</code>. Its <b>evaluator</b> is a function the belief runs every Drain, with edge rules: a rise opens, a fall closes only with <code>close_on_false</code>. One shared instance. A window with steps must have an evaluator: nothing opens on a cast of a first step. New in 0.9: an optional <code>reset_on_target_change</code> field. Hunter weave and Rogue riposte stay this kind.</p>
+    </div>
+    <div class="card">
+      <h3>APL-led window</h3>
+      <p>Declared in the priority: in the <code>windows</code> list, or by a <code>sequence</code> / <code>strict_sequence</code> line. It has <b>no evaluator</b>. Its lines are commands: the display's pass at time = now runs them in list order and sends the belief the operations that changed the window. The belief replays them. One window per display, each under its own key.</p>
+    </div>
+  </div>
+  <div class="cols">
+    <div class="card">
+      <h3>Level, not edge</h3>
+      <p>Nothing remembers an APL line's previous value. A condition that stays true keeps the window open and reopens it after it expires. A line that is not reached does nothing. A bare <code>open_window</code> reached every pass is a window that is always open.</p>
+    </div>
+    <div class="card">
+      <h3>No guardrails</h3>
+      <p>The owner's ruling: "the signal that is sent should just follow the APL instead of collecting and applying boolean logic. These are tools for APL pack authors and don't need guardrails against bad APL design." A priority that opens and closes a window every pass is allowed; the snapshot shows it.</p>
+    </div>
+  </div>
+  <div class="note">
+    <div><strong>What changed since v5.</strong> The machinery in the diagrams is the same. The last ten questions and eight derived rules were answered.</div>
+    <ul class="tight">
+      <li>The plain-sequence option is <code>mode=skip|wait|continue</code>. <code>wait_on_ready=1</code> is an alias for <code>mode=wait</code> with SimC's exact meaning; the translator writes <code>mode=continue</code>.</li>
+      <li>No restart cap. The fired mark resets per slot, so forecasts show windows opening and closing.</li>
+      <li>Open and close lines carry only <code>name=</code> and <code>if=</code> for every window, class windows included.</li>
+      <li>The step deadline is 4 s with a <code>step_timeout=</code> option. A sequence that begins with a cooldown starts in Primary and AOE.</li>
+      <li><code>reset_on_target_change</code> exists for Lua windows too. Hunter <code>hha</code> and Paladin <code>move1</code> / <code>move2</code> become APL sequences in Phase 3.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="decided">
+  <div class="sec-head"><div class="eyebrow">Decided</div><h2>Everything is decided: 36 rulings</h2></div>
+  <p>No design question is open. The nineteen outlined cards are the answers given since v5: questions 7 to 16, the derived rules D1 to D8, and the two items v6 itself raised (the first two cards). Where the ledger quotes the owner, the quote is given; ledger row numbers are in the corner.</p>
+  <ol class="decided">
+    <li class="new"><span class="led">L845 · v6 item 2</span><b>Two ability fields for the strict start test.</b><blockquote class="say">"useful for a replacement ready, or having sequence_ready add conditions by return ready() and xyz = true"</blockquote><span><code>sequence_ignore = { "form", ... }</code> judges a later member with the named gates skipped; <code>sequence_ready</code> is a handler that replaces the judgement and may call the normal one. Set by the pack on the ability. Only for members after the first, only in the start test, no effect with <code>start_on_first=1</code>. Arms uses the first: Overpower <code>{ "form" }</code>, Rend <code>{ "nobuff" }</code>.</span></li>
+    <li class="new"><span class="led">L844 · v6 item 1</span><b>Sequences hold cast steps only.</b><blockquote class="say">"no move steps go into hekili"</blockquote><span>wowsims <code>move</code> and <code>wait</code> steps stay folded into the next cast's condition, as the translator does today.</span></li>
+    <li class="new"><span class="led">L829, L830 · Q15</span><b>The plain-sequence option is <code>mode=skip|wait|continue</code>.</b><blockquote class="say">"unready ... horrible ... how about just mode?"</blockquote><span>skip is the default and is SimC. wait is SimC's <code>wait_on_ready=1</code>, accepted as an alias. continue stays on the step and lets the list carry on: wowsims, and what the translator writes.</span></li>
+    <li class="new"><span class="led">L834 · D1, D2</span><b>The default skip follows SimC exactly.</b><span>An active plain sequence whose due step cannot be cast when its turn comes drops that step for this run. It burns out only if every remaining step is uncastable. <code>restart_sequence</code> or a new fight resets. A line whose <code>if=</code> is false skips nothing. "Ready" is judged at the moment the player can next act, the GCD end.</span></li>
+    <li class="new"><span class="led">L822 · Q9</span><b>The fired mark resets per slot.</b><blockquote class="say">"so that future predictions can model windows opening/closing correctly"</blockquote><span>Each line acts at most once per slot. Only slot 1 sends operations.</span></li>
+    <li class="new"><span class="led">L826, L827 · Q13</span><b>No restart cap. Step deadline 4 s, with <code>step_timeout=</code>.</b><span>The per-slot fired mark already bounds restarts by the number of window lines. Restarts per slot are shown in the snapshot and debug output; the CPU gate is in Phase 2.</span></li>
+    <li class="new"><span class="led">L824, L831 · Q10</span><b>Window lines carry only <code>name=</code> and <code>if=</code>, for every window.</b><span>Attributes live only in the declaration: <code>RegisterWindow</code> or <code>actions.windows</code>. An attribute on a line is a compile error. No shipped line changes, because no shipped priority has such a line.</span></li>
+    <li class="new"><span class="led">L836 · replaces D6</span><b>Hunter hha and Paladin move1 / move2 become APL sequences in Phase 3.</b><span>They are the real-world tests beside Warrior Arms, floors re-measured with the move. Hunter weave and Rogue riposte stay Lua-led: they follow observed game events.</span></li>
+    <li class="new"><span class="led">L837 · D7</span><b><code>reset_on_target_change</code> is built for Lua windows too.</b><blockquote class="say">"yes build target change option with 0.9"</blockquote><span>A <code>RegisterWindow</code> field beside the sequence and declaration option. Default off everywhere.</span></li>
+    <li class="new"><span class="led">L827 · Q14</span><b>A sequence that begins with a cooldown starts in Primary and AOE.</b><span>There the start line also bypasses the separate-toggle filter, overriding the ability's display category.</span></li>
+    <li class="new"><span class="led">L832 · Q16</span><b>The default strict start keeps SimC's rule.</b><span>Every step castable now, no queue-window tolerance. <code>start_on_first=1</code> carries the queue window. Missed first presses are measured in Phase 3.</span></li>
+    <li class="new"><span class="led">L821 · Q7</span><b>Operations are writes.</b><span>The belief does not judge caps again on replay.</span></li>
+    <li class="new"><span class="led">L821 · Q8</span><b>A granted REFRESH restarts the walk.</b><span>Like an open or a close. Cost measured in Phase 2.</span></li>
+    <li class="new"><span class="led">L825 · Q11</span><b><code>windows</code> is a reserved list name.</b><span>With a release note.</span></li>
+    <li class="new"><span class="led">L825 · Q12</span><b>Open and close lines may name a sequence.</b><span>A close aborts it; an open starts it.</span></li>
+    <li class="new"><span class="led">L839 · D3</span><b>The default strict hold lets <code>use_off_gcd=1</code> lines through.</b><span><code>hold_off_gcd=1</code> holds them too.</span></li>
+    <li class="new"><span class="led">L839 · D4</span><b>No loop shorthand.</b><span>A loop is <code>restart_sequence,name=x,if=window.x.done</code>; <code>window.&lt;seq&gt;.done</code> reads the parked state.</span></li>
+    <li class="new"><span class="led">L839 · D5</span><b>An unnamed plain sequence is <code>default</code>.</b><span>Further unnamed ones get generated names.</span></li>
+    <li class="new"><span class="led">L838 · D8</span><b>v4's option names are compile error E7.</b><span><code>unready=</code>, <code>start=</code>, <code>off_gcd=</code>, <code>target_change=</code>.</span></li>
+    <li><span class="led">L815 · reversal</span><b>SimC's sequence behaviour is the default.</b><blockquote class="say">"keeps Hekili consistent with how it was initially written"</blockquote><span>The wowsims translator writes the wowsims behaviour on every sequence it emits.</span></li>
+    <li><span class="led">L818 · naming</span><b>SimC's option names; Hekili-only options in SimC's style.</b><blockquote class="say">"simc is the spec we're writing against. Anything that is unique to hekili will come up with a name schemed on simc semantics"</blockquote></li>
+    <li><span class="led">L817 · target change</span><b>A target change resets nothing by default.</b><blockquote class="say">"because of potential sequences with target swap recommendations"</blockquote><span>An option on the declaration resets.</span></li>
+    <li><span class="led">L812 · Q4</span><b>A plain sequence opens on its condition.</b><blockquote class="say">"when it is reached and evals to true and time=now"</blockquote><span>Strict sequences keep open-on-chosen.</span></li>
+    <li><span class="led">L813 · Q5</span><b>Imports add no options.</b><span>Lines are kept as written. The Actions tab shows effective values, defaults included, and every parameter is visible and editable there.</span></li>
+    <li><span class="led">L814, L818 · Q6</span><b>A finished plain sequence parks.</b><span>Up, no step due, until <code>restart_sequence</code> or combat end.</span></li>
+    <li><span class="led">L810, L815 · Q2</span><b>Start within the spell queue window is the wowsims option.</b><blockquote class="say">"we defaulted to wowsims for our sequence decisions already"</blockquote><span>Now <code>start_on_first=1</code>.</span></li>
+    <li><span class="led">L806 · Q1</span><b>The display in a sequence shows its members whatever its filter.</b><blockquote class="say">"force the ability into the display that is in a sequence. Cooldowns/defensives/interrupts can continue to function as they are and the player can decide what to do"</blockquote></li>
+    <li><span class="led">L808, L809</span><b>Per-display "Sequences" setting.</b><blockquote class="say">"Yes freeform windows will still work"</blockquote><span>On for Primary and AOE, off for Cooldowns, Interrupts and Defensives. Sequences only.</span></li>
+    <li><span class="led">L795</span><b>APL window lines are commands. No edge logic.</b><blockquote class="say">"These are tools for APL pack authors and dont need guardrails against bad APL design."</blockquote></li>
+    <li><span class="led">L796</span><b>Anonymous windows are declared once in the <code>windows</code> list.</b><blockquote class="say">"Approved given the precombat precedent of having a specifically named actions list"</blockquote></li>
+    <li><span class="led">L778</span><b>All window state lives in the belief.</b><blockquote class="say">"all window state should live in belief. The display simulation only pushes one way to open/close/etc. but the belief state is then pushed back to core"</blockquote></li>
+    <li><span class="led">L776</span><b>A press advances a sequence; it never opens a window.</b><blockquote class="say">"The press isnt what opens a window though right? The press advances a sequence, but the window is open already from the condition"</blockquote></li>
+    <li><span class="led">L779</span><b>A strict sequence opens when its line is the one chosen at now.</b><span>In that display's pass, at its list position.</span></li>
+    <li><span class="led">L781</span><b>Explicit in the priority; nothing inferred from the abilities.</b><blockquote class="say">"lean to be explicit in the apl rather than having inherent knowledge packaged in the items"</blockquote></li>
+    <li><span class="led">L782</span><b>Strict sequences carry a name.</b><blockquote class="say">"give strict sequences names just to be consistent"</blockquote></li>
+    <li><span class="led">L773</span><b>A Lua window with steps must have an evaluator.</b><blockquote class="say">"Assuming that we want the window opened whenever the first item in the step sequence is a BIG misjudgement in most of the cases"</blockquote></li>
+  </ol>
+</section>
+
+<section id="flow">
+  <div class="sec-head"><div class="eyebrow">Diagram 1</div><h2>Data flow: one new crossing, one way, by key</h2></div>
+  <figure>
+    <div class="fig-scroll">
+    <svg class="dg" viewBox="0 0 1020 615" role="img" aria-label="Data flow. Game feeds the belief with observed casts and target swaps. The class file registers Lua windows and evaluators. The APL compiler registers APL windows, one key per display. Each display's Now pass sends its window operations, in APL order, one way to the belief under its own keys, and reads the state of its keys back through the facade at the start of its next pass. The belief knows keys only.">
+      <defs>
+        <marker id="d1a" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="d1acc" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path class="mk-acc" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="d1m" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path class="mk-mut" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <!-- Game -->
+      <path class="box" d="M50,52 a70,12 0 0 1 140,0 v42 a70,12 0 0 1 -140,0 z"/>
+      <path class="ln-faint" d="M50,52 a70,12 0 0 0 140,0"/>
+      <text class="b mid" x="120" y="84">Game</text>
+      <line class="ln" x1="120" y1="107" x2="120" y2="198" marker-end="url(#d1a)"/>
+      <text class="sm" x="130" y="130">observed casts, target swaps</text>
+
+      <!-- Belief -->
+      <rect class="zone" x="20" y="150" width="400" height="420" rx="14"/>
+      <text class="hd" x="40" y="178">Belief</text>
+      <text class="sm" x="100" y="178">all window state; knows keys only</text>
+      <rect class="box" x="40" y="200" width="160" height="50" rx="8"/>
+      <text class="b mid" x="120" y="222">sim</text>
+      <text class="sm mid" x="120" y="240">observed state</text>
+      <rect class="box" x="225" y="200" width="175" height="50" rx="8"/>
+      <text class="b mid" x="312" y="222">Window conditions</text>
+      <text class="sm mid" x="312" y="240">Lua evaluators</text>
+      <line class="ln" x1="120" y1="250" x2="120" y2="288" marker-end="url(#d1a)"/>
+      <text class="sm" x="128" y="274">casts advance steps</text>
+      <line class="ln" x1="312" y1="250" x2="312" y2="288" marker-end="url(#d1a)"/>
+      <text class="sm" x="320" y="274">every Drain</text>
+      <rect class="box" x="40" y="290" width="360" height="266" rx="10"/>
+      <text class="hd" x="56" y="314">Windows</text>
+      <text class="sm" x="136" y="314">rows by key</text>
+      <rect class="zone" x="56" y="324" width="328" height="40" rx="8"/>
+      <text class="b" x="68" y="349">Lua windows</text>
+      <text class="sm end" x="372" y="349">shared; evaluator + edges</text>
+      <rect class="acc-box" x="56" y="372" width="328" height="174" rx="8"/>
+      <text class="b" x="68" y="392">APL windows</text>
+      <text class="sm end" x="372" y="392">no evaluator; one key per display</text>
+      <rect class="box" x="68" y="402" width="304" height="22" rx="4"/><text class="mono mid" x="220" y="418">pack:burst#Primary</text>
+      <rect class="box" x="68" y="430" width="304" height="22" rx="4"/><text class="mono mid" x="220" y="446">pack:burst#AOE</text>
+      <rect class="box" x="68" y="458" width="304" height="22" rx="4"/><text class="mono mid" x="220" y="474">pack:burst#Cooldowns</text>
+      <rect class="box" x="68" y="486" width="304" height="22" rx="4"/><text class="mono mid" x="220" y="502">pack:burst#Interrupts</text>
+      <rect class="box" x="68" y="514" width="304" height="22" rx="4"/><text class="mono mid" x="220" y="530">pack:burst#Defensives</text>
+
+      <!-- Core -->
+      <rect class="zone" x="540" y="150" width="440" height="420" rx="14"/>
+      <text class="hd" x="560" y="178">Core</text>
+      <text class="sm" x="606" y="178">keeps nothing between updates</text>
+      <rect class="box" x="560" y="200" width="180" height="50" rx="8"/>
+      <text class="b mid" x="650" y="222">Pack</text>
+      <text class="sm mid" x="650" y="240">class file (Lua)</text>
+      <rect class="box" x="780" y="200" width="180" height="50" rx="8"/>
+      <text class="b mid" x="870" y="222">APL compiler</text>
+      <text class="sm mid" x="870" y="240">LoadScripts</text>
+      <!-- APL text -->
+      <rect class="box" x="780" y="40" width="180" height="60" rx="8"/>
+      <text class="hd mid" x="870" y="66">APL</text>
+      <text class="sm mid" x="870" y="86">priority text, plain names</text>
+      <line class="ln" x1="870" y1="100" x2="870" y2="198" marker-end="url(#d1a)"/>
+      <line class="ln" x1="870" y1="250" x2="870" y2="288" marker-end="url(#d1a)"/>
+      <text class="sm" x="878" y="274">compiled lists</text>
+      <!-- display passes -->
+      <g>
+        <rect class="acc-box" x="560" y="290" width="200" height="38" rx="6"/><text class="b mid" x="660" y="314">Primary · Now</text>
+        <rect class="box-dash" x="772" y="290" width="188" height="38" rx="6"/><text class="sm mid" x="866" y="314">Futures (slots 2+)</text>
+        <rect class="acc-box" x="560" y="336" width="200" height="38" rx="6"/><text class="b mid" x="660" y="360">AOE · Now</text>
+        <rect class="box-dash" x="772" y="336" width="188" height="38" rx="6"/><text class="sm mid" x="866" y="360">Futures (slots 2+)</text>
+        <rect class="acc-box" x="560" y="382" width="200" height="38" rx="6"/><text class="b mid" x="660" y="406">Cooldowns · Now</text>
+        <rect class="box-dash" x="772" y="382" width="188" height="38" rx="6"/><text class="sm mid" x="866" y="406">Futures (slots 2+)</text>
+        <rect class="acc-box" x="560" y="428" width="200" height="38" rx="6"/><text class="b mid" x="660" y="452">Interrupts · Now</text>
+        <rect class="box-dash" x="772" y="428" width="188" height="38" rx="6"/><text class="sm mid" x="866" y="452">Futures (slots 2+)</text>
+        <rect class="acc-box" x="560" y="474" width="200" height="38" rx="6"/><text class="b mid" x="660" y="498">Defensives · Now</text>
+        <rect class="box-dash" x="772" y="474" width="188" height="38" rx="6"/><text class="sm mid" x="866" y="498">Futures (slots 2+)</text>
+      </g>
+      <text class="sm" x="560" y="538">Only Now (slot 1) sends operations.</text>
+      <text class="sm" x="560" y="556">Futures and the alternatives probe never do.</text>
+      <!-- collector bracket on the Now chips -->
+      <path class="ln-acc" d="M560,309 H550 V493 H560 M550,355 H560 M550,401 H560 M550,447 H560"/>
+
+      <!-- Pack -> Window conditions -->
+      <line class="ln" x1="560" y1="225" x2="402" y2="225" marker-end="url(#d1a)"/>
+      <text class="sm mid" x="480" y="216">Lua registration</text>
+      <text class="sm mid" x="480" y="242">+ evaluator</text>
+
+      <!-- operations: the only new crossing -->
+      <line class="ln-acc" x1="550" y1="412" x2="386" y2="412" marker-end="url(#d1acc)"/>
+      <text class="b acc mid" x="480" y="350">operations</text>
+      <text class="acc mid" x="480" y="367" style="font-size:12px">in APL order</text>
+      <text class="acc mid" x="480" y="384" style="font-size:12px">OPEN · CLOSE</text>
+      <text class="acc mid" x="480" y="400" style="font-size:12px">REFRESH · STEP</text>
+      <text class="b acc mid" x="480" y="431">by key, one way</text>
+      <text class="acc mid" x="480" y="447" style="font-size:12px">new crossing</text>
+
+      <!-- facade copy back -->
+      <line class="ln-mut" x1="402" y1="500" x2="546" y2="500" marker-end="url(#d1m)"/>
+      <text class="sm mid" x="474" y="492">state of my keys</text>
+      <text class="sm mid" x="474" y="517">at next pass</text>
+
+      <!-- APL registration path -->
+      <path class="ln" d="M960,225 H1002 V595 H220 V558" marker-end="url(#d1a)"/>
+      <text class="sm mid" x="650" y="588">APL registration: window records by key + generation bump, applied out of combat</text>
+    </svg>
+    </div>
+    <figcaption><b>The only new arrow is the teal one.</b> When a line changes a window in a display's slot-1 walk at now, the core calls <code>WindowOp(key, op, arg)</code>. The key is that display's own, for example <code>pack:burst#Primary</code>; there is no display, line or time argument. The belief sees five separate windows (a sequence has keys only for the displays whose Sequences setting is on). Each display seeds its working copy with <code>Facade.Window(key)</code> for its own keys; priority text still reads <code>window.burst.up</code>. A display that is not walked sends nothing; its open windows still advance on casts and end by duration.</figcaption>
+  </figure>
+</section>
+
+<section id="rules">
+  <div class="sec-head"><div class="eyebrow">Rules at a glance</div><h2>Twenty-three rules, as v6 states them</h2></div>
+  <ol class="rules">
+    <li><span>Every window's state lives in the belief. The core keeps nothing between updates.</span></li>
+    <li><span>A window is declared in one of three places: in the class file (Lua, with an evaluator), in the priority's <code>windows</code> list, or by a <code>sequence</code> / <code>strict_sequence</code> line, which declares its own. <code>windows</code> is a reserved list name.</span></li>
+    <li><span>A window used by <code>open_window</code> or <code>close_window</code> must be declared exactly once. An undeclared name, a second declaration, or a declared name the class already registers in Lua is a compile error.</span></li>
+    <li><span><b>Changed.</b> <code>open_window</code> and <code>close_window</code> lines carry only <code>name=</code> and <code>if=</code>, for every window, Lua-registered ones included. Settings live only in the declaration. The name may be a sequence's.</span></li>
+    <li><span>APL window lines are commands, run in list order. A true <code>open_window</code> opens the window; if it is already open nothing happens, unless it is declared <code>refresh=1</code>. A true <code>close_window</code> closes it.</span></li>
+    <li><span>There are no edges for APL windows. A condition that stays true keeps the window open, and reopens it after it expires. A line that is not reached does nothing.</span></li>
+    <li><span><b>Changed.</b> After a line changes the window, the walk starts again from the top with time unchanged. Each line can act once per slot: the fired mark is cleared at the start of every slot. There is no restart cap; restarts per slot cannot exceed the number of window lines.</span></li>
+    <li><span>Only slot 1's walk at time = now talks to the belief. It sends the ordered list of operations that changed the window. The belief replays them, in order, at the start of its next update, as writes. Forecast slots act on the copy and never send.</span></li>
+    <li><span>Each display has its own copy of every APL window, under its own key (<code>&lt;pack&gt;:&lt;name&gt;#&lt;display&gt;</code>). The belief knows nothing about displays or priority lines. Lua windows are one shared instance.</span></li>
+    <li><span><b>Changed.</b> Lua windows keep their evaluator and edge rules. New: the optional field <code>reset_on_target_change</code>, default off.</span></li>
+    <li><span>A press never opens a window. Presses (observed casts) advance the steps of a sequence that is already open.</span></li>
+    <li><span>A strict sequence opens when its line is the one chosen at now. By default (SimC) it can be chosen only when every member can be cast now, with no tolerance; with <code>start_on_first=1</code> (wowsims) when its first member is due within the spell queue window. While open, that display shows no on-GCD line outside it; <code>use_off_gcd=1</code> lines are still shown unless the sequence says <code>hold_off_gcd=1</code>. A step not pressed within <code>step_timeout</code> (4 s) closes it.</span></li>
+    <li><span><b>Changed.</b> A plain sequence opens when its line is reached at now and its condition is true. <code>mode=</code> says what happens when the due member cannot be cast: <code>skip</code> (default) drops it for this run; <code>wait</code> shows it with its countdown and recommends nothing below; <code>continue</code> stays on it and lets the list carry on. A line whose <code>if=</code> is false shows and skips nothing.</span></li>
+    <li><span>After its last step a plain sequence parks: up, no step due, until <code>restart_sequence</code> or combat end. <code>window.&lt;seq&gt;.done</code> is true while parked. A loop is <code>restart_sequence,name=x,if=window.x.done</code>.</span></li>
+    <li><span>"Can be cast" is judged at the moment the player can next act: the end of the GCD or cast for an on-GCD member, now for an off-GCD one.</span></li>
+    <li><span>Sequence behaviour is written on the line. What a line does not say is SimC's behaviour. Option names are SimC's where SimC has one and SimC-styled where it has none. An import adds nothing. The wowsims translator writes the wowsims settings on every sequence it emits. An option an entry does not take is a compile error.</span></li>
+    <li><span>A window also closes at its duration, at <code>max_duration</code>, at combat end, on a <code>closeWindow</code> from a real cast, and (strict) on any other on-GCD cast or at the step deadline. A target change closes nothing unless the declaration says <code>reset_on_target_change</code>.</span></li>
+    <li><span><b>Changed.</b> While a sequence's window is up in a display, that display shows its members even when it would normally filter them out. In Primary and AOE the start line also skips the "toggle shown separately" test, so a sequence that begins with a separated cooldown starts there. A switched-off toggle still disables the member.</span></li>
+    <li><span>Each display has a "Sequences" setting: on by default for Primary and AOE, off for Cooldowns, Interrupts and Defensives. Where it is off, sequences do not exist for that display. Free-form windows work in every display.</span></li>
+    <li><span>An unnamed plain sequence is <code>default</code>, as in SimC; further unnamed sequences and every unnamed strict one get generated names.</span></li>
+    <li><span>These are tools for pack authors. The engine does not protect against a priority that opens and closes a window every pass; the snapshot shows it, with the restarts per slot.</span></li>
+    <li><span>Every parameter of a sequence line, a <code>windows</code> declaration and an open or close line is visible and editable on the Actions tab, shown with its effective value, defaults included.</span></li>
+    <li><span><b>New.</b> A step is a cast; moves and waits are never steps. In the default strict start test a member after the first may be judged with some of its gates skipped (<code>sequence_ignore</code>) or by its own handler (<code>sequence_ready</code>), both declared by the pack on the ability. That is how a sequence whose first member enables its second can start without <code>start_on_first=1</code>.</span></li>
+  </ol>
+</section>
+
+<section id="declare">
+  <div class="sec-head"><div class="eyebrow">Declarations</div><h2>The <code>windows</code> list, and what fails to compile</h2></div>
+  <p>Anonymous windows are declared once in a named list, as <code>precombat</code> is a named list. The list is read at compile time only: it is never walked and cannot be called. SimC imports simply lack it; sequences declare their own window.</p>
+  <div class="cols">
+    <div class="card">
+      <h3>Declare, then use</h3>
+      <p class="mono" style="overflow-x:auto;white-space:pre;line-height:1.7">actions.windows+=/window,name=burst,duration=12
+actions.windows+=/window,name=pool,duration=6,
+    refresh=1,max_refresh=2,max_duration=15
+
+actions+=/open_window,name=burst,if=cooldowns_up
+actions+=/close_window,name=burst,if=target.dying</p>
+      <ul class="tight">
+        <li><code>name</code> and <code>duration</code> (seconds, or <code>combat</code>) are required.</li>
+        <li><code>refresh</code>, <code>max_duration</code>, <code>max_refresh</code> are optional and mean what they mean for a Lua window. <code>reset_on_target_change=1</code> is optional too: a target change then closes the window.</li>
+        <li>"Before use" means the compiler reads this list before every other list (text order is lost once lists are stored by name).</li>
+        <li><code>windows</code> is a reserved list name. A user's old ordinary list of that name gets E5; the release notes say so.</li>
+        <li>Lines that name a Lua (class) window have the same form: <code>name=</code> and <code>if=</code> only. They act on the forecast and send nothing; the length comes from <code>RegisterWindow</code>.</li>
+      </ul>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">E1</td><td>An <code>open_window</code> / <code>close_window</code> names a window that is not in the list, not a sequence of this priority and not a class window.</td></tr>
+          <tr><td class="mono">E2</td><td>A name declared twice: two list entries, two sequences, or one of each.</td></tr>
+          <tr><td class="mono">E3</td><td>A declared name that a class already registers in Lua, in any spec.</td></tr>
+          <tr><td class="mono">E4</td><td>An open or close line that carries anything besides <code>name=</code> and <code>if=</code>, whatever kind of window it names.</td></tr>
+          <tr><td class="mono">E5</td><td>A <code>window</code> entry outside the list, any other entry inside it, <code>if=</code> on an entry, or the list being called.</td></tr>
+          <tr><td class="mono">E6</td><td>A missing or non-positive <code>duration</code>, bad caps, or a non-positive <code>step_timeout</code>.</td></tr>
+          <tr><td class="mono">E7</td><td>An option the entry does not take: anything outside the option table on a sequence or <code>window</code> entry, v4's four names included; a bad <code>mode=</code> value; <code>mode=</code> with <code>wait_on_ready</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p style="font-size:15px;color:var(--muted)">An error disables the offending line, is listed with the priority's warnings, and fails the build for shipped packs.</p>
+</section>
+
+<section id="restart">
+  <div class="sec-head"><div class="eyebrow">Diagram 2</div><h2>Lines as commands: restart from the top, inside one pass</h2></div>
+  <figure>
+    <div class="fig-scroll">
+    <svg class="dg" viewBox="0 0 1000 318" role="img" aria-label="In-pass restart, the owner's example. Walk 1: the open_window line at the top is true and opens W; the walk restarts. Walk 2: the open line has already fired; the readers see W up; the close_window line at the bottom closes W; the walk restarts. Walk 3: both lines have fired; the readers see W down and one is picked; the pass ends with W closed. OPEN then CLOSE were sent.">
+      <defs>
+        <marker id="d3acc" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path class="mk-acc" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <text class="hd" x="30" y="36">Walk 1</text>
+      <text class="hd" x="355" y="36">Walk 2</text>
+      <text class="sm" x="420" y="36">same slot, time not advanced</text>
+      <text class="hd" x="680" y="36">Walk 3</text>
+
+      <!-- walk 1 -->
+      <rect class="acc-box" x="30" y="56" width="290" height="40" rx="6"/>
+      <text class="mono" x="42" y="81">open_window,name=W,if=a</text>
+      <text class="b acc end" x="310" y="81">opens W</text>
+      <g class="ghost">
+        <rect class="box" x="30" y="104" width="290" height="40" rx="6"/><text class="mono" x="42" y="129">nuke,if=window.W.up</text>
+        <rect class="box" x="30" y="152" width="290" height="40" rx="6"/><text class="mono" x="42" y="177">dot,if=!window.W.up</text>
+        <rect class="box" x="30" y="200" width="290" height="40" rx="6"/><text class="mono" x="42" y="225">close_window,name=W,if=b</text>
+      </g>
+      <text class="b acc" x="30" y="268">OPEN sent · restart</text>
+
+      <!-- walk 2 -->
+      <rect class="box-dash" x="355" y="56" width="290" height="40" rx="6"/>
+      <text class="mono" x="367" y="81">open_window,name=W,if=a</text>
+      <text class="sm end" x="635" y="81">fired</text>
+      <rect class="box" x="355" y="104" width="290" height="40" rx="6"/>
+      <text class="mono" x="367" y="129">nuke,if=window.W.up</text>
+      <text class="sm end" x="635" y="129">up; on cooldown</text>
+      <rect class="box" x="355" y="152" width="290" height="40" rx="6"/>
+      <text class="mono" x="367" y="177">dot,if=!window.W.up</text>
+      <text class="sm end" x="635" y="177">sees up: false</text>
+      <rect class="acc-box" x="355" y="200" width="290" height="40" rx="6"/>
+      <text class="mono" x="367" y="225">close_window,name=W,if=b</text>
+      <text class="b acc end" x="635" y="225">closes W</text>
+      <text class="b acc" x="355" y="268">CLOSE sent · restart</text>
+
+      <!-- walk 3 -->
+      <rect class="box-dash" x="680" y="56" width="290" height="40" rx="6"/>
+      <text class="mono" x="692" y="81">open_window,name=W,if=a</text>
+      <text class="sm end" x="960" y="81">fired</text>
+      <rect class="box" x="680" y="104" width="290" height="40" rx="6"/>
+      <text class="mono" x="692" y="129">nuke,if=window.W.up</text>
+      <text class="sm end" x="960" y="129">sees down: false</text>
+      <rect class="acc-box" x="680" y="152" width="290" height="40" rx="6"/>
+      <text class="mono" x="692" y="177">dot,if=!window.W.up</text>
+      <text class="b acc end" x="960" y="177">down: picked</text>
+      <g class="ghost">
+        <rect class="box-dash" x="680" y="200" width="290" height="40" rx="6"/><text class="mono" x="692" y="225">close_window,name=W,if=b</text>
+      </g>
+      <text class="b" x="680" y="268">pass ends: W closed</text>
+
+      <!-- restart arrows -->
+      <line class="ln-acc" x1="320" y1="76" x2="352" y2="76" marker-end="url(#d3acc)"/>
+      <path class="ln-acc" d="M645,220 C668,220 656,76 677,76" marker-end="url(#d3acc)"/>
+      <text class="sm" x="30" y="300">Working copy only. The belief receives OPEN then CLOSE and also ends closed. The same happens in each later slot (copy only) and on the next pass.</text>
+    </svg>
+    </div>
+    <ul class="fig-notes">
+      <li>Time not advanced</li>
+      <li>A line acts once per slot: the fired mark (<code>WIN.lineLast</code>) is cleared at the start of every slot</li>
+      <li>No restart cap: at most one restart per window line per slot; the count is in the snapshot</li>
+      <li>A ready pick between the two lines in walk 2 ends the pass with W open</li>
+      <li>A granted refresh also restarts the walk</li>
+      <li>Slots 2 and later replay the same lines on the copy, so the forecast shows the window open and close; sending stays slot 1, now</li>
+    </ul>
+    <figcaption><b>The owner's example:</b> open at the top, close at the bottom, both true. Without the fired mark, walk 3 would open W again and loop. wowsims re-picks from the top after every action (1000-pass guard). A restart drops the partial pick, <code>state.delay</code>, the Stack and Block lists and <code>state.nearAction</code>, and unwinds nested lists, without allocating tables. Nothing is ever truncated: the restarts in a slot cannot exceed the number of window lines, a number fixed at compile time, and Phase 2's CPU gate measures the cost. An open that passes only at a recheck time, or in a later slot, changes the copy and sends nothing.</figcaption>
+  </figure>
+</section>
+
+<section id="replay">
+  <div class="sec-head"><div class="eyebrow">Diagram 3</div><h2>Operations replay: what the belief does with the list</h2></div>
+  <figure>
+    <div class="fig-scroll">
+    <svg class="dg" viewBox="0 0 1000 420" role="img" aria-label="Operations replay. Top lane, a display's pass at now: the copy is seeded closed, line 1 opens it and sends OPEN, the walk restarts, line 9 closes it and sends CLOSE, the walk restarts, the pass ends closed. The list OPEN then CLOSE, stamped with the previous Drain cutoff, is carried to the belief. Bottom lane, the next Drain: flush, replay operations, polls, fold newer observations, settle, Lua evaluators, deliver. A cast heard during the pass is folded after the replay.">
+      <defs>
+        <marker id="d2a" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="d2acc" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path class="mk-acc" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <text class="hd" x="40" y="36">Primary's pass at now</text>
+      <text class="sm" x="232" y="36">after Drain N (cutoff T); working copy</text>
+      <rect class="box" x="40" y="54" width="136" height="54" rx="8"/>
+      <text class="b mid" x="108" y="77">seed copy</text><text class="sm mid" x="108" y="95">burst closed</text>
+      <rect class="acc-box" x="200" y="54" width="136" height="54" rx="8"/>
+      <text class="b mid" x="268" y="77">line 1 true</text><text class="acc mid" x="268" y="95">opens: OPEN</text>
+      <rect class="box" x="360" y="54" width="136" height="54" rx="8"/>
+      <text class="b mid" x="428" y="77">restart</text><text class="sm mid" x="428" y="95">from the top</text>
+      <rect class="acc-box" x="520" y="54" width="136" height="54" rx="8"/>
+      <text class="b mid" x="588" y="77">line 9 true</text><text class="acc mid" x="588" y="95">closes: CLOSE</text>
+      <rect class="box" x="680" y="54" width="136" height="54" rx="8"/>
+      <text class="b mid" x="748" y="77">restart</text><text class="sm mid" x="748" y="95">from the top</text>
+      <rect class="box" x="840" y="54" width="136" height="54" rx="8"/>
+      <text class="b mid" x="908" y="77">pass ends</text><text class="sm mid" x="908" y="95">copy closed</text>
+      <line class="ln" x1="176" y1="81" x2="198" y2="81" marker-end="url(#d2a)"/>
+      <line class="ln" x1="336" y1="81" x2="358" y2="81" marker-end="url(#d2a)"/>
+      <line class="ln" x1="496" y1="81" x2="518" y2="81" marker-end="url(#d2a)"/>
+      <line class="ln" x1="656" y1="81" x2="678" y2="81" marker-end="url(#d2a)"/>
+      <line class="ln" x1="816" y1="81" x2="838" y2="81" marker-end="url(#d2a)"/>
+
+      <!-- the list -->
+      <line class="ln-acc" x1="268" y1="108" x2="268" y2="140" marker-end="url(#d2acc)"/>
+      <line class="ln-acc" x1="588" y1="108" x2="588" y2="140" marker-end="url(#d2acc)"/>
+      <rect class="acc-box" x="200" y="142" width="616" height="74" rx="8"/>
+      <text class="b acc" x="216" y="163">sent in order, stamped T by the belief</text>
+      <text class="mono" x="216" y="185">1  OPEN   pack:burst#Primary  12</text>
+      <text class="mono" x="216" y="204">2  CLOSE  pack:burst#Primary</text>
+      <text class="sm end" x="800" y="185">WindowOp(key, op, arg)</text>
+      <text class="sm end" x="800" y="204">preallocated buffer</text>
+
+      <!-- belief lane -->
+      <path class="ln-acc" d="M234,216 V266" marker-end="url(#d2acc)"/>
+      <text class="hd" x="40" y="252">Belief · Drain N+1</text>
+      <rect class="box" x="40" y="268" width="122" height="50" rx="8"/><text class="b mid" x="101" y="298">Flush</text>
+      <rect class="acc-box" x="173" y="268" width="122" height="50" rx="8"/><text class="b acc mid" x="234" y="290">replay</text><text class="acc mid" x="234" y="307">operations</text>
+      <rect class="box" x="306" y="268" width="122" height="50" rx="8"/><text class="b mid" x="367" y="298">polls</text>
+      <rect class="box" x="439" y="268" width="122" height="50" rx="8"/><text class="b mid" x="500" y="290">fold newer</text><text class="b mid" x="500" y="307">observations</text>
+      <rect class="box" x="572" y="268" width="122" height="50" rx="8"/><text class="b mid" x="633" y="298">settle</text>
+      <rect class="box" x="705" y="268" width="122" height="50" rx="8"/><text class="b mid" x="766" y="290">Lua</text><text class="b mid" x="766" y="307">evaluators</text>
+      <rect class="box" x="838" y="268" width="122" height="50" rx="8"/><text class="b mid" x="899" y="298">deliver</text>
+      <path class="ln-faint" d="M234,318 V340 M500,318 V362"/>
+      <text class="acc" x="173" y="354">OPEN, then CLOSE: the key ends closed, as the copy did</text>
+      <text class="sm" x="439" y="376">a cast heard while the pass was running is folded here, after the replay</text>
+      <text class="sm" x="40" y="406">Operations are writes: the belief does not judge caps again. Each applied operation is logged, so a recording replays without the core.</text>
+    </svg>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Operation</th><th>Argument</th><th>Sent when</th><th>The belief's replay</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">OPEN</td><td>duration in effect</td><td>a true <code>open_window</code> on a closed copy; a strict sequence chosen at now; a plain sequence's start line</td><td>up, opened at T, expires at T + duration (capped by <code>max_duration</code>), step 1 if stepped</td></tr>
+          <tr><td class="mono">REFRESH</td><td>duration in effect</td><td>a true <code>open_window</code> on an open copy declared <code>refresh=1</code>, within its caps</td><td>timer restarts from T within the caps; refresh count + 1</td></tr>
+          <tr><td class="mono">CLOSE</td><td>none</td><td>a true <code>close_window</code> on an open copy; a strict sequence giving up</td><td>down</td></tr>
+          <tr><td class="mono">STEP</td><td>step number</td><td>a plain sequence with <code>mode=skip</code> (the default) dropping an uncastable member, or a strict one with <code>allow_skip=1</code>; <code>restart_sequence</code> (step 1)</td><td>step set to that number</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption><b>Why replay is exact.</b> The belief changes only inside Drain, the copy was seeded from the state Drain N left, and the operations are applied before anything else in Drain N+1. So the list meets the same state it was computed on. Operations go first and not through the observation fold because the fold applies in arrival order: a cast heard during the pass would otherwise land before the open that should precede it. The buffer is sized exactly (a line fires at most once per slot and only slot 1 sends), so it cannot overflow. An operation for an unknown key, after an edit in combat, is dropped and counted.</figcaption>
+  </figure>
+</section>
+
+<section id="life">
+  <div class="sec-head"><div class="eyebrow">Diagram 4</div><h2>A strict sequence's life, chosen to done</h2></div>
+  <figure>
+    <div class="fig-scroll">
+    <svg class="dg" viewBox="0 0 1000 570" role="img" aria-label="Timeline of the strict sequence burst then nuke on 0.2 second update ticks. At pass N the line is chosen at now and the pass sends OPEN under this display's key; the core copy opens at once. The belief replays OPEN at Drain N+1 and the hold begins. The player presses burst, the next Drain advances to step 2, slot 1 shows nuke; the player presses nuke and the next Drain closes the window and ends the hold. Five ways it can end early are listed. A target change ends it only when the line says reset_on_target_change=1. A plain sequence instead opens on its condition, skips an unready member, parks after its last step with done true, and restart_sequence sends STEP 1.">
+      <defs>
+        <marker id="d4m" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="mk-mut" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="d4a" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <!-- axis: t=0.0 at x=150, 82 px per 0.2 s -->
+      <text class="sm" x="20" y="44">update tick (s)</text>
+      <line class="ln-faint" x1="150" y1="48" x2="970" y2="48"/>
+      <g>
+        <text class="sm mid" x="150" y="40">0.0</text><text class="sm mid" x="232" y="40">0.2</text><text class="sm mid" x="314" y="40">0.4</text>
+        <text class="sm mid" x="396" y="40">0.6</text><text class="sm mid" x="478" y="40">0.8</text><text class="sm mid" x="560" y="40">1.0</text>
+        <text class="sm mid" x="642" y="40">1.2</text><text class="sm mid" x="724" y="40">1.4</text><text class="sm mid" x="806" y="40">1.6</text>
+        <text class="sm mid" x="888" y="40">1.8</text><text class="sm mid" x="970" y="40">2.0</text>
+      </g>
+      <path class="ln-faint" d="M150,48 V340 M232,48 V340 M314,48 V340 M396,48 V340 M478,48 V340 M560,48 V340 M642,48 V340 M724,48 V340 M806,48 V340 M888,48 V340 M970,48 V340"/>
+      <!-- lane labels -->
+      <text class="b" x="20" y="114">Display pass</text>
+      <text class="b" x="20" y="184">Belief</text>
+      <text class="b" x="20" y="254">Player</text>
+      <text class="b" x="20" y="320">Slot 1 shows</text>
+
+      <!-- display pass lane -->
+      <circle class="dot-acc" cx="150" cy="110" r="7"/>
+      <text class="b acc" x="160" y="86">pass N: chosen at now (both castable) → OPEN pack:opener#Primary</text>
+      <rect class="acc-box" x="232" y="100" width="574" height="22" rx="4"/>
+      <text class="acc mid" x="519" y="116">hold: the hidden list, plus outside use_off_gcd=1 lines; members bypass the filter</text>
+      <text class="sm" x="160" y="140">core copy opens at once: slot 2 shows nuke</text>
+      <text class="sm" x="478" y="140">other displays are not held and recommend as today</text>
+
+      <!-- belief lane -->
+      <rect class="acc-box" x="232" y="170" width="246" height="24" rx="4"/>
+      <text class="acc mid" x="355" y="187">open · step 1</text>
+      <rect class="acc-box" x="478" y="170" width="328" height="24" rx="4"/>
+      <text class="acc mid" x="642" y="187">step 2</text>
+      <text class="sm" x="236" y="212">Drain N+1 replays OPEN</text>
+      <text class="sm" x="482" y="212">Drain: step 2, deadline restarts</text>
+      <text class="sm" x="810" y="212">Drain: last step, closes;</text>
+      <text class="sm" x="810" y="227">hold ends</text>
+
+      <!-- player lane -->
+      <path class="dot-fg" d="M437,242 l8,8 l-8,8 l-8,-8 z"/>
+      <text class="mid" x="437" y="276">presses burst</text>
+      <path class="dot-fg" d="M765,242 l8,8 l-8,8 l-8,-8 z"/>
+      <text class="mid" x="765" y="276">presses nuke</text>
+      <line class="ln-mut" x1="443" y1="243" x2="474" y2="198" marker-end="url(#d4m)"/>
+      <line class="ln-mut" x1="771" y1="243" x2="802" y2="198" marker-end="url(#d4m)"/>
+      <text class="sm" x="460" y="236">observed cast</text>
+
+      <!-- slot 1 lane -->
+      <rect class="box" x="150" y="304" width="328" height="24" rx="4"/><text class="mono mid" x="314" y="321">burst</text>
+      <rect class="box" x="478" y="304" width="328" height="24" rx="4"/><text class="mono mid" x="642" y="321">nuke</text>
+      <rect class="box-dash" x="806" y="304" width="164" height="24" rx="4"/><text class="sm mid" x="888" y="321">normal list</text>
+
+      <!-- early ends -->
+      <text class="hd" x="20" y="378">Ends early: any of these closes it and ends the hold</text>
+      <rect class="acc-box" x="20" y="392" width="180" height="76" rx="8"/>
+      <text class="b" x="32" y="414">give-up</text>
+      <text class="sm" x="32" y="433">due step cannot be cast,</text>
+      <text class="acc" x="32" y="450" style="font-size:12px">the pass sends CLOSE</text>
+      <rect class="box" x="212" y="392" width="180" height="76" rx="8"/>
+      <text class="b" x="224" y="414">strict deviation</text>
+      <text class="sm" x="224" y="433">any other on-GCD cast</text>
+      <text class="sm" x="224" y="450">(belief rule)</text>
+      <rect class="box" x="404" y="392" width="180" height="76" rx="8"/>
+      <text class="b" x="416" y="414">target change</text>
+      <text class="sm" x="416" y="433">only if the line says</text>
+      <text class="sm" x="416" y="450">reset_on_target_change=1</text>
+      <rect class="box" x="596" y="392" width="180" height="76" rx="8"/>
+      <text class="b" x="608" y="414">step timeout</text>
+      <text class="sm" x="608" y="433">restarts at each advance;</text>
+      <text class="sm" x="608" y="450">4 s, or step_timeout=</text>
+      <rect class="box" x="788" y="392" width="180" height="76" rx="8"/>
+      <text class="b" x="800" y="414">combat end</text>
+      <text class="sm" x="800" y="433">everything closes;</text>
+      <text class="sm" x="800" y="450">next fight starts fresh</text>
+
+      <!-- plain sequence strip -->
+      <text class="hd" x="20" y="500">A plain sequence instead</text>
+      <rect class="box" x="20" y="512" width="216" height="44" rx="8"/>
+      <text class="b mid" x="128" y="531">opens on its condition</text><text class="sm mid" x="128" y="547">OPEN from a generated line</text>
+      <rect class="box" x="264" y="512" width="216" height="44" rx="8"/>
+      <text class="b mid" x="372" y="531">steps advance on casts</text><text class="sm mid" x="372" y="547">mode=skip drops a member: STEP</text>
+      <rect class="box" x="508" y="512" width="216" height="44" rx="8"/>
+      <text class="b mid" x="616" y="531">parks after the last step</text><text class="sm mid" x="616" y="547">still up; done is true</text>
+      <rect class="acc-box" x="752" y="512" width="216" height="44" rx="8"/>
+      <text class="b mid" x="860" y="531">restart_sequence true</text><text class="acc mid" x="860" y="547" style="font-size:12px">STEP 1: runs again</text>
+      <line class="ln" x1="236" y1="534" x2="262" y2="534" marker-end="url(#d4a)"/>
+      <line class="ln" x1="480" y1="534" x2="506" y2="534" marker-end="url(#d4a)"/>
+      <line class="ln" x1="724" y1="534" x2="750" y2="534" marker-end="url(#d4a)"/>
+    </svg>
+    </div>
+    <figcaption><b>Example: <code>strict_sequence,name=opener:burst:nuke</code></b> (fixture S01), written with no option, so SimC's rules apply: the line can be chosen only when <code>burst</code> and <code>nuke</code> can both be cast, and while it is open an outside line marked <code>use_off_gcd=1</code> is still shown. A translator line carries <code>start_on_first=1,hold_off_gcd=1</code> instead: it is chosen when its first member is due within the spell queue window, about 0.4 s, and nothing outside it is shown. The OPEN is sent once slot 1 is final and causes no restart: the pick stands. While the window is up in a display, that display's generated sequence lines skip its ability filter; nothing is shared with the other displays. Hidden list lines read <code>&lt;member&gt;,if=window.&lt;w&gt;.next.&lt;member&gt;&amp;&lt;its own condition&gt;</code>. Being level, a strict sequence that is never pressed closes at its step timeout (4 s) and is chosen and opened again on the next pass. Known risk: a first member pressed before the belief has opened the window is missed; the default start makes this more likely than the wowsims start does. The owner kept SimC's rule for the default, and Phase 3 counts the misses.</figcaption>
+  </figure>
+</section>
+
+<section id="mods">
+  <div class="sec-head"><div class="eyebrow">Options and defaults · final</div><h2>SimC's behaviour unless the line says otherwise</h2></div>
+  <p>Options sit where SimC puts them, before the steps: <code>strict_sequence,name=x,start_on_first=1,if=cond:a:b</code>. A flag is off unless written. Nothing is inferred from the abilities and an import adds nothing. Open and close lines take <code>name=</code> and <code>if=</code> only.</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Option</th><th>Applies to</th><th>Origin</th><th>Default, unwritten</th><th>Written</th><th>The wowsims translator writes</th></tr></thead>
+      <tbody>
+        <tr><td><code>name=</code></td><td><code>sequence</code>, <code>strict_sequence</code>, <code>restart_sequence</code>; required on <code>window</code>, <code>open_window</code>, <code>close_window</code></td><td><span class="tag simc">SimC</span></td><td>first unnamed plain sequence and a bare restart: <code>default</code>. Others: a generated name</td><td>the window's name</td><td>always, a generated name</td></tr>
+        <tr><td><code>if=</code></td><td>every entry except <code>window</code>; each member has its own</td><td><span class="tag simc">SimC</span></td><td>true when reached</td><td>the condition</td><td>the node's condition</td></tr>
+        <tr><td><code>mode=skip|wait|continue</code></td><td><code>sequence</code></td><td><span class="tag">Hekili</span></td><td><span class="def">skip: a due member that cannot be cast is dropped for this run; none castable: the sequence burns out</span></td><td><b>wait</b>: stays on the member, shows its countdown, nothing below the line is recommended. <b>continue</b>: stays on the member, the list carries on below</td><td><code>mode=continue</code> on every <code>sequence</code></td></tr>
+        <tr><td><code>wait_on_ready=1</code></td><td><code>sequence</code></td><td><span class="tag simc">SimC</span></td><td>off</td><td>an alias for <code>mode=wait</code>; the editor shows Mode = wait</td><td>never</td></tr>
+        <tr><td><code>allow_skip=1</code></td><td><code>strict_sequence</code></td><td><span class="tag simc">SimC</span></td><td><span class="def">a due member that cannot be cast ends the sequence</span></td><td>starts when any member can be cast; uncastable members are skipped</td><td>never</td></tr>
+        <tr><td><code>start_on_first=1</code></td><td><code>strict_sequence</code></td><td><span class="tag">Hekili</span></td><td><span class="def">can be chosen only when every member can be cast now, no tolerance</span></td><td>can be chosen when the first member is due within the spell queue window</td><td>on every <code>strict_sequence</code></td></tr>
+        <tr><td><code>hold_off_gcd=1</code></td><td><code>strict_sequence</code></td><td><span class="tag">Hekili</span></td><td><span class="def">while open, outside <code>use_off_gcd=1</code> lines are still shown</span></td><td>while open, nothing outside the sequence is shown</td><td>on every <code>strict_sequence</code></td></tr>
+        <tr><td><code>step_timeout=</code></td><td><code>strict_sequence</code></td><td><span class="tag">Hekili</span></td><td><span class="def">4 s: a due step not cast for 4 s closes the window; the timer restarts at each advance</span></td><td>that many seconds</td><td>never</td></tr>
+        <tr><td><code>reset_on_target_change=1</code></td><td><code>sequence</code>, <code>strict_sequence</code>, <code>window</code> declaration; a <code>RegisterWindow</code> field for Lua windows</td><td><span class="tag">Hekili</span></td><td><span class="def">off everywhere: a target change changes nothing</span></td><td>a target change closes the window; a sequence is back to not started, a parked one too</td><td>never</td></tr>
+        <tr><td><code>duration=</code></td><td><code>window</code> declaration, required</td><td><span class="tag">Hekili</span></td><td>none; missing is an error</td><td>seconds, or <code>combat</code></td><td>no pack declares a window</td></tr>
+        <tr><td><code>refresh=1</code>, <code>max_duration=</code>, <code>max_refresh=</code></td><td><code>window</code> declaration</td><td><span class="tag">Hekili</span></td><td>no refresh, no caps</td><td>a true open line on an open window restarts its timer, within the caps</td><td>no pack declares a window</td></tr>
+        <tr><td><code>restart_sequence,name=</code></td><td>its own line</td><td><span class="tag simc">SimC</span></td><td></td><td>step 1 when true and the sequence is up at any other step, parked included</td><td>one per wowsims <code>resetSequence</code></td></tr>
+        <tr><td><code>window.&lt;seq&gt;.done</code></td><td>a condition read</td><td><span class="tag">Hekili</span></td><td></td><td>true while a plain sequence is parked</td><td>for <code>sequenceIsComplete</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:15px;color:var(--muted)">Compile error E7: an option the entry does not take. That includes v4's <code>unready=</code>, <code>start=</code>, <code>off_gcd=</code>, <code>target_change=</code>, a <code>mode=</code> value outside the three, <code>mode=</code> together with <code>wait_on_ready</code>, and a strict option on a plain line or the reverse.</p>
+  <h3>Ability fields for the strict start test</h3>
+  <p>SimC's start rule, every member castable now, cannot pass when the first member enables a later one: <code>battle_stance:overpower</code> out of Battle Stance. Two optional fields on the ability, written by the pack, tell the start test how to judge such a member. The core knows four kinds of gate, which are fields it already reads; it knows no stance by name.</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Field</th><th>Set in</th><th>Value</th><th>Default</th><th>Meaning</th><th>Used by</th></tr></thead>
+      <tbody>
+        <tr><td><code>sequence_ignore</code></td><td>the ability's registration, in the pack's class file</td><td>a list of gate names: <code>form</code>, <code>noform</code>, <code>buff</code>, <code>nobuff</code></td><td class="def">none: no gate is skipped</td><td>normal readiness with the named gates skipped. Cooldown, cost, range, the ability's own <code>usable</code> and the member's <code>if=</code> still count</td><td>Warrior: Overpower <code>{ "form" }</code>, Rend <code>{ "nobuff" }</code></td></tr>
+        <tr><td><code>sequence_ready</code></td><td>the ability's registration</td><td>a function with no arguments, like <code>usable</code></td><td class="def">none: the test is <code>ready()</code></td><td>replaces the judgement. Inside it, <code>ready()</code> is the normal test with <code>sequence_ignore</code> applied, so it can add to it or ignore it</td><td>no shipped ability in 0.9</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <pre class="apl">sequence_ready = function() return ready() and buff.flurry.down end   -- the normal test plus a condition
+sequence_ready = function() return rage.current >= 5 end              -- a replacement</pre>
+  <ul class="tight" style="font-size:15px">
+    <li><b>Applies:</b> the start test of a <code>strict_sequence</code> written without <code>start_on_first=1</code>, for members after the first.</li>
+    <li><b>Never applies:</b> the first member; any step once the sequence is open (the real gate is the truth by then); plain sequences; ordinary lines; a line with <code>start_on_first=1</code>. So no shipped pack line changes: the translator writes <code>start_on_first=1</code> on all 18.</li>
+    <li>A wrong gate name raises when the class file loads. The Actions tab does not edit these fields; it shows a read-only note on the step.</li>
+  </ul>
+  <h3>The three modes of a plain sequence</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>When the due member cannot be cast</th><th><code>mode=skip</code> (default)</th><th><code>mode=wait</code></th><th><code>mode=continue</code></th></tr></thead>
+      <tbody>
+        <tr><td>The sequence</td><td>moves to the next castable member; the dropped one is not offered again this run</td><td>stays on the member</td><td>stays on the member</td></tr>
+        <tr><td>The display shows</td><td>the next castable member</td><td>the member, with its countdown</td><td>whatever the list below picks</td></tr>
+        <tr><td>Lines below the sequence</td><td>walked as usual</td><td>not recommended</td><td>walked as usual</td></tr>
+        <tr><td>No remaining member castable</td><td>burnt out: parked, <code>done</code> true</td><td>keeps waiting</td><td>keeps its place</td></tr>
+        <tr><td>Follows</td><td>SimC</td><td>SimC <code>wait_on_ready=1</code></td><td>wowsims</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>What the two simulators do, read in their source</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Behaviour</th><th>SimC, the default</th><th>wowsims, the explicit setting</th></tr></thead>
+      <tbody>
+        <tr><td>Plain: the due step is not ready</td><td>Skipped; with no later step ready the sequence is finished <span class="mono">sequence.cpp:150-165</span>. With <code>wait_on_ready=1</code> the actor waits and nothing below runs <span class="mono">95-108</span></td><td>Stays on the step; the list carries on below <span class="mono">apl_actions_sequences.go:63-68</span></td></tr>
+        <tr><td>Plain: finished</td><td colspan="2">Both: not ready again until restarted or reset. This is parking. <span class="mono">sequence.cpp:145-167 · go:63-68, 124-126</span></td></tr>
+        <tr><td>Strict: start</td><td>Every step ready at that moment; with <code>allow_skip=1</code>, any step <span class="mono">sequence.cpp:253-275</span></td><td>GCD within the spell queue window and the first step ready <span class="mono">go:178-191</span></td></tr>
+        <tr><td>Strict: what is held</td><td>The foreground pick only. Lines on the off-GCD list (<code>use_off_gcd=1</code>) still run <span class="mono">player.cpp:7365-7369</span></td><td>Everything: the sequence takes the rotation <span class="mono">go:192-195</span></td></tr>
+        <tr><td>Strict: the due step is not ready</td><td>Cancelled; with <code>allow_skip=1</code>, skipped <span class="mono">sequence.cpp:295-351</span></td><td>Gives the rotation back when the GCD is ready <span class="mono">go:263-267</span></td></tr>
+        <tr><td>Target change</td><td colspan="2">Both: nothing.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="translator">
+  <div class="sec-head"><div class="eyebrow">Translator</div><h2>What the wowsims generator now writes</h2></div>
+  <p>The generator no longer leans on defaults. Every <code>strict_sequence</code> it writes carries a generated name, <code>start_on_first=1</code> and <code>hold_off_gcd=1</code>; every <code>sequence</code> a name and <code>mode=continue</code>. With those settings the shipped lines behave as wowsims does, so the Phase 3 tests measure the move to APL sequences and nothing else.</p>
+  <pre class="apl">actions+=/strict_sequence,name=battle_stance_overpower,start_on_first=1,hold_off_gcd=1,if=&lt;sequence condition&gt;:battle_stance,use_off_gcd=1:overpower,focus=1,if=&lt;its own condition&gt;</pre>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Pack</th><th>List</th><th><code>name=</code></th><th>Members</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="3">Rogue Assassination, Combat, Subtlety (each)</td><td>default</td><td class="mono">blood_fury_blade_flurry</td><td>blood_fury : blade_flurry</td></tr>
+        <tr><td>default</td><td class="mono">blood_fury_adrenaline_rush</td><td>blood_fury : adrenaline_rush</td></tr>
+        <tr><td>default</td><td class="mono">elunes_light_adrenaline_rush</td><td>elunes_light : adrenaline_rush</td></tr>
+        <tr><td>Mage Arcane</td><td>default</td><td class="mono">presence_of_mind_arcane_wrath</td><td>presence_of_mind : arcane_wrath</td></tr>
+        <tr><td>Mage Arcane, Fire, Frostfire (each)</td><td>evocation</td><td class="mono">read_ley_line_evocation</td><td>read_ley_line : evocation</td></tr>
+        <tr><td>Priest Shadow</td><td>default</td><td class="mono">inner_focus_mind_flay</td><td>inner_focus : mind_flay</td></tr>
+        <tr><td rowspan="2">Warrior Arms</td><td>default</td><td class="mono">battle_stance_overpower</td><td>battle_stance : overpower</td></tr>
+        <tr><td>default</td><td class="mono">battle_stance_rend</td><td>battle_stance : rend</td></tr>
+        <tr><td rowspan="2">Warrior Fury</td><td>default</td><td class="mono">battle_stance_rend</td><td>battle_stance : rend</td></tr>
+        <tr><td>overpower_weaving</td><td class="mono">battle_stance_overpower</td><td>battle_stance : overpower</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:15px;color:var(--muted)">18 lines in nine packs, 8 shapes. Every line gets the same two flags and never <code>allow_skip</code>, <code>step_timeout</code> or <code>reset_on_target_change</code>. With Cooldowns shown separately, the ones that begin with a cooldown now start in Primary.</p>
+  <h3>The two Lua windows that are really sequences move in Phase 3</h3>
+  <div class="cols">
+    <div class="card">
+      <h3>Hunter Beast Mastery: <code>hha</code></h3>
+      <pre class="apl">actions+=/restart_sequence,name=hha,if=window.hha.done
+actions+=/sequence,name=hha,mode=continue:summon_hawk:summon_hawk:arcane_shot,if=target.outside8
+...
+actions+=/arcane_shot,if=window.hha.next.arcane_shot&amp;&lt;second gate&gt;
+actions+=/arcane_shot,if=window.hha.next.arcane_shot&amp;&lt;third gate&gt;</pre>
+      <p>The restart line is the whole loop. Arcane Shot keeps its three list positions: the member carries the first range gate, and the other two stay ordinary lines that read the sequence. A cast advances the step whichever line showed it. The class's looping Lua window is removed in the same change.</p>
+    </div>
+    <div class="card">
+      <h3>Paladin Retribution: <code>move1</code> / <code>move2</code></h3>
+      <pre class="apl">actions.move_to_melee=sequence,name=move1,mode=continue,if=&lt;cond&gt;&amp;&lt;before first swing&gt;&amp;!window.move1.done:judgement,use_off_gcd=1,if=&lt;range&gt;:seal_of_command,focus=1
+actions.move_to_melee+=/close_window,name=move1,if=window.move1.up&amp;!window.move1.done&amp;!&lt;before first swing&gt;</pre>
+      <p>The opener runs once a fight. The close line replaces the Lua window's <code>close_on_false</code> for a player who reaches melee early. Lines that read "the opener is running" change from <code>window.move1.up</code> to up and not <code>done</code>, because a parked sequence stays up. wowsims's <code>move</code> and <code>wait</code> steps give no step, as today.</p>
+    </div>
+  </div>
+  <p style="font-size:15px;color:var(--muted)">Hunter <code>weave</code> and Rogue <code>riposte</code> stay Lua windows: they follow observed game events (Auto Shot and swing timing, a usability flip), not a priority. Floors for the two converted packs are re-measured with the move.</p>
+</section>
+
+<section id="displays">
+  <div class="sec-head"><div class="eyebrow">Decided · per-display setting</div><h2>Sequences, display by display</h2></div>
+  <p>Each display has a "Sequences" setting on its options page. Where it is off, sequences do not exist for that display: the compiler makes no sequence keys for it, and its pass skips every sequence line, start lines included, as if they were not in the priority. The setting covers sequences only. The owner: "Yes freeform windows will still work".</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Display</th><th>Sequences, default</th><th>Free-form windows</th><th>What that means with the defaults</th></tr></thead>
+      <tbody>
+        <tr><td>Primary</td><td class="def">on</td><td>always</td><td rowspan="2">Sequences start, hold and advance here. The filter bypass shows a separated cooldown member here while the sequence is open.</td></tr>
+        <tr><td>AOE</td><td class="def">on</td><td>always</td></tr>
+        <tr><td>Cooldowns</td><td>off</td><td>always</td><td rowspan="3">No sequence keys, no hold, sequence lines skipped. The display recommends as it does today. Turning the setting on restores "starts where it is chosen" here.</td></tr>
+        <tr><td>Interrupts</td><td>off</td><td>always</td></tr>
+        <tr><td>Defensives</td><td>off</td><td>always</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="tight" style="font-size:15px">
+    <li>Keys: a list-declared window has five; a sequence has one per display with the setting on, two with the defaults.</li>
+    <li>In an off display, <code>restart_sequence</code> and open or close lines that name a sequence are skipped too, and <code>window.&lt;sequence&gt;.up</code> reads false.</li>
+    <li>Changing the setting applies like a priority edit: at once out of combat, else at combat end.</li>
+  </ul>
+  <div class="note"><div><span class="pill answered">Decided Q14</span>With Cooldowns shown separately and Sequences off there, a sequence whose <b>first</b> member is a separated cooldown starts in Primary and AOE: the start line skips the "toggle shown separately" test there, overriding the ability's display category. A toggle that is switched off is not bypassed. Shipped sequences begin with blood_fury, elunes_light, presence_of_mind and inner_focus.</div></div>
+</section>
+
+<section id="compile">
+  <div class="sec-head"><div class="eyebrow">Diagram 5</div><h2>Compile-time registration from the APL</h2></div>
+  <figure>
+    <div class="fig-scroll">
+    <svg class="dg" viewBox="0 0 1000 460" role="img" aria-label="Compile-time registration. The saved priority uses plain names and holds the windows list. LoadScripts reads the windows list, collects sequences, checks for undeclared, duplicate and class-clashing names, makes one key per display for each window, and generates lines and the hidden list. The keys go to the belief with a generation bump, applied at the next Drain out of combat, else at combat end. People only ever see plain names.">
+      <defs>
+        <marker id="d5a" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <rect class="box" x="20" y="40" width="400" height="260" rx="10"/>
+      <text class="hd" x="36" y="66">APL, as saved</text>
+      <text class="sm" x="36" y="90">the windows list: compile time only</text>
+      <text class="mono" x="36" y="110">actions.windows+=/window,name=burst,duration=12</text>
+      <text class="sm" x="36" y="140">the lists that are walked</text>
+      <text class="mono" x="36" y="160">open_window,name=burst,if=flag</text>
+      <text class="mono" x="36" y="180">filler,if=window.burst.up</text>
+      <text class="mono" x="36" y="200">close_window,name=burst,if=!flag</text>
+      <text class="mono" x="36" y="220">strict_sequence,name=opener:stance:nuke</text>
+      <text class="sm" x="36" y="256">Plain names only; the user writes these.</text>
+      <text class="sm" x="36" y="274">Members must be abilities the belief tracks.</text>
+
+      <line class="ln" x1="420" y1="170" x2="438" y2="170" marker-end="url(#d5a)"/>
+
+      <rect class="acc-box" x="440" y="40" width="300" height="260" rx="10"/>
+      <text class="hd" x="456" y="66">APL compiler · LoadScripts</text>
+      <text class="sm" x="456" y="86">at login and after every edit</text>
+      <text class="b" x="456" y="114">1  read the windows list</text>
+      <text class="b" x="456" y="142">2  collect sequences</text>
+      <text class="sm" x="477" y="159">each declares its own window</text>
+      <text class="b" x="456" y="187">3  check names</text>
+      <text class="pend" x="477" y="204" style="font-size:12px">undeclared · duplicate · class clash</text>
+      <text class="b" x="456" y="232">4  make keys, one per display</text>
+      <text class="b" x="456" y="260">5  generate lines</text>
+      <text class="sm" x="477" y="277">and the hidden list (strict only)</text>
+
+      <line class="ln" x1="740" y1="170" x2="758" y2="170" marker-end="url(#d5a)"/>
+
+      <rect class="box" x="760" y="40" width="220" height="260" rx="10"/>
+      <text class="hd" x="776" y="66">Belief</text>
+      <text class="sm" x="776" y="86">window records by key</text>
+      <text class="mono" x="776" y="110">pack:burst#Primary</text>
+      <text class="mono" x="776" y="128">pack:burst#AOE</text>
+      <text class="mono" x="776" y="146">pack:burst#Cooldowns</text>
+      <text class="mono" x="776" y="164">pack:burst#Interrupts</text>
+      <text class="mono" x="776" y="182">pack:burst#Defensives</text>
+      <text class="sm" x="776" y="202">and five for pack:opener</text>
+      <text class="b" x="776" y="232">applied</text>
+      <text class="sm" x="776" y="250">on a generation bump: next</text>
+      <text class="sm" x="776" y="266">Drain out of combat, else at</text>
+      <text class="sm" x="776" y="282">combat end. APL rows only.</text>
+
+      <rect class="pend-box" x="20" y="322" width="560" height="124" rx="10"/>
+      <text class="b pend" x="36" y="346">Compile errors</text>
+      <text class="sm" x="36" y="368">E1  name not declared anywhere</text>
+      <text class="sm" x="36" y="388">E2  name declared twice</text>
+      <text class="sm" x="36" y="408">E3  name a class registers in Lua</text>
+      <text class="sm" x="300" y="368">E4  open / close with more than name, if</text>
+      <text class="sm" x="36" y="428">E7  an option the entry does not take</text>
+      <text class="sm" x="300" y="388">E5  misplaced entry, or the list called</text>
+      <text class="sm" x="300" y="408">E6  missing or bad duration, bad caps</text>
+
+      <rect class="zone" x="600" y="322" width="380" height="124" rx="10"/>
+      <text class="b" x="616" y="346">Plain names everywhere a person looks</text>
+      <text class="sm" x="616" y="368">Saved priorities, the editor, export, debug lines</text>
+      <text class="sm" x="616" y="386">and snapshots use plain names. Keys are never</text>
+      <text class="sm" x="616" y="404">saved. Until applied, an unknown key reads down</text>
+      <text class="sm" x="616" y="422">and its operations are dropped and counted.</text>
+    </svg>
+    </div>
+    <figcaption><b>One compiler, in the addon.</b> The build tools only write <code>sequence</code> / <code>strict_sequence</code> lines (and a <code>windows</code> list where a pack wants one) into the .simc. Two priorities may both declare <code>burst</code>; their keys differ by pack. Parser work is needed: SimC puts commas inside colon-separated members. Belief windows are otherwise built only at SpecializationChanged; this follows the <code>CdmSwitchChanged</code> pattern and rebuilds only the APL rows and the operations buffer. An unnamed strict sequence in an import gets a generated name.</figcaption>
+  </figure>
+</section>
+
+<section id="plan">
+  <div class="sec-head"><div class="eyebrow">Phased plan · final</div><h2>Six phases, belief first</h2></div>
+  <ol class="plan">
+    <li><span class="ph">Phase 0</span><h3>Docs</h3><span>Fix design §3a (the wowsims strict start at the pin is "first step ready") and name SimC as the default reference; record v6 as the build reference; this page; draft the release notes (<code>windows</code> reserved, displays showing abilities outside their category, the Sequences setting).</span></li>
+    <li><span class="ph">Phase 1</span><h3>Belief</h3><span>APL rows by key, the operations buffer and <code>WindowOp</code>, Drain order, the four operations as writes, parking, <code>reset_on_target_change</code> for APL rows and Lua windows, <code>step_timeout</code> (4 s), RegisterWindow's checks, generation-bump apply, operation logging, counters.</span><span class="gate">Gate: fast checks. Matrix runner and test kit built here; belief-only columns asserted first.</span></li>
+    <li><span class="ph">Phase 2</span><h3>Core and compiler</h3><span>The reserved <code>windows</code> list, errors E1-E7, keys, sequence syntax with every option; lines as commands with the per-slot fired mark; the uniform line form; the restart with no cap and the restarts-per-slot count; the three start tests and the two ability fields; the hold; give-up, the strict skip and the three plain modes; the start-line bypass in Primary and AOE; the translator writing its flags; snapshot lines.</span><span class="gate">CPU gate: shipped packs unchanged (none has a window line yet), plus three synthetic priorities (flapping pair, chain of three, held-true refresh) measured for CPU ratio and restarts per slot. A high number becomes a warning proposal, never a cap.</span></li>
+    <li><span class="ph">Phase 3</span><h3>Three real-world tests</h3><span><b>Warrior Arms</b>, strict: the new rule 14 against its <code>prev.1</code> chains, also with Cooldowns separate. Overpower and Rend get <code>sequence_ignore</code>, and one arm runs with <code>start_on_first=1</code> removed to count missed first presses; a second such arm, harness only, runs on Rogue Combat's blood_fury then blade_flurry. <b>Hunter Beast Mastery</b>: <code>hha</code> as a <code>mode=continue</code> sequence with a restart line, the Lua window removed. <b>Paladin Retribution</b>: <code>move1</code> / <code>move2</code> as sequences with a close line, the Lua windows removed.</span><span class="gate">Each against its 0.8.5 form on the same seeds: both accuracy numbers, flicker, CPU ratio, operations per minute, restarts per slot. Floors re-measured with the move and the cause named.</span></li>
+    <li class="cond"><span class="ph">Phase 4 · conditional</span><h3>Rollout</h3><span>Fury, Rogue ×3, Mage ×3, Shadow, only if the Arms probe is at least equal. Re-floor each with the cause named.</span></li>
+    <li><span class="ph">Phase 5</span><h3>Editor and in game</h3><span>The Actions tab shows and edits every parameter with its effective value, defaults included. Then in game: the Sequences setting, a cooldown-first sequence starting in Primary, import and export unchanged, edit in combat, the snapshot text, the three converted packs on an open-world mob.</span></li>
+  </ol>
+  <h3>What the Actions tab shows (Phase 5)</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Entry</th><th>Fields, each with its effective value</th></tr></thead>
+      <tbody>
+        <tr><td><code>sequence</code></td><td>Name; Steps (ordered, each an ability with its own options and <code>if=</code>); Mode (skip / wait / continue); Reset on target change; <code>if=</code></td></tr>
+        <tr><td><code>strict_sequence</code></td><td>Name; Steps; Allow skip; Start on first step; Hold off-GCD lines; Step timeout; Reset on target change; <code>if=</code></td></tr>
+        <tr><td><code>restart_sequence</code></td><td>Sequence, picked from the priority's sequence names; <code>if=</code></td></tr>
+        <tr><td><code>window</code> in the <code>windows</code> list</td><td>Name; Duration (seconds or "combat"); Refresh; Max duration; Max refreshes; Reset on target change</td></tr>
+        <tr><td><code>open_window</code>, <code>close_window</code></td><td>Window, picked from the declared names (list, sequences, class windows); <code>if=</code>. Nothing else</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="tight" style="font-size:15px">
+    <li>An unwritten flag shows unchecked with "default (SimC)"; Mode shows "skip, default (SimC)"; Step timeout shows "4, default"; a generated name shows as the name.</li>
+    <li>Setting a field back to its default removes it from the line, so an export stays as short as the import was.</li>
+    <li>A line imported with <code>wait_on_ready=1</code> shows Mode = wait. A translator line shows its flags checked and Mode = continue.</li>
+  </ul>
+  <p style="font-size:15px;color:var(--muted)">Harness gates: the drift guard keeps its meaning for Lua windows. APL windows get two checks instead: after every Drain each key's belief state equals the state the sending pass left in its copy, and no APL window is ever up without a logged OPEN or REFRESH.</p>
+</section>
+
+<section id="matrix">
+  <div class="sec-head"><div class="eyebrow">Test matrix</div><h2>One table-driven spec over small fixture priorities</h2></div>
+  <div class="stats">
+    <div class="stat"><b>16</b><span>axes</span></div>
+    <div class="stat"><b>164</b><span>exhaustive-block cases</span></div>
+    <div class="stat"><b>~30</b><span>pairwise cases</span></div>
+    <div class="stat"><b>~212</b><span>fixtures in all</span></div>
+    <div class="stat"><b>142</b><span>named cases that must exist</span></div>
+  </div>
+  <p>Each fixture is a 3-10 line priority over a small test kit (<code>filler</code>, <code>nuke</code>, <code>burst</code>, <code>stance</code>, <code>dot</code>, a Lua window <code>luaw</code>, one Cooldowns-display cooldown) with a tick timeline beside it. Every tick asserts the belief state per key, the ordered operations each display's pass sent, the forecast copy and the restarts in each asserted slot, and the published slot 1; any unlisted field that changes fails. Every case runs again after warm-up and must allocate nothing in Drain, <code>WindowOp</code>, the walk and the restart. Compile cases have no timeline: they assert the error list and which lines are disabled.</p>
+  <div class="note"><div><strong>Replay invariant, checked on every case and every tick.</strong> After the next Drain, the belief's state for each key equals the copy's state at the end of the slot-1 now walk that sent the operations, except where a scripted cast, target swap or expiry falls in between. It replaces v3's Lua twin.</div></div>
+  <div class="cols">
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Axis</th><th>Values</th></tr></thead>
+        <tbody>
+          <tr><td>A kind</td><td>Lua-led; APL list-declared; APL sequence</td></tr>
+          <tr><td>B declaration</td><td>valid; undeclared; duplicate; list and sequence share a name; class clash; an attribute on a line naming an APL window, and on one naming a Lua window; wrong entry in the list; <code>window</code> outside it; bad duration</td></tr>
+          <tr><td>C declared settings</td><td>plain; <code>refresh=1</code>; with <code>max_refresh</code>; with <code>max_duration</code>; <code>duration=combat</code></td></tr>
+          <tr><td>D lines on one window</td><td>open only; open + close; two opens; two opens + close; close only</td></tr>
+          <tr><td>E order</td><td>open above close; close above open; open, close, open</td></tr>
+          <tr><td>F condition over time</td><td>true once; held true; toggling; true only at a recheck time</td></tr>
+          <tr><td>G what sits between</td><td>nothing; a reader; a ready pick; a call list that is false</td></tr>
+          <tr><td>H restart chain</td><td>0; 1; 2; 5; every window line of a 12-line priority; nested list. No cap values: there is no cap</td></tr>
+          <tr><td>I sequence</td><td>none, plain, strict</td></tr>
+          <tr><td>J options, each unwritten (SimC) and written</td><td><code>mode=</code> skip / wait / continue and the <code>wait_on_ready=1</code> alias, <code>allow_skip</code>, <code>start_on_first</code>, <code>hold_off_gcd</code>, <code>step_timeout=</code>, <code>reset_on_target_change</code> (sequence, declaration, Lua field), <code>name=</code> given or defaulted</td></tr>
+          <tr><td>K press timing</td><td>normal; same Drain as the operation; before chosen; two members in one frame</td></tr>
+          <tr><td>L displays and keys</td><td>Primary only; two displays, different conditions; Cooldowns separate; toggled mid-fight</td></tr>
+          <tr><td>M lifecycle</td><td>precombat; combat start / end; edit in combat; pack switch; spec switch</td></tr>
+          <tr><td>N target</td><td>no swap; plain GUID; under Map; <code>cycle_targets</code> member</td></tr>
+          <tr><td>O naming</td><td>plain; same name in two priorities; export/import</td></tr>
+          <tr><td>Q slot</td><td>slot 1 (sends); slot 2 and later (copy only, fired mark cleared)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:grid;gap:16px;align-content:start;min-width:0">
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Exhaustive block</th><th style="text-align:right">Cases</th></tr></thead>
+          <tbody>
+            <tr><td>C × F, one open line (level, refresh, caps, reopen after expiry)</td><td class="num">20</td></tr>
+            <tr><td>D × E × G (operation order, end state of the pass)</td><td class="num">36</td></tr>
+            <tr><td>H × slot (restarts equal the lines that fired; per-slot mark)</td><td class="num">12</td></tr>
+            <tr><td>B × editor load / import (compile errors)</td><td class="num">20</td></tr>
+            <tr><td>strict × start_on_first × hold_off_gcd × allow_skip × K; plain × three modes × K</td><td class="num">32 + 12</td></tr>
+            <tr><td>plain, strict, declared window, Lua window × reset_on_target_change × N</td><td class="num">32</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Named groups</h3>
+        <ul class="tight">
+          <li><b>C01-C11</b> compile and declaration errors, the reserved list name</li>
+          <li><b>W01-W19</b> free-form windows</li>
+          <li><b>R01-R13</b> in-pass restart and the per-slot fired mark: every window line firing with nothing truncated, the same lines firing again in slot 2, a forecast window opening in slot 2 and closing in slot 3. No cap tests</li>
+          <li><b>S01-S24</b> sequences</li>
+          <li><b>D01-D20</b> displays, keys, the filter bypass, the Sequences setting, a cooldown-first sequence starting in Primary</li>
+          <li><b>P01-P36</b> option pairs: fixtures that differ in one option only, for every option; the three <code>mode=</code> values and the alias; an inactive line skipping nothing; a dropped member coming back after a restart; <code>step_timeout</code>; the reset on a Lua window; the uniform line form; the translator's flags on all 18 lines; the ability fields: each gate kind ignored, the handler replacing, the handler calling <code>ready()</code> plus a condition, no effect with <code>start_on_first=1</code>, on the first member or on running steps</li>
+          <li><b>G01-G08</b> real-world gates: Arms, <code>hha</code> and the Paladin moves, each against its 0.8.5 form on the same seeds, plus a log replay of each; the default-start arms on Arms (through <code>sequence_ignore</code>) and Rogue Combat</li>
+          <li><b>L01-L11</b> lifecycle, naming and log replay</li>
+        </ul>
+        <p><b>Contrast pair:</b> one fixture runs the same flag through <code>luaw</code> (edge) and an APL window (level) and asserts where they must differ.</p>
+        <p><b>Two fixture families:</b> <code>simc-*</code> write no option and test the defaults; <code>wowsims-*</code> carry the translator's flags. Sequence cases whose start or hold matters are written in both.</p>
+        <p><b>Harness too:</b> W19, S09, S10, S11, D02 and group G. One recorded fight per S group replays through the belief alone, operations included, and must match every tick.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="open">
+  <div class="sec-head"><div class="eyebrow">Nothing open</div><h2>Risks, readings and notes for the builders</h2></div>
+  <p>Every question is decided, and no contradiction is open. The two items v6 first raised here (Paladin move steps, the Arms start test) were ruled on and are the first two cards of the Decided list.</p>
+  <div class="cols">
+    <div class="card">
+      <h3>Readings v6 made</h3>
+      <p>Small points the rulings imply but do not spell out, each the narrowest reading.</p>
+      <ul class="tight">
+        <li>The Lua-window reset is the controller's reading of L837. Flipping it to APL-only means deleting one field.</li>
+        <li>A reset Lua window also forgets its evaluator's last value, so a still-true evaluator reopens it at step 1.</li>
+        <li><code>step_timeout=</code> is for strict sequences only; a plain sequence has no deadline.</li>
+        <li><code>mode=</code> together with <code>wait_on_ready</code> is an error, rather than one silently winning.</li>
+        <li>A plain sequence's generated lines all sit under its condition, so a false <code>if=</code> shows and skips nothing.</li>
+        <li>The start-line bypass applies in Primary and AOE only, as the ruling names them.</li>
+        <li><code>sequence_ready</code> takes no arguments, like <code>usable</code>, and reaches the normal test as <code>ready()</code>; the ruling left the mechanism to the design. The fields also cover the any-member start test of <code>allow_skip=1</code>.</li>
+        <li><code>hha</code> keeps Arcane Shot at its three list positions through ordinary lines that read <code>window.hha.next.arcane_shot</code>, so the pack's order does not change.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Not checked in code, for the builders</h3>
+      <ul class="tight">
+        <li>Phase 1: whether a second Drain can run before all five passes finish; whether the two GCD tests ever disagree; where a Lua window keeps its evaluator's last value.</li>
+        <li>Phase 2: whether a slot-1 line is always evaluated at delay 0; whether the core can ask "castable at the end of the GCD" for a member that is not the line being walked; how a line is accepted with a wait for <code>mode=wait</code>; every place the fired mark is cleared today; whether <code>mode</code> or <code>step_timeout</code> collide with an existing entry field.</li>
+        <li>Phase 2: whether the four gates can be skipped for one judgement without a second code path, and how <code>ready()</code> reaches the handler without an allocation.</li>
+        <li>Phase 3: that Overpower's gate is its <code>form</code> field and Rend's a <code>nobuff</code> field in the Warrior class file, and whether Fury needs the same; an APL expression for "before the first main-hand swing"; tests and tools that name <code>hha</code>, <code>move1</code>, <code>move2</code> as class windows.</li>
+        <li>Phase 5: whether the Actions tab can show a list of steps without a new widget.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cols">
+    <div class="card">
+      <h3>Risks</h3>
+      <ul class="tight">
+        <li><b>Flapping.</b> Open and close conditions both true: the window opens and closes in every slot of every pass. By design; a cost and a surprise, not a fault.</li>
+        <li><b>A window that never closes.</b> A held-true open reopens the moment the window expires; <code>refresh=1</code> burns through <code>max_refresh</code> in under a second.</li>
+        <li><b>Restart cost, with no cap and in every slot.</b> Worst case is window lines × slots extra walks per display per update. Bounded and fixed at compile time; Phase 2 measures it and the snapshot shows it.</li>
+        <li><b>Forecast slots differ from what is sent.</b> With the per-slot mark the copy can open and close windows the belief never hears about. Slot 1's operations are what the belief received.</li>
+        <li><b>Replay determinism.</b> Rests on the belief changing only in Drain, operations being writes, and the log holding them in order. The harness invariant is the guard.</li>
+        <li><b>The default skip is sharp.</b> A member that is uncastable for one pass is dropped for the run. SimC's behaviour, and a known surprise there.</li>
+        <li><b><code>mode=wait</code> can stall a display.</b> A waited member that never becomes castable blocks everything below the line.</li>
+        <li><b>The default strict start cannot begin a sequence whose later member is enabled by its first</b> unless the pack marks that ability with <code>sequence_ignore</code> or <code>sequence_ready</code>, or the line says <code>start_on_first=1</code>. An imported SimC line over unmarked abilities never starts.</li>
+        <li><b>A start test that looks past a gate can be wrong.</b> If the first member does not lift the gate, the sequence opens and the give-up closes it: one wasted recommendation, repeated while the condition holds. The fields are pack code, not visible in the priority text.</li>
+        <li><b>Two families of behaviour.</b> A translator pack and a hand-written line with the same members act differently, by design. The Actions tab and the snapshot show why.</li>
+        <li><b>Displays show abilities outside their category.</b> A separated cooldown in Primary, as a later member and now as a first member. A cooldown that exists only as a sequence's first member no longer shows in Cooldowns while Sequences is off there.</li>
+        <li><b>The conversions move shipped behaviour.</b> <code>hha</code> restarts its loop one update later than the Lua window; the Paladin opener depends on a close line and on every old <code>.up</code> read becoming "up and not done".</li>
+        <li><b>A press before the window is open</b>: up to one update with the wowsims start, longer with the default start. Phase 3 counts both.</li>
+        <li><b>The latch repeats.</b> An unpressed strict sequence is opened again after every step timeout.</li>
+        <li><b>A reserved list name.</b> A user's old list called <code>windows</code> gets errors on load. Release note.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>How a pack author sees it</h3>
+      <p>No new option. Everything is in the existing debug output and snapshot, in plain names.</p>
+      <ul class="tight">
+        <li>Each window line's debug text gains its outcome: opened and restarted, already open, already fired this slot, or forecast only.</li>
+        <li>A "Windows" section per display: "Sequences: on/off", state as seeded, the operations slot 1 sent in order with the line that sent each, and the restarts in each slot.</li>
+        <li>Each open sequence's effective options, every STEP with the member it dropped, and for <code>mode=wait</code> the member waited on.</li>
+        <li>Two rolling numbers per window: operations and opens in the last 10 s. A flapping window reads "burst: 100 operations / 10 s".</li>
+        <li>A belief section with the keys, operations applied and dropped since combat start.</li>
+        <li>Compile errors E1-E7 with the line number and the plain name.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>Source: windows design v6, final (2026-11-13), sections 0-15, implementing ledger rows L773-L839, L844 and L845. Diagrams follow §11. Nothing here is a ruling beyond what v6 records.</footer>
+</div>

@@ -1,0 +1,3 @@
+-- tools/check_border.sh must fail this core stand-in on line 3: a belief name beside the approved calls
+local _, ns = ...
+local up = ns.VirtualState.Window("x")
