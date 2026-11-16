@@ -22,7 +22,7 @@ function M.boot(ns, api, edit)
     -- the rate-field entries (Bear Form's energy pause), which Spec/Regen.lua moves out of the model into regenMult
     local rates = {}
     for _, m in pairs(w.resources[3].models or {}) do
-        if m.mult or m.spirit or m.share or m.mp5 then
+        if m.mult or m.spirit or m.share or m.mp5 or m.mp5Mult then
             rates[#rates + 1] = m
         end
     end

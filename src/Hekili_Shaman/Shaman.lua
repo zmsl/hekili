@@ -497,10 +497,12 @@ spec:RegisterResource(
     Enum.PowerType.Mana,
     {
         improved_stormstrike = { aura = "improved_stormstrike", share = 0.5 },
-        -- Mana Tide Totem's buff (1325257 effect 1: 290 every 3 s, 13 s; wowsims spell data)
-        mana_tide = { aura = "mana_tide", mp5 = 290 / 3 * 5 },
+        -- Mana Tide Totem's buff (1325257 effect 1: 290 every 3 s, 13 s; wowsims spell data). Both totems' buffs are
+        -- periodic energizes (`energize`): Innervate leaves their mp5 unscaled (wowsims e4ef929e54 mana.go:176-183).
+        mana_tide = { aura = "mana_tide", mp5 = 290 / 3 * 5, energize = true },
         mana_spring = {
             aura = "mana_spring",
+            energize = true,
             mp5 = function()
                 local ranks = TOTEMS.mana_spring_totem.ids
                 return (MANA_SPRING[knownRank(ranks)] or MANA_SPRING[1])
