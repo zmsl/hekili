@@ -1203,4 +1203,80 @@ describe("Exorcism's 879 ranks with the creature type hidden", function()
         assert.are.same({ true }, usable())
         assert.are.same({}, H.errors)
     end)
+
+    -- L1142: Holy Wrath (Undead and Demons) is self-centred, so its own range answer is nil on every target (L187).
+    -- Its type is confirmed by the range answer of a known 879 (Undead/Demon) Exorcism rank; with none known, or with a
+    -- 415068 rank (any target, so its answer confirms nothing), it waits for a plain type. 3 yd from the target.
+    local function paladin(known)
+        local H = headless.new({
+            character = {
+                class = "PALADIN",
+                classID = 2,
+                specID = 1486,
+                level = 60,
+                known = known,
+                power = { type = 0, token = "MANA", max = 5000 },
+                speed = { 3.6 },
+            },
+            pack = "Retribution (wowsims.com)",
+        })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, 3
+        H.ctl.ranges[10318] = { 0, 0 } -- self-centred: the client's plain nil
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now
+        return H,
+            function(creature)
+                H.ctl.creature.target = creature
+                t = t + 0.2
+                H.ctl.now = t
+                assert.is_true(headless.cycle(H, t))
+                return { H.Hekili.State:IsUsable("holy_wrath") }
+            end
+    end
+    local UNDEAD_RANKS = { 879, 5614, 5615, 10312, 10313, 10314, 10318 }
+    local NIL = { false, "creature type unknown; range nil: wrong target type" }
+
+    it("Holy Wrath: a plain type decides in the open world; no target refuses it", function()
+        local H, usable = paladin(UNDEAD_RANKS)
+        assert.are.same({ true }, usable("undead"))
+        assert.are.same({ true }, usable("demon"))
+        assert.are.same({ false, "target's creature type not in usable_on" }, usable("humanoid"))
+        H.ctl.exists.target = false
+        assert.are.same({ false, "usable_on: no attackable target" }, usable("unknown"))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("Holy Wrath restricted (type and GUID secret): the known 879 Exorcism rank's range answer decides", function()
+        local H, usable = paladin(UNDEAD_RANKS)
+        H.ctl.guid.target = SECRET
+        H.ctl.ranges[10314] = { 0, 30 } -- Exorcism: true (an Undead or Demon target)
+        assert.are.same({ true }, usable(SECRET))
+        H.ctl.ranges[10314] = { 0, 2 } -- false: a valid type, out of reach
+        assert.are.same({ true }, usable(SECRET))
+        H.ctl.ranges[10314] = { 0, 0 } -- nil: a type Exorcism cannot hit
+        assert.are.same(NIL, usable(SECRET))
+        assert.are.same(NIL, usable("undead")) -- a plain type read under the restriction is not trusted
+        H.ctl.ranges[10314], H.ctl.distance.target = nil, SECRET
+        assert.are.same({ false, "creature type unknown; range secret: unconfirmed" }, usable(SECRET))
+        H.ctl.distance.target = 3
+        H.ctl.guid.target = "Creature-1" -- the target-swap poll in the open world: type plainly unknown
+        H.ctl.ranges[10314] = { 0, 30 }
+        assert.are.same({ true }, usable("unknown"))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("Holy Wrath restricted with no 879 Exorcism rank known, or a 415068 rank known: refused", function()
+        for _, known in ipairs({ { 2812, 10318 }, { 879, 5614, 10314, 415068, 10318 } }) do
+            local H, usable = paladin(known)
+            H.ctl.guid.target = SECRET
+            for _, q in ipairs(known) do
+                H.ctl.ranges[q] = q ~= 10318 and { 0, 30 } or { 0, 0 } -- every Exorcism rank answers true
+            end
+            assert.are.same(NIL, usable(SECRET), #known)
+            H.ctl.guid.target = "Creature-1" -- open world: the plain type decides
+            assert.are.same({ true }, usable("undead"), #known)
+            assert.are.same({}, H.errors)
+        end
+    end)
 end)

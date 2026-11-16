@@ -988,6 +988,14 @@ spec:RegisterAbilities({
         usable_on = function()
             return UNDEAD_DEMON
         end,
+        -- Self-centred: its own range answer is nil on every target (L187). A known 879 Exorcism rank (the same two
+        -- types) confirms the target's type while it reads secret; a 415068 rank hits any target, so it confirms none.
+        rangeSpell = function()
+            local r = knownRank(EXORCISM)
+            if r > 0 and r < EXORCISM_ANY then
+                return EXORCISM[r]
+            end
+        end,
     },
 
     -- Improved Hammer of Justice (20487): -5 s a rank.

@@ -7400,12 +7400,19 @@ do
             return false, "not usable in combat"
         end
 
-        -- `usable_on`: the target creature types the ability works on (`target.creature_type`'s keys). An unknown type
-        -- (secret in a restricted area) falls to the client's range answer on a hostile target: a plain nil is the
-        -- client's answer for a type the spell cannot hit (L238); true, false or secret keep it usable here.
+        -- `usable_on`: the target creature types the ability works on (`target.creature_type`'s keys); usable only on a
+        -- confirmed type (L1141). It needs a plainly attackable target. A plain type decides. Under the Map restriction
+        -- (a dungeon or raid) the target's GUID reads secret (nil here) and no type read is trusted (L1142); there, and
+        -- while the type reads unknown, the client's range answer for `rangeSpell` (else the ability) decides: plain
+        -- true or false is a type the spell can hit, a plain nil one it cannot (L238), a secret one is unconfirmed.
         z = ability.usable_on
         if z then
-            local ct = self.target.creature_type
+            local issecretvalue = Facade.issecretvalue
+            local e, hostile = UnitExists( "target" ), UnitCanAttack( "player", "target" )
+            if issecretvalue( e ) or not e or issecretvalue( hostile ) or not hostile then
+                return false, "usable_on: no attackable target"
+            end
+            local ct = UnitGUID( "target" ) and self.target.creature_type or "unknown"
             if ct ~= "unknown" then
                 local ok = false
                 for i = 1, #z do
@@ -7413,12 +7420,9 @@ do
                 end
                 if not ok then return false, "target's creature type not in usable_on" end
             else
-                local issecretvalue = Facade.issecretvalue
-                local e, hostile = UnitExists( "target" ), UnitCanAttack( "player", "target" )
-                if not issecretvalue( e ) and e and not issecretvalue( hostile ) and hostile then
-                    local r, secret = C_Spell.IsSpellInRange( ability.rangeSpell or ability.id, "target" )
-                    if r == nil and not secret then return false, "creature type unknown; range nil: wrong target type" end
-                end
+                local r, secret = C_Spell.IsSpellInRange( ability.rangeSpell or ability.id, "target" )
+                if secret then return false, "creature type unknown; range secret: unconfirmed" end
+                if r == nil then return false, "creature type unknown; range nil: wrong target type" end
             end
         end
 

@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon, so they no longer show up with no target or with a target of another type.
+
 ### Known issues
 
 ### Upgrade notes
