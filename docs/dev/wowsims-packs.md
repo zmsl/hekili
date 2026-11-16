@@ -232,7 +232,7 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 
 1. One line per entry; `prepullActions` -> `actions.precombat`, in wowsims's `doAtValue` order (earliest first); groups
    -> called lists; variables inlined, except one whose text holds 40 or more terms (CN25): it is one
-   `variable,name=v_<name>,value=<text>` line heading the default list, read as `variable.v_<name>`, so no line
+   `variable,name=v_<name>,pure=1,value=<text>` line heading the default list, read as `variable.v_<name>`, so no line
    repeats it (the engine reads such a line's value in place, as the inlined text would be: Scripts.lua's pure
    variables). Omits a prepull entry with no constant `doAtValue` or one after the pull (a time folds from
    constants, `math`, the kit's base cast time and its unhasted GCD, each a `# Deviation:` line, and a spell's travel

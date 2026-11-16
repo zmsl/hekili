@@ -15,7 +15,7 @@
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced, except a text of M.HOIST_TERMS or more
 --    term occurrences (CN25: Lua 5.1's limits on one line, the engine's debug print and recheck): it is one
---    `variable,name=v_<snake>,value=<text>` line heading the default list and read as `variable.v_<snake>` (an
+--    `variable,name=v_<snake>,pure=1,value=<text>` line heading the default list and read as `variable.v_<snake>` (an
 --    engine pure variable; never a text reading a window, the target's range or holding a comma).
 --    The pre-pull guard (owner ruling 2026-10-21: a guard against recasting, the player decides when to press): each
 --    cast line of the precombat list, and of a list only pre-pull lists call, gets one term ahead of its condition,
@@ -3148,7 +3148,10 @@ function M.translate(rotation, c)
     local defs = {}
     for _, x in ipairs(c.hoistOrder) do
         if need[x] then
-            defs[#defs + 1] = "variable,name=" .. x .. ",value=" .. maintained(c, "x,if=" .. c.hoist[x], {}):sub(6)
+            defs[#defs + 1] = "variable,name="
+                .. x
+                .. ",pure=1,value="
+                .. maintained(c, "x,if=" .. c.hoist[x], {}):sub(6)
         end
     end
     if #defs > 0 then

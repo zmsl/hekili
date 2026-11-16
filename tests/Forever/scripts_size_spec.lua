@@ -20,14 +20,15 @@ describe("Scripts.lua on a long condition (CN25)", function()
     end)
 end)
 
--- A pure variable (Scripts.lua LoadScripts: a `variable` line with a value and nothing else, the only one of its name)
--- reads as its value inlined at the read would: the translator hoists a large wowsims variable into one (CN25).
+-- A pure variable (Scripts.lua MarkPure: a `variable` line marked pure=1, with a value and nothing else, the only one of
+-- its name, in a list reached only by unconditional calls from default) reads as its value inlined at the read would:
+-- the translator hoists a large wowsims variable into one (CN25). Without pure=1 a line is a stock variable.
 describe("a pure variable reads as its inlined text (CN25)", function()
     local ww = require("Forever.helpers.warrior_world")
 
     -- Headless Arms; `hoist`: every condition of the pack moved into a variable line heading the default list and
-    -- read by name (`variable,name=vN,value=<condition>`, the condition `variable.vN`).
-    local function boot(hoist)
+    -- read by name (`variable,name=vN,pure=1,value=<condition>`, the condition `variable.vN`; `stock`: without pure=1).
+    local function boot(hoist, stock)
         local H = headless.new({ character = ww.character(), pack = ww.PACK })
         assert.are.same({}, H.loadErrors)
         if hoist then
@@ -37,6 +38,7 @@ describe("a pure variable reads as its inlined text (CN25)", function()
                     if (e.criteria or "") ~= "" then
                         defs[#defs + 1] =
                             { action = "variable", enabled = true, var_name = "v" .. #defs + 1, value = e.criteria }
+                        defs[#defs].pure = not stock and 1 or nil
                         e.criteria = "variable.v" .. #defs
                     end
                 end
@@ -133,13 +135,79 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- CN25 fix round 2 (L1211): purity is explicit. The same lines without pure=1 are stock variables (registered,
+    -- cached), whatever their shape, and recommend the same.
+    it("reads a variable line without pure=1 through the stock path", function()
+        local A, B = boot(false), boot(true, true)
+        local t = A.ctl.now
+        for i = 1, 10 do
+            t = t + 0.5
+            for _, H in ipairs({ A, B }) do
+                H.ctl.power[1] = (i * 17) % 100
+                headless.cycle(H, t)
+            end
+            local ra, rb = A.Hekili.Engine.Output.Primary.recs, B.Hekili.Engine.Output.Primary.recs
+            assert.are.same({ i, (ra[1] or {}).actionName }, { i, (rb[1] or {}).actionName })
+        end
+        assert.is_false(B.Hekili.Scripts.PackInfo[ww.PACK].pure.v1)
+        for _, v in pairs(B.Hekili.Scripts.PackInfo[ww.PACK].pure) do
+            assert.is_false(v)
+        end
+        assert.is_truthy(B.Hekili.State.varDB.v1) -- registered: the stock path
+        assert.are.same({}, B.errors)
+    end)
+
+    -- A pure=1 line that cannot be read in place raises at load, naming the line and the reason, and is read as a stock
+    -- variable (never silently).
+    for _, case in ipairs({
+        { "an if=", { criteria = "active_enemies>1" }, "if= is set" },
+        { "a value_else=", { value_else = "2" }, "value_else= is set" },
+        { "an op other than set", { op = "max" }, "op=max" },
+        { "a second line of its name", { second = true }, "2 lines of the name" },
+        { "a list reached through a conditional call", { list = "cond" }, "reached through a conditional call" },
+    }) do
+        it("raises at load on a pure=1 line with " .. case[1], function()
+            local H = boot(false)
+            local lists = H.Hekili.DB.profile.packs[ww.PACK].lists
+            local e = { action = "variable", enabled = true, var_name = "x", value = "1", pure = 1 }
+            for k, v in pairs(case[2]) do
+                e[k] = v
+            end
+            local list, at = e.list or "default", nil
+            e.list, e.second = nil, nil
+            if list ~= "default" then
+                lists[list] = { e }
+                table.insert(
+                    lists.default,
+                    1,
+                    { action = "call_action_list", enabled = true, list_name = list, criteria = "active_enemies>1" }
+                )
+                at = ww.PACK .. ":" .. list .. ":1"
+            else
+                table.insert(lists.default, 1, e)
+                at = ww.PACK .. ":default:1"
+            end
+            if case[2].second then
+                table.insert(lists.default, 2, { action = "variable", enabled = true, var_name = "x", value = "2" })
+            end
+            H.Hekili:LoadScripts()
+            local Sc = H.Hekili.Scripts
+            assert.is_false(Sc.PackInfo[ww.PACK].pure.x)
+            local found
+            for _, err in ipairs(H.errors) do
+                found = found or (err:find(at, 1, true) and err:find(case[3], 1, true) and err)
+            end
+            assert.is_truthy(found, table.concat(H.errors, "\n"))
+        end)
+    end
+
     -- CN25 fix round 1 (I2): the priority editor moves a line (Options.lua: the list reordered, then
     -- scripts:SwapScripts) or edits one option (Hekili:LoadScript); which variables are pure follows the pack as it is.
     it("follows the editor: a moved line, an if= given, a name given twice", function()
         local H = boot(false)
         local list = H.Hekili.DB.profile.packs[ww.PACK].lists.default
-        table.insert(list, 1, { action = "variable", enabled = true, var_name = "b", value = "2" })
-        table.insert(list, 1, { action = "variable", enabled = true, var_name = "a", value = "1" })
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "b", value = "2", pure = 1 })
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "a", value = "1", pure = 1 })
         H.Hekili:LoadScripts()
         H.Hekili:ReviewPacks()
         headless.cycle(H, H.ctl.now + 0.5)
@@ -155,7 +223,7 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         assert.are.same({ 1, 2 }, { S.variable.a, S.variable.b })
         assert.are.same({ a = true, b = true }, pure())
 
-        list[1].criteria = "active_enemies>1" -- b (now first) gets an if=: a stock variable
+        list[1].criteria = "active_enemies>1" -- b (now first) gets an if=: raised, read as a stock variable
         H.Hekili:LoadScript(ww.PACK, "default", 1)
         assert.are.same({ a = true, b = false }, pure())
         assert.are.equal(1, S.variable.a)
@@ -163,6 +231,8 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         list[1].criteria, list[1].var_name = nil, "a" -- b renamed a: two lines of one name, neither pure
         H.Hekili:LoadScript(ww.PACK, "default", 1)
         assert.are.same({ a = false, b = false }, pure())
-        assert.are.same({}, H.errors)
+        local all = table.concat(H.errors, "\n")
+        assert.is_truthy(all:find(at .. "1: if= is set", 1, true), all)
+        assert.is_truthy(all:find(at .. "2: 2 lines of the name", 1, true), all)
     end)
 end)

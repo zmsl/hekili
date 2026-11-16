@@ -3591,7 +3591,7 @@ describe("CN25: a variable of many terms is one variable line, read by name", fu
             lines[#lines + 1] = l
         end
         assert.are.equal(3, #lines)
-        assert.is_truthy(lines[1]:find("^actions=variable,name=v_big_one,value=%(rage%.lo<1|rage%.lo<2|"))
+        assert.is_truthy(lines[1]:find("^actions=variable,name=v_big_one,pure=1,value=%(rage%.lo<1|rage%.lo<2|"))
         assert.are.equal(apl.HOIST_TERMS, apl.terms(lines[1]:match(",value=(.*)$")))
         assert.are.equal("actions+=/strike,if=variable.v_big_one", lines[2])
         assert.are.equal("actions+=/roar,use_off_gcd=1,if=!variable.v_big_one", lines[3])

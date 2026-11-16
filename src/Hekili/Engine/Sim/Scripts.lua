@@ -1743,21 +1743,60 @@ end
 
 
 -- CN25: pack `pack`'s pure variables, each read in place (State.lua) and never registered (Core.lua): a `variable` line
--- with a value and no if=, value_else= or op but set, enabled, the only line of its name. PackInfo[pack].pure maps each
--- variable name to its line's script ID (false: not pure), pureText to its value. Returns whether a name's purity
--- changed (a line's compiled rechecks and time-sensitivity read it: Hekili:LoadScript then reloads the pack).
+-- marked pure=1 (explicit: a line without it is a stock variable, whatever its shape), enabled, with a value and no if=,
+-- value_else= or op but set, the only line of its name, in default or a list reached only by unconditional calls from
+-- default. A pure=1 line that is not raises at load (the line and the reason) and is read as a stock variable.
+-- PackInfo[pack].pure maps each variable name to its line's script ID (false: not pure), pureText to its value. Returns
+-- whether a name's purity changed (a line's compiled rechecks and time-sensitivity read it: Hekili:LoadScript then
+-- reloads the pack).
 function scripts:MarkPure( pack )
     local pData, info = Hekili.Engine.settings.packs[ pack ], self.PackInfo[ pack ]
     if not ( pData and info ) then return false end
+
+    -- the lists every call to which is unconditional from a list already reached so (default first)
+    local reach, count, grew = { default = true }, {}, true
+    while grew do
+        grew = false
+        for list in pairs( pData.lists ) do
+            if not reach[ list ] then
+                local called, ok = false, true
+                for from, fData in pairs( pData.lists ) do
+                    for _, e in ipairs( fData ) do
+                        if e.list_name == list and e.enabled ~= false and ( e.action == "call_action_list" or e.action == "run_action_list" ) then
+                            called = true
+                            ok = ok and reach[ from ] and ( e.criteria or "" ) == ""
+                        end
+                    end
+                end
+                if called and ok then reach[ list ], grew = true, true end
+            end
+        end
+    end
+    for _, lData in pairs( pData.lists ) do
+        for _, e in ipairs( lData ) do
+            if e.action == "variable" and e.var_name then count[ e.var_name ] = ( count[ e.var_name ] or 0 ) + 1 end
+        end
+    end
 
     local pure, text = {}, {}
     for list, lData in pairs( pData.lists ) do
         for id, e in ipairs( lData ) do
             local name = e.action == "variable" and e.var_name
             if name then
-                pure[ name ] = pure[ name ] == nil and e.enabled ~= false and ( e.criteria or "" ) == ""
-                    and ( e.value_else or "" ) == "" and ( e.op or "set" ) == "set" and ( e.value or "" ) ~= ""
-                    and ( pack .. ":" .. list .. ":" .. id )
+                local at = pack .. ":" .. list .. ":" .. id
+                local why
+                if tonumber( e.pure ) == 1 and e.enabled ~= false then
+                    why = ( e.criteria or "" ) ~= "" and "if= is set"
+                        or ( e.value_else or "" ) ~= "" and "value_else= is set"
+                        or ( e.op or "set" ) ~= "set" and ( "op=" .. e.op )
+                        or ( e.value or "" ) == "" and "no value="
+                        or count[ name ] > 1 and ( count[ name ] .. " lines of the name" )
+                        or not reach[ list ] and "its list is reached through a conditional call (or not from default)"
+                    if why then
+                        Hekili:Error( ( "Pure variable '%s' at %s: %s; it is read as a stock variable." ):format( name, at, why ) )
+                    end
+                end
+                pure[ name ] = not why and tonumber( e.pure ) == 1 and e.enabled ~= false and count[ name ] == 1 and at
                 text[ name ] = e.value
             end
         end

@@ -43,6 +43,7 @@ local OPTIONS = {
     icon = "icon",
     icon_if = "icon_if",
     value = "value", -- a `variable` line's (CN25: name= is then its var_name)
+    pure = "pure", -- a `variable` line read in place (CN25, Scripts.lua MarkPure): 1
 } -- plus if=, which runs to the end of the line
 -- kept as the line wrote them: text shown with the pick (label, icon) and its condition (label_if, icon_if)
 local VERBATIM =
@@ -57,7 +58,7 @@ end
 -- SimC-style lines into their lists and entries:
 -- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,cycle_targets=N][,max_cycle_targets=N]
 -- [,other_target=N][,focus=N][,label=text][,label_if=cond][,icon=texture file id or path][,icon_if=cond][,if=criteria];
--- variable,name=var,value=expression (CN25: a translated wowsims variable);
+-- variable,name=var[,pure=1],value=expression (CN25: a translated wowsims variable; pure=1: read in place);
 -- focus is a tier, 1 highest; buff_name is cancel_buff's aura.
 local function parse(simc)
     local lists = {}
@@ -128,6 +129,7 @@ local function unparse(lists)
                 .. (e.label_if and ",label_if=" .. e.label_if or "")
                 .. (e.icon and ",icon=" .. e.icon or "")
                 .. (e.icon_if and ",icon_if=" .. e.icon_if or "")
+                .. (e.pure and ",pure=" .. e.pure or "")
                 .. (e.value and ",value=" .. e.value:gsub("||", "|") or "")
                 .. (e.criteria and ",if=" .. e.criteria:gsub("||", "|") or "")
         end
@@ -183,7 +185,7 @@ local function import(lists, src, imp, clash)
         return list == "default" and imp.as or imp.as .. "_" .. list
     end
     local up = "buff." .. imp.aura .. ".up"
-    local out, vars = {}, {}
+    local out, vars, pure = {}, {}, {}
     for name, entries in pairs(lists) do
         out[name] = entries
         for _, e in ipairs(entries) do
@@ -196,7 +198,7 @@ local function import(lists, src, imp, clash)
             clash(name, to)
         end
         out[to] = {}
-        for i, e in ipairs(entries) do
+        for _, e in ipairs(entries) do
             if e.var_name and vars[e.var_name] then -- CN25: one variable per name in a pack
                 error(("%s imports variable %s, which the host pack has too"):format(imp.from, e.var_name), 0)
             end
@@ -204,8 +206,12 @@ local function import(lists, src, imp, clash)
             if c.list_name and (c.action == "call_action_list" or c.action == "run_action_list") then
                 c.list_name = rename(c.list_name)
             end
-            out[to][i] = c
+            -- CN25: a pure=1 line must sit where only unconditional calls reach it (Scripts.lua MarkPure), and the
+            -- renamed lists are entered under the aura: it joins the host's default (its readers carry the guard)
+            local into = (c.action == "variable" and c.pure) and pure or out[to]
+            into[#into + 1] = c
         end
+        out[to] = out[to][1] and out[to] or nil
     end
     for _, name in ipairs({ "default", "precombat" }) do
         local guarded = {}
@@ -214,11 +220,14 @@ local function import(lists, src, imp, clash)
         end
         for _, e in ipairs(lists[name] or {}) do
             local c = copy(e)
-            -- CN25: a variable line stays unguarded (an if= would end its purity, Scripts.lua MarkPure): its readers
-            -- carry the guard, and a pure read does not depend on where the line sits
-            if c.action ~= "variable" then
+            -- CN25: a pure=1 variable line stays unguarded (an if= would make it ineligible, Scripts.lua MarkPure): its
+            -- readers carry the guard, and a pure read does not depend on where the line sits
+            if not (c.action == "variable" and c.pure) then
                 c.criteria = (c.criteria or "") ~= "" and "(" .. c.criteria .. ")&!" .. up or "!" .. up
             end
+            guarded[#guarded + 1] = c
+        end
+        for _, c in ipairs(name == "default" and pure or {}) do
             guarded[#guarded + 1] = c
         end
         out[name] = guarded[1] and guarded or nil
