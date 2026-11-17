@@ -229,7 +229,8 @@ M.FLICKER = {
     -- (021dece2f, L1119) leaves it flat (199 -> 200)
     -- re-pin e5a9cd2a2d -> e4ef929e54 (repin-druid-09 round 4; seeds 1-20 / 21-40 / 41-60 heldReady 189 / 174 / 174,
     -- flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, agreement .997 / .997 / .998): heldReady 200 -> 189,
-    -- the re-pinned Balance pack (its world unchanged)
+    -- likely mana-09 (043d29b57: the Innervate entry's regen = 5, druid_loop_world.lua:37 / :404, and CN22's percent-cost
+    -- rounding), not the re-pin (the Balance .simc changed only its header); likely, not A/B'd
     ["Balance"] = { flicker = 0, retracted = 0, heldReady = 189 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
