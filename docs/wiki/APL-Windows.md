@@ -112,8 +112,9 @@ actions+=/strict_sequence,name=burst,start_on_first=1,hold_off_gcd=1:bloodrage,u
   `restart_sequence`) do nothing. With `hold_off_gcd=1` in a priority with no `open_window`, `close_window` or
   `variable` line, the normal lines are not read at all while it is open.
 - An unnamed plain sequence is `default` (further ones `default_2`, ...); an unnamed strict one `strict_1`, ...
-- Each display has a Sequences setting, on for Primary and AOE. Where it is off, the display skips every sequence line
-  as if it were not in the priority. Free-form windows work in every display.
+- Sequences run in Primary and AOE only. Each has a Sequences setting, on by default; where it is off, the display
+  skips every sequence line as if it were not in the priority. Cooldowns, Interrupts and Defensives never run
+  sequences. Free-form windows work in every display.
 
 ## Errors
 

@@ -811,17 +811,14 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
         -- the start test (§6, rulings 27, 28): every member (allow_skip: any member) can be cast; start_on_first tests the
         -- first only, its time within the queue window judged when the pick is final (Hekili.Update)
         local first, n, failed = 0, #d.steps, 0
-        -- (§7, ruling 25) in Primary and AOE the start line skips the "toggle shown separately" test; a member after the
-        -- first is judged as it will be once up (ruling 9: the display filter skipped too, D02), the first unbypassed (D20)
-        local sb = ( dispName == "Primary" or dispName == "AOE" ) and 1 or 0
+        -- (§7, ruling 25) the start line skips the "toggle shown separately" test (sequences run in Primary and AOE only)
+        state.seqBypass = 1
         if d.start_on_first then first = 1
         elseif d.allow_skip then -- the first shown is the first castable by normal readiness; else by the fields (ruling 36)
             for k = 1, n do
-                state.seqBypass = k > 1 and 2 or sb
                 if castable( self, d, k ) then first = k break end
             end
             if first == 0 then
-                state.seqBypass = 2
                 for k = 2, n do
                     if castable( self, d, k, true ) then first = k break end
                 end
@@ -829,11 +826,9 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
         else
             first = 1
             for k = 1, n do
-                state.seqBypass = k > 1 and 2 or sb
                 if not castable( self, d, k, true ) then first, failed = 0, k break end
             end
         end
-        state.seqBypass = sb
         if first == 0 then
             state.seqBypass = 0
             if debug then -- (§15 risk 18) the member the default test stopped at; allow_skip: none of them
@@ -864,7 +859,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
     end
     if win.done then return rAction, rWait, rDepth end -- parked (ruling 15)
 
-    state.seqBypass = 2 -- (§7, ruling 9) up: its generated lines skip the display filter and the separate test
+    state.seqBypass = 1 -- (§7, ruling 9) up: its generated lines skip the separate test
     if d.mode == "skip" and not state.WindowFired( d.skipID ) then -- the generated skip line (ruling 28, SimC)
         local due, n = win.step, #d.steps
         if not castable( self, d, due ) then
@@ -898,7 +893,7 @@ local function giveUp( self, d )
     local name = d.name
     local win = state.window[ name ]
     state.delay = 0
-    state.seqBypass = 2 -- the running steps' readiness through the bypass (§7): an off toggle still gives up
+    state.seqBypass = 1 -- the running steps' readiness through the bypass (§7): an off toggle still gives up
     if not state.WindowFired( d.giveID ) and state.cooldown.global_cooldown.remains == 0 and not castable( self, d, win.step ) then
         local to = 0
         if d.allow_skip then
@@ -1726,7 +1721,7 @@ local function nextPrediction( self, dispName, packName, slot )
             holdOffOnly = 0
             if not walkRestart then giveUp( self, hold ) end
             if wait > 0 and not walkRestart then
-                state.seqBypass = 2 -- the hidden list's lines skip the display filter while up (§7, ruling 9)
+                state.seqBypass = 1 -- the hidden list's lines skip the separate test while up (§7, ruling 9)
                 action, wait, depth = self:GetPredictionFromAPL( dispName, packName, hold.hidden, slot, action, wait, depth )
                 state.seqBypass = 0
             end

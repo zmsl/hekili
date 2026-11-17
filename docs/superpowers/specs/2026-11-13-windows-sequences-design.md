@@ -55,7 +55,7 @@ the answers to v5's questions 7-16 and derived rules D1-D8; rows 35-36 answer th
 | 7 | APL window lines are commands; no edge logic; no guardrails | "These are tools for APL pack authors and dont need guardrails against bad APL design." | L795 |
 | 8 | Anonymous windows are declared once in the `windows` list | "Approved given the precombat precedent of having a specifically named actions list" | L796 |
 | 9 | Q1, cross-display: the display that is in a sequence shows its members whatever its filter | "force the ability into the display that is in a sequence. Cooldowns/defensives/interrupts can continue to function as they are and the player can decide what to do" | L806 |
-| 10 | Per-display "Sequences" setting: on for Primary and AOE, off for Cooldowns, Interrupts, Defensives; sequences only | "Yes freeform windows will still work" | L808, L809 |
+| 10 | A "Sequences" setting for Primary and AOE, on by default; Cooldowns, Interrupts and Defensives never sequence and have no such setting; sequences only | "Yes freeform windows will still work"; "Never: remove the option" | L808, L809, L1315 |
 | 11 | Q2: a strict sequence may start on its first step due within the spell queue window. Since ruling 14 this is the `start_on_first=1` option, not the default | "we defaulted to wowsims for our sequence decisions already" | L810, L815 |
 | 12 | Q4: a plain sequence's window opens on its condition. Strict keeps open-on-chosen | "when it is reached and evals to true and time=now" | L812 |
 | 13 | Q5: imports add no options. The Actions tab shows effective values including defaults, and every window and sequence parameter is visible and editable there | (ruling, L813) | L813 |
@@ -86,7 +86,8 @@ the answers to v5's questions 7-16 and derived rules D1-D8; rows 35-36 answer th
 Superseded and no longer in force: L780 (1) hold everything as the default (now `hold_off_gcd=1`); L780 (2) and
 L816 (target change ends or resets by default); L781's wowsims defaults and value names; L810 as a default (now
 `start_on_first=1`); L822's "+ the hard cap" (dropped by L827); v5's `wait_on_ready=1` with the wowsims meaning
-(now `mode=continue`); v5's D6 (hha and the Paladin moves stay Lua) and D7 (no Lua field).
+(now `mode=continue`); v5's D6 (hha and the Paladin moves stay Lua) and D7 (no Lua field); L808's opt-in Sequences
+setting for Cooldowns, Interrupts and Defensives (L1315: they never sequence).
 
 ### 0.1 What the two simulators do, as read in source
 
@@ -159,13 +160,14 @@ below. That is why ruling 26 has three values: `mode=wait` is SimC's, `mode=cont
     and (strict) on any other on-GCD cast, on a later member's cast out of order (on or off the GCD), or at the step
     deadline. A target change closes nothing, unless the
     window's declaration (sequence line, `windows` entry or `RegisterWindow`) says `reset_on_target_change`.
-18. While a sequence's window is up in a display, that display shows the sequence's members even when it would
-    normally filter them out. In Primary and AOE the start line also skips the "toggle shown separately" test, so
-    a sequence that begins with a separated cooldown starts there. A toggle that is switched off still disables
-    the member. The other displays carry on as they are.
-19. Each display has a "Sequences" setting: on by default for Primary and AOE, off by default for Cooldowns,
-    Interrupts and Defensives. Where it is off, sequences do not exist for that display: no keys, and its pass
-    skips sequence lines as if they were not in the priority. Free-form windows work in every display.
+18. Sequences run in Primary and AOE only. While a sequence's window is up there, the display shows the
+    sequence's members even when the "toggle shown separately" test would hide them, and the start line skips that
+    test too, so a sequence that begins with a separated cooldown starts there. A toggle that is switched off still
+    disables the member. Cooldowns, Interrupts and Defensives carry on as they are.
+19. Primary and AOE each have a "Sequences" setting, on by default. Where it is off, sequences do not exist for
+    that display: no keys, and its pass skips sequence lines as if they were not in the priority. Cooldowns,
+    Interrupts and Defensives never sequence and have no such setting (L1315). Free-form windows work in every
+    display.
 20. An unnamed plain sequence is `default`, as in SimC; further unnamed sequences and every unnamed strict one get
     generated names.
 21. These are tools for pack authors. The engine does not protect against a priority that opens and closes a
@@ -540,31 +542,28 @@ In the pass:
 - Cross-display, decided (ruling 9, L806): "Yes, force the ability into the display that is in a
   sequence. Cooldowns/defensives/interrupts can continue to function as they are and the player can decide what to
   do."
-  - Rule: while a sequence's window is up in a display's copy, that display's compiler-generated sequence lines
-    (a strict sequence's hidden list; a plain sequence's in-place member lines) skip the display's ability filter.
-  - Mechanism: generated lines carry a compile-time mark. The two display-filter tests
-    (`state.filter ~= toggle and not ability[ state.filter ]`, Engine/Sim/State.lua:7206 and 7300) get one
-    exception: a marked line, in this display, while its window is up in the copy. How the walk tells the test
-    which line is being judged is an implementation detail (a flag set around the line's evaluation). [M]
-  - Decided (rulings 9 and 25): the neighbouring "this toggle is shown separately" tests (State.lua:7205, 7303)
-    hide a separated cooldown from Primary and AOE. Marked lines skip that test too, so a sequence running in
+  - Rule: sequences run only in Primary and AOE (L1315), whose display filter is "none"; what hides an ability
+    there is the "this toggle is shown separately" test (Engine/Sim/State.lua, IsDisabled's prefix). While a
+    sequence's window is up in a display's copy, that display's compiler-generated sequence lines (a strict
+    sequence's hidden list; a plain sequence's in-place member lines) skip that test, so a sequence running in
     Primary shows a later member that is a separated cooldown. A toggle that is switched off still disables the
     member (the strict give-up then closes the sequence).
+  - Mechanism: generated lines carry a compile-time mark; the walk sets `state.seqBypass` around a marked line's
+    evaluation, and IsDisabled neither reads nor writes its cache for such a line.
   - Nothing is shared between displays: no second key, no extra operations. v4's first draft proposed `+` keys;
     they are dropped. A display in which the sequence was not chosen does not open it and is not held.
   - The start line (ruling 25): in Primary and AOE, a sequence's start line (the strict sequence line with its
     first member; a plain sequence's first member line) also skips the "toggle shown separately" test, with no
     window up yet. So a sequence that begins with a separated cooldown is chosen, shown and started in Primary,
-    overriding the ability's display category. A switched-off toggle still disables it. In Cooldowns, Interrupts
-    and Defensives, where a player has turned Sequences on, the start line stays subject to that display's own
-    filter: the sequence starts there only if its first member belongs there.
+    overriding the ability's display category. A switched-off toggle still disables it.
   - Displays may disagree about what is next. Each runs its own pass with its own target count and filter
     (Core.lua:1383-1390; State.lua:6505-6524: Primary clamps to one target in single, dual and reactive modes, AOE
     forces at least the AoE threshold, Cooldowns, Interrupts and Defensives use the real count and their toggle).
     The player decides.
-- The per-display "Sequences" setting (owner, L808-L809).
-  - Defaults: on for Primary and AOE; off for Cooldowns, Interrupts and Defensives. Stored with the display's
-    other options in the profile and shown on each display's options page.
+- The "Sequences" setting of Primary and AOE (owner, L808-L809, L1315).
+  - On by default. Stored with the display's other options in the profile and shown on the display's options
+    page. Cooldowns, Interrupts and Defensives never sequence and have no such setting; a value an older profile
+    stored for them is ignored.
   - Off means sequences do not exist for that display. The compiler makes no sequence keys for it, and its pass
     skips every sequence line: the `sequence` / `strict_sequence` line and everything generated from it (start,
     members, skip), with no evaluation, as if the lines were not in the priority. No hold, no operations.
@@ -572,13 +571,12 @@ In the pass:
     that name a sequence are skipped too, and `window.<sequence>.up` reads false (there is no key).
   - Sequences only. Free-form windows (`actions.windows`, `open_window`, `close_window`) keep one key in every
     display and work everywhere (owner: "Yes freeform windows will still work").
-  - With the defaults, sequences run in Primary and AOE, and the filter bypass above shows a separated cooldown
-    member there. Turning the setting on for Cooldowns restores "starts where it is chosen" in that display; a
-    sequence led by a separated cooldown is still chosen in Primary and AOE as well (ruling 25, D02).
+  - Sequences run in Primary and AOE, and the bypass above shows a separated cooldown member there; a sequence
+    led by a separated cooldown is chosen and started there (ruling 25, D02).
   - Changing the setting is a registration change: it goes through the same generation bump as a priority edit
     (section 9), at once out of combat, else at combat end (in combat at once only while the belief has no APL window yet).
-  - With Cooldowns shown separately and Sequences off there (the default), a sequence whose first member is a
-    separated cooldown starts in Primary through the start-line exception above, and is skipped in Cooldowns.
+  - With Cooldowns shown separately, a sequence whose first member is a separated cooldown starts in Primary
+    through the start-line exception above, and is skipped in Cooldowns.
 
 ## 8. Target change
 
@@ -1091,25 +1089,23 @@ Group D, displays and keys (unit; D02 also harness):
 | id | Shape | What it proves |
 |---|---|---|
 | D01 | Primary and AOE both on, flag true for one target count only | OPEN under one display's key only; the other key stays closed; each display reads its own |
-| D02 | Cooldowns separate with Sequences turned on for it; strict `classcd:nuke` | chosen in Cooldowns: OPEN on Cooldowns' key; Cooldowns then shows `nuke` (filter bypassed) and holds. Where the line is also Primary's pick, Primary starts it too through ruling 25 (D14): OPEN on Primary's key, two holds, one cast advances both (D11). Where Primary's pick is another line, Primary's key stays closed and it recommends as today |
+| D02 | Cooldowns separate, AOE on, a `sequences` value stored for Cooldowns by an older profile; strict `classcd:nuke`, and plain `classcd:filler` | Primary and AOE start it through ruling 25 (D14): OPEN on each key, two holds, one cast advances both (D11), `nuke` / `filler` shown at step 2; Cooldowns sends nothing, has no key and shows no member |
 | D03 | display turned off at step 2, on again later | its key advanced by casts meanwhile; no stale hold beyond the deadline |
 | D04 | one cast with the sequence open under three keys | all three advance |
 | D05 | the belief's API and log during D01 | only key strings appear; no display number, no line number (the ruling-1 check) |
-| D06 | D02 after the last step, and after a give-up | window closed: `nuke` is filtered out of Cooldowns again on the next pass |
+| D06 | D14 after the last step, and after a give-up | window closed: `classcd` is hidden from Primary again by the separate-toggle test on the next pass |
 | D07 | Cooldowns separate; strict `nuke:classcd` chosen in Primary | Primary shows `classcd` at step 2 (the separate-toggle test bypassed); Cooldowns may show it too through its normal list |
 | D08 | D07 with the cooldowns toggle switched off | `classcd` stays disabled; give-up CLOSE; no bypass of an off toggle |
-| D09 | plain sequence `classcd:filler` reached in Cooldowns (Sequences on there) | Cooldowns shows `filler` at step 2 through the in-place member line; no hold, other cooldown lines still shown |
-| D10 | a non-generated `burst2,use_off_gcd=1` line that Cooldowns filters, walked while the window is up (default hold) | still filtered: the exception is for marked lines only |
+| D10 | a non-generated `burst2,use_off_gcd=1` line the display filters (a separated cooldown in Primary), walked while the window is up (default hold) | still filtered: the exception is for marked lines only |
 | D11 | Primary and AOE both choose the same strict sequence | two keys open, two independent holds; one cast advances both |
-| D12 | a fresh profile, one sequence and one list-declared window | Sequences on for Primary and AOE, off for the other three; two sequence keys, five window keys |
-| D13 | defaults, Cooldowns separate, strict `nuke:classcd` | runs in Primary; Cooldowns' pass skips the line (no evaluation, no key, no hold) and recommends as today |
-| D14 | defaults, Cooldowns separate, strict `classcd:nuke` | starts in Primary: the start line skips the separate-toggle test (ruling 25) and `classcd` is shown there; Cooldowns' pass skips the line |
-| D15 | Sequences off in Cooldowns; `open_window,name=burst` reached there | free-form window still opens under Cooldowns' key |
+| D12 | a fresh profile, one sequence and one list-declared window; and a `sequences` value stored for the other three | Sequences on for Primary and AOE; two sequence keys, five window keys; the stored values add no key |
+| D13 | Cooldowns separate, strict `nuke:classcd` | runs in Primary; Cooldowns' pass skips the line (no evaluation, no key, no hold) and recommends as today |
+| D14 | Cooldowns separate, strict `classcd:nuke` | starts in Primary: the start line skips the separate-toggle test (ruling 25) and `classcd` is shown there; Cooldowns' pass skips the line |
+| D15 | Cooldowns (no sequences there); `open_window,name=burst` reached there | free-form window still opens under Cooldowns' key |
 | D16 | Sequences off in a display; `restart_sequence`, `close_window,name=<seq>`, a reader of `window.<seq>.up` | the two lines are skipped; the reader sees false |
-| D17 | the setting switched on for Cooldowns out of combat, and in combat | keys added at once, or at combat end; then D02 holds. Switched off: keys removed, an open sequence there is gone |
+| D17 | Primary's setting switched on in combat, and off out of combat | on: the key at once in the compile, the belief's row at combat end; off: key and row removed at once, an open sequence there is gone |
 | D18 | D14 with the cooldowns toggle switched off | never chosen: an off toggle is not bypassed |
-| D19 | defaults, Cooldowns separate, plain `classcd:filler`, and AOE on | `classcd` is shown in Primary and in AOE as the due first member; each display's key opens and advances on the one cast |
-| D20 | D14 with Sequences also on for Cooldowns, strict `nuke:classcd` | Cooldowns does not start it (`nuke` is not its ability: no start-line bypass outside Primary and AOE); Primary does |
+| D19 | Cooldowns separate, plain `classcd:filler`, and AOE on | `classcd` is shown in Primary and in AOE as the due first member; each display's key opens and advances on the one cast |
 
 Group P, option pairs: each case is a set of fixtures that differ in one option only (unit only; P18 is a
 build-tool test):
@@ -1185,7 +1181,7 @@ Group L, lifecycle, naming and replay (unit only):
 
 ### Unit versus harness
 
-- Unit only: groups C, W (except W19), R, L, P, D01, D03-D20, and S except S09-S11. They are deterministic rules.
+- Unit only: groups C, W (except W19), R, L, P, D01, D03-D08, D10-D19, and S except S09-S11. They are deterministic rules.
   S01-S13 and S22-S24 are written twice where the start or the hold matters to them, as `simc-*` and `wowsims-*`.
 - Also a harness loop or replay gate (the outcome depends on reaction time, update cadence and the simulated
   player): W19, S09, S10, S11, D02, and group G (Arms, `hha`, the Paladin moves). The harness reports first-member casts that found
@@ -1212,7 +1208,7 @@ None open. The first issue of v6 listed two; the owner has ruled on both (L844, 
    `blood_fury:blade_flurry` stays as a second, harness-only arm (G08).
 3. D02 (carried from v4) against ruling 25: 25 wins; the row is rewritten (Fable for the owner, ledger L1270). In
    v4/v5 Primary's separate-toggle test hid the cooldown, so Primary could not choose the line; ruling 25 removed
-   that test for the start line.
+   that test for the start line. Cooldowns never sequences (L1315), so the row covers Primary and AOE.
 
 Found while folding ruling 36 in: nothing that contradicts an earlier ruling. Two things were looked at:
 - Ruling 5 ("explicit in the apl rather than having inherent knowledge packaged in the items") and ruling 36
@@ -1252,8 +1248,7 @@ Small points the rulings imply but do not spell out. Each is the narrowest readi
 - The strict give-up takes a per-slot mark like a line, so that "restarts are bounded by the number of window
   lines" holds for it too.
 - Ruling 25 names Primary and AOE. Those are the displays the "toggle shown separately" test hides abilities
-  from [M]; in Cooldowns, Interrupts and Defensives with Sequences switched on, the start line stays subject to
-  that display's own filter, as in v5.
+  from, and the only displays that sequence (L1315).
 - In a display with Sequences off, `restart_sequence` and open or close lines naming a sequence are skipped, and
   `window.<sequence>.up` and `.done` read false (carried from v5, section 7).
 - The `hha` conversion keeps Arcane Shot at its three list positions through reader lines (10.2) instead of
@@ -1349,20 +1344,18 @@ For the builders. None is an owner question; each names the phase that must sett
    close windows the belief never hears about; that is the point of ruling 20. An author reading the snapshot
    must look at slot 1's operations to know what the belief received.
 9. A reserved list name (ruling 22): a user's old list called `windows` gets E5 on load. Release note.
-10. Displays disagree (ruling 9). With Sequences switched on for Cooldowns, while Cooldowns is held in a strict
-    sequence Primary keeps recommending from its normal list. If the player presses Primary's on-GCD pick, that
-    cast is a strict deviation and ends the sequence in Cooldowns. The same member can also appear in two displays
-    at once (D07). A sequence led by a separated cooldown is also chosen in Primary (ruling 25, D02), so there the
-    displays agree; the disagreement remains for a sequence Primary did not choose. Accepted by the ruling ("the
-    player can decide"); the snapshot's per-display Windows section
-    shows which display is in which sequence and step.
-11. A display shows abilities outside its category (rulings 9, 25): a non-cooldown in Cooldowns, and a separated
-    cooldown in Primary, both as later members and now as a sequence's first member. Expected by the rulings, new
+10. Displays disagree (ruling 9). Primary and AOE each run their own pass with their own target count, so one
+    can be held in a strict sequence while the other recommends from its normal list; pressing the other's on-GCD
+    pick is a strict deviation and ends the sequence. Cooldowns never sequences, so a member can also appear in
+    Cooldowns through its normal list while Primary shows it (D07). Accepted by the ruling ("the player can
+    decide"); the snapshot's per-display Windows section shows which display is in which sequence and step.
+11. A display shows abilities outside its category (rulings 9, 25): a separated cooldown in Primary or AOE, both
+    as a later member and as a sequence's first member. Expected by the rulings, new
     to users; one line in the release notes. The exception is narrow: marked lines, toggle not switched off (D06,
     D08, D10).
-12. A cooldown that exists only as a sequence's first member is no longer shown in the Cooldowns display when
-    Sequences is off there (the default): the sequence line is skipped in that display. It shows in Primary
-    instead (ruling 25). The snapshot's per-display Windows section says "Sequences: off" for such a display.
+12. A cooldown that exists only as a sequence's first member is not shown in the Cooldowns display: Cooldowns
+    never sequences, so the sequence line is skipped there. It shows in Primary instead (ruling 25). The
+    snapshot's per-display Windows section says "Sequences: off" for such a display.
 13. The default skip is sharp. A plain sequence with `mode=skip` drops a member that is uncastable for a single
     pass (short of energy by one point, P02) and does not offer it again in that run; with nothing castable it
     burns out on the spot. This is SimC's behaviour and a known surprise there too. The snapshot names every STEP

@@ -101,9 +101,9 @@ state.nearHoldFrom = 0 -- Core: the held pick's nearPre
 -- (windows design v6 §3.6, ruling 36) a strict start test's member after the first: the gates its `sequence_ignore`
 -- names (a set: form, noform, buff, nobuff) that IsUsable / TimeToReady skip for that one judgement; false otherwise
 state.gateSkip = false
--- (windows design v6 §7, rulings 9, 25) a sequence's generated line being judged: 1 a start line in Primary or AOE
--- (skips the "toggle shown separately" test), 2 a member line while its window is up (skips that and the display
--- filter); 0 otherwise. An off toggle still disables. IsDisabled neither reads nor writes its cache for a bypass.
+-- (windows design v6 §7, rulings 9, 25) 1 while a sequence's generated line is judged (sequences run in Primary and
+-- AOE only): it skips the "toggle shown separately" test; 0 otherwise. An off toggle still disables. IsDisabled neither
+-- reads nor writes its cache for a bypass.
 state.seqBypass = 0
 -- (ruling 36) `ready()` inside an ability's sequence_ready: the start test's accessor during that call, false otherwise
 -- (a permanent key: setting an absent key, even to nil, grows the table in Lua 5.1)
@@ -7344,11 +7344,10 @@ do
 
             local tt = toggle and toggle ~= "none" and settings.toggles[ toggle ] -- nil for an unknown key: disabled below, as before
             live = tt and ( tt.override or tt.infusion )
-            local bp = self.seqBypass
-            if toggle and toggle ~= "none" and ( not self.toggle[ toggle ] or ( settings.toggles[ toggle ].separate and state.filter ~= toggle and bp == 0 ) ) then return DISABLED, format( "toggle %s", toggle ), live end
+            if toggle and toggle ~= "none" and ( not self.toggle[ toggle ] or ( settings.toggles[ toggle ].separate and state.filter ~= toggle and self.seqBypass == 0 ) ) then return DISABLED, format( "toggle %s", toggle ), live end
 
             if ability.id < -100 or ability.id > 0 or toggleSpells[ spell ] then
-                if state.filter ~= "none" and state.filter ~= toggle and not ability[ state.filter ] and bp < 2 then return DISABLED, "display", live
+                if state.filter ~= "none" and state.filter ~= toggle and not ability[ state.filter ] then return DISABLED, "display", live
                 elseif ability.item and not ability.bagItem and not state.equipped[ ability.item ] then return ENABLED, nil, live end
             end
         end

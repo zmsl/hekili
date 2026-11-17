@@ -212,7 +212,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
     <li><span class="led">L814, L818 · Q6</span><b>A finished plain sequence parks.</b><span>Up, no step due, until <code>restart_sequence</code> or combat end.</span></li>
     <li><span class="led">L810, L815 · Q2</span><b>Start within the spell queue window is the wowsims option.</b><blockquote class="say">"we defaulted to wowsims for our sequence decisions already"</blockquote><span>Now <code>start_on_first=1</code>.</span></li>
     <li><span class="led">L806 · Q1</span><b>The display in a sequence shows its members whatever its filter.</b><blockquote class="say">"force the ability into the display that is in a sequence. Cooldowns/defensives/interrupts can continue to function as they are and the player can decide what to do"</blockquote></li>
-    <li><span class="led">L808, L809</span><b>Per-display "Sequences" setting.</b><blockquote class="say">"Yes freeform windows will still work"</blockquote><span>On for Primary and AOE, off for Cooldowns, Interrupts and Defensives. Sequences only.</span></li>
+    <li><span class="led">L808, L809, L1315</span><b>"Sequences" setting for Primary and AOE.</b><blockquote class="say">"Yes freeform windows will still work"; "Never: remove the option"</blockquote><span>On by default for Primary and AOE. Cooldowns, Interrupts and Defensives never sequence and have no such setting. Sequences only.</span></li>
     <li><span class="led">L795</span><b>APL window lines are commands. No edge logic.</b><blockquote class="say">"These are tools for APL pack authors and dont need guardrails against bad APL design."</blockquote></li>
     <li><span class="led">L796</span><b>Anonymous windows are declared once in the <code>windows</code> list.</b><blockquote class="say">"Approved given the precombat precedent of having a specifically named actions list"</blockquote></li>
     <li><span class="led">L778</span><b>All window state lives in the belief.</b><blockquote class="say">"all window state should live in belief. The display simulation only pushes one way to open/close/etc. but the belief state is then pushed back to core"</blockquote></li>
@@ -354,7 +354,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
     <li><span>Sequence behaviour is written on the line. What a line does not say is SimC's behaviour. Option names are SimC's where SimC has one and SimC-styled where it has none. An import adds nothing. The wowsims translator writes the wowsims settings on every sequence it emits. An option an entry does not take is a compile error.</span></li>
     <li><span>A window also closes at its duration, at <code>max_duration</code>, at combat end, on a <code>closeWindow</code> from a real cast, and (strict) on any other on-GCD cast or at the step deadline. A target change closes nothing unless the declaration says <code>reset_on_target_change</code>.</span></li>
     <li><span><b>Changed.</b> While a sequence's window is up in a display, that display shows its members even when it would normally filter them out. In Primary and AOE the start line also skips the "toggle shown separately" test, so a sequence that begins with a separated cooldown starts there. A switched-off toggle still disables the member.</span></li>
-    <li><span>Each display has a "Sequences" setting: on by default for Primary and AOE, off for Cooldowns, Interrupts and Defensives. Where it is off, sequences do not exist for that display. Free-form windows work in every display.</span></li>
+    <li><span>Primary and AOE each have a "Sequences" setting, on by default. Where it is off, sequences do not exist for that display. Cooldowns, Interrupts and Defensives never sequence. Free-form windows work in every display.</span></li>
     <li><span>An unnamed plain sequence is <code>default</code>, as in SimC; further unnamed sequences and every unnamed strict one get generated names.</span></li>
     <li><span>These are tools for pack authors. The engine does not protect against a priority that opens and closes a window every pass; the snapshot shows it, with the restarts per slot.</span></li>
     <li><span>Every parameter of a sequence line, a <code>windows</code> declaration and an open or close line is visible and editable on the Actions tab, shown with its effective value, defaults included.</span></li>
@@ -757,16 +757,16 @@ actions.move_to_melee+=/close_window,name=move1,if=window.move1.up&amp;!window.m
 
 <section id="displays">
   <div class="sec-head"><div class="eyebrow">Decided · per-display setting</div><h2>Sequences, display by display</h2></div>
-  <p>Each display has a "Sequences" setting on its options page. Where it is off, sequences do not exist for that display: the compiler makes no sequence keys for it, and its pass skips every sequence line, start lines included, as if they were not in the priority. The setting covers sequences only. The owner: "Yes freeform windows will still work".</p>
+  <p>Primary and AOE each have a "Sequences" setting on their options page; Cooldowns, Interrupts and Defensives never sequence (L1315). Where it is off, sequences do not exist for that display: the compiler makes no sequence keys for it, and its pass skips every sequence line, start lines included, as if they were not in the priority. The setting covers sequences only. The owner: "Yes freeform windows will still work".</p>
   <div class="tbl">
     <table>
       <thead><tr><th>Display</th><th>Sequences, default</th><th>Free-form windows</th><th>What that means with the defaults</th></tr></thead>
       <tbody>
         <tr><td>Primary</td><td class="def">on</td><td>always</td><td rowspan="2">Sequences start, hold and advance here. The filter bypass shows a separated cooldown member here while the sequence is open.</td></tr>
         <tr><td>AOE</td><td class="def">on</td><td>always</td></tr>
-        <tr><td>Cooldowns</td><td>off</td><td>always</td><td rowspan="3">No sequence keys, no hold, sequence lines skipped. The display recommends as it does today. Turning the setting on restores "starts where it is chosen" here.</td></tr>
-        <tr><td>Interrupts</td><td>off</td><td>always</td></tr>
-        <tr><td>Defensives</td><td>off</td><td>always</td></tr>
+        <tr><td>Cooldowns</td><td>never</td><td>always</td><td rowspan="3">No setting: no sequence keys, no hold, sequence lines skipped. The display recommends as it does today.</td></tr>
+        <tr><td>Interrupts</td><td>never</td><td>always</td></tr>
+        <tr><td>Defensives</td><td>never</td><td>always</td></tr>
       </tbody>
     </table>
   </div>
@@ -775,7 +775,7 @@ actions.move_to_melee+=/close_window,name=move1,if=window.move1.up&amp;!window.m
     <li>In an off display, <code>restart_sequence</code> and open or close lines that name a sequence are skipped too, and <code>window.&lt;sequence&gt;.up</code> reads false.</li>
     <li>Changing the setting applies like a priority edit: at once out of combat, else at combat end.</li>
   </ul>
-  <div class="note"><div><span class="pill answered">Decided Q14</span>With Cooldowns shown separately and Sequences off there, a sequence whose <b>first</b> member is a separated cooldown starts in Primary and AOE: the start line skips the "toggle shown separately" test there, overriding the ability's display category. A toggle that is switched off is not bypassed. Shipped sequences begin with blood_fury, elunes_light, presence_of_mind and inner_focus.</div></div>
+  <div class="note"><div><span class="pill answered">Decided Q14</span>With Cooldowns shown separately, a sequence whose <b>first</b> member is a separated cooldown starts in Primary and AOE: the start line skips the "toggle shown separately" test there, overriding the ability's display category. A toggle that is switched off is not bypassed. Shipped sequences begin with blood_fury, elunes_light, presence_of_mind and inner_focus.</div></div>
 </section>
 
 <section id="compile">

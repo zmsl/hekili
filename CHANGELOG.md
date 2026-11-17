@@ -7,7 +7,7 @@
 
 - A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
 
-- Priorities can use SimC `sequence` and `strict_sequence` lines (with `restart_sequence` and `window.<name>.done`); each display has a Sequences setting, on for Primary and AOE.
+- Priorities can use SimC `sequence` and `strict_sequence` lines (with `restart_sequence` and `window.<name>.done`); they run in the Primary and AOE displays, each with a Sequences setting (on by default).
 - A sequence running in a display shows all its steps there, including a cooldown that is normally shown in its own display; a toggle that is switched off still keeps that step out.
 
 - A priority whose lines open and close the same window in one recommendation gets a one-time warning, also when a `close_window` line stops a sequence that then starts again.
