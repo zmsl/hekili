@@ -6806,7 +6806,9 @@ do
 
         if option == 'value' then
             if bind == 'pause' then self:TogglePause()
-            elseif bind == 'mode' then toggle.value = val
+            elseif bind == 'mode' then
+                toggle.value = val
+                if WeakAuras and WeakAuras.ScanEvents then WeakAuras.ScanEvents( "HEKILI_TOGGLE", "mode", val ) end
             else self:FireToggle( bind ) end
 
         elseif option == 'type' then
@@ -8143,8 +8145,9 @@ function Hekili:TotalRefresh( noOptions )
     self:OverrideBinds()
 
     if WeakAuras and WeakAuras.ScanEvents then
-        for name, toggle in pairs( Hekili.DB.profile.toggles ) do
-            WeakAuras.ScanEvents( "HEKILI_TOGGLE", name, toggle.value )
+        for name in pairs( Hekili.DB.profile.toggles ) do
+            local value = self:GetToggleState( name ) -- snapshot (a keybinding, no state) has none: not sent
+            if value ~= nil then WeakAuras.ScanEvents( "HEKILI_TOGGLE", name, value ) end
         end
     end
 
@@ -8948,6 +8951,7 @@ function Hekili:TogglePause( ... )
 
     self:Print( not self.Pause and L["UNPAUSED."] or L["PAUSED."] )
     if Hekili.DB.profile.notifications.enabled then self:Notify( not self.Pause and L["UNPAUSED"] or L["PAUSED"] ) end
+    if WeakAuras and WeakAuras.ScanEvents then WeakAuras.ScanEvents( "HEKILI_TOGGLE", "pause", self.Pause ) end
 
 end
 
@@ -9013,12 +9017,13 @@ do
         end,
     } )
 
+    --- Sets the display mode; returns true when `mode` is a mode (else prints why and changes nothing).
     function Hekili:SetMode( mode )
         mode = lower( mode:trim() )
 
         if not modeIndex[ mode ] then
             Hekili:Print( L["SetMode failed:  '%s' is not a valid mode.\nTry |cFFFFD100automatic|r, |cFFFFD100single|r, |cFFFFD100aoe|r, |cFFFFD100dual|r, or |cFFFFD100reactive|r."] )
-            return
+            return false
         end
 
         self.DB.profile.toggles.mode.value = mode
@@ -9028,6 +9033,7 @@ do
         else
             self:Print( format( L["%s mode activated."], modeIndex[ mode ][2] ) )
         end
+        return true
     end
 
     function Hekili:FireToggle( name, explicitState )
@@ -9038,7 +9044,7 @@ do
         -- Handle mode toggle with explicitState if provided
         if name == 'mode' then
             if explicitState then
-                self:SetMode( explicitState )
+                if not self:SetMode( explicitState ) then return end -- rejected: no event, nothing changed
             else
                 -- If no explicit state, cycle through available modes
                 local current = toggle.value
@@ -9102,7 +9108,10 @@ do
         self:ForceUpdate( "HEKILI_TOGGLE", true )
     end
 
+    --- A toggle's state: the mode's name for `mode`, true while paused for `pause`, else the toggle's on/off (nil for
+    --- `snapshot` and unknown names). Public, read-only; HEKILI_TOGGLE sends the same value.
     function Hekili:GetToggleState( name, class )
+        if name == "pause" then return self.Pause and true or false end
         local t = name and self.DB.profile.toggles[ name ]
 
         return t and t.value

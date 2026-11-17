@@ -15,6 +15,8 @@ The **integration reference** lists every function and event of Hekili Forever's
 | `Hekili:RegisterRecommendationListener` | Function | `src/Hekili/Integrations/Recommendations.lua` |
 | `Hekili:UnregisterRecommendationListener` | Function | `src/Hekili/Integrations/Recommendations.lua` |
 | `HEKILI_RECOMMENDATION_UPDATE` | WeakAuras event | `src/Hekili/Integrations/Recommendations.lua` |
+| `Hekili:GetToggleState` | Function | `src/Hekili/Options/Options.lua` |
+| `HEKILI_TOGGLE` | WeakAuras event | `src/Hekili/Options/Options.lua` |
 
 ## Display styles
 
@@ -140,6 +142,48 @@ end
 ```
 
 [Show the next recommendation in a WeakAura](Integration-WeakAuras-Example) builds a complete icon from this event.
+
+## GetToggleState
+
+`Hekili:GetToggleState(name)` returns the state of a toggle. It only reads: an addon changes a toggle with a chat command (below), never by writing to Hekili Forever's tables.
+
+| `name` | Returns |
+|---|---|
+| `mode` | The display mode: `automatic`, `single`, `aoe`, `dual` or `reactive` ([Display modes](Toggles#display-modes)) |
+| `pause` | `true` while the displays are paused, else `false` |
+| `cooldowns`, `minor_cooldowns`, `defensives`, `interrupts`, `potions`, `movement`, `custom1`, `custom2` | `true` when the toggle is on, `false` when it is off |
+| Any other name | nil |
+
+```lua
+if Hekili:GetToggleState("cooldowns") then
+    -- major cooldowns may be recommended
+end
+```
+
+## HEKILI_TOGGLE
+
+`HEKILI_TOGGLE` is a WeakAuras event, so only a WeakAura can receive it; another addon reads `Hekili:GetToggleState` when it needs the state. Its arguments are the toggle's name and its new state, the same value `Hekili:GetToggleState(name)` returns.
+
+| Argument | Meaning |
+|---|---|
+| 1 | The toggle's name, as in the `GetToggleState` table |
+| 2 | Its new state |
+
+It is sent:
+
+- after every change of a toggle that Hekili Forever accepts, from a keybinding, a chat command or macro, the minimap menu or the options. A change that sets the state the toggle already has is sent too. A command that is refused, such as `/hekili set mode` with a word that is not a mode, changes nothing and sends nothing;
+- each time the displays are paused or resumed, with the name `pause`;
+- once for each toggle, `pause` included, when the profile is loaded or changed.
+
+Taking a snapshot does not send it.
+
+Example, a WeakAuras custom trigger with "Event Type" set to "Status" and `HEKILI_TOGGLE` in "Event(s)", true while the major cooldowns toggle is on. WeakAuras runs it again on each `HEKILI_TOGGLE`, and it reads the state itself, so it is also right when the aura loads:
+
+```lua
+function(event, name, value)
+    return Hekili ~= nil and Hekili:GetToggleState("cooldowns") == true
+end
+```
 
 ## Chat commands in macros
 

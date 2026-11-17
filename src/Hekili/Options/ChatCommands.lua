@@ -153,14 +153,7 @@ function Hekili:HandleSetCommand( args )
 
     -- Handle display mode setting
     if mainToggle == "mode" then
-        if subToggleOrState then
-            self:SetMode( subToggleOrState )
-            if WeakAuras and WeakAuras.ScanEvents then WeakAuras.ScanEvents( "HEKILI_TOGGLE", "mode", args[3] ) end
-            if ns.UI.Minimap then ns.UI.Minimap:RefreshDataText() end
-        return true
-        else
-            Hekili:FireToggle( "mode" )
-        end
+        Hekili:FireToggle( "mode", subToggleOrState ) -- a rejected mode changes nothing and fires no HEKILI_TOGGLE
         return true
     end
 
@@ -287,7 +280,7 @@ function Hekili:HandleFixCommand( args )
         end
 
         -- Reset display mode to automatic.
-        self:SetMode( "automatic" )
+        self:FireToggle( "mode", "automatic" )
 
         self:Print( L["Your UI displays have been restored to default positions and visibility."] )
         self:BuildUI()

@@ -16,6 +16,7 @@ The recommendations come from Hekili Forever's own simulation of the next few se
 | The recommendation record | Table fields | Every reader of the recommendations |
 | `Hekili:RegisterRecommendationListener(fn)` and `Hekili:UnregisterRecommendationListener(fn)` | Functions | An addon that follows each update of the recommendations |
 | `HEKILI_RECOMMENDATION_UPDATE` | WeakAuras event | A WeakAura that shows or reacts to recommendations |
+| `Hekili:GetToggleState(name)` and `HEKILI_TOGGLE` | Function, WeakAuras event | Reading the toggles and the display mode, and reacting when they change |
 | `Hekili:RegisterSnapshotListener(fn)` and `Hekili:UnregisterSnapshotListener(fn)` | Functions | An addon that adds its own lines to a snapshot |
 | The public chat commands | Commands | Macros and buttons that change toggles, priorities and profiles |
 
