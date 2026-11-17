@@ -2591,6 +2591,24 @@ describe("a running GCD (ruling 28: an on-GCD member is judged at the GCD's end;
         assert.are.same({ { key("s"), OPEN } }, sent)
         assert.are.equal("hamstring", recs[1].actionName)
     end)
+
+    -- (review M3) the copy's park (State.lua advance): members with no cooldown, so a copy that closed instead would be
+    -- reopened at step 1 by the open line in slot 2 and show its first member again
+    it(
+        "M3: the forecast cast of a plain sequence's last member parks the copy; slots 2 and 3 do not reopen it",
+        function()
+            load({ default = "actions+=/sequence,name=x:hamstring:rend\nactions+=/battle_shout" })
+            tick()
+            cast(HS)
+            tick()
+            local recs, sent = tick()
+            assert.are.same({ true, 2 }, { seqState("x") })
+            assert.are.same({}, sent)
+            assert.are.equal("rend", recs[1].actionName)
+            assert.are.equal("battle_shout", recs[2].actionName)
+            assert.are.equal("battle_shout", recs[3].actionName)
+        end
+    )
 end)
 
 -- (review I1, Fable L1290) A member's own if= belongs to its position: the generated line of position K reads
@@ -2864,5 +2882,51 @@ describe("the flapping warning for sequences (L1205; Fable L1286)", function()
             assert.are.same({ { CLOSE }, {}, {} }, codes, opt)
             assert.are.equal(0, n, opt)
         end
+    end)
+end)
+
+-- (review M4) The alternatives probe (needs.alts) walks with rage pinned to the band's bounds; its window and
+-- sequence lines act on its copy only (State.WindowSlot(false)). Rage's band as alts_spec sets it: Core.lua's own
+-- reads see the low bound, the client facade's the estimate.
+describe("the alternatives probe sends nothing (windows design v6 §5.1; review M4)", function()
+    it("M4: an open_window and a sequence line true only at the probe's high bound send no operation", function()
+        boot()
+        local power, fake = VS.Power, { est = 15, lo = 5, hi = 40, conf = 1 }
+        VS.Power = function(pt, now)
+            local r = power(pt, now)
+            if pt ~= 1 then
+                return r
+            end
+            local core = false
+            for level = 2, 8 do
+                local info = debug.getinfo(level, "S")
+                if not info then
+                    break
+                end
+                if info.what ~= "tail" and not info.source:find("Game/API/Facade.lua", 1, true) then
+                    core = info.source:find("Engine/Sim/Core.lua", 1, true) ~= nil
+                    break
+                end
+            end
+            fake.lo = core and 5 or 15
+            return fake
+        end
+        load({
+            windows = "actions+=/window,name=w,duration=6",
+            default = "actions+=/open_window,name=w,if=rage.current>=30\n"
+                .. "actions+=/sequence,name=p,if=rage.current>=30:mortal_strike:battle_shout\n"
+                .. "actions+=/mortal_strike\nactions+=/hamstring\nactions+=/berserker_stance",
+        })
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end, true, { alts = true }))
+        local probed = 0
+        for _ = 1, 3 do
+            local recs, sent = tick()
+            assert.are.same({}, sent)
+            assert.are.equal("hamstring", recs[1].actionName)
+            probed = probed + recs[1].alts.n
+        end
+        assert.is_true(probed > 0) -- the probe ran and picked other actions
+        assert.is_false(belief("w").up)
+        assert.is_false(belief("p").up)
     end)
 end)
