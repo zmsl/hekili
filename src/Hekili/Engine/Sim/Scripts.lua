@@ -1999,12 +1999,10 @@ function scripts:LoadScripts()
                     self.HiddenLists[ pack ][ d.hidden ], self.HiddenLists[ pack ][ d.startList ] = d.hiddenEntries, d.startEntries
                     for k, m in ipairs( d.members ) do
                         self.DB[ d.memberIDs[ k ] ] = ConvertScript( m, false, d.memberIDs[ k ] )
-                        for _, h in ipairs( { { d.hiddenEntries, d.hiddenIDs }, { d.startEntries, d.startIDs } } ) do
+                        for _, h in ipairs( { { d.hiddenEntries, d.hiddenIDs, d.hidden }, { d.startEntries, d.startIDs, d.startList } } ) do
                             local sid = h[ 2 ][ k ]
-                            recordID( h[ 1 ], k, sid )
-                            local script = ConvertScript( h[ 1 ][ k ], true, sid )
-                            script.action, script.ReadsWindow = h[ 1 ][ k ].action, true
-                            self.DB[ sid ] = script
+                            Hekili:LoadScript( pack, h[ 3 ], k, h[ 1 ], sid ) -- an ordinary line's bookkeeping (off-GCD, channels, items, auras)
+                            self.DB[ sid ].ReadsWindow = true
                         end
                     end
                 end
@@ -2162,12 +2160,14 @@ function Hekili:LoadItemScripts()
 end
 
 
-function Hekili:LoadScript( pack, list, id )
+-- `entries`, `scriptID`: a sequence's generated list and its line's ID (windows design v6 §6), else the pack's list.
+function Hekili:LoadScript( pack, list, id, entries, scriptID )
     local pData = Hekili.Engine.settings.packs[ pack ]
-    local data = pData.lists[ list ][ id ]
+    entries = entries or pData.lists[ list ]
+    local data = entries[ id ]
     local specData = pData.spec and class.specs[ pData.spec ]
-    local scriptID = pack .. ":" .. list .. ":" .. id
-    recordID( pData.lists[ list ], id, scriptID )
+    scriptID = scriptID or pack .. ":" .. list .. ":" .. id
+    recordID( entries, id, scriptID )
 
     local script = ConvertScript( data, true, scriptID )
 

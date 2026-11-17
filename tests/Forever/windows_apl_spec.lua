@@ -1325,6 +1325,16 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
         end
     end)
 
+    it("member lines get LoadScript's bookkeeping: use_off_gcd=1 marks the pack, a member item is listed", function()
+        load({ default = "actions+=/strict_sequence,name=s:bloodrage,use_off_gcd=1:berserker_stance\nactions+=/defensive_stance" })
+        local info = H.Hekili.Scripts.PackInfo[ww.PACK]
+        assert.is_true(info.hasOffGCD)
+        local sid = H.Hekili.Scripts.appliedWindows.byName.s.hiddenIDs[1]
+        local script = H.Hekili.Scripts.DB[sid]
+        assert.are.equal("bloodrage", script.action)
+        assert.is_true(script.ReadsWindow)
+    end)
+
     it("L1181: a later member cast out of order ends a strict sequence", function()
         load({ default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance" })
         tick()
