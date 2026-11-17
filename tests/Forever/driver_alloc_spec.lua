@@ -177,7 +177,11 @@ describe("Engine/Driver.lua through the engine frame", function()
         local restarts = H.Hekili.Engine.Output.Primary.recs[1].restarts
         assert.is_true(restarts >= 3, tostring(restarts))
         assert.are.equal(0, bytes)
-        assert.are.same({}, H.errors)
+        -- the bare close line against the chosen OPEN: the sequence's flapping warning (Fable L1286), once
+        assert.are.equal(1, #H.errors)
+        assert.is_truthy(H.errors[1]:find("sequence '%s' was closed by a close_window line", 1, true), H.errors[1])
+        local keys = H.Hekili.ErrorKeys -- formatted (H.errors holds the template)
+        assert.is_truthy(keys[#keys]:find("sequence 's' was closed", 1, true), keys[#keys])
     end)
 
     -- The held steady state: the strict sequence stays up (nothing is cast), so every slot runs the hold (the normal

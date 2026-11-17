@@ -14,7 +14,10 @@ local H, S, VS, VSI, ops, t
 local opArgs = {} -- each sent operation's argument (STEP's step), by its index in `ops`
 local flags = {}
 local flaps = 0 -- the one-time flapping-pair warnings seen (L1205), taken out of H.errors by tick()
+local flapMsg -- the last of them
 local FLAP = "opened and closed by lines in the same recommendation"
+-- a sequence's (Fable L1286): closed by a close_window line and started again in one slot
+local FLAP_SEQ = "was closed by a close_window line and started again in the same recommendation"
 
 -- Boots Arms, registers the Lua windows `lua` (name -> RegisterWindow data) and the test flags (state expressions
 -- reading `flags`), targets a mob and records every WindowOp the core sends.
@@ -88,8 +91,8 @@ local function tick()
     t = t + 0.2
     assert(headless.cycle(H, t))
     for i = #H.errors, 1, -1 do
-        if H.errors[i]:find(FLAP, 1, true) then
-            flaps = flaps + 1
+        if H.errors[i]:find(FLAP, 1, true) or H.errors[i]:find(FLAP_SEQ, 1, true) then
+            flaps, flapMsg = flaps + 1, H.errors[i]
             table.remove(H.errors, i)
         end
     end
@@ -1556,10 +1559,9 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
         assert.is_false(H.Hekili.Scripts.NoWindows.holdWalk)
     end)
 
-    -- Fable L1270 item 4, seen, not decided (owner): reproduces the behaviour as built; pending until the owner says
-    -- whether the L1205 warning should cover a close line against the chosen OPEN
+    -- Fable L1286 item 4: the L1205 warning covers a close line against the chosen OPEN (once, the sequence's text)
     it(
-        "item 4: a held-true close line on a strict sequence chosen again sends CLOSE + OPEN every Update, no warning",
+        "item 4: a held-true close line on a strict sequence chosen again sends CLOSE + OPEN every Update, warned once",
         function()
             load({
                 default = "actions+=/close_window,name=s,if=test_fb\nactions+=/strict_sequence,name=s:berserker_stance:defensive_stance\n"
@@ -1568,12 +1570,17 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
             tick()
             flags.fb = true
             local before = flaps
-            for _ = 1, 3 do
+            for i = 1, 3 do
                 local _, sent = tick()
                 assert.are.same({ { key("s"), CLOSE }, { key("s"), OPEN } }, sent)
+                assert.are.equal(before + 1, flaps, i)
             end
-            assert.are.equal(before, flaps)
-            pending("owner: should the L1205 flapping-pair warning cover this? (Fable L1270 item 4, not decided)")
+            assert.is_truthy(flapMsg:find(FLAP_SEQ, 1, true))
+            local keys = H.Hekili.ErrorKeys -- formatted (H.errors holds the template)
+            assert.is_truthy(
+                keys[#keys]:find("Priority '" .. ww.PACK .. "': sequence 's' was closed", 1, true),
+                keys[#keys]
+            )
         end
     )
 
@@ -2759,4 +2766,103 @@ describe("the give-up's allow_skip STEP restarts the walk (windows design v6 §4
             assert.are.equal("defensive_stance", recs[1].actionName)
         end
     )
+end)
+
+-- (Fable L1286, item 4) The one-time flapping warning (L1205) also covers a sequence closed by a close_window line and
+-- started again in one slot: the strict sequence's chosen OPEN and the plain sequence's generated open line. Engine
+-- closes (the give-up, step_timeout) and STEPs do not count.
+describe("the flapping warning for sequences (L1205; Fable L1286)", function()
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+    end)
+
+    -- three ticks with test_fb held true; returns the operation codes sent per tick and the warnings counted
+    local function held(lists)
+        load(lists)
+        tick()
+        flags.fb = true
+        local before, codes = flaps, {}
+        for i = 1, 3 do
+            local _, sent = tick()
+            codes[i] = {}
+            for _, s in ipairs(sent) do
+                codes[i][#codes[i] + 1] = s[2]
+            end
+            table.sort(codes[i])
+        end
+        return codes, flaps - before
+    end
+
+    it("plain: a close line above or below the sequence (its due member not ready), warned once", function()
+        for _, lists in ipairs({
+            "actions+=/close_window,name=p,if=test_fb\nactions+=/sequence,name=p:berserker_stance:defensive_stance\n"
+                .. "actions+=/defensive_stance",
+            "actions+=/sequence,name=p,mode=continue:berserker_stance,if=test_fa:defensive_stance\n"
+                .. "actions+=/close_window,name=p,if=test_fb\nactions+=/defensive_stance",
+        }) do
+            boot()
+            local codes, n = held({ default = lists })
+            assert.are.same({ { OPEN, CLOSE }, { OPEN, CLOSE }, { OPEN, CLOSE } }, codes, lists)
+            assert.are.equal(1, n, lists)
+            local keys = H.Hekili.ErrorKeys
+            assert.is_truthy(
+                keys[#keys]:find("Priority '" .. ww.PACK .. "': sequence 'p' was closed", 1, true),
+                keys[#keys]
+            )
+            assert.is_truthy(flapMsg:find(FLAP_SEQ, 1, true))
+        end
+    end)
+
+    it(
+        "one token for both routes: warned through an open/close line pair, the item-4 shape is not warned again",
+        function()
+            local codes, n = held({
+                default = "actions+=/open_window,name=s,if=test_fa\nactions+=/close_window,name=s,if=test_fa\n"
+                    .. "actions+=/strict_sequence,name=s,if=test_fa:berserker_stance:defensive_stance\nactions+=/defensive_stance",
+            })
+            assert.are.equal(0, n) -- test_fa false: nothing acts
+            flags.fa = true
+            local before = flaps
+            tick()
+            assert.are.equal(before + 1, flaps)
+            assert.is_truthy(flapMsg:find(FLAP_SEQ, 1, true)) -- the text by the window's kind, not by the route
+            flags.fa, flags.fb = false, false
+            codes, n = held({
+                default = "actions+=/close_window,name=s,if=test_fb\nactions+=/strict_sequence,name=s:berserker_stance:defensive_stance\n"
+                    .. "actions+=/defensive_stance",
+            })
+            assert.are.same({ { OPEN, CLOSE }, { OPEN, CLOSE }, { OPEN, CLOSE } }, codes)
+            assert.are.equal(0, n)
+        end
+    )
+
+    it("stays silent: the give-up's CLOSE with the sequence chosen again in the slot; S24's opposite term", function()
+        gcdRig()
+        load({
+            default = "actions+=/strict_sequence,name=s,start_on_first=1:hamstring:rend,if=!test_fa\nactions+=/battle_shout",
+        })
+        tick()
+        cast(HS)
+        tick()
+        assert.are.same({ true, 2 }, { seqState("s") })
+        flags.fa = true
+        local before, closed = flaps, false
+        for _ = 1, 10 do
+            local _, sent = tick()
+            closed = closed or (sent[1] and sent[1][2] == CLOSE and sent[2] and sent[2][2] == OPEN) or false
+        end
+        assert.is_true(closed) -- CLOSE then the chosen OPEN in one slot
+        assert.are.equal(before, flaps)
+        for _, opt in ipairs({ "", ",hold_off_gcd=1" }) do
+            boot()
+            local codes, n = held({
+                default = "actions+=/close_window,name=s,if=test_fb\nactions+=/strict_sequence,name=s"
+                    .. opt
+                    .. ",if=!test_fb:bloodrage:berserker_stance\nactions+=/defensive_stance",
+            })
+            assert.are.same({ { CLOSE }, {}, {} }, codes, opt)
+            assert.are.equal(0, n, opt)
+        end
+    end)
 end)

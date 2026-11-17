@@ -1264,6 +1264,8 @@ Small points the rulings imply but do not spell out. Each is the narrowest readi
   name raises at registration.
 - The two fields also apply to the any-member start test of `allow_skip=1`, for members after the first; the
   ruling says "a strict sequence's start test" without naming the variant.
+- "By lines" in L1205 includes a sequence's own line: a strict sequence's chosen OPEN and a plain sequence's open
+  line count as the open of the flapping pair (Fable for the owner, L1286).
 - v6's "one line per distinct member" is read as one line per position, keyed on `window.<w>.step=K`, so a
   repeated member's own `if=` is read only at its position (Fable for the owner, L1290).
 - G03 passes when the sequences start; the missed-press number is reported, since no ruling sets a threshold.
@@ -1316,7 +1318,9 @@ For the builders. None is an owner question; each names the phase that must sett
 1. Flapping. A priority whose open and close conditions are both true (W09) opens and closes the window in every
    slot of every pass, five passes a second, for ever. Readers between the two lines see it up, readers elsewhere
    see it down, and the belief ends every update closed. This is by design (L795). A cost and a surprise, not a
-   fault.
+   fault. The one-time warning (L1205) covers a window opened and closed by lines in one slot, and a sequence closed
+   by a `close_window` line and started again in the same slot (strict: chosen again; plain: its open line); engine
+   closes and STEPs do not count.
 2. A window that never closes. A bare or held-true `open_window` reopens the window the moment it expires, so its
    duration means little, and `refresh=1` burns through `max_refresh` in under a second of held truth. Authors used
    to SimC's or the Lua windows' edges will meet this first. The guide must say "level" in its first paragraph.

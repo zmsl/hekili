@@ -575,6 +575,29 @@ local OP_OPEN, OP_CLOSE = 1, 2 -- VS.WindowOp's codes (Game/State/Families/Windo
 -- (L1205) pack -> window name -> true: the flapping-pair warning already given this session
 local flapWarned = {}
 
+-- (L1205, Fable L1286) Lines both closed and opened window `name` in one slot (a close_window line against an
+-- open_window line, a strict sequence's chosen OPEN or a plain sequence's open line): warned once per pack and window,
+-- the text by the window's kind; the message is built only then.
+local function flapWarn( packName, name )
+    local w = flapWarned[ packName ]
+    if w and w[ name ] then return end
+    if not w then
+        w = {}
+        flapWarned[ packName ] = w
+    end
+    w[ name ] = true
+    local d = scripts.appliedWindows.byName[ name ]
+    if d and d.seq then
+        Hekili:Error( "Priority '%s': sequence '%s' was closed by a close_window line and started again in the same recommendation; "
+            .. "while both stay true it starts over in every recommendation and each one walks the priority again (windows restart). "
+            .. "Add the opposite of the close_window condition to the sequence line's if=.", tostring( packName ), tostring( name ) )
+    else
+        Hekili:Error( "Priority '%s': window '%s' was opened and closed by lines in the same recommendation; every such "
+            .. "recommendation walks the priority again (windows restart). Check the open_window and close_window conditions.",
+            tostring( packName ), tostring( name ) )
+    end
+end
+
 -- (windows design v6 §15) the snapshot's two rolling numbers per key: the operations and the opens sent in the last
 -- 10 s, in one-second buckets (a key's buckets are made the first time it sends, then reused).
 local OP_NAME = { "OPEN", "CLOSE", "STEP" }
@@ -670,13 +693,7 @@ local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap, pa
     if changed then
         state.WindowFired( scriptID, true )
         -- (L1205) opened and closed by lines within one slot: the author's flapping pair, warned once per pack and window
-        if state.WindowFlap( name, isOpen ) and not ( flapWarned[ packName ] and flapWarned[ packName ][ name ] ) then
-            flapWarned[ packName ] = flapWarned[ packName ] or {}
-            flapWarned[ packName ][ name ] = true
-            Hekili:Error( "Priority '%s': window '%s' was opened and closed by lines in the same recommendation; every such "
-                .. "recommendation walks the priority again (windows restart). Check the open_window and close_window conditions.",
-                tostring( packName ), tostring( name ) )
-        end
+        if state.WindowFlap( name, isOpen ) then flapWarn( packName, name ) end
     end
 
     if debug then
@@ -835,6 +852,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
     if not ( self:CheckStack() and scripts:CheckScript( scriptID ) ) then return rAction, rWait, rDepth end
     if not win.up then
         if not state.WindowFired( scriptID ) and state.openWindow( name ) then -- the generated open line (ruling 12)
+            if state.WindowFlap( name, true ) then flapWarn( packName, name ) end
             seqSend( d, OP_OPEN, nil, scriptID )
             state.WindowFired( scriptID, true )
             walkRestart = true
@@ -2298,6 +2316,7 @@ function Hekili.Update()
                         local dl = state.delay
                         state.delay = 0
                         if state.openWindow( sd.name ) then
+                            if state.WindowFlap( sd.name, true ) then flapWarn( packName, sd.name ) end
                             local key = state.offset == 0 and state.WindowSendKey( sd.name )
                             if key then winSend( key, OP_OPEN, nil, sd.name, sd.id ) end
                             if k > 1 and state.WindowStep( sd.name, k ) and key then winSend( key, OP_STEP, k, sd.name, sd.id ) end
