@@ -76,19 +76,41 @@ local REPLAY = {
 -- Fire 0.918 (67 of 73) against 0.96, Frostfire 0.981 and Frost 0.944 (clear); flicker 0.67/min Arcane and Fire against
 -- 0.34. Candidate cause (misses coincide with belief mana ~1.6k under the truth): the preraid Robe of the Archmage and
 -- the mana gems' restores are not believed (repin-mage-09-1.md).
+-- Re-pin e5a9cd2a2d -> e4ef929e54 floors (lane mage 0.9, R6; with item-restores-09: the Robe of the Archmage and mana
+-- gem restores credited, mana-09 CN22, harness-gcd-edge-09; one logged fight a spec, so one measurement):
+-- Arcane 0.95 -> 0.96 (0.969, 62 of 64; the restore credit closes the Evocation misses at 32.50 and the Fire Blast
+-- at 139.00; left arcane_blast -> evocation at 45.00 / 46.50 run time: `mana.pct_lo<=10` reads the lower bound, lo
+-- 503 / 595 against the truth's 725 / 768 of 6108, the belief's lo band under the truth (gap BQ)).
+-- Fire 0.96 -> 0.93 (0.932, 68 of 73): fireball -> scorch 4 (log 16.50, 22.50, 63.50, 82.50) are the 70.50 replay
+-- limit (line position, mage_fire.lua's header) at 3.0 = 3.0: the new preraid gear's log casts Fire Blast exactly two
+-- GCDs before each of those Fireballs, `cooldown.fire_blast.remains>=action.fireball.cast` is true in wowsims at
+-- equality and ours reads remains a few microseconds under 3 because the Fireball's Casting line falls later in its
+-- timestamp than Fire Blast's did in its own (lines 28/9, 6/4, 10/3, 10/4; the one agreeing Fireball at 76.50 has 6
+-- against 10); scorch -> arcane_blast 1 (log 30.00: Arcane Blast's aura gained 13.50, 18 s, remains = cast 1.5 in
+-- wowsims; the 87.00 class of mage_fire.lua's header, untraced past the equality). Mana is not the cause (lo 4266 /
+-- 3312 / 3283 / 1180 against Fireball's 395). The restore credit fixed 143.00 (fire_blast -> scorch).
+-- Frostfire 0.96 -> 1.00 (1.000, 53 of 53: the restore credit). Frost 0.93 -> 0.96 (0.963, 52 of 54; frostbolt ->
+-- cone_of_cold 2, a raise, not traced).
+-- Flicker Arcane and Fire 0.34 -> 0.67 (0.67/min, two flips a fight, the same before the restore credit): every flip
+-- is an A-B-A whose B is the cast wowsims presses at that poll (the replay's flip count takes no presses): Arcane
+-- arcane_missiles at log 100.60 and 149.00 (Missile Barrage gained 100.50 / 148.90 on the new log, pressed 100 ms
+-- later; fire_blast shown before it and during the channel), Fire pyroblast at log 15.00 (shown the poll before the
+-- press, combustion during the GCD before and the cast after) and fire_blast at log 179.10 (Clearcasting's free Fire
+-- Blast on a dry pool, scorch waiting before and after). LIVE60 kept (measured Arcane 8.4 under 10.0, Fire 6.2,
+-- Frostfire 11.8, Frost 6.0).
 local PACKS = {
-    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.95, 10.0, 0.34 },
+    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0, 0.67 },
     -- LIVE60 6.0 -> 6.2 (CN8 D2): the same dry-pool wait for Scorch (96.4-102.4 s, mana 49-153), one poll longer on
     -- the re-timed fight
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.96, 6.2, 0.34 },
-    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.93, 6.2, 0.67 },
+    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 1.00, 11.8, 0 },
     -- Frost (new pack, 2026-11-12, R6 first measurement): 0.93 (0.934, 57 of 61; the recipe's header names the misses),
     -- LIVE60 6.0 (the 6 s bar: 6.0 measured, L10 0.2, L40 0.0), flicker 0 (0.00/min measured). LIVE60's cause (traced
     -- 2026-11-13): a dry-pool wait for Frostbolt (117.2-123.0 s; the client answers it unusable, the mana under its
     -- cost), Evocation cooling (424 s left) and Cold Snap spent, as Fire's Scorch wait. Arcane L10/L40 0.4 -> 0.2 s
     -- (47 -> 48, 53 -> 54 presses): Arcane Wrath's learn levels (25/36/48/60) entered learn_mage.lua with this pack;
     -- without those four lines the numbers are forever's again (measured)
-    { "mage_frost", "Frost", "Frost (wowsims.com)", 0.93, 6.0, 0 },
+    { "mage_frost", "Frost", "Frost (wowsims.com)", 0.96, 6.0, 0 },
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()
