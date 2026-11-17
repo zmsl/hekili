@@ -2623,10 +2623,20 @@ do
                         caption = caption:gsub( "%[h:(.-)%]", "|TInterface\\AddOns\\Hekili\\Textures\\%1:0|t" )
                         -- Replace "[<text>:<height>:<width>]" in the caption with the escape sequence for the atlas.
                         caption = caption:gsub( "%[(.-):(%d+):(%d+)%]", "|A:%1:%2:%3|a" )
-                        action = action .. ',caption=' .. caption .. ',description=' .. description
+                        comment = ',caption=' .. caption .. ',description=' .. description
                     else
                         -- Change commas to semicolons.
-                        action = action .. ',description=' .. comment:gsub( ",", ";" )
+                        comment = ',description=' .. comment:gsub( ",", ";" )
+                    end
+                    local head = action:match( "^([%w_]+)" )
+                    local at = ( head == "sequence" or head == "strict_sequence" ) and action:find( ":", 1, true )
+                    if at then
+                        -- (windows design §3.3) a sequence's own options sit before its first colon, and a colon splits
+                        -- members. shortcut: a caption's texture or atlas escape loses its colons here; keep them if
+                        -- sequence captions with icons are wanted.
+                        action = action:sub( 1, at - 1 ) .. comment:gsub( ":", ";" ) .. action:sub( at )
+                    else
+                        action = action .. comment
                     end
                     comment = nil
                 end

@@ -282,6 +282,31 @@ describe("the windows compiler (windows design v6 §3.4, §9)", function()
         assert.is_truthy(warnings:find("E1", 1, true))
         assert.is_falsy(warnings:find("Unknown window 'x'", 1, true))
     end)
+
+    it(
+        "an import comment above a sequence line is the line's description, a colon in it included (review M8)",
+        function()
+            local out = H.Hekili:ImportSimcAPL(
+                "t",
+                "t",
+                "# Opener: on pull\nactions=sequence,name=p,mode=continue:bloodrage:berserker_stance\n"
+                    .. "# Burst::the big one: go\nactions+=/strict_sequence,name=s:bloodrage:berserker_stance\n"
+                    .. "actions+=/defensive_stance"
+            )
+            local p, s = out.default[1], out.default[2]
+            assert.are.same(
+                { "sequence", true, 2, "Opener, on pull" },
+                { p.action, p.enabled, #p.steps, p.description }
+            )
+            assert.is_nil(p.steps[2].description)
+            assert.are.same(
+                { "strict_sequence", true, 2, "Burst", "the big one, go" },
+                { s.action, s.enabled, #s.steps, s.caption, s.description }
+            )
+            assert.is_nil(s.steps[2].caption)
+            assert.are.same({}, codes(H.Hekili.Scripts.CheckWindows(out, "t")))
+        end
+    )
 end)
 
 describe("APL window lines as commands (windows design v6 §4, §5)", function()
