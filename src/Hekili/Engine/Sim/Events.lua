@@ -2475,7 +2475,6 @@ RegisterEvent( "ACTIONBAR_HIDEGRID", DelayedUpdateKeybindings )
 RegisterEvent( "UPDATE_BONUS_ACTIONBAR", DelayedUpdateKeybindings ) -- a form change swaps the gamepad form bar
 RegisterEvent( "UPDATE_OVERRIDE_ACTIONBAR", DelayedUpdateKeybindings ) -- the pages ConsolePort's paged widget follows
 RegisterEvent( "UPDATE_VEHICLE_ACTIONBAR", DelayedUpdateKeybindings )
-RegisterEvent( "UPDATE_SHAPESHIFT_FORM", DelayedUpdateKeybindings )
 -- a keyboard slot edit already raises SHOWGRID/HIDEGRID; only the gamepad storage slots (181 up) and "all" (0) matter here
 RegisterEvent( "ACTIONBAR_SLOT_CHANGED", function( event, slot )
     if slot == nil or slot == 0 or slot > 180 then DelayedUpdateKeybindings( event ) end
