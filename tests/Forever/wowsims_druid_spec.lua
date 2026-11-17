@@ -189,12 +189,13 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local simc = f:read("*a")
         f:close()
         assert.matches("\n# Setting maintain_demoralizing_roar %(", simc)
+        -- re-pin e4ef929e54: both lines sit in the single-target group (the default list calls it behind the gate)
         assert.matches(
-            "\nactions%+=/demoralizing_roar,focus=2,if=settings%.maintain_demoralizing_roar&%(!%(!%(debuff%.demoralizing_roar%.remains<=0%)%)",
+            "\nactions%.single_target_and_larger_packs%+=/demoralizing_roar,focus=2,if=settings%.maintain_demoralizing_roar&!%(!%(debuff%.demoralizing_roar%.remains<=0%)%)",
             simc
         )
         assert.matches(
-            "\nactions%+=/faerie_fire,if=%(action%.faerie_fire%.known&debuff%.faerie_fire%.remains<=0%)",
+            "\nactions%.single_target_and_larger_packs=faerie_fire,if=%(action%.faerie_fire%.known&debuff%.faerie_fire%.remains<=0%)",
             simc
         )
         assert.matches("demoralizing_roar", first(true, false))
