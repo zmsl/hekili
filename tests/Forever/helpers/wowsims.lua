@@ -519,6 +519,10 @@ M.READY = {
     -- (never 25 -> 2; 9 of them 0.2-0.3 s early, the Searing Pain grain as above); median 0.20
     -- { 0.30, 10 } -> { 0.00, 0 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 114 decisions, 103 timed all in grain,
     -- never 11 (A: the refill-blind Life Tap, R50)
+    -- fixture re-recorded (hotfix 0.8.6, the core's missable rule keeps a running brand through a missed Searing
+    -- Pain, as wowsims's OutcomeLanded-only Demonic Brand): 27.00 corruption and 33.10 immolate never -> in grain;
+    -- 103.90 life_tap and 122.00 soul_fire tie -> in grain, their tie partners 102.40 / 120.50 searing_pain tie ->
+    -- never; floor unchanged
     warlock_demonology = { 0.00, 0 },
     -- 0.500, 5: Incinerate's 2.0 s cast, likewise. { 0.50, 5 } -> { 0.50, 16 } R42 (the replay answers
     -- fight_remains from the log): only rows that were "never" moved, now timed
@@ -527,6 +531,9 @@ M.READY = {
     warlock_destruction = { 0.00, 0 },
     -- 0.900, 16: Shadow Bolt's, likewise. -> { 0.20, 1 } re-pin e2842f0a78 (Task 16, R6, L82 M5): 100 decisions, 1
     -- real (shadow_bolt late 0.20 s), the rest in grain or tie, never 24
+    -- fixture re-recorded (hotfix 0.8.6, the same brand hold through the Searing Pain misses at 19.71, 30.00 and
+    -- 156.59): the 11 rows after them never or tie -> in grain, the tie partners 18.24 / 28.53 searing_pain tie ->
+    -- never, 162.57 life_tap stays never (predicted 1.531 -> 1.561); floor unchanged
     warlock_shadow_brand = { 0.20, 1 },
     -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28). -> { 0.20, 8 } re-pin e2842f0a78 (Task
     -- 16, R6, L82 M5; R49's stand-in DoT lines): 93 decisions, 8 real all early (shadow_bolt 4 max 0.30, life_tap 2,
