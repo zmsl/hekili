@@ -101,8 +101,8 @@ local function key(name, display)
     return ww.PACK .. ":" .. name .. "#" .. (display or "Primary")
 end
 
-local function belief(name)
-    local up, openedAt, expiresAt, refreshes, step = VS.Window(key(name))
+local function belief(name, display)
+    local up, openedAt, expiresAt, refreshes, step = VS.Window(key(name, display))
     return { up = up, openedAt = openedAt, expiresAt = expiresAt, refreshes = refreshes, step = step }
 end
 
@@ -565,7 +565,11 @@ end
 -- `c.casts[i]`); returns the operations sent per tick. Candidates are { name, code, arg } (arg: STEP's step); the
 -- sends are compared with their arguments, the copy and the belief with their step (sequences, §6).
 local function forecastRun(c)
+    local disp = c.display or "Primary" -- the display whose keys are checked; Primary walks (and sends) too
     load(c.lists)
+    if disp ~= "Primary" then
+        assert.is_true(H.Hekili.Engine.Subscribe(disp, function() end))
+    end
     flaps = 0
     assert.are.equal(c.loadErrors or 0, #H.errors) -- C01: its compile errors, reported once at load
     for k in pairs(H.errors) do
@@ -573,7 +577,7 @@ local function forecastRun(c)
     end
     local decl, names = {}, {}
     for _, r in ipairs(VSI.def.aplWindows) do
-        local name = r.key:match("^[^:]+:([^#]+)#Primary$")
+        local name = r.key:match("^[^:]+:([^#]+)#" .. disp .. "$")
         if name then
             decl[name], names[#names + 1] = r, name
         end
@@ -598,7 +602,7 @@ local function forecastRun(c)
     H.Hekili.GetNextPrediction = function(self, dispName, packName, slot)
         tail = false
         local a, w, d = gnp(self, dispName, packName, slot)
-        if not captured and dispName == "Primary" and slot.index == 1 then -- slot 1's now walk, before any wait
+        if not captured and dispName == disp and slot.index == 1 then -- slot 1's now walk, before any wait
             captured, tail = true, true
             snap()
         end
@@ -607,7 +611,7 @@ local function forecastRun(c)
     -- a strict sequence's chosen OPEN (and an allow_skip STEP) is sent once slot 1 is final, after its walk
     VS.WindowOp = function(k, code, arg)
         local r = wop(k, code, arg)
-        if tail then
+        if tail and k:sub(-#disp - 1) == "#" .. disp then
             snap()
         end
         return r
@@ -626,13 +630,15 @@ local function forecastRun(c)
         local _, sent = tick()
         local sentA = {}
         for j, o in ipairs(sent) do
-            sentA[j] = { o[1], o[2], opArgs[j] }
+            if o[1]:sub(-#disp - 1) == "#" .. disp then
+                sentA[#sentA + 1] = { o[1], o[2], opArgs[j] }
+            end
         end
         local T = VSI.clock
         assert.are.equal(T, S.now, "the pass's now is the Drain's stamp (OP5 cannot arise)")
         local seed = {}
         for _, n in ipairs(names) do
-            local b = belief(n)
+            local b = belief(n, disp)
             seed[n] = b
             if prev and not moved then -- the replay invariant: the previous pass's copy, its expiry run at this stamp
                 local want = closedAt(prev[n], T)
@@ -661,7 +667,7 @@ local function forecastRun(c)
                 changed = changed or before[k] ~= v
             end
             if changed then
-                want[#want + 1] = { key(n), code, o[3] or false }
+                want[#want + 1] = { key(n, disp), code, o[3] or false }
             end
         end
         assert.are.same(want, sentA, c.id .. " tick " .. i .. ": sends")
@@ -673,7 +679,7 @@ local function forecastRun(c)
         end
         assert.are.equal(refused, Q.refused, c.id .. " tick " .. i .. ": refused")
         assert.are.equal(dropped, Q.dropped, c.id .. " tick " .. i .. ": dropped")
-        prev, perTick[i] = copy, #sent
+        prev, perTick[i] = copy, #sentA
         copy = {}
     end
     H.Hekili.GetNextPrediction, VS.WindowOp = gnp, wop
@@ -684,7 +690,7 @@ local function forecastRun(c)
     H.ctl.now = t
     VS.Drain(t)
     for _, n in ipairs(names) do
-        local want, b = closedAt(prev[n], VSI.clock), belief(n)
+        local want, b = closedAt(prev[n], VSI.clock), belief(n, disp)
         assert.is_true(
             sameState(want, b),
             string.format("%s final drain %s: copy %s belief %s", c.id, n, show(want), show(b))
@@ -975,6 +981,18 @@ describe("forecast == apply, the core's side (windows design v6 §13, L1180)", f
             end
             local got = forecastRun(c)
             assert.are.same(c.sends, got)
+        end)
+    end
+
+    -- the same cases on AOE's keys (mode dual: Primary and AOE both walked, each sends to its own keys)
+    for _, c in ipairs(FORECAST) do
+        it(c.id .. " (AOE)", function()
+            for k in pairs(flags) do
+                flags[k] = false
+            end
+            H.Hekili.Engine.settings.toggles.mode.value = "dual"
+            local d = setmetatable({ display = "AOE" }, { __index = c })
+            assert.are.same(c.sends, forecastRun(d))
         end)
     end
 
