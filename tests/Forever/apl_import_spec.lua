@@ -16,6 +16,28 @@ local function bare(s)
     return (s:gsub("%s", ""))
 end
 
+-- an entry's keys that differ after a round trip: the importer spaces a condition or variable value out (SpaceOut)
+-- and gives a variable line `op = "set"`, which make_pack leaves off
+local function entryDiff(e, ge)
+    local out = {}
+    for k, v in pairs(e) do
+        local a, b = tostring(v), tostring(ge[k])
+        if k == "criteria" or k == "value" then
+            a, b = bare(a), bare(b)
+        end
+        if a ~= b then
+            out[#out + 1] = k .. ": " .. b .. ", want " .. a
+        end
+    end
+    for k, v in pairs(ge) do
+        if e[k] == nil and not (k == "op" and e.action == "variable" and v == "set") then
+            out[#out + 1] = k .. ": extra " .. tostring(v)
+        end
+    end
+    table.sort(out)
+    return out
+end
+
 describe("the priority importer", function()
     local H
     setup(function()
@@ -29,6 +51,15 @@ describe("the priority importer", function()
         local lists = H.Hekili:ImportSimcAPL(nil, nil, "actions=slam,if=buff.a.up^action.slam.ready=1\n")
         assert.are.equal(1, #lists.default)
         assert.are.equal("buff.a.up^action.slam.ready=1", bare(lists.default[1].criteria))
+    end)
+
+    it("round-trips a pure=1 variable line as make_pack writes it (no op, value unspaced)", function()
+        local got = H.Hekili:ImportSimcAPL(nil, nil, "actions=variable,name=v_x,pure=1,value=(a=0&b>1)&c\n")
+        local e = { action = "variable", var_name = "v_x", pure = "1", value = "(a=0&b>1)&c", enabled = true }
+        assert.are.equal("1", tostring(got.default[1].pure))
+        assert.are.same({}, entryDiff(e, got.default[1]))
+        e.pure = nil
+        assert.are.same({ "pure: extra 1" }, entryDiff(e, got.default[1]))
     end)
 
     it("splits a line only at commas outside parentheses", function()
@@ -148,38 +179,8 @@ describe("every shipped pack's Source tab text", function()
                         hits[#hits + 1] = name .. " " .. list .. ": " .. #g .. " entries, want " .. #entries
                     end
                     for i, e in ipairs(entries) do
-                        local ge = g[i] or {}
-                        for k, v in pairs(e) do
-                            local a, b = tostring(v), tostring(ge[k])
-                            if k == "criteria" then -- the importer spaces a condition out (SpaceOut)
-                                a, b = bare(a), bare(b)
-                            end
-                            if a ~= b then
-                                hits[#hits + 1] = name
-                                    .. " "
-                                    .. list
-                                    .. "["
-                                    .. i
-                                    .. "]."
-                                    .. k
-                                    .. ": "
-                                    .. b
-                                    .. ", want "
-                                    .. a
-                            end
-                        end
-                        for k, v in pairs(ge) do
-                            if e[k] == nil then
-                                hits[#hits + 1] = name
-                                    .. " "
-                                    .. list
-                                    .. "["
-                                    .. i
-                                    .. "]."
-                                    .. k
-                                    .. ": extra "
-                                    .. tostring(v)
-                            end
+                        for _, d in ipairs(entryDiff(e, g[i] or {})) do
+                            hits[#hits + 1] = name .. " " .. list .. "[" .. i .. "]." .. d
                         end
                     end
                 end
