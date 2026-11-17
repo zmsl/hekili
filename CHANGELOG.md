@@ -17,7 +17,7 @@
 - Warrior: a hit you block in full no longer counts as rage gained, and the rage expected from hits taken follows the latest measurements by attacker level (not yet checked in game).
 - Warrior: a missed, dodged or parried Execute no longer gives back part of its cost (not yet checked in game).
 - Warrior: Overpower now shows after a dodge that comes soon after your last Overpower; it used to wait 5 seconds from that Overpower (not yet checked in game).
-- Warrior, Arms and Fury (wowsims.com): checked against wowsims's latest gear sets, which change three gear pieces; the priorities are unchanged, and wowsims's new Blackhand's Breadth trinket lines are not included.
+- Warrior, Arms and Fury (wowsims.com): checked against wowsims's latest gear sets, which change three gear pieces; the priorities are unchanged, and Blackhand's Breadth, which wowsims now uses, is not suggested yet.
 - Warrior, Protection (wowsims.com): checked against wowsims's pre-raid gear set and its new healing rate; the priorities are unchanged.
 
 ### Known issues
