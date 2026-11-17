@@ -96,6 +96,18 @@ describe("HEKILI_TOGGLE and GetToggleState (headless Arms)", function()
         end
     )
 
+    it("the options' mode type change fires the mode it rewrites to, and nothing when the mode stays", function()
+        hk:EmbedToggleOptions(hk.Options)
+        local set = hk.Options.args.toggles.set
+        assert.is_true(hk:SetMode("aoe"))
+        set({ "toggles", "mode", "type" }, "AutoSingle") -- aoe is not one of its modes: rewritten to automatic
+        assert.are.equal("automatic", hk:GetToggleState("mode"))
+        assert.are.same({ { "mode", "automatic" } }, fired)
+        set({ "toggles", "mode", "type" }, "AutoDual") -- automatic is one of its modes: kept
+        assert.are.equal(1, #fired)
+        assert.are.same({}, H.errors)
+    end)
+
     it("a profile refresh fires every toggle that has a state, each with GetToggleState's answer", function()
         hk:TotalRefresh()
         assert.is_true(#fired > 0)

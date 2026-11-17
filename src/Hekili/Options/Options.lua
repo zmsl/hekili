@@ -6813,11 +6813,13 @@ do
 
         elseif option == 'type' then
             toggle.type = val
+            local was = toggle.value
 
             if val == "AutoSingle" and not ( toggle.value == "automatic" or toggle.value == "single" ) then toggle.value = "automatic" end
             if val == "AutoDual" and not ( toggle.value == "automatic" or toggle.value == "dual" ) then toggle.value = "automatic" end
             if val == "SingleAOE" and not ( toggle.value == "single" or toggle.value == "aoe" ) then toggle.value = "single" end
             if val == "ReactiveDual" and toggle.value ~= "reactive" then toggle.value = "reactive" end
+            if toggle.value ~= was and WeakAuras and WeakAuras.ScanEvents then WeakAuras.ScanEvents( "HEKILI_TOGGLE", bind, toggle.value ) end
 
         elseif option == 'key' then
             for t, data in pairs( p.toggles ) do
