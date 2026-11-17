@@ -134,6 +134,46 @@ describe("Engine/Driver.lua through the engine frame", function()
         assert.is_truthy(H.errors[1]:find("opened and closed by lines in the same recommendation", 1, true))
     end)
 
+    -- windows design v6 §6: sequences acting in every slot. A bare close line aborts the strict sequence each slot (the
+    -- hold's walk of the normal lists, CLOSE, a restart), its start test passes and the final pick opens it (the chosen
+    -- OPEN); the plain one parks by its skip line (its member never castable) and its restart_sequence line sends it
+    -- back to step 1 (STEP). Precombat, out of combat, as above: in combat this Update allocates about 0.3 B without
+    -- any sequence line (measured 2026-11-16, 300 warm-up Updates), a cost outside the sequence paths.
+    it("allocates 0 B per Update with a strict and a plain sequence acting in every slot", function()
+        local pack = H.Hekili.Engine.Output.Primary.recs[1].pack
+        local lists = H.Hekili.DB.profile.packs[pack].lists
+        local add = H.Hekili:ParseActionList(
+            "actions+=/restart_sequence,name=p,if=window.p.done\nactions+=/sequence,name=p:defensive_stance,if=time<0\n"
+                .. "actions+=/close_window,name=s\nactions+=/strict_sequence,name=s:bloodrage:berserker_stance\n",
+            true
+        )
+        for i = #add, 1, -1 do
+            add[i].enabled = true
+            table.insert(lists.precombat, 1, add[i])
+        end
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        H.Hekili.Scripts:ApplyWindows(pack)
+        H.Hekili.State:BuildWindows()
+        H.ns.VirtualState.Drain(H.ctl.now)
+        local codes, op = { 0, 0, 0 }, H.ns.VirtualState.WindowOp
+        H.ns.VirtualState.WindowOp = function(key, code, arg)
+            codes[code] = codes[code] + 1
+            return op(key, code, arg)
+        end
+        for _ = 1, 35 do
+            tick()
+        end
+        codes[1], codes[2], codes[3] = 0, 0, 0
+        local bytes = perUpdate(45)
+        H.ns.VirtualState.WindowOp = op
+        assert.is_true(codes[1] >= 45 and codes[2] >= 45 and codes[3] >= 45, table.concat(codes, " ")) -- OPEN, CLOSE, STEP
+        local restarts = H.Hekili.Engine.Output.Primary.recs[1].restarts
+        assert.is_true(restarts >= 3, tostring(restarts))
+        assert.are.equal(0, bytes)
+        assert.are.same({}, H.errors)
+    end)
+
     -- Option D review I1: Recommend Target Swaps on, three mobs all carrying the DoT (the feature's resting state): the
     -- swap lines (cycle_targets=1 and other_target=1) find no other target every Update and build nothing. The enemy
     -- count grows each refresh, the count with it (all DoTed), so text built from the counts would be new each time
