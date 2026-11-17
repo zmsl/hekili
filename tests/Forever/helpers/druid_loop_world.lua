@@ -324,8 +324,8 @@ local PACKS = {
         -- and Claw lines read (L602): Shredding Attacks 3/3 (the log header's 16966=3), and a DPS behind its target, so
         -- the client says our target targets someone else. The log's build also has Blood Frenzy 2/2 (16958: catHit's
         -- combo point, the bear's Primal Fury rage), Predatory Discipline 1/1 (1328613: Bite keeps its extra energy)
-        -- and Shifting Power 1/1 (1322605), which the pack's talent terms read
-        talents = { [17056] = 3, [16966] = 3, [16958] = 2, [1328613] = 1, [1322605] = 1 },
+        -- and Shifting Power 1/1 (1322605), which the pack's talent terms read, and Ferocity 5/5 (16934: the log's Rake 35)
+        talents = { [17056] = 3, [16966] = 3, [16958] = 2, [1328613] = 1, [1322605] = 1, [16934] = 5 },
         uptime = { "rip", "rake" },
         notTargeted = true,
     },
@@ -348,7 +348,10 @@ local PACKS = {
             "mark_of_the_wild",
             "thorns",
         },
-        talents = { [16958] = 2 }, -- Primal Fury (wowsims's bear build's 2/2): its rage on our crits
+        -- wowsims's e4ef929e54 Bear build (its log header), the talents the class file or the pack reads: Blood Frenzy 1/2
+        -- (16958, "Primal Fury": its rage on our crits; was 2/2 at e5a9cd2a2d), Ferocity 5/5 (16934: the log's Maul 10),
+        -- Feral Instinct 3/3 (16947: the Maul lines' terms), Thick Hide 3/3 (16929: the Guardian selector); no Furor
+        talents = { [16958] = 1, [16934] = 5, [16947] = 3, [16929] = 3 },
         power = { type = RAGE, token = TOKENS[RAGE], max = 100 },
         res = {},
         form = "bear_form",

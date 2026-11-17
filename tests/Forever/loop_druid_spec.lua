@@ -91,6 +91,15 @@ describe("the Feral loop world's press", function()
         got[3] = feralPress("claw", 100, 4, true) -- capped at 5
         assert.are.same({ 2, 1, 5 }, got)
     end)
+    -- Ferocity 5/5 in both e4ef929e54 builds (the log headers' 16934=5): the logs' Rake 35 and Maul 10
+    it("prices Rake and Guardian's Maul at the logs' costs", function()
+        local got = {}
+        for _, c in ipairs({ { "Feral", "rake" }, { "Guardian", "maul" } }) do
+            local C = dlw[c[1]]
+            got[#got + 1] = C.resolve(c[2], headless.new({ character = C.character(), pack = C.PACK })).cost
+        end
+        assert.are.same({ 35, 10 }, got)
+    end)
     it("keeps Ferocious Bite's extra energy (Predatory Discipline) and spends the combo points", function()
         local points, energy, cost = feralPress("ferocious_bite", 90, 5, false)
         assert.are.same({ 0, 90 - cost }, { points, energy })
