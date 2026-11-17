@@ -2464,3 +2464,123 @@ describe("the strict start test's ability fields (windows design v6 §3.6, rulin
         assert.are.equal(0, calls)
     end)
 end)
+
+-- A running GCD in the rig (review I2): an on-GCD cast the belief observes opens its GCD, which the facade answers for
+-- Forever's GCD spell; rage is set so the on-GCD members can be cast. `gcdSeen`: the GCD slot 1's walk read at now on
+-- the last tick (each case asserts it ran, so no case passes without a GCD).
+local gcdSeen = 0
+local HS, RD, MS -- Hamstring, Rend, Mortal Strike: on-GCD members with no cooldown, and one with
+
+local function gcdRig()
+    H.ctl.power[1] = 100
+    local a = H.Hekili.Class.abilities
+    -- the known ranks' IDs: the client's answers (casts, cooldown flags) are the known rank's
+    HS, RD, MS = VS.KnownID(a.hamstring.id), VS.KnownID(a.rend.id), VS.KnownID(a.mortal_strike.id)
+    local gnp = H.Hekili.GetNextPrediction
+    H.Hekili.GetNextPrediction = function(self, dispName, packName, slot)
+        if dispName == "Primary" and slot.index == 1 then
+            local delay = S.delay
+            S.delay = 0
+            gcdSeen = S.cooldown.global_cooldown.remains
+            S.delay = delay
+        end
+        return gnp(self, dispName, packName, slot)
+    end
+end
+
+describe("a running GCD (ruling 28: an on-GCD member is judged at the GCD's end; review I2)", function()
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+        gcdRig()
+    end)
+
+    it(
+        "P03: the due on-GCD member while the GCD runs is not dropped (skip, continue, wait): no STEP, shown at its end",
+        function()
+            -- the last arm: the client's flags for the due member say on the GCD (the facade answers the GCD's numbers)
+            for _, arm in ipairs({ "skip", "continue", "wait", "skip+flag" }) do
+                boot()
+                gcdRig()
+                load({
+                    default = "actions+=/sequence,name=p,mode="
+                        .. arm:match("^%a+")
+                        .. ":hamstring:rend\nactions+=/battle_shout",
+                })
+                local recs, sent = tick()
+                assert.are.same({ { key("p"), OPEN } }, sent, arm)
+                assert.are.equal("hamstring", recs[1].actionName, arm)
+                cast(HS)
+                if arm == "skip+flag" then
+                    H.ctl.cooldown[RD] = { isActive = true, isOnGCD = true, startTime = t, duration = 1.5 }
+                end
+                local seen = 0
+                for _ = 1, 6 do
+                    recs, sent = tick()
+                    assert.are.same({}, sent, arm)
+                    if gcdSeen > 0.05 then
+                        seen = seen + 1
+                        assert.are.equal("rend", recs[1].actionName, arm)
+                        assert.is_true(
+                            math.abs(recs[1].wait - gcdSeen) < 0.05,
+                            arm .. " " .. recs[1].wait .. " " .. gcdSeen
+                        )
+                    end
+                end
+                assert.is_true(seen >= 3, arm .. " " .. seen) -- the GCD ran in the walk
+                assert.are.same({ true, 2 }, { seqState("p") }, arm)
+                H.ctl.cooldown[RD] = nil
+            end
+        end
+    )
+
+    it("a member short by time only (skip): ready before the GCD's end it stays due; after it, STEP past it", function()
+        for _, x in ipairs({ 1.0, 2.2 }) do -- seconds from the GCD's start to the member's ready time (GCD 1.5 s)
+            boot()
+            gcdRig()
+            load({ default = "actions+=/sequence,name=p:hamstring:mortal_strike:rend\nactions+=/battle_shout" })
+            local cd = VS.CooldownLength(MS)
+            cast(MS) -- out of order: a plain sequence stays on its step (L1181)
+            H.ctl.cooldown[MS] = { isActive = true, isOnGCD = false, startTime = t, duration = cd }
+            t = t + cd - x - 0.2
+            local recs, sent = tick()
+            assert.are.same({ { key("p"), OPEN } }, sent, x)
+            assert.are.equal("hamstring", recs[1].actionName, x)
+            cast(HS)
+            local all, seen = {}, false
+            for _ = 1, 3 do
+                recs, sent = tick()
+                seen = seen or gcdSeen > 0.05
+                for _, s in ipairs(sent) do
+                    all[#all + 1] = s
+                end
+            end
+            assert.is_true(seen, x)
+            if x < 1.5 then
+                assert.are.same({}, all, x)
+                assert.are.equal("mortal_strike", recs[1].actionName, x)
+            else
+                assert.are.same({ { key("p"), STEP } }, all, x)
+                assert.are.equal(3, opArgs[1] or 0, x)
+                assert.are.equal("rend", recs[1].actionName, x)
+            end
+        end
+    end)
+
+    it("the strict start test with a member short by time only (no GCD): not chosen until it is ready", function()
+        load({ default = "actions+=/strict_sequence,name=s:hamstring:mortal_strike\nactions+=/battle_shout" })
+        local cd = VS.CooldownLength(MS)
+        cast(MS)
+        H.ctl.cooldown[MS] = { isActive = true, isOnGCD = false, startTime = t, duration = cd }
+        t = t + cd - 0.5 - 0.2 -- the GCD MS opened is over; MS ready in 0.5 s
+        local recs, sent = tick()
+        assert.is_true(gcdSeen == 0)
+        assert.are.same({}, sent)
+        assert.are.equal("battle_shout", recs[1].actionName)
+        H.ctl.cooldown[MS] = nil
+        t = t + 0.6
+        recs, sent = tick()
+        assert.are.same({ { key("s"), OPEN } }, sent)
+        assert.are.equal("hamstring", recs[1].actionName)
+    end)
+end)
