@@ -656,11 +656,64 @@ describe("the headless loop's flicker counter (loop.flips)", function()
 
     it("still counts an A -> B -> A whose B was not pressed", function()
         assert.are.equal(1, loop.flips(seq, 4, { false, false, false, false }))
-        assert.are.equal(1, loop.flips(seq, 4)) -- no press data (a replay): every flip counts
+        assert.are.equal(1, loop.flips(seq, 4)) -- no press data: every flip counts
     end)
 
     it("does not excuse the blip for a press of a different ability", function()
         assert.are.equal(1, loop.flips(seq, 4, { "a", "c", "a", false }))
+    end)
+
+    it("takes a replay's set of casts per tick: B cast before the next tick is excused, another cast is not", function()
+        assert.are.equal(0, loop.flips(seq, 4, { {}, { c = true, b = true }, {}, {} }))
+        assert.are.equal(1, loop.flips(seq, 4, { {}, { c = true }, {}, {} }))
+        assert.are.equal(1, loop.flips(seq, 4, { {}, {}, { b = true }, {} })) -- cast after we flipped back
+    end)
+
+    it("records in a replay each in-combat tick's casts before the next tick", function()
+        local scenarios = require("Game.harness.scenarios")
+        local stub = {
+            character = function()
+                return { level = 60, power = { type = 1, token = "RAGE", max = 100 } }
+            end,
+            resolve = function()
+                error("no press in a replay")
+            end,
+            usable = function()
+                return {}
+            end,
+            uptime = function()
+                return {}
+            end,
+            gain = function()
+                return 0
+            end,
+            WORLD = { level = 60, max = 100, mobHealth = 1e9 },
+        }
+        local L = loop.new(stub)
+        local R = {
+            pull = 3,
+            duration = 2,
+            decisions = { -- in-combat ticks at 3.0 (n = 1), 3.2, 3.4, ...
+                { t = 2.5, key = "pre", gcd = true }, -- before the pull: no tick
+                { t = 3.3, key = "a", gcd = true },
+                { t = 3.35, key = "b", gcd = false },
+                { t = 4.1, key = "c", gcd = true },
+            },
+        }
+        function R.world(wo, seed)
+            return scenarios.world(wo, seed)
+        end
+        function R.next()
+            return false
+        end
+        local run = loop.run(L, 1, { replay = R, trace = false }, { { H = L.us } })
+        assert.are.same({ a = true, b = true }, run.pressed[2])
+        assert.are.same({ c = true }, run.pressed[6])
+        for n = 1, run.combat do
+            if n ~= 2 and n ~= 6 then
+                assert.are.same({}, run.pressed[n])
+            end
+        end
     end)
 end)
 
