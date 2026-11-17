@@ -439,18 +439,23 @@ M.READY = {
     -- new line, item-restores mapping the Robe) at its log use.
     -- Arcane { 0.76, 9 } -> { 0.22, 2 }: fire_blast 110.70 / 128.80 late 0.22, cost class (gap BQ, lo 6.7 / 6.9 under
     -- the truth at Fire Blast's 340).
-    mage_arcane = { 0.22, 2 }, -- 0.220, 2
-    -- { 0.37, 31 } -> { 0.45, 10 } re-pin e2842f0a78: cost class, scorch 10
-    -- { 0.45, 10 } -> { 0.69, 3 }: scorch 126.20 0.25, 146.60 1.61, 152.40 0.69 late, cost class on the new log's dry
-    -- pool (gap BQ: lo 4.8 / 73.7 / 18.6 under the truth at Scorch's 150);
+    mage_arcane = { 0.22, 2 }, -- 0.220, 2 (ruling M13)
+    -- { 0.37, 31 } -> { 0.45, 10 } re-pin e2842f0a78: cost class, scorch 10; the median is gap BQ's size, but the
+    -- max 2.23 s rows sit about 50 mana under the truth, past BQ's ~0.4 s (untraced: an unseen Master of Elements
+    -- refund is the candidate)
+    -- { 0.45, 10 } -> { 0.69, 3 }: scorch 126.20 0.25, 152.40 0.69 late, cost class on the new log's dry pool (gap BQ:
+    -- lo 4.8 / 18.6 under the truth at Scorch's 150); 146.60 1.61 late (lo 73.7 under, past BQ's ~0.4 s) is untraced
+    -- (the BQ class or the unseen Master of Elements refund);
     -- the same three before the restore credit, which moved scorch 42.00 (a 9.502 -> 0.001) and fire_blast 136.50
     -- (never -> in:grain at the Citrine's use, lo-truth -817.4 -> -42.4)
     mage_fire = { 0.69, 3 }, -- 0.690, 3
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
-    -- { 0.42, 9 } -> { 1.51, 3 }: three late cost rows on the new log's dry pool (gap BQ, lo under the truth at the
-    -- cost): frostfire_bolt 112.80 0.23 (lo -7.1), scorch 118.00 2.51 (lo -41.9 at Scorch's 150, regen while casting),
-    -- frostfire_bolt 141.10 1.51 (lo -32.8); the same three before the restore credit (only 141.10's est moved)
-    mage_frostfire = { 1.51, 3 }, -- 1.510, 3
+    -- { 0.42, 9 } -> { 1.51, 3 }: three late cost rows on the new log's dry pool (lo under the truth at the cost):
+    -- frostfire_bolt 112.80 0.23 (lo -7.1, gap BQ), scorch 118.00 2.51 (lo -41.9 at Scorch's 150; untraced: the BQ
+    -- class or the unseen Master of Elements refund), frostfire_bolt 141.10 1.51 (lo -32.8); the same three before the
+    -- restore credit (only 141.10's est moved). 1.51 is the median over 3 rows; it rose because 6 rows closed (the
+    -- restore credit), not because rows got worse
+    mage_frostfire = { 1.51, 3 }, -- 1.510, 3 (Task FFB, ruling M13)
     -- { 0.23, 3 } -> { 0.29, 3 }: frostbolt 132.00 / 157.30 late 0.29 (cost class, lo 8.3 / 8.1 under the truth),
     -- 179.20 0.16 (slack)
     mage_frost = { 0.29, 3 }, -- 0.290, 3 (new pack 2026-11-12, R6 first measurement: frostbolt late, cost class)
