@@ -208,10 +208,11 @@ M.FLICKER = {
     -- agreement .971 / .947 / .975, was .971 / .974 / .974): flicker under the held 0.03
     -- re-pin e5a9cd2a2d -> e4ef929e54 (repin-druid-09 round 4; seeds 1-20 / 21-40 / 41-60 flicker 0.04 / 0.00 / 0.02
     -- (oracle 0.00 / 0.02 / 0.02), retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 301 / 326 / 322, agreement
-    -- .977 / .980 / .972): flicker 0.03 -> 0.05 (the measured worst + 0.01), heldReady 479 -> 326. Cause: the world
-    -- plays the new Feral log's build (Blood Frenzy 2/2's combo point on a builder's crit, Predatory Discipline's Bite,
-    -- Shifting Power, Ferocity 5/5's Rake 35); at seeds 1-20 the round 2 world read flicker 0.02, heldReady 426
-    ["Feral"] = { flicker = 0.05, retracted = 0, heldReady = 326 }, -- 0.56 / 0.89 / 0.56, 0
+    -- .977 / .980 / .972): heldReady 479 -> 326. Cause: the world plays the new Feral log's build (Blood Frenzy 2/2's
+    -- combo point on a builder's crit, Predatory Discipline's Bite, Shifting Power, Ferocity 5/5's Rake 35); at seeds
+    -- 1-20 the round 2 world read flicker 0.02, heldReady 426. Flicker row NOT moved: the owner's hold at 0.03 (L660
+    -- (b)); seeds 1-20's 0.04 is red for the owner (untraced per flip)
+    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 326 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
