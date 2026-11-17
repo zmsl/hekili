@@ -85,6 +85,15 @@ local function rankOf(r, k)
     return t > 0 and VS.Talent(t) or t == 0 and 1 or 0
 end
 
+-- Whether modifier k of slot r (`mod`, its aura's spell ID `js`), at its talent rank `rank`, prices ability a at `now`:
+-- a rank, its aura believed up on the player or a talent with no aura, a in its scope, not held by its `unless` aura.
+local function prices(r, k, mod, js, a, rank, now)
+    return rank > 0
+        and (js > 0 and VS.Aura("player", js, now) or mod.aura == nil and mod.talent ~= nil)
+        and inScope(r, k, a)
+        and not held(r, k, now)
+end
+
 --- Ability a's cost `c` on slot r after the cost modifiers in its scope whose aura is believed up on the player at
 --- `now` and whose talent (if any) has a rank, the value at that rank; one with a talent and no aura needs only the
 --- rank. The simulation's M.Apply (Engine/Schema/Races.lua) alike. Allocates nothing.
@@ -99,12 +108,7 @@ function I.CostMod(a, r, c, now)
         local rank = rankOf(r, k)
         -- shortcut: modifiers apply in list order, so a flat listed after a pct lands after it; wowsims adds every flat
         -- to the base before any percent (spell.go:1055). Upgrade when a pack gives one ability both kinds.
-        if
-            rank > 0
-            and (js[k] > 0 and VS.Aura("player", js[k], now) or mod.aura == nil and mod.talent ~= nil)
-            and inScope(r, k, a)
-            and not held(r, k, now)
-        then
+        if prices(r, k, mod, js[k], a, rank, now) then
             local p, f = mod.pct, mod.flat
             p, f = type(p) == "table" and p[rank] or p, type(f) == "table" and f[rank] or f
             if type(p) == "number" then
@@ -115,6 +119,29 @@ function I.CostMod(a, r, c, now)
         end
     end
     return c > 0 and c or 0
+end
+
+--- The factor the cost modifiers pricing ability a on slot r at `now` (I.CostMod) multiply its cost by, when each is a
+--- passive talent's percent (a talent, no aura: always in scope while the rank stands): the product of (1 + pct) at
+--- their ranks, 1 when none prices it; 0 when an aura's modifier (which comes and goes) or a flat one prices it, or the
+--- product is not above 0. I.LearnBases inverts it. Allocates nothing.
+function I.PassiveCostFactor(a, r, now)
+    local mods = r and M.costMods[r]
+    local m, js = 1, mods and M.modSpell[r]
+    for k = 1, mods and #mods or 0 do
+        local mod = mods[k]
+        local rank = rankOf(r, k)
+        if prices(r, k, mod, js[k], a, rank, now) then
+            local p, f = mod.pct, mod.flat
+            p, f = type(p) == "table" and p[rank] or p, type(f) == "table" and f[rank] or f
+            if mod.aura ~= nil or type(p) ~= "number" and type(f) == "number" then
+                return 0
+            elseif type(p) == "number" then
+                m = m * (1 + p)
+            end
+        end
+    end
+    return m > 0 and m or 0
 end
 
 --- A paid cast of ability a at t on slot r spends one believed stack of each charged modifier in its scope whose aura
