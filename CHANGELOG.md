@@ -21,7 +21,7 @@
 
 ### Fixed
 
-- Another addon that follows Hekili's displays can no longer stop the action bar glow, a display or the WeakAuras event from updating.
+- Another addon that follows Hekili's displays can no longer take the place of the action bar glow, a display or the WeakAuras event.
 
 - WeakAuras that react to Hekili's toggles (the `HEKILI_TOGGLE` event) now also see pause and resume, a toggle set with `/hekili set` and a mode chosen in the options, and are no longer told about a `/hekili set mode` word that is not a mode.
 
