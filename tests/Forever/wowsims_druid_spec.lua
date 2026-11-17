@@ -90,8 +90,11 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- enemy). The 5 never rows: 16.25 innervate -> cat_form (the powershift tie above); 23.25 shred -> rake (Rake fades
     -- in the instant wowsims Shreds: same-instant order, as the old 140.38); 44.13 shred (cost: the belief's energy lo
     -- 1.2 under the truth, energy secret: API-forced); 150.13 shifting_power -> shred (mana 686.5 against the 684 cost:
-    -- the belief's mana near cost, shared, as the old 111.89); 164.88 shred -> rake: UNTRACED (wowsims's Rake runs
-    -- 156.38-165.38; PROVISIONAL floor, repin-druid-09 report)
+    -- the belief's mana near cost, shared, as the old 111.89); 164.88 shred -> faerie_fire (traced, round 3 of
+    -- repin-druid-09, with the world talents in): wowsims's 161.63 Faerie Fire misses and its 6 s form cooldown holds
+    -- the recast to 167.63, but replay.lua's engineCooldown reads the kit's `(cat or bear) and 6 or 0` once at boot,
+    -- before the state sees Cat Form (0), so the replay client never puts it on cooldown and ours shows it from 162.80
+    -- (the old 162.38 row's class; central note repin-druid-09-4)
     it("Feral (wowsims.com) follows wowsims's casts", function()
         local r, line = ws.gate(
             "Feral (wowsims.com)",
