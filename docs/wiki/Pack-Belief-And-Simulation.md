@@ -11,7 +11,7 @@ Hekili Forever keeps two models of the game, the **belief** and the **simulation
 | Belief | What the addon believes happened, from observed events. Written by `now`. |
 | Simulation | The forecast of future casts. Written by `handler`. |
 | Read by both | The ability's declared fields: cost, cooldown, cast time, GCD, auras |
-| Belief only | `now`, `onCrit`, `onLand`, `now_finish`, `refundOnAvoid`, reactions |
+| Belief only | `now`, `onCrit`, `onLand`, `now_finish`, `refundOnAvoid`, `refundNowOnAvoid`, reactions |
 | Simulation only | `handler`, `start`, `tick`, `finish`, state functions and expressions |
 | Source | `src/Hekili/Game/` (belief), `src/Hekili/Engine/Sim/` (simulation) |
 
@@ -113,6 +113,7 @@ Some effects only the belief can see, because they depend on what happened: a cr
 - `onLand`: what only a landed hit gives, run once the cast's hit is settled as landed.
 - `now_finish`: a channel's twin of the simulation's `finish`, run when the channel ran to its end.
 - `refundOnAvoid`: the share of the cost given back when the target dodges, parries or misses.
+- `refundNowOnAvoid`: on that avoid, what the cast's `now` spent from the ability's resource also comes back.
 - Reactions (`RegisterReaction`): a `now` function run by an observed outcome instead of a cast ([Pack windows and reactions](Pack-Windows-And-Reactions)).
 
 The simulation's `start`, `tick` and `finish` (a channel in progress) and its state functions and expressions have no belief twin, except `finish` through `now_finish`. Each field is described on [Pack abilities reference](Pack-Abilities-Reference).
