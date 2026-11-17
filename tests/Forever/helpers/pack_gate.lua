@@ -76,7 +76,15 @@ M.FLICKER = {
     -- float-rounding edge in the Warrior entry's last(), floor((t - swing) / speed), used to credit a landed swing at once
     -- after a parry pull; P3 confirms it one poll later (GAP AK's ORACLE_MIN), so ours shows the oracle's icon waiting
     -- 0.12-0.20 s. Not a rage error (trace: flicker-085 report, "Trace: Arms/Fury held trips")
-    ["Arms"] = { flicker = 0.08, retracted = 0.1, readyShort = 3, heldReady = 279 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6; with gap-as-09, avoid-refund-09 and Execute's
+    -- refundNowOnAvoid; seeds 1-20 / 21-40 / 41-60 flicker 0.06 / 0.04 / 0.08, retracted 0 / 0 / 0, readyShort 1 / 0 /
+    -- 0, heldReady 316 / 239 / 266): readyShort 3 -> 1; heldReady 279 -> 316, per fight (seeds 1-20, the gate's boot)
+    -- only seeds 5 (4 -> 30) and 6 (8 -> 19) move: ab8ad0acc's world rule (an avoided Execute keeps its extra rage)
+    -- moves seed 2's kill 4.8 s, so seeds 5 and 6 start on another boot clock and land on the P3 float-rounding edge
+    -- above (one held tick per swing, 0.12-0.20 s; each alone on a fresh boot reads 27 / 8 before and after the rule);
+    -- seed 6 +1 more: this round (gap-as-09, avoid-refund-09, Execute's field; not split) re-times it from 126 s (a
+    -- Rend wait 2.79 s, truth 11.0 against its 10)
+    ["Arms"] = { flicker = 0.08, retracted = 0.1, readyShort = 1, heldReady = 316 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
@@ -102,7 +110,11 @@ M.FLICKER = {
     -- 2 involve a landed, unpaid swing. Measured .48 / .39 / .44 (seeds 1-20 / 21-40 / 41-60) after the world charge fix 8a5dfbf2a.
     -- 0.49 -> 0.56 (L880): the world's Reckless Swings aura now ends at the 4th charge as in wowsims; the truer world is more
     -- volatile (oracle flicker 0.48 -> 0.68) and ours measures 0.54 against it.
-    ["Fury L60"] = { flicker = 0.56, flickerK = 0.6, retracted = 0.21, readyShort = 26, heldReady = 228 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6; with gap-as-09, avoid-refund-09 and Execute's
+    -- refundNowOnAvoid; seeds 1-20 / 21-40 / 41-60 flicker 0.18 / 0.34 / 0.49 (oracle 0.65 / 0.61 / 0.70), retracted
+    -- 0.07 / 0.04 / 0, readyShort 15 / 2 / 5, heldReady 156 / 169 / 171): tightened to the measurement, flicker 0.56 ->
+    -- 0.51 (the measured worst + 0.01), readyShort 26 -> 15, heldReady 228 -> 171; retracted kept
+    ["Fury L60"] = { flicker = 0.51, flickerK = 0.6, retracted = 0.21, readyShort = 15, heldReady = 171 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -143,7 +155,16 @@ M.FLICKER = {
     -- anchor; seeds 1-20 / 21-40 / 41-60 heldReady 309 / 306 / 371, the same after review R3): heldReady 370 -> 371, one
     -- event, seed 58 tick 4: the forecast now equals the truth (15.05 with the off hand's rage), so ours shows the
     -- oracle's sunder_armor waiting 0.20 s for the swing's confirmation where it showed rend before (a disagreement)
-    ["Fury L24"] = { flicker = 0.43, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 371 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6; with gap-as-09, avoid-refund-09 and Execute's
+    -- refundNowOnAvoid; seeds 1-20 / 21-40 / 41-60 flicker 0.20 / 0.29 / 0.27 (oracle 0.38 / 0.72 / 0.44), retracted 0
+    -- / 0 / 0, readyShort 0 / 0 / 0, heldReady 377 / 282 / 364): flicker 0.43 -> 0.30 (the measured worst + 0.01);
+    -- heldReady 371 -> 377 (seeds 1-20 on the gate's boot; 309 at the lane's base d17b7d45e, held ticks mostly Heroic
+    -- Strike's `rage.lo>=40` wait at truth 40-41, gap CJ's class (1) above): ab8ad0acc's world rule (an avoided Execute
+    -- keeps its extra) moves seed 5's kill 6.4 s, so seeds 6-20 start on another boot clock (seeds 6, 9, 14, 15, 17, 20
+    -- alone on a fresh boot read the same before and after the rule; seed 11 alone 30 -> 14, the rule moving that
+    -- fight directly); this round (gap-as-09, avoid-refund-09, Execute's field; not split) moves seed 1, the boot's
+    -- first fight, 21 -> 22 (an Execute held at 102.80)
+    ["Fury L24"] = { flicker = 0.30, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 377 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
