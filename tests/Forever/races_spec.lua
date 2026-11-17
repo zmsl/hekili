@@ -290,7 +290,10 @@ describe("race packs", function()
             load("Gnome", nil, "MAGE")
             local blast = ability("arcane_blast", { id = 400574, spend = 0.15, spendType = "mana" })
             state.buff.eureka = { up = true, count = 3 }
-            assert.is_true(math.abs(blast.spend - 0.135) < 1e-9) -- a percent cost (ManaCost 0 in SpellPower) is in scope
+            -- a percent cost (ManaCost 0 in SpellPower) is in scope: the fraction stays as declared and its whole price
+            -- takes the cut (ns.SpendPoints, Engine/Sim/State.lua)
+            assert.are.equal(0.15, blast.spend)
+            assert.is_true(math.abs(ns.costMods.Apply(182, blast, true) - 163.8) < 1e-9)
             load("Gnome", nil, "DRUID")
             assert.are.same({ 1, 0 }, { #ns.raceMods.maxMods, #ns.raceMods.costMods })
         end
