@@ -2121,6 +2121,26 @@ describe("now handlers", function()
                 end
             )
 
+            -- review I1 check (a): a swing's rage is in at PLAYER_SWING, its wound ~0.47 s later; a rung between them
+            -- lifts lo/est and is owed by that wound (Resources.lua owe). The give-back explains the lift, so the
+            -- wound after the avoid pays its whole step: 40 - 10 + 9 = 39, not 30
+            it("a swing before the rung, its wound after the avoid: the wound pays its whole step", function()
+                rest(true, false)
+                cast(fs.SPENDER_C, 5)
+                ctl.now = 5.03
+                ctl.Fire("PLAYER_SWING", 3.6, 0) -- the swing's rage (9) is in; its wound comes later
+                ctl.usable[fs.SPENDER_B] = { true, false } -- the rung: at least 15
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.04)
+                ctl.usable[fs.SPENDER_B] = nil
+                outcome(5.05, "DODGE")
+                assert.are.equal(30, rage(5.1).est) -- the floor: no gain since the cast counted
+                ctl.now = 5.5
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 100, 1) -- the swing's wound lands
+                drain(5.55)
+                assert.are.equal(39, rage(5.6).est)
+            end)
+
             -- review I1: poll 2 re-asks every tracked spender each drain, so a standing usable answer (the live case)
             -- lifts lo and est to its rung right after the cast zeroes them
             for _, field in ipairs({ true, false }) do
