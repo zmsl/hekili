@@ -781,10 +781,12 @@ describe("Forever Mage priorities", function()
         local cls = ld.load(nil, FILE, "MAGE")
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
         -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items and the mana gem, and the High Order Skyborne race
-        -- file's Read Ley Line and Energized, and the racials rule 13 adds (Hekili_Shared/Races/)
+        -- file's Read Ley Line and Energized, and the racials rule 13 adds (Hekili_Shared/Races/); Robe of the Archmage
+        -- (Hekili_Shared/Shared/Consumables.lua, rule 13's autocastOtherCooldowns line)
         local shared = {
             use_items = true,
             mana_gem = true,
+            robe_of_the_archmage = true,
             call_action_list = true,
             read_ley_line = true,
             energized = true,
