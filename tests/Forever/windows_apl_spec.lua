@@ -1973,6 +1973,35 @@ describe("named cases, part D (windows design v6 §13)", function()
         end
     )
 
+    it("D03: a display not walked at step 2: its key advances on casts; past the step timeout no stale hold", function()
+        H.Hekili.Engine.settings.toggles.mode.value = "dual"
+        load({
+            default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance:defensive_stance\n"
+                .. "actions+=/battle_shout",
+        })
+        local sub = function() end
+        assert.is_true(H.Hekili.Engine.Subscribe("AOE", sub))
+        tick()
+        cast(BR)
+        tick()
+        assert.are.same({ true, 2 }, { seqState("s", "AOE") })
+        H.Hekili.Engine.Unsubscribe("AOE", sub) -- AOE is not walked: it sends nothing
+        cast(BS)
+        tick()
+        assert.are.same({ true, 3 }, belief("s", "AOE").up and { true, belief("s", "AOE").step })
+        H.Hekili.Engine.Subscribe("AOE", sub)
+        tick()
+        assert.are.equal("defensive_stance", H.Hekili.Engine.Output.AOE.recs[1].actionName) -- held at step 3
+        H.Hekili.Engine.Unsubscribe("AOE", sub)
+        for _ = 1, 25 do -- 5 s: past the 4 s step timeout
+            tick()
+        end
+        assert.is_false(belief("s", "AOE").up)
+        H.Hekili.Engine.Subscribe("AOE", sub)
+        tick()
+        assert.are.equal("battle_shout", H.Hekili.Engine.Output.AOE.recs[1].actionName) -- no stale hold
+    end)
+
     it("S10: the first member cast before the line is ever chosen: no window, step 2 not shown", function()
         load({
             default = "actions+=/strict_sequence,name=s,if=test_fa:bloodrage:berserker_stance\nactions+=/defensive_stance",
