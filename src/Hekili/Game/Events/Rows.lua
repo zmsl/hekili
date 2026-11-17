@@ -71,6 +71,32 @@ local function tieHolder(t, g, amount, flag)
     return nil
 end
 
+-- The PROV swing on `g` whose tied avoid came in open cast ticket p's own frame (tieP), for a white wound at t that p
+-- would take and the swing's hand classes: in the swing's core band (`band`, the cast's own frame: ledger L80), else
+-- anywhere in its window (past the cast's frame: L629). Nil when none. Allocates nothing.
+local function tiedTo(p, t, g, amount, flag, band)
+    if T.state[p] ~= T.OPEN then
+        return nil
+    end
+    for i = 1, T.CAP do
+        local h = T.x[i]
+        if
+            tieP[i] == p
+            and tieAt[i] == T.at[p]
+            and T.state[i] == T.PROV
+            and T.kind[i] == MELEE
+            and T.at[i] == tieSw[i]
+            and T.guid[i] == g
+            and t - T.at[i] <= T.w[i]
+            and (not band or math.abs(t - T.at[i] - L.med[h]) <= 2 * L.spr[h])
+            and M.classOf(h, amount, flag) > 0
+        then
+            return i
+        end
+    end
+    return nil
+end
+
 -- Gap AS, the forward order: the oldest swing of ours on `g` anchored before `at0` (a cast's success) that still owes
 -- its row at t (no row yet, its window holding t), or 0. Allocates nothing.
 local function owedBefore(t, g, at0)
@@ -733,6 +759,17 @@ local function route(t, g, uid, act, flag, amount, school)
     if p == 0 and not credited and not tied then
         p, n = T.Pick(t, g, 4, act, flag, amount, school, avoid)
         pass = 4
+    end
+    -- AS (ledger L80, L629): a white wound for the open cast whose own-frame avoid the tie gave a swing of ours is that
+    -- swing's own (its hand's class; in its core band in the cast's frame, past the frame anywhere in its window): the
+    -- swing landed, so the avoid goes back to the cast (creditSwing)
+    if p > 0 and white and not avoid and not secret then
+        local i = tiedTo(p, t, g, amount, flag, pass == 1)
+        if i then
+            local h = T.x[i]
+            p, credited, lr, ref, lag, second = 0, i, math.huge, h, t - T.at[i], 0
+            k = M.thetaIndex(h, M.classOf(h, amount, flag), h, lag)
+        end
     end
     if p > 0 then
         -- past p's own frame, inside an unmapped success's window: nobody's, and p's expiry is not a lost row (it

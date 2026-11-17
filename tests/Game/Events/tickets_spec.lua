@@ -741,6 +741,9 @@ describe("the ticket pool", function()
         -- gap AS, the tie's wound (ledger L80, Rend): the cast's own-frame dodge went to the swing in flight by the
         -- MELEE tie; the swing's own wound 6 ms later falls in the cast's frame too, and the cast's open ticket took it
         it("gives the swing its own wound in the tied cast's frame, and the dodge back to the cast (L80)", function()
+            ctl.now = 150
+            ctl.damage = { 25, 35, 10, 12 } -- 30 is the main hand's (exact)
+            ctl.Fire("PLAYER_REGEN_ENABLED")
             ctl.now = 163.13
             ctl.Fire("PLAYER_SWING", 2.6, 0)
             local sw = T.lastSwing[1]
@@ -758,6 +761,9 @@ describe("the ticket pool", function()
         -- gap AS (ledger L629, Feral Rake): the same tie, the swing's own wound outside its core band (lag 0.674) and
         -- past the cast's frame; the cast's open ticket took it, so the cast was believed landed with no refund
         it("gives the swing its own wound past the tied cast's frame outside its core band (L629)", function()
+            ctl.now = 150
+            ctl.damage = { 25, 35, 10, 12 }
+            ctl.Fire("PLAYER_REGEN_ENABLED")
             ctl.now = 163.13
             ctl.Fire("PLAYER_SWING", 2.6, 0)
             ctl.now = 163.54
