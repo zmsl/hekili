@@ -195,6 +195,8 @@ M.MAP = {
     },
     rip = { effect = debuff("rip"), points = "all" },
     -- the extra energy goes with the hit, kept with Predatory Discipline (wowsims e4ef929e54 ferocious_bite.go:22-35)
+    -- shortcut: world.lua's `drain` runs on an avoided bite too; no world plays Bite without Predatory Discipline
+    -- (Feral's build has it), upgrade to a drain on the landed hit when one does
     ferocious_bite = {
         effect = hit("ferocious_bite"),
         points = "all",

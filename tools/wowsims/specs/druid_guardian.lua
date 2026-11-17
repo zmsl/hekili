@@ -10,21 +10,22 @@
 -- behind the movement gate, a pre-pull Maul at 3 targets (CN21: its computed aura duration keeps the `!buff.maul.up`
 -- guard); the gear file unchanged. Owner deviation L1169 (decision C) is Feral's only: Guardian's groups have no
 -- other-target read (CN24) and ship whole.
--- Replay (4b0030a44b, `procs { ["9881:0"] = true }`: Maul's untagged Casting lines are wowsims's queue at each swing):
+-- Replay (e4ef929e54, `procs { ["9881:0"] = true }`: Maul's untagged Casting lines are wowsims's queue at each swing):
 -- the kit has no rage-from-damage-taken rule (`taken`: CN7's hook, a named gap), so the belief sees only the bear's own
--- rage (white swings, Primal Fury, Enrage): decisions on-GCD 0.632 (117). NAMED GAP (owner ruling 2026-11-07): the
--- shipped kit has no rage from hits taken (CN7; the belief cannot read hit amounts in game, L67); the floor is measured
--- without it (fresh-floor rule waived for this one cause). With the archived kit rule (lane-feralguardian-taken-wip.patch,
--- scratch, NOT shipped: do not land it blind) the replay is 0.923 (117) once CN7 and CN9 (the Druid world's rage knob)
--- land, but its replay flicker is 14.65/min (off-GCD Maul alternation; oracle 0.00). 9 misses with it, none a pack
--- line, by log time:
---   8.95 lacerate -> primal_bite, 10.45 primal_bite -> lacerate, 18.20 primal_bite -> lacerate, 23.95 lacerate ->
---   primal_bite, 38.20 primal_bite -> lacerate, 151.20 primal_bite -> lacerate: the belief's rage lo sits under the
---   true rage at Lacerate's 15 / Primal Bite's 18 (truth 15-34, lo 1.6-17.8: the hits' rage is an estimate band);
---   120.70 barkskin: `health.pct<=60` reads the player's health, secret in game (API-forced, as Frenzied Regeneration);
---   122.20 lacerate -> faerie_fire: Faerie Fire fades at 122.20, the instant wowsims casts Lacerate and recasts Faerie
---   Fire at 123.70 (same-instant order: replay limit);
---   179.70 lacerate -> bear_form: the fight's last decision, UNTRACED (the log ends at 180.00).
+-- rage (white swings, Primal Fury, Enrage): decisions on-GCD 0.574 (115). NAMED GAP (owner ruling 2026-11-07, extended
+-- to this pin by the controller, L1319): the shipped kit has no rage from hits taken (CN7; the belief cannot read hit
+-- amounts in game, L67); the floor is measured without it. The log's rage by source over 180 s: hits taken 1779.7 of
+-- ~2150 (~87%), white swings 101.2 (Maul replaces 64 of 72 swings), Primal Fury 105.0, Enrage 62.0. The re-pinned list
+-- spends 15 rage every GCD (Lacerate to 5 stacks, then Lacerate as the filler under Primal Bite), so all 49 misses are
+-- one class: the belief's rage 0-12 against a truth of 25-90 (Lacerate / Primal Bite cost 15); with rage believed ~0 the
+-- queue waits Primal Bite 3-5 s and a Faerie Fire / Demoralizing Roar refresh due at its believed expiry comes first.
+-- By pair (theirs -> ours): lacerate -> primal_bite 30, lacerate -> demoralizing_roar 9, lacerate -> faerie_fire 6,
+-- primal_bite -> faerie_fire 2, primal_bite -> demoralizing_roar 1, lacerate -> bear_form 1. Two carry a second cause:
+--   121.90 primal_bite -> faerie_fire: Faerie Fire fades 0.05 s after wowsims's Primal Bite (same-instant order:
+--   replay limit);
+--   178.90 lacerate -> bear_form: the believed Bear Form expiry at the log's end (180.00).
+-- With the archived kit rule (lane-feralguardian-taken-wip.patch, scratch, NOT shipped: do not land it blind) the old
+-- pin's replay was 0.923 (117) with 14.65/min flicker (off-GCD Maul alternation; oracle 0.00).
 -- Worked (Task 7g): the bear's 11.25 rage a white swing and a crit's 8.65 more; Primal Fury's 5 on our crits (16959) as
 -- the strikes' `onCrit`.
 -- Translation: `health.pct<25` (Frenzied Regeneration) and `<=60` (Barkskin) read the player's health, full while the

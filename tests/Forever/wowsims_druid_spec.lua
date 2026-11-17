@@ -95,17 +95,21 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- the recast to 167.63, but replay.lua's engineCooldown reads the kit's `(cat or bear) and 6 or 0` once at boot,
     -- before the state sees Cat Form (0), so the replay client never puts it on cooldown and ours shows it from 162.80
     -- (the old 162.38 row's class; central note repin-druid-09-4)
+    -- 0.94 -> 0.95 (0.954, 83/87) and flicker 0.7 -> 0 (0.00/min, oracle 0.00): replay-fncd-09 fa9cb8a64 (the replay
+    -- world reads a function cooldown at each cast: Faerie Fire's form 6 s and Shifting Power's 7.5, L1318/L1320) and
+    -- replay-flips-09 ade4d6379 (a flip whose middle icon wowsims casts that tick is excused, L1317). The 164.88 row is
+    -- gone (L1301's cause); the 4 left are the 16.25, 23.25, 44.13 and 150.13 rows above
     it("Feral (wowsims.com) follows wowsims's casts", function()
         local r, line = ws.gate(
             "Feral (wowsims.com)",
             content("druid_feral", W.Feral, "Feral (wowsims.com)", 60),
             "druid_feral",
-            0.94,
+            0.95,
             -- wowsims's Feral stands behind its target (no inFrontOfTarget in the request): the client says the mob
             -- targets someone else, so the pack's Shred lines run as wowsims's (L602)
             { notTargeted = true }
         )
-        assert.is_true(r.flicker <= 0.7, line)
+        assert.is_true(r.flicker <= 0, line)
     end)
     -- the pack's own worst idle at 60 (wowsims's energy pooling), seconds: 4.0 on central fix 22 round 1 (the live
     -- world's presses resolve from the driving instance, not the never-stepped oracle; L20 4.0 -> 3.0, L40 3.8 -> 3.4,
@@ -128,7 +132,12 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "druid_guardian",
             -- 0 -> 0.63 (0.632 of 117 decisions on-GCD; R6, truncated): no rage from hits yet (CN7): the kit has no `taken`, so
             -- the belief sees only the bear's own rage (0.923 with the archived rule: named gap in the recipe header). Old pin: 0.782 (61/78)
-            0.63,
+            -- 0.63 -> 0.57 (0.574, 66/115) re-pin e5a9cd2a2d -> e4ef929e54 (controller ruling L1319: the 2026-11-07 CN7
+            -- waiver extends to the new pin): the re-pinned adaptive list spends 15 rage every GCD (Lacerate to 5 stacks,
+            -- then Lacerate as the filler under Primal Bite), and ~87% of the log's rage comes from hits taken (1779.7 of
+            -- ~2150), which the belief cannot see (CN7): all 49 misses believe 0-12 rage at a truth of 25-90
+            -- (repin-druid-09-5). replay-fncd-09 / replay-flips-09 move no Guardian row
+            0.57,
             -- once the replay ends a cooldown at its log timestamp (the ready-time ruling)
             -- Maul's untagged Casting lines are wowsims's queue at each swing (Cost = 0); its Tag 1 line is the hit,
             -- when the game's cast succeeds
