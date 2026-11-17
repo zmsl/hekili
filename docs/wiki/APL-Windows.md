@@ -84,7 +84,9 @@ actions.windows+=/window,name=pool,duration=6,refresh=1,max_refresh=2,max_durati
 ## Sequences
 
 A `sequence` or `strict_sequence` line declares a window named by its `name=` and holds its members as steps, in
-SimC's syntax: options in the first colon-separated part, then one member per part, each with its own options.
+SimC's syntax: options in the first colon-separated part, then one member per part, each with its own options. An
+ability may appear more than once in a sequence, each time with its own `if=`, which is read only while that position
+is due.
 
 ```
 actions+=/restart_sequence,name=opener,if=window.opener.done

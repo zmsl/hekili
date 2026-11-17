@@ -491,11 +491,13 @@ A plain sequence's generated lines, in order at the sequence's position, all und
 (SimC: a sequence whose `if=` is false is not ready and does nothing):
 1. the open line (OPEN when the copy is closed);
 2. with `mode=skip` only, the skip line (STEP);
-3. one line per distinct member: `<member>,if=window.<w>.next.<member>&<the member's own condition>`. With
-   `mode=wait` the due member's line is accepted with its wait.
+3. one line per member, in order; the line of position K is
+   `<member>,if=window.<w>.step=K&<the member's own condition>`. Only the due position's line can pass, so an
+   ability that appears twice is judged by the condition written at the due position (SimC and wowsims judge the
+   due step's action only). With `mode=wait` the due member's line is accepted with its wait.
 
-Other lines of the priority may read `window.<w>.next.<member>` too. A cast advances the step whichever line
-recommended it. This is how one member can be offered at several list positions (the `hha` conversion, section
+Other lines of the priority may read `window.<w>.next.<member>` too; it is true at every position that holds that
+ability; `window.<w>.step` tells positions apart. A cast advances the step whichever line recommended it. This is how one member can be offered at several list positions (the `hha` conversion, section
 10).
 
 In the pass:
@@ -519,8 +521,8 @@ In the pass:
   held sequence takes slot 1 whenever it is ready, and pressing it ends the sequence; the author's to manage (ruling
   7). An engine check, not a generated line, so it does not depend on `run_action_list` blocking. `precombat` gets
   the same check.
-- Hidden list lines: `<member>,if=window.<w>.next.<member>&<the member's own condition>`. The sequence's condition
-  is not re-read once a strict sequence is open.
+- Hidden list lines: the line of position K is `<member>,if=window.<w>.step=K&<the member's own condition>`. The
+  sequence's condition is not re-read once a strict sequence is open.
 - A plain sequence has no hold.
 - `open_window` / `close_window` on a sequence's name are allowed (ruling 23): a close line is a way to abort a
   sequence; an open line on a strict sequence starts its hold without the line being chosen; an open line on a
@@ -1262,6 +1264,8 @@ Small points the rulings imply but do not spell out. Each is the narrowest readi
   name raises at registration.
 - The two fields also apply to the any-member start test of `allow_skip=1`, for members after the first; the
   ruling says "a strict sequence's start test" without naming the variant.
+- v6's "one line per distinct member" is read as one line per position, keyed on `window.<w>.step=K`, so a
+  repeated member's own `if=` is read only at its position (Fable for the owner, L1290).
 - G03 passes when the sequences start; the missed-press number is reported, since no ruling sets a threshold.
 - Phase 2's CPU gate is defined in section 12 (shipped packs unchanged, three synthetic priorities measured); the
   rulings say only that the gate is in Phase 2.

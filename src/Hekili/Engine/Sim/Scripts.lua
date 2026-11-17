@@ -1851,8 +1851,9 @@ function scripts.CheckWindows( lists, packName )
                     byName[ name ] = decl
                     decls[ #decls + 1 ] = decl
                     -- the generated lines (§6): script IDs and the hidden lists, compiled by LoadScripts. `memberIDs`: each
-                    -- member's own if=; `seq:<name>`: one line per member under `window.<name>.next.<member>` (the plain
-                    -- sequence's in-place lines and the strict hold); `seqstart:<name>` (strict): the start line's members
+                    -- member's own if=; `seq:<name>`: one line per position K under `window.<name>.step=K`, so a repeated
+                    -- member is judged by the condition at the due position (the plain sequence's in-place lines and the
+                    -- strict hold); `seqstart:<name>` (strict): the start line's members
                     local id = tostring( packName ) .. ":" .. list .. ":" .. i
                     decl.id, decl.members, decl.memberIDs = id, members, {}
                     decl.skipID, decl.giveID, decl.hidden, decl.startList = id .. ":skip", id .. ":give", "seq:" .. name, "seqstart:" .. name
@@ -1862,7 +1863,7 @@ function scripts.CheckWindows( lists, packName )
                         local h, st = {}, {}
                         for f, v in pairs( m ) do h[ f ], st[ f ] = v, v end
                         local own = m.criteria and m.criteria ~= "" and ( "&(" .. m.criteria .. ")" ) or ""
-                        h.criteria, h.enabled, st.enabled = "window." .. name .. ".next." .. steps[ k ] .. own, true, true
+                        h.criteria, h.enabled, st.enabled = "window." .. name .. ".step=" .. k .. own, true, true
                         decl.hiddenEntries[ k ], decl.startEntries[ k ] = h, st
                         decl.hiddenIDs[ k ] = tostring( packName ) .. ":" .. decl.hidden .. ":" .. k
                         decl.startIDs[ k ] = tostring( packName ) .. ":" .. decl.startList .. ":" .. k

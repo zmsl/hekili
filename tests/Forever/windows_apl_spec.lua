@@ -2584,3 +2584,132 @@ describe("a running GCD (ruling 28: an on-GCD member is judged at the GCD's end;
         assert.are.equal("hamstring", recs[1].actionName)
     end)
 end)
+
+-- (review I1, Fable L1290) A member's own if= belongs to its position: the generated line of position K reads
+-- window.<w>.step=K. Hamstring and Rend: on-GCD members with no cooldown, so a repeated one is castable at both.
+describe("member lines keyed on their position (windows design v6 §6; review I1)", function()
+    local REPEAT = ":hamstring,if=test_fa:rend:hamstring,if=!test_fa"
+
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+        gcdRig()
+    end)
+
+    it("compiles window.<w>.step=<K> and the own condition; no script error, no recheck from the step term", function()
+        load({ default = "actions+=/sequence,name=p,mode=continue" .. REPEAT })
+        local d = H.Hekili.Scripts.appliedWindows.byName.p
+        assert.are.same({ "window.p.step=1&(test_fa)", "window.p.step=2", "window.p.step=3&(! test_fa)" }, {
+            d.hiddenEntries[1].criteria,
+            d.hiddenEntries[2].criteria,
+            d.hiddenEntries[3].criteria,
+        })
+        for k = 1, 3 do
+            assert.is_nil(H.Hekili.Scripts.DB[d.hiddenIDs[k]].Error, k)
+        end
+        assert.is_nil(H.Hekili.Scripts.DB[d.hiddenIDs[2]].RecheckScript)
+    end)
+
+    it(
+        "plain, continue and wait: a repeated member is judged by the condition at the due position (probe P2)",
+        function()
+            for _, mode in ipairs({ "continue", "wait" }) do
+                boot()
+                gcdRig()
+                -- the reader below (test 3): next.<member> is true at every position holding hamstring
+                load({
+                    default = "actions+=/sequence,name=p,mode="
+                        .. mode
+                        .. REPEAT
+                        .. "\nactions+=/battle_shout,if=window.p.next.hamstring",
+                })
+                local below = mode == "continue" and "battle_shout" or nil
+                flags.fa = false -- step 1, its own condition false (position 3's true)
+                local recs, sent = tick()
+                local all = { sent }
+                assert.are.equal(below, recs[1].actionName, mode .. " step 1")
+                flags.fa = true
+                recs, sent = tick()
+                all[#all + 1] = sent
+                assert.are.equal("hamstring", recs[1].actionName, mode .. " step 1 true")
+                cast(HS)
+                recs, sent = tick()
+                all[#all + 1] = sent
+                assert.are.same({ true, 2 }, { seqState("p") }, mode)
+                assert.are.equal("rend", recs[1].actionName, mode .. " step 2")
+                cast(RD)
+                recs, sent = tick() -- step 3, test_fa true: its own condition false (position 1's true)
+                all[#all + 1] = sent
+                assert.are.same({ true, 3 }, { seqState("p") }, mode)
+                assert.are.equal(below, recs[1].actionName, mode .. " step 3")
+                flags.fa = false
+                all[#all + 1] = select(2, tick()) -- a change between two picks that both wait on the GCD shows one poll late
+                recs, sent = tick()
+                all[#all + 1] = sent
+                assert.are.equal("hamstring", recs[1].actionName, mode .. " step 3 true")
+                cast(HS)
+                tick()
+                assert.are.same({ true, 4 }, { seqState("p") }, mode) -- parked
+                S.delay = 0
+                assert.is_true(S.window.p.done, mode)
+                assert.are.same({ { { key("p"), OPEN } }, {}, {}, {}, {}, {} }, all, mode)
+                H.Fire("PLAYER_REGEN_ENABLED")
+            end
+        end
+    )
+
+    it(
+        "strict hold under a running GCD: no member shown under another position's condition; give-up at its end",
+        function()
+            load({
+                default = "actions+=/strict_sequence,name=s,start_on_first=1,hold_off_gcd=1"
+                    .. REPEAT
+                    .. "\nactions+=/battle_shout",
+            })
+            flags.fa = true
+            local _, sent = tick()
+            assert.are.same({ { key("s"), OPEN } }, sent)
+            cast(HS)
+            tick()
+            assert.are.same({ true, 2 }, { seqState("s") })
+            cast(RD) -- step 3 (hamstring, if=!test_fa) with test_fa true; Rend's GCD runs
+            local seen, closed = 0, false
+            for _ = 1, 10 do
+                local recs
+                recs, sent = tick()
+                if gcdSeen > 0.05 then
+                    seen = seen + 1
+                    assert.are_not.equal("hamstring", recs[1].actionName)
+                    assert.are.same({}, sent)
+                elseif not closed then -- the give-up's CLOSE; member 1's condition holds, so the line starts it again
+                    assert.are.same({ { key("s"), CLOSE }, { key("s"), OPEN } }, sent)
+                    assert.are.equal("hamstring", recs[1].actionName)
+                    closed = true
+                end
+            end
+            assert.is_true(seen >= 3, seen)
+            assert.is_true(closed)
+        end
+    )
+
+    it(
+        "the shape that ships (10.2): a repeated member with no conditions shows at both positions, then done",
+        function()
+            load({
+                default = "actions+=/sequence,name=h,mode=continue:hamstring:hamstring:rend\nactions+=/battle_shout",
+            })
+            local recs, sent = tick()
+            assert.are.same({ { key("h"), OPEN } }, sent)
+            for step, want in ipairs({ "hamstring", "hamstring", "rend" }) do
+                recs, sent = tick()
+                assert.are.same({}, sent, step)
+                assert.are.same({ true, step }, { seqState("h") }, step)
+                assert.are.equal(want, recs[1].actionName, step)
+                cast(want == "rend" and RD or HS)
+            end
+            recs = tick()
+            assert.are.same({ true, 4 }, { seqState("h") })
+            assert.are.equal("battle_shout", recs[1].actionName)
+        end
+    )
+end)
