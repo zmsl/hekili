@@ -118,19 +118,20 @@ local PACKS = {
     },
     -- re-pin e5a9cd2a2d: the adaptive list puts the upkeep Lacerate and Roar first, the rage dump (Maul) last
     -- re-pin e4ef929e54: the leveling Maul (2) heads the default list; the 2-target, 3-target and single-target groups
-    -- each keep their upkeep (2) and their Maul (1)
+    -- each keep their upkeep (2) and their Maul (2: a rage dump as Heroic Strike, always tier 2; Fable for the owner
+    -- 2026-11-17, L1302)
     ["Druid/APLs/Guardian"] = {
         "maul=2",
         "demoralizing_roar=2",
         "lacerate=2",
-        "maul=1",
-        "maul=1",
+        "maul=2",
+        "maul=2",
         "demoralizing_roar=2",
         "lacerate=2",
         "lacerate=2",
         "demoralizing_roar=2",
         "lacerate=2",
-        "maul=1",
+        "maul=2",
     },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },
     -- Frost (new pack): Cone of Cold on five Winter's Chill stacks and Ice Lance on a Fingers of Frost charge 1, Ice

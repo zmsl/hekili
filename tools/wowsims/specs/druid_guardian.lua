@@ -65,10 +65,9 @@ return {
     -- Faerie Fire's armor and Demoralizing Roar's attack power are exclusive effects (wowsims
     -- sim/core/debuffs_generated_test.go:326 with Curse of Recklessness, :446 with Demoralizing Shout): rule 10
     exclusive = { [9907] = true, [9898] = true },
-    -- by role (docs/dev/wowsims-packs.md): Maul a rage dump as Heroic Strike, tier 1 (the leveling Maul, a literal, at
-    -- 2); re-pin e4ef929e54: the adaptive list's three Maul lines (2-target, 3-target, single target) keep the one old
-    -- line's tier 1; Lacerate (every line) and Demoralizing Roar at 2
-    focus = { maul = { 1, 1, 1 }, lacerate = 2, demoralizing_roar = 2 },
+    -- by role (docs/dev/wowsims-packs.md): Maul a rage dump as Heroic Strike, always tier 2, every line (owner ruling
+    -- 2026-10-22 extended to Guardian, Fable for the owner 2026-11-17); Lacerate (every line) and Demoralizing Roar at 2
+    focus = { maul = 2, lacerate = 2, demoralizing_roar = 2 },
     -- Before Primal Bite Maul is the only rage sink: queued whenever affordable instead of at
     -- wowsims's 20, which pools for the on-GCD strikes a low-level bear lacks (ruling L18; silent once Primal Bite is
     -- known). The re-pin's adaptive list maintains Faerie Fire (#14) and Demoralizing Roar (#16, "Attack-power reduction

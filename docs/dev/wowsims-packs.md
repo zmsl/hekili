@@ -145,8 +145,8 @@ Translation:
   carry none. Tier 1 is a reactive or windowed line the player must catch: proc-, position- or stance-gated
   (Overpower, Revenge, Pyroblast on Heating Up, Arcane Missiles on Missile Barrage, Shred on
   Clearcasting) and Victory Rush (its kill window; a recipe `extra` line, so `victory_rush,focus=1` in the line itself).
-  The Warrior rage dumps Heroic Strike and Cleave are always tier 2, every line of them (owner ruling 2026-10-22,
-  superseding the 2026-10-21 `{ 1, 2 }` form).
+  The rage dumps Heroic Strike, Cleave and the Guardian's Maul are always tier 2, every line of them (owner ruling
+  2026-10-22, superseding the 2026-10-21 `{ 1, 2 }` form).
   Tier 2 is upkeep: DoTs, debuffs, buffs, seals and shields kept up (not totems) (Rend, Rake, Rip, Moonfire,
   Scorch for Fire Vulnerability, Hunter's Mark, Demoralizing Roar, Flame Shock). Cooldowns, consumables, defensives,
   movement and pre-pull lines carry none (the translator drops a tier on a `prepull_at` line). A line whose role is
