@@ -19,6 +19,8 @@
 
 ### Fixed
 
+- A recommendation that changes and changes straight back no longer flashes the other ability for a split second.
+
 - Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 
 ### Known issues
