@@ -67,6 +67,34 @@ describe("the Feral loop world's press", function()
             assert.are.same({ dw.GCD.totem, dw.GCD.spell }, got)
         end
     )
+
+    -- The build the Feral log plays (its header: 16958=2 Blood Frenzy, 1328613=1 Predatory Discipline): wowsims
+    -- e4ef929e54 talents_feral_combat.go:146 (a builder's crit in Cat Form, one more combo point: 100% at 2/2, the
+    -- log's 2.01 "from {SpellID: 16958}") and ferocious_bite.go:22-35 (the extra energy stays).
+    local POINTS = require("Forever.helpers.druid_world").POINTS
+    local function feralPress(key, power, points, crit)
+        local C = dlw.Feral
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local p = C.resolve(key, H)
+        local W = scenarios.world(setmetatable({ power = power, form = C.character().form }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1
+        W.crit = crit and 1 or 0
+        us.target.avoid = {}
+        us.res[POINTS].cur = points
+        local ok, why = W.press(us, key, p)
+        assert.is_true(ok, tostring(why))
+        return W.res(us, POINTS), us.power, p.cost
+    end
+    it("gives a builder's crit in Cat Form Blood Frenzy's second combo point, a plain hit one", function()
+        local got = { (feralPress("shred", 100, 0, true)), (feralPress("rake", 100, 0, false)) }
+        got[3] = feralPress("claw", 100, 4, true) -- capped at 5
+        assert.are.same({ 2, 1, 5 }, got)
+    end)
+    it("keeps Ferocious Bite's extra energy (Predatory Discipline) and spends the combo points", function()
+        local points, energy, cost = feralPress("ferocious_bite", 90, 5, false)
+        assert.are.same({ 0, 90 - cost }, { points, energy })
+    end)
 end)
 
 describe("the Guardian loop world's press", function()
