@@ -1091,7 +1091,7 @@ Group D, displays and keys (unit; D02 also harness):
 | D01 | Primary and AOE both on, flag true for one target count only | OPEN under one display's key only; the other key stays closed; each display reads its own |
 | D02 | Cooldowns separate, AOE on, a `sequences` value stored for Cooldowns by an older profile; strict `classcd:nuke`, and plain `classcd:filler` | Primary and AOE start it through ruling 25 (D14): OPEN on each key, two holds, one cast advances both (D11), `nuke` / `filler` shown at step 2; Cooldowns sends nothing, has no key and shows no member |
 | D03 | display turned off at step 2, on again later | its key advanced by casts meanwhile; no stale hold beyond the deadline |
-| D04 | one cast with the sequence open under three keys | all three advance |
+| D04 | one cast with the sequence open under several keys (the core makes two, Primary and AOE; the belief matrix uses three) | all advance |
 | D05 | the belief's API and log during D01 | only key strings appear; no display number, no line number (the ruling-1 check) |
 | D06 | D14 after the last step, and after a give-up | window closed: `classcd` is hidden from Primary again by the separate-toggle test on the next pass |
 | D07 | Cooldowns separate; strict `nuke:classcd` chosen in Primary | Primary shows `classcd` at step 2 (the separate-toggle test bypassed); Cooldowns may show it too through its normal list |

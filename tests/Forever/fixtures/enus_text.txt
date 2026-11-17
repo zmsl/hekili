@@ -13930,8 +13930,6 @@ options.displays.Cooldowns.main.pos.x	desc	Set the horizontal position for this 
 options.displays.Cooldowns.main.pos.x	name	X
 options.displays.Cooldowns.main.pos.y	desc	Set the vertical position for this display's primary icon relative to the center of the screen.  Negative values will move the display down; positive values will move it up.
 options.displays.Cooldowns.main.pos.y	name	Y
-options.displays.Cooldowns.main.sequences	desc	When on, this display runs the priority's sequence and strict_sequence lines. When off, it skips them as if they were not in the priority. Free-form windows work either way.\n\nOn by default for Primary and AOE.
-options.displays.Cooldowns.main.sequences	name	Sequences
 options.displays.Cooldowns.main.style	desc	Select how this display draws its recommendations.  Each style has its own settings tabs.
 options.displays.Cooldowns.main.style	name	Style
 options.displays.Cooldowns.main.style	values.classic	Classic
@@ -14822,8 +14820,6 @@ options.displays.Defensives.main.pos.x	desc	Set the horizontal position for this
 options.displays.Defensives.main.pos.x	name	X
 options.displays.Defensives.main.pos.y	desc	Set the vertical position for this display's primary icon relative to the center of the screen.  Negative values will move the display down; positive values will move it up.
 options.displays.Defensives.main.pos.y	name	Y
-options.displays.Defensives.main.sequences	desc	When on, this display runs the priority's sequence and strict_sequence lines. When off, it skips them as if they were not in the priority. Free-form windows work either way.\n\nOn by default for Primary and AOE.
-options.displays.Defensives.main.sequences	name	Sequences
 options.displays.Defensives.main.style	desc	Select how this display draws its recommendations.  Each style has its own settings tabs.
 options.displays.Defensives.main.style	name	Style
 options.displays.Defensives.main.style	values.classic	Classic
@@ -15714,8 +15710,6 @@ options.displays.Interrupts.main.pos.x	desc	Set the horizontal position for this
 options.displays.Interrupts.main.pos.x	name	X
 options.displays.Interrupts.main.pos.y	desc	Set the vertical position for this display's primary icon relative to the center of the screen.  Negative values will move the display down; positive values will move it up.
 options.displays.Interrupts.main.pos.y	name	Y
-options.displays.Interrupts.main.sequences	desc	When on, this display runs the priority's sequence and strict_sequence lines. When off, it skips them as if they were not in the priority. Free-form windows work either way.\n\nOn by default for Primary and AOE.
-options.displays.Interrupts.main.sequences	name	Sequences
 options.displays.Interrupts.main.style	desc	Select how this display draws its recommendations.  Each style has its own settings tabs.
 options.displays.Interrupts.main.style	name	Style
 options.displays.Interrupts.main.style	values.classic	Classic
@@ -16651,8 +16645,6 @@ options.displays.Multi.main.pos.x	desc	Set the horizontal position for this disp
 options.displays.Multi.main.pos.x	name	X
 options.displays.Multi.main.pos.y	desc	Set the vertical position for this display's primary icon relative to the center of the screen.  Negative values will move the display down; positive values will move it up.\n\n|cFF00B4FFPrimary:|r |cFFFFD100-225|r\n|cFF00B4FFAOE:|r |cFFFFD100-170|r\n|cFF00B4FFCooldowns:|r |cFFFFD100-280|r\n|cFF00B4FFDefensives:|r |cFFFFD100-225|r\n|cFF00B4FFInterrupts:|r |cFFFFD100-225|r
 options.displays.Multi.main.pos.y	name	Y
-options.displays.Multi.main.sequences	desc	When on, this display runs the priority's sequence and strict_sequence lines. When off, it skips them as if they were not in the priority. Free-form windows work either way.\n\nOn by default for Primary and AOE.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
-options.displays.Multi.main.sequences	name	Sequences
 options.displays.Multi.main.style	desc	Select how this display draws its recommendations.  Each style has its own settings tabs.\n\n|cFF00B4FFPrimary:|r |cFFFFD100Classic|r\n|cFF00B4FFAOE:|r |cFFFFD100Classic|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Classic|r\n|cFF00B4FFDefensives:|r |cFFFFD100Classic|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Classic|r
 options.displays.Multi.main.style	name	Style
 options.displays.Multi.main.style	values.classic	Classic

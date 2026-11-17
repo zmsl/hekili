@@ -1405,7 +1405,7 @@ describe("plain sequences (windows design v6 §6, rulings 12, 15, 26, 28)", func
         assert.is_false(S.window.x.up)
     end)
 
-    it("the Sequences toggle is on each display's page and hidden for the Multi pseudo display", function()
+    it("the Sequences toggle is on the Primary and AOE pages only (L1315; not Multi)", function()
         H.Hekili:EmbedDisplayOptions()
         local plugins = H.Hekili.Options.args.displays.plugins
         local function find(args)
@@ -1419,10 +1419,15 @@ describe("plain sequences (windows design v6 §6, rulings 12, 15, 26, 28)", func
                 end
             end
         end
-        local p, m = find(plugins.Primary.Primary.args), find(plugins.Multi.Multi.args)
-        assert.is_truthy(p)
-        assert.is_falsy(p.hidden and p.hidden())
-        assert.is_true(m.hidden())
+        for _, disp in ipairs({ "Primary", "AOE" }) do
+            local p = find(plugins[disp][disp].args)
+            assert.is_truthy(p, disp)
+            assert.is_nil(p.hidden, disp)
+        end
+        for _, disp in ipairs({ "Cooldowns", "Interrupts", "Defensives", "Multi" }) do
+            assert.is_truthy(plugins[disp][disp].args, disp)
+            assert.is_nil(find(plugins[disp][disp].args), disp)
+        end
     end)
 end)
 
@@ -1837,6 +1842,24 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
         assert.are.same({ true, 2 }, { seqState("s") })
         assert.are.equal("bloodrage", recs[1].actionName)
         cds.value = false
+        recs, sent = tick()
+        assert.are.same({ { key("s"), CLOSE } }, sent)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+    end)
+
+    it("D06: once the window closes, the bypass ends: classcd's own line is hidden from Primary again", function()
+        load({
+            default = "actions+=/close_window,name=s,if=test_fa\n"
+                .. "actions+=/strict_sequence,name=s,if=!test_fa:berserker_stance:bloodrage\n"
+                .. "actions+=/bloodrage\nactions+=/defensive_stance",
+        })
+        tick()
+        cast(BS)
+        local recs = tick()
+        assert.are.same({ true, 2 }, { seqState("s") })
+        assert.are.equal("bloodrage", recs[1].actionName)
+        flags.fa = true
+        local sent
         recs, sent = tick()
         assert.are.same({ { key("s"), CLOSE } }, sent)
         assert.are.equal("defensive_stance", recs[1].actionName)
