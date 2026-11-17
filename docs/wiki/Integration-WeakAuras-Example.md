@@ -6,7 +6,7 @@ Prerequisites: [Integration reference](Integration-Reference#hekili_recommendati
 -->
 This page shows how to build a WeakAura icon that shows the first recommendation of the `Primary` display, with its keybind, from the `HEKILI_RECOMMENDATION_UPDATE` event. It is for players who want Hekili Forever's next ability inside their own WeakAuras layout. The [Integration overview](Integration-Overview) explains what the event promises.
 
-<!-- UNVERIFIED: the WeakAuras option names and the trigger state updater's calling convention are WeakAuras's, not checked in this repository or in game on Forever. -->
+<!-- UNVERIFIED: the option names, the trigger's calling convention and the next-frame run were checked against WeakAuras2's source (main at 5499776, 2026-11-16), not tried in game on the Forever client. -->
 
 ## Before you start
 
@@ -15,10 +15,10 @@ This page shows how to build a WeakAura icon that shows the first recommendation
 
 ## Steps
 
-1. Type `/wa` and create a new Icon aura.
-2. On the Trigger tab, set the type to Custom, then choose Trigger State Updater (TSU).
-3. In the event list, enter `HEKILI_RECOMMENDATION_UPDATE`.
-4. Paste this as the trigger function:
+1. Type `/wa`, click "New Aura" and choose "Icon".
+2. On the "Trigger" tab, set "Type" to "Custom" and "Event Type" to "Trigger State Updater (Advanced)". Leave "Check On..." at "Event(s)".
+3. In "Event(s)", enter `HEKILI_RECOMMENDATION_UPDATE`.
+4. Paste this into "Custom Trigger":
 
    ```lua
    function(allstates, event, display, actionID, indicator, _, payload)
@@ -51,8 +51,10 @@ This page shows how to build a WeakAura icon that shows the first recommendation
    end
    ```
 
-5. In the custom variables box, enter `{ keybind = "string", wait = "number" }` so the display can use the two extra values.
-6. On the Display tab, add a text with `%keybind` to show the key bound to the ability.
+5. In "Custom Variables", enter `{ keybind = "string", wait = "number" }`, so that the aura's conditions can test the two extra values.
+6. On the "Display" tab, click "Add Text" and set the new text to `%keybind` to show the key bound to the ability. The icon itself shows `state.icon` without any setting.
+
+WeakAuras calls the trigger as `function(allstates, event, ...)`, with the event's own arguments after its name. It also calls it with other events, such as `OPTIONS` while the aura is edited, which is why the function returns `false` for any other event. WeakAuras runs the trigger on the frame after Hekili Forever sends the event, so the payload then holds the display's latest recommendations.
 
 `rec.time` is the number of seconds from the update until the recommendation is due, 0 when it is ready. `rec.keybind` is the same key text Hekili Forever's own display shows. The other fields a recommendation carries are listed in [the recommendation record](Contributing-Display-Styles-And-Integrations#the-recommendation-record).
 

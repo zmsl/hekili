@@ -134,13 +134,17 @@ The payload, the same for this event and for a [recommendation listener](#regist
 - When the display has no recommendation, the event is still sent and the listeners are still called, with every entry empty.
 - The copy is shallow. The tables inside a recommendation, such as `resources` and `alts`, are Hekili Forever's own and change on the next update. The payload and its entries are also the same tables on every update of a display. Copy the values you keep, and never change the payload.
 
-Example, a trigger function that tests for a recommendation on the `Primary` display:
+WeakAuras runs a trigger on the frame after the event is sent, so the payload it sees holds the display's latest recommendations then.
 
-<!-- UNVERIFIED: that a WeakAuras custom event trigger receives the event name first and then the event's arguments is WeakAuras's convention, not checked in this repository. -->
+Example, a WeakAuras custom trigger with "Event Type" set to "Status" and `HEKILI_RECOMMENDATION_UPDATE` in "Event(s)", true while the `Primary` display has a recommendation. WeakAuras calls it with the event's name first, then the event's arguments:
 
 ```lua
 function(event, display, actionID, indicator, _, payload)
-    return event == "HEKILI_RECOMMENDATION_UPDATE" and display == "Primary" and actionID ~= nil
+    -- a Status trigger runs again on the other displays' events: keep the Primary answer between them
+    if event == "HEKILI_RECOMMENDATION_UPDATE" and display == "Primary" then
+        aura_env.hasRecommendation = actionID ~= nil
+    end
+    return aura_env.hasRecommendation == true
 end
 ```
 
