@@ -66,6 +66,7 @@ Game\Events\Attackers.lua
 Game\API\Facade.lua
 Locales\enUS.lua
 Locales\zhCN.lua
+Locales\itIT.lua
 Locales\Locales.lua
 
 Hekili.lua
