@@ -50,7 +50,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         -- Tag 1 (Reflection 3/3 in the new build); was Tag 2's 31 and 22 (up > 30, down < 24). Lane R2: the casting
         -- rate is the one the log shows (it never leaves the rule); the not-casting rate this read before (up > 16,
         -- down < 13) was the replay world's, which answered a casting-only log with no spirit part (now M + S, 24.4)
-        -- re-pin e4ef929e54: Serenity Field's passive Spirit 14 -> 7 (the 11-13 item nerf) moves the log's casting
+        -- re-pin e4ef929e54: Serenity Field's passive Spirit 14 -> 7 (the 11-13 item nerf; unverified as the cause: it predicts ~12.17, the log reads 12.11) moves the log's casting
         -- regen to 12.11 a second and 16.61 inside the one Serenity Field window left (21.09-36.09 s; Innervate from
         -- 24.86 s, so the window read is 21.5-24.5 s); the log has no second use (was 112.21 s; the pack omits the
         -- trinket, so not traced)
