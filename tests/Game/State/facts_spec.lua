@@ -190,6 +190,15 @@ describe("facts and polls", function()
         assert.are.equal(811, mixedCut(0.03, 0.55, 1720, 24, 433))
     end)
 
+    -- The pack's base stays only while it prices the finest uncut read exactly, as with no cut read, even when a finer
+    -- cut read's looser keep test (either rounding) would hold it.
+    it("relearns a pack base the cut read would keep but the uncut read misprices", function()
+        -- the true base 613: 3% reads 18 (18.39); 35% is 215 whole (214.55), cut 208.55, read 209. The pack's 617 prices
+        -- the cut read 216 x 0.97 = 209.52 (kept truncated) but the uncut 19 (18.51): relearnt from the finer cut read,
+        -- 209 is only 215 cut, the base nearest 215 / 0.35 = 614.3
+        assert.are.equal(614, mixedCut(0.03, 0.35, 617, 18, 209))
+    end)
+
     it("learns no base from a read a passive talent's flat cost modifier cuts", function()
         passiveCut({ talent = "talent_a", flat = -5, spells = { fs.SPENDER_A } })
         ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 75 } }
