@@ -25,6 +25,9 @@ local REPLAY = {}
 -- Blessing of Wisdom at rank 1 or at the top rank, R25), replay flicker 0.67/min before and after, LIVE60 1.8 -> 1.8.
 -- Smite 0.93 -> 0.93 (0.932, 41 of 44 before and after; the log is unchanged, R25's top-rank blessing), replay flicker
 -- 1.00/min before and after, LIVE60 0.2 -> 0.2.
+-- Re-pin e5a9cd2a2d -> e4ef929e54 (Priest lane): both floors hold, Shadow 1.00 (1.000, 86 of 86), Smite 0.93 (0.932, 41 of
+-- 44), LIVE60 1.8 / 0.2 unchanged. The new logs differ (Shadow 640 lines, Smite 96) with no kit record, APL or request change;
+-- the upstream cause of the shifted log lines is not traced (no floor moved on it). Timing fixtures re-recorded.
 local PACKS = {
     { "priest_shadow", "Shadow", "Shadow (wowsims.com)", 1.00, 1.8 },
     { "priest_smite", "Smite", "Smite (wowsims.com)", 0.93, 0.2 },
