@@ -544,8 +544,9 @@ function VS.BasePower(pt)
     return b and b > 0 and b or nil
 end
 
--- The wholes lo..hi a cut read R stands for: each W with nearest(m, W) = R (R itself when m = 1); with none (a factor
--- above 1 can step over R), R / m twice. m > 0; about 1 / m steps, out of combat only. Allocates nothing.
+-- The wholes lo..hi a cut read R stands for: each W with nearest(m, W) = R (R itself when m = 1). When no whole gives R
+-- (only a factor above 1 can step over it; no shipped talent raises a cost) both are R / m, the read's own middle, which
+-- pins nothing. m > 0; about 1 / m steps, out of combat only. Allocates nothing.
 local function wholeWindow(R, m)
     local lo = floor((R - 0.5) / m) - 1
     while nearest(m, lo) < R do
