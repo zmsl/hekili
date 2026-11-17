@@ -615,6 +615,8 @@ function M.new(text, H, o)
             -- next cast for the agreement
             if not (a.movesOnly or a.onNextSwing and ((e.cost or 0) > 0 or e.landed)) then
                 presses[#presses + 1] = d
+            else
+                d.landing = true -- no press: excuses no flip either (loop.flips)
             end
         end
     end
