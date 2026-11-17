@@ -105,8 +105,8 @@ local function hit(key)
     end
 end
 -- A bear strike's hit (`key`'s amount; with `debuffKey`, the debuff when it lands): Primal Fury's rage on its crit in
--- Bear Form (X.primalFury, the class file's rule at the character's rank). Maul's queued strike never crits in the
--- world (behaviours.lua's strike frame), so it pays none.
+-- Bear Form (X.primalFury, the class file's rule at the character's rank). Maul's queued strike crits at its swing
+-- (its press's `crits`) and pays the same through C.WORLD's `struck` hook.
 local function bearHit(key, debuffKey)
     return function(W, e, _, X)
         local r = W.hit(e, e.target, AMOUNT[key], SCHOOL[key] or 1)
@@ -235,7 +235,7 @@ M.MAP = {
     lacerate = { effect = bearHit("lacerate", "lacerate") },
     swipe_bear = { effect = bearHit("swipe_bear") },
     demoralizing_roar = { effect = debuff("demoralizing_roar") },
-    maul = { amount = { 110, 140 } },
+    maul = { amount = { 110, 140 }, crits = true }, -- its crit at the swing pays Primal Fury (C.WORLD's script)
     enrage = {
         extra = function(p)
             local R, a = rules(), class().auras.enrage
@@ -529,6 +529,15 @@ local function content(name)
         regenPause = rules().pause, -- energy stops in Bear Form (the class file's bear_pause; both lists put Bear first)
         mobHealth = 15000,
         canParry = false, -- druids never parry (wowsims's CanParry: no parry haste of ours)
+        -- our queued strike's outcome at its swing (behaviours.lua): a Maul crit in Bear Form pays Primal Fury's
+        -- rage, as bearHit does for the on-GCD strikes (the e4ef929e54 Guardian log: 11 of its 21 16959 gains)
+        script = function(_, us)
+            us.struck = function(W, act, flag)
+                if act == "WOUND" and flag == "CRITICAL" and us.form == FORM.bear_form and pfRage > 0 then
+                    W.gain(us, pfRage)
+                end
+            end
+        end,
     }, { __index = P.world })
 
     -- The client's other power reads: combo points plain (research addendum), the rest never. UnitPowerMax answers the
@@ -629,6 +638,7 @@ local function content(name)
             drain = m.drain,
             refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
             outcomes = M.OUTCOMES[key], -- nil: the special melee tables
+            crits = m.crits, -- a queued strike's crit at its swing (behaviours.lua)
         }
         if m.points then
             p.points = { POINTS, m.points }

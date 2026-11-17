@@ -152,6 +152,32 @@ describe("the Guardian loop world's press", function()
         assert.is_true(p.cost > 0)
         assert.are.same({ "strike " .. p.cost, "cc 1" }, { out[1], out[2] })
     end)
+
+    -- Blood Frenzy 1/2 (the e4ef929e54 log's 16958=1): its 5 rage (16959) on half our crits in Bear Form, Maul's
+    -- included: the log's 18 Maul crits bring 11 of its 21 gains (each 0.01 s after the crit), so the world pays the
+    -- class file's expected 2.5 on a Maul crit at its swing, as on the on-GCD strikes' and the white swings'
+    it("pays Primal Fury's rage on a Maul crit at its swing", function()
+        local C = dlw.Guardian
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local p = C.resolve("maul", H)
+        local W = scenarios.world(setmetatable({ power = 60, form = C.character().form }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1
+        W.crit = 1
+        us.target.avoid = {}
+        local ok, why = W.press(us, "maul", p)
+        assert.is_true(ok, tostring(why))
+        W.run(8)
+        local out = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "strike" and ev.src == us and ev.spell then
+                out[#out + 1] = "strike " .. ev.flag
+            elseif ev.kind == "gain" and ev.src == us and #out > 0 then
+                out[#out + 1] = "gain " .. tostring(ev.rage)
+            end
+        end
+        assert.are.same({ "strike CRITICAL", "gain 2.5" }, { out[1], out[2] })
+    end)
 end)
 
 -- Owner ruling L1110 (in game): Omen of Clarity procs on the cast, at its success, so a hard cast started right after
