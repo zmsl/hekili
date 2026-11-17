@@ -25,6 +25,9 @@
 - Reference: [API](Pack-API-Reference) · [Abilities](Pack-Abilities-Reference) · [Auras](Pack-Auras-Reference) · [Resources](Pack-Resources-And-Regen) · [Talents and selectors](Pack-Talents-Specs-And-Selectors) · [Settings](Pack-Settings) · [Expects](Pack-Expects-And-Outcomes) · [Windows and reactions](Pack-Windows-And-Reactions) · [Environment names](Pack-Environment-Names) · [Translator rules](Pack-Translator-Rules)
 - [Testing and gates](Pack-Testing-And-Gates) · [wowsims recipes](Pack-wowsims-Recipes) · [Adding a spec or class](Pack-Adding-A-Spec-Or-Class)
 
+**Integrate with Hekili Forever**
+- [Overview](Integration-Overview) · [Reference](Integration-Reference) · [WeakAuras example](Integration-WeakAuras-Example)
+
 **Contribute**
 - [Contributing](Contributing) · [Architecture](Contributing-Architecture) · [Display styles and integrations](Contributing-Display-Styles-And-Integrations) · [Docs](Contributing-Docs) · [Style guide](Style-Guide)
 

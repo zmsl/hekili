@@ -18,6 +18,7 @@ The built-in priorities are translated from the rotations at [wowsims.com](https
 | Report a wrong recommendation | [Reporting a problem](Reporting-A-Problem) |
 | Change a line in a priority | [APL overview](APL-Overview) |
 | Add or fix an ability in a class addon | [Pack overview](Pack-Overview) |
+| Read the recommendations from another addon or a WeakAura | [Integration overview](Integration-Overview) |
 
 ## About the estimates
 

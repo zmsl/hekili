@@ -107,3 +107,4 @@ The bridge listens passively: a display that is hidden is not computed only for 
 - [Reading the displays](Reading-The-Displays)
 - [Displays reference](Displays-Reference)
 - [Contributing architecture](Contributing-Architecture)
+- [Integration overview](Integration-Overview): what another addon may rely on
