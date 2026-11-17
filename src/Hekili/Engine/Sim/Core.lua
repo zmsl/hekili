@@ -676,7 +676,8 @@ local function castable( self, d, k, start )
             state.ready = ready
             ok = custom() and true or false
             state.ready = false
-        else -- ready()'s body inline: calling it here measured 14 B per held Update (driver_alloc_spec), inline 0
+        else -- ready()'s body inline: its one extra frame (depth 9 in the Update thread) grows that thread's call stack
+            -- once, 640 B, the same total at 45 and 135 Updates; driver_alloc_spec would read it as bytes per Update
             state.delay = 0
             ok = state:TimeToReady() <= seqAt + 0.01
             if ok then
