@@ -146,6 +146,10 @@ describe("Forever Paladin", function()
         end
         assert.are.same({ 11.9, 5.1 }, seed("retribution")) -- the e4ef929e54 log: 17.00 outside, 5.10 while casting
         assert.are.same({ 16.5, 0 }, seed("protection")) -- the e4ef929e54 log: 16.50 outside, none while casting
+        -- Holy Shock known (the Holy Shock build, its own gear): its own log, 25.13 outside, 7.54 while casting
+        w.game.known[1311606] = true
+        assert.are.same({ 17.59, 7.54 }, seed("retribution"))
+        w.game.known[1311606] = nil
         -- the static share follows Reverence's rank (15/30%, wowsims's curve), never the spec
         local shares = {}
         for rank = 0, 2 do

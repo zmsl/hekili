@@ -254,14 +254,23 @@ local REVERENCE = { 0.15, 0.3 }
 -- the in-combat calibration replace, as wowsims's e4ef929e54 logs measure them at 60: Retribution 11.9 spirit + 5.1
 -- casting = 17.0 outside (Reverence 2/2's share is the 5.1: the share below is the static share those parts hold; was
 -- 13.65 + 8.25 before its gear lost the Soulforge pieces), Protection 0 while casting and 16.5 outside (was 17.38). Forever's Spirit regen is `6.25 + Spirit/8` a second for every class
--- (wowsims mana.go:75-76), not Classic's formula.
--- state.spec: the functions run in the state's environment (the file's `spec` is the class).
+-- (wowsims mana.go:75-76), not Classic's formula. Holy Shock known (the Holy Shock build, a Retribution spec on its own
+-- gear): its own e4ef929e54 log, 2.513 a 0.1 s tick outside, 0.754 casting: 17.59 spirit + 7.54 casting (was
+-- Retribution's 11.9 / 5.1).
+-- state.spec: the functions run in the state's environment (the file's `spec` is the class). The core resolves them
+-- at the build, before its talent walk, so the Holy Shock build is told by the spellbook (knownRank), not talent.*.
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
     fsr = {
         spirit = function()
+            if knownRank(HOLY_SHOCK) > 0 then
+                return 17.59
+            end
             return state.spec.retribution and 11.9 or 16.5
         end,
         mp5 = function()
+            if knownRank(HOLY_SHOCK) > 0 then
+                return 7.54
+            end
             return state.spec.retribution and 5.1 or 0
         end,
         share = function() -- Reverence's rank (the belief reads it after its talent walk), never the spec
