@@ -71,6 +71,26 @@ local function tieHolder(t, g, amount, flag)
     return nil
 end
 
+-- Gap AS, the forward order: the oldest swing of ours on `g` anchored before `at0` (a cast's success) that still owes
+-- its row at t (no row yet, its window holding t), or 0. Allocates nothing.
+local function owedBefore(t, g, at0)
+    local best = 0
+    for i = 1, T.CAP do
+        if
+            T.state[i] == T.OPEN
+            and T.told[i] ~= 1 -- the Outcomes provider said HIT: no avoid is its
+            and T.kind[i] == MELEE
+            and T.guid[i] == g
+            and T.at[i] < at0
+            and t - T.at[i] <= T.w[i]
+            and (best == 0 or T.at[i] < T.at[best])
+        then
+            best = i
+        end
+    end
+    return best
+end
+
 local MISSES = {
     DODGE = true,
     PARRY = true,
@@ -580,6 +600,7 @@ local function route(t, g, uid, act, flag, amount, school)
     local tied = false -- the MELEE tie took the row from a spell: pass (d) never hands it back
     local tiedP, tiedN = 0, 0 -- the spell ticket the tie took it from in its own frame (re-offered if the swing refuses)
     local frameSw, frameP = 0, 0 -- the swing the tie gave an avoid in a cast's own frame, and that cast's ticket (AS)
+    local owed = 0 -- the swing from before a cast an avoid past the cast's frame is held on (AS, the forward order)
     local p, n = T.Pick(t, g, 1, act, flag, amount, school, avoid)
     local pass = 1
     local replacing = 0
@@ -636,12 +657,22 @@ local function route(t, g, uid, act, flag, amount, school)
             else
                 crit = false
             end
+        elseif avoid and pass > 1 and T.kind[p] == X.FRAME then
+            -- the forward order (Fury L30, Sunder 60.40): past the cast's own frame, a swing of ours from before the cast
+            -- that still owes its row was resolved first; the avoid is held on the oldest such swing, whatever its lag
+            -- (the LR's weakest claim, 0: its own wound takes it back for the cast), never the cast's while one waits
+            owed = owedBefore(t, g, T.at[p])
+            if owed > 0 then
+                frameSw, frameP, p, tied = owed, p, 0, true
+            end
         end
     end
     local credited, lr, ref, lag, second, k = nil, 0, 0, 0, 0, 1
     local unknown = false
     local refused = 0 -- the swing the LR refused this wound for (AS's reversed order)
-    if p == 0 and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
+    if owed > 0 then
+        credited, lr, ref, lag, second = owed, 0, T.x[owed], t - T.at[owed], 0
+    elseif p == 0 and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
         if not avoid then
             local _, maxMain = VS.Stat("UnitDamage")
             local form = Plain(I.api, I.api.GetShapeshiftForm()) -- secret: Plain; plain in combat (Facade's stance row)
