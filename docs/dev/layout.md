@@ -310,20 +310,20 @@ wowsims's logs measure it per spec (Mindfulness inside Elemental's, Improved Sto
 Enhancement's; Mana Spring Totem's 5 a second as its own aura entry (10494) while the water totem stands, in both),
 UNMEASURED pool, no Water Shield or potions), so most in-combat ticks show no icon on either side.
 The imbues are not in the solo world's kit (it has no weapon enchant read). The world's costs are each rank's (DB2),
-with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
+with Shamanistic Focus when the build has it, Stormstrike's 122 (wowsims/forever's, to the nearest mana), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
 the forever gate on 51a0b1ac: Fire Nova at the DB2's 520). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's
 own fight (floor 0.96, the table below) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana).
-Elemental (wowsims.com) (Task 14) runs the same gates on the Elemental world (20 yd, wowsims's 5650 mana and regen:
-26.13 a second casting without Mana Spring Totem's buff, 31.13 with it, 45.25 outside the five-second rule; re-pin
-e2842f0a78): replay floor 0.89 (the table below), live L10 0.2,
+Elemental (wowsims.com) (Task 14) runs the same gates on the Elemental world (20 yd, wowsims's 5950 mana and regen:
+26.31 a second casting without Mana Spring Totem's buff, 31.31 with it, 45.62 outside the five-second rule; re-pin
+e4ef929e54): replay floor 0.93 (the table below), live L10 0.2,
 L40 0.0, L60 5.0 s (LIVE60 5.0), flicker floor 0.6. The lines:
 
 ```
-Enhancement solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.027; ... [seeds 1-3]
-Enhancement solo: fights=20 agreement 0.912 (18040 ticks); react median 0 p90 8 never 0.016; ready while short 0; held while ready 152; refused per 100 [], episodes 0.00/min; dps A/B 0.996; ...
-Elemental solo: fights=3 agreement 0.985 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 4.2 (oracle 3.8, unmatched 0.0)], episodes 0.67/min; dps A/B 0.990; ... [seeds 1-3]
-Elemental solo: fights=20 agreement 0.993 (18040 ticks); react median 0 p90 1 never 0.013; ready while short 0; held while ready 284; refused per 100 [casting 0.5 (oracle 0.2, unmatched 0.0)], episodes 0.07/min; dps A/B 0.997; ...
+Enhancement solo: fights=3 agreement 0.999 (2703 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 22; refused per 100 [], episodes 0.00/min; dps A/B 1.032; ... [seeds 1-3]
+Enhancement solo: fights=20 agreement 0.990 (18020 ticks); react median 0 p90 0 never 0.001; ready while short 0; held while ready 146; refused per 100 [], episodes 0.00/min; dps A/B 1.019; ...
+Elemental solo: fights=3 agreement 0.999 (2703 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 39; refused per 100 [], episodes 0.00/min; dps A/B 1.013; ... [seeds 1-3]
+Elemental solo: fights=20 agreement 0.997 (18020 ticks); react median 0 p90 1 never 0.000; ready while short 0; held while ready 277; refused per 100 [], episodes 0.00/min; dps A/B 1.026; ...
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
@@ -631,8 +631,8 @@ beside the number (DEVELOPMENT.md).
 | Retribution (wowsims.com) | 0.93 | 0.10, 7 |
 | Holy Shock (wowsims.com) | 0.97 | 0.24, 5 |
 | Protection (wowsims.com), Paladin | 0.95 | 0.43, 1 |
-| Enhancement (wowsims.com) | 0.96 | 0.38, 34 |
-| Elemental (wowsims.com) | 0.89 | 2.20, 3 |
+| Enhancement (wowsims.com) | 0.96 | 1.05, 7 |
+| Elemental (wowsims.com) | 0.93 | 1.22, 2 |
 | Beast Mastery (wowsims.com) | 0.95 | 0.46, 28 |
 | Marksmanship (wowsims.com) | 0.98 | 0.32, 22 |
 | Survival (wowsims.com) | 0.94 | 0.29, 22 |

@@ -112,7 +112,7 @@ M.STEADY = tonumber(os.getenv("HEKILI_LOOP_STEADY")) or os.getenv("HEKILI_LOOP_H
 M.RAW = { "UnitHealth", "UnitHealthMax", "C_UnitAuras.GetDebuffDataByIndex" }
 
 --- Boots the two instances for `content` (one boot per busted block, §1.3): { content, us, oracle }. `content`:
---- character(), PACK, resolve(key, H), usable(H), gain(pt, hand, amount, flag, character) (what a landed wound of ours
+--- character(), PACK, resolve(key, H, e) (`e`: the world's us at the press, its auras now), usable(H), gain(pt, hand, amount, flag, character) (what a landed wound of ours
 --- pays in power type `pt`, the character's), WORLD (scenario knobs), uptime(H); optional OBSERVE (observer knobs over
 --- the loop's: another power's reads, the forms), SCENARIO (headless.new's `scenario`; default "sim": the settings'
 --- harness defaults, wowsims's scenario; "game" boots both instances with the in-game ones).
@@ -744,7 +744,7 @@ function M.run(L, seed, o, drivers)
         end
         if press then
             truth.Hekili.State.reset("Primary", true) -- Update leaves its last prediction (a predicted buff, query_time ahead of now)
-            local p = content.resolve(key, truth)
+            local p = content.resolve(key, truth, us) -- the world's us: its auras price the press (L1233)
             local pre = W.res(us, p.pt)
             local n0 = #W.truth
             local ok, why = W.press(us, key, p)

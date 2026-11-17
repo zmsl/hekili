@@ -66,7 +66,13 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     -- (R50 class A; log 121.47, magma_totem -> stormstrike). Re-pin 0.7 (e5a9cd2a2dfc, lane shaman, R6): 0.98 -> 0.96,
     -- 0.969 (97), was 0.988: three single misses, [fire_nova -> lightning_bolt, flame_shock -> stormstrike, magma_totem
     -- -> stormstrike], the repin triage's ties and dry mana (the build's Stormstrike cooldown is now 6 s; the potion
-    -- refill the belief cannot see, R50 class A, GAP V, is among them: central); no Stormstrike pattern
+    -- refill the belief cannot see, R50 class A, GAP V, is among them: central); no Stormstrike pattern.
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (lane repin-shaman-09, R6): 0.963 (80), was 0.969 (97); floor 0.96 kept. Stormstrike 8 s
+    -- (hotfix push 113722) and Maelstrom Weapon's 10 a minute (was 20) leave fewer on-GCD decisions; three single
+    -- misses [earth_shock -> flame_shock, flame_shock -> lightning_bolt, flame_shock -> magma_totem]: the Flame Shock
+    -- cost crossing (gap BT). The log's 22 Windfury Totem strikes (`Casting {SpellID: 10610}`) map to no ability and are
+    -- not scored. With lane mana-09 merged (Stormstrike 122, the log's price): 0.963 (80) unchanged; LIVE60 below 5.8
+    -- unchanged
     it(PACK .. " follows wowsims's casts", function()
         local C = content("shaman_enhancement", sw.Enhancement, PACK, 60)
         ws.gate(PACK, C, "shaman_enhancement", 0.96, ENH_REPLAY)
@@ -74,8 +80,10 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims's spending runs the mana out (its own log
     -- sits near 170 of 5530 mana from 90 s), so the priority waits for mana with only cheaper ranks usable
     -- 8.0 before the world's parry haste (decision 63: every seeded fight reordered); 8.2 -> 5.2 re-pin e2842f0a78
-    -- (lane 15: the build's own list, 6565 mana, Fire Nova at 375; 5.0 at 520); under the 6 s bar (R22) as L10/L40
-    local LIVE60 = 5.2
+    -- (lane 15: the build's own list, 6565 mana, Fire Nova at 375; 5.0 at 520); under the 6 s bar (R22) as L10/L40.
+    -- 5.2 -> 5.8 re-pin e5a9cd2a2d -> e4ef929e54 (lane repin-shaman-09): Stormstrike 8 s and the Five Thunders gear's 6250 mana (and
+    -- regen 25.75 / 12.0): the pool runs dry sooner and the waits for mana run longer; still under the 6 s bar
+    local LIVE60 = 5.8
     for _, level in ipairs({ 10, 40, 60 }) do
         it(PACK .. " stays live at level " .. level, function()
             ws.live(
@@ -101,12 +109,17 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     -- wowsims down-ranks (rank 8, 144 mana, at mana < 20%: gap BL, disagreement 1 of the recipe), so with ~179 mana the
     -- totem (170) is the sooner wait (debug snapshot at t=117.43: Searing Totem usable at 0.89 s, Lightning Bolt at
     -- 5.4 s, cost 198)
+    -- 0.89 -> 0.93 re-pin e5a9cd2a2d -> e4ef929e54 (lane repin-shaman-09, R6): 0.937 (95), was 0.896 (96); the request is
+    -- unchanged, the log moves with Searing Totem's 2.425 s cadence, the resist constant 8L + 19 and the Weakness
+    -- Analyzer's 6 min cooldown; six misses [lightning_bolt -> searing_totem 4 (gap BL: wowsims down-ranks at low
+    -- mana), chain_lightning -> flame_shock 1, flame_shock -> lightning_bolt 1] (not traced row by row)
     it(ELE .. " follows wowsims's casts", function()
-        ws.gate(ELE, content("shaman_elemental", sw.Elemental, ELE, 60), "shaman_elemental", 0.89, ELE_REPLAY)
+        ws.gate(ELE, content("shaman_elemental", sw.Elemental, ELE, 60), "shaman_elemental", 0.93, ELE_REPLAY)
     end)
-    -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims runs its mana out (its log of 5650 sits under
-    -- 220 at 100-120 s and from ~170 s, Lightning Bolt 3-6.7 s apart), so the priority waits for mana. 5.0 -> 5.0 at the
-    -- re-pin (5650 mana); L10/L40 keep the 6 s bar, only L60 may follow LIVE60 (R22, both packs)
+    -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims runs its mana out (its log of 5950 sits under
+    -- 330 at 100-107 s), so the priority waits for mana. 5.0 -> 5.0 at the re-pin e2842f0a78 (5650 mana) and at
+    -- e4ef929e54 (the world's 5950 mana and regen from the new log); L10/L40 keep the 6 s bar, only L60 may follow
+    -- LIVE60 (R22, both packs)
     local ELE_LIVE60 = 5.0
     for _, level in ipairs({ 10, 40, 60 }) do
         it(ELE .. " stays live at level " .. level, function()

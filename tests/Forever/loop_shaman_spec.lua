@@ -10,6 +10,67 @@ local sw = require("Forever.helpers.shaman_world")
 local PACKS = { "Enhancement", "Elemental" }
 
 describe("the Shaman loop worlds", function()
+    -- Each world's pool and regen are its wowsims log's (OtherID 2 regen ticks, 0.1 s apart): the max mana, the casting
+    -- tick without and with Mana Spring Totem's 5 a second (Tag 1) and the tick outside the five-second rule (Tag 2)
+    for _, key in ipairs(PACKS) do
+        it(key .. ": the pool and the five-second rule's rates are its wowsims log's", function()
+            local Wd = sw[key].WORLD
+            local f = Wd.fsr[0]
+            local log = assert(io.open("tests/Forever/wowsims/shaman_" .. key:lower() .. ".log")):read("*a")
+            local spirit, mp5, totem = f[1], f[2], f.auras[10494].mp5
+            assert.are.equal(Wd.max, tonumber(log:match("of (%d+) total")))
+            for _, t in ipairs({ { 1, mp5 }, { 1, mp5 + totem }, { 2, spirit + mp5 + totem } }) do
+                local row = ("Gained %.3f mana from {OtherID: 2, Tag: %d}"):format(t[2] / 10, t[1])
+                assert.is_truthy(log:find(row, 1, true), row)
+            end
+        end)
+    end
+
+    -- wowsims e4ef929e54: Maelstrom Weapon's rate is its rank's 6..10 a minute (curve 408498), and our Windfury Totem
+    -- standing rolls a weapon strike (20%, a 0.1 s ICD) on a landed main-hand swing, which stacks no Maelstrom Weapon
+    it(
+        "Enhancement: a landed main-hand swing rolls Maelstrom Weapon by rank and our Windfury Totem's strike",
+        function()
+            local us = { weapons = { { 180, 260, 3.6 } }, auras = {} }
+            local W = { t = 10, rolls = {}, hits = 0, slot = nil }
+            W.rng = {
+                chance = function(p)
+                    W.rolls[#W.rolls + 1] = p
+                    return false
+                end,
+            }
+            W.totem = function(_, slot)
+                return slot == 4 and W.slot or nil
+            end
+            W.hit = function()
+                W.hits = W.hits + 1
+                return { act = "WOUND" }
+            end
+            sw.Enhancement.WORLD.script(W, us)
+            us.target = {}
+            us.landed(W, "WOUND", 1) -- no totem: the Maelstrom Weapon roll only, 10 a minute at 5/5 on a 3.6 s weapon
+            assert.are.same({ 0.6 }, W.rolls)
+            W.rolls, W.slot = {}, { spell = 10614 } -- Windfury Totem rank 3 in the air slot
+            us.landed(W, "WOUND", 2) -- the off hand: no strike roll
+            us.landed(W, "DODGE", 1) -- not landed: no roll at all
+            assert.are.same({ 0.6 }, W.rolls)
+            W.rolls = {}
+            W.rng.chance = function(p)
+                W.rolls[#W.rolls + 1] = p
+                return p == 0.2 -- the strike procs; Maelstrom Weapon does not
+            end
+            us.landed(W, "WOUND", 1)
+            us.landed(W, "WOUND", 1) -- the same instant: inside the 0.1 s ICD
+            assert.are.same({ 0.6, 0.2, 0.6 }, W.rolls)
+            assert.are.equal(1, W.hits)
+            assert.are.same({}, us.auras) -- the strike stacked no Maelstrom Weapon
+            W.t, W.slot = 10.1, { spell = 25359 } -- Grace of Air Totem in the air slot: no strike
+            W.rolls = {}
+            us.landed(W, "WOUND", 1)
+            assert.are.same({ 0.6 }, W.rolls)
+        end
+    )
+
     -- A shock's press sends both shocks' ranks (the shared category) but is priced by its own rank: at level 30 the
     -- highest Flame Shock is rank 3 (8053, 160 mana in the DB2), not the top rank's 410.
     it("prices a shock by its own known rank", function()
@@ -19,6 +80,19 @@ describe("the Shaman loop worlds", function()
         local p = C.resolve("flame_shock", H)
         assert.are.same({ 8053, 160 }, { p.spell, p.cost })
         assert.are.equal(13, #p.ids) -- Earth Shock's 7 ranks and Flame Shock's 6
+    end)
+
+    -- A press is priced by the world's us the loop passes (L1233): its auras even once its stop has run (the fight's
+    -- last tick); a resolve with no world reads no aura.
+    it("Enhancement: prices Lightning Bolt from the passed world's Maelstrom Weapon, stopped or not", function()
+        local C = sw.Enhancement
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local us = { auras = { [408505] = { stacks = 5, expires = 1e9 } }, stopped = true }
+        assert.are.same({ 0, 0 }, {
+            C.resolve("lightning_bolt", H, us).cost,
+            C.resolve("lightning_bolt", H, us).cast,
+        })
+        assert.are.equal(220, C.resolve("lightning_bolt", H).cost)
     end)
 
     -- Elemental's world without a pack (its pack's gates below): the build boots on its spec, every ability the

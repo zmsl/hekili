@@ -81,10 +81,10 @@
                   "id":279270,
                   "enchant":849
                 },{
-                  "id":22102,
+                  "id":21183,
                   "enchant":1893
                 },{
-                  "id":22095,
+                  "id":21186,
                   "enchant":1901
                 },{
                   "id":12632,
@@ -95,7 +95,7 @@
                   "id":252486,
                   "enchant":1509
                 },{
-                  "id":22096,
+                  "id":275621,
                   "enchant":8492
                 },{
                   "id":275972
@@ -376,6 +376,7 @@
                           "auraIsActive":{
                             "includeReactionTime":true,
                             "auraId":{
+                              "spellId":408510
                             }
                           }
                         }

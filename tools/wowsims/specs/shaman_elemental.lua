@@ -27,9 +27,9 @@
 --   lo-truth -388.7; the poll's lo was not dumped: plausibly the rank-8 Lightning Bolts, 144 in wowsims, read at the top
 --   rank's 198), so Flame Shock (170.8) reads unaffordable. Without the three travel-time misses 93 of 97 (0.959, the base).
 -- Deviation: multidot (Flame Shock) keeps the DoT on the current target only (the header's `# Deviation:` line).
--- Worked: the shaman world's Elemental distance 20 yd (the build's), its mana and regen from the re-pin log (5650; 31.13
--- a second casting, 45.25 outside the five-second rule; was 5590 / 29.75 / 42.5 as a Troll; the kit's seeds likewise:
--- no decision moved), the Troll's Berserking in the world's MAP (unused since). Windshaper Skyborne has no race file:
+-- Worked: the shaman world's Elemental distance 20 yd (the build's), its mana and regen from the 0.9 log (5950; 31.31
+-- a second casting with Mana Spring Totem's buff, 45.62 outside the five-second rule; the kit's seeds likewise: no
+-- decision moved), the Troll's Berserking in the world's MAP (unused since). Windshaper Skyborne has no race file:
 -- its Skysight is movement only (no regen mod, unlike the High Order's Read Ley Line); the shared Wind Blessed is
 -- +2% cast speed in wowsims (Lightning Bolt 2.0 s -> 1.961 s in the log). The Blood Fury and Berserking lines stay
 -- silent (other races'). The Weakness Analyzer (item 272438) is `use_items` (rule 13; as Shadow and Affliction).
@@ -43,6 +43,12 @@
 -- Levels (P8; learn_shaman.lua regenerated with the Elemental kit's ranks): L10 0.0, L40 0.0, L60 5.0 s, no leveling
 -- line needed. The spells the DB2 lacks (Lava Burst rank 4, 1326047; Elemental Mastery, 16166) still count as learned
 -- at level 1, so the lower brackets can press them early (the check's limit, docs/dev/wowsims-packs.md).
+-- Re-pin 0.9 (e4ef929e54, lane repin-shaman-09): the request and the pack's lines are unchanged; the log moves with
+-- upstream's Searing Totem cadence (an attack every 2.425 s, the first at 2.2 s: 91a36310d6, its Tag 1 rows are no
+-- choice), the spell resistance constant 8L + 19 (dffbd4b05a) and the Weakness Analyzer's on-use cooldown (90 s -> 6
+-- min in the item db: one use a fight, the ~91 s one gone). The shaman world's Elemental mana and regen follow this
+-- log (5950; 26.31 a second casting without Mana Spring Totem's buff, 31.31 with it, 45.62 outside the five-second
+-- rule; the kit's seeds likewise, spirit 14.31 and mp5 26.31): no replay decision moved.
 return {
     class = "SHAMAN",
     pack = "Elemental (wowsims.com)",

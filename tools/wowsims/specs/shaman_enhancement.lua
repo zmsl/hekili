@@ -17,7 +17,8 @@
 -- Kit fixes (P6): Reverberation (shocks 5 s), Improved Fire Nova (6 s), Shamanistic Focus (-45% on the shocks and
 -- Lightning Shield), from wowdb; Call of Flame (+3 s a rank on Flame Shock) and Stormstrike's cost (8% of base mana,
 -- 121 at 60; the DB2's 125), wowsims spell data absent from DB2 (in-game checks). Each matches the log.
--- Known deviations: the Water Shield line's condition is ours (R55, below). Of wowsims's autocast cooldowns (rule 13)
+-- Known deviations: none of the list's own (R55's Water Shield condition is upstream's since e4ef929e54, below). Of
+-- wowsims's autocast cooldowns (rule 13)
 -- Rage of the Farseer 425336 (the kit's, by its ID) and the Weakness Analyzer (use_items) translate; mana is secret in
 -- combat, so the potion (mana.pct<80) and Demonic Rune (<70) read the belief's estimate. Fire Nova now costs wowsims's
 -- 65..375 in the kit (R57a, the owner's in-game read; the DB2's 520 was wrong).
@@ -35,6 +36,15 @@
 -- Re-pin 0.7 (4b0030a44b, lane shaman): the pack's lines are unchanged (the talent string re-encoded, Improved Ghost Wolf
 -- moved); Stormstrike's cooldown is 6 s (was 8; the kit's). aoe_rotation #1's autoTimeToNext stays omitted (translator-5,
 -- held: nothing in this lane adds it).
+-- Re-pin 0.9 (e4ef929e54, lane repin-shaman-09): the request moves three gear slots (Five Thunders removed upstream,
+-- 322214c400: 22102/22095/22096 -> 21183/21186/275621) and the Water Shield line now names its aura 408510
+-- (61ed8cf56d), so the translator writes `!buff.water_shield.up` itself: R55's `condition` (the line's own condition
+-- since 2026-11-06) is moot and gone (the .simc is byte-identical with or without it). Omissions 4 -> 3 (that empty
+-- aura's). The pack's lines are unchanged. The log: the Weakness Analyzer's on-use cooldown is 6 min (item db; its ~90 s
+-- second use is gone), Windfury Totem's strike logs as a `Casting {SpellID: 10610}` (no ability's ID: the replay scores
+-- none of them), Stormstrike costs 122 (upstream rounds percent costs, 18a464037f; ours, 121, moves with lane mana-09).
+-- The kit follows the pin: Stormstrike 8 s (hotfix push 113722), Maelstrom
+-- Weapon -20% a stack at every rank, Windfury Totem's proc a weapon strike (no aura), Totemic Recall registered.
 return {
     class = "SHAMAN",
     pack = "Enhancement (wowsims.com)",
@@ -54,9 +64,6 @@ return {
     -- before Stormstrike (learned at 40): Lightning Bolt fills while the shocks wait; silent from 40, and so at 60,
     -- where wowsims casts it only at five Maelstrom Weapon stacks
     leveling = { "lightning_bolt,if=!action.stormstrike.known" },
-    -- Deviation by ruling (R55, 2026-11-06): the build's Water Shield line tests an empty aura ID (no condition in
-    -- wowsims, which never knows the shield); from 20 it would lead every GCD. Its own buff, as the precombat line.
-    condition = { water_shield = "!buff.water_shield.up" },
     -- not wowsims (its imbue never expires, sim/shaman/weapon_imbues.go); need-based (R41): the main hand's imbue when
     -- none is up (weapon buffs lane, owner 2026-11-05: Flametongue, Rockbiter before it is learned at 10), first so it
     -- works in combat (a trailing line is never reached; a player's custom one only showed out of combat)

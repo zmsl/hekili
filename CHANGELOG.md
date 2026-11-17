@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Shaman: Hekili now knows Totemic Recall; casting it takes your totems and their buffs down in the recommendations (the mana it gives back is not counted yet). Not yet checked in game.
 - Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
 - A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
@@ -13,11 +14,13 @@
 - A priority whose lines open and close the same window in one recommendation gets a one-time warning, also when a `close_window` line stops a sequence that then starts again.
 
 ### Changed
+- Enhancement Shaman: Stormstrike's cooldown is now 8 seconds, and each Maelstrom Weapon stack takes 20% off Lightning Bolt's cast time and cost at every talent rank. Not yet checked in game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
 
 ### Fixed
+- Shaman: Mana Tide Totem now counts its mana every 3 seconds (290 at its top rank, less at lower ranks), not five times that, so your mana is no longer overestimated while it is up.
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
