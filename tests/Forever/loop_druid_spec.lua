@@ -154,7 +154,7 @@ describe("the Guardian loop world's press", function()
     end)
 
     -- Blood Frenzy 1/2 (the e4ef929e54 log's 16958=1): its 5 rage (16959) on half our crits in Bear Form, Maul's
-    -- included: the log's 18 Maul crits bring 11 of its 21 gains (each 0.01 s after the crit), so the world pays the
+    -- included: the log's 18 Maul crits bring 10 of its 21 gains, plus one tied with a Lacerate crit (each 0.01 s after the crit), so the world pays the
     -- class file's expected 2.5 on a Maul crit at its swing, as on the on-GCD strikes' and the white swings'
     it("pays Primal Fury's rage on a Maul crit at its swing", function()
         local C = dlw.Guardian

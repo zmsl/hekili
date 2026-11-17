@@ -532,7 +532,7 @@ local function content(name)
         mobHealth = 15000,
         canParry = false, -- druids never parry (wowsims's CanParry: no parry haste of ours)
         -- our queued strike's outcome at its swing (behaviours.lua): a Maul crit in Bear Form pays Primal Fury's
-        -- rage, as bearHit does for the on-GCD strikes (the e4ef929e54 Guardian log: 11 of its 21 16959 gains)
+        -- rage, as bearHit does for the on-GCD strikes (the e4ef929e54 Guardian log: 10 of its 21 16959 gains, plus one tied with a Lacerate crit)
         script = function(_, us)
             us.struck = function(W, act, flag)
                 if act == "WOUND" and flag == "CRITICAL" and us.form == FORM.bear_form and pfRage > 0 then
