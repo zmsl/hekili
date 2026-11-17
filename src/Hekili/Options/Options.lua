@@ -9108,7 +9108,7 @@ do
         self:ForceUpdate( "HEKILI_TOGGLE", true )
     end
 
-    --- A toggle's state: the mode's name for `mode`, true while paused for `pause`, else the toggle's on/off (nil for
+    --- A toggle's value: the mode's name for `mode`, true while paused for `pause`, else the toggle's on/off (nil for
     --- `snapshot` and unknown names). Public, read-only; HEKILI_TOGGLE sends the same value.
     function Hekili:GetToggleState( name, class )
         if name == "pause" then return self.Pause and true or false end
