@@ -698,6 +698,11 @@ describe("the ticket pool", function()
                 assert.are.equal(1, count(VS.Obs.Avoided)) -- the miss was the cast's: its effect undone
             end)
 
+            it("never holds a non-avoid miss (IMMUNE) on the swing: a swing takes avoids only", function()
+                sunder(60.48, "IMMUNE")
+                assert.are.same({ T.OPEN, "" }, { T.state[mh], T.avoid[mh] })
+            end)
+
             it("stays the cast's in its own frame (pass 1), the older swing still in flight", function()
                 sunder(60.4)
                 assert.are.equal(1, count(VS.Obs.Avoided))

@@ -683,7 +683,7 @@ local function route(t, g, uid, act, flag, amount, school)
             else
                 crit = false
             end
-        elseif avoid and pass > 1 and T.kind[p] == X.FRAME then
+        elseif avoid and AVOIDS[act] and pass > 1 and T.kind[p] == X.FRAME then
             -- the forward order (Fury L30, Sunder 60.40): past the cast's own frame, a swing of ours from before the cast
             -- that still owes its row was resolved first; the avoid is held on the oldest such swing, whatever its lag
             -- (the LR's weakest claim, 0: its own wound takes it back for the cast), never the cast's while one waits
