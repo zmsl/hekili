@@ -265,15 +265,16 @@ M.FLICKER = {
     -- adaptive list (its single-target Maul at rage.lo>=20, Lacerate as the filler) and the new Bear build in the world
     -- (Blood Frenzy 1/2, Feral Instinct 3/3, Thick Hide 3/3, no Furor, Ferocity 5/5: Maul 10, Primal Bite 15; a Maul
     -- crit's Primal Fury). Traced (seeds 1-20, 16 flips): maul <-> lacerate 9, maul -> primal_bite 4, the rest
-    -- lacerate -> primal_bite / demoralizing_roar; seed 5 t 60.6-61.2: Maul shows on a forecast swing's rage (lo 15,
+    -- lacerate -> primal_bite and maul -> demoralizing_roar; seed 5 t 60.6-61.2: Maul shows on a forecast swing's rage (lo 15,
     -- maul@0.08), drops for one poll when the swing is due but not yet credited (truth 29.0, lo 15), and returns at
     -- its credit (lo 28.5): the swing-paid rage class this row already names, now on the Maul line
     -- heldReady's two causes, separated (round 5 A/B, loop.tally, on repin-druid-09 13272efff; the world's Maul-crit
     -- Primal Fury, f0b6fc018, off / on): seeds 1-20 / 21-40 / 41-60 off 423 / 423 / 402 (flicker 0.31 / 0.35 / 0.25),
     -- on 420 / 411 / 396 (0.28 / 0.34 / 0.24). The re-pin (list + build) moves it 307 -> 423 (worst, off); the world fix
     -- lowers it 3 / 12 / 6 (its truth now pays the 2.5 the kit's Maul onCrit declares). The row stays the worst on, 420.
+    -- retracted 0.7 -> 0 (round 5 review M2: all three sets measured 0, the measured worst)
     -- avoid-refund-09, replay-fncd-09 and replay-flips-09 merged: every cell identical (seeds 1-20 re-run)
-    ["Guardian"] = { flicker = 0.35, retracted = 0.7, readyShort = 0, heldReady = 420 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 420 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
