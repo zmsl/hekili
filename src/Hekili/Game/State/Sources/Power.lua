@@ -148,12 +148,18 @@ S.Poll(1, function(api, t)
                     and type(act) == "number"
                     and idle >= act
                     and (idle ~= 0 or not R.restMax[r])
-                    and (act ~= R.regE[r] or idle - act ~= R.spE[r])
+                    -- news: a rate that differs, or a band still open (a read equal to the seed narrows it, L1289)
+                    and (act ~= R.regE[r] or idle - act ~= R.spE[r] or R.regL[r] ~= R.regH[r] or R.spL[r] ~= R.spH[r])
                 then
                     Direct(Obs.Read, t, r, act, ReadOf.Regen)
                     Direct(Obs.Read, t, r, idle - act, ReadOf.RegenSpirit)
                 end
-            elseif idle ~= nil and type(act) == "number" and act ~= R.regE[r] and (act ~= 0 or not R.restMax[r]) then
+            elseif
+                idle ~= nil
+                and type(act) == "number"
+                and (act ~= R.regE[r] or R.regL[r] ~= R.regH[r])
+                and (act ~= 0 or not R.restMax[r])
+            then
                 Direct(Obs.Read, t, r, act, ReadOf.Regen)
             end
         end
