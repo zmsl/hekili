@@ -280,13 +280,13 @@ M.FLICKER = {
     -- 41-60 flicker 0.03 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 201 / 192 / 168):
     -- flicker 0 -> 0.03, heldReady 382 -> 201
     -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9; wowsims 41976091ed; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0,
-    -- readyShort 0 / 0 / 0, heldReady 194 / 239 / 197): flicker 0.03 -> 0.01; heldReady kept at 201 (seeds 1-20, this gate's, 194).
+    -- readyShort 0 / 0 / 0, heldReady 194 / 239 / 197): flicker 0.03 -> 0.01; heldReady 201 -> 239 (the worst set, seed-noise rule, ledger L1245).
     -- Only the Hemorrhage term acts for this build (Death Mark shuts Eviscerate). A/B seeds 21-40 without the flip / the flip
     -- alone / the tip 197 / 239 / 239: seed 33 alone 8 -> 39, the other 19 fights +11 net. Seed 33 (traced): a Rupture pressed
     -- at t 23.0 is avoided (the world keeps the points, applies no debuff), our belief keeps the modelled Rupture for its whole
     -- duration (the known avoided-debuff class, ledger L317), so from t 34.6 at 5 points our Rupture waits 6.4 s while the
-    -- oracle's (raw debuff read) shows it ready: 27 held ticks; the flip only re-times that avoid into a fight
-    ["Subtlety"] = { flicker = 0.01, retracted = 0, heldReady = 201 }, -- 0.02 / 0 / 0, 0 (gap CE)
+    -- oracle's (raw debuff read) shows it ready: 27 held ticks; the flip only re-times that avoid into a fight; seeds 1-20 (this gate) read 194
+    ["Subtlety"] = { flicker = 0.01, retracted = 0, heldReady = 239 }, -- 0.02 / 0 / 0, 0 (gap CE)
     -- 0.1 -> 0.2 (Task 5b, gap BV: the world takes the export's Resourcefulness 2/2, so wowsims's 60% cut makes the
     -- strikes cheap; seeds 1-20 / 21-40 / 41-60: 0.20 / 0.02 / 0.07, was 0.05 / 0 / 0; oracle 2.18 / 1.68 / 2.26, was 0):
     -- no longer mana-gated, Raptor Strike comes up on its cooldown end beside Wing Clip or Strider Kick, and in its last
