@@ -1027,7 +1027,7 @@ do
     -- Visibility reads the spec and combat from Engine.Output.status, which the engine publishes from its next update
     -- (after PLAYER_REGEN_* or a spec change ran UpdateAlpha/UpdateDisplayVisibility): redo them when either moves.
     local seenSpec, seenCombat
-    Hekili.Engine.Subscribe( "status", function( _, _, st )
+    ns.Output.Subscribe( "status", function( _, _, st )
         if st.specID ~= seenSpec then
             seenSpec, seenCombat = st.specID, st.combat
             Hekili:UpdateDisplayVisibility()
@@ -1173,7 +1173,7 @@ do
                 local style = self.style
                 local needs = style and style.needs
                 if style and style.NeedsFor then needs = style.NeedsFor( self.id, Hekili.DB.profile.displays[ self.id ] ) end
-                Hekili.Engine.Subscribe( self.id, self.OnPublish, nil, needs )
+                ns.Output.Subscribe( self.id, self.OnPublish, nil, needs ) -- Hekili's own slot: an outside subscriber never takes it
             end
         end
 

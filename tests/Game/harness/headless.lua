@@ -79,6 +79,7 @@ M.KNOWN_RUN_NILS = {
     id = "State.lua:3765",
     listName = "Core.lua:1992",
     squawk = "Scripts.lua:1032",
+    WeakAuras = "Integrations/Recommendations.lua: each publish checks whether WeakAuras is loaded",
 }
 
 -- WoW's string additions, process-wide (the header's one shared effect).

@@ -220,7 +220,7 @@ function BarGlow.Apply()
     if want ~= followed then
         if followed then Engine.Unsubscribe( followed, onPublish ) end
         followed, lastOut = nil, nil
-        if want and Engine.Subscribe( want, onPublish, false ) then followed = want end
+        if want and ns.Output.Subscribe( want, onPublish, false ) then followed = want end
     end
     refresh()
 end

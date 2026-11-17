@@ -12,7 +12,9 @@ The **integration reference** lists every function and event of Hekili Forever's
 | `Hekili.DisplayStyleAPI` | Number | `src/Hekili/UI/Styles.lua` |
 | `Hekili:RegisterSnapshotListener` | Function | `src/Hekili/Engine/Snapshot.lua` |
 | `Hekili:UnregisterSnapshotListener` | Function | `src/Hekili/Engine/Snapshot.lua` |
-| `HEKILI_RECOMMENDATION_UPDATE` | WeakAuras event | `src/Hekili/Integrations/WeakAuras.lua` |
+| `Hekili:RegisterRecommendationListener` | Function | `src/Hekili/Integrations/Recommendations.lua` |
+| `Hekili:UnregisterRecommendationListener` | Function | `src/Hekili/Integrations/Recommendations.lua` |
+| `HEKILI_RECOMMENDATION_UPDATE` | WeakAuras event | `src/Hekili/Integrations/Recommendations.lua` |
 
 ## Display styles
 
@@ -60,9 +62,55 @@ Hekili:RegisterSnapshotListener(AddMyState)
 Hekili:UnregisterSnapshotListener(AddMyState)
 ```
 
+## RegisterRecommendationListener
+
+`Hekili:RegisterRecommendationListener(fn)` adds `fn` to the functions called after every update of the `Primary`, `AOE`, `Cooldowns`, `Defensives` and `Interrupts` displays. It is the way for an addon that is not a WeakAura to follow the recommendations, without drawing a display.
+
+| Part | Value |
+|---|---|
+| `fn` | A function. Anything else raises an error. |
+| Returns | `true` when `fn` is registered, also when it already was; `false` when 16 listeners are already registered |
+| Registering the same `fn` again | Has no effect |
+| Called | After every update of each of the five displays, in the order the listeners were registered |
+
+The listener is called as `fn(display, payload)`:
+
+| Argument | Meaning |
+|---|---|
+| `display` | The display's name, such as `Primary` |
+| `payload` | The display's recommendations: the same table as the payload of [`HEKILI_RECOMMENDATION_UPDATE`](#payload) |
+
+- A display is updated only while it is worked out: while it is shown, or while the action bar glow follows it. In combat that is several times a second. A hidden display sends nothing, so check `display` and expect long gaps.
+- When the display has no recommendation, the listener is still called, with every entry of the payload empty.
+- The listener runs inside `pcall`. Its first error is passed to the game's error handler, so it shows like any other Lua error; its later errors are not shown. The listener stays registered and the other listeners and Hekili Forever's displays keep running.
+- The listener runs inside Hekili Forever's update. Keep it short: copy the values it needs and do the work elsewhere.
+
+Example, an addon that keeps the name of the next ability of the `Primary` display:
+
+```lua
+-- In an addon with "## Dependencies: Hekili" in its TOC
+local nextAbility
+
+local function OnRecommendation(display, payload)
+    if display == "Primary" then
+        nextAbility = payload[1].actionName -- nil when the display has no recommendation
+    end
+end
+
+Hekili:RegisterRecommendationListener(OnRecommendation)
+```
+
+## UnregisterRecommendationListener
+
+`Hekili:UnregisterRecommendationListener(fn)` removes a listener added with `Hekili:RegisterRecommendationListener`. It returns nothing. A function that is not registered is ignored. A listener may unregister itself or another listener while it runs; the listeners after it are still called for that update.
+
+```lua
+Hekili:UnregisterRecommendationListener(OnRecommendation)
+```
+
 ## HEKILI_RECOMMENDATION_UPDATE
 
-`HEKILI_RECOMMENDATION_UPDATE` is a WeakAuras event: Hekili Forever sends it through WeakAuras, so only a WeakAura can receive it. It is sent when WeakAuras is loaded as the player enters the world, after every update of the `Primary`, `AOE`, `Cooldowns`, `Defensives` and `Interrupts` displays. In combat a shown display updates several times a second. A hidden display is not updated, so it sends nothing.
+`HEKILI_RECOMMENDATION_UPDATE` is a WeakAuras event: Hekili Forever sends it through WeakAuras, so only a WeakAura can receive it. It is sent while WeakAuras is loaded, after every update of the `Primary`, `AOE`, `Cooldowns`, `Defensives` and `Interrupts` displays. In combat a shown display updates several times a second. A hidden display is not updated, so it sends nothing.
 
 | Argument | Meaning |
 |---|---|
@@ -72,12 +120,14 @@ Hekili:UnregisterSnapshotListener(AddMyState)
 | 4 | Always nil |
 | 5 | The payload: a table of the display's recommendations |
 
-The payload:
+### Payload
+
+The payload, the same for this event and for a [recommendation listener](#registerrecommendationlistener):
 
 - `payload[i]` is a copy of recommendation `i`, with the fields of a recommendation record. It has 12 entries; those past the display's last recommendation are empty tables, so `payload[i].actionID` is nil there.
 - The payload's own fields read recommendation 1, so `payload.actionName` is `payload[1].actionName`.
-- When the display has no recommendation, the event is still sent, with every entry empty.
-- The copy is shallow. The tables inside a recommendation, such as `resources` and `alts`, are Hekili Forever's own and change on the next update. The payload and its entries are also the same tables on every event of a display. A WeakAura copies the values it keeps.
+- When the display has no recommendation, the event is still sent and the listeners are still called, with every entry empty.
+- The copy is shallow. The tables inside a recommendation, such as `resources` and `alts`, are Hekili Forever's own and change on the next update. The payload and its entries are also the same tables on every update of a display. Copy the values you keep, and never change the payload.
 
 Example, a trigger function that tests for a recommendation on the `Primary` display:
 

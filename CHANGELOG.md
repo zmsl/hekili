@@ -12,12 +12,16 @@
 
 - A priority whose lines open and close the same window in one recommendation gets a one-time warning, also when a `close_window` line stops a sequence that then starts again.
 
+- Other addons can follow Hekili's recommendations with `Hekili:RegisterRecommendationListener`, described on the wiki's Integration reference page.
+
 ### Changed
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
 
 ### Fixed
+
+- Another addon that follows Hekili's displays can no longer stop the action bar glow, a display or the WeakAuras event from updating.
 
 - Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 

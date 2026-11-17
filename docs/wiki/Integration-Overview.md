@@ -14,13 +14,14 @@ The recommendations come from Hekili Forever's own simulation of the next few se
 |---|---|---|
 | `Hekili:RegisterDisplayStyle(name, impl)` and `Hekili.DisplayStyleAPI` | Function, number | An addon that draws a display's recommendations in its own way |
 | The recommendation record | Table fields | Every reader of the recommendations |
+| `Hekili:RegisterRecommendationListener(fn)` and `Hekili:UnregisterRecommendationListener(fn)` | Functions | An addon that follows each update of the recommendations |
 | `HEKILI_RECOMMENDATION_UPDATE` | WeakAuras event | A WeakAura that shows or reacts to recommendations |
 | `Hekili:RegisterSnapshotListener(fn)` and `Hekili:UnregisterSnapshotListener(fn)` | Functions | An addon that adds its own lines to a snapshot |
 | The public chat commands | Commands | Macros and buttons that change toggles, priorities and profiles |
 
 The display style interface and the fields of a recommendation record are described in [Contributing display styles and integrations](Contributing-Display-Styles-And-Integrations). `Hekili.DisplayStyleAPI` changes only when that interface or the record's fields change. The chat commands are listed in [Slash commands](Slash-Commands); each one also works in a macro.
 
-The saved settings (`HekiliDB`), the options, the frames and every other member of the `Hekili` global are internal. An addon that reads them can break with any release. An addon that is neither a display style nor a WeakAura therefore has no public way to receive each update of the recommendations; the snapshot listener runs only when a snapshot is taken.
+The saved settings (`HekiliDB`), the options, the frames and every other member of the `Hekili` global are internal. An addon that reads them can break with any release. `Hekili.Engine` is internal too: an addon that follows the recommendations registers a recommendation listener.
 
 ## Detecting Hekili Forever
 
@@ -44,9 +45,10 @@ end
 |---|---|
 | `Hekili:RegisterDisplayStyle` | Any time after Hekili Forever's files have loaded, including from the dependent addon's own files. A style registered after the displays exist is bound on the next rebuild, and its settings are added to every display. |
 | `Hekili:RegisterSnapshotListener` | Any time after Hekili Forever's files have loaded |
-| `HEKILI_RECOMMENDATION_UPDATE` | Sent only when WeakAuras is loaded as the player enters the world |
+| `Hekili:RegisterRecommendationListener` | Any time after Hekili Forever's files have loaded. The listener is called from the next update on. |
+| `HEKILI_RECOMMENDATION_UPDATE` | Sent while WeakAuras is loaded |
 
-The recommendations are worked out only for a display that is shown. A display that is hidden publishes nothing new, so neither a style nor the WeakAuras event sees an update for it.
+The recommendations are worked out only for a display that is shown, or followed by the action bar glow. A display that is hidden publishes nothing new, so neither a style, a listener nor the WeakAuras event sees an update for it.
 
 ## Hidden values
 
@@ -59,7 +61,7 @@ An integration that reads the game itself meets the game's limits. On Forever th
 <!-- UNVERIFIED: the text fields of a record (texture, keybind) are assumed plain like the numbers; not measured in game. -->
 
 > [!WARNING]
-> **Different from retail Hekili:** Retail Hekili has a global function, `Hekili_GetRecommendedAbility`. Hekili Forever has no such function: an addon reads the recommendations through a display style, and a WeakAura through `HEKILI_RECOMMENDATION_UPDATE`.
+> **Different from retail Hekili:** Retail Hekili has a global function, `Hekili_GetRecommendedAbility`. Hekili Forever has no such function: an addon follows the recommendations with a recommendation listener or a display style, and a WeakAura with `HEKILI_RECOMMENDATION_UPDATE`.
 
 ## See also
 

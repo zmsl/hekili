@@ -8,7 +8,9 @@ local _, ns = ...
 local Engine = Hekili.Engine
 
 local SLOTS = 12 -- recommendation records per display: at most 10 buttons, and 2 more records for the on-GCD plan (Core)
-local SUBS = 4 -- subscriber slots per display, and annotator slots
+local SUBS = 8 -- subscriber slots per display: OUTSIDE of them for Engine.Subscribe, the rest Hekili's own (Output.Subscribe)
+local OUTSIDE = 4 -- so an outside caller never takes the slot of the display, the integrations or the action bar glow
+local ANNOTATORS = 4
 local ALTS = 2 -- alternatives per record: the picks at the low and the high bound of the gating resource
 local READY = 0.05 -- steady icons: a record due within this is shown as ready (the harness's press threshold)
 
@@ -34,9 +36,9 @@ local function filled(v)
     return t
 end
 
--- `false` fills the slots past `n`, so the array part is sized once and (un)subscribing never grows it.
+-- `false` fills the slots past `n`, so the array part is sized once (SUBS) and (un)subscribing never grows it.
 local function slots()
-    return { false, false, false, false, n = 0 }
+    return { false, false, false, false, false, false, false, false, n = 0 }
 end
 
 local function display()
@@ -47,6 +49,8 @@ local function display()
         scratch = records(),
         subs = slots(),
         passive = slots(),
+        own = slots(), -- per subscriber slot: Hekili's own (Output.Subscribe), not an outside caller's
+        outside = 0, -- outside callers' slots in use
         alts = slots(), -- per subscriber slot: it declared needs.alts
         wanted = 0,
         needAlts = 0, -- subscribers that declared needs.alts (passive or not): Core then fills recs[1..2].alts
@@ -73,6 +77,8 @@ local Displays = {
         count = 1, -- status is itself the one record it publishes (Publish("status", 1)); always 1
         subs = slots(),
         passive = slots(),
+        own = slots(),
+        outside = 0,
         wanted = 0,
         publishing = false,
         combat = false,
@@ -163,19 +169,19 @@ end
 
 -- Drops the blanked (false) subscriber slots, keeping the others' order.
 local function compact(o)
-    local subs, passive, alts = o.subs, o.passive, o.alts
+    local subs, passive, own, alts = o.subs, o.passive, o.own, o.alts
     local n, j = subs.n, 0
     for i = 1, n do
         if subs[i] then
             j = j + 1
-            subs[j], passive[j] = subs[i], passive[i]
+            subs[j], passive[j], own[j] = subs[i], passive[i], own[i]
             if alts then
                 alts[j] = alts[i]
             end
         end
     end
     for i = j + 1, n do
-        subs[i], passive[i] = false, false
+        subs[i], passive[i], own[i] = false, false, false
         if alts then
             alts[i] = false
         end
@@ -229,11 +235,8 @@ local function setAlts(o, i, alts)
     end
 end
 
---- Subscribes `fn(name, version, output)` to `name`'s publishes; a `passive` subscriber listens without asking the
---- engine to compute the display. `needs` (optional): `needs.alts` asks Core to fill recs[1..2].alts (the picks at
---- the gating resource's belief bounds). Subscribing an already subscribed fn only updates its passive flag and needs.
---- Returns false when the slots are full.
-function Engine.Subscribe(name, fn, passive, needs)
+-- Engine.Subscribe and Output.Subscribe: `own` true for Hekili's own subscribers, which outside callers never crowd out.
+local function subscribe(name, fn, passive, needs, own)
     local o = Displays[name]
     local subs = o.subs
     passive = passive and true or false
@@ -248,6 +251,9 @@ function Engine.Subscribe(name, fn, passive, needs)
             return true
         end
     end
+    if not own and o.outside == OUTSIDE then
+        return false
+    end
     -- A publish cut short by a subscriber error leaves its blanked slots (and `publishing`) behind: drop them first.
     if subs.n == SUBS then
         compact(o)
@@ -256,12 +262,29 @@ function Engine.Subscribe(name, fn, passive, needs)
         return false
     end
     local n = subs.n + 1
-    subs[n], o.passive[n], subs.n = fn, passive, n
+    subs[n], o.passive[n], o.own[n], subs.n = fn, passive, own, n
+    if not own then
+        o.outside = o.outside + 1
+    end
     if not passive then
         o.wanted = o.wanted + 1
     end
     setAlts(o, n, alts)
     return true
+end
+
+--- Subscribes `fn(name, version, output)` to `name`'s publishes; a `passive` subscriber listens without asking the
+--- engine to compute the display. `needs` (optional): `needs.alts` asks Core to fill recs[1..2].alts (the picks at
+--- the gating resource's belief bounds). Subscribing an already subscribed fn only updates its passive flag and needs.
+--- Returns false when the caller's slots are full: an outside caller has 4 per display.
+function Engine.Subscribe(name, fn, passive, needs)
+    return subscribe(name, fn, passive, needs, false)
+end
+
+--- Engine.Subscribe for Hekili's own subscribers (the displays, the integrations, the action bar glow): their slots
+--- are kept apart from the outside callers', so an outside caller never takes one.
+function Output.Subscribe(name, fn, passive, needs)
+    return subscribe(name, fn, passive, needs, true)
 end
 
 --- Removes `fn` from `name`'s subscribers, keeping the others' order.
@@ -272,6 +295,9 @@ function Engine.Unsubscribe(name, fn)
         if subs[i] == fn then
             if not o.passive[i] then
                 o.wanted = o.wanted - 1
+            end
+            if not o.own[i] then
+                o.outside = o.outside - 1
             end
             setAlts(o, i, false)
             subs[i] = false
@@ -291,7 +317,7 @@ function Output.Annotate(fn)
             return true
         end
     end
-    if n == SUBS then
+    if n == ANNOTATORS then
         return false
     end
     annotators[n + 1], annotators.n = fn, n + 1
