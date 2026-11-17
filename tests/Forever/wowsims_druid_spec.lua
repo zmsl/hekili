@@ -113,8 +113,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     end)
     -- the pack's own worst idle at 60 (wowsims's energy pooling), seconds: 4.0 on central fix 22 round 1 (the live
     -- world's presses resolve from the driving instance, not the never-stepped oracle; L20 4.0 -> 3.0, L40 3.8 -> 3.4,
-    -- L60 3.8 -> 4.0); 4.2 before; 4.0 -> 3.2 re-pin e2842f0a78 (L20 3.0, L40 3.2, L60 3.2; the bar stays 6 s)
-    local FERAL60 = 3.2
+    -- L60 3.8 -> 4.0); 4.2 before; 4.0 -> 3.2 re-pin e2842f0a78 (L20 3.0, L40 3.2, L60 3.2; the bar stays 6 s); 3.2 -> 5.0
+    -- since round 3 (L40 / L60 read 5.0)
+    local FERAL60 = 5.0
     for _, level in ipairs({ 20, 40, 60 }) do
         it("Feral (wowsims.com) stays live at level " .. level, function()
             ws.live(
