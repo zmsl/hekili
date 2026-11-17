@@ -2961,23 +2961,33 @@ describe("the flapping warning for sequences (L1205; Fable L1286)", function()
     it(
         "one token for both routes: warned through an open/close line pair, the item-4 shape is not warned again",
         function()
-            local codes, n = held({
+            -- one load, one session: test_fa drives the line pair alone, test_fb the item-4 shape (a close line + the start)
+            load({
                 default = "actions+=/open_window,name=s,if=test_fa\nactions+=/close_window,name=s,if=test_fa\n"
-                    .. "actions+=/strict_sequence,name=s,if=test_fa:berserker_stance:defensive_stance\nactions+=/defensive_stance",
+                    .. "actions+=/close_window,name=s,if=test_fb\n"
+                    .. "actions+=/strict_sequence,name=s,if=test_fb:berserker_stance:defensive_stance\n"
+                    .. "actions+=/defensive_stance",
             })
-            assert.are.equal(0, n) -- test_fa false: nothing acts
-            flags.fa = true
             local before = flaps
+            local _, sent = tick()
+            assert.are.same({}, sent) -- both false: nothing acts
+            flags.fa = true
             tick()
             assert.are.equal(before + 1, flaps)
             assert.is_truthy(flapMsg:find(FLAP_SEQ, 1, true)) -- the text by the window's kind, not by the route
-            flags.fa, flags.fb = false, false
-            codes, n = held({
-                default = "actions+=/close_window,name=s,if=test_fb\nactions+=/strict_sequence,name=s:berserker_stance:defensive_stance\n"
-                    .. "actions+=/defensive_stance",
-            })
+            flags.fa, flags.fb = false, true
+            tick()
+            local codes = {}
+            for i = 1, 3 do
+                _, sent = tick()
+                codes[i] = {}
+                for _, s in ipairs(sent) do
+                    codes[i][#codes[i] + 1] = s[2]
+                end
+                table.sort(codes[i])
+            end
             assert.are.same({ { OPEN, CLOSE }, { OPEN, CLOSE }, { OPEN, CLOSE } }, codes)
-            assert.are.equal(0, n)
+            assert.are.equal(before + 1, flaps)
         end
     )
 
