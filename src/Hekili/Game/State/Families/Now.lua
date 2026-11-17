@@ -970,6 +970,10 @@ I.On(Obs.Avoided, function(o, t)
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
     end
     local r = A.slot[o.a]
+    -- shortcut: a usable answer between the cast and this avoid keeps est where it raised it (I.Refund: the answer
+    -- saw the pool), so est stays under the truth by up to the `now`'s give-back, not the share alone; lo and hi are
+    -- right. Heals at the next answer. Upgrade (est to the post-`now` est + give-back, capped by the answer's top) if
+    -- a trace shows an avoided `refundNowOnAvoid` cast held back by it.
     local d = r > 0 and paid * A.refund[o.a] or 0
     if r > 0 and (d > 0 or nowH > 0) then -- at the fold; the answers since the cast's spend already saw it
         I.Refund(r, d + nowE, t, false, d + nowL, d + nowH)

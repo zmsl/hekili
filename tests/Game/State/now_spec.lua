@@ -2092,20 +2092,25 @@ describe("now handlers", function()
                 assert.are.equal(1, I.avoidsRun)
             end)
 
-            it("a usable answer between the cast and its avoid: no floor or estimate above the truth (30)", function()
-                rest(true, false)
-                cast(fs.SPENDER_C, 5)
-                ctl.usable[fs.SPENDER_B] = { true, false } -- the client already shows 30: spender_b (15) usable
-                ctl.Fire("SPELL_UPDATE_USABLE")
-                drain(5.03)
-                ctl.usable[fs.SPENDER_B] = nil
-                assert.is_true(rage(5.03).lo >= 15)
-                outcome(5.05, "DODGE")
-                local r = rage(5.1)
-                assert.are.equal(1, I.avoidsRun)
-                assert.is_true(r.lo <= 30 and r.est <= 30 + 1e-9, ("lo %.2f est %.2f, truth 30"):format(r.lo, r.est))
-                assert.is_true(r.hi >= 30 - 1e-9, ("hi %.2f, truth 30"):format(r.hi))
-            end)
+            it(
+                "a usable answer between the cast and its avoid: no floor above the truth (30), est at the answer",
+                function()
+                    rest(true, false)
+                    cast(fs.SPENDER_C, 5)
+                    ctl.usable[fs.SPENDER_B] = { true, false } -- the client already shows 30: spender_b (15) usable
+                    ctl.Fire("SPELL_UPDATE_USABLE")
+                    drain(5.03)
+                    ctl.usable[fs.SPENDER_B] = nil
+                    assert.is_true(rage(5.03).lo >= 15)
+                    outcome(5.05, "DODGE")
+                    local r = rage(5.1)
+                    assert.are.equal(1, I.avoidsRun)
+                    -- the answer's bound holds (no floor above the truth); est stays at the answer's 15, not the truth's
+                    -- 30 (I.Refund keeps est an answer raised since the cast: the Now.lua avoid path's shortcut)
+                    assert.are.same({ 15, 15 }, { r.lo, r.est })
+                    assert.is_true(r.hi >= 30 - 1e-9, ("hi %.2f, truth 30"):format(r.hi))
+                end
+            )
 
             it("a band: the floor and the top each get back what the `now` took from them", function()
                 rest(true, false)
