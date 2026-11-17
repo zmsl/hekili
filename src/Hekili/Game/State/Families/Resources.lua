@@ -171,7 +171,11 @@ R.auraRegen = G
 -- Regen entries (C3b, built from each resource's `mult` list), wowsims's mana PseudoStats while the player's aura j is
 -- believed up: `mult` the whole rate x n (default 1), `spirit` the spirit regen x m (default 1), `share` + s of the
 -- spirit regen while casting (default 0; capped with the slot's static share at all of it), `mp5` + x a second in and
--- out of the window (default 0); `spirit`, `share` and `mp5` may be functions (refresh). See coefAt.
+-- out of the window (default 0); `spirit`, `share` and `mp5` may be functions (refresh). `mp5Mult` (a number, default 1)
+-- the gear and buff MP5 x p: the learned mp5 part and every other entry's `mp5` but an `energize` one's (`energize`:
+-- a periodic energize ticks its own amount; wowsims mana.go:176-183 multipliedManaRegen). `spirit`, `share`,
+-- `mp5Mult` and `energize` act on an `fsr` slot only: a slot without the rule has no learned parts to split, its rate is
+-- f x (the learned rate + every entry's mp5). See coefAt.
 local M = {
     n = 0,
     slot = {},
@@ -180,6 +184,8 @@ local M = {
     spirit = {},
     share = {},
     mp5 = {},
+    mp5Mult = {},
+    energize = {},
     spiritDef = {},
     mp5Def = {},
     shareDef = {},
@@ -452,11 +458,13 @@ I.OnBuild(function(def, now)
             local e = entries[k]
             -- each field valid or its default (a spirit of 0 or less: the out-of-combat read divides by it; a mult of 0
             -- pauses the slot, and a read under it teaches nothing); a function spirit or mp5 is read here once
-            local f, sh, m, x = e.mult, e.share, e.spirit, e.mp5
+            local f, sh, m, x, p = e.mult, e.share, e.spirit, e.mp5, e.mp5Mult
             f = type(f) == "number" and f >= 0 and f or nil
             sh = (type(sh) == "function" or type(sh) == "number" and sh > 0 and sh <= 1) and sh or nil
+            p = type(p) == "number" and p > 0 and p or nil
             local live = f
                 or sh
+                or p
                 or type(m) == "function"
                 or type(m) == "number" and m > 0
                 or type(x) == "function"
@@ -466,6 +474,7 @@ I.OnBuild(function(def, now)
                     M.n = M.n + 1
                     M.slot[M.n], M.aura[M.n] = r, i
                     M.mult[M.n], M.spiritDef[M.n], M.mp5Def[M.n], M.shareDef[M.n] = f or 1, m, x, sh
+                    M.mp5Mult[M.n], M.energize[M.n] = p or 1, e.energize == true
                     R.shaped[r] = true
                 end
             end
@@ -587,27 +596,39 @@ local function auraGain(g, from, to)
 end
 
 -- Slot r's rate at t as multiples of its two learned parts plus a known rate (fa x regE + fb x spE + k): wowsims's
--- (MP5/5 + S x m x min(c + s, 1)) x f inside the window and (MP5/5 + S x m) x f outside (sim/core/mana.go:186-206),
--- from the entries up at t: f and m multiply, s and mp5 add. The spirit regen S is spE / (1 - c), or the mp5 part
--- when the static share c is all of it (shortcut: exact while the slot has no mp5; upgrade if a full-share spec has
--- mp5). A plain slot's fb is 0. Allocates nothing.
+-- (MP5 x p + S x m x min(c + s, 1) + E) x f inside the window and (MP5 x p + S x m + E) x f outside
+-- (sim/core/mana.go:176-206: its all-regen multiplier p scales the spirit regen too, which `spirit` entries carry), from
+-- the entries up at t: f, m and p multiply, s and mp5 add; MP5 is the learned mp5 part M plus the entries' mp5 but an
+-- `energize` one's, E those. regE holds M + cS and spE (1 - c)S, so M x p + S x m' is p x regE + (m' - p c) / (1 - c) x
+-- spE. The spirit regen S is spE / (1 - c), or the mp5 part when the static share c is all of it (shortcut: exact while
+-- the slot has no mp5; upgrade if a full-share spec has mp5). A plain slot's fb is 0. Allocates nothing.
+-- shortcut: an entry whose p exceeds its spirit multiple (an `mp5Mult` with no `spirit`) makes fb negative, so the
+-- spirit term of the band's lo and hi swap sides; the estimate is exact. Upgrade by taking the band's ends apart when a
+-- pack declares one (the shared all-regen entry has m = p).
 local function coefAt(r, t, inside)
-    local f, m, s, k = 1, 1, 0, 0
+    local f, m, s, p, k, kE = 1, 1, 0, 1, 0, 0
     for i = 1, M.n do
         if M.slot[i] == r then
             local j = M.aura[i]
             if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then -- unit 1 is always "player"
-                f, m, s, k = f * M.mult[i], m * M.spirit[i], s + M.share[i], k + M.mp5[i]
+                f, m, s, p = f * M.mult[i], m * M.spirit[i], s + M.share[i], p * M.mp5Mult[i]
+                if M.energize[i] then
+                    kE = kE + M.mp5[i]
+                else
+                    k = k + M.mp5[i]
+                end
             end
         end
     end
     if not R.fsr[r] then
-        return f, 0, f * k
+        return f, 0, f * (k + kE)
     end
+    k = k * p + kE
     local c = R.share[r]
-    local fa, fb, e = 1, 1, m - 1
+    -- outside 1 + e / (1 - c) = (m - p c) / (1 - c), written so p = 1 computes what it did before p existed
+    local fa, fb, e = p, 1, m - 1 - (p - 1) * c
     if inside then
-        fb, e = 0, m * (c + s < 1 and c + s or 1) - c
+        fb, e = 0, m * (c + s < 1 and c + s or 1) - p * c
     end
     if c < 1 then
         fb = fb + e / (1 - c) -- nonzero: c < 1
@@ -618,9 +639,9 @@ local function coefAt(r, t, inside)
 end
 
 -- The entries of slot r up at t as the out-of-combat read sees them: their whole-rate multiple f, their summed mp5,
--- whether a `spirit` one is up (the game's pair then mixes the parts: no news), and the summed share s of the
--- share-only ones (a regen-while-casting aura: the pair mixes them by a known share, which the read unmixes; aura audit
--- C9). Allocates nothing.
+-- whether a `spirit` or an `mp5Mult` one is up (the game's pair then mixes the parts: no news), and the summed share s
+-- of the share-only ones (a regen-while-casting aura: the pair mixes them by a known share, which the read unmixes; aura
+-- audit C9). Allocates nothing.
 local function readAt(r, t)
     local f, k, mixed, s = 1, 0, false, 0
     for i = 1, M.n do
@@ -628,7 +649,7 @@ local function readAt(r, t)
             local j = M.aura[i]
             if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then
                 f, k = f * M.mult[i], k + M.mp5[i]
-                mixed = mixed or M.spirit[i] ~= 1
+                mixed = mixed or M.spirit[i] ~= 1 or M.mp5Mult[i] ~= 1
                 s = s + (M.spirit[i] == 1 and M.share[i] or 0)
             end
         end

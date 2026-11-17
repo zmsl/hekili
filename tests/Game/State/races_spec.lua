@@ -185,11 +185,59 @@ describe("Engine/Schema/Races.lua", function()
         assert.are.equal(15, a.spend)
     end)
 
-    it("applies pct to a fraction-of-maximum cost", function()
+    -- a fraction keeps its declared value: ns.SpendPoints prices it whole and then cuts that price (`points`), as
+    -- wowsims does (spend_base_spec.lua)
+    it("leaves a fraction cost to its whole price, which takes the pct", function()
         load("Fake")
         local a = ability("spender_a", { id = 1011, spend = 0.2, spendType = "resource_a" })
         state.buff.racial_a = { up = true, count = 3 }
-        assert.is_true(math.abs(a.spend - 0.18) < 1e-9)
+        assert.are.same({ 0.2, 18 }, { a.spend, ns.costMods.Apply(20, a, true) })
+    end)
+
+    it(
+        "cuts by a talent's rank with no aura (`talent`, `pct` by rank), never at rank 0, and takes no charge",
+        function()
+            load("Fake", nil, { talent = "talent_x", pct = { -0.04, -0.08, -0.12 }, charges = 1 })
+            state.talent = { talent_x = { rank = 3 } }
+            local a = ability("spender_b", { id = 1012, spend = 0.11, spendType = "resource_a" })
+            assert.is_true(math.abs(ns.costMods.Apply(189, a, true) - 166.32) < 1e-9) -- 189 x 0.88, unrounded
+            ns.costMods.Spend(a.baseSpend, "spender_b") -- no aura: nothing to charge, no error
+            state.talent.talent_x.rank = 0
+            assert.are.equal(189, ns.costMods.Apply(189, a, true))
+        end
+    )
+
+    -- an aura + talent modifier with charges needs the rank for its charge as for its price (the belief's
+    -- I.SpendCostCharges alike, modifiers_spec.lua)
+    it("takes no charge from an aura + talent modifier at talent rank 0", function()
+        load("Fake", nil, { aura = "racial_a", talent = "talent_x", pct = -0.10, charges = 3 })
+        state.talent = { talent_x = { rank = 0 } }
+        local a = ability("spender_b", { id = 1012, spend = 10, spendType = "resource_a" })
+        state.buff.racial_a = { up = true, count = 3 }
+        assert.are.equal(10, a.spend)
+        ns.costMods.Spend(a.baseSpend, "spender_b")
+        assert.are.equal(3, state.buff.racial_a.count)
+        state.talent.talent_x.rank = 1
+        state.changes = state.changes + 1 -- the next reset (the cost memo's key)
+        assert.are.equal(9, a.spend)
+        ns.costMods.Spend(a.baseSpend, "spender_b")
+        assert.are.equal(2, state.buff.racial_a.count)
+    end)
+
+    -- a talent key the class does not register never applies and is read raw, not through the talent table's
+    -- unknown-key path (Sim/State.lua mt_talents logs "Unknown talent" there): a shared or race modifier may name a
+    -- talent another class has
+    it("never applies a talent key the class lacks, and reads it raw", function()
+        load("Fake", nil, { talent = "not_a_talent", pct = -0.5 })
+        local unknown = 0
+        state.talent = setmetatable({}, {
+            __index = function()
+                unknown = unknown + 1
+                return { rank = 0 }
+            end,
+        })
+        local a = ability("spender_b", { id = 1012, spend = 0.11, spendType = "resource_a" })
+        assert.are.same({ 189, 0 }, { ns.costMods.Apply(189, a, true), unknown })
     end)
 
     it("covers every ability without `spells`, and spends a charge on a cast made free (pct = -1)", function()

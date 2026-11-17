@@ -345,11 +345,14 @@ follows the log's pet power lines (their after-values, no modelled regen; fix 31
 log.
 
 **Percent-of-base costs.** A `spend` between 0 and 1 is a fraction of its pool's base power (the resource meta's
-`base`, or the belief's learned one; without either, of the maximum, as Hekili), floored, in both layers: the sim's
-`ns.SpendPoints` (`Engine/Sim/State.lua`, every site that prices a spend) and the belief's `I.BaseCostOf`
-(`Game/State/Families/Casts.lua`). Any other cost is points. An ability declaring `spendBase = true` has its `spend`,
-scalar or function, read as a fraction at any magnitude (a percent-of-base cost a stacking aura raises past 100% of
-base), priced `floor(c x base)` the same way; the base learning from out-of-combat cost reads counts its reads too.
+`base`, or the belief's learned one; without either, of the maximum, as Hekili), to the nearest whole (a half up), in
+both layers: the sim's `ns.SpendPoints` (`Engine/Sim/State.lua`, every site that prices a spend) and the belief's
+`I.BaseCostOf` (`Game/State/Families/Casts.lua`); cost modifiers then cut that whole price, unrounded. Any other cost is
+points. An ability declaring `spendBase = true` has its `spend`, scalar or function, read as a fraction at any
+magnitude (a percent-of-base cost a stacking aura raises past 100% of base), priced the same way; the base learning
+from out-of-combat cost reads (`I.LearnBases`) counts its reads too. A read cut only by passive talents' percent
+modifiers (talent-gated, no aura) teaches the base with their factor divided out; a read an aura's modifier cuts
+teaches nothing.
 
 An ability's `known` must depend only on the spellbook, talents and gear, never on buffs or time, because the engine
 caches it for one prediction (`state:IsKnown`, wiped by `Hekili:ResetSpellCaches`). `state:IsDisabled` caches its
