@@ -20,8 +20,11 @@ The recommendations come from Hekili Forever's own simulation of the next few se
 | `Hekili.IsForever()` and `Hekili.Version` | Function, string | Telling Hekili Forever from retail Hekili, and which release is loaded ([Detecting Hekili Forever](#detecting-hekili-forever)) |
 | `Hekili:RegisterSnapshotListener(fn)` and `Hekili:UnregisterSnapshotListener(fn)` | Functions | An addon that adds its own lines to a snapshot |
 | The public chat commands | Commands | Macros and buttons that change toggles, priorities and profiles |
+| The LibDataBroker data source `Hekili` | Data source name | A display addon for LibDataBroker, such as a panel bar, that shows Hekili Forever's mode and toggles and its menu |
 
 The display style interface and the fields of a recommendation record are described in [Contributing display styles and integrations](Contributing-Display-Styles-And-Integrations). `Hekili.DisplayStyleAPI` changes only when that interface or the record's fields change. The chat commands are listed in [Slash commands](Slash-Commands); each one also works in a macro.
+
+Only the name of the LibDataBroker data source is promised: a display addon finds it under `Hekili`. What the data source holds (its text, icon and click handler) is internal and can change.
 
 The saved settings (`HekiliDB`), the options, the frames and every other member of the `Hekili` global are internal. An addon that reads them can break with any release. `Hekili.Engine` is internal too: an addon that follows the recommendations registers a recommendation listener.
 

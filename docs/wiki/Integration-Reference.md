@@ -17,6 +17,9 @@ The **integration reference** lists every function and event of Hekili Forever's
 | `HEKILI_RECOMMENDATION_UPDATE` | WeakAuras event | `src/Hekili/Integrations/Recommendations.lua` |
 | `Hekili:GetToggleState` | Function | `src/Hekili/Options/Options.lua` |
 | `HEKILI_TOGGLE` | WeakAuras event | `src/Hekili/Options/Options.lua` |
+| `Hekili.IsForever` | Function | `src/Hekili/Hekili.lua` |
+| `Hekili.Version` | String | `src/Hekili/Hekili.lua` |
+| `Hekili` (LibDataBroker) | Data source name | `src/Hekili/UI/UI.lua` |
 
 ## Display styles
 
@@ -184,6 +187,14 @@ function(event, name, value)
     return Hekili ~= nil and Hekili:GetToggleState("cooldowns") == true
 end
 ```
+
+## IsForever and Version
+
+`Hekili.IsForever()` takes no argument and returns `true`; retail Hekili has no such function. `Hekili.Version` is the version string, such as `v0.9.0`. [Detecting Hekili Forever](Integration-Overview#detecting-hekili-forever) shows the test to use and the shapes of the version.
+
+## The LibDataBroker data source
+
+Hekili Forever registers a LibDataBroker data source named `Hekili`. A display addon for LibDataBroker, such as a panel bar, lists it under that name, shows the display mode and the main toggles as its text, and opens Hekili Forever's menu when it is clicked. Only the name is promised: the data source's fields are internal.
 
 ## Chat commands in macros
 
