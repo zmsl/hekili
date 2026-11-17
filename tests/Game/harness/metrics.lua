@@ -532,6 +532,16 @@ end
 function M.recovered100(m)
     return m.falseRows > 0 and 100 * m.recovered / m.falseRows or 100
 end
+--- False credits left unrecovered per 100 own outcomes in the truth (spell outcomes plus the melee tally's white
+--- wounds): the detect gate (L1285). recovered100's share falls when a recovered false credit stops happening; this
+--- count does not.
+function M.unrecovered100(m)
+    local mm, n = m.melee, m.own
+    if mm then
+        n = n + mm.own[1] + mm.own[2]
+    end
+    return n > 0 and 100 * (m.falseRows - m.recovered) / n or 0
+end
 function M.wash(m)
     return m.washFights > 0 and m.washNet / m.washFights or 0
 end
@@ -832,7 +842,7 @@ function M.ticketLine(m)
     return string.format(
         "fights=%d own=%d recall=%.3f (wrong %d, missed %d) false/100=%.2f leak/100=%.2f staged=%.3f divergent/100=%.2f "
             .. "lost engine=%d truth=%d outcomes=%d dispatched=%d residual=%d overflow=%d postClear=%d/%d"
-            .. " recovered/100=%.1f (median %.0f ms) wash=%.2f (gross %.1f)",
+            .. " recovered/100=%.1f (median %.0f ms) wash=%.2f (gross %.1f) unrecovered/100=%.2f",
         m.fights,
         m.own,
         M.recall(m),
@@ -853,7 +863,8 @@ function M.ticketLine(m)
         M.recovered100(m),
         M.recoverMedian(m),
         M.wash(m),
-        m.washFights > 0 and m.washGross / m.washFights or 0
+        m.washFights > 0 and m.washGross / m.washFights or 0,
+        M.unrecovered100(m)
     )
 end
 

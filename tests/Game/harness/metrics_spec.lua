@@ -85,6 +85,20 @@ describe("the harness metrics", function()
         assert.are.equal(11, m.washGross / m.washFights) -- 9 + 9 + 4 over 2 fights
     end)
 
+    it("unrecovered: false credits left unrecovered per 100 own outcomes; a recovered one gone leaves it", function()
+        local m = metrics.newTickets()
+        m.own, m.melee = 3, metrics.new()
+        m.melee.own = { 1, 0 } -- 4 own outcomes in the truth: spell outcomes plus white wounds
+        metrics.recoverRow(m, 12.0, 0, 0, true) -- neutral: recovered
+        metrics.recoverRow(m, 13.0, 0, 0, false) -- unrecovered
+        assert.are.equal(25, metrics.unrecovered100(m)) -- 1 of 4
+        local share = metrics.recovered100(m)
+        m.falseRows, m.recovered = 1, 0 -- the recovered false credit never happens (a better attribution)
+        assert.are.equal(25, metrics.unrecovered100(m)) -- unchanged, while the share falls
+        assert.is_true(metrics.recovered100(m) < share)
+        assert.are.equal(0, metrics.unrecovered100(metrics.newTickets())) -- no own outcome: 0, never x/0
+    end)
+
     it("lostDiff: lost spell rows plus spell tickets closed assumed, off the truth's lost rows", function()
         local m = metrics.newTickets()
         m.lostEngine, m.lostTruth = 3, 4
