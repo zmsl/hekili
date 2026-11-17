@@ -12,6 +12,8 @@
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
+- Paladin: a second attack in the same instant as an Unsealed Wrath proc no longer stores or spends an extra Echo (the talent's 0.1 s cooldown; not yet checked in game).
+- Paladin: Retribution and Protection start from current mana regeneration values until your own is measured (not yet checked in game).
 
 - Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 
