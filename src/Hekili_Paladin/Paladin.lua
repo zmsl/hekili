@@ -262,13 +262,13 @@ local REVERENCE = { 0.15, 0.3 }
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
     fsr = {
         spirit = function()
-            if knownRank(HOLY_SHOCK) > 0 then
+            if state.spec.retribution and knownRank(HOLY_SHOCK) > 0 then
                 return 17.59
             end
             return state.spec.retribution and 11.9 or 16.5
         end,
         mp5 = function()
-            if knownRank(HOLY_SHOCK) > 0 then
+            if state.spec.retribution and knownRank(HOLY_SHOCK) > 0 then
                 return 7.54
             end
             return state.spec.retribution and 5.1 or 0

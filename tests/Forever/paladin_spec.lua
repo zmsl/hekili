@@ -149,6 +149,8 @@ describe("Forever Paladin", function()
         -- Holy Shock known (the Holy Shock build, its own gear): its own log, 25.13 outside, 7.54 while casting
         w.game.known[1311606] = true
         assert.are.same({ 17.59, 7.54 }, seed("retribution"))
+        -- Protection knows Holy Shock too (its kit): it keeps its own seed
+        assert.are.same({ 16.5, 0 }, seed("protection"))
         w.game.known[1311606] = nil
         -- the static share follows Reverence's rank (15/30%, wowsims's curve), never the spec
         local shares = {}
