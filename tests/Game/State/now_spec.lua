@@ -2185,6 +2185,36 @@ describe("now handlers", function()
                 assert.is_true(I.res.pinValid[s]) -- the swing's crossing, measured (Resources.lua pin)
             end)
 
+            -- the avoid and the swing's crossing in one drain (no re-ask of the short between): the give-back must
+            -- count in the slot's gain (R.gain) as what est took, not the whole take, or the crossing reads as ours
+            it("a swing's crossing in the avoid's own drain is no gain of ours either (review M3)", function()
+                register("big_test", { id = 2688, spend = 35, spendType = "rage" })
+                rest(true, false)
+                local s = I.res.slotOf[fs.RAGE]
+                cast(fs.SPENDER_C, 5)
+                ctl.usable[fs.SPENDER_B] = { true, false } -- the rung: at least 15
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.02)
+                ctl.usable[fs.SPENDER_B] = nil
+                ctl.usable[2688] = { false, true } -- 35 is short (the truth 30)
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.03)
+                ctl.now = 5.04
+                ctl.Fire("PLAYER_SWING", 3.6, 0) -- a swing's rage: past 35
+                ctl.now = 5.05
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                ctl.usable[2688] = { true, false }
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                ctl.Tick(5.06)
+                VS.Drain(5.07)
+                ctl.usable[2688] = nil
+                local r = rage(5.1)
+                assert.are.equal(1, I.avoidsRun)
+                assert.is_true(I.res.crossT[s] < 5, "the swing's crossing read as our own gain")
+                assert.is_true(I.res.pinValid[s]) -- the swing's crossing, measured (Resources.lua pin)
+                assert.is_true(r.lo >= 35 - 1e-9 and r.hi > 35, ("lo %.2f hi %.2f, truth 39"):format(r.lo, r.hi))
+            end)
+
             it("a plain read between the cast and its avoid wins: the avoid gives back nothing on top of it", function()
                 rest(true, false)
                 cast(fs.SPENDER_C, 5)
