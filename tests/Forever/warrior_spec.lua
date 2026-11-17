@@ -1323,3 +1323,47 @@ end)
 
 -- The wowsims lines (class-completion Task 5) on the headless engine, as fury_spec checks Fury's: each line's `if=` runs
 -- through the real Scripts.lua against a booted Arms Warrior (helpers/warrior_world.lua) with the state pinned per case.
+
+-- Execute's `refundNowOnAvoid` on the belief (L1237): its `now` spends all the rest of the rage; a DODGE with no usable
+-- answer in between gives that back, the base cost kept (wowsims execute.go at e4ef929e54: an avoid costs the base only).
+describe("the belief's rage after an avoided Execute", function()
+    local headless = require("Game.harness.headless")
+    local ww = require("Forever.helpers.warrior_world")
+    local EXECUTE = 5308
+
+    local function avoided(field)
+        local c = ww.character()
+        local H = headless.new({ character = c, pack = "Fury (wowsims.com)" })
+        assert.are.same({}, H.loadErrors)
+        local VS, I = H.ns.VirtualState, H.ns.VirtualStateInternal
+        local a = I.ab.bySpell[EXECUTE]
+        I.ab.refundNow[a] = field
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = H.ctl.now + 1
+        H.ctl.power[1] = 60 -- a plain read seeds the belief, then rage goes secret (as in combat)
+        H.Fire("UNIT_POWER_FREQUENT", "player", "RAGE")
+        assert.is_true(headless.cycle(H, t))
+        H.ctl.power[1] = nil
+        local R = VS.Power(1, t).est
+        H.ctl.now = t + 0.1
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-X", EXECUTE)
+        assert.is_true(headless.cycle(H, t + 0.15))
+        assert.are.equal(0, VS.Power(1, t + 0.15).est) -- the `now` spent the rest
+        H.ctl.now = t + 0.2
+        H.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+        assert.is_true(headless.cycle(H, t + 0.25))
+        VS.Drain(t + 0.3)
+        return R, VS.Power(1, t + 0.3).est, I.CostOf(a)
+    end
+
+    it("is back to R less Execute's cost with the field on, and 0 with it off", function()
+        local R, back, cost = avoided(true)
+        assert.is_true(R > 0 and cost > 0 and R >= cost, tostring(R) .. " " .. tostring(cost))
+        assert.are.equal(R - cost, back)
+        local _, off = avoided(false)
+        assert.are.equal(0, off)
+    end)
+end)
