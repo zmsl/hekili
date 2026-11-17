@@ -176,9 +176,10 @@ M.FLICKER = {
     -- it); the same shape is in the ablated tree (seeds 12, 15) and before the change (seeds 12, 15, 18)
     -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.12 / 0.13 / 0.07,
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 2, heldReady 351 / 270 / 327, agreement .890 / .906 / .896): flicker 0.22 ->
-    -- 0.14 (the measured worst + 0.01), readyShort 1 -> 2, heldReady 362 -> 351. Cause: the world's main hand follows
-    -- the new log, 2.35 -> 2.40 s (3becdf582; d17b7d45e and ab8ad0acc read readyShort 0, heldReady 359 at 41-60). 2.40 s is
-    -- 12 polls, so a swing that lands on a poll stays there: in seed 59 (on the gate's boot) the mob's swing at 164.72 is
+    -- 0.14 (the measured worst + 0.01) and heldReady 362 -> 351 tightened to the measurement (the step that moved them
+    -- not split: the re-pin flip, the world follow, the mana-09 and harness-gcd-edge merges); readyShort 1 -> 2, cause:
+    -- the world's main hand follows the new log, 2.35 -> 2.40 s (3becdf582; seeds 41-60 at d17b7d45e and ab8ad0acc read
+    -- readyShort 0). 2.40 s is 12 polls, so a swing that lands on a poll stays there: in seed 59 (on the gate's boot) the mob's swing at 164.72 is
     -- parried and parry haste pulls our swing to 20% of 2.40 (0.48), onto the poll at 165.20, then 167.60 ... 177.20. At
     -- 170.00 (Shield Block, 10) and 177.20 (Revenge, 2; that swing misses) the swing is due at the poll's own instant:
     -- ours and the oracle both count it and show the icon at 0.00, and the loop presses before the world pays the swing
