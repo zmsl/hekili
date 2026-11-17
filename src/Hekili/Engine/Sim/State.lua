@@ -1804,6 +1804,16 @@ do
         return false
     end
 
+    --- (§15, the snapshot's Windows section) The copy's row count, and row `w`: its name, whether it exists in this
+    --- display, up at now, its step and its number of steps (0 for a window without steps).
+    function state.WindowCount()
+        return WIN.n
+    end
+
+    function state.WindowRow( w )
+        return WIN.name[ w ], not absent( w ), upAt( w, state.now + state.offset ), WIN.step[ w ], WIN.nSteps[ w ] or 0
+    end
+
     --- Core.lua's slot loop at the top of every slot (and the alternatives probe, `send` false): the per-slot fired
     --- marks cleared (ruling 20); `send`: this slot's lines at now send their changes.
     function state.WindowSlot( send )

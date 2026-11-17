@@ -59,12 +59,8 @@ local function parse(text)
     return lines
 end
 
--- The pack's lists from simc text by list name; loads the scripts and enters combat.
-local function load(lists)
-    local out = { precombat = {} }
-    for name, text in pairs(lists) do
-        out[name] = parse(text)
-    end
+-- The pack's lists (entries by list name); loads the scripts and enters combat.
+local function install(out)
     H.Hekili.DB.profile.packs[ww.PACK].lists = out
     H.Hekili:LoadScripts()
     H.Hekili:ReviewPacks() -- the lists and entries the walk may run (UI.lua), as an edit in the options does
@@ -75,6 +71,15 @@ local function load(lists)
     VS.Drain(H.ctl.now)
     H.Fire("PLAYER_REGEN_DISABLED")
     assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+end
+
+-- The pack's lists from simc text by list name, installed as above.
+local function load(lists)
+    local out = { precombat = {} }
+    for name, text in pairs(lists) do
+        out[name] = parse(text)
+    end
+    install(out)
 end
 
 -- One update 0.2 s on; returns Primary's records and the operations it sent (in order, as { key, op }).
@@ -461,6 +466,42 @@ describe("APL window lines as commands (windows design v6 §4, §5)", function()
         assert.are.same({}, VSI.def.aplWindows)
         assert.are.equal(0, VSI.def.aplOpCap)
         assert.are_not.equal(gen, VSI.def.aplGen)
+    end)
+
+    it("L05: export then import: plain names and the windows list in the string; the same operations on W09", function()
+        load({
+            windows = "actions+=/window,name=x,duration=6",
+            default = "actions+=/open_window,name=x\nactions+=/close_window,name=x\n"
+                .. "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance",
+        })
+        local function run()
+            local got = {}
+            for i = 1, 3 do
+                local _, sent = tick()
+                got[i] = sent
+            end
+            return got
+        end
+        local before = run()
+        local hk = H.Hekili
+        local lists = hk.DeserializeActionPack(hk.SerializeActionPack(ww.PACK)).payload.lists
+        local function walk(v) -- no display key in the exported lists: plain names only
+            if type(v) == "string" then
+                assert.is_nil(v:find("#", 1, true), v)
+            elseif type(v) == "table" then
+                for k, x in pairs(v) do
+                    walk(k)
+                    walk(x)
+                end
+            end
+        end
+        walk(lists)
+        assert.are.same({ "window", "x" }, { lists.windows[1].action, lists.windows[1].window_name })
+        assert.are.equal(2, #lists.default[3].steps)
+        boot()
+        install(lists)
+        assert.are.same(before, run())
+        assert.are.equal(OPEN, before[1][1][2])
     end)
 
     it("L03: a spec change builds the belief from the active pack's records", function()
@@ -1485,6 +1526,98 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
     end)
 end)
 
+describe("strict sequences, more named cases (windows design v6 §13)", function()
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+    end)
+
+    it("S02: a line above the sequence becoming ready while it is open does not take slot 1 (the hold)", function()
+        load({
+            default = "actions+=/defensive_stance,if=test_fa\nactions+=/strict_sequence,name=s:bloodrage:berserker_stance\n"
+                .. "actions+=/defensive_stance",
+        })
+        local _, sent = tick()
+        assert.are.same({ { key("s"), OPEN } }, sent)
+        flags.fa = true
+        local recs = tick()
+        assert.are.same({ true, 1 }, { seqState("s") })
+        assert.are.equal("bloodrage", recs[1].actionName)
+    end)
+
+    it("P07: an outside zero-GCD line without use_off_gcd=1 is held under the default hold", function()
+        load({
+            default = "actions+=/strict_sequence,name=s:berserker_stance:defensive_stance\nactions+=/bloodrage,if=test_fb\n"
+                .. "actions+=/defensive_stance",
+        })
+        tick()
+        flags.fb = true
+        local recs = tick()
+        assert.are.same({ true, 1 }, { seqState("s") })
+        assert.are.equal("berserker_stance", recs[1].actionName)
+    end)
+
+    it("S13: two strict sequences sharing a first member: only the chosen one's key gets OPEN", function()
+        load({
+            default = "actions+=/strict_sequence,name=a:bloodrage:berserker_stance\n"
+                .. "actions+=/strict_sequence,name=b:bloodrage:defensive_stance\nactions+=/defensive_stance",
+        })
+        local _, sent = tick()
+        assert.are.same({ { key("a"), OPEN } }, sent)
+        assert.is_false((seqState("b")))
+    end)
+
+    it(
+        "P08: a member that cannot be cast at step 2: give-up CLOSE; allow_skip STEP 3, and CLOSE with none left",
+        function()
+            for _, opt in ipairs({ "", ",allow_skip=1" }) do
+                load({
+                    default = "actions+=/strict_sequence,name=s"
+                        .. opt
+                        .. ":bloodrage:berserker_stance,if=!test_fa:defensive_stance,if=!test_fb\nactions+=/defensive_stance",
+                })
+                tick()
+                cast(BR)
+                tick()
+                assert.are.same({ true, 2 }, { seqState("s") }, opt)
+                flags.fa = true
+                local recs, sent = tick()
+                if opt == "" then
+                    assert.are.same({ { key("s"), CLOSE } }, sent)
+                else
+                    assert.are.same({ { key("s"), STEP } }, sent)
+                    assert.are.equal(3, opArgs[1])
+                    assert.are.equal("defensive_stance", recs[1].actionName)
+                    tick()
+                    assert.are.same({ true, 3 }, { seqState("s") })
+                    flags.fb = true
+                    _, sent = tick()
+                    -- closed; unheld, the allow_skip start test passes on bloodrage again, so it is chosen and reopens
+                    assert.are.same({ { key("s"), CLOSE }, { key("s"), OPEN } }, sent)
+                end
+                flags.fa, flags.fb = false, false
+                H.Fire("PLAYER_REGEN_ENABLED")
+            end
+        end
+    )
+
+    it("D11: Primary and AOE both choose the same strict sequence: two keys open; one cast advances both", function()
+        H.Hekili.Engine.settings.toggles.mode.value = "dual"
+        load({ default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance" })
+        assert.is_true(H.Hekili.Engine.Subscribe("AOE", function() end))
+        local _, sent = tick()
+        local got = {}
+        for _, o in ipairs(sent) do
+            got[o[1]] = o[2]
+        end
+        assert.are.same({ [key("s")] = OPEN, [key("s", "AOE")] = OPEN }, got)
+        cast(BR)
+        tick()
+        assert.are.same({ true, 2 }, { seqState("s") })
+        assert.are.same({ true, 2 }, { seqState("s", "AOE") })
+    end)
+end)
+
 describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 25)", function()
     -- `bloodrage` plays the separated cooldown (`classcd`): its toggle is cooldowns, shown separately
     local cds
@@ -1611,6 +1744,119 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
         local recs = tick()
         assert.are.same({ true, 1 }, { seqState("p") })
         assert.are.equal("bloodrage", recs[1].actionName)
+    end)
+end)
+
+describe("the snapshot's Windows section (windows design v6 §15; L06, R13)", function()
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+    end)
+
+    -- One tick with the debug log on, its lines captured (a debugged display is not debugged again within 0.5 s, so
+    -- a caller spaces these ticks by plain ones).
+    local function debugTick()
+        local lines, dbg = {}, H.Hekili.Debug
+        H.Hekili.Debug = function(_, a, ...)
+            local ok, text
+            if type(a) == "number" then
+                ok, text = pcall(string.format, ...)
+            else
+                ok, text = pcall(string.format, a, ...)
+            end
+            lines[#lines + 1] = ok and text or tostring(a)
+        end
+        H.Hekili.Engine.settings.screenshot = false -- the snapshot's screenshot is a client call
+        H.Hekili.ActiveDebug = true
+        local ok, err = pcall(tick)
+        H.Hekili.ActiveDebug = false
+        H.Hekili.Debug = dbg
+        assert(ok, err)
+        return lines
+    end
+    local function has(lines, text)
+        for _, l in ipairs(lines) do
+            if l == text then
+                return true
+            end
+        end
+        return false
+    end
+    local function windowsLines(lines)
+        local out = {}
+        for _, l in ipairs(lines) do
+            if l:find("^Windows") or l:find("^  %w+: ") then
+                out[#out + 1] = l
+            end
+        end
+        return out
+    end
+
+    it("S01: Sequences on, each window as seeded, slot 1's operations with their line, the 10 s counters", function()
+        load({ default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance" })
+        local lines = debugTick()
+        local pack = ww.PACK
+        assert.is_true(has(lines, "Windows (Primary): Sequences on."), table.concat(windowsLines(lines), "\n"))
+        assert.is_true(has(lines, "  s: closed; 0 operations / 10 s, 0 opens / 10 s."))
+        assert.is_true(
+            has(lines, "Windows: sent OPEN s (line " .. pack .. ":default:1)."),
+            table.concat(windowsLines(lines), "\n")
+        )
+        tick()
+        tick()
+        lines = debugTick()
+        assert.is_true(
+            has(lines, "  s: up, step 1 of 2; strict, step timeout 4; 1 operations / 10 s, 1 opens / 10 s."),
+            table.concat(windowsLines(lines), "\n")
+        )
+        for _, l in ipairs(windowsLines(lines)) do
+            assert.is_nil(l:find("#", 1, true), l) -- plain names: no key suffix outside the belief's section
+        end
+    end)
+
+    it("W09 (L06/R13): both operations in order with their lines, two restarts in the slot, the counters", function()
+        load({
+            windows = "actions+=/window,name=x,duration=6",
+            default = "actions+=/open_window,name=x\nactions+=/close_window,name=x\nactions+=/defensive_stance",
+        })
+        local lines = debugTick()
+        local pack, at = ww.PACK, {}
+        for i, l in ipairs(lines) do
+            at[l] = at[l] or i
+        end
+        local o, c =
+            at["Windows: sent OPEN x (line " .. pack .. ":default:1)."],
+            at["Windows: sent CLOSE x (line " .. pack .. ":default:2)."]
+        assert.is_true(o ~= nil and c ~= nil and o < c, table.concat(windowsLines(lines), "\n"))
+        local restarts = false
+        for _, l in ipairs(lines) do
+            restarts = restarts or l:find("^Recommendation #1 is .*window restarts: 2%.") ~= nil
+        end
+        assert.is_true(restarts)
+        tick()
+        tick()
+        lines = debugTick()
+        assert.is_true(
+            has(lines, "  x: closed; 6 operations / 10 s, 3 opens / 10 s."),
+            table.concat(windowsLines(lines), "\n")
+        )
+    end)
+
+    it("a mode=wait sequence names the member it waits on; Sequences off is said for the display", function()
+        H.Hekili.Engine.settings.displays.Primary.sequences = false
+        load({ default = "actions+=/sequence,name=p,mode=wait:bloodrage,if=test_fa\nactions+=/defensive_stance" })
+        local lines = debugTick()
+        assert.is_true(has(lines, "Windows (Primary): Sequences off."), table.concat(windowsLines(lines), "\n"))
+        boot()
+        load({ default = "actions+=/sequence,name=p,mode=wait:bloodrage,if=test_fa\nactions+=/defensive_stance" })
+        tick()
+        tick()
+        tick()
+        lines = debugTick()
+        assert.is_true(
+            has(lines, "  p: up, step 1 of 1; mode=wait, waiting on bloodrage; 1 operations / 10 s, 1 opens / 10 s."),
+            table.concat(windowsLines(lines), "\n")
+        )
     end)
 end)
 

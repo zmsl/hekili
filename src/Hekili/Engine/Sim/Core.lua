@@ -575,6 +575,67 @@ local OP_OPEN, OP_CLOSE = 1, 2 -- VS.WindowOp's codes (Game/State/Families/Windo
 -- (L1205) pack -> window name -> true: the flapping-pair warning already given this session
 local flapWarned = {}
 
+-- (windows design v6 §15) the snapshot's two rolling numbers per key: the operations and the opens sent in the last
+-- 10 s, in one-second buckets (a key's buckets are made the first time it sends, then reused).
+local OP_NAME = { "OPEN", "CLOSE", "STEP" }
+local winCount = {}
+
+local function count10( key )
+    local c = key and winCount[ key ]
+    if not c then return 0, 0 end
+    local now, ops, opens = math.floor( state.now ), 0, 0
+    for b = 1, 10 do
+        if c.sec[ b ] > now - 10 then ops, opens = ops + c.ops[ b ], opens + c.opens[ b ] end
+    end
+    return ops, opens
+end
+
+-- Every operation the core sends: to the belief under `key`, counted, and named in the debug log with the line that
+-- sent it (`lineID`, the entry's "pack:list:n"; window `name`, never the key).
+local function winSend( key, code, arg, name, lineID )
+    ns.VirtualState.WindowOp( key, code, arg )
+    local c = winCount[ key ]
+    if not c then
+        c = { sec = {}, ops = {}, opens = {} }
+        for b = 1, 10 do c.sec[ b ], c.ops[ b ], c.opens[ b ] = -1, 0, 0 end
+        winCount[ key ] = c
+    end
+    local sec = math.floor( state.now )
+    local b = sec % 10 + 1
+    if c.sec[ b ] ~= sec then c.sec[ b ], c.ops[ b ], c.opens[ b ] = sec, 0, 0 end
+    c.ops[ b ] = c.ops[ b ] + 1
+    if code == OP_OPEN then c.opens[ b ] = c.opens[ b ] + 1 end
+    if Hekili.ActiveDebug then
+        Hekili:Debug( "Windows: sent %s %s%s (line %s).", OP_NAME[ code ], tostring( name ), arg and ( " " .. arg ) or "", tostring( lineID ) )
+    end
+end
+
+-- (§15) The snapshot's Windows section of display `dispName` (debug only): its Sequences setting, then each window it
+-- has, as seeded from the belief: up or closed, the step, an open sequence's effective options (mode=wait: the member
+-- waited on) and the two rolling numbers.
+local function windowsSection( dispName )
+    local cw = scripts.appliedWindows
+    Hekili:Debug( "Windows (%s): Sequences %s.", dispName, scripts.SequencesOn( dispName ) and "on" or "off" )
+    for w = 1, state.WindowCount() do
+        local name, present, up, step, nSteps = state.WindowRow( w )
+        if present then
+            local d = cw.byName[ name ]
+            local ops, opens = count10( d and d.keys[ dispName ] )
+            local opt = ""
+            if up and d and d.seq then
+                if d.strict then
+                    opt = format( "; strict%s%s%s, step timeout %s", d.start_on_first and ", start_on_first" or "", d.allow_skip and ", allow_skip" or "",
+                        d.hold_off_gcd and ", hold_off_gcd" or "", tostring( d.step_timeout or 4 ) )
+                else
+                    opt = format( "; mode=%s%s", tostring( d.mode ), d.mode == "wait" and d.steps[ step ] and ( ", waiting on " .. d.steps[ step ] ) or "" )
+                end
+            end
+            Hekili:Debug( "  %s: %s%s%s; %d operations / 10 s, %d opens / 10 s.", name, up and "up" or "closed",
+                up and nSteps > 0 and format( ", step %d of %d", step, nSteps ) or "", opt, ops, opens )
+        end
+    end
+end
+
 local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap, packName )
     local name = state.args.window_name
     local verb = isOpen and "open_window" or "close_window"
@@ -605,7 +666,7 @@ local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap, pa
         if isOpen then changed = state.openWindow( name ) else changed = state.closeWindow( name ) end
     end
     local key = changed and atNow and state.WindowSendKey( name )
-    if key then ns.VirtualState.WindowOp( key, isOpen and OP_OPEN or OP_CLOSE ) end
+    if key then winSend( key, isOpen and OP_OPEN or OP_CLOSE, nil, name, scriptID ) end
     if changed then
         state.WindowFired( scriptID, true )
         -- (L1205) opened and closed by lines within one slot: the author's flapping pair, warned once per pack and window
@@ -696,9 +757,9 @@ local function castable( self, d, k, start )
 end
 
 -- A change to sequence d's copy at now goes to the belief under this display's key (slot 1 only, §5.1).
-local function seqSend( d, code, arg )
+local function seqSend( d, code, arg, lineID )
     local key = state.offset == 0 and ( state.delay or 0 ) == 0 and state.WindowSendKey( d.name )
-    if key then ns.VirtualState.WindowOp( key, code, arg ) end
+    if key then winSend( key, code, arg, d.name, lineID ) end
 end
 
 -- (§6) One sequence line at its list position. Returns the pick, and true when the walk must end below it (mode=wait
@@ -714,7 +775,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
         if not ( d and d.keys[ dispName ] ) or state.WindowFired( scriptID ) then return rAction, rWait, rDepth end
         local win = state.window[ name ]
         if win.up and win.step ~= 1 and self:CheckStack() and scripts:CheckScript( scriptID ) and state.WindowStep( name, 1 ) then
-            seqSend( d, OP_STEP, 1 )
+            seqSend( d, OP_STEP, 1, scriptID )
             state.WindowFired( scriptID, true )
             walkRestart = true
             if debug then self:Debug( " - restart_sequence %s: step 1, restart.", name ) end
@@ -774,7 +835,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
     if not ( self:CheckStack() and scripts:CheckScript( scriptID ) ) then return rAction, rWait, rDepth end
     if not win.up then
         if not state.WindowFired( scriptID ) and state.openWindow( name ) then -- the generated open line (ruling 12)
-            seqSend( d, 1 )
+            seqSend( d, OP_OPEN, nil, scriptID )
             state.WindowFired( scriptID, true )
             walkRestart = true
             if debug then self:Debug( " - sequence %s: opened, restart.", name ) end
@@ -793,7 +854,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
             end
             if state.WindowStep( name, to ) then
                 state.seqBypass = 0
-                seqSend( d, OP_STEP, to )
+                seqSend( d, OP_STEP, to, d.skipID )
                 state.WindowFired( d.skipID, true )
                 walkRestart = true
                 if debug then self:Debug( " - sequence %s: step %d cannot be cast, step %d, restart.", name, due, to ) end
@@ -827,9 +888,9 @@ local function giveUp( self, d )
         end
         state.WindowFired( d.giveID, true )
         if to > 0 then
-            if state.WindowStep( name, to ) then seqSend( d, OP_STEP, to ) end
+            if state.WindowStep( name, to ) then seqSend( d, OP_STEP, to, d.giveID ) end
         elseif state.closeWindow( name ) then
-            seqSend( d, 2 )
+            seqSend( d, OP_CLOSE, nil, d.giveID )
             walkRestart = true
             if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d cannot be cast; closed, restart.", name, win.step ) end
         end
@@ -1899,7 +1960,7 @@ function Hekili.Update()
             local maxRecs, onGcd = numRecs > 1 and numRecs + 2 or numRecs, 0
             local abilityOpts = Hekili:GetActiveSpecOption( "abilities" )
 
-            if debug then Hekili:Debug( "Combat Timer: %.2f", state.time ) end
+            if debug then Hekili:Debug( "Combat Timer: %.2f", state.time ); windowsSection( dispName ) end
 
             for i = 1, maxRecs do
                 local chosen_depth = 0
@@ -2228,8 +2289,8 @@ function Hekili.Update()
                         state.delay = 0
                         if state.openWindow( sd.name ) then
                             local key = state.offset == 0 and state.WindowSendKey( sd.name )
-                            if key then ns.VirtualState.WindowOp( key, 1 ) end
-                            if k > 1 and state.WindowStep( sd.name, k ) and key then ns.VirtualState.WindowOp( key, 3, k ) end
+                            if key then winSend( key, OP_OPEN, nil, sd.name, sd.id ) end
+                            if k > 1 and state.WindowStep( sd.name, k ) and key then winSend( key, OP_STEP, k, sd.name, sd.id ) end
                             if debug then Hekili:Debug( "strict_sequence %s chosen at +%.2f: opened%s.", sd.name, wait, key and ", sent" or ", forecast only" ) end
                         end
                         state.delay = dl
