@@ -57,7 +57,8 @@ end
 | `Hekili:RegisterDisplayStyle` | Any time after Hekili Forever's files have loaded, including from the dependent addon's own files. A style registered after the displays exist is bound on the next rebuild, and its settings are added to every display. |
 | `Hekili:RegisterSnapshotListener` | Any time after Hekili Forever's files have loaded |
 | `Hekili:RegisterRecommendationListener` | Any time after Hekili Forever's files have loaded. The listener is called from the next update on. |
-| `HEKILI_RECOMMENDATION_UPDATE` | Sent while WeakAuras is loaded |
+| `Hekili:GetToggleState` | After Hekili Forever's saved settings have loaded; from `PLAYER_LOGIN` on it is always safe |
+| `HEKILI_RECOMMENDATION_UPDATE` | Sent only when WeakAuras is loaded as the player enters the world |
 
 The recommendations are worked out only for a display that is shown, or followed by the action bar glow. A display that is hidden publishes nothing new, so neither a style, a listener nor the WeakAuras event sees an update for it.
 

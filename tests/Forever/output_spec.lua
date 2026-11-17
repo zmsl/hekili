@@ -245,7 +245,7 @@ describe("Engine.Output (pure)", function()
         assert.are.equal(0, bytes)
     end)
 
-    it("Subscribe drops slots blanked by a publish a subscriber error cut short before the 4-slot check", function()
+    it("Subscribe drops slots blanked by a publish a subscriber error cut short before the slot check", function()
         local s1
         s1 = function()
             Engine.Unsubscribe("AOE", s1) -- mid-publish: blanks the slot, compaction waits for the loop's end
@@ -259,6 +259,9 @@ describe("Engine.Output (pure)", function()
         Engine.Unsubscribe("AOE", s2)
         for _ = 1, 4 do
             assert.is_true(Engine.Subscribe("AOE", function() end))
+        end
+        for _ = 1, 4 do -- the last two fit only once the two blanked slots are dropped
+            assert.is_true(Out.Subscribe("AOE", function() end))
         end
     end)
 
@@ -878,40 +881,43 @@ describe("Engine.Output (headless Arms)", function()
         assert.is_true(spent > 0, "no published record costs anything")
     end)
 
-    it("WeakAuras: a passive subscriber fills payload and scans the six arguments", function()
-        local calls = {}
-        H.env.WeakAuras = {
-            ScanEvents = function(...)
-                calls[#calls + 1] = { n = select("#", ...), ... }
-            end,
-        }
-        local wanted = H.ns.Output.Wanted("Primary")
-        H.Fire("PLAYER_ENTERING_WORLD", false, false)
-        assert.are.equal(wanted, H.ns.Output.Wanted("Primary")) -- passive
-        t = t + 0.2
-        assert(headless.cycle(H, t))
-        local c
-        for _, call in ipairs(calls) do
-            if call[2] == "Primary" then
-                c = call
+    it(
+        "WeakAuras: a passive subscriber from PLAYER_ENTERING_WORLD fills payload and scans the six arguments",
+        function()
+            local calls = {}
+            H.env.WeakAuras = {
+                ScanEvents = function(...)
+                    calls[#calls + 1] = { n = select("#", ...), ... }
+                end,
+            }
+            local wanted = H.ns.Output.Wanted("Primary")
+            H.Fire("PLAYER_ENTERING_WORLD", false, false)
+            assert.are.equal(wanted, H.ns.Output.Wanted("Primary")) -- passive
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+            local c
+            for _, call in ipairs(calls) do
+                if call[2] == "Primary" then
+                    c = call
+                end
             end
+            assert.is_table(c, "no Primary scan")
+            local p = out.payload
+            assert.are.equal(6, c.n)
+            assert.are.equal("HEKILI_RECOMMENDATION_UPDATE", c[1])
+            assert.are.equal(out.recs[1].actionID, c[3])
+            assert.are.equal(out.recs[1].indicator, c[4])
+            assert.is_nil(c[5])
+            assert.are.equal(p, c[6])
+            assert.are.equal(out.recs[1].actionName, p[1].actionName)
+            assert.are.equal(out.recs[2].actionName, p[2].actionName)
+            assert.are_not.equal(out.recs[1], p[1])
+            assert.are.equal(p[1].actionName, p.actionName) -- the stock __index = payload[1]
+            assert.are.equal("kv", getmetatable(p).__mode)
+            assert.are.same({}, H.errors)
+            assert.are.same({}, headless.unexpected(H, "run"))
         end
-        assert.is_table(c, "no Primary scan")
-        local p = out.payload
-        assert.are.equal(6, c.n)
-        assert.are.equal("HEKILI_RECOMMENDATION_UPDATE", c[1])
-        assert.are.equal(out.recs[1].actionID, c[3])
-        assert.are.equal(out.recs[1].indicator, c[4])
-        assert.is_nil(c[5])
-        assert.are.equal(p, c[6])
-        assert.are.equal(out.recs[1].actionName, p[1].actionName)
-        assert.are.equal(out.recs[2].actionName, p[2].actionName)
-        assert.are_not.equal(out.recs[1], p[1])
-        assert.are.equal(p[1].actionName, p.actionName) -- the stock __index = payload[1]
-        assert.are.equal("kv", getmetatable(p).__mode)
-        assert.are.same({}, H.errors)
-        assert.are.same({}, headless.unexpected(H, "run"))
-    end)
+    )
 
     it(
         "WeakAuras: slots past count are blank tables, payload reads blank at 0, and a publish allocates nothing",

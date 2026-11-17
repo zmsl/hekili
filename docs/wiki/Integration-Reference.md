@@ -115,7 +115,7 @@ Hekili:UnregisterRecommendationListener(OnRecommendation)
 
 ## HEKILI_RECOMMENDATION_UPDATE
 
-`HEKILI_RECOMMENDATION_UPDATE` is a WeakAuras event: Hekili Forever sends it through WeakAuras, so only a WeakAura can receive it. It is sent while WeakAuras is loaded, after every update of the `Primary`, `AOE`, `Cooldowns`, `Defensives` and `Interrupts` displays. In combat a shown display updates several times a second. A hidden display is not updated, so it sends nothing.
+`HEKILI_RECOMMENDATION_UPDATE` is a WeakAuras event: Hekili Forever sends it through WeakAuras, so only a WeakAura can receive it. It is sent when WeakAuras is loaded as the player enters the world, after every update of the `Primary`, `AOE`, `Cooldowns`, `Defensives` and `Interrupts` displays. In combat a shown display updates several times a second. A hidden display is not updated, so it sends nothing.
 
 | Argument | Meaning |
 |---|---|
@@ -180,9 +180,9 @@ It is sent:
 
 - after every change of a toggle that Hekili Forever accepts, from a keybinding, a chat command or macro, the minimap menu or the options. A change that sets the state the toggle already has is sent too. A command that is refused, such as `/hekili set mode` with a word that is not a mode, changes nothing and sends nothing;
 - each time the displays are paused or resumed, with the name `pause`;
-- once for each toggle, `pause` included, when the profile is loaded or changed.
+- once for each toggle, `pause` included, when Hekili Forever starts and when the profile is switched, copied or reset.
 
-Taking a snapshot does not send it.
+It is sent only when WeakAuras is loaded at that moment. Taking a snapshot does not send it.
 
 Example, a WeakAuras custom trigger with "Event Type" set to "Status" and `HEKILI_TOGGLE` in "Event(s)", true while the major cooldowns toggle is on. WeakAuras runs it again on each `HEKILI_TOGGLE`, and it reads the state itself, so it is also right when the aura loads:
 

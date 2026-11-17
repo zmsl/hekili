@@ -1,7 +1,7 @@
 local _, ns = ...
 -- Integrations/Recommendations.lua: each recommendation update for other addons. One passive subscriber per display,
 -- in Hekili's own engine slots, copies the published records into a payload and hands it to the WeakAuras event
--- HEKILI_RECOMMENDATION_UPDATE (when WeakAuras is loaded) and to the listeners of Hekili:RegisterRecommendationListener.
+-- HEKILI_RECOMMENDATION_UPDATE (when WeakAuras was loaded as the player entered the world) and to the listeners of Hekili:RegisterRecommendationListener.
 -- Passive: neither ever makes the engine compute a hidden display, as stock.
 
 local NAMES = { "Interrupts", "Defensives", "Cooldowns", "Primary", "AOE" }
@@ -15,6 +15,8 @@ for i = 1, MAX do
 end
 local calling = false
 local reported = {} -- listener -> true once its first error went to the error handler
+local wa = false -- WeakAuras was loaded when the player entered the world, as stock
+local subscribed = false
 
 -- Per display, the payload's record tables, held strongly here: the stock payload is weak ("kv"), and these are
 -- allocated once, not again after a collection.
@@ -35,8 +37,7 @@ local function compact()
 end
 
 local function OnPublish(name, version, out)
-    local scan = WeakAuras and WeakAuras.ScanEvents
-    if not scan and listeners.n == 0 then
+    if not wa and listeners.n == 0 then
         return
     end
 
@@ -71,8 +72,8 @@ local function OnPublish(name, version, out)
 
     -- Also fires on Core's rule-off Publish(name, 0), unlike stock (which left the aura on a stale recommendation).
     -- nil holds a retired argument slot
-    if scan then
-        scan("HEKILI_RECOMMENDATION_UPDATE", name, recs[1].actionID, recs[1].indicator, nil, payload)
+    if wa then
+        WeakAuras.ScanEvents("HEKILI_RECOMMENDATION_UPDATE", name, recs[1].actionID, recs[1].indicator, nil, payload)
     end
 
     calling = true
@@ -90,9 +91,23 @@ local function OnPublish(name, version, out)
     compact()
 end
 
-for i = 1, #NAMES do
-    ns.Output.Subscribe(NAMES[i], OnPublish, true)
+-- Subscribed once, on the first need (WeakAuras at PLAYER_ENTERING_WORLD, or the first listener), in Hekili's own slots.
+local function subscribe()
+    if subscribed then
+        return
+    end
+    subscribed = true
+    for i = 1, #NAMES do
+        ns.Output.Subscribe(NAMES[i], OnPublish, true)
+    end
 end
+
+ns.RegisterEvent("PLAYER_ENTERING_WORLD", function()
+    if WeakAuras and WeakAuras.ScanEvents then
+        wa = true
+        subscribe()
+    end
+end)
 
 --- Registers `fn(display, payload)`, called after every update of the five displays (Interrupts, Defensives,
 --- Cooldowns, Primary, AOE) with the display's name and the HEKILI_RECOMMENDATION_UPDATE event's payload. Called
@@ -112,6 +127,7 @@ function Hekili:RegisterRecommendationListener(fn)
         return false
     end
     listeners[n + 1], listeners.n = fn, n + 1
+    subscribe()
     return true
 end
 

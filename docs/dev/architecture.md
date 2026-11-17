@@ -93,8 +93,8 @@ through it.
   `delay`, `since`, `wait`, `waitSec`, `offGCD`, `interrupt`, `castStart`, `resource`, `resource_type`, `cost`, `busy`,
   `scriptType`, `script`, `hook`, plus the tables `resources`, `alts` (§7) and `belief` (empty until an annotator fills it).
 - `payload`: the copy for other addons (the WeakAuras event and the recommendation listeners), set by
-  `Integrations/Recommendations.lua` (a passive subscriber, outside `Engine/`) once WeakAuras is loaded or a listener
-  is registered.
+  `Integrations/Recommendations.lua` (a passive subscriber, outside `Engine/`) once WeakAuras is loaded at
+  `PLAYER_ENTERING_WORLD` or the first listener is registered.
 - Read it in a subscriber, or between publishes. Records are reused: copy a field you need to keep.
 
 **`Engine.Output.status`**: the engine's own record, published once (`count` is 1) when one of its fields changes:

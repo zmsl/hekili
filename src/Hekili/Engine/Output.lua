@@ -55,7 +55,7 @@ local function display()
         wanted = 0,
         needAlts = 0, -- subscribers that declared needs.alts (passive or not): Core then fills recs[1..2].alts
         publishing = false,
-        payload = nil, -- the WeakAuras event copy, set by Integrations/WeakAuras.lua only when WeakAuras is loaded
+        payload = nil, -- the copy for other addons, set by Integrations/Recommendations.lua (WeakAuras or a listener)
         -- steady icons (Output.steady): per slot the raw (unheld) name last publish, its countdown streak, and whether recs[i] is
         -- held; `acts` the Output.Acted count this display last published at
         rawName = filled(false),
