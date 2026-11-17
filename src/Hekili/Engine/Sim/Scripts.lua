@@ -1717,13 +1717,13 @@ local STRICT_OPTS = { allow_skip = true, start_on_first = true, hold_off_gcd = t
 local MODES = { skip = true, wait = true, continue = true }
 local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {}, byName = {}, seqByID = {}, startByID = {}, nStrict = 0, holdWalk = false, fireIDs = {} }
 
--- (windows design v6 §7, rulings 10, 19) a display's Sequences setting: on by default for Primary and AOE only
-local SEQ_DEFAULT = { Primary = true, AOE = true }
+-- (windows design v6 §7, rulings 10, 19; L1315) a display's Sequences setting: Primary and AOE only, on by default;
+-- Cooldowns, Interrupts and Defensives never sequence (a value stored there by an older build is ignored)
+local SEQ_DISPLAYS = { Primary = true, AOE = true }
 function scripts.SequencesOn( disp )
+    if not SEQ_DISPLAYS[ disp ] then return false end
     local d = rawget( Hekili.Engine.settings.displays, disp )
-    local v = d and d.sequences
-    if v == nil then return SEQ_DEFAULT[ disp ] == true end
-    return v == true
+    return not ( d and d.sequences == false )
 end
 scripts.NoWindows = NO_APL_WINDOWS
 scripts.Windows = {} -- pack name -> its CheckWindows result (LoadScripts)

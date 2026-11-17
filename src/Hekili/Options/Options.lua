@@ -1320,15 +1320,15 @@ return end
                                 hidden = function () return _G["ElvUI"] == nil or notClassic() end,
                             },
 
-                            -- (windows design v6 §7, rulings 10, 19) sequences exist only in displays with this on; a change
-                            -- reloads the scripts (new keys, applied as a priority edit is)
+                            -- (windows design v6 §7, rulings 10, 19; L1315) Primary and AOE only: sequences exist only in a
+                            -- display with this on; a change reloads the scripts (new keys, applied as a priority edit is)
                             sequences = {
                                 type = "toggle",
                                 name = L["Sequences"],
                                 desc = L["When on, this display runs the priority's sequence and strict_sequence lines. When off, it skips them as if they were not in the priority. Free-form windows work either way.\n\nOn by default for Primary and AOE."],
                                 width = "full",
                                 order = 1.5,
-                                hidden = function() return name == "Multi" end, -- per display: Multi would write displays.Multi
+                                hidden = function() return name ~= "Primary" and name ~= "AOE" end, -- Multi would write displays.Multi
                                 get = function() return Hekili.Scripts.SequencesOn( name ) end,
                                 set = function( _, val )
                                     Hekili.DB.profile.displays[ name ].sequences = val

@@ -1223,12 +1223,14 @@ describe("the sequences compiler (windows design v6 §3.3, §3.4, §9)", functio
                 "pk:s#Primary",
                 "pk:s#AOE",
             }, keys)
-            -- the Sequences setting on for Cooldowns adds its keys (§7)
-            H.Hekili.Engine.settings.displays.Cooldowns.sequences = true
+            -- (§7, L1315) Cooldowns, Interrupts and Defensives never sequence: a stored "on" there adds no key
+            for _, disp in ipairs({ "Cooldowns", "Interrupts", "Defensives" }) do
+                H.Hekili.Engine.settings.displays[disp].sequences = true
+            end
             local cw2 = check({ default = "actions+=/sequence,name=p:bloodrage" })
-            assert.are.equal(3, #cw2.records)
-            assert.are.equal("pk:p#Cooldowns", cw2.records[3].key)
-            assert.are.equal(4 * 3, cw2.cap) -- the open, the skip, the chosen OPEN and its STEP per key (§5.5)
+            assert.are.equal(2, #cw2.records)
+            assert.are.same({ "pk:p#Primary", "pk:p#AOE" }, { cw2.records[1].key, cw2.records[2].key })
+            assert.are.equal(4 * 2, cw2.cap) -- the open, the skip, the chosen OPEN and its STEP per key (§5.5)
         end
     )
 end)
@@ -1851,10 +1853,15 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
         assert.are.equal("berserker_stance", recs[1].actionName)
     end)
 
-    -- Sequences on for Cooldowns too (D02, D20): both displays walked; the operations sent, as a set by key
-    local function cooldownsOn(text)
-        H.Hekili.Engine.settings.displays.Cooldowns.sequences = true
+    -- (§7, L1315) Cooldowns, Interrupts and Defensives never sequence: a stored Sequences "on" there (an old profile)
+    -- is ignored. Primary, AOE and Cooldowns walked; the operations sent, as a set by key
+    local function storedOn(text)
+        H.Hekili.Engine.settings.toggles.mode.value = "dual"
+        for _, disp in ipairs({ "Cooldowns", "Interrupts", "Defensives" }) do
+            H.Hekili.DB.profile.displays[disp].sequences = true
+        end
         load({ default = text })
+        assert.is_true(H.Hekili.Engine.Subscribe("AOE", function() end))
         assert.is_true(H.Hekili.Engine.Subscribe("Cooldowns", function() end))
     end
     local function sentSet(sent)
@@ -1864,31 +1871,51 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
         end
         return s
     end
-
-    -- Reading (ruling 25 over D02's "Primary's key stays closed"): Primary's start line skips the separate test, so a
-    -- strict classcd:nuke starts in Primary as in D14; Cooldowns starts it under its own key as well.
-    it("D02: Sequences on in Cooldowns: a strict classcd:nuke starts there and shows nuke (filter bypassed)", function()
-        cooldownsOn("actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance")
-        local _, sent = tick()
-        local s = sentSet(sent)
-        assert.are.equal(OPEN, s[key("s", "Cooldowns")])
-        assert.are.equal(OPEN, s[key("s")])
+    -- nothing on Cooldowns' key, no copy there, and Cooldowns does not show the member Primary is at
+    local function cooldownsQuiet(sent, name, member)
+        assert.is_nil(sentSet(sent)[key(name, "Cooldowns")])
+        assert.is_nil(H.Hekili.Scripts.appliedWindows.byName[name].keys.Cooldowns)
+        assert.is_false((seqState(name, "Cooldowns")))
         local cd = H.Hekili.Engine.Output.Cooldowns.recs
-        assert.are.equal("bloodrage", cd[1].actionName)
+        assert.are_not.equal(member, cd[1] and cd[1].actionName)
+    end
+
+    -- D02 (Fable Q2, L1270; L1315): ruling 25: Primary's and AOE's start lines skip the separate test, so a strict
+    -- classcd:nuke starts in both (D14); Cooldowns never sequences, whatever is stored.
+    it("D02: a strict classcd:nuke starts in Primary and AOE; Cooldowns (stored on) sends and shows nothing", function()
+        storedOn("actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance")
+        local recs, sent = tick()
+        local s = sentSet(sent)
+        assert.are.equal(OPEN, s[key("s")])
+        assert.are.equal(OPEN, s[key("s", "AOE")])
+        assert.are.equal("bloodrage", recs[1].actionName)
+        cooldownsQuiet(sent, "s", "bloodrage")
         cast(BR)
-        tick()
-        assert.are.same({ true, 2 }, { seqState("s", "Cooldowns") })
-        cd = H.Hekili.Engine.Output.Cooldowns.recs
-        assert.are.equal("berserker_stance", cd[1].actionName) -- a non-cooldown in Cooldowns: the held member
-        -- D06: after the last step the window is closed: nuke is filtered out of Cooldowns again
-        cast(BS)
-        tick()
-        cd = H.Hekili.Engine.Output.Cooldowns.recs
-        assert.are_not.equal("berserker_stance", cd[1] and cd[1].actionName)
+        recs, sent = tick()
+        assert.are.same({ true, 2 }, { seqState("s") })
+        assert.are.same({ true, 2 }, { seqState("s", "AOE") })
+        assert.are.equal("berserker_stance", recs[1].actionName)
+        assert.are.equal("berserker_stance", H.Hekili.Engine.Output.AOE.recs[1].actionName)
+        cooldownsQuiet(sent, "s", "berserker_stance")
     end)
 
     it(
-        "D13: defaults (Sequences off in Cooldowns): a strict nuke:classcd runs in Primary; Cooldowns skips it",
+        "D02 (plain, L1315): a plain classcd:filler runs in Primary; Cooldowns (stored on) sends and shows nothing",
+        function()
+            storedOn("actions+=/sequence,name=p,mode=continue:bloodrage:berserker_stance\nactions+=/defensive_stance")
+            local _, sent = tick()
+            cooldownsQuiet(sent, "p", "bloodrage")
+            cast(BR)
+            local recs
+            recs, sent = tick()
+            assert.are.same({ true, 2 }, { seqState("p") })
+            assert.are.equal("berserker_stance", recs[1].actionName)
+            cooldownsQuiet(sent, "p", "berserker_stance")
+        end
+    )
+
+    it(
+        "D13: Cooldowns separate (it never sequences): a strict nuke:classcd runs in Primary; Cooldowns skips it",
         function()
             load({ default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance" })
             assert.is_true(H.Hekili.Engine.Subscribe("Cooldowns", function() end))
@@ -1903,18 +1930,6 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
         end
     )
 
-    it(
-        "D20: Sequences on in Cooldowns: a strict nuke:classcd starts in Primary only (no start bypass there)",
-        function()
-            cooldownsOn("actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance")
-            local _, sent = tick()
-            local s = sentSet(sent)
-            assert.is_nil(s[key("s", "Cooldowns")])
-            assert.are.equal(OPEN, s[key("s")])
-            assert.is_false((seqState("s", "Cooldowns")))
-        end
-    )
-
     it("D19 (Primary): a plain classcd:filler shows classcd as its due first member in Primary", function()
         load({
             default = "actions+=/sequence,name=p,mode=continue:bloodrage:berserker_stance\nactions+=/defensive_stance",
@@ -1925,28 +1940,7 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
         assert.are.equal("bloodrage", recs[1].actionName)
     end)
 
-    it(
-        "D09: a plain classcd:filler in Cooldowns shows filler at step 2; no hold, a cooldown line above still shows",
-        function()
-            H.Hekili.Class.abilities.defensive_stance.toggle = "cooldowns"
-            cooldownsOn(
-                "actions+=/defensive_stance,if=test_fa\nactions+=/sequence,name=p,mode=continue:bloodrage:berserker_stance\n"
-                    .. "actions+=/defensive_stance"
-            )
-            tick()
-            cast(BR)
-            tick()
-            assert.are.same({ true, 2 }, { seqState("p", "Cooldowns") })
-            local cd = H.Hekili.Engine.Output.Cooldowns.recs
-            assert.are.equal("berserker_stance", cd[1].actionName) -- the in-place member line, filter bypassed
-            flags.fa = true
-            tick()
-            cd = H.Hekili.Engine.Output.Cooldowns.recs
-            assert.are.equal("defensive_stance", cd[1].actionName) -- no hold: the line above takes slot 1
-        end
-    )
-
-    it("D15: Sequences off in Cooldowns: an open_window line reached there opens under Cooldowns' key", function()
+    it("D15: Cooldowns (no sequences there): an open_window line reached there opens under Cooldowns' key", function()
         load({
             windows = "actions+=/window,name=burst,duration=6",
             default = "actions+=/open_window,name=burst\nactions+=/bloodrage\nactions+=/defensive_stance",
@@ -1959,43 +1953,40 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
     end)
 
     it(
-        "D17: Sequences switched on for Cooldowns: keys at once out of combat, at combat end in combat; off removes them",
+        "D17: Sequences switched on for Primary: keys at once out of combat, at combat end in combat; off removes them",
         function()
-            local text = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance"
-            load({ default = text })
-            assert.is_true(H.Hekili.Engine.Subscribe("Cooldowns", function() end))
-            local k, rows = key("s", "Cooldowns"), VSI.win.byKey
-            assert.is_nil(H.Hekili.Scripts.appliedWindows.byName.s.keys.Cooldowns)
+            H.Hekili.DB.profile.displays.Primary.sequences = false
+            load({ default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance" })
+            local k, rows = key("s"), VSI.win.byKey
+            assert.is_nil(H.Hekili.Scripts.appliedWindows.byName.s.keys.Primary)
             assert.is_nil(rows[k])
             -- in combat: the compile has the key at once, the belief's row waits for combat end
-            H.Hekili.DB.profile.displays.Cooldowns.sequences = true
+            H.Hekili.DB.profile.displays.Primary.sequences = true
             H.Hekili:LoadScripts()
             tick()
-            assert.are.equal(k, H.Hekili.Scripts.appliedWindows.byName.s.keys.Cooldowns)
+            assert.are.equal(k, H.Hekili.Scripts.appliedWindows.byName.s.keys.Primary)
             assert.is_nil(rows[k])
             H.Fire("PLAYER_REGEN_ENABLED")
             tick()
             assert.is_number(rows[k])
             -- out of combat, switched off: the key and its row go at once
-            H.Hekili.DB.profile.displays.Cooldowns.sequences = false
+            H.Hekili.DB.profile.displays.Primary.sequences = false
             H.Hekili:LoadScripts()
             tick()
-            assert.is_nil(H.Hekili.Scripts.appliedWindows.byName.s.keys.Cooldowns)
+            assert.is_nil(H.Hekili.Scripts.appliedWindows.byName.s.keys.Primary)
             assert.is_nil(rows[k])
         end
     )
 
-    -- review M9: an allow_skip start past member 1 (member 1's if= false, member 2 the separated cooldown) is shown and
-    -- started in AOE (no display filter there, the start line skips the separate test) and in Cooldowns (its own
-    -- ability): OPEN then STEP 2 on each key, member 2 in slot 1.
-    it("M9: an allow_skip start past member 1 shows and starts in AOE and in Cooldowns", function()
-        H.Hekili.Engine.settings.toggles.mode.value = "dual"
-        cooldownsOn(
+    -- review M9 (L1315): an allow_skip start past member 1 (member 1's if= false, member 2 the separated cooldown) is
+    -- shown and started in Primary and AOE (no display filter there, the start line skips the separate test): OPEN then
+    -- STEP 2 on each key, member 2 in slot 1. Cooldowns (stored on) neither starts nor shows it.
+    it("M9: an allow_skip start past member 1 shows and starts in Primary and AOE, never in Cooldowns", function()
+        storedOn(
             "actions+=/strict_sequence,name=s,allow_skip=1:berserker_stance,if=test_fa:bloodrage\nactions+=/defensive_stance"
         )
-        assert.is_true(H.Hekili.Engine.Subscribe("AOE", function() end))
         local _, sent = tick()
-        for _, disp in ipairs({ "Primary", "AOE", "Cooldowns" }) do
+        for _, disp in ipairs({ "Primary", "AOE" }) do
             local got = {}
             for i, o in ipairs(sent) do
                 if o[1] == key("s", disp) then
@@ -2006,6 +1997,7 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
             local recs = H.Hekili.Engine.Output[disp].recs
             assert.are.equal("bloodrage", recs[1] and recs[1].actionName, disp)
         end
+        cooldownsQuiet(sent, "s", "bloodrage")
     end)
 end)
 
