@@ -3141,7 +3141,17 @@ do
             -- LibRangeCheck's about 5 yd brackets): GetRange answers nil while unknown, and a lower bound alone past
             -- the library's last check. Unknown never blocks: within and outside are both true,
             -- distance and minR/maxR keep upstream's defaults.
-            if k == "distance" then t[k] = ( t.minR + t.maxR ) / 2
+            -- The type is not kept: a pass can span a target change (the update yields across frames). First in the
+            -- chain: the k:sub keys below build strings. Under the Map restriction (the target's GUID secret, nil
+            -- here) no type read is trusted, so none is made (L1142): unknown.
+            if k == "creature_type" then
+                if not UnitGUID( "target" ) then return "unknown" end
+                local _, id = UnitCreatureType( "target" )
+                if issecretvalue( id ) or not CREATURE_TYPES[ id ] then return "unknown" end
+                return CREATURE_TYPES[ id ]
+            elseif k == "is_demon" then return t.creature_type == "demon"
+            elseif k == "is_undead" then return t.creature_type == "undead"
+            elseif k == "distance" then t[k] = ( t.minR + t.maxR ) / 2
             elseif k == "in_range" then return t.distance <= 8
             elseif k == "minR" or k == "maxR" then
                 local minR, maxR = RC:GetRange( "target" )
@@ -3179,10 +3189,6 @@ do
                     if c then t[k] = strlower( c )
                     else t[k] = "unknown" end
                 end
-            elseif k == "creature_type" then
-                local _, id = UnitCreatureType( "target" )
-                if issecretvalue( id ) or not CREATURE_TYPES[ id ] then t[k] = "unknown"
-                else t[k] = CREATURE_TYPES[ id ] end
             elseif k == "exists" then t[k] = UnitExists( "target" )
             elseif k == "health_current" then return t.health.current
             elseif k == "health_max" then return t.health.max
@@ -3199,7 +3205,6 @@ do
                     t[k] = ( UnitCanAttack( "player", "target" ) and ( UnitClassification( "target" ) == "worldboss" or UnitLevel( "target" ) == -1 ) )
                 end
             elseif k == "is_dead" then t[k] = UnitIsDeadOrGhost("target")
-            elseif k == "is_demon" then t[k] = t.creature_type == "demon"
             elseif k == "is_friendly" then t[k] = Facade.UnitCanAssist( "player", "target" )
             elseif k == "is_in_party" then t[k] = Facade.UnitInParty( "target" )
             elseif k == "is_in_raid" then t[k] = Facade.UnitInRaid( "target" ) ~= nil
@@ -3212,7 +3217,6 @@ do
                 t[k] = UnitIsUnit( "targettarget", "player" ) == true
 
             elseif k == "is_dummy" then t[k] = ( TargetDummies[ t.npcid ] ~= nil )
-            elseif k == "is_undead" then t[k] = t.creature_type == "undead"
 
             elseif k == "level" then t[k] = UnitLevel( "target" ) or UnitLevel( "player" ) or MAX_PLAYER_LEVEL
             elseif k == "moving" then t[k] = GetUnitSpeed( "target" ) > 0
@@ -7422,24 +7426,38 @@ do
             return false, "not usable in combat"
         end
 
-        -- `usable_on`: the target creature types the ability works on (`target.creature_type`'s keys). An unknown type
-        -- (secret in a restricted area) falls to the client's range answer on a hostile target: a plain nil is the
-        -- client's answer for a type the spell cannot hit (L238); true, false or secret keep it usable here.
+        -- `usable_on`: the target creature types the ability works on (`target.creature_type`'s keys), or { "any" } for
+        -- any type; usable only on a living attackable target of a confirmed type (L1141, L1160). The target must
+        -- plainly exist, not plainly be dead, and be plainly attackable outside the Map restriction. Under it (a dungeon
+        -- or raid) the target's GUID reads secret (nil here): no type read is trusted (L1142) and a secret UnitCanAttack
+        -- does not refuse (L1161). A plain type decides outside it ("any": no type check). Under it, and while the type
+        -- reads unknown, the client's range answer for `rangeSpell` (else the ability) decides: plain true or false is
+        -- a target the spell can hit, a plain nil one it cannot (L238), a secret one is unconfirmed.
         z = ability.usable_on
         if z then
-            local ct = self.target.creature_type
-            if ct ~= "unknown" then
+            local issecretvalue = Facade.issecretvalue
+            local e = UnitExists( "target" )
+            if issecretvalue( e ) or not e then return false, "usable_on: no attackable target" end
+            local restricted = not UnitGUID( "target" )
+            local hostile, dead = UnitCanAttack( "player", "target" ), UnitIsDead( "target" )
+            if issecretvalue( hostile ) then
+                if not restricted then return false, "usable_on: no attackable target" end
+            elseif not hostile then return false, "usable_on: no attackable target" end
+            if not issecretvalue( dead ) and dead then return false, "usable_on: no attackable target" end
+            local ct = z[ 1 ] == "any" and "any" or self.target.creature_type -- unknown while restricted
+            if ct == "any" and not restricted then -- any type: the target checks above decide
+            elseif ct ~= "unknown" and ct ~= "any" then
                 local ok = false
                 for i = 1, #z do
                     if z[ i ] == ct then ok = true; break end
                 end
                 if not ok then return false, "target's creature type not in usable_on" end
             else
-                local issecretvalue = Facade.issecretvalue
-                local e, hostile = UnitExists( "target" ), UnitCanAttack( "player", "target" )
-                if not issecretvalue( e ) and e and not issecretvalue( hostile ) and hostile then
-                    local r, secret = C_Spell.IsSpellInRange( ability.rangeSpell or ability.id, "target" )
-                    if r == nil and not secret then return false, "creature type unknown; range nil: wrong target type" end
+                local r, secret = C_Spell.IsSpellInRange( ability.rangeSpell or ability.id, "target" )
+                if secret then return false, "creature type unknown; range secret: unconfirmed" end
+                if r == nil then
+                    if ct == "any" then return false, "range nil: not a valid target" end
+                    return false, "creature type unknown; range nil: wrong target type"
                 end
             end
         end

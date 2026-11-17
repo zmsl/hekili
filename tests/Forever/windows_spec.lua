@@ -9,6 +9,11 @@ local function boot()
     return H
 end
 
+-- a stepped window's evaluator (L773: steps need one); never true, so nothing here opens from it
+local function noEval()
+    return false
+end
+
 describe("RegisterWindow", function()
     local H, kit
     before_each(function()
@@ -45,6 +50,20 @@ describe("RegisterWindow", function()
             assert.are.equal(key, def.abilities[rec.steps[k]].key)
         end
         assert.is_nil(getmetatable(rec))
+        assert.is_false(rec.reset_on_target_change) -- off unless the class asks (windows design v6 ruling 33)
+    end)
+
+    it("carries reset_on_target_change = true into the record", function()
+        kit:RegisterWindow("reset_window", { evaluator = noEval, duration = 6, reset_on_target_change = true })
+        H.Hekili:SpecializationChanged()
+        local def = H.ns.VirtualStateInternal.def
+        local rec
+        for w = 1, #def.windows do
+            if def.windows[w].key == "reset_window" then
+                rec = def.windows[w]
+            end
+        end
+        assert.is_true(rec.reset_on_target_change)
     end)
 
     it("raises at load on a second name, a bad field or an unregistered step key", function()
@@ -59,11 +78,22 @@ describe("RegisterWindow", function()
             kit:RegisterWindow("bad_eval", { duration = 6, evaluator = 1 })
         end)
         assert.has_error(function()
-            kit:RegisterWindow("bad_dev", { duration = 6, steps = steps(), on_deviation = "wander" })
-        end)
+            kit:RegisterWindow(
+                "bad_dev",
+                { duration = 6, evaluator = noEval, steps = steps(), on_deviation = "wander" }
+            )
+        end, "RegisterWindow: bad_dev's on_deviation")
         assert.has_error(function()
-            kit:RegisterWindow("bad_step", { duration = 6, steps = { "no_such_ability" } })
-        end)
+            kit:RegisterWindow("bad_step", { duration = 6, evaluator = noEval, steps = { "no_such_ability" } })
+        end, "RegisterWindow: bad_step's step no_such_ability is no registered ability")
+        -- L773 (windows design v6 ruling 1): a stepped window needs an evaluator; no window opens on its first step's cast
+        assert.has_error(function()
+            kit:RegisterWindow("no_eval_steps", { duration = 6, steps = steps() })
+        end, "RegisterWindow: no_eval_steps has steps but no evaluator")
+        -- ruling 33: reset_on_target_change is a boolean or nil
+        assert.has_error(function()
+            kit:RegisterWindow("bad_reset", { duration = 6, reset_on_target_change = 1 })
+        end, "RegisterWindow: bad_reset's reset_on_target_change is not a boolean")
         assert.has_error(function() -- spec 0's windows merge beside the spec's
             H.Hekili.Class.specs[0]:RegisterWindow("twice", { duration = 6 })
         end)
@@ -493,6 +523,7 @@ describe("the core's windows", function()
     describe("steps (forecast)", function()
         local function stepped(data, step)
             data.duration, data.steps = 6, data.steps or { "bloodrage", "berserker_stance", "battle_stance" }
+            data.evaluator = noEval
             core({ w = data })
             VS.Window = function(name)
                 if name == "w" then
@@ -556,7 +587,10 @@ describe("the core's windows", function()
     end)
 
     it("allocates nothing copying, reading and changing windows", function()
-        core({ w = { duration = 6, steps = { "bloodrage", "berserker_stance" } }, v = { duration = 6 } })
+        core({
+            w = { duration = 6, evaluator = noEval, steps = { "bloodrage", "berserker_stance" } },
+            v = { duration = 6 },
+        })
         local copy = S.CopyWindows
         local function once()
             copy()
