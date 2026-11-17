@@ -392,7 +392,7 @@ end
 scripts.SimToLua = SimToLua
 
 
--- CN25: the pure variables ({ [name] = scriptID }, scripts:LoadScripts) of the pack whose line is being converted
+-- CN25: the pure variables ({ [name] = scriptID }, scripts:MarkPure) of the pack whose line is being converted
 local loadingPure
 
 
@@ -1747,8 +1747,8 @@ end
 -- value_else= or op but set, the only line of its name, in default or a list reached only by unconditional calls from
 -- default. A pure=1 line that is not raises at load (the line and the reason) and is read as a stock variable.
 -- PackInfo[pack].pure maps each variable name to its line's script ID (false: not pure), pureText to its value. Returns
--- whether a name's purity changed (a line's compiled rechecks and time-sensitivity read it: Hekili:LoadScript then
--- reloads the pack).
+-- whether a name's purity or a pure value's text changed (a line's compiled rechecks and time-sensitivity read them:
+-- Hekili:LoadScript then reloads the pack). Runs only outside the load's own loop (load time and editor edits).
 function scripts:MarkPure( pack )
     local pData, info = Hekili.Engine.settings.packs[ pack ], self.PackInfo[ pack ]
     if not ( pData and info ) then return false end
@@ -1764,7 +1764,7 @@ function scripts:MarkPure( pack )
                     for _, e in ipairs( fData ) do
                         if e.list_name == list and e.enabled ~= false and ( e.action == "call_action_list" or e.action == "run_action_list" ) then
                             called = true
-                            ok = ok and reach[ from ] and ( e.criteria or "" ) == ""
+                            ok = ok and reach[ from ] and ( e.criteria or "" ) == "" and ( e.strict_if or "" ) == ""
                         end
                     end
                 end
@@ -1802,10 +1802,31 @@ function scripts:MarkPure( pack )
         end
     end
 
-    local old = info.pure or {}
+    -- a pure variable whose value reads itself, directly or through other pure variables, would recurse at every read
+    local function loops( root, name, seen )
+        for ref in ( text[ name ] or "" ):gmatch( "variable%.([%w_]+)" ) do
+            if ref == root then return true end
+            if pure[ ref ] and not seen[ ref ] then
+                seen[ ref ] = true
+                if loops( root, ref, seen ) then return true end
+            end
+        end
+        return false
+    end
+    local looped = {}
+    for name, at in pairs( pure ) do
+        if at and loops( name, name, {} ) then looped[ name ] = at end
+    end
+    for name, at in pairs( looped ) do
+        Hekili:Error( ( "Pure variable '%s' at %s: its value reads itself; it is read as a stock variable." ):format( name, at ) )
+        pure[ name ] = false
+    end
+
+    local old, oldText = info.pure or {}, info.pureText or {}
     info.pure, info.pureText = pure, text
     for name, v in pairs( pure ) do
         if not v ~= not old[ name ] then return true end
+        if v and text[ name ] ~= oldText[ name ] then return true end -- its readers' time-sensitivity reads the text
     end
     for name, v in pairs( old ) do
         if v and pure[ name ] == nil then return true end
@@ -2024,14 +2045,19 @@ function Hekili:LoadScript( pack, list, id )
     local scriptID = pack .. ":" .. list .. ":" .. id
     recordID( pData.lists[ list ], id, scriptID )
 
-    -- CN25: an edited `variable` line outside a full load: the pack's pure map follows it, and a change in which names
-    -- are pure reloads every line of the pack (their rechecks and time-sensitivity read through pure variables)
-    if not Hekili.LoadingScripts and data.action == "variable" and scripts:MarkPure( pack ) then
+    -- CN25: an edited `variable` or list-call line outside a full load (a call's condition, state or target sets which
+    -- lists a pure line may sit in): the pack's pure map follows it, and a change in which names are pure or in a pure
+    -- value reloads every line of the pack (their rechecks and time-sensitivity read through pure variables)
+    if not Hekili.LoadingScripts
+        and ( data.action == "variable" or data.action == "call_action_list" or data.action == "run_action_list" )
+        and scripts:MarkPure( pack ) then
+        Hekili.LoadingScripts = true
         for l, lData in pairs( pData.lists ) do
             for i in ipairs( lData ) do
                 Hekili:LoadScript( pack, l, i )
             end
         end
+        Hekili.LoadingScripts = false
         return
     end
 

@@ -4681,7 +4681,7 @@ do
                 return defaultValue
             end
 
-            -- CN25: a pure variable (Scripts.lua LoadScripts) is its value, read now in the reader's context, as its
+            -- CN25: a pure variable (Scripts.lua scripts:MarkPure) is its value, read now in the reader's context, as its
             -- text inlined there would be: no cache, no path, nothing built
             local info = scripts.PackInfo[ state.system.packName ]
             local pure = info and info.pure and info.pure[ var ]

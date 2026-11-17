@@ -201,6 +201,74 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         end)
     end
 
+    -- CN25 fix round 3 (I-A): editing a list call in the priority editor (Hekili:LoadScript of that line) changes where
+    -- a pure=1 line may sit: an if= or strict_if= on the call, the call disabled, or pointed at another list makes the
+    -- pure=1 line in the called list a stock variable at once, with the load error.
+    for _, case in ipairs({
+        { "an if=", { criteria = "active_enemies>1" } },
+        { "a strict_if=", { strict_if = "active_enemies>1" } },
+        { "disabled", { enabled = false } },
+        { "pointed at another list", { list_name = "other" } },
+    }) do
+        it("follows the editor: a call to a pure=1 line's list given " .. case[1], function()
+            local H = boot(false)
+            local lists = H.Hekili.DB.profile.packs[ww.PACK].lists
+            lists.sub = { { action = "variable", enabled = true, var_name = "x", value = "1", pure = 1 } }
+            lists.other = { { action = "variable", enabled = true, var_name = "y", value = "2" } }
+            table.insert(lists.default, 1, { action = "call_action_list", enabled = true, list_name = "sub" })
+            H.Hekili:LoadScripts()
+            local Sc = H.Hekili.Scripts
+            assert.is_truthy(Sc.PackInfo[ww.PACK].pure.x)
+            assert.are.same({}, H.errors)
+            for k, v in pairs(case[2]) do
+                lists.default[1][k] = v
+            end
+            H.Hekili:LoadScript(ww.PACK, "default", 1)
+            assert.is_false(Sc.PackInfo[ww.PACK].pure.x)
+            assert.is_truthy(H.errors[1] and H.errors[1]:find(ww.PACK .. ":sub:1: its list is reached", 1, true))
+        end)
+    end
+
+    -- A pure value edited in the editor reloads its readers: a list call's time-sensitivity reads through it.
+    it("follows the editor: a pure value edited to read time reloads its readers", function()
+        local H = boot(false)
+        local lists = H.Hekili.DB.profile.packs[ww.PACK].lists
+        local list = lists.default
+        lists.sub = { { action = "heroic_strike", enabled = true } }
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "a", value = "1", pure = 1 })
+        table.insert(
+            list,
+            2,
+            { action = "call_action_list", enabled = true, list_name = "sub", criteria = "variable.a" }
+        )
+        H.Hekili:LoadScripts()
+        local Sc, at = H.Hekili.Scripts, ww.PACK .. ":default:"
+        assert.is_falsy(Sc:IsTimeSensitive(at .. 2))
+        list[1].value = "buff.battle_shout.remains<=10"
+        H.Hekili:LoadScript(ww.PACK, "default", 1)
+        assert.is_truthy(Sc:IsTimeSensitive(at .. 2))
+        assert.are.same({}, H.errors)
+    end)
+
+    -- CN25 fix round 3 (m7): a pure value reading itself, directly or through another pure variable, would recurse at
+    -- every read: each such line raises at load and is a stock variable.
+    it("raises at load on pure=1 lines whose values read each other in a loop", function()
+        local H = boot(false)
+        local list = H.Hekili.DB.profile.packs[ww.PACK].lists.default
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "p", value = "variable.q+1", pure = 1 })
+        table.insert(list, 2, { action = "variable", enabled = true, var_name = "q", value = "variable.p", pure = 1 })
+        table.insert(list, 3, { action = "variable", enabled = true, var_name = "s", value = "variable.s", pure = 1 })
+        table.insert(list, 4, { action = "variable", enabled = true, var_name = "t", value = "variable.q", pure = 1 })
+        H.Hekili:LoadScripts()
+        local pure = H.Hekili.Scripts.PackInfo[ww.PACK].pure
+        assert.are.same({ false, false, false }, { pure.p, pure.q, pure.s })
+        assert.is_truthy(pure.t) -- reads a loop's variable (now stock), but is in none itself
+        local all = table.concat(H.errors, "\n")
+        for _, n in ipairs({ "p", "q", "s" }) do
+            assert.is_truthy(all:find("Pure variable '" .. n .. "' at .-: its value reads itself"), all)
+        end
+    end)
+
     -- CN25 fix round 1 (I2): the priority editor moves a line (Options.lua: the list reordered, then
     -- scripts:SwapScripts) or edits one option (Hekili:LoadScript); which variables are pure follows the pack as it is.
     it("follows the editor: a moved line, an if= given, a name given twice", function()
