@@ -628,7 +628,7 @@ function M.run(L, seed, o, drivers)
             di = di + 1
             if d.t > t then
                 step(d.at and d.at > t and d.at or d.t) -- d.at: a reacted aura's window (replay.lua o.reacted)
-                if run.combat > 0 then -- wowsims's casts in (t_n, t_n+1]: in-combat tick n's presses (loop.flips)
+                if run.combat > 0 and not d.landing then -- wowsims's presses in (t_n, t_n+1]: tick n's (loop.flips)
                     run.pressed[run.combat][d.key] = true
                 end
                 if d.gcd then

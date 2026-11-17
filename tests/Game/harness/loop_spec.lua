@@ -697,6 +697,7 @@ describe("the headless loop's flicker counter (loop.flips)", function()
                 { t = 2.5, key = "pre", gcd = true }, -- before the pull: no tick
                 { t = 3.3, key = "a", gcd = true },
                 { t = 3.35, key = "b", gcd = false },
+                { t = 3.38, key = "hs", gcd = false, landing = true }, -- an on-next-swing paid cast: no press
                 { t = 4.1, key = "c", gcd = true },
             },
         }
