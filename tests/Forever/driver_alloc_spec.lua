@@ -209,6 +209,56 @@ describe("Engine/Driver.lua through the engine frame", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- (review M7) A key's first operation inside the measured window: its snapshot counters were built where the keys
+    -- are applied (Scripts.lua ApplyWindows), not on that first send in the walk. Window bw (1 s) opens again and again
+    -- through the warm-up, so the send path itself is warm; aw sends first once the gate opens in the window.
+    it("allocates 0 B per Update when a window key sends its first operation inside the measured window", function()
+        local gate = false
+        H.Hekili.Class.kit:RegisterStateExpr("test_gate", function()
+            return gate
+        end)
+        local pack = H.Hekili.Engine.Output.Primary.recs[1].pack
+        local lists = H.Hekili.DB.profile.packs[pack].lists
+        lists.windows = {
+            { action = "window", window_name = "aw", duration = "6", enabled = true },
+            { action = "window", window_name = "bw", duration = "1", enabled = true },
+        }
+        local add = H.Hekili:ParseActionList(
+            "actions+=/open_window,name=bw\nactions+=/open_window,name=aw,if=test_gate\n",
+            true
+        )
+        for i = #add, 1, -1 do
+            add[i].enabled = true
+            table.insert(lists.precombat, 1, add[i])
+        end
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        H.Hekili.Scripts:ApplyWindows(pack)
+        H.Hekili.State:BuildWindows()
+        H.ns.VirtualState.Drain(H.ctl.now)
+        local aw, bw, op = 0, 0, H.ns.VirtualState.WindowOp
+        H.ns.VirtualState.WindowOp = function(key, ...)
+            if key:find(":aw#", 1, true) then
+                aw = aw + 1
+            else
+                bw = bw + 1
+            end
+            return op(key, ...)
+        end
+        for _ = 1, 35 do
+            tick()
+        end
+        assert.are.equal(0, aw)
+        assert.is_true(bw >= 5, tostring(bw))
+        local bytes = perUpdate(45, function()
+            gate = true
+        end)
+        H.ns.VirtualState.WindowOp = op
+        assert.is_true(aw >= 1, tostring(aw))
+        assert.are.equal(0, bytes)
+        assert.are.same({}, H.errors)
+    end)
+
     -- Option D review I1: Recommend Target Swaps on, three mobs all carrying the DoT (the feature's resting state): the
     -- swap lines (cycle_targets=1 and other_target=1) find no other target every Update and build nothing. The enemy
     -- count grows each refresh, the count with it (all DoTed), so text built from the counts would be new each time

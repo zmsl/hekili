@@ -1746,6 +1746,11 @@ do
             row( n, apl.decls[ k ].name, apl.decls[ k ] )
         end
         WIN.n = n
+        -- every line's per-slot mark made here, so a line acting for the first time adds no key in the walk
+        for k = 1, apl and #apl.fireIDs or 0 do
+            local id = apl.fireIDs[ k ]
+            if WIN.fired[ id ] == nil then WIN.fired[ id ] = false end
+        end
     end
 
     --- Every reset: the belief's windows (Facade.Window, the one window read): a Lua window by name, an APL window by

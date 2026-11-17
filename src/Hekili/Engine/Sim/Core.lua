@@ -599,9 +599,9 @@ local function flapWarn( packName, name )
 end
 
 -- (windows design v6 §15) the snapshot's two rolling numbers per key: the operations and the opens sent in the last
--- 10 s, in one-second buckets (a key's buckets are made the first time it sends, then reused).
+-- 10 s, in one-second buckets, built for every key where the keys are applied (Scripts.lua ApplyWindows).
 local OP_NAME = { "OPEN", "CLOSE", "STEP" }
-local winCount = {}
+local winCount = scripts.winCount
 
 local function count10( key )
     local c = key and winCount[ key ]
@@ -617,17 +617,14 @@ end
 -- sent it (`lineID`, the entry's "pack:list:n"; window `name`, never the key).
 local function winSend( key, code, arg, name, lineID )
     ns.VirtualState.WindowOp( key, code, arg )
-    local c = winCount[ key ]
-    if not c then
-        c = { sec = {}, ops = {}, opens = {} }
-        for b = 1, 10 do c.sec[ b ], c.ops[ b ], c.opens[ b ] = -1, 0, 0 end
-        winCount[ key ] = c
+    local c = winCount[ key ] -- every sent key is an applied record's (State.lua WindowSendKey)
+    if c then
+        local sec = math.floor( state.now )
+        local b = sec % 10 + 1
+        if c.sec[ b ] ~= sec then c.sec[ b ], c.ops[ b ], c.opens[ b ] = sec, 0, 0 end
+        c.ops[ b ] = c.ops[ b ] + 1
+        if code == OP_OPEN then c.opens[ b ] = c.opens[ b ] + 1 end
     end
-    local sec = math.floor( state.now )
-    local b = sec % 10 + 1
-    if c.sec[ b ] ~= sec then c.sec[ b ], c.ops[ b ], c.opens[ b ] = sec, 0, 0 end
-    c.ops[ b ] = c.ops[ b ] + 1
-    if code == OP_OPEN then c.opens[ b ] = c.opens[ b ] + 1 end
     if Hekili.ActiveDebug then
         Hekili:Debug( "Windows: sent %s %s%s (line %s).", OP_NAME[ code ], tostring( name ), arg and ( " " .. arg ) or "", tostring( lineID ) )
     end

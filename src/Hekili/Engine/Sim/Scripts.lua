@@ -1715,7 +1715,7 @@ local WINDOW_OPTS = { duration = true, refresh = true, max_duration = true, max_
 local PLAIN_OPTS = { mode = true, wait_on_ready = true, reset_on_target_change = true }
 local STRICT_OPTS = { allow_skip = true, start_on_first = true, hold_off_gcd = true, step_timeout = true, reset_on_target_change = true }
 local MODES = { skip = true, wait = true, continue = true }
-local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {}, byName = {}, seqByID = {}, startByID = {}, nStrict = 0, holdWalk = false }
+local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {}, byName = {}, seqByID = {}, startByID = {}, nStrict = 0, holdWalk = false, fireIDs = {} }
 
 -- (windows design v6 §7, rulings 10, 19) a display's Sequences setting: on by default for Primary and AOE only
 local SEQ_DEFAULT = { Primary = true, AOE = true }
@@ -1748,7 +1748,7 @@ end
 --- `lists`: a priority's lists by name (parsed entries). Returns { decls, records, cap, errors }; each error
 --- { code, list, line, text, entry }. The shared empty result when nothing is declared and nothing is wrong.
 function scripts.CheckWindows( lists, packName )
-    local errors, decls, records, byName, cap = {}, {}, {}, {}, 0
+    local errors, decls, records, byName, cap, fireIDs = {}, {}, {}, {}, 0, {}
     local function err( code, list, i, entry, text )
         errors[ #errors + 1 ] = { code = code, list = list, line = i, entry = entry, text = text }
     end
@@ -1857,6 +1857,9 @@ function scripts.CheckWindows( lists, packName )
                     local id = tostring( packName ) .. ":" .. list .. ":" .. i
                     decl.id, decl.members, decl.memberIDs = id, members, {}
                     decl.skipID, decl.giveID, decl.hidden, decl.startList = id .. ":skip", id .. ":give", "seq:" .. name, "seqstart:" .. name
+                    fireIDs[ #fireIDs + 1 ] = id
+                    fireIDs[ #fireIDs + 1 ] = decl.skipID
+                    fireIDs[ #fireIDs + 1 ] = decl.giveID
                     decl.hiddenEntries, decl.startEntries, decl.hiddenIDs, decl.startIDs = {}, {}, {}, {}
                     for k, m in ipairs( members ) do
                         decl.memberIDs[ k ] = id .. ":" .. k
@@ -1893,6 +1896,9 @@ function scripts.CheckWindows( lists, packName )
         for i, e in ipairs( lists[ list ] ) do
             local a = e.action
             if a == "open_window" or a == "close_window" or a == "variable" then holdWalk = true end
+            if a == "open_window" or a == "close_window" or a == "restart_sequence" then
+                fireIDs[ #fireIDs + 1 ] = tostring( packName ) .. ":" .. list .. ":" .. i
+            end
             if e.enabled == false then -- luacheck: ignore 542 (a switched-off line is not checked)
             elseif a == "window" then err( "E5", list, i, e, "a window entry belongs in the windows list" )
             elseif ( a == "call_action_list" or a == "run_action_list" ) and e.list_name == "windows" then
@@ -1917,16 +1923,30 @@ function scripts.CheckWindows( lists, packName )
 
     if #decls == 0 and #errors == 0 then return NO_APL_WINDOWS end
     return { decls = decls, records = records, cap = cap, errors = errors, byName = byName, seqByID = seqByID,
-        startByID = startByID, nStrict = nStrictDecl, holdWalk = holdWalk }
+        startByID = startByID, nStrict = nStrictDecl, holdWalk = holdWalk, fireIDs = fireIDs }
 end
 
 --- The active pack's APL windows into the belief's def (Tracked.lua ns.SetAplWindows: a new generation) and as the
 --- core copy's source (State.lua BuildWindows reads scripts.appliedWindows). Before a Build (Activation.lua) and when
---- the active pack or its scripts change (Core.lua Hekili.Update). Allocates nothing.
+--- the active pack or its scripts change (Core.lua Hekili.Update). Allocates only a key's snapshot counters, the
+--- first time that key is applied.
+-- (windows design v6 §15) the snapshot's two rolling numbers per key (Core.lua winSend, count10): the operations and
+-- the opens sent in the last 10 s, in one-second buckets; built here so the walk never allocates them.
+scripts.winCount = {}
+
 function scripts:ApplyWindows( packName )
     local cw = packName and self.Windows[ packName ] or NO_APL_WINDOWS
     self.appliedWindows = cw
     ns.SetAplWindows( cw.records, cw.cap )
+    local counts = self.winCount
+    for i = 1, #cw.records do
+        local key = cw.records[ i ].key
+        if not counts[ key ] then
+            local c = { sec = {}, ops = {}, opens = {} }
+            for b = 1, 10 do c.sec[ b ], c.ops[ b ], c.opens[ b ] = -1, 0, 0 end
+            counts[ key ] = c
+        end
+    end
 end
 
 local reportedWindowErrors = {} -- LoadScripts: the window compile errors already reported this session
