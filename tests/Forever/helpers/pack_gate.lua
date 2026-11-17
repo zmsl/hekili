@@ -211,7 +211,7 @@ M.FLICKER = {
     -- .977 / .980 / .972): heldReady 479 -> 326. Cause: the world plays the new Feral log's build (Blood Frenzy 2/2's
     -- combo point on a builder's crit, Predatory Discipline's Bite, Shifting Power, Ferocity 5/5's Rake 35); at seeds
     -- 1-20 the round 2 world read flicker 0.02, heldReady 426. Flicker row NOT moved: the owner's hold at 0.03 (L660
-    -- (b)); seeds 1-20's 0.04 is red for the owner (untraced per flip)
+    -- (b)); seeds 1-20's 0.04 is red for the owner (both flips traced in repin-druid-09-6.md; green with steady-hold-09, ledger L1328)
     ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 326 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
