@@ -226,7 +226,8 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- (its own first fight), limit 6.0 s. One seed's worst is noise: with the parry fix the single seed 1 measured 8.4
     -- (rage below Primal Bite's 15 from two white misses in a row). On these tables: median 4.4, worst 11.0, 4 of 30
     -- seeds over 6.0 (rage 357.2 a minute against wowsims's 349.9).
-    -- L60's outcome tables, wowsims's for its export (druid_guardian.log, seed 101: 65 white swings, 79 yellow strikes;
+    -- L60's outcome tables, measured on the OLD pin's log (e5a9cd2a2d; 65 white swings, 79 yellow strikes; the e4ef929e54 log has
+    -- 8 white swings and a 24.6% yellow crit, so these are not re-derived, lane deferral 14);
     -- owner approved 2026-10-25). From its code: no parry (the export has no inFrontOfTarget, so the bear attacks from
     -- behind: spell_outcome.go), the white dodge the level 63 table's 6.5% less expertise (spell_outcome.go's white
     -- outcome: BaseDodgeChance - DodgeParrySuppression; attack_table_test.go: 6.5% at skill 300; the export has no
