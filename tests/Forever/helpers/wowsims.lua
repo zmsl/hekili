@@ -450,7 +450,10 @@ M.READY = {
     -- holy_strike 5 (max 0.10), seal_of_command 1 (0.23), seal_of_righteousness 1 (0.17)
     -- { 0.10, 7 } -> { 0.07, 2 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log, the GCD-edge replay fix): real 2, cost
     -- class: seal_of_righteousness 149.65 late 0.38 (lo 6.2 under the truth), holy_strike 158.17 early 0.07
-    paladin_retribution = { 0.07, 2 }, -- 0.070, 2
+    -- { 0.07, 2 } -> { 0.10, 3 } regen-read band fix 89d1613b5 (L1341): the believed mana is exact, which moves a near tie
+    -- by one tick: 79.14 judgement late 0.21 -> in:grain (lo -4.611 -> -0.565), 79.24 holy_strike in:grain -> early -0.10
+    -- (lo -1.154); real 3 (early 2, late 1), median 0.10
+    paladin_retribution = { 0.10, 3 }, -- 0.100, 3
     -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at
     -- the GCD's end inside it (Arcane's Missiles likewise, about 0.9 s)
     priest_shadow = { 1.50, 36 },
