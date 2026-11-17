@@ -74,6 +74,8 @@ end
 -- The PROV swing on `g` whose tied avoid came in open cast ticket p's own frame (tieP), for a white wound at t that p
 -- would take and the swing's hand classes: in the swing's core band (`band`, the cast's own frame: ledger L80), else
 -- anywhere in its window (past the cast's frame: L629). Nil when none. Allocates nothing.
+-- shortcut: past the cast's frame the whole swing window can take another player's same-class white wound on `g` (a
+-- crowd), undoing a cast the avoid truly hit; upgrade if crowd bands (detect party/busy) show false give-backs.
 local function tiedTo(p, t, g, amount, flag, band)
     if T.state[p] ~= T.OPEN then
         return nil
@@ -373,6 +375,9 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
         L.avoidsBack = L.avoidsBack + 1 -- the avoid it held was someone else's after all
         local q = tieP[credited]
         if q > 0 and T.at[credited] == tieSw[credited] and T.state[q] == T.OPEN and T.at[q] == tieAt[credited] then
+            -- pass 1 even for a pass-2/3 match (the forward order): the swing's own wound settled the tie, so the
+            -- payment is final now; pass 2 would only hold it TENT to its narrow band's end (a later undo), and an
+            -- avoid on a FRAME ticket (the forward order's only kind) teaches nothing at any pass (teachFrom)
             paySpell(q, 1, 1, tieT[credited], T.avoid[credited], "", 0, 1, true, false) -- the cast's, by the tie (AS)
         end
     end
