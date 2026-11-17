@@ -180,12 +180,43 @@ end
 -- the renamed one while buff.<aura>.up, and every host entry there gains !buff.<aura>.up, so in that aura only the
 -- imported lists run (call_action_list: never a Block, unlike a strict run_action_list in precombat). `clash(list, to)`
 -- raises when `to` is a list the host already has.
+-- CN25: whether `e` is a pure=1 variable line (pure=0 or none: a stock one, as Scripts.lua MarkPure reads it)
+local function isPure(e)
+    return e.action == "variable" and tonumber(e.pure) == 1
+end
+
+-- CN25: the lists of `lists` where a pure=1 line is read in place (Scripts.lua MarkPure's placement rule): default, and
+-- a list every call to which is enabled, unconditional and in a list already so
+local function reached(lists)
+    local reach, grew = { default = true }, true
+    while grew do
+        grew = false
+        for list in pairs(lists) do
+            if not reach[list] then
+                local called, ok = false, true
+                for from, entries in pairs(lists) do
+                    for _, e in ipairs(entries) do
+                        if e.list_name == list and e.action:match("^%a+_action_list$") and e.enabled ~= false then
+                            called = true
+                            ok = ok and reach[from] and (e.criteria or "") == ""
+                        end
+                    end
+                end
+                if called and ok then
+                    reach[list], grew = true, true
+                end
+            end
+        end
+    end
+    return reach
+end
+
 local function import(lists, src, imp, clash)
     local function rename(list)
         return list == "default" and imp.as or imp.as .. "_" .. list
     end
     local up = "buff." .. imp.aura .. ".up"
-    local out, vars, pure = {}, {}, {}
+    local out, vars, pure, reach = {}, {}, {}, reached(src)
     for name, entries in pairs(lists) do
         out[name] = entries
         for _, e in ipairs(entries) do
@@ -207,8 +238,20 @@ local function import(lists, src, imp, clash)
                 c.list_name = rename(c.list_name)
             end
             -- CN25: a pure=1 line must sit where only unconditional calls reach it (Scripts.lua MarkPure), and the
-            -- renamed lists are entered under the aura: it joins the host's default (its readers carry the guard)
-            local into = (c.action == "variable" and c.pure) and pure or out[to]
+            -- renamed lists are entered under the aura: one its own pack reads in place joins the host's default (its
+            -- readers carry the guard); another keeps its list (the engine reads it as a stock variable, with an error)
+            local move = isPure(c) and reach[name]
+            if isPure(c) and not move then
+                io.stderr:write(
+                    ("warning: %s's variable %s (list %s) is not read in place there; it stays in %s\n"):format(
+                        imp.from,
+                        c.var_name,
+                        name,
+                        to
+                    )
+                )
+            end
+            local into = move and pure or out[to]
             into[#into + 1] = c
         end
         out[to] = out[to][1] and out[to] or nil
@@ -222,7 +265,7 @@ local function import(lists, src, imp, clash)
             local c = copy(e)
             -- CN25: a pure=1 variable line stays unguarded (an if= would make it ineligible, Scripts.lua MarkPure): its
             -- readers carry the guard, and a pure read does not depend on where the line sits
-            if not (c.action == "variable" and c.pure) then
+            if not isPure(c) then
                 c.criteria = (c.criteria or "") ~= "" and "(" .. c.criteria .. ")&!" .. up or "!" .. up
             end
             guarded[#guarded + 1] = c

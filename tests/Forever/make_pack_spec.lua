@@ -252,6 +252,45 @@ describe("tools/make_pack.lua", function()
             assert.is_nil(simc:find("actions.o+=/variable,name=v_y", 1, true), simc)
             assert.is_truthy(simc:find("\nactions.o+=/variable,name=w,value=c\n", 1, true), simc)
         end)
+
+        -- CN25 fix round 3 (m1): only pure=1 is pure (Scripts.lua MarkPure reads pure=0 as stock): a pure=0 host line is
+        -- guarded, a pure=0 source line keeps its list
+        it("treats a pure=0 variable line as a stock one", function()
+            local ok, packs = load(MANIFEST, {
+                ["Host.simc"] = HOST .. "actions+=/variable,name=w,pure=0,value=c\n",
+                ["Other.simc"] = OTHER .. "actions+=/variable,name=u,pure=0,value=d\n",
+            })
+            assert.is_true(ok, packs)
+            local simc = packs[1].simc
+            assert.is_truthy(
+                simc:find("\nactions+=/variable,name=w,pure=0,value=c,if=!buff.o_form.up\n", 1, true),
+                simc
+            )
+            assert.is_truthy(simc:find("\nactions.o+=/variable,name=u,pure=0,value=d\n", 1, true), simc)
+        end)
+
+        -- CN25 fix round 3 (m2): only a source pure=1 line its own pack accepts (default, or a list reached only by
+        -- unconditional calls from it) moves; another stays in its list, read as a stock variable, with a warning
+        it("moves only the source's pure=1 lines its own pack reads in place", function()
+            local stderr, warned = io.stderr, {}
+            io.stderr = { -- luacheck: ignore 122 (make_pack's build warnings, captured)
+                write = function(_, msg)
+                    warned[#warned + 1] = msg
+                end,
+            }
+            local ok, packs = load(MANIFEST, {
+                ["Other.simc"] = OTHER
+                    .. "actions+=/call_action_list,name=cond,if=q\nactions+=/call_action_list,name=all\n"
+                    .. "actions.cond=variable,name=v_z,pure=1,value=e\nactions.all=variable,name=v_a,pure=1,value=f\n",
+            })
+            io.stderr = stderr -- luacheck: ignore 122
+            assert.is_true(ok, packs)
+            local simc = packs[1].simc
+            assert.is_truthy(simc:find("\nactions.o_cond=variable,name=v_z,pure=1,value=e\n", 1, true), simc)
+            assert.is_truthy(simc:find("\nactions+=/variable,name=v_a,pure=1,value=f\n", 1, true), simc)
+            assert.are.equal(1, #warned)
+            assert.matches("Other's variable v_z %(list cond%) is not read in place", warned[1])
+        end)
     end)
 
     describe("write (the version changes only with the text)", function()
