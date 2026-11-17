@@ -48,6 +48,8 @@ local format = string.format
 --   it and shifts the floor and the top by the average too.
 --   Also without a bump: the aura fields `spellHaste`, `stats` and `statsPct` (the stat split, L971); an older core
 --   ignores them and holds the out-of-combat spell haste and stats through a fight, as before.
+--   Also without a bump: the ability field `refundNowOnAvoid` (L1237); an older core ignores it and keeps what the
+--   ability's `now` spent after an avoid, as before.
 --   Also without a bump: the regen entry fields `mp5Mult` and `energize` (CN23); an older core ignores both and keeps
 --   the gear and buff MP5 at x 1 under such an entry, as before.
 -- 15 (2026-11-16, mana-09): a cost modifier's `talent` (RegisterCostMod: a talent's rank gates it, no `aura` needed)

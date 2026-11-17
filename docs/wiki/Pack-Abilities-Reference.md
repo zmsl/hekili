@@ -46,6 +46,7 @@ The belief reads the declared fields it needs to model a cast (cost, cooldown, c
 | `spendBase` | boolean | Reads `spend` as a share of base power at any size, for a percent cost that an aura can raise past 100% |
 | `excess_cap` | number or function | The most extra of the spent resource the ability converts beyond its cost. A line with `max_energy` waits for the cost plus this, at most the resource's maximum ([APL line options](APL-Line-Options)). |
 | `refundOnAvoid` | boolean or number | The share of the cost given back when the target dodges, parries or misses. `true` uses the resource's default share. Belief only. |
+| `refundNowOnAvoid` | boolean | `true`: when the target dodges, parries or misses the cast, the belief gives back what the cast's `now` spent from the ability's resource ([Pack resources and regen](Pack-Resources-And-Regen#refunds)). Belief only. |
 | `ladder` | boolean | `false`: the client's usability answers for this ability do not bound the resource. Use it when the answer depends on something else, such as a finisher that is unusable at 0 combo points. |
 
 A proc that makes abilities cheaper is a cost modifier (`RegisterCostMod`), not a condition in `spend` ([Pack API reference](Pack-API-Reference#cost-and-gcd-modifiers)).

@@ -6,6 +6,16 @@ local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
 local alloc = require("Game.State.helpers.alloc")
 
+-- A `now` that spends the rest of the pool (after an optional target debuff), out of reach of the spec's local `rage`.
+local function spendRest(debuff)
+    return function()
+        if debuff then
+            applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+        end
+        spend(rage.hi, "rage") -- luacheck: ignore 113 (the `now` context's verb and resource)
+    end
+end
+
 describe("now handlers", function()
     local ns, VS, I, api, ctl, h, state, saved, rows, cleu
 
@@ -1626,9 +1636,9 @@ describe("now handlers", function()
         end
         -- the target item (cooldownID 502) for spender_c's debuff, rage plain at `pool` out of combat, then secret in
         -- combat, the target walk secret; the item proven by a light the dark then closes (mob A, 4 - 4.5)
-        local function begin(pool, off, extra)
+        local function begin(pool, off, extra, share)
             h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 }
-            h.Class.abilities.spender_c.refundOnAvoid = true
+            h.Class.abilities.spender_c.refundOnAvoid = share ~= false or nil -- false: no share of the cost
             h.cdmOff = off
             table.insert(ctl.viewer.sets[2], 502)
             ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
@@ -1974,6 +1984,313 @@ describe("now handlers", function()
             assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 7.5).est)
             assert.are.equal(30, rage(7.5).est)
             assert.are.equal(0, I.auraVerdict.n[k])
+        end)
+
+        -- L1237: an ability declaring `refundNowOnAvoid` gets back, at its own avoid, what its `now` took from its own
+        -- slot (here a strike whose `now` spends the rest of the pool past its cost: an avoid costs the cost alone),
+        -- once with its cost share, and never twice with the verdict's refund.
+        describe("what the `now` took, back at the cast's avoid (refundNowOnAvoid, L1237)", function()
+            -- spender_c (cost 10) spends the rest of the pool in its `now`; `field` sets refundNowOnAvoid, `share`
+            -- its cost share (false: none), `debuff` its target debuff (the verdict's record)
+            local function rest(field, share, debuff)
+                h.Class.abilities.spender_c.refundNowOnAvoid = field or nil
+                h.Class.abilities.spender_c.funcs.now = spendRest(debuff)
+                begin(40, nil, nil, share)
+            end
+            local function outcome(t, act)
+                ctl.now = t
+                ctl.Fire("UNIT_COMBAT", "target", act, "", act == "WOUND" and 100 or 0, 1)
+                ctl.Tick(t + 0.01)
+                VS.Drain(t + 0.02)
+            end
+
+            it("an avoided cast keeps the pool past its cost: 40 - 10 = 30, not 0", function()
+                rest(true, false)
+                cast(fs.SPENDER_C, 5)
+                assert.are.equal(0, rage(5.04).est)
+                outcome(5.05, "DODGE")
+                local r = rage(5.1)
+                assert.are.equal(1, I.avoidsRun)
+                assert.are.same({ 30, 30, 30 }, { r.est, r.lo, r.hi })
+                assert.are.same({ "modelled", VS.Obs.Avoided }, { r.basis, r.last.modelled.event })
+            end)
+
+            it("a landed cast, or one with no row, keeps nothing back: 0", function()
+                rest(true, false)
+                cast(fs.SPENDER_C, 5)
+                outcome(5.05, "WOUND")
+                assert.are.equal(0, rage(5.1).est)
+                drain(9)
+                ctl.power[fs.RAGE] = 40
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.Fire("UNIT_POWER_FREQUENT", "player", "RAGE")
+                drain(9.5)
+                ctl.power[fs.RAGE] = nil
+                assert.are.equal(40, rage(9.5).est)
+                cast(fs.SPENDER_C, 10)
+                drain(11)
+                assert.are.equal(0, rage(11).est)
+                assert.are.equal(0, I.avoidsRun)
+            end)
+
+            it("without the field the avoid gives back none of the `now`'s spend", function()
+                rest(false, false)
+                cast(fs.SPENDER_C, 5)
+                outcome(5.05, "MISS")
+                assert.are.equal(1, I.avoidsRun)
+                assert.are.equal(0, rage(5.1).est)
+            end)
+
+            it("with the cost share: one refund of both (30 + 8), and the later verdict adds nothing", function()
+                rest(true, true, true)
+                cast(fs.SPENDER_C, 5)
+                I.curSwapN = I.curSwapN + 1 -- the record stays up past the avoid, for the verdict to close
+                outcome(5.05, "PARRY")
+                I.curSwapN = I.curSwapN - 1
+                assert.are.equal(38, rage(5.1).est)
+                for t = 5.3, 7.5, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(1, I.auraVerdict.n[k])
+                assert.are.equal(0, I.auraVerdict.refunds[k])
+                assert.are.equal(38, rage(7.5).est)
+                I.Sources.Direct(VS.Obs.Avoided, 7.6, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- again
+                drain(7.7)
+                assert.are.equal(38, rage(7.7).est)
+                assert.are.equal(1, I.avoidsRun)
+            end)
+
+            it(
+                "with the cost share, the verdict first: its share alone; a later plain avoid row gives the `now`'s take once",
+                function()
+                    rest(true, true, true)
+                    cast(fs.SPENDER_C, 5)
+                    for t = 5.3, 6.9, 0.2 do
+                        drain(t)
+                    end
+                    assert.are.equal(1, I.auraVerdict.refunds[k])
+                    assert.are.equal(8, rage(6.9).est) -- the verdict's refund is the cost share only (Now.lua shortcut)
+                    I.Sources.Direct(VS.Obs.Avoided, 7, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- a hand-back
+                    drain(7.1)
+                    assert.are.equal(38, rage(7.1).est) -- the `now`'s 30, not the share again
+                    assert.are.equal(1, I.avoidsRun)
+                    I.Sources.Direct(VS.Obs.Avoided, 7.2, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- again
+                    drain(7.3)
+                    assert.are.equal(38, rage(7.3).est)
+                    assert.are.equal(1, I.avoidsRun)
+                end
+            )
+
+            it("no cost share: the verdict refunds nothing, the avoid after it gives the `now`'s back once", function()
+                rest(true, false, true)
+                cast(fs.SPENDER_C, 5)
+                for t = 5.3, 6.9, 0.2 do
+                    drain(t)
+                end
+                assert.are.equal(1, I.auraVerdict.n[k])
+                assert.are.equal(0, I.auraVerdict.refunds[k])
+                assert.are.equal(0, rage(6.9).est)
+                I.Sources.Direct(VS.Obs.Avoided, 7, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE)
+                drain(7.1)
+                assert.are.equal(30, rage(7.1).est)
+                I.Sources.Direct(VS.Obs.Avoided, 7.2, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- again
+                drain(7.3)
+                assert.are.equal(30, rage(7.3).est)
+                assert.are.equal(1, I.avoidsRun)
+            end)
+
+            it(
+                "a usable answer between the cast and its avoid: the give-back still comes (30), the rung's lift explained",
+                function()
+                    rest(true, false)
+                    local s = I.res.slotOf[fs.RAGE]
+                    cast(fs.SPENDER_C, 5)
+                    ctl.usable[fs.SPENDER_B] = { true, false } -- the client already shows 30: spender_b (15) usable
+                    ctl.Fire("SPELL_UPDATE_USABLE")
+                    drain(5.03)
+                    ctl.usable[fs.SPENDER_B] = nil
+                    assert.is_true(rage(5.03).lo >= 15)
+                    assert.is_true(I.res.liftE[s] > 0) -- the rung's lift, owed by a swing (Resources.lua owe)
+                    outcome(5.05, "DODGE")
+                    local r = rage(5.1)
+                    assert.are.equal(1, I.avoidsRun)
+                    assert.are.same({ 30, 30 }, { r.lo, r.est })
+                    assert.is_true(r.hi >= 30 - 1e-9, ("hi %.2f, truth 30"):format(r.hi))
+                    -- the give-back explains the rung's lift: no later swing's wound is netted against it
+                    assert.are.same({ 0, 0 }, { I.res.liftE[s], I.res.liftL[s] })
+                end
+            )
+
+            -- review I1 check (a): a swing's rage is in at PLAYER_SWING, its wound ~0.47 s later; a rung between them
+            -- lifts lo/est and is owed by that wound (Resources.lua owe). The give-back explains the lift, so the
+            -- wound after the avoid pays its whole step: 40 - 10 + 9 = 39, not 30
+            it("a swing before the rung, its wound after the avoid: the wound pays its whole step", function()
+                rest(true, false)
+                cast(fs.SPENDER_C, 5)
+                ctl.now = 5.03
+                ctl.Fire("PLAYER_SWING", 3.6, 0) -- the swing's rage (9) is in; its wound comes later
+                ctl.usable[fs.SPENDER_B] = { true, false } -- the rung: at least 15
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.04)
+                ctl.usable[fs.SPENDER_B] = nil
+                outcome(5.05, "DODGE")
+                assert.are.equal(30, rage(5.1).est) -- the floor: no gain since the cast counted
+                ctl.now = 5.5
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 100, 1) -- the swing's wound lands
+                drain(5.55)
+                assert.are.equal(39, rage(5.6).est)
+            end)
+
+            -- review I1: poll 2 re-asks every tracked spender each drain, so a standing usable answer (the live case)
+            -- lifts lo and est to its rung right after the cast zeroes them
+            for _, field in ipairs({ true, false }) do
+                it("a standing usable answer from the poll alone, field " .. tostring(field), function()
+                    rest(field, false)
+                    ctl.usable[fs.SPENDER_B] = { true, false } -- usable before the cast; never an event
+                    drain(4.9)
+                    cast(fs.SPENDER_C, 5)
+                    drain(5.03)
+                    assert.are.same({ 15, 15 }, { rage(5.03).lo, rage(5.03).est }) -- the rung
+                    outcome(5.05, "DODGE")
+                    local r = rage(5.1)
+                    ctl.usable[fs.SPENDER_B] = nil
+                    assert.are.equal(1, I.avoidsRun)
+                    assert.are.same(field and { 30, 30 } or { 15, 15 }, { r.lo, r.est })
+                end)
+            end
+
+            it(
+                "a short answer between the cast and its avoid: the give-back stays under its top (review M4)",
+                function()
+                    register("big_test", { id = 2688, spend = 35, spendType = "rage" })
+                    rest(true, false)
+                    cast(fs.SPENDER_C, 5)
+                    ctl.usable[2688] = { false, true } -- 35 is short: the truth is 30
+                    ctl.Fire("SPELL_UPDATE_USABLE")
+                    drain(5.03)
+                    ctl.usable[2688] = nil
+                    assert.is_true(I.res.sinceShort[I.res.slotOf[fs.RAGE]] < 35) -- the short answer's top, heard
+                    outcome(5.05, "DODGE")
+                    local r = rage(5.1)
+                    assert.are.equal(1, I.avoidsRun)
+                    assert.are.same({ 30, 30 }, { r.lo, r.est })
+                    assert.is_true(r.hi >= 30 - 1e-9 and r.hi < 35, ("hi %.2f, truth 30, short at 35"):format(r.hi))
+                end
+            )
+
+            it("a swing's crossing after the give-back is no gain of ours (review M3)", function()
+                register("big_test", { id = 2688, spend = 35, spendType = "rage" })
+                rest(true, false)
+                local s = I.res.slotOf[fs.RAGE]
+                cast(fs.SPENDER_C, 5)
+                ctl.usable[fs.SPENDER_B] = { true, false } -- the rung: at least 15
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.02)
+                ctl.usable[fs.SPENDER_B] = nil
+                -- 35 is short (the truth 30), and stays so: the poll re-asks it every drain, the avoid's included, so
+                -- the short's gain mark (Resources.lua shortGain) already holds the give-back when the swing crosses
+                ctl.usable[2688] = { false, true }
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.03)
+                outcome(5.05, "DODGE")
+                assert.are.same({ 30, 30 }, { rage(5.1).lo, rage(5.1).est })
+                ctl.now = 5.5
+                ctl.Fire("PLAYER_SWING", 3.6, 0) -- a swing's rage: past 35
+                drain(5.55)
+                ctl.usable[2688] = { true, false }
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.6)
+                ctl.usable[2688] = nil
+                assert.is_true(I.res.crossT[s] < 5.5, "the swing's crossing read as our own gain")
+                assert.is_true(I.res.pinValid[s]) -- the swing's crossing, measured (Resources.lua pin)
+            end)
+
+            -- the avoid and the swing's crossing in one drain (no re-ask of the short between): the give-back must
+            -- count in the slot's gain (R.gain) as what est took, not the whole take, or the crossing reads as ours
+            it("a swing's crossing in the avoid's own drain is no gain of ours either (review M3)", function()
+                register("big_test", { id = 2688, spend = 35, spendType = "rage" })
+                rest(true, false)
+                local s = I.res.slotOf[fs.RAGE]
+                cast(fs.SPENDER_C, 5)
+                ctl.usable[fs.SPENDER_B] = { true, false } -- the rung: at least 15
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.02)
+                ctl.usable[fs.SPENDER_B] = nil
+                ctl.usable[2688] = { false, true } -- 35 is short (the truth 30)
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.03)
+                ctl.now = 5.04
+                ctl.Fire("PLAYER_SWING", 3.6, 0) -- a swing's rage: past 35
+                ctl.now = 5.05
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                ctl.usable[2688] = { true, false }
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                ctl.Tick(5.06)
+                VS.Drain(5.07)
+                ctl.usable[2688] = nil
+                local r = rage(5.1)
+                assert.are.equal(1, I.avoidsRun)
+                assert.is_true(I.res.crossT[s] < 5, "the swing's crossing read as our own gain")
+                assert.is_true(I.res.pinValid[s]) -- the swing's crossing, measured (Resources.lua pin)
+                assert.is_true(r.lo >= 35 - 1e-9 and r.hi > 35, ("lo %.2f hi %.2f, truth 39"):format(r.lo, r.hi))
+            end)
+
+            it("a spend from the slot between the cast and its avoid: no floor above the truth", function()
+                rest(true, false)
+                local s = I.res.slotOf[fs.RAGE]
+                cast(fs.SPENDER_C, 5)
+                ctl.usable[fs.SPENDER_B] = { true, false } -- the rung: at least 15
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.03)
+                ctl.usable[fs.SPENDER_B] = nil
+                I.ResourceShift(s, -5, 5.04, VS.Obs.CastSuccess) -- a `now` verb's spend (a reaction's): the truth 25
+                outcome(5.05, "DODGE")
+                local r = rage(5.1)
+                assert.are.equal(1, I.avoidsRun)
+                assert.is_true(r.lo <= 25 and r.est <= 25, ("lo %.2f est %.2f, truth 25"):format(r.lo, r.est))
+            end)
+
+            it("a plain read between the cast and its avoid wins: the avoid gives back nothing on top of it", function()
+                rest(true, false)
+                cast(fs.SPENDER_C, 5)
+                ctl.power[fs.RAGE] = 30 -- the server never spent the rest: the read shows it
+                ctl.Fire("UNIT_POWER_FREQUENT", "player", "RAGE")
+                drain(5.03)
+                ctl.power[fs.RAGE] = nil
+                assert.are.equal(30, rage(5.03).est)
+                outcome(5.05, "DODGE")
+                local r = rage(5.1)
+                assert.are.equal(1, I.avoidsRun)
+                assert.are.same({ 30, 30, 30 }, { r.lo, r.est, r.hi })
+            end)
+
+            it("a band: the floor and the top each get back what the `now` took from them", function()
+                rest(true, false)
+                local s = I.res.slotOf[fs.RAGE]
+                I.res.lo0[s], I.res.est0[s], I.res.hi0[s] = 30, 40, 50 -- a secret pool between 30 and 50
+                cast(fs.SPENDER_C, 5)
+                outcome(5.05, "DODGE")
+                local r = rage(5.1) -- the truth 20-40 (the pool less the cost)
+                assert.are.same({ 20, 30, 40 }, { r.lo, r.est, r.hi })
+            end)
+
+            it("allocates nothing across 1000 avoided casts", function()
+                rest(true, true)
+                function h:ForceUpdate() end
+                cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+                local t = 50
+                local bytes = alloc.bytes(function()
+                    t = t + 1
+                    ctl.now = t
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                    ctl.Tick(t + 0.01)
+                    VS.Drain(t + 0.02)
+                    ctl.Tick(t + 0.03)
+                end, 1000)
+                assert.are.equal(0, bytes)
+                assert.is_true(I.avoidsRun >= 1000)
+            end)
         end)
     end)
 end)
