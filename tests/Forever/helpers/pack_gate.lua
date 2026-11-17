@@ -372,9 +372,11 @@ M.FLICKER = {
     -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
     -- spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 210 / 236 / 186, flicker 0, retracted 0, readyShort
     -- 0, agreement .997 / .999 / .997). Traced per tick (seeds 1-20): the near-cost edge, arcane_shot 194 at mana
-    -- 189-192 against its 189, hunters_mark 2; rapid_fire 14: Rapid Fire behind an Aimed Shot whose 310 is paid at the
-    -- cast's end waits from the belief's floor at a fight-opening pool no read has pinned (t 8.6: lo 352.2, (100 -
-    -- (lo - 310)) / 12.40 = 4.67 s; the oracle's exact 513.3 covers both; central, repin-hunter-09-3): the worst set
+    -- 189-192 against its 189, hunters_mark 2; rapid_fire 14 = 11 + 1 + 2: 11 are Rapid Fire behind an Aimed Shot whose
+    -- 310 is paid at the cast's end, waiting from the belief's floor at a fight-opening pool no read has pinned (t 8.6:
+    -- lo 352.2, (100 - (lo - 310)) / 12.40 = 4.67 s; the oracle's exact 513.3 covers both; central, repin-hunter-09-3);
+    -- 1 is fight 15 at t 8.80, 3.23 s at truth 101 (untraced, plausibly the same unpinned floor); 2 are near-cost edge
+    -- ticks (0.09 s, 0.07 s): the worst set
     ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 236 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
     -- heldReady 183 -> 361 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3270 mana, 12.40 mp5 + 16.75 spirit (was 5000 and spirit 15.88, no mp5); seeds 1-20 / 21-40 /
