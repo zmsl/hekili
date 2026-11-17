@@ -1345,6 +1345,21 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
         assert.is_false((seqState("s")))
     end)
 
+    it("L1181: an outside use_off_gcd=1 line for a later member is weaved by the hold and ends it when pressed", function()
+        load({
+            default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/bloodrage,use_off_gcd=1,if=test_fb\n"
+                .. "actions+=/defensive_stance",
+        })
+        tick()
+        flags.fb = true
+        local recs = tick()
+        assert.are.same({ true, 1 }, { seqState("s") })
+        assert.are.equal("bloodrage", recs[1].actionName) -- the known SimC difference (L1181): shown, and pressing it ends s
+        cast(BR)
+        tick()
+        assert.is_false((seqState("s")))
+    end)
+
     it("L1181: a plain sequence stays on its step when a later member is cast out of order", function()
         load({
             default = "actions+=/sequence,name=p,mode=continue:berserker_stance:bloodrage\nactions+=/defensive_stance",
