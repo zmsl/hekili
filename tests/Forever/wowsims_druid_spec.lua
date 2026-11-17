@@ -246,7 +246,12 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
                 -- idles: nothing useful to cast (Roar up, Maul off the GCD, Faerie Fire not known at L10, learned at 18): 0.2 -> 10.2 s
                 -- L40 6.0 -> 8.4 (8.4 s measured): R41 white-miss rage starvation (the bear's rage comes from its own swings only and
                 -- no rage from hits yet, CN7), as in the old-pin analysis
-                ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 8.4)
+                -- L40 8.4 -> 9.4 (9.4 s measured, seed 1) re-pin e5a9cd2a2d -> e4ef929e54 (the adaptive list spends 15 rage
+                -- every GCD on Lacerate / Primal Bite; Ferocity 5/5, the new Bear build), traced (repin-druid-09 round 4):
+                -- the same R41 class, white swings MISS at 83.06, 85.56 and 90.56 keep the truth at 3.5 then 14.8 under the
+                -- 15 cost until 93.06; the streak's usable answers are Cat Form, caster Faerie Fire, Frenzied
+                -- Regeneration, Innervate and Demoralizing Roar with its debuff up, none the list presses
+                ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 9.4)
             end
         end)
     end
