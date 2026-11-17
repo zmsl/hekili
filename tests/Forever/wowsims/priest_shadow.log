@@ -1,4 +1,4 @@
-# wowsims e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664 priest_shadow seed 101 180 s target 63
+# wowsims e4ef929e54794ea16dc9a3c4b4f9d4688d500679 priest_shadow seed 101 180 s target 63
 # talents 1225132=5@1 14523=3@1 18551=3@1 14751=1@1 14521=3@1 14913=3@2 15260=5@3 15273=4@3 15275=2@3 17322=2@3 15407=1@3 1225139=2@3 1326159=5@3 15286=1@3 15257=3@3 1309950=2@3 15259=5@3 15473=1@3
 [0.00] [Shadow (#1)] Aura gained: {SpellID: 15473}
 [0.00] [Shadow (#1)] Aura gained: {SpellID: 25898, Tag: -1}
@@ -36,7 +36,7 @@
 [0.00] [Shadow (#1)] Gained 2.838 mana from {OtherID: 2, Tag: 1} (4846.000 --> 4846.000) of 4846 total.
 [0.00] [Shadow (#1)] Completed cast {SpellID: 10947}
 [0.00] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (4846.000 --> 4671.000) of 4846 total.
-[0.00] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 965.024 damage (SpellSchool: 32). (Threat: 675.517)
+[0.00] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 962.974 damage (SpellSchool: 32). (Threat: 674.082)
 [0.00] [Shadow (#1)] Casting {ItemID: 272438} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 5
 [0.00] [Shadow (#1)] Completed cast {ItemID: 272438}
 [0.00] [Shadow (#1)] Aura gained: {SpellID: 1291101}
@@ -114,11 +114,11 @@
 [4.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4082.305 --> 4085.343) of 4846 total.
 [4.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4085.343 --> 4088.380) of 4846 total.
 [4.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4088.380 --> 4091.418) of 4846 total.
-[4.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 766.020 damage (SpellSchool: 32). (Threat: 536.214)
+[4.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 763.865 damage (SpellSchool: 32). (Threat: 534.706)
 [4.50] [Shadow (#1)] Casting {SpellID: 1309636} (Cost = 170.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [4.50] [Shadow (#1)] Completed cast {SpellID: 1309636}
 [4.50] [Shadow (#1)] Spent 170.000 mana from {SpellID: 1309636} (4091.418 --> 3921.418) of 4846 total.
-[4.50] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1051.701 damage (SpellSchool: 32). (Threat: 736.191)
+[4.50] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1049.433 damage (SpellSchool: 32). (Threat: 734.603)
 [4.50] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2427.000 --> 1698.900) of 2427 total.
 [4.51] [Target 1] Aura refreshed: {SpellID: 15258}
 [4.51] [Target 1] {SpellID: 15258} stacks: 3 --> 4
@@ -137,8 +137,8 @@
 [5.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3957.868 --> 3960.905) of 4846 total.
 [5.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3960.905 --> 3963.943) of 4846 total.
 [6.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3963.943 --> 3966.980) of 4846 total.
-[6.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 253.434 damage (SpellSchool: 32). (Threat: 177.404)
-[6.00] [Shadow (#1)] Gained 253.434 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1952.334) of 2427 total.
+[6.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 252.885 damage (SpellSchool: 32). (Threat: 177.020)
+[6.00] [Shadow (#1)] Gained 252.885 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1951.785) of 2427 total.
 [6.00] [Shadow (#1)] Casting {SpellID: 10947} (Cost = 175.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 8
 [6.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3966.980 --> 3970.018) of 4846 total.
 [6.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3970.018 --> 3973.055) of 4846 total.
@@ -155,10 +155,10 @@
 [7.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4003.430 --> 4006.468) of 4846 total.
 [7.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4006.468 --> 4009.505) of 4846 total.
 [7.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4009.505 --> 4012.543) of 4846 total.
-[7.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 390.237 damage (SpellSchool: 32). (Threat: 273.166)
+[7.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 389.139 damage (SpellSchool: 32). (Threat: 272.397)
 [7.50] [Shadow (#1)] Completed cast {SpellID: 10947}
 [7.50] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (4012.543 --> 3837.543) of 4846 total.
-[7.50] [Shadow (#1)] [Target 1] {SpellID: 10947} Crit for 2191.357 damage (SpellSchool: 32). (Threat: 1533.950)
+[7.50] [Shadow (#1)] [Target 1] {SpellID: 10947} Crit for 2186.815 damage (SpellSchool: 32). (Threat: 1530.770)
 [7.50] [Shadow (#1)] Casting {SpellID: 14751} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 13 > step 1
 [7.50] [Shadow (#1)] Completed cast {SpellID: 14751}
 [7.50] [Shadow (#1)] Aura gained: {SpellID: 14751}
@@ -183,20 +183,20 @@
 [8.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3858.805 --> 3861.843) of 4846 total.
 [8.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3861.843 --> 3864.880) of 4846 total.
 [8.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3864.880 --> 3867.918) of 4846 total.
-[8.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 730.720 damage (SpellSchool: 32). (Threat: 511.504)
+[8.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 728.853 damage (SpellSchool: 32). (Threat: 510.197)
 [8.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3867.918 --> 3870.955) of 4846 total.
 [8.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3870.955 --> 3873.993) of 4846 total.
 [8.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3873.993 --> 3877.030) of 4846 total.
 [8.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3877.030 --> 3880.068) of 4846 total.
 [9.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3880.068 --> 3883.105) of 4846 total.
-[9.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 258.127 damage (SpellSchool: 32). (Threat: 180.689)
-[9.00] [Shadow (#1)] Gained 258.127 health from {SpellID: 19280, Tag: 1} (1952.334 --> 2210.462) of 2427 total.
+[9.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 257.568 damage (SpellSchool: 32). (Threat: 180.298)
+[9.00] [Shadow (#1)] Gained 257.568 health from {SpellID: 19280, Tag: 1} (1951.785 --> 2209.354) of 2427 total.
 [9.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3883.105 --> 3886.143) of 4846 total.
 [9.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3886.143 --> 3889.180) of 4846 total.
 [9.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3889.180 --> 3892.218) of 4846 total.
 [9.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3892.218 --> 3895.255) of 4846 total.
 [9.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3895.255 --> 3898.293) of 4846 total.
-[9.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 876.864 damage (SpellSchool: 32). (Threat: 613.805)
+[9.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 874.624 damage (SpellSchool: 32). (Threat: 612.237)
 [9.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3898.293 --> 3901.330) of 4846 total.
 [9.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3901.330 --> 3904.368) of 4846 total.
 [9.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3904.368 --> 3907.405) of 4846 total.
@@ -207,11 +207,11 @@
 [10.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3919.555 --> 3922.593) of 4846 total.
 [10.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3922.593 --> 3925.630) of 4846 total.
 [10.50] [Target 1] Aura faded: {SpellID: 18807}
-[10.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 526.119 damage (SpellSchool: 32). (Threat: 368.283)
+[10.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 524.774 damage (SpellSchool: 32). (Threat: 367.342)
 [10.50] [Shadow (#1)] {SpellID: 14751} stacks: 1 --> 0
 [10.50] [Shadow (#1)] Aura faded: {SpellID: 14751}
 [10.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3925.630 --> 3928.668) of 4846 total.
-[10.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 397.463 damage (SpellSchool: 32). (Threat: 278.224)
+[10.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 396.345 damage (SpellSchool: 32). (Threat: 277.442)
 [10.51] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [10.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3928.668 --> 3931.705) of 4846 total.
 [10.60] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -230,20 +230,20 @@
 [11.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3850.468 --> 3853.505) of 4846 total.
 [11.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3853.505 --> 3856.543) of 4846 total.
 [11.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3856.543 --> 3859.580) of 4846 total.
-[11.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 365.360 damage (SpellSchool: 32). (Threat: 255.752)
+[11.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 364.427 damage (SpellSchool: 32). (Threat: 255.099)
 [11.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3859.580 --> 3862.618) of 4846 total.
 [11.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3862.618 --> 3865.655) of 4846 total.
 [11.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3865.655 --> 3868.693) of 4846 total.
 [12.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3868.693 --> 3871.730) of 4846 total.
-[12.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 258.127 damage (SpellSchool: 32). (Threat: 180.689)
-[12.00] [Shadow (#1)] Gained 258.127 health from {SpellID: 19280, Tag: 1} (2210.462 --> 2427.000) of 2427 total.
+[12.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 257.568 damage (SpellSchool: 32). (Threat: 180.298)
+[12.00] [Shadow (#1)] Gained 257.568 health from {SpellID: 19280, Tag: 1} (2209.354 --> 2427.000) of 2427 total.
 [12.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3871.730 --> 3874.768) of 4846 total.
 [12.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3874.768 --> 3877.805) of 4846 total.
 [12.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3877.805 --> 3880.843) of 4846 total.
 [12.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3880.843 --> 3883.880) of 4846 total.
 [12.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3883.880 --> 3886.918) of 4846 total.
 [12.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3886.918 --> 3889.955) of 4846 total.
-[12.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 438.432 damage (SpellSchool: 32). (Threat: 306.902)
+[12.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 437.312 damage (SpellSchool: 32). (Threat: 306.118)
 [12.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3889.955 --> 3892.993) of 4846 total.
 [12.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3892.993 --> 3896.030) of 4846 total.
 [12.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3896.030 --> 3899.068) of 4846 total.
@@ -253,9 +253,9 @@
 [13.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3908.180 --> 3911.218) of 4846 total.
 [13.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3911.218 --> 3914.255) of 4846 total.
 [13.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3914.255 --> 3917.293) of 4846 total.
-[13.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 397.463 damage (SpellSchool: 32). (Threat: 278.224)
+[13.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 396.345 damage (SpellSchool: 32). (Threat: 277.442)
 [13.60] [Target 1] Aura faded: {SpellID: 18807}
-[13.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 526.119 damage (SpellSchool: 32). (Threat: 368.283)
+[13.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 524.774 damage (SpellSchool: 32). (Threat: 367.342)
 [13.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3917.293 --> 3920.330) of 4846 total.
 [13.61] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [13.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3920.330 --> 3923.368) of 4846 total.
@@ -273,13 +273,13 @@
 [14.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3953.742 --> 3956.780) of 4846 total.
 [14.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3956.780 --> 3959.817) of 4846 total.
 [15.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3959.817 --> 3962.855) of 4846 total.
-[15.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 258.127 damage (SpellSchool: 32). (Threat: 180.689)
-[15.00] [Shadow (#1)] Gained 258.127 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[15.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 257.568 damage (SpellSchool: 32). (Threat: 180.298)
+[15.00] [Shadow (#1)] Gained 257.568 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [15.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3962.855 --> 3965.892) of 4846 total.
 [15.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3965.892 --> 3968.930) of 4846 total.
 [15.20] [Shadow (#1)] Completed cast {SpellID: 10947}
 [15.20] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (3968.930 --> 3793.930) of 4846 total.
-[15.20] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1111.366 damage (SpellSchool: 32). (Threat: 777.956)
+[15.20] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1109.062 damage (SpellSchool: 32). (Threat: 776.343)
 [15.20] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [15.20] [Shadow (#1)] Completed cast {SpellID: 18807}
 [15.20] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (3793.930 --> 3691.430) of 4846 total.
@@ -298,11 +298,11 @@
 [16.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3712.692 --> 3715.730) of 4846 total.
 [16.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3715.730 --> 3718.767) of 4846 total.
 [16.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3718.767 --> 3721.805) of 4846 total.
-[16.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 365.360 damage (SpellSchool: 32). (Threat: 255.752)
+[16.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 364.427 damage (SpellSchool: 32). (Threat: 255.099)
 [16.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3721.805 --> 3724.842) of 4846 total.
 [16.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3724.842 --> 3727.880) of 4846 total.
 [16.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3727.880 --> 3730.917) of 4846 total.
-[16.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 397.463 damage (SpellSchool: 32). (Threat: 278.224)
+[16.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 396.345 damage (SpellSchool: 32). (Threat: 277.442)
 [16.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3730.917 --> 3733.955) of 4846 total.
 [16.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3733.955 --> 3736.992) of 4846 total.
 [16.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3736.992 --> 3740.030) of 4846 total.
@@ -310,7 +310,7 @@
 [17.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3743.067 --> 3746.105) of 4846 total.
 [17.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3746.105 --> 3749.142) of 4846 total.
 [17.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3749.142 --> 3752.180) of 4846 total.
-[17.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 876.864 damage (SpellSchool: 32). (Threat: 613.805)
+[17.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 874.624 damage (SpellSchool: 32). (Threat: 612.237)
 [17.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3752.180 --> 3755.217) of 4846 total.
 [17.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3755.217 --> 3758.255) of 4846 total.
 [17.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3758.255 --> 3761.292) of 4846 total.
@@ -319,11 +319,11 @@
 [17.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3767.367 --> 3770.405) of 4846 total.
 [17.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3770.405 --> 3773.442) of 4846 total.
 [18.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3773.442 --> 3776.480) of 4846 total.
-[18.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 258.127 damage (SpellSchool: 32). (Threat: 180.689)
-[18.00] [Shadow (#1)] Gained 258.127 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[18.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 257.568 damage (SpellSchool: 32). (Threat: 180.298)
+[18.00] [Shadow (#1)] Gained 257.568 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [18.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3776.480 --> 3779.517) of 4846 total.
 [18.20] [Target 1] Aura faded: {SpellID: 18807}
-[18.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 526.119 damage (SpellSchool: 32). (Threat: 368.283)
+[18.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 524.774 damage (SpellSchool: 32). (Threat: 367.342)
 [18.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3779.517 --> 3782.555) of 4846 total.
 [18.21] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [18.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3782.555 --> 3785.592) of 4846 total.
@@ -343,10 +343,10 @@
 [19.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3704.355 --> 3707.392) of 4846 total.
 [19.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3707.392 --> 3710.430) of 4846 total.
 [19.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3710.430 --> 3713.467) of 4846 total.
-[19.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 365.360 damage (SpellSchool: 32). (Threat: 255.752)
+[19.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 364.427 damage (SpellSchool: 32). (Threat: 255.099)
 [19.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3713.467 --> 3716.505) of 4846 total.
 [19.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3716.505 --> 3719.542) of 4846 total.
-[19.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 397.463 damage (SpellSchool: 32). (Threat: 278.224)
+[19.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 396.345 damage (SpellSchool: 32). (Threat: 277.442)
 [19.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3719.542 --> 3722.580) of 4846 total.
 [19.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3722.580 --> 3725.617) of 4846 total.
 [19.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3725.617 --> 3728.655) of 4846 total.
@@ -355,7 +355,7 @@
 [20.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3734.730 --> 3737.767) of 4846 total.
 [20.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3737.767 --> 3740.805) of 4846 total.
 [20.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3740.805 --> 3743.842) of 4846 total.
-[20.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 438.432 damage (SpellSchool: 32). (Threat: 306.902)
+[20.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 437.312 damage (SpellSchool: 32). (Threat: 306.118)
 [20.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3743.842 --> 3746.880) of 4846 total.
 [20.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3746.880 --> 3749.917) of 4846 total.
 [20.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3749.917 --> 3752.955) of 4846 total.
@@ -363,12 +363,12 @@
 [20.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3755.992 --> 3759.030) of 4846 total.
 [20.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3759.030 --> 3762.067) of 4846 total.
 [21.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3762.067 --> 3765.105) of 4846 total.
-[21.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 258.127 damage (SpellSchool: 32). (Threat: 180.689)
-[21.00] [Shadow (#1)] Gained 258.127 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[21.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 257.568 damage (SpellSchool: 32). (Threat: 180.298)
+[21.00] [Shadow (#1)] Gained 257.568 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [21.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3765.105 --> 3768.142) of 4846 total.
 [21.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3768.142 --> 3771.180) of 4846 total.
 [21.30] [Target 1] Aura faded: {SpellID: 18807}
-[21.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 526.119 damage (SpellSchool: 32). (Threat: 368.283)
+[21.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 524.774 damage (SpellSchool: 32). (Threat: 367.342)
 [21.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3771.180 --> 3774.217) of 4846 total.
 [21.31] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [21.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3774.217 --> 3777.255) of 4846 total.
@@ -384,18 +384,18 @@
 [22.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3801.555 --> 3804.592) of 4846 total.
 [22.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3804.592 --> 3807.630) of 4846 total.
 [22.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3807.630 --> 3810.667) of 4846 total.
-[22.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 397.463 damage (SpellSchool: 32). (Threat: 278.224)
+[22.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 396.345 damage (SpellSchool: 32). (Threat: 277.442)
 [22.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3810.667 --> 3813.705) of 4846 total.
 [22.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3813.705 --> 3816.742) of 4846 total.
 [22.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3816.742 --> 3819.780) of 4846 total.
 [22.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3819.780 --> 3822.817) of 4846 total.
 [22.90] [Shadow (#1)] Completed cast {SpellID: 10947}
 [22.90] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (3822.817 --> 3647.817) of 4846 total.
-[22.90] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1080.009 damage (SpellSchool: 32). (Threat: 756.006)
+[22.90] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1077.770 damage (SpellSchool: 32). (Threat: 754.439)
 [22.90] [Shadow (#1)] Casting {SpellID: 1309636} (Cost = 170.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [22.90] [Shadow (#1)] Completed cast {SpellID: 1309636}
 [22.90] [Shadow (#1)] Spent 170.000 mana from {SpellID: 1309636} (3647.817 --> 3477.817) of 4846 total.
-[22.90] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1102.170 damage (SpellSchool: 32). (Threat: 771.519)
+[22.90] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1099.793 damage (SpellSchool: 32). (Threat: 769.855)
 [22.90] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2427.000 --> 1698.900) of 2427 total.
 [22.91] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [22.91] [Target 1] Aura refreshed: {SpellID: 15258}
@@ -411,8 +411,8 @@
 [23.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3502.117 --> 3505.155) of 4846 total.
 [23.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3505.155 --> 3508.192) of 4846 total.
 [24.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3508.192 --> 3511.230) of 4846 total.
-[24.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 258.127 damage (SpellSchool: 32). (Threat: 180.689)
-[24.00] [Shadow (#1)] Gained 258.127 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1957.027) of 2427 total.
+[24.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 257.568 damage (SpellSchool: 32). (Threat: 180.298)
+[24.00] [Shadow (#1)] Gained 257.568 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1956.468) of 2427 total.
 [24.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3511.230 --> 3514.267) of 4846 total.
 [24.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3514.267 --> 3517.305) of 4846 total.
 [24.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3517.305 --> 3520.342) of 4846 total.
@@ -433,9 +433,9 @@
 [25.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3442.142 --> 3445.180) of 4846 total.
 [25.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3445.180 --> 3448.217) of 4846 total.
 [25.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3448.217 --> 3451.255) of 4846 total.
-[25.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 365.360 damage (SpellSchool: 32). (Threat: 255.752)
+[25.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 364.427 damage (SpellSchool: 32). (Threat: 255.099)
 [25.50] [Target 1] Aura faded: {SpellID: 10894}
-[25.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 397.463 damage (SpellSchool: 32). (Threat: 278.224)
+[25.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 396.345 damage (SpellSchool: 32). (Threat: 277.442)
 [25.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3451.255 --> 3454.292) of 4846 total.
 [25.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3454.292 --> 3457.330) of 4846 total.
 [25.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3457.330 --> 3460.367) of 4846 total.
@@ -446,21 +446,21 @@
 [26.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3472.517 --> 3475.555) of 4846 total.
 [26.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3475.555 --> 3478.592) of 4846 total.
 [26.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3478.592 --> 3481.630) of 4846 total.
-[26.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 438.432 damage (SpellSchool: 32). (Threat: 306.902)
+[26.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 437.312 damage (SpellSchool: 32). (Threat: 306.118)
 [26.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3481.630 --> 3484.667) of 4846 total.
 [26.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3484.667 --> 3487.705) of 4846 total.
 [26.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3487.705 --> 3490.742) of 4846 total.
 [26.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3490.742 --> 3493.780) of 4846 total.
 [26.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3493.780 --> 3496.817) of 4846 total.
 [27.00] [Target 1] Aura faded: {SpellID: 19280}
-[27.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 258.127 damage (SpellSchool: 32). (Threat: 180.689)
-[27.00] [Shadow (#1)] Gained 258.127 health from {SpellID: 19280, Tag: 1} (1957.027 --> 2215.155) of 2427 total.
+[27.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 257.568 damage (SpellSchool: 32). (Threat: 180.298)
+[27.00] [Shadow (#1)] Gained 257.568 health from {SpellID: 19280, Tag: 1} (1956.468 --> 2214.037) of 2427 total.
 [27.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3496.817 --> 3499.855) of 4846 total.
 [27.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3499.855 --> 3502.892) of 4846 total.
 [27.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3502.892 --> 3505.930) of 4846 total.
 [27.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3505.930 --> 3508.967) of 4846 total.
 [27.40] [Target 1] Aura faded: {SpellID: 18807}
-[27.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 526.119 damage (SpellSchool: 32). (Threat: 368.283)
+[27.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 524.774 damage (SpellSchool: 32). (Threat: 367.342)
 [27.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3508.967 --> 3512.005) of 4846 total.
 [27.41] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [27.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3512.005 --> 3515.042) of 4846 total.
@@ -507,12 +507,12 @@
 [30.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3115.805 --> 3118.842) of 4846 total.
 [30.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3118.842 --> 3121.880) of 4846 total.
 [30.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3121.880 --> 3124.917) of 4846 total.
-[30.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[30.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [30.50] [Shadow (#1)] Casting {ItemID: 12662} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 5
 [30.50] [Shadow (#1)] Completed cast {ItemID: 12662}
 [30.50] [Shadow (#1)] Gained 1182.603 mana from {ItemID: 12662} (3124.917 --> 4307.521) of 4846 total.
 [30.50] [Shadow (#1)] [Shadow (#1)] {ItemID: 12662, Tag: 1} Hit for 947.031 damage (SpellSchool: 32). (Threat: 662.922)
-[30.50] [Shadow (#1)] Spent 947.031 health from {OtherID: 9} (2215.155 --> 1268.124) of 2427 total.
+[30.50] [Shadow (#1)] Spent 947.031 health from {OtherID: 9} (2214.037 --> 1267.006) of 2427 total.
 [30.50] [Shadow (#1)] Major cooldown used: {ItemID: 12662}
 [30.50] [Shadow (#1)] Casting {SpellID: 10947} (Cost = 175.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 8
 [30.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4307.521 --> 4310.558) of 4846 total.
@@ -530,11 +530,11 @@
 [31.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4343.971 --> 4347.008) of 4846 total.
 [31.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4347.008 --> 4350.046) of 4846 total.
 [32.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4350.046 --> 4353.083) of 4846 total.
-[32.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[32.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1268.124 --> 1519.683) of 2427 total.
+[32.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[32.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1267.006 --> 1518.006) of 2427 total.
 [32.00] [Shadow (#1)] Completed cast {SpellID: 10947}
 [32.00] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (4353.083 --> 4178.083) of 4846 total.
-[32.00] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1094.104 damage (SpellSchool: 32). (Threat: 765.872)
+[32.00] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1091.779 damage (SpellSchool: 32). (Threat: 764.245)
 [32.00] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [32.00] [Shadow (#1)] Completed cast {SpellID: 18807}
 [32.00] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (4178.083 --> 4075.583) of 4846 total.
@@ -553,19 +553,19 @@
 [32.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4096.846 --> 4099.883) of 4846 total.
 [32.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4099.883 --> 4102.921) of 4846 total.
 [33.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4102.921 --> 4105.958) of 4846 total.
-[33.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[33.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [33.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4105.958 --> 4108.996) of 4846 total.
 [33.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4108.996 --> 4112.033) of 4846 total.
 [33.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4112.033 --> 4115.071) of 4846 total.
 [33.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4115.071 --> 4118.108) of 4846 total.
 [33.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4118.108 --> 4121.146) of 4846 total.
-[33.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[33.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [33.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4121.146 --> 4124.183) of 4846 total.
 [33.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4124.183 --> 4127.221) of 4846 total.
 [33.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4127.221 --> 4130.258) of 4846 total.
 [33.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4130.258 --> 4133.296) of 4846 total.
 [34.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4133.296 --> 4136.333) of 4846 total.
-[34.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[34.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [34.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4136.333 --> 4139.371) of 4846 total.
 [34.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4139.371 --> 4142.408) of 4846 total.
 [34.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4142.408 --> 4145.446) of 4846 total.
@@ -576,10 +576,10 @@
 [34.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4157.596 --> 4160.633) of 4846 total.
 [34.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4160.633 --> 4163.671) of 4846 total.
 [35.00] [Target 1] Aura faded: {SpellID: 18807}
-[35.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[35.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [35.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4163.671 --> 4166.708) of 4846 total.
-[35.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[35.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1519.683 --> 1771.242) of 2427 total.
+[35.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[35.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1518.006 --> 1769.006) of 2427 total.
 [35.01] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [35.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4166.708 --> 4169.746) of 4846 total.
 [35.10] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -598,19 +598,19 @@
 [35.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4088.508 --> 4091.546) of 4846 total.
 [36.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4091.546 --> 4094.583) of 4846 total.
 [36.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4094.583 --> 4097.621) of 4846 total.
-[36.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[36.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [36.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4097.621 --> 4100.658) of 4846 total.
 [36.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4100.658 --> 4103.696) of 4846 total.
 [36.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4103.696 --> 4106.733) of 4846 total.
 [36.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4106.733 --> 4109.771) of 4846 total.
-[36.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[36.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [36.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4109.771 --> 4112.808) of 4846 total.
 [36.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4112.808 --> 4115.846) of 4846 total.
 [36.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4115.846 --> 4118.883) of 4846 total.
 [36.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4118.883 --> 4121.921) of 4846 total.
 [37.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4121.921 --> 4124.958) of 4846 total.
 [37.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4124.958 --> 4127.996) of 4846 total.
-[37.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[37.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [37.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4127.996 --> 4131.033) of 4846 total.
 [37.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4131.033 --> 4134.071) of 4846 total.
 [37.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4134.071 --> 4137.108) of 4846 total.
@@ -620,10 +620,10 @@
 [37.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4146.221 --> 4149.258) of 4846 total.
 [37.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4149.258 --> 4152.296) of 4846 total.
 [38.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4152.296 --> 4155.333) of 4846 total.
-[38.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[38.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1771.242 --> 2022.801) of 2427 total.
+[38.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[38.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1769.006 --> 2020.005) of 2427 total.
 [38.10] [Target 1] Aura faded: {SpellID: 18807}
-[38.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[38.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [38.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4155.333 --> 4158.371) of 4846 total.
 [38.11] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [38.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4158.371 --> 4161.408) of 4846 total.
@@ -641,12 +641,12 @@
 [39.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4191.783 --> 4194.821) of 4846 total.
 [39.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4194.821 --> 4197.858) of 4846 total.
 [39.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4197.858 --> 4200.896) of 4846 total.
-[39.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[39.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [39.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4200.896 --> 4203.933) of 4846 total.
 [39.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4203.933 --> 4206.971) of 4846 total.
 [39.70] [Shadow (#1)] Completed cast {SpellID: 10947}
 [39.70] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (4206.971 --> 4031.971) of 4846 total.
-[39.70] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1084.117 damage (SpellSchool: 32). (Threat: 758.882)
+[39.70] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1081.813 damage (SpellSchool: 32). (Threat: 757.269)
 [39.70] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [39.70] [Shadow (#1)] Completed cast {SpellID: 18807}
 [39.70] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (4031.971 --> 3929.471) of 4846 total.
@@ -665,12 +665,12 @@
 [40.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3950.733 --> 3953.771) of 4846 total.
 [40.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3953.771 --> 3956.808) of 4846 total.
 [40.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3956.808 --> 3959.846) of 4846 total.
-[40.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[40.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [40.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3959.846 --> 3962.883) of 4846 total.
 [40.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3962.883 --> 3965.921) of 4846 total.
 [41.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3965.921 --> 3968.958) of 4846 total.
-[41.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[41.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2022.801 --> 2274.360) of 2427 total.
+[41.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[41.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2020.005 --> 2271.005) of 2427 total.
 [41.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3968.958 --> 3971.996) of 4846 total.
 [41.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3971.996 --> 3975.033) of 4846 total.
 [41.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3975.033 --> 3978.071) of 4846 total.
@@ -678,7 +678,7 @@
 [41.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3981.108 --> 3984.146) of 4846 total.
 [41.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3984.146 --> 3987.183) of 4846 total.
 [41.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3987.183 --> 3990.221) of 4846 total.
-[41.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[41.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [41.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3990.221 --> 3993.258) of 4846 total.
 [41.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3993.258 --> 3996.296) of 4846 total.
 [42.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3996.296 --> 3999.333) of 4846 total.
@@ -687,18 +687,18 @@
 [42.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4005.408 --> 4008.446) of 4846 total.
 [42.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4008.446 --> 4011.483) of 4846 total.
 [42.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4011.483 --> 4014.521) of 4846 total.
-[42.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[42.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [42.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4014.521 --> 4017.558) of 4846 total.
 [42.70] [Target 1] Aura faded: {SpellID: 18807}
-[42.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[42.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [42.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4017.558 --> 4020.596) of 4846 total.
 [42.71] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [42.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (4020.596 --> 4023.633) of 4846 total.
 [42.80] [Shadow (#1)] Casting {SpellID: 1309636} (Cost = 170.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [42.80] [Shadow (#1)] Completed cast {SpellID: 1309636}
 [42.80] [Shadow (#1)] Spent 170.000 mana from {SpellID: 1309636} (4023.633 --> 3853.633) of 4846 total.
-[42.80] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1070.586 damage (SpellSchool: 32). (Threat: 749.410)
-[42.80] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2274.360 --> 1546.260) of 2427 total.
+[42.80] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1068.217 damage (SpellSchool: 32). (Threat: 747.752)
+[42.80] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2271.005 --> 1542.905) of 2427 total.
 [42.81] [Target 1] Aura refreshed: {SpellID: 15258}
 [42.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3853.633 --> 3856.671) of 4846 total.
 [43.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3856.671 --> 3859.708) of 4846 total.
@@ -712,8 +712,8 @@
 [43.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3880.971 --> 3884.008) of 4846 total.
 [43.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3884.008 --> 3887.046) of 4846 total.
 [44.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3887.046 --> 3890.083) of 4846 total.
-[44.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[44.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1546.260 --> 1797.819) of 2427 total.
+[44.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[44.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1542.905 --> 1793.905) of 2427 total.
 [44.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3890.083 --> 3893.121) of 4846 total.
 [44.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3893.121 --> 3896.158) of 4846 total.
 [44.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3896.158 --> 3899.196) of 4846 total.
@@ -733,10 +733,10 @@
 [45.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3817.958 --> 3820.996) of 4846 total.
 [45.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3820.996 --> 3824.033) of 4846 total.
 [45.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3824.033 --> 3827.071) of 4846 total.
-[45.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[45.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [45.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3827.071 --> 3830.108) of 4846 total.
 [45.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3830.108 --> 3833.146) of 4846 total.
-[45.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[45.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [45.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3833.146 --> 3836.183) of 4846 total.
 [45.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3836.183 --> 3839.221) of 4846 total.
 [45.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3839.221 --> 3842.258) of 4846 total.
@@ -745,7 +745,7 @@
 [46.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3848.333 --> 3851.371) of 4846 total.
 [46.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3851.371 --> 3854.408) of 4846 total.
 [46.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3854.408 --> 3857.446) of 4846 total.
-[46.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[46.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [46.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3857.446 --> 3860.483) of 4846 total.
 [46.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3860.483 --> 3863.521) of 4846 total.
 [46.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3863.521 --> 3866.558) of 4846 total.
@@ -753,12 +753,12 @@
 [46.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3869.596 --> 3872.633) of 4846 total.
 [46.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3872.633 --> 3875.671) of 4846 total.
 [47.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3875.671 --> 3878.708) of 4846 total.
-[47.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Crit for 503.118 damage (SpellSchool: 32). (Threat: 352.183)
-[47.00] [Shadow (#1)] Gained 503.118 health from {SpellID: 19280, Tag: 1} (1797.819 --> 2300.937) of 2427 total.
+[47.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Crit for 502.000 damage (SpellSchool: 32). (Threat: 351.400)
+[47.00] [Shadow (#1)] Gained 502.000 health from {SpellID: 19280, Tag: 1} (1793.905 --> 2295.905) of 2427 total.
 [47.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3878.708 --> 3881.746) of 4846 total.
 [47.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3881.746 --> 3884.783) of 4846 total.
 [47.30] [Target 1] Aura faded: {SpellID: 18807}
-[47.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[47.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [47.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3884.783 --> 3887.821) of 4846 total.
 [47.31] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [47.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3887.821 --> 3890.858) of 4846 total.
@@ -774,7 +774,7 @@
 [48.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3915.158 --> 3918.196) of 4846 total.
 [48.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3918.196 --> 3921.233) of 4846 total.
 [48.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3921.233 --> 3924.271) of 4846 total.
-[48.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[48.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [48.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3924.271 --> 3927.308) of 4846 total.
 [48.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3927.308 --> 3930.346) of 4846 total.
 [48.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3930.346 --> 3933.383) of 4846 total.
@@ -798,10 +798,10 @@
 [49.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3680.183 --> 3683.221) of 4846 total.
 [49.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3683.221 --> 3686.258) of 4846 total.
 [49.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3686.258 --> 3689.296) of 4846 total.
-[49.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[49.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [50.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3689.296 --> 3692.333) of 4846 total.
-[50.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[50.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2300.937 --> 2427.000) of 2427 total.
+[50.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[50.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2295.905 --> 2427.000) of 2427 total.
 [50.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3692.333 --> 3695.371) of 4846 total.
 [50.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3695.371 --> 3698.408) of 4846 total.
 [50.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3698.408 --> 3701.446) of 4846 total.
@@ -811,20 +811,20 @@
 [50.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3710.558 --> 3713.596) of 4846 total.
 [50.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3713.596 --> 3716.633) of 4846 total.
 [50.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3716.633 --> 3719.671) of 4846 total.
-[50.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[50.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [51.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3719.671 --> 3722.708) of 4846 total.
 [51.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3722.708 --> 3725.746) of 4846 total.
 [51.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3725.746 --> 3728.783) of 4846 total.
 [51.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3728.783 --> 3731.821) of 4846 total.
 [51.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3731.821 --> 3734.858) of 4846 total.
 [51.50] [Target 1] Aura faded: {SpellID: 10894}
-[51.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[51.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [51.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3734.858 --> 3737.896) of 4846 total.
 [51.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3737.896 --> 3740.933) of 4846 total.
 [51.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3740.933 --> 3743.971) of 4846 total.
 [51.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3743.971 --> 3747.008) of 4846 total.
 [51.90] [Target 1] Aura faded: {SpellID: 18807}
-[51.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[51.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [51.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3747.008 --> 3750.046) of 4846 total.
 [51.91] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [52.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3750.046 --> 3753.083) of 4846 total.
@@ -842,8 +842,8 @@
 [52.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3539.346 --> 3542.383) of 4846 total.
 [52.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3542.383 --> 3545.421) of 4846 total.
 [53.00] [Target 1] Aura faded: {SpellID: 19280}
-[53.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[53.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[53.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[53.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [53.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3545.421 --> 3548.458) of 4846 total.
 [53.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3548.458 --> 3551.496) of 4846 total.
 [53.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3551.496 --> 3554.533) of 4846 total.
@@ -892,7 +892,7 @@
 [56.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3164.408 --> 3167.446) of 4846 total.
 [56.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3167.446 --> 3170.483) of 4846 total.
 [56.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3170.483 --> 3173.521) of 4846 total.
-[56.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[56.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [56.50] [Shadow (#1)] Casting {SpellID: 10947} (Cost = 175.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 8
 [56.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3173.521 --> 3176.558) of 4846 total.
 [56.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3176.558 --> 3179.596) of 4846 total.
@@ -909,11 +909,11 @@
 [57.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3209.971 --> 3213.008) of 4846 total.
 [57.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3213.008 --> 3216.046) of 4846 total.
 [58.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3216.046 --> 3219.083) of 4846 total.
-[58.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[58.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[58.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[58.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [58.00] [Shadow (#1)] Completed cast {SpellID: 10947}
 [58.00] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (3219.083 --> 3044.083) of 4846 total.
-[58.00] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1074.635 damage (SpellSchool: 32). (Threat: 752.245)
+[58.00] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1072.352 damage (SpellSchool: 32). (Threat: 750.646)
 [58.00] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [58.00] [Shadow (#1)] Completed cast {SpellID: 18807}
 [58.00] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (3044.083 --> 2941.583) of 4846 total.
@@ -932,19 +932,19 @@
 [58.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2962.846 --> 2965.883) of 4846 total.
 [58.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2965.883 --> 2968.921) of 4846 total.
 [59.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2968.921 --> 2971.958) of 4846 total.
-[59.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[59.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [59.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2971.958 --> 2974.996) of 4846 total.
 [59.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2974.996 --> 2978.033) of 4846 total.
 [59.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2978.033 --> 2981.071) of 4846 total.
 [59.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2981.071 --> 2984.108) of 4846 total.
 [59.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2984.108 --> 2987.146) of 4846 total.
-[59.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[59.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [59.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2987.146 --> 2990.183) of 4846 total.
 [59.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2990.183 --> 2993.221) of 4846 total.
 [59.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2993.221 --> 2996.258) of 4846 total.
 [59.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2996.258 --> 2999.296) of 4846 total.
 [60.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2999.296 --> 3002.333) of 4846 total.
-[60.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[60.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [60.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3002.333 --> 3005.371) of 4846 total.
 [60.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3005.371 --> 3008.408) of 4846 total.
 [60.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3008.408 --> 3011.446) of 4846 total.
@@ -955,16 +955,16 @@
 [60.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3023.596 --> 3026.633) of 4846 total.
 [60.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3026.633 --> 3029.671) of 4846 total.
 [61.00] [Target 1] Aura faded: {SpellID: 18807}
-[61.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[61.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [61.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3029.671 --> 3032.708) of 4846 total.
-[61.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[61.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[61.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[61.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [61.01] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [61.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (3032.708 --> 3035.746) of 4846 total.
 [61.10] [Shadow (#1)] Casting {SpellID: 1309636} (Cost = 170.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [61.10] [Shadow (#1)] Completed cast {SpellID: 1309636}
 [61.10] [Shadow (#1)] Spent 170.000 mana from {SpellID: 1309636} (3035.746 --> 2865.746) of 4846 total.
-[61.10] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1080.985 damage (SpellSchool: 32). (Threat: 756.690)
+[61.10] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1078.593 damage (SpellSchool: 32). (Threat: 755.015)
 [61.10] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2427.000 --> 1698.900) of 2427 total.
 [61.11] [Target 1] Aura refreshed: {SpellID: 15258}
 [61.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2865.746 --> 2868.783) of 4846 total.
@@ -981,7 +981,7 @@
 [62.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2899.158 --> 2902.196) of 4846 total.
 [62.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2902.196 --> 2905.233) of 4846 total.
 [62.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2905.233 --> 2908.271) of 4846 total.
-[62.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[62.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [62.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2908.271 --> 2911.308) of 4846 total.
 [62.60] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [62.60] [Shadow (#1)] Completed cast {SpellID: 18807}
@@ -999,20 +999,20 @@
 [63.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2830.071 --> 2833.108) of 4846 total.
 [63.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2833.108 --> 2836.146) of 4846 total.
 [63.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2836.146 --> 2839.183) of 4846 total.
-[63.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[63.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [63.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2839.183 --> 2842.221) of 4846 total.
 [63.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2842.221 --> 2845.258) of 4846 total.
 [63.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2845.258 --> 2848.296) of 4846 total.
 [64.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2848.296 --> 2851.333) of 4846 total.
-[64.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[64.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1950.459) of 2427 total.
+[64.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[64.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1949.900) of 2427 total.
 [64.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2851.333 --> 2854.371) of 4846 total.
 [64.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2854.371 --> 2857.408) of 4846 total.
 [64.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2857.408 --> 2860.446) of 4846 total.
 [64.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2860.446 --> 2863.483) of 4846 total.
 [64.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2863.483 --> 2866.521) of 4846 total.
 [64.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2866.521 --> 2869.558) of 4846 total.
-[64.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[64.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [64.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2869.558 --> 2872.596) of 4846 total.
 [64.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2872.596 --> 2875.633) of 4846 total.
 [64.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2875.633 --> 2878.671) of 4846 total.
@@ -1022,9 +1022,9 @@
 [65.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2887.783 --> 2890.821) of 4846 total.
 [65.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2890.821 --> 2893.858) of 4846 total.
 [65.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2893.858 --> 2896.896) of 4846 total.
-[65.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[65.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [65.60] [Target 1] Aura faded: {SpellID: 18807}
-[65.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 1020.645 damage (SpellSchool: 32). (Threat: 714.452)
+[65.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 1017.957 damage (SpellSchool: 32). (Threat: 712.570)
 [65.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2896.896 --> 2899.933) of 4846 total.
 [65.61] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [65.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2899.933 --> 2902.971) of 4846 total.
@@ -1042,13 +1042,13 @@
 [66.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2933.346 --> 2936.383) of 4846 total.
 [66.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2936.383 --> 2939.421) of 4846 total.
 [67.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2939.421 --> 2942.458) of 4846 total.
-[67.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[67.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1950.459 --> 2202.018) of 2427 total.
+[67.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[67.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1949.900 --> 2200.900) of 2427 total.
 [67.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2942.458 --> 2945.496) of 4846 total.
 [67.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2945.496 --> 2948.533) of 4846 total.
 [67.20] [Shadow (#1)] Completed cast {SpellID: 10947}
 [67.20] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (2948.533 --> 2773.533) of 4846 total.
-[67.20] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1091.701 damage (SpellSchool: 32). (Threat: 764.191)
+[67.20] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1089.382 damage (SpellSchool: 32). (Threat: 762.567)
 [67.20] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [67.20] [Shadow (#1)] Completed cast {SpellID: 18807}
 [67.20] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (2773.533 --> 2671.033) of 4846 total.
@@ -1067,11 +1067,11 @@
 [68.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2692.296 --> 2695.333) of 4846 total.
 [68.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2695.333 --> 2698.371) of 4846 total.
 [68.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2698.371 --> 2701.408) of 4846 total.
-[68.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[68.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [68.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2701.408 --> 2704.446) of 4846 total.
 [68.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2704.446 --> 2707.483) of 4846 total.
 [68.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2707.483 --> 2710.521) of 4846 total.
-[68.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[68.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [68.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2710.521 --> 2713.558) of 4846 total.
 [68.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2713.558 --> 2716.596) of 4846 total.
 [68.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2716.596 --> 2719.633) of 4846 total.
@@ -1079,7 +1079,7 @@
 [69.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2722.671 --> 2725.708) of 4846 total.
 [69.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2725.708 --> 2728.746) of 4846 total.
 [69.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2728.746 --> 2731.783) of 4846 total.
-[69.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[69.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [69.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2731.783 --> 2734.821) of 4846 total.
 [69.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2734.821 --> 2737.858) of 4846 total.
 [69.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2737.858 --> 2740.896) of 4846 total.
@@ -1088,11 +1088,11 @@
 [69.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2746.971 --> 2750.008) of 4846 total.
 [69.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2750.008 --> 2753.046) of 4846 total.
 [70.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2753.046 --> 2756.083) of 4846 total.
-[70.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[70.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2202.018 --> 2427.000) of 2427 total.
+[70.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[70.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2200.900 --> 2427.000) of 2427 total.
 [70.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2756.083 --> 2759.121) of 4846 total.
 [70.20] [Target 1] Aura faded: {SpellID: 18807}
-[70.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[70.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [70.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2759.121 --> 2762.158) of 4846 total.
 [70.21] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [70.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2762.158 --> 2765.196) of 4846 total.
@@ -1112,10 +1112,10 @@
 [71.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2683.958 --> 2686.996) of 4846 total.
 [71.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2686.996 --> 2690.033) of 4846 total.
 [71.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2690.033 --> 2693.071) of 4846 total.
-[71.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 708.781 damage (SpellSchool: 32). (Threat: 496.147)
+[71.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 706.914 damage (SpellSchool: 32). (Threat: 494.840)
 [71.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2693.071 --> 2696.108) of 4846 total.
 [71.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2696.108 --> 2699.146) of 4846 total.
-[71.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[71.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [71.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2699.146 --> 2702.183) of 4846 total.
 [71.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2702.183 --> 2705.221) of 4846 total.
 [71.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2705.221 --> 2708.258) of 4846 total.
@@ -1124,7 +1124,7 @@
 [72.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2714.333 --> 2717.371) of 4846 total.
 [72.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2717.371 --> 2720.408) of 4846 total.
 [72.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2720.408 --> 2723.446) of 4846 total.
-[72.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[72.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [72.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2723.446 --> 2726.483) of 4846 total.
 [72.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2726.483 --> 2729.521) of 4846 total.
 [72.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2729.521 --> 2732.558) of 4846 total.
@@ -1132,12 +1132,12 @@
 [72.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2735.596 --> 2738.633) of 4846 total.
 [72.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2738.633 --> 2741.671) of 4846 total.
 [73.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2741.671 --> 2744.708) of 4846 total.
-[73.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[73.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[73.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[73.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [73.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2744.708 --> 2747.746) of 4846 total.
 [73.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2747.746 --> 2750.783) of 4846 total.
 [73.30] [Target 1] Aura faded: {SpellID: 18807}
-[73.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[73.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [73.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2750.783 --> 2753.821) of 4846 total.
 [73.31] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [73.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2753.821 --> 2756.858) of 4846 total.
@@ -1153,14 +1153,14 @@
 [74.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2781.158 --> 2784.196) of 4846 total.
 [74.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2784.196 --> 2787.233) of 4846 total.
 [74.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2787.233 --> 2790.271) of 4846 total.
-[74.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[74.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [74.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2790.271 --> 2793.308) of 4846 total.
 [74.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2793.308 --> 2796.346) of 4846 total.
 [74.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2796.346 --> 2799.383) of 4846 total.
 [74.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2799.383 --> 2802.421) of 4846 total.
 [74.90] [Shadow (#1)] Completed cast {SpellID: 10947}
 [74.90] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (2802.421 --> 2627.421) of 4846 total.
-[74.90] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1052.480 damage (SpellSchool: 32). (Threat: 736.736)
+[74.90] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1050.244 damage (SpellSchool: 32). (Threat: 735.171)
 [74.90] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [74.90] [Shadow (#1)] Completed cast {SpellID: 18807}
 [74.90] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (2627.421 --> 2524.921) of 4846 total.
@@ -1179,10 +1179,10 @@
 [75.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2546.183 --> 2549.221) of 4846 total.
 [75.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2549.221 --> 2552.258) of 4846 total.
 [75.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2552.258 --> 2555.296) of 4846 total.
-[75.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[75.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [76.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2555.296 --> 2558.333) of 4846 total.
-[76.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[76.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[76.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[76.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [76.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2558.333 --> 2561.371) of 4846 total.
 [76.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2561.371 --> 2564.408) of 4846 total.
 [76.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2564.408 --> 2567.446) of 4846 total.
@@ -1192,20 +1192,20 @@
 [76.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2576.558 --> 2579.596) of 4846 total.
 [76.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2579.596 --> 2582.633) of 4846 total.
 [76.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2582.633 --> 2585.671) of 4846 total.
-[76.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[76.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [77.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2585.671 --> 2588.708) of 4846 total.
 [77.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2588.708 --> 2591.746) of 4846 total.
 [77.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2591.746 --> 2594.783) of 4846 total.
 [77.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2594.783 --> 2597.821) of 4846 total.
 [77.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2597.821 --> 2600.858) of 4846 total.
 [77.50] [Target 1] Aura faded: {SpellID: 10894}
-[77.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[77.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [77.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2600.858 --> 2603.896) of 4846 total.
 [77.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2603.896 --> 2606.933) of 4846 total.
 [77.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2606.933 --> 2609.971) of 4846 total.
 [77.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2609.971 --> 2613.008) of 4846 total.
 [77.90] [Target 1] Aura faded: {SpellID: 18807}
-[77.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[77.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [77.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2613.008 --> 2616.046) of 4846 total.
 [77.91] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [78.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2616.046 --> 2619.083) of 4846 total.
@@ -1225,8 +1225,8 @@
 [78.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2405.346 --> 2408.383) of 4846 total.
 [78.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2408.383 --> 2411.421) of 4846 total.
 [79.00] [Target 1] Aura faded: {SpellID: 19280}
-[79.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[79.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[79.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[79.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [79.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2411.421 --> 2414.458) of 4846 total.
 [79.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2414.458 --> 2417.496) of 4846 total.
 [79.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2417.496 --> 2420.533) of 4846 total.
@@ -1252,7 +1252,7 @@
 [80.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2219.846 --> 2222.883) of 4846 total.
 [80.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2222.883 --> 2225.921) of 4846 total.
 [81.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2225.921 --> 2228.958) of 4846 total.
-[81.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[81.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [81.00] [Shadow (#1)] Casting {SpellID: 10947} (Cost = 175.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 8
 [81.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2228.958 --> 2231.996) of 4846 total.
 [81.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2231.996 --> 2235.033) of 4846 total.
@@ -1271,11 +1271,11 @@
 [82.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2271.483 --> 2274.521) of 4846 total.
 [82.50] [Shadow (#1)] Completed cast {SpellID: 10947}
 [82.50] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (2274.521 --> 2099.521) of 4846 total.
-[82.50] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1088.525 damage (SpellSchool: 32). (Threat: 761.967)
+[82.50] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1086.212 damage (SpellSchool: 32). (Threat: 760.348)
 [82.50] [Shadow (#1)] Casting {SpellID: 1309636} (Cost = 170.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [82.50] [Shadow (#1)] Completed cast {SpellID: 1309636}
 [82.50] [Shadow (#1)] Spent 170.000 mana from {SpellID: 1309636} (2099.521 --> 1929.521) of 4846 total.
-[82.50] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1061.552 damage (SpellSchool: 32). (Threat: 743.086)
+[82.50] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1059.203 damage (SpellSchool: 32). (Threat: 741.442)
 [82.50] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2427.000 --> 1698.900) of 2427 total.
 [82.51] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [82.51] [Target 1] Aura refreshed: {SpellID: 15258}
@@ -1295,7 +1295,7 @@
 [83.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1965.971 --> 1969.008) of 4846 total.
 [83.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1969.008 --> 1972.046) of 4846 total.
 [84.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1972.046 --> 1975.083) of 4846 total.
-[84.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[84.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [84.00] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [84.00] [Shadow (#1)] Completed cast {SpellID: 18807}
 [84.00] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1975.083 --> 1872.583) of 4846 total.
@@ -1312,7 +1312,7 @@
 [84.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1893.846 --> 1896.883) of 4846 total.
 [84.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1896.883 --> 1899.921) of 4846 total.
 [85.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1899.921 --> 1902.958) of 4846 total.
-[85.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 708.781 damage (SpellSchool: 32). (Threat: 496.147)
+[85.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 706.914 damage (SpellSchool: 32). (Threat: 494.840)
 [85.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1902.958 --> 1905.996) of 4846 total.
 [85.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1905.996 --> 1909.033) of 4846 total.
 [85.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1909.033 --> 1912.071) of 4846 total.
@@ -1323,7 +1323,7 @@
 [85.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1924.221 --> 1927.258) of 4846 total.
 [85.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1927.258 --> 1930.296) of 4846 total.
 [86.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1930.296 --> 1933.333) of 4846 total.
-[86.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[86.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [86.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1933.333 --> 1936.371) of 4846 total.
 [86.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1936.371 --> 1939.408) of 4846 total.
 [86.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1939.408 --> 1942.446) of 4846 total.
@@ -1334,9 +1334,9 @@
 [86.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1954.596 --> 1957.633) of 4846 total.
 [86.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1957.633 --> 1960.671) of 4846 total.
 [87.00] [Target 1] Aura faded: {SpellID: 18807}
-[87.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[87.00] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [87.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1960.671 --> 1963.708) of 4846 total.
-[87.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[87.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [87.01] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [87.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1963.708 --> 1966.746) of 4846 total.
 [87.10] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -1355,7 +1355,7 @@
 [87.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1885.508 --> 1888.546) of 4846 total.
 [88.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1888.546 --> 1891.583) of 4846 total.
 [88.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1891.583 --> 1894.621) of 4846 total.
-[88.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[88.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [88.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1894.621 --> 1897.658) of 4846 total.
 [88.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1897.658 --> 1900.696) of 4846 total.
 [88.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1900.696 --> 1903.733) of 4846 total.
@@ -1366,7 +1366,7 @@
 [88.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1915.883 --> 1918.921) of 4846 total.
 [89.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1918.921 --> 1921.958) of 4846 total.
 [89.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1921.958 --> 1924.996) of 4846 total.
-[89.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 850.538 damage (SpellSchool: 32). (Threat: 595.376)
+[89.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 848.297 damage (SpellSchool: 32). (Threat: 593.808)
 [89.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1924.996 --> 1928.033) of 4846 total.
 [89.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1928.033 --> 1931.071) of 4846 total.
 [89.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1931.071 --> 1934.108) of 4846 total.
@@ -1376,17 +1376,12 @@
 [89.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1943.221 --> 1946.258) of 4846 total.
 [89.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1946.258 --> 1949.296) of 4846 total.
 [90.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1949.296 --> 1952.333) of 4846 total.
-[90.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[90.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [90.10] [Target 1] Aura faded: {SpellID: 18807}
-[90.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[90.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [90.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1952.333 --> 1955.371) of 4846 total.
 [90.11] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [90.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1955.371 --> 1958.408) of 4846 total.
-[90.20] [Shadow (#1)] Casting {ItemID: 272438} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 5
-[90.20] [Shadow (#1)] Completed cast {ItemID: 272438}
-[90.20] [Shadow (#1)] Aura gained: {SpellID: 1291101}
-[90.20] [Shadow (#1)] {SpellID: 1291101} stacks: 0 --> 1
-[90.20] [Shadow (#1)] Major cooldown used: {ItemID: 272438}
 [90.20] [Shadow (#1)] Casting {SpellID: 10947} (Cost = 175.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 8
 [90.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1958.408 --> 1961.446) of 4846 total.
 [90.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1961.446 --> 1964.483) of 4846 total.
@@ -1405,7 +1400,7 @@
 [91.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2000.933 --> 2003.971) of 4846 total.
 [91.70] [Shadow (#1)] Completed cast {SpellID: 10947}
 [91.70] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (2003.971 --> 1828.971) of 4846 total.
-[91.70] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1087.370 damage (SpellSchool: 32). (Threat: 761.159)
+[91.70] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1085.059 damage (SpellSchool: 32). (Threat: 759.542)
 [91.70] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [91.70] [Shadow (#1)] Completed cast {SpellID: 18807}
 [91.70] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1828.971 --> 1726.471) of 4846 total.
@@ -1424,11 +1419,11 @@
 [92.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1747.733 --> 1750.771) of 4846 total.
 [92.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1750.771 --> 1753.808) of 4846 total.
 [92.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1753.808 --> 1756.846) of 4846 total.
-[92.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[92.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [92.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1756.846 --> 1759.883) of 4846 total.
 [92.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1759.883 --> 1762.921) of 4846 total.
 [93.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1762.921 --> 1765.958) of 4846 total.
-[93.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[93.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [93.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1765.958 --> 1768.996) of 4846 total.
 [93.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1768.996 --> 1772.033) of 4846 total.
 [93.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1772.033 --> 1775.071) of 4846 total.
@@ -1436,7 +1431,7 @@
 [93.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1778.108 --> 1781.146) of 4846 total.
 [93.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1781.146 --> 1784.183) of 4846 total.
 [93.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1784.183 --> 1787.221) of 4846 total.
-[93.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[93.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [93.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1787.221 --> 1790.258) of 4846 total.
 [93.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1790.258 --> 1793.296) of 4846 total.
 [94.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1793.296 --> 1796.333) of 4846 total.
@@ -1447,7 +1442,7 @@
 [94.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1808.483 --> 1811.521) of 4846 total.
 [94.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1811.521 --> 1814.558) of 4846 total.
 [94.70] [Target 1] Aura faded: {SpellID: 18807}
-[94.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[94.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [94.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1814.558 --> 1817.596) of 4846 total.
 [94.71] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [94.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1817.596 --> 1820.633) of 4846 total.
@@ -1467,10 +1462,10 @@
 [95.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1739.396 --> 1742.433) of 4846 total.
 [95.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1742.433 --> 1745.471) of 4846 total.
 [95.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1745.471 --> 1748.508) of 4846 total.
-[95.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[95.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [95.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1748.508 --> 1751.546) of 4846 total.
 [96.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1751.546 --> 1754.583) of 4846 total.
-[96.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[96.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [96.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1754.583 --> 1757.621) of 4846 total.
 [96.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1757.621 --> 1760.658) of 4846 total.
 [96.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1760.658 --> 1763.696) of 4846 total.
@@ -1479,7 +1474,7 @@
 [96.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1769.771 --> 1772.808) of 4846 total.
 [96.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1772.808 --> 1775.846) of 4846 total.
 [96.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1775.846 --> 1778.883) of 4846 total.
-[96.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[96.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [96.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1778.883 --> 1781.921) of 4846 total.
 [97.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1781.921 --> 1784.958) of 4846 total.
 [97.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1784.958 --> 1787.996) of 4846 total.
@@ -1490,7 +1485,7 @@
 [97.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1800.146 --> 1803.183) of 4846 total.
 [97.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1803.183 --> 1806.221) of 4846 total.
 [97.80] [Target 1] Aura faded: {SpellID: 18807}
-[97.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[97.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [97.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1806.221 --> 1809.258) of 4846 total.
 [97.81] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [97.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1809.258 --> 1812.296) of 4846 total.
@@ -1506,14 +1501,14 @@
 [98.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1836.596 --> 1839.633) of 4846 total.
 [98.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1839.633 --> 1842.671) of 4846 total.
 [99.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1842.671 --> 1845.708) of 4846 total.
-[99.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[99.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [99.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1845.708 --> 1848.746) of 4846 total.
 [99.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1848.746 --> 1851.783) of 4846 total.
 [99.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1851.783 --> 1854.821) of 4846 total.
 [99.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1854.821 --> 1857.858) of 4846 total.
 [99.40] [Shadow (#1)] Completed cast {SpellID: 10947}
 [99.40] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (1857.858 --> 1682.858) of 4846 total.
-[99.40] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1103.050 damage (SpellSchool: 32). (Threat: 772.135)
+[99.40] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1100.706 damage (SpellSchool: 32). (Threat: 770.494)
 [99.40] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [99.40] [Shadow (#1)] Completed cast {SpellID: 18807}
 [99.40] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1682.858 --> 1580.358) of 4846 total.
@@ -1532,7 +1527,7 @@
 [100.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1601.621 --> 1604.658) of 4846 total.
 [100.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1604.658 --> 1607.696) of 4846 total.
 [100.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1607.696 --> 1610.733) of 4846 total.
-[100.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 708.781 damage (SpellSchool: 32). (Threat: 496.147)
+[100.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 706.914 damage (SpellSchool: 32). (Threat: 494.840)
 [100.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1610.733 --> 1613.771) of 4846 total.
 [100.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1613.771 --> 1616.808) of 4846 total.
 [100.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1616.808 --> 1619.846) of 4846 total.
@@ -1543,20 +1538,20 @@
 [101.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1631.996 --> 1635.033) of 4846 total.
 [101.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1635.033 --> 1638.071) of 4846 total.
 [101.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1638.071 --> 1641.108) of 4846 total.
-[101.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[101.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [101.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1641.108 --> 1644.146) of 4846 total.
 [101.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1644.146 --> 1647.183) of 4846 total.
 [101.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1647.183 --> 1650.221) of 4846 total.
 [101.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1650.221 --> 1653.258) of 4846 total.
 [101.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1653.258 --> 1656.296) of 4846 total.
 [102.00] [Target 1] Aura faded: {SpellID: 10894}
-[102.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[102.00] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [102.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1656.296 --> 1659.333) of 4846 total.
 [102.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1659.333 --> 1662.371) of 4846 total.
 [102.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1662.371 --> 1665.408) of 4846 total.
 [102.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1665.408 --> 1668.446) of 4846 total.
 [102.40] [Target 1] Aura faded: {SpellID: 18807}
-[102.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[102.40] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [102.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1668.446 --> 1671.483) of 4846 total.
 [102.41] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [102.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1671.483 --> 1674.521) of 4846 total.
@@ -1602,7 +1597,7 @@
 [105.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1275.283 --> 1278.321) of 4846 total.
 [105.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1278.321 --> 1281.358) of 4846 total.
 [105.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1281.358 --> 1284.396) of 4846 total.
-[105.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[105.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [105.50] [Shadow (#1)] Casting {SpellID: 10947} (Cost = 175.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 8
 [105.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1284.396 --> 1287.433) of 4846 total.
 [105.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1287.433 --> 1290.471) of 4846 total.
@@ -1619,16 +1614,16 @@
 [106.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1320.846 --> 1323.883) of 4846 total.
 [106.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1323.883 --> 1326.921) of 4846 total.
 [107.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1326.921 --> 1329.958) of 4846 total.
-[107.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Crit for 503.118 damage (SpellSchool: 32). (Threat: 352.183)
-[107.00] [Shadow (#1)] Gained 503.118 health from {SpellID: 19280, Tag: 1} (1698.900 --> 2202.018) of 2427 total.
+[107.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Crit for 502.000 damage (SpellSchool: 32). (Threat: 351.400)
+[107.00] [Shadow (#1)] Gained 502.000 health from {SpellID: 19280, Tag: 1} (1698.900 --> 2200.900) of 2427 total.
 [107.00] [Shadow (#1)] Completed cast {SpellID: 10947}
 [107.00] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (1329.958 --> 1154.958) of 4846 total.
-[107.00] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1066.005 damage (SpellSchool: 32). (Threat: 746.204)
+[107.00] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1063.741 damage (SpellSchool: 32). (Threat: 744.618)
 [107.00] [Shadow (#1)] Casting {SpellID: 1309636} (Cost = 170.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [107.00] [Shadow (#1)] Completed cast {SpellID: 1309636}
 [107.00] [Shadow (#1)] Spent 170.000 mana from {SpellID: 1309636} (1154.958 --> 984.958) of 4846 total.
 [107.00] [Shadow (#1)] [Target 1] {SpellID: 1309636} Miss (SpellSchool: 32). (Threat: 0.000)
-[107.00] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2202.018 --> 1473.918) of 2427 total.
+[107.00] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2200.900 --> 1472.800) of 2427 total.
 [107.01] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [107.01] [Target 1] Aura refreshed: {SpellID: 15258}
 [107.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (984.958 --> 987.996) of 4846 total.
@@ -1646,7 +1641,7 @@
 [108.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1021.408 --> 1024.446) of 4846 total.
 [108.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1024.446 --> 1027.483) of 4846 total.
 [108.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1027.483 --> 1030.521) of 4846 total.
-[108.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[108.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [108.50] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [108.50] [Shadow (#1)] Completed cast {SpellID: 18807}
 [108.50] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1030.521 --> 928.021) of 4846 total.
@@ -1663,22 +1658,20 @@
 [109.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (949.283 --> 952.321) of 4846 total.
 [109.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (952.321 --> 955.358) of 4846 total.
 [109.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (955.358 --> 958.396) of 4846 total.
-[109.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[109.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [109.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (958.396 --> 961.433) of 4846 total.
 [109.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (961.433 --> 964.471) of 4846 total.
 [109.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (964.471 --> 967.508) of 4846 total.
 [109.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (967.508 --> 970.546) of 4846 total.
 [110.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (970.546 --> 973.583) of 4846 total.
-[110.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[110.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1473.918 --> 1725.477) of 2427 total.
+[110.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[110.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1472.800 --> 1723.800) of 2427 total.
 [110.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (973.583 --> 976.621) of 4846 total.
-[110.20] [Shadow (#1)] Aura faded: {SpellID: 1291101}
-[110.20] [Shadow (#1)] {SpellID: 1291101} stacks: 1 --> 0
 [110.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (976.621 --> 979.658) of 4846 total.
 [110.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (979.658 --> 982.696) of 4846 total.
 [110.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (982.696 --> 985.733) of 4846 total.
 [110.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (985.733 --> 988.771) of 4846 total.
-[110.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[110.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [110.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (988.771 --> 991.808) of 4846 total.
 [110.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (991.808 --> 994.846) of 4846 total.
 [110.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (994.846 --> 997.883) of 4846 total.
@@ -1689,9 +1682,9 @@
 [111.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1010.033 --> 1013.071) of 4846 total.
 [111.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1013.071 --> 1016.108) of 4846 total.
 [111.50] [Target 1] Aura faded: {SpellID: 18807}
-[111.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[111.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [111.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1016.108 --> 1019.146) of 4846 total.
-[111.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[111.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [111.51] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [111.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1019.146 --> 1022.183) of 4846 total.
 [111.60] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -1710,20 +1703,20 @@
 [112.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (940.946 --> 943.983) of 4846 total.
 [112.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (943.983 --> 947.021) of 4846 total.
 [112.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (947.021 --> 950.058) of 4846 total.
-[112.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[112.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [112.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (950.058 --> 953.096) of 4846 total.
 [112.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (953.096 --> 956.133) of 4846 total.
 [112.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (956.133 --> 959.171) of 4846 total.
 [113.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (959.171 --> 962.208) of 4846 total.
-[113.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[113.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1725.477 --> 1977.036) of 2427 total.
+[113.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[113.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1723.800 --> 1974.800) of 2427 total.
 [113.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (962.208 --> 965.246) of 4846 total.
 [113.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (965.246 --> 968.283) of 4846 total.
 [113.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (968.283 --> 971.321) of 4846 total.
 [113.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (971.321 --> 974.358) of 4846 total.
 [113.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (974.358 --> 977.396) of 4846 total.
 [113.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (977.396 --> 980.433) of 4846 total.
-[113.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[113.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [113.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (980.433 --> 983.471) of 4846 total.
 [113.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (983.471 --> 986.508) of 4846 total.
 [113.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (986.508 --> 989.546) of 4846 total.
@@ -1733,9 +1726,9 @@
 [114.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (998.658 --> 1001.696) of 4846 total.
 [114.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1001.696 --> 1004.733) of 4846 total.
 [114.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1004.733 --> 1007.771) of 4846 total.
-[114.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[114.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [114.60] [Target 1] Aura faded: {SpellID: 18807}
-[114.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[114.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [114.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1007.771 --> 1010.808) of 4846 total.
 [114.61] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [114.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1010.808 --> 1013.846) of 4846 total.
@@ -1753,13 +1746,13 @@
 [115.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1044.221 --> 1047.258) of 4846 total.
 [115.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1047.258 --> 1050.296) of 4846 total.
 [116.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1050.296 --> 1053.333) of 4846 total.
-[116.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[116.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1977.036 --> 2228.595) of 2427 total.
+[116.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[116.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1974.800 --> 2225.800) of 2427 total.
 [116.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1053.333 --> 1056.371) of 4846 total.
 [116.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1056.371 --> 1059.408) of 4846 total.
 [116.20] [Shadow (#1)] Completed cast {SpellID: 10947}
 [116.20] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (1059.408 --> 884.408) of 4846 total.
-[116.20] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1082.252 damage (SpellSchool: 32). (Threat: 757.577)
+[116.20] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1079.953 damage (SpellSchool: 32). (Threat: 755.967)
 [116.20] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [116.20] [Shadow (#1)] Completed cast {SpellID: 18807}
 [116.20] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (884.408 --> 781.908) of 4846 total.
@@ -1781,7 +1774,7 @@
 [117.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (812.283 --> 815.321) of 4846 total.
 [117.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (815.321 --> 818.358) of 4846 total.
 [117.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (818.358 --> 821.396) of 4846 total.
-[117.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[117.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [117.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (821.396 --> 824.433) of 4846 total.
 [117.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (824.433 --> 827.471) of 4846 total.
 [117.70] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
@@ -1800,12 +1793,12 @@
 [118.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (746.233 --> 749.271) of 4846 total.
 [118.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (749.271 --> 752.308) of 4846 total.
 [118.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (752.308 --> 755.346) of 4846 total.
-[118.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 708.781 damage (SpellSchool: 32). (Threat: 496.147)
+[118.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 706.914 damage (SpellSchool: 32). (Threat: 494.840)
 [118.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (755.346 --> 758.383) of 4846 total.
 [118.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (758.383 --> 761.421) of 4846 total.
 [119.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (761.421 --> 764.458) of 4846 total.
-[119.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[119.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2228.595 --> 2427.000) of 2427 total.
+[119.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[119.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2225.800 --> 2427.000) of 2427 total.
 [119.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (764.458 --> 767.496) of 4846 total.
 [119.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (767.496 --> 770.533) of 4846 total.
 [119.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (770.533 --> 773.571) of 4846 total.
@@ -1813,7 +1806,7 @@
 [119.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (776.608 --> 779.646) of 4846 total.
 [119.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (779.646 --> 782.683) of 4846 total.
 [119.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (782.683 --> 785.721) of 4846 total.
-[119.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 850.538 damage (SpellSchool: 32). (Threat: 595.376)
+[119.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 848.297 damage (SpellSchool: 32). (Threat: 593.808)
 [119.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (785.721 --> 788.758) of 4846 total.
 [119.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (788.758 --> 791.796) of 4846 total.
 [120.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (791.796 --> 794.833) of 4846 total.
@@ -1822,10 +1815,10 @@
 [120.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (800.908 --> 803.946) of 4846 total.
 [120.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (803.946 --> 806.983) of 4846 total.
 [120.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (806.983 --> 810.021) of 4846 total.
-[120.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[120.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [120.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (810.021 --> 813.058) of 4846 total.
 [120.70] [Target 1] Aura faded: {SpellID: 18807}
-[120.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 1020.645 damage (SpellSchool: 32). (Threat: 714.452)
+[120.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 1017.957 damage (SpellSchool: 32). (Threat: 712.570)
 [120.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (813.058 --> 816.096) of 4846 total.
 [120.70] [Shadow (#1)] {SpellID: 1323377} stacks: 1 --> 0
 [120.70] [Shadow (#1)] Aura faded: {SpellID: 1323377}
@@ -1851,11 +1844,11 @@
 [121.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2356.587 --> 2359.624) of 4846 total.
 [121.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2359.624 --> 2362.662) of 4846 total.
 [121.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2362.662 --> 2365.699) of 4846 total.
-[121.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 708.781 damage (SpellSchool: 32). (Threat: 496.147)
+[121.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 706.914 damage (SpellSchool: 32). (Threat: 494.840)
 [121.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2365.699 --> 2368.737) of 4846 total.
 [122.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2368.737 --> 2371.774) of 4846 total.
-[122.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[122.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[122.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[122.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [122.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2371.774 --> 2374.812) of 4846 total.
 [122.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2374.812 --> 2377.849) of 4846 total.
 [122.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2377.849 --> 2380.887) of 4846 total.
@@ -1864,7 +1857,7 @@
 [122.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2386.962 --> 2389.999) of 4846 total.
 [122.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2389.999 --> 2393.037) of 4846 total.
 [122.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2393.037 --> 2396.074) of 4846 total.
-[122.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[122.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [122.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2396.074 --> 2399.112) of 4846 total.
 [123.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2399.112 --> 2402.149) of 4846 total.
 [123.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2402.149 --> 2405.187) of 4846 total.
@@ -1872,11 +1865,11 @@
 [123.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2408.224 --> 2411.262) of 4846 total.
 [123.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2411.262 --> 2414.299) of 4846 total.
 [123.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2414.299 --> 2417.337) of 4846 total.
-[123.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[123.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [123.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2417.337 --> 2420.374) of 4846 total.
 [123.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2420.374 --> 2423.412) of 4846 total.
 [123.80] [Target 1] Aura faded: {SpellID: 18807}
-[123.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[123.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [123.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2423.412 --> 2426.449) of 4846 total.
 [123.81] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [123.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2426.449 --> 2429.487) of 4846 total.
@@ -1892,19 +1885,19 @@
 [124.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2453.787 --> 2456.824) of 4846 total.
 [124.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2456.824 --> 2459.862) of 4846 total.
 [125.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2459.862 --> 2462.899) of 4846 total.
-[125.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Crit for 503.118 damage (SpellSchool: 32). (Threat: 352.183)
-[125.00] [Shadow (#1)] Gained 503.118 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[125.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Crit for 502.000 damage (SpellSchool: 32). (Threat: 351.400)
+[125.00] [Shadow (#1)] Gained 502.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [125.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2462.899 --> 2465.937) of 4846 total.
 [125.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2465.937 --> 2468.974) of 4846 total.
 [125.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2468.974 --> 2472.012) of 4846 total.
 [125.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2472.012 --> 2475.049) of 4846 total.
 [125.40] [Shadow (#1)] Completed cast {SpellID: 10947}
 [125.40] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (2475.049 --> 2300.049) of 4846 total.
-[125.40] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1058.233 damage (SpellSchool: 32). (Threat: 740.763)
+[125.40] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1055.985 damage (SpellSchool: 32). (Threat: 739.190)
 [125.40] [Shadow (#1)] Casting {SpellID: 1309636} (Cost = 170.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [125.40] [Shadow (#1)] Completed cast {SpellID: 1309636}
 [125.40] [Shadow (#1)] Spent 170.000 mana from {SpellID: 1309636} (2300.049 --> 2130.049) of 4846 total.
-[125.40] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1080.911 damage (SpellSchool: 32). (Threat: 756.638)
+[125.40] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1078.519 damage (SpellSchool: 32). (Threat: 754.963)
 [125.40] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2427.000 --> 1698.900) of 2427 total.
 [125.41] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [125.41] [Target 1] Aura refreshed: {SpellID: 15258}
@@ -1920,7 +1913,7 @@
 [126.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2154.349 --> 2157.387) of 4846 total.
 [126.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2157.387 --> 2160.424) of 4846 total.
 [126.50] [Target 1] Aura faded: {SpellID: 10894}
-[126.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[126.50] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [126.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2160.424 --> 2163.462) of 4846 total.
 [126.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2163.462 --> 2166.499) of 4846 total.
 [126.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (2166.499 --> 2169.537) of 4846 total.
@@ -1943,8 +1936,8 @@
 [127.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1964.912 --> 1967.949) of 4846 total.
 [127.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1967.949 --> 1970.987) of 4846 total.
 [128.00] [Target 1] Aura faded: {SpellID: 19280}
-[128.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[128.00] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1950.459) of 2427 total.
+[128.00] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[128.00] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1949.900) of 2427 total.
 [128.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1970.987 --> 1974.024) of 4846 total.
 [128.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1974.024 --> 1977.062) of 4846 total.
 [128.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1977.062 --> 1980.099) of 4846 total.
@@ -1971,7 +1964,7 @@
 [129.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1776.374 --> 1779.412) of 4846 total.
 [129.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1779.412 --> 1782.449) of 4846 total.
 [129.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1782.449 --> 1785.487) of 4846 total.
-[129.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[129.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [129.90] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [129.90] [Shadow (#1)] Completed cast {SpellID: 18807}
 [129.90] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1785.487 --> 1682.987) of 4846 total.
@@ -1988,20 +1981,20 @@
 [130.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1704.249 --> 1707.287) of 4846 total.
 [130.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1707.287 --> 1710.324) of 4846 total.
 [130.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1710.324 --> 1713.362) of 4846 total.
-[130.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[130.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [131.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1713.362 --> 1716.399) of 4846 total.
 [131.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1716.399 --> 1719.437) of 4846 total.
 [131.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1719.437 --> 1722.474) of 4846 total.
 [131.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1722.474 --> 1725.512) of 4846 total.
 [131.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1725.512 --> 1728.549) of 4846 total.
-[131.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[131.40] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1950.459 --> 2202.018) of 2427 total.
+[131.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[131.40] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1949.900 --> 2200.900) of 2427 total.
 [131.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1728.549 --> 1731.587) of 4846 total.
 [131.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1731.587 --> 1734.624) of 4846 total.
 [131.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1734.624 --> 1737.662) of 4846 total.
 [131.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1737.662 --> 1740.699) of 4846 total.
 [131.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1740.699 --> 1743.737) of 4846 total.
-[131.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[131.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [132.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1743.737 --> 1746.774) of 4846 total.
 [132.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1746.774 --> 1749.812) of 4846 total.
 [132.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1749.812 --> 1752.849) of 4846 total.
@@ -2012,9 +2005,9 @@
 [132.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1764.999 --> 1768.037) of 4846 total.
 [132.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1768.037 --> 1771.074) of 4846 total.
 [132.90] [Target 1] Aura faded: {SpellID: 18807}
-[132.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[132.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [132.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1771.074 --> 1774.112) of 4846 total.
-[132.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[132.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [132.91] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [133.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1774.112 --> 1777.149) of 4846 total.
 [133.00] [Shadow (#1)] Casting {SpellID: 10947} (Cost = 175.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 8
@@ -2032,12 +2025,12 @@
 [134.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1810.562 --> 1813.599) of 4846 total.
 [134.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1813.599 --> 1816.637) of 4846 total.
 [134.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1816.637 --> 1819.674) of 4846 total.
-[134.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[134.40] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2202.018 --> 2427.000) of 2427 total.
+[134.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[134.40] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2200.900 --> 2427.000) of 2427 total.
 [134.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1819.674 --> 1822.712) of 4846 total.
 [134.50] [Shadow (#1)] Completed cast {SpellID: 10947}
 [134.50] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (1822.712 --> 1647.712) of 4846 total.
-[134.50] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1100.177 damage (SpellSchool: 32). (Threat: 770.124)
+[134.50] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1097.840 damage (SpellSchool: 32). (Threat: 768.488)
 [134.50] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [134.50] [Shadow (#1)] Completed cast {SpellID: 18807}
 [134.50] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1647.712 --> 1545.212) of 4846 total.
@@ -2056,19 +2049,19 @@
 [135.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1566.474 --> 1569.512) of 4846 total.
 [135.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1569.512 --> 1572.549) of 4846 total.
 [135.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1572.549 --> 1575.587) of 4846 total.
-[135.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[135.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [135.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1575.587 --> 1578.624) of 4846 total.
 [135.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1578.624 --> 1581.662) of 4846 total.
 [135.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1581.662 --> 1584.699) of 4846 total.
 [135.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1584.699 --> 1587.737) of 4846 total.
-[135.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[135.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [136.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1587.737 --> 1590.774) of 4846 total.
 [136.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1590.774 --> 1593.812) of 4846 total.
 [136.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1593.812 --> 1596.849) of 4846 total.
 [136.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1596.849 --> 1599.887) of 4846 total.
 [136.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1599.887 --> 1602.924) of 4846 total.
 [136.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1602.924 --> 1605.962) of 4846 total.
-[136.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[136.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [136.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1605.962 --> 1608.999) of 4846 total.
 [136.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1608.999 --> 1612.037) of 4846 total.
 [136.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1612.037 --> 1615.074) of 4846 total.
@@ -2078,10 +2071,10 @@
 [137.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1624.187 --> 1627.224) of 4846 total.
 [137.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1627.224 --> 1630.262) of 4846 total.
 [137.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1630.262 --> 1633.299) of 4846 total.
-[137.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[137.40] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[137.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[137.40] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [137.50] [Target 1] Aura faded: {SpellID: 18807}
-[137.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[137.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [137.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1633.299 --> 1636.337) of 4846 total.
 [137.51] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [137.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1636.337 --> 1639.374) of 4846 total.
@@ -2101,11 +2094,11 @@
 [138.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1558.137 --> 1561.174) of 4846 total.
 [138.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1561.174 --> 1564.212) of 4846 total.
 [138.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1564.212 --> 1567.249) of 4846 total.
-[138.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[138.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [138.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1567.249 --> 1570.287) of 4846 total.
 [138.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1570.287 --> 1573.324) of 4846 total.
 [138.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1573.324 --> 1576.362) of 4846 total.
-[138.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[138.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [139.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1576.362 --> 1579.399) of 4846 total.
 [139.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1579.399 --> 1582.437) of 4846 total.
 [139.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1582.437 --> 1585.474) of 4846 total.
@@ -2113,7 +2106,7 @@
 [139.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1588.512 --> 1591.549) of 4846 total.
 [139.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1591.549 --> 1594.587) of 4846 total.
 [139.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1594.587 --> 1597.624) of 4846 total.
-[139.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[139.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [139.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1597.624 --> 1600.662) of 4846 total.
 [139.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1600.662 --> 1603.699) of 4846 total.
 [139.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1603.699 --> 1606.737) of 4846 total.
@@ -2122,11 +2115,11 @@
 [140.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1612.812 --> 1615.849) of 4846 total.
 [140.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1615.849 --> 1618.887) of 4846 total.
 [140.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1618.887 --> 1621.924) of 4846 total.
-[140.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[140.40] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[140.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[140.40] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [140.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1621.924 --> 1624.962) of 4846 total.
 [140.60] [Target 1] Aura faded: {SpellID: 18807}
-[140.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[140.60] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [140.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1624.962 --> 1627.999) of 4846 total.
 [140.61] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [140.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1627.999 --> 1631.037) of 4846 total.
@@ -2143,13 +2136,13 @@
 [141.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1658.374 --> 1661.412) of 4846 total.
 [141.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1661.412 --> 1664.449) of 4846 total.
 [141.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1664.449 --> 1667.487) of 4846 total.
-[141.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 768.653 damage (SpellSchool: 32). (Threat: 538.057)
+[141.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 766.416 damage (SpellSchool: 32). (Threat: 536.491)
 [142.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1667.487 --> 1670.524) of 4846 total.
 [142.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1670.524 --> 1673.562) of 4846 total.
 [142.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1673.562 --> 1676.599) of 4846 total.
 [142.20] [Shadow (#1)] Completed cast {SpellID: 10947}
 [142.20] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (1676.599 --> 1501.599) of 4846 total.
-[142.20] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1102.263 damage (SpellSchool: 32). (Threat: 771.584)
+[142.20] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1099.921 damage (SpellSchool: 32). (Threat: 769.945)
 [142.20] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [142.20] [Shadow (#1)] Completed cast {SpellID: 18807}
 [142.20] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1501.599 --> 1399.099) of 4846 total.
@@ -2168,11 +2161,11 @@
 [143.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1420.362 --> 1423.399) of 4846 total.
 [143.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1423.399 --> 1426.437) of 4846 total.
 [143.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1426.437 --> 1429.474) of 4846 total.
-[143.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[143.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [143.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1429.474 --> 1432.512) of 4846 total.
 [143.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1432.512 --> 1435.549) of 4846 total.
-[143.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Crit for 503.118 damage (SpellSchool: 32). (Threat: 352.183)
-[143.40] [Shadow (#1)] Gained 503.118 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
+[143.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Crit for 502.000 damage (SpellSchool: 32). (Threat: 351.400)
+[143.40] [Shadow (#1)] Gained 502.000 health from {SpellID: 19280, Tag: 1} (2427.000 --> 2427.000) of 2427 total.
 [143.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1435.549 --> 1438.587) of 4846 total.
 [143.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1438.587 --> 1441.624) of 4846 total.
 [143.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1441.624 --> 1444.662) of 4846 total.
@@ -2181,7 +2174,7 @@
 [144.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1450.737 --> 1453.774) of 4846 total.
 [144.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1453.774 --> 1456.812) of 4846 total.
 [144.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1456.812 --> 1459.849) of 4846 total.
-[144.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[144.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [144.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1459.849 --> 1462.887) of 4846 total.
 [144.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1462.887 --> 1465.924) of 4846 total.
 [144.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1465.924 --> 1468.962) of 4846 total.
@@ -2189,18 +2182,18 @@
 [144.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1471.999 --> 1475.037) of 4846 total.
 [144.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1475.037 --> 1478.074) of 4846 total.
 [144.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1478.074 --> 1481.112) of 4846 total.
-[144.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[144.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [145.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1481.112 --> 1484.149) of 4846 total.
 [145.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1484.149 --> 1487.187) of 4846 total.
 [145.20] [Target 1] Aura faded: {SpellID: 18807}
-[145.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[145.20] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [145.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1487.187 --> 1490.224) of 4846 total.
 [145.21] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [145.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1490.224 --> 1493.262) of 4846 total.
 [145.30] [Shadow (#1)] Casting {SpellID: 1309636} (Cost = 170.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [145.30] [Shadow (#1)] Completed cast {SpellID: 1309636}
 [145.30] [Shadow (#1)] Spent 170.000 mana from {SpellID: 1309636} (1493.262 --> 1323.262) of 4846 total.
-[145.30] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1082.390 damage (SpellSchool: 32). (Threat: 757.673)
+[145.30] [Shadow (#1)] [Target 1] {SpellID: 1309636} Hit for 1079.994 damage (SpellSchool: 32). (Threat: 755.996)
 [145.30] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (2427.000 --> 1698.900) of 2427 total.
 [145.31] [Target 1] Aura refreshed: {SpellID: 15258}
 [145.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1323.262 --> 1326.299) of 4846 total.
@@ -2214,8 +2207,8 @@
 [146.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1347.562 --> 1350.599) of 4846 total.
 [146.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1350.599 --> 1353.637) of 4846 total.
 [146.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1353.637 --> 1356.674) of 4846 total.
-[146.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[146.40] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1950.459) of 2427 total.
+[146.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[146.40] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1698.900 --> 1949.900) of 2427 total.
 [146.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1356.674 --> 1359.712) of 4846 total.
 [146.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1359.712 --> 1362.749) of 4846 total.
 [146.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1362.749 --> 1365.787) of 4846 total.
@@ -2236,9 +2229,9 @@
 [147.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1287.587 --> 1290.624) of 4846 total.
 [147.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1290.624 --> 1293.662) of 4846 total.
 [147.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1293.662 --> 1296.699) of 4846 total.
-[147.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[147.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [147.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1296.699 --> 1299.737) of 4846 total.
-[147.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[147.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [148.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1299.737 --> 1302.774) of 4846 total.
 [148.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1302.774 --> 1305.812) of 4846 total.
 [148.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1305.812 --> 1308.849) of 4846 total.
@@ -2248,20 +2241,20 @@
 [148.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1317.962 --> 1320.999) of 4846 total.
 [148.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1320.999 --> 1324.037) of 4846 total.
 [148.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1324.037 --> 1327.074) of 4846 total.
-[148.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 850.538 damage (SpellSchool: 32). (Threat: 595.376)
+[148.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 848.297 damage (SpellSchool: 32). (Threat: 593.808)
 [148.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1327.074 --> 1330.112) of 4846 total.
 [149.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1330.112 --> 1333.149) of 4846 total.
 [149.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1333.149 --> 1336.187) of 4846 total.
 [149.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1336.187 --> 1339.224) of 4846 total.
 [149.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1339.224 --> 1342.262) of 4846 total.
 [149.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1342.262 --> 1345.299) of 4846 total.
-[149.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[149.40] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1950.459 --> 2202.018) of 2427 total.
+[149.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[149.40] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1949.900 --> 2200.900) of 2427 total.
 [149.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1345.299 --> 1348.337) of 4846 total.
 [149.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1348.337 --> 1351.374) of 4846 total.
 [149.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1351.374 --> 1354.412) of 4846 total.
 [149.80] [Target 1] Aura faded: {SpellID: 18807}
-[149.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[149.80] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [149.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1354.412 --> 1357.449) of 4846 total.
 [149.81] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [149.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1357.449 --> 1360.487) of 4846 total.
@@ -2276,7 +2269,7 @@
 [150.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1381.749 --> 1384.787) of 4846 total.
 [150.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1384.787 --> 1387.824) of 4846 total.
 [150.90] [Target 1] Aura faded: {SpellID: 10894}
-[150.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 768.653 damage (SpellSchool: 32). (Threat: 538.057)
+[150.90] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 766.416 damage (SpellSchool: 32). (Threat: 536.491)
 [150.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1387.824 --> 1390.862) of 4846 total.
 [151.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1390.862 --> 1393.899) of 4846 total.
 [151.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1393.899 --> 1396.937) of 4846 total.
@@ -2285,12 +2278,12 @@
 [151.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1403.012 --> 1406.049) of 4846 total.
 [151.40] [Shadow (#1)] Completed cast {SpellID: 10947}
 [151.40] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (1406.049 --> 1231.049) of 4846 total.
-[151.40] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1050.498 damage (SpellSchool: 32). (Threat: 735.348)
+[151.40] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1048.266 damage (SpellSchool: 32). (Threat: 733.786)
 [151.40] [Shadow (#1)] Casting {ItemID: 12662} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 5
 [151.40] [Shadow (#1)] Completed cast {ItemID: 12662}
 [151.40] [Shadow (#1)] Gained 940.144 mana from {ItemID: 12662} (1231.049 --> 2171.193) of 4846 total.
 [151.40] [Shadow (#1)] [Shadow (#1)] {ItemID: 12662, Tag: 1} Hit for 1108.018 damage (SpellSchool: 32). (Threat: 775.613)
-[151.40] [Shadow (#1)] Spent 1108.018 health from {OtherID: 9} (2202.018 --> 1094.000) of 2427 total.
+[151.40] [Shadow (#1)] Spent 1108.018 health from {OtherID: 9} (2200.900 --> 1092.882) of 2427 total.
 [151.40] [Shadow (#1)] Major cooldown used: {ItemID: 12662}
 [151.40] [Shadow (#1)] Casting {SpellID: 10894} (Cost = 235.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6
 [151.40] [Shadow (#1)] Completed cast {SpellID: 10894}
@@ -2310,8 +2303,8 @@
 [152.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1957.456 --> 1960.493) of 4846 total.
 [152.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1960.493 --> 1963.531) of 4846 total.
 [152.40] [Target 1] Aura faded: {SpellID: 19280}
-[152.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.559 damage (SpellSchool: 32). (Threat: 176.091)
-[152.40] [Shadow (#1)] Gained 251.559 health from {SpellID: 19280, Tag: 1} (1094.000 --> 1345.559) of 2427 total.
+[152.40] [Shadow (#1)] [Target 1] {SpellID: 19280} tick Hit for 251.000 damage (SpellSchool: 32). (Threat: 175.700)
+[152.40] [Shadow (#1)] Gained 251.000 health from {SpellID: 19280, Tag: 1} (1092.882 --> 1343.882) of 2427 total.
 [152.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1963.531 --> 1966.568) of 4846 total.
 [152.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1966.568 --> 1969.606) of 4846 total.
 [152.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1969.606 --> 1972.643) of 4846 total.
@@ -2337,7 +2330,7 @@
 [154.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1771.956 --> 1774.993) of 4846 total.
 [154.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1774.993 --> 1778.031) of 4846 total.
 [154.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1778.031 --> 1781.068) of 4846 total.
-[154.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[154.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [154.40] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [154.40] [Shadow (#1)] Completed cast {SpellID: 18807}
 [154.40] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1781.068 --> 1678.568) of 4846 total.
@@ -2373,19 +2366,19 @@
 [156.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1642.893 --> 1645.931) of 4846 total.
 [156.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1645.931 --> 1648.968) of 4846 total.
 [156.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1648.968 --> 1652.006) of 4846 total.
-[156.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[156.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [157.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1652.006 --> 1655.043) of 4846 total.
 [157.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1655.043 --> 1658.081) of 4846 total.
 [157.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1658.081 --> 1661.118) of 4846 total.
 [157.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1661.118 --> 1664.156) of 4846 total.
 [157.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1664.156 --> 1667.193) of 4846 total.
-[157.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 768.653 damage (SpellSchool: 32). (Threat: 538.057)
+[157.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 766.416 damage (SpellSchool: 32). (Threat: 536.491)
 [157.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1667.193 --> 1670.231) of 4846 total.
 [157.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1670.231 --> 1673.268) of 4846 total.
 [157.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1673.268 --> 1676.306) of 4846 total.
 [157.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1676.306 --> 1679.343) of 4846 total.
 [157.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1679.343 --> 1682.381) of 4846 total.
-[157.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[157.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [158.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1682.381 --> 1685.418) of 4846 total.
 [158.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1685.418 --> 1688.456) of 4846 total.
 [158.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1688.456 --> 1691.493) of 4846 total.
@@ -2396,7 +2389,7 @@
 [158.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1703.643 --> 1706.681) of 4846 total.
 [158.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1706.681 --> 1709.718) of 4846 total.
 [158.90] [Target 1] Aura faded: {SpellID: 18807}
-[158.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[158.90] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [158.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1709.718 --> 1712.756) of 4846 total.
 [158.91] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [159.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1712.756 --> 1715.793) of 4846 total.
@@ -2415,11 +2408,11 @@
 [160.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1749.206 --> 1752.243) of 4846 total.
 [160.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1752.243 --> 1755.281) of 4846 total.
 [160.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1755.281 --> 1758.318) of 4846 total.
-[160.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[160.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [160.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1758.318 --> 1761.356) of 4846 total.
 [160.50] [Shadow (#1)] Completed cast {SpellID: 10947}
 [160.50] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (1761.356 --> 1586.356) of 4846 total.
-[160.50] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1066.912 damage (SpellSchool: 32). (Threat: 746.838)
+[160.50] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1064.645 damage (SpellSchool: 32). (Threat: 745.251)
 [160.50] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [160.50] [Shadow (#1)] Completed cast {SpellID: 18807}
 [160.50] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1586.356 --> 1483.856) of 4846 total.
@@ -2438,7 +2431,7 @@
 [161.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1505.118 --> 1508.156) of 4846 total.
 [161.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1508.156 --> 1511.193) of 4846 total.
 [161.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1511.193 --> 1514.231) of 4846 total.
-[161.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[161.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [161.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1514.231 --> 1517.268) of 4846 total.
 [161.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1517.268 --> 1520.306) of 4846 total.
 [161.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1520.306 --> 1523.343) of 4846 total.
@@ -2449,7 +2442,7 @@
 [162.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1535.493 --> 1538.531) of 4846 total.
 [162.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1538.531 --> 1541.568) of 4846 total.
 [162.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1541.568 --> 1544.606) of 4846 total.
-[162.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[162.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [162.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1544.606 --> 1547.643) of 4846 total.
 [162.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1547.643 --> 1550.681) of 4846 total.
 [162.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1550.681 --> 1553.718) of 4846 total.
@@ -2459,9 +2452,9 @@
 [163.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1562.831 --> 1565.868) of 4846 total.
 [163.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1565.868 --> 1568.906) of 4846 total.
 [163.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1568.906 --> 1571.943) of 4846 total.
-[163.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 768.653 damage (SpellSchool: 32). (Threat: 538.057)
+[163.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Crit for 766.416 damage (SpellSchool: 32). (Threat: 536.491)
 [163.50] [Target 1] Aura faded: {SpellID: 18807}
-[163.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[163.50] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [163.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1571.943 --> 1574.981) of 4846 total.
 [163.51] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [163.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1574.981 --> 1578.018) of 4846 total.
@@ -2469,7 +2462,7 @@
 [163.60] [Shadow (#1)] Completed cast {SpellID: 1309636}
 [163.60] [Shadow (#1)] Spent 170.000 mana from {SpellID: 1309636} (1578.018 --> 1408.018) of 4846 total.
 [163.60] [Shadow (#1)] [Target 1] {SpellID: 1309636} Miss (SpellSchool: 32). (Threat: 0.000)
-[163.60] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (1345.559 --> 617.459) of 2427 total.
+[163.60] [Shadow (#1)] Spent 728.100 health from {SpellID: 1309636} (1343.882 --> 615.782) of 2427 total.
 [163.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1408.018 --> 1411.056) of 4846 total.
 [163.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1411.056 --> 1414.093) of 4846 total.
 [163.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1414.093 --> 1417.131) of 4846 total.
@@ -2501,11 +2494,11 @@
 [165.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1372.343 --> 1375.381) of 4846 total.
 [166.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1375.381 --> 1378.418) of 4846 total.
 [166.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1378.418 --> 1381.456) of 4846 total.
-[166.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 708.781 damage (SpellSchool: 32). (Threat: 496.147)
+[166.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 706.914 damage (SpellSchool: 32). (Threat: 494.840)
 [166.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1381.456 --> 1384.493) of 4846 total.
 [166.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1384.493 --> 1387.531) of 4846 total.
 [166.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1387.531 --> 1390.568) of 4846 total.
-[166.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[166.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [166.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1390.568 --> 1393.606) of 4846 total.
 [166.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1393.606 --> 1396.643) of 4846 total.
 [166.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1396.643 --> 1399.681) of 4846 total.
@@ -2513,7 +2506,7 @@
 [166.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1402.718 --> 1405.756) of 4846 total.
 [167.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1405.756 --> 1408.793) of 4846 total.
 [167.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1408.793 --> 1411.831) of 4846 total.
-[167.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[167.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [167.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1411.831 --> 1414.868) of 4846 total.
 [167.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1414.868 --> 1417.906) of 4846 total.
 [167.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1417.906 --> 1420.943) of 4846 total.
@@ -2524,7 +2517,7 @@
 [167.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1433.093 --> 1436.131) of 4846 total.
 [168.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1436.131 --> 1439.168) of 4846 total.
 [168.10] [Target 1] Aura faded: {SpellID: 18807}
-[168.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
+[168.10] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 508.978 damage (SpellSchool: 32). (Threat: 356.285)
 [168.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1439.168 --> 1442.206) of 4846 total.
 [168.11] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [168.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1442.206 --> 1445.243) of 4846 total.
@@ -2541,13 +2534,13 @@
 [169.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1472.581 --> 1475.618) of 4846 total.
 [169.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1475.618 --> 1478.656) of 4846 total.
 [169.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1478.656 --> 1481.693) of 4846 total.
-[169.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[169.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [169.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1481.693 --> 1484.731) of 4846 total.
 [169.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1484.731 --> 1487.768) of 4846 total.
 [169.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1487.768 --> 1490.806) of 4846 total.
 [169.70] [Shadow (#1)] Completed cast {SpellID: 10947}
 [169.70] [Shadow (#1)] Spent 175.000 mana from {SpellID: 10947} (1490.806 --> 1315.806) of 4846 total.
-[169.70] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1063.232 damage (SpellSchool: 32). (Threat: 744.263)
+[169.70] [Shadow (#1)] [Target 1] {SpellID: 10947} Hit for 1060.973 damage (SpellSchool: 32). (Threat: 742.681)
 [169.70] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [169.70] [Shadow (#1)] Completed cast {SpellID: 18807}
 [169.70] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1315.806 --> 1213.306) of 4846 total.
@@ -2566,7 +2559,7 @@
 [170.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1234.568 --> 1237.606) of 4846 total.
 [170.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1237.606 --> 1240.643) of 4846 total.
 [170.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1240.643 --> 1243.681) of 4846 total.
-[170.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
+[170.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 353.457 damage (SpellSchool: 32). (Threat: 247.420)
 [170.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1243.681 --> 1246.718) of 4846 total.
 [170.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1246.718 --> 1249.756) of 4846 total.
 [171.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1249.756 --> 1252.793) of 4846 total.
@@ -2577,7 +2570,7 @@
 [171.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1264.943 --> 1267.981) of 4846 total.
 [171.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1267.981 --> 1271.018) of 4846 total.
 [171.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1271.018 --> 1274.056) of 4846 total.
-[171.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
+[171.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 424.149 damage (SpellSchool: 32). (Threat: 296.904)
 [171.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1274.056 --> 1277.093) of 4846 total.
 [171.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1277.093 --> 1280.131) of 4846 total.
 [172.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1280.131 --> 1283.168) of 4846 total.
@@ -2585,11 +2578,11 @@
 [172.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1286.206 --> 1289.243) of 4846 total.
 [172.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1289.243 --> 1292.281) of 4846 total.
 [172.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1292.281 --> 1295.318) of 4846 total.
-[172.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[172.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [172.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1295.318 --> 1298.356) of 4846 total.
 [172.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1298.356 --> 1301.393) of 4846 total.
 [172.70] [Target 1] Aura faded: {SpellID: 18807}
-[172.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 1020.645 damage (SpellSchool: 32). (Threat: 714.452)
+[172.70] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Crit for 1017.957 damage (SpellSchool: 32). (Threat: 712.570)
 [172.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1301.393 --> 1304.431) of 4846 total.
 [172.71] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
 [172.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1304.431 --> 1307.468) of 4846 total.
@@ -2615,9 +2608,7 @@
 [174.30] [Shadow (#1)] Casting {SpellID: 18807} (Cost = 102.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 14
 [174.30] [Shadow (#1)] Completed cast {SpellID: 18807}
 [174.30] [Shadow (#1)] Spent 102.500 mana from {SpellID: 18807} (1250.531 --> 1148.031) of 4846 total.
-[174.30] [Target 1] Aura gained: {SpellID: 18807}
-[174.30] [Shadow (#1)] [Target 1] {SpellID: 18807} Hit for 0.000 damage (SpellSchool: 32). (Threat: 0.000)
-[174.31] [Target 1] Aura refreshed: {SpellID: 15258}
+[174.30] [Shadow (#1)] [Target 1] {SpellID: 18807} Miss (SpellSchool: 32). (Threat: 0.000)
 [174.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1148.031 --> 1151.068) of 4846 total.
 [174.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1151.068 --> 1154.106) of 4846 total.
 [174.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1154.106 --> 1157.143) of 4846 total.
@@ -2628,61 +2619,58 @@
 [175.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1169.293 --> 1172.331) of 4846 total.
 [175.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1172.331 --> 1175.368) of 4846 total.
 [175.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1175.368 --> 1178.406) of 4846 total.
-[175.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 354.391 damage (SpellSchool: 32). (Threat: 248.074)
 [175.40] [Target 1] Aura faded: {SpellID: 10894}
-[175.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 384.326 damage (SpellSchool: 32). (Threat: 269.028)
+[175.40] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
 [175.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1178.406 --> 1181.443) of 4846 total.
 [175.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1181.443 --> 1184.481) of 4846 total.
 [175.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1184.481 --> 1187.518) of 4846 total.
 [175.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1187.518 --> 1190.556) of 4846 total.
 [175.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1190.556 --> 1193.593) of 4846 total.
-[175.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1193.593 --> 1196.631) of 4846 total.
-[176.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1196.631 --> 1199.668) of 4846 total.
-[176.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1199.668 --> 1202.706) of 4846 total.
-[176.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1202.706 --> 1205.743) of 4846 total.
-[176.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1205.743 --> 1208.781) of 4846 total.
-[176.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 425.269 damage (SpellSchool: 32). (Threat: 297.688)
-[176.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1208.781 --> 1211.818) of 4846 total.
-[176.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1211.818 --> 1214.856) of 4846 total.
-[176.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1214.856 --> 1217.893) of 4846 total.
-[176.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1217.893 --> 1220.931) of 4846 total.
-[176.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1220.931 --> 1223.968) of 4846 total.
-[176.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1223.968 --> 1227.006) of 4846 total.
-[177.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1227.006 --> 1230.043) of 4846 total.
-[177.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1230.043 --> 1233.081) of 4846 total.
-[177.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1233.081 --> 1236.118) of 4846 total.
-[177.30] [Target 1] Aura faded: {SpellID: 18807}
-[177.30] [Shadow (#1)] [Target 1] {SpellID: 18807} tick Hit for 510.323 damage (SpellSchool: 32). (Threat: 357.226)
-[177.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1236.118 --> 1239.156) of 4846 total.
-[177.31] [Shadow (#1)] Aura refreshed: {SpellID: 1326168}
-[177.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1239.156 --> 1242.193) of 4846 total.
-[177.40] [Shadow (#1)] Casting {SpellID: 10894} (Cost = 235.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6
-[177.40] [Shadow (#1)] Completed cast {SpellID: 10894}
-[177.40] [Shadow (#1)] Spent 235.000 mana from {SpellID: 10894} (1242.193 --> 1007.193) of 4846 total.
-[177.40] [Target 1] Aura gained: {SpellID: 10894}
-[177.40] [Shadow (#1)] [Target 1] {SpellID: 10894} Hit for 0.000 damage (SpellSchool: 32). (Threat: 0.000)
-[177.41] [Target 1] Aura refreshed: {SpellID: 15258}
-[177.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1007.193 --> 1010.231) of 4846 total.
-[177.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1010.231 --> 1013.268) of 4846 total.
-[177.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1013.268 --> 1016.306) of 4846 total.
-[177.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1016.306 --> 1019.343) of 4846 total.
-[177.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1019.343 --> 1022.381) of 4846 total.
-[178.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1022.381 --> 1025.418) of 4846 total.
-[178.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1025.418 --> 1028.456) of 4846 total.
-[178.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1028.456 --> 1031.493) of 4846 total.
-[178.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1031.493 --> 1034.531) of 4846 total.
-[178.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1034.531 --> 1037.568) of 4846 total.
-[178.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1037.568 --> 1040.606) of 4846 total.
-[178.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1040.606 --> 1043.643) of 4846 total.
-[178.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1043.643 --> 1046.681) of 4846 total.
-[178.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1046.681 --> 1049.718) of 4846 total.
-[178.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1049.718 --> 1052.756) of 4846 total.
-[178.90] [Shadow (#1)] Casting {SpellID: 19280} (Cost = 246.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
-[178.90] [Shadow (#1)] Completed cast {SpellID: 19280}
-[178.90] [Shadow (#1)] Spent 246.250 mana from {SpellID: 19280} (1052.756 --> 806.506) of 4846 total.
-[178.90] [Target 1] Aura gained: {SpellID: 19280}
-[178.90] [Shadow (#1)] [Target 1] {SpellID: 19280} Hit for 0.000 damage (SpellSchool: 32). (Threat: 0.000)
-[178.91] [Target 1] Aura refreshed: {SpellID: 15258}
+[175.80] [Shadow (#1)] Casting {SpellID: 10894} (Cost = 235.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6
+[175.80] [Shadow (#1)] Completed cast {SpellID: 10894}
+[175.80] [Shadow (#1)] Spent 235.000 mana from {SpellID: 10894} (1193.593 --> 958.593) of 4846 total.
+[175.80] [Target 1] Aura gained: {SpellID: 10894}
+[175.80] [Shadow (#1)] [Target 1] {SpellID: 10894} Hit for 0.000 damage (SpellSchool: 32). (Threat: 0.000)
+[175.81] [Target 1] Aura refreshed: {SpellID: 15258}
+[175.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (958.593 --> 961.631) of 4846 total.
+[176.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (961.631 --> 964.668) of 4846 total.
+[176.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (964.668 --> 967.706) of 4846 total.
+[176.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (967.706 --> 970.743) of 4846 total.
+[176.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (970.743 --> 973.781) of 4846 total.
+[176.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (973.781 --> 976.818) of 4846 total.
+[176.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (976.818 --> 979.856) of 4846 total.
+[176.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (979.856 --> 982.893) of 4846 total.
+[176.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (982.893 --> 985.931) of 4846 total.
+[176.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (985.931 --> 988.968) of 4846 total.
+[176.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (988.968 --> 992.006) of 4846 total.
+[177.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (992.006 --> 995.043) of 4846 total.
+[177.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (995.043 --> 998.081) of 4846 total.
+[177.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (998.081 --> 1001.118) of 4846 total.
+[177.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (1001.118 --> 1004.156) of 4846 total.
+[177.30] [Shadow (#1)] Casting {SpellID: 19280} (Cost = 246.250, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
+[177.30] [Shadow (#1)] Completed cast {SpellID: 19280}
+[177.30] [Shadow (#1)] Spent 246.250 mana from {SpellID: 19280} (1004.156 --> 757.906) of 4846 total.
+[177.30] [Target 1] Aura gained: {SpellID: 19280}
+[177.30] [Shadow (#1)] [Target 1] {SpellID: 19280} Hit for 0.000 damage (SpellSchool: 32). (Threat: 0.000)
+[177.31] [Target 1] Aura refreshed: {SpellID: 15258}
+[177.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (757.906 --> 760.943) of 4846 total.
+[177.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (760.943 --> 763.981) of 4846 total.
+[177.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (763.981 --> 767.018) of 4846 total.
+[177.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (767.018 --> 770.056) of 4846 total.
+[177.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (770.056 --> 773.093) of 4846 total.
+[177.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (773.093 --> 776.131) of 4846 total.
+[178.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (776.131 --> 779.168) of 4846 total.
+[178.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (779.168 --> 782.206) of 4846 total.
+[178.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (782.206 --> 785.243) of 4846 total.
+[178.30] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (785.243 --> 788.281) of 4846 total.
+[178.40] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (788.281 --> 791.318) of 4846 total.
+[178.50] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (791.318 --> 794.356) of 4846 total.
+[178.60] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (794.356 --> 797.393) of 4846 total.
+[178.70] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (797.393 --> 800.431) of 4846 total.
+[178.80] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (800.431 --> 803.468) of 4846 total.
+[178.80] [Shadow (#1)] [Target 1] {SpellID: 10894} tick Hit for 383.208 damage (SpellSchool: 32). (Threat: 268.246)
+[178.80] [Shadow (#1)] Casting {SpellID: 10947} (Cost = 175.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 8
+[178.90] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (803.468 --> 806.506) of 4846 total.
 [179.00] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (806.506 --> 809.543) of 4846 total.
 [179.10] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (809.543 --> 812.581) of 4846 total.
 [179.20] [Shadow (#1)] Gained 3.038 mana from {OtherID: 2, Tag: 1} (812.581 --> 815.618) of 4846 total.
