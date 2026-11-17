@@ -1831,6 +1831,240 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
         assert.are.same({ true, 1 }, { seqState("p") })
         assert.are.equal("bloodrage", recs[1].actionName)
     end)
+
+    it(
+        "D09: a plain classcd:filler in Cooldowns shows filler at step 2; no hold, a cooldown line above still shows",
+        function()
+            H.Hekili.Class.abilities.defensive_stance.toggle = "cooldowns"
+            cooldownsOn(
+                "actions+=/defensive_stance,if=test_fa\nactions+=/sequence,name=p,mode=continue:bloodrage:berserker_stance\n"
+                    .. "actions+=/defensive_stance"
+            )
+            tick()
+            cast(BR)
+            tick()
+            assert.are.same({ true, 2 }, { seqState("p", "Cooldowns") })
+            local cd = H.Hekili.Engine.Output.Cooldowns.recs
+            assert.are.equal("berserker_stance", cd[1].actionName) -- the in-place member line, filter bypassed
+            flags.fa = true
+            tick()
+            cd = H.Hekili.Engine.Output.Cooldowns.recs
+            assert.are.equal("defensive_stance", cd[1].actionName) -- no hold: the line above takes slot 1
+        end
+    )
+
+    it("D15: Sequences off in Cooldowns: an open_window line reached there opens under Cooldowns' key", function()
+        load({
+            windows = "actions+=/window,name=burst,duration=6",
+            default = "actions+=/open_window,name=burst\nactions+=/bloodrage\nactions+=/defensive_stance",
+        })
+        assert.is_true(H.Hekili.Engine.Subscribe("Cooldowns", function() end))
+        local _, sent = tick()
+        assert.are.equal(OPEN, sentSet(sent)[key("burst", "Cooldowns")])
+        tick()
+        assert.is_true(VS.Window(key("burst", "Cooldowns")))
+    end)
+
+    it(
+        "D17: Sequences switched on for Cooldowns: keys at once out of combat, at combat end in combat; off removes them",
+        function()
+            local text = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance"
+            load({ default = text })
+            assert.is_true(H.Hekili.Engine.Subscribe("Cooldowns", function() end))
+            local k, rows = key("s", "Cooldowns"), VSI.win.byKey
+            assert.is_nil(H.Hekili.Scripts.appliedWindows.byName.s.keys.Cooldowns)
+            assert.is_nil(rows[k])
+            -- in combat: the compile has the key at once, the belief's row waits for combat end
+            H.Hekili.DB.profile.displays.Cooldowns.sequences = true
+            H.Hekili:LoadScripts()
+            tick()
+            assert.are.equal(k, H.Hekili.Scripts.appliedWindows.byName.s.keys.Cooldowns)
+            assert.is_nil(rows[k])
+            H.Fire("PLAYER_REGEN_ENABLED")
+            tick()
+            assert.is_number(rows[k])
+            -- out of combat, switched off: the key and its row go at once
+            H.Hekili.DB.profile.displays.Cooldowns.sequences = false
+            H.Hekili:LoadScripts()
+            tick()
+            assert.is_nil(H.Hekili.Scripts.appliedWindows.byName.s.keys.Cooldowns)
+            assert.is_nil(rows[k])
+        end
+    )
+end)
+
+describe("named cases, part D (windows design v6 §13)", function()
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+    end)
+
+    it("S10: the first member cast before the line is ever chosen: no window, step 2 not shown", function()
+        load({
+            default = "actions+=/strict_sequence,name=s,if=test_fa:bloodrage:berserker_stance\nactions+=/defensive_stance",
+        })
+        tick()
+        cast(BR)
+        local recs, sent = tick()
+        assert.are.same({}, sent)
+        assert.is_false((seqState("s")))
+        assert.are.equal("defensive_stance", recs[1].actionName)
+    end)
+
+    it("D01/D05: Primary and AOE, a line true for AOE's target count only: OPEN under AOE's key; keys only", function()
+        H.Hekili.Engine.settings.toggles.mode.value = "dual"
+        load({
+            default = "actions+=/strict_sequence,name=s,if=active_enemies>1:bloodrage:berserker_stance\n"
+                .. "actions+=/defensive_stance",
+        })
+        assert.is_true(H.Hekili.Engine.Subscribe("AOE", function() end))
+        local lines = {}
+        VS.SetLog({
+            active = function()
+                return true
+            end,
+            write = function(fmt, ...)
+                local s = string.format(fmt, ...)
+                if s:find("windowop", 1, true) then
+                    lines[#lines + 1] = s
+                end
+            end,
+        })
+        local _, sent = tick()
+        tick()
+        assert.are.same({ { key("s", "AOE"), OPEN } }, sent)
+        assert.is_false((seqState("s")))
+        assert.are.same({ true, 1 }, { seqState("s", "AOE") })
+        -- D05: the belief hears key strings only: no display number, no line number
+        assert.are.equal(1, #lines)
+        assert.are.equal("[vs] windowop applied " .. key("s", "AOE") .. " OPEN 0", lines[1]:match("^(.-) t="))
+        local snap = VS.Snapshot()
+        assert.is_truthy(snap:find(key("s", "AOE"), 1, true), snap)
+        assert.is_nil(snap:find(":default:", 1, true))
+    end)
+
+    it(
+        "S21/P11: a target swap: unwritten nothing changes; reset_on_target_change=1 closes, a plain one reopens",
+        function()
+            for _, opt in ipairs({ "", ",reset_on_target_change=1" }) do
+                load({
+                    windows = "actions+=/window,name=w,duration=30" .. opt,
+                    default = "actions+=/open_window,name=w,if=test_fb\nactions+=/strict_sequence,name=s"
+                        .. opt
+                        .. ":berserker_stance:defensive_stance\nactions+=/sequence,name=p,mode=continue"
+                        .. opt
+                        .. ":bloodrage:battle_shout\nactions+=/defensive_stance",
+                })
+                flags.fb = true
+                tick()
+                flags.fb = false
+                tick()
+                assert.is_true(belief("w").up, opt)
+                assert.are.same({ true, 1 }, { seqState("s") }, opt)
+                H.ctl.guid.target = "Creature-2" .. opt
+                H.Fire("PLAYER_TARGET_CHANGED")
+                if opt == "" then
+                    tick()
+                    assert.is_true(belief("w").up, opt)
+                    assert.are.same({ true, 1 }, { seqState("s") }, opt)
+                else
+                    local _, sent = tick()
+                    assert.is_false(belief("w").up, opt) -- reopens only by a line
+                    local s = {}
+                    for _, o in ipairs(sent) do
+                        s[o[1]] = o[2]
+                    end
+                    assert.are.equal(OPEN, s[key("s")], opt) -- chosen again, from step 1
+                    tick()
+                    assert.are.same({ true, 1 }, { seqState("s") }, opt)
+                end
+                H.Fire("PLAYER_REGEN_ENABLED")
+            end
+        end
+    )
+
+    it("P22: a plain skip drops a member for the run; a restart and a new fight offer it again", function()
+        load({
+            default = "actions+=/restart_sequence,name=p,if=test_fb\n"
+                .. "actions+=/sequence,name=p:bloodrage:berserker_stance,if=!test_fa:battle_shout\nactions+=/defensive_stance",
+        })
+        tick()
+        cast(BR)
+        tick()
+        assert.are.same({ true, 2 }, { seqState("p") })
+        flags.fa = true
+        local _, sent = tick()
+        assert.are.same({ { key("p"), STEP } }, sent)
+        assert.are.equal(3, opArgs[1])
+        flags.fa = false
+        tick()
+        local recs = tick()
+        assert.are.same({ true, 3 }, { seqState("p") })
+        assert.are_not.equal("berserker_stance", recs[1].actionName) -- not offered again in this run
+        flags.fb = true
+        tick()
+        flags.fb = false
+        cast(BR)
+        recs = tick()
+        assert.are.same({ true, 2 }, { seqState("p") })
+        assert.are.equal("berserker_stance", recs[1].actionName) -- after the restart
+        H.Fire("PLAYER_REGEN_ENABLED")
+        tick()
+        H.Fire("PLAYER_REGEN_DISABLED")
+        tick()
+        cast(BR)
+        recs = tick()
+        assert.are.same({ true, 2 }, { seqState("p") })
+        assert.are.equal("berserker_stance", recs[1].actionName) -- a new fight
+    end)
+
+    it("S23: a strict sequence in precombat stays open across combat start; the hold applies in precombat", function()
+        H.Hekili.DB.profile.packs[ww.PACK].lists = {
+            precombat = parse("actions+=/strict_sequence,name=s:bloodrage:berserker_stance:defensive_stance"),
+            default = parse("actions+=/battle_shout"),
+        }
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        H.Hekili.Scripts:ApplyWindows(ww.PACK)
+        S:BuildWindows()
+        VS.Drain(H.ctl.now)
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        local _, sent = tick()
+        assert.are.same({ { key("s"), OPEN } }, sent)
+        cast(BR)
+        tick()
+        assert.are.same({ true, 2 }, { seqState("s") })
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local recs
+        recs, sent = tick()
+        assert.are.same({}, sent)
+        assert.are.same({ true, 2 }, { seqState("s") })
+        assert.are.equal("berserker_stance", recs[1].actionName)
+    end)
+
+    it("P02: a plain skip member short for one tick: mode=skip steps past it; wait and continue do not", function()
+        for _, mode in ipairs({ "", ",mode=wait", ",mode=continue" }) do
+            load({
+                default = "actions+=/sequence,name=p"
+                    .. mode
+                    .. ":bloodrage:berserker_stance,if=!test_fa:battle_shout\nactions+=/defensive_stance",
+            })
+            tick()
+            cast(BR)
+            tick()
+            flags.fa = true
+            local _, sent = tick()
+            if mode == "" then
+                assert.are.same({ { key("p"), STEP } }, sent, mode)
+                assert.are.equal(3, opArgs[1])
+            else
+                assert.are.same({}, sent, mode)
+                assert.are.same({ true, 2 }, { seqState("p") }, mode)
+            end
+            flags.fa = false
+            H.Fire("PLAYER_REGEN_ENABLED")
+        end
+    end)
 end)
 
 describe("the snapshot's Windows section (windows design v6 §15; L06, R13)", function()
