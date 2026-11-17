@@ -90,7 +90,7 @@ local REPLAY = {
 -- wowsims; the 87.00 class of mage_fire.lua's header, untraced past the equality). Mana is not the cause (lo 4266 /
 -- 3312 / 3283 / 1180 against Fireball's 395). The restore credit fixed 143.00 (fire_blast -> scorch).
 -- Frostfire 0.96 -> 1.00 (1.000, 53 of 53: the restore credit). Frost 0.93 -> 0.96 (0.963, 52 of 54; frostbolt ->
--- cone_of_cold 2, a raise, not traced).
+-- cone_of_cold 2; 0.944 on the same log before the restore credit, so the credit's).
 -- Flicker Arcane and Fire 0.34 -> 0.67 (0.67/min, two flips a fight, the same before the restore credit): every flip
 -- is an A-B-A whose B is the cast wowsims presses at that poll (the replay's flip count takes no presses): Arcane
 -- arcane_missiles at log 100.60 and 149.00 (Missile Barrage gained 100.50 / 148.90 on the new log, pressed 100 ms
