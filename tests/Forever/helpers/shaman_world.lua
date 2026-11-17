@@ -413,7 +413,6 @@ end
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, IDS = {} }
-    local truth -- the current world's us (hooks): a press is priced by its true auras
     C.SPEC = P.spec
 
     function C.character()
@@ -445,7 +444,6 @@ local function content(name)
     -- The class's world hooks on us, from the class file's aura IDs: our landed swing stacks Maelstrom Weapon; a hit
     -- that lands on us spends a Lightning Shield charge.
     local function hooks(_, us)
-        truth = us
         us.health, us.healthMax = 1e9, 1e9 -- never killed: see C.WORLD
         local A = class().auras
         local X = { aura = {} }
@@ -514,9 +512,9 @@ local function content(name)
 
     --- The resolved press of `key` from instance `H` (the oracle's: its state is true): the highest known rank's ID
     --- and every known rank's (a shock's with the other shock's: the client answers the shared cooldown on both), the
-    --- cost (Clearcasting and Maelstrom Weapon on the current world's us), the cooldown, GCD and cast time, the
+    --- cost (Clearcasting and Maelstrom Weapon on the world's us `e`), the cooldown, GCD and cast time, the
     --- mapping's effects. Raises "unmapped key".
-    function C.resolve(key, H)
+    function C.resolve(key, H, e)
         local m = M.MAP[key]
         if not m then
             error("unmapped key " .. tostring(key), 2)
@@ -537,11 +535,9 @@ local function content(name)
                 end
             end
         end
-        -- Clearcasting and Maelstrom Weapon from the world, not the oracle: the leveling brackets never step the oracle
-        if truth and truth.stopped then
-            truth = nil -- the world ended (its stop): a later press has no world to read
-        end
-        local auras = truth and truth.auras or {}
+        -- Clearcasting and Maelstrom Weapon from the world's us `e` (the loop's, at the press), not the oracle: the
+        -- leveling brackets never step the oracle; no world, no aura
+        local auras = e and e.auras or {}
         local cc = auras[X.aura.clearcasting.id]
         local mw = auras[X.aura.maelstrom_weapon.id] and auras[X.aura.maelstrom_weapon.id].stacks
         local em = auras[X.aura.elemental_mastery.id] ~= nil

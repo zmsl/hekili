@@ -82,6 +82,19 @@ describe("the Shaman loop worlds", function()
         assert.are.equal(13, #p.ids) -- Earth Shock's 7 ranks and Flame Shock's 6
     end)
 
+    -- A press is priced by the world's us the loop passes (L1233): its auras even once its stop has run (the fight's
+    -- last tick); a resolve with no world reads no aura.
+    it("Enhancement: prices Lightning Bolt from the passed world's Maelstrom Weapon, stopped or not", function()
+        local C = sw.Enhancement
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local us = { auras = { [408505] = { stacks = 5, expires = 1e9 } }, stopped = true }
+        assert.are.same({ 0, 0 }, {
+            C.resolve("lightning_bolt", H, us).cost,
+            C.resolve("lightning_bolt", H, us).cast,
+        })
+        assert.are.equal(220, C.resolve("lightning_bolt", H).cost)
+    end)
+
     -- Elemental's world without a pack (its pack's gates below): the build boots on its spec, every ability the
     -- character knows is mapped, the casts priced on the true state.
     it("Elemental: boots on its spec, and maps every ability the character knows", function()
