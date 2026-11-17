@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- Dominos users no longer get repeated Lua errors when Hekili reads keybindings before all action bars or buttons exist.
+
 ### Known issues
 
 ### Upgrade notes
