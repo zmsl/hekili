@@ -4,6 +4,7 @@
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
+local alloc = require("Game.State.helpers.alloc")
 
 describe("the ticket pool", function()
     local api, ctl, ns, VS, I, T, X, U, saved, got, cleu
@@ -735,6 +736,36 @@ describe("the ticket pool", function()
                 ctl.now = 60.48
                 ctl.Fire("UNIT_COMBAT", "target", "MISS", "", fake.SECRET, 1)
                 assert.are.same({ 0, T.OPEN }, { count(VS.Obs.Avoided), T.state[mh] })
+            end)
+
+            it("allocates nothing on the held avoid nor on the tied cast's wound (the hot row path)", function()
+                I.Sources.Stage = stage -- the spy allocates
+                cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+                ctl.now = 5
+                ctl.damage = { 25, 35, 10, 12 }
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                local L = I.Log
+                local a0, b0 = L.avoids, L.avoidsBack
+                local bytes = alloc.bytes(function(i)
+                    local t = 10 * i
+                    ctl.now = t
+                    ctl.Fire("PLAYER_SWING", 2.6, 0)
+                    ctl.now = t + 0.65
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                    ctl.now = t + 0.731 -- past the cast's frame, the swing still owes its row: held on it
+                    ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+                    ctl.now = t + 3
+                    ctl.Fire("PLAYER_SWING", 2.6, 0)
+                    ctl.now = t + 3.41
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C)
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- the tie
+                    ctl.now = t + 3.674 -- the swing's own wound past the cast's frame: the dodge back to the cast
+                    ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+                    ctl.Tick(t + 6)
+                    I.Sources.Flush()
+                end, 2000)
+                assert.are.equal(0, bytes)
+                assert.is_true(L.avoids - a0 >= 2 * 2200 and L.avoidsBack - b0 >= 2200) -- both paths ran each time
             end)
         end)
 
