@@ -458,7 +458,7 @@ lines at the sequence line's position, and (strict only) a hidden list.
 | steps | belief rule: the observed cast of the due member advances it. Unchanged |
 | end of a strict sequence | after the last step the window closes. Chosen again later, it opens again |
 | end of a plain sequence | the window parks: it stays up at step = members + 1, no member due, until `restart_sequence` or combat end (ruling 15) |
-| give-up (strict, default) | CLOSE: at the top of the slot's walk, if the hold is active, the GCD is ready and the due member cannot be cast, the copy closes and the normal lists answer in the same walk. Once per slot (it takes a mark like a line). SimC cancels at the same point (sequence.cpp:295-306), wowsims gives the rotation back (seq.go:263-267) |
+| give-up (strict, default) | CLOSE: after the hold's walk of the normal lists (a due member's `if=` may read a variable that walk defines), if the hold is active, the GCD is ready and the due member cannot be cast, the copy closes. The CLOSE restarts the walk unheld (one counted restart, section 14.3; a close restarts the walk, ruling 19) and the normal lists answer in the same slot. Once per slot (it takes a mark like a line). SimC cancels at the same point (sequence.cpp:295-306), wowsims gives the rotation back (seq.go:263-267) |
 | skip (strict, `allow_skip=1`) | STEP in place of that CLOSE: the copy moves to the first later member that can be cast; if there is none, CLOSE |
 | `mode=skip` (plain, default) | STEP: a generated line at the sequence's position, under the sequence's condition. When it is reached with the due member not castable at the player's next moment to act, it moves the copy to the first later member that is; the dropped member is not offered again in this run. No later member castable: STEP to members + 1, the sequence is burnt out, which is the parked state (SimC runs off the end, sequence.cpp:150-167; ruling 28). Not reached, or the sequence's `if=` false: nothing is skipped |
 | `mode=wait` (plain) | no skip line. The due member's generated line is taken as the pick even when the member is not ready, shown with the time until it is; the walk ends there, so nothing below the sequence line is recommended (SimC: the line counts as ready and the actor waits, sequence.cpp:95-108, 157-164). Lines above the sequence line are untouched |
@@ -500,14 +500,25 @@ recommended it. This is how one member can be offered at several list positions 
 
 In the pass:
 - Hold: at the top of each slot's walk the engine checks whether a strict APL window is up in this display's copy.
-  If so it walks that window's hidden list first. By default it then walks the normal lists and takes only
-  entries marked `use_off_gcd=1` whose ability is off the GCD (SimC, ruling 29). With `hold_off_gcd=1` it takes
-  nothing else from them (wowsims): no ability line outside the sequence is shown. In both modes the normal lists are
-  still walked for `open_window` / `close_window` lines (with the `call_action_list` / `run_action_list` / `variable`
-  lines that reach them), so a close line aborts the sequence at once (ruling 23, S24). Owner ruling L1249: allowed on
-  condition that the CPU is clean (the W09 / R03 / W05 bench and every shipped pack's CPU ratio and flicker show no
-  meaningful rise); if they do, the owner decides again. An engine check, not a generated line, so it does not depend on `run_action_list`
-  blocking. `precombat` gets the same check.
+  If so it walks the normal lists first, then runs the give-up, then walks that window's hidden list. From the
+  normal lists the default hold takes window lines (with the `call_action_list` / `run_action_list` / `variable`
+  lines that reach them) and entries marked `use_off_gcd=1` whose ability is off the GCD (SimC, ruling 29); such an
+  off-GCD line that is ready shows ahead of the due member, and the member takes the next slot. With
+  `hold_off_gcd=1` it takes window and variable lines only (wowsims): no ability line outside the sequence is shown;
+  when the priority has no `open_window`, `close_window` or `variable` line (enabled or not, in any list) the normal
+  lists are not walked at all. A close line aborts the sequence at once (ruling 23, S24); variables exist before the
+  members' conditions read them. Sequence lines (`sequence`, `strict_sequence`, `restart_sequence`) do nothing under a
+  hold: no other sequence starts, steps or restarts meanwhile (both simulators agree, 0.1; a plain sequence below
+  opens on the first pass after the hold). `open_window` / `close_window` lines naming a sequence still act (ruling
+  23: explicit commands). Decided for the owner (Fable, ledger L1270, on L1249's condition): the walk of the normal
+  lists under a hold, its skip under `hold_off_gcd=1`, and this order. The order departs from SimC on one tie: SimC
+  picks the member when the actor is ready and runs an off-GCD line only while it waits for its next ready
+  (player.cpp:6792-6838, 7365-7369); here a ready outside off-GCD line is shown first even when the member is
+  castable now. The presses are the same two and the line is off the GCD; the built order is the quieter one (the GCD
+  ending moves nothing). Consequence (L1181's fourth case): an outside `use_off_gcd=1` line for a later member of the
+  held sequence takes slot 1 whenever it is ready, and pressing it ends the sequence; the author's to manage (ruling
+  7). An engine check, not a generated line, so it does not depend on `run_action_list` blocking. `precombat` gets
+  the same check.
 - Hidden list lines: `<member>,if=window.<w>.next.<member>&<the member's own condition>`. The sequence's condition
   is not re-read once a strict sequence is open.
 - A plain sequence has no hold.
@@ -560,7 +571,8 @@ In the pass:
   - Sequences only. Free-form windows (`actions.windows`, `open_window`, `close_window`) keep one key in every
     display and work everywhere (owner: "Yes freeform windows will still work").
   - With the defaults, sequences run in Primary and AOE, and the filter bypass above shows a separated cooldown
-    member there. Turning the setting on for Cooldowns restores "starts where it is chosen" in that display.
+    member there. Turning the setting on for Cooldowns restores "starts where it is chosen" in that display; a
+    sequence led by a separated cooldown is still chosen in Primary and AOE as well (ruling 25, D02).
   - Changing the setting is a registration change: it goes through the same generation bump as a priority edit
     (section 9), at once out of combat, else at combat end (in combat at once only while the belief has no APL window yet).
   - With Cooldowns shown separately and Sequences off there (the default), a sequence whose first member is a
@@ -1077,7 +1089,7 @@ Group D, displays and keys (unit; D02 also harness):
 | id | Shape | What it proves |
 |---|---|---|
 | D01 | Primary and AOE both on, flag true for one target count only | OPEN under one display's key only; the other key stays closed; each display reads its own |
-| D02 | Cooldowns separate with Sequences turned on for it; strict `classcd:nuke` | chosen in Cooldowns: OPEN on Cooldowns' key only; Cooldowns then shows `nuke` (filter bypassed) and holds; Primary's key stays closed and Primary recommends as today |
+| D02 | Cooldowns separate with Sequences turned on for it; strict `classcd:nuke` | chosen in Cooldowns: OPEN on Cooldowns' key; Cooldowns then shows `nuke` (filter bypassed) and holds. Where the line is also Primary's pick, Primary starts it too through ruling 25 (D14): OPEN on Primary's key, two holds, one cast advances both (D11). Where Primary's pick is another line, Primary's key stays closed and it recommends as today |
 | D03 | display turned off at step 2, on again later | its key advanced by casts meanwhile; no stale hold beyond the deadline |
 | D04 | one cast with the sequence open under three keys | all three advance |
 | D05 | the belief's API and log during D01 | only key strings appear; no display number, no line number (the ruling-1 check) |
@@ -1196,6 +1208,9 @@ None open. The first issue of v6 listed two; the owner has ruled on both (L844, 
    Stance gives. Ruled (36): two ability fields for the strict start test, `sequence_ignore` and
    `sequence_ready` (3.6). Arms uses `sequence_ignore`; the arm now measures. Rogue Combat's
    `blood_fury:blade_flurry` stays as a second, harness-only arm (G08).
+3. D02 (carried from v4) against ruling 25: 25 wins; the row is rewritten (Fable for the owner, ledger L1270). In
+   v4/v5 Primary's separate-toggle test hid the cooldown, so Primary could not choose the line; ruling 25 removed
+   that test for the start line.
 
 Found while folding ruling 36 in: nothing that contradicts an earlier ruling. Two things were looked at:
 - Ruling 5 ("explicit in the apl rather than having inherent knowledge packaged in the items") and ruling 36
@@ -1329,7 +1344,9 @@ For the builders. None is an owner question; each names the phase that must sett
 10. Displays disagree (ruling 9). With Sequences switched on for Cooldowns, while Cooldowns is held in a strict
     sequence Primary keeps recommending from its normal list. If the player presses Primary's on-GCD pick, that
     cast is a strict deviation and ends the sequence in Cooldowns. The same member can also appear in two displays
-    at once (D07). Accepted by the ruling ("the player can decide"); the snapshot's per-display Windows section
+    at once (D07). A sequence led by a separated cooldown is also chosen in Primary (ruling 25, D02), so there the
+    displays agree; the disagreement remains for a sequence Primary did not choose. Accepted by the ruling ("the
+    player can decide"); the snapshot's per-display Windows section
     shows which display is in which sequence and step.
 11. A display shows abilities outside its category (rulings 9, 25): a non-cooldown in Cooldowns, and a separated
     cooldown in Primary, both as later members and now as a sequence's first member. Expected by the rulings, new

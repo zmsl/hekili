@@ -1538,6 +1538,27 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
         assert.is_false(H.Hekili.Scripts.NoWindows.holdWalk)
     end)
 
+    -- Fable L1270 item 4, seen, not decided (owner): reproduces the behaviour as built; pending until the owner says
+    -- whether the L1205 warning should cover a close line against the chosen OPEN
+    it(
+        "item 4: a held-true close line on a strict sequence chosen again sends CLOSE + OPEN every Update, no warning",
+        function()
+            load({
+                default = "actions+=/close_window,name=s,if=test_fb\nactions+=/strict_sequence,name=s:berserker_stance:defensive_stance\n"
+                    .. "actions+=/defensive_stance",
+            })
+            tick()
+            flags.fb = true
+            local before = flaps
+            for _ = 1, 3 do
+                local _, sent = tick()
+                assert.are.same({ { key("s"), CLOSE }, { key("s"), OPEN } }, sent)
+            end
+            assert.are.equal(before, flaps)
+            pending("owner: should the L1205 flapping-pair warning cover this? (Fable L1270 item 4, not decided)")
+        end
+    )
+
     it("member lines get LoadScript's bookkeeping: use_off_gcd=1 marks the pack, a member item is listed", function()
         load({
             default = "actions+=/strict_sequence,name=s:bloodrage,use_off_gcd=1:berserker_stance\nactions+=/defensive_stance",

@@ -99,9 +99,14 @@ actions+=/strict_sequence,name=burst,start_on_first=1,hold_off_gcd=1:bloodrage,u
 - A `strict_sequence` opens when its line is the pick at now. By default every member must be castable then;
   `start_on_first=1` tests only the first member, within the spell queue window; `allow_skip=1` starts on the first
   member that can be cast and skips members that cannot. While it is open the display shows its members; outside lines
-  marked `use_off_gcd=1` still show unless the line says `hold_off_gcd=1`. A member that cannot be cast when the GCD is
-  ready ends it; so do another on-GCD cast, a later member cast out of order, `step_timeout=` (4 s by default) and a
-  `close_window,name=<sequence>` line whose `if=` is true (read while the sequence is open, with either hold).
+  marked `use_off_gcd=1` for an off-GCD ability still show unless the line says `hold_off_gcd=1`, and such a line that
+  is ready shows ahead of the due member (for a later member of the sequence, pressing it ends the sequence). A member
+  that cannot be cast when the GCD is ready ends it and the normal lines answer at once; so do another on-GCD cast, a
+  later member cast out of order, `step_timeout=` (4 s by default) and a `close_window,name=<sequence>` line whose
+  `if=` is true (read while the sequence is open, with either hold). While it is open, `open_window`,
+  `close_window` and `variable` lines are still read; sequence lines (`sequence`, `strict_sequence`,
+  `restart_sequence`) do nothing. With `hold_off_gcd=1` in a priority with no `open_window`, `close_window` or
+  `variable` line, the normal lines are not read at all while it is open.
 - An unnamed plain sequence is `default` (further ones `default_2`, ...); an unnamed strict one `strict_1`, ...
 - Each display has a Sequences setting, on for Primary and AOE. Where it is off, the display skips every sequence line
   as if it were not in the priority. Free-form windows work in every display.
