@@ -52,8 +52,8 @@ approved exceptions (`tools/check_border.sh` allows these and nothing else):
 - `ns.VirtualState.WindowOp(key, op, arg)` (windows design v6 §5, `docs/superpowers/specs/2026-11-13-windows-sequences-design.md`):
   an APL window's operation from a display pass at now, by key (`<pack>:<name>#<display>`): 1 OPEN, 2 CLOSE,
   3 STEP (arg: the step); the author's intent only (v6.1, L1165): the belief holds each window's declaration.
-  Three plain values into a preallocated buffer; the next `Drain` replays them first (see "Rotation windows"). No
-  core file calls it yet: the display passes' operations are the windows rebuild's Phase 2.
+  Three plain values into a preallocated buffer; the next `Drain` replays them first (see "Rotation windows"). The
+  one caller is `Engine/Sim/Core.lua`'s window line, in slot 1 of a display pass at now.
 Those four are all the core names; the gate allows nothing else. The one belief read beside them is the window read
 (re-pin decision 11, owner "yes"): `ns.Facade.Window(name)` -> `up, openedAt, expiresAt, refreshes, step` (plain
 values; `false, 0, 0, 0, 0` closed or unknown), a belief-only facade function like `Facade.KnownRank`, never the aura
@@ -253,7 +253,8 @@ closes all. APL windows (windows design v6) are rows of the same store with no e
 `def.aplWindows` (records `{ key, duration, refresh?, max_duration?, max_refresh?, steps? (ability indexes), strict?,
 step_timeout?, reset_on_target_change?, on_deviation? }`), with `def.aplOpCap` (the operations buffer's bound per update) and
 `def.aplGen` (a changed generation rebuilds only these rows and the buffer, at the next `Drain` out of combat, else
-after combat end; until then an unknown key reads down and its operations are dropped). `Drain` replays the buffered
+after combat end; until then an unknown key reads down and its operations are dropped. While no APL row exists, as after
+a /reload in combat, whose scripts load after the Build, the next `Drain` applies it in combat too). `Drain` replays the buffered
 `WindowOp`s first (Flush, operations, polls, fold, settle, Lua evaluators, aura deltas), stamped with the previous
 cut-off: OPEN a fresh open for the declared duration on a closed or run-out row, and on an open row the declared
 refresh rule (with `refresh`, below `max_refresh` and below openedAt + `max_duration`: the expiry restarts, capped
@@ -265,11 +266,20 @@ operation is a `[vs] windowop applied|refused|dropped` line of the trace, one ov
 send and one waiting at a full `Build` a `discarded` line (a replay skips those two). A plain sequence (steps, not strict) parks past its last step (step = steps + 1)
 until a STEP or combat end; a strict one closes after its last step, at another on-GCD cast, at a later step's cast
 when its record says `on_deviation = "end"`, and when the due step is
-not cast within `step_timeout` (default 4 s, restarted at each advance; Lua windows have none). The core is stateless: every reset copies the windows from `Facade.Window`, and within a cycle
-`actions+=/open_window,name=<w>,if=<c>[,refresh=1][,duration=<s>]` and `actions+=/close_window,name=<w>,if=<c>` (list
-order, no icon, like `variable`; an unregistered name is a `ParseActionList` warning with its line and the entry
-disabled), a `handler()`'s `openWindow`/`closeWindow` (the same verbs as `now()`'s, written separately in
-`Engine/Sim/State.lua`) and a simulated cast's step change only that cycle's copy. Reads: `window.<name>.up`,
+not cast within `step_timeout` (default 4 s, restarted at each advance; Lua windows have none). The core is stateless: every reset copies the windows from `Facade.Window` (an APL window by the key of the display being
+walked), and within a cycle `actions+=/open_window,name=<w>,if=<c>` and `actions+=/close_window,name=<w>,if=<c>` (list
+order, no icon, like `variable`; name= and if= only), a `handler()`'s `openWindow`/`closeWindow` (the same verbs as
+`now()`'s, written separately in `Engine/Sim/State.lua`) and a simulated cast's step change only that cycle's copy.
+The priority's own windows are the reserved `windows` list's `window,name=,duration=[,refresh=][,max_refresh=]
+[,max_duration=][,reset_on_target_change=]` entries: `Engine/Sim/Scripts.lua` `CheckWindows` checks them with every
+window line (errors E1-E7 of the windows design §3.4: a line in error gets `script.Error` and is skipped; the import
+switches it off with a warning) into one record per window and display for `def.aplWindows` (`ns.SetAplWindows`,
+Tracked.lua: before every Build, and from `Hekili.Update` when the active pack's compile changes). Window lines are
+commands (design §4): a line that changed the copy takes a per-slot mark (`state.WindowSlot` clears them at each slot)
+and the walk restarts from the top at the same time (`Hekili:GetNextPrediction`, no cap, `slot.restarts` counts
+them); a change made by slot 1 at now (offset and delay 0, not a recheck) to an APL window is sent as
+`VS.WindowOp(key, OPEN|CLOSE)`. The copy's refresh of an APL window follows the belief's rule (refused once the
+expiry sits at the `max_duration` cap); a Lua window's line changes the copy only. Reads: `window.<name>.up`,
 `.remains`, `.elapsed` (0 when down), `.step`, `.next.<ability key>`, at `query_time`. An `open_window` line whose
 condition fails now is rechecked like any entry, so "true in t" opens the window at t, and a later line reading
 `window.<name>` gets that time as a recheck (its countdown). The decreasing-clock `<`/`<=` direction works today; the

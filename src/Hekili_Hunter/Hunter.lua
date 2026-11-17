@@ -554,8 +554,8 @@ end)
 -- stat read; the now context has no ranged clock speed). A due main-hand swing (none comes out of melee) counts as
 -- before the shot. Its length (owner 2026-11-04) is 1.2 x the ranged shot time at each open, a liberal cap since the
 -- window mostly closes on its own: in the belief the evaluator's read (`now_duration`), in the forecast ranged_speed's
--- (`duration`, under state), each written in its own layer as now() and handler() are. The forecast's window (each
--- pack's open_window line, tools/wowsims/specs/hunter_*.lua `extra`) ends at Raptor Strike's handler or that length.
+-- (`duration`, under state), each written in its own layer as now() and handler() are. The forecast's window (the
+-- belief's, copied at each reset; no pack line opens it) ends at Raptor Strike's handler or that length.
 -- (The evaluator and the shot's now() run in the belief's now context: the test is written in each.)
 local weaveShot = 0 -- the shot's now(): 1 it opened the window, 2 it did not; the evaluator reads it once (an upvalue)
 local weaveCombat = 0 -- the evaluator's last `combat`: its fall to 0 (combat end) clears a weaveShot left unread

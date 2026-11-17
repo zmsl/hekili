@@ -579,6 +579,55 @@ describe("resources", function()
             poll(105)
             assert.are.equal(0, VS.Regen(RAGE, 105).est)
         end)
+
+        -- ledger L1289: a read equal to the seed is still news for the band (the build's +- REGEN_SPREAD)
+        for _, rate in ipairs({ 10, 12 }) do
+            it(("narrows the seed's band to a read of %s (seed 10)"):format(rate), function()
+                api.ctl.regen[ENERGY] = { rate, rate }
+                poll(105)
+                local g = VS.Regen(ENERGY, 105)
+                assert.are.same({ rate, rate, rate }, { g.lo, g.est, g.hi })
+                poll(110) -- the same rate on a closed band is no news: not taken again
+                assert.are.equal(105, I.res.readT[1])
+            end)
+        end
+
+        for _, read in ipairs({ { 15, 3 }, { 17, 4 } }) do
+            it(
+                ("narrows an `fsr` slot's two bands to a read of %s / %s (seed 15 / 3)"):format(read[1], read[2]),
+                function()
+                    boot({
+                        abilities = {},
+                        abilityIds = {},
+                        abilitySlot = {},
+                        resources = {
+                            {
+                                key = "mana",
+                                type = 0,
+                                token = "MANA",
+                                max = 1000,
+                                rest = true,
+                                fsr = { spirit = 12, mp5 = 3 },
+                            },
+                        },
+                        auras = {},
+                        auraIds = {},
+                        talents = {},
+                        units = { "player", "target" },
+                    })
+                    api = I.api
+                    VS.Start(api)
+                    api.ctl.regen[0] = read
+                    poll(105)
+                    local R = I.res
+                    local sp = read[1] - read[2]
+                    assert.are.same(
+                        { read[2], read[2], read[2], sp, sp, sp },
+                        { R.regL[1], R.regE[1], R.regH[1], R.spL[1], R.spE[1], R.spH[1] }
+                    )
+                end
+            )
+        end
     end)
 
     describe("a swing-paid resource (rage, 9 a main-hand swing)", function()

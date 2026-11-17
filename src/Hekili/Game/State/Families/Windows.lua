@@ -17,7 +17,7 @@
 -- closes after its last step and when its `step_timeout` (default 4 s, restarted at each advance) runs out.
 -- `reset_on_target_change` (any row, Lua ones too): a target swap closes the row, and a Lua row also forgets its
 -- evaluator's last value, so a still-true evaluator reopens it at step 1 in the same Drain. A new `def.aplGen`
--- rebuilds the APL rows and the buffer only, at the next Drain out of combat.
+-- rebuilds the APL rows and the buffer only, at the next Drain out of combat (in combat too while there is no APL row).
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -371,7 +371,9 @@ function I.WindowOps()
     end
     Q.n = 0
     local def = I.def
-    if def and def.aplGen ~= W.gen and not I.inCombat then
+    -- in combat only while no APL row exists yet (a /reload or login in combat: the scripts, and so the active pack's
+    -- windows, load after the Build), so nothing open is lost; otherwise at the first Drain out of combat
+    if def and def.aplGen ~= W.gen and (not I.inCombat or W.n == W.nLua) then
         applyApl(def)
     end
 end

@@ -2626,7 +2626,7 @@ do
         local output = {}
 
         for name, list in pairs( lists ) do
-            local import, warnings = self:ParseActionList( list )
+            local import, warnings = self:ParseActionList( list, true )
 
             if warnings then
                 AddWarning( format( L["The import for '%s' required some automated changes."], name ) )
@@ -2648,6 +2648,12 @@ do
 
                 count = count + 1
             end
+        end
+
+        -- (windows design v6 §3.4) the whole priority's windows: each error disables its line, with a warning
+        for _, e in ipairs( self.Scripts.CheckWindows( output, name ).errors ) do
+            e.entry.enabled = false
+            AddWarning( format( L["List '%s' line %d: %s: %s; entry disabled."], e.list, e.line, e.code, e.text ) )
         end
 
         local use_items_found = false
@@ -8601,6 +8607,7 @@ do
         cancel_buff = "buff_name",
         open_window = "window_name",
         close_window = "window_name",
+        window = "window_name", -- the `windows` list's declarations (windows design v6 §3.1)
         op = "op",
     }
 
@@ -8613,7 +8620,9 @@ do
         return false
     end
 
-    function Hekili:ParseActionList( list )
+    -- `whole`: the caller checks the whole priority's windows afterwards (Scripts.lua CheckWindows: a name the
+    -- `windows` list declares is known there), so a window line's name is not checked against the class here.
+    function Hekili:ParseActionList( list, whole )
         local line, times = 0, 0
         local output, warnings, missing = {}, parseData.warnings, parseData.missing
 
@@ -8694,7 +8703,7 @@ do
                 if a == 1 then
                     local ability = str:trim()
 
-                    if ability and ( ability == "use_item" or Registry.Abilities()[ ability ] ) then
+                    if ability and ( ability == "use_item" or ability == "window" or Registry.Abilities()[ ability ] ) then
                         result.action = ability
                     elseif not ignore_actions[ ability ] then
                         insert( warnings, format( L["Line %s: Unsupported action '%s'."], line, ability ) )
@@ -8735,7 +8744,7 @@ do
                 result.name = nil
             end
 
-            if ( result.action == "open_window" or result.action == "close_window" ) and not knownWindow( result.window_name ) then
+            if not whole and ( result.action == "open_window" or result.action == "close_window" ) and not knownWindow( result.window_name ) then
                 insert( warnings, format( L["Line %s: Unknown window '%s'; entry disabled."], line, tostring( result.window_name ) ) )
                 result.enabled = false
             end

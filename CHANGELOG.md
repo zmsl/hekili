@@ -5,8 +5,12 @@
 ### New
 - Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
+- A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
+
 ### Changed
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
+
+- `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
 
 ### Fixed
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
@@ -15,11 +19,15 @@
 - Paladin: a second attack in the same instant as an Unsealed Wrath proc no longer stores or spends an extra Echo (the talent's 0.1 s cooldown; not yet checked in game).
 - Paladin: Retribution and Protection start from current mana regeneration values until your own is measured (not yet checked in game).
 
+- When the game's out-of-combat mana or energy regeneration matches the expected rate, Hekili now takes it as exact, so its mana and energy estimates no longer start a little low.
+
 - Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 
 ### Known issues
 
 ### Upgrade notes
+
+- A priority list named `windows` is now reserved for window declarations: a custom priority with an ordinary list of that name shows an error on that list until it is renamed.
 
 ## v0.8.5
 

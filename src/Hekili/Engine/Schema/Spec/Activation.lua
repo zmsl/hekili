@@ -333,8 +333,12 @@ function Hekili:SpecializationChanged()
 
     -- the belief tracks what this spec registered (Engine/Schema/Tracked.lua); its talent walk runs here, before
     -- ns.updateTalents reads the ranks.
+    -- the active pack's APL windows go into def before the Build (windows design v6 §9): never the previous pack's
+    local specs = Hekili.Engine.settings.specs
+    local active = specs and rawget( specs, state.spec.id or 0 )
+    Hekili.Scripts:ApplyWindows( active and active.package )
     ns.BuildTracked()
-    state:BuildWindows() -- the core's window tables (Engine/Sim/State.lua), from class.windows
+    state:BuildWindows() -- the core's window tables (Engine/Sim/State.lua), from class.windows and the APL windows
 
     ns.updateTalents()
     ns.TrackedStatics() -- the records' static values, under `state` with this spec's talent ranks (Tracked.lua)

@@ -1310,10 +1310,8 @@ local newModifiers = {
     op = 'string',
     var_name = 'string',
 
-    -- the rotation window lines (re-pin design §3a): open_window/close_window,name=<w>[,refresh=1][,duration=<s>]
+    -- the rotation window lines: open_window/close_window,name=<w> (windows design v6 ruling 21: name= and if= only)
     window_name = 'string',
-    refresh = 'raw',
-    duration = 'raw',
 
     -- shown with the pick (Core's markPick): text on its icon, and an icon a display may draw instead, each only while
     -- its _if holds. 'text' is the line's value verbatim: no SimC translation, so a texture path keeps its backslashes.
@@ -1707,6 +1705,116 @@ local function recordID( lData, id, scriptID )
     ids[ id ] = scriptID
 end
 
+-- (windows design v6 §3, §9) The priority's APL windows: the reserved `windows` list's `window` entries, checked with
+-- every open_window / close_window line (compile errors E1-E7, §3.4), into one record per window and display for the
+-- belief (`def.aplWindows`, keyed `<pack>:<name>#<display>`, Engine/Schema/Tracked.lua ns.SetAplWindows) and the
+-- operations bound (§5.5: a line fires at most once per slot and only slot 1 sends). Allocates; load and import only.
+local WINDOW_DISPLAYS = { "Primary", "AOE", "Cooldowns", "Interrupts", "Defensives" }
+local ENTRY_META = { action = true, window_name = true, enabled = true, description = true, caption = true }
+local WINDOW_OPTS = { duration = true, refresh = true, max_duration = true, max_refresh = true, reset_on_target_change = true }
+local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {} }
+scripts.NoWindows = NO_APL_WINDOWS
+scripts.Windows = {} -- pack name -> its CheckWindows result (LoadScripts)
+scripts.declaredWindows = {} -- every loaded priority's declared window names (State.lua: read closed when not active)
+scripts.appliedWindows = NO_APL_WINDOWS
+
+local function luaWindow( name )
+    for _, s in pairs( class.specs ) do
+        local w = rawget( s, "windows" )
+        if w and w[ name ] then return true end
+    end
+    return false
+end
+
+local function flag( v ) -- an "=1" option: nil (unwritten), else 0 or 1, else false (not a flag)
+    if v == nil then return nil end
+    v = tonumber( v )
+    return ( v == 0 or v == 1 ) and v or false
+end
+
+--- `lists`: a priority's lists by name (parsed entries). Returns { decls, records, cap, errors }; each error
+--- { code, list, line, text, entry }. The shared empty result when nothing is declared and nothing is wrong.
+function scripts.CheckWindows( lists, packName )
+    local errors, decls, records, byName, cap = {}, {}, {}, {}, 0
+    local function err( code, list, i, entry, text )
+        errors[ #errors + 1 ] = { code = code, list = list, line = i, entry = entry, text = text }
+    end
+
+    -- the `windows` list first: "before use" (§3.1)
+    for i, e in ipairs( lists.windows or NO_APL_WINDOWS.decls ) do
+        local name = e.window_name
+        if e.enabled == false then -- luacheck: ignore 542 (a switched-off entry declares nothing)
+        elseif e.action ~= "window" then err( "E5", "windows", i, e, "only window entries belong in the windows list" )
+        elseif e.criteria ~= nil then err( "E5", "windows", i, e, "a window entry takes no if=" )
+        else
+            local bad
+            for k in pairs( e ) do
+                if not ENTRY_META[ k ] and not WINDOW_OPTS[ k ] then bad = k break end
+            end
+            local d = e.duration == "combat" and "combat" or tonumber( e.duration )
+            local maxD, maxR = tonumber( e.max_duration ), tonumber( e.max_refresh )
+            if bad then err( "E7", "windows", i, e, "a window entry does not take " .. bad .. "=" )
+            elseif type( name ) ~= "string" or name == "" then err( "E6", "windows", i, e, "a window needs name=" )
+            elseif d ~= "combat" and not ( d and d > 0 ) then err( "E6", "windows", i, e, name .. ": duration= must be positive seconds or combat" )
+            elseif e.max_duration ~= nil and not ( maxD and maxD > 0 ) then err( "E6", "windows", i, e, name .. ": max_duration= must be positive" )
+            elseif e.max_refresh ~= nil and not ( maxR and maxR >= 0 and maxR % 1 == 0 ) then err( "E6", "windows", i, e, name .. ": max_refresh= must be a count" )
+            elseif flag( e.refresh ) == false or flag( e.reset_on_target_change ) == false then err( "E6", "windows", i, e, name .. ": refresh= and reset_on_target_change= take 0 or 1" )
+            elseif byName[ name ] then err( "E2", "windows", i, e, name .. " is declared twice" )
+            elseif luaWindow( name ) then err( "E3", "windows", i, e, name .. " is a class window" )
+            else
+                local decl = { name = name, duration = d, refresh = flag( e.refresh ) == 1, max_duration = maxD, max_refresh = maxR,
+                    reset_on_target_change = flag( e.reset_on_target_change ) == 1, keys = {} }
+                byName[ name ] = decl
+                decls[ #decls + 1 ] = decl
+                for _, disp in ipairs( WINDOW_DISPLAYS ) do
+                    local key = tostring( packName ) .. ":" .. name .. "#" .. disp
+                    decl.keys[ disp ] = key
+                    records[ #records + 1 ] = { key = key, duration = d, refresh = decl.refresh or nil, max_duration = maxD,
+                        max_refresh = maxR, reset_on_target_change = decl.reset_on_target_change or nil }
+                end
+            end
+        end
+    end
+
+    local names = {}
+    for list in pairs( lists ) do
+        if list ~= "windows" then names[ #names + 1 ] = list end
+    end
+    table.sort( names )
+    for _, list in ipairs( names ) do
+        for i, e in ipairs( lists[ list ] ) do
+            local a = e.action
+            if e.enabled == false then -- luacheck: ignore 542 (a switched-off line is not checked)
+            elseif a == "window" then err( "E5", list, i, e, "a window entry belongs in the windows list" )
+            elseif ( a == "call_action_list" or a == "run_action_list" ) and e.list_name == "windows" then
+                err( "E5", list, i, e, "the windows list cannot be called" )
+            elseif a == "open_window" or a == "close_window" then
+                local name, bad = e.window_name, nil
+                for k in pairs( e ) do
+                    if not ENTRY_META[ k ] and k ~= "criteria" then bad = k break end
+                end
+                if bad then err( "E4", list, i, e, a .. " takes only name= and if= (" .. bad .. "=)" )
+                elseif byName[ name ] then cap = cap + #WINDOW_DISPLAYS
+                elseif not luaWindow( name ) then err( "E1", list, i, e, "window " .. tostring( name ) .. " is not declared" ) end
+            end
+        end
+    end
+
+    if #decls == 0 and #errors == 0 then return NO_APL_WINDOWS end
+    return { decls = decls, records = records, cap = cap, errors = errors }
+end
+
+--- The active pack's APL windows into the belief's def (Tracked.lua ns.SetAplWindows: a new generation) and as the
+--- core copy's source (State.lua BuildWindows reads scripts.appliedWindows). Before a Build (Activation.lua) and when
+--- the active pack or its scripts change (Core.lua Hekili.Update). Allocates nothing.
+function scripts:ApplyWindows( packName )
+    local cw = packName and self.Windows[ packName ] or NO_APL_WINDOWS
+    self.appliedWindows = cw
+    ns.SetAplWindows( cw.records, cw.cap )
+end
+
+local reportedWindowErrors = {} -- LoadScripts: the window compile errors already reported this session
+
 local function scriptLoader()
     if not Hekili.LoadingScripts and not scriptsLoaded then scripts:LoadScripts() end
 end
@@ -1743,6 +1851,8 @@ function scripts:LoadScripts()
     wipe( self.DB )
     wipe( self.Channels )
     wipe( self.PackInfo )
+    wipe( self.Windows )
+    wipe( self.declaredWindows )
 
     Hekili.LoadingScripts = true
 
@@ -1759,9 +1869,26 @@ function scripts:LoadScripts()
                 hasWhileCasting = false
             }
 
+            -- (windows design v6 §9) the priority's windows first: a line reading one compiles against a known name
+            local cw = scripts.CheckWindows( pData.lists, pack )
+            self.Windows[ pack ] = cw
+            for _, d in ipairs( cw.decls ) do self.declaredWindows[ d.name ] = true end
+
             for list, lData in pairs( pData.lists ) do
                 for action, _ in ipairs( lData ) do
                     Hekili:LoadScript( pack, list, action )
+                end
+            end
+
+            -- (windows design v6 §3.4) a window compile error disables its line (the walk skips a script with an Error)
+            for _, e in ipairs( cw.errors ) do
+                local script = self.DB[ pack .. ":" .. e.list .. ":" .. e.line ]
+                local text = e.code .. ": " .. e.text
+                if script then script.Error = text end
+                local seen = pack .. ":" .. e.list .. ":" .. e.line .. " " .. text
+                if not reportedWindowErrors[ seen ] then -- once per line and error a session: every options edit loads again
+                    reportedWindowErrors[ seen ] = true
+                    Hekili:Error( "Priority '%s' list '%s' line %d: %s: %s; the line is skipped.", pack, e.list, e.line, e.code, e.text )
                 end
             end
         end
