@@ -98,7 +98,8 @@ actions+=/strict_sequence,name=burst,start_on_first=1,hold_off_gcd=1:bloodrage,u
 - A plain `sequence` opens when its line is reached and its `if=` is true, shows its due member, and parks after the
   last one (`window.<name>.done` is true while parked) until `restart_sequence` or combat end. `mode=skip` (the
   default, SimC) drops a member that cannot be cast; `mode=wait` (or `wait_on_ready=1`) shows the due member and
-  nothing below the line; `mode=continue` stays on the member and lets the list carry on.
+  nothing below the line, in its list or after the lines that called that list;
+  `mode=continue` stays on the member and lets the list carry on.
 - A `strict_sequence` opens when its line is the pick at now. By default every member must be castable then;
   `start_on_first=1` tests only the first member, within the spell queue window; `allow_skip=1` starts on the first
   member that can be cast and skips members that cannot. While it is open the display shows its members; outside lines

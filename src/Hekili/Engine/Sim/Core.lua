@@ -713,6 +713,8 @@ end
 local seqAction = { sequence = true, strict_sequence = true, restart_sequence = true }
 local holdPass = { call_action_list = true, run_action_list = true, variable = true, open_window = true, close_window = true }
 local seqStartStep, holdOffOnly = 0, 0
+-- a mode=wait sequence ended its list's walk: cleared before each called list, read after it (§6: nothing below the line)
+local seqHalt = false
 local HOLD_LISTS = { "precombat", "default" }
 local OP_STEP = 3
 
@@ -1019,7 +1021,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                     if holdOffOnly == 0 then
                         local halt
                         rAction, rWait, rDepth, halt = sequenceLine( self, dispName, packName, entry, scriptID, slot, rAction, rWait, rDepth, caller, debug )
-                        if halt then stop = true end
+                        if halt then stop, seqHalt = true, true end
                     end
 
                 elseif holdOffOnly > 0 and ability and not holdPass[ action ]
@@ -1226,8 +1228,11 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                 if debug then self:Debug( "Action list (%s) was found.", name ) end
                                                 self:AddToStack( scriptID, name, caller, not ts and action == "run_action_list" )
 
+                                                seqHalt = false
                                                 rAction, rWait, rDepth = self:GetPredictionFromAPL( dispName, packName, name, slot, rAction, rWait, rDepth, scriptID )
                                                 if debug then self:Debug( "Returned from list (%s), current recommendation is %s (+%.2f).", name, rAction or "NO ACTION", rWait ) end
+                                                -- (§6, SimC: the waiting line is every caller's pick) a mode=wait sequence in it stops this list too
+                                                if seqHalt then stop = true end
 
                                                 self:PopStack()
 

@@ -1319,6 +1319,38 @@ describe("plain sequences (windows design v6 §6, rulings 12, 15, 26, 28)", func
         end
     )
 
+    -- review M5 (§6 mode=wait, risk 16; SimC: the line counts as ready, so every caller returns it): nothing below the
+    -- sequence line is recommended, the lines below each call_action_list / run_action_list that reached it included
+    it("M5: mode=wait two called lists deep stops every caller; mode=continue lets them carry on", function()
+        for _, c in ipairs({
+            { "call_action_list", "mode=wait" },
+            { "run_action_list", "mode=wait" },
+            { "call_action_list", "mode=continue" },
+        }) do
+            load({
+                default = "actions+=/" .. c[1] .. ",name=a\nactions+=/defensive_stance",
+                a = "actions+=/call_action_list,name=b\nactions+=/berserker_stance,if=test_fb",
+                b = "actions+=/sequence,name=x,"
+                    .. c[2]
+                    .. ":bloodrage,if=test_fa:hamstring\nactions+=/rend,if=test_fb",
+            })
+            local recs, sent = tick()
+            local what = c[1] .. " " .. c[2]
+            assert.are.same({ { key("x"), OPEN } }, sent, what)
+            if c[2] == "mode=wait" then
+                assert.is_nil(recs[1].actionName, what)
+                flags.fb = true -- the lines below the sequence line, in its list and in its caller, stay unreached
+                recs = tick()
+                assert.is_nil(recs[1].actionName, what)
+            else
+                assert.are.equal("defensive_stance", recs[1].actionName, what)
+            end
+            flags.fb = false
+            H.Fire("PLAYER_REGEN_ENABLED") -- the next case starts closed
+            H.Hekili.DB.profile.packs[ww.PACK].lists = { precombat = {}, default = {} }
+        end
+    end)
+
     it("P21: an inactive sequence line (if= false) opens, skips and shows nothing", function()
         load({
             default = "actions+=/sequence,name=x,if=test_fb:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance",
