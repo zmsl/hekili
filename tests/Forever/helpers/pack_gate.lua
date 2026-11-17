@@ -79,9 +79,9 @@ M.FLICKER = {
     -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6; with gap-as-09, avoid-refund-09 and Execute's
     -- refundNowOnAvoid; seeds 1-20 / 21-40 / 41-60 flicker 0.06 / 0.04 / 0.08, retracted 0 / 0 / 0, readyShort 1 / 0 /
     -- 0, heldReady 316 / 239 / 266): readyShort 3 -> 1; heldReady 279 -> 316, per fight (seeds 1-20, the gate's boot)
-    -- only seeds 5 (4 -> 30) and 6 (8 -> 19) move: ab8ad0acc's world rule (an avoided Execute keeps its extra rage)
-    -- moves seed 2's kill 4.8 s, so seeds 5 and 6 start on another boot clock and land on the P3 float-rounding edge
-    -- above (one held tick per swing, 0.12-0.20 s; each alone on a fresh boot reads 27 / 8 before and after the rule);
+    -- only seeds 5 (4 -> 30) and 6 (8 -> 19) move: ab8ad0acc (the re-pin kit: the damage-taken rage rows and the
+    -- Execute world rule, not split) moves seed 2's kill 4.8 s, so seeds 5 and 6 start on another boot clock and land on the P3 float-rounding edge
+    -- above (one held tick per swing, 0.12-0.20 s; each alone on a fresh boot reads 27 / 8 before and after ab8ad0acc);
     -- seed 6 +1 more: the gap-as-09 / avoid-refund-09 merges (field off reads the same) re-times it from 126 s (a
     -- Rend wait 2.79 s, truth 11.0 against its 10)
     ["Arms"] = { flicker = 0.08, retracted = 0.1, readyShort = 1, heldReady = 316 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
@@ -159,10 +159,10 @@ M.FLICKER = {
     -- refundNowOnAvoid; seeds 1-20 / 21-40 / 41-60 flicker 0.20 / 0.29 / 0.27 (oracle 0.38 / 0.72 / 0.44), retracted 0
     -- / 0 / 0, readyShort 0 / 0 / 0, heldReady 377 / 282 / 364): flicker 0.43 -> 0.30 (the measured worst + 0.01);
     -- heldReady 371 -> 377 (seeds 1-20 on the gate's boot; 309 at the lane's base d17b7d45e, held ticks mostly Heroic
-    -- Strike's `rage.lo>=40` wait at truth 40-41, gap CJ's class (1) above): ab8ad0acc's world rule (an avoided Execute
-    -- keeps its extra) moves seed 5's kill 6.4 s, so seeds 6-20 start on another boot clock (seeds 6, 9, 14, 15, 17, 20
-    -- alone on a fresh boot read the same before and after the rule; seed 11 alone 30 -> 14, the rule moving that
-    -- fight directly); the gap-as-09 / avoid-refund-09 merges (field off reads the same) moves seed 1, the boot's
+    -- Strike's `rage.lo>=40` wait at truth 40-41, gap CJ's class (1) above): ab8ad0acc (the re-pin kit: the
+    -- damage-taken rage rows and the Execute world rule, not split) moves seed 5's kill 6.4 s, so seeds 6-20 start on
+    -- another boot clock (seeds 6, 9, 14, 15, 17, 20 alone on a fresh boot read the same before and after ab8ad0acc;
+    -- seed 11 alone 30 -> 14, ab8ad0acc moving that fight directly); the gap-as-09 / avoid-refund-09 merges (field off reads the same) moves seed 1, the boot's
     -- first fight, 21 -> 22 (an Execute held at 102.80)
     ["Fury L24"] = { flicker = 0.30, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 377 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
