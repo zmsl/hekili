@@ -733,14 +733,17 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
         -- the start test (§6, rulings 27, 28): every member (allow_skip: any member) can be cast; start_on_first tests the
         -- first only, its time within the queue window judged when the pick is final (Hekili.Update)
         local first, n = 0, #d.steps
-        -- (§7, ruling 25) in Primary and AOE the start line skips the "toggle shown separately" test
-        state.seqBypass = ( dispName == "Primary" or dispName == "AOE" ) and 1 or 0
+        -- (§7, ruling 25) in Primary and AOE the start line skips the "toggle shown separately" test; a member after the
+        -- first is judged as it will be once up (ruling 9: the display filter skipped too, D02), the first unbypassed (D20)
+        local sb = ( dispName == "Primary" or dispName == "AOE" ) and 1 or 0
         if d.start_on_first then first = 1
         elseif d.allow_skip then -- the first shown is the first castable by normal readiness; else by the fields (ruling 36)
             for k = 1, n do
+                state.seqBypass = k > 1 and 2 or sb
                 if castable( self, d, k ) then first = k break end
             end
             if first == 0 then
+                state.seqBypass = 2
                 for k = 2, n do
                     if castable( self, d, k, true ) then first = k break end
                 end
@@ -748,9 +751,11 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
         else
             first = 1
             for k = 1, n do
+                state.seqBypass = k > 1 and 2 or sb
                 if not castable( self, d, k, true ) then first = 0 break end
             end
         end
+        state.seqBypass = sb
         if first == 0 then
             state.seqBypass = 0
             if debug then self:Debug( " - strict_sequence %s: the start test fails.", name ) end

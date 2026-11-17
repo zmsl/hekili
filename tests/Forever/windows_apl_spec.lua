@@ -7,10 +7,11 @@ local ww = require("Forever.helpers.warrior_world")
 local mx = require("Game.State.helpers.windows_matrix")
 local fake = require("Game.State.helpers.fake_api")
 
-local OPEN, CLOSE = mx.OP.OPEN, mx.OP.CLOSE
+local OPEN, CLOSE, STEP = mx.OP.OPEN, mx.OP.CLOSE, mx.OP.STEP
 local DISPLAYS = { "Primary", "AOE", "Cooldowns", "Interrupts", "Defensives" }
 
 local H, S, VS, VSI, ops, t
+local opArgs = {} -- each sent operation's argument (STEP's step), by its index in `ops`
 local flags = {}
 local flaps = 0 -- the one-time flapping-pair warnings seen (L1205), taken out of H.errors by tick()
 local FLAP = "opened and closed by lines in the same recommendation"
@@ -44,6 +45,7 @@ local function boot(lua)
     local op = VS.WindowOp
     VS.WindowOp = function(key, code, arg)
         ops[#ops + 1] = { key, code }
+        opArgs[#ops] = arg or false
         return op(key, code, arg)
     end
 end
@@ -483,7 +485,13 @@ end)
 -- (a line the walk evaluates again after a restart is listed again). Named exemptions: L01 (operations to a key
 -- whose generation waits for combat end are dropped, asserted there) and OP5 (a window running out between the
 -- Drain's stamp and the pass's now: the headless pass's now is the stamp, asserted every tick, so it cannot arise).
-local FIELDS = { "up", "openedAt", "expiresAt" }
+local FIELDS = { "up", "openedAt", "expiresAt", "step" }
+
+local BR, BS = 2687, 2458 -- Bloodrage, Berserker Stance: the casts the belief observes
+
+local function cast(id)
+    H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-seq-" .. id .. "-" .. t, id)
+end
 
 local function closedAt(s, T)
     if s.up and s.expiresAt <= T then
@@ -503,10 +511,18 @@ local function sameState(a, b)
 end
 
 local function show(s)
-    return string.format("up=%s opened=%s expires=%s", tostring(s.up), tostring(s.openedAt), tostring(s.expiresAt))
+    return string.format(
+        "up=%s opened=%s expires=%s step=%s",
+        tostring(s.up),
+        tostring(s.openedAt),
+        tostring(s.expiresAt),
+        tostring(s.step)
+    )
 end
 
--- Runs `c.lists` for `c.ticks` ticks (flags per tick from `c.flags[i]`); returns the operations sent per tick.
+-- Runs `c.lists` for `c.ticks` ticks (flags per tick from `c.flags[i]`, a cast the belief observes before tick i from
+-- `c.casts[i]`); returns the operations sent per tick. Candidates are { name, code, arg } (arg: STEP's step); the
+-- sends are compared with their arguments, the copy and the belief with their step (sequences, §6).
 local function forecastRun(c)
     load(c.lists)
     flaps = 0
@@ -521,23 +537,39 @@ local function forecastRun(c)
             decl[name], names[#names + 1] = r, name
         end
     end
-    local copy, captured = {}, false
-    local gnp = H.Hekili.GetNextPrediction
+    local copy, captured, tail = {}, false, false
+    local function snap()
+        local delay = S.delay
+        S.delay = 0 -- read at now (query_time = now + offset + delay; slot 1's offset is 0)
+        for _, n in ipairs(names) do
+            local win = S.window[n]
+            local up = win.up
+            copy[n] = {
+                up = up,
+                openedAt = up and S.now - win.elapsed or 0,
+                expiresAt = up and S.now + win.remains or 0,
+                step = up and win.step or 0,
+            }
+        end
+        S.delay = delay
+    end
+    local gnp, wop = H.Hekili.GetNextPrediction, VS.WindowOp
     H.Hekili.GetNextPrediction = function(self, dispName, packName, slot)
+        tail = false
         local a, w, d = gnp(self, dispName, packName, slot)
         if not captured and dispName == "Primary" and slot.index == 1 then -- slot 1's now walk, before any wait
-            captured = true
-            local delay = S.delay
-            S.delay = 0 -- read at now (query_time = now + offset + delay; slot 1's offset is 0)
-            for _, n in ipairs(names) do
-                local win = S.window[n]
-                local up = win.up
-                copy[n] =
-                    { up = up, openedAt = up and S.now - win.elapsed or 0, expiresAt = up and S.now + win.remains or 0 }
-            end
-            S.delay = delay
+            captured, tail = true, true
+            snap()
         end
         return a, w, d
+    end
+    -- a strict sequence's chosen OPEN (and an allow_skip STEP) is sent once slot 1 is final, after its walk
+    VS.WindowOp = function(k, code, arg)
+        local r = wop(k, code, arg)
+        if tail then
+            snap()
+        end
+        return r
     end
     local Q, prev, perTick = VSI.winOps, nil, {}
     for i = 1, c.ticks do
@@ -546,14 +578,22 @@ local function forecastRun(c)
         end
         local refused, dropped = Q.refused, Q.dropped
         captured = false
+        local moved = c.casts and c.casts[i]
+        if moved then
+            cast(moved)
+        end
         local _, sent = tick()
+        local sentA = {}
+        for j, o in ipairs(sent) do
+            sentA[j] = { o[1], o[2], opArgs[j] }
+        end
         local T = VSI.clock
         assert.are.equal(T, S.now, "the pass's now is the Drain's stamp (OP5 cannot arise)")
         local seed = {}
         for _, n in ipairs(names) do
             local b = belief(n)
             seed[n] = b
-            if prev then -- the replay invariant: the previous pass's copy, its expiry run at this stamp
+            if prev and not moved then -- the replay invariant: the previous pass's copy, its expiry run at this stamp
                 local want = closedAt(prev[n], T)
                 assert.is_true(
                     sameState(want, b),
@@ -574,16 +614,16 @@ local function forecastRun(c)
             for k, v in pairs(s[n]) do
                 before[k] = v
             end
-            mx.apply(s[n], code, nil, decl[n], T)
+            mx.apply(s[n], code, o[3], decl[n], T)
             local changed = false
             for k, v in pairs(s[n]) do
                 changed = changed or before[k] ~= v
             end
             if changed then
-                want[#want + 1] = { key(n), code }
+                want[#want + 1] = { key(n), code, o[3] or false }
             end
         end
-        assert.are.same(want, sent, c.id .. " tick " .. i .. ": sends")
+        assert.are.same(want, sentA, c.id .. " tick " .. i .. ": sends")
         for _, n in ipairs(names) do
             assert.is_true(
                 sameState(s[n], copy[n]),
@@ -595,7 +635,7 @@ local function forecastRun(c)
         prev, perTick[i] = copy, #sent
         copy = {}
     end
-    H.Hekili.GetNextPrediction = gnp
+    H.Hekili.GetNextPrediction, VS.WindowOp = gnp, wop
     -- L1205: a window opened and closed by lines within one slot warns once per pack and window a session
     assert.are.equal(c.flaps or 0, flaps, c.id .. ": flapping-pair warnings")
     -- the last tick's sends too: one more Drain (no pass) must leave the belief equal to the last copy
@@ -822,6 +862,64 @@ local FORECAST = {
         sends = { 1, 0 },
         loadErrors = 2,
     },
+    -- sequences (§6): STEP with its argument, the copy's step, the chosen OPEN, the give-up, a close line (S24)
+    {
+        id = "SEQ-skip (S15)",
+        lists = {
+            default = "actions+=/sequence,name=x:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance",
+        },
+        ticks = 3,
+        cand = always({ { "x", OPEN }, { "x", STEP, 2 } }), -- open, then the skip line drops bloodrage once
+        sends = { 2, 0, 0 },
+    },
+    {
+        id = "SEQ-loop (S19)",
+        lists = {
+            default = "actions+=/restart_sequence,name=x,if=window.x.done\nactions+=/sequence,name=x:bloodrage,if=test_fa\n"
+                .. "actions+=/defensive_stance",
+        },
+        ticks = 3,
+        cand = always({ { "x", OPEN }, { "x", STEP, 2 }, { "x", STEP, 1 } }), -- burnt out, then sent back, every slot
+        sends = { 3, 2, 2 },
+        flaps = 0,
+    },
+    {
+        id = "SEQ-strict (S01/S04)",
+        lists = {
+            default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance,if=!test_fa\nactions+=/defensive_stance",
+        },
+        ticks = 3,
+        flags = { {}, {}, { fa = true } },
+        casts = { [2] = BR },
+        cand = function(i)
+            return i == 1 and { { "s", OPEN } } or i == 3 and { { "s", CLOSE } } or {}
+        end,
+        sends = { 1, 0, 1 }, -- chosen; held at step 2 after the cast; given up (berserker_stance's if= false)
+    },
+    {
+        id = "SEQ-allow_skip (P09)",
+        lists = {
+            default = "actions+=/strict_sequence,name=s,allow_skip=1:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance",
+        },
+        ticks = 2,
+        cand = function(i)
+            return i == 1 and { { "s", OPEN }, { "s", STEP, 2 } } or {}
+        end,
+        sends = { 2, 0 },
+    },
+    {
+        id = "SEQ-close (S24)",
+        lists = {
+            default = "actions+=/close_window,name=s,if=test_fa\nactions+=/strict_sequence,name=s,hold_off_gcd=1:bloodrage:"
+                .. "berserker_stance,if=!test_fa\nactions+=/defensive_stance",
+        },
+        ticks = 3,
+        flags = { {}, { fa = true } },
+        cand = function(i)
+            return i == 1 and { { "s", OPEN } } or i == 2 and { { "s", CLOSE } } or {}
+        end,
+        sends = { 1, 1, 0 },
+    },
 }
 
 describe("forecast == apply, the core's side (windows design v6 §13, L1180)", function()
@@ -1037,12 +1135,6 @@ describe("the sequences compiler (windows design v6 §3.3, §3.4, §9)", functio
         end
     )
 end)
-
-local BR, BS = 2687, 2458 -- Bloodrage, Berserker Stance: the casts the belief observes
-
-local function cast(id)
-    H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-seq-" .. id .. "-" .. t, id)
-end
 
 local function seqState(name, display)
     local up, _, _, _, step = VS.Window(key(name, display))
@@ -1446,6 +1538,70 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
         assert.are.same({ true, 1 }, { seqState("s") })
         assert.are.equal("berserker_stance", recs[1].actionName)
     end)
+
+    -- Sequences on for Cooldowns too (D02, D20): both displays walked; the operations sent, as a set by key
+    local function cooldownsOn(text)
+        H.Hekili.Engine.settings.displays.Cooldowns.sequences = true
+        load({ default = text })
+        assert.is_true(H.Hekili.Engine.Subscribe("Cooldowns", function() end))
+    end
+    local function sentSet(sent)
+        local s = {}
+        for _, o in ipairs(sent) do
+            s[o[1]] = o[2]
+        end
+        return s
+    end
+
+    -- Reading (ruling 25 over D02's "Primary's key stays closed"): Primary's start line skips the separate test, so a
+    -- strict classcd:nuke starts in Primary as in D14; Cooldowns starts it under its own key as well.
+    it("D02: Sequences on in Cooldowns: a strict classcd:nuke starts there and shows nuke (filter bypassed)", function()
+        cooldownsOn("actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance")
+        local _, sent = tick()
+        local s = sentSet(sent)
+        assert.are.equal(OPEN, s[key("s", "Cooldowns")])
+        assert.are.equal(OPEN, s[key("s")])
+        local cd = H.Hekili.Engine.Output.Cooldowns.recs
+        assert.are.equal("bloodrage", cd[1].actionName)
+        cast(BR)
+        tick()
+        assert.are.same({ true, 2 }, { seqState("s", "Cooldowns") })
+        cd = H.Hekili.Engine.Output.Cooldowns.recs
+        assert.are.equal("berserker_stance", cd[1].actionName) -- a non-cooldown in Cooldowns: the held member
+        -- D06: after the last step the window is closed: nuke is filtered out of Cooldowns again
+        cast(BS)
+        tick()
+        cd = H.Hekili.Engine.Output.Cooldowns.recs
+        assert.are_not.equal("berserker_stance", cd[1] and cd[1].actionName)
+    end)
+
+    it(
+        "D13: defaults (Sequences off in Cooldowns): a strict nuke:classcd runs in Primary; Cooldowns skips it",
+        function()
+            load({ default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance" })
+            assert.is_true(H.Hekili.Engine.Subscribe("Cooldowns", function() end))
+            local _, sent = tick()
+            assert.are.same({ { key("s"), OPEN } }, sent)
+            assert.is_false((seqState("s", "Cooldowns")))
+            cast(BS)
+            tick()
+            assert.are.same({ true, 2 }, { seqState("s") })
+            local cd = H.Hekili.Engine.Output.Cooldowns.recs
+            assert.are_not.equal("berserker_stance", cd[1] and cd[1].actionName) -- no hold there, no bypass
+        end
+    )
+
+    it(
+        "D20: Sequences on in Cooldowns: a strict nuke:classcd starts in Primary only (no start bypass there)",
+        function()
+            cooldownsOn("actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance")
+            local _, sent = tick()
+            local s = sentSet(sent)
+            assert.is_nil(s[key("s", "Cooldowns")])
+            assert.are.equal(OPEN, s[key("s")])
+            assert.is_false((seqState("s", "Cooldowns")))
+        end
+    )
 
     it("D19 (Primary): a plain classcd:filler shows classcd as its due first member in Primary", function()
         load({
