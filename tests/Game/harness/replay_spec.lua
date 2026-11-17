@@ -916,18 +916,18 @@ describe("the replay's cooldowns: the engine's, a shared category's, the log's",
         }, "\n")
         -- the engine's shape (Abilities.lua): the kit's function in `funcs`, `cooldown` its answer in the state now,
         -- here the boot state's: not in the form yet, so the out-of-form 0
-        local claw = setmetatable({ key = "claw", id = 900070, gcd = "spell", funcs = {} }, {
+        local gust = setmetatable({ key = "gust", id = 900070, gcd = "spell", funcs = {} }, {
             __index = function(t, k)
                 return t.funcs[k] and t.funcs[k]()
             end,
         })
-        claw.funcs.cooldown = function()
+        gust.funcs.cooldown = function()
             return 0
         end
         local HF = {
             Hekili = {
-                Class = { abilities = { claw = claw }, auras = {} },
-                State = { action = { claw = { cooldown = 0 } } },
+                Class = { abilities = { gust = gust }, auras = {} },
+                State = { action = { gust = { cooldown = 0 } } },
             },
         }
         local W
@@ -961,11 +961,11 @@ describe("the replay's cooldowns: the engine's, a shared category's, the log's",
         end
         -- cast in the form: the in-form 6 s (the log's 10 s spacing caps nothing)
         assert.are.equal(6, tonumber(("%.4f"):format(lastCast().cd)))
-        assert.is_true(math.abs(us.cdUntil.claw - (R.pull + 1 + 6)) < 1e-3)
+        assert.is_true(math.abs(us.cdUntil.gust - (R.pull + 1 + 6)) < 1e-3)
         at(W, R.pull + 12)
         assert.are.equal(0, us.form)
         assert.are.equal(0, lastCast().cd) -- out of the form: no cooldown
-        assert.is_true(math.abs(us.cdUntil.claw - (R.pull + 1 + 6)) < 1e-3)
+        assert.is_true(math.abs(us.cdUntil.gust - (R.pull + 1 + 6)) < 1e-3)
     end)
 end)
 
