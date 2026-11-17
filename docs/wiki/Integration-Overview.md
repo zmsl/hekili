@@ -17,6 +17,7 @@ The recommendations come from Hekili Forever's own simulation of the next few se
 | `Hekili:RegisterRecommendationListener(fn)` and `Hekili:UnregisterRecommendationListener(fn)` | Functions | An addon that follows each update of the recommendations |
 | `HEKILI_RECOMMENDATION_UPDATE` | WeakAuras event | A WeakAura that shows or reacts to recommendations |
 | `Hekili:GetToggleState(name)` and `HEKILI_TOGGLE` | Function, WeakAuras event | Reading the toggles and the display mode, and reacting when they change |
+| `Hekili.IsForever()` and `Hekili.Version` | Function, string | Telling Hekili Forever from retail Hekili, and which release is loaded ([Detecting Hekili Forever](#detecting-hekili-forever)) |
 | `Hekili:RegisterSnapshotListener(fn)` and `Hekili:UnregisterSnapshotListener(fn)` | Functions | An addon that adds its own lines to a snapshot |
 | The public chat commands | Commands | Macros and buttons that change toggles, priorities and profiles |
 
@@ -31,14 +32,20 @@ The core addon's folder, and the name another addon declares as a dependency, is
 - An addon that cannot work without Hekili Forever lists `## Dependencies: Hekili` in its TOC file. The game then loads Hekili Forever first, so the `Hekili` global and the functions on this page exist when the addon's own files run.
 - An addon that only adds to Hekili Forever when it is there lists `## OptionalDeps: Hekili`, which also loads Hekili Forever first when it is installed, and tests for it before use.
 
+Retail Hekili uses the same folder name and the same `Hekili` global, so an addon that must know which one is loaded calls `Hekili.IsForever()`:
+
 ```lua
 -- A file of an addon with "## OptionalDeps: Hekili" in its TOC
-if Hekili and Hekili.DisplayStyleAPI == 1 then
-    -- the interface this addon was written for is present
+if Hekili and Hekili.IsForever and Hekili.IsForever() then
+    -- Hekili Forever is loaded
 end
 ```
 
-`Hekili.DisplayStyleAPI` is the interface version of the display style interface and the recommendation record. Comparing it with the version an addon was written for tells the addon that both are the ones it expects. `Hekili:RegisterDisplayStyle` itself refuses a style written for another version.
+| Name | What it gives |
+|---|---|
+| `Hekili.IsForever()` | Always `true` in Hekili Forever. Retail Hekili has no such function, so the test above is false there. |
+| `Hekili.Version` | The version as a string: the release's tag, such as `v0.9.0`, or `Dev-` followed by the game build and a date for a copy run straight from the source. It does not tell Hekili Forever from retail Hekili. |
+| `Hekili.DisplayStyleAPI` | The version of the display style interface and the recommendation record, 1 in this release. Comparing it with the version an addon was written for tells the addon that both are the ones it expects. `Hekili:RegisterDisplayStyle` itself refuses a style written for another version. |
 
 ## Load order
 
