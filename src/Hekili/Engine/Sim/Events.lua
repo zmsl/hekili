@@ -2155,6 +2155,51 @@ local function padStore( page, key, aType, id )
     StoreKeybindInfo( page, key, aType, id, "pad" )
 end
 
+-- ConsolePort on Camelot keeps its own gamepad bars (slots 185+, bindings "CLICK ConsolePortGamepadBar<n>Slot<i>"). The
+-- constants and paging come from its data (ConsolePort:GetData().Actionbar, Model/Game/Actionbar.lua), so a change there
+-- follows. Runs on bar events, not per update; any API change raises into pcall and is dropped.
+local function ReadConsolePortGamepad()
+    local ab = ConsolePort:GetData().Actionbar
+    local gp = ab and ab.Gamepad
+    if not gp then return end
+
+    local paged, page = ab:GetGamepadPagedBar(), ab:GetGamepadPage()
+
+    -- the last slots first: the earlier bar wins when a spell sits on several
+    for slot = gp.First + gp.Width * gp.Bars - 1, gp.First, -1 do
+        local action, id = GetActionInfo( slot )
+
+        if action and id then
+            local barID, index = ab:GetFormattedIDs( slot )
+            -- the paged bar's own slots are on screen only while no other page replaces them; that page shows through the paged widget
+            local widget = barID == page and paged or barID
+
+            if barID ~= paged or page == paged then
+                local key, mod = ConsolePort:GetCurrentBindingOwner( gp.Format:format( widget - gp.BarOffset, index ) )
+
+                if key then
+                    StoreKeybindInfo( 1, ConsolePort:GetFormattedButtonCombination( key, mod ), action, id, "cPort" )
+                end
+            end
+        end
+    end
+end
+
+local function ReadConsolePortSlots()
+    for i = 1, 180 do
+        local action, id = GetActionInfo( i )
+
+        if action and id then
+            local bind = ConsolePort:GetActionBinding( i )
+            local key, mod = ConsolePort:GetCurrentBindingOwner( bind )
+
+            if key then
+                StoreKeybindInfo( math.ceil( i / 12 ), ConsolePort:GetFormattedButtonCombination( key, mod ), action, id, "cPort" )
+            end
+        end
+    end
+end
+
 local function ReadKeybindings( event )
         if not Hekili:IsValidSpec() then return end
 
@@ -2321,18 +2366,8 @@ local function ReadKeybindings( event )
         Pad.Read( padStore )
 
         if _G.ConsolePort then
-            for i = 1, 180 do
-                local action, id = GetActionInfo( i )
-
-                if action and id then
-                    local bind = ConsolePort:GetActionBinding( i )
-                    local key, mod = ConsolePort:GetCurrentBindingOwner( bind )
-
-                    if key then
-                        StoreKeybindInfo( math.ceil( i / 12 ), ConsolePort:GetFormattedButtonCombination( key, mod ), action, id, "cPort" )
-                    end
-                end
-            end
+            pcall( ReadConsolePortSlots )
+            pcall( ReadConsolePortGamepad )
         end
 
         for k, v in pairs( keys ) do

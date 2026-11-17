@@ -478,3 +478,80 @@ describe("the Gamepad options tab", function()
         assert.are.equal("TOPRIGHT", kb.anchor)
     end)
 end)
+
+describe("ConsolePort gamepad bars", function()
+    before_each(reset)
+
+    -- ConsolePort on Camelot: its own gamepad bars (Model/Game/Actionbar.lua), bindings CLICK ConsolePortGamepadBar%dSlot%d
+    local function stub(H, page, owners)
+        local gp = {
+            First = 185,
+            Width = 8,
+            Bars = 22,
+            BarOffset = 15,
+            Format = "CLICK ConsolePortGamepadBar%dSlot%d:LeftButton",
+        }
+        local ab = { Gamepad = gp }
+        function ab:GetFormattedIDs(slot)
+            local i = slot - gp.First
+            return gp.BarOffset + math.floor(i / gp.Width) + 1, (i % gp.Width) + 1
+        end
+        function ab:GetGamepadPagedBar()
+            return 16
+        end
+        function ab:GetGamepadPage()
+            return page
+        end
+        H.env.ConsolePort = {
+            GetActionBinding = function() end,
+            GetData = function()
+                return { Actionbar = ab }
+            end,
+            GetCurrentBindingOwner = function(_, b)
+                local o = owners[b]
+                if o then
+                    return o, ""
+                end
+            end,
+            GetFormattedButtonCombination = function(_, key, mod)
+                return "|TIcon" .. key .. mod .. ":0:0:0:0|t"
+            end,
+        }
+    end
+
+    it("shows the controller button for a spell on a ConsolePort gamepad bar, following the paged bar", function()
+        local H = boot()
+        stub(H, 26, {
+            ["CLICK ConsolePortGamepadBar1Slot2:LeftButton"] = "PAD1", -- paged widget, slot 2
+            ["CLICK ConsolePortGamepadBar3Slot1:LeftButton"] = "PAD3", -- a plain bar
+        })
+        world.actions[186] = id(H, "mortal_strike") -- bar 16 is the paged bar, but the stance page 26 is showing: skipped
+        world.actions[266] = id(H, "bloodthirst") -- bar 26 slot 2: the stance page, shown through the paged widget
+        world.actions[201] = id(H, "whirlwind") -- bar 18 slot 1: ConsolePort bar 3, bound on its own widget
+        local info = read(H)
+        assert.are.equal("|TIconPAD1:0:0:0:0|t", info.bloodthirst.console[1])
+        assert.are.equal("|TIconPAD3:0:0:0:0|t", info.whirlwind.console[1])
+        assert.is_nil(info.mortal_strike.console[1])
+    end)
+
+    it("raises nothing when the ConsolePort API lacks these methods", function()
+        local H = boot()
+        world.actions[5] = id(H, "mortal_strike")
+        H.env.ConsolePort = { GetActionBinding = function() end, GetCurrentBindingOwner = function() end }
+        assert.has_no.errors(function()
+            read(H)
+        end)
+        H.env.ConsolePort = {
+            GetData = function()
+                error("changed")
+            end,
+        }
+        assert.has_no.errors(function()
+            read(H)
+        end)
+        H.env.ConsolePort = {}
+        assert.has_no.errors(function()
+            read(H)
+        end)
+    end)
+end)
