@@ -501,8 +501,12 @@ recommended it. This is how one member can be offered at several list positions 
 In the pass:
 - Hold: at the top of each slot's walk the engine checks whether a strict APL window is up in this display's copy.
   If so it walks that window's hidden list first. By default it then walks the normal lists and takes only
-  entries marked `use_off_gcd=1` whose ability is off the GCD (SimC, ruling 29). With `hold_off_gcd=1` it walks
-  nothing else (wowsims). An engine check, not a generated line, so it does not depend on `run_action_list`
+  entries marked `use_off_gcd=1` whose ability is off the GCD (SimC, ruling 29). With `hold_off_gcd=1` it takes
+  nothing else from them (wowsims): no ability line outside the sequence is shown. In both modes the normal lists are
+  still walked for `open_window` / `close_window` lines (with the `call_action_list` / `run_action_list` / `variable`
+  lines that reach them), so a close line aborts the sequence at once (ruling 23, S24). Owner ruling L1249: allowed on
+  condition that the CPU is clean (the W09 / R03 / W05 bench and every shipped pack's CPU ratio and flicker show no
+  meaningful rise); if they do, the owner decides again. An engine check, not a generated line, so it does not depend on `run_action_list`
   blocking. `precombat` gets the same check.
 - Hidden list lines: `<member>,if=window.<w>.next.<member>&<the member's own condition>`. The sequence's condition
   is not re-read once a strict sequence is open.

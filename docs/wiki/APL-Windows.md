@@ -100,7 +100,8 @@ actions+=/strict_sequence,name=burst,start_on_first=1,hold_off_gcd=1:bloodrage,u
   `start_on_first=1` tests only the first member, within the spell queue window; `allow_skip=1` starts on the first
   member that can be cast and skips members that cannot. While it is open the display shows its members; outside lines
   marked `use_off_gcd=1` still show unless the line says `hold_off_gcd=1`. A member that cannot be cast when the GCD is
-  ready ends it; so do another on-GCD cast, a later member cast out of order and `step_timeout=` (4 s by default).
+  ready ends it; so do another on-GCD cast, a later member cast out of order, `step_timeout=` (4 s by default) and a
+  `close_window,name=<sequence>` line whose `if=` is true (read while the sequence is open, with either hold).
 - An unnamed plain sequence is `default` (further ones `default_2`, ...); an unnamed strict one `strict_1`, ...
 - Each display has a Sequences setting, on for Primary and AOE. Where it is off, the display skips every sequence line
   as if it were not in the priority. Free-form windows work in every display.
