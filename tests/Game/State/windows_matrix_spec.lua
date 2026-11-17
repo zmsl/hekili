@@ -469,6 +469,49 @@ local CASES = {
             { t = 2.6, expect = { y = { up = true, openedAt = 2.4, expiresAt = 7.4 } } },
         },
     },
+    -- L1181: the compiler's records (strict: on_deviation = "end"; plain: none) under a later member cast out of order
+    {
+        id = "L1181-strict-off",
+        what = "strict, on_deviation=end: an off-GCD later member cast out of order ends it (the SimC difference)",
+        apl = { x = { steps = { "filler", "stance" }, strict = true, on_deviation = "end" } },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, expect = { x = { up = true, step = 1, openedAt = 2, expiresAt = HUGE } } },
+            { t = 2.4, cast = "stance", expect = { x = C } },
+        },
+    },
+    {
+        id = "L1181-strict-on",
+        what = "strict, on_deviation=end: an on-GCD later member cast out of order ends it",
+        apl = { x = { steps = { "filler", "nuke", "dot" }, strict = true, on_deviation = "end" } },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, expect = { x = { up = true, step = 1, openedAt = 2, expiresAt = HUGE } } },
+            { t = 2.4, cast = "dot", expect = { x = C } },
+        },
+    },
+    {
+        id = "L1181-plain",
+        what = "plain, no on_deviation: a later member cast out of order leaves it on its step",
+        apl = { x = { steps = { "filler", "nuke", "dot" } } },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, expect = { x = { up = true, step = 1, openedAt = 2, expiresAt = HUGE } } },
+            { t = 2.4, cast = "dot", expect = { x = { up = true, step = 1 } } },
+            { t = 2.6, cast = "filler", expect = { x = { step = 2 } } },
+        },
+    },
+    {
+        id = "L1181-strict-earlier",
+        what = "strict, on_deviation=end: an earlier off-GCD member cast again keeps the step; a later one then ends it",
+        apl = { x = { steps = { "burst", "nuke", "stance" }, strict = true, on_deviation = "end" } },
+        timeline = {
+            { t = 2, ops = { { "x", "OPEN" } } },
+            { t = 2.2, cast = "burst", expect = { x = { up = true, step = 2, openedAt = 2, expiresAt = HUGE } } },
+            { t = 2.4, cast = "burst", expect = { x = { up = true, step = 2 } } },
+            { t = 2.6, cast = "stance", expect = { x = C } },
+        },
+    },
 }
 
 describe("windows matrix (belief columns)", function()
