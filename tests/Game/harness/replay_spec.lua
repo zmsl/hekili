@@ -903,6 +903,70 @@ describe("the replay's cooldowns: the engine's, a shared category's, the log's",
         end
         assert.is_nil(W.ents[1].cdUntil.shock_b)
     end)
+
+    it("reads a state-dependent cooldown at each cast from the run's instance, reset to now first", function()
+        local log = table.concat({
+            "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 20 s target 63",
+            "[0.00] [Tester (#1)] Aura gained: {SpellID: 900010}",
+            "[1.00] [Tester (#1)] Casting {SpellID: 900070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+            "[1.00] [Tester (#1)] Completed cast {SpellID: 900070}",
+            "[5.00] [Tester (#1)] Aura faded: {SpellID: 900010}",
+            "[11.00] [Tester (#1)] Casting {SpellID: 900070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+            "[11.00] [Tester (#1)] Completed cast {SpellID: 900070}",
+        }, "\n")
+        -- the engine's shape (Abilities.lua): the kit's function in `funcs`, `cooldown` its answer in the state now,
+        -- here the boot state's: not in the form yet, so the out-of-form 0
+        local claw = setmetatable({ key = "claw", id = 900070, gcd = "spell", funcs = {} }, {
+            __index = function(t, k)
+                return t.funcs[k] and t.funcs[k]()
+            end,
+        })
+        claw.funcs.cooldown = function()
+            return 0
+        end
+        local HF = {
+            Hekili = {
+                Class = { abilities = { claw = claw }, auras = {} },
+                State = { action = { claw = { cooldown = 0 } } },
+            },
+        }
+        local W
+        local fresh = false
+        local TH = { -- the run's instance: 6 s in the world's form 1, answered only after a reset to now
+            Hekili = {
+                State = {
+                    reset = function()
+                        fresh = true
+                    end,
+                    action = setmetatable({}, {
+                        __index = function()
+                            local v = fresh and W.ents[1].form == 1 and 6 or 0
+                            fresh = false
+                            return { cooldown = v }
+                        end,
+                    }),
+                },
+            },
+        }
+        local R = replay.new(log, HF, { forms = { 900010 } })
+        W = R.world(setmetatable({ tag = "-fn" }, { __index = WO }), 1, TH)
+        at(W, R.pull + 2)
+        local us = W.ents[1]
+        local function lastCast()
+            local last
+            for _, ev in ipairs(W.truth) do
+                last = ev.kind == "cast" and ev or last
+            end
+            return last
+        end
+        -- cast in the form: the in-form 6 s (the log's 10 s spacing caps nothing)
+        assert.are.equal(6, tonumber(("%.4f"):format(lastCast().cd)))
+        assert.is_true(math.abs(us.cdUntil.claw - (R.pull + 1 + 6)) < 1e-3)
+        at(W, R.pull + 12)
+        assert.are.equal(0, us.form)
+        assert.are.equal(0, lastCast().cd) -- out of the form: no cooldown
+        assert.is_true(math.abs(us.cdUntil.claw - (R.pull + 1 + 6)) < 1e-3)
+    end)
 end)
 
 describe("the replay's position", function()
