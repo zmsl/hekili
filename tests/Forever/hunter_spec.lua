@@ -1593,6 +1593,25 @@ describe("the Hunter talent cost cuts through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- mana-09's LearnBases on the class that caused the 0.9 regression (L1230): a client read cut by Efficiency (3% a
+    -- rank: Arcane Shot's 189 reads 183, 178, 172, 166, 161) must teach base mana 1720 out of combat, alone and beside
+    -- an uncut read (Bestial Wrath's 12% reads 206).
+    it("learns base mana 1720 from Efficiency-cut and uncut cost reads at every rank", function()
+        for rank = 1, 5 do
+            local c = hw.BeastMasteryTurret.character()
+            c.talents = { [19416] = rank }
+            local H = headless.new({ character = c, pack = "Beast Mastery Turret (wowsims.com)" })
+            local VS, S = H.ns.VirtualState, H.Hekili.State
+            H.ctl.costs[3044] = { { type = 0, cost = math.floor(189 * (1 - 0.03 * rank) + 0.5) } }
+            H.Fire("SPELLS_CHANGED")
+            assert.are.same({ rank, 1720 }, { S.talent.efficiency.rank, VS.BasePower(0) }, "cut alone, rank " .. rank)
+            H.ctl.costs[19574] = { { type = 0, cost = 206 } }
+            H.Fire("SPELLS_CHANGED")
+            assert.are.equal(1720, VS.BasePower(0), "beside an uncut read, rank " .. rank)
+            assert.are.same({}, H.errors)
+        end
+    end)
+
     -- no wowsims log takes both talents: the engine's own product of the two talent mods (Raptor Strike rank 8's 100
     -- x (1 - 0.6) x (1 - 0.06) = 37.6, not the added 34), in the belief and the simulation
     it("multiplies Resourcefulness 2/2 and Efficiency 2/5 in both layers (Raptor Strike 37.6)", function()
