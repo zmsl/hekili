@@ -479,9 +479,10 @@ M.FLICKER = {
     -- flicker 0.03 -> 0, heldReady 95 -> 97
     -- re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6; with item-restores-09, mana-09 CN22, harness-gcd-edge-09;
     -- seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 96 / 97 / 102,
-    -- agreement .989 / .988 / .990): heldReady 97 -> 102, cause the world's Arcane Concentration at a sixth of its chance
-    -- a roll (wowsims 5ad9515c15): seeds 41-60 with the old full chance (everything else equal) read 98, so +4 is the
-    -- re-pin's; 84 -> 98 is the changes since the regen phase lane's measurement (not separated)
+    -- agreement .989 / .988 / .990): heldReady 97 -> 102, the worst of three seed sets (96 / 97 / 102); partly traced
+    -- to wowsims 5ad9515c15's Arcane Concentration chance (a sixth a roll): seeds 41-60 with the old full chance
+    -- (everything else equal) read 98 (A/B, not draw-identical), already over the old floor of 97; 84 -> 98 is the
+    -- changes since the regen phase lane's measurement (not separated)
     ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 102 }, -- 0 / 0 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one
