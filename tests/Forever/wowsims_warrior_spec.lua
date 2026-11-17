@@ -162,12 +162,14 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- window fix f2812da55; 0.800 before it) from 0.86. The old log with today's kit reads 0.879 (87 of 99), so the
             -- drop is the new log (wowsims's new Fury gear, 3 slots, re-times the fight after 43.50). Misses by class, new
             -- log 18 / old log 12: Overpower weaves (R46 latency) 5 / 5 (10.50, 19.43, 32.00, 98.06, 155.94); a cast on a
-            -- swing's rage inside one poll 1 / 1 (167.34); an own main-hand miss just before the GCD, its rage still
-            -- forecast (Sunder over Execute) 3 / 0 (171.84, 175.84, 177.34); gap AS, a Sunder avoid credited across our own
-            -- swings (central, blocker note repin-warrior-09-2) 3 / 0 (94.00, 123.24, 135.24); Reckless Swings (the 20-rage
+            -- swing's rage inside one poll 2 / 1 (167.34; 177.34: the off-hand miss at 176.00, then Bloodrage +12.5 and
+            -- Execute at 177.34); an own main-hand miss just before the GCD, its rage still forecast (Sunder over
+            -- Execute) 2 / 0 (171.84, 175.84); gap AS, a Sunder avoid credited across our own swings (central, blocker
+            -- note repin-warrior-09-2) 1 / 0 (123.24, now fixed); Sunder's own avoid on a fresh application 2 / 0
+            -- (94.00, 135.24, ledger L1323); Reckless Swings (the 20-rage
             -- shortcut, warrior-1) 3 / 3 (13.50, 43.50, 154.74); execute -> death_wish 1 / 1 (149.88); the opening
-            -- whirlwind -> sunder_armor 1 / 1 (0.00); a Sunder fade at or just before wowsims's cast 1 / 1 (79.00). Without
-            -- gap AS: 0.85. The one avoided Execute (145.09) moves no decision (belief 12 vs truth 14.9)
+            -- whirlwind -> sunder_armor 1 / 1 (0.00); a Sunder fade at or just before wowsims's cast 1 / 1 (79.00). The one avoided
+            -- Execute (145.09) moves no decision (belief 12 vs truth 14.9)
             -- 0.82 -> 0.83 (83 of 100; measured 0.830) with gap-as-09 merged: 123.24 bloodthirst agrees (the 93.76 swing's
             -- MISS no longer undoes the 94.00 Sunder's refresh). 94.00 and 135.24 stay, a different class than the gap AS
             -- above: Sunder's own MISS / DODGE on a fresh application (80.50, 126.24) keeps the belief's first stack, so a
