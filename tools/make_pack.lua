@@ -42,13 +42,23 @@ local OPTIONS = {
     label_if = "label_if",
     icon = "icon",
     icon_if = "icon_if",
+    value = "value", -- a `variable` line's (CN25: name= is then its var_name)
+    pure = "pure", -- a `variable` line read in place (CN25, Scripts.lua MarkPure): 1
 } -- plus if=, which runs to the end of the line
 -- kept as the line wrote them: text shown with the pick (label, icon) and its condition (label_if, icon_if)
-local VERBATIM = { name = true, buff_name = true, label = true, label_if = true, icon = true, icon_if = true }
+local VERBATIM =
+    { name = true, buff_name = true, label = true, label_if = true, icon = true, icon_if = true, value = true }
+
+-- a literal | as the in-game importer stores it: || (a lone | starts a WoW colour escape in the editor); the engine
+-- reads either form (Scripts.lua)
+local function piped(s)
+    return (s:gsub("(|)([^|])", "%1|%2"):gsub("|||", "||"))
+end
 
 -- SimC-style lines into their lists and entries:
 -- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,cycle_targets=N][,max_cycle_targets=N]
 -- [,other_target=N][,focus=N][,label=text][,label_if=cond][,icon=texture file id or path][,icon_if=cond][,if=criteria];
+-- variable,name=var[,pure=1],value=expression (CN25: a translated wowsims variable; pure=1: read in place);
 -- focus is a tier, 1 highest; buff_name is cancel_buff's aura.
 local function parse(simc)
     local lists = {}
@@ -63,9 +73,7 @@ local function parse(simc)
         opts = "," .. opts -- if= only as a whole option, never the tail of label_if= or icon_if=
         e.criteria = opts:match(",if=(.*)$")
         if e.criteria then
-            -- stored as the in-game importer stores it: a literal | is || (a lone | starts a WoW colour escape in the
-            -- editor); the engine reads either form (Scripts.lua)
-            e.criteria = e.criteria:gsub("(|)([^|])", "%1|%2"):gsub("|||", "||")
+            e.criteria = piped(e.criteria)
         end
         opts = opts:gsub(",if=.*$", "")
         for opt in opts:gmatch("[^,]+") do
@@ -80,7 +88,10 @@ local function parse(simc)
             if value == nil then
                 error("bad value " .. opt .. " in: " .. line, 0)
             end
-            e[OPTIONS[k]] = value
+            if k == "value" then
+                value = piped(value)
+            end
+            e[(k == "name" and action == "variable") and "var_name" or OPTIONS[k]] = value
         end
         lists[list] = lists[list] or {}
         table.insert(lists[list], e)
@@ -107,6 +118,7 @@ local function unparse(lists)
                 .. (i == 1 and "=" or "+=/")
                 .. e.action
                 .. (e.list_name and ",name=" .. e.list_name or "")
+                .. (e.var_name and ",name=" .. e.var_name or "")
                 .. (e.buff_name and ",buff_name=" .. e.buff_name or "")
                 .. (e.use_off_gcd and ",use_off_gcd=" .. e.use_off_gcd or "")
                 .. (e.cycle_targets and ",cycle_targets=" .. e.cycle_targets or "")
@@ -117,6 +129,8 @@ local function unparse(lists)
                 .. (e.label_if and ",label_if=" .. e.label_if or "")
                 .. (e.icon and ",icon=" .. e.icon or "")
                 .. (e.icon_if and ",icon_if=" .. e.icon_if or "")
+                .. (e.pure and ",pure=" .. e.pure or "")
+                .. (e.value and ",value=" .. e.value:gsub("||", "|") or "")
                 .. (e.criteria and ",if=" .. e.criteria:gsub("||", "|") or "")
         end
     end
@@ -166,14 +180,48 @@ end
 -- the renamed one while buff.<aura>.up, and every host entry there gains !buff.<aura>.up, so in that aura only the
 -- imported lists run (call_action_list: never a Block, unlike a strict run_action_list in precombat). `clash(list, to)`
 -- raises when `to` is a list the host already has.
+-- CN25: whether `e` is a pure=1 variable line (pure=0 or none: a stock one, as Scripts.lua MarkPure reads it)
+local function isPure(e)
+    return e.action == "variable" and tonumber(e.pure) == 1
+end
+
+-- CN25: the lists of `lists` where a pure=1 line is read in place (Scripts.lua MarkPure's placement rule): default, and
+-- a list every call to which is enabled, unconditional and in a list already so
+local function reached(lists)
+    local reach, grew = { default = true }, true
+    while grew do
+        grew = false
+        for list in pairs(lists) do
+            if not reach[list] then
+                local called, ok = false, true
+                for from, entries in pairs(lists) do
+                    for _, e in ipairs(entries) do
+                        if e.list_name == list and e.action:match("^%a+_action_list$") and e.enabled ~= false then
+                            called = true
+                            ok = ok and reach[from] and (e.criteria or "") == ""
+                        end
+                    end
+                end
+                if called and ok then
+                    reach[list], grew = true, true
+                end
+            end
+        end
+    end
+    return reach
+end
+
 local function import(lists, src, imp, clash)
     local function rename(list)
         return list == "default" and imp.as or imp.as .. "_" .. list
     end
     local up = "buff." .. imp.aura .. ".up"
-    local out = {}
+    local out, vars, pure, reach = {}, {}, {}, reached(src)
     for name, entries in pairs(lists) do
         out[name] = entries
+        for _, e in ipairs(entries) do
+            vars[e.var_name or ""] = true
+        end
     end
     for name, entries in pairs(src) do
         local to = rename(name)
@@ -181,13 +229,32 @@ local function import(lists, src, imp, clash)
             clash(name, to)
         end
         out[to] = {}
-        for i, e in ipairs(entries) do
+        for _, e in ipairs(entries) do
+            if e.var_name and vars[e.var_name] then -- CN25: one variable per name in a pack
+                error(("%s imports variable %s, which the host pack has too"):format(imp.from, e.var_name), 0)
+            end
             local c = copy(e)
             if c.list_name and (c.action == "call_action_list" or c.action == "run_action_list") then
                 c.list_name = rename(c.list_name)
             end
-            out[to][i] = c
+            -- CN25: a pure=1 line must sit where only unconditional calls reach it (Scripts.lua MarkPure), and the
+            -- renamed lists are entered under the aura: one its own pack reads in place joins the host's default (its
+            -- readers carry the guard); another keeps its list (the engine reads it as a stock variable, with an error)
+            local move = isPure(c) and reach[name]
+            if isPure(c) and not move then
+                io.stderr:write(
+                    ("warning: %s's variable %s (list %s) is not read in place there; it stays in %s\n"):format(
+                        imp.from,
+                        c.var_name,
+                        name,
+                        to
+                    )
+                )
+            end
+            local into = move and pure or out[to]
+            into[#into + 1] = c
         end
+        out[to] = out[to][1] and out[to] or nil
     end
     for _, name in ipairs({ "default", "precombat" }) do
         local guarded = {}
@@ -196,7 +263,14 @@ local function import(lists, src, imp, clash)
         end
         for _, e in ipairs(lists[name] or {}) do
             local c = copy(e)
-            c.criteria = (c.criteria or "") ~= "" and "(" .. c.criteria .. ")&!" .. up or "!" .. up
+            -- CN25: a pure=1 variable line stays unguarded (an if= would make it ineligible, Scripts.lua MarkPure): its
+            -- readers carry the guard, and a pure read does not depend on where the line sits
+            if not isPure(c) then
+                c.criteria = (c.criteria or "") ~= "" and "(" .. c.criteria .. ")&!" .. up or "!" .. up
+            end
+            guarded[#guarded + 1] = c
+        end
+        for _, c in ipairs(name == "default" and pure or {}) do
             guarded[#guarded + 1] = c
         end
         out[name] = guarded[1] and guarded or nil

@@ -374,6 +374,17 @@ describe("the wowsims APL translator", function()
         local function h(f)
             return setfenv(f, env)
         end
+        -- the engine's shape of a field the kit computes: kept in `funcs`, run on read (Spec/Auras.lua, Abilities.lua)
+        local function computed(t, funcs)
+            t.funcs = funcs
+            return setmetatable(t, {
+                __index = function(x, k)
+                    if x.funcs[k] then
+                        return x.funcs[k]()
+                    end
+                end,
+            })
+        end
         local function guardCtx(r)
             local kit = {
                 abilities = {
@@ -466,6 +477,37 @@ describe("the wowsims APL translator", function()
                         end),
                     },
                     plain = { key = "plain", id = 1010, gcd = "spell", cooldown = 0 },
+                    swing = {
+                        key = "swing",
+                        id = 1011,
+                        gcd = "off",
+                        cooldown = 60,
+                        handler = h(function()
+                            applyBuff("swing")
+                        end),
+                    },
+                    quick = {
+                        key = "quick",
+                        id = 1012,
+                        gcd = "off",
+                        cooldown = 60,
+                        handler = h(function()
+                            applyBuff("quick")
+                        end),
+                    },
+                    -- CN21 (review M1): a computed cooldown (300) longer than the aura (10): moot if it were read
+                    slow = computed({
+                        key = "slow",
+                        id = 1013,
+                        gcd = "off",
+                        handler = h(function()
+                            applyBuff("slow")
+                        end),
+                    }, {
+                        cooldown = function()
+                            return 300
+                        end,
+                    }),
                 },
                 auras = {
                     shout = { id = 2001, duration = 120 },
@@ -477,6 +519,29 @@ describe("the wowsims APL translator", function()
                     stance = { id = 2008, duration = 3600 },
                     other_stance = { id = 2018, duration = 3600 },
                     boom = { id = 2009, duration = 30 },
+                    -- CN21: the engine keeps a function duration in `funcs` and runs it on read, in the stub state,
+                    -- which raises on a key it lacks (Guardian's prepull Maul: mainhand_speed)
+                    swing = setmetatable({
+                        id = 2010,
+                        funcs = {
+                            duration = function()
+                                error('stub state lacks "mainhand_speed"')
+                            end,
+                        },
+                    }, {
+                        __index = function(t, k)
+                            if t.funcs[k] then
+                                return t.funcs[k]()
+                            end
+                        end,
+                    }),
+                    -- CN21 (review M1): a computed duration (1) under the cooldown (60): moot if it were read
+                    quick = computed({ id = 2012 }, {
+                        duration = function()
+                            return 1
+                        end,
+                    }),
+                    slow = { id = 2013, duration = 10 },
                 },
                 talents = {},
             }
@@ -516,6 +581,26 @@ describe("the wowsims APL translator", function()
             )
             assert.are.equal(1, #omitted)
             assert.matches("^precombat #7: no guard: boom's handler raised", omitted[1])
+        end)
+
+        -- CN21: a duration the kit computes (a function, run in the stub state) is unknown, never moot: the guard stays,
+        -- and its read never raises (Guardian's prepull Maul, whose aura lasts the main hand's swing)
+        it("keeps the guard of an aura whose duration is a function, without reading it", function()
+            local text, omitted = apl.translate({ prepullActions = { at(1011, "-1s") } }, guardCtx())
+            assert.are.equal("actions.precombat=swing,use_off_gcd=1,if=!buff.swing.up", text)
+            assert.are.same({}, omitted)
+        end)
+
+        -- review M1: the rule, not a guarded read: a computed duration a read would call moot keeps the guard, and so
+        -- does a computed cooldown
+        it("keeps the guard of a computed duration or cooldown that a read would call moot", function()
+            local text, omitted = apl.translate({ prepullActions = { at(1012, "-2s"), at(1013, "-1s") } }, guardCtx())
+            assert.are.equal(
+                "actions.precombat=quick,use_off_gcd=1,if=!buff.quick.up\n"
+                    .. "actions.precombat+=/slow,use_off_gcd=1,if=!buff.slow.up",
+                text
+            )
+            assert.are.same({}, omitted)
         end)
 
         it(
@@ -2096,7 +2181,7 @@ describe("the wowsims APL translator's re-pin reads", function()
         )
         assert.are.same({
             "default #4: targetIsActive of Target",
-            "default #5: timeUntilTargetDies of Target",
+            "default #5: timeUntilTargetDies of Target: Forever gives no other target's time to die", -- CN24
             "default #6: numActiveAdds",
             "default #7: remainingCastTime",
             "default #8: isExecutePhase of Target",
@@ -3366,6 +3451,57 @@ describe("the wowsims APL translator's target swaps (option D)", function()
         }, omitted)
     end)
 
+    -- CN24 (API-forced): Forever gives no other target's time to die, so an entry that reads another target's death
+    -- (Feral's 2/3-target lists, through their variables) or compares the current target's with the fight's end
+    -- (Guardian's, both fight_remains here) is omitted with its reason, never folded into an always-false term
+    -- review M2: the target's death against the fight's end is a constant term (S4's fold), so `|`, `!` and
+    -- `<=`/`>=`/`=` keep their meaning: false for `<`, `>`, `!=`; true for `<=`, `>=`, `=`
+    it(
+        "CN24: omits another target's death and a swap to it; folds the target's death against the fight's end",
+        function()
+            local next = { timeUntilTargetDies = { targetUnit = { type = "NextTarget" } } }
+            local dies = { timeUntilTargetDies = { targetUnit = { type = "CurrentTarget" } } }
+            local text, omitted = apl.translate({
+                priorityList = {
+                    cast(100, cmp("OpGt", next, const("10s"))),
+                    cast(100, { variableRef = { name = "Next target lives" } }),
+                    swap({ variableRef = { name = "Next target lives" } }),
+                    swap(nil, "PreviousTarget"),
+                    cast(200, AND(cmp("OpLt", dies, const("3s")), cmp("OpLt", dies, { remainingTime = {} }))),
+                    cast(200, cmp("OpGt", { remainingTime = {} }, { timeUntilTargetDies = {} })),
+                    cast(200, cmp("OpLt", dies, const("3s"))),
+                    cast(300, OR(cmp("OpLt", dies, { remainingTime = {} }), cmp("OpLt", dies, const("2s")))),
+                    cast(
+                        400,
+                        AND(cmp("OpLe", dies, { remainingTime = {} }), cmp("OpGt", { currentRage = {} }, const("5")))
+                    ),
+                    cast(500, NOT(cmp("OpLt", dies, { remainingTime = {} }))),
+                },
+                valueVariables = { { name = "Next target lives", value = cmp("OpGt", next, const("6s")) } },
+            }, ctx({}))
+            assert.are.equal(
+                table.concat({
+                    "actions=big_hit,if=fight_remains<3",
+                    "actions+=/roar,use_off_gcd=1,if=fight_remains<2",
+                    "actions+=/dot,if=rage.lo>5",
+                    "actions+=/starfire",
+                }, "\n"),
+                text
+            )
+            local other = "timeUntilTargetDies of NextTarget: Forever gives no other target's time to die"
+            local fight = "never: timeUntilTargetDies against remainingTime: the target's time to die is fight_remains here"
+                .. " (gap AN), so the comparison is a constant."
+            assert.are.same({
+                "default #1: " .. other,
+                "default #2: " .. other,
+                "default #3: changeTarget NextTarget: no on-all-targets read of a cast before it in this list",
+                "default #4: changeTarget PreviousTarget: no previous target in Hekili",
+                "default #5: " .. fight,
+                "default #6: " .. fight,
+            }, omitted)
+        end
+    )
+
     it("rule 17: multidot on more than one target is cycle_targets with max_cycle_targets", function()
         local function multidot(dots)
             return { action = { multidot = { spellId = { spellId = 400 }, maxDots = dots, maxOverlap = const("0ms") } } }
@@ -3427,5 +3563,74 @@ describe("the wowsims APL translator's target swaps (option D)", function()
         assert.are.equal("actions=dot,if=!(active_dot.dot>0)", text)
         assert.are.same({}, omitted)
         assert.are.same({}, header)
+    end)
+end)
+
+describe("CN25: a variable of many terms is one variable line, read by name", function()
+    -- n `rage.lo<k` reads OR'd: n term occurrences
+    local function big(n)
+        local t = {}
+        for i = 1, n do
+            t[i] = cmp("OpLt", { currentRage = {} }, const(tostring(i)))
+        end
+        return OR(unpack(t))
+    end
+    local function run(entries, vars)
+        return (apl.translate({ priorityList = entries, valueVariables = vars }, ctx({})))
+    end
+
+    it("emits a variable of M.HOIST_TERMS terms once, heading the default list, and reads it by name", function()
+        local text = run({
+            cast(100, { variableRef = { name = "Big one" } }),
+            cast(300, NOT({ variableRef = { name = "Big one" } })),
+        }, {
+            { name = "Big one", value = big(apl.HOIST_TERMS) },
+        })
+        local lines = {}
+        for l in text:gmatch("[^\n]+") do
+            lines[#lines + 1] = l
+        end
+        assert.are.equal(3, #lines)
+        assert.is_truthy(lines[1]:find("^actions=variable,name=v_big_one,pure=1,value=%(rage%.lo<1|rage%.lo<2|"))
+        assert.are.equal(apl.HOIST_TERMS, apl.terms(lines[1]:match(",value=(.*)$")))
+        assert.are.equal("actions+=/strike,if=variable.v_big_one", lines[2])
+        assert.are.equal("actions+=/roar,use_off_gcd=1,if=!variable.v_big_one", lines[3])
+    end)
+
+    -- fix round 1 (M2): rule 19 reads a line's own range terms (target.within/outside, in_range), so a text holding one
+    -- stays in the line
+    it("inlines a variable of M.HOIST_TERMS terms that reads the target's range", function()
+        local d = { unitDistance = { sourceUnit = { type = "Self" } } }
+        local text = run({ cast(100, { variableRef = { name = "Big near" } }) }, {
+            { name = "Big near", value = AND(cmp("OpLe", d, const("5")), big(apl.HOIST_TERMS)) },
+        })
+        assert.is_nil(text:find("variable", 1, true))
+        assert.is_truthy(text:find("^actions=strike,if=%(target%.within5&"), text:sub(1, 80))
+    end)
+
+    it("inlines a variable under M.HOIST_TERMS terms, as before", function()
+        local text = run({ cast(100, { variableRef = { name = "Small" } }) }, {
+            { name = "Small", value = big(apl.HOIST_TERMS - 1) },
+        })
+        assert.is_nil(text:find("variable", 1, true))
+        assert.are.equal(apl.HOIST_TERMS - 1, apl.terms(text:match(",if=(.*)$")))
+    end)
+
+    it("emits a variable another reads before it, and none an emitted line never reads", function()
+        local text = run({
+            cast(100, AND({ variableRef = { name = "Outer" } }, cmp("OpGt", { currentRage = {} }, const("5")))),
+            cast(999, { variableRef = { name = "Unread" } }), -- omitted: spell 999 is unmapped
+        }, {
+            { name = "Inner", value = big(apl.HOIST_TERMS) },
+            { name = "Outer", value = AND({ variableRef = { name = "Inner" } }, big(apl.HOIST_TERMS)) },
+            { name = "Unread", value = big(apl.HOIST_TERMS + 1) },
+        })
+        local names = {}
+        for x in text:gmatch("variable,name=([%w_]+)") do
+            names[#names + 1] = x
+        end
+        assert.are.same({ "v_inner", "v_outer" }, names)
+        assert.is_truthy(text:find("value=(variable.v_inner&(rage.lo<1|", 1, true))
+        assert.is_truthy(text:find("actions+=/strike,if=(variable.v_outer&rage.lo>5)", 1, true))
     end)
 end)

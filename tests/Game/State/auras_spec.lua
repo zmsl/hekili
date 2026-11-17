@@ -1558,6 +1558,26 @@ describe("auras", function()
                 assert.are.equal(0, I.auraVerdict.n[kT()])
             end)
 
+            -- L1113: the item proven last session, its proof restored at this session's layout load (in combat here):
+            -- the first missed cast closes as for a proof lit this session; "an item never lit" below is the control.
+            it("a proof restored from the last session closes the session's first missed cast", function()
+                api.HekiliCDMProof =
+                    { v = 1, items = { [502] = { key = "spender_c", viewer = 3, unit = 2, silent = 0 } } }
+                ctl.Callback("CooldownViewerSettings.OnPendingChanges", {}, false)
+                ctl.Callback("CooldownViewerSettings.OnDataChanged")
+                poll(10.5)
+                assert.are.same({ true, 1 }, { I.PRESENCE.viewer.proven[502], I.PRESENCE.viewer.restored })
+                assert.are.equal(I.UNDECIDED, P.Presence(REND, 2)) -- a restore is no light: no fact
+                cast(2, REND, 11, 15) -- dodged: the item never lights
+                for _, t in ipairs({ 11.2, 11.5, 11.8 }) do
+                    poll(t)
+                    assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
+                end
+                poll(12)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12))
+                assert.are.same({ 1, 12 }, { I.auraVerdict.n[kT()], I.auraVerdict.at[kT()] })
+            end)
+
             it("an item never lit (unproven) gives no verdict", function()
                 cast(2, REND, 11, 15)
                 for t = 11.5, 14, 0.5 do
@@ -2416,6 +2436,25 @@ describe("auras", function()
                 "presence-layout spender_h on=no neverLit=yes",
             })
             assert.is_truthy(snap:find("presence-proof mappedNeverLit=spender_s,spender_h\n", 1, true), snap)
+        end)
+
+        -- L1087 item 5: a slot's last light, dark and lit unit survive what starts its seen rule over (a target swap,
+        -- a re-point), so a "believed up but wasn't" snapshot taken right after one still shows them.
+        it("the slot lines keep each slot's last light, dark and unit through a target swap and a re-point", function()
+            ctl.ViewerAura(ti, "target")
+            poll(10.5)
+            ctl.ViewerClear(ti) -- lit, then dark from 11
+            poll(11)
+            swap("Creature-2", 11.5) -- resets the target slot's seen rule
+            poll(12)
+            lines(VS.Snapshot(), {
+                "presence-slot B s=2 i=2 cd=502 aura=spender_c shown=no lit=no ans=- light=1.50 dark=1.00 unit=target",
+            })
+            ctl.ViewerRepoint(ti, 501) -- the frame now shows the player aura's item: its history stays the frame's
+            poll(12.5)
+            lines(VS.Snapshot(), {
+                "presence-slot B s=2 i=2 cd=501 aura=spender_a shown=no lit=no ans=- light=2.00 dark=1.50 unit=target",
+            })
         end)
 
         it("the snapshot's slot lines print secrets as S, a failed IsShown as ?, and a family item's member", function()

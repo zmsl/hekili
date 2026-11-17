@@ -17,7 +17,7 @@ local function spit(path, s)
     f:close()
 end
 
--- the shared new-pin checkout and its oracle CLI (docs/dev/wowsims-packs.md "Moving the pin"); absent off this machine
+-- the checkout at the OLD pin and its oracle CLI (docs/dev/wowsims-packs.md "Moving the pin"); absent off this machine
 local PIN_ROOT = (os.getenv("HOME") or "") .. "/src/wowsims-pin-e5a9cd2a2d"
 local PIN_CLI = PIN_ROOT .. "/wowsimcli-sim-pin"
 local function present(path)
@@ -136,11 +136,11 @@ describe("export.lua .siml recipe paths", function()
 
     local real = present(PIN_CLI) and it or pending
     real(
-        "parses the new pin's Retribution .apl.siml and .gear.siml (a scratch recipe) as the translator's fixture",
+        "parses the old pin's Retribution .apl.siml and .gear.siml (a scratch recipe) as the translator's fixture",
         function()
             local spec = "paladin_retribution"
             local saved = ex.SPEC_PIN[spec]
-            ex.SPEC_PIN[spec] = ex.OLD_PIN -- the scratch recipe is at the new pin; the checked-in line is the lane's flip
+            ex.SPEC_PIN[spec] = ex.OLD_PIN -- the scratch recipe is at the old pin (the checkout's)
             local r = ex.recipe(spec)
             r.apl = "ui/specs/paladin/retribution/apls/default.apl.siml"
             r.player.gear = "ui/specs/paladin/retribution/gear_sets/default.gear.siml"
@@ -160,8 +160,8 @@ describe("export.lua .siml recipe paths", function()
                 { apl.translate(old.rotation, apl.context(set, r, log, old)) },
                 { apl.translate(p.rotation, apl.context(set, r, log, old)) }
             )
-            -- a spec left at the old pin refuses the new pin's CLI instead of parsing with it
-            ex.SPEC_PIN[spec] = ex.NEW_PIN -- explicit: the checked-in line is NEW once the lane has flipped this spec
+            -- a spec at the new pin refuses the old pin's CLI instead of parsing with it
+            ex.SPEC_PIN[spec] = ex.NEW_PIN
             local ok2, err = pcall(ex.request, r, PIN_ROOT, spec, PIN_CLI)
             ex.SPEC_PIN[spec] = saved
             assert.is_false(ok2)

@@ -350,6 +350,25 @@ member past its modelled duration. A plain
 direct read still wins: a form aura the shapeshift read owns is never judged by the Cooldown Manager. The family name
 is the pack's own; the core only compares it.
 
+**Cooldown Manager proof across sessions** (L1113-L1115). The verdict closes a record only through a proven item (one
+that lit for its aura). Each proven item that maps to one aura is saved at logout (and `/reload`) in the belief's own
+per-character saved global `HekiliCDMProof` (`Hekili.toc` `SavedVariablesPerCharacter`), with its aura key, the viewer
+it was proven on, its unit and its silent count; `Game/State/Sources/Presence/CooldownViewer.lua` reads and writes it
+through `api` only and the core never names it, so the store is no border crossing. The client's
+`CooldownViewerSettings.OnDataChanged` (EventRegistry; registered at `VS.Start`) fires once when the layout loads at
+login, on every settings edit, and when spells, talents or PvP talents change or a hotfix arrives; `OnPendingChanges`
+brackets an edit. After it, and when a viewer is shown after the load (an in-combat-only viewer at the pull), the
+leaf's next sweep with no edit open reads the layout (every configured slot of a visible viewer): a saved entry is
+restored when its viewer shows the item and the item still maps to the saved aura alone, else dropped; a proof whose
+viewer no longer shows its item (moved or removed) is dropped. A viewer that is hidden or shows a secret ID judges
+nothing, and a saved entry waits while its viewer shows no item. While saved entries wait and the layout shows no
+configured item yet on a visible viewer with plain IDs, it is read again at each sweep out of combat (with every
+viewer hidden it waits for one to be shown). A restored proof is no light: no fact goes up or down by it, only the
+item's dark counts again, so the first missed application of a session can be closed. The snapshot's `presence-proof`
+line counts `restored`, `unlaid` (dropped by an edit) and `reads` (layout reads). The snapshot's `presence-slot`
+light, dark and unit are each slot's last held sweep as a mapped item, the first silent sweep after it and its unit,
+kept through target swaps and re-points.
+
 **A charge spent by hits on us, with its own cooldown.** A player aura's `consumedBy` (a set of hit kinds:
 `WOUND`, `BLOCK`, `BLOCKED`, ...) makes each such hit on us spend one stack in the belief (`Families/Auras.lua`), and
 `consumeIcd = <seconds>` limits it to one stack a window from the last spend (wowsims's ICD timer: a recast keeps it
@@ -586,6 +605,30 @@ error in any of them leaves the field nil. Core evaluates them at each pick (`ma
 queue slot's state; the value is taken verbatim (Scripts.lua's `text` modifier type), so it may not hold a comma.
 Both default renderers draw the record's icon through `ns.UI.SetRecTexture` (UI.lua): `iconOverride` when set, else
 `texture`. A style that ignores overrides sets `texture` itself. Example: `starfire,label=R6,label_if=mana.pct<20`.
+
+**Pure variables.** Purity is explicit: `variable,name=<v>,pure=1,value=<expression>` is a pure variable when it is
+enabled, has no `if=`, `value_else=` or `op` other than `set`, is the only line of that name in the pack, and sits in
+`default` or a list reached only by enabled calls with no `if=` or `strict_if=` from `default`, and its value does not
+read itself (directly or through other pure variables). A `pure=1` line that breaks a rule raises a `Hekili:Error` at
+load naming the line and the rule, and is read as a stock variable; a line without `pure=1` is always a stock variable.
+`scripts:MarkPure` in `Sim/Scripts.lua` keeps the pack's map (`PackInfo[pack].pure`): at `LoadScripts`, after the
+priority editor moves a line (`SwapScripts`), and when one `variable` or list-call line is reloaded
+(`Hekili:LoadScript`; a change in which names are pure, or in a pure value, reloads the pack's lines).
+A read `variable.<v>` calls its compiled value in the reader's own state: no cache, no registration (`Sim/Core.lua`
+skips the line in the walk), no string built (`state.variable` in `Sim/State.lua`; under a debug snapshot it logs the
+value and the expression). The reader's recheck times are its value's (`recurseRechecks` follows it), never a time of
+the bare read, and the time-sensitivity of a line reads through it. It is the expression written in the reader's place
+in what it reads and when, with these limits: the value is compiled as a value (`EmulateSyntax`'s numeric mode, so a
+boolean expression must compile the same both ways: the wowsims packs' do, `tests/Forever/wowsims_pin_spec.lua`); a
+pure read does not make the reader a window reader (`ReadsWindow`: its own text only); a comparison of the read
+(`variable.<v><=x`) keeps the inherited recheck of a variable time; and the value ignores the list calls that reach the
+line (a stock variable is evaluated under its line's call conditions): the placement rule keeps a pure line out of
+conditionally called lists. Any other `variable` line keeps the inherited Hekili path (registered per walk, cached per
+`query_time`). The wowsims translator emits `pure=1` variables for its large shared conditions (`tools/wowsims/apl.lua`
+rule 1: never a text that reads a window or the target's range), so no line exceeds Lua 5.1's limits;
+`tools/make_pack.lua`'s import leaves a host's `pure=1` lines unguarded and moves the source's into the host's
+`default` (the imported lists are entered under the form's condition); stock `variable` lines are guarded and stay in
+their list.
 
 **Pre-pull guards.** Upstream Hekili walks `precombat` before `default` on every refresh and skips its non-essential
 entries once `time > 0`; out of combat it is a plain priority. The fork keeps it so (owner ruling 2026-10-21: "a guard

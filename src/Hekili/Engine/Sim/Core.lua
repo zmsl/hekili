@@ -897,6 +897,8 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                                     if class.variables[ name ] then
                                         if debug then self:Debug( " - variable.%s references a hardcoded variable and this entry will be ignored.", name ) end
+                                    elseif packInfo and packInfo.pure and packInfo.pure[ name ] then
+                                        -- CN25: a pure variable is read in place (State.lua), never registered
                                     elseif name ~= nil then
                                         state:RegisterVariable( name, scriptID, listName, Stack )
                                         if debug then self:Debug( " - variable.%s[%s] will check this script entry ( %s )", name, tostring( state.variable[ name ] ), scriptID ) end
