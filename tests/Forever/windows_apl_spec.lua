@@ -1899,6 +1899,62 @@ describe("named cases, part D (windows design v6 §13)", function()
         flags.fa, flags.fb = false, false
     end)
 
+    -- S12/P05 with a cooldown in the GCD's place: the line's delay is the first member's cooldown (nothing below it)
+    it(
+        "S12/P05: due in 0.3 s opens with start_on_first=1 (inside the queue window); 0.6 s never; unwritten at 0 only",
+        function()
+            local cd = H.Hekili.Class.abilities.bloodrage.cooldown
+            for _, opt in ipairs({ "", ",start_on_first=1" }) do
+                for _, due in ipairs({ 0.6, 0.3, 0 }) do
+                    boot()
+                    H.Fire("CVAR_UPDATE", "SpellQueueWindow", "400")
+                    load({ default = "actions+=/strict_sequence,name=s" .. opt .. ":bloodrage:berserker_stance" })
+                    cast(BR)
+                    H.ctl.cooldown[BR] = { isActive = true, isOnGCD = false, startTime = t, duration = cd }
+                    t = t + cd - due - 0.2
+                    local recs, sent = tick()
+                    local want = (due == 0 or (opt ~= "" and due == 0.3)) and { { key("s"), OPEN } } or {}
+                    assert.are.same(
+                        want,
+                        sent,
+                        opt
+                            .. " "
+                            .. due
+                            .. " "
+                            .. tostring(recs[1] and recs[1].actionName)
+                            .. " "
+                            .. tostring(recs[1] and recs[1].wait)
+                    )
+                end
+            end
+        end
+    )
+
+    it(
+        "P10: allow_skip=1 with start_on_first=1 starts within the queue window, then skips a member that cannot",
+        function()
+            local cd = H.Hekili.Class.abilities.bloodrage.cooldown
+            H.Fire("CVAR_UPDATE", "SpellQueueWindow", "400")
+            load({
+                default = "actions+=/strict_sequence,name=s,allow_skip=1,start_on_first=1"
+                    .. ":bloodrage:berserker_stance,if=!test_fa:defensive_stance",
+            })
+            cast(BR)
+            H.ctl.cooldown[BR] = { isActive = true, isOnGCD = false, startTime = t, duration = cd }
+            t = t + cd - 0.3 - 0.2
+            local _, sent = tick()
+            assert.are.same({ { key("s"), OPEN } }, sent) -- due in 0.3 s
+            H.ctl.cooldown[BR] = nil
+            cast(BR)
+            tick()
+            assert.are.same({ true, 2 }, { seqState("s") })
+            flags.fa = true
+            _, sent = tick()
+            assert.are.same({ { key("s"), STEP } }, sent)
+            assert.are.equal(3, opArgs[1])
+        end
+    )
+
     it("S10: the first member cast before the line is ever chosen: no window, step 2 not shown", function()
         load({
             default = "actions+=/strict_sequence,name=s,if=test_fa:bloodrage:berserker_stance\nactions+=/defensive_stance",
