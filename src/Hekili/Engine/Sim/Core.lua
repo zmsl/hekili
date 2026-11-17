@@ -726,6 +726,8 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
         -- the start test (§6, rulings 27, 28): every member (allow_skip: any member) can be cast; start_on_first tests the
         -- first only, its time within the queue window judged when the pick is final (Hekili.Update)
         local first, n = 0, #d.steps
+        -- (§7, ruling 25) in Primary and AOE the start line skips the "toggle shown separately" test
+        state.seqBypass = ( dispName == "Primary" or dispName == "AOE" ) and 1 or 0
         if d.start_on_first then first = 1
         elseif d.allow_skip then -- the first shown is the first castable by normal readiness; else by the fields (ruling 36)
             for k = 1, n do
@@ -743,13 +745,14 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
             end
         end
         if first == 0 then
+            state.seqBypass = 0
             if debug then self:Debug( " - strict_sequence %s: the start test fails.", name ) end
             return rAction, rWait, rDepth
         end
         self:AddToStack( scriptID, d.startList, caller )
         seqStartStep = first
         rAction, rWait, rDepth = self:GetPredictionFromAPL( dispName, packName, d.startList, slot, rAction, rWait, rDepth, scriptID )
-        seqStartStep = 0
+        seqStartStep, state.seqBypass = 0, 0
         self:PopStack()
         return rAction, rWait, rDepth
     end
@@ -767,6 +770,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
     end
     if win.done then return rAction, rWait, rDepth end -- parked (ruling 15)
 
+    state.seqBypass = 2 -- (§7, ruling 9) up: its generated lines skip the display filter and the separate test
     if d.mode == "skip" and not state.WindowFired( d.skipID ) then -- the generated skip line (ruling 28, SimC)
         local due, n = win.step, #d.steps
         if not castable( self, d, due ) then
@@ -775,6 +779,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
                 if castable( self, d, k ) then to = k break end
             end
             if state.WindowStep( name, to ) then
+                state.seqBypass = 0
                 seqSend( d, OP_STEP, to )
                 state.WindowFired( d.skipID, true )
                 walkRestart = true
@@ -787,6 +792,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
     -- the member lines, under this line's condition (the stack)
     self:AddToStack( scriptID, d.hidden, caller )
     rAction, rWait, rDepth = self:GetPredictionFromAPL( dispName, packName, d.hidden, slot, rAction, rWait, rDepth, scriptID )
+    state.seqBypass = 0
     self:PopStack()
     return rAction, rWait, rDepth, d.mode == "wait" -- SimC wait_on_ready: nothing below the line
 end
@@ -798,6 +804,7 @@ local function giveUp( self, d )
     local name = d.name
     local win = state.window[ name ]
     state.delay = 0
+    state.seqBypass = 2 -- the running steps' readiness through the bypass (§7): an off toggle still gives up
     if not state.WindowFired( d.giveID ) and state.cooldown.global_cooldown.remains == 0 and not castable( self, d, win.step ) then
         local to = 0
         if d.allow_skip then
@@ -814,6 +821,7 @@ local function giveUp( self, d )
             if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d cannot be cast; closed, restart.", name, win.step ) end
         end
     end
+    state.seqBypass = 0
 end
 
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )
@@ -1605,7 +1613,9 @@ local function nextPrediction( self, dispName, packName, slot )
             holdOffOnly = 0
             if not walkRestart then giveUp( self, hold ) end
             if wait > 0 and not walkRestart then
+                state.seqBypass = 2 -- the hidden list's lines skip the display filter while up (§7, ruling 9)
                 action, wait, depth = self:GetPredictionFromAPL( dispName, packName, hold.hidden, slot, action, wait, depth )
+                state.seqBypass = 0
             end
             state:SetWhitelist( nil )
             return action, wait, depth

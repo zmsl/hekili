@@ -1358,6 +1358,66 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
     end)
 end)
 
+describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 25)", function()
+    -- `bloodrage` plays the separated cooldown (`classcd`): its toggle is cooldowns, shown separately
+    local cds
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+        H.Hekili.Class.abilities.bloodrage.toggle = "cooldowns"
+        cds = H.Hekili.Engine.settings.toggles.cooldowns
+        cds.separate, cds.value = true, true
+    end)
+
+    it("D14/D18: a strict classcd:nuke starts in Primary (the start line skips the separate test); an off toggle never", function()
+        load({ default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance" })
+        local recs, sent = tick()
+        assert.are.same({ { key("s"), OPEN } }, sent)
+        assert.are.equal("bloodrage", recs[1].actionName)
+        boot()
+        H.Hekili.Class.abilities.bloodrage.toggle = "cooldowns"
+        cds = H.Hekili.Engine.settings.toggles.cooldowns
+        cds.separate, cds.value = true, false
+        load({ default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance" })
+        recs, sent = tick()
+        assert.are.same({}, sent)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+    end)
+
+    it("D07/D08: a strict nuke:classcd shows classcd in Primary at step 2; the toggle switched off gives up", function()
+        load({ default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance" })
+        local _, sent = tick()
+        assert.are.same({ { key("s"), OPEN } }, sent)
+        cast(BS)
+        local recs = tick()
+        assert.are.same({ true, 2 }, { seqState("s") })
+        assert.are.equal("bloodrage", recs[1].actionName)
+        cds.value = false
+        recs, sent = tick()
+        assert.are.same({ { key("s"), CLOSE } }, sent)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+    end)
+
+    it("D10: an outside use_off_gcd=1 line the display filters stays filtered while the hold is up", function()
+        load({
+            default = "actions+=/strict_sequence,name=s:berserker_stance:defensive_stance\nactions+=/bloodrage,use_off_gcd=1\n"
+                .. "actions+=/defensive_stance",
+        })
+        tick()
+        local recs = tick()
+        assert.are.same({ true, 1 }, { seqState("s") })
+        assert.are.equal("berserker_stance", recs[1].actionName)
+    end)
+
+    it("D19 (Primary): a plain classcd:filler shows classcd as its due first member in Primary", function()
+        load({ default = "actions+=/sequence,name=p,mode=continue:bloodrage:berserker_stance\nactions+=/defensive_stance" })
+        tick()
+        local recs = tick()
+        assert.are.same({ true, 1 }, { seqState("p") })
+        assert.are.equal("bloodrage", recs[1].actionName)
+    end)
+end)
+
 describe("the strict start test's ability fields (windows design v6 §3.6, ruling 36)", function()
     local GATES = {
         form = { "form", "defensive_stance" }, -- down: the gate fails
