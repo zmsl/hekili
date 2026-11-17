@@ -432,6 +432,8 @@ M.FLICKER = {
     -- 0 / 0 / 0, heldReady 186 / 177 / 198, agreement 1.000 / 1.000 / 1.000): heldReady 287 -> 198 (the worst set). 178 /
     -- 183 / 153 with the flip and CN22 alone; the rest is the new log's regen (16.5 outside the rule, was 17.38: kit seed
     -- and world), the only later change Protection runs (no Twist of Light: Unsealed Wrath's cooldown never runs)
+    -- Re-measured after the review fixes (Protection keeps its own 16.5 / 0 seed with the Holy Shock seed gated on
+    -- Retribution; mana-09 e2d7b1187 merged): 186 / 177 / 198, flicker 0, retracted 0, readyShort 0: unchanged
     ["Protection"] = { flicker = 0, retracted = 0, heldReady = 198 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0.08), retracted 0, readyShort 0 / 0 / 0, heldReady 65 / 70 / 94, agreement .998 / .999 / .997): flicker 0.01 (the
@@ -460,7 +462,8 @@ M.FLICKER = {
     -- 93, flicker 0 / 0 / 0, agreement .998 / .997 / .998, the worst set unchanged. Traced (fight 1, tick by tick): a seed
     -- equal to the game's rate makes the out-of-combat read no news (Sources/Power.lua skips a read equal to the
     -- belief's), so the declared spread band stays (lo 2-13 under est from the first tick) where a differing seed's read
-    -- collapsed it; the seed moves which crossings hold, not the class
+    -- collapsed it; the seed moves which crossings hold, not the class. The regen-read band fix (89d1613b5, L1341: an
+    -- equal read narrows a still-open band) and mana-09 e2d7b1187 merged: 93 / 93 / 81 (L1342), the floor holds
     ["Holy Shock"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 93 },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)

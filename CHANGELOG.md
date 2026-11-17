@@ -17,7 +17,7 @@
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
 - Paladin: a second attack in the same instant as an Unsealed Wrath proc no longer stores or spends an extra Echo (the talent's 0.1 s cooldown; not yet checked in game).
-- Paladin: Retribution and Protection start from current mana regeneration values until your own is measured (not yet checked in game).
+- Paladin: Retribution (17 mana a second outside the five-second rule, 5.1 while casting), Protection (16.5 outside, none while casting) and Holy Shock Retribution (25.13 outside, 7.54 while casting) start from the current Forever mana regeneration values until your own is measured (not yet checked in game).
 
 - When the game's out-of-combat mana or energy regeneration matches the expected rate, Hekili now takes it as exact, so its mana and energy estimates no longer start a little low.
 
