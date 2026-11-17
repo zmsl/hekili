@@ -305,6 +305,16 @@ describe("the windows compiler (windows design v6 §3.4, §9)", function()
             )
             assert.is_nil(s.steps[2].caption)
             assert.are.same({}, codes(H.Hekili.Scripts.CheckWindows(out, "t")))
+            -- an unclosed ( in the text does not hide the members' colons from the split
+            out = H.Hekili:ImportSimcAPL(
+                "t",
+                "t",
+                "# Burst (big\nactions=sequence,name=p:bloodrage:berserker_stance\n"
+                    .. "# Burst (big::the opener\nactions+=/strict_sequence,name=s:bloodrage:berserker_stance\n"
+            )
+            for i = 1, 2 do
+                assert.are.same({ true, 2 }, { out.default[i].enabled, #out.default[i].steps }, i)
+            end
         end
     )
 end)

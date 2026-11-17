@@ -2567,6 +2567,7 @@ do
         impControl.warnings = nil
     end
 
+    local SEQ_TEXT = { [":"] = ";", ["("] = "[", [")"] = "]" } -- a comment's text on a sequence line's own options
 
     function Hekili:ImportSimcAPL( name, source, apl, pack )
 
@@ -2631,10 +2632,11 @@ do
                     local head = action:match( "^([%w_]+)" )
                     local at = ( head == "sequence" or head == "strict_sequence" ) and action:find( ":", 1, true )
                     if at then
-                        -- (windows design §3.3) a sequence's own options sit before its first colon, and a colon splits
-                        -- members. shortcut: a caption's texture or atlas escape loses its colons here; keep them if
-                        -- sequence captions with icons are wanted.
-                        action = action:sub( 1, at - 1 ) .. comment:gsub( ":", ";" ) .. action:sub( at )
+                        -- (windows design §3.3) a sequence's own options sit before its first colon; a colon splits
+                        -- members and an unclosed ( hides the colons after it, so the text carries neither.
+                        -- shortcut: a caption's texture or atlas escape loses its colons here; keep them if sequence
+                        -- captions with icons are wanted.
+                        action = action:sub( 1, at - 1 ) .. comment:gsub( "[:()]", SEQ_TEXT ) .. action:sub( at )
                     else
                         action = action .. comment
                     end
