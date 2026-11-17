@@ -939,6 +939,19 @@ describe("Forever Warrior", function()
         end
     )
 
+    it("gives back an avoided Execute's extra rage, the base cost kept (refundNowOnAvoid on Execute only)", function()
+        -- wowsims execute.go at e4ef929e54 (7025f28b98): an avoid costs the base rage and keeps the extra, which
+        -- the belief's `now` took (L1237)
+        local yes = {}
+        for key, a in pairs(w.abilities) do
+            if a.refundNowOnAvoid then
+                yes[#yes + 1] = key
+            end
+        end
+        assert.are.same({ "execute" }, yes)
+        assert.is_nil(w.abilities.execute.refundOnAvoid)
+    end)
+
     it("declares no rage maximum of its own: a Gnome's 105 is the race pack's Expansive Mind", function()
         assert.is_nil(w.resource[4].max) -- 100 by default; the Gnome's race pack adds Expansive Mind
     end)

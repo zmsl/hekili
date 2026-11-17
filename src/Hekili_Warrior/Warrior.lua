@@ -1416,8 +1416,9 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         -- An avoid costs the base rage alone, none of it back, and keeps the extra rage (wowsims execute.go at e4ef929e54,
-        -- 7025f28b98: 36 avoided Executes in in-game logs), so no `refundOnAvoid`. The extra the `now` below spends stays
-        -- spent on an avoid in the belief: no field gives a `now`'s spend back (central need repin-warrior-09-1).
+        -- 7025f28b98: 36 avoided Executes in in-game logs), so no `refundOnAvoid`; the extra the `now` below spent
+        -- comes back on the avoid (L1237).
+        refundNowOnAvoid = true,
         known = knows(EXECUTE),
         nobuff = "defensive_stance",
         healthGate = 0.2, -- usable at or below 20% of the target's health: the belief's target health reads it
