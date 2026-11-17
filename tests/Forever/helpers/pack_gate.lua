@@ -174,7 +174,17 @@ M.FLICKER = {
     -- Strike's long waits (seed 6 t 124.4-125.4, w 0.99 -> 0.19): its line needs rage.lo >= 20 while our lo sits at
     -- 17.0 (Shield Slam's cost) under the truth 21.9, so it waits for the next swing's credit (lo 27 the poll after
     -- it); the same shape is in the ablated tree (seeds 12, 15) and before the change (seeds 12, 15, 18)
-    ["Warrior Protection"] = { flicker = 0.22, retracted = 0.1, readyShort = 1, heldReady = 362 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.12 / 0.13 / 0.07,
+    -- retracted 0 / 0 / 0, readyShort 0 / 0 / 2, heldReady 351 / 270 / 327, agreement .890 / .906 / .896): flicker 0.22 ->
+    -- 0.14 (the measured worst + 0.01), readyShort 1 -> 2, heldReady 362 -> 351. Cause: the world's main hand follows
+    -- the new log, 2.35 -> 2.40 s (3becdf582; d17b7d45e and ab8ad0acc read readyShort 0, heldReady 359 at 41-60). 2.40 s is
+    -- 12 polls, so a swing that lands on a poll stays there: in seed 59 (on the gate's boot) the mob's swing at 164.72 is
+    -- parried and parry haste pulls our swing to 20% of 2.40 (0.48), onto the poll at 165.20, then 167.60 ... 177.20. At
+    -- 170.00 (Shield Block, 10) and 177.20 (Revenge, 2; that swing misses) the swing is due at the poll's own instant:
+    -- ours and the oracle both count it and show the icon at 0.00, and the loop presses before the world pays the swing
+    -- (truth 2.95 / 0.86 before the press; lo 2.13 / 1.99): a same-instant press-order tie in the harness, not a rage
+    -- error (refused cost 0.1, unmatched 0.0). Seed 59 alone reads 0 (the mob's swings fall at .69, off the poll grid)
+    ["Warrior Protection"] = { flicker = 0.14, retracted = 0.1, readyShort = 2, heldReady = 351 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
