@@ -2158,6 +2158,33 @@ describe("now handlers", function()
                 end
             )
 
+            it("a swing's crossing after the give-back is no gain of ours (review M3)", function()
+                register("big_test", { id = 2688, spend = 35, spendType = "rage" })
+                rest(true, false)
+                local s = I.res.slotOf[fs.RAGE]
+                cast(fs.SPENDER_C, 5)
+                ctl.usable[fs.SPENDER_B] = { true, false } -- the rung: at least 15
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.02)
+                ctl.usable[fs.SPENDER_B] = nil
+                -- 35 is short (the truth 30), and stays so: the poll re-asks it every drain, the avoid's included, so
+                -- the short's gain mark (Resources.lua shortGain) already holds the give-back when the swing crosses
+                ctl.usable[2688] = { false, true }
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.03)
+                outcome(5.05, "DODGE")
+                assert.are.same({ 30, 30 }, { rage(5.1).lo, rage(5.1).est })
+                ctl.now = 5.5
+                ctl.Fire("PLAYER_SWING", 3.6, 0) -- a swing's rage: past 35
+                drain(5.55)
+                ctl.usable[2688] = { true, false }
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.6)
+                ctl.usable[2688] = nil
+                assert.is_true(I.res.crossT[s] < 5.5, "the swing's crossing read as our own gain")
+                assert.is_true(I.res.pinValid[s]) -- the swing's crossing, measured (Resources.lua pin)
+            end)
+
             it("a plain read between the cast and its avoid wins: the avoid gives back nothing on top of it", function()
                 rest(true, false)
                 cast(fs.SPENDER_C, 5)
