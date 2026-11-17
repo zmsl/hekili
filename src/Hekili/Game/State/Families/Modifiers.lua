@@ -85,12 +85,11 @@ local function rankOf(r, k)
     return t > 0 and VS.Talent(t) or t == 0 and 1 or 0
 end
 
--- Whether modifier k of slot r, at its talent rank `rank`, prices ability a at `now`: a rank, its aura believed up on
--- the player or a talent with no aura, a in its scope, not held by its `unless` aura.
-local function prices(r, k, a, rank, now)
-    local js, mod = M.modSpell[r], M.costMods[r][k]
+-- Whether modifier k of slot r (`mod`, its aura's spell ID `js`), at its talent rank `rank`, prices ability a at `now`:
+-- a rank, its aura believed up on the player or a talent with no aura, a in its scope, not held by its `unless` aura.
+local function prices(r, k, mod, js, a, rank, now)
     return rank > 0
-        and (js[k] > 0 and VS.Aura("player", js[k], now) or mod.aura == nil and mod.talent ~= nil)
+        and (js > 0 and VS.Aura("player", js, now) or mod.aura == nil and mod.talent ~= nil)
         and inScope(r, k, a)
         and not held(r, k, now)
 end
@@ -103,12 +102,13 @@ function I.CostMod(a, r, c, now)
     if not mods or c <= 0 then
         return c
     end
+    local js = M.modSpell[r]
     for k = 1, #mods do
         local mod = mods[k]
         local rank = rankOf(r, k)
         -- shortcut: modifiers apply in list order, so a flat listed after a pct lands after it; wowsims adds every flat
         -- to the base before any percent (spell.go:1055). Upgrade when a pack gives one ability both kinds.
-        if prices(r, k, a, rank, now) then
+        if prices(r, k, mod, js[k], a, rank, now) then
             local p, f = mod.pct, mod.flat
             p, f = type(p) == "table" and p[rank] or p, type(f) == "table" and f[rank] or f
             if type(p) == "number" then
@@ -127,11 +127,11 @@ end
 --- product is not above 0. I.LearnBases inverts it. Allocates nothing.
 function I.PassiveCostFactor(a, r, now)
     local mods = r and M.costMods[r]
-    local m = 1
+    local m, js = 1, mods and M.modSpell[r]
     for k = 1, mods and #mods or 0 do
         local mod = mods[k]
         local rank = rankOf(r, k)
-        if prices(r, k, a, rank, now) then
+        if prices(r, k, mod, js[k], a, rank, now) then
             local p, f = mod.pct, mod.flat
             p, f = type(p) == "table" and p[rank] or p, type(f) == "table" and f[rank] or f
             if mod.aura ~= nil or type(p) ~= "number" and type(f) == "number" then

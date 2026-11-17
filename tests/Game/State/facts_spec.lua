@@ -160,6 +160,45 @@ describe("facts and polls", function()
         assert.are.same({ 3, 800 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
     end)
 
+    -- A mixed pool: spender_a's read uncut (fraction fa), spender_c's cut by the talent's rank 1 (3%, fraction fc); the
+    -- pack's base `pack`, the reads given.
+    local function mixedCut(fa, fc, pack, readA, readC)
+        local h = fs.new(9)
+        h.Class.abilities.spender_a.spend, h.Class.abilities.spender_c.spend = fa, fc
+        local def = fs.def(h)
+        def.resources[1].base = pack
+        def.resources[1].costMods =
+            { { talent = "talent_a", pct = { -0.03, -0.06, -0.09 }, spells = { fs.SPENDER_C } } }
+        I.Build(def, 1)
+        ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
+        ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 1011 } }
+        ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 1 }
+        ctl.costs[fs.SPENDER_A], ctl.costs[fs.SPENDER_C] =
+            { { type = 1, cost = readA } }, { { type = 1, cost = readC } }
+        ctl.Fire("SPELLS_CHANGED")
+        return VS.BasePower(fs.RAGE)
+    end
+
+    -- An uncut read has no rounding doubt: a cut read wins only when its half-width under either rounding of the cut
+    -- read, (1.5 / m + 0.5) / f, is below the uncut one's 0.5 / f.
+    it("learns from the uncut read unless a cut read is finer under either rounding", function()
+        -- the true base 321: 11% reads 35 (35.31); 12% is 39 whole (38.52), cut 3% 37.83, read 38. Uncut half-width
+        -- 4.5 against the cut's 17.0: the base nearest 35 / 0.11 = 318.2 (the cut read alone: 39 / 0.12 = 325)
+        assert.are.equal(318, mixedCut(0.11, 0.12, 1720, 35, 38))
+        -- the true base 810: 3% reads 24 (24.3); 55% is 446 whole (445.5), cut 432.62, read 433. Cut half-width 3.7
+        -- against 16.7: 433 is only 446 cut, the base nearest 446 / 0.55 = 810.9 (the uncut read: 24 / 0.03 = 800)
+        assert.are.equal(811, mixedCut(0.03, 0.55, 1720, 24, 433))
+    end)
+
+    -- The pack's base stays only while it prices the finest uncut read exactly, as with no cut read, even when a finer
+    -- cut read's looser keep test (either rounding) would hold it.
+    it("relearns a pack base the cut read would keep but the uncut read misprices", function()
+        -- the true base 613: 3% reads 18 (18.39); 35% is 215 whole (214.55), cut 208.55, read 209. The pack's 617 prices
+        -- the cut read 216 x 0.97 = 209.52 (kept truncated) but the uncut 19 (18.51): relearnt from the finer cut read,
+        -- 209 is only 215 cut, the base nearest 215 / 0.35 = 614.3
+        assert.are.equal(614, mixedCut(0.03, 0.35, 617, 18, 209))
+    end)
+
     it("learns no base from a read a passive talent's flat cost modifier cuts", function()
         passiveCut({ talent = "talent_a", flat = -5, spells = { fs.SPENDER_A } })
         ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 75 } }
