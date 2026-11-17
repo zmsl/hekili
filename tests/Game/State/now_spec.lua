@@ -1429,6 +1429,20 @@ describe("now handlers", function()
             assert.are.equal(0, I.avoidsRun)
         end)
 
+        -- gap AS (Fury L30 live loop, Sunder 60.40): the swing's own row late (lag 0.731), 80 ms past the cast's frame
+        it("a miss past the cast's frame while a swing from before it owes its row: the debuff stays", function()
+            h.Class.abilities.spender_c.expects = "debuff" -- no damage: avoids only (Sunder Armor's declaration)
+            begin()
+            ctl.now = 4.349
+            ctl.Fire("PLAYER_SWING", 3.6, 0)
+            castOutcome(fs.SPENDER_C, 5, "MISS", 0.08)
+            ctl.Tick(7.5) -- past every window
+            VS.Drain(7.5)
+            local rec = VS.Aura("target", fs.SPENDER_C, 7.5)
+            assert.are.equal(20, rec and rec.est) -- nil: undone
+            assert.are.same({ 0, 0 }, { VS.Power(fs.RAGE, 7.5).est, I.avoidsRun }) -- nothing refunded
+        end)
+
         it("a white avoid in our swing's own frame 0.25 s after the cast is not the cast's (P log 2's)", function()
             begin()
             castOutcome(fs.SPENDER_C, 5) -- no outcome of its own yet
