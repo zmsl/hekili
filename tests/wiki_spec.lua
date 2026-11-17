@@ -307,7 +307,12 @@ describe("the expression check", function()
 end)
 
 describe("make wiki-build", function()
-    local OUT = "/tmp/wiki-build-spec" -- not build/, so a gate run leaves the tree as it found it
+    -- A per-run directory outside build/, so concurrent runs never share one and a gate run leaves the tree as it found it.
+    local OUT = os.tmpname()
+    os.remove(OUT)
+    teardown(function()
+        os.execute("rm -rf " .. OUT)
+    end)
     local function build()
         local ok = os.execute(".lua/bin/lua tools/wiki/gen.lua build " .. OUT .. " >/dev/null 2>&1")
         assert.is_true(ok == 0 or ok == true)
