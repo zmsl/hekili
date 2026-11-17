@@ -203,7 +203,7 @@ M.FLICKER = {
     -- readyShort 0). 2.40 s is 12 polls, so a swing that lands on a poll stays there: in seed 59 (on the gate's boot) the mob's swing at 164.72 is
     -- parried and parry haste pulls our swing to 20% of 2.40 (0.48), onto the poll at 165.20, then 167.60 ... 177.20. At
     -- 170.00 (Shield Block, 10) and 177.20 (Revenge, 2; that swing misses) the swing is due at the poll's own instant:
-    -- ours and the oracle both count it and show the icon at 0.00, and the loop presses before the world pays the swing
+    -- ours and the oracle both count it and show the icon at 0.00, and the loop presses before the world resolves the swing
     -- (truth 2.95 / 0.86 before the press; lo 2.13 / 1.99): a same-instant press-order tie in the harness, not a rage
     -- error (refused cost 0.1, unmatched 0.0). Seed 59 alone reads 0 (the mob's swings fall at .69, off the poll grid)
     ["Warrior Protection"] = { flicker = 0.14, retracted = 0.1, readyShort = 2, heldReady = 351 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
