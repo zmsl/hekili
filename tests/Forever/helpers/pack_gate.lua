@@ -321,7 +321,16 @@ M.FLICKER = {
     -- under Resourcefulness 2/2 it costs 40 (was 39) and ties Raptor Strike's 40; a queued Raptor Strike's mana now shows
     -- Strider Kick for one poll and flips() no longer excludes it. Traced in mana-09's review round (L1210/L1212: the
     -- oracle shows the same flips, its own flicker rose 0.05 -> 0.13 with it); the measured worst + 0.01
-    ["Survival"] = { flicker = 0.09, retracted = 0, readyShort = 1, heldReady = 314 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- flicker 0.09 -> 0.11, heldReady 314 -> 112 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the
+    -- world's pool and regen from its e4ef929e54 log, 3555 mana, 12.00 mp5 + 17.50 spirit with Resourcefulness's 50%
+    -- share while casting (was 5000 and spirit 15.88, no mp5: nothing while casting), so the pool sits at the strikes'
+    -- 40 less often; seeds 1-20 / 21-40 / 41-60 flicker 0.08 / 0.0999 / 0.08, oracle 0.12 / 0.13 / 0.25, heldReady
+    -- 112 / 102 / 76, readyShort 0 / 0 / 0, agreement .993 / .984 / .989). Flicker: the Strider Kick / Raptor Strike
+    -- 40-mana tie (L1210, the oracle flips more). Held ticks traced per tick (seeds 1-20): the near-cost edge, the pool
+    -- dry at a cost with our est a few mana under truth (raptor_strike 62 at 40-41, wing_clip 31, strider_kick 13,
+    -- hunters_mark 5, mongoose_bite 1; cooldowns and Hunter's Mark equal in ours, the oracle and the world): the worst
+    -- printed + 0.01, the worst set
+    ["Survival"] = { flicker = 0.11, retracted = 0, readyShort = 1, heldReady = 112 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661), first measured (R6; seeds 1-20 / 21-40 / 41-60, steady
     -- icons on): flicker 0 / 0 / 0 each (Survival Melee's oracle 0.02 / 0.03 / 0.02, the others' 0), retracted 0,
     -- readyShort 0; heldReady the Hunter rows' cost-crossing class (the floor a few units under the truth, gap BT),
@@ -335,15 +344,45 @@ M.FLICKER = {
     -- list's summon_hawk 61 / 60 / 54 and arcane_shot 26 / 20 / 25 (class "unknown"; the old list pressed neither), with
     -- est - truth at disagreements +19 / +34 / +33 (the opposite sign to the other Hunter rows), so the mechanism is
     -- open; the move rides the hawk rotation): the worst set
-    ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 132 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
+    -- heldReady 132 -> 237 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
+    -- from its log, 3330 mana, casting 21.15 = 12.40 mp5 + Bestial Discipline's half of 17.50 spirit (was 5000 and 7.94
+    -- / 7.94), and The Beast Within in the world, every cost x0.5 for 18 s after Bestial Wrath (owner L1105); seeds
+    -- 1-20 / 21-40 / 41-60 heldReady 226 / 236 / 237, flicker 0, retracted 0, readyShort 0, agreement .997 each).
+    -- Traced per tick (seeds 1-60, this tip and d17b7d45e): the near-cost edge, the pool dry at the 189 cost (94.5 under
+    -- The Beast Within) with our est 2-3 mana under truth, our wait 0.07-0.42 s, the oracle's 0 (summon_hawk 146 / 150 /
+    -- 150, arcane_shot 69 / 73 / 74); the smaller pool puts more ticks at the edge (d17b7d45e: arcane_shot 110-118 of
+    -- 118-125). The +19..+34 est - truth above was the world charging full price inside the window the belief halved.
+    -- rapid_fire 11 / 13 / 13: Rapid Fire behind an Aimed Shot whose 310 is paid at the cast's end waits from the
+    -- belief's floor at a fight-opening pool no read has pinned (t 8.6: lo 381.9, (100 - (lo - 310)) / 21.15 = 1.33
+    -- s; the oracle's exact 430.6 covers both; central, repin-hunter-09-3): the worst set
+    ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 237 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
     -- Marksmanship Turret, 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60
     -- heldReady 132 / 115 / 108, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 118 -> 132
     -- (the worst set). Cause harness: ladder-usable-085 cc02f47e5's between-fight rest window (fights start at the true
     -- mana, re-timed; the same cause as Balance, L1118; bisected 113 at its parent -> 132); the Hunter cost-crossing
     -- class, seeds 1-20 held ticks arcane_shot 100 -> 118, rapid_fire 4 -> 8, hunters_mark 9 -> 6, +1..+4 a fight
-    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 132 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
-    ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 117 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
-    ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 183 }, -- heldReady 166 / 183 / 177; after L667 173 / 169 / 174
+    -- heldReady 132 -> 213 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
+    -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Rapid Recuperation's 50% share while casting for 15 s after
+    -- each Serpent Sting (was 5000 and spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 201 / 204 / 213,
+    -- flicker 0, retracted 0, readyShort 0, agreement .998 / .999 / .995). Traced per tick (seeds 1-20): the near-cost
+    -- edge, arcane_shot 199 at mana 166-169 against its 166.32 (our est a few mana under truth, the oracle's wait 0),
+    -- hunters_mark 2; the smaller pool sits at the edge more often: the worst set
+    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 213 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    -- heldReady 117 -> 236 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
+    -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
+    -- spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 210 / 236 / 186, flicker 0, retracted 0, readyShort
+    -- 0, agreement .997 / .999 / .997). Traced per tick (seeds 1-20): the near-cost edge, arcane_shot 194 at mana
+    -- 189-192 against its 189, hunters_mark 2; rapid_fire 14: Rapid Fire behind an Aimed Shot whose 310 is paid at the
+    -- cast's end waits from the belief's floor at a fight-opening pool no read has pinned (t 8.6: lo 352.2, (100 -
+    -- (lo - 310)) / 12.40 = 4.67 s; the oracle's exact 513.3 covers both; central, repin-hunter-09-3): the worst set
+    ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 236 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
+    -- heldReady 183 -> 361 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
+    -- from its log, 3270 mana, 12.40 mp5 + 16.75 spirit (was 5000 and spirit 15.88, no mp5); seeds 1-20 / 21-40 /
+    -- 41-60 heldReady 346 / 342 / 361, flicker 0 (oracle 0.13 / 0 / 0.02), retracted 0, readyShort 0, agreement .992 /
+    -- .995 / .996). Traced per tick (seeds 1-20): the near-cost edge, wing_clip 301 at mana 80-83 against its 80,
+    -- mongoose_bite 37, hunters_mark 8 (cooldowns and Hunter's Mark equal in ours, the oracle and the world): the worst
+    -- set
+    ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 361 }, -- heldReady 166 / 183 / 177; after L667 173 / 169 / 174
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
     -- wowsims's logged regen (Ret 8.25/s casting) runs the world at an empty mana pool; the oracle's flicker rose too; our
     -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling

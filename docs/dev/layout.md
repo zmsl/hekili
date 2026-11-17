@@ -403,8 +403,11 @@ Turret with a one-time notice). Survival's weave was its default before, so Surv
 Their worlds take the export's whole talent string; the Turret worlds stand at 12 yd shooting, Survival Melee at 5 yd
 with two one-handers (its live bars at 11 yd, R63, `W.SurvivalMeleeRanged`). At the re-pin e4ef929e54 (Pre-BiS gear),
 replay decisions on-GCD: 0.980 (51), 0.982 (56), 1.000 (51), 1.000 (67); the 20-fight lines (seeds 1-20 / 21-40 /
-41-60) read held while ready 130 / 132 / 104, 130 / 112 / 116, 104 / 115 / 102 and 156 / 169 / 157, flicker 0 (rows
-in `pack_gate.FLICKER`: floors at or above the worst of the three seed sets).
+41-60), with each world's pool and regen from its log, read held while ready 226 / 236 / 237, 201 / 204 / 213, 210 /
+236 / 186 and 346 / 342 / 361, flicker 0 (rows in `pack_gate.FLICKER`: floors at the worst of the three seed sets).
+The held ticks are the near-cost edge (a dry pool at a cost, our estimate a few mana under the truth), plus, in the
+Beast Mastery and Survival Turret worlds, Rapid Fire behind an Aimed Shot paid at the cast's end, its wait paced from
+the belief's floor at an unpinned fight-opening pool.
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter
 research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`), plus:
