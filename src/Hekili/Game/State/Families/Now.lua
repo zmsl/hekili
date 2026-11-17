@@ -987,7 +987,8 @@ end)
 
 --- The CDM verdict closed target aura j's application `ap` as missed (Sources/Auras.lua, L1029): the cast whose own
 --- write it was gets back its `refundOnAvoid` share, as an avoid's (I.Refund), once: an avoid or a hand-back of that
---- cast (Obs.Avoided) before it cleared it, and this consumes the cast's undo so neither after it undoes or refunds;
+--- cast (Obs.Avoided) before it cleared it, and this consumes the cast's undo so neither after it undoes or refunds
+--- (a `refundNowOnAvoid` cast's avoid after it still gives back its `now`'s take, the share not again);
 --- every record of that cast is cleared (two debuffs of one cast refund once). Past another spend, an answer since the
 --- cast that raised the slot already held the refund (I.Refund's `held`). Returns the cast's success time, or nil.
 --- Allocates nothing.
@@ -999,14 +1000,19 @@ function I.VerdictRefund(j, ap, t)
     local castT, r = vT[j], A.slot[a]
     forget(a, castT)
     if undoA == a and undoT == castT then
-        undoA = 0
+        -- the share and the target undo were this verdict's; a plain avoid row of the cast still gives back what its
+        -- `now` took (the row is proof: no L1096 widening), so a `refundNowOnAvoid` cast keeps its undo for it
+        paid, undoN = 0, 0
+        if nowH == 0 then
+            undoA = 0
+        end
     end
     -- shortcut: a target immune to this debuff only (the cast landed, its record never lights) reads as a miss and is
     -- refunded; accepted as bounded by the owner (L1096): two unlit verdicts suspend the item's proof until it lights
     -- again, so at most ~2 wrong refunds per item per immune target. Upgrade if an immune flag becomes readable.
     -- shortcut: the cost share only, never what a `refundNowOnAvoid` cast's `now` took (L1237): an immune target's
-    -- wrong verdict (L1096 above) would give back a whole pool, not a share; the cast's avoid row, plain, still gives
-    -- it back when the verdict found nothing to refund (no share). Upgrade with the owner's ruling if a pack needs both.
+    -- wrong verdict (L1096 above) would give back a whole pool, not a share; the cast's own avoid row, plain, still
+    -- gives it back while the cast is the latest. Upgrade with the owner's ruling if a pack loses that row.
     -- shortcut: a short answer heard between the cast and a later spend no longer caps this late refund (that spend
     -- reset sinceShort; the cap is valid only for answers after the cast's own spend); the error is at most the share,
     -- until the next answer. Upgrade (a per-cast cap carried across spends) if traces show est above the truth after
