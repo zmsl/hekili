@@ -95,8 +95,9 @@ local asOf = false
 local UNDO = 4
 local undoA, undoT, undoSwap, paid, undoN = 0, -1, 0, 0, 0
 -- And what its `now` took from the ability's own slot, from the estimate, the floor (lo0) and the top (L1237), for an
--- ability with `refundNowOnAvoid`; 0 otherwise.
-local nowE, nowL, nowH = 0, 0, 0
+-- ability with `refundNowOnAvoid`; 0 otherwise. With them: est and lo before the `now` (nowE0, nowL0), the slot's
+-- pin time (nowPin) and its rung lifts (nowLE/LL/LH, Resources.lua owe) at the cast.
+local nowE, nowL, nowH, nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = 0, 0, 0, 0, 0, 0, 0, 0, 0
 local journal = true -- false while an `onCrit` runs: a landed crit's writes are no avoid's to undo
 local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
@@ -857,6 +858,7 @@ local function run(o, t)
         local e, l, h = R.est0[r], R.lo0[r], R.hi0[r] -- nil with no slot (r 0): not read
         call(A.now[a], a, t)
         if r > 0 then -- the belief's own numbers (never a secret); a gain nets nothing back
+            nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = e, l, R.pinT[r], R.liftE[r], R.liftL[r], R.liftH[r]
             e, l, h = e - R.est0[r], l - R.lo0[r], h - R.hi0[r]
             nowE, nowL, nowH = e > 0 and e or 0, l > 0 and l or 0, h > 0 and h or 0
         end
@@ -970,13 +972,15 @@ I.On(Obs.Avoided, function(o, t)
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
     end
     local r = A.slot[o.a]
-    -- shortcut: a usable answer between the cast and this avoid keeps est where it raised it (I.Refund: the answer
-    -- saw the pool), so est stays under the truth by up to the `now`'s give-back, not the share alone; lo and hi are
-    -- right. Heals at the next answer. Upgrade (est to the post-`now` est + give-back, capped by the answer's top) if
-    -- a trace shows an avoided `refundNowOnAvoid` cast held back by it.
     local d = r > 0 and paid * A.refund[o.a] or 0
-    if r > 0 and (d > 0 or nowH > 0) then -- at the fold; the answers since the cast's spend already saw it
-        I.Refund(r, d + nowE, t, false, d + nowL, d + nowH)
+    -- the `now`'s take comes back unless a pin since the cast (a plain read, a crossing) already measured the pool;
+    -- a usable answer since (the poll's rung, every drain) only bounds it from below: the floors (I.Refund's fE, fL)
+    -- and the rung's lift it explains (I.LiftExplained)
+    if r > 0 and nowH > 0 and I.res.pinT[r] == nowPin then
+        I.Refund(r, d + nowE, t, false, d + nowL, d + nowH, nowE0 + d, nowL0 + d)
+        I.LiftExplained(r, nowLE, nowLL, nowLH, d + nowE, d + nowL, d + nowH)
+    elseif r > 0 and d > 0 then
+        I.Refund(r, d, t) -- at the fold; the answers since the cast's spend already saw it
     end
     I.avoidsRun = I.avoidsRun + 1
 end)
