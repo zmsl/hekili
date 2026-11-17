@@ -7,6 +7,7 @@
 
 ### Changed
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
+- Mage: the Arcane, Fire, Frost and Frostfire (wowsims.com) priorities now come from the current wowsims version; the order of spells is unchanged (not yet checked in game).
 
 ### Fixed
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
