@@ -1275,6 +1275,8 @@ spec:RegisterAbilities({
         startsCombat = true,
         -- wowsims e4ef929e54 ferocious_bite.go refundOnMiss: 80% of the 35 base energy back on an avoid
         refundOnAvoid = true,
+        -- ferocious_bite.go:32-40: the extra energy is spent on a landed bite only, so an avoid gives `now`'s spend back
+        refundNowOnAvoid = true,
         known = knows(FEROCIOUS_BITE),
         form = "cat_form",
 
@@ -1282,10 +1284,8 @@ spec:RegisterAbilities({
             return combo_points.current > 0, "requires combo points"
         end,
 
-        -- Predatory Discipline (hotfix 113554, wowsims ferocious_bite.go): the extra energy stays
-        -- shortcut: wowsims spends the extra energy on a landed bite only; spent here at the cast, an avoided bite's
-        -- extra stays spent in the belief until the next energy answer. `onLand` would idle it on live (target rows
-        -- secret); upgrade once a landed hit is heard on live.
+        -- Predatory Discipline (hotfix 113554, wowsims ferocious_bite.go): the extra energy stays. Spent at the cast;
+        -- an avoid gives it back (refundNowOnAvoid). `onLand` would idle it on live (target rows secret).
         now = function()
             if not talent.predatory_discipline.enabled then
                 spend(energy.current, "energy")

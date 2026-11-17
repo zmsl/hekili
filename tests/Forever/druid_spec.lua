@@ -1640,15 +1640,16 @@ describe("Forever Druid in VirtualState's now context", function()
         VS.Drain(t + 0.01)
     end
 
-    -- re-pin e4ef929e54 (ferocious_bite.go): a failed Bite gets 80% of its 35 base energy back
-    it("gives an avoided Ferocious Bite 80% of its 35 base energy back", function()
+    -- re-pin e4ef929e54 (ferocious_bite.go:32-42): a failed Bite gets 80% of its 35 base energy back, and its extra
+    -- energy is spent on a landed bite only (refundNowOnAvoid, L1237)
+    it("gives an avoided Ferocious Bite 80% of its 35 base energy and all its extra energy back", function()
         I.Sources.Direct(VS.Obs.CombatStart, 1.5)
         I.SetTalentRank(I.talents.bySpell[17056], 5) -- Furor 5/5: the Cat entry keeps the 100
         cast(768, 2)
         cast(22568, 3) -- Bite: 35 of 100, then the 65 left (no Predatory Discipline)
         near(1, power(3, 3.1))
         avoided(22568, 3, 3.1)
-        near(1 + 28 + 1, power(3, 3.2))
+        near(1 + 65 + 28 + 1, power(3, 3.2))
     end)
 
     -- re-pin e4ef929e54 (poised.go, EV-0035): an avoided cast spends Poised too; the refund is 80% of what it paid

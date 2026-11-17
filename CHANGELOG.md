@@ -11,7 +11,7 @@
 - Feral: the default priority follows wowsims's new Feral build (Rend and Tear 5/5). With two or three enemies it keeps the single-target priority, because wowsims's lists for two and three enemies switch targets, which Hekili cannot follow.
 - Guardian: the default priority follows wowsims's new Bear build and lists, with its own priorities for two and three enemies (Swipe). Not yet checked in game.
 - Guardian: in the Timeline style, Maul no longer takes the now circle ahead of keeping up Lacerate and Demoralizing Roar.
-- Feral: a dodged or missed Ferocious Bite now gives back 28 energy, and the Idol of Ferocity (Claw and Rake cost 2 less) and the Idol of the Dream (Rip lasts 2 seconds longer) are counted. Not yet checked in game.
+- Feral: a dodged or missed Ferocious Bite now gives back 28 energy and keeps the extra energy it would have used, and the Idol of Ferocity (Claw and Rake cost 2 less) and the Idol of the Dream (Rip lasts 2 seconds longer) are counted. Not yet checked in game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
