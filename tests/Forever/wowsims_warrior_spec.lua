@@ -168,7 +168,12 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- shortcut, warrior-1) 3 / 3 (13.50, 43.50, 154.74); execute -> death_wish 1 / 1 (149.88); the opening
             -- whirlwind -> sunder_armor 1 / 1 (0.00); a Sunder fade at or just before wowsims's cast 1 / 1 (79.00). Without
             -- gap AS: 0.85. The one avoided Execute (145.09) moves no decision (belief 12 vs truth 14.9)
-            0.82,
+            -- 0.82 -> 0.83 (83 of 100; measured 0.830) with gap-as-09 merged: 123.24 bloodthirst agrees (the 93.76 swing's
+            -- MISS no longer undoes the 94.00 Sunder's refresh). 94.00 and 135.24 stay, a different class than the gap AS
+            -- above: Sunder's own MISS / DODGE on a fresh application (80.50, 126.24) keeps the belief's first stack, so a
+            -- later Sunder reads 5 one cast early (central, repin-warrior-09-4). The avoided Execute's give-back
+            -- (refundNowOnAvoid) moves no decision: the same-frame avoid reads lo 12 with the field on or off
+            0.83,
             FURY_REPLAY
         )
     end)
