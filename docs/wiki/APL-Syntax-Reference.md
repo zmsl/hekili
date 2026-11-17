@@ -143,15 +143,16 @@ A line reads it as `variable.<name>`. The value is worked out when a line reads 
 actions+=/variable,name=<name>,pure=1,value=<expression>
 ```
 
-A line with `pure=1` names an expression. A line that reads `variable.<name>` gets the expression worked out at that line, exactly as if the expression were written there. Nothing is stored between lines, and reading it costs no memory. The wowsims packs use pure variables for their large shared conditions. A `variable` line without `pure=1` works as described above, whatever it holds.
+A line with `pure=1` names an expression. A line that reads `variable.<name>` gets the expression worked out at that line, at that line's moment in the walk. Nothing is stored between lines, and reading it costs no memory. The expression is worked out as a value: true and false become 1 and 0, as for any variable. The wowsims packs use pure variables for their large shared conditions. A `variable` line without `pure=1` works as described above, whatever it holds.
 
 A `pure=1` line must:
 
 - have a `value` and no `if=`, `value_else=` or `op=` other than `set`;
-- be the only line of its name in the priority;
-- sit in the default list, or in a list that every call reaches without a condition, starting from the default list.
+- be the only line of its name in the priority (a disabled line of the same name counts too);
+- sit in the default list, or in a list that every call reaches without a condition (no `if=` and no `strict_if=` on the call), starting from the default list. The precombat list is never allowed;
+- not read itself, directly or through other pure variables.
 
-When a `pure=1` line breaks one of these rules, loading the priority reports an error that names the line and the rule, and the line works as a variable without `pure=1`. A disabled line is never pure.
+When a `pure=1` line breaks one of these rules, loading the priority reports an error that names the line and the rule, and the line works as a variable without `pure=1`. The same happens at once when an edit in the priority editor breaks a rule, for example a condition added to the call that reaches the line. A disabled line is never pure.
 
 ## Special actions
 
