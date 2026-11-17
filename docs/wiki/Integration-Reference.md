@@ -16,7 +16,7 @@ The **integration reference** lists every function and event of Hekili Forever's
 
 ## Display styles
 
-`Hekili:RegisterDisplayStyle(name, impl)` registers a display style: the code that draws one display's recommendations. It returns `true` when the style is registered and `false` when it is refused. `Hekili.DisplayStyleAPI` is the interface version, 1 in this release. [Contributing display styles and integrations](Contributing-Display-Styles-And-Integrations#registerdisplaystyle) describes every member of `impl`, the button contract and [the fields of a recommendation record](Contributing-Display-Styles-And-Integrations#the-recommendation-record).
+`Hekili:RegisterDisplayStyle(name, impl)` registers a display style: the code that draws one display's recommendations. It returns `true` when the style is registered and `false` when it is refused. `Hekili.DisplayStyleAPI` is the interface version, 1 in this release. [Contributing display styles and integrations](Contributing-Display-Styles-And-Integrations#registerdisplaystyle) describes every member of `impl`, the button contract and the fields of a recommendation record.
 
 ## RegisterSnapshotListener
 
@@ -34,7 +34,7 @@ The listener is called as `fn(index, record, isAuto)`:
 | Argument | Meaning |
 |---|---|
 | `index` | The position of the snapshot's first record in `Hekili.Snapshots`. The snapshot has one record per display; the others follow it, up to `#Hekili.Snapshots`. |
-| `record` | That first record. `record.header` is its title line and `record.log` its full text. |
+| `record` | That first record. `record.log` is its text, the report the Snapshots tab shows. |
 | `isAuto` | `false` for a snapshot taken by the player |
 
 - A string the listener returns is added to the text of every record of the snapshot, under a `## External` heading. Each listener's text is cut at 4000 characters.
@@ -74,12 +74,14 @@ Hekili:UnregisterSnapshotListener(AddMyState)
 
 The payload:
 
-- `payload[i]` is a copy of recommendation `i`, with the fields of a [recommendation record](Contributing-Display-Styles-And-Integrations#the-recommendation-record). It has 12 entries; those past the display's last recommendation are empty tables, so `payload[i].actionID` is nil there.
+- `payload[i]` is a copy of recommendation `i`, with the fields of a recommendation record. It has 12 entries; those past the display's last recommendation are empty tables, so `payload[i].actionID` is nil there.
 - The payload's own fields read recommendation 1, so `payload.actionName` is `payload[1].actionName`.
 - When the display has no recommendation, the event is still sent, with every entry empty.
 - The copy is shallow. The tables inside a recommendation, such as `resources` and `alts`, are Hekili Forever's own and change on the next update. The payload and its entries are also the same tables on every event of a display. A WeakAura copies the values it keeps.
 
 Example, a trigger function that tests for a recommendation on the `Primary` display:
+
+<!-- UNVERIFIED: that a WeakAuras custom event trigger receives the event name first and then the event's arguments is WeakAuras's convention, not checked in this repository. -->
 
 ```lua
 function(event, display, actionID, indicator, _, payload)
@@ -103,5 +105,4 @@ Every public chat command also works in a macro. A macro can change a toggle, th
 
 ## See also
 
-- [Integration overview](Integration-Overview)
 - [Toggles](Toggles): the names `/hekili set` takes
