@@ -7,8 +7,9 @@ local _, ns = ...
 local NAMES = { "Interrupts", "Defensives", "Cooldowns", "Primary", "AOE" }
 local MAX = 16 -- listener slots
 
--- The listeners, `false` past `n` (sized once). One unregistered mid-call is blanked and the list compacted after the
--- loop, so no later listener is skipped.
+-- The listeners, `false` past `n` (sized once for 16; inside a callback a register after an unregister may append
+-- past 16 until the compaction). One unregistered mid-call is blanked and the list compacted after the loop, so no
+-- later listener is skipped.
 local listeners = { n = 0 }
 for i = 1, MAX do
     listeners[i] = false

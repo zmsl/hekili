@@ -171,6 +171,8 @@ function Hekili:HandleSetCommand( args )
     -- Explicit State Check for Main Toggle
     local toggleCategory = profile.toggles[ mainToggle ]
     if toggleCategory then
+        if subToggleOrState == "value" then subToggleOrState, explicitState = explicitState, nil end -- `set X value on` is `set X on`
+
         if subToggleOrState == "on" or subToggleOrState == "off" then
             local on = subToggleOrState == "on"
             if mainToggle ~= "pause" then

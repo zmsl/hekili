@@ -68,6 +68,11 @@ describe("HEKILI_TOGGLE and GetToggleState (headless Arms)", function()
         hk:CmdLine("set cooldowns maybe")
         assert.are.equal(2, #fired)
         assert.is_true(hk:GetToggleState("cooldowns"))
+        hk:CmdLine("set cooldowns value off") -- the same as `set cooldowns off`
+        assert.are.same({ "cooldowns", false }, fired[3])
+        hk:CmdLine("set pause value on")
+        assert.is_true(hk.Pause)
+        assert.are.same({ "pause", true }, fired[4])
     end)
 
     it(
