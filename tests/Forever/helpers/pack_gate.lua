@@ -453,9 +453,14 @@ M.FLICKER = {
     -- re-pin e5a9cd2a2d -> e4ef929e54 (R6; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0.25 / 0),
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 93 / 93 / 81, agreement .994 / .997 / .997): flicker 0.07 ->
     -- 0.01 (the measured worst + 0.01), heldReady 110 -> 93 (the worst set). 66 / 68 / 73 with the flip and CN22 alone;
-    -- the rest is the regen commit (no Twist of Light: Unsealed Wrath's cooldown never runs): the world's 17.59 / 7.54
-    -- (was 18.37 / 7.88) and the kit's Retribution seed it shares (11.9 / 5.1, was 13.65 / 8.25); which of the two moves
-    -- it is not traced
+    -- the rest is the world's regen from the new log, 17.59 / 7.54 (was 18.37 / 7.88). Traced, seeds 1-20: with that
+    -- world reverted 66, A's line exactly; with the kit seed reverted 93, the same line (the out-of-combat read replaces
+    -- a seed that differs from it); the held ticks are the cost-edge lag (truth over the cost, lo 1.6-3.1 under):
+    -- holy_strike 6 -> 22, seal_of_righteousness 14 -> 32. Then the build's own seed (17.59 / 7.54, its log): 77 / 93 /
+    -- 93, flicker 0 / 0 / 0, agreement .998 / .997 / .998, the worst set unchanged. Traced (fight 1, tick by tick): a seed
+    -- equal to the game's rate makes the out-of-combat read no news (Sources/Power.lua skips a read equal to the
+    -- belief's), so the declared spread band stays (lo 2-13 under est from the first tick) where a differing seed's read
+    -- collapsed it; the seed moves which crossings hold, not the class
     ["Holy Shock"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 93 },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
