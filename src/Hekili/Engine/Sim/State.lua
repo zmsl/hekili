@@ -1614,16 +1614,20 @@ state.rawSpend = rawSpend
 
 -- Rotation windows, the core's side (re-pin design §3a, decision 11): the forecast only. `state.window.<name>` answers
 -- `.up`, `.remains` and `.elapsed` (0 when down), `.step` and `.next.<ability key>` (the due step of an up window) at
--- query_time. Every reset copies the belief's windows from Facade.Window (CopyWindows) and clears the per-line memory,
--- so nothing a cycle changes (an `open_window`/`close_window` line, Core.lua; a handler's `openWindow`/`closeWindow`; a
--- simulated cast's step, WindowCast from RunHandler) survives it or reaches the belief. The edge and step rules are the
--- belief's (Game/State/Families/Windows.lua), written again here: never one shared function. Built at
--- SpecializationChanged (BuildWindows); nothing allocated per cycle.
+-- query_time. Every reset copies the belief's windows from Facade.Window (CopyWindows): a Lua window by its name, an
+-- APL window (windows design v6 §4.1, the active pack's `windows` list, Scripts.lua CheckWindows) by the key of the
+-- display being walked. Nothing a cycle changes (an `open_window`/`close_window` line, Core.lua; a handler's
+-- `openWindow`/`closeWindow`; a simulated cast's step, WindowCast from RunHandler) survives it; only Core.lua's slot-1
+-- lines at now send their changes to an APL window's key (VS.WindowOp). The edge and step rules are the belief's
+-- (Game/State/Families/Windows.lua), written again here: never one shared function. Built at SpecializationChanged
+-- and when the active pack's APL windows change (BuildWindows); nothing allocated per cycle.
 local WIN = {
     n = 0, byKey = {}, tables = {}, of = {}, -- of: a window's table (or its `next` table) -> its index
     dur = {}, maxDur = {}, maxRef = {}, refresh = {}, steps = {}, nSteps = {}, lastAt = {}, loop = {}, dev = {}, strict = {},
     up = {}, openedAt = {}, expiresAt = {}, refreshes = {}, step = {},
-    lineLast = {}, -- by an open_window line's script ID: its last result in this cycle (a held condition opens once)
+    name = {}, keys = {}, key = {}, -- by index: the window's name; an APL window's keys by display, and this pass's key
+    fired = {}, -- by a window line's script ID: it changed the copy in this slot (the per-slot mark, §4.3, ruling 20)
+    send = false, -- the slot walking now sends its changes (Core.lua's slot 1; never the alternatives probe)
 }
 
 do
@@ -1638,16 +1642,22 @@ do
         WIN.up[ w ], WIN.openedAt[ w ], WIN.expiresAt[ w ], WIN.refreshes[ w ], WIN.step[ w ] = false, 0, 0, 0, 0
     end
 
-    -- `dur`: a line's duration=, else nil for the registered length (seconds, math.huge for "combat", or its function
+    -- `dur`: a handler's duration, else nil for the registered length (seconds, math.huge for "combat", or its function
     -- run under state now, at this open or counted refresh; a non-positive or non-number answer opens nothing).
+    -- True when the copy changed (a fresh open or a counted refresh).
     local function open( w, t, dur, refresh )
         if WIN.up[ w ] and WIN.expiresAt[ w ] <= t then close( w ) end -- expired: a fresh open
         local fresh = not WIN.up[ w ]
-        if not fresh and not ( refresh and ( WIN.maxRef[ w ] < 0 or WIN.refreshes[ w ] < WIN.maxRef[ w ] ) ) then return end
+        if not fresh and not ( refresh and ( WIN.maxRef[ w ] < 0 or WIN.refreshes[ w ] < WIN.maxRef[ w ] ) ) then return false end
+        -- L1182: an APL window refuses a refresh once its expiry sits at the max_duration cap ("combat": always), as the
+        -- belief applies an OPEN (the oracle M.apply); a Lua window counts one there (its own edge rule, unchanged)
+        if not fresh and WIN.keys[ w ] and not ( WIN.expiresAt[ w ] < ( WIN.maxDur[ w ] > 0 and WIN.openedAt[ w ] + WIN.maxDur[ w ] or math.huge ) ) then
+            return false
+        end
         if not dur then
             dur = WIN.dur[ w ]
             if type( dur ) == "function" then dur = dur() end
-            if type( dur ) ~= "number" or not ( dur > 0 ) then return end
+            if type( dur ) ~= "number" or not ( dur > 0 ) then return false end
         end
         local e = t + dur
         if fresh then
@@ -1658,6 +1668,7 @@ do
         end
         local cap = WIN.maxDur[ w ] > 0 and WIN.openedAt[ w ] + WIN.maxDur[ w ] or e
         WIN.expiresAt[ w ] = e < cap and e or cap
+        return true
     end
 
     local function advance( w, s )
@@ -1682,60 +1693,104 @@ do
         return steps and upAt( w, state.query_time ) and steps[ WIN.step[ w ] ] == key or false
     end }
 
-    state.window = {}
+    -- A window some loaded priority declares but the active pack does not (another pack's `windows` list, compiled
+    -- before its scripts by Scripts.lua LoadScripts) reads closed; any other unknown name stays an error.
+    local closedNext = setmetatable( {}, { __index = function() return false end } )
+    local closedWindow = setmetatable( {}, { __index = function( _, k )
+        if k == "up" or k == "done" then return false elseif k == "down" then return true elseif k == "next" then return closedNext end
+        return 0
+    end } )
+    state.window = setmetatable( {}, { __index = function( _, k )
+        if scripts.declaredWindows and scripts.declaredWindows[ k ] then return closedWindow end
+    end } )
 
-    --- SpecializationChanged: one table per registered window (class.windows), reused by index. Not per cycle.
+    local function row( n, name, d )
+        WIN.byKey[ name ], WIN.name[ n ] = n, name
+        local t = WIN.tables[ n ] or setmetatable( { next = setmetatable( {}, mtNext ) }, mtWindow )
+        WIN.tables[ n ], WIN.of[ t ], WIN.of[ t.next ] = t, n, n
+        state.window[ name ] = t
+        WIN.dur[ n ], WIN.refresh[ n ] = d.duration == "combat" and math.huge or d.duration, d.refresh == true
+        WIN.maxDur[ n ], WIN.maxRef[ n ] = d.max_duration or 0, d.max_refresh or -1
+        WIN.steps[ n ], WIN.nSteps[ n ] = d.steps or false, d.steps and #d.steps or 0
+        local lastAt = {} -- ability key -> its last step position
+        for k = 1, WIN.nSteps[ n ] do lastAt[ d.steps[ k ] ] = k end
+        WIN.lastAt[ n ], WIN.loop[ n ] = lastAt, d.loop == true
+        WIN.dev[ n ], WIN.strict[ n ] = DEV[ d.on_deviation ] or STAY, d.strict == true
+        WIN.keys[ n ], WIN.key[ n ] = d.keys or false, false
+        close( n )
+    end
+
+    --- SpecializationChanged, and a change of the active pack's APL windows (Core.lua): one table per registered
+    --- window (class.windows), then per APL window (Scripts.lua's applied CheckWindows declarations), reused by index.
+    --- Not per cycle.
     function state:BuildWindows()
         wipe( WIN.byKey )
         wipe( state.window )
         local n = 0
         for name, d in pairs( class.windows ) do
             n = n + 1
-            WIN.byKey[ name ] = n
-            local t = WIN.tables[ n ] or setmetatable( { next = setmetatable( {}, mtNext ) }, mtWindow )
-            WIN.tables[ n ], WIN.of[ t ], WIN.of[ t.next ] = t, n, n
-            state.window[ name ] = t
-            WIN.dur[ n ], WIN.refresh[ n ] = d.duration == "combat" and math.huge or d.duration, d.refresh == true
-            WIN.maxDur[ n ], WIN.maxRef[ n ] = d.max_duration or 0, d.max_refresh or -1
-            WIN.steps[ n ], WIN.nSteps[ n ] = d.steps or false, d.steps and #d.steps or 0
-            local lastAt = {} -- ability key -> its last step position
-            for k = 1, WIN.nSteps[ n ] do lastAt[ d.steps[ k ] ] = k end
-            WIN.lastAt[ n ], WIN.loop[ n ] = lastAt, d.loop == true
-            WIN.dev[ n ], WIN.strict[ n ] = DEV[ d.on_deviation ] or STAY, d.strict == true
-            close( n )
+            row( n, name, d )
+        end
+        local apl = scripts.appliedWindows
+        for k = 1, apl and #apl.decls or 0 do
+            n = n + 1
+            row( n, apl.decls[ k ].name, apl.decls[ k ] )
         end
         WIN.n = n
-        wipe( WIN.lineLast )
     end
 
-    --- Every reset: the belief's windows (Facade.Window, the one window read), and each line's memory cleared.
-    function state.CopyWindows()
-        for name, w in pairs( WIN.byKey ) do
-            WIN.up[ w ], WIN.openedAt[ w ], WIN.expiresAt[ w ], WIN.refreshes[ w ], WIN.step[ w ] = Facade.Window( name )
+    --- Every reset: the belief's windows (Facade.Window, the one window read): a Lua window by name, an APL window by
+    --- the key of display `dispName` (closed when it has none).
+    function state.CopyWindows( dispName )
+        for w = 1, WIN.n do
+            local keys = WIN.keys[ w ]
+            local key = keys and keys[ dispName ] or false
+            WIN.key[ w ] = key
+            if keys and not key then
+                close( w )
+            else
+                WIN.up[ w ], WIN.openedAt[ w ], WIN.expiresAt[ w ], WIN.refreshes[ w ], WIN.step[ w ] = Facade.Window( key or WIN.name[ w ] )
+            end
         end
-        for id in pairs( WIN.lineLast ) do WIN.lineLast[ id ] = false end
     end
 
-    --- The verbs (handlers, and Core.lua's lines): open or close window `name` at query_time. `duration` (an
-    --- `open_window` line's duration=) overrides the registered one; `refresh` (its refresh=1), else the registered
-    --- `refresh`, lets an open window restart, within its caps. A close acts only on an open window.
+    --- The verbs (handlers, and Core.lua's lines): open or close window `name` at query_time, true when the copy
+    --- changed. `duration` (a handler's) overrides the registered one; `refresh`, else the registered `refresh`, lets
+    --- an open window restart, within its caps. A close acts only on an open window.
     function state.openWindow( name, duration, refresh )
         local w = WIN.byKey[ name ]
-        if not w then return end
+        if not w then return false end
         if refresh == nil then refresh = WIN.refresh[ w ] end
-        open( w, state.query_time, type( duration ) == "number" and duration > 0 and duration or nil, refresh )
+        return open( w, state.query_time, type( duration ) == "number" and duration > 0 and duration or nil, refresh )
     end
 
     function state.closeWindow( name )
         local w = WIN.byKey[ name ]
-        if w and upAt( w, state.query_time ) then close( w ) end
+        if w and upAt( w, state.query_time ) then
+            close( w )
+            return true
+        end
+        return false
     end
 
-    --- Core.lua's `open_window` line: its last result in this cycle (false after the reset); records the new one.
-    function state.WindowLine( scriptID, pass )
-        local was = WIN.lineLast[ scriptID ]
-        WIN.lineLast[ scriptID ] = pass
-        return was
+    --- Core.lua's slot loop at the top of every slot (and the alternatives probe, `send` false): the per-slot fired
+    --- marks cleared (ruling 20); `send`: this slot's lines at now send their changes.
+    function state.WindowSlot( send )
+        WIN.send = send
+        for id in pairs( WIN.fired ) do WIN.fired[ id ] = false end
+    end
+
+    --- Core.lua's window line `scriptID`: true when it already changed the copy in this slot; `mark` sets it.
+    function state.WindowFired( scriptID, mark )
+        if mark then WIN.fired[ scriptID ] = true end
+        return WIN.fired[ scriptID ] == true
+    end
+
+    --- The key a change to window `name` is sent under from this pass, or false: a Lua window, a display with no key,
+    --- or a slot that does not send.
+    function state.WindowSendKey( name )
+        local w = WIN.byKey[ name ]
+        return WIN.send and w ~= nil and WIN.key[ w ] or false
     end
 
     --- A window-reading line's recheck times (state.recheck): each up window's forecast open still ahead (a hair past
@@ -6527,7 +6582,7 @@ do
 
         state.ClearCycle()
         state:ResetVariables()
-        state.CopyWindows() -- the cycle starts from the belief's windows (Facade.Window)
+        state.CopyWindows( dispName ) -- the cycle starts from the belief's windows (Facade.Window), APL ones by this display's key
         -- This will be our comprehensive resetter.
         state:ResetQueues()
 

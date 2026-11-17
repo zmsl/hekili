@@ -322,7 +322,14 @@ function M.run(L, seed, o, drivers)
     local arm = ab.ARMS[armName] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
     local aw = arm.world or {} -- a verdict arm's world knobs that shape the world's build (ab.lua; not a replay's)
     wo.mobAvoid, wo.swapEvery, wo.extraMobs = aw.mobAvoid, aw.swapEvery, aw.extraMobs
-    local W = R and R.world(wo, seed) or scenarios.world(wo, seed)
+    -- the instance whose state is the run's truth, a press resolving from it: the oracle when it is driven, else the
+    -- driver (a run of ours alone, ws.live, never steps the oracle, whose state then stays at its boot); a
+    -- replay's computed cooldowns are its answers at each cast
+    local truth = drivers[1].H
+    for _, d in ipairs(drivers) do
+        truth = d.H == L.oracle and d.H or truth
+    end
+    local W = R and R.world(wo, seed, truth) or scenarios.world(wo, seed)
     local us = W.ents[1]
     local run = {
         W = W,
@@ -337,12 +344,6 @@ function M.run(L, seed, o, drivers)
         readyShort = 0,
         heldReady = 0,
     }
-    -- the instance whose state is the run's truth, a press resolving from it: the oracle when it is driven, else the
-    -- driver (a run of ours alone, ws.live, never steps the oracle, whose state then stays at its boot)
-    local truth = drivers[1].H
-    for _, d in ipairs(drivers) do
-        truth = d.H == L.oracle and d.H or truth
-    end
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
     run.ours, run.theirs, run.gap, run.cpu, run.secrets, run.focus = {}, {}, {}, {}, {}, 0

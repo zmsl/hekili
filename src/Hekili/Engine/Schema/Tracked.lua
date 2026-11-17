@@ -438,6 +438,13 @@ function Hekili:CdmSwitchChanged()
     def.providers.cdmGen = (def.providers.cdmGen or 0) + 1
 end
 
+--- (windows design v6 §9) The active pack's APL window records (Engine/Sim/Scripts.lua CheckWindows) and the
+--- operations bound: a new generation, which the belief applies at its next Drain out of combat (after combat end
+--- otherwise; a full Build at once). Never a rebuild here.
+function ns.SetAplWindows(records, cap)
+    def.aplWindows, def.aplOpCap, def.aplGen = records, cap, (def.aplGen or 0) + 1
+end
+
 --- Rebuilds the belief's tracked set from the active spec (decision 8). Called at the end of
 --- Hekili:SpecializationChanged, after every registration. Allocates; SpecializationChanged only.
 function ns.BuildTracked()

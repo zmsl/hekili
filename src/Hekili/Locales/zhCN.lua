@@ -391,6 +391,7 @@ L["There is already a style with the name '%s' -- overwrite it?"] = "已存在�
 L["Restart"] = "重新开始"
 L["Paste your SimulationCraft action priority list or profile here."] = "在此粘贴你的 SimulationCraft 动作优先级列表或配置文件。"
 L["The import for '%s' required some automated changes."] = "导入“%s”时需要进行一些自动修改。"
+-- L["List '%s' line %d: %s: %s; entry disabled."] = ""
 L["This profile is missing support for generic trinkets.  It is recommended that every priority includes either:\n - [Use Items], which includes any trinkets not explicitly included in the priority; or\n - [Trinket 1] and [Trinket 2], which will recommend the trinket for the numbered slot."] = "此配置文件缺少对通用饰品的支持。建议每个优先级都包含以下任一项：\n - [使用物品]，包括优先级中未明确列出的所有饰品；或\n - [饰品 1] 和 [饰品 2]，将推荐对应编号栏位的饰品。"
 L["No action lists were imported from this profile."] = "未从此配置文件导入任何动作列表。"
 L["Imported %s action lists."] = "已导入 %s 个动作列表。"

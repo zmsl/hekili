@@ -5,12 +5,16 @@
 ### New
 - Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
+- A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
+
 ### Changed
 - Feral: the default priority follows wowsims's new Feral build (Rend and Tear 5/5). With two or three enemies it keeps the single-target priority, because wowsims's lists for two and three enemies switch targets, which Hekili cannot follow.
 - Guardian: the default priority follows wowsims's new Bear build and lists, with its own priorities for two and three enemies (Swipe). Not yet checked in game.
 - Guardian: in the Timeline style, Maul no longer takes the now circle ahead of keeping up Lacerate and Demoralizing Roar.
 - Feral: a dodged or missed Ferocious Bite now gives back 28 energy, and the Idol of Ferocity (Claw and Rake cost 2 less) and the Idol of the Dream (Rip lasts 2 seconds longer) are counted. Not yet checked in game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
+
+- `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
 
 ### Fixed
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
@@ -21,6 +25,8 @@
 ### Known issues
 
 ### Upgrade notes
+
+- A priority list named `windows` is now reserved for window declarations: a custom priority with an ordinary list of that name shows an error on that list until it is renamed.
 
 ## v0.8.5
 

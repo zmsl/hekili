@@ -105,6 +105,33 @@ describe("Engine/Driver.lua through the engine frame", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- windows design v6 R08: the owner's flapping pair (W09) on top of the priority, an APL window from the `windows`
+    -- list: every Update opens and closes it in each slot (two restarts a slot), sends OPEN and CLOSE from slot 1
+    -- (VS.WindowOp) and the next Drain replays them; nothing allocates.
+    it("allocates 0 B per Update with an open and a close line on an APL window firing in every slot", function()
+        local pack = H.Hekili.Engine.Output.Primary.recs[1].pack
+        local lists = H.Hekili.DB.profile.packs[pack].lists
+        lists.windows = { { action = "window", window_name = "aw", duration = "6", enabled = true } }
+        -- precombat is walked first (out of combat its pick would end the walk before the default list)
+        table.insert(lists.precombat, 1, { action = "close_window", window_name = "aw", enabled = true })
+        table.insert(lists.precombat, 1, { action = "open_window", window_name = "aw", enabled = true })
+        H.Hekili:LoadScripts()
+        local sent, op = 0, H.ns.VirtualState.WindowOp
+        H.ns.VirtualState.WindowOp = function(...)
+            sent = sent + 1
+            return op(...)
+        end
+        for _ = 1, 35 do
+            tick()
+        end
+        local bytes = perUpdate(45)
+        H.ns.VirtualState.WindowOp = op
+        assert.are.equal(2, H.Hekili.Engine.Output.Primary.recs[1].restarts)
+        assert.is_true(sent >= 160, tostring(sent)) -- OPEN and CLOSE per Update (Primary and AOE may both send)
+        assert.are.equal(0, bytes)
+        assert.are.same({}, H.errors)
+    end)
+
     -- Option D review I1: Recommend Target Swaps on, three mobs all carrying the DoT (the feature's resting state): the
     -- swap lines (cycle_targets=1 and other_target=1) find no other target every Update and build nothing. The enemy
     -- count grows each refresh, the count with it (all DoTed), so text built from the counts would be new each time

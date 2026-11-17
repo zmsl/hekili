@@ -422,10 +422,12 @@ describe("the core's windows", function()
         assert.is_false(S.window.w.up)
     end)
 
-    it("runs open_window lines in list order: a line above the open reads it down", function()
+    -- windows design v6 §4.3 (R01): the open restarts the walk, so a line above it reads it up in the same slot
+    it("runs open_window lines as commands: a line above the open reads it after the restart", function()
         core({ w = { duration = 6 } })
         local recs = run("actions+=/bloodrage,if=window.w.up\nactions+=/open_window,name=w\nactions+=/berserker_stance")
-        assert.are.equal("berserker_stance", recs[1] and recs[1].actionName)
+        assert.are.equal("bloodrage", recs[1] and recs[1].actionName)
+        assert.are.equal(1, recs[1].restarts)
         recs = run("actions+=/open_window,name=w\nactions+=/bloodrage,if=window.w.up\nactions+=/berserker_stance")
         assert.are.equal("bloodrage", recs[1] and recs[1].actionName)
         assert.is_false((VS.Window("w"))) -- never written back
@@ -439,20 +441,20 @@ describe("the core's windows", function()
         assert.are.equal("berserker_stance", recs[1] and recs[1].actionName)
     end)
 
-    it("opens once on a held condition, even with refresh=1, across the cycle's slots", function()
+    -- windows design v6 §4.3, ruling 20: the line runs in every slot (the mark is per slot); a window with no
+    -- registered refresh changes the copy once, and later slots find it open
+    it("opens once on a held condition across the cycle's slots", function()
         core({ w = { duration = 6 } })
         local opens, lines = 0, 0
-        local openWindow, line = S.openWindow, S.WindowLine
+        local openWindow = S.openWindow
         S.openWindow = function(...)
-            opens = opens + 1
-            return openWindow(...)
-        end
-        S.WindowLine = function(...)
             lines = lines + 1
-            return line(...)
+            local changed = openWindow(...)
+            opens = opens + (changed and 1 or 0)
+            return changed
         end
-        run("actions+=/open_window,name=w,if=1,refresh=1\nactions+=/berserker_stance\nactions+=/bloodrage")
-        S.openWindow, S.WindowLine = openWindow, line
+        run("actions+=/open_window,name=w,if=1\nactions+=/berserker_stance\nactions+=/bloodrage")
+        S.openWindow = openWindow
         assert.is_true(lines >= 2, tostring(lines)) -- the line ran at every slot of the cycle
         assert.are.equal(1, opens)
     end)

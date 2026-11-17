@@ -65,7 +65,8 @@ The importer converts these SimulationCraft forms, or drops them, and lists each
 | `%`, `%%` and `//` | `%` becomes `/` (division); `%%` and `//` become `%` (remainder) |
 | `snapshot_stats`, `flask`, `food`, `augmentation` | Dropped |
 | An action the specialization does not have | Kept, with an "Unsupported action" warning; the walk skips it |
-| `open_window` or `close_window` with a window the class does not register | Kept switched off, with an "Unknown window" warning |
+| `open_window` or `close_window` with a window neither the priority's `windows` list nor the class declares, or with an option besides `name=` and `if=` | Kept switched off, with a warning naming the error (E1, E4) |
+| A list named `windows` | Reserved for `window` declarations: any other entry in it is switched off with a warning (E5) |
 
 A class pack's own source (`tools/make_pack.lua`) refuses any option outside a short list and stops the build ([APL line options](APL-Line-Options#options-by-path)).
 

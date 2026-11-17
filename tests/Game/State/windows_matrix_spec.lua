@@ -431,6 +431,21 @@ local CASES = {
         },
     },
     {
+        id = "L01-first",
+        what = "an edit in combat that brings the first APL windows applies at once (a /reload in combat: no row to keep)",
+        apl = {},
+        keys = { "z" },
+        timeline = {
+            { t = 2, combat = "start" },
+            { t = 2.2, edit = { z = { duration = 5 } }, ops = { { "z", "OPEN" } } },
+            {
+                t = 2.4,
+                expect = { z = { up = true, openedAt = 2.2, expiresAt = 7.2 } },
+                counts = { applied = 1, dropped = 0 },
+            },
+        },
+    },
+    {
         id = "L02",
         what = "a new generation out of combat: the old key is gone (down, its operations dropped), the new one closed",
         apl = { x = { duration = 5 } },

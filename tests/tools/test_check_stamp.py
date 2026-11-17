@@ -321,6 +321,10 @@ NOT_INPUTS = {
     "LUACHECK": "set by the Makefile on api-check's line (a := variable)",
     "FULL": "only forces a full run",
     "MAKE": "make itself",
+    "BENCH": "tests/Forever/windows_cpu_bench.lua: a dev-only CPU bench, not check",
+    "ARM": "tests/Forever/windows_cpu_bench.lua: a dev-only CPU bench, not check",
+    "PAIRS": "tests/Forever/windows_cpu_bench.lua: a dev-only CPU bench, not check",
+    "UPDATES": "tests/Forever/windows_cpu_bench.lua: a dev-only CPU bench, not check",
 }
 # Files that read an environment variable by a computed name, with the names they read (all in ENV_VARS).
 DYNAMIC_READS = {"tools/wowsims/export.lua": "env(name): WOWSIMS, WOWSIMS_CLI, WOWDB"}
