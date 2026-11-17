@@ -172,10 +172,15 @@ function Hekili:HandleSetCommand( args )
     local toggleCategory = profile.toggles[ mainToggle ]
     if toggleCategory then
         if subToggleOrState == "on" or subToggleOrState == "off" then
-            toggleCategory.value = ( subToggleOrState == "on" )
-            local stateText = toggleCategory.value and L["|cFF00FF00ON|r"] or L["|cFFFF0000OFF|r"]
-            self:Print( format( L["|cFFFFD100%s|r is now %s."], mainToggle, stateText ) )
-            self:ForceUpdate( "CLI_TOGGLE" )
+            local on = subToggleOrState == "on"
+            if mainToggle ~= "pause" then
+                self:FireToggle( mainToggle, subToggleOrState ) -- prints, sends HEKILI_TOGGLE, updates
+            elseif on ~= ( self.Pause and true or false ) then
+                self:TogglePause()
+            else -- already so: nothing to pause or resume, sent like any toggle set to the value it has
+                self:Print( on and L["PAUSED."] or L["UNPAUSED."] )
+                if WeakAuras and WeakAuras.ScanEvents then WeakAuras.ScanEvents( "HEKILI_TOGGLE", "pause", on ) end
+            end
             return true
         end
 

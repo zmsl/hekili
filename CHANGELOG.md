@@ -23,7 +23,9 @@
 
 - Another addon that follows Hekili's displays can no longer stop the action bar glow, a display or the WeakAuras event from updating.
 
-- WeakAuras that react to Hekili's toggles (the `HEKILI_TOGGLE` event) now also see pause and resume, see a mode chosen in the options, and are no longer told about a `/hekili set mode` word that is not a mode.
+- WeakAuras that react to Hekili's toggles (the `HEKILI_TOGGLE` event) now also see pause and resume, a toggle set with `/hekili set` and a mode chosen in the options, and are no longer told about a `/hekili set mode` word that is not a mode.
+
+- `/hekili set pause on` and `/hekili set pause off` now pause and resume the displays.
 
 - Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 

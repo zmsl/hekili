@@ -179,7 +179,7 @@ end
 It is sent:
 
 - after every change of a toggle that Hekili Forever accepts, from a keybinding, a chat command or macro, the minimap menu or the options. A change that sets the state the toggle already has is sent too. A command that is refused, such as `/hekili set mode` with a word that is not a mode, changes nothing and sends nothing;
-- each time the displays are paused or resumed, with the name `pause`;
+- each time the displays are paused or resumed, with the name `pause`. `/hekili set pause on` pauses them and `/hekili set pause off` resumes them; when they already are in that state, it is sent without pausing or resuming again;
 - once for each toggle, `pause` included, when Hekili Forever starts and when the profile is switched, copied or reset.
 
 It is sent only when WeakAuras is loaded at that moment. Taking a snapshot does not send it.
@@ -202,10 +202,11 @@ Hekili Forever registers a LibDataBroker data source named `Hekili`. A display a
 
 ## Chat commands in macros
 
-Every public chat command also works in a macro. A macro can change a toggle, the display mode, a specialization setting, the priority or the profile:
+Every public chat command also works in a macro. A macro can change a toggle, pause, the display mode, a specialization setting, the priority or the profile. A toggle or pause changed this way sends `HEKILI_TOGGLE` like any other change:
 
 ```text
 /hekili set cooldowns on
+/hekili set pause off
 /hekili set mode single
 /hekili priority default
 ```

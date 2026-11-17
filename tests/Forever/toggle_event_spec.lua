@@ -58,6 +58,44 @@ describe("HEKILI_TOGGLE and GetToggleState (headless Arms)", function()
         assert.is_false(hk:GetToggleState("pause"))
     end)
 
+    it("/hekili set <toggle> on|off fires the new state; a refused word fires nothing and changes nothing", function()
+        hk:CmdLine("set cooldowns off")
+        assert.are.same({ { "cooldowns", false } }, fired)
+        assert.is_false(hk:GetToggleState("cooldowns"))
+        hk:CmdLine("set cooldowns on")
+        assert.are.same({ "cooldowns", true }, fired[2])
+        assert.is_true(hk:GetToggleState("cooldowns"))
+        hk:CmdLine("set cooldowns maybe")
+        assert.are.equal(2, #fired)
+        assert.is_true(hk:GetToggleState("cooldowns"))
+    end)
+
+    it(
+        "/hekili set pause on|off sets pause to that state, fired; the state it already has is fired, not toggled",
+        function()
+            local snaps, make = 0, hk.MakeSnapshot
+            hk.MakeSnapshot = function(...)
+                snaps = snaps + 1
+                return make(...)
+            end
+            hk:CmdLine("set pause on")
+            assert.is_true(hk.Pause)
+            assert.are.same({ { "pause", true } }, fired)
+            hk:CmdLine("set pause on")
+            assert.is_true(hk.Pause)
+            assert.are.same({ "pause", true }, fired[2])
+            assert.are.equal(1, snaps) -- paused once
+            hk:CmdLine("set pause off")
+            assert.is_false(hk.Pause)
+            assert.are.same({ "pause", false }, fired[3])
+            hk:CmdLine("set pause off")
+            assert.is_false(hk.Pause)
+            assert.are.same({ "pause", false }, fired[4])
+            assert.are.equal(4, #fired)
+            assert.are.same({}, H.errors)
+        end
+    )
+
     it("a profile refresh fires every toggle that has a state, each with GetToggleState's answer", function()
         hk:TotalRefresh()
         assert.is_true(#fired > 0)
