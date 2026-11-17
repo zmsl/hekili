@@ -82,7 +82,7 @@ M.FLICKER = {
     -- only seeds 5 (4 -> 30) and 6 (8 -> 19) move: ab8ad0acc's world rule (an avoided Execute keeps its extra rage)
     -- moves seed 2's kill 4.8 s, so seeds 5 and 6 start on another boot clock and land on the P3 float-rounding edge
     -- above (one held tick per swing, 0.12-0.20 s; each alone on a fresh boot reads 27 / 8 before and after the rule);
-    -- seed 6 +1 more: this round (gap-as-09, avoid-refund-09, Execute's field; not split) re-times it from 126 s (a
+    -- seed 6 +1 more: the gap-as-09 / avoid-refund-09 merges (field off reads the same) re-times it from 126 s (a
     -- Rend wait 2.79 s, truth 11.0 against its 10)
     ["Arms"] = { flicker = 0.08, retracted = 0.1, readyShort = 1, heldReady = 316 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
@@ -162,7 +162,7 @@ M.FLICKER = {
     -- Strike's `rage.lo>=40` wait at truth 40-41, gap CJ's class (1) above): ab8ad0acc's world rule (an avoided Execute
     -- keeps its extra) moves seed 5's kill 6.4 s, so seeds 6-20 start on another boot clock (seeds 6, 9, 14, 15, 17, 20
     -- alone on a fresh boot read the same before and after the rule; seed 11 alone 30 -> 14, the rule moving that
-    -- fight directly); this round (gap-as-09, avoid-refund-09, Execute's field; not split) moves seed 1, the boot's
+    -- fight directly); the gap-as-09 / avoid-refund-09 merges (field off reads the same) moves seed 1, the boot's
     -- first fight, 21 -> 22 (an Execute held at 102.80)
     ["Fury L24"] = { flicker = 0.30, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 377 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
