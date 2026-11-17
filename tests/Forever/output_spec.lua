@@ -387,7 +387,21 @@ describe("Engine.Output steady icons (the experimental hold, pure)", function()
             return shown(Out, { { { "a", 0.8 } }, { { "b", 0.49 } }, { { "b", 0.29 } }, last })
         end
         assert.are.same({ "a", "a", "b", "a" }, from({ { "a", 0 } })) -- a ready return
+        assert.are.same({ "a", "a", "b", "a" }, from({ { "a", 0.05 } })) -- ready at READY: never held
+        assert.are.same({ "a", "a", "b", "b" }, from({ { "a", 0.06 } })) -- just past READY: held
         assert.are.same({ "a", "a", "b", "c" }, from({ { "c", 0.2 } })) -- another icon due within the window
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 1 -- the held return lives one publish: b shown twice, then a returns at once
+        assert.are.same(
+            { "a", "a", "b", "b", "a" },
+            shown(Out, { { { "a", 0.8 } }, { { "b", 0.69 } }, { { "b", 0.49 } }, { { "b", 0.29 } }, { { "a", 0.2 } } })
+        )
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 1 -- a hold cut short by an in-window c is no held change coming through
+        assert.are.same(
+            { "a", "a", "c", "a" },
+            shown(Out, { { { "a", 0.8 } }, { { "b", 0.49 } }, { { "c", 0.2 } }, { { "a", 0.2 } } })
+        )
         Out = select(2, load())
         Out.steady, Out.hold = true, 1
         shown(Out, { { { "a", 0.8 } }, { { "b", 0.49 } }, { { "b", 0.29 } } })

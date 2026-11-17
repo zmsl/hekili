@@ -57,7 +57,8 @@ local function display()
         rawName = filled(false),
         streak = filled(0),
         held = filled(false),
-        kept = filled(false), -- per slot the icon a hold kept shown, the publish its held change came through (else false)
+        -- per slot the icon a hold kept shown, the publish its held change came through (else false)
+        kept = filled(false),
         acts = 0,
     }
 end
