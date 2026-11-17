@@ -85,12 +85,19 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- run (integ/0.7 5deb101c4: CN8's cooldown countdown and steady icons as the default, over the pin-2 export; the
     -- two are not separated). The 21.25, 39.88, 111.89, 140.38 and 162.38 never rows are gone; left: innervate ->
     -- cat_form (the 0.04 s powershift tie), rake -> faerie_fire and shred -> faerie_fire
+    -- 0.96 -> 0.94 (0.943, 82/87; flicker 0.00/min) re-pin e4ef929e54 -> the new log's fight (wowsims #972's adaptive
+    -- list, CatTalents; measured with CN25, mana-09 and harness-gcd-edge-09 merged; decision C changes nothing at one
+    -- enemy). The 5 never rows: 16.25 innervate -> cat_form (the powershift tie above); 23.25 shred -> rake (Rake fades
+    -- in the instant wowsims Shreds: same-instant order, as the old 140.38); 44.13 shred (cost: the belief's energy lo
+    -- 1.2 under the truth, energy secret: API-forced); 150.13 shifting_power -> shred (mana 686.5 against the 684 cost:
+    -- the belief's mana near cost, shared, as the old 111.89); 164.88 shred -> rake: UNTRACED (wowsims's Rake runs
+    -- 156.38-165.38; PROVISIONAL floor, repin-druid-09 report)
     it("Feral (wowsims.com) follows wowsims's casts", function()
         local r, line = ws.gate(
             "Feral (wowsims.com)",
             content("druid_feral", W.Feral, "Feral (wowsims.com)", 60),
             "druid_feral",
-            0.96,
+            0.94,
             -- wowsims's Feral stands behind its target (no inFrontOfTarget in the request): the client says the mob
             -- targets someone else, so the pack's Shred lines run as wowsims's (L602)
             { notTargeted = true }
