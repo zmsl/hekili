@@ -570,8 +570,10 @@ end
 --- is the whole nearest (lo + hi) / 2 / f. Under nearest rounding the true base lies within ((hi - lo) / 2 + 0.5) / f of
 --- that middle (0.5 / f when the read pins W, always uncut), so the learned base within that + 0.5, never worse than
 --- (0.5 / m + 0.5) / f + 0.5; under truncation within (1.5 / m + 0.5) / f + 0.5. The finest read is the one with the
---- smallest nearest half-width. Runs after the reads and again after a talent walk that changed a rank
---- (Sources/Talents.lua), so a talent-scaled fraction and a talent's factor are the walked rank's. Allocates nothing.
+--- smallest half-width under either rounding: 0.5 / f uncut, (1.5 / m + 0.5) / f cut, so an uncut read, which has no
+--- rounding doubt, wins any near tie and the chosen read is never coarser than the finest uncut one. Runs after the
+--- reads and again after a talent walk that changed a rank (Sources/Talents.lua), so a talent-scaled fraction and a
+--- talent's factor are the walked rank's. Allocates nothing.
 -- shortcut: the base is exact only to that half-width of the chosen read (a 55% read: within 1 mana); a coarser read
 -- the result misprices is not reconciled; upgrade by intersecting every read's interval.
 function I.LearnBases()
@@ -580,7 +582,7 @@ function I.LearnBases()
     end
     for r = 1, #I.baseDefault do
         if I.basePow[r] > 0 then
-            local bestF, bestM, bestCost, bestW, bestMid = 0, 1, 0, 0, 0
+            local bestF, bestM, bestCost, bestW = 0, 1, 0, 0
             for a = 1, A.n do
                 local cost = A.readCost[a]
                 if A.slot[a] == r and cost > 0 then
@@ -589,17 +591,17 @@ function I.LearnBases()
                         and isFraction(a, f)
                         and (I.PassiveCostFactor and I.PassiveCostFactor(a, r, I.clock) or 1)
                     if m and m > 0 then
-                        local lo, hi = wholeWindow(cost, m)
-                        local w = ((hi - lo) / 2 + 0.5) / f -- f > 0 (isFraction)
+                        local w = (m == 1 and 0.5 or 1.5 / m + 0.5) / f -- f > 0 (isFraction)
                         if bestW == 0 or w < bestW then
-                            bestF, bestM, bestCost, bestW, bestMid = f, m, cost, w, (lo + hi) / 2
+                            bestF, bestM, bestCost, bestW = f, m, cost, w
                         end
                     end
                 end
             end
             local miss = bestF > 0 and nearest(bestF, I.basePow[r]) * bestM - bestCost
             if miss and (miss < -0.5 - EPS or miss >= 1 - EPS) then
-                I.basePow[r] = max(floor(bestMid / bestF + 0.5), 1) -- bestF > 0 checked; 0 would mean no base
+                local lo, hi = wholeWindow(bestCost, bestM)
+                I.basePow[r] = max(floor((lo + hi) / 2 / bestF + 0.5), 1) -- bestF > 0 checked; 0 would mean no base
             end
         end
     end
