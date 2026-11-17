@@ -1942,6 +1942,29 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
             assert.is_nil(rows[k])
         end
     )
+
+    -- review M9: an allow_skip start past member 1 (member 1's if= false, member 2 the separated cooldown) is shown and
+    -- started in AOE (no display filter there, the start line skips the separate test) and in Cooldowns (its own
+    -- ability): OPEN then STEP 2 on each key, member 2 in slot 1.
+    it("M9: an allow_skip start past member 1 shows and starts in AOE and in Cooldowns", function()
+        H.Hekili.Engine.settings.toggles.mode.value = "dual"
+        cooldownsOn(
+            "actions+=/strict_sequence,name=s,allow_skip=1:berserker_stance,if=test_fa:bloodrage\nactions+=/defensive_stance"
+        )
+        assert.is_true(H.Hekili.Engine.Subscribe("AOE", function() end))
+        local _, sent = tick()
+        for _, disp in ipairs({ "Primary", "AOE", "Cooldowns" }) do
+            local got = {}
+            for i, o in ipairs(sent) do
+                if o[1] == key("s", disp) then
+                    got[#got + 1] = o[2] == STEP and ("STEP " .. opArgs[i]) or o[2]
+                end
+            end
+            assert.are.same({ OPEN, "STEP 2" }, got, disp)
+            local recs = H.Hekili.Engine.Output[disp].recs
+            assert.are.equal("bloodrage", recs[1] and recs[1].actionName, disp)
+        end
+    end)
 end)
 
 describe("named cases, part D (windows design v6 §13)", function()
