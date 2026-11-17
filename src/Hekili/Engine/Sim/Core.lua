@@ -811,7 +811,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
         if not ( self:CheckStack() and scripts:CheckScript( scriptID ) ) then return rAction, rWait, rDepth end
         -- the start test (§6, rulings 27, 28): every member (allow_skip: any member) can be cast; start_on_first tests the
         -- first only, its time within the queue window judged when the pick is final (Hekili.Update)
-        local first, n = 0, #d.steps
+        local first, n, failed = 0, #d.steps, 0
         -- (§7, ruling 25) in Primary and AOE the start line skips the "toggle shown separately" test; a member after the
         -- first is judged as it will be once up (ruling 9: the display filter skipped too, D02), the first unbypassed (D20)
         local sb = ( dispName == "Primary" or dispName == "AOE" ) and 1 or 0
@@ -831,13 +831,16 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
             first = 1
             for k = 1, n do
                 state.seqBypass = k > 1 and 2 or sb
-                if not castable( self, d, k, true ) then first = 0 break end
+                if not castable( self, d, k, true ) then first, failed = 0, k break end
             end
         end
         state.seqBypass = sb
         if first == 0 then
             state.seqBypass = 0
-            if debug then self:Debug( " - strict_sequence %s: the start test fails.", name ) end
+            if debug then -- (§15 risk 18) the member the default test stopped at; allow_skip: none of them
+                if failed > 0 then self:Debug( " - strict_sequence %s: the start test fails at step %d (%s).", name, failed, d.steps[ failed ] )
+                else self:Debug( " - strict_sequence %s: the start test fails: no member can be cast.", name ) end
+            end
             return rAction, rWait, rDepth
         end
         self:AddToStack( scriptID, d.startList, caller )
@@ -875,7 +878,7 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
                 seqSend( d, OP_STEP, to, d.skipID )
                 state.WindowFired( d.skipID, true )
                 walkRestart = true
-                if debug then self:Debug( " - sequence %s: step %d cannot be cast, step %d, restart.", name, due, to ) end
+                if debug then self:Debug( " - sequence %s: step %d (%s) cannot be cast, step %d, restart.", name, due, d.steps[ due ], to ) end
                 return rAction, rWait, rDepth
             end
         end
@@ -910,12 +913,12 @@ local function giveUp( self, d )
             if state.WindowStep( name, to ) then -- a STEP restarts the walk like the CLOSE (§4.3): outside lines see it
                 seqSend( d, OP_STEP, to, d.giveID )
                 walkRestart = true
-                if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d cannot be cast; step %d, restart.", name, due, to ) end
+                if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d (%s) cannot be cast; step %d, restart.", name, due, d.steps[ due ], to ) end
             end
         elseif state.closeWindow( name ) then
             seqSend( d, OP_CLOSE, nil, d.giveID )
             walkRestart = true
-            if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d cannot be cast; closed, restart.", name, due ) end
+            if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d (%s) cannot be cast; closed, restart.", name, due, d.steps[ due ] ) end
         end
     end
     state.seqBypass = 0

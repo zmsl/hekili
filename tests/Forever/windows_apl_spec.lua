@@ -2289,6 +2289,52 @@ describe("the snapshot's Windows section (windows design v6 §15; L06, R13)", fu
             table.concat(windowsLines(lines), "\n")
         )
     end)
+
+    -- §15 risks 13 and 18 (review M6): the member a failed start test stopped at, and the member every STEP drops
+    local function seqLines(lines)
+        local out = {}
+        for _, l in ipairs(lines) do
+            if l:find("sequence ", 1, true) then
+                out[#out + 1] = l
+            end
+        end
+        return table.concat(out, "\n")
+    end
+
+    it("risk 18: a failed default start test names the member that cannot be cast", function()
+        load({
+            default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance,if=test_fa\nactions+=/defensive_stance",
+        })
+        local lines = debugTick()
+        assert.is_true(
+            has(lines, " - strict_sequence s: the start test fails at step 2 (berserker_stance)."),
+            seqLines(lines)
+        )
+    end)
+
+    it("risk 13: a plain skip STEP and the give-up's allow_skip STEP name the member they drop", function()
+        load({ default = "actions+=/sequence,name=x:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance" })
+        local lines = debugTick()
+        assert.is_true(
+            has(lines, " - sequence x: step 1 (bloodrage) cannot be cast, step 2, restart."),
+            seqLines(lines)
+        )
+        boot()
+        load({
+            default = "actions+=/strict_sequence,name=s,allow_skip=1:bloodrage:berserker_stance,if=!test_fa:defensive_stance"
+                .. "\nactions+=/defensive_stance",
+        })
+        tick()
+        cast(BR)
+        tick()
+        tick()
+        flags.fa = true
+        lines = debugTick()
+        assert.is_true(
+            has(lines, "strict_sequence s: step 2 (berserker_stance) cannot be cast; step 3, restart."),
+            seqLines(lines)
+        )
+    end)
 end)
 
 describe("the strict start test's ability fields (windows design v6 §3.6, ruling 36)", function()
