@@ -98,6 +98,9 @@ state.nearCost = false
 state.nearAction = false
 state.nearPre = 0 -- TimeToReady: the running GCD's remains the near-cost window opens after (L628)
 state.nearHoldFrom = 0 -- Core: the held pick's nearPre
+-- (windows design v6 §3.6, ruling 36) a strict start test's member after the first: the gates its `sequence_ignore`
+-- names (a set: form, noform, buff, nobuff) that IsUsable / TimeToReady skip for that one judgement; false otherwise
+state.gateSkip = false
 state.delayMin = 0
 state.delayMax = 15
 
@@ -7532,15 +7535,16 @@ do
             end
         end
 
-        if ability.form and not state.buff[ ability.form ].up then
+        local skip = self.gateSkip -- ruling 36: the gates a strict start test may look past for this member
+        if ability.form and not ( skip and skip.form ) and not state.buff[ ability.form ].up then
             return false, "required form (" .. ability.form .. ") not active"
         end
 
-        if ability.noform and state.buff[ ability.noform ].up then
+        if ability.noform and not ( skip and skip.noform ) and state.buff[ ability.noform ].up then
             return false, "not usable in current form (" .. ability.noform .. ")"
         end
 
-        z = ability.buff
+        z = not ( skip and skip.buff ) and ability.buff
         if type( z ) == "table" then
             for _, v in ipairs( z ) do
                 if not state.buff[ v ].up then
@@ -7748,7 +7752,8 @@ function state:TimeToReady( action, pool )
         waitRes = wait
     end
 
-    z = ability.nobuff
+    z = self.gateSkip
+    z = not ( z and z.nobuff ) and ability.nobuff
     if type( z ) == "table" then
         for _, v in ipairs( z ) do
             z = self.buff[ v ].remains

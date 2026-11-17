@@ -640,9 +640,22 @@ local OP_STEP = 3
 
 -- (§3.3, ruling 28) Member k of sequence d can be cast at the moment the player can next act (the GCD's end for an
 -- on-GCD member, now for an off-GCD one): enabled, known, ready by then, usable and its own if= true then. The walk's
--- current entry (this_action, delay, scriptID, the near-cost marks) is kept. shortcut: the strict start test of a member
--- after the first uses this normal readiness too (no sequence_ignore / sequence_ready yet, ruling 36); add them there.
-local function castable( self, d, k )
+-- current entry (this_action, delay, scriptID, the near-cost marks) is kept.
+-- `start` (ruling 36, §3.6): a strict start test without start_on_first; for a member after the first its ability's
+-- `sequence_ignore` gates are skipped and its `sequence_ready`, when present, replaces the readiness (the time to
+-- ready and the usable test), with `ready()` the gate-skipped normal test during the call. Enabled, known and the
+-- member's own if= stay outside either.
+local seqAt = 0 -- the moment readiness is judged for, read by ready()
+local gateSet = { form = false, noform = false, buff = false, nobuff = false }
+
+local function ready()
+    state.delay = 0
+    if state:TimeToReady() > seqAt + 0.01 then return false end
+    state.delay = seqAt
+    return state:IsUsable() and true or false
+end
+
+local function castable( self, d, k, start )
     local key = d.steps[ k ]
     local ability = key and class.abilities[ key ]
     if not ability then return false end
@@ -650,11 +663,24 @@ local function castable( self, d, k )
     state.this_action, state.scriptID, state.delay = key, d.memberIDs[ k ], 0
     local ok = self:IsSpellEnabled( key ) and self:IsSpellKnown( key )
     if ok then
-        local at = ability.gcd ~= "off" and state.cooldown.global_cooldown.remains or 0
-        ok = state:TimeToReady() <= at + 0.01
+        seqAt = ability.gcd ~= "off" and state.cooldown.global_cooldown.remains or 0
+        local later = start and k > 1
+        local ig = later and ability.sequence_ignore
+        if ig then
+            gateSet.form, gateSet.noform, gateSet.buff, gateSet.nobuff = false, false, false, false
+            for i = 1, #ig do gateSet[ ig[ i ] ] = true end
+            state.gateSkip = gateSet
+        end
+        local custom = later and ability.sequence_ready
+        if custom then
+            rawset( state, "ready", ready )
+            ok = custom() and true or false
+            rawset( state, "ready", nil )
+        else ok = ready() end
+        state.gateSkip = false
         if ok then
-            state.delay = at
-            ok = state:IsUsable() and scripts:CheckScript( d.memberIDs[ k ] )
+            state.delay = seqAt
+            ok = scripts:CheckScript( d.memberIDs[ k ] )
         end
     end
     state.this_action, state.delay, state.scriptID, state.nearCost, state.nearPre = pa, pd, pid, pnc, pnp
@@ -701,14 +727,19 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
         -- first only, its time within the queue window judged when the pick is final (Hekili.Update)
         local first, n = 0, #d.steps
         if d.start_on_first then first = 1
-        elseif d.allow_skip then
+        elseif d.allow_skip then -- the first shown is the first castable by normal readiness; else by the fields (ruling 36)
             for k = 1, n do
                 if castable( self, d, k ) then first = k break end
+            end
+            if first == 0 then
+                for k = 2, n do
+                    if castable( self, d, k, true ) then first = k break end
+                end
             end
         else
             first = 1
             for k = 1, n do
-                if not castable( self, d, k ) then first = 0 break end
+                if not castable( self, d, k, true ) then first = 0 break end
             end
         end
         if first == 0 then

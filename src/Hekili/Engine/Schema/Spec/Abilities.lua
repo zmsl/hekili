@@ -23,7 +23,12 @@ local protectedFunctions = {
     -- Casts
     handler = true, -- Cast finish.
     impact = true,  -- Projectile impact.
+
+    sequence_ready = true, -- (windows design v6 §3.6) called by the strict start test, never read as a value
 }
+
+-- (ruling 36) the gates `sequence_ignore` may name: the ability fields the usable test and the time to ready read
+local SEQUENCE_GATES = { form = true, noform = true, buff = true, nobuff = true }
 
 
 -- A missable DoT (an ability's `missable`, C15): a dodged, parried or missed cast still raised SPELL_CAST_SUCCESS, so
@@ -88,6 +93,17 @@ local methods = {
             ns.TrackPassive( data.id )
             return
         end
+
+        local ig = data.sequence_ignore
+        if ig ~= nil then
+            assert( type( ig ) == "table", "RegisterAbility: " .. tostring( ability ) .. "'s sequence_ignore must be a list" )
+            for _, g in ipairs( ig ) do
+                assert( SEQUENCE_GATES[ g ], "RegisterAbility: " .. tostring( ability ) .. "'s sequence_ignore names '" .. tostring( g )
+                    .. "' (form, noform, buff or nobuff)" )
+            end
+        end
+        assert( data.sequence_ready == nil or type( data.sequence_ready ) == "function",
+            "RegisterAbility: " .. tostring( ability ) .. "'s sequence_ready must be a function" )
 
         CommitKey( ability )
 

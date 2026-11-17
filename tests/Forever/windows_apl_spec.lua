@@ -1357,3 +1357,150 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
         assert.are.same({ true, 1 }, { seqState("p") })
     end)
 end)
+
+describe("the strict start test's ability fields (windows design v6 §3.6, ruling 36)", function()
+    local GATES = {
+        form = { "form", "defensive_stance" }, -- down: the gate fails
+        buff = { "buff", "defensive_stance" },
+        noform = { "noform", "battle_stance" }, -- up: the gate fails
+        nobuff = { "nobuff", "battle_stance" }, -- up for an hour: the time to ready waits
+    }
+    local LINE = "actions+=/strict_sequence,name=s%s:bloodrage:berserker_stance%s\nactions+=/defensive_stance"
+    local calls
+
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+        calls = 0
+    end)
+
+    local function member(fields)
+        local a = H.Hekili.Class.abilities.berserker_stance
+        for k, v in pairs(fields) do
+            if type(v) == "function" then
+                setfenv(v, S)
+            end
+            a[k] = v
+        end
+        return a
+    end
+
+    local function opened(opt, own)
+        load({ default = LINE:format(opt or "", own or "") })
+        local _, sent = tick()
+        return #sent > 0 and sent[1][2] == OPEN
+    end
+
+    it("P28: each gate blocks the start; sequence_ignore naming it lets the line be chosen; another gate still blocks", function()
+        for gate, g in pairs(GATES) do
+            boot()
+            member({ [g[1]] = g[2] })
+            assert.is_false(opened(), gate)
+            boot()
+            member({ [g[1]] = g[2], sequence_ignore = { gate } })
+            assert.is_true(opened(), gate)
+            boot()
+            local other = gate == "form" and "noform" or "form"
+            member({ [g[1]] = g[2], [GATES[other][1]] = GATES[other][2], sequence_ignore = { gate } })
+            assert.is_false(opened(), gate .. " + " .. other)
+        end
+    end)
+
+    it("P29: only the named gate is skipped: the member's usable test still blocks", function()
+        member({ form = "defensive_stance", sequence_ignore = { "form" }, usable = false })
+        assert.is_false(opened())
+    end)
+
+    it("P30: sequence_ready replaces readiness (chosen exactly when it is true); the member's own if= still blocks", function()
+        for _, f in ipairs({ false, true }) do
+            boot()
+            member({
+                usable = false,
+                sequence_ready = function()
+                    calls = calls + 1
+                    return flags.fa
+                end,
+            })
+            flags.fa = f
+            assert.are.equal(f, opened(), tostring(f))
+        end
+        assert.is_true(calls > 0)
+        boot()
+        member({
+            sequence_ready = function()
+                return true
+            end,
+        })
+        assert.is_false(opened(nil, ",if=test_fb"))
+    end)
+
+    it("P31: ready() inside sequence_ready is the gate-skipped normal test", function()
+        local function readyAndFlag()
+            return ready() and flags.fa -- luacheck: ignore 113 (ready: the state's accessor during the call)
+        end
+        for _, c in ipairs({ { false, false, false }, { true, false, true }, { true, true, false } }) do
+            boot()
+            member({ form = "defensive_stance", sequence_ignore = { "form" }, usable = not c[2], sequence_ready = readyAndFlag })
+            flags.fa = c[1]
+            assert.are.equal(c[3], opened(), tostring(c[1]) .. " " .. tostring(c[2]))
+        end
+    end)
+
+    it("P32/P33: start_on_first=1 and the first member ignore the fields; sequence_ready is never called", function()
+        local fields = {
+            form = "defensive_stance",
+            sequence_ignore = { "form" },
+            sequence_ready = function()
+                calls = calls + 1
+                return true
+            end,
+        }
+        member(fields)
+        assert.is_true(opened(",start_on_first=1")) -- only the first member is tested
+        boot()
+        member(fields)
+        load({ default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance" })
+        local _, sent = tick()
+        assert.are.same({}, sent) -- the first member uses normal readiness
+        assert.are.equal(0, calls)
+    end)
+
+    it("P34: once open, a running step uses normal readiness: the gate it skipped at the start gives up", function()
+        member({ form = "defensive_stance", sequence_ignore = { "form" } })
+        assert.is_true(opened())
+        tick()
+        cast(BR)
+        local _, sent = tick()
+        -- give-up CLOSE; the start test (fields again) then chooses the line anew: OPEN (level, ruling 18)
+        assert.are.same({ { key("s"), CLOSE }, { key("s"), OPEN } }, sent)
+    end)
+
+    it("P35: a wrong field raises at registration with the ability's name", function()
+        local kit = H.Hekili.Class.kit
+        for _, bad in ipairs({ { sequence_ignore = { "stance" } }, { sequence_ignore = "form" }, { sequence_ready = true } }) do
+            bad.id = 999001
+            local ok, err = pcall(kit.RegisterAbility, kit, "seq_bad_field", bad)
+            assert.is_false(ok)
+            assert.is_truthy(tostring(err):find("seq_bad_field", 1, true), tostring(err))
+        end
+    end)
+
+    it("P36: a plain sequence and an ordinary line ignore the fields; the handler is not called", function()
+        member({
+            form = "defensive_stance",
+            sequence_ignore = { "form" },
+            sequence_ready = function()
+                calls = calls + 1
+                return true
+            end,
+        })
+        load({
+            default = "actions+=/sequence,name=p,mode=continue:berserker_stance\nactions+=/berserker_stance\n"
+                .. "actions+=/defensive_stance",
+        })
+        tick()
+        local recs = tick()
+        assert.are.equal("defensive_stance", recs[1].actionName)
+        assert.are.equal(0, calls)
+    end)
+end)

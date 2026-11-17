@@ -97,6 +97,8 @@ These fields decide whether the ability is known, usable and shown.
 | `toggle` | string | The toggle it sits under: `"cooldowns"`, `"defensives"`, `"interrupts"`, `"potions"` and the others on [Toggles](Toggles) |
 | `startsCombat` | boolean | Casting it starts combat with the target |
 | `essential` | boolean | A precombat line with this ability is still considered once combat has started |
+| `sequence_ignore` | list | Gates out of `"form"`, `"noform"`, `"buff"`, `"nobuff"` that a `strict_sequence` start test skips for this ability when it is a member after the first and the line has no `start_on_first=1`. Any other name raises at load. |
+| `sequence_ready` | function | Replaces this ability's readiness in the same start test; inside it `ready()` is the normal test with `sequence_ignore` applied. The member's own `if=` still applies. |
 
 Declare a form requirement with `form`, never through `buff` or a `usable` function; `tests/Forever/forms_spec.lua` checks this.
 
