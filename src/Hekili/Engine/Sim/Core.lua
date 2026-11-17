@@ -673,10 +673,17 @@ local function castable( self, d, k, start )
         end
         local custom = later and ability.sequence_ready
         if custom then
-            rawset( state, "ready", ready )
+            state.ready = ready
             ok = custom() and true or false
-            rawset( state, "ready", nil )
-        else ok = ready() end
+            state.ready = false
+        else -- ready()'s body inline: calling it here measured 14 B per held Update (driver_alloc_spec), inline 0
+            state.delay = 0
+            ok = state:TimeToReady() <= seqAt + 0.01
+            if ok then
+                state.delay = seqAt
+                ok = state:IsUsable() and true or false
+            end
+        end
         state.gateSkip = false
         if ok then
             state.delay = seqAt
@@ -914,10 +921,13 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                 local ability = class.abilities[ action ]
 
                 if seqAction[ action ] then
-                    -- (windows design v6 §6) a sequence line: its window's generated lines, run by the engine
-                    local halt
-                    rAction, rWait, rDepth, halt = sequenceLine( self, dispName, packName, entry, scriptID, slot, rAction, rWait, rDepth, caller, debug )
-                    if halt then stop = true end
+                    -- (windows design v6 §6) a sequence line: its window's generated lines, run by the engine; nothing
+                    -- while a strict sequence holds the walk (its members and window lines only)
+                    if holdOffOnly == 0 then
+                        local halt
+                        rAction, rWait, rDepth, halt = sequenceLine( self, dispName, packName, entry, scriptID, slot, rAction, rWait, rDepth, caller, debug )
+                        if halt then stop = true end
+                    end
 
                 elseif holdOffOnly > 0 and ability and not holdPass[ action ]
                     and not ( holdOffOnly == 1 and entry.use_off_gcd == 1 and ability.gcd == "off" ) then
@@ -1557,6 +1567,9 @@ local function nextPrediction( self, dispName, packName, slot )
     for i = #Block, 1, -1 do tinsert( StackPool, tremove( Block, i ) ) end
     twipe( InUse )
     inPrecombat = false -- in case a walk was interrupted
+    -- the sequence walk's flags too (a dropped thread, a raising sequence_ready handler)
+    holdOffOnly, seqStartStep, state.seqBypass, state.gateSkip = 0, 0, 0, false
+    state.ready = false
 
     for k, v in pairs( listCache ) do tinsert( lcPool, v ); twipe( v ); listCache[ k ] = nil end
     for k, v in pairs( listValue ) do tinsert( lvPool, v ); twipe( v ); listValue[ k ] = nil end

@@ -105,6 +105,9 @@ state.gateSkip = false
 -- (skips the "toggle shown separately" test), 2 a member line while its window is up (skips that and the display
 -- filter); 0 otherwise. An off toggle still disables. IsDisabled neither reads nor writes its cache for a bypass.
 state.seqBypass = 0
+-- (ruling 36) `ready()` inside an ability's sequence_ready: the start test's accessor during that call, false otherwise
+-- (a permanent key: setting an absent key, even to nil, grows the table in Lua 5.1)
+state.ready = false
 state.delayMin = 0
 state.delayMax = 15
 

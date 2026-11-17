@@ -1288,23 +1288,38 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
         end
     )
 
-    it("S24: a close_window line on the strict sequence closes it under the default hold and under hold_off_gcd=1", function()
-        for _, opt in ipairs({ "", ",hold_off_gcd=1" }) do
-            load({
-                default = "actions+=/close_window,name=s,if=test_fb\nactions+=/strict_sequence,name=s"
-                    .. opt
-                    .. ",if=!test_fb:bloodrage:berserker_stance\nactions+=/defensive_stance",
-            })
-            tick()
-            tick()
-            assert.are.same({ true, 1 }, { seqState("s") }, opt)
-            flags.fb = true
-            local recs, sent = tick()
-            assert.are.same({ { key("s"), CLOSE } }, sent, opt)
-            assert.are.equal("defensive_stance", recs[1].actionName, opt) -- the hold ended in the same pass
-            flags.fb = false
-            H.Fire("PLAYER_REGEN_ENABLED")
+    it(
+        "S24: a close_window line on the strict sequence closes it under the default hold and under hold_off_gcd=1",
+        function()
+            for _, opt in ipairs({ "", ",hold_off_gcd=1" }) do
+                load({
+                    default = "actions+=/close_window,name=s,if=test_fb\nactions+=/strict_sequence,name=s"
+                        .. opt
+                        .. ",if=!test_fb:bloodrage:berserker_stance\nactions+=/defensive_stance",
+                })
+                tick()
+                tick()
+                assert.are.same({ true, 1 }, { seqState("s") }, opt)
+                flags.fb = true
+                local recs, sent = tick()
+                assert.are.same({ { key("s"), CLOSE } }, sent, opt)
+                assert.are.equal("defensive_stance", recs[1].actionName, opt) -- the hold ended in the same pass
+                flags.fb = false
+                H.Fire("PLAYER_REGEN_ENABLED")
+            end
         end
+    )
+
+    it("a plain sequence line below does nothing while a strict sequence holds (no OPEN, no member shown)", function()
+        load({
+            default = "actions+=/strict_sequence,name=s:berserker_stance:defensive_stance\n"
+                .. "actions+=/sequence,name=p:bloodrage\nactions+=/defensive_stance",
+        })
+        tick()
+        local recs, sent = tick()
+        assert.are.same({ true, 1 }, { seqState("s") })
+        assert.are.same({}, sent)
+        assert.are.equal("berserker_stance", recs[1].actionName)
     end)
 
     it("the give-up judges a member reading variable.x after the variable lines are walked (both holds)", function()
@@ -1326,7 +1341,9 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
     end)
 
     it("member lines get LoadScript's bookkeeping: use_off_gcd=1 marks the pack, a member item is listed", function()
-        load({ default = "actions+=/strict_sequence,name=s:bloodrage,use_off_gcd=1:berserker_stance\nactions+=/defensive_stance" })
+        load({
+            default = "actions+=/strict_sequence,name=s:bloodrage,use_off_gcd=1:berserker_stance\nactions+=/defensive_stance",
+        })
         local info = H.Hekili.Scripts.PackInfo[ww.PACK]
         assert.is_true(info.hasOffGCD)
         local sid = H.Hekili.Scripts.appliedWindows.byName.s.hiddenIDs[1]
@@ -1345,20 +1362,23 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
         assert.is_false((seqState("s")))
     end)
 
-    it("L1181: an outside use_off_gcd=1 line for a later member is weaved by the hold and ends it when pressed", function()
-        load({
-            default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/bloodrage,use_off_gcd=1,if=test_fb\n"
-                .. "actions+=/defensive_stance",
-        })
-        tick()
-        flags.fb = true
-        local recs = tick()
-        assert.are.same({ true, 1 }, { seqState("s") })
-        assert.are.equal("bloodrage", recs[1].actionName) -- the known SimC difference (L1181): shown, and pressing it ends s
-        cast(BR)
-        tick()
-        assert.is_false((seqState("s")))
-    end)
+    it(
+        "L1181: an outside use_off_gcd=1 line for a later member is weaved by the hold and ends it when pressed",
+        function()
+            load({
+                default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/bloodrage,use_off_gcd=1,if=test_fb\n"
+                    .. "actions+=/defensive_stance",
+            })
+            tick()
+            flags.fb = true
+            local recs = tick()
+            assert.are.same({ true, 1 }, { seqState("s") })
+            assert.are.equal("bloodrage", recs[1].actionName) -- the known SimC difference (L1181): shown, and pressing it ends s
+            cast(BR)
+            tick()
+            assert.is_false((seqState("s")))
+        end
+    )
 
     it("L1181: a plain sequence stays on its step when a later member is cast out of order", function()
         load({
@@ -1384,20 +1404,23 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
         cds.separate, cds.value = true, true
     end)
 
-    it("D14/D18: a strict classcd:nuke starts in Primary (the start line skips the separate test); an off toggle never", function()
-        load({ default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance" })
-        local recs, sent = tick()
-        assert.are.same({ { key("s"), OPEN } }, sent)
-        assert.are.equal("bloodrage", recs[1].actionName)
-        boot()
-        H.Hekili.Class.abilities.bloodrage.toggle = "cooldowns"
-        cds = H.Hekili.Engine.settings.toggles.cooldowns
-        cds.separate, cds.value = true, false
-        load({ default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance" })
-        recs, sent = tick()
-        assert.are.same({}, sent)
-        assert.are.equal("defensive_stance", recs[1].actionName)
-    end)
+    it(
+        "D14/D18: a strict classcd:nuke starts in Primary (the start line skips the separate test); an off toggle never",
+        function()
+            load({ default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance" })
+            local recs, sent = tick()
+            assert.are.same({ { key("s"), OPEN } }, sent)
+            assert.are.equal("bloodrage", recs[1].actionName)
+            boot()
+            H.Hekili.Class.abilities.bloodrage.toggle = "cooldowns"
+            cds = H.Hekili.Engine.settings.toggles.cooldowns
+            cds.separate, cds.value = true, false
+            load({ default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance" })
+            recs, sent = tick()
+            assert.are.same({}, sent)
+            assert.are.equal("defensive_stance", recs[1].actionName)
+        end
+    )
 
     it("D07/D08: a strict nuke:classcd shows classcd in Primary at step 2; the toggle switched off gives up", function()
         load({ default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance" })
@@ -1425,7 +1448,9 @@ describe("filter bypasses for sequence lines (windows design v6 §7, rulings 9, 
     end)
 
     it("D19 (Primary): a plain classcd:filler shows classcd as its due first member in Primary", function()
-        load({ default = "actions+=/sequence,name=p,mode=continue:bloodrage:berserker_stance\nactions+=/defensive_stance" })
+        load({
+            default = "actions+=/sequence,name=p,mode=continue:bloodrage:berserker_stance\nactions+=/defensive_stance",
+        })
         tick()
         local recs = tick()
         assert.are.same({ true, 1 }, { seqState("p") })
@@ -1466,48 +1491,54 @@ describe("the strict start test's ability fields (windows design v6 §3.6, rulin
         return #sent > 0 and sent[1][2] == OPEN
     end
 
-    it("P28: each gate blocks the start; sequence_ignore naming it lets the line be chosen; another gate still blocks", function()
-        for gate, g in pairs(GATES) do
-            boot()
-            member({ [g[1]] = g[2] })
-            assert.is_false(opened(), gate)
-            boot()
-            member({ [g[1]] = g[2], sequence_ignore = { gate } })
-            assert.is_true(opened(), gate)
-            boot()
-            local other = gate == "form" and "noform" or "form"
-            member({ [g[1]] = g[2], [GATES[other][1]] = GATES[other][2], sequence_ignore = { gate } })
-            assert.is_false(opened(), gate .. " + " .. other)
+    it(
+        "P28: each gate blocks the start; sequence_ignore naming it lets the line be chosen; another gate still blocks",
+        function()
+            for gate, g in pairs(GATES) do
+                boot()
+                member({ [g[1]] = g[2] })
+                assert.is_false(opened(), gate)
+                boot()
+                member({ [g[1]] = g[2], sequence_ignore = { gate } })
+                assert.is_true(opened(), gate)
+                boot()
+                local other = gate == "form" and "noform" or "form"
+                member({ [g[1]] = g[2], [GATES[other][1]] = GATES[other][2], sequence_ignore = { gate } })
+                assert.is_false(opened(), gate .. " + " .. other)
+            end
         end
-    end)
+    )
 
     it("P29: only the named gate is skipped: the member's usable test still blocks", function()
         member({ form = "defensive_stance", sequence_ignore = { "form" }, usable = false })
         assert.is_false(opened())
     end)
 
-    it("P30: sequence_ready replaces readiness (chosen exactly when it is true); the member's own if= still blocks", function()
-        for _, f in ipairs({ false, true }) do
+    it(
+        "P30: sequence_ready replaces readiness (chosen exactly when it is true); the member's own if= still blocks",
+        function()
+            for _, f in ipairs({ false, true }) do
+                boot()
+                member({
+                    usable = false,
+                    sequence_ready = function()
+                        calls = calls + 1
+                        return flags.fa
+                    end,
+                })
+                flags.fa = f
+                assert.are.equal(f, opened(), tostring(f))
+            end
+            assert.is_true(calls > 0)
             boot()
             member({
-                usable = false,
                 sequence_ready = function()
-                    calls = calls + 1
-                    return flags.fa
+                    return true
                 end,
             })
-            flags.fa = f
-            assert.are.equal(f, opened(), tostring(f))
+            assert.is_false(opened(nil, ",if=test_fb"))
         end
-        assert.is_true(calls > 0)
-        boot()
-        member({
-            sequence_ready = function()
-                return true
-            end,
-        })
-        assert.is_false(opened(nil, ",if=test_fb"))
-    end)
+    )
 
     it("P31: ready() inside sequence_ready is the gate-skipped normal test", function()
         local function readyAndFlag()
@@ -1515,7 +1546,12 @@ describe("the strict start test's ability fields (windows design v6 §3.6, rulin
         end
         for _, c in ipairs({ { false, false, false }, { true, false, true }, { true, true, false } }) do
             boot()
-            member({ form = "defensive_stance", sequence_ignore = { "form" }, usable = not c[2], sequence_ready = readyAndFlag })
+            member({
+                form = "defensive_stance",
+                sequence_ignore = { "form" },
+                usable = not c[2],
+                sequence_ready = readyAndFlag,
+            })
             flags.fa = c[1]
             assert.are.equal(c[3], opened(), tostring(c[1]) .. " " .. tostring(c[2]))
         end
@@ -1550,9 +1586,33 @@ describe("the strict start test's ability fields (windows design v6 §3.6, rulin
         assert.are.same({ { key("s"), CLOSE }, { key("s"), OPEN } }, sent)
     end)
 
+    it("a raising sequence_ready leaves no gate skipped for the next walk", function()
+        member({
+            form = "defensive_stance",
+            sequence_ignore = { "form" },
+            sequence_ready = function()
+                error("handler raised")
+            end,
+        })
+        load({ default = LINE:format("", "") })
+        t = t + 0.2
+        headless.cycle(H, t)
+        for i = #H.errors, 1, -1 do
+            table.remove(H.errors, i)
+        end
+        load({ default = "actions+=/berserker_stance\nactions+=/defensive_stance" })
+        local recs = tick()
+        assert.are.equal("defensive_stance", recs[1].actionName) -- the form gate holds again
+        assert.is_false(rawget(S, "ready"))
+    end)
+
     it("P35: a wrong field raises at registration with the ability's name", function()
         local kit = H.Hekili.Class.kit
-        for _, bad in ipairs({ { sequence_ignore = { "stance" } }, { sequence_ignore = "form" }, { sequence_ready = true } }) do
+        for _, bad in ipairs({
+            { sequence_ignore = { "stance" } },
+            { sequence_ignore = "form" },
+            { sequence_ready = true },
+        }) do
             bad.id = 999001
             local ok, err = pcall(kit.RegisterAbility, kit, "seq_bad_field", bad)
             assert.is_false(ok)

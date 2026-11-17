@@ -139,14 +139,12 @@ describe("Engine/Driver.lua through the engine frame", function()
     -- OPEN); the plain one parks by its skip line (its member never castable) and its restart_sequence line sends it
     -- back to step 1 (STEP). Precombat, out of combat, as above: in combat this Update allocates about 0.3 B without
     -- any sequence line (measured 2026-11-16, 300 warm-up Updates), a cost outside the sequence paths.
-    it("allocates 0 B per Update with a strict and a plain sequence acting in every slot", function()
+    -- The given lines on top of precombat, applied as an edit; then 35 warm-up Updates and the bytes over 45 more, with
+    -- the operations sent in the window counted by code (OPEN, CLOSE, STEP).
+    local function sequenceRun(text)
         local pack = H.Hekili.Engine.Output.Primary.recs[1].pack
         local lists = H.Hekili.DB.profile.packs[pack].lists
-        local add = H.Hekili:ParseActionList(
-            "actions+=/restart_sequence,name=p,if=window.p.done\nactions+=/sequence,name=p:defensive_stance,if=time<0\n"
-                .. "actions+=/close_window,name=s\nactions+=/strict_sequence,name=s:bloodrage:berserker_stance\n",
-            true
-        )
+        local add = H.Hekili:ParseActionList(text, true)
         for i = #add, 1, -1 do
             add[i].enabled = true
             table.insert(lists.precombat, 1, add[i])
@@ -167,9 +165,27 @@ describe("Engine/Driver.lua through the engine frame", function()
         codes[1], codes[2], codes[3] = 0, 0, 0
         local bytes = perUpdate(45)
         H.ns.VirtualState.WindowOp = op
-        assert.is_true(codes[1] >= 45 and codes[2] >= 45 and codes[3] >= 45, table.concat(codes, " ")) -- OPEN, CLOSE, STEP
+        return codes, bytes
+    end
+
+    it("allocates 0 B per Update with a strict and a plain sequence acting in every slot", function()
+        local codes, bytes = sequenceRun(
+            "actions+=/restart_sequence,name=p,if=window.p.done\nactions+=/sequence,name=p:defensive_stance,if=time<0\n"
+                .. "actions+=/close_window,name=s\nactions+=/strict_sequence,name=s:bloodrage:berserker_stance\n"
+        )
+        assert.is_true(codes[1] >= 45 and codes[2] >= 45 and codes[3] >= 45, table.concat(codes, " "))
         local restarts = H.Hekili.Engine.Output.Primary.recs[1].restarts
         assert.is_true(restarts >= 3, tostring(restarts))
+        assert.are.equal(0, bytes)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- The held steady state: the strict sequence stays up (nothing is cast), so every slot runs the hold (the normal
+    -- lists for window and off-GCD lines, the give-up's test with the GCD ready, the hidden list under the bypass).
+    it("allocates 0 B per Update while a strict sequence holds the walk", function()
+        local codes, bytes = sequenceRun("actions+=/strict_sequence,name=s:bloodrage:berserker_stance\n")
+        assert.are.equal(0, codes[2], table.concat(codes, " ")) -- never given up: both members stay castable
+        assert.is_true(codes[1] < 10, table.concat(codes, " ")) -- held: reopened only after its 4 s step_timeout
         assert.are.equal(0, bytes)
         assert.are.same({}, H.errors)
     end)
