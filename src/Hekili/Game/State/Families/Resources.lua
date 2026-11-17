@@ -1975,6 +1975,10 @@ function I.Refund(r, d, t, held, dL, dH, fE, fL)
     if R.hi0[r] < R.est0[r] then
         R.hi0[r] = R.est0[r]
     end
+    if dL then -- a `now`'s give-back explains a flip (R.gain) by what est took, not by the whole take
+        local took = R.est0[r] - e
+        R.gain[r] = R.gain[r] - d + (took > 0 and took or 0)
+    end
     return R.est0[r] - e, R.lo0[r] - lo, R.hi0[r] - hi
 end
 
