@@ -2060,19 +2060,26 @@ describe("now handlers", function()
                 assert.are.equal(1, I.avoidsRun)
             end)
 
-            it("with the cost share, the verdict first: its share alone, and a later avoid adds nothing", function()
-                rest(true, true, true)
-                cast(fs.SPENDER_C, 5)
-                for t = 5.3, 6.9, 0.2 do
-                    drain(t)
+            it(
+                "with the cost share, the verdict first: its share alone; a later plain avoid row gives the `now`'s take once",
+                function()
+                    rest(true, true, true)
+                    cast(fs.SPENDER_C, 5)
+                    for t = 5.3, 6.9, 0.2 do
+                        drain(t)
+                    end
+                    assert.are.equal(1, I.auraVerdict.refunds[k])
+                    assert.are.equal(8, rage(6.9).est) -- the verdict's refund is the cost share only (Now.lua shortcut)
+                    I.Sources.Direct(VS.Obs.Avoided, 7, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- a hand-back
+                    drain(7.1)
+                    assert.are.equal(38, rage(7.1).est) -- the `now`'s 30, not the share again
+                    assert.are.equal(1, I.avoidsRun)
+                    I.Sources.Direct(VS.Obs.Avoided, 7.2, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- again
+                    drain(7.3)
+                    assert.are.equal(38, rage(7.3).est)
+                    assert.are.equal(1, I.avoidsRun)
                 end
-                assert.are.equal(1, I.auraVerdict.refunds[k])
-                assert.are.equal(8, rage(6.9).est) -- the verdict's refund is the cost share only (Now.lua shortcut)
-                I.Sources.Direct(VS.Obs.Avoided, 7, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- a hand-back
-                drain(7.1)
-                assert.are.equal(8, rage(7.1).est)
-                assert.are.equal(0, I.avoidsRun)
-            end)
+            )
 
             it("no cost share: the verdict refunds nothing, the avoid after it gives the `now`'s back once", function()
                 rest(true, false, true)
