@@ -1473,6 +1473,71 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
         end
     end)
 
+    -- (Fable Q1 (c), L1270) the default-list walks begun while a strict sequence holds Primary, over one tick
+    local function heldWalks()
+        local n, apl = 0, H.Hekili.GetPredictionFromAPL
+        H.Hekili.GetPredictionFromAPL = function(self, dispName, packName, listName, ...)
+            if listName == "default" and dispName == "Primary" and S.WindowHold() then
+                n = n + 1
+            end
+            return apl(self, dispName, packName, listName, ...)
+        end
+        local ok, recs, sent = pcall(tick)
+        H.Hekili.GetPredictionFromAPL = apl
+        assert(ok, recs)
+        return n, recs, sent
+    end
+
+    it("holdWalk: hold_off_gcd=1 in a priority with no window or variable line skips the normal lists", function()
+        for _, opt in ipairs({ ",hold_off_gcd=1", "" }) do
+            load({
+                default = "actions+=/strict_sequence,name=s"
+                    .. opt
+                    .. ":berserker_stance:defensive_stance\nactions+=/defensive_stance",
+            })
+            assert.is_false(H.Hekili.Scripts.appliedWindows.holdWalk, opt)
+            tick()
+            local n, recs, sent = heldWalks()
+            assert.are.same({ true, 1 }, { seqState("s") }, opt)
+            assert.are.same({}, sent, opt)
+            assert.are.equal("berserker_stance", recs[1].actionName, opt)
+            -- hold_off_gcd=1 skips the walk; the default hold walks whatever the flag (ruling 29)
+            if opt == "" then
+                assert.is_true(n > 0, opt)
+            else
+                assert.are.equal(0, n, opt)
+            end
+            H.Fire("PLAYER_REGEN_ENABLED")
+        end
+    end)
+
+    it("holdWalk: a variable line alone keeps the walk; the member reading it shows at step 2, no CLOSE", function()
+        load({
+            default = "actions+=/variable,name=v,value=1\nactions+=/strict_sequence,name=s,hold_off_gcd=1"
+                .. ":bloodrage:berserker_stance,if=variable.v>0\nactions+=/defensive_stance",
+        })
+        assert.is_true(H.Hekili.Scripts.appliedWindows.holdWalk)
+        tick()
+        tick()
+        cast(BR)
+        local n, recs, sent = heldWalks()
+        assert.are.same({ true, 2 }, { seqState("s") })
+        assert.are.same({}, sent)
+        assert.are.equal("berserker_stance", recs[1].actionName)
+        assert.is_true(n > 0)
+    end)
+
+    it("holdWalk: a switched-off close_window line still sets the flag (a superset)", function()
+        local default = parse(
+            "actions+=/close_window,name=s,if=test_fb\nactions+=/strict_sequence,name=s,hold_off_gcd=1"
+                .. ":berserker_stance:defensive_stance\nactions+=/defensive_stance"
+        )
+        default[1].enabled = false
+        install({ precombat = {}, default = default })
+        assert.is_true(H.Hekili.Scripts.appliedWindows.holdWalk)
+        assert.is_false(H.Hekili.Scripts.NoWindows.holdWalk)
+    end)
+
     it("member lines get LoadScript's bookkeeping: use_off_gcd=1 marks the pack, a member item is listed", function()
         load({
             default = "actions+=/strict_sequence,name=s:bloodrage,use_off_gcd=1:berserker_stance\nactions+=/defensive_stance",

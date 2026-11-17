@@ -1685,10 +1685,15 @@ local function nextPrediction( self, dispName, packName, slot )
         if hold then
             -- the outside lines first (a ready off-GCD one is weaved ahead of the member), the give-up, then the members
             holdOffOnly = hold.hold_off_gcd and 2 or 1
-            for _, listName in ipairs( HOLD_LISTS ) do
-                if pack.lists[ listName ] and wait > 0 and not walkRestart then
-                    action, wait, depth = self:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth )
+            -- hold_off_gcd=1 takes window and variable lines only: none in the priority, nothing to walk (L1270)
+            if holdOffOnly == 1 or scripts.appliedWindows.holdWalk then
+                for _, listName in ipairs( HOLD_LISTS ) do
+                    if pack.lists[ listName ] and wait > 0 and not walkRestart then
+                        action, wait, depth = self:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth )
+                    end
                 end
+            elseif debug then
+                self:Debug( "strict_sequence %s: no window or variable line in the priority; the normal lists are not walked.", holdName )
             end
             holdOffOnly = 0
             if not walkRestart then giveUp( self, hold ) end

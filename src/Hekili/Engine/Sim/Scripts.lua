@@ -1715,7 +1715,7 @@ local WINDOW_OPTS = { duration = true, refresh = true, max_duration = true, max_
 local PLAIN_OPTS = { mode = true, wait_on_ready = true, reset_on_target_change = true }
 local STRICT_OPTS = { allow_skip = true, start_on_first = true, hold_off_gcd = true, step_timeout = true, reset_on_target_change = true }
 local MODES = { skip = true, wait = true, continue = true }
-local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {}, byName = {}, seqByID = {}, startByID = {}, nStrict = 0 }
+local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {}, byName = {}, seqByID = {}, startByID = {}, nStrict = 0, holdWalk = false }
 
 -- (windows design v6 §7, rulings 10, 19) a display's Sequences setting: on by default for Primary and AOE only
 local SEQ_DEFAULT = { Primary = true, AOE = true }
@@ -1885,9 +1885,13 @@ function scripts.CheckWindows( lists, packName )
     -- a pass sends at most: the open, the skip (plain) or the give-up (strict), the chosen OPEN and its STEP (§5.5)
     cap = cap + 4 * nSeqKeys
 
+    -- `holdWalk` (L1270): a hold_off_gcd=1 hold walks the normal lists only when a line there could act (a window or
+    -- variable line, enabled or not, in any list: a superset on purpose)
+    local holdWalk = false
     for _, list in ipairs( names ) do
         for i, e in ipairs( lists[ list ] ) do
             local a = e.action
+            if a == "open_window" or a == "close_window" or a == "variable" then holdWalk = true end
             if e.enabled == false then -- luacheck: ignore 542 (a switched-off line is not checked)
             elseif a == "window" then err( "E5", list, i, e, "a window entry belongs in the windows list" )
             elseif ( a == "call_action_list" or a == "run_action_list" ) and e.list_name == "windows" then
@@ -1912,7 +1916,7 @@ function scripts.CheckWindows( lists, packName )
 
     if #decls == 0 and #errors == 0 then return NO_APL_WINDOWS end
     return { decls = decls, records = records, cap = cap, errors = errors, byName = byName, seqByID = seqByID,
-        startByID = startByID, nStrict = nStrictDecl }
+        startByID = startByID, nStrict = nStrictDecl, holdWalk = holdWalk }
 end
 
 --- The active pack's APL windows into the belief's def (Tracked.lua ns.SetAplWindows: a new generation) and as the
