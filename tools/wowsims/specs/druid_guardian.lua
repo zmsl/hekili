@@ -15,7 +15,7 @@
 -- rage (white swings, Primal Fury, Enrage): decisions on-GCD 0.574 (115). NAMED GAP (owner ruling 2026-11-07, extended
 -- to this pin by the controller, L1319): the shipped kit has no rage from hits taken (CN7; the belief cannot read hit
 -- amounts in game, L67); the floor is measured without it. The log's rage by source over 180 s: hits taken 1779.7 of
--- ~2150 (~87%), white swings 101.2 (Maul replaces 64 of 72 swings), Primal Fury 105.0, Enrage 62.0. The re-pinned list
+-- ~2150 (~83%), white swings 101.2 (Maul replaces 64 of 72 swings), Primal Fury 105.0, Enrage 62.0. The re-pinned list
 -- spends 15 rage every GCD (Lacerate to 5 stacks, then Lacerate as the filler under Primal Bite), so all 49 misses are
 -- one class: the belief's rage 0-12 against a truth of 25-90 (Lacerate / Primal Bite cost 15); with rage believed ~0 the
 -- queue waits Primal Bite 3-5 s and a Faerie Fire / Demoralizing Roar refresh due at its believed expiry comes first.

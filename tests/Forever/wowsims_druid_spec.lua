@@ -134,7 +134,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             -- the belief sees only the bear's own rage (0.923 with the archived rule: named gap in the recipe header). Old pin: 0.782 (61/78)
             -- 0.63 -> 0.57 (0.574, 66/115) re-pin e5a9cd2a2d -> e4ef929e54 (controller ruling L1319: the 2026-11-07 CN7
             -- waiver extends to the new pin): the re-pinned adaptive list spends 15 rage every GCD (Lacerate to 5 stacks,
-            -- then Lacerate as the filler under Primal Bite), and ~87% of the log's rage comes from hits taken (1779.7 of
+            -- then Lacerate as the filler under Primal Bite), and ~83% of the log's rage comes from hits taken (1779.7 of
             -- ~2150), which the belief cannot see (CN7): all 49 misses believe 0-12 rage at a truth of 25-90
             -- (repin-druid-09-5). replay-fncd-09 / replay-flips-09 move no Guardian row
             0.57,

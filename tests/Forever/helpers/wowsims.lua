@@ -385,7 +385,7 @@ M.READY = {
     -- 2.50 -> 1.75, the count rises by the same cause (not by the metric)
     -- { 1.76, 55 } -> { 2.50, 50 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log; CN7 waiver extended, L1319): real 50 (all
     -- late), median 2.500: the re-pinned list spends 15 rage every GCD and the belief cannot see the rage from hits
-    -- taken (~87% of the log's), so Lacerate / Primal Bite show late or never (49 never rows; repin-druid-09-5)
+    -- taken (~83% of the log's), so Lacerate / Primal Bite show late or never (49 never rows; repin-druid-09-5)
     druid_guardian = { 2.50, 50 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     -- re-pin 8b-2 (controller ruling, round 3): move-reached weave strikes show at the decision to walk (the Auto Shot that
     -- opens the weave window); wowsims logs the cast at arrival; the offset is the walk time, which Hekili does not model
