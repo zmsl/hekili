@@ -2235,6 +2235,21 @@ describe("now handlers", function()
                 assert.is_true(r.lo >= 35 - 1e-9 and r.hi > 35, ("lo %.2f hi %.2f, truth 39"):format(r.lo, r.hi))
             end)
 
+            it("a spend from the slot between the cast and its avoid: no floor above the truth", function()
+                rest(true, false)
+                local s = I.res.slotOf[fs.RAGE]
+                cast(fs.SPENDER_C, 5)
+                ctl.usable[fs.SPENDER_B] = { true, false } -- the rung: at least 15
+                ctl.Fire("SPELL_UPDATE_USABLE")
+                drain(5.03)
+                ctl.usable[fs.SPENDER_B] = nil
+                I.ResourceShift(s, -5, 5.04, VS.Obs.CastSuccess) -- a `now` verb's spend (a reaction's): the truth 25
+                outcome(5.05, "DODGE")
+                local r = rage(5.1)
+                assert.are.equal(1, I.avoidsRun)
+                assert.is_true(r.lo <= 25 and r.est <= 25, ("lo %.2f est %.2f, truth 25"):format(r.lo, r.est))
+            end)
+
             it("a plain read between the cast and its avoid wins: the avoid gives back nothing on top of it", function()
                 rest(true, false)
                 cast(fs.SPENDER_C, 5)

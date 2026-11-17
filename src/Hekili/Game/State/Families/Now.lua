@@ -96,8 +96,8 @@ local UNDO = 4
 local undoA, undoT, undoSwap, paid, undoN = 0, -1, 0, 0, 0
 -- And what its `now` took from the ability's own slot, from the estimate, the floor (lo0) and the top (L1237), for an
 -- ability with `refundNowOnAvoid`; 0 otherwise. With them: est and lo before the `now` (nowE0, nowL0), the slot's
--- pin time (nowPin) and its rung lifts (nowLE/LL/LH, Resources.lua owe) at the cast.
-local nowE, nowL, nowH, nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = 0, 0, 0, 0, 0, 0, 0, 0, 0
+-- pin time (nowPin), its rung lifts (nowLE/LL/LH, Resources.lua owe) and its spend serial (nowSp) at the cast.
+local nowE, nowL, nowH, nowE0, nowL0, nowPin, nowLE, nowLL, nowLH, nowSp = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 local journal = true -- false while an `onCrit` runs: a landed crit's writes are no avoid's to undo
 local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
@@ -861,6 +861,7 @@ local function run(o, t)
             nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = e, l, R.pinT[r], R.liftE[r], R.liftL[r], R.liftH[r]
             e, l, h = e - R.est0[r], l - R.lo0[r], h - R.hi0[r]
             nowE, nowL, nowH = e > 0 and e or 0, l > 0 and l or 0, h > 0 and h or 0
+            nowSp = R.spends[r]
         end
         flight = 0
         rawset(NAMES, "cast_start", 0)
@@ -975,8 +976,11 @@ I.On(Obs.Avoided, function(o, t)
     local d = r > 0 and paid * A.refund[o.a] or 0
     -- the `now`'s take comes back unless a pin since the cast (a plain read, a crossing) already measured the pool;
     -- a usable answer since (the poll's rung, every drain) only bounds it from below: the floors (I.Refund's fE, fL)
-    -- and the rung's lift it explains (I.LiftExplained)
-    if r > 0 and nowH > 0 and I.res.pinT[r] == nowPin then
+    -- and the rung's lift it explains (I.LiftExplained). A spend from the slot since (a reaction's) reset the marks
+    -- that say an answer already holds part of it: no take back then (est low, the safe side).
+    -- shortcut: that case gives back the share only; upgrade (the take less the lift since the cast) if a pack's
+    -- reaction spends from the slot an avoid refunds
+    if r > 0 and nowH > 0 and I.res.pinT[r] == nowPin and I.res.spends[r] == nowSp then
         I.Refund(r, d + nowE, t, false, d + nowL, d + nowH, nowE0 + d, nowL0 + d)
         I.LiftExplained(r, nowLE, nowLL, nowLH, d + nowE, d + nowL, d + nowH)
     elseif r > 0 and d > 0 then
