@@ -268,13 +268,16 @@ local function cell(m)
         -- a share like recall (a percent's integers read as spell IDs to tests/boundary_spec.lua)
         recovered = down(metrics.recovered100(m) / 100),
         wash = up(metrics.wash(m)),
+        -- L1285: the gate on recovery (a ceiling): false credits left unrecovered per 100 own outcomes; the share above
+        -- falls when a recovered false credit stops happening, so it is recorded, not gated
+        unrecovered = up(metrics.unrecovered100(m)),
     }
 end
 
 --- The cell's gated values as one line (the A/B's comparison; the rage error signed).
 function M.cellLine(m)
     local v, mm = cell(m), m.melee
-    return ("cell recall=%.2f melee=%.2f melee2=%.2f rageErr=%.1f staged=%.2f false100=%.1f leak100=%.1f lostDiff=%d residual=%d postClear=%.2f recovered=%.2f wash=%.1f"):format(
+    return ("cell recall=%.2f melee=%.2f melee2=%.2f rageErr=%.1f staged=%.2f false100=%.1f leak100=%.1f lostDiff=%d residual=%d postClear=%.2f recovered=%.2f wash=%.1f unrecovered=%.1f"):format(
         v.recall,
         v.melee,
         v.melee2,
@@ -286,7 +289,8 @@ function M.cellLine(m)
         v.residual,
         v.postClear,
         v.recovered,
-        v.wash
+        v.wash,
+        v.unrecovered
     )
 end
 
@@ -330,6 +334,9 @@ function M.record(kind, band, m)
         "-- Fix round 2 (avoidSeen): 9fd58600's floors were never merged; part of their drop rested on believed rage for"
             .. " swings avoided in truth (an error cancelling the under-count), which the avoidSeen fix removes.",
         "-- Task 5 (attribution-recovery decisions 54-56): recovered (floor, a share) and wash (ceiling) first set by this run.",
+        "-- 2026-11-17 (L1285, gap AS): recovered is recorded, no longer gated (a share falls when a recovered false credit"
+            .. " stops happening: gap AS's better attribution failed K2 solo / K19 party); the gate is unrecovered, false"
+            .. " credits left unrecovered per 100 own outcomes (a ceiling), first set from base a92b9b96c.",
         "-- Parry-haste spec decision 63: the world models parry haste; its swing reschedule reorders every seeded fight, so"
             .. " every floor that failed in any seed set (1-20 / 21-40 / 41-60), or improved in all three, is re-set to the"
             .. " worst of the three. Twins-drift cells K14/K14p: one hand pulled.",
@@ -345,7 +352,7 @@ function M.record(kind, band, m)
             local v = all[k][b]
             if v then
                 out[#out + 1] = string.format(
-                    "        %s = { recall = %.2f, melee = %.2f, melee2 = %.2f, rageErr = %.1f, staged = %.2f, false100 = %.1f, leak100 = %.1f, lostDiff = %d, residual = %d, postClear = %.2f, recovered = %.2f, wash = %.1f },",
+                    "        %s = { recall = %.2f, melee = %.2f, melee2 = %.2f, rageErr = %.1f, staged = %.2f, false100 = %.1f, leak100 = %.1f, lostDiff = %d, residual = %d, postClear = %.2f, recovered = %.2f, wash = %.1f, unrecovered = %.1f },",
                     b,
                     v.recall,
                     v.melee,
@@ -358,7 +365,8 @@ function M.record(kind, band, m)
                     v.residual,
                     v.postClear,
                     v.recovered or 0, -- a floor written before Task 5's cells: rewritten by its own kind's run
-                    v.wash or 0
+                    v.wash or 0,
+                    v.unrecovered or 0 -- a floor written before L1285: rewritten by its own kind's run
                 )
             end
         end
@@ -387,7 +395,8 @@ function M.check(kind, band, m)
     ab.check(v.lostDiff <= fl.lostDiff, at, "lost reported off the truth: " .. line)
     ab.check(v.residual <= fl.residual, at, "dedupe residual above its ceiling: " .. line)
     ab.check(v.postClear >= fl.postClear, at, "post-clear rows below their floor: " .. line)
-    ab.check(v.recovered >= (fl.recovered or 0), at, "recovery below its floor: " .. line)
+    assert(fl.unrecovered, at .. ": no unrecovered ceiling")
+    ab.check(v.unrecovered <= fl.unrecovered, at, "unrecovered false credit above its ceiling: " .. line)
     ab.check(v.wash <= (fl.wash or math.huge), at, "net wash above its ceiling: " .. line)
     local a = m.audit
     if a then -- a provider arm: its audit beside the cell
