@@ -6,7 +6,7 @@
 - Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 
 ### Changed
-- Feral: the default priority follows wowsims's new Feral build (Rend and Tear 5/5) and has its own lists for two and three enemies; for now those lists only keep up Rake, Shifting Power and Innervate, and they are not yet checked against wowsims's fights.
+- Feral: the default priority follows wowsims's new Feral build (Rend and Tear 5/5). With two or three enemies it keeps the single-target priority, because wowsims's lists for two and three enemies switch targets, which Hekili cannot follow.
 - Feral: a dodged or missed Ferocious Bite now gives back 28 energy, and the Idol of Ferocity (Claw and Rake cost 2 less) and the Idol of the Dream (Rip lasts 2 seconds longer) are counted. Not yet checked in game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 

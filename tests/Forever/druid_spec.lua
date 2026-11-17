@@ -1088,7 +1088,7 @@ describe("Forever Druid", function()
         -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items; Hekili_Shared/Races' Night Elf racial and the
         -- Skyborne racial's aura (energized); the core's cancel_buff (tests/Forever/apl_entry_spec.lua), its buff_name a
         -- registered aura
-        local sharedActions = { use_items = true, elunes_light = true, cancel_buff = true }
+        local sharedActions = { use_items = true, elunes_light = true, cancel_buff = true, variable = true }
         local sharedAuras = { energized = true }
         local shared = { buff = sharedAuras, debuff = sharedAuras, action = sharedActions, cooldown = sharedActions }
         local kinds = {
@@ -1115,7 +1115,7 @@ describe("Forever Druid", function()
                             where .. ": no aura " .. tostring(e.buff_name)
                         )
                     end
-                    local c = e.criteria or ""
+                    local c = (e.criteria or "") .. " " .. (e.value or "") -- CN25: a pure variable's text too
                     for kind, key in c:gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
                             local ok = kinds[kind][key] ~= nil or (shared[kind] or {})[key]
@@ -1703,7 +1703,7 @@ describe("Forever Druid Movement (R8)", function()
         local s = f:read("*a")
         f:close()
         local out = {}
-        local at = group and ("actions%." .. group .. "%+=/") or "actions%+=/"
+        local at = group and ("actions%." .. group .. "%+=/") or "actions%+?=/?"
         for l in s:gmatch("\n(" .. at .. key .. ",[^\n]+)") do
             out[#out + 1] = l
         end
@@ -1726,15 +1726,23 @@ describe("Forever Druid Movement (R8)", function()
         H.Fire("PLAYER_TARGET_CHANGED")
         local t = H.ctl.now + 0.2
         assert(headless.cycle(H, t))
-        local list = {}
+        local list, vars = {}, {}
         for _, k in ipairs(type(key) == "table" and key or { key }) do
             for _, l in ipairs(lines(k, pack, group)) do
                 list[#list + 1] = parse(H, l)
             end
         end
-        local lists = { precombat = {}, default = list }
+        -- CN25: the pack's pure variables head its default list; the lines read them
+        for _, l in ipairs(lines("variable", pack)) do
+            vars[#vars + 1] = parse(H, l)
+        end
+        local lists = { precombat = {}, default = vars }
         if group then
-            lists.default, lists[group] = { parse(H, lines("call_action_list,name=" .. group, pack)[1]) }, list
+            vars[#vars + 1], lists[group] = parse(H, lines("call_action_list,name=" .. group, pack)[1]), list
+        else
+            for _, e in ipairs(list) do
+                vars[#vars + 1] = e
+            end
         end
         H.Hekili.DB.profile.packs[pack].lists = lists
         H.Hekili:LoadScripts()
@@ -1854,6 +1862,63 @@ describe("Forever Druid Ravage opener (R69)", function()
     end)
 end)
 
+-- Owner deviation L1169 / L1205 (decision C): wowsims's 2- and 3-target groups read other targets on every strike
+-- (all omitted on Forever), so the pack omits the six group calls and single_target runs at every enemy count.
+describe("Forever Druid 2-3 enemies (L1169)", function()
+    local headless = require("Game.harness.headless")
+    local dlw = require("Forever.helpers.druid_loop_world")
+    local PACK = "Feral (wowsims.com)"
+
+    -- The icons of a Cat in melee range, energy full, Faerie Fire on the target, 1 s into combat with `n` enemies.
+    local function recs(n)
+        local H = headless.new({ character = dlw.Feral.character(), pack = PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, 3
+        H.ctl.auras.target.HARMFUL[1] = { spellId = 9907, expirationTime = H.ctl.now + 40, applications = 0 }
+        H.Fire("UNIT_AURA", "target")
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ns.getNumberTargets = function()
+            return n, n
+        end
+        local VS = H.ns.VirtualState
+        local power, full = VS.Power, { est = 100, lo = 100, hi = 100, conf = 1 }
+        VS.Power = function(pt, now)
+            return pt == 3 and full or power(pt, now)
+        end
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert(headless.cycle(H, t + 1))
+        assert.are.same({}, H.errors)
+        local names = {}
+        for i, r in ipairs(H.Hekili.Engine.Output.Primary.recs) do
+            names[i] = r.actionName
+        end
+        return table.concat(names, " ")
+    end
+
+    it("calls no 2/3-target group and gates single_target by range only", function()
+        local f = assert(io.open("src/Hekili_Druid/APLs/" .. PACK .. ".simc"))
+        local s = f:read("*a")
+        f:close()
+        assert.is_nil(s:find("\nactions[^\n]*call_action_list,name=[23]_targets"))
+        local call = s:match("\n(actions%+=/call_action_list,name=single_target,[^\n]+)")
+        assert.are.equal(
+            "actions+=/call_action_list,name=single_target,if=active_enemies>=1&(toggle.movement&target.outside5|target.within5)",
+            call
+        )
+    end)
+
+    it("shows the single-target strikes at 2 and 3 enemies as at 1 and 4", function()
+        local one = recs(1)
+        assert.matches("shred", one)
+        for _, n in ipairs({ 2, 3, 4 }) do
+            assert.are.equal(one, recs(n), n .. " enemies")
+        end
+    end)
+end)
+
 -- Claw vs Shred (owner L597-L603): a Shred line runs while `settings.behind` is on or the target is not attacking us
 -- (target.is_targeting_player), and with Shredding Attacks at 2+ ranks or Clearcasting up; the Claw line takes the
 -- other cases at Claw's own cost. The pack's Shred and Claw lines alone, a Cat in melee range, in combat.
@@ -1869,7 +1934,8 @@ describe("Forever Druid Claw vs Shred (L602)", function()
         local s = f:read("*a")
         f:close()
         local out = {}
-        for l in s:gmatch("\n(actions%.single_target%+=/" .. key .. ",[^\n]+)") do
+        local at = key == "variable" and "actions%+?=/?" or "actions%.single_target%+=/"
+        for l in s:gmatch("\n(" .. at .. key .. ",[^\n]+)") do
             out[#out + 1] = l
         end
         return out
@@ -1891,7 +1957,7 @@ describe("Forever Druid Claw vs Shred (L602)", function()
         H.Fire("UNIT_AURA", "player")
         H.Fire("PLAYER_TARGET_CHANGED")
         local list = {}
-        for _, k in ipairs({ "shred", "claw" }) do
+        for _, k in ipairs({ "variable", "shred", "claw" }) do -- CN25: the pure variables the lines read first
             for _, l in ipairs(lines(k)) do
                 local parsed = H.Hekili:ParseActionList(l)
                 parsed[1].enabled = true

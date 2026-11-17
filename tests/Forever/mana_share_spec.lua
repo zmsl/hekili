@@ -83,10 +83,10 @@ describe("a wowsims pack's absolute mana threshold on a small pool (rule 22)", f
         end)
     end
 
-    -- Feral: Innervate in Cat Form at low energy, in melee
+    -- Feral: Innervate in Cat Form at low energy, in melee (re-pin e4ef929e54: single_target's line)
     local function innervate(max)
         local C = dlw.Feral
-        local text = line("Druid", "Feral (wowsims.com)", "actions+=/innervate")
+        local text = line("Druid", "Feral (wowsims.com)", "actions.single_target+=/innervate")
         assert.is_truthy(text:find("mana.lo<1400", 1, true), text)
         return engine(C.character(), "Feral (wowsims.com)", text, max, 3)
     end
