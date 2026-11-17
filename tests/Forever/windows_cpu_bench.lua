@@ -62,6 +62,13 @@ local CASES = {
         id = "SEQ-skip-loop",
         top = "actions+=/restart_sequence,name=p,if=window.p.done\nactions+=/sequence,name=p:charge",
     },
+    -- (review M2, recorded without a bar) slot 2, after the forecast bloodrage, gives up on charge (never castable in
+    -- combat) every Update: an allow_skip STEP and its restart
+    {
+        id = "STRICT-skip",
+        top = "actions+=/strict_sequence,name=s,start_on_first=1,allow_skip=1,hold_off_gcd=1"
+            .. ":bloodrage,use_off_gcd=1:charge:berserker_stance",
+    },
 }
 
 local function boot()

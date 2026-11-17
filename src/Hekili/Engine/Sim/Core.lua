@@ -887,12 +887,17 @@ local function giveUp( self, d )
             end
         end
         state.WindowFired( d.giveID, true )
+        local due = win.step
         if to > 0 then
-            if state.WindowStep( name, to ) then seqSend( d, OP_STEP, to, d.giveID ) end
+            if state.WindowStep( name, to ) then -- a STEP restarts the walk like the CLOSE (§4.3): outside lines see it
+                seqSend( d, OP_STEP, to, d.giveID )
+                walkRestart = true
+                if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d cannot be cast; step %d, restart.", name, due, to ) end
+            end
         elseif state.closeWindow( name ) then
             seqSend( d, OP_CLOSE, nil, d.giveID )
             walkRestart = true
-            if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d cannot be cast; closed, restart.", name, win.step ) end
+            if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d cannot be cast; closed, restart.", name, due ) end
         end
     end
     state.seqBypass = 0

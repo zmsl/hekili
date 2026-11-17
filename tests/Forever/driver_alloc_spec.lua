@@ -190,6 +190,21 @@ describe("Engine/Driver.lua through the engine frame", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- (review M2) The give-up's allow_skip STEP and its restart in every Update: slot 1 holds bloodrage, the forecast
+    -- casts it, and slot 2's give-up steps past member 2 (never castable) to member 3 and restarts the walk there.
+    it("allocates 0 B per Update with an allow_skip give-up stepping and restarting in every Update", function()
+        local _, bytes = sequenceRun(
+            "actions+=/strict_sequence,name=s,start_on_first=1,allow_skip=1,hold_off_gcd=1"
+                .. ":bloodrage,use_off_gcd=1:defensive_stance,if=time<0:berserker_stance\n"
+        )
+        local recs = H.Hekili.Engine.Output.Primary.recs
+        assert.are.equal("bloodrage", recs[1].actionName)
+        assert.are.equal("berserker_stance", recs[2].actionName)
+        assert.are.equal(1, recs[2].restarts)
+        assert.are.equal(0, bytes)
+        assert.are.same({}, H.errors)
+    end)
+
     -- Option D review I1: Recommend Target Swaps on, three mobs all carrying the DoT (the feature's resting state): the
     -- swap lines (cycle_targets=1 and other_target=1) find no other target every Update and build nothing. The enemy
     -- count grows each refresh, the count with it (all DoTed), so text built from the counts would be new each time

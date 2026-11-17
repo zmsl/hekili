@@ -1686,6 +1686,7 @@ describe("strict sequences, more named cases (windows design v6 §13)", function
                 assert.are.same({ true, 2 }, { seqState("s") }, opt)
                 flags.fa = true
                 local recs, sent = tick()
+                assert.are.equal(1, recs[1].restarts, opt) -- the give-up's CLOSE or STEP restarts the walk (Fable M2)
                 if opt == "" then
                     assert.are.same({ { key("s"), CLOSE } }, sent)
                 else
@@ -2710,6 +2711,52 @@ describe("member lines keyed on their position (windows design v6 §6; review I1
             recs = tick()
             assert.are.same({ true, 4 }, { seqState("h") })
             assert.are.equal("battle_shout", recs[1].actionName)
+        end
+    )
+end)
+
+-- (review M2, Fable L1290) The give-up's allow_skip STEP restarts the walk, as its CLOSE does: the outside lines read
+-- the new step in the same slot. P08's allow_skip shape, member 2 made uncastable at step 2.
+describe("the give-up's allow_skip STEP restarts the walk (windows design v6 §4.3, §6; review M2)", function()
+    local SHAPE = "actions+=/strict_sequence,name=s,allow_skip=1"
+        .. ":bloodrage:berserker_stance,if=!test_fa:defensive_stance\nactions+=/defensive_stance"
+
+    before_each(function()
+        boot()
+        flags.fa, flags.fb = false, false
+    end)
+
+    local function toStep2(lists)
+        load(lists)
+        tick()
+        cast(BR)
+        tick()
+        assert.are.same({ true, 2 }, { seqState("s") })
+        flags.fa = true
+    end
+
+    it("an outside open_window line reading the step acts in the slot the give-up steps (STEP then OPEN)", function()
+        toStep2({
+            windows = "actions+=/window,name=x,duration=6",
+            default = "actions+=/open_window,name=x,if=window.s.step=3\n" .. SHAPE,
+        })
+        local recs, sent = tick()
+        assert.are.same({ { key("s"), STEP }, { key("x"), OPEN } }, sent)
+        assert.are.equal(3, opArgs[1])
+        assert.are.equal(2, recs[1].restarts)
+        assert.are.equal("defensive_stance", recs[1].actionName)
+    end)
+
+    it(
+        "the default hold's pick: an outside use_off_gcd=1 line on the old due member gives way to the new one",
+        function()
+            gcdRig() -- rage for heroic_strike, an off-GCD ability ready at now
+            toStep2({
+                default = "actions+=/heroic_strike,use_off_gcd=1,if=window.s.next.berserker_stance\n" .. SHAPE,
+            })
+            local recs, sent = tick()
+            assert.are.same({ { key("s"), STEP } }, sent)
+            assert.are.equal("defensive_stance", recs[1].actionName)
         end
     )
 end)
