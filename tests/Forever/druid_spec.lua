@@ -1779,20 +1779,22 @@ describe("Forever Druid Movement (R8)", function()
         assert.are.equal("shred", far(true))
     end)
 
-    -- Guardian's Maul (off the GCD, rage full): its first line carries the same gate; the second (the leveling Maul,
-    -- before Primal Bite is known) is silent at 60.
+    -- Guardian's Maul (off the GCD, rage full). re-pin e4ef929e54: the gate sits on the default list's group calls (the
+    -- new adaptive list's gate has no Feral Charge clause); single_target_and_larger_packs holds one Maul; the leveling
+    -- Maul (before Primal Bite) stays in the default list, silent at 60.
     it("OFF hides Guardian's Maul outside 5 yd and shows it inside", function()
-        local g = "Guardian (wowsims.com)"
-        local l = lines("maul", g)
-        assert.are.equal(2, #l)
-        assert.matches("&%(toggle%.movement&%(target%.outside5.*%)|target%.within5%)$", l[1])
+        local g, grp = "Guardian (wowsims.com)", "single_target_and_larger_packs"
+        local call = lines("call_action_list,name=" .. grp, g)
+        assert.are.equal(1, #call)
+        assert.matches("&%(toggle%.movement&target%.outside5|target%.within5%)$", call[1])
+        assert.are.equal(1, #lines("maul", g, grp))
         local function at(yd)
-            return world(yd, dlw.Guardian, g, "maul", 1)
+            return world(yd, dlw.Guardian, g, "maul", 1, grp)
         end
         local far, near = at(11), at(3)
         assert.is_nil(far(false))
         assert.are.equal("maul", near(false))
-        -- ON at range shows no Maul either here: the pack waits for Feral Charge (`cooldown.feral_charge.ready`) first
+        -- ON at range shows no Maul here either (as at the old pin; not traced: a melee swing queue out of range)
     end)
 end)
 

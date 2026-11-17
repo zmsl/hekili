@@ -5,6 +5,11 @@
 -- apls/adaptive.apl.json (:10, :12 ROTATION_ADAPTIVE "Adaptive Bear"), the gear gear_sets/default.gear.json (:11). The
 -- re-pin from e2842f0a78 changed only the APL: b19089ff45 dropped its autocastOtherCooldowns entry (6 lines), so the
 -- pack's lines are the old pin's (the translator already omitted that entry).
+-- Re-pin e5a9cd2a2d -> e4ef929e54: BearTalents '050022-5023030212310112501-055' (presets.ts:14); the adaptive list
+-- rewritten (cbd46412fd, a94dc3c549): 2- and 3-target groups (Swipe, Primal Bite) and single_target_and_larger_packs
+-- behind the movement gate, a pre-pull Maul at 3 targets (CN21: its computed aura duration keeps the `!buff.maul.up`
+-- guard); the gear file unchanged. Owner deviation L1169 (decision C) is Feral's only: Guardian's groups have no
+-- other-target read (CN24) and ship whole.
 -- Replay (4b0030a44b, `procs { ["9881:0"] = true }`: Maul's untagged Casting lines are wowsims's queue at each swing):
 -- the kit has no rage-from-damage-taken rule (`taken`: CN7's hook, a named gap), so the belief sees only the bear's own
 -- rage (white swings, Primal Fury, Enrage): decisions on-GCD 0.632 (117). NAMED GAP (owner ruling 2026-11-07): the
@@ -37,7 +42,7 @@ return {
         race = "RaceTauren",
         class = "ClassDruid",
         gear = "ui/specs/druid/feralbear/gear_sets/default.gear.json",
-        talentsString = "050022-2322030212310212501-055",
+        talentsString = "050022-5023030212310112501-055",
         specKey = "feralBearDruid",
         options = { startingRage = 0, assumeBleedActive = true },
         profession1 = "Engineering",
@@ -60,9 +65,10 @@ return {
     -- Faerie Fire's armor and Demoralizing Roar's attack power are exclusive effects (wowsims
     -- sim/core/debuffs_generated_test.go:326 with Curse of Recklessness, :446 with Demoralizing Shout): rule 10
     exclusive = { [9907] = true, [9898] = true },
-    -- by role (docs/dev/wowsims-packs.md): Maul a rage dump as Heroic Strike ({ 1, 2 } by line; the leveling Maul,
-    -- a literal, the second at 2); Lacerate (both lines) and Demoralizing Roar at 2
-    focus = { maul = { 1, 2 }, lacerate = 2, demoralizing_roar = 2 },
+    -- by role (docs/dev/wowsims-packs.md): Maul a rage dump as Heroic Strike, tier 1 (the leveling Maul, a literal, at
+    -- 2); re-pin e4ef929e54: the adaptive list's three Maul lines (2-target, 3-target, single target) keep the one old
+    -- line's tier 1; Lacerate (every line) and Demoralizing Roar at 2
+    focus = { maul = { 1, 1, 1 }, lacerate = 2, demoralizing_roar = 2 },
     -- Before Primal Bite Maul is the only rage sink: queued whenever affordable instead of at
     -- wowsims's 20, which pools for the on-GCD strikes a low-level bear lacks (ruling L18; silent once Primal Bite is
     -- known). The re-pin's adaptive list maintains Faerie Fire (#14) and Demoralizing Roar (#16, "Attack-power reduction

@@ -66,7 +66,7 @@
             },
             "race":"RaceTauren",
             "name":"Guardian",
-            "talentsString":"050022-2322030212310212501-055",
+            "talentsString":"050022-5023030212310112501-055",
             "profession2":"Enchanting",
             "rotation":{
               "simple":{
@@ -76,6 +76,13 @@
               },
               "type":"TypeAPL",
               "valueVariables":[{
+                  "name":"Two-target Primal Bite minimum target lifetime",
+                  "value":{
+                    "const":{
+                      "val":"3s"
+                    }
+                  }
+                },{
                   "name":"Healthstone health threshold",
                   "value":{
                     "const":{
@@ -115,6 +122,20 @@
                   "value":{
                     "const":{
                       "val":"25%"
+                    }
+                  }
+                },{
+                  "name":"Cleave Maul minimum rage",
+                  "value":{
+                    "const":{
+                      "val":"10"
+                    }
+                  }
+                },{
+                  "name":"On-use defensive health threshold",
+                  "value":{
+                    "const":{
+                      "val":"40%"
                     }
                   }
                 },{
@@ -473,6 +494,385 @@
                         }]
                     }
                   }
+                },{
+                  "name":"Maul leaves rage for Swipe",
+                  "value":{
+                    "cmp":{
+                      "op":"OpGe",
+                      "rhs":{
+                        "math":{
+                          "op":"OpAdd",
+                          "rhs":{
+                            "spellCurrentCost":{
+                              "spellId":{
+                                "spellId":9908
+                              }
+                            }
+                          },
+                          "lhs":{
+                            "spellCurrentCost":{
+                              "spellId":{
+                                "spellId":9881,
+                                "tag":1
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "lhs":{
+                        "currentRage":{
+                        }
+                      }
+                    }
+                  }
+                },{
+                  "name":"Enough rage to queue Maul for Swipe",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "variableRef":{
+                                "name":"Maul minimum rage"
+                              }
+                            },
+                            "lhs":{
+                              "currentRage":{
+                              }
+                            }
+                          }
+                        },{
+                          "variableRef":{
+                            "name":"Maul leaves rage for Swipe"
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Use talent-specific Maul thresholds in cleave",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"2"
+                              }
+                            },
+                            "lhs":{
+                              "talentRank":{
+                                "talentId":{
+                                  "spellId":16947
+                                }
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"2"
+                              }
+                            },
+                            "lhs":{
+                              "talentRank":{
+                                "talentId":{
+                                  "spellId":16958
+                                }
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Cleave Maul reserves rage for Primal Bite",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "and":{
+                            "vals":[{
+                                "cmp":{
+                                  "op":"OpGe",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"3"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "talentRank":{
+                                      "talentId":{
+                                        "spellId":16947
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "or":{
+                                  "vals":[{
+                                      "not":{
+                                        "val":{
+                                          "spellIsKnown":{
+                                            "spellId":{
+                                              "spellId":1238070
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpGt",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"0s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "spellTimeToReady":{
+                                            "spellId":{
+                                              "spellId":1238070
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpGe",
+                                        "rhs":{
+                                          "spellCurrentCost":{
+                                            "spellId":{
+                                              "spellId":1238070
+                                            }
+                                          }
+                                        },
+                                        "lhs":{
+                                          "math":{
+                                            "op":"OpSub",
+                                            "rhs":{
+                                              "spellCurrentCost":{
+                                                "spellId":{
+                                                  "spellId":9881,
+                                                  "tag":1
+                                                }
+                                              }
+                                            },
+                                            "lhs":{
+                                              "currentRage":{
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }]
+                                }
+                              }]
+                          }
+                        },{
+                          "and":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "cmp":{
+                                      "op":"OpGe",
+                                      "rhs":{
+                                        "const":{
+                                          "val":"3"
+                                        }
+                                      },
+                                      "lhs":{
+                                        "talentRank":{
+                                          "talentId":{
+                                            "spellId":16947
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "variableRef":{
+                                  "name":"Maul leaves rage for a nearby Primal Bite"
+                                }
+                              }]
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Enough rage to queue Maul in cleave",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "and":{
+                            "vals":[{
+                                "variableRef":{
+                                  "name":"Use talent-specific Maul thresholds in cleave"
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGe",
+                                  "rhs":{
+                                    "variableRef":{
+                                      "name":"Cleave Maul minimum rage"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "currentRage":{
+                                    }
+                                  }
+                                }
+                              },{
+                                "variableRef":{
+                                  "name":"Cleave Maul reserves rage for Primal Bite"
+                                }
+                              }]
+                          }
+                        },{
+                          "and":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "variableRef":{
+                                      "name":"Use talent-specific Maul thresholds in cleave"
+                                    }
+                                  }
+                                }
+                              },{
+                                "variableRef":{
+                                  "name":"Enough rage to queue Maul"
+                                }
+                              }]
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Enough rage to queue Maul for three-target Swipe",
+                  "value":{
+                    "or":{
+                      "vals":[{
+                          "and":{
+                            "vals":[{
+                                "variableRef":{
+                                  "name":"Use talent-specific Maul thresholds in cleave"
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGe",
+                                  "rhs":{
+                                    "variableRef":{
+                                      "name":"Cleave Maul minimum rage"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "currentRage":{
+                                    }
+                                  }
+                                }
+                              },{
+                                "variableRef":{
+                                  "name":"Maul leaves rage for Swipe"
+                                }
+                              },{
+                                "or":{
+                                  "vals":[{
+                                      "not":{
+                                        "val":{
+                                          "cmp":{
+                                            "op":"OpGe",
+                                            "rhs":{
+                                              "const":{
+                                                "val":"3"
+                                              }
+                                            },
+                                            "lhs":{
+                                              "talentRank":{
+                                                "talentId":{
+                                                  "spellId":16947
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "variableRef":{
+                                        "name":"Cleave Maul reserves rage for Primal Bite"
+                                      }
+                                    }]
+                                }
+                              }]
+                          }
+                        },{
+                          "and":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "variableRef":{
+                                      "name":"Use talent-specific Maul thresholds in cleave"
+                                    }
+                                  }
+                                }
+                              },{
+                                "variableRef":{
+                                  "name":"Enough rage to queue Maul for Swipe"
+                                }
+                              }]
+                          }
+                        }]
+                    }
+                  }
+                },{
+                  "name":"Ready to return to the main weapon",
+                  "value":{
+                    "and":{
+                      "vals":[{
+                          "activeItemSwapSet":{
+                            "swapSet":"Swap1"
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"30s"
+                              }
+                            },
+                            "lhs":{
+                              "currentTime":{
+                              }
+                            }
+                          }
+                        },{
+                          "cmp":{
+                            "op":"OpLe",
+                            "rhs":{
+                              "const":{
+                                "val":"0.1s"
+                              }
+                            },
+                            "lhs":{
+                              "autoTimeSinceLast":{
+                                "autoType":"MainHandAuto"
+                              }
+                            }
+                          }
+                        },{
+                          "not":{
+                            "val":{
+                              "auraIsActive":{
+                                "auraId":{
+                                  "spellId":13494
+                                }
+                              }
+                            }
+                          }
+                        }]
+                    }
+                  }
                 }],
               "priorityList":[{
                   "action":{
@@ -500,27 +900,17 @@
                 },{
                   "action":{
                     "condition":{
-                      "and":{
-                        "vals":[{
-                            "cmp":{
-                              "op":"OpGt",
-                              "rhs":{
-                                "const":{
-                                  "val":"5"
-                                }
-                              },
-                              "lhs":{
-                                "unitDistance":{
-                                }
-                              }
-                            }
-                          },{
-                            "spellIsReady":{
-                              "spellId":{
-                                "spellId":16979
-                              }
-                            }
-                          }]
+                      "cmp":{
+                        "op":"OpGt",
+                        "rhs":{
+                          "const":{
+                            "val":"5"
+                          }
+                        },
+                        "lhs":{
+                          "unitDistance":{
+                          }
+                        }
                       }
                     },
                     "move":{
@@ -570,6 +960,29 @@
                     }
                   },
                   "notes":"Finish closing to melee before damage abilities"
+                },{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpLe",
+                        "rhs":{
+                          "const":{
+                            "val":"5"
+                          }
+                        },
+                        "lhs":{
+                          "unitDistance":{
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "itemId":9449
+                      }
+                    }
+                  },
+                  "notes":"Activate the equipped MCP once in melee"
                 },{
                   "action":{
                     "condition":{
@@ -688,7 +1101,14 @@
                       }
                     }
                   },
-                  "notes":"Use the selected Major Healthstone at 30% health or lower"
+                  "notes":"Use Major Healthstone at the low-health threshold"
+                },{
+                  "action":{
+                    "groupReference":{
+                      "groupName":"Optional on-use items"
+                    }
+                  },
+                  "notes":"Optional on-use items: enable the rows for equipped items"
                 },{
                   "action":{
                     "condition":{
@@ -729,39 +1149,8 @@
                 },{
                   "action":{
                     "condition":{
-                      "and":{
-                        "vals":[{
-                            "activeItemSwapSet":{
-                              "swapSet":"Swap1"
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"30s"
-                                }
-                              },
-                              "lhs":{
-                                "currentTime":{
-                                }
-                              }
-                            }
-                          },{
-                            "cmp":{
-                              "op":"OpLe",
-                              "rhs":{
-                                "const":{
-                                  "val":"0.1s"
-                                }
-                              },
-                              "lhs":{
-                                "autoTimeSinceLast":{
-                                  "autoType":"MainHandAuto"
-                                }
-                              }
-                            }
-                          }]
+                      "variableRef":{
+                        "name":"Ready to return to the main weapon"
                       }
                     },
                     "itemSwap":{
@@ -772,118 +1161,91 @@
                 },{
                   "action":{
                     "condition":{
-                      "variableRef":{
-                        "name":"Faerie Fire needs refreshing"
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":9907
-                      }
-                    }
-                  },
-                  "notes":"Apply Faerie Fire when missing; maintain it unless the raid supplies it"
-                },{
-                  "action":{
-                    "condition":{
-                      "variableRef":{
-                        "name":"Five-stack Lacerate is near expiry"
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":1235827
-                      }
-                    }
-                  },
-                  "notes":"Refresh five-stack Lacerate before it expires"
-                },{
-                  "action":{
-                    "condition":{
-                      "not":{
-                        "val":{
-                          "variableRef":{
-                            "name":"Attack-power reduction is covered"
+                      "cmp":{
+                        "op":"OpEq",
+                        "rhs":{
+                          "const":{
+                            "val":"2"
+                          }
+                        },
+                        "lhs":{
+                          "numberTargets":{
                           }
                         }
                       }
                     },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":9898
-                      }
+                    "groupReference":{
+                      "groupName":"Two targets: Swipe and Primal Bite"
                     }
                   },
-                  "notes":"Maintain the attack-power debuff when the raid does not cover it"
+                  "notes":"Use the two-target priority for your Feral Instinct rank"
                 },{
                   "action":{
                     "condition":{
-                      "spellIsKnown":{
-                        "spellId":{
-                          "spellId":1238070
+                      "cmp":{
+                        "op":"OpEq",
+                        "rhs":{
+                          "const":{
+                            "val":"3"
+                          }
+                        },
+                        "lhs":{
+                          "numberTargets":{
+                          }
                         }
                       }
                     },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":1238070
-                      }
+                    "groupReference":{
+                      "groupName":"Three targets: Swipe priority"
                     }
                   },
-                  "notes":"Use Primal Bite before spending rage on filler"
+                  "notes":"Use the Swipe priority against exactly three targets"
                 },{
                   "action":{
                     "condition":{
                       "and":{
                         "vals":[{
-                            "cmp":{
-                              "op":"OpGe",
-                              "rhs":{
-                                "const":{
-                                  "val":"2"
-                                }
-                              },
-                              "lhs":{
-                                "numberTargets":{
+                            "not":{
+                              "val":{
+                                "cmp":{
+                                  "op":"OpEq",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"3"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "numberTargets":{
+                                    }
+                                  }
                                 }
                               }
                             }
                           },{
-                            "druidBleedIsActive":{
+                            "not":{
+                              "val":{
+                                "cmp":{
+                                  "op":"OpEq",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"2"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "numberTargets":{
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }]
                       }
                     },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":9908
-                      }
+                    "groupReference":{
+                      "groupName":"Single target and larger packs"
                     }
                   },
-                  "notes":"Swipe with more than one target once one bleeds, so Rend and Tear applies"
-                },{
-                  "action":{
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":1235827
-                      }
-                    }
-                  },
-                  "notes":"Build or refresh Lacerate when no higher-priority attack needs the global"
-                },{
-                  "action":{
-                    "condition":{
-                      "variableRef":{
-                        "name":"Enough rage to queue Maul"
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":9881
-                      }
-                    }
-                  },
-                  "notes":"Queue Maul with enough rage left for a nearby Primal Bite"
+                  "notes":"Use the single-target and larger-pack priority for other target counts"
                 }],
               "prepullActions":[{
                   "action":{
@@ -956,23 +1318,737 @@
                 },{
                   "action":{
                     "condition":{
-                      "spellIsKnown":{
-                        "spellId":{
-                          "itemId":9449
+                      "not":{
+                        "val":{
+                          "activeItemSwapSet":{
+                            "swapSet":"Swap1"
+                          }
                         }
+                      }
+                    },
+                    "itemSwap":{
+                      "swapSet":"Main"
+                    }
+                  },
+                  "doAtValue":{
+                    "const":{
+                      "val":"-0.01s"
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "and":{
+                        "vals":[{
+                            "cmp":{
+                              "op":"OpEq",
+                              "rhs":{
+                                "const":{
+                                  "val":"3"
+                                }
+                              },
+                              "lhs":{
+                                "numberTargets":{
+                                }
+                              }
+                            }
+                          },{
+                            "cmp":{
+                              "op":"OpGe",
+                              "rhs":{
+                                "spellCurrentCost":{
+                                  "spellId":{
+                                    "spellId":9881,
+                                    "tag":1
+                                  }
+                                }
+                              },
+                              "lhs":{
+                                "currentRage":{
+                                }
+                              }
+                            }
+                          }]
                       }
                     },
                     "castSpell":{
                       "spellId":{
-                        "itemId":9449
+                        "spellId":9881
                       }
                     }
                   },
                   "doAtValue":{
                     "const":{
-                      "val":"0s"
+                      "val":"-250ms"
                     }
                   }
+                }],
+              "groups":[{
+                  "name":"Two targets: Swipe and Primal Bite",
+                  "actions":[{
+                      "action":{
+                        "condition":{
+                          "variableRef":{
+                            "name":"Faerie Fire needs refreshing"
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9907
+                          }
+                        }
+                      },
+                      "notes":"Apply Faerie Fire when missing; maintain it unless the raid supplies it"
+                    },{
+                      "action":{
+                        "condition":{
+                          "not":{
+                            "val":{
+                              "variableRef":{
+                                "name":"Attack-power reduction is covered"
+                              }
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9898
+                          }
+                        }
+                      },
+                      "notes":"Maintain the attack-power debuff when the raid does not cover it"
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":1235827
+                          },
+                          "target":{
+                            "type":"CurrentTarget"
+                          }
+                        },
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "druidBleedIsActive":{
+                                      "targetUnit":{
+                                        "type":"CurrentTarget"
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "auraIsInactive":{
+                                  "includeReactionTime":true,
+                                  "sourceUnit":{
+                                    "type":"CurrentTarget"
+                                  },
+                                  "auraId":{
+                                    "spellId":1235827
+                                  }
+                                }
+                              }]
+                          }
+                        }
+                      },
+                      "notes":"Apply Lacerate when this target needs a bleed"
+                    },{
+                      "action":{
+                        "condition":{
+                          "variableRef":{
+                            "name":"Enough rage to queue Maul in cleave"
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9881
+                          }
+                        }
+                      },
+                      "notes":"Queue Maul while reserving rage for Primal Bite"
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9908
+                          }
+                        },
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "cmp":{
+                                  "op":"OpGe",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"2"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "numberTargets":{
+                                    }
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGe",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"3"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "talentRank":{
+                                      "talentId":{
+                                        "spellId":16947
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLt",
+                                  "rhs":{
+                                    "variableRef":{
+                                      "name":"Two-target Primal Bite minimum target lifetime"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "timeUntilTargetDies":{
+                                      "targetUnit":{
+                                        "type":"CurrentTarget"
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLt",
+                                  "rhs":{
+                                    "remainingTime":{
+                                    }
+                                  },
+                                  "lhs":{
+                                    "timeUntilTargetDies":{
+                                      "targetUnit":{
+                                        "type":"CurrentTarget"
+                                      }
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        }
+                      },
+                      "notes":"With three Feral Instinct points, favor Swipe when this target is about to die before the fight ends"
+                    },{
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "spellId":1238070
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":1238070
+                          }
+                        }
+                      },
+                      "notes":"Use Primal Bite before spending rage on filler"
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9908
+                          }
+                        },
+                        "condition":{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"2"
+                              }
+                            },
+                            "lhs":{
+                              "numberTargets":{
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "notes":"Use Swipe as the two-target filler"
+                    }]
+                },{
+                  "name":"Three targets: Swipe priority",
+                  "actions":[{
+                      "action":{
+                        "condition":{
+                          "variableRef":{
+                            "name":"Enough rage to queue Maul for three-target Swipe"
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9881
+                          }
+                        }
+                      },
+                      "notes":"Queue Maul while leaving rage for the next Swipe"
+                    },{
+                      "action":{
+                        "condition":{
+                          "variableRef":{
+                            "name":"Faerie Fire needs refreshing"
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9907
+                          }
+                        }
+                      },
+                      "notes":"Apply Faerie Fire when missing; maintain it unless the raid supplies it"
+                    },{
+                      "action":{
+                        "condition":{
+                          "not":{
+                            "val":{
+                              "variableRef":{
+                                "name":"Attack-power reduction is covered"
+                              }
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9898
+                          }
+                        }
+                      },
+                      "notes":"Maintain the attack-power debuff when the raid does not cover it"
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":1235827
+                          },
+                          "target":{
+                            "type":"CurrentTarget"
+                          }
+                        },
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "druidBleedIsActive":{
+                                      "targetUnit":{
+                                        "type":"CurrentTarget"
+                                      }
+                                    }
+                                  }
+                                }
+                              },{
+                                "auraIsInactive":{
+                                  "includeReactionTime":true,
+                                  "sourceUnit":{
+                                    "type":"CurrentTarget"
+                                  },
+                                  "auraId":{
+                                    "spellId":1235827
+                                  }
+                                }
+                              }]
+                          }
+                        }
+                      },
+                      "notes":"Apply Lacerate when this target needs a bleed"
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9908
+                          }
+                        },
+                        "condition":{
+                          "cmp":{
+                            "op":"OpGe",
+                            "rhs":{
+                              "const":{
+                                "val":"3"
+                              }
+                            },
+                            "lhs":{
+                              "numberTargets":{
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "notes":"Swipe three targets"
+                    },{
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "spellId":1238070
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":1238070
+                          }
+                        }
+                      },
+                      "notes":"Use Primal Bite when the three-target Swipe rule cannot run"
+                    }]
+                },{
+                  "name":"Single target and larger packs",
+                  "actions":[{
+                      "action":{
+                        "condition":{
+                          "variableRef":{
+                            "name":"Faerie Fire needs refreshing"
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9907
+                          }
+                        }
+                      },
+                      "notes":"Apply Faerie Fire when missing; maintain it unless the raid supplies it"
+                    },{
+                      "action":{
+                        "condition":{
+                          "variableRef":{
+                            "name":"Five-stack Lacerate is near expiry"
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":1235827
+                          }
+                        }
+                      },
+                      "notes":"Refresh five-stack Lacerate before it expires"
+                    },{
+                      "action":{
+                        "condition":{
+                          "not":{
+                            "val":{
+                              "variableRef":{
+                                "name":"Attack-power reduction is covered"
+                              }
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9898
+                          }
+                        }
+                      },
+                      "notes":"Maintain the attack-power debuff when the raid does not cover it"
+                    },{
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "spellId":1238070
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":1238070
+                          }
+                        }
+                      },
+                      "notes":"Use Primal Bite before spending rage on filler"
+                    },{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "cmp":{
+                                  "op":"OpGe",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"2"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "numberTargets":{
+                                    }
+                                  }
+                                }
+                              },{
+                                "druidBleedIsActive":{
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9908
+                          }
+                        }
+                      },
+                      "notes":"Swipe with more than one target once one bleeds, so Rend and Tear applies"
+                    },{
+                      "action":{
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":1235827
+                          }
+                        }
+                      },
+                      "notes":"Build or refresh Lacerate when no higher-priority attack needs the global"
+                    },{
+                      "action":{
+                        "condition":{
+                          "variableRef":{
+                            "name":"Enough rage to queue Maul"
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":9881
+                          }
+                        }
+                      },
+                      "notes":"Queue Maul with enough rage left for a nearby Primal Bite"
+                    }]
+                },{
+                  "name":"Optional on-use items",
+                  "actions":[{
+                      "notes":"Enable Earthstrike when equipped",
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "itemId":21180
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":21180
+                          }
+                        }
+                      },
+                      "hide":true
+                    },{
+                      "notes":"Enable Slayer’s Crest when equipped",
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "itemId":23041
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":23041
+                          }
+                        }
+                      },
+                      "hide":true
+                    },{
+                      "notes":"Enable Badge of the Swarmguard when equipped",
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "itemId":21670
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":21670
+                          }
+                        }
+                      },
+                      "hide":true
+                    },{
+                      "notes":"Enable Jom Gabbar when equipped",
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "spellId":29602
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "spellId":29602
+                          }
+                        }
+                      },
+                      "hide":true
+                    },{
+                      "notes":"Enable Kiss of the Spider when equipped",
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "itemId":22954
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":22954
+                          }
+                        }
+                      },
+                      "hide":true
+                    },{
+                      "notes":"Enable Molten Heart of the Mountain when equipped",
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "itemId":249470
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":249470
+                          }
+                        }
+                      },
+                      "hide":true
+                    },{
+                      "notes":"Enable Flamebreak Talisman when equipped",
+                      "action":{
+                        "condition":{
+                          "spellIsKnown":{
+                            "spellId":{
+                              "itemId":280071
+                            }
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":280071
+                          }
+                        }
+                      },
+                      "hide":true
+                    },{
+                      "notes":"Enable Adaptive Combat Assistant at 40% health or lower",
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "spellIsKnown":{
+                                  "spellId":{
+                                    "itemId":272437
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLe",
+                                  "rhs":{
+                                    "variableRef":{
+                                      "name":"On-use defensive health threshold"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "currentHealthPercent":{
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":272437
+                          }
+                        }
+                      },
+                      "hide":true
+                    },{
+                      "notes":"Enable Smoking Heart of the Mountain at 40% health or lower",
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "spellIsKnown":{
+                                  "spellId":{
+                                    "itemId":11811
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLe",
+                                  "rhs":{
+                                    "variableRef":{
+                                      "name":"On-use defensive health threshold"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "currentHealthPercent":{
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":11811
+                          }
+                        }
+                      },
+                      "hide":true
+                    },{
+                      "notes":"Enable Arena Grand Master at 40% health or lower",
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "spellIsKnown":{
+                                  "spellId":{
+                                    "itemId":19024
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpLe",
+                                  "rhs":{
+                                    "variableRef":{
+                                      "name":"On-use defensive health threshold"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "currentHealthPercent":{
+                                    }
+                                  }
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":19024
+                          }
+                        }
+                      },
+                      "hide":true
+                    }]
                 }]
             },
             "feralBearDruid":{
