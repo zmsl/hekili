@@ -629,10 +629,12 @@ local function windowLine( self, scriptID, script, isOpen, debug, rWait, cap, pa
 end
 
 -- (windows design v6 §6) Sequences: their lines are engine work, not abilities. `seqStartStep`: the member a strict
--- start line walks (its `seqstart:` list, 0 otherwise); `holdOffOnly`: the default strict hold walks the normal lists
--- for use_off_gcd=1 off-GCD lines only (ruling 29).
+-- start line walks (its `seqstart:` list, 0 otherwise); `holdOffOnly`: a strict hold walks the normal lists for the
+-- lines in `holdPass` (window lines abort or start sequences, ruling 23) and, 1 (the default, ruling 29), use_off_gcd=1
+-- off-GCD lines; 2 (hold_off_gcd=1) nothing else; 0 no hold.
 local seqAction = { sequence = true, strict_sequence = true, restart_sequence = true }
-local seqStartStep, holdOffOnly = 0, false
+local holdPass = { call_action_list = true, run_action_list = true, variable = true, open_window = true, close_window = true }
+local seqStartStep, holdOffOnly = 0, 0
 local HOLD_LISTS = { "precombat", "default" }
 local OP_STEP = 3
 
@@ -758,13 +760,11 @@ local function sequenceLine( self, dispName, packName, entry, scriptID, slot, rA
     return rAction, rWait, rDepth, d.mode == "wait" -- SimC wait_on_ready: nothing below the line
 end
 
--- (§6) The top of a slot's walk while a strict sequence is up in this display: the give-up (its due member cannot be
--- cast with the GCD ready: CLOSE, or with allow_skip a STEP to the next member that can), once per slot. Returns the
--- hold's declaration (false: nothing holds) and the pick.
-local function strictHold( self, dispName, packName, slot, action, wait, depth )
-    local name = state.WindowHold()
-    local d = name and scripts.appliedWindows.byName[ name ]
-    if not d then return false, action, wait, depth end
+-- (§6) The give-up of strict sequence d held in this display (its due member cannot be cast with the GCD ready:
+-- CLOSE, which restarts the walk unheld, or with allow_skip a STEP to the next member that can), once per slot. Run
+-- after the hold's walk of the normal lists, so a member's if= reads the variables those lines define.
+local function giveUp( self, d )
+    local name = d.name
     local win = state.window[ name ]
     state.delay = 0
     if not state.WindowFired( d.giveID ) and state.cooldown.global_cooldown.remains == 0 and not castable( self, d, win.step ) then
@@ -779,11 +779,10 @@ local function strictHold( self, dispName, packName, slot, action, wait, depth )
             if state.WindowStep( name, to ) then seqSend( d, OP_STEP, to ) end
         elseif state.closeWindow( name ) then
             seqSend( d, 2 )
-            if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d cannot be cast; closed.", name, win.step ) end
-            return false, action, wait, depth
+            walkRestart = true
+            if self.ActiveDebug then self:Debug( "strict_sequence %s: step %d cannot be cast; closed, restart.", name, win.step ) end
         end
     end
-    return d, action, wait, depth
 end
 
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )
@@ -881,9 +880,9 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                     rAction, rWait, rDepth, halt = sequenceLine( self, dispName, packName, entry, scriptID, slot, rAction, rWait, rDepth, caller, debug )
                     if halt then stop = true end
 
-                elseif holdOffOnly and ability and action ~= "call_action_list" and action ~= "run_action_list" and action ~= "variable"
-                    and not ( entry.use_off_gcd == 1 and ability.gcd == "off" ) then
-                    -- the default strict hold (ruling 29): outside the sequence only use_off_gcd=1 off-GCD lines
+                elseif holdOffOnly > 0 and ability and not holdPass[ action ]
+                    and not ( holdOffOnly == 1 and entry.use_off_gcd == 1 and ability.gcd == "off" ) then
+                    -- a strict hold (rulings 23, 29): outside the sequence only window lines and, by default, use_off_gcd=1 off-GCD lines
                     if debug then self:Debug( "[---] %s ( %s - %d ) held by a strict sequence; skipping...", action, listName, actID ) end
 
                 elseif not ability then
@@ -1559,23 +1558,22 @@ local function nextPrediction( self, dispName, packName, slot )
         state:SetWhitelist( nil )
     end
 
-    -- (windows design v6 §6) a strict sequence up in this display holds the walk: its members first; then nothing
-    -- (hold_off_gcd=1), or the normal lists for use_off_gcd=1 off-GCD lines only (the default, ruling 29)
-    if scripts.appliedWindows.nStrict > 0 then
-        local hold
-        hold, action, wait, depth = strictHold( self, dispName, packName, slot, action, wait, depth )
+    -- (windows design v6 §6) a strict sequence up in this display holds the walk: the normal lists for window lines
+    -- (ruling 23: a close line aborts it) and, by default, use_off_gcd=1 off-GCD lines (ruling 29); then its members
+    local holdName = scripts.appliedWindows.nStrict > 0 and state.WindowHold()
+    if holdName then
+        local hold = scripts.appliedWindows.byName[ holdName ]
         if hold then
-            -- the outside use_off_gcd=1 off-GCD lines first (a ready one is weaved ahead of the member), then the members
-            if not hold.hold_off_gcd then
-                holdOffOnly = true
-                for _, listName in ipairs( HOLD_LISTS ) do
-                    if pack.lists[ listName ] and wait > 0 then
-                        action, wait, depth = self:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth )
-                    end
+            -- the outside lines first (a ready off-GCD one is weaved ahead of the member), the give-up, then the members
+            holdOffOnly = hold.hold_off_gcd and 2 or 1
+            for _, listName in ipairs( HOLD_LISTS ) do
+                if pack.lists[ listName ] and wait > 0 and not walkRestart then
+                    action, wait, depth = self:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth )
                 end
-                holdOffOnly = false
             end
-            if wait > 0 then
+            holdOffOnly = 0
+            if not walkRestart then giveUp( self, hold ) end
+            if wait > 0 and not walkRestart then
                 action, wait, depth = self:GetPredictionFromAPL( dispName, packName, hold.hidden, slot, action, wait, depth )
             end
             state:SetWhitelist( nil )

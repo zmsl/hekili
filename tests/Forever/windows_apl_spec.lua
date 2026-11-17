@@ -1176,11 +1176,30 @@ describe("plain sequences (windows design v6 §6, rulings 12, 15, 26, 28)", func
         load({ default = "actions+=/sequence,name=x:bloodrage\nactions+=/defensive_stance" })
         local cw = H.Hekili.Scripts.appliedWindows
         assert.is_nil(cw.byName.x.keys.Cooldowns)
-        assert.are.equal("pk", "pk") -- the walk test: Cooldowns has no key, its pass never opens x
         S.CopyWindows("Cooldowns")
         S.delay = 0
         assert.is_false(S.openWindow("x"))
         assert.is_false(S.window.x.up)
+    end)
+
+    it("the Sequences toggle is on each display's page and hidden for the Multi pseudo display", function()
+        H.Hekili:EmbedDisplayOptions()
+        local plugins = H.Hekili.Options.args.displays.plugins
+        local function find(args)
+            for k, v in pairs(args) do
+                if k == "sequences" and v.type == "toggle" then
+                    return v
+                end
+                local got = type(v) == "table" and v.args and find(v.args)
+                if got then
+                    return got
+                end
+            end
+        end
+        local p, m = find(plugins.Primary.Primary.args), find(plugins.Multi.Multi.args)
+        assert.is_truthy(p)
+        assert.is_falsy(p.hidden and p.hidden())
+        assert.is_true(m.hidden())
     end)
 end)
 
@@ -1268,6 +1287,43 @@ describe("strict sequences (windows design v6 §6, rulings 4, 27, 29; L1181)", f
             end
         end
     )
+
+    it("S24: a close_window line on the strict sequence closes it under the default hold and under hold_off_gcd=1", function()
+        for _, opt in ipairs({ "", ",hold_off_gcd=1" }) do
+            load({
+                default = "actions+=/close_window,name=s,if=test_fb\nactions+=/strict_sequence,name=s"
+                    .. opt
+                    .. ",if=!test_fb:bloodrage:berserker_stance\nactions+=/defensive_stance",
+            })
+            tick()
+            tick()
+            assert.are.same({ true, 1 }, { seqState("s") }, opt)
+            flags.fb = true
+            local recs, sent = tick()
+            assert.are.same({ { key("s"), CLOSE } }, sent, opt)
+            assert.are.equal("defensive_stance", recs[1].actionName, opt) -- the hold ended in the same pass
+            flags.fb = false
+            H.Fire("PLAYER_REGEN_ENABLED")
+        end
+    end)
+
+    it("the give-up judges a member reading variable.x after the variable lines are walked (both holds)", function()
+        for _, opt in ipairs({ "", ",hold_off_gcd=1" }) do
+            load({
+                default = "actions+=/variable,name=v,value=1\nactions+=/strict_sequence,name=s"
+                    .. opt
+                    .. ",if=!test_fb:bloodrage:berserker_stance,if=variable.v>0\nactions+=/defensive_stance",
+            })
+            tick()
+            tick()
+            cast(BR)
+            local recs, sent = tick()
+            assert.are.same({ true, 2 }, { seqState("s") }, opt)
+            assert.are.same({}, sent, opt)
+            assert.are.equal("berserker_stance", recs[1].actionName, opt)
+            H.Fire("PLAYER_REGEN_ENABLED")
+        end
+    end)
 
     it("L1181: a later member cast out of order ends a strict sequence", function()
         load({ default = "actions+=/strict_sequence,name=s:berserker_stance:bloodrage\nactions+=/defensive_stance" })

@@ -1328,6 +1328,7 @@ return end
                                 desc = L["When on, this display runs the priority's sequence and strict_sequence lines. When off, it skips them as if they were not in the priority. Free-form windows work either way.\n\nOn by default for Primary and AOE."],
                                 width = "full",
                                 order = 1.5,
+                                hidden = function() return name == "Multi" end, -- per display: Multi would write displays.Multi
                                 get = function() return Hekili.Scripts.SequencesOn( name ) end,
                                 set = function( _, val )
                                     Hekili.DB.profile.displays[ name ].sequences = val
