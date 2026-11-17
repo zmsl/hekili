@@ -2139,6 +2139,25 @@ describe("now handlers", function()
                 end)
             end
 
+            it(
+                "a short answer between the cast and its avoid: the give-back stays under its top (review M4)",
+                function()
+                    register("big_test", { id = 2688, spend = 35, spendType = "rage" })
+                    rest(true, false)
+                    cast(fs.SPENDER_C, 5)
+                    ctl.usable[2688] = { false, true } -- 35 is short: the truth is 30
+                    ctl.Fire("SPELL_UPDATE_USABLE")
+                    drain(5.03)
+                    ctl.usable[2688] = nil
+                    assert.is_true(I.res.sinceShort[I.res.slotOf[fs.RAGE]] < 35) -- the short answer's top, heard
+                    outcome(5.05, "DODGE")
+                    local r = rage(5.1)
+                    assert.are.equal(1, I.avoidsRun)
+                    assert.are.same({ 30, 30 }, { r.lo, r.est })
+                    assert.is_true(r.hi >= 30 - 1e-9 and r.hi < 35, ("hi %.2f, truth 30, short at 35"):format(r.hi))
+                end
+            )
+
             it("a plain read between the cast and its avoid wins: the avoid gives back nothing on top of it", function()
                 rest(true, false)
                 cast(fs.SPENDER_C, 5)
