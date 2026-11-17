@@ -1,10 +1,11 @@
 -- Hekili_Shared/Shared/Consumables.lua
 -- The consumables every class shares on Forever (shared-content spec §4.3), through Engine/Schema/Shared.lua into `all`: the
 -- `potion` action and auras core reads by name, the Healthstone from Forever's items (DB2 1.60.1.70338: the five
--- ranks and their Improved Healthstone variants), and the mana and energy consumables as their own actions. No potion
--- is registered for the `potion` verb, nor flask or food: the default priorities leave them out.
--- Neither action has a `now`: the belief sees only spell casts (an item action has no spell ID), and a Healthstone's
--- heal is health, which the belief does not track (spec §4.3).
+-- ranks and their Improved Healthstone variants), the mana and energy consumables as their own actions, and the on-use
+-- items that restore mana. No potion is registered for the `potion` verb, nor flask or food: the default priorities
+-- leave them out.
+-- Neither `potion` nor the Healthstone has a `now`: the belief sees only spell casts (neither names a use spell), and a
+-- Healthstone's heal is health, which the belief does not track (spec §4.3). A mana refill names its use spell (below).
 
 local C_Item = Hekili.Client.C_Item
 local GetItemCount, IsUsableItem = C_Item.GetItemCount, C_Item.IsUsableItem
@@ -125,28 +126,41 @@ shared:RegisterAbility("healthstone", {
 -- Read in game (checkpoint). Offered while one is in the bags and the client calls it usable.
 -- Under the Potions toggle (user ruling 2026-10-21: buff and resource consumables go under Potions, health ones under
 -- Defensives); with Potions off their lines are skipped and the list falls through to the next.
--- A mana refill (`spell`, `mid`, `spread`: its use spell and that spell's restore, mid +- spread) is the use spell's
--- cast success, which the belief tracks (`copy`). The roll is unseen, so it credits the average (owner L969): the `now`
--- puts the estimate at the midpoint and the floor and top at the ends, the simulation's `handler` gains the midpoint.
-local function consume(key, items, cooldown, name, spell, mid, spread)
+-- A mana refill (`spells`, `mids`, `spreads`: by rank in `items` order, each item's use spell and that spell's
+-- restore, mid +- spread; numbers for one rank) is the use spell's cast success, which the belief tracks (`copy`): the
+-- `now` credits the rank the cast was (`cast_id`), the simulation's `handler` the best one in the bags. The roll is
+-- unseen, so it credits the average (owner L969): the `now` puts the estimate at the midpoint and the floor and top at
+-- the ends, the `handler` gains the midpoint. `worn`: an equipped item (offered only while worn, the core's `equipped`
+-- test), also under Potions (owner L1235).
+local function consume(key, items, cooldown, name, spells, mids, spreads, worn)
     local function best()
         return inBags(items)
+    end
+    if type(spells) == "number" then
+        spells, mids, spreads = { spells }, { mids }, { spreads }
+    end
+    local bySpell, byItem = {}, {} -- a use spell's and an item's rank
+    for r = 1, spells and #spells or 0 do
+        bySpell[spells[r]], byItem[items[r]] = r, r
     end
     shared:RegisterAbility(key, {
         name = name,
         cast = 0,
         cooldown = cooldown,
         gcd = "off",
-        copy = spell and { spell } or nil,
+        copy = spells,
 
-        item = best,
+        item = worn and items[1] or best,
         items = items,
-        bagItem = true,
+        bagItem = not worn,
 
         startsCombat = false,
         toggle = "potions",
 
         usable = function()
+            if worn then
+                return IsUsableItem(items[1]) == true, "not usable"
+            end
             local item, have = best()
             if not have then
                 return false, "none in the bags"
@@ -154,20 +168,32 @@ local function consume(key, items, cooldown, name, spell, mid, spread)
             return IsUsableItem(item) == true, "not usable"
         end,
 
-        now = spell and function()
-            gain(mid, "mana", spread)
+        now = spells and function()
+            local r = bySpell[cast_id] or 1 -- luacheck: ignore 113 (the `now` context's read, Families/Now.lua)
+            gain(mids[r], "mana", spreads[r])
         end or nil,
-        handler = spell and function()
-            gain(mid, "mana")
+        handler = spells and function()
+            local r = byItem[(best())] or 1
+            gain(mids[r], "mana")
         end or nil,
     })
 end
 
--- The restores: the wowsims pin's spelldata (sim/core/spelldata/spells_auto_gen.go; the DB2's rows): 17531 Restore Mana
--- 1800 +- 450 (1350-2250), 16666 Demonic Rune 1200 +- 300 (900-1500): BasePoints, Variance 0.5 (half either side).
--- shortcut: the mana gems' four ranks share one ability, so their restore (one use spell a rank) is not credited;
--- split the gems per rank when a pack prompts them.
+-- The restores: the wowsims pin's spelldata (e4ef929e54, sim/core/spelldata/spells_auto_gen.go; the DB2's rows), mid
+-- +- mid * Variance / 2: 17531 Restore Mana 1800 +- 450 (1350-2250), 16666 Demonic Rune 1200 +- 300 (900-1500); the
+-- gems' Replenish Mana 10058 1100 +- 100, 10057 850 +- 75, 10052 600 +- 50, 5405 400 +- 25, their cooldown the items'
+-- on-use category 1153, 120 s (the pin's db.json; sim/mage/mana_gems.go), not the spells' 60 s category 30; Robe of
+-- the Archmage's 18385 500 +- 125, its item's on-use 300 s (db.json).
 consume("major_mana_potion", { 13444 }, 120, nil, 17531, 1800, 450)
 consume("demonic_rune", { 12662 }, 120, nil, 16666, 1200, 300)
 consume("thistle_tea", { 7676 }, 300)
-consume("mana_gem", { 8008, 8007, 5513, 5514 }, 120, "Mana Gem") -- Ruby, Citrine, Jade, Agate
+consume( -- Ruby, Citrine, Jade, Agate
+    "mana_gem",
+    { 8008, 8007, 5513, 5514 },
+    120,
+    "Mana Gem",
+    { 10058, 10057, 10052, 5405 },
+    { 1100, 850, 600, 400 },
+    { 100, 75, 50, 25 }
+)
+consume("robe_of_the_archmage", { 14152 }, 300, nil, 18385, 500, 125, true)

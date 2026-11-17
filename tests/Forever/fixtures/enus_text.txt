@@ -18422,6 +18422,30 @@ options.items.potion.toggle	values.interrupts	Interrupts
 options.items.potion.toggle	values.minor_cooldowns	Minor CDs
 options.items.potion.toggle	values.none	None
 options.items.potion.toggle	values.potions	Potions
+options.items.robe_of_the_archmage	name	Item 14152
+options.items.robe_of_the_archmage.boss	desc	If checked, the addon will not recommend [Item 14152] via [Use Items] unless you are in a boss fight (or encounter).  If left unchecked, [Item 14152] can be recommended in any type of fight.
+options.items.robe_of_the_archmage.boss	name	Boss Encounter Only
+options.items.robe_of_the_archmage.clash	desc	If set above zero, the addon will pretend [Item 14152] has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.items.robe_of_the_archmage.clash	name	Clash
+options.items.robe_of_the_archmage.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using [Item 14152].
+options.items.robe_of_the_archmage.disabled	name	Disable [Item 14152]
+options.items.robe_of_the_archmage.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if the addon incorrectly detects your keybindings.
+options.items.robe_of_the_archmage.keybind	name	Override Keybind Text
+options.items.robe_of_the_archmage.targetMax	desc	If set above zero, the addon will only allow [Item 14152] to be recommended via [Use Items] if there are this many detected enemies (or fewer).\nSet to zero to ignore.
+options.items.robe_of_the_archmage.targetMax	name	Maximum Targets
+options.items.robe_of_the_archmage.targetMin	desc	If set above zero, the addon will only allow [Item 14152] to be recommended via [Use Items] if there are at least this many detected enemies.\nSet to zero to ignore.
+options.items.robe_of_the_archmage.targetMin	name	Minimum Targets
+options.items.robe_of_the_archmage.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.items.robe_of_the_archmage.toggle	name	Require Toggle
+options.items.robe_of_the_archmage.toggle	values.cooldowns	Cooldowns
+options.items.robe_of_the_archmage.toggle	values.custom1	Custom 1
+options.items.robe_of_the_archmage.toggle	values.custom2	Custom 2
+options.items.robe_of_the_archmage.toggle	values.default	Default |cffffd100(potions)|r
+options.items.robe_of_the_archmage.toggle	values.defensives	Defensives
+options.items.robe_of_the_archmage.toggle	values.interrupts	Interrupts
+options.items.robe_of_the_archmage.toggle	values.minor_cooldowns	Minor CDs
+options.items.robe_of_the_archmage.toggle	values.none	None
+options.items.robe_of_the_archmage.toggle	values.potions	Potions
 options.items.spec	desc	These options apply to your selected specialization.
 options.items.spec	name	Specialization
 options.items.spec	values.100011	|W|T132292:0::::64:64:4:60:4:60|t Arms|w
@@ -18526,6 +18550,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action	values.open_windo
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.affliction.Affliction (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.shadow_bolt	|T136000:0|t Spell 686
@@ -18608,6 +18633,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.open_
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.shadow_bolt	|T136000:0|t Spell 686
@@ -18842,6 +18868,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.open_window	|
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.shadow_bolt	|T136000:0|t Spell 686
@@ -18925,6 +18952,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.open_win
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.shadow_bolt	|T136000:0|t Spell 686
@@ -19224,6 +19252,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.action	values.pool_resource	|T13
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.presence_of_mind	|T136000:0|t Spell 12043
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.scorch	|T136000:0|t Spell 2948
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
@@ -19297,6 +19326,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.pool_resource
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.presence_of_mind	|T136000:0|t Spell 12043
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.scorch	|T136000:0|t Spell 2948
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
@@ -19557,6 +19587,7 @@ options.packs.arms.Arms (wowsims.com).lists.action	values.recklessness	|T136000:
 options.packs.arms.Arms (wowsims.com).lists.action	values.rend	|T136000:0|t Spell 772
 options.packs.arms.Arms (wowsims.com).lists.action	values.retaliation	|T136000:0|t Spell 20230
 options.packs.arms.Arms (wowsims.com).lists.action	values.revenge	|T136000:0|t Spell 6572
+options.packs.arms.Arms (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.arms.Arms (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.arms.Arms (wowsims.com).lists.action	values.shield_bash	|T136000:0|t Spell 72
 options.packs.arms.Arms (wowsims.com).lists.action	values.shield_block	|T136000:0|t Spell 2565
@@ -19653,6 +19684,7 @@ options.packs.arms.Arms (wowsims.com).lists.action_name	values.recklessness	|T13
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.rend	|T136000:0|t Spell 772
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.retaliation	|T136000:0|t Spell 20230
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.revenge	|T136000:0|t Spell 6572
+options.packs.arms.Arms (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.shield_bash	|T136000:0|t Spell 72
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.shield_block	|T136000:0|t Spell 2565
@@ -19945,6 +19977,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.action	values.prem
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.preparation	|T136000:0|t Spell 14185
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.redirect	|T136000:0|t Spell 438040
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.riposte	|T136000:0|t Spell 14251
+options.packs.assassination.Assassination (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.rupture	|T136000:0|t Spell 1943
 options.packs.assassination.Assassination (wowsims.com).lists.action	values.sap	|T136000:0|t Spell 6770
@@ -20028,6 +20061,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.action_name	values
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.preparation	|T136000:0|t Spell 14185
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.redirect	|T136000:0|t Spell 438040
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.riposte	|T136000:0|t Spell 14251
+options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.rupture	|T136000:0|t Spell 1943
 options.packs.assassination.Assassination (wowsims.com).lists.action_name	values.sap	|T136000:0|t Spell 6770
@@ -20307,6 +20341,7 @@ options.packs.balance.Balance (wowsims.com).lists.action	values.rejuvenation	|T1
 options.packs.balance.Balance (wowsims.com).lists.action	values.remove_curse	|T136000:0|t Spell 2782
 options.packs.balance.Balance (wowsims.com).lists.action	values.revive	|T136000:0|t Spell 1237951
 options.packs.balance.Balance (wowsims.com).lists.action	values.rip	|T136000:0|t Spell 1079
+options.packs.balance.Balance (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.balance.Balance (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.balance.Balance (wowsims.com).lists.action	values.shifting_power	|T136000:0|t Spell 1322605
 options.packs.balance.Balance (wowsims.com).lists.action	values.shred	|T136000:0|t Spell 5221
@@ -20394,6 +20429,7 @@ options.packs.balance.Balance (wowsims.com).lists.action_name	values.rejuvenatio
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.remove_curse	|T136000:0|t Spell 2782
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.revive	|T136000:0|t Spell 1237951
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.rip	|T136000:0|t Spell 1079
+options.packs.balance.Balance (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.shifting_power	|T136000:0|t Spell 1322605
 options.packs.balance.Balance (wowsims.com).lists.action_name	values.shred	|T136000:0|t Spell 5221
@@ -20683,6 +20719,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.poti
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -20794,6 +20831,7 @@ options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
+options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.beast_mastery.Beast Mastery (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -21015,6 +21053,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	valu
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -21095,6 +21134,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -21373,6 +21413,7 @@ options.packs.combat.Combat (wowsims.com).lists.action	values.premeditation	|T13
 options.packs.combat.Combat (wowsims.com).lists.action	values.preparation	|T136000:0|t Spell 14185
 options.packs.combat.Combat (wowsims.com).lists.action	values.redirect	|T136000:0|t Spell 438040
 options.packs.combat.Combat (wowsims.com).lists.action	values.riposte	|T136000:0|t Spell 14251
+options.packs.combat.Combat (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.combat.Combat (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.combat.Combat (wowsims.com).lists.action	values.rupture	|T136000:0|t Spell 1943
 options.packs.combat.Combat (wowsims.com).lists.action	values.sap	|T136000:0|t Spell 6770
@@ -21457,6 +21498,7 @@ options.packs.combat.Combat (wowsims.com).lists.action_name	values.premeditation
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.preparation	|T136000:0|t Spell 14185
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.redirect	|T136000:0|t Spell 438040
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.riposte	|T136000:0|t Spell 14251
+options.packs.combat.Combat (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.rupture	|T136000:0|t Spell 1943
 options.packs.combat.Combat (wowsims.com).lists.action_name	values.sap	|T136000:0|t Spell 6770
@@ -21722,6 +21764,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action	values.open_windo
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.demonology.Demonology (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.shadow_bolt	|T136000:0|t Spell 686
@@ -21805,6 +21848,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.open_
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.shadow_bolt	|T136000:0|t Spell 686
@@ -22039,6 +22083,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.open_win
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.shadow_bolt	|T136000:0|t Spell 686
@@ -22122,6 +22167,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.ope
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.shadow_bolt	|T136000:0|t Spell 686
@@ -22426,6 +22472,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action	values.open_win
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.destruction.Destruction (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.shadow_bolt	|T136000:0|t Spell 686
@@ -22512,6 +22559,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.ope
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.pool_resource	|T136243:0|t |cff00ccff[Pool Resource]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.rain_of_fire	|T136000:0|t Spell 5740
+options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.searing_pain	|T136000:0|t Spell 5676
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.shadow_bolt	|T136000:0|t Spell 686
@@ -22822,6 +22870,7 @@ options.packs.discipline.Smite (wowsims.com).lists.action	values.prayer_of_spiri
 options.packs.discipline.Smite (wowsims.com).lists.action	values.psychic_scream	|T136000:0|t Spell 8122
 options.packs.discipline.Smite (wowsims.com).lists.action	values.renew	|T136000:0|t Spell 139
 options.packs.discipline.Smite (wowsims.com).lists.action	values.resurrection	|T136000:0|t Spell 2006
+options.packs.discipline.Smite (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.discipline.Smite (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.discipline.Smite (wowsims.com).lists.action	values.shackle_undead	|T136000:0|t Spell 9484
 options.packs.discipline.Smite (wowsims.com).lists.action	values.shadow_protection	|T136000:0|t Spell 976
@@ -22902,6 +22951,7 @@ options.packs.discipline.Smite (wowsims.com).lists.action_name	values.prayer_of_
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.psychic_scream	|T136000:0|t Spell 8122
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.renew	|T136000:0|t Spell 139
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.resurrection	|T136000:0|t Spell 2006
+options.packs.discipline.Smite (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.shackle_undead	|T136000:0|t Spell 9484
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.shadow_protection	|T136000:0|t Spell 976
@@ -23171,6 +23221,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action	values.potion	|T136
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.purge	|T136000:0|t Spell 370
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.riptide	|T136000:0|t Spell 408521
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.rockbiter_weapon	|T136000:0|t Spell 8017
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.searing_totem	|T136000:0|t Spell 3599
@@ -23256,6 +23307,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.potion	
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.purge	|T136000:0|t Spell 370
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.riptide	|T136000:0|t Spell 408521
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.rockbiter_weapon	|T136000:0|t Spell 8017
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.searing_totem	|T136000:0|t Spell 3599
@@ -23522,6 +23574,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.potion	|
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.purge	|T136000:0|t Spell 370
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.riptide	|T136000:0|t Spell 408521
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.rockbiter_weapon	|T136000:0|t Spell 8017
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.searing_totem	|T136000:0|t Spell 3599
@@ -23607,6 +23660,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.pot
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.purge	|T136000:0|t Spell 370
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.rage_of_the_farseer	|T136000:0|t Spell 425336
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.riptide	|T136000:0|t Spell 408521
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.rockbiter_weapon	|T136000:0|t Spell 8017
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.searing_totem	|T136000:0|t Spell 3599
@@ -23889,6 +23943,7 @@ options.packs.feral.Feral (wowsims.com).lists.action	values.rejuvenation	|T13600
 options.packs.feral.Feral (wowsims.com).lists.action	values.remove_curse	|T136000:0|t Spell 2782
 options.packs.feral.Feral (wowsims.com).lists.action	values.revive	|T136000:0|t Spell 1237951
 options.packs.feral.Feral (wowsims.com).lists.action	values.rip	|T136000:0|t Spell 1079
+options.packs.feral.Feral (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.feral.Feral (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.feral.Feral (wowsims.com).lists.action	values.shifting_power	|T136000:0|t Spell 1322605
 options.packs.feral.Feral (wowsims.com).lists.action	values.shred	|T136000:0|t Spell 5221
@@ -23983,6 +24038,7 @@ options.packs.feral.Feral (wowsims.com).lists.action_name	values.rejuvenation	|T
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.remove_curse	|T136000:0|t Spell 2782
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.revive	|T136000:0|t Spell 1237951
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.rip	|T136000:0|t Spell 1079
+options.packs.feral.Feral (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.shifting_power	|T136000:0|t Spell 1322605
 options.packs.feral.Feral (wowsims.com).lists.action_name	values.shred	|T136000:0|t Spell 5221
@@ -24284,6 +24340,7 @@ options.packs.fire.Fire (wowsims.com).lists.action	values.pool_resource	|T136243
 options.packs.fire.Fire (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.presence_of_mind	|T136000:0|t Spell 12043
 options.packs.fire.Fire (wowsims.com).lists.action	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.fire.Fire (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.fire.Fire (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.scorch	|T136000:0|t Spell 2948
 options.packs.fire.Fire (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
@@ -24357,6 +24414,7 @@ options.packs.fire.Fire (wowsims.com).lists.action_name	values.pool_resource	|T1
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.presence_of_mind	|T136000:0|t Spell 12043
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.scorch	|T136000:0|t Spell 2948
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
@@ -24561,6 +24619,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.action	values.pool_resource	|T1
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.presence_of_mind	|T136000:0|t Spell 12043
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.scorch	|T136000:0|t Spell 2948
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
@@ -24631,6 +24690,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.pool_resourc
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.presence_of_mind	|T136000:0|t Spell 12043
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.scorch	|T136000:0|t Spell 2948
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
@@ -24897,6 +24957,7 @@ options.packs.frost.Frost (wowsims.com).lists.action	values.pool_resource	|T1362
 options.packs.frost.Frost (wowsims.com).lists.action	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.frost.Frost (wowsims.com).lists.action	values.presence_of_mind	|T136000:0|t Spell 12043
 options.packs.frost.Frost (wowsims.com).lists.action	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.frost.Frost (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.frost.Frost (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.frost.Frost (wowsims.com).lists.action	values.scorch	|T136000:0|t Spell 2948
 options.packs.frost.Frost (wowsims.com).lists.action	values.thistle_tea	|T0:0|t [Item 7676]
@@ -24968,6 +25029,7 @@ options.packs.frost.Frost (wowsims.com).lists.action_name	values.pool_resource	|
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.potion	|T136243:0|t |cff00ccff[Potion]|r
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.presence_of_mind	|T136000:0|t Spell 12043
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.pyroblast	|T136000:0|t Spell 11366
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.scorch	|T136000:0|t Spell 2948
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.thistle_tea	|T0:0|t [Item 7676]
@@ -25230,6 +25292,7 @@ options.packs.fury.Fury (wowsims.com).lists.action	values.recklessness	|T136000:
 options.packs.fury.Fury (wowsims.com).lists.action	values.rend	|T136000:0|t Spell 772
 options.packs.fury.Fury (wowsims.com).lists.action	values.retaliation	|T136000:0|t Spell 20230
 options.packs.fury.Fury (wowsims.com).lists.action	values.revenge	|T136000:0|t Spell 6572
+options.packs.fury.Fury (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.fury.Fury (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.fury.Fury (wowsims.com).lists.action	values.shield_bash	|T136000:0|t Spell 72
 options.packs.fury.Fury (wowsims.com).lists.action	values.shield_block	|T136000:0|t Spell 2565
@@ -25318,6 +25381,7 @@ options.packs.fury.Fury (wowsims.com).lists.action_name	values.recklessness	|T13
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.rend	|T136000:0|t Spell 772
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.retaliation	|T136000:0|t Spell 20230
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.revenge	|T136000:0|t Spell 6572
+options.packs.fury.Fury (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.shield_bash	|T136000:0|t Spell 72
 options.packs.fury.Fury (wowsims.com).lists.action_name	values.shield_block	|T136000:0|t Spell 2565
@@ -25627,6 +25691,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action	values.rejuvenation	|
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.remove_curse	|T136000:0|t Spell 2782
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.revive	|T136000:0|t Spell 1237951
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.rip	|T136000:0|t Spell 1079
+options.packs.guardian.Guardian (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.shifting_power	|T136000:0|t Spell 1322605
 options.packs.guardian.Guardian (wowsims.com).lists.action	values.shred	|T136000:0|t Spell 5221
@@ -25721,6 +25786,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.rejuvenat
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.remove_curse	|T136000:0|t Spell 2782
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.revive	|T136000:0|t Spell 1237951
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.rip	|T136000:0|t Spell 1079
+options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.shifting_power	|T136000:0|t Spell 1322605
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.shred	|T136000:0|t Spell 5221
@@ -26024,6 +26090,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.potion
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -26121,6 +26188,7 @@ options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.p
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
+options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.marksmanship.Marksmanship (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -26342,6 +26410,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -26421,6 +26490,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	v
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -26760,6 +26830,7 @@ options.packs.protection.Protection (wowsims.com).lists.action	values.retaliatio
 options.packs.protection.Protection (wowsims.com).lists.action	values.retribution_aura	|T136000:0|t Spell 7294
 options.packs.protection.Protection (wowsims.com).lists.action	values.revenge	|T136000:0|t Spell 6572
 options.packs.protection.Protection (wowsims.com).lists.action	values.righteous_fury	|T136000:0|t Spell 25780
+options.packs.protection.Protection (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.protection.Protection (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.protection.Protection (wowsims.com).lists.action	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.protection.Protection (wowsims.com).lists.action	values.seal_of_fury	|T136000:0|t Spell 1311649
@@ -26897,6 +26968,7 @@ options.packs.protection.Protection (wowsims.com).lists.action_name	values.retal
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.retribution_aura	|T136000:0|t Spell 7294
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.revenge	|T136000:0|t Spell 6572
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.righteous_fury	|T136000:0|t Spell 25780
+options.packs.protection.Protection (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.seal_of_fury	|T136000:0|t Spell 1311649
@@ -27240,6 +27312,7 @@ options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.purify	|T
 options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.repentance	|T136000:0|t Spell 20066
 options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.retribution_aura	|T136000:0|t Spell 7294
 options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.righteous_fury	|T136000:0|t Spell 25780
+options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.retribution.Holy Shock (wowsims.com).lists.action	values.seal_of_fury	|T136000:0|t Spell 1311649
@@ -27308,6 +27381,7 @@ options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.puri
 options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.repentance	|T136000:0|t Spell 20066
 options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.retribution_aura	|T136000:0|t Spell 7294
 options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.righteous_fury	|T136000:0|t Spell 25780
+options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.retribution.Holy Shock (wowsims.com).lists.action_name	values.seal_of_fury	|T136000:0|t Spell 1311649
@@ -27535,6 +27609,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.action	values.purify	|
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.repentance	|T136000:0|t Spell 20066
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.retribution_aura	|T136000:0|t Spell 7294
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.righteous_fury	|T136000:0|t Spell 25780
+options.packs.retribution.Retribution (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.retribution.Retribution (wowsims.com).lists.action	values.seal_of_fury	|T136000:0|t Spell 1311649
@@ -27607,6 +27682,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.pur
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.repentance	|T136000:0|t Spell 20066
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.retribution_aura	|T136000:0|t Spell 7294
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.righteous_fury	|T136000:0|t Spell 25780
+options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.seal_of_command	|T136000:0|t Spell 20375
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.seal_of_fury	|T136000:0|t Spell 1311649
@@ -27911,6 +27987,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.action	values.prayer_of_spirit	|
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.psychic_scream	|T136000:0|t Spell 8122
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.renew	|T136000:0|t Spell 139
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.resurrection	|T136000:0|t Spell 2006
+options.packs.shadow.Shadow (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.shackle_undead	|T136000:0|t Spell 9484
 options.packs.shadow.Shadow (wowsims.com).lists.action	values.shadow_protection	|T136000:0|t Spell 976
@@ -28000,6 +28077,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.prayer_of_spi
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.psychic_scream	|T136000:0|t Spell 8122
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.renew	|T136000:0|t Spell 139
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.resurrection	|T136000:0|t Spell 2006
+options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.shackle_undead	|T136000:0|t Spell 9484
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.shadow_protection	|T136000:0|t Spell 976
@@ -28321,6 +28399,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.premeditation	
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.preparation	|T136000:0|t Spell 14185
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.redirect	|T136000:0|t Spell 438040
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.riposte	|T136000:0|t Spell 14251
+options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.rupture	|T136000:0|t Spell 1943
 options.packs.subtlety.Subtlety (wowsims.com).lists.action	values.sap	|T136000:0|t Spell 6770
@@ -28404,6 +28483,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.premedita
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.preparation	|T136000:0|t Spell 14185
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.redirect	|T136000:0|t Spell 438040
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.riposte	|T136000:0|t Spell 14251
+options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.rupture	|T136000:0|t Spell 1943
 options.packs.subtlety.Subtlety (wowsims.com).lists.action_name	values.sap	|T136000:0|t Spell 6770
@@ -28669,6 +28749,7 @@ options.packs.survival.Survival (wowsims.com).lists.action	values.potion	|T13624
 options.packs.survival.Survival (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.survival.Survival (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
+options.packs.survival.Survival (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.survival.Survival (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -28775,6 +28856,7 @@ options.packs.survival.Survival (wowsims.com).lists.action_name	values.potion	|T
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
+options.packs.survival.Survival (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -28996,6 +29078,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.action	values.potion	|
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
+options.packs.survival.Survival Melee (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival Melee (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -29082,6 +29165,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.pot
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
+options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503
@@ -29305,6 +29389,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.action	values.potion	
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.revive_pet	|T136000:0|t Spell 982
+options.packs.survival.Survival Turret (wowsims.com).lists.action	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival Turret (wowsims.com).lists.action	values.scatter_shot	|T136000:0|t Spell 19503
@@ -29384,6 +29469,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.po
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.rapid_fire	|T136000:0|t Spell 3045
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.raptor_strike	|T136000:0|t Spell 2973
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.revive_pet	|T136000:0|t Spell 982
+options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.robe_of_the_archmage	|T0:0|t [Item 14152]
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.run_action_list	|T136243:0|t |cff00ccff[Run Action List]|r
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.scare_beast	|T136000:0|t Spell 1513
 options.packs.survival.Survival Turret (wowsims.com).lists.action_name	values.scatter_shot	|T136000:0|t Spell 19503

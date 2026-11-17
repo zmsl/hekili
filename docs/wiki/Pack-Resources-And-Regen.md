@@ -124,7 +124,7 @@ A rate entry changes the continuous rate while a player aura is up. It has `aura
 | `mp5` | This much more a second, inside and outside the five-second rule |
 | `mp5Mult` | The MP5 from gear and buffs times this: the player's own MP5 and every other entry's `mp5`, except an entry marked `energize` |
 
-An entry with `mp5` and `energize = true` is a periodic energize, such as a totem's mana tick. It gives its own amount whatever multiplies the MP5.
+An entry with `mp5` and `energize = true` is a periodic energize, such as a totem's mana tick. It gives its own amount whatever multiplies the MP5. `spirit`, `share`, `mp5Mult` and `energize` act only on a resource with the five-second rule (`fsr`).
 
 From `src/Hekili_Shared/Shared/Auras.lua`: Innervate makes the spirit regeneration and the MP5 from gear and buffs five times as fast, and lets all of the spirit regeneration continue while casting.
 

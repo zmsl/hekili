@@ -79,6 +79,12 @@ local function held(r, k, now)
     return u > 0 and VS.Aura("player", u, now) ~= nil
 end
 
+-- Modifier k of slot r's believed talent rank: 1 without `talent`, 0 for a key the class did not register.
+local function rankOf(r, k)
+    local t = M.modTalent[r][k]
+    return t > 0 and VS.Talent(t) or t == 0 and 1 or 0
+end
+
 --- Ability a's cost `c` on slot r after the cost modifiers in its scope whose aura is believed up on the player at
 --- `now` and whose talent (if any) has a rank, the value at that rank; one with a talent and no aura needs only the
 --- rank. The simulation's M.Apply (Engine/Schema/Races.lua) alike. Allocates nothing.
@@ -87,13 +93,15 @@ function I.CostMod(a, r, c, now)
     if not mods or c <= 0 then
         return c
     end
-    local js, jt = M.modSpell[r], M.modTalent[r]
+    local js = M.modSpell[r]
     for k = 1, #mods do
-        local mod, t = mods[k], jt[k]
-        local rank = t > 0 and VS.Talent(t) or t == 0 and 1 or 0
+        local mod = mods[k]
+        local rank = rankOf(r, k)
+        -- shortcut: modifiers apply in list order, so a flat listed after a pct lands after it; wowsims adds every flat
+        -- to the base before any percent (spell.go:1055). Upgrade when a pack gives one ability both kinds.
         if
             rank > 0
-            and (js[k] > 0 and VS.Aura("player", js[k], now) or mod.aura == nil and t ~= 0)
+            and (js[k] > 0 and VS.Aura("player", js[k], now) or mod.aura == nil and mod.talent ~= nil)
             and inScope(r, k, a)
             and not held(r, k, now)
         then
@@ -110,8 +118,9 @@ function I.CostMod(a, r, c, now)
 end
 
 --- A paid cast of ability a at t on slot r spends one believed stack of each charged modifier in its scope whose aura
---- is up, but none of a modifier its `unless` aura holds as the cast starts (decided before any stack goes); at 0 the
---- aura goes. Called by the `now` family's cost step (Families/Now.lua). Allocates nothing.
+--- is up and whose talent (if any) has a rank, but none of a modifier its `unless` aura holds as the cast starts
+--- (decided before any stack goes); at 0 the aura goes. Called by the `now` family's cost step (Families/Now.lua).
+--- Allocates nothing.
 function I.SpendCostCharges(a, r, t, event)
     local mods = r and M.costMods[r]
     if not mods then
@@ -122,7 +131,7 @@ function I.SpendCostCharges(a, r, t, event)
         hk[k] = held(r, k, t)
     end
     for k = 1, #mods do
-        if mods[k].charges and ja[k] > 0 and not hk[k] and inScope(r, k, a) then
+        if mods[k].charges and ja[k] > 0 and not hk[k] and rankOf(r, k) > 0 and inScope(r, k, a) then
             local rec, stacks, applied = VS.Aura("player", js[k], t)
             if rec then
                 local left = (stacks or 1) - 1

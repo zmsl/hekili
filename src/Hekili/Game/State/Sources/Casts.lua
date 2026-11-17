@@ -40,8 +40,9 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
         return
     end
     -- priced now, on the last fold's belief: a cost-cutting aura the cast consumes (its UNIT_AURA read, Direct, can
-    -- reach the log before this staged success) still prices it (I.CastCost)
-    Stage(Obs.CastSuccess, t, a, I.CostOf(a), 1)
+    -- reach the log before this staged success) still prices it (I.CastCost); `c` the cast ID's place among the
+    -- ability's IDs (a rank: the `now`'s cast_id, Families/Now.lua)
+    Stage(Obs.CastSuccess, t, a, I.CostOf(a), I.ab.idPos[spellID] or 1)
     I.Log.Cast("SPELL_CAST_SUCCESS", t, spellID, I.Units.Sent(castGUID) or I.Units.Pin(api, t))
 end)
 

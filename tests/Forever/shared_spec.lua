@@ -305,10 +305,15 @@ describe("shared content", function()
 
     it("registers the potion action and auras core reads, and the Healthstone from Forever's items only", function()
         load({ "Consumables" })
-        assert.are.same(
-            { "demonic_rune", "healthstone", "major_mana_potion", "mana_gem", "potion", "thistle_tea" },
-            keys("abilities")
-        )
+        assert.are.same({
+            "demonic_rune",
+            "healthstone",
+            "major_mana_potion",
+            "mana_gem",
+            "potion",
+            "robe_of_the_archmage",
+            "thistle_tea",
+        }, keys("abilities"))
         assert.are.same({ "fake_potion", "potion" }, keys("auras"))
         assert.are.equal(all.abilities.potion, all.abilities.potion_default)
         assert.are.same({ "fake_potion" }, all.auras.potion.alias)
@@ -339,9 +344,7 @@ describe("shared content", function()
             assert.are.equal("potions", a[key].toggle, key) -- a resource consumable: under Potions (user, 2026-10-21)
             assert.is_false((a[key].usable()), key)
         end
-        for _, key in ipairs({ "thistle_tea", "mana_gem" }) do
-            assert.is_nil(a[key].now, key) -- no use spell the belief tracks
-        end
+        assert.is_nil(a.thistle_tea.now) -- no use spell the belief tracks
         assert.are.equal(5514, a.mana_gem.item()) -- the lowest rank when none is in the bags
         bags[5513], bags[8007] = 1, 1
         assert.are.equal(8007, a.mana_gem.item()) -- the best one in the bags
@@ -369,6 +372,72 @@ describe("shared content", function()
             assert.are.same({ { want[2], "mana", want[3] }, { want[2], "mana" } }, got, key)
             assert.are_not.equal(a[key].now, a[key].handler, key) -- the belief rejects a `now` that is its handler
         end
+    end)
+
+    -- The gems' ranks (wowsims pin e4ef929e54 spelldata: Replenish Mana 10058 1100 Variance .1818, 10057 850 .1765, 10052
+    -- 600 .1667, 5405 400 .125: mid +- mid*var/2), one ability: its `now` credits the rank the cast was (`cast_id`), the
+    -- simulation the best gem in the bags. The cooldown 120: the gem items' on-use category 1153, 120000 ms (the pin's
+    -- db.json; sim/mage/mana_gems.go), not the Replenish Mana rows' 60 s category 30.
+    it("credits a mana gem's restore by the rank used, and its 120 s item cooldown", function()
+        load({ "Consumables" })
+        local gem = all.abilities.mana_gem
+        assert.are.same({ { 8008, 8007, 5513, 5514 }, { 10058, 10057, 10052, 5405 }, 120 }, {
+            gem.items,
+            gem.copy,
+            gem.cooldown,
+        })
+        local want = {
+            [10058] = { 1100, "mana", 100 },
+            [10057] = { 850, "mana", 75 },
+            [10052] = { 600, "mana", 50 },
+            [5405] = { 400, "mana", 25 },
+        }
+        for id, w in pairs(want) do
+            assert.are.equal(gem, all.abilities[id], id) -- each rank's use spell is the gem's cast
+            local got
+            setfenv(gem.now, {
+                cast_id = id,
+                gain = function(...)
+                    got = { ... }
+                end,
+            })()
+            assert.are.same(w, got, id)
+        end
+        local got
+        local env = {
+            gain = function(...)
+                got = { ... }
+            end,
+        }
+        bags[5513], bags[8007] = 1, 1
+        setfenv(gem.handler, env)()
+        assert.are.same({ 850, "mana" }, got) -- the simulation: the best gem in the bags, Citrine
+    end)
+
+    -- An on-use item that restores mana: Robe of the Archmage 14152 (worn, not a bag item), its use spell 18385 E_ENERGIZE
+    -- 500 Variance .5 (375-625) and the item's 300 s on-use cooldown (wowsims pin e4ef929e54 spelldata and db.json).
+    it("credits Robe of the Archmage's restore at its use spell, worn", function()
+        load({ "Consumables" })
+        local robe = all.abilities.robe_of_the_archmage
+        assert.are.same({ 14152, { 14152 }, { 18385 }, 300, "off" }, {
+            robe.item,
+            robe.items,
+            robe.copy,
+            robe.cooldown,
+            robe.gcd,
+        })
+        assert.is_falsy(robe.bagItem) -- the core offers it only while worn (Sim/State.lua `equipped`)
+        assert.are.equal("potions", robe.toggle) -- a resource consumable like the gems (owner L1235), not Cooldowns
+        assert.are.equal(robe, all.abilities[18385])
+        local got = {}
+        local env = {
+            gain = function(...)
+                got[#got + 1] = { ... }
+            end,
+        }
+        setfenv(robe.now, env)()
+        setfenv(robe.handler, env)()
+        assert.are.same({ { 500, "mana", 125 }, { 500, "mana" } }, got)
     end)
 
     it("uses the best Healthstone in the bags, and the Minor one when there is none", function()
