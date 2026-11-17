@@ -288,13 +288,13 @@ local PACKS = {
             "thorns",
         },
         power = { type = ENERGY, token = TOKENS[ENERGY], max = 100 },
-        -- mana: wowsims/forever's Feral log's pool (pre-raid gear) and regen (2.175 a 0.1 s tick outside the
-        -- five-second rule, none inside it: { spirit, mp5 } = { 22, 0 } a second); stats: UnitStat's Spirit (S = 6.25 + 124/8
-        -- = 21.75), the belief's read for the Serenity Field entry
-        res = { [POINTS] = { cur = 0, max = 5 }, [MANA] = { cur = 2674, max = 2674 } },
+        -- mana: wowsims/forever's Feral log's pool (pre-raid gear, e4ef929e54) and regen (2.2 a 0.1 s tick outside the
+        -- five-second rule, none inside it: { spirit, mp5 } = { 22, 0 } a second); stats: UnitStat's Spirit (S = 6.25 + 126/8
+        -- = 22), the belief's read for the Serenity Field entry
+        res = { [POINTS] = { cur = 0, max = 5 }, [MANA] = { cur = 2584, max = 2584 } },
         form = "cat_form",
         weapon = { 55, 75, 1.0 },
-        world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = manaFsr(22), power = 100, stats = { [5] = 124 } },
+        world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = manaFsr(22), power = 100, stats = { [5] = 126 } },
         -- Furor 3/5 (wowsims's Feral build, the log header's 17056=3); wowsims's Feral scenario, which the pack's Shred
         -- and Claw lines read (L602): Shredding Attacks 3/3 (the log header's 16966=3), and a DPS behind its target, so
         -- the client says our target targets someone else
@@ -501,7 +501,7 @@ local function content(name)
     }, { __index = P.world })
 
     -- The client's other power reads: combo points plain (research addendum), the rest never. UnitPowerMax answers the
-    -- world's pools where it keeps mana (Feral's 2674, Balance's 4000; else the fake's 100).
+    -- world's pools where it keeps mana (Feral's 2584, Balance's 4000; else the fake's 100).
     C.OBSERVE = {
         plainPower = { [POINTS] = "always" },
         powerTokens = TOKENS,
