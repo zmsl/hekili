@@ -2093,24 +2093,58 @@ describe("now handlers", function()
             end)
 
             it(
-                "a usable answer between the cast and its avoid: no floor above the truth (30), est at the answer",
+                "a usable answer between the cast and its avoid: the give-back still comes (30), the rung's lift explained",
                 function()
                     rest(true, false)
+                    local s = I.res.slotOf[fs.RAGE]
                     cast(fs.SPENDER_C, 5)
                     ctl.usable[fs.SPENDER_B] = { true, false } -- the client already shows 30: spender_b (15) usable
                     ctl.Fire("SPELL_UPDATE_USABLE")
                     drain(5.03)
                     ctl.usable[fs.SPENDER_B] = nil
                     assert.is_true(rage(5.03).lo >= 15)
+                    assert.is_true(I.res.liftE[s] > 0) -- the rung's lift, owed by a swing (Resources.lua owe)
                     outcome(5.05, "DODGE")
                     local r = rage(5.1)
                     assert.are.equal(1, I.avoidsRun)
-                    -- the answer's bound holds (no floor above the truth); est stays at the answer's 15, not the truth's
-                    -- 30 (I.Refund keeps est an answer raised since the cast: the Now.lua avoid path's shortcut)
-                    assert.are.same({ 15, 15 }, { r.lo, r.est })
+                    assert.are.same({ 30, 30 }, { r.lo, r.est })
                     assert.is_true(r.hi >= 30 - 1e-9, ("hi %.2f, truth 30"):format(r.hi))
+                    -- the give-back explains the rung's lift: no later swing's wound is netted against it
+                    assert.are.same({ 0, 0 }, { I.res.liftE[s], I.res.liftL[s] })
                 end
             )
+
+            -- review I1: poll 2 re-asks every tracked spender each drain, so a standing usable answer (the live case)
+            -- lifts lo and est to its rung right after the cast zeroes them
+            for _, field in ipairs({ true, false }) do
+                it("a standing usable answer from the poll alone, field " .. tostring(field), function()
+                    rest(field, false)
+                    ctl.usable[fs.SPENDER_B] = { true, false } -- usable before the cast; never an event
+                    drain(4.9)
+                    cast(fs.SPENDER_C, 5)
+                    drain(5.03)
+                    assert.are.same({ 15, 15 }, { rage(5.03).lo, rage(5.03).est }) -- the rung
+                    outcome(5.05, "DODGE")
+                    local r = rage(5.1)
+                    ctl.usable[fs.SPENDER_B] = nil
+                    assert.are.equal(1, I.avoidsRun)
+                    assert.are.same(field and { 30, 30 } or { 15, 15 }, { r.lo, r.est })
+                end)
+            end
+
+            it("a plain read between the cast and its avoid wins: the avoid gives back nothing on top of it", function()
+                rest(true, false)
+                cast(fs.SPENDER_C, 5)
+                ctl.power[fs.RAGE] = 30 -- the server never spent the rest: the read shows it
+                ctl.Fire("UNIT_POWER_FREQUENT", "player", "RAGE")
+                drain(5.03)
+                ctl.power[fs.RAGE] = nil
+                assert.are.equal(30, rage(5.03).est)
+                outcome(5.05, "DODGE")
+                local r = rage(5.1)
+                assert.are.equal(1, I.avoidsRun)
+                assert.are.same({ 30, 30, 30 }, { r.lo, r.est, r.hi })
+            end)
 
             it("a band: the floor and the top each get back what the `now` took from them", function()
                 rest(true, false)
