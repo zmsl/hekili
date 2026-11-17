@@ -192,10 +192,11 @@ for key, def in pairs(auras) do
     shared:RegisterAura(key, def)
 end
 
--- Innervate (DB2 29166), as wowsims/forever applies its two effects (sim/core/spelldata/parse_effects_table.go): aura 110
--- +400% (the spirit regen x 5) and aura 134 100% (all of it while casting), so 5 x the full spirit regen inside the
--- five-second rule too (its Feral log: 108.75 = 5 x 21.75 a second). On every mana user: the Druid casting it on
--- itself, or another Druid's on the player. Its seconds weigh the calibration. Seen on a non-Druid only through the
--- player's out-of-combat aura walk (an Innervate before the pull): in combat the player's auras are not plain and no
--- cast of ours opens it.
-shared:RegisterRegenMod({ resource = "mana", aura = "innervate", spirit = 5, share = 1 })
+-- Innervate (DB2 29166), as wowsims/forever e4ef929e54 applies its two effects (sim/core/spelldata/
+-- parse_effects_table.go, mana.go:176-183): aura 110 +400% as Innervate's multiplier (the spirit regen and the gear and
+-- buff MP5 x 5; a periodic energize such as Mana Spring or Blessing of Wisdom ticks its own amount: an `energize` entry
+-- stays x 1) and aura 134 100% (all of the spirit regen while casting), so 5 x (MP5 + the full spirit regen) inside the
+-- five-second rule too. On every mana user: the Druid casting it on itself, or another Druid's on the player. Its seconds
+-- weigh the calibration. Seen on a non-Druid only through the player's out-of-combat aura walk (an Innervate before the
+-- pull): in combat the player's auras are not plain and no cast of ours opens it.
+shared:RegisterRegenMod({ resource = "mana", aura = "innervate", spirit = 5, share = 1, mp5Mult = 5 })

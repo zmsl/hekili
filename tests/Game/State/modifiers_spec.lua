@@ -157,6 +157,85 @@ describe("resource modifiers", function()
         assert.are.equal(15, I.CostOf(spender_b))
     end)
 
+    -- A percent-of-base cost is priced whole first, then cut by the modifiers, unrounded, as the simulation does
+    -- (spend_base_spec.lua; wowsims e4ef929e54 spell.go:1055): 11% of 1720 is 189, halved 94.5, cut 12% 166.32.
+    it("cuts a percent-of-base cost after pricing it whole, unrounded", function()
+        local spender_c = I.ab.bySpell[fs.SPENDER_C]
+        h.Class.abilities.spender_c.spend = 0.11
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.5 } }
+        ns.BuildTracked()
+        I.basePow[I.ab.slot[spender_c]] = 1720
+        I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        I.clock = 5
+        assert.are.same({ 189, 94.5 }, { I.BaseCostOf(spender_c), I.CostOf(spender_c) })
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.12 } }
+        ns.BuildTracked()
+        I.basePow[I.ab.slot[spender_c]] = 1720
+        I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        assert.is_true(math.abs(I.CostOf(spender_c) - 166.32) < 1e-9, tostring(I.CostOf(spender_c)))
+    end)
+
+    -- A talent-gated modifier (`talent`, no aura): active while the talent has a rank, its `pct` by rank (a list) or
+    -- one value; the cut lands on the whole price, unrounded (wowsims e4ef929e54 spell_mod.go:909 on a passive talent:
+    -- 11% of 1720 is 189, a 12% rank 166.32), as the simulation applies it (spend_base_spec.lua).
+    it("cuts a cost by a talent's rank with no aura, and not at rank 0", function()
+        local spender_c = I.ab.bySpell[fs.SPENDER_C]
+        h.Class.abilities.spender_c.spend = 0.11
+        ns.raceMods.costMods = { { talent = "talent_a", pct = { -0.04, -0.08, -0.12 } } }
+        ns.BuildTracked()
+        I.basePow[I.ab.slot[spender_c]] = 1720
+        I.clock = 5
+        local got = {}
+        for rank = 0, 3 do
+            I.SetTalentRank(1, rank)
+            got[#got + 1] = I.CostOf(spender_c)
+        end
+        assert.are.same({ 189, 181.44 }, { got[1], got[2] })
+        assert.is_true(math.abs(got[3] - 173.88) < 1e-9 and math.abs(got[4] - 166.32) < 1e-9, table.concat(got, " "))
+        ns.raceMods.costMods = { { talent = "talent_a", pct = -0.5, spells = { fs.SPENDER_B } } } -- one value, any rank
+        ns.BuildTracked()
+        I.SetTalentRank(1, 2)
+        assert.are.equal(7.5, I.CostOf(I.ab.bySpell[fs.SPENDER_B]))
+    end)
+
+    -- An aura + talent modifier with charges needs the rank for its charge as for its price: at rank 0 the aura's
+    -- stacks stay (the simulation's M.Spend alike, races_spec.lua).
+    it("takes no charge from an aura + talent modifier at talent rank 0", function()
+        local spender_b = I.ab.bySpell[fs.SPENDER_B]
+        local def = { aura = "mod_aura_a", talent = "talent_a", pct = -0.10, charges = 3, spells = { fs.SPENDER_B } }
+        ns.raceMods.costMods = { def }
+        ns.BuildTracked()
+        VS.Drain(1.5)
+        local j = I.auras.bySpell[MOD_AURA]
+        I.SetTalentRank(1, 0)
+        I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        I.clock = 5
+        assert.are.equal(15, I.CostOf(spender_b))
+        cast(fs.SPENDER_B, 6)
+        local _, stacks = VS.Aura("player", MOD_AURA, 6.1)
+        assert.are.equal(3, stacks)
+        I.SetTalentRank(1, 1)
+        I.clock = 6.1
+        assert.are.equal(13.5, I.CostOf(spender_b))
+        cast(fs.SPENDER_B, 7)
+        _, stacks = VS.Aura("player", MOD_AURA, 7.1)
+        assert.are.equal(2, stacks)
+    end)
+
+    -- A talent key the class did not register never applies, with an aura or without (a shared or race modifier
+    -- naming another class's talent).
+    for _, aura in ipairs({ "mod_aura_a", false }) do
+        it("never applies a talent key the class lacks (" .. (aura and "with" or "without") .. " an aura)", function()
+            local spender_b = I.ab.bySpell[fs.SPENDER_B]
+            ns.raceMods.costMods = { { aura = aura or nil, talent = "not_a_talent", pct = -0.5 } }
+            ns.BuildTracked()
+            I.SetTalentRank(1, 3)
+            I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+            I.clock = 5
+            assert.are.equal(15, I.CostOf(spender_b))
+        end)
+    end
+
     -- `unless` (CN11): while the named aura is believed up on the player, the modifier neither prices nor takes a
     -- charge; the other modifier's spend in the same cast never decides it, whichever comes first in the list.
     local function unlessMods(first)
