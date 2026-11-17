@@ -657,10 +657,14 @@ describe("the ticket pool", function()
         -- 60.229 (its row 60.930). The swing from before the cast still owes its row: the miss is the swing's, held.
         describe("an avoid past a cast's own frame while a swing from before the cast owes its row (AS)", function()
             local mh, oh
-            local function sunder(rowT, act)
+            local function sunder(rowT, act, unmappedAt)
                 local c = fs.new(9, nil, nil, true)
                 c.Class.abilities.spender_c.expects = "debuff" -- no damage: avoids only (Sunder Armor's declaration)
                 I.Build(fs.def(c), 1)
+                if unmappedAt then
+                    ctl.now = unmappedAt
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 999999)
+                end
                 ctl.now = 59.749
                 ctl.Fire("PLAYER_SWING", 2.6, 0)
                 mh = T.lastSwing[1]
@@ -701,6 +705,12 @@ describe("the ticket pool", function()
             it("never holds a non-avoid miss (IMMUNE) on the swing: a swing takes avoids only", function()
                 sunder(60.48, "IMMUNE")
                 assert.are.same({ T.OPEN, "" }, { T.state[mh], T.avoid[mh] })
+            end)
+
+            it("leaves it to an unmapped success's window as nobody's, never held on the swing", function()
+                local a0 = T.absorbed
+                sunder(60.48, "MISS", 60.0)
+                assert.are.same({ 1, T.OPEN, "" }, { T.absorbed - a0, T.state[mh], T.avoid[mh] })
             end)
 
             it("stays the cast's in its own frame (pass 1), the older swing still in flight", function()
