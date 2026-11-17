@@ -23,6 +23,7 @@ describe("recommendation listeners (headless Arms)", function()
         for i = 1, #added do
             hk:UnregisterRecommendationListener(added[i])
         end
+        H.env.WeakAuras = nil
     end)
 
     local function listen(fn)
@@ -120,6 +121,111 @@ describe("recommendation listeners (headless Arms)", function()
         assert.are.equal(1, nextCalls)
         pub("Primary", { "a" })
         assert.are.equal(2, nextCalls)
+    end)
+
+    it("a listener's error is reported again after it is unregistered and registered again", function()
+        local function bad()
+            error("listener bug")
+        end
+        listen(bad)
+        pub("Primary", { "a" })
+        hk:UnregisterRecommendationListener(bad)
+        listen(bad)
+        pub("Primary", { "a" })
+        assert.are.equal(2, #H.errors)
+    end)
+
+    it("an erroring listener, once unregistered, is not kept alive by the error report", function()
+        local weak = setmetatable({}, { __mode = "k" })
+        local bad = function()
+            error("listener bug")
+        end
+        weak[bad] = true
+        assert.is_true(hk:RegisterRecommendationListener(bad)) -- not through listen(): `added` would hold it
+        pub("Primary", { "a" })
+        assert.are.equal(1, #H.errors)
+        hk:UnregisterRecommendationListener(bad)
+        bad = nil -- luacheck: ignore 311
+        collectgarbage()
+        collectgarbage()
+        assert.is_nil(next(weak))
+    end)
+
+    it("with 16 in use, a register inside a callback after an unregister there takes the freed slot", function()
+        local victim, newcomer, ok = nil, nil, nil
+        local newCalls, counts = 0, {}
+        listen(function()
+            if ok == nil then
+                hk:UnregisterRecommendationListener(victim)
+                ok = hk:RegisterRecommendationListener(newcomer)
+            end
+        end)
+        victim = function()
+            error("unregistered before its turn")
+        end
+        listen(victim)
+        for i = 3, 16 do
+            assert.is_true(listen(function()
+                counts[i] = (counts[i] or 0) + 1
+            end))
+        end
+        newcomer = function()
+            newCalls = newCalls + 1
+        end
+        added[#added + 1] = newcomer
+        pub("Primary", { "a" })
+        assert.is_true(ok)
+        assert.are.equal(0, newCalls) -- called from the next update on
+        pub("Primary", { "a" })
+        assert.are.equal(1, newCalls)
+        for i = 3, 16 do
+            assert.are.equal(2, counts[i], i) -- nobody skipped
+        end
+        assert.are.same({}, H.errors)
+        assert.is_false(listen(function() end)) -- 16 again: a 17th is refused
+    end)
+
+    it("WeakAuras and a listener receive the same payload table", function()
+        local scanned, got
+        H.env.WeakAuras = {
+            ScanEvents = function(_, display, _, _, _, p)
+                if display == "Primary" then
+                    scanned = p
+                end
+            end,
+        }
+        H.Fire("PLAYER_ENTERING_WORLD", false, false)
+        listen(function(display, p)
+            if display == "Primary" then
+                got = p
+            end
+        end)
+        pub("Primary", { "a" })
+        assert.is_table(got)
+        assert.are.equal(scanned, got)
+    end)
+
+    it("a listener before PLAYER_ENTERING_WORLD, then WeakAuras: one subscription, one call and one scan", function()
+        local calls, scans = 0, 0
+        listen(function(display)
+            if display == "Primary" then
+                calls = calls + 1
+            end
+        end)
+        local subs = hk.Engine.Output.Primary.subs.n
+        H.env.WeakAuras = {
+            ScanEvents = function(_, display)
+                if display == "Primary" then
+                    scans = scans + 1
+                end
+            end,
+        }
+        H.Fire("PLAYER_ENTERING_WORLD", false, false)
+        assert.are.equal(subs, hk.Engine.Output.Primary.subs.n)
+        pub("Primary", { "a" })
+        assert.are.equal(1, calls)
+        assert.are.equal(1, scans)
+        assert.are.same({}, H.errors)
     end)
 
     it("takes 16 listeners and refuses the 17th", function()

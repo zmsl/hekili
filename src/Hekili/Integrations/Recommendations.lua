@@ -14,7 +14,8 @@ for i = 1, MAX do
     listeners[i] = false
 end
 local calling = false
-local reported = {} -- listener -> true once its first error went to the error handler
+-- listener -> true once its first error went to the error handler; weak, and cleared on unregister
+local reported = setmetatable({}, { __mode = "k" })
 local wa = false -- WeakAuras was loaded when the player entered the world, as stock
 local subscribed = false
 
@@ -117,15 +118,20 @@ end)
 ---@return boolean
 function Hekili:RegisterRecommendationListener(fn)
     assert(type(fn) == "function", "RegisterRecommendationListener: fn must be a function")
-    local n = listeners.n
+    local n, live = listeners.n, 0
     for i = 1, n do
-        if listeners[i] == fn then
+        local l = listeners[i]
+        if l == fn then
             return true
+        elseif l then
+            live = live + 1
         end
     end
-    if n == MAX then
+    if live == MAX then
         return false
     end
+    -- Appended even past MAX inside a callback (a blank there is compacted after the loop), so it is first called on
+    -- the next publish.
     listeners[n + 1], listeners.n = fn, n + 1
     subscribe()
     return true
@@ -136,6 +142,7 @@ function Hekili:UnregisterRecommendationListener(fn)
     for i = 1, listeners.n do
         if listeners[i] == fn then
             listeners[i] = false
+            reported[fn] = nil
             if not calling then
                 compact()
             end
