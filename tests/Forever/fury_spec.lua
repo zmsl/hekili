@@ -99,7 +99,8 @@ describe("the Fury world's off hand", function()
             local C = gate.content(level)
             return C.gain(1, 2, 0, "HIT", C.character())
         end
-        assert.is_near(1.73 * 1.9, offHand(24), 1e-9) -- the L24 cut stops short of the talent
-        assert.is_near(1.73 * 1.5 * 1.9, offHand(60), 1e-9)
+        -- both cuts carry Unbridled Wrath 5/5: its expected 0.595 a landed swing (0.119 x 5, EV-0148) on top
+        assert.is_near(1.73 * 1.9 + 0.595, offHand(24), 1e-9) -- the L24 cut stops short of the talent
+        assert.is_near(1.73 * 1.5 * 1.9 + 0.595, offHand(60), 1e-9)
     end)
 end)
