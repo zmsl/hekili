@@ -56,6 +56,10 @@ describe("the Mage loop worlds", function()
             )
             assert.is_true(#C.usable(H) > 0)
             assert.are.same({}, H.errors)
+            -- the client's static spell ranges (DB2 70707), so a travelling cast's flight window is its real one: a
+            -- Fireball crit 0.83 s out (20 yd) lands inside 35 / 24 s, never past a 5 yd default's 0.21 s
+            local info = H.api.C_Spell.GetSpellInfo
+            assert.are.same({ 35, 20, 0 }, { info(10151).maxRange, info(10199).maxRange, info(12051).maxRange })
         end)
     end
 
