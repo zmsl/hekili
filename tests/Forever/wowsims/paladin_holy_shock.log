@@ -1,4 +1,4 @@
-# wowsims e4ef929e54794ea16dc9a3c4b4f9d4688d500679 paladin_holy_shock seed 101 180 s target 63
+# wowsims ab0f00e4fc83cdede13ba8a184f2a384b8efa3ab paladin_holy_shock seed 101 180 s target 63
 # talents 20262=5@1 1310899=2@1 20224=5@1 429144=2@1 20216=1@1 1237268=2@1 1310904=2@1 426065=1@1 1310905=2@1 1311606=1@1 20101=5@3 25956=2@3 20117=3@3 1311074=3@3 9452=3@3 20375=1@3 26022=1@3 1311087=1@3 20111=3@3 20049=3@3 1311084=3@3
 [0.00] [Holy Shock (#1)] Aura gained: {SpellID: 18679}
 [0.00] [Holy Shock (#1)] Aura gained: {SpellID: 18679}
@@ -313,7 +313,7 @@
 [4.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4105.317 --> 4106.071) of 4667 total.
 [4.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4106.071 --> 4106.825) of 4667 total.
 [4.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[4.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 73.443 damage (SpellSchool: 2). (Threat: 58.754)
+[4.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 72.760 damage (SpellSchool: 2). (Threat: 58.208)
 [4.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4106.825 --> 4107.579) of 4667 total.
 [4.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4107.579 --> 4108.332) of 4667 total.
 [4.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4108.332 --> 4109.086) of 4667 total.
@@ -340,7 +340,7 @@
 [5.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4094.855 --> 4095.609) of 4667 total.
 [5.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4095.609 --> 4096.362) of 4667 total.
 [5.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[5.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 73.443 damage (SpellSchool: 2). (Threat: 58.754)
+[5.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 72.760 damage (SpellSchool: 2). (Threat: 58.208)
 [5.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4096.362 --> 4097.116) of 4667 total.
 [5.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4097.116 --> 4097.870) of 4667 total.
 [5.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4097.870 --> 4098.624) of 4667 total.
@@ -356,7 +356,7 @@
 [6.40] [Holy Shock (#1)] Queueing up {SpellID: 25902} to cast at 6.500000002s.
 [6.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (4103.146 --> 4103.900) of 4667 total.
 [6.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[6.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 73.443 damage (SpellSchool: 2). (Threat: 58.754)
+[6.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 72.760 damage (SpellSchool: 2). (Threat: 58.208)
 [6.50] [Holy Shock (#1)] Casting {SpellID: 20216} (Cost = 60.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 8
 [6.50] [Holy Shock (#1)] Completed cast {SpellID: 20216}
 [6.50] [Holy Shock (#1)] Spent 60.000 mana from {SpellID: 20216} (4103.900 --> 4043.900) of 4667 total.
@@ -400,7 +400,7 @@
 [8.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3764.967 --> 3765.721) of 4667 total.
 [8.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3765.721 --> 3766.475) of 4667 total.
 [8.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[8.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[8.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [8.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3766.475 --> 3767.229) of 4667 total.
 [8.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3767.229 --> 3767.982) of 4667 total.
 [8.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3767.982 --> 3768.736) of 4667 total.
@@ -418,7 +418,7 @@
 [9.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3772.505 --> 3773.259) of 4667 total.
 [9.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3773.259 --> 3774.012) of 4667 total.
 [9.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[9.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[9.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [9.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3774.012 --> 3774.766) of 4667 total.
 [9.64] [Holy Shock (#1)] Queueing up {SpellID: 20271} to cast at 10.000000001s.
 [9.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3774.766 --> 3775.520) of 4667 total.
@@ -441,7 +441,7 @@
 [10.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3830.142 --> 3830.896) of 4667 total.
 [10.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3830.896 --> 3831.650) of 4667 total.
 [10.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[10.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[10.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [10.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3831.650 --> 3832.404) of 4667 total.
 [10.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3832.404 --> 3833.157) of 4667 total.
 [10.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3833.157 --> 3833.911) of 4667 total.
@@ -467,7 +467,7 @@
 [11.46] [Holy Shock (#1)] [Target 1] {SpellID: 25713} Hit for 160.506 damage (SpellSchool: 2). (Threat: 128.405)
 [11.50] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [11.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[11.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[11.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [11.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3838.434 --> 3839.187) of 4667 total.
 [11.50] [Holy Shock (#1)] Casting {SpellID: 20924} (Cost = 305.100, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 5
 [11.50] [Holy Shock (#1)] Completed cast {SpellID: 20924}
@@ -486,7 +486,7 @@
 [12.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3540.117 --> 3540.871) of 4667 total.
 [12.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3540.871 --> 3541.625) of 4667 total.
 [12.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[12.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[12.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [12.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3541.625 --> 3542.379) of 4667 total.
 [12.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3542.379 --> 3543.132) of 4667 total.
 [12.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3543.132 --> 3543.886) of 4667 total.
@@ -498,7 +498,7 @@
 [13.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3547.655 --> 3548.409) of 4667 total.
 [13.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3548.409 --> 3549.162) of 4667 total.
 [13.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[13.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[13.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [13.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3549.162 --> 3549.916) of 4667 total.
 [13.64] [Holy Shock (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [13.64] [Holy Shock (#1)] Completed cast {OtherID: 3, Tag: 14}
@@ -516,7 +516,7 @@
 [14.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3555.192 --> 3555.946) of 4667 total.
 [14.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3555.946 --> 3556.700) of 4667 total.
 [14.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[14.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[14.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [14.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3556.700 --> 3557.454) of 4667 total.
 [14.60] [Holy Shock (#1)] Queueing up {SpellID: 10333} to cast at 15.000000002s.
 [14.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3557.454 --> 3558.207) of 4667 total.
@@ -536,7 +536,7 @@
 [15.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3544.730 --> 3545.484) of 4667 total.
 [15.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3545.484 --> 3546.237) of 4667 total.
 [15.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[15.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[15.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [15.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3546.237 --> 3546.991) of 4667 total.
 [15.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3546.991 --> 3547.745) of 4667 total.
 [15.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3547.745 --> 3548.499) of 4667 total.
@@ -558,7 +558,7 @@
 [16.45] [Holy Shock (#1)] Queueing up {SpellID: 25902} to cast at 16.500000002s.
 [16.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3553.021 --> 3553.775) of 4667 total.
 [16.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[16.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[16.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [16.50] [Holy Shock (#1)] Casting {SpellID: 25902} (Cost = 292.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [16.50] [Holy Shock (#1)] Completed cast {SpellID: 25902}
 [16.50] [Holy Shock (#1)] Spent 292.500 mana from {SpellID: 25902} (3553.775 --> 3261.275) of 4667 total.
@@ -574,7 +574,7 @@
 [17.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3267.305 --> 3268.059) of 4667 total.
 [17.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3268.059 --> 3268.812) of 4667 total.
 [17.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[17.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[17.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [17.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3268.812 --> 3269.566) of 4667 total.
 [17.60] [Holy Shock (#1)] Queueing up {SpellID: 20271} to cast at 18.000000002s.
 [17.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3269.566 --> 3270.320) of 4667 total.
@@ -603,7 +603,7 @@
 [18.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3324.942 --> 3325.696) of 4667 total.
 [18.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3325.696 --> 3326.450) of 4667 total.
 [18.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[18.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[18.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [18.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3326.450 --> 3327.204) of 4667 total.
 [18.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3327.204 --> 3327.957) of 4667 total.
 [18.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3327.957 --> 3328.711) of 4667 total.
@@ -620,7 +620,7 @@
 [19.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3333.234 --> 3333.987) of 4667 total.
 [19.50] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [19.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[19.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[19.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [19.50] [Holy Shock (#1)] Casting {SpellID: 20924} (Cost = 305.100, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 5
 [19.50] [Holy Shock (#1)] Completed cast {SpellID: 20924}
 [19.50] [Holy Shock (#1)] Spent 305.100 mana from {SpellID: 20924} (3333.987 --> 3028.887) of 4667 total.
@@ -644,7 +644,7 @@
 [20.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3034.917 --> 3035.671) of 4667 total.
 [20.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3035.671 --> 3036.425) of 4667 total.
 [20.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[20.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[20.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [20.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3036.425 --> 3037.179) of 4667 total.
 [20.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3037.179 --> 3037.932) of 4667 total.
 [20.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3037.932 --> 3038.686) of 4667 total.
@@ -656,7 +656,7 @@
 [21.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3042.455 --> 3043.209) of 4667 total.
 [21.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3043.209 --> 3043.962) of 4667 total.
 [21.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[21.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[21.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [21.51] [Holy Shock (#1)] Aura faded: {SpellID: 437063}
 [21.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3043.962 --> 3044.716) of 4667 total.
 [21.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (3044.716 --> 3045.470) of 4667 total.
@@ -679,7 +679,7 @@
 [22.46] [Holy Shock (#1)] [Target 1] {SpellID: 25713} Hit for 160.506 damage (SpellSchool: 2). (Threat: 128.405)
 [22.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2870.746 --> 2871.500) of 4667 total.
 [22.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[22.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[22.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [22.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2871.500 --> 2872.254) of 4667 total.
 [22.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2872.254 --> 2873.007) of 4667 total.
 [22.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2873.007 --> 2873.761) of 4667 total.
@@ -691,7 +691,7 @@
 [23.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2877.530 --> 2878.284) of 4667 total.
 [23.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2878.284 --> 2879.037) of 4667 total.
 [23.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[23.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[23.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [23.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2879.037 --> 2879.791) of 4667 total.
 [23.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2879.791 --> 2880.545) of 4667 total.
 [23.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2880.545 --> 2881.299) of 4667 total.
@@ -703,7 +703,7 @@
 [24.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2885.067 --> 2885.821) of 4667 total.
 [24.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2885.821 --> 2886.575) of 4667 total.
 [24.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[24.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[24.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [24.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2886.575 --> 2887.329) of 4667 total.
 [24.64] [Holy Shock (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [24.64] [Holy Shock (#1)] Completed cast {OtherID: 3, Tag: 14}
@@ -729,7 +729,7 @@
 [25.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2874.605 --> 2875.359) of 4667 total.
 [25.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2875.359 --> 2876.112) of 4667 total.
 [25.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[25.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[25.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [25.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2876.112 --> 2876.866) of 4667 total.
 [25.60] [Holy Shock (#1)] Queueing up {SpellID: 20271} to cast at 26.000000003s.
 [25.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2876.866 --> 2877.620) of 4667 total.
@@ -757,7 +757,7 @@
 [26.41] [Holy Shock (#1)] Queueing up {SpellID: 25902} to cast at 26.500000003s.
 [26.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2932.996 --> 2933.750) of 4667 total.
 [26.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[26.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[26.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [26.50] [Holy Shock (#1)] Casting {SpellID: 25902} (Cost = 292.500, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 9
 [26.50] [Holy Shock (#1)] Completed cast {SpellID: 25902}
 [26.50] [Holy Shock (#1)] Spent 292.500 mana from {SpellID: 25902} (2933.750 --> 2641.250) of 4667 total.
@@ -777,7 +777,7 @@
 [27.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2648.034 --> 2648.787) of 4667 total.
 [27.50] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [27.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[27.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[27.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [27.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2648.787 --> 2649.541) of 4667 total.
 [27.60] [Holy Shock (#1)] Queueing up {SpellID: 20924} to cast at 28.000000004s.
 [27.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2649.541 --> 2650.295) of 4667 total.
@@ -804,7 +804,7 @@
 [28.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2353.486 --> 2354.240) of 4667 total.
 [29.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2354.240 --> 2354.994) of 4667 total.
 [29.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[29.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 75.582 damage (SpellSchool: 2). (Threat: 60.466)
+[29.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 74.663 damage (SpellSchool: 2). (Threat: 59.730)
 [29.05] [Holy Shock (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [29.05] [Holy Shock (#1)] Completed cast {OtherID: 3, Tag: 14}
 [29.05] [Holy Shock (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 256.697 damage (SpellSchool: 1). (Threat: 205.358)
@@ -826,7 +826,7 @@
 [29.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2361.024 --> 2361.777) of 4667 total.
 [30.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2361.777 --> 2362.531) of 4667 total.
 [30.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[30.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[30.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [30.10] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2362.531 --> 2363.285) of 4667 total.
 [30.20] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2363.285 --> 2364.039) of 4667 total.
 [30.30] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2364.039 --> 2364.792) of 4667 total.
@@ -838,7 +838,7 @@
 [30.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2368.561 --> 2369.315) of 4667 total.
 [31.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2369.315 --> 2370.069) of 4667 total.
 [31.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[31.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[31.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [31.10] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2370.069 --> 2370.822) of 4667 total.
 [31.20] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2370.822 --> 2371.576) of 4667 total.
 [31.25] [Holy Shock (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
@@ -856,7 +856,7 @@
 [31.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2376.099 --> 2376.852) of 4667 total.
 [32.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2376.852 --> 2377.606) of 4667 total.
 [32.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[32.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[32.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [32.10] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2377.606 --> 2378.360) of 4667 total.
 [32.20] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2378.360 --> 2379.114) of 4667 total.
 [32.30] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2379.114 --> 2379.867) of 4667 total.
@@ -868,7 +868,7 @@
 [32.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2383.636 --> 2384.390) of 4667 total.
 [33.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2384.390 --> 2385.144) of 4667 total.
 [33.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[33.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 119.790 damage (SpellSchool: 2). (Threat: 95.832)
+[33.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 117.702 damage (SpellSchool: 2). (Threat: 94.161)
 [33.10] [Holy Shock (#1)] Gained 0.000 mana from {OtherID: 2, Tag: 1} (2385.144 --> 2385.144) of 4667 total.
 [33.10] [Holy Shock (#1)] Gained 2.512 mana from {OtherID: 2, Tag: 2} (2385.144 --> 2387.656) of 4667 total.
 [33.20] [Holy Shock (#1)] Gained 2.513 mana from {OtherID: 2, Tag: 2} (2387.656 --> 2390.169) of 4667 total.
@@ -891,7 +891,7 @@
 [33.95] [Holy Shock (#1)] Queueing up {SpellID: 20271} to cast at 34.000000003s.
 [34.00] [Holy Shock (#1)] Gained 2.513 mana from {OtherID: 2, Tag: 2} (2407.756 --> 2410.269) of 4667 total.
 [34.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[34.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[34.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [34.00] [Holy Shock (#1)] Casting {SpellID: 20271} (Cost = 81.900, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 4
 [34.00] [Holy Shock (#1)] Completed cast {SpellID: 20271}
 [34.00] [Holy Shock (#1)] Gained 0.000 mana from {OtherID: 2, Tag: 2} (2410.269 --> 2410.269) of 4667 total.
@@ -915,7 +915,7 @@
 [34.91] [Holy Shock (#1)] Queueing up {SpellID: 10333} to cast at 35.000000003s.
 [35.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2467.152 --> 2467.906) of 4667 total.
 [35.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[35.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[35.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [35.00] [Holy Shock (#1)] Casting {SpellID: 10333} (Cost = 18.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
 [35.00] [Holy Shock (#1)] Completed cast {SpellID: 10333}
 [35.00] [Holy Shock (#1)] Spent 18.000 mana from {SpellID: 10333} (2467.906 --> 2449.906) of 4667 total.
@@ -938,7 +938,7 @@
 [36.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2456.690 --> 2457.444) of 4667 total.
 [36.00] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [36.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[36.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[36.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [36.10] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2457.444 --> 2458.197) of 4667 total.
 [36.10] [Holy Shock (#1)] Queueing up {SpellID: 20924} to cast at 36.500000004s.
 [36.20] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2458.197 --> 2458.951) of 4667 total.
@@ -965,7 +965,7 @@
 [37.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2162.142 --> 2162.896) of 4667 total.
 [37.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2162.896 --> 2163.650) of 4667 total.
 [37.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[37.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[37.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [37.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2163.650 --> 2164.404) of 4667 total.
 [37.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2164.404 --> 2165.157) of 4667 total.
 [37.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (2165.157 --> 2165.911) of 4667 total.
@@ -992,7 +992,7 @@
 [38.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1877.180 --> 1877.934) of 4667 total.
 [38.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1877.934 --> 1878.687) of 4667 total.
 [38.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[38.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[38.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [38.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1878.687 --> 1879.441) of 4667 total.
 [38.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1879.441 --> 1880.195) of 4667 total.
 [38.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1880.195 --> 1880.949) of 4667 total.
@@ -1004,7 +1004,7 @@
 [39.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1884.717 --> 1885.471) of 4667 total.
 [39.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1885.471 --> 1886.225) of 4667 total.
 [39.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[39.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[39.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [39.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1886.225 --> 1886.979) of 4667 total.
 [39.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1886.979 --> 1887.732) of 4667 total.
 [39.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1887.732 --> 1888.486) of 4667 total.
@@ -1022,7 +1022,7 @@
 [40.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1892.255 --> 1893.009) of 4667 total.
 [40.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1893.009 --> 1893.762) of 4667 total.
 [40.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[40.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[40.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [40.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1893.762 --> 1894.516) of 4667 total.
 [40.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1894.516 --> 1895.270) of 4667 total.
 [40.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1895.270 --> 1896.024) of 4667 total.
@@ -1034,7 +1034,7 @@
 [41.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1899.792 --> 1900.546) of 4667 total.
 [41.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1900.546 --> 1901.300) of 4667 total.
 [41.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[41.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[41.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [41.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1901.300 --> 1902.054) of 4667 total.
 [41.60] [Holy Shock (#1)] Queueing up {SpellID: 20271} to cast at 42.000000004s.
 [41.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1902.054 --> 1902.807) of 4667 total.
@@ -1067,7 +1067,7 @@
 [42.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1777.430 --> 1778.184) of 4667 total.
 [42.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1778.184 --> 1778.937) of 4667 total.
 [42.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[42.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[42.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [42.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1778.937 --> 1779.691) of 4667 total.
 [42.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1779.691 --> 1780.445) of 4667 total.
 [42.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1780.445 --> 1781.199) of 4667 total.
@@ -1079,7 +1079,7 @@
 [43.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1784.967 --> 1785.721) of 4667 total.
 [43.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1785.721 --> 1786.475) of 4667 total.
 [43.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[43.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[43.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [43.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1786.475 --> 1787.229) of 4667 total.
 [43.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1787.229 --> 1787.982) of 4667 total.
 [43.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1787.982 --> 1788.736) of 4667 total.
@@ -1102,7 +1102,7 @@
 [44.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1793.259 --> 1794.012) of 4667 total.
 [44.50] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [44.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[44.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[44.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [44.50] [Holy Shock (#1)] Casting {SpellID: 20924} (Cost = 305.100, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 5
 [44.50] [Holy Shock (#1)] Completed cast {SpellID: 20924}
 [44.50] [Holy Shock (#1)] Spent 305.100 mana from {SpellID: 20924} (1794.012 --> 1488.912) of 4667 total.
@@ -1120,7 +1120,7 @@
 [45.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1494.942 --> 1495.696) of 4667 total.
 [45.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1495.696 --> 1496.450) of 4667 total.
 [45.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[45.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[45.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [45.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1496.450 --> 1497.204) of 4667 total.
 [45.60] [Holy Shock (#1)] Queueing up {SpellID: 10333} to cast at 46.000000005s.
 [45.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1497.204 --> 1497.957) of 4667 total.
@@ -1140,7 +1140,7 @@
 [46.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1484.480 --> 1485.234) of 4667 total.
 [46.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1485.234 --> 1485.987) of 4667 total.
 [46.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[46.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[46.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [46.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1485.987 --> 1486.741) of 4667 total.
 [46.65] [Holy Shock (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [46.65] [Holy Shock (#1)] Completed cast {OtherID: 3, Tag: 14}
@@ -1158,7 +1158,7 @@
 [47.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1492.017 --> 1492.771) of 4667 total.
 [47.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1492.771 --> 1493.525) of 4667 total.
 [47.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[47.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[47.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [47.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1493.525 --> 1494.279) of 4667 total.
 [47.65] [Holy Shock (#1)] Queueing up {SpellID: 25902} to cast at 48.000000005s.
 [47.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1494.279 --> 1495.032) of 4667 total.
@@ -1178,7 +1178,7 @@
 [48.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1207.055 --> 1207.809) of 4667 total.
 [48.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1207.809 --> 1208.562) of 4667 total.
 [48.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[48.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[48.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [48.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1208.562 --> 1209.316) of 4667 total.
 [48.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1209.316 --> 1210.070) of 4667 total.
 [48.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1210.070 --> 1210.824) of 4667 total.
@@ -1219,7 +1219,7 @@
 [50.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1272.230 --> 1272.984) of 4667 total.
 [50.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1272.984 --> 1273.737) of 4667 total.
 [50.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[50.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[50.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [50.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1273.737 --> 1274.491) of 4667 total.
 [50.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1274.491 --> 1275.245) of 4667 total.
 [50.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1275.245 --> 1275.999) of 4667 total.
@@ -1237,7 +1237,7 @@
 [51.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1279.767 --> 1280.521) of 4667 total.
 [51.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1280.521 --> 1281.275) of 4667 total.
 [51.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[51.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[51.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [51.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1281.275 --> 1282.029) of 4667 total.
 [51.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1282.029 --> 1282.782) of 4667 total.
 [51.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1282.782 --> 1283.536) of 4667 total.
@@ -1254,7 +1254,7 @@
 [52.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1288.059 --> 1288.812) of 4667 total.
 [52.50] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [52.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[52.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[52.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [52.50] [Holy Shock (#1)] Casting {SpellID: 20924} (Cost = 305.100, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 5
 [52.50] [Holy Shock (#1)] Completed cast {SpellID: 20924}
 [52.50] [Holy Shock (#1)] Spent 305.100 mana from {SpellID: 20924} (1288.812 --> 983.712) of 4667 total.
@@ -1278,7 +1278,7 @@
 [53.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (989.742 --> 990.496) of 4667 total.
 [53.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (990.496 --> 991.250) of 4667 total.
 [53.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[53.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[53.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [53.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (991.250 --> 992.004) of 4667 total.
 [53.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (992.004 --> 992.757) of 4667 total.
 [53.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (992.757 --> 993.511) of 4667 total.
@@ -1290,7 +1290,7 @@
 [54.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (997.280 --> 998.034) of 4667 total.
 [54.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (998.034 --> 998.787) of 4667 total.
 [54.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[54.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[54.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [54.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (998.787 --> 999.541) of 4667 total.
 [54.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (999.541 --> 1000.295) of 4667 total.
 [54.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1000.295 --> 1001.049) of 4667 total.
@@ -1308,7 +1308,7 @@
 [55.47] [Holy Shock (#1)] [Target 1] {SpellID: 25713} Hit for 169.591 damage (SpellSchool: 2). (Threat: 135.673)
 [55.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1005.571 --> 1006.325) of 4667 total.
 [55.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[55.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[55.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [55.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1006.325 --> 1007.079) of 4667 total.
 [55.60] [Holy Shock (#1)] Queueing up {SpellID: 10333} to cast at 56.000000005s.
 [55.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1007.079 --> 1007.832) of 4667 total.
@@ -1328,7 +1328,7 @@
 [56.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (994.355 --> 995.109) of 4667 total.
 [56.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (995.109 --> 995.862) of 4667 total.
 [56.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[56.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[56.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [56.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (995.862 --> 996.616) of 4667 total.
 [56.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (996.616 --> 997.370) of 4667 total.
 [56.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (997.370 --> 998.124) of 4667 total.
@@ -1340,7 +1340,7 @@
 [57.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1001.892 --> 1002.646) of 4667 total.
 [57.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1002.646 --> 1003.400) of 4667 total.
 [57.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[57.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[57.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [57.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1003.400 --> 1004.154) of 4667 total.
 [57.60] [Holy Shock (#1)] Queueing up {SpellID: 20271} to cast at 58.000000006s.
 [57.65] [Holy Shock (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
@@ -1373,7 +1373,7 @@
 [58.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (767.030 --> 767.784) of 4667 total.
 [58.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (767.784 --> 768.537) of 4667 total.
 [58.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[58.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[58.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [58.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (768.537 --> 769.291) of 4667 total.
 [58.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (769.291 --> 770.045) of 4667 total.
 [58.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (770.045 --> 770.799) of 4667 total.
@@ -1387,7 +1387,7 @@
 [59.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (774.567 --> 775.321) of 4667 total.
 [59.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (775.321 --> 776.075) of 4667 total.
 [59.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[59.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 71.304 damage (SpellSchool: 2). (Threat: 57.043)
+[59.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 70.857 damage (SpellSchool: 2). (Threat: 56.686)
 [59.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (776.075 --> 776.829) of 4667 total.
 [59.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (776.829 --> 777.582) of 4667 total.
 [59.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (777.582 --> 778.336) of 4667 total.
@@ -1410,7 +1410,7 @@
 [60.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (782.859 --> 783.612) of 4667 total.
 [60.50] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [60.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[60.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.956 damage (SpellSchool: 2). (Threat: 85.565)
+[60.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.286 damage (SpellSchool: 2). (Threat: 85.029)
 [60.50] [Holy Shock (#1)] Casting {SpellID: 20924} (Cost = 305.100, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 5
 [60.50] [Holy Shock (#1)] Completed cast {SpellID: 20924}
 [60.50] [Holy Shock (#1)] Spent 305.100 mana from {SpellID: 20924} (783.612 --> 478.512) of 4667 total.
@@ -1428,7 +1428,7 @@
 [61.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (484.542 --> 485.296) of 4667 total.
 [61.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (485.296 --> 486.050) of 4667 total.
 [61.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[61.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 71.304 damage (SpellSchool: 2). (Threat: 57.043)
+[61.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 70.857 damage (SpellSchool: 2). (Threat: 56.686)
 [61.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (486.050 --> 486.804) of 4667 total.
 [61.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (486.804 --> 487.557) of 4667 total.
 [61.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (487.557 --> 488.311) of 4667 total.
@@ -1462,7 +1462,7 @@
 [63.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (319.617 --> 320.371) of 4667 total.
 [63.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (320.371 --> 321.125) of 4667 total.
 [63.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[63.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 71.304 damage (SpellSchool: 2). (Threat: 57.043)
+[63.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 70.857 damage (SpellSchool: 2). (Threat: 56.686)
 [63.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (321.125 --> 321.879) of 4667 total.
 [63.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (321.879 --> 322.632) of 4667 total.
 [63.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (322.632 --> 323.386) of 4667 total.
@@ -1477,7 +1477,7 @@
 [64.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (327.155 --> 327.909) of 4667 total.
 [64.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (327.909 --> 328.662) of 4667 total.
 [64.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[64.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.956 damage (SpellSchool: 2). (Threat: 85.565)
+[64.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.286 damage (SpellSchool: 2). (Threat: 85.029)
 [64.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (328.662 --> 329.416) of 4667 total.
 [64.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (329.416 --> 330.170) of 4667 total.
 [64.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (330.170 --> 330.924) of 4667 total.
@@ -1489,7 +1489,7 @@
 [65.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (334.692 --> 335.446) of 4667 total.
 [65.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (335.446 --> 336.200) of 4667 total.
 [65.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[65.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.956 damage (SpellSchool: 2). (Threat: 85.565)
+[65.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.286 damage (SpellSchool: 2). (Threat: 85.029)
 [65.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (336.200 --> 336.954) of 4667 total.
 [65.64] [Holy Shock (#1)] Queueing up {SpellID: 20271} to cast at 1m6.000000006s.
 [65.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (336.954 --> 337.707) of 4667 total.
@@ -1525,7 +1525,7 @@
 [66.47] [Holy Shock (#1)] [Target 1] {SpellID: 25713} Hit for 151.421 damage (SpellSchool: 2). (Threat: 121.137)
 [66.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (375.084 --> 375.837) of 4667 total.
 [66.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[66.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.956 damage (SpellSchool: 2). (Threat: 85.565)
+[66.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.286 damage (SpellSchool: 2). (Threat: 85.029)
 [66.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (375.837 --> 376.591) of 4667 total.
 [66.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (376.591 --> 377.345) of 4667 total.
 [66.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (377.345 --> 378.099) of 4667 total.
@@ -1537,7 +1537,7 @@
 [67.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (381.867 --> 382.621) of 4667 total.
 [67.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (382.621 --> 383.375) of 4667 total.
 [67.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[67.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 71.304 damage (SpellSchool: 2). (Threat: 57.043)
+[67.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 70.857 damage (SpellSchool: 2). (Threat: 56.686)
 [67.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (383.375 --> 384.129) of 4667 total.
 [67.61] [Holy Shock (#1)] Queueing up {SpellID: 25902} to cast at 1m8.000000006s.
 [67.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (384.129 --> 384.882) of 4667 total.
@@ -1559,7 +1559,7 @@
 [68.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (97.659 --> 98.412) of 4667 total.
 [68.50] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [68.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[68.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.956 damage (SpellSchool: 2). (Threat: 85.565)
+[68.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.286 damage (SpellSchool: 2). (Threat: 85.029)
 [68.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (98.412 --> 99.166) of 4667 total.
 [68.64] [Holy Shock (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [68.64] [Holy Shock (#1)] Completed cast {OtherID: 3, Tag: 14}
@@ -1788,7 +1788,7 @@
 [82.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (18.474 --> 19.227) of 4667 total.
 [83.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (19.227 --> 19.981) of 4667 total.
 [83.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[83.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 71.304 damage (SpellSchool: 2). (Threat: 57.043)
+[83.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 70.857 damage (SpellSchool: 2). (Threat: 56.686)
 [83.10] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (19.981 --> 20.735) of 4667 total.
 [83.20] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (20.735 --> 21.489) of 4667 total.
 [83.30] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (21.489 --> 22.242) of 4667 total.
@@ -1800,7 +1800,7 @@
 [83.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (26.011 --> 26.765) of 4667 total.
 [84.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (26.765 --> 27.519) of 4667 total.
 [84.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[84.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 71.304 damage (SpellSchool: 2). (Threat: 57.043)
+[84.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 70.857 damage (SpellSchool: 2). (Threat: 56.686)
 [84.05] [Holy Shock (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [84.05] [Holy Shock (#1)] Completed cast {OtherID: 3, Tag: 14}
 [84.05] [Holy Shock (#1)] [Target 1] {OtherID: 3, Tag: 14} Dodge (SpellSchool: 1). (Threat: 0.000)
@@ -1815,7 +1815,7 @@
 [84.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (33.549 --> 34.302) of 4667 total.
 [85.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (34.302 --> 35.056) of 4667 total.
 [85.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[85.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 71.304 damage (SpellSchool: 2). (Threat: 57.043)
+[85.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 70.857 damage (SpellSchool: 2). (Threat: 56.686)
 [85.10] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (35.056 --> 35.810) of 4667 total.
 [85.20] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (35.810 --> 36.564) of 4667 total.
 [85.30] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (36.564 --> 37.317) of 4667 total.
@@ -1831,7 +1831,7 @@
 [85.91] [Holy Shock (#1)] Queueing up {SpellID: 10333} to cast at 1m26.000000008s.
 [86.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (41.840 --> 42.594) of 4667 total.
 [86.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[86.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 71.304 damage (SpellSchool: 2). (Threat: 57.043)
+[86.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 70.857 damage (SpellSchool: 2). (Threat: 56.686)
 [86.00] [Holy Shock (#1)] Casting {SpellID: 10333} (Cost = 18.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 7
 [86.00] [Holy Shock (#1)] Completed cast {SpellID: 10333}
 [86.00] [Holy Shock (#1)] Spent 18.000 mana from {SpellID: 10333} (42.594 --> 24.594) of 4667 total.
@@ -1850,7 +1850,7 @@
 [86.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (30.624 --> 31.377) of 4667 total.
 [87.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (31.377 --> 32.131) of 4667 total.
 [87.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[87.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 71.304 damage (SpellSchool: 2). (Threat: 57.043)
+[87.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 70.857 damage (SpellSchool: 2). (Threat: 56.686)
 [87.10] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (32.131 --> 32.885) of 4667 total.
 [87.20] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (32.885 --> 33.639) of 4667 total.
 [87.30] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (33.639 --> 34.392) of 4667 total.
@@ -1862,7 +1862,7 @@
 [87.90] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (38.161 --> 38.915) of 4667 total.
 [88.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (38.915 --> 39.669) of 4667 total.
 [88.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[88.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.956 damage (SpellSchool: 2). (Threat: 85.565)
+[88.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 106.286 damage (SpellSchool: 2). (Threat: 85.029)
 [88.10] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (39.669 --> 40.422) of 4667 total.
 [88.20] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (40.422 --> 41.176) of 4667 total.
 [88.30] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (41.176 --> 41.930) of 4667 total.
@@ -1895,7 +1895,7 @@
 [90.00] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (53.990 --> 54.744) of 4667 total.
 [90.00] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [90.00] [Target 1] Aura refreshed: {SpellID: 1280353}
-[90.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 73.443 damage (SpellSchool: 2). (Threat: 58.754)
+[90.00] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 72.760 damage (SpellSchool: 2). (Threat: 58.208)
 [90.10] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (54.744 --> 55.497) of 4667 total.
 [90.20] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (55.497 --> 56.251) of 4667 total.
 [90.30] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (56.251 --> 57.005) of 4667 total.
@@ -2479,7 +2479,7 @@
 [128.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (44.593 --> 45.347) of 4667 total.
 [128.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (45.347 --> 46.100) of 4667 total.
 [128.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[128.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[128.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [128.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (46.100 --> 46.854) of 4667 total.
 [128.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (46.854 --> 47.608) of 4667 total.
 [128.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (47.608 --> 48.362) of 4667 total.
@@ -2491,7 +2491,7 @@
 [129.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (52.130 --> 52.884) of 4667 total.
 [129.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (52.884 --> 53.638) of 4667 total.
 [129.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[129.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[129.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [129.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (53.638 --> 54.392) of 4667 total.
 [129.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (54.392 --> 55.145) of 4667 total.
 [129.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (55.145 --> 55.899) of 4667 total.
@@ -2518,7 +2518,7 @@
 [130.41] [Holy Shock (#1)] {SpellID: 20216} stacks: 0 --> 1
 [130.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (0.422 --> 1.175) of 4667 total.
 [130.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[130.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[130.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [130.52] [Holy Shock (#1)] Aura faded: {SpellID: 20293}
 [130.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1.175 --> 1.929) of 4667 total.
 [130.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (1.929 --> 2.683) of 4667 total.
@@ -2531,7 +2531,7 @@
 [131.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (7.205 --> 7.959) of 4667 total.
 [131.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (7.959 --> 8.713) of 4667 total.
 [131.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[131.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 119.790 damage (SpellSchool: 2). (Threat: 95.832)
+[131.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Crit for 117.702 damage (SpellSchool: 2). (Threat: 94.161)
 [131.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (8.713 --> 9.467) of 4667 total.
 [131.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (9.467 --> 10.220) of 4667 total.
 [131.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (10.220 --> 10.974) of 4667 total.
@@ -2546,7 +2546,7 @@
 [132.44] [Holy Shock (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 84.183 damage (SpellSchool: 1). (Threat: 67.346)
 [132.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (15.497 --> 16.250) of 4667 total.
 [132.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[132.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[132.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [132.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (16.250 --> 17.004) of 4667 total.
 [132.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (17.004 --> 17.758) of 4667 total.
 [132.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (17.758 --> 18.512) of 4667 total.
@@ -2558,7 +2558,7 @@
 [133.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (22.280 --> 23.034) of 4667 total.
 [133.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (23.034 --> 23.788) of 4667 total.
 [133.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[133.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[133.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [133.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (23.788 --> 24.542) of 4667 total.
 [133.70] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (24.542 --> 25.295) of 4667 total.
 [133.80] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (25.295 --> 26.049) of 4667 total.
@@ -2570,7 +2570,7 @@
 [134.40] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (29.818 --> 30.572) of 4667 total.
 [134.50] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (30.572 --> 31.325) of 4667 total.
 [134.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[134.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[134.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [134.60] [Holy Shock (#1)] Gained 0.754 mana from {OtherID: 2, Tag: 1} (31.325 --> 32.079) of 4667 total.
 [134.65] [Holy Shock (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [134.65] [Holy Shock (#1)] Completed cast {OtherID: 3, Tag: 14}
@@ -2587,7 +2587,7 @@
 [135.50] [Holy Shock (#1)] Gained 2.261 mana from {OtherID: 2, Tag: 2} (38.185 --> 40.446) of 4667 total.
 [135.50] [Holy Shock (#1)] Aura faded: {SpellID: 20924}
 [135.50] [Target 1] Aura refreshed: {SpellID: 1280353}
-[135.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 79.860 damage (SpellSchool: 2). (Threat: 63.888)
+[135.50] [Holy Shock (#1)] [Target 1] {SpellID: 20924} tick Hit for 78.468 damage (SpellSchool: 2). (Threat: 62.774)
 [135.60] [Holy Shock (#1)] Gained 2.513 mana from {OtherID: 2, Tag: 2} (40.446 --> 42.958) of 4667 total.
 [135.61] [Holy Shock (#1)] Queueing up {SpellID: 10333} to cast at 2m16.000000012s.
 [135.70] [Holy Shock (#1)] Gained 2.513 mana from {OtherID: 2, Tag: 2} (42.958 --> 45.471) of 4667 total.
