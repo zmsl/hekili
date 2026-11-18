@@ -844,7 +844,8 @@ do
     function scripts:BuildRecheck( conditions )
         if type( conditions ) ~= "string" then return end
 
-        local recheck
+        -- parts: each distinct time in order, and [ part ] = true (the times are a set: a repeat adds nothing)
+        local recheck, parts
 
         conditions = conditions:gsub( " +", "" )
         conditions = self:EmulateSyntax( conditions, true )
@@ -862,9 +863,11 @@ do
                         part = self:EmulateSyntax( part, true )
 
                         local rslt, msg = Hekili:Loadstring( "return " .. part )
+                        parts = parts or {}
                         if not rslt then
                             Hekili:Debug( "Recheck failed to loadstring: %s", msg )
-                        else
+                        elseif not parts[ part ] then
+                            parts[ part ], parts[ #parts + 1 ] = true, part
                             recheck = ( recheck and ( recheck .. ", " ) or "" ) .. part
                         end
                     end
@@ -872,7 +875,7 @@ do
             end
         end
 
-        return recheck
+        return recheck, parts
     end
 
 
@@ -1470,7 +1473,7 @@ local function ConvertScript( node, hasModifiers, header )
     end
 
     -- autorecheck...
-    local rs, rc, erc, rEle
+    local rs, rc, erc, rEle, rParts
     local recheckDebug, recheckPrint
 
     local hasCriteria = node.criteria and node.criteria ~= ""
@@ -1480,9 +1483,9 @@ local function ConvertScript( node, hasModifiers, header )
     if hasCriteria or hasValue or hasValueElse then
         if node.action == "variable" then
             rs = format( "%s | %s | %s", hasCriteria and node.criteria or "1", hasValue and node.value or "1", hasValueElse and node.value_else or "1" )
-            rs = scripts:BuildRecheck( rs )
+            rs, rParts = scripts:BuildRecheck( rs )
         else
-            rs = scripts:BuildRecheck( node.criteria )
+            rs, rParts = scripts:BuildRecheck( node.criteria )
         end
 
         if rs then
@@ -1524,6 +1527,7 @@ local function ConvertScript( node, hasModifiers, header )
 
     output.Recheck = rc
     output.RecheckScript = rs
+    output.RecheckParts = rParts -- its distinct times (State.lua joins a line's with those of the variables it reads)
     output.RecheckError = erc
     output.RecheckElements = rEle
     output.RecheckPrint = recheckPrint

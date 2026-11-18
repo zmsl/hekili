@@ -1945,28 +1945,70 @@ do
         return seen
     end
 
+    -- feral-cpu-09: a line's own times and those of every variable it reads, joined once (the first recheck after a
+    -- load) into one function of their distinct times (scripts:BuildRecheck's parts): the times are a set, and a
+    -- pack's variants of one variable repeat most comparisons (the re-pinned Feral pack: 86-146 values, 23-27
+    -- distinct). False: not joined (a part list missing, or too many values for one Lua function): called one by one.
+    local joinParts = {}
+
+    local function addParts( parts )
+        for _, part in ipairs( parts ) do
+            if not joinParts[ part ] then joinParts[ part ], joinParts[ #joinParts + 1 ] = true, part end
+        end
+    end
+
+    local function joinRechecks( script )
+        wipe( joinParts )
+        if script.Recheck then
+            if not script.RecheckParts then return false end
+            addParts( script.RecheckParts )
+        end
+        for id in pairs( script.AllRechecks ) do
+            local s = scripts.DB[ id ]
+            if not ( s and s.RecheckParts ) then return false end
+            addParts( s.RecheckParts )
+        end
+        if #joinParts == 0 then return false end
+        local fn = Hekili:Loadstring( "-- " .. tostring( script.ID ) .. " rechecks\nreturn " .. table.concat( joinParts, ", " ) )
+        if not fn then return false end
+        setfenv( fn, state )
+        return fn
+    end
+
+    -- Adds `script`'s own recheck times and those of every variable it reads to the work table.
+    local function addRechecks( script )
+        if script.Variables and not script.AllRechecks then
+            script.AllRechecks = recurseRechecks( script )
+
+            for id, func in pairs( script.AllRechecks ) do
+                if type( func ) ~= "function" then script.AllRechecks[ id ] = nil end
+            end
+
+            script.JoinedRecheck = joinRechecks( script )
+        end
+
+        if script.JoinedRecheck then
+            recheckHelper( workTable, script.JoinedRecheck() )
+            return
+        end
+
+        if script.Recheck then
+            recheckHelper( workTable, script.Recheck() )
+        end
+
+        if script.Variables then
+            for id, func in pairs( script.AllRechecks ) do
+                recheckHelper( workTable, func() )
+            end
+        end
+    end
+
     function state.recheck( ability, script, stack, block )
         local times = state.recheckTimes
         wipe( workTable )
 
         if script then
-            if script.Recheck then
-                recheckHelper( workTable, script.Recheck() )
-            end
-
-            if script.Variables then
-                if not script.AllRechecks then
-                    script.AllRechecks = recurseRechecks( script )
-
-                    for id, func in pairs( script.AllRechecks ) do
-                        if type( func ) ~= "function" then script.AllRechecks[ id ] = nil end
-                    end
-                end
-
-                for id, func in pairs( script.AllRechecks ) do
-                    recheckHelper( workTable, func() )
-                end
-            end
+            addRechecks( script )
 
             if script.ReadsWindow then state.WindowRecheck( recheckHelper, workTable ) end
         end
@@ -1989,23 +2031,7 @@ do
                 local callScript = caller.script
                 callScript = callScript and scripts:GetScript( callScript )
 
-                if callScript and callScript.Recheck then
-                    recheckHelper( workTable, callScript.Recheck() )
-
-                    if callScript.Variables then
-                        if not callScript.AllRechecks then
-                            callScript.AllRechecks = recurseRechecks( callScript )
-
-                            for id, func in pairs( callScript.AllRechecks ) do
-                                if type( func ) ~= "function" then callScript.AllRechecks[ id ] = nil end
-                            end
-                        end
-
-                        for id, func in pairs( callScript.AllRechecks ) do
-                            recheckHelper( workTable, func() )
-                        end
-                    end
-                end
+                if callScript and callScript.Recheck then addRechecks( callScript ) end
             end
         end
 
@@ -2014,27 +2040,7 @@ do
                 local callScript = caller.script
                 callScript = callScript and scripts:GetScript( callScript )
 
-                if callScript and callScript.Recheck then
-                    recheckHelper( workTable, callScript.Recheck() )
-                end
-
-                if callScript and callScript.Recheck then
-                    recheckHelper( workTable, callScript.Recheck() )
-
-                    if callScript.Variables then
-                        if not callScript.AllRechecks then
-                            callScript.AllRechecks = recurseRechecks( callScript )
-
-                            for id, func in pairs( callScript.AllRechecks ) do
-                                if type( func ) ~= "function" then callScript.AllRechecks[ id ] = nil end
-                            end
-                        end
-
-                        for id, func in pairs( callScript.AllRechecks ) do
-                            recheckHelper( workTable, func() )
-                        end
-                    end
-                end
+                if callScript and callScript.Recheck then addRechecks( callScript ) end
             end
         end
 

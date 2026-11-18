@@ -369,4 +369,38 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         assert.is_truthy(all:find(at .. "1: if= is set", 1, true), all)
         assert.is_truthy(all:find(at .. "2: 2 lines of the name", 1, true), all)
     end)
+
+    -- feral-cpu-09: a line's recheck times are a set, built from its own time comparisons and those of every variable it
+    -- reads (State.lua recurseRechecks). A pack's variants of one variable repeat most comparisons, inside one value and
+    -- across values (the re-pinned Feral pack: 8 to 13 functions, 86 to 146 values, 23 to 27 distinct): each distinct
+    -- comparison is evaluated once per recheck, and the times are the same.
+    it("evaluates each distinct time comparison once per recheck, across the pure variables a line reads", function()
+        local H = boot(false)
+        local reads = 0
+        H.Hekili.Class.stateExprs.probe_remains = function()
+            reads = reads + 1
+            return 10
+        end
+        local list = H.Hekili.DB.profile.packs[ww.PACK].lists.default
+        local a, b = "probe_remains<=3&probe_remains<=3&probe_remains<=4", "probe_remains<=3|probe_remains<=4"
+        table.insert(list, 1, { action = "bloodrage", enabled = true, criteria = "variable.a&variable.b" })
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "b", value = b, pure = 1 })
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "a", value = a, pure = 1 })
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        assert(headless.cycle(H, H.ctl.now + 0.5))
+        local S, Sc = H.Hekili.State, H.Hekili.Scripts
+        local own = Sc.DB[ww.PACK .. ":default:1"] -- a value's own recheck: each comparison once
+        reads = 0
+        assert.are.same({ 7, 6 }, { own.Recheck() })
+        assert.are.equal(2, reads)
+        S.system.packName, S.delayMin, S.delayMax = ww.PACK, 0, 3600
+        for _ = 1, 2 do -- the first call builds the line's rechecks, the second reuses them
+            reads = 0
+            S.recheck("bloodrage", Sc.DB[ww.PACK .. ":default:3"])
+            assert.are.same({ 6, 7 }, S.recheckTimes)
+            assert.are.equal(2, reads)
+        end
+        assert.are.same({}, H.errors)
+    end)
 end)
