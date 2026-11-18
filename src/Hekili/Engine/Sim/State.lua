@@ -24,6 +24,7 @@ local formatKey = ns.formatKey
 local ResourceRegenerates = ns.ResourceRegenerates
 
 local Error = ns.Error
+local READY, UPDATE_INTERVAL = ns.READY, ns.UPDATE_INTERVAL -- Engine/Sim/Constants.lua
 
 local orderedPairs = ns.orderedPairs
 local round, roundUp, roundDown = ns.round, ns.roundUp, ns.roundDown
@@ -7785,11 +7786,9 @@ function state:TimeToReady( action, pool )
     end
     if spend and z and z > wait then
         wait = max( wait, ceil( z * 100 ) / 100 )
-        -- a resource wait inside Output's READY (0.05 s) would show ready while the floor is still under the cost
-        -- (dim never promote, CN8 C1): shown one update later instead
-        -- shortcut: 0.05 is READY in three places (Engine/Output.lua's READY, tests/Game/harness/loop.lua's REACT, here);
-        -- change them together, or share one engine constant if a fourth reader appears
-        if wait <= 0.05 then wait = 0.06 end
+        -- a resource wait inside the ready margin (ns.READY, 0.05 s) would show ready while the floor is still under
+        -- the cost (dim never promote, CN8 C1): shown one update later instead
+        if wait <= READY then wait = 0.06 end
         -- Forever (mana-regen plan, Task 4a): near its cost when the belief's estimate (the `current` stream) reaches
         -- the cost within EARLY_EXIT (at the estimate the pick would end the scan) while the floor reaches it within
         -- one more update (the usability poll that settles it; the client answers a gain late, so the floor runs a few
@@ -7801,7 +7800,7 @@ function state:TimeToReady( action, pool )
         -- further out, where the forecast is less settled (measured: the mark toggled, flicker and readyShort rose).
         z = self[ resource ]
         nearRes = not z.swingGen
-            and wait <= pre + ns.EARLY_EXIT + 0.2 -- the driver's combat update interval
+            and wait <= pre + ns.EARLY_EXIT + UPDATE_INTERVAL
             and self:TimeToResource( z, spend ) <= pre + ns.EARLY_EXIT
         waitRes = wait
     end

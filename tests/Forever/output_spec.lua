@@ -12,7 +12,7 @@ local function load()
     local env = setmetatable({ Hekili = { Engine = {} } }, { __index = _G })
     local f = assert(loadfile("src/Hekili/Engine/Output.lua"))
     setfenv(f, env)
-    local ns = {}
+    local ns = { READY = 0.05, UPDATE_INTERVAL = 0.2 } -- Engine/Sim/Constants.lua's, which loads first in game
     f("Hekili", ns)
     return env.Hekili.Engine, ns.Output
 end
@@ -551,6 +551,14 @@ describe("Engine.Output (headless Arms)", function()
     end
 
     before_each(boot)
+
+    -- dry-forecast (engine pass E2): one ready margin and one combat update interval (Engine/Sim/Constants.lua), which
+    -- the harness's press threshold and poll model; Output, the Timeline and the driver read the engine's.
+    it("publishes the ready margin and the update interval the harness models", function()
+        local loop = require("Game.harness.loop")
+        assert.are.equal(loop.REACT, H.Hekili.Engine.READY)
+        assert.are.equal(loop.TICK, H.Hekili.Engine.UPDATE_INTERVAL)
+    end)
 
     it("steady icons: always on, hold 1, whatever an old profile saved; our casts bridged", function()
         local id = H.Hekili.State.spec.id
