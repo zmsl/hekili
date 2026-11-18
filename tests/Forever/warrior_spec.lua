@@ -3,6 +3,7 @@
 -- does with them is verified in game (the plan's checkpoint).
 local lw = require("Forever.helpers.load_warrior")
 local alloc = require("Game.State.helpers.alloc")
+local pe = require("Forever.helpers.pack_entries") -- a pack check walks a sequence's members too
 -- the project interpreter when bootstrapped, else the system one (as tools/list_api_reads.sh picks it)
 local LUA = io.open(".lua/bin/lua") and ".lua/bin/lua" or "lua5.1"
 
@@ -1111,7 +1112,7 @@ describe("Forever Warrior", function()
         local focus = {}
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warrior")) do
             for _, list in pairs(p.lists) do
-                for _, e in ipairs(list) do
+                for _, e in ipairs(pe.flat(list)) do
                     if e.focus then
                         local k = p.name .. " " .. e.action
                         focus[k] = focus[k] or {}
@@ -1146,7 +1147,7 @@ describe("Forever Warrior", function()
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warrior")) do
             if p.name ~= "Protection (wowsims.com)" then
                 for list, entries in pairs(p.lists) do
-                    for i, e in ipairs(entries) do
+                    for i, e in ipairs(pe.flat(entries)) do
                         if e.action == "berserker_rage" then
                             local _, times = (e.criteria or ""):gsub("talent%.improved_berserker_rage%.enabled", "")
                             assert.are.equal(1, times, p.name .. " " .. list .. " " .. i)
@@ -1203,7 +1204,7 @@ describe("Forever Warrior", function()
         }
         for _, p in ipairs(packs) do
             for list, entries in pairs(p.lists) do
-                for i, e in ipairs(entries) do
+                for i, e in ipairs(pe.flat(entries)) do
                     local where = p.name .. " " .. list .. " " .. i
                     if e.list_name then
                         assert.is_not_nil(p.lists[e.list_name], where .. ": no list " .. e.list_name)
@@ -1212,6 +1213,7 @@ describe("Forever Warrior", function()
                         -- the shared kit's (Hekili_Shared/Shared/Consumables.lua)
                         assert.is_true(
                             w.abilities[e.action] ~= nil
+                                or pe.LINE[e.action]
                                 or e.action == "use_items"
                                 or racial[e.action] ~= nil
                                 or set.abilities[e.action] ~= nil,

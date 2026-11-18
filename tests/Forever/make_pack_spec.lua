@@ -458,4 +458,52 @@ describe("tools/make_pack.lua", function()
             mp.parse("actions.precombat=aura,prepull_at=10\n")
         end, "unknown option prepull_at in: actions.precombat=aura,prepull_at=10")
     end)
+
+    -- windows Phase 3 (I1): the translator's sequence lines, built as Options.lua ParseActionList builds them (a built-in
+    -- pack loads these lists as they are): members split on `:` outside parentheses into `steps`, the head's if= ends at
+    -- the first member, name= is the window_name of the five window actions, and unparse writes each line back.
+    it("round-trips sequence, strict_sequence, restart_sequence and window lines, members as steps", function()
+        local simc = "actions=strict_sequence,name=a_b,start_on_first=1,hold_off_gcd=1,if=x>1"
+            .. ":battle_stance,use_off_gcd=1,if=window.a_b.next.battle_stance"
+            .. ":overpower,focus=1,if=window.a_b.next.overpower&(y|z)\n"
+            .. "actions+=/restart_sequence,name=hha,if=window.hha.done\n"
+            .. "actions+=/sequence,name=hha,mode=continue:summon_hawk:summon_hawk:arcane_shot,if=min(a,b)>1&(c:d)\n"
+            .. "actions+=/open_window,name=w,if=a\n"
+            .. "actions.melee=close_window,name=w,if=window.w.up&!window.w.done\n"
+        local lists = mp.parse(simc)
+        assert.are.same({
+            action = "strict_sequence",
+            enabled = true,
+            window_name = "a_b",
+            start_on_first = 1,
+            hold_off_gcd = 1,
+            criteria = "x>1",
+            steps = {
+                { action = "battle_stance", use_off_gcd = 1, criteria = "window.a_b.next.battle_stance" },
+                { action = "overpower", focus = 1, criteria = "window.a_b.next.overpower&(y||z)" },
+            },
+        }, lists.default[1])
+        assert.are.same(
+            { action = "restart_sequence", enabled = true, window_name = "hha", criteria = "window.hha.done" },
+            lists.default[2]
+        )
+        assert.are.same({
+            action = "sequence",
+            enabled = true,
+            window_name = "hha",
+            mode = "continue",
+            steps = {
+                { action = "summon_hawk" },
+                { action = "summon_hawk" },
+                { action = "arcane_shot", criteria = "min(a,b)>1&(c:d)" },
+            },
+        }, lists.default[3])
+        assert.are.same({ action = "open_window", enabled = true, window_name = "w", criteria = "a" }, lists.default[4])
+        assert.are.equal("w", lists.melee[1].window_name)
+        assert.are.equal(simc, mp.unparse(lists))
+        assert.are.same(lists, mp.parse(mp.unparse(lists)))
+        assert.has_error(function()
+            mp.parse("actions=strict_sequence,name=s,allow_skip=1:slam\n")
+        end, "unknown option allow_skip in: actions=strict_sequence,name=s,allow_skip=1:slam")
+    end)
 end)

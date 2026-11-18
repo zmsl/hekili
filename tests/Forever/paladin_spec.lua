@@ -844,11 +844,12 @@ describe("Forever Paladin priorities", function()
             cooldown = cls.abilities,
             settings = cls.settings,
         }
+        local pe = require("Forever.helpers.pack_entries") -- a sequence's members walked too
         for name, p in pairs(packs) do
             for list, entries in pairs(p.lists) do
-                for i, e in ipairs(entries) do
+                for i, e in ipairs(pe.flat(entries)) do
                     local where = name .. " " .. list .. " " .. i
-                    local isList = e.action == "run_action_list" or e.action == "call_action_list"
+                    local isList = e.action == "run_action_list" or e.action == "call_action_list" or pe.LINE[e.action]
                     -- stoneform: the Dwarf racial (Hekili_Shared/Races), rule 13's line for a tank
                     -- use_items is Hekili's `all` (Hekili_Shared/Shared/Items.lua), as in druid_spec
                     local shared = e.action == "use_items" or e.action == "stoneform"

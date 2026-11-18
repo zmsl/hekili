@@ -1099,15 +1099,16 @@ describe("Forever Druid", function()
             talent = w.talents,
             settings = w.settings,
         }
+        local pe = require("Forever.helpers.pack_entries") -- a sequence's members walked too
         for _, p in ipairs(packs) do
             for list, entries in pairs(p.lists) do
-                for i, e in ipairs(entries) do
+                for i, e in ipairs(pe.flat(entries)) do
                     local where = p.name .. " " .. list .. " " .. i
                     if e.list_name then
                         assert.is_not_nil(p.lists[e.list_name], where .. ": no list " .. e.list_name)
                     else
                         assert.is_true(
-                            w.abilities[e.action] ~= nil or sharedActions[e.action],
+                            w.abilities[e.action] ~= nil or sharedActions[e.action] or pe.LINE[e.action],
                             where .. ": no ability " .. e.action
                         )
                         assert.is_true(

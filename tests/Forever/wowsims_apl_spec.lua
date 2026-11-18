@@ -4061,6 +4061,117 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
         }, got)
     end)
 
+    -- a recipe's translation with `sequences` set in a test copy of the recipe (no shipped recipe sets it); its action
+    -- lines by list, and each list through the engine's parser on `H`
+    local function sequenced(spec)
+        local ex = assert(loadfile("tools/wowsims/export.lua"))()
+        local _, text = apl.render(
+            spec,
+            setmetatable({
+                recipe = function(s)
+                    local r = ex.recipe(s)
+                    r.sequences = true
+                    return r
+                end,
+            }, { __index = ex })
+        )
+        return text
+    end
+    local function engineLists(H, text)
+        local byList, lists, warn = {}, {}, {}
+        for line in text:gmatch("[^\n]+") do
+            local list = line:match("^actions%.?([%w_]*)%+?=")
+            if list then
+                list = list == "" and "default" or list
+                byList[list] = (byList[list] and (byList[list] .. "\n") or "") .. line
+            end
+        end
+        for name, t in pairs(byList) do
+            local parsed, warnings = H.Hekili:ParseActionList(t, true)
+            for _, w in ipairs(warnings or {}) do
+                warn[#warn + 1] = name .. ": " .. w
+            end
+            lists[name] = parsed
+        end
+        return lists, warn
+    end
+
+    -- I1: the Arms lines go through make_pack as a pack (load, encode, decode) unchanged, and the decoded lists, as a
+    -- built-in pack loads them (Packs.lua), declare the same two strict sequences
+    it("builds the Arms recipe's strict_sequence lines into a pack that declares both sequences", function()
+        local mp = assert(loadfile("tools/make_pack.lua"))("lib")
+        local headless = require("Game.harness.headless")
+        local ww = require("Forever.helpers.warrior_world")
+        local lines = {}
+        for line in sequenced("warrior_arms"):gmatch("[^\n]+") do
+            if line:match("^actions") then
+                lines[#lines + 1] = line
+            end
+        end
+        local root = os.tmpname()
+        os.remove(root)
+        assert(os.execute("mkdir -p " .. root) == 0)
+        local f = assert(io.open(root .. "/packs.lua", "wb"))
+        f:write('return { class = "WARRIOR", packs = { "Arms" }, specs = { Arms = "arms" } }\n')
+        f:close()
+        f = assert(io.open(root .. "/Arms.simc", "wb"))
+        f:write("# Arms, sequences on\n" .. table.concat(lines, "\n") .. "\n")
+        f:close()
+        local ok, packs = pcall(mp.load, "warrior", root .. "/", { src = "" })
+        os.execute("rm -r " .. root)
+        assert.is_true(ok, tostring(packs))
+        local payload = mp.decode(mp.encode(packs[1]))
+        local back = {}
+        for line in mp.unparse(payload.lists):gmatch("[^\n]+") do
+            back[#back + 1] = line
+        end
+        table.sort(lines)
+        table.sort(back)
+        assert.are.same(lines, back) -- every line written back byte for byte
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        local cw = H.Hekili.Scripts.CheckWindows(payload.lists, "pk")
+        assert.are.same({}, cw.errors)
+        local got = {}
+        for _, decl in ipairs(cw.decls) do
+            got[#got + 1] =
+                { decl.name, decl.strict, decl.start_on_first, decl.hold_off_gcd, decl.allow_skip, #decl.steps }
+        end
+        assert.are.same({
+            { "battle_stance_overpower", true, true, true, false, 2 },
+            { "battle_stance_rend", true, true, true, false, 2 },
+        }, got)
+    end)
+
+    -- M1: the BM and Ret plain sequence lines parse without a warning; until each Part B lane drops the class's Lua
+    -- window of the same name, CheckWindows reports exactly that clash (E3) and, for BM, the restart line on it (E1)
+    for _, case in ipairs({
+        {
+            "hunter_beast_mastery_turret",
+            "Forever.helpers.hunter_world",
+            "BeastMasteryTurret",
+            { "E1 restart_sequence: hha is not a plain sequence", "E3 hha is a class window" },
+        },
+        {
+            "paladin_retribution",
+            "Forever.helpers.paladin_world",
+            "Retribution",
+            { "E3 move1 is a class window", "E3 move2 is a class window" },
+        },
+    }) do
+        it("the engine parses the " .. case[1] .. " recipe's sequence lines", function()
+            local C = require(case[2])[case[3]]
+            local H = require("Game.harness.headless").new({ character = C.character(), pack = C.PACK })
+            local lists, warn = engineLists(H, sequenced(case[1]))
+            assert.are.same({}, warn)
+            local errs = {}
+            for _, x in ipairs(H.Hekili.Scripts.CheckWindows(lists, "pk").errors) do
+                errs[#errs + 1] = x.code .. " " .. x.text
+            end
+            table.sort(errs)
+            assert.are.same(case[4], errs)
+        end)
+    end
+
     it("rule 14b: a restart line and a reader of an omitted sequence are omitted with it", function()
         local text, omitted = apl.translate({
             priorityList = {
