@@ -1768,32 +1768,29 @@ describe("Forever Druid Movement (R8)", function()
         end
     end
 
-    -- re-pin e4ef929e54: the gate sits on the default list's group calls; the Shred lines are single_target's
+    -- re-pin ab0f00e4fc (wowsims #1087): one flat list; the gate sits on each line after the move entry
     it("OFF hides Shred outside 5 yd and shows it inside; ON shows it outside too", function()
-        local call = lines("call_action_list,name=single_target")
-        assert.are.equal(1, #call)
-        assert.matches("&%(toggle%.movement&target%.outside5|target%.within5%)$", call[1])
-        assert.are.equal(2, #lines("shred", nil, "single_target"))
-        local function at(yd)
-            return world(yd, nil, nil, nil, nil, "single_target")
+        local shred = lines("shred")
+        assert.are.equal(2, #shred)
+        for _, l in ipairs(shred) do
+            assert.matches("&%(toggle%.movement&target%.outside5|target%.within5%)$", l)
         end
-        local far, near = at(11), at(3)
+        local far, near = world(11), world(3)
         assert.is_nil(far(false))
         assert.are.equal("shred", near(false))
         assert.are.equal("shred", far(true))
     end)
 
-    -- Guardian's Maul (off the GCD, rage full). re-pin e4ef929e54: the gate sits on the default list's group calls (the
-    -- new adaptive list's gate has no Feral Charge clause); single_target_and_larger_packs holds one Maul; the leveling
-    -- Maul (before Primal Bite) stays in the default list, silent at 60.
+    -- Guardian's Maul (off the GCD, rage full). re-pin ab0f00e4fc (wowsims #1087): one flat list; its Maul line carries
+    -- the gate (no Feral Charge clause); the leveling Maul (before Primal Bite) follows it, silent at 60.
     it("OFF hides Guardian's Maul outside 5 yd and shows it inside", function()
-        local g, grp = "Guardian (wowsims.com)", "single_target_and_larger_packs"
-        local call = lines("call_action_list,name=" .. grp, g)
-        assert.are.equal(1, #call)
-        assert.matches("&%(toggle%.movement&target%.outside5|target%.within5%)$", call[1])
-        assert.are.equal(1, #lines("maul", g, grp))
+        local g = "Guardian (wowsims.com)"
+        local maul = lines("maul", g)
+        assert.are.equal(2, #maul)
+        assert.matches("&%(toggle%.movement&target%.outside5|target%.within5%)$", maul[1])
+        assert.are.equal("actions+=/maul,use_off_gcd=1,focus=2,if=!action.primal_bite.known", maul[2])
         local function at(yd)
-            return world(yd, dlw.Guardian, g, "maul", 1, grp)
+            return world(yd, dlw.Guardian, g, "maul", 1)
         end
         local far, near = at(11), at(3)
         assert.is_nil(far(false))
@@ -1893,9 +1890,9 @@ describe("Forever Druid Ravage opener (R69)", function()
     end)
 end)
 
--- Owner deviation L1169 / L1205 (decision C): wowsims's 2- and 3-target groups read other targets on every strike
--- (all omitted on Forever), so the pack omits the six group calls and single_target runs at every enemy count.
-describe("Forever Druid 2-3 enemies (L1169)", function()
+-- re-pin ab0f00e4fc (wowsims #1087): the adaptive list is one flat list at every enemy count (no 2/3-target groups;
+-- the 0.9 owner deviation L1169 that omitted them is gone with them).
+describe("Forever Druid 2-3 enemies (wowsims #1087)", function()
     local headless = require("Game.harness.headless")
     local dlw = require("Forever.helpers.druid_loop_world")
     local PACK = "Feral (wowsims.com)"
@@ -1929,16 +1926,14 @@ describe("Forever Druid 2-3 enemies (L1169)", function()
         return table.concat(names, " ")
     end
 
-    it("calls no 2/3-target group and gates single_target by range only", function()
-        local f = assert(io.open("src/Hekili_Druid/APLs/" .. PACK .. ".simc"))
-        local s = f:read("*a")
-        f:close()
-        assert.is_nil(s:find("\nactions[^\n]*call_action_list,name=[23]_targets"))
-        local call = s:match("\n(actions%+=/call_action_list,name=single_target,[^\n]+)")
-        assert.are.equal(
-            "actions+=/call_action_list,name=single_target,if=active_enemies>=1&(toggle.movement&target.outside5|target.within5)",
-            call
-        )
+    it("calls no action list in Feral or Guardian and reads no enemy count", function()
+        for _, p in ipairs({ PACK, "Guardian (wowsims.com)" }) do
+            local f = assert(io.open("src/Hekili_Druid/APLs/" .. p .. ".simc"))
+            local s = f:read("*a")
+            f:close()
+            assert.is_nil(s:find("call_action_list", 1, true), p)
+            assert.is_nil(s:find("active_enemies", 1, true), p)
+        end
     end)
 
     it("shows the single-target strikes at 2 and 3 enemies as at 1 and 4", function()
@@ -1959,14 +1954,13 @@ describe("Forever Druid Claw vs Shred (L602)", function()
     local SECRET = require("Game.State.helpers.fake_api").SECRET
     local PACK = "Feral (wowsims.com)"
 
-    -- re-pin e4ef929e54: the Shred and Claw lines sit in the single_target list
+    -- re-pin ab0f00e4fc (wowsims #1087): the Shred and Claw lines sit in the one default list
     local function lines(key)
         local f = assert(io.open("src/Hekili_Druid/APLs/" .. PACK .. ".simc"))
         local s = f:read("*a")
         f:close()
         local out = {}
-        local at = key == "variable" and "actions%+?=/?" or "actions%.single_target%+=/"
-        for l in s:gmatch("\n(" .. at .. key .. ",[^\n]+)") do
+        for l in s:gmatch("\n(actions%+?=/?" .. key .. ",[^\n]+)") do
             out[#out + 1] = l
         end
         return out
@@ -2012,7 +2006,7 @@ describe("Forever Druid Claw vs Shred (L602)", function()
         return r and r.actionName, r and r.wait
     end
 
-    -- re-pin e4ef929e54: two adjacent Claw lines, one recipe condition (the OR of wowsims's two, the second guarded)
+    -- two adjacent Claw lines (since e4ef929e54), one recipe condition (the OR of wowsims's two, the second guarded)
     it("guards every Shred line, and the Claw lines, by position, the talent and Clearcasting", function()
         local shred, claw = lines("shred"), lines("claw")
         local S = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)"

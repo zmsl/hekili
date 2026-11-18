@@ -379,7 +379,11 @@ M.READY = {
     -- { 0.12, 4 } -> { 0.12, 3 } (0.9 batch, regen-read-09 89d1613b5: an equal out-of-combat energy read no longer
     -- reopens the closed band, L1341; bisected: green at d5186a639, red with regen-read-09 alone merged on it):
     -- shred at 4.75 late 0.234 -> in:grain; real 3 (early 1, late 2), median 0.118
-    druid_feral = { 0.12, 3 },
+    -- { 0.12, 3 } -> { 0.14, 4 } (re-pin e4ef929e54 -> ab0f00e4fc: wowsims #1087's flat list on the new log): real 4
+    -- (early 1, late 3), median 0.134: rake 2.00 early 1.00 (wowsims's slack after the 1 s GCD, as before), shred 13.79
+    -- late 0.07 and 163.63 late 0.134 (cost edges a poll late), shifting_power 75.64 late 0.53 (mana 686.6 against
+    -- the 684 cost: the belief's mana near cost, shared, the old 150.13 row's class)
+    druid_feral = { 0.14, 4 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone

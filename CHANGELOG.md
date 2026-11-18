@@ -7,7 +7,8 @@
 - Italian translation of the core interface, thanks to Sairiin.
 
 ### Changed
-
+- Feral: the default priority follows wowsims's simplified Feral priority: one priority at every enemy count, with new energy points for Shifting Power and Ferocious Bite.
+- Guardian: the default priority follows wowsims's simplified Bear priority: one priority at every enemy count, and Swipe is no longer suggested.
 - In a custom condition, `gcd` on its own now means the full global cooldown (`gcd.max`), as it already did in an
   imported priority.
 
@@ -16,10 +17,8 @@
 - A separate Cooldowns, Interrupts or Defensives display whose Forecast Period is longer than the Forecast window
   (Performance) now recommends an ability whose resources arrive within that period, instead of treating it as not
   ready.
-
 - At very high spell haste, the icons after the first no longer come up a little early: a global cooldown is never
   shorter than 1 second.
-
 - Dominos users no longer get repeated Lua errors when Hekili reads keybindings before all action bars or buttons exist.
 
 ### Known issues

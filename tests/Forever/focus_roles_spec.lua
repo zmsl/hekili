@@ -96,38 +96,13 @@ local PACKS = {
     },
     ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" },
     -- re-pin e2842f0a78 (R66): the adaptive list's order; Claw's one line is wowsims's "Claw can replace Shred" fallback
-    -- re-pin e4ef929e54: the 2/3-target lists keep their Rake upkeep (2); single_target's two Claw lines share the
-    -- fallback's condition (the recipe's `(A)|(B)`), both 1
-    ["Druid/APLs/Feral"] = {
-        "rake=2",
-        "rake=2",
-        "rake=2",
-        "rake=2",
-        "shred=1",
-        "rip=2",
-        "rake=2",
-        "claw=1",
-        "claw=1",
-        "rake=2",
-        "rake=2",
-    },
+    -- re-pin ab0f00e4fc (wowsims #1087): one flat list; its two Claw lines share the fallback's condition (the recipe's
+    -- `(A)|(B)`), both 1
+    ["Druid/APLs/Feral"] = { "shred=1", "rip=2", "rake=2", "claw=1", "claw=1" },
     -- re-pin e5a9cd2a2d: the adaptive list puts the upkeep Lacerate and Roar first, the rage dump (Maul) last
-    -- re-pin e4ef929e54: the leveling Maul (2) heads the default list; the 2-target, 3-target and single-target groups
-    -- each keep their upkeep (2) and their Maul (2: a rage dump as Heroic Strike, always tier 2; Fable for the owner
-    -- 2026-11-17, L1302)
-    ["Druid/APLs/Guardian"] = {
-        "maul=2",
-        "demoralizing_roar=2",
-        "lacerate=2",
-        "maul=2",
-        "maul=2",
-        "demoralizing_roar=2",
-        "lacerate=2",
-        "lacerate=2",
-        "demoralizing_roar=2",
-        "lacerate=2",
-        "maul=2",
-    },
+    -- re-pin ab0f00e4fc (wowsims #1087): one flat list: the upkeep (2), the Maul rage dump (2: as Heroic Strike, always
+    -- tier 2; Fable for the owner 2026-11-17, L1302), then the leveling Maul (2)
+    ["Druid/APLs/Guardian"] = { "demoralizing_roar=2", "lacerate=2", "maul=2", "maul=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },
     -- Frost (new pack): Cone of Cold on five Winter's Chill stacks and Ice Lance on a Fingers of Frost charge 1, Ice
     -- Barrier kept for Frigid Power 2 (the AoE list's too); Cold Snap a cooldown (none)

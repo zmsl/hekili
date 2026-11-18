@@ -92,7 +92,7 @@ describe("the form-following Druid packs", function()
         assert.is_true(#feral > 0)
         assert.are.same(feral, guardian)
         none(guardian, BEAR, "a bear ability in Cat Form")
-        -- the cat_single_target builder (Shred / Claw), not only Faerie Fire or Rake (CN25 round 1: L1241)
+        -- the imported cat list's builder (Shred / Claw), not only Faerie Fire or Rake (CN25 round 1: L1241)
         local built = false
         for _, n in ipairs(guardian) do
             built = built or n == "shred" or n == "claw"

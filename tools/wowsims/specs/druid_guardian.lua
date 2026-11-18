@@ -5,12 +5,14 @@
 -- apls/adaptive.apl.json (:10, :12 ROTATION_ADAPTIVE "Adaptive Bear"), the gear gear_sets/default.gear.json (:11). The
 -- re-pin from e2842f0a78 changed only the APL: b19089ff45 dropped its autocastOtherCooldowns entry (6 lines), so the
 -- pack's lines are the old pin's (the translator already omitted that entry).
--- Re-pin e5a9cd2a2d -> e4ef929e54: BearTalents '050022-5023030212310112501-055' (presets.ts:14); the adaptive list
--- rewritten (cbd46412fd, a94dc3c549): 2- and 3-target groups (Swipe, Primal Bite) and single_target_and_larger_packs
--- behind the movement gate, a pre-pull Maul at 3 targets (CN21: its computed aura duration keeps the `!buff.maul.up`
--- guard); the gear file unchanged. Owner deviation L1169 (decision C) is Feral's only: Guardian's groups have no
--- other-target read (CN24) and ship whole.
--- Replay (e4ef929e54, `procs { ["9881:0"] = true }`: Maul's untagged Casting lines are wowsims's queue at each swing):
+-- Re-pin e5a9cd2a2d -> e4ef929e54: BearTalents '050022-5023030212310112501-055' (presets.ts:14); the gear file
+-- unchanged.
+-- Re-pin e4ef929e54 -> ab0f00e4fc (wowsims #1087; owner L1397 (2): follow it): the adaptive list is one flat list at
+-- every enemy count (Enrage, Faerie Fire, Demoralizing Roar, Primal Bite, Lacerate, Maul behind the movement gate): no
+-- 2/3-target groups and no Swipe at all, no pre-pull Furor Bear Form shift (the pre-pull Enrage stays), no pre-pull
+-- 3-target Maul (CN21's line: gone). Talents and gear unchanged; the log's casts are the old pin's, in time.
+-- Replay (e4ef929e54; the same at ab0f00e4fc, identical casts, 0.574 (66/115); `procs { ["9881:0"] = true }`: Maul's
+-- untagged Casting lines are wowsims's queue at each swing):
 -- the kit has no rage-from-damage-taken rule (`taken`: CN7's hook, a named gap), so the belief sees only the bear's own
 -- rage (white swings, Primal Fury, Enrage): decisions on-GCD 0.574 (115). NAMED GAP (owner ruling 2026-11-07, extended
 -- to this pin by the controller, L1319): the shipped kit has no rage from hits taken (CN7; the belief cannot read hit
@@ -71,8 +73,8 @@ return {
     focus = { maul = 2, lacerate = 2, demoralizing_roar = 2 },
     -- Before Primal Bite Maul is the only rage sink: queued whenever affordable instead of at
     -- wowsims's 20, which pools for the on-GCD strikes a low-level bear lacks (ruling L18; silent once Primal Bite is
-    -- known). The re-pin's adaptive list maintains Faerie Fire (#14) and Demoralizing Roar (#16, "Attack-power reduction
-    -- is covered") itself, whenever the debuff is down and at every level, above every strike: the leveling Roar and
+    -- known). The adaptive list maintains Faerie Fire (#15) and Demoralizing Roar (#16, "Maintain the attack-power
+    -- debuff") itself, whenever the debuff is down and at every level, above every strike: the leveling Roar and
     -- Faerie Fire lines R45 guarded were dead behind them and are gone (L47).
     -- Rule 15: the raid debuff, a setting off in game and on in the harness (the user's ruling, 2026-10-21)
     maintenance = { demoralizing_roar = "maintain_demoralizing_roar" },

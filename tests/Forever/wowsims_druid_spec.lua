@@ -99,12 +99,16 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- world reads a function cooldown at each cast: Faerie Fire's form 6 s and Shifting Power's 7.5, L1318/L1320) and
     -- replay-flips-09 ade4d6379 (a flip whose middle icon wowsims casts that tick is excused, L1317). The 164.88 row is
     -- gone (L1301's cause); the 4 left are the 16.25, 23.25, 44.13 and 150.13 rows above
+    -- 0.95 -> 0.96 (0.964, 80/83; flicker 0.00/min, oracle 0.00) re-pin e4ef929e54 -> ab0f00e4fc: wowsims #1087's flat
+    -- list (Shifting Power at 53 energy, the new Bite pooling) and the new log's fight. Misses: shred -> rake 2 (one is
+    -- 76.64, where Rake fades in the instant wowsims Shreds: same-instant order, as 23.25 above; the other not located
+    -- by time) and innervate -> cat_form 1 (the powershift tie, now at 14.79)
     it("Feral (wowsims.com) follows wowsims's casts", function()
         local r, line = ws.gate(
             "Feral (wowsims.com)",
             content("druid_feral", W.Feral, "Feral (wowsims.com)", 60),
             "druid_feral",
-            0.95,
+            0.96,
             -- wowsims's Feral stands behind its target (no inFrontOfTarget in the request): the client says the mob
             -- targets someone else, so the pack's Shred lines run as wowsims's (L602)
             { notTargeted = true }
@@ -138,6 +142,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             -- then Lacerate as the filler under Primal Bite), and ~83% of the log's rage comes from hits taken (1779.7 of
             -- ~2150), which the belief cannot see (CN7): all 49 misses believe 0-12 rage at a truth of 25-90
             -- (repin-druid-09-5). replay-fncd-09 / replay-flips-09 move no Guardian row
+            -- re-pin e4ef929e54 -> ab0f00e4fc (wowsims #1087: no Swipe, no groups): 0.574 (66/115) unchanged, the log's
+            -- casts identical in time (damage lines only); the timing fixture's 29.50 Lacerate never row predicts 8.951
+            -- (was 9.000)
             0.57,
             -- once the replay ends a cooldown at its log timestamp (the ready-time ruling)
             -- Maul's untagged Casting lines are wowsims's queue at each swing (Cost = 0); its Tag 1 line is the hit,
@@ -202,13 +209,13 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local simc = f:read("*a")
         f:close()
         assert.matches("\n# Setting maintain_demoralizing_roar %(", simc)
-        -- re-pin e4ef929e54: both lines sit in the single-target group (the default list calls it behind the gate)
+        -- re-pin ab0f00e4fc (wowsims #1087): both lines sit in the one default list, each behind the movement gate
         assert.matches(
-            "\nactions%.single_target_and_larger_packs%+=/demoralizing_roar,focus=2,if=settings%.maintain_demoralizing_roar&!%(!%(debuff%.demoralizing_roar%.remains<=0%)%)",
+            "\nactions%+=/demoralizing_roar,focus=2,if=settings%.maintain_demoralizing_roar&%(!%(!%(debuff%.demoralizing_roar%.remains<=0%)%)&",
             simc
         )
         assert.matches(
-            "\nactions%.single_target_and_larger_packs=faerie_fire,if=%(action%.faerie_fire%.known&debuff%.faerie_fire%.remains<=0%)",
+            "\nactions%+=/faerie_fire,if=%(action%.faerie_fire%.known&debuff%.faerie_fire%.remains<=0%)&",
             simc
         )
         assert.matches("demoralizing_roar", first(true, false))

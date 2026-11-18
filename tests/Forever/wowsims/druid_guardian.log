@@ -1,4 +1,4 @@
-# wowsims e4ef929e54794ea16dc9a3c4b4f9d4688d500679 druid_guardian seed 101 180 s target 63
+# wowsims ab0f00e4fc83cdede13ba8a184f2a384b8efa3ab druid_guardian seed 101 180 s target 63
 # talents 1223081=5@1 1223082=2@1 16819=2@1 16934=5@2 17002=2@2 16947=3@2 16929=3@2 16998=2@2 1238122=1@2 16942=2@2 16972=3@2 1328617=1@2 16958=1@2 17007=1@2 1223242=2@2 1223246=5@2 407995=1@2 17003=5@3 17069=5@3
 [0.00] [Guardian (#1)] Aura gained: {SpellID: 24932, Tag: -1}
 [0.00] [Guardian (#1)] Aura gained: {SpellID: 1328827}
@@ -7,7 +7,7 @@
 [0.00] [Guardian (#1)] Dynamic dep enabled (AttackPower += FeralAttackPower * 1.00): {}
 [0.00] [Guardian (#1)] Dynamic dep enabled (Armor += DefenseRating * 9.20): {"Armor": 46.000,}
 [0.00] [Guardian (#1)] Dynamic dep enabled (Stamina *= 1.20): {"Stamina": 55.000,"Health": 577.500,}
-[-10.00] [Guardian (#1)] Casting {SpellID: 5229} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: prepull 2
+[-10.00] [Guardian (#1)] Casting {SpellID: 5229} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: prepull 1
 [-10.00] [Guardian (#1)] Completed cast {SpellID: 5229}
 [-10.00] [Guardian (#1)] Gained 10.000 rage from {SpellID: 5229} (0.000 --> 10.000) of 100 total.
 [-10.00] [Guardian (#1)] Aura gained: {SpellID: 5229}
@@ -184,11 +184,11 @@
 [1.00] [Guardian (#1)] {OtherID: 20} stacks: 4 --> 0
 [1.00] [Guardian (#1)] Stopped walking at 4.00 yards
 [1.00] [Guardian (#1)] Aura faded: {SpellID: 16979, Tag: 1}
-[1.00] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.1
+[1.00] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 15
 [1.00] [Guardian (#1)] Completed cast {SpellID: 9907}
 [1.00] [Guardian (#1)] [Target 1] {SpellID: 9907} Hit for 0.000 damage (SpellSchool: 8). (Threat: 258.000)
 [1.00] [Target 1] Aura gained: {SpellID: 9907}
-[1.00] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[1.00] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [1.00] [Guardian (#1)] Completed cast {SpellID: 9881}
 [1.03] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [1.05] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -233,7 +233,7 @@
 [2.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [2.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [2.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[2.50] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.3
+[2.50] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 16
 [2.50] [Guardian (#1)] Completed cast {SpellID: 9898}
 [2.50] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9898} (60.828 --> 50.828) of 100 total.
 [2.50] [Guardian (#1)] [Target 1] {SpellID: 9898} Hit for 0.000 damage (SpellSchool: 1). (Threat: 103.200)
@@ -266,12 +266,12 @@
 [3.37] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [3.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [3.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[3.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[3.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [3.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [3.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (50.828 --> 40.828) of 100 total.
 [3.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [3.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 350.183 damage (SpellSchool: 1). (Threat: 1317.565)
-[3.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[3.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [3.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [3.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [3.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -288,7 +288,7 @@
 [3.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 4.000000002s.
 [4.00] [Target 1] Aura faded: {SpellID: 19675}
 [4.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[4.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[4.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [4.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [4.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (40.828 --> 25.828) of 100 total.
 [4.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 616.158 damage (SpellSchool: 1). (Threat: 3974.218)
@@ -341,7 +341,7 @@
 [5.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [5.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [5.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[5.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[5.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [5.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [5.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (53.321 --> 38.321) of 100 total.
 [5.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 19.270 damage (SpellSchool: 1). (Threat: 138.102)
@@ -358,12 +358,12 @@
 [5.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [5.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [5.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[5.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[5.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [5.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [5.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (38.321 --> 28.321) of 100 total.
 [5.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [5.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 364.743 damage (SpellSchool: 1). (Threat: 1372.346)
-[5.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[5.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [5.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [6.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [6.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -396,7 +396,7 @@
 [6.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [6.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 7.000000003s.
 [7.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[7.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[7.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [7.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [7.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (28.321 --> 13.321) of 100 total.
 [7.00] [Guardian (#1)] [Target 1] {SpellID: 1235827} Miss (SpellSchool: 1). (Threat: 0.000)
@@ -445,7 +445,7 @@
 [8.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [8.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [8.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[8.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[8.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [8.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [8.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (48.892 --> 38.892) of 100 total.
 [8.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -453,7 +453,7 @@
 [8.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 8.500000004s.
 [8.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [8.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 20.873 damage (SpellSchool: 1). (Threat: 149.586)
-[8.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[8.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [8.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [8.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (38.892 --> 23.892) of 100 total.
 [8.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 46.036 damage (SpellSchool: 1). (Threat: 329.927)
@@ -496,7 +496,7 @@
 [9.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [9.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [10.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[10.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[10.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [10.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [10.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (23.892 --> 8.892) of 100 total.
 [10.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 262.415 damage (SpellSchool: 1). (Threat: 1692.576)
@@ -513,7 +513,7 @@
 [10.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [10.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [10.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[10.28] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[10.28] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [10.28] [Guardian (#1)] Completed cast {SpellID: 9881}
 [10.30] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [10.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
@@ -533,12 +533,12 @@
 [10.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [10.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [10.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[10.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[10.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [10.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [10.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (42.834 --> 32.834) of 100 total.
 [10.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [10.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 333.209 damage (SpellSchool: 1). (Threat: 1253.698)
-[10.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[10.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [10.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [11.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [11.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -559,7 +559,7 @@
 [11.47] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [11.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [11.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 41.745 damage (SpellSchool: 1). (Threat: 299.173)
-[11.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[11.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [11.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [11.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (32.834 --> 17.834) of 100 total.
 [11.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 70.223 damage (SpellSchool: 1). (Threat: 503.266)
@@ -603,7 +603,7 @@
 [12.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [12.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [13.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[13.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[13.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [13.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [13.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (54.383 --> 39.383) of 100 total.
 [13.00] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 89.318 damage (SpellSchool: 1). (Threat: 640.112)
@@ -620,12 +620,12 @@
 [13.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [13.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [13.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[13.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[13.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [13.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [13.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (39.383 --> 29.383) of 100 total.
 [13.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [13.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 352.762 damage (SpellSchool: 1). (Threat: 1327.266)
-[13.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[13.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [13.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [13.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [13.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -663,7 +663,7 @@
 [14.48] [Guardian (#1)] {OtherID: 12} stacks: 0 --> 62
 [14.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [14.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 83.490 damage (SpellSchool: 1). (Threat: 598.345)
-[14.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[14.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [14.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [14.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (50.308 --> 35.308) of 100 total.
 [14.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 100.968 damage (SpellSchool: 1). (Threat: 723.604)
@@ -704,14 +704,14 @@
 [15.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [15.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [15.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[15.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[15.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [15.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [15.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (35.308 --> 25.308) of 100 total.
 [15.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [15.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 369.798 damage (SpellSchool: 1). (Threat: 1391.365)
 [15.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 16.000000007s.
 [16.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[16.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[16.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [16.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [16.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (25.308 --> 10.308) of 100 total.
 [16.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 598.161 damage (SpellSchool: 1). (Threat: 3858.140)
@@ -728,7 +728,7 @@
 [16.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [16.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [16.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[16.25] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[16.25] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [16.25] [Guardian (#1)] Completed cast {SpellID: 9881}
 [16.30] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [16.30] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -761,7 +761,7 @@
 [17.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [17.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [17.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
-[17.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[17.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [17.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [17.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (28.645 --> 13.645) of 100 total.
 [17.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 101.857 damage (SpellSchool: 1). (Threat: 729.975)
@@ -802,12 +802,12 @@
 [18.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [18.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [18.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[18.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[18.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [18.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [18.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [18.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 339.296 damage (SpellSchool: 1). (Threat: 1276.601)
 [18.45] [Guardian (#1)] Aura faded: {SpellID: 16870}
-[18.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[18.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [18.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [18.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [18.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -826,7 +826,7 @@
 [18.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [18.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 19.000000008s.
 [19.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[19.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[19.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [19.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [19.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (32.461 --> 17.461) of 100 total.
 [19.00] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 113.567 damage (SpellSchool: 1). (Threat: 813.898)
@@ -873,7 +873,7 @@
 [20.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [20.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [20.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
-[20.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[20.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [20.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [20.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (39.258 --> 24.258) of 100 total.
 [20.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 110.124 damage (SpellSchool: 1). (Threat: 789.223)
@@ -886,7 +886,7 @@
 [20.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [20.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [20.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[20.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[20.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [20.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [20.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (24.258 --> 14.258) of 100 total.
 [20.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -920,7 +920,7 @@
 [21.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [21.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 22.000000009s.
 [22.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[22.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[22.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [22.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [22.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (19.258 --> 4.258) of 100 total.
 [22.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Dodge (SpellSchool: 1). (Threat: 0.000)
@@ -938,7 +938,7 @@
 [22.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [22.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [22.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[22.25] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[22.25] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [22.25] [Guardian (#1)] Completed cast {SpellID: 9881}
 [22.30] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [22.30] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -969,7 +969,7 @@
 [23.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [23.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [23.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[23.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[23.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [23.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [23.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (44.953 --> 34.953) of 100 total.
 [23.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -978,11 +978,11 @@
 [23.46] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (34.953 --> 39.953) of 100 total.
 [23.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [23.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
-[23.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[23.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [23.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [23.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (39.953 --> 24.953) of 100 total.
 [23.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 101.137 damage (SpellSchool: 1). (Threat: 724.815)
-[23.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[23.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [23.50] [Guardian (#1)] Completed cast {SpellID: 9881}
 [23.53] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [23.55] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -1027,7 +1027,7 @@
 [24.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [24.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [25.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[25.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[25.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [25.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [25.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (57.932 --> 42.932) of 100 total.
 [25.00] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 115.132 damage (SpellSchool: 1). (Threat: 825.114)
@@ -1052,12 +1052,12 @@
 [25.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [25.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [25.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[25.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[25.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [25.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [25.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (42.932 --> 32.932) of 100 total.
 [25.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [25.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 352.359 damage (SpellSchool: 1). (Threat: 1325.752)
-[25.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[25.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [25.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [26.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [26.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -1079,7 +1079,7 @@
 [26.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 26.500000011s.
 [26.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [26.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
-[26.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[26.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [26.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [26.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (32.932 --> 17.932) of 100 total.
 [26.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 250.728 damage (SpellSchool: 1). (Threat: 1796.881)
@@ -1116,7 +1116,7 @@
 [27.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [27.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [28.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[28.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[28.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [28.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [28.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (17.932 --> 2.932) of 100 total.
 [28.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 293.469 damage (SpellSchool: 1). (Threat: 1892.873)
@@ -1145,12 +1145,12 @@
 [28.43] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [28.43] [Guardian (#1)] {OtherID: 12} stacks: 2 --> 15
 [28.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[28.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[28.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [28.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [28.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (50.351 --> 40.351) of 100 total.
 [28.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [28.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 350.900 damage (SpellSchool: 1). (Threat: 1320.261)
-[28.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[28.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [28.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [28.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [28.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -1180,7 +1180,7 @@
 [29.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 29.500000012s.
 [29.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [29.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
-[29.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[29.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [29.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [29.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (40.351 --> 25.351) of 100 total.
 [29.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 105.939 damage (SpellSchool: 1). (Threat: 759.229)
@@ -1221,7 +1221,7 @@
 [30.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [30.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [30.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[30.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[30.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [30.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [30.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (25.351 --> 15.351) of 100 total.
 [30.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -1229,7 +1229,7 @@
 [30.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 31.000000013s.
 [30.96] [Guardian (#1)] Aura gained: {SpellID: 16870}
 [31.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[31.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[31.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [31.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [31.00] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 104.322 damage (SpellSchool: 1). (Threat: 747.640)
 [31.00] [Guardian (#1)] Aura faded: {SpellID: 16870}
@@ -1281,11 +1281,11 @@
 [32.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [32.50] [Target 1] Aura faded: {SpellID: 9898}
 [32.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
-[32.50] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.3
+[32.50] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 16
 [32.50] [Guardian (#1)] Completed cast {SpellID: 9898}
 [32.50] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9898} (35.124 --> 25.124) of 100 total.
 [32.50] [Guardian (#1)] [Target 1] {SpellID: 9898} Miss (SpellSchool: 1). (Threat: 0.000)
-[32.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[32.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [32.50] [Guardian (#1)] Completed cast {SpellID: 9881}
 [32.53] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [32.55] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -1307,7 +1307,7 @@
 [33.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [33.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [33.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[33.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[33.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [33.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [33.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (25.124 --> 15.124) of 100 total.
 [33.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -1328,7 +1328,7 @@
 [33.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [33.95] [Guardian (#1)] Queueing up {SpellID: 9898} to cast at 34.000000014s.
 [34.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[34.00] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.3
+[34.00] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 16
 [34.00] [Guardian (#1)] Completed cast {SpellID: 9898}
 [34.00] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9898} (15.124 --> 5.124) of 100 total.
 [34.00] [Guardian (#1)] [Target 1] {SpellID: 9898} Hit for 0.000 damage (SpellSchool: 1). (Threat: 103.200)
@@ -1379,7 +1379,7 @@
 [35.50] [Guardian (#1)] {OtherID: 12} stacks: 41 --> 45
 [35.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [35.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
-[35.50] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[35.50] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [35.50] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [35.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (24.076 --> 9.076) of 100 total.
 [35.50] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 277.038 damage (SpellSchool: 1). (Threat: 1786.892)
@@ -1398,7 +1398,7 @@
 [35.95] [Guardian (#1)] Completed cast {OtherID: 3, Tag: 14}
 [35.95] [Guardian (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 162.754 damage (SpellSchool: 1). (Threat: 349.922)
 [35.95] [Guardian (#1)] Gained 11.250 rage from {OtherID: 3, Tag: 14} (9.076 --> 20.326) of 100 total.
-[35.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[35.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [35.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [35.97] [Guardian (#1)] Gained 318.292 health from {OtherID: 12} (6145.650 --> 6145.650) of 6146 total.
 [35.97] [Guardian (#1)] Aura refreshed: {OtherID: 12}
@@ -1440,7 +1440,7 @@
 [36.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [36.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 37.000000015s.
 [37.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[37.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[37.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [37.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [37.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (43.993 --> 28.993) of 100 total.
 [37.00] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 104.879 damage (SpellSchool: 1). (Threat: 751.635)
@@ -1488,7 +1488,7 @@
 [38.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [38.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [38.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[38.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[38.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [38.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [38.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (55.428 --> 45.428) of 100 total.
 [38.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -1497,11 +1497,11 @@
 [38.46] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (45.428 --> 50.428) of 100 total.
 [38.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [38.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
-[38.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[38.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [38.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [38.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (50.428 --> 35.428) of 100 total.
 [38.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 232.305 damage (SpellSchool: 1). (Threat: 1664.856)
-[38.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[38.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [38.50] [Guardian (#1)] Completed cast {SpellID: 9881}
 [38.53] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [38.55] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -1546,7 +1546,7 @@
 [39.99] [Guardian (#1)] Gained 293.015 health from {OtherID: 12} (6145.650 --> 6145.650) of 6146 total.
 [39.99] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [40.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[40.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[40.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [40.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [40.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (35.428 --> 20.428) of 100 total.
 [40.00] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 224.308 damage (SpellSchool: 1). (Threat: 1607.537)
@@ -1583,7 +1583,7 @@
 [40.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [40.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [40.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[40.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[40.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [40.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [40.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (25.428 --> 15.428) of 100 total.
 [40.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -1603,7 +1603,7 @@
 [41.45] [Guardian (#1)] Queueing up {SpellID: 9907} to cast at 41.500000017s.
 [41.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [41.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
-[41.50] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.1
+[41.50] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 15
 [41.50] [Guardian (#1)] Completed cast {SpellID: 9907}
 [41.50] [Guardian (#1)] [Target 1] {SpellID: 9907} Hit for 0.000 damage (SpellSchool: 8). (Threat: 258.000)
 [41.50] [Target 1] Aura gained: {SpellID: 9907}
@@ -1635,7 +1635,7 @@
 [42.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [42.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [42.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[42.25] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[42.25] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [42.25] [Guardian (#1)] Completed cast {SpellID: 9881}
 [42.30] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [42.30] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -1657,7 +1657,7 @@
 [42.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [42.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [43.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[43.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[43.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [43.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [43.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (32.608 --> 17.608) of 100 total.
 [43.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 618.772 damage (SpellSchool: 1). (Threat: 3991.077)
@@ -1673,7 +1673,7 @@
 [43.45] [Guardian (#1)] Gained 2416.834 health from {OtherID: 12} (5671.390 --> 6145.650) of 6146 total.
 [43.45] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [43.45] [Guardian (#1)] {OtherID: 12} stacks: 14 --> 49
-[43.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[43.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [43.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [43.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (17.608 --> 7.608) of 100 total.
 [43.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -1717,12 +1717,12 @@
 [44.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 44.500000018s.
 [44.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [44.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Crit for 229.598 damage (SpellSchool: 1). (Threat: 1645.449)
-[44.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[44.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [44.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [44.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (31.326 --> 16.326) of 100 total.
 [44.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} Dodge (SpellSchool: 1). (Threat: 0.000)
 [44.50] [Guardian (#1)] Gained 12.000 rage from {OtherID: 8} (16.326 --> 28.326) of 100 total.
-[44.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[44.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [44.50] [Guardian (#1)] Completed cast {SpellID: 9881}
 [44.53] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [44.55] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -1760,14 +1760,14 @@
 [45.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [45.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [45.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[45.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[45.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [45.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [45.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (28.326 --> 18.326) of 100 total.
 [45.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [45.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 319.286 damage (SpellSchool: 1). (Threat: 1201.315)
 [45.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 46.000000019s.
 [46.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[46.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[46.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [46.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [46.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (18.326 --> 3.326) of 100 total.
 [46.00] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 94.084 damage (SpellSchool: 1). (Threat: 674.269)
@@ -1880,7 +1880,7 @@
 [50.00] [Guardian (#1)] Gained 10.000 rage from {SpellID: 5229} (14.576 --> 24.576) of 100 total.
 [50.00] [Guardian (#1)] Aura gained: {SpellID: 5229}
 [50.00] [Guardian (#1)] Dynamic dep enabled (Armor += Agility * -0.32): {"Armor": -89.600,}
-[50.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[50.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [50.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [50.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (24.576 --> 9.576) of 100 total.
 [50.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 590.599 damage (SpellSchool: 1). (Threat: 3809.366)
@@ -1898,7 +1898,7 @@
 [50.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [50.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [50.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[50.26] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[50.26] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [50.26] [Guardian (#1)] Completed cast {SpellID: 9881}
 [50.30] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [50.31] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -1919,12 +1919,12 @@
 [50.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [50.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [50.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[50.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[50.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [50.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [50.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (63.746 --> 53.746) of 100 total.
 [50.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [50.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 344.583 damage (SpellSchool: 1). (Threat: 1296.495)
-[50.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[50.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [50.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [51.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [51.00] [Guardian (#1)] Gained 2.000 rage from {SpellID: 5229} (53.746 --> 55.746) of 100 total.
@@ -1941,7 +1941,7 @@
 [51.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [51.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 51.500000002s.
 [51.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[51.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[51.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [51.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [51.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (55.746 --> 40.746) of 100 total.
 [51.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} Dodge (SpellSchool: 1). (Threat: 0.000)
@@ -1993,7 +1993,7 @@
 [52.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [53.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [53.00] [Guardian (#1)] Gained 2.000 rage from {SpellID: 5229} (74.798 --> 76.798) of 100 total.
-[53.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[53.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [53.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [53.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (76.798 --> 61.798) of 100 total.
 [53.00] [Guardian (#1)] [Target 1] {SpellID: 1235827} Dodge (SpellSchool: 1). (Threat: 0.000)
@@ -2014,12 +2014,12 @@
 [53.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [53.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [53.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[53.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[53.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [53.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [53.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (73.798 --> 63.798) of 100 total.
 [53.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [53.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 359.640 damage (SpellSchool: 1). (Threat: 1353.145)
-[53.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[53.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [53.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [53.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [53.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
@@ -2057,7 +2057,7 @@
 [54.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [54.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 54.500000003s.
 [54.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[54.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[54.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [54.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [54.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (89.742 --> 74.742) of 100 total.
 [54.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 254.883 damage (SpellSchool: 1). (Threat: 1826.659)
@@ -2099,7 +2099,7 @@
 [55.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [55.94] [Guardian (#1)] Gained 1436.041 health from {OtherID: 12} (6145.650 --> 6145.650) of 6146 total.
 [55.94] [Guardian (#1)] Aura refreshed: {OtherID: 12}
-[55.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[55.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [55.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [55.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (76.742 --> 66.742) of 100 total.
 [55.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -2108,11 +2108,11 @@
 [55.96] [Guardian (#1)] Aura gained: {SpellID: 16870}
 [56.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [56.00] [Guardian (#1)] Gained 2.000 rage from {SpellID: 5229} (66.742 --> 68.742) of 100 total.
-[56.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[56.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [56.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [56.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 295.860 damage (SpellSchool: 1). (Threat: 1908.296)
 [56.00] [Guardian (#1)] Aura faded: {SpellID: 16870}
-[56.00] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[56.00] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [56.00] [Guardian (#1)] Completed cast {SpellID: 9881}
 [56.03] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [56.03] [Target 1] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
@@ -2153,7 +2153,7 @@
 [57.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [57.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [57.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[57.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[57.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [57.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [57.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (70.742 --> 55.742) of 100 total.
 [57.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 102.299 damage (SpellSchool: 1). (Threat: 733.143)
@@ -2189,12 +2189,12 @@
 [58.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [58.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [58.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[58.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[58.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [58.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [58.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (82.496 --> 72.496) of 100 total.
 [58.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [58.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 735.027 damage (SpellSchool: 1). (Threat: 2765.537)
-[58.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[58.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [58.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [58.46] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (72.496 --> 77.496) of 100 total.
 [58.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
@@ -2215,7 +2215,7 @@
 [58.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 59.000000005s.
 [59.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [59.00] [Guardian (#1)] Gained 2.000 rage from {SpellID: 5229} (77.496 --> 79.496) of 100 total.
-[59.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[59.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [59.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [59.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (79.496 --> 64.496) of 100 total.
 [59.00] [Guardian (#1)] [Target 1] {SpellID: 1235827} Dodge (SpellSchool: 1). (Threat: 0.000)
@@ -2274,7 +2274,7 @@
 [60.44] [Guardian (#1)] Gained 134.563 health from {OtherID: 12} (6145.650 --> 6145.650) of 6146 total.
 [60.44] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [60.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[60.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[60.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [60.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [60.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (98.157 --> 83.157) of 100 total.
 [60.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 93.254 damage (SpellSchool: 1). (Threat: 668.323)
@@ -2287,12 +2287,12 @@
 [60.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [60.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [60.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[60.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[60.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [60.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [60.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (83.157 --> 73.157) of 100 total.
 [60.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [60.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 798.722 damage (SpellSchool: 1). (Threat: 3005.193)
-[60.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[60.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [60.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [60.96] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (73.157 --> 78.157) of 100 total.
 [61.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
@@ -2326,7 +2326,7 @@
 [61.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [61.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 1m2.000000006s.
 [62.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[62.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[62.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [62.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [62.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (78.157 --> 63.157) of 100 total.
 [62.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 634.864 damage (SpellSchool: 1). (Threat: 4094.871)
@@ -2370,18 +2370,18 @@
 [63.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [63.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [63.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[63.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[63.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [63.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [63.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (63.157 --> 53.157) of 100 total.
 [63.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [63.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 347.007 damage (SpellSchool: 1). (Threat: 1305.614)
 [63.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m3.500000007s.
 [63.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[63.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[63.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [63.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [63.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (53.157 --> 38.157) of 100 total.
 [63.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 93.101 damage (SpellSchool: 1). (Threat: 667.224)
-[63.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[63.50] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [63.50] [Guardian (#1)] Completed cast {SpellID: 9881}
 [63.53] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [63.55] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -2431,7 +2431,7 @@
 [64.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [64.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [65.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[65.00] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.3
+[65.00] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 16
 [65.00] [Guardian (#1)] Completed cast {SpellID: 9898}
 [65.00] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9898} (71.173 --> 61.173) of 100 total.
 [65.00] [Guardian (#1)] [Target 1] {SpellID: 9898} Hit for 0.000 damage (SpellSchool: 1). (Threat: 103.200)
@@ -2459,12 +2459,12 @@
 [65.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [65.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [65.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[65.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[65.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [65.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [65.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (61.173 --> 51.173) of 100 total.
 [65.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [65.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 803.811 damage (SpellSchool: 1). (Threat: 3024.339)
-[65.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[65.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [65.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [66.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [66.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -2491,7 +2491,7 @@
 [66.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [66.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m6.500000008s.
 [66.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[66.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[66.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [66.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [66.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (72.105 --> 57.105) of 100 total.
 [66.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 106.947 damage (SpellSchool: 1). (Threat: 766.456)
@@ -2537,7 +2537,7 @@
 [67.95] [Guardian (#1)] Gained 718.884 health from {OtherID: 12} (6145.650 --> 6145.650) of 6146 total.
 [67.95] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [68.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[68.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[68.00] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [68.00] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [68.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (57.105 --> 42.105) of 100 total.
 [68.00] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 549.093 damage (SpellSchool: 1). (Threat: 3541.653)
@@ -2555,12 +2555,12 @@
 [68.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [68.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [68.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[68.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[68.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [68.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [68.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (42.105 --> 32.105) of 100 total.
 [68.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [68.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 342.705 damage (SpellSchool: 1). (Threat: 1289.428)
-[68.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[68.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [68.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [68.46] [Guardian (#1)] Aura gained: {SpellID: 16870}
 [68.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
@@ -2591,7 +2591,7 @@
 [69.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [69.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m9.500000009s.
 [69.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[69.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[69.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [69.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [69.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 101.626 damage (SpellSchool: 1). (Threat: 728.323)
 [69.50] [Guardian (#1)] Aura faded: {SpellID: 16870}
@@ -2638,7 +2638,7 @@
 [70.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [70.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [70.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[70.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[70.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [70.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [70.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (51.575 --> 41.575) of 100 total.
 [70.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -2646,11 +2646,11 @@
 [70.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m11.00000001s.
 [70.96] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (41.575 --> 46.575) of 100 total.
 [71.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[71.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[71.00] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [71.00] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [71.00] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (46.575 --> 31.575) of 100 total.
 [71.00] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 95.578 damage (SpellSchool: 1). (Threat: 684.972)
-[71.00] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[71.00] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [71.00] [Guardian (#1)] Completed cast {SpellID: 9881}
 [71.03] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [71.05] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -2699,7 +2699,7 @@
 [72.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [72.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [72.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[72.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[72.50] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [72.50] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [72.50] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (31.575 --> 16.575) of 100 total.
 [72.50] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 107.708 damage (SpellSchool: 1). (Threat: 771.907)
@@ -2725,7 +2725,7 @@
 [73.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [73.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [73.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[73.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[73.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [73.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [73.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (16.575 --> 6.575) of 100 total.
 [73.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -2806,7 +2806,7 @@
 [75.95] [Guardian (#1)] Completed cast {OtherID: 3, Tag: 14}
 [75.95] [Guardian (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 192.631 damage (SpellSchool: 1). (Threat: 414.158)
 [75.95] [Guardian (#1)] Gained 11.250 rage from {OtherID: 3, Tag: 14} (11.575 --> 22.825) of 100 total.
-[75.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[75.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [75.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [75.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (22.825 --> 7.825) of 100 total.
 [75.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 619.273 damage (SpellSchool: 1). (Threat: 3994.309)
@@ -2823,7 +2823,7 @@
 [76.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [76.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [76.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[76.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[76.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [76.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [76.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [76.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -2858,7 +2858,7 @@
 [77.44] [Guardian (#1)] Gained 1900.710 health from {OtherID: 12} (5569.478 --> 6145.650) of 6146 total.
 [77.44] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [77.44] [Guardian (#1)] {OtherID: 12} stacks: 30 --> 38
-[77.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[77.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [77.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [77.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (42.404 --> 27.404) of 100 total.
 [77.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 93.522 damage (SpellSchool: 1). (Threat: 670.238)
@@ -2897,12 +2897,12 @@
 [78.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [78.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [78.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[78.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[78.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [78.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [78.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (49.865 --> 39.865) of 100 total.
 [78.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [78.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 341.486 damage (SpellSchool: 1). (Threat: 1284.839)
-[78.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[78.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [78.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [78.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [78.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -2916,7 +2916,7 @@
 [78.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [78.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [78.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[78.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[78.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [78.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [78.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (39.865 --> 24.865) of 100 total.
 [78.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 98.813 damage (SpellSchool: 1). (Threat: 708.159)
@@ -2969,7 +2969,7 @@
 [80.34] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [80.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [80.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[80.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[80.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [80.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [80.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (46.176 --> 31.176) of 100 total.
 [80.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 98.449 damage (SpellSchool: 1). (Threat: 705.548)
@@ -2984,7 +2984,7 @@
 [80.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [80.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [80.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[80.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[80.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [80.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [80.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (31.176 --> 21.176) of 100 total.
 [80.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -3019,7 +3019,7 @@
 [81.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [81.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [81.95] [Guardian (#1)] Queueing up {SpellID: 9907} to cast at 1m21.952381954s.
-[81.95] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.1
+[81.95] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 15
 [81.95] [Guardian (#1)] Completed cast {SpellID: 9907}
 [81.95] [Guardian (#1)] [Target 1] {SpellID: 9907} Hit for 0.000 damage (SpellSchool: 8). (Threat: 258.000)
 [81.95] [Target 1] Aura gained: {SpellID: 9907}
@@ -3038,7 +3038,7 @@
 [82.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [82.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [82.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[82.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[82.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [82.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [82.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [82.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -3074,17 +3074,17 @@
 [83.36] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [83.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [83.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[83.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[83.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [83.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [83.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (59.073 --> 49.073) of 100 total.
 [83.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [83.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 765.984 damage (SpellSchool: 1). (Threat: 2882.013)
 [83.45] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 1m23.452381955s.
-[83.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[83.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [83.45] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [83.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (49.073 --> 34.073) of 100 total.
 [83.45] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 268.909 damage (SpellSchool: 1). (Threat: 1734.461)
-[83.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[83.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [83.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [83.46] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (34.073 --> 39.073) of 100 total.
 [83.46] [Guardian (#1)] Aura gained: {SpellID: 16870}
@@ -3138,7 +3138,7 @@
 [84.87] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [84.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [84.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[84.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[84.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [84.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [84.95] [Guardian (#1)] [Target 1] {SpellID: 1235827} Miss (SpellSchool: 1). (Threat: 0.000)
 [84.95] [Guardian (#1)] Aura faded: {SpellID: 16870}
@@ -3166,12 +3166,12 @@
 [85.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [85.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [85.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[85.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[85.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [85.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [85.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (62.413 --> 52.413) of 100 total.
 [85.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [85.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 700.365 damage (SpellSchool: 1). (Threat: 2635.125)
-[85.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[85.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [85.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [86.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [86.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -3194,7 +3194,7 @@
 [86.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [86.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [86.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m26.452381956s.
-[86.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[86.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [86.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [86.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (70.938 --> 55.938) of 100 total.
 [86.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 105.244 damage (SpellSchool: 1). (Threat: 754.246)
@@ -3239,7 +3239,7 @@
 [87.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [87.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [87.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[87.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[87.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [87.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [87.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (55.938 --> 40.938) of 100 total.
 [87.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 93.479 damage (SpellSchool: 1). (Threat: 669.929)
@@ -3261,13 +3261,13 @@
 [88.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [88.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [88.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[88.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[88.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [88.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [88.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (62.592 --> 52.592) of 100 total.
 [88.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [88.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Miss (SpellSchool: 1). (Threat: 0.000)
 [88.45] [Guardian (#1)] Gained 8.000 rage from {OtherID: 8} (52.592 --> 60.592) of 100 total.
-[88.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[88.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [88.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [88.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [88.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -3295,7 +3295,7 @@
 [89.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [89.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [89.45] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 1m29.452381957s.
-[89.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[89.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [89.45] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [89.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (60.592 --> 45.592) of 100 total.
 [89.45] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 567.265 damage (SpellSchool: 1). (Threat: 3658.859)
@@ -3344,17 +3344,17 @@
 [90.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [90.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [90.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[90.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[90.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [90.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [90.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (80.698 --> 70.698) of 100 total.
 [90.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [90.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 713.408 damage (SpellSchool: 1). (Threat: 2684.199)
 [90.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m30.952381958s.
-[90.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[90.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [90.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [90.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (70.698 --> 55.698) of 100 total.
 [90.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 101.037 damage (SpellSchool: 1). (Threat: 724.098)
-[90.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[90.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [90.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [90.96] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (55.698 --> 60.698) of 100 total.
 [90.99] [Guardian (#1)] Gained 515.843 health from {OtherID: 12} (6145.650 --> 6145.650) of 6146 total.
@@ -3407,7 +3407,7 @@
 [92.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [92.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [92.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[92.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[92.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [92.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [92.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (78.523 --> 63.523) of 100 total.
 [92.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 117.142 damage (SpellSchool: 1). (Threat: 839.520)
@@ -3435,12 +3435,12 @@
 [93.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [93.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [93.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[93.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[93.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [93.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [93.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (63.523 --> 53.523) of 100 total.
 [93.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [93.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 719.322 damage (SpellSchool: 1). (Threat: 2706.447)
-[93.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[93.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [93.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [93.46] [Guardian (#1)] Gained 1611.027 health from {OtherID: 12} (6145.650 --> 6145.650) of 6146 total.
 [93.46] [Guardian (#1)] Aura refreshed: {OtherID: 12}
@@ -3459,7 +3459,7 @@
 [93.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [93.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [93.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m33.952381959s.
-[93.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[93.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [93.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [93.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (53.523 --> 38.523) of 100 total.
 [93.95] [Guardian (#1)] [Target 1] {SpellID: 1235827} Dodge (SpellSchool: 1). (Threat: 0.000)
@@ -3510,7 +3510,7 @@
 [95.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [95.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [95.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[95.45] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.3
+[95.45] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 16
 [95.45] [Guardian (#1)] Completed cast {SpellID: 9898}
 [95.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9898} (68.007 --> 58.007) of 100 total.
 [95.45] [Guardian (#1)] [Target 1] {SpellID: 9898} Hit for 0.000 damage (SpellSchool: 1). (Threat: 103.200)
@@ -3529,12 +3529,12 @@
 [95.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [95.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [95.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[95.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[95.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [95.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [95.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (58.007 --> 48.007) of 100 total.
 [95.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [95.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 357.262 damage (SpellSchool: 1). (Threat: 1344.200)
-[95.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[95.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [95.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [96.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [96.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -3570,7 +3570,7 @@
 [96.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [96.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [96.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 1m36.95238196s.
-[96.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[96.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [96.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [96.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (67.732 --> 52.732) of 100 total.
 [96.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 273.687 damage (SpellSchool: 1). (Threat: 1765.280)
@@ -3621,17 +3621,17 @@
 [98.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [98.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [98.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[98.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[98.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [98.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [98.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (73.304 --> 63.304) of 100 total.
 [98.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [98.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 728.520 damage (SpellSchool: 1). (Threat: 2741.056)
 [98.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m38.452381961s.
-[98.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[98.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [98.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [98.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (63.304 --> 48.304) of 100 total.
 [98.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 104.566 damage (SpellSchool: 1). (Threat: 749.389)
-[98.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[98.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [98.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [98.46] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (48.304 --> 53.304) of 100 total.
 [98.46] [Guardian (#1)] Aura gained: {SpellID: 16870}
@@ -3673,7 +3673,7 @@
 [99.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [99.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [99.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[99.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[99.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [99.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [99.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 99.365 damage (SpellSchool: 1). (Threat: 712.117)
 [99.95] [Guardian (#1)] Aura faded: {SpellID: 16870}
@@ -3710,12 +3710,12 @@
 [100.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [100.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [100.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[100.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[100.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [100.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [100.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (72.713 --> 62.713) of 100 total.
 [100.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [100.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 362.202 damage (SpellSchool: 1). (Threat: 1362.784)
-[100.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[100.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [100.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [101.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [101.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -3730,7 +3730,7 @@
 [101.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [101.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [101.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m41.452381962s.
-[101.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[101.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [101.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [101.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (62.713 --> 47.713) of 100 total.
 [101.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 114.525 damage (SpellSchool: 1). (Threat: 820.762)
@@ -3782,7 +3782,7 @@
 [102.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [102.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [102.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[102.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[102.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [102.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [102.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (79.257 --> 64.257) of 100 total.
 [102.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 280.384 damage (SpellSchool: 1). (Threat: 1808.480)
@@ -3799,12 +3799,12 @@
 [103.33] [Guardian (#1)] {OtherID: 12} stacks: 17 --> 43
 [103.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [103.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[103.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[103.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [103.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [103.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (64.257 --> 54.257) of 100 total.
 [103.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [103.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 342.387 damage (SpellSchool: 1). (Threat: 1288.231)
-[103.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[103.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [103.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [103.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [103.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -3840,7 +3840,7 @@
 [104.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [104.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [104.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m44.452381963s.
-[104.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[104.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [104.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [104.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (76.531 --> 61.531) of 100 total.
 [104.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 94.334 damage (SpellSchool: 1). (Threat: 676.060)
@@ -3880,17 +3880,17 @@
 [105.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [105.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [105.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[105.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[105.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [105.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [105.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (61.531 --> 51.531) of 100 total.
 [105.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [105.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 334.536 damage (SpellSchool: 1). (Threat: 1258.693)
 [105.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m45.952381964s.
-[105.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[105.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [105.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [105.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (51.531 --> 36.531) of 100 total.
 [105.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 222.420 damage (SpellSchool: 1). (Threat: 1594.011)
-[105.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[105.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [105.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [105.96] [Guardian (#1)] Gained 5.000 rage from {SpellID: 16959} (36.531 --> 41.531) of 100 total.
 [106.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
@@ -3938,7 +3938,7 @@
 [107.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [107.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [107.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[107.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[107.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [107.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [107.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (63.023 --> 48.023) of 100 total.
 [107.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 114.322 damage (SpellSchool: 1). (Threat: 819.311)
@@ -3973,12 +3973,12 @@
 [108.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [108.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [108.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[108.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[108.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [108.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [108.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (68.260 --> 58.260) of 100 total.
 [108.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [108.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 332.101 damage (SpellSchool: 1). (Threat: 1249.531)
-[108.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[108.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [108.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [108.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [108.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -3993,7 +3993,7 @@
 [108.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [108.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [108.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 1m48.952381965s.
-[108.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[108.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [108.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [108.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (58.260 --> 43.260) of 100 total.
 [108.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 625.506 damage (SpellSchool: 1). (Threat: 4034.511)
@@ -4040,7 +4040,7 @@
 [110.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [110.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [110.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[110.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[110.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [110.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [110.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (65.297 --> 50.297) of 100 total.
 [110.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 109.886 damage (SpellSchool: 1). (Threat: 787.519)
@@ -4058,12 +4058,12 @@
 [110.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [110.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [110.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[110.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[110.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [110.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [110.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (50.297 --> 40.297) of 100 total.
 [110.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [110.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 751.871 damage (SpellSchool: 1). (Threat: 2828.913)
-[110.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[110.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [110.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [111.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [111.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -4088,7 +4088,7 @@
 [111.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [111.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [111.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m51.952381966s.
-[111.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[111.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [111.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [111.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (40.297 --> 25.297) of 100 total.
 [111.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 104.656 damage (SpellSchool: 1). (Threat: 750.032)
@@ -4135,13 +4135,13 @@
 [113.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [113.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [113.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[113.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[113.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [113.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [113.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (25.297 --> 15.297) of 100 total.
 [113.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [113.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 328.867 damage (SpellSchool: 1). (Threat: 1237.362)
 [113.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 1m53.452381967s.
-[113.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[113.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [113.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [113.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (15.297 --> 0.297) of 100 total.
 [113.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 99.731 damage (SpellSchool: 1). (Threat: 714.739)
@@ -4215,7 +4215,7 @@
 [115.95] [Guardian (#1)] Completed cast {OtherID: 3, Tag: 14}
 [115.95] [Guardian (#1)] [Target 1] {OtherID: 3, Tag: 14} Glance for 112.755 damage (SpellSchool: 1). (Threat: 242.423)
 [115.95] [Guardian (#1)] Gained 11.250 rage from {OtherID: 3, Tag: 14} (12.297 --> 23.547) of 100 total.
-[115.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[115.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [115.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [115.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (23.547 --> 8.547) of 100 total.
 [115.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 274.911 damage (SpellSchool: 1). (Threat: 1773.173)
@@ -4232,7 +4232,7 @@
 [116.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [116.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [116.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[116.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[116.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [116.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [116.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [116.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -4268,7 +4268,7 @@
 [117.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [117.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [117.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[117.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[117.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [117.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [117.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (59.373 --> 44.373) of 100 total.
 [117.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 106.491 damage (SpellSchool: 1). (Threat: 763.187)
@@ -4304,12 +4304,12 @@
 [118.38] [Guardian (#1)] {OtherID: 12} stacks: 0 --> 68
 [118.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [118.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[118.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[118.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [118.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [118.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (64.028 --> 54.028) of 100 total.
 [118.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [118.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 797.313 damage (SpellSchool: 1). (Threat: 2999.891)
-[118.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[118.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [118.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [118.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [118.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -4330,7 +4330,7 @@
 [118.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [118.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [118.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[118.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[118.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [118.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [118.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (56.028 --> 41.028) of 100 total.
 [118.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 109.455 damage (SpellSchool: 1). (Threat: 784.426)
@@ -4381,7 +4381,7 @@
 [120.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [120.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [120.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[120.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[120.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [120.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [120.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (61.253 --> 46.253) of 100 total.
 [120.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 103.737 damage (SpellSchool: 1). (Threat: 743.448)
@@ -4401,12 +4401,12 @@
 [120.84] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [120.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [120.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[120.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[120.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [120.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [120.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (48.253 --> 38.253) of 100 total.
 [120.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [120.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 355.039 damage (SpellSchool: 1). (Threat: 1335.834)
-[120.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[120.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [120.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [121.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [121.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -4437,7 +4437,7 @@
 [121.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [121.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 2m1.952381954s.
 [121.95] [Target 1] Aura faded: {SpellID: 9907}
-[121.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[121.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [121.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [121.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (40.253 --> 25.253) of 100 total.
 [121.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 252.974 damage (SpellSchool: 1). (Threat: 1631.685)
@@ -4485,17 +4485,17 @@
 [123.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [123.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [123.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[123.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[123.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [123.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [123.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (47.374 --> 37.374) of 100 total.
 [123.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [123.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 343.260 damage (SpellSchool: 1). (Threat: 1291.515)
 [123.45] [Guardian (#1)] Queueing up {SpellID: 9907} to cast at 2m3.452381955s.
-[123.45] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.1
+[123.45] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 15
 [123.45] [Guardian (#1)] Completed cast {SpellID: 9907}
 [123.45] [Guardian (#1)] [Target 1] {SpellID: 9907} Hit for 0.000 damage (SpellSchool: 8). (Threat: 258.000)
 [123.45] [Target 1] Aura gained: {SpellID: 9907}
-[123.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[123.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [123.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [123.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [123.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -4548,7 +4548,7 @@
 [124.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [124.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [124.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[124.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[124.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [124.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [124.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (62.469 --> 47.469) of 100 total.
 [124.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 103.166 damage (SpellSchool: 1). (Threat: 739.357)
@@ -4578,12 +4578,12 @@
 [125.89] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [125.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [125.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[125.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[125.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [125.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [125.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (47.469 --> 37.469) of 100 total.
 [125.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [125.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 354.047 damage (SpellSchool: 1). (Threat: 1332.101)
-[125.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[125.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [125.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [126.00] [Guardian (#1)] Gained 224.395 health from {OtherID: 12} (6145.650 --> 6145.650) of 6146 total.
 [126.00] [Guardian (#1)] Aura refreshed: {OtherID: 12}
@@ -4603,7 +4603,7 @@
 [126.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [126.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [126.45] [Guardian (#1)] Queueing up {SpellID: 9898} to cast at 2m6.452381956s.
-[126.45] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.3
+[126.45] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 16
 [126.45] [Guardian (#1)] Completed cast {SpellID: 9898}
 [126.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9898} (37.469 --> 27.469) of 100 total.
 [126.45] [Guardian (#1)] [Target 1] {SpellID: 9898} Hit for 0.000 damage (SpellSchool: 1). (Threat: 103.200)
@@ -4643,7 +4643,7 @@
 [127.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [127.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [127.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[127.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[127.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [127.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [127.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (27.469 --> 12.469) of 100 total.
 [127.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 287.762 damage (SpellSchool: 1). (Threat: 1856.066)
@@ -4672,12 +4672,12 @@
 [128.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [128.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [128.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[128.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[128.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [128.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [128.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (54.678 --> 44.678) of 100 total.
 [128.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [128.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 348.330 damage (SpellSchool: 1). (Threat: 1310.593)
-[128.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[128.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [128.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [128.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [128.50] [Guardian (#1)] [Target 1] {SpellID: 1235827} tick Hit for 104.363 damage (SpellSchool: 1). (Threat: 747.931)
@@ -4707,7 +4707,7 @@
 [129.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [129.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [129.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m9.452381957s.
-[129.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[129.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [129.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [129.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (44.678 --> 29.678) of 100 total.
 [129.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 227.857 damage (SpellSchool: 1). (Threat: 1632.972)
@@ -4752,17 +4752,17 @@
 [130.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [130.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [130.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[130.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[130.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [130.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [130.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (56.234 --> 46.234) of 100 total.
 [130.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [130.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 361.152 damage (SpellSchool: 1). (Threat: 1358.835)
 [130.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m10.952381958s.
-[130.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[130.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [130.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [130.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (46.234 --> 31.234) of 100 total.
 [130.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 101.192 damage (SpellSchool: 1). (Threat: 725.206)
-[130.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[130.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [130.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [131.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [131.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -4813,7 +4813,7 @@
 [132.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [132.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [132.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[132.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[132.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [132.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [132.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (51.315 --> 36.315) of 100 total.
 [132.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 210.440 damage (SpellSchool: 1). (Threat: 1508.153)
@@ -4845,12 +4845,12 @@
 [133.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [133.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [133.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[133.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[133.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [133.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [133.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (41.315 --> 31.315) of 100 total.
 [133.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [133.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 348.608 damage (SpellSchool: 1). (Threat: 1311.638)
-[133.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[133.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [133.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [133.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [133.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -4865,7 +4865,7 @@
 [133.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [133.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [133.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 2m13.952381959s.
-[133.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[133.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [133.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [133.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (31.315 --> 16.315) of 100 total.
 [133.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 547.081 damage (SpellSchool: 1). (Threat: 3528.670)
@@ -4913,7 +4913,7 @@
 [135.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [135.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [135.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[135.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[135.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [135.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [135.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 95.755 damage (SpellSchool: 1). (Threat: 686.245)
 [135.45] [Guardian (#1)] Aura faded: {SpellID: 16870}
@@ -4932,12 +4932,12 @@
 [135.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [135.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [135.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[135.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[135.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [135.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [135.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (38.507 --> 28.507) of 100 total.
 [135.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [135.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 343.464 damage (SpellSchool: 1). (Threat: 1292.284)
-[135.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[135.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [135.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [136.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [136.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -4978,7 +4978,7 @@
 [136.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [136.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [136.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m16.95238196s.
-[136.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[136.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [136.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [136.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (58.544 --> 43.544) of 100 total.
 [136.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 115.055 damage (SpellSchool: 1). (Threat: 824.559)
@@ -5020,13 +5020,13 @@
 [138.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [138.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [138.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[138.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[138.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [138.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [138.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (43.544 --> 33.544) of 100 total.
 [138.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [138.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Crit for 806.132 damage (SpellSchool: 1). (Threat: 3033.071)
 [138.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m18.452381961s.
-[138.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[138.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [138.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [138.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (33.544 --> 18.544) of 100 total.
 [138.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 239.244 damage (SpellSchool: 1). (Threat: 1714.580)
@@ -5066,7 +5066,7 @@
 [139.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [139.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [139.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[139.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[139.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [139.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [139.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (23.544 --> 8.544) of 100 total.
 [139.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 286.788 damage (SpellSchool: 1). (Threat: 1849.781)
@@ -5087,7 +5087,7 @@
 [140.18] [Guardian (#1)] {OtherID: 12} stacks: 0 --> 17
 [140.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [140.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[140.28] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[140.28] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [140.28] [Guardian (#1)] Completed cast {SpellID: 9881}
 [140.30] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [140.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
@@ -5105,12 +5105,12 @@
 [140.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [140.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [140.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[140.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[140.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [140.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [140.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (38.350 --> 28.350) of 100 total.
 [140.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [140.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 369.053 damage (SpellSchool: 1). (Threat: 1388.561)
-[140.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[140.95] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [140.95] [Guardian (#1)] Completed cast {SpellID: 9881}
 [141.00] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [141.00] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -5125,7 +5125,7 @@
 [141.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [141.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [141.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m21.452381962s.
-[141.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[141.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [141.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [141.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (28.350 --> 13.350) of 100 total.
 [141.45] [Guardian (#1)] [Target 1] {SpellID: 1235827} Dodge (SpellSchool: 1). (Threat: 0.000)
@@ -5179,7 +5179,7 @@
 [142.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [142.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [142.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[142.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[142.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [142.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [142.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (25.350 --> 10.350) of 100 total.
 [142.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 95.868 damage (SpellSchool: 1). (Threat: 687.056)
@@ -5193,7 +5193,7 @@
 [143.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [143.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [143.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[143.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[143.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [143.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [143.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (10.350 --> 0.350) of 100 total.
 [143.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -5234,7 +5234,7 @@
 [144.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [144.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [144.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m24.452381963s.
-[144.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[144.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [144.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [144.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (21.693 --> 6.693) of 100 total.
 [144.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 244.601 damage (SpellSchool: 1). (Threat: 1752.975)
@@ -5283,7 +5283,7 @@
 [145.95] [Guardian (#1)] [Target 1] {OtherID: 3, Tag: 14} Hit for 171.190 damage (SpellSchool: 1). (Threat: 368.058)
 [145.95] [Guardian (#1)] Gained 11.250 rage from {OtherID: 3, Tag: 14} (11.693 --> 22.943) of 100 total.
 [145.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 2m25.952381964s.
-[145.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[145.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [145.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [145.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (22.943 --> 7.943) of 100 total.
 [145.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 256.572 damage (SpellSchool: 1). (Threat: 1654.889)
@@ -5300,7 +5300,7 @@
 [146.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [146.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [146.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[146.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[146.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [146.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [146.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [146.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -5333,7 +5333,7 @@
 [147.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [147.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [147.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[147.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[147.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [147.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [147.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (29.369 --> 14.369) of 100 total.
 [147.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 100.489 damage (SpellSchool: 1). (Threat: 720.171)
@@ -5362,7 +5362,7 @@
 [148.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [148.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [148.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[148.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[148.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [148.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [148.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (14.369 --> 4.369) of 100 total.
 [148.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -5419,7 +5419,7 @@
 [150.19] [Guardian (#1)] Aura gained: {OtherID: 12}
 [150.19] [Guardian (#1)] {OtherID: 12} stacks: 0 --> 9
 [150.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[150.20] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[150.20] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [150.20] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [150.20] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (27.333 --> 12.333) of 100 total.
 [150.20] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 115.196 damage (SpellSchool: 1). (Threat: 825.573)
@@ -5470,7 +5470,7 @@
 [151.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [151.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [151.95] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 2m31.952381965s.
-[151.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[151.95] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [151.95] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [151.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (23.583 --> 8.583) of 100 total.
 [151.95] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 259.613 damage (SpellSchool: 1). (Threat: 1674.503)
@@ -5487,7 +5487,7 @@
 [152.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [152.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [152.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[152.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[152.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [152.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [152.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [152.24] [Guardian (#1)] Gained 1192.454 health from {OtherID: 12} (4675.108 --> 5867.562) of 6146 total.
@@ -5528,13 +5528,13 @@
 [153.33] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [153.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [153.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[153.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[153.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [153.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [153.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (29.962 --> 19.962) of 100 total.
 [153.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [153.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 333.633 damage (SpellSchool: 1). (Threat: 1255.295)
 [153.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m33.452381966s.
-[153.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[153.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [153.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [153.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (19.962 --> 4.962) of 100 total.
 [153.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 104.753 damage (SpellSchool: 1). (Threat: 750.731)
@@ -5563,7 +5563,7 @@
 [154.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [154.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [154.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[154.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[154.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [154.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [154.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [154.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -5585,7 +5585,7 @@
 [154.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [154.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [154.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[154.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[154.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [154.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [154.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (29.311 --> 14.311) of 100 total.
 [154.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 96.437 damage (SpellSchool: 1). (Threat: 691.129)
@@ -5612,7 +5612,7 @@
 [155.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [155.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [155.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[155.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[155.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [155.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [155.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (14.311 --> 4.311) of 100 total.
 [155.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -5638,7 +5638,7 @@
 [156.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [156.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m36.452381967s.
 [156.45] [Target 1] Aura faded: {SpellID: 9898}
-[156.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[156.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [156.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [156.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (26.736 --> 11.736) of 100 total.
 [156.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 258.708 damage (SpellSchool: 1). (Threat: 1854.075)
@@ -5678,7 +5678,7 @@
 [157.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [157.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [157.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[157.95] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.3
+[157.95] [Guardian (#1)] Casting {SpellID: 9898} (Cost = 10.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 16
 [157.95] [Guardian (#1)] Completed cast {SpellID: 9898}
 [157.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9898} (11.736 --> 1.736) of 100 total.
 [157.95] [Guardian (#1)] [Target 1] {SpellID: 9898} Hit for 0.000 damage (SpellSchool: 1). (Threat: 103.200)
@@ -5697,14 +5697,14 @@
 [158.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [158.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [158.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[158.28] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[158.28] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [158.28] [Guardian (#1)] Completed cast {SpellID: 9881}
 [158.30] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [158.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [158.33] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
 [158.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [158.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[158.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[158.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [158.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [158.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (29.429 --> 19.429) of 100 total.
 [158.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -5739,7 +5739,7 @@
 [159.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [159.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [159.45] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 2m39.452381968s.
-[159.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[159.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [159.45] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [159.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (19.429 --> 4.429) of 100 total.
 [159.45] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 265.301 damage (SpellSchool: 1). (Threat: 1711.192)
@@ -5768,7 +5768,7 @@
 [160.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [160.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [160.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[160.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[160.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [160.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [160.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [160.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -5794,13 +5794,13 @@
 [160.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [160.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [160.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[160.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[160.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [160.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [160.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (26.614 --> 16.614) of 100 total.
 [160.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [160.95] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 370.100 damage (SpellSchool: 1). (Threat: 1392.503)
 [160.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m40.952381969s.
-[160.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[160.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [160.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [160.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (16.614 --> 1.614) of 100 total.
 [160.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 257.838 damage (SpellSchool: 1). (Threat: 1847.842)
@@ -5855,11 +5855,11 @@
 [162.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [162.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [162.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[162.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[162.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [162.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [162.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (39.691 --> 24.691) of 100 total.
 [162.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 107.335 damage (SpellSchool: 1). (Threat: 769.233)
-[162.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[162.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [162.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [162.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [162.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -5885,7 +5885,7 @@
 [163.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [163.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [163.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[163.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[163.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [163.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [163.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (24.691 --> 14.691) of 100 total.
 [163.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -5906,7 +5906,7 @@
 [163.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [163.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [163.95] [Guardian (#1)] Queueing up {SpellID: 9907} to cast at 2m43.95238197s.
-[163.95] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.1
+[163.95] [Guardian (#1)] Casting {SpellID: 9907} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 15
 [163.95] [Guardian (#1)] Completed cast {SpellID: 9907}
 [163.95] [Guardian (#1)] [Target 1] {SpellID: 9907} Hit for 0.000 damage (SpellSchool: 8). (Threat: 258.000)
 [163.95] [Target 1] Aura gained: {SpellID: 9907}
@@ -5923,7 +5923,7 @@
 [164.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [164.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [164.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[164.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[164.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [164.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [164.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [164.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -5960,7 +5960,7 @@
 [165.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [165.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [165.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[165.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[165.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [165.45] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [165.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (39.293 --> 24.293) of 100 total.
 [165.45] [Guardian (#1)] [Target 1] {SpellID: 1238070} Crit for 649.202 damage (SpellSchool: 1). (Threat: 4187.351)
@@ -5979,7 +5979,7 @@
 [165.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [165.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [165.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[165.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[165.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [165.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [165.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (29.293 --> 19.293) of 100 total.
 [165.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -5997,7 +5997,7 @@
 [166.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [166.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [166.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[166.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[166.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [166.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [166.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [166.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -6020,7 +6020,7 @@
 [166.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [166.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [166.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m46.952381971s.
-[166.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[166.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [166.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [166.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (36.809 --> 21.809) of 100 total.
 [166.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 95.447 damage (SpellSchool: 1). (Threat: 684.037)
@@ -6072,13 +6072,13 @@
 [168.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [168.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [168.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[168.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[168.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [168.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [168.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (41.124 --> 31.124) of 100 total.
 [168.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [168.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 346.714 damage (SpellSchool: 1). (Threat: 1304.510)
 [168.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m48.452381972s.
-[168.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[168.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [168.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [168.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (31.124 --> 16.124) of 100 total.
 [168.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Crit for 230.722 damage (SpellSchool: 1). (Threat: 1653.511)
@@ -6091,7 +6091,7 @@
 [168.60] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [168.63] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [168.70] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[168.70] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[168.70] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [168.70] [Guardian (#1)] Completed cast {SpellID: 9881}
 [168.72] [Guardian (#1)] Gained 478.189 health from {OtherID: 12} (6107.937 --> 6145.650) of 6146 total.
 [168.72] [Guardian (#1)] Aura refreshed: {OtherID: 12}
@@ -6126,7 +6126,7 @@
 [169.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [169.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [169.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[169.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[169.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [169.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [169.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (21.124 --> 6.124) of 100 total.
 [169.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 115.373 damage (SpellSchool: 1). (Threat: 826.838)
@@ -6162,7 +6162,7 @@
 [170.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [170.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [170.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[170.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[170.95] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [170.95] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [170.95] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (27.467 --> 17.467) of 100 total.
 [170.95] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -6179,7 +6179,7 @@
 [171.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [171.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [171.45] [Guardian (#1)] Queueing up {SpellID: 1238070} to cast at 2m51.452381973s.
-[171.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[171.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [171.45] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [171.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1238070} (17.467 --> 2.467) of 100 total.
 [171.45] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 264.417 damage (SpellSchool: 1). (Threat: 1705.492)
@@ -6209,7 +6209,7 @@
 [172.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [172.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [172.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[172.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[172.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [172.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [172.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [172.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -6231,7 +6231,7 @@
 [172.83] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [172.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [172.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[172.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[172.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [172.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [172.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (35.131 --> 20.131) of 100 total.
 [172.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 111.124 damage (SpellSchool: 1). (Threat: 796.386)
@@ -6245,7 +6245,7 @@
 [173.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [173.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [173.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[173.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[173.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [173.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [173.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (20.131 --> 10.131) of 100 total.
 [173.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
@@ -6284,7 +6284,7 @@
 [174.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [174.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [174.45] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m54.452381974s.
-[174.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[174.45] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [174.45] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [174.45] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (31.198 --> 16.198) of 100 total.
 [174.45] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 109.417 damage (SpellSchool: 1). (Threat: 784.157)
@@ -6330,7 +6330,7 @@
 [175.95] [Guardian (#1)] [Target 1] {OtherID: 3, Tag: 14} Crit for 352.124 damage (SpellSchool: 1). (Threat: 757.066)
 [175.95] [Guardian (#1)] Gained 22.500 rage from {OtherID: 3, Tag: 14} (16.198 --> 38.698) of 100 total.
 [175.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m55.952381975s.
-[175.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[175.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [175.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [175.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (38.698 --> 23.698) of 100 total.
 [175.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 106.880 damage (SpellSchool: 1). (Threat: 765.971)
@@ -6343,7 +6343,7 @@
 [176.10] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [176.13] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [176.20] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
-[176.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[176.20] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [176.20] [Guardian (#1)] Completed cast {SpellID: 9881}
 [176.23] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [176.25] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -6375,7 +6375,7 @@
 [177.33] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [177.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [177.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[177.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.4
+[177.45] [Guardian (#1)] Casting {SpellID: 1238070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17
 [177.45] [Guardian (#1)] Completed cast {SpellID: 1238070}
 [177.45] [Guardian (#1)] [Target 1] {SpellID: 1238070} Hit for 259.547 damage (SpellSchool: 1). (Threat: 1674.080)
 [177.45] [Guardian (#1)] Aura faded: {SpellID: 16870}
@@ -6412,12 +6412,12 @@
 [178.39] [Guardian (#1)] Aura refreshed: {OtherID: 12}
 [178.40] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [178.43] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
-[178.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[178.45] [Guardian (#1)] Casting {SpellID: 9881, Tag: 1} (Cost = 10.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [178.45] [Guardian (#1)] Completed cast {SpellID: 9881, Tag: 1}
 [178.45] [Guardian (#1)] Spent 10.000 rage from {SpellID: 9881, Tag: 1} (59.911 --> 49.911) of 100 total.
 [178.45] [Guardian (#1)] Aura faded: {SpellID: 9881, Tag: 1}
 [178.45] [Guardian (#1)] [Target 1] {SpellID: 9881, Tag: 1} Hit for 322.446 damage (SpellSchool: 1). (Threat: 1213.202)
-[178.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 17 > group 3.7
+[178.45] [Guardian (#1)] Casting {SpellID: 9881} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s) APL: priority 19
 [178.45] [Guardian (#1)] Completed cast {SpellID: 9881}
 [178.50] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [178.50] [Guardian (#1)] Aura gained: {SpellID: 9881, Tag: 1}
@@ -6434,7 +6434,7 @@
 [178.90] [Guardian (#1)] Gained 2.025 mana from {OtherID: 2, Tag: 2} (2524.000 --> 2524.000) of 2524 total.
 [178.93] [Guardian (#1)] Gained 0.000 energy from {OtherID: 5} (100.000 --> 100.000) of 100 total.
 [178.95] [Guardian (#1)] Queueing up {SpellID: 1235827} to cast at 2m58.952381976s.
-[178.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 17 > group 3.6
+[178.95] [Guardian (#1)] Casting {SpellID: 1235827} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 18
 [178.95] [Guardian (#1)] Completed cast {SpellID: 1235827}
 [178.95] [Guardian (#1)] Spent 15.000 rage from {SpellID: 1235827} (49.911 --> 34.911) of 100 total.
 [178.95] [Guardian (#1)] [Target 1] {SpellID: 414647} Hit for 97.629 damage (SpellSchool: 1). (Threat: 699.676)
