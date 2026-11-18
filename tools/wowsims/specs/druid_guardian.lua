@@ -11,7 +11,8 @@
 -- every enemy count (Enrage, Faerie Fire, Demoralizing Roar, Primal Bite, Lacerate, Maul behind the movement gate): no
 -- 2/3-target groups and no Swipe at all, no pre-pull Furor Bear Form shift (the pre-pull Enrage stays), no pre-pull
 -- 3-target Maul (CN21's line: gone). Talents and gear unchanged; the log's casts are the old pin's, in time.
--- Replay (e4ef929e54, `procs { ["9881:0"] = true }`: Maul's untagged Casting lines are wowsims's queue at each swing):
+-- Replay (e4ef929e54; the same at ab0f00e4fc, identical casts, 0.574 (66/115); `procs { ["9881:0"] = true }`: Maul's
+-- untagged Casting lines are wowsims's queue at each swing):
 -- the kit has no rage-from-damage-taken rule (`taken`: CN7's hook, a named gap), so the belief sees only the bear's own
 -- rage (white swings, Primal Fury, Enrage): decisions on-GCD 0.574 (115). NAMED GAP (owner ruling 2026-11-07, extended
 -- to this pin by the controller, L1319): the shipped kit has no rage from hits taken (CN7; the belief cannot read hit
