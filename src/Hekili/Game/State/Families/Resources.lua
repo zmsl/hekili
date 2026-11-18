@@ -539,7 +539,7 @@ end)
 -- gained at the swing) (its application after it, or its expiry at or before it). Allocates nothing.
 local function perSwing(r, hand, main, off, at)
     local j, t = R.swingAura[r], at or I.clock
-    if j < 0 or j > 0 and (I.auras.exp0[1][j] <= t or I.auras.applied[1][j] > t) then
+    if j < 0 or j > 0 and not I.AuraUpAt(1, j, t) then
         return 0 -- unit 1 is always "player" (Tracked.lua's def.units)
     end
     local v = main[r]
@@ -610,7 +610,7 @@ local function coefAt(r, t, inside)
     for i = 1, M.n do
         if M.slot[i] == r then
             local j = M.aura[i]
-            if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then -- unit 1 is always "player"
+            if I.AuraUpAt(1, j, t) then -- unit 1 is always "player"
                 f, m, s, p = f * M.mult[i], m * M.spirit[i], s + M.share[i], p * M.mp5Mult[i]
                 if M.energize[i] then
                     kE = kE + M.mp5[i]
@@ -647,7 +647,7 @@ local function readAt(r, t)
     for i = 1, M.n do
         if M.slot[i] == r then
             local j = M.aura[i]
-            if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then
+            if I.AuraUpAt(1, j, t) then
                 f, k = f * M.mult[i], k + M.mp5[i]
                 mixed = mixed or M.spirit[i] ~= 1 or M.mp5Mult[i] ~= 1
                 s = s + (M.spirit[i] == 1 and M.share[i] or 0)
@@ -1696,11 +1696,8 @@ I.On(Obs.PlayerHit, function(o, t)
     for r = 1, R.n do
         local f = R.taken[r]
         if f then
-            I.NowAt(t)
-            local ok, gain, width = pcall(f, I.HitName[kind], o.b, o.c)
-            if not ok then
-                I.nowErrors, I.nowError = I.nowErrors + 1, gain
-            elseif type(gain) == "number" and gain > 0 then
+            local ok, gain, width = I.Guard(f, t, I.HitName[kind], o.b, o.c)
+            if ok and type(gain) == "number" and gain > 0 then
                 width = type(width) == "number" and width > 0 and width or 0
                 local max = R.max[r]
                 R.est0[r] = clamp(R.est0[r] + gain, max)

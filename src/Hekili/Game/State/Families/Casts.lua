@@ -97,14 +97,14 @@ function I.Eval(f, t, retry)
     end
     local env = getfenv(f)
     setfenv(f, I.nowCtx)
-    I.NowAt(t)
-    local ok, v = pcall(f)
+    local n, why = I.nowErrors, I.nowError
+    local ok, v = I.Guard(f, t)
     setfenv(f, env)
     if not ok then
-        if not raised then
-            failed[f] = true
-            I.nowErrors, I.nowError = (I.nowErrors or 0) + 1, v
+        if raised then -- a retry's raise is the fault counted at its first
+            I.nowErrors, I.nowError = n, why
         end
+        failed[f] = true
         return nil, false
     end
     if raised then
@@ -139,7 +139,7 @@ local function gcdMult(a, t)
     local f = 1
     for k = 1, GM.n do
         local j, sc = GM.aura[k], GM.scope[k]
-        if (not sc or sc[a]) and I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then -- unit 1: "player"
+        if (not sc or sc[a]) and I.AuraUpAt(1, j, t) then -- unit 1: "player"
             f = f * GM.mult[k]
         end
     end

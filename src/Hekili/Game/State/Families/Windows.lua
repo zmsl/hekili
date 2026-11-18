@@ -98,10 +98,8 @@ local function length(w, t)
     if not f then
         return W.dur[w]
     end
-    I.NowAt(t)
-    local ok, v = pcall(f)
+    local ok, v = I.Guard(f, t)
     if not ok then
-        I.nowErrors, I.nowError = I.nowErrors + 1, v
         return 0
     end
     local api = I.api
