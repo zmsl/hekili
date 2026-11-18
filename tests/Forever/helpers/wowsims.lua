@@ -481,13 +481,13 @@ M.READY = {
     -- 36 -> 10 (early 1, late 9), the median of the ones left 0.190 -> 0.280. The gain comes through a harness-only
     -- path: in game UNIT_POWER_FREQUENT sets energy's last_tick, so P1 reaches only mana there; the replay's energy pool
     -- sits at last_tick 0 (review M5; harness follow-up: the world fires the energy power event)
-    rogue_assassination = { 0.28, 36 }, -- 0.280, 10
+    rogue_assassination = { 0.20, 14 }, -- 0.28, 36 -> 0.20, 14 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) re-times the log, the pack is logically unchanged; 78 timed, 14 real (all late; cost class)
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)
     -- { 0.24, 20 } -> { 0.24, 21 } R42 (the replay answers fight_remains from the log): only rows that were
     -- "never" moved, now timed (176.62 eviscerate late 0.19 s)
-    rogue_combat = { 0.24, 21 }, -- 0.240, 21
-    rogue_subtlety = { 0.17, 40 }, -- 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
+    rogue_combat = { 0, 0 }, -- 0.24, 21 -> 0, 0 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) and the dropped 4-point Eviscerate branch re-time the log; 104 timed, no real row
+    rogue_subtlety = { 0.07, 5 }, -- 0.17, 40 -> 0.07, 5 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) and the Hemorrhage energy term re-time the log (Death Mark shuts Eviscerate); 98 timed, 5 real late (hemorrhage 3, death_mark 2); 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
     -- { 0.21, 7 } -> { 0.71, 16 } re-pin e2842f0a78 (lane 15, R6): the build's own list (Magma and Windfury Totems,
     -- Fire Nova the filler at 375, Skyborne); 85 decisions, 16 real (10 early, 6 late); by class cooldown 15, cost 9, gcd 43
     -- { 0.71, 16 } -> { 0.38, 34 } 0.7 re-pin (e5a9cd2a2dfc, lane shaman, R6, owner ruling option b, reversible): 92

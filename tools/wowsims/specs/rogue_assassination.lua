@@ -33,6 +33,11 @@
 -- Eviscerate at 3 points; remainingTime reads 3600, gap AN, API); venom -> slice_and_dice 80.69: wowsims casts Venom at
 -- exactly 25 energy after the unseen 27788 at 79.25 (belief lo 13.1, truth 25). Without the three fight-end misses 0.949.
 -- Regen/pool: the log's 10 a tick and 100 max; kit and world unchanged (not refreshed, lanes 10-12 precedent).
+-- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9): two APL lines change (Eviscerate: no 4-point Slice and Dice branch, waits for Rupture >= 3 s
+-- under Serrated Blades; Hemorrhage: + energy >= 75), four gear slots (Darkmantle out: the darkmantle-set-512 oracle patch is inert),
+-- Poised's attribute word; no recipe key changes. Strict sequences (prev.1 chains) as before: no rule 14 in this build.
+-- For this build the pack is logically unchanged: the dropped branch is covered by `combo_points.current=4&action.mutilate.known`,
+-- no Serrated Blades, no Hemorrhage. Its log moves by the gear change (four slots, Darkmantle 27788 rows 8 -> 0).
 return {
     class = "ROGUE",
     pack = "Assassination (wowsims.com)",

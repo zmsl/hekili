@@ -245,6 +245,10 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9; R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort
+    -- 0 / 0 / 0, heldReady 130 / 142 / 126): unchanged. The pack is logically unchanged for this build (the dropped branch is
+    -- covered by `combo_points.current=4&action.mutilate.known`) and the loop world reads no gear: three-tree A/B on seeds
+    -- 21-40 (base + mana-09 without the flip / the flip alone / the tip) 142 / 142 / 142, so no re-pin move
     ["Assassination"] = { flicker = 0, retracted = 0, heldReady = 159 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
@@ -255,13 +259,26 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.03 / 0.03 / 0.03, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 156 / 153 / 152):
     -- flicker 0.05 -> 0.03, heldReady 356 -> 156
-    ["Combat"] = { flicker = 0.03, retracted = 0, heldReady = 156 }, -- 0.15 / 0 / 0.02, 0
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9; wowsims 41976091ed; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0,
+    -- readyShort 0 / 0 / 0, heldReady 155 / 160 / 152): flicker 0.03 -> 0.01 (the measured worst + 0.01), heldReady 156 -> 160 (the
+    -- worst set). Cause: only the dropped 4-point Eviscerate branch acts for this build (no Serrated Blades, no Hemorrhage); A/B
+    -- seeds 21-40 without the flip / the flip alone / the tip 139 / 160 / 160, 14 of 20 fights +1..+4 (4 at -1..-2): every held tick on both
+    -- sides is the cost-lag class (energy.lo under the cost, truth at it, wait ~0.1 s); held Sinister Strike 113 -> 142, Eviscerate
+    -- 13 -> 6: finishing at 5 points takes one more builder a cycle, so more Sinister Strike cost crossings
+    ["Combat"] = { flicker = 0.01, retracted = 0, heldReady = 160 }, -- 0.15 / 0 / 0.02, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 382 / 364 / 363):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.03 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 201 / 192 / 168):
     -- flicker 0 -> 0.03, heldReady 382 -> 201
-    ["Subtlety"] = { flicker = 0.03, retracted = 0, heldReady = 201 }, -- 0.02 / 0 / 0, 0 (gap CE)
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (0.9; wowsims 41976091ed; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0,
+    -- readyShort 0 / 0 / 0, heldReady 194 / 239 / 197): flicker 0.03 -> 0.01; heldReady 201 -> 239 (the worst set, seed-noise rule, ledger L1245).
+    -- Only the Hemorrhage term acts for this build (Death Mark shuts Eviscerate). A/B seeds 21-40 without the flip / the flip
+    -- alone / the tip 197 / 239 / 239: seed 33 alone 8 -> 39, the other 19 fights +11 net. Seed 33 (traced): a Rupture pressed
+    -- at t 23.0 is avoided (the world keeps the points, applies no debuff), our belief keeps the modelled Rupture for its whole
+    -- duration (the known avoided-debuff class, ledger L317), so from t 34.6 at 5 points our Rupture waits 6.4 s while the
+    -- oracle's (raw debuff read) shows it ready: 27 held ticks; the flip only re-times that avoid into a fight; seeds 1-20 (this gate) read 194
+    ["Subtlety"] = { flicker = 0.01, retracted = 0, heldReady = 239 }, -- 0.02 / 0 / 0, 0 (gap CE)
     -- 0.1 -> 0.2 (Task 5b, gap BV: the world takes the export's Resourcefulness 2/2, so wowsims's 60% cut makes the
     -- strikes cheap; seeds 1-20 / 21-40 / 41-60: 0.20 / 0.02 / 0.07, was 0.05 / 0 / 0; oracle 2.18 / 1.68 / 2.26, was 0):
     -- no longer mana-gated, Raptor Strike comes up on its cooldown end beside Wing Clip or Strider Kick, and in its last

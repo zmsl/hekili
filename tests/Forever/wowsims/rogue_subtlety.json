@@ -23,7 +23,7 @@
             "class":"ClassRogue",
             "equipment":{
               "items":[{
-                  "id":22005,
+                  "id":11735,
                   "enchant":1508
                 },{
                   "id":22150
@@ -33,10 +33,10 @@
                   "id":21187,
                   "enchant":7667
                 },{
-                  "id":22009,
+                  "id":13944,
                   "enchant":7645
                 },{
-                  "id":22004,
+                  "id":22204,
                   "enchant":7656
                 },{
                   "id":21278,
@@ -44,7 +44,7 @@
                 },{
                   "id":272395
                 },{
-                  "id":22007,
+                  "id":15062,
                   "enchant":1508
                 },{
                   "id":18506,
@@ -1149,52 +1149,19 @@
                                           }
                                         }
                                       },{
-                                        "spellIsKnown":{
-                                          "spellId":{
-                                            "spellId":1241584,
-                                            "rank":3
-                                          }
-                                        }
-                                      }]
-                                  }
-                                },{
-                                  "and":{
-                                    "vals":[{
-                                        "cmp":{
-                                          "op":"OpGe",
-                                          "rhs":{
-                                            "const":{
-                                              "val":"4"
-                                            }
-                                          },
-                                          "lhs":{
-                                            "currentComboPoints":{
-                                            }
-                                          }
-                                        }
-                                      },{
-                                        "cmp":{
-                                          "op":"OpLe",
-                                          "rhs":{
-                                            "const":{
-                                              "val":"6s"
-                                            }
-                                          },
-                                          "lhs":{
-                                            "auraRemainingTime":{
-                                              "auraId":{
-                                                "spellId":6774
+                                        "or":{
+                                          "vals":[{
+                                              "spellIsKnown":{
+                                                "spellId":{
+                                                  "spellId":1241584,
+                                                  "rank":3
+                                                }
                                               }
-                                            }
-                                          }
-                                        }
-                                      },{
-                                        "not":{
-                                          "val":{
-                                            "variableRef":{
-                                              "name":"SnD Fall Imminent"
-                                            }
-                                          }
+                                            },{
+                                              "variableRef":{
+                                                "name":"Use Backstab"
+                                              }
+                                            }]
                                         }
                                       }]
                                   }
@@ -1239,6 +1206,37 @@
                                   }
                                 }
                               }
+                            }
+                          },{
+                            "or":{
+                              "vals":[{
+                                  "not":{
+                                    "val":{
+                                      "talentIsKnown":{
+                                        "talentId":{
+                                          "spellId":14171,
+                                          "rank":1
+                                        }
+                                      }
+                                    }
+                                  }
+                                },{
+                                  "cmp":{
+                                    "op":"OpGe",
+                                    "rhs":{
+                                      "const":{
+                                        "val":"3s"
+                                      }
+                                    },
+                                    "lhs":{
+                                      "dotRemainingTime":{
+                                        "spellId":{
+                                          "spellId":11275
+                                        }
+                                      }
+                                    }
+                                  }
+                                }]
                             }
                           }]
                       }
@@ -1639,6 +1637,10 @@
                                         }
                                       }
                                     }
+                                  }
+                                },{
+                                  "variableRef":{
+                                    "name":"In Danger of Energy Capping"
                                   }
                                 }]
                             }
