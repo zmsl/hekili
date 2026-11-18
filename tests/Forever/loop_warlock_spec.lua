@@ -52,30 +52,30 @@ describe("the Warlock loop worlds", function()
             -- the channels at their lengths and ticks
             local dl, ds = C.resolve("drain_life", H), C.resolve("drain_soul", H)
             assert.are.same({ 5, 1, 15, 3 }, { dl.channel.length, dl.channel.tick, ds.channel.length, ds.channel.tick })
-            -- a cast press: its top rank's cost and cast time on the true state (Bane 5/5 in every build; Cataclysm
-            -- 3/3 in Destruction's, 2/2 in SM Ruin's at the re-pin e2842f0a78)
+            -- a cast press: its top rank's cost and cast time on the true state (Bane 5/5 in every build but
+            -- Affliction's 35/11/5; Cataclysm 3/3 in Destruction's, 2/2 in SM Ruin's at the re-pin e2842f0a78)
             local p = C.resolve("shadow_bolt", H)
             local cost = ({ Destruction = 342, SMRuin = 380 * (1 - 0.06) })[name] or 380
-            assert.are.same({ cost, 2.5, 0 }, { p.cost, p.cast, p.cooldown })
+            assert.are.same({ cost, name == "Affliction" and 3 or 2.5, 0 }, { p.cost, p.cast, p.cooldown })
             assert.is_true(#C.usable(H) > 0)
             assert.are.same({}, H.errors)
         end)
     end
 
-    -- The presses in the world: Corruption's cast bar and its ticks on the target, then Wrack's channel and its debuff.
-    it("Affliction: casts Corruption as a cast bar, ticks it, and channels Wrack with its debuff", function()
+    -- The presses in the world: Corruption's instant cast and its ticks on the target, then Wrack's channel and its
+    -- debuff.
+    it("Affliction: casts Corruption instantly, ticks it, and channels Wrack with its debuff", function()
         local C = ww.Affliction
         local H = headless.new({ character = C.character() })
         local W = scenarios.world(setmetatable({ fsr = C.WORLD.fsr, power = 5000 }, { __index = C.WORLD }), 1)
         local us = W.ents[1]
         W.t = 1
         local cor = C.resolve("corruption", H)
-        assert.are.same({ 340, 0.8 }, { cor.cost, math.floor(cor.cast * 1000 + 0.5) / 1000 }) -- Improved Corruption 3/3 of 5: 2 - 1.2
+        assert.are.same({ 340, 0 }, { cor.cost, cor.cast }) -- Improved Corruption 5/5: 2 - 2.0
         assert.is_true(W.press(us, "corruption", cor))
-        W.run(1.8)
         local cast = false
         for _, ev in ipairs(W.truth) do
-            cast = cast or (ev.kind == "cast" and ev.src == us and math.abs(ev.t - 1.8) < 1e-9)
+            cast = cast or (ev.kind == "cast" and ev.src == us and math.abs(ev.t - 1) < 1e-9)
         end
         assert.is_true(cast)
         local landed = us.target.auras[172] ~= nil -- a missed one (the spell table) leaves none
@@ -101,6 +101,37 @@ describe("the Warlock loop worlds", function()
         assert.are.same({ 6, true }, { ticks, stop })
     end)
 
+    -- Wrack at e4ef929e54 (wowsims wrack.go): while the channel runs, our Corruption on the target also ticks on the half
+    -- points of its own 3 s grid; the expiry stays. Corruption is instant (Improved Corruption 5/5): pressed off the
+    -- whole seconds Wrack's own ticks fall on.
+    it("Affliction: under Wrack's channel, Corruption also ticks on its half points", function()
+        local C = ww.Affliction
+        local H = headless.new({ character = C.character() })
+        local W = scenarios.world(setmetatable({ fsr = C.WORLD.fsr, power = 5000 }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1.2
+        assert.is_true(W.press(us, "corruption", C.resolve("corruption", H)))
+        W.run(3)
+        assert.is_truthy(us.target.auras[172], "the seed lands Corruption")
+        local landed
+        for _, ev in ipairs(W.truth) do
+            landed = landed or (ev.kind == "cast" and ev.src == us and ev.t) -- the instant cast: the landing
+        end
+        assert.are.equal(1.2, landed)
+        local n0 = #W.truth
+        assert.is_true(W.press(us, "wrack", C.resolve("wrack", H))) -- channels 3 .. 9
+        W.run(9.5)
+        local at = {}
+        for i = n0 + 1, #W.truth do
+            local ev = W.truth[i]
+            if ev.kind == "tick" and ev.src == us and math.abs(ev.t - math.floor(ev.t + 0.5)) > 1e-6 then
+                at[#at + 1] = math.floor((ev.t - landed) * 10 + 0.5) / 10 -- Wrack's own ticks fall on whole seconds
+            end
+        end
+        -- 4.5 and 7.5 the channel's half points (1.5, at 2.7, falls before the channel), 3 and 6 the normal grid
+        assert.are.same({ 3, 4.5, 6, 7.5 }, at)
+    end)
+
     -- Fix 27's world: the Soul Shards in the bags (wowsims's 32), the demon and its mana, the Spirit Life Tap reads.
     it(
         "declares the shards, the demon and Spirit; the shard spells take a reagent, the summons and Sacrifice the pet",
@@ -108,14 +139,26 @@ describe("the Warlock loop worlds", function()
             for _, name in ipairs({ "Affliction", "Demonology", "Destruction" }) do
                 local C = ww[name]
                 assert.are.same({ [6265] = 32 }, C.WORLD.bags, name)
-                -- the re-pin's Human builds (Demonology, Destruction) read Spirit 255; Affliction (still Orc) 221
-                assert.are.same({ [5] = name == "Affliction" and 221 or 255 }, C.WORLD.stats, name)
+                -- the re-pin's Human builds (Demonology, Destruction) read Spirit 255; Affliction (Orc) 235
+                assert.are.same({ [5] = name == "Affliction" and 235 or 255 }, C.WORLD.stats, name)
                 local pet = C.WORLD.pet
-                -- wowsims's logs at 60: the Imp 2180 mana, 85.2 mp5; the Succubus 1871, 28.4 mp5
-                local want = name == "Demonology" and { 0, 2180, 2180, 17.04, 2, true }
-                    or { 0, 1871, 1871, 5.68, 2, true }
+                -- wowsims's logs at 60: the Imp 2180 mana, 85.2 mp5; the Succubus 1871, 28.4 mp5; Affliction's Imp is
+                -- sacrificed (no demon out)
+                local want = ({
+                    Affliction = { 0, 2180, 2180, 17.04, 2, false },
+                    Demonology = { 0, 2180, 2180, 17.04, 2, true },
+                })[name] or { 0, 1871, 1871, 5.68, 2, true }
                 assert.are.same(want, { pet.pt, pet.max, pet.power, pet.regen, pet.tick, pet.up }, name)
             end
+            -- Affliction: the sacrificed Imp's Burning Wish from the pull, no demon to sacrifice
+            local A = ww.Affliction
+            local HA = headless.new({ character = A.character() })
+            local WA = scenarios.world(setmetatable({ power = 5000 }, { __index = A.WORLD }), 1)
+            local ua = WA.ents[1]
+            WA.run(1)
+            assert.are.same({ false, true }, { ua.pet.up, ua.auras[18789] ~= nil })
+            WA.t = WA.t + 0.1
+            assert.is_false(WA.press(ua, "demonic_sacrifice", A.resolve("demonic_sacrifice", HA)))
             local C = ww.Destruction
             local H = headless.new({ character = C.character() })
             for _, key in ipairs({ "shadowburn", "soul_fire", "summon_succubus", "summon_felhunter" }) do

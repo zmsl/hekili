@@ -16,8 +16,9 @@
 -- the regen the five builds' logs show), and the channels (Drain Life 5 s a tick a second, Drain Soul 15 s every 3 s,
 -- Wrack 6 s a tick a second with its debuff, Rain of Fire 8 s every 2 s, Hellfire 15 s a tick a second). Central fix
 -- 27's harness: the Soul Shards in the bags (`WORLD.bags`, wowsims's 32; the shard spells' `reagent`, Shadow and
--- Flame's refund), the demon (`WORLD.pet`: the build's demon out from the start, as wowsims; its mana and regen from
--- wowsims's logs; the summons and Demonic Sacrifice's `pet`, the demon's own Firebolt or Lash of Pain spending its
+-- Flame's refund), the demon (`WORLD.pet`: the build's demon out from the start, as wowsims, none in Affliction's;
+-- its mana and regen from wowsims's logs; the summons and Demonic Sacrifice's `pet`, the demon's own Firebolt or Lash
+-- of Pain spending its
 -- mana; Demonic Sacrifice's effects, the build's sacrificed demon's from the pull) and the Spirit Life Tap reads
 -- (`WORLD.stats`). The harness has one pet of any kind: summoning a different demon refills it to the build demon's
 -- pool. Damage amounts are UNMEASURED.
@@ -33,13 +34,16 @@ M.CLIENT_SPEC, M.CLASS_ID = 1490, 9 -- the client's Warlock pseudo-spec (assumed
 local MANA = 0 -- Enum.PowerType
 local BASE = 1373 -- base mana at 60 (wowsims's ExtraClassBaseStats): a percent-of-base cost's base
 local GCD = { spell = 1.5, off = 0 }
--- The regen a second, outside the five-second rule and inside it (wowsims's logs at 60, the preraid gear: 4.428 and
--- 1.04 a 0.1 s tick): the spirit part (paused inside it) and the mp5 part. UNMEASURED in game.
-local FSR = { 33.88, 10.4 }
-local SPIRIT = 221 -- the builds' Spirit at 60 (wowsims's logs: Life Tap 774 = (424 + 221) x 1.2)
+-- The regen a second, outside the five-second rule and inside it: the spirit part (paused inside it) and the mp5 part.
+-- Affliction's Orc build at e4ef929e54 (the preraid gear): Spirit 235 = Life Tap 790.8 / 1.2 - 424 (2/2 Improved Life
+-- Tap); the spirit part 6.25 + 235 / 8 = 35.625 (wowsims mana.go's default curve, which gives the Human logs' 38.13 at
+-- 255); the mp5 part the log's 1.520 a 0.1 s tick inside the rule (1810 of them). The log never leaves the rule, so
+-- the spirit part is derived, not logged. UNMEASURED in game.
+local FSR = { 35.625, 15.2 }
+local SPIRIT = 235
 -- Re-pin e2842f0a78: the four Human builds (Demonology, Shadow Brand, Destruction, SM Ruin; the new preraid gear) log
 -- 1.52 a 0.1 s tick inside the rule and 5.333 outside it, and Life Tap 679 = 424 + 255 (814.8 x 1.2 at 2/2 Improved
--- Life Tap); Affliction (still Orc) keeps the values above. A pack's `fsr` / `spirit` override them.
+-- Life Tap); Affliction (Orc) keeps the values above. A pack's `fsr` / `spirit` override them.
 local FSR_HUMAN, SPIRIT_HUMAN = { 38.13, 15.2 }, 255
 local SOUL_SHARD = 6265 -- the item (ItemSparse); wowsims's builds carry 32 (classOptions.soulShards)
 -- The demons the builds summon: their mana and regen a second at 60 (wowsims's logs, the preraid gear: "Pet stats"
@@ -200,21 +204,25 @@ local BASELINE = {
 
 -- The packs' worlds: `pack` the wowsims.com pack it runs, `spec` its spec id, `kit` the talent
 -- abilities the build adds to BASELINE, `talents` the build's ({ [rank-1 spell] = rank }, its talentsString through
--- wowsims's tree), `max` the pool (the build's log), `demon` the build's summon (classOptions.summon: the pet's mana),
+-- wowsims's tree), `max` the pool (the build's log), `demon` the build's summon (classOptions.summon: the pet's mana;
+-- nil: none out),
 -- `petMax` the demon's pool where the build's talents raise it (the log's "Pet stats"), `sacrificed` its sacrificed
 -- demon (classOptions.sacrificedDemon), `uptime` the debuffs reported.
 local PACKS = {
-    -- aff_wrack.build.json 25300020135201351--0550005003 (33/0/18)
+    -- aff_wrack.build.json 25500020135201351-0050203001-05 (35/11/5; the request's talents, the log's header at
+    -- e4ef929e54): Improved Corruption 5/5 (an instant Corruption), no Bane (Shadow Bolt 3 s); no demon out, the Imp
+    -- sacrificed (classOptions.sacrificedDemon: the log's Burning Wish 18789 from 0.00, "No pet summoned" for all
+    -- four); the pool the log's 6277
     Affliction = {
         pack = "Affliction (wowsims.com)",
         spec = 100091,
-        max = 5353,
-        demon = "succubus",
-        kit = { "siphon_life", "wrack", "amplify_curse" },
+        max = 6277,
+        sacrificed = "imp",
+        kit = { "siphon_life", "wrack", "amplify_curse", "demonic_sacrifice" },
         talents = {
             [18182] = 2, -- Improved Life Tap
             [18174] = 5, -- Suppression
-            [17810] = 3, -- Improved Corruption
+            [17810] = 5, -- Improved Corruption
             [18827] = 2, -- Improved Bane of Agony
             [18288] = 1, -- Amplify Curse
             [427712] = 3, -- Pandemic
@@ -224,10 +232,11 @@ local PACKS = {
             [17804] = 3, -- Soul Siphon
             [18271] = 5, -- Shadow Mastery
             [1316697] = 1, -- Wrack
+            [18697] = 5, -- Demonic Embrace
+            [1235316] = 2, -- Demonic Aegis
+            [18731] = 3, -- Fel Vitality
+            [18788] = 1, -- Demonic Sacrifice
             [17793] = 5, -- Improved Shadow Bolt
-            [17788] = 5, -- Bane
-            [17959] = 5, -- Ruin
-            [17927] = 3, -- Agonizing Flames
         },
         uptime = { "corruption", "bane_of_agony" },
     },
@@ -466,8 +475,13 @@ local function tick(W, e, dst, school, after)
     end
 end
 
+-- Wrack (wowsims wrack.go at e4ef929e54): while our channel runs on the target, our Corruption, Siphon Life and Bane
+-- of Agony there also tick on the half points of their own grid, each tick full, the expiry unchanged.
+local WRACK, WRACKED = 1316697, { corruption = true, siphon_life = true, bane_of_agony = true }
+
 -- A DoT's, Bane's or Curse's landing: the others of its group off the target, its ticks (each while this application
--- is the target's: a refresh or a removal ends them; the last lands at the expiry, as wowsims's), its aura on.
+-- is the target's: a refresh or a removal ends them; the last lands at the expiry, as wowsims's; under our Wrack the
+-- half points too), its aura on.
 local function dot(W, e, X, H, key)
     local d, v = DOT[key], e.target
     for _, other in ipairs(d[4] and GROUP[d[4]] or {}) do
@@ -478,14 +492,30 @@ local function dot(W, e, X, H, key)
     v.dots = v.dots or {}
     local live = {}
     v.dots[key] = live
+    local after = key == "corruption"
+            and function() -- Nightfall rolls on every Corruption tick, a half point's too
+                nightfall(W, e, X, H)
+            end
+        or nil
     for n = 1, d[2] and math.floor(d[1] / d[2] + 1e-9) or 0 do
         W.at(W.t + n * d[2], function()
             if v.dots[key] == live then
-                tick(W, e, v, d[3], key == "corruption" and function()
-                    nightfall(W, e, X, H)
-                end)
+                tick(W, e, v, d[3], after)
             end
         end)
+        if WRACKED[key] then
+            -- shortcut: a half point at the channel's exact start or end instant follows the world's event order
+            -- (wowsims ticks both; its end is unmeasured, wrack.go's TODO); measure it if a count there ever matters.
+            -- shortcut: the half points are gated on our current target, where wowsims reads the channel's aura on the
+            -- DoT's unit; the same on one target (every loop), model the channel's own unit if a multi-target world
+            -- retargets during Wrack
+            W.at(W.t + (n - 0.5) * d[2], function()
+                local ch = e.channel
+                if v.dots[key] == live and ch and ch.spell == WRACK and e.target == v then
+                    tick(W, e, v, d[3], after)
+                end
+            end)
+        end
     end
     aura(W, X, v, key, 1, d[1])
 end
@@ -782,7 +812,7 @@ local function content(name)
         end
         demonCasts(W, us)
     end
-    local D = DEMON[P.demon]
+    local D = DEMON[P.demon or P.sacrificed] -- no demon out: the sacrificed one's pool, down until a summon
     C.WORLD = {
         level = 60,
         canParry = false, -- warlocks never parry (wowsims's CanParry)
@@ -795,7 +825,14 @@ local function content(name)
         script = hooks,
         bags = { [SOUL_SHARD] = 32 },
         -- the build's demon, out from the start with its mana full (wowsims)
-        pet = { pt = MANA, max = P.petMax or D.max, power = P.petMax or D.max, regen = D.regen, tick = 2, up = true },
+        pet = {
+            pt = MANA,
+            max = P.petMax or D.max,
+            power = P.petMax or D.max,
+            regen = D.regen,
+            tick = 2,
+            up = P.demon ~= nil,
+        },
         stats = { [5] = P.spirit or SPIRIT }, -- UnitStat(5)'s Spirit, Life Tap's
     }
 

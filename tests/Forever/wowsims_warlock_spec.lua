@@ -66,15 +66,26 @@ end
 --   Demonology 0.86 -> 0.87 (0.872, 117) and Destruction 0.89 -> 0.90 (0.908, 109): the pre-pull Soul Fire (the
 --   travel-time fold) is shown. Shadow Brand 0.71 (0.718) unchanged: its pre-pull Shadow Bolt is shown, the
 --   corruption pre-pull line after it is not (the hardcast runs into it); no decision moved.
+-- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9, R6, DECISIONS on-GCD; with mana-09 merged, which moves no Warlock cell;
+-- replay flicker 0.00/min in all five, oracle 0.00):
+--   Affliction 0.83 -> 0.93 (0.935, 62; 0.850 (60) on the same tree at the old log and pack): wowsims's new Wrack APL
+--   (202831a0a0: no Bane of Doom on one target, Agony and Amplify Curse no longer wait on Doom, the Cooldowns Wrack
+--   line gone, racials on the Amp Agony variables); top [wrack -> life_tap 3; siphon_life -> corruption 1].
+--   SM Ruin 0.78 -> 0.85 (0.851, 94), Demonology 0.87 -> 0.94 (0.940, 117), Destruction 0.90 -> 0.95 (0.954, 109),
+--   Shadow Brand 0.71 (0.718, 103) unchanged: each identical at the old log and pack on this tree (BASE run; the re-pin
+--   moves only the Weakness Analyzer's second use, an unscored item row); the rise predates this re-pin, not bisected;
+--   floor follows the measurement (R6). LIVE60 Destruction 0.4 -> 0.2 (worst idle 0.2 s at 60): identical at the old
+--   log and pack on this tree (BASE run); the fall predates this re-pin, not bisected; floor follows the measurement
+--   (R6).
 -- The replay flicker ceiling (per minute, the last column): plain flicker bars, 0 in all five, measured 0.00/min (oracle
 -- 0.00) at the re-pin e2842f0a78. They say nothing about Movement: Demonology and Shadow Brand replay with it ON (R8) but
 -- every replay is single-target and the Hellfire line needs active_enemies>=3.
 local PACKS = {
-    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.83, 0.2, 0 },
-    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.78, 0.2, 0 },
-    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.87, 0.2, 0 },
+    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.93, 0.2, 0 },
+    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.85, 0.2, 0 },
+    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.94, 0.2, 0 },
     { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.71, 0.2, 0 },
-    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.90, 0.4, 0 },
+    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.95, 0.2, 0 },
 }
 
 describe("the Warlock wowsims.com packs #slow #wowsims", function()

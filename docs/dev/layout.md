@@ -518,19 +518,20 @@ Soul Fire on Decimation at tier 1). The packs are Affliction, SM Ruin (Afflictio
 (Demonology's second) and Destruction (wowsims.com), Task 13 of the wowsims packs plan, from wowsims/forever's five
 Warlock builds; their replay and leveling gates `tests/Forever/wowsims_warlock_spec.lua`. The worlds
 (`tests/Forever/helpers/warlock_world.lua`) cast at 25 yd with cast bars and channels, the build's demon out from the
-pull (its mana and regen from the logs), the Soul Shards in the bags; the pools are the logs' (5353, Demonology's 6156).
+pull (its mana and regen from the logs; Affliction's Imp sacrificed, none out), the Soul Shards in the bags; the pools
+are the logs' (Affliction 6277, Demonology 6328).
 Flicker floors (pack_gate `FLICKER`, 20 fights): Affliction 0 (0 / 0 / 0 over seeds 1-20 / 21-40 / 41-60, oracle 0;
 0.4 -> 0 on the mana-regen plan's Task 10: Wrack's 6 s paid channel holds the casting rate to its end), SM Ruin 0.3,
 Demonology 0.1, Shadow Brand 0.1, Destruction 0.4 (their measured values beside them in pack_gate), retracted 0 each.
-The lines (the mana regen plan's gate on 0ce56d64f):
+The lines (the mana regen plan's gate on 0ce56d64f; Affliction's on wowsims's e4ef929e54 build):
 
 ```
-Affliction solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.6 (oracle 3.6, unmatched 0.0)], episodes 1.00/min; dps A/B 1.000; ... [seeds 1-3]
+Affliction solo: fights=3 agreement 0.997 (2703 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ... [seeds 1-3]
 SM Ruin solo: fights=3 agreement 0.992 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.976; ... [seeds 1-3]
 Demonology solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.4 (oracle 3.4, unmatched 0.0)], episodes 1.33/min; dps A/B 0.993; ... [seeds 1-3]
 Shadow Brand solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.4 (oracle 3.4, unmatched 0.0)], episodes 1.11/min; dps A/B 1.000; ... [seeds 1-3]
 Destruction solo: fights=3 agreement 0.980 (2706 ticks); react median 0 p90 0 never 0.003; refused per 100 [casting 12.2 (oracle 12.1, unmatched 0.6)], episodes 4.77/min; dps A/B 1.028; ... [seeds 1-3]
-Affliction solo: fights=20 agreement 0.995 (18040 ticks); react median 0 p90 0 never 0.001; ready while short 0; held while ready 0; refused per 100 [casting 11.4 (oracle 11.1, unmatched 0.0)], episodes 2.44/min; dps A/B 0.991; ...
+Affliction solo: fights=20 agreement 0.995 (18020 ticks); react median 0 p90 0 never 0.001; ready while short 0; held while ready 0; refused per 100 [casting 0.8 (oracle 0.7, unmatched 0.0)], episodes 0.17/min; dps A/B 1.008; ...
 SM Ruin solo: fights=20 agreement 0.979 (18040 ticks); react median 0 p90 0 never 0.001; ready while short 0; held while ready 3; refused per 100 [], episodes 0.00/min; dps A/B 0.995; ...
 Demonology solo: fights=20 agreement 0.953 (18040 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 0; refused per 100 [casting 4.2 (oracle 4.2, unmatched 0.3)], episodes 1.63/min; dps A/B 1.002; ...
 Shadow Brand solo: fights=20 agreement 0.987 (18040 ticks); react median 0 p90 0 never 0.000; ready while short 0; held while ready 7; refused per 100 [casting 4.5 (oracle 4.1, unmatched 0.0)], episodes 1.48/min; dps A/B 0.995; ...
@@ -642,11 +643,11 @@ beside the number (DEVELOPMENT.md).
 | Frost (wowsims.com) | 0.93 | 0.23, 3 |
 | Shadow (wowsims.com) | 1.00 | 1.50, 36 |
 | Smite (wowsims.com) | 0.93 | 0.70, 11 |
-| Affliction (wowsims.com) | 0.83 | 0.00, 0 |
-| SM Ruin (wowsims.com) | 0.78 | 0.20, 8 |
-| Demonology (wowsims.com) | 0.87 | 0.00, 0 |
+| Affliction (wowsims.com) | 0.93 | 0.00, 0 |
+| SM Ruin (wowsims.com) | 0.85 | 0.00, 0 |
+| Demonology (wowsims.com) | 0.94 | 0.00, 0 |
 | Shadow Brand (wowsims.com) | 0.71 | 0.20, 1 |
-| Destruction (wowsims.com) | 0.90 | 0.00, 0 |
+| Destruction (wowsims.com) | 0.95 | 0.00, 0 |
 
 Recorded deviations (each one's reason in the named file):
 - Every pack (API-forced, `tools/wowsims/apl.lua` rules 10, 11, 13): `fight_remains` answers unknown (target health

@@ -589,6 +589,9 @@ M.FLICKER = {
     -- on seeds 21-40); controller rule, the measured values beside the line
     -- 0.7 re-pin (e5a9cd2a2d, merged tree 27add4428+, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- heldReady 5 -> 0 (the rewritten list, steady icons and C1)
+    -- 0.9 re-pin e5a9cd2a2d -> e4ef929e54 (R6; the new Wrack APL, the world's Wrack half points, then the world on
+    -- wowsims's 35/11/5 build: instant Corruption, the Imp sacrificed, pool 6277): every cell 0 / 0 / 0 on all three
+    -- sets, agreement .995 / .996 / .994; nothing moves
     ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
     -- heldReady 6 -> 8 (re-pin e2842f0a78, Task 16, R6, R49; seeds 1-20 / 21-40 / 41-60: 7 / 8 / 2, flicker 0.17 / 0.17 /
     -- 0.05, oracle 0): traced at 21-40, all 8 the stand-in Siphon Life after a hard cast, ours 0.10 s vs the oracle's

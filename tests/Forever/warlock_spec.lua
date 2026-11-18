@@ -19,7 +19,7 @@ local KIT = {
     corruption = { { 172, 6222, 6223, 7648, 11671, 11672, 25311 }, 340, 0, "spell" },
     bane_of_agony = { { 980, 1014, 6217, 11711, 11712, 11713 }, 215, 0, "spell" },
     bane_of_doom = { { 603 }, 300, 60, "spell" },
-    bane_of_havoc = { { 1225228 }, 0.05, 0, "off" }, -- 5% of base mana; off the GCD as wowsims (its TODO)
+    bane_of_havoc = { { 1225228 }, 0.05, 0, "spell" }, -- 5% of base mana; wowsims e4ef929e54: GCD 1500, category 133
     curse_of_the_elements = { { 440892, 1311676, 1311677, 1311680 }, 200, 0, "spell" },
     curse_of_recklessness = { { 704, 7658, 7659, 11717 }, 115, 0, "spell" },
     curse_of_weakness = { { 702, 1108, 6205, 7646, 11707, 11708 }, 175, 0, "spell" },
@@ -1015,6 +1015,8 @@ describe("Forever Warlock through the engine", function()
         H.ctl.inRange.target, H.ctl.level.target = true, 60
         H.Fire("PLAYER_TARGET_CHANGED")
         assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        -- Havoc takes the GCD (wowsims e4ef929e54), so it queues behind the curse and Bane of Doom lines: fifth
+        H.Hekili.DB.profile.displays.Primary.numIcons = 8
         H.ns.getNumberTargets = function()
             return 2, 2
         end

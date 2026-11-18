@@ -39,6 +39,9 @@
 -- Incinerate's (controller ruling, "follow wowsims"); with Incinerate the term is true, so the lines are wowsims's.
 -- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in Shadow Bolt then Life Tap under its cost,
 -- so no bracket idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
+-- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9): the build, talents and gear are unchanged; the log moves on the Weakness
+-- Analyzer's 6 min cooldown (was 90 s: one use in the fight, was two). Bane of Havoc takes the GCD (its spell row at
+-- the pin: 1.5 s, category 133): its 2+ target line loses `use_off_gcd=1`.
 return {
     class = "WARLOCK",
     pack = "Destruction (wowsims.com)",

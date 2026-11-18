@@ -15,6 +15,8 @@
 
 ### Changed
 - Enhancement Shaman: Stormstrike's cooldown is now 8 seconds, and each Maelstrom Weapon stack takes 20% off Lightning Bolt's cast time and cost at every talent rank. Not yet checked in game.
+- Warlock, Affliction (wowsims.com): follows wowsims's new Wrack priority: Bane of Doom only with two or more enemies, Bane of Agony and Amplify Curse no longer wait for Doom, Blood Fury is saved for Amplify Curse, and the Major Mana Potion line is gone (not yet checked in game).
+- Warlock: Bane of Havoc now waits for the global cooldown, as in wowsims (not yet checked in game).
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
