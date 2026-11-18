@@ -56,13 +56,14 @@ describe("Dominos keybinding discovery", function()
         for i = 1, 8 do
             H.env["DominosFrame" .. i] = { buttons = {} }
         end
-        H.env.DominosFrame1.buttons[1] = button(5) -- Dominos shows slot 5 on its first button
+        H.env.DominosFrame3.buttons[1] = button(5) -- Dominos shows slot 5 on bar 3 (the default fallback would say bar 1)
         H.env.DominosFrame2 = {} -- a frame without a button collection
         assert.has_no.errors(function()
             H.ns.ReadKeybindings()
         end)
         local info = H.Hekili.KeybindInfo
-        assert.are.equal("S5", info.mortal_strike.upper[1]) -- Dominos' own binding
+        assert.are.equal("S5", info.mortal_strike.upper[3]) -- Dominos' own binding, on Dominos' bar
+        assert.is_nil(info.mortal_strike.upper[1]) -- slot 5 is claimed: no default-bar copy
         assert.are.equal("S2", info.overpower.upper[1]) -- slot 2 is not claimed: the default bar's binding
     end)
 
