@@ -676,7 +676,7 @@ M.FLICKER = {
     -- (mind_flay waiting 0.07-0.2 s at the mana crossing, the floor under the cost, the truth over it)
     -- re-pin e5a9cd2a2d -> e4ef929e54 (Priest lane, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, heldReady 405 / 406 / 396):
     -- flicker 0.02 -> 0 (the worst set reads 0); heldReady 406 holds. The new log moves 3 fixture rows and one decision (85 -> 86, a mind_flay tail), no loop-world value
-    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 406 }, -- 0 / 0 / 0, 0
+    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 406 }, -- flicker 0 / 0 / 0, retracted 0, heldReady 406 / 400 / 398
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
@@ -690,9 +690,12 @@ M.FLICKER = {
     -- 0.9 batch (integ/0.9 a464ca6a4; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, retracted 0 / 0 / 0, readyShort
     -- 0 / 0 / 0, heldReady 0 / 1 / 0, agreement .948 / .947 / .959): flicker 0 -> 0.02, the row before the Priest lane
     -- (0.02 passes at seeds 1-20). Not from the batch merges: the lane's own tip 12c555178 reads 0.02 / .948 at seeds 1-20
-    -- in this spec, so its 0.02 -> 0 above did not reproduce; why the lane read 0 is not known. heldReady stays 0 (the
-    -- gated seeds 1-20 read 0; seeds 21-40's 1 is not traced)
-    ["Smite"] = { flicker = 0.02, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
+    -- in this spec, so its 0.02 -> 0 above did not reproduce; why the lane read 0 is not known.
+    -- 0.9 measure lane (forever 1a83bc208; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, retracted 0 / 0 / 0, readyShort
+    -- 0 / 0 / 0, heldReady 0 / 1 / 0, agreement .948 / .947 / .959): heldReady 0 -> 1, traced: seeds 21-40, one tick at
+    -- 183.0 s, power_infusion shown 0.07 s out (past the 0.05 s react window) while the oracle shows it ready; the truth
+    -- covers its 248 cost by 2.8 mana: a one-poll near-cost crossing (the belief's own mana at that tick not read)
+    ["Smite"] = { flicker = 0.02, retracted = 0, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
