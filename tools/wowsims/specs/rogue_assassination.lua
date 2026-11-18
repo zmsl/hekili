@@ -25,7 +25,7 @@
 -- and replays 0.982 (56) [eviscerate -> venom 1, the fight's end] on this pack; Combat's Gnome A/B 1.000 (68). A
 -- carried `energy.lo>=90` would be forecast (Engine/Sim/Scripts.lua `.lo` recheck, timeToLo; near_cost_spec).
 -- Affords: the builders' "SnD + builder" term is `energy.lo>(action.slice_and_dice.cost+action.<builder>.cost)`.
--- Rogue Armor Energize 27788 in the log 10 times (darkmantle-set-512.patch; 4 Darkmantle pieces). Mutilate's hand
+-- Rogue Armor Energize 27788 in the log 10 times (4 Darkmantle pieces). Mutilate's hand
 -- hits stay procs; no other untagged GCD-0 cast in the log is a kit ability (Brain Damage 1290950 is the
 -- Lobotomizer's proc, unmapped).
 -- Disagreements (P7; floor 0.98 -> 0.93, decisions on-GCD 0.932, n 59): slice_and_dice shown, wowsims eviscerate
@@ -34,13 +34,13 @@
 -- exactly 25 energy after the unseen 27788 at 79.25 (belief lo 13.1, truth 25). Without the three fight-end misses 0.949.
 -- Regen/pool: the log's 10 a tick and 100 max; kit and world unchanged (not refreshed, lanes 10-12 precedent).
 -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9): two APL lines change (Eviscerate: no 4-point Slice and Dice branch, waits for Rupture >= 3 s
--- under Serrated Blades; Hemorrhage: + energy >= 75), four gear slots (Darkmantle out: the darkmantle-set-512 oracle patch is inert),
+-- under Serrated Blades; Hemorrhage: + energy >= 75), four gear slots (the gear wears the Darkmantle reissue pieces; see the ab0f00e4fc note before `return`),
 -- Poised's attribute word; no recipe key changes. Strict sequences (prev.1 chains) as before: no rule 14 in this build.
 -- For this build the pack is logically unchanged: the dropped branch is covered by `combo_points.current=4&action.mutilate.known`,
--- no Serrated Blades, no Hemorrhage. Its log moves by the gear change (four slots, Darkmantle 27788 rows 8 -> 0).
+-- no Serrated Blades, no Hemorrhage. Its log moves by the gear change (four slots; the ab0f00e4fc note before `return` names the energy procs of its gear).
 -- Re-pin e4ef929e54 -> ab0f00e4fc (wowsims #1067 gear sets, #1086 PPM sweep): the build's gear (muti / sinister / hemo) wears four Darkmantle
--- reissue pieces again, so the 4-piece Rogue Armor Energize (27788, +20 energy, 0.8 PPM on landed white swings) fires in the log (the old
--- "inert" note is void; darkmantle-set-512 is not in the ab0f oracle set), and Stormshroud's 3-piece 23863 (+30 energy) too. Both are random
+-- reissue pieces again, so the 4-piece Rogue Armor Energize (27788, +20 energy, 0.8 PPM on landed white swings) fires in the log (the oracle set has no
+-- Darkmantle set-ID patch: the reissue pieces carry their own set ID), and Stormshroud's 3-piece 23863 (+30 energy) too. Both are random
 -- resource procs and are NOT modelled (owner L1396/L1397); energy is secret in combat, so the belief sees each gain at its next read.
 return {
     class = "ROGUE",
