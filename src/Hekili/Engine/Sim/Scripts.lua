@@ -1990,6 +1990,10 @@ function scripts:SwapScripts( s1, s2 )
     -- CN25: the editor moved a line (its list is already reordered): the pure variables' script IDs follow it
     local pack = s1:match( "^(.*):[^:]*:%d+$" )
     if pack then scripts:MarkPure( pack ) end
+
+    -- a pack with windows or window errors: the checks (and errorAt, LoadScript's stamp) follow the lines' new order
+    local w = pack and scripts.Windows[ pack ]
+    if w and ( #w.decls > 0 or #w.errors > 0 ) then Hekili:LoadScripts() end
 end
 
 

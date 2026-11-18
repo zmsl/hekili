@@ -264,6 +264,18 @@ describe("the windows compiler (windows design v6 §3.4, §9)", function()
         end
     )
 
+    it("a line the editor moves takes its window error with it, and the line moved past it has none", function()
+        load({ default = "actions+=/open_window,name=nope\nactions+=/berserker_stance" })
+        local lines = H.Hekili.DB.profile.packs[ww.PACK].lists.default
+        lines[1], lines[2] = lines[2], lines[1] -- the editor's move down (Options.lua moveDownBtn)
+        local at = ww.PACK .. ":default:"
+        H.Hekili.Scripts:SwapScripts(at .. 1, at .. 2)
+        H.Hekili:LoadScript(ww.PACK, "default", 1) -- then an edit of the stance line, now first
+        assert.is_nil(H.Hekili.Scripts.DB[at .. 1].Error)
+        local moved = H.Hekili.Scripts.DB[at .. 2]
+        assert.is_truthy(moved.Error and moved.Error:find("E1", 1, true))
+    end)
+
     it("an editor edit of a window line checks the priority's windows again", function()
         load({
             windows = "actions+=/window,name=x,duration=6",
