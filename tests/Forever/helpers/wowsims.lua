@@ -629,7 +629,12 @@ M.READY = {
     -- instant; the belief read 25-30 against 29.7), 99.90 (1.32, a swing's rage between two polls) and 142.09 (0.20).
     -- The old log's 57.00-104.50 rows left with the new log's re-timing and the GCD-edge fix (not split per row); the
     -- median rises because the small rows left, no row grew
-    warrior_fury = { 1.12, 5 },
+    -- -> { 0.17, 9 } (re-pin e4ef929e54 -> ab0f00e4fc, R6): 101 decisions, 9 real, all late; the new log's (wowsims's
+    -- rage rules #1069/#1099 re-time the fight): the old kit reads the same 9 at median 0.17 on it. Cost waits with the
+    -- belief 4.7-17.2 under the log's rage at wowsims's cast (the old rows' class): Bloodthirst 26.40 (1.45), 98.30
+    -- (0.13), 105.10 (0.64), Sunder Armor 44.00 (0.99), 46.40 (0.17), Execute 168.82 (1.70); GCD edges 0.07-0.17:
+    -- Reckless Swings 112.30, Sunder Armor 129.80, Death Wish 151.27
+    warrior_fury = { 0.17, 9 },
     -- { 0.38, 11 } -> { 0.37, 3 } re-pin e2842f0a78 (lane 14, R6; after 5049ede22's GCD fix): 98 decisions, 3 real, all
     -- early, class aura: Shield Slam 49.84 (0.24), Sunder Armor 71.77 / 143.44 (0.37 / 0.44): wowsims queues Shield Block
     -- (`Queueing up 2565 to cast at`) and casts the on-GCD ability at that instant, after ours shows it ready
@@ -639,7 +644,12 @@ M.READY = {
     -- real, all late, each a gain from a hit taken (or its block's +5) inside the poll before wowsims's cast: Rend 11.23
     -- (0.81; 6.6 < 7 until the 11.14 partial block), Shield Slam 30.43 (0.81), 49.62 and 61.62 (0.41), Sunder Armor
     -- 71.22 and Revenge 171.19 (0.41); the new log's Pre-BiS gear and 770 healing re-time the hits (the old log had 4)
-    warrior_protection = { 0.41, 6 },
+    -- -> { 0.48, 12 } (re-pin e4ef929e54 -> ab0f00e4fc, R6): 98 decisions, 12 real (11 late, 1 early); the new log's
+    -- (wowsims's rage rules #1069/#1099 re-time the hits): the old kit reads the same 12 at median 0.48 on it. Cost waits
+    -- with the belief 0.7-19.7 under the log's rage at wowsims's cast: Revenge 18.44 and 68.74, Sunder Armor 23.23,
+    -- 88.42 and 153.22 (1.00), Shield Slam 49.54, 71.14 and 92.74 (0.48), Rend 143.22 (0.41), Sunder Armor 116.24 early
+    -- (0.34); GCD edges: Shield Slam 64.44 (0.19), Sunder Armor 158.12 (1.00)
+    warrior_protection = { 0.48, 12 },
 }
 
 --- The ready-time check of replay `R` (timing.lua) on spec `spec` after its run: prints "<label> wowsims timing:
