@@ -40,6 +40,8 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
       reactions, options, state expressions, hooks, pets, totems, settings), `ns.SCHOOL`, `specTemplate`, `ns.callHook`;
     - `Spec/Regen.lua`: RegisterResource and the sim's generated regen entries;
     - `Spec/Auras.lua`: RegisterAura(s), RegisterPower(s);
+    - `Spec/Ranks.lua`: an ability's derived fields (`ranks`, `{ byRank = values }`, `effect`), pure, also run by the
+      recording test loaders;
     - `Spec/Abilities.lua`: RegisterAbility(ies), missable DoTs;
     - `Spec/Kits.lua`: spec records: `NewClass` (the class kit), `NewSpecialization` (spec 0), `GetSpecialization`;
     - `Spec/All.lua`: spec 0 (`all`): the engine keys core reads by name;

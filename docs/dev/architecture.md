@@ -322,6 +322,13 @@ where it works, a reaction only where only an outcome reveals the span.
 player never casts. The belief tracks its known rank (the `now` context's `knownRank` reads it; the sim's asks the
 spellbook through the facade); the sim never sees it.
 
+`RegisterAbility{ ranks = { id1, id2, ... } }` and `effect = function() return function() ... end end`
+(`Engine/Schema/Spec/Ranks.lua`, `ns.DeriveAbility`, run first on every registration) are derived at registration:
+`ranks` gives `id`, `copy` (ranks 2..n) and `known` (`Facade.KnownRank(ranks) > 0`), and a field declared
+`{ byRank = values }` reads the highest known rank's value (rank 1's before any); `effect` is called once for each
+missing one of `handler` and `now`, two closures for the two environments. A declared field wins; neither `ranks` nor
+`effect` crosses `Build(def)`.
+
 **Target creature type.** `target.creature_type` (`Engine/Sim/State.lua`'s target table, cached per reset) is the
 target's creature type as a key: UnitCreatureType's second return, CreatureType.db2's ID (the same on every client
 language), as its English name in snake case (`"undead"`, `"demon"`, `"beast"`, `"not_specified"`, ...), and

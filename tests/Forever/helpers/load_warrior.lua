@@ -5,6 +5,11 @@
 -- the file's handlers, state functions and hooks (Hekili runs them with setfenv( f, state )).
 local M = {}
 
+-- The core's registration-time derivation of `ranks` and `effect` (Engine/Schema/Spec/Ranks.lua), run on each
+-- recorded ability as RegisterAbility runs it, so a class file declaring them reads the same fields here.
+local Ranks = {}
+assert(loadfile("src/Hekili/Engine/Schema/Spec/Ranks.lua"))("Hekili", Ranks)
+
 --- Loads the class file. Returns `w`: `w.abilities`, `w.auras` (merged by key), `w.talents`, `w.resource`
 --- ({ powerType, models }), `w.hooks[name]`, `w.events[event]` (spec:RegisterEvent's handlers), `w.funcs[name]`,
 --- `w.exprs[name]`, `w.settings[key]` ({ default, option, specs: nil for every spec }), `w.packs` (in order: { name,
@@ -112,6 +117,7 @@ function M.load()
     assert(ok, err)
     for _, call in ipairs(reg.RegisterAbilities or {}) do
         for k, v in pairs(call[1]) do
+            Ranks.DeriveAbility(k, v, w.state.knownRank)
             w.abilities[k] = v
         end
     end

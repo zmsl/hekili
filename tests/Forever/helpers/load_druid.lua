@@ -6,6 +6,11 @@
 -- (Hekili runs them with setfenv( f, state )).
 local M = {}
 
+-- The core's registration-time derivation of `ranks` and `effect` (Engine/Schema/Spec/Ranks.lua), run on each
+-- recorded ability as RegisterAbility runs it, so a class file declaring them reads the same fields here.
+local Ranks = {}
+assert(loadfile("src/Hekili/Engine/Schema/Spec/Ranks.lua"))("Hekili", Ranks)
+
 --- [spellID] = the name the fake client's C_Spell.GetSpellInfo answers (unset: no info, as for a spell the client has
 --- not cached); a spec fills it before M.load and empties it after.
 M.SPELL_NAMES = {}
@@ -123,6 +128,7 @@ function M.load(vs, file, class)
     assert(ok, err)
     for _, call in ipairs(reg.RegisterAbilities or {}) do
         for k, v in pairs(call[1]) do
+            Ranks.DeriveAbility(k, v, w.state.knownRank)
             w.abilities[k] = v
         end
     end

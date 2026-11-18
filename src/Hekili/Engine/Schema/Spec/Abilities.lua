@@ -31,6 +31,9 @@ local protectedFunctions = {
 -- (ruling 36) the gates `sequence_ignore` may name: the ability fields the usable test and the time to ready read
 local SEQUENCE_GATES = { form = true, noform = true, buff = true, nobuff = true }
 
+-- `ranks` and `effect` (Spec/Ranks.lua) read the spellbook through the facade, as the packs' own rank helpers do.
+local KnownRank = Facade.KnownRank
+
 
 -- A missable DoT (an ability's `missable`, C15): a dodged, parried or missed cast still raised SPELL_CAST_SUCCESS, so
 -- its `now` applied the debuff (`missable = true`: the ability's own key; a string: that debuff's key). Our
@@ -96,8 +99,11 @@ local methods = {
     -- (a percent-of-base cost a stacking aura raises past 100%); without it only a cost between 0 and 1 is a fraction.
     -- Hekili's `form = key` (or a function returning one): the form or stance aura the ability needs (state:IsUsable);
     -- a kit declares that here, never through `buff` or a `usable` body (tests/Forever/forms_spec.lua); `nobuff` stays
-    -- upstream's "not while this is up".
+    -- upstream's "not while this is up". `ranks` (rank-ordered spell IDs) and `effect` (one factory for `handler` and
+    -- `now`) are derived first: Spec/Ranks.lua.
     RegisterAbility = function( self, ability, data )
+        ns.DeriveAbility( ability, data, KnownRank ) -- `ranks` and `effect` into their fields, before anything reads them
+
         -- A passive (a spell the spellbook knows, never cast): the belief tracks its known rank; the sim never sees it.
         if data.passive then
             assert( type( data.id ) == "number", "RegisterAbility: passive " .. tostring( ability ) .. " needs a numeric id" )
