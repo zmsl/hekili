@@ -135,7 +135,7 @@ function M.gain(_, hand, _, flag, character)
     if hand ~= 1 then
         return 0
     end
-    return 4.5 * 3.6 * (flag == "CRITICAL" and 2 or 1) + wrath(character.talents[UNBRIDLED_WRATH])
+    return 4.5 * 3.6 * (flag == "CRITICAL" and 2 or 1) + wrath(character and character.talents[UNBRIDLED_WRATH])
 end
 
 -- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's warrior/*.go):
