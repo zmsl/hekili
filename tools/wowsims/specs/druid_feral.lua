@@ -37,16 +37,14 @@
 -- Translation gaps: Thistle Tea (selectedConjured), potions, sapper charges, item swaps, autocastOtherCooldowns (GAP
 -- 14: no class cooldown lost). Time to die is unknown on Forever (3600), so the `fight_remains` lines read a long fight
 -- (API-forced).
--- Re-pin e4ef929e54 (0.9): the adaptive APL rewritten (wowsims #972): the default list calls 2- and 3-target groups by
--- talent shape and `single_target` (the old lines, with talent-shape terms); the talents follow the new preset
--- CatTalents (presets.ts:71, Rend and Tear 5/5; owner L1154 (4)). The idol branches resolve to the kit's auras (Idol of
--- Ferocity 27851, Idol of the Dream 446212; the request wears neither). Claw: two adjacent lines now (`condition.claw`).
--- Owner deviation L1169 (decision C, owner-confirmed L1205): the six 2/3-target group calls are omitted (`condition`
--- false) and `single_target` runs at every enemy count, behind the same movement/range gate. wowsims's groups are the
--- single-target rotation plus swaps to spread Rake/Rip, every Bite/Shred/Rip/Claw line guarded by another target's read
--- (NextTarget's time to die, Next/PreviousTarget swaps: omitted on Forever, CN24), so they kept only Shifting Power, Rake
--- and Innervate; wowsims itself runs `single_target` at 4+ enemies. The un-called lists stay in the pack (the
--- translator writes every called group, an omitted call included); they never run.
+-- Re-pin e4ef929e54 (0.9): the talents follow the new preset CatTalents (presets.ts:71, Rend and Tear 5/5; owner L1154
+-- (4)). The idol branches resolve to the kit's auras (Idol of Ferocity 27851, Idol of the Dream 446212; the request
+-- wears neither).
+-- Re-pin ab0f00e4fc (wowsims #1087, "feral-apl-simplify"): the adaptive APL is one flat list at every enemy count (no
+-- 2/3-target groups, no target swaps, no other target's read), with shared tuning: Shifting Power at 53 energy or
+-- less, Ferocious Bite pooling to 75 energy (60 at 5 combo points, 45 under Clearcasting). The 0.9 owner deviation
+-- L1169 (omit the 2/3-target group calls) and CN24 (other-target reads) have nothing left to apply to: gone. Claw: two
+-- adjacent lines (`condition.claw`, re-derived on the new lines).
 return {
     class = "DRUID",
     pack = "Feral (wowsims.com)",
@@ -74,23 +72,14 @@ return {
     condition = {
         -- owner deviation R69 (header): no Prowl cancel line; Prowl ends when Ravage lands or the player attacks
         cancel_buff = false,
-        -- owner deviation L1169 (header): the six 2/3-target group calls are omitted
-        ["2_targets_shred"] = false,
-        ["2_targets_hybrid_with_blood_frenzy"] = false,
-        ["2_targets_hybrid"] = false,
-        ["3_targets_shred"] = false,
-        ["3_targets_hybrid_with_blood_frenzy"] = false,
-        ["3_targets_hybrid"] = false,
-        -- owner deviation L1169 (header): no 2/3-target group; single_target at every enemy count. shortcut: rule 7 has
-        -- no "no condition" value, so an always-true term stands in; upgrade if the translator takes one
-        single_target = "active_enemies>=1",
-        -- Claw vs Shred (header): wowsims's two adjacent single_target Claw lines (rule 7 keys a condition by action, so
-        -- both take this one: adjacent lines of one action are their conditions' OR, so it is `(A)|(B)`): A, the Claw
-        -- builder of a build without Shredding Attacks, as generated; B, "Claw can replace Shred", with
-        -- `!action.shred.ready` -> the cases the Shred guard refuses and `energy.lo>=action.shred.cost` ->
-        -- `energy.lo>=action.claw.cost`; the rest as generated (re-derive both on a re-pin: translate with this key
-        -- removed, take the two Claw lines)
-        claw = "(((!action.cat_form.known|buff.cat_form.up)&talent.improved_shred.rank=0&energy.lo>=action.claw.cost&variable.v_paid_builder_fits_the_energy_pool))|((((!(action.cat_form.known|action.shred.known)|((!action.cat_form.known|buff.cat_form.up)&(!action.shred.known|(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up))&(!action.shred.known|energy.lo>=action.claw.cost)))&energy.lo>=action.claw.cost)&!variable.v_pool_energy_for_bite))",
+        -- Claw vs Shred (header): wowsims's two adjacent Claw lines (rule 7 keys a condition by action, so both take
+        -- this one: adjacent lines of one action are their conditions' OR, so it is `(A)|(B)`): A, the Claw builder of
+        -- a build without Shredding Attacks, as generated; B, "Claw can replace Shred" (the APL variable, inlined here)
+        -- with `!action.shred.ready` -> the cases the Shred guard refuses and `energy.lo>=action.shred.cost` ->
+        -- `energy.lo>=action.claw.cost`, then the line's own `energy.lo>=action.claw.cost`; the rest as generated
+        -- (re-derive both on a re-pin: translate with this key removed, take the first Claw line's condition and the
+        -- `v_claw_can_replace_shred` value, each without the movement gate)
+        claw = "(((!action.cat_form.known|buff.cat_form.up)&!talent.improved_shred.enabled&energy.lo>=action.claw.cost&variable.v_paid_builder_fits_the_energy_pool))|((((!action.cat_form.known|buff.cat_form.up)&(!action.shred.known|(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up))&(!action.shred.known|energy.lo>=action.claw.cost)&(buff.clearcasting.up|!(((!action.cat_form.known|buff.cat_form.up)&talent.predatory_discipline.enabled&((talent.primal_fury.enabled&combo_points.current>=4)|(!talent.primal_fury.enabled&combo_points.current>=5))&((talent.primal_fury.enabled&(!action.rip.known|debuff.rip.remains>=3))|(!talent.primal_fury.enabled&(((!talent.improved_shred.enabled&!(!talent.primal_fury.enabled&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)&(time+fight_remains)<=60)&(!action.rip.known|debuff.rip.remains>=2))|(!(!talent.improved_shred.enabled&!(!talent.primal_fury.enabled&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)&(time+fight_remains)<=60)&(!action.rip.known|debuff.rip.remains>=4))))))&!((buff.clearcasting.up&energy.lo>=45)|(!buff.clearcasting.up&(energy.lo>=75|((combo_points.current>=5|(talent.primal_fury.rank>=2&!talent.improved_shred.enabled))&energy.lo>=60)))))))&energy.lo>=action.claw.cost))",
     },
     guard = {
         -- R69 too: Faerie Fire (wowsims's line above Ravage) breaks Prowl, so it waits while Prowl is up
@@ -99,12 +88,11 @@ return {
         shred = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)",
     },
     -- by role (docs/dev/wowsims-packs.md): Shred's first line (Clearcasting) at 1, not the builder; Claw's lines are
-    -- wowsims's "Claw can replace Shred" builder fallback (one condition, above), kept at tier 1 as before (R66). The
-    -- occurrences count the omitted entries too: the un-called 2/3-target lists' Shred and Claw entries (omitted,
-    -- CN24) are occurrences 1-8, so single_target's Clearcasting Shred is the 9th and its two Claw lines the 9th and 10th
+    -- wowsims's "Claw can replace Shred" builder fallback (one condition, above), kept at tier 1 as before (R66): every
+    -- Claw line. Shred's occurrences: the Clearcasting line first, the paid builder second
     focus = {
-        shred = { false, false, false, false, false, false, false, false, 1, false },
-        claw = { false, false, false, false, false, false, false, false, 1, 1 },
+        shred = { 1, false },
+        claw = 1,
         rip = 2,
         rake = 2,
     },

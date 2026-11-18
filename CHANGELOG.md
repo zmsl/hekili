@@ -5,6 +5,8 @@
 ### New
 
 ### Changed
+- Feral: the default priority follows wowsims's simplified Feral priority: one priority at every enemy count, with new energy points for Shifting Power and Ferocious Bite.
+- Guardian: the default priority follows wowsims's simplified Bear priority: one priority at every enemy count, and Swipe is no longer suggested.
 
 ### Fixed
 

@@ -5,11 +5,12 @@
 -- apls/adaptive.apl.json (:10, :12 ROTATION_ADAPTIVE "Adaptive Bear"), the gear gear_sets/default.gear.json (:11). The
 -- re-pin from e2842f0a78 changed only the APL: b19089ff45 dropped its autocastOtherCooldowns entry (6 lines), so the
 -- pack's lines are the old pin's (the translator already omitted that entry).
--- Re-pin e5a9cd2a2d -> e4ef929e54: BearTalents '050022-5023030212310112501-055' (presets.ts:14); the adaptive list
--- rewritten (cbd46412fd, a94dc3c549): 2- and 3-target groups (Swipe, Primal Bite) and single_target_and_larger_packs
--- behind the movement gate, a pre-pull Maul at 3 targets (CN21: its computed aura duration keeps the `!buff.maul.up`
--- guard); the gear file unchanged. Owner deviation L1169 (decision C) is Feral's only: Guardian's groups have no
--- other-target read (CN24) and ship whole.
+-- Re-pin e5a9cd2a2d -> e4ef929e54: BearTalents '050022-5023030212310112501-055' (presets.ts:14); the gear file
+-- unchanged.
+-- Re-pin e4ef929e54 -> ab0f00e4fc (wowsims #1087; owner L1397 (2): follow it): the adaptive list is one flat list at
+-- every enemy count (Enrage, Faerie Fire, Demoralizing Roar, Primal Bite, Lacerate, Maul behind the movement gate): no
+-- 2/3-target groups and no Swipe at all, no pre-pull Furor Bear Form shift (the pre-pull Enrage stays), no pre-pull
+-- 3-target Maul (CN21's line: gone). Talents and gear unchanged; the log's casts are the old pin's, in time.
 -- Replay (e4ef929e54, `procs { ["9881:0"] = true }`: Maul's untagged Casting lines are wowsims's queue at each swing):
 -- the kit has no rage-from-damage-taken rule (`taken`: CN7's hook, a named gap), so the belief sees only the bear's own
 -- rage (white swings, Primal Fury, Enrage): decisions on-GCD 0.574 (115). NAMED GAP (owner ruling 2026-11-07, extended
