@@ -4815,7 +4815,8 @@ do
             local script = pure and scripts.DB[ pure ]
             if script and script.Modifiers and script.Modifiers.value then
                 local v = script.Modifiers.value()
-                if debug then Hekili:Debug( " - variable.%s = %s (pure: %s)", var, tostring( v ), scripts:GetModifierValues( "value", pure ) or "?" ) end
+                -- the value only: a per-term text would re-read each nested pure variable (2^depth in a traced cycle)
+                if debug then Hekili:Debug( " - variable.%s = %s (pure)", var, tostring( v ) ) end
                 return v
             end
 

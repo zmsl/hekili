@@ -292,6 +292,49 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         end
     end)
 
+    -- Batch 0.9 item 1: a traced read of a pure variable reading another, 4 deep, evaluates each value a bounded number
+    -- of times (the debug line once rebuilt every term's text, re-reading the nested ones: 1/2/4/8), and the log still
+    -- names each pure read with its value (CN25 review M4).
+    it("evaluates each value of a 4-deep pure chain a bounded number of times in a traced read", function()
+        local H = boot(false)
+        local list = H.Hekili.DB.profile.packs[ww.PACK].lists.default
+        for i = 4, 1, -1 do
+            local value = i == 4 and "1" or ("variable.d" .. (i + 1) .. "+1")
+            table.insert(list, 1, { action = "variable", enabled = true, var_name = "d" .. i, value = value, pure = 1 })
+        end
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        headless.cycle(H, H.ctl.now + 0.5)
+        assert.are.same({}, H.errors)
+        local S, Sc, hk = H.Hekili.State, H.Hekili.Scripts, H.Hekili
+        local pure, calls, lines = Sc.PackInfo[ww.PACK].pure, {}, {}
+        for i = 1, 4 do
+            assert.is_truthy(pure["d" .. i], "d" .. i)
+            local m = Sc.DB[pure["d" .. i]].Modifiers
+            local f = m.value
+            calls[i] = 0
+            m.value = function()
+                calls[i] = calls[i] + 1
+                return f()
+            end
+        end
+        local debug = hk.Debug
+        hk.Debug = function(_, fmt, ...)
+            lines[#lines + 1] = fmt:format(...)
+        end
+        hk.ActiveDebug = true
+        local v = S.variable.d1
+        hk.ActiveDebug, hk.Debug = false, debug
+        assert.are.equal(4, v)
+        for i = 1, 4 do
+            assert.is_true(calls[i] <= 2, "calls " .. table.concat(calls, "/"))
+        end
+        local all = table.concat(lines, "\n")
+        for i = 1, 4 do
+            assert.is_truthy(all:find(" - variable.d" .. i .. " = " .. (5 - i), 1, true), all)
+        end
+    end)
+
     -- CN25 fix round 1 (I2): the priority editor moves a line (Options.lua: the list reordered, then
     -- scripts:SwapScripts) or edits one option (Hekili:LoadScript); which variables are pure follows the pack as it is.
     it("follows the editor: a moved line, an if= given, a name given twice", function()
