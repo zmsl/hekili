@@ -123,7 +123,7 @@ function M.render(rows)
 end
 
 local function main(args)
-    local dir = os.getenv("WOWSIMS_TREES") or (os.getenv("HOME") .. "/src/wowsims-pin-e5a9cd2a2d/ui/sim/talents/trees")
+    local dir = os.getenv("WOWSIMS_TREES") or (os.getenv("HOME") .. "/src/wowsims-pin-e4ef929e54/ui/sim/talents/trees")
     local write, list = false, {}
     for _, a in ipairs(args) do
         if a == "--write" then

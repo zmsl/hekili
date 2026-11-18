@@ -18,7 +18,7 @@ local function spit(path, s)
 end
 
 -- the checkout at the OLD pin and its oracle CLI (docs/dev/wowsims-packs.md "Moving the pin"); absent off this machine
-local PIN_ROOT = (os.getenv("HOME") or "") .. "/src/wowsims-pin-e5a9cd2a2d"
+local PIN_ROOT = (os.getenv("HOME") or "") .. "/src/wowsims-pin-e4ef929e54"
 local PIN_CLI = PIN_ROOT .. "/wowsimcli-sim-pin"
 local function present(path)
     local f = io.open(path, "rb")
@@ -177,7 +177,7 @@ describe("export.lua .siml recipe paths", function()
             name = "S",
             build = "ui/specs/hunter/dps/builds/sv_weave.siml",
             defaults = "ui/specs/hunter/dps/defaults.siml",
-            gear = "ui/specs/hunter/dps/gear_sets/p1_melee.gear.siml",
+            gear = "ui/specs/hunter/dps/gear_sets/prebis_weave.gear.siml",
         }, PIN_ROOT, spec, PIN_CLI)
         ex.SPEC_PIN[spec] = saved
         assert(ok, req)
