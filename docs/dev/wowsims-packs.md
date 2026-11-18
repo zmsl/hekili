@@ -387,28 +387,20 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   breaks Prowl) behind Ravage while Prowled. No 'behind the target' signal and no fallback timer: Ravage stays the
   first icon while Prowl is up and the target is in range; Prowl ends when Ravage lands or the player attacks. The
   replay and loop worlds do not know Prowl or Ravage, so they do not see the deviation (unit-tested in druid_spec).
-- Druid Feral (and Guardian's imported Cat lines), Claw vs Shred (owner, 2026-11-11, L597-L603): solo, the mob attacks
+- Druid Feral, Claw vs Shred (owner, 2026-11-11, L597-L603): solo, the mob attacks
   the player, who cannot be behind it, and Claw out-damages Shred per energy below 2 ranks of Shredding Attacks (Claw
   r2 140% + 39 for 40 energy with Ferocity, Shred r2 200% + 32 for 60, -6 a rank; both free under Clearcasting, where
   Shred wins). `guard = { shred = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)" }`
-  on every Shred line; wowsims's single_target list has two adjacent Claw lines (A, the builder of a build without
-  Shredding Attacks; B, "Claw can replace Shred"), and a recipe condition is keyed by action, so
+  on every Shred line; wowsims's list has two adjacent Claw lines (A, the builder of a build without Shredding
+  Attacks; B, its "Claw can replace Shred" variable and Claw's cost), and a recipe condition is keyed by action, so
   `condition = { claw = "(A)|(B')" }` gives both lines one condition (two adjacent lines of one action are their
-  conditions' OR): A as generated, B' with `!action.shred.ready` replaced by
+  conditions' OR): A as generated, B' the variable's text inlined with `!action.shred.ready` replaced by
   `(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up)` and
   `energy.lo>=action.shred.cost` by `energy.lo>=action.claw.cost` (no recipe key edits part of a line, so the rest is
   the generated text, re-derived on a re-pin from a translation without the key). `target.is_targeting_player` is the core's
   UnitIsUnit("targettarget", "player"), false when secret or unknown (assume behind); `settings.behind` is the class's
   "Always Behind" option. The replay world answers that the target attacks someone else (wowsims stands behind;
   replay knob `notTargeted`) and the build has 3/3, so the replay is unchanged; the loops' mob attacks the player.
-- Druid Feral (and Guardian's imported Cat lines), 2 and 3 enemies (decision C, L1169, owner-confirmed L1205: "keep
-  single target for feral"): wowsims's six 2/3-target groups are its single-target rotation plus swaps that spread
-  Rake and Rip, and every Bite, Shred, Rip and Claw line in them reads another target (NextTarget's time to die, swaps
-  to Next/PreviousTarget), which Forever cannot read (omitted, CN24), so they would keep only Shifting Power, Rake and
-  Innervate. `condition` sets the six group calls false and `single_target = "active_enemies>=1"` (rule 7 has no
-  "no condition" value), so `single_target` runs at every enemy count behind the same movement/range gate (wowsims
-  runs it at 4+ itself). The un-called lists stay in the pack (an omitted call still has the translator write its
-  group) and never run. Reversible with the recipe change.
 - Rogue Combat, Riposte (owner R70, 2026-11-06: "add it to the apl and make it focus=1"). A recipe `extra` line before
   Garrote (the first line left once the new pin's APL dropped its Ambush opener: re-anchored, L143):
   `riposte,use_off_gcd=1,focus=1,if=energy.lo>=action.riposte.cost`. The 5 s parry window is the kit's registered window
