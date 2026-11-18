@@ -131,9 +131,9 @@ unticked, it creates the draft (use this when a tag's run failed after the push,
   job fails after the upload. Checked 2026-10-19: no rule on `forever`.
 - **Discord webhook** (the user): in #releases, channel settings > Integrations, create a Discord webhook and copy
   its URL. Store it with `gh secret set DISCORD_RELEASES_WEBHOOK` (paste the URL). publish.yml's discord job
-  (`tools/discord_notes.py`) posts each published release, pre-releases too: a header with the link, then the notes
-  in order, split at line ends into messages of at most 2000 characters, with no mention ever pinging. The repo has
-  no GitHub webhook to Discord (Settings > Webhooks), or the release would post twice. Preview the payloads with
+  (`tools/discord_notes.py`) posts each published release, pre-releases too: one message: a header with the link
+  (no embed), the notes attached as release-notes-<tag>.txt, with no mention ever pinging. The repo has
+  no GitHub webhook to Discord (Settings > Webhooks), or the release would post twice. Preview the payload with
   `python3 tools/discord_notes.py --dry-run <event.json>`.
 
 The CurseForge game version, with the same token:

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Posts a published release's notes to Discord #releases (docs/publishing/README.md, "One-time setup").
+"""Posts a published release to Discord #releases: one message, the notes attached as a .txt
+(docs/publishing/README.md, "One-time setup").
 
 usage: discord_notes.py [--dry-run] <event.json>     (the publish event payload; DISCORD_RELEASES_WEBHOOK in the env)
---dry-run prints the JSON payloads and posts nothing. Python 3 standard library only. Never prints the webhook URL.
+--dry-run prints the payload_json and the attachment's name and size, and posts nothing.
+Python 3 standard library only. Never prints the webhook URL.
 """
 
 import json
@@ -11,47 +13,44 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import uuid
 
-LIMIT = 2000  # Discord's message length
+import cf_upload
+
 NO_EMBEDS = 4  # message flag SUPPRESS_EMBEDS
 NO_MENTIONS = {"parse": []}  # notes can never ping @everyone, @here or a role
 
 
-def split(text, limit=LIMIT):
-    """Chunks of at most `limit` characters, cut at line ends; a single longer line is cut hard.
-    shortcut: a code fence open across a cut is not reopened; the notes carry none, upgrade if they start to."""
-    out, cur = [], ""
-    for line in text.split("\n"):
-        while len(line) > limit:
-            if cur:
-                out.append(cur)
-                cur = ""
-            out.append(line[:limit])
-            line = line[limit:]
-        if cur and len(cur) + 1 + len(line) > limit:
-            out.append(cur)
-            cur = line
-        else:
-            cur = cur + "\n" + line if cur else line
-    if cur:
-        out.append(cur)
-    return out
+def message(release):
+    """(payload_json, filename, bytes): one message, the notes attached as a .txt; no attachment for an empty body."""
+    tag = release["tag_name"]
+    meta = {
+        "content": "**Hekili Forever %s**\n%s" % (tag, release["html_url"]),
+        "flags": NO_EMBEDS,
+        "allowed_mentions": NO_MENTIONS,
+    }
+    body = (release.get("body") or "").strip().encode("utf-8")
+    if not body:
+        return meta, None, b""
+    name = "release-notes-%s.txt" % tag
+    meta["attachments"] = [{"id": 0, "filename": name}]
+    return meta, name, body
 
 
-def payloads(release):
-    head = "**Hekili Forever %s**\n%s" % (release["tag_name"], release["html_url"])
-    body = (release.get("body") or "").strip()
-    chunks = split(head + "\n\n" + body if body else head)
-    return [
-        dict({"content": c, "allowed_mentions": NO_MENTIONS}, **({"flags": NO_EMBEDS} if i else {}))
-        for i, c in enumerate(chunks)
-    ]
+def request(meta, name, body, url):
+    if not name:
+        return urllib.request.Request(
+            url, json.dumps(meta).encode(), {"Content-Type": "application/json", "User-Agent": "hekili-release"}
+        )
+    boundary = uuid.uuid4().hex
+    data = cf_upload.multipart(meta, name, body, boundary, "payload_json", "files[0]", "text/plain")
+    headers = {"Content-Type": "multipart/form-data; boundary=" + boundary, "User-Agent": "hekili-release"}
+    return urllib.request.Request(url, data, headers)
 
 
-def post(url, payload):
-    data = json.dumps(payload).encode()
+def post(url, meta, name, body):
     for _ in range(5):
-        req = urllib.request.Request(url, data, {"Content-Type": "application/json", "User-Agent": "hekili-release"})
+        req = request(meta, name, body, url)
         try:
             urllib.request.urlopen(req, timeout=30).close()
             return
@@ -74,18 +73,16 @@ def main(argv):
     if len(args) != 1:
         sys.exit(__doc__)
     with open(args[0], encoding="utf-8") as f:
-        msgs = payloads(json.load(f)["release"])
+        meta, name, body = message(json.load(f)["release"])
     if dry:
-        print(json.dumps(msgs, indent=2, ensure_ascii=False))
+        print(json.dumps(meta, indent=2, ensure_ascii=False))
+        print("attachment: %s (%d bytes)" % (name, len(body)) if name else "attachment: none")
         return
     url = os.environ.get("DISCORD_RELEASES_WEBHOOK", "")
     if not url:
         sys.exit("discord_notes: DISCORD_RELEASES_WEBHOOK is not set")
-    for i, m in enumerate(msgs):
-        if i:
-            time.sleep(1)
-        post(url, m)
-    print("discord_notes: posted %d message(s)" % len(msgs))
+    post(url, meta, name, body)
+    print("discord_notes: posted")
 
 
 if __name__ == "__main__":

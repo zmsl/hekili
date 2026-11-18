@@ -41,18 +41,18 @@ def metadata(release, game_version):
     }
 
 
-def multipart(meta, filename, data, boundary):
-    """The multipart/form-data body CurseForge's upload-file takes: a `metadata` JSON field and the `file`."""
+def multipart(meta, filename, data, boundary, meta_name="metadata", file_name="file", file_type="application/zip"):
+    """A multipart/form-data body: a JSON field (CurseForge's `metadata`) and one file (its `file`)."""
     b = boundary.encode()
     return b"".join(
         [
             b"--" + b + b"\r\n",
-            b'Content-Disposition: form-data; name="metadata"\r\n',
+            b'Content-Disposition: form-data; name="' + meta_name.encode() + b'"\r\n',
             b"Content-Type: application/json\r\n\r\n",
             json.dumps(meta).encode(),
             b"\r\n--" + b + b"\r\n",
-            b'Content-Disposition: form-data; name="file"; filename="' + filename.encode() + b'"\r\n',
-            b"Content-Type: application/zip\r\n\r\n",
+            b'Content-Disposition: form-data; name="' + file_name.encode() + b'"; filename="' + filename.encode() + b'"\r\n',
+            b"Content-Type: " + file_type.encode() + b"\r\n\r\n",
             data,
             b"\r\n--" + b + b"--\r\n",
         ]

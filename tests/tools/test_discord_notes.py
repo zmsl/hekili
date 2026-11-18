@@ -18,44 +18,51 @@ def rel(body):
     return {"tag_name": "v0.2.0", "html_url": URL, "body": body}
 
 
-class Split(unittest.TestCase):
-    def test_short_is_one(self):
-        self.assertEqual(dn.split("a\nb"), ["a\nb"])
+class Message(unittest.TestCase):
+    def test_one_message_with_attachment(self):
+        body = "Notes \u2014 ok.\n\n### Rogue\n- Fixed."
+        meta, name, data = dn.message(rel(body + "\n"))
+        self.assertEqual(meta["content"], "**Hekili Forever v0.2.0**\n" + URL)
+        self.assertEqual(meta["flags"], 4)
+        self.assertEqual(meta["allowed_mentions"], {"parse": []})
+        self.assertEqual(meta["attachments"], [{"id": 0, "filename": "release-notes-v0.2.0.txt"}])
+        self.assertEqual(name, "release-notes-v0.2.0.txt")
+        self.assertEqual(data, body.encode("utf-8"))
 
-    def test_long_splits_on_lines(self):
-        text = "\n".join("x" * 99 for _ in range(60))
-        chunks = dn.split(text)
-        self.assertGreater(len(chunks), 1)
-        self.assertTrue(all(len(c) <= 2000 for c in chunks))
-        self.assertEqual("\n".join(chunks), text)  # cut only at line ends
+    def test_long_body_stays_one_message(self):
+        _, _, data = dn.message(rel("\n".join("z" * 90 for _ in range(60))))
+        self.assertGreater(len(data), 2000)
 
-    def test_overlong_line_cut_hard(self):
-        chunks = dn.split("head\n" + "y" * 4500)
-        self.assertEqual(chunks, ["head", "y" * 2000, "y" * 2000, "y" * 500])
+    def test_empty_body_header_only(self):
+        meta, name, data = dn.message(rel(None))
+        self.assertEqual(meta["content"], "**Hekili Forever v0.2.0**\n" + URL)
+        self.assertNotIn("attachments", meta)
+        self.assertEqual((name, data), (None, b""))
 
+    def test_multipart_well_formed(self):
+        meta, name, data = dn.message(rel("Notes."))
+        req = dn.request(meta, name, data, "https://discord.invalid/x")
+        ctype = req.get_header("Content-type")
+        self.assertTrue(ctype.startswith("multipart/form-data; boundary="))
+        b = ctype.split("boundary=")[1].encode()
+        parts = req.data.split(b"--" + b)
+        self.assertEqual(parts[0], b"")
+        self.assertEqual(parts[-1], b"--\r\n")
+        self.assertEqual(len(parts), 4)
+        self.assertIn(b'name="payload_json"', parts[1])
+        self.assertIn(b"\r\n\r\n" + json.dumps(meta).encode() + b"\r\n", parts[1])
+        self.assertIn(b'name="files[0]"; filename="release-notes-v0.2.0.txt"', parts[2])
+        self.assertIn(b"Content-Type: text/plain\r\n\r\nNotes.\r\n", parts[2])
 
-class Payloads(unittest.TestCase):
-    def test_header_and_body(self):
-        m = dn.payloads(rel("Notes.\n\n### Rogue\n- Fixed."))
-        self.assertEqual(len(m), 1)
-        self.assertTrue(m[0]["content"].startswith("**Hekili Forever v0.2.0**\n" + URL))
-        self.assertIn("### Rogue", m[0]["content"])
-
-    def test_no_mentions_and_later_chunks_no_embeds(self):
-        m = dn.payloads(rel("\n".join("z" * 90 for _ in range(60))))
-        self.assertGreater(len(m), 1)
-        self.assertTrue(all(p["allowed_mentions"] == {"parse": []} for p in m))
-        self.assertNotIn("flags", m[0])
-        self.assertTrue(all(p["flags"] == 4 for p in m[1:]))
-        self.assertTrue(all(len(p["content"]) <= 2000 for p in m))
-
-    def test_empty_body(self):
-        m = dn.payloads(rel(None))
-        self.assertEqual(m[0]["content"], "**Hekili Forever v0.2.0**\n" + URL)
+    def test_empty_body_is_plain_json(self):
+        meta, name, data = dn.message(rel(""))
+        req = dn.request(meta, name, data, "https://discord.invalid/x")
+        self.assertEqual(req.get_header("Content-type"), "application/json")
+        self.assertEqual(json.loads(req.data), meta)
 
 
 class Cli(unittest.TestCase):
-    def test_dry_run_prints_payloads_not_url(self):
+    def test_dry_run_prints_payload_not_url(self):
         os.environ["DISCORD_RELEASES_WEBHOOK"] = "https://discord.com/api/webhooks/SECRETID/SECRETTOKEN"
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
             json.dump({"release": rel("Notes.")}, f)
@@ -64,7 +71,8 @@ class Cli(unittest.TestCase):
             dn.main(["--dry-run", f.name])
         os.unlink(f.name)
         os.environ.pop("DISCORD_RELEASES_WEBHOOK")
-        self.assertEqual(json.loads(out.getvalue())[0]["allowed_mentions"], {"parse": []})
+        self.assertIn('"allowed_mentions"', out.getvalue())
+        self.assertIn("attachment: release-notes-v0.2.0.txt (6 bytes)", out.getvalue())
         self.assertNotIn("SECRET", out.getvalue())
 
 
