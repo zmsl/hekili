@@ -547,6 +547,14 @@ function ns.SpendPoints( c, res, ability )
     end
     return c
 end
+--- The declared spend of `ability` (an entry of class.abilities) and its resource, in one read: the cost the
+--- modifiers' wrapper answers (Engine/Schema/Races.lua M.Wrap), a number or nil, never a function (an ability's
+--- metatable calls it), and the ability's `spendType`, else the class's primary resource (even with no spend).
+--- Points: ns.SpendPoints. Allocates nothing.
+function state.SpendOf( ability )
+    return ability.spend, ability.spendType or class.primaryResource
+end
+
 -- (audit E8) Through the facade: knownRank(ids) is the highest rank of the list the spellbook knows (0 none; memoised
 -- there); swingBase(hand) the hand's unhasted swing speed, the attack speed with the melee haste taken out (0 unknown;
 -- hands 1 and 2); healthMax(unit) the client's. Allocate nothing.
@@ -2590,24 +2598,14 @@ do
             if k == "action_cooldown" then return ability and ability.cooldown or 0
             elseif k == "cast_delay" then return 0
             elseif k == "cast_regen" then
-                local resType = class.primaryResource
-                local amount, resource
-
-                if ability then
-                    amount, resource = ability.spend
-
-                    if not resource and ability.spendType then
-                        resource = ability.spendType
-                    end
-                end
-
-                resType = resource or resType
+                local amount, resType = nil, class.primaryResource
+                if ability then amount, resType = state.SpendOf( ability ) end
 
                 local regen = t[ resType ].regen
                 if regen == 0.001 then regen = 0 end
 
                 if not amount then return t.gcd.execute * regen end
-                return ( max( t.gcd.execute, ability.cast or 0 ) * regen ) - ( ability.spend or 0 )
+                return ( max( t.gcd.execute, ability.cast or 0 ) * regen ) - amount
 
             elseif k == "cast_time" then return ability and ability.cast or 0
             elseif k == "charges" then return cooldown.charges
@@ -2622,8 +2620,9 @@ do
                 local c = ability.cost
                 if c then return c end
 
-                c = ability.spend
-                if c then c = ns.SpendPoints( c, t[ ability.spendType or class.primaryResource ], ability ) end
+                local r
+                c, r = state.SpendOf( ability )
+                if c then c = ns.SpendPoints( c, t[ r ], ability ) end
                 return c or 0
 
             elseif k == "crit_pct_current" or k == "crit_percent_current" then return ability and ability.critical or t.stat.crit
@@ -5552,9 +5551,10 @@ local mt_default_action = {
 
                 if c then return c end
 
-                c = ability.spend
+                local r
+                c, r = state.SpendOf( ability )
 
-                if c then c = ns.SpendPoints( c, state[ ability.spendType or class.primaryResource ], ability ) end
+                if c then c = ns.SpendPoints( c, state[ r ], ability ) end
 
                 return c or 0
             end
@@ -5562,13 +5562,8 @@ local mt_default_action = {
             return 0
 
         elseif k == "cost_type" then
-            local a, _ = ability.spendType
-            if type( a ) == "string" then return a end
-
-            a = ability.spend
-            if type( a ) == "function" then _, a = a() end
-            if type( a ) == "string" then return a end
-            return class.primaryResource
+            local _, r = state.SpendOf( ability )
+            return r
 
         elseif k == "in_flight" or k == "in_flight_to_target" then
             if ability.flightTime then
@@ -7074,15 +7069,8 @@ function state.GetResourceType( ability )
 
     if not action then return end
 
-    if action.spend ~= nil then
-        if type( action.spend ) == "number" then
-            return action.spendType or class.primaryResource
-
-        elseif type( action.spend ) == "function" then
-            return select( 2, action.spend() ) or action.spendType or class.primaryResource
-
-        end
-    end
+    local c, resource = state.SpendOf( action )
+    if c ~= nil then return resource end
 
     return nil
 end
@@ -7094,20 +7082,8 @@ ns.spendResources = function( ability )
     if not action then return end
 
     -- First, spend resources.
-    if action.spend ~= nil then
-        local cost, resource
-
-        if type( action.spend ) == "number" then
-            cost = action.spend
-            resource = action.spendType or class.primaryResource
-        elseif type( action.spend ) == "function" then
-            cost, resource = action.spend()
-            resource = resource or action.spendType or class.primaryResource
-        else
-            cost = cost or 0
-            resource = resource or "health"
-        end
-
+    local cost, resource = state.SpendOf( action )
+    if cost ~= nil then
         cost = ns.SpendPoints( cost, state[ resource ], action )
 
         -- a charged cost modifier's buff loses a stack when the declared cost is above 0, even at a discounted 0 (Engine/Schema/Races.lua)
@@ -7648,16 +7624,8 @@ ns.hasRequiredResources = function( ability )
     if not action then return end
 
     -- First, spend resources.
-    if action.spend and action.spend ~= 0 then
-        local spend, resource
-
-        if type( action.spend ) == "number" then
-            spend = action.spend
-            resource = action.spendType or class.primaryResource
-        elseif type( action.spend ) == "function" then
-            spend, resource = action.spend()
-        end
-
+    local spend, resource = state.SpendOf( action )
+    if spend and spend ~= 0 then
         if resource == "focus" or resource == "energy" then
             -- Thought: We'll already delay CD based on time to get energy/focus.
             -- So let's leave it alone.
@@ -7738,17 +7706,8 @@ function state:TimeToReady( action, pool )
         end
     end
 
-    local spend, resource = ability.spend
-    if spend then
-        if type( spend ) == "number" then
-            resource = ability.spendType or class.primaryResource
-        elseif type( spend ) == "function" then
-            spend, resource = spend()
-            resource = resource or ability.spendType or class.primaryResource
-        end
-
-        spend = spend or 0
-    end
+    local spend, resource = state.SpendOf( ability )
+    if spend == nil then resource = nil end -- no spend: no resource wait (a `readySpend` below included)
 
     if spend and resource then spend = ns.SpendPoints( spend, self[ resource ], ability ) end
 
@@ -7885,16 +7844,8 @@ function state:IsReady( action )
         return false
     end
 
-    if ability.spend then
-        local spend, resource
-
-        if type( ability.spend ) == "number" then
-            spend = ability.spend
-            resource = ability.spendType or class.primaryResource
-        elseif type( ability.spend ) == "function" then
-            spend, resource = ability.spend()
-        end
-
+    local spend, resource = state.SpendOf( ability )
+    if spend then
         if resource == "focus" or resource == "energy" or state.script.entry then
             local ttr = self:TimeToReady( action )
 

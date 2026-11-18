@@ -2358,9 +2358,7 @@ function Hekili.Update()
 
                     -- For a timeline: the pick's spend of resource_type now (as ns.spendResources reads it) and how long
                     -- it keeps the player busy (its GCD, or its cast or channel when longer).
-                    local cost = ability.spend
-                    if type( cost ) == "function" then cost = cost() end
-                    if type( cost ) ~= "number" then cost = 0 end
+                    local cost = state.SpendOf( ability ) or 0
                     if slot.resource_type then cost = ns.SpendPoints( cost, state[ slot.resource_type ], ability ) end
                     slot.cost = cost
                     slot.busy = max( ability.gcd ~= "off" and gcdLength( action ) or 0, ability.cast or 0 )
