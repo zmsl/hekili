@@ -506,6 +506,26 @@ describe("APL window lines as commands (windows design v6 §4, §5)", function()
         assert.are_not.equal(gen, VSI.def.aplGen)
     end)
 
+    it("a rebuild drops the old lines' per-slot marks: WIN.fired does not grow over a session (L1324)", function()
+        load({
+            windows = "actions+=/window,name=x,duration=6",
+            default = "actions+=/open_window,name=x\nactions+=/berserker_stance",
+        })
+        tick()
+        local WIN
+        for i = 1, 200 do
+            local name, v = debug.getupvalue(S.WindowSlot, i)
+            if not name then
+                break
+            elseif name == "WIN" then
+                WIN = v
+            end
+        end
+        assert.is_not_nil(next(WIN.fired))
+        load({ default = "actions+=/berserker_stance" })
+        assert.is_nil(next(WIN.fired))
+    end)
+
     it("L05: export then import: plain names and the windows list in the string; the same operations on W09", function()
         load({
             windows = "actions+=/window,name=x,duration=6",

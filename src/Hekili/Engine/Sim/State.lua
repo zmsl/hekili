@@ -1740,6 +1740,7 @@ do
     --- Not per cycle.
     function state:BuildWindows()
         wipe( WIN.byKey )
+        wipe( WIN.fired ) -- the old lines' marks: WindowSlot walks every key each slot (L1324)
         wipe( state.window )
         local n = 0
         for name, d in pairs( class.windows ) do
