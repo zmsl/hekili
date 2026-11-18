@@ -76,6 +76,26 @@ describe("HEKILI_TOGGLE and GetToggleState (headless Arms)", function()
     end)
 
     it(
+        "/hekili set snapshot on|off is refused: no snapshot, no event, nothing written; a bare one takes one",
+        function()
+            local snaps, make = 0, hk.MakeSnapshot
+            hk.MakeSnapshot = function(...)
+                snaps = snaps + 1
+                return make(...)
+            end
+            local before = hk.DB.profile.toggles.snapshot.value
+            for _, cmd in ipairs({ "set snapshot off", "set snapshot on", "set snapshot value on" }) do
+                hk:CmdLine(cmd)
+            end
+            assert.are.equal(0, snaps)
+            assert.are.same({}, fired)
+            assert.are.equal(before, hk.DB.profile.toggles.snapshot.value)
+            hk:CmdLine("set snapshot")
+            assert.are.equal(1, snaps)
+        end
+    )
+
+    it(
         "/hekili set pause on|off sets pause to that state, fired; the state it already has is fired, not toggled",
         function()
             local snaps, make = 0, hk.MakeSnapshot

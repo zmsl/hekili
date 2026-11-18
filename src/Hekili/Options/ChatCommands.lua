@@ -175,7 +175,9 @@ function Hekili:HandleSetCommand( args )
 
         if subToggleOrState == "on" or subToggleOrState == "off" then
             local on = subToggleOrState == "on"
-            if mainToggle ~= "pause" then
+            if mainToggle == "snapshot" then -- an action with no on or off; only a bare `set snapshot` takes one
+                self:Print( L["Invalid explicit state; use 'on' or 'off'."] )
+            elseif mainToggle ~= "pause" then
                 self:FireToggle( mainToggle, subToggleOrState ) -- prints, sends HEKILI_TOGGLE, updates
             elseif on ~= ( self.Pause and true or false ) then
                 self:TogglePause()
