@@ -688,10 +688,11 @@ M.FLICKER = {
     -- re-pin e5a9cd2a2d -> e4ef929e54 (Priest lane, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, heldReady 0 / 0 / 0):
     -- flicker 0.02 -> 0 (the worst set reads 0; the old 0.05 at seeds 41-60 is gone)
     -- 0.9 batch (integ/0.9 a464ca6a4; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, retracted 0 / 0 / 0, readyShort
-    -- 0 / 0 / 0, heldReady 0 / 1 / 0, agreement .948 / .947 / .959): flicker 0 -> 0.03 (the measured worst + 0.01). Cause
-    -- the Priest re-pin itself: the lane's own tip 12c555178 reads 0.02 / .948 at seeds 1-20 in this spec, so its 0.02 -> 0
-    -- above did not reproduce. heldReady stays 0 (the gated seeds 1-20 read 0; seeds 21-40's 1 is not traced)
-    ["Smite"] = { flicker = 0.03, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
+    -- 0 / 0 / 0, heldReady 0 / 1 / 0, agreement .948 / .947 / .959): flicker 0 -> 0.02, the row before the Priest lane
+    -- (0.02 passes at seeds 1-20). Not from the batch merges: the lane's own tip 12c555178 reads 0.02 / .948 at seeds 1-20
+    -- in this spec, so its 0.02 -> 0 above did not reproduce; why the lane read 0 is not known. heldReady stays 0 (the
+    -- gated seeds 1-20 read 0; seeds 21-40's 1 is not traced)
+    ["Smite"] = { flicker = 0.02, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
