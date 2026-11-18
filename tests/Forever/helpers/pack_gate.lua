@@ -298,7 +298,11 @@ M.FLICKER = {
     -- lowers it 3 / 12 / 6 (its truth now pays the 2.5 the kit's Maul onCrit declares). The row stays the worst on, 420.
     -- retracted 0.7 -> 0 (round 5 review M2: all three sets measured 0, the measured worst)
     -- avoid-refund-09, replay-fncd-09 and replay-flips-09 merged: every cell identical (seeds 1-20 re-run)
-    ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 420 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- 0.9 batch (integ/0.9 a464ca6a4; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.32 / 0.16, retracted 0 / 0 / 0,
+    -- readyShort 0 / 0 / 0, heldReady 423 / 411 / 410, agreement .908 / .924 / .907): heldReady 420 -> 423. Cause gap-as-09
+    -- (the swing-avoid give-back, which the Druid lane did not carry), A/B on one tree: the Druid merge e98ef8506 reads
+    -- 423, the same minus gap-as's src + harness diff 420; steady-hold-09 moves flicker 0.28 -> 0.26 (its own A/B)
+    ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 423 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
@@ -610,7 +614,11 @@ M.FLICKER = {
     -- to wowsims 5ad9515c15's Arcane Concentration chance (a sixth a roll): seeds 41-60 with the old full chance
     -- (everything else equal) read 98 (A/B, not draw-identical), already over the old floor of 97; 84 -> 98 is the
     -- changes since the regen phase lane's measurement (not separated)
-    ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 102 }, -- 0 / 0 / 0, 0
+    -- 0.9 batch (integ/0.9 a464ca6a4; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort
+    -- 0 / 0 / 0, heldReady 109 / 97 / 102, agreement .990 / .989 / .990): heldReady 102 -> 109. Cause regen-read-09 (an
+    -- out-of-combat regen read equal to the seed narrows the band), A/B on one tree: the Paladin merge 03b05f947 (which
+    -- carries it) reads 109, the same minus its Power.lua diff 96
+    ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 109 }, -- 0 / 0 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one
     -- tick an episode, lo 141-150 against the truth's 150-152 (gap BQ)
@@ -679,7 +687,11 @@ M.FLICKER = {
     -- flicker 0.03 -> 0.02
     -- re-pin e5a9cd2a2d -> e4ef929e54 (Priest lane, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, heldReady 0 / 0 / 0):
     -- flicker 0.02 -> 0 (the worst set reads 0; the old 0.05 at seeds 41-60 is gone)
-    ["Smite"] = { flicker = 0, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
+    -- 0.9 batch (integ/0.9 a464ca6a4; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, retracted 0 / 0 / 0, readyShort
+    -- 0 / 0 / 0, heldReady 0 / 1 / 0, agreement .948 / .947 / .959): flicker 0 -> 0.03 (the measured worst + 0.01). Cause
+    -- the Priest re-pin itself: the lane's own tip 12c555178 reads 0.02 / .948 at seeds 1-20 in this spec, so its 0.02 -> 0
+    -- above did not reproduce. heldReady stays 0 (the gated seeds 1-20 read 0; seeds 21-40's 1 is not traced)
+    ["Smite"] = { flicker = 0.03, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
