@@ -133,7 +133,10 @@ describe("Forever Hunter", function()
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.rapid_fire.toggle)
         assert.are.equal("cooldowns", w.abilities.bestial_wrath.toggle)
-        assert.are.same({ 6, true, 1 }, { w.abilities.volley.cast, w.abilities.volley.channeled, w.abilities.volley.tick_time })
+        assert.are.same(
+            { 6, true, 1 },
+            { w.abilities.volley.cast, w.abilities.volley.channeled, w.abilities.volley.tick_time }
+        )
     end)
 
     it("places every talent in a tree (Forever's)", function()
