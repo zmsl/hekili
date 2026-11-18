@@ -80,6 +80,8 @@ describe(
             -- and a landed white swing its Unbridled Wrath: 3.46 x 2.1 main hand at 5/5
             local c = C.character()
             assert.is_true(math.abs(C.gain(1, 1, 100, "", c) - (3.46 * 2.1 + 0.595)) < 1e-9)
+            -- a two-hander's swing (the Arms world) 1 rage a proc too (owner L1419, wowsims ab0f EnergizeEffect 10 tenths)
+            assert.is_true(math.abs(ww.gain(1, 1, 100, "", c) - (4.5 * 3.6 + 0.595)) < 1e-9)
         end)
     end
 )

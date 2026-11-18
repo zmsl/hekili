@@ -459,10 +459,10 @@ describe("Forever Warrior", function()
                 e.spent = {}
                 lw.run(a.onAvoid, e) -- a second avoid: nothing more
                 assert.are.same({}, e.spent)
-                e.weapon.size = 2 -- a two-hander's proc is 2 rage, as its swings'
+                e.weapon.size = 2 -- a two-hander's proc is 1 rage too (owner L1419, wowsims ab0f: 22/22 Arms procs at 1)
                 e.gained = {}
                 lw.run(a.now, e)
-                assert.is_true(math.abs(e.gained[1] - 1.19) < 1e-9, key .. " " .. tostring(e.gained[1]))
+                assert.is_true(math.abs(e.gained[1] - 0.595) < 1e-9, key .. " " .. tostring(e.gained[1]))
             end
         end
     )
@@ -749,9 +749,9 @@ describe("Forever Warrior", function()
         w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 1.76, 2.0, 1.25
         near(3.46 * 2.2 + 0.595, lw.run(models.mainhand.value, w.state))
         near(1.73 * 2.5 * 1.3 + 0.595, lw.run(models.offhand.value, w.state))
-        w.state.main_hand.size = 2 -- a two-hander: 4.5 x speed, Unbridled Wrath 2 rage a proc
+        w.state.main_hand.size = 2 -- a two-hander: 4.5 x speed, Unbridled Wrath 1 rage a proc (owner L1419)
         w.game.base = { 3.3, 0 }
-        near(4.5 * 3.3 + 1.19, lw.run(models.mainhand.value, w.state)) -- 14.85 + 1.19 = 16.04
+        near(4.5 * 3.3 + 0.595, lw.run(models.mainhand.value, w.state)) -- 14.85 + 0.595 = 15.445
         near(4.5 * 3.3, lw.run(models.mainhand.crit, w.state)) -- a white crit doubles the swing's rage, two-hander too (W1)
         w.state.main_hand.size, w.game.base = 1, { 2.2, 2.5 }
         near(3.46 * 2.2, lw.run(models.mainhand.crit, w.state))

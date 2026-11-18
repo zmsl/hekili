@@ -7,7 +7,7 @@
 ### Changed
 
 ### Fixed
-- Warrior: Unbridled Wrath now counts its measured 60% chance per swing, and Heroic Strike and Cleave now count the Unbridled Wrath and Reckless Swings rage they give.
+- Warrior: Unbridled Wrath now counts its measured 60% chance per swing and 1 rage per proc with a two-hander too, and Heroic Strike and Cleave now count the Unbridled Wrath and Reckless Swings rage they give.
 
 ### Known issues
 

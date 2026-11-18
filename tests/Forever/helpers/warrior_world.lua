@@ -119,15 +119,23 @@ M.WORLD = {
     end,
 }
 
+-- Unbridled Wrath's rage on a landed white swing, Heroic Strike or Cleave at talent rank `rank`: the class file's
+-- expected value (11.9% a rank of 1 rage with any weapon, wowsims EV-0148, owner L1419), not a roll: a draw would re-time
+-- every later draw of the fight.
+local WRATH, UNBRIDLED_WRATH = 0.119, 12322
+local function wrath(rank)
+    return WRATH * (rank or 0)
+end
 -- True rage per landed white wound: the class file's own model restated (Hekili_Warrior/Warrior.lua, "Rage per white
--- swing": 4.5 x the unhasted speed with a two-hander; a crit doubles it, W1). Circular on purpose:
+-- swing": 4.5 x the unhasted speed with a two-hander; a crit doubles it, W1), plus Unbridled Wrath's expected rage at
+-- the character's rank (none at M.TALENTS). Circular on purpose:
 -- the loop measures recommendations, not the rage model (its own specs measure that). The loop's gain hook: rage is
 -- the character's only power, so `pt` is always rage's.
-function M.gain(_, hand, _, flag)
+function M.gain(_, hand, _, flag, character)
     if hand ~= 1 then
         return 0
     end
-    return 4.5 * 3.6 * (flag == "CRITICAL" and 2 or 1)
+    return 4.5 * 3.6 * (flag == "CRITICAL" and 2 or 1) + wrath(character.talents[UNBRIDLED_WRATH])
 end
 
 -- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's warrior/*.go):
@@ -180,13 +188,6 @@ function M.dropReckless()
             W.emit({ kind = "aura", dst = e, aura = id, stacks = 0, expires = 0, duration = 0 })
         end
     end)
-end
--- Unbridled Wrath's rage on a landed white swing, Heroic Strike or Cleave at talent rank `rank`: the class file's
--- expected value (11.9% a rank of 1 rage, wowsims EV-0148; these worlds' one-handers), not a roll: a draw would re-time
--- every later draw of the fight.
-local WRATH, UNBRIDLED_WRATH = 0.119, 12322
-local function wrath(rank)
-    return WRATH * (rank or 0)
 end
 -- Our queued Heroic Strike's or Cleave's outcome (behaviours.lua's `e.struck`), set at its press: a landed one rolls
 -- Unbridled Wrath and spends one Reckless Swings charge for 5 rage, once a cast (wowsims talents_fury.go at
