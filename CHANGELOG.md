@@ -28,6 +28,7 @@
 - Hunter: Survival Melee now runs out to reapply Serpent Sting while Strider Kick's speed is up and you have more than 30% mana, as wowsims.com does, and no longer suggests a Major Mana Potion (not yet checked in game).
 - Hunter: before it learns your own mana regeneration, Hekili now starts from the regeneration of wowsims.com's current level 60 gear, so early fights forecast mana closer to the game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
+- Mage, Arcane, Fire, Frost and Frostfire (wowsims.com): when you wear Robe of the Archmage, its use is now suggested with your other cooldowns, under the Potions toggle (not yet checked in game).
 
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
 
@@ -36,6 +37,7 @@
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
+- Using a mana gem or Robe of the Archmage now adds its mana to Hekili's mana forecast, the gem's by the gem you used.
 
 - A recommendation that changes and changes straight back no longer flashes the other ability for a split second.
 

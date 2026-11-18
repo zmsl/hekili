@@ -519,7 +519,13 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 97 / 85 / 84):
     -- flicker 0.03 -> 0, heldReady 95 -> 97
-    ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 97 }, -- 0 / 0.02 / 0, 0
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6; with item-restores-09, mana-09 CN22, harness-gcd-edge-09;
+    -- seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 96 / 97 / 102,
+    -- agreement .989 / .988 / .990): heldReady 97 -> 102, the worst of three seed sets (96 / 97 / 102); partly traced
+    -- to wowsims 5ad9515c15's Arcane Concentration chance (a sixth a roll): seeds 41-60 with the old full chance
+    -- (everything else equal) read 98 (A/B, not draw-identical), already over the old floor of 97; 84 -> 98 is the
+    -- changes since the regen phase lane's measurement (not separated)
+    ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 102 }, -- 0 / 0 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one
     -- tick an episode, lo 141-150 against the truth's 150-152 (gap BQ)
@@ -532,6 +538,9 @@ M.FLICKER = {
     -- retracted 0 -> 0.02, readyShort 0 -> 1, heldReady 180 -> 175. The 21-40 / 41-60 readyShort and retracted predate
     -- that lane (L757 I1, bisected on seeds 21-40: readyShort 0 / retracted 0 at 2a65a4d79, 2 / 0.03 at 1e75b58e2, the
     -- aura-paladin-mage merge's Mage auras); the lane measured them first
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 /
+    -- 0, readyShort 0 / 0 / 0, heldReady 172 / 170 / 175, agreement .996 / .991 / .997): floors kept (heldReady at the
+    -- floor; retracted and readyShort under it, not separated)
     ["Fire"] = { flicker = 0, retracted = 0.02, heldReady = 175, readyShort = 1 }, -- 0 / 0 / 0, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
@@ -545,6 +554,9 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.02 / 0.03 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 97 / 121 / 111):
     -- flicker 0.03 -> 0.04, heldReady 119 -> 121
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, retracted 0,
+    -- readyShort 0, heldReady 109 / 109 / 113, agreement .916 / .918 / .914): floors kept (under them; not separated:
+    -- seeds 41-60 read 113 with Arcane Concentration's old full chance too)
     ["Frostfire"] = { flicker = 0.04, retracted = 0, heldReady = 121 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0), retracted 0, readyShort 0 / 0 / 0, heldReady 113 / 113 / 109, agreement .999 / .998 / .997): flicker 0.01 (the
@@ -556,6 +568,8 @@ M.FLICKER = {
     -- (047aa7e82): fights start at the true mana, so fights are re-timed; same cost/cooldown near-tie class (seeds 1-20
     -- / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 116 /
     -- 117 / 110, agreement .995 / .997 / .998): heldReady 112 -> 117
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0,
+    -- readyShort 0, heldReady 116 / 117 / 110, agreement .995 / .997 / .999): floors kept (heldReady at the floor)
     ["Frost"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 117 },
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 396 / 398 / 399):
     -- flicker 0.1 -> 0 (S, steady icons on by default)

@@ -212,6 +212,24 @@ describe("now handlers", function()
         assert.are.same({ est + 20, lo + 15, math.min(hi + 25, 100) }, { after.est, after.lo, after.hi })
     end)
 
+    -- One ability, several use spells (a ranked consumable's): its `now` reads which of its IDs the cast was.
+    it("hands the cast's own spell ID to the `now` as cast_id, 0 outside a cast", function()
+        local seen = {}
+        register("rank_test", {
+            id = 2687,
+            copy = { 2688, 2689 },
+            now = function()
+                seen[#seen + 1] = cast_id -- luacheck: ignore 113 (the `now` context's read)
+            end,
+        })
+        start()
+        cast(2689, 9)
+        cast(2687, 12)
+        cast(2688, 15)
+        assert.are.same({ 2689, 2687, 2688 }, seen)
+        assert.are.equal(0, I.nowCtx.cast_id)
+    end)
+
     it("keeps a `now` gain over a short answer read before the gain can show, and caps on one after", function()
         register("rage_test", {
             id = 2687,

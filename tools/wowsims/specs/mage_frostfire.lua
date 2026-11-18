@@ -1,7 +1,7 @@
 -- tools/wowsims/specs/mage_frostfire.lua (wowsims packs, Task FFB): Frostfire (wowsims.com)'s wowsims/forever request
 -- and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/mage/dps/presets.ts:16,20,31-35
--- (FFBAplPreset, FFBTalents, DefaultOptions), :37-41 (OtherDefaults), :84-89 (FFBBuild: the gear p1Arcane.gear.json)
+-- (FFBAplPreset, FFBTalents, DefaultOptions), :37-41 (OtherDefaults), :84-89 (FFBBuild: the old pin's gear p1Arcane.gear.json)
 -- and ui/features/settings/model/apply_defaults.ts:68,97 (no race: the class's first, Human; 100 ms reaction time) at
 -- the pin.
 -- Spec binding: the FFB talents are 29 Fire points to 22 Frost (0 Arcane), and our active spec is the tree with the
@@ -22,7 +22,7 @@
 -- Deviations: Evocation's clip (the translator drops channelSpell.interruptIf; mage_fire.lua); rule 12 drops Read Ley
 -- Line (mage_arcane.lua); Ignite (412538) is a proc no key maps; includeReactionTime on the Fingers of Frost read is
 -- ignored (rule 5), and no decision here turns on it. autocastOtherCooldowns (rule 13): the trinket
--- (`use_items`; 18820 since the re-pin, was 19339) and the mana gem, off the GCD (this build has no Combustion).
+-- (`use_items`; 272438 since the e4ef929e54 re-pin, 18820 on e2842f0a78, 19339 before) and the mana gem, off the GCD (this build has no Combustion).
 -- Focus (M5): Pyroblast on Hot Streak and Fire Blast (unless two Fingers of Frost charges are up) tier 1, Scorch and
 -- Evocation tier 2.
 -- Loops (20 fights, 0.958; frostfire_bolt -> scorch 680): measured (Task FFB fix round 1) as the believed mana a few
@@ -44,6 +44,11 @@
 -- Leveling (ruling R22: L10/L40 keep the 6 s bar): L10's 6.6 s is full mana with Fire Blast the only listed
 -- castable line (Frostfire Bolt unlearned until L40), Fireball affordable and unlisted: the filler Fireball until
 -- Frostfire Bolt.
+-- Re-pin e2842f0a78 -> e4ef929e54 (lane mage 0.9, R6): the gear is the pin's default preraid.gear.json (so "the gear
+-- p1Arcane.gear.json" above is the old pin's) and its trinket the Weakness Analyzer 272438, mapped to `use_items`
+-- (18820 before); Robe of the Archmage (item 14152, spell 18385) is a kit ability under the Potions toggle, emitted as
+-- robe_of_the_archmage,use_off_gcd=1 before use_items; the world rolls Arcane Concentration at a sixth of its chance
+-- at a channel's start and at each landed missile (wowsims 5ad9515c15).
 return {
     class = "MAGE",
     pack = "Frostfire (wowsims.com)",
@@ -54,7 +59,7 @@ return {
     player = {
         race = "RaceHuman",
         class = "ClassMage",
-        gear = "ui/specs/mage/dps/gear_sets/p1Arcane.gear.json",
+        gear = "ui/specs/mage/dps/gear_sets/preraid.gear.json",
         talentsString = "-5550000123011303-2035010311013002",
         specKey = "mage",
         options = { classOptions = { defaultMageArmor = "MageArmorMageArmor" } },
@@ -63,9 +68,9 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    -- the Talisman of Ephemeral Power (ItemSparse 18820: a trinket, InventoryType 12; the re-pin gear, was the Mind
+    -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear, was the Talisman 18820 and the Mind
     -- Quickening Gem 19339)
-    map = { ["item:18820"] = "use_items" },
+    map = { ["item:272438"] = "use_items" },
     focus = { pyroblast = 1, scorch = 2, evocation = 2, fire_blast = 1, counterspell = 1 },
     leveling = { "fireball,if=!action.frostfire_bolt.known" },
 }

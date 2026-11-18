@@ -738,6 +738,48 @@ describe("the replay's casts: tags, items, pets, totems", function()
     end)
 end)
 
+-- A ranked item (one ability, its `items` and their use spells in `copy`, same order): a logged use of a rank emits that
+-- rank's use spell, so the belief credits the rank used (the mana gems).
+describe("the replay's ranked item use", function()
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[1.00] [Tester (#1)] Casting {ItemID: 800005} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+        "[1.00] [Tester (#1)] Completed cast {ItemID: 800005}",
+        "[3.00] [Tester (#1)] Casting {ItemID: 800004} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+        "[3.00] [Tester (#1)] Completed cast {ItemID: 800004}",
+    }, "\n")
+    local HR = {
+        Hekili = {
+            Class = {
+                abilities = {
+                    strike = { key = "strike", id = 900001, gcd = "spell" },
+                    gem = {
+                        key = "gem",
+                        id = -103,
+                        copy = { 900078, 900079 },
+                        items = { 800004, 800005 },
+                        cooldown = 1,
+                        gcd = "off",
+                    },
+                },
+                auras = {},
+            },
+        },
+    }
+
+    it("emits the use spell of the rank the log used", function()
+        local R = replay.new(LOG, HR, {})
+        local W = at(R.world(setmetatable({ tag = "-rk" }, { __index = WO }), 1), R.pull + 4)
+        local got = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "cast" then
+                got[#got + 1] = ev.spell
+            end
+        end
+        assert.are.same({ 900079, 900078 }, got)
+    end)
+end)
+
 -- Fix 31 G4: an item use the kit does not map is still our cast to the client (its UNIT_SPELLCAST_SUCCEEDED, of a
 -- spell no ability has), so its outcome a travel later is not our pending cast's to claim (Rows.lua's another()).
 describe("the replay's unmapped item use", function()

@@ -421,14 +421,37 @@ M.READY = {
     hunter_survival_melee = { 0.23, 3 },
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
     -- a cost after the truth), fire_blast 7 (max 0.76: the dry-mana waits on its 340)
-    mage_arcane = { 0.76, 9 }, -- 0.760, 9 (ruling M13)
+    -- Re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6; the new preraid gear's logs, with item-restores-09's Robe of
+    -- the Archmage and mana gem restores credited, mana-09 CN22 and harness-gcd-edge-09 merged). Fixture rows the
+    -- restore credit moved: the forecast's predicted offset (column a) of the rows after the first Robe / gem use
+    -- 8.0 / 2.1 / 6.7 s -> 0.001 (Arcane 27.50-137.00, Frostfire 38.00-134.50: the forecast no longer waits on mana the
+    -- truth has); the cost rows at a gem's own use from never to in:grain (Arcane arcane_wrath 134.00 lo-truth -911.8 ->
+    -- -136.8, Frostfire fire_blast 130.50 -852.0 -> -77.0, Frost cone_of_cold 145.90 -916.7 -> -141.7); Frostfire's
+    -- later cost rows follow the credited Citrine (frostfire_bolt 141.10 est-truth -32.8 -> -0.2; the scorch rows
+    -- 149.10-178.30 b within 0.02 s, lo-truth within 0.6). New off-GCD rows: robe_of_the_archmage (never; the packs'
+    -- new line, item-restores mapping the Robe) at its log use.
+    -- Arcane { 0.76, 9 } -> { 0.22, 2 }: fire_blast 110.70 / 128.80 late 0.22, cost class (gap BQ, lo 6.7 / 6.9 under
+    -- the truth at Fire Blast's 340).
+    mage_arcane = { 0.22, 2 }, -- 0.220, 2 (ruling M13)
     -- { 0.37, 31 } -> { 0.45, 10 } re-pin e2842f0a78: cost class, scorch 10; the median is gap BQ's size, but the
     -- max 2.23 s rows sit about 50 mana under the truth, past BQ's ~0.4 s (untraced: an unseen Master of Elements
     -- refund is the candidate)
-    mage_fire = { 0.45, 10 }, -- 0.450, 10
+    -- { 0.45, 10 } -> { 0.69, 3 }: scorch 126.20 0.25, 152.40 0.69 late, cost class on the new log's dry pool (gap BQ:
+    -- lo 4.8 / 18.6 under the truth at Scorch's 150); 146.60 1.61 late (lo 73.7 under, past BQ's ~0.4 s) is untraced
+    -- (the BQ class or the unseen Master of Elements refund);
+    -- the same three before the restore credit, which moved scorch 42.00 (a 9.502 -> 0.001) and fire_blast 136.50
+    -- (never -> in:grain at the Citrine's use, lo-truth -817.4 -> -42.4)
+    mage_fire = { 0.69, 3 }, -- 0.690, 3
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
-    mage_frostfire = { 0.42, 9 }, -- 0.420, 9 (Task FFB, ruling M13)
-    mage_frost = { 0.23, 3 }, -- 0.230, 3 (new pack 2026-11-12, R6 first measurement: frostbolt late, cost class)
+    -- { 0.42, 9 } -> { 1.51, 3 }: three late cost rows on the new log's dry pool (lo under the truth at the cost):
+    -- frostfire_bolt 112.80 0.23 (lo -7.1, gap BQ), scorch 118.00 2.51 (lo -41.9 at Scorch's 150; untraced: the BQ
+    -- class or the unseen Master of Elements refund), frostfire_bolt 141.10 1.51 (lo -32.8); the same three before the
+    -- restore credit (only 141.10's est moved). 1.51 is the median over 3 rows; it rose because 6 rows closed (the
+    -- restore credit), not because rows got worse
+    mage_frostfire = { 1.51, 3 }, -- 1.510, 3 (Task FFB, ruling M13)
+    -- { 0.23, 3 } -> { 0.29, 3 }: frostbolt 132.00 / 157.30 late 0.29 (cost class, lo 8.3 / 8.1 under the truth),
+    -- 179.20 0.16 (slack)
+    mage_frost = { 0.29, 3 }, -- 0.290, 3 (new pack 2026-11-12, R6 first measurement: frostbolt late, cost class)
     paladin_holy_shock = { 0.24, 5 }, -- 0.240, 5 (new pack 2026-11-12, R6 first measurement: cost and slack classes)
     -- { 0.86, 7 } -> { 0.00, 0 } re-pin e2842f0a78: real 0 once Holy Shield's block hits are procs (PROT_REPLAY)
     -- { 0.00, 0 } -> { 0.43, 1 } pin move 2 on CN8 (rank 4 log, PROT_REPLAY's rank-4 procs, steady icons): one row, holy_strike

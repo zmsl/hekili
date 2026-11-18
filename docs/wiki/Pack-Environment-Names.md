@@ -50,6 +50,7 @@ These names answer in both environments, with the same meaning. A function that 
 |---|---|
 | `instant` | True inside an instant cast's `now`; false elsewhere |
 | `cast_start` | The cast's start time; 0 for an instant |
+| `cast_id` | The spell ID of the cast being credited (the rank an item used); 0 elsewhere |
 | `target.health` | The belief's bounds on the target's health, in percent: `.known`, `.lo`, `.hi` (0 and 100 while unknown). There is no `.pct`: a hidden health is unknown, so a `now` tests a bound, such as `target.health.hi < 35` for "proven below 35%". |
 | `usable.<key>` | The client's last plain answer to whether the ability is usable; false before one |
 | `lastSwing(hand)` | The time of the last observed swing of a hand (1 main, 2 off, 3 ranged); 0 for none |

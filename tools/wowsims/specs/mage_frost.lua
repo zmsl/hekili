@@ -2,7 +2,7 @@
 -- request and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at the pin: ui/specs/mage/dps/apls/frost.apl.json,
 -- the Frost Incin talents 203205-5-053500011121331251 (presets.ts FrostIncinTalents; sim/mage/mage_test.go
--- FrostTalents: 15 Arcane, 5 Fire, 31 Frost), the gear p1Arcane.gear.json, Human (apply_defaults.ts: the class's
+-- FrostTalents: 15 Arcane, 5 Fire, 31 Frost), the old pin's gear p1Arcane.gear.json, Human (apply_defaults.ts: the class's
 -- first), 100 ms reaction time, 28 yd.
 -- Disagreements (P7; floor 0.93), decisions on-GCD 0.934 (57 of 61) top [frostbolt -> cone_of_cold 3; cone_of_cold ->
 -- frostbolt 1] (log times):
@@ -18,6 +18,11 @@
 -- the log's pool (6348).
 -- Loops (20 fights, seeds 1-20 / 21-40 / 41-60; the harness's seeded regen phase, 2026-11-13): agreement .996 / .998 /
 -- .998, flicker 0 x3, heldReady 112 / 111 / 109.
+-- Re-pin e2842f0a78 -> e4ef929e54 (lane mage 0.9, R6): the gear is the pin's default preraid.gear.json (so "the gear
+-- p1Arcane.gear.json" above is the old pin's) and its trinket the Weakness Analyzer 272438, mapped to `use_items`
+-- (18820 before); Robe of the Archmage (item 14152, spell 18385) is a kit ability under the Potions toggle, emitted as
+-- robe_of_the_archmage,use_off_gcd=1 before use_items; the world rolls Arcane Concentration at a sixth of its chance
+-- at a channel's start and at each landed missile (wowsims 5ad9515c15).
 return {
     class = "MAGE",
     pack = "Frost (wowsims.com)",
@@ -28,7 +33,7 @@ return {
     player = {
         race = "RaceHuman",
         class = "ClassMage",
-        gear = "ui/specs/mage/dps/gear_sets/p1Arcane.gear.json",
+        gear = "ui/specs/mage/dps/gear_sets/preraid.gear.json",
         talentsString = "203205-5-053500011121331251",
         specKey = "mage",
         options = { classOptions = { defaultMageArmor = "MageArmorMageArmor" } },
@@ -37,8 +42,8 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 28,
     },
-    -- the Talisman of Ephemeral Power (ItemSparse 18820: a trinket, InventoryType 12)
-    map = { ["item:18820"] = "use_items" },
+    -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear)
+    map = { ["item:272438"] = "use_items" },
     -- by role (docs/dev/wowsims-packs.md): Cone of Cold on five Winter's Chill stacks and Ice Lance (one Fingers of
     -- Frost charge while Frostbolt casts; 0 casts in wowsims's fight) are windows to catch (1); Ice Barrier, kept up for Frigid Power, is upkeep (2)
     focus = { cone_of_cold = 1, ice_lance = 1, ice_barrier = 2 },

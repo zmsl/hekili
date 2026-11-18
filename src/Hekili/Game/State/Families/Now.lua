@@ -7,7 +7,7 @@
 -- `summonPet`, `dismissPet`, `openWindow`, `closeWindow`) and reads (`talent`, `buff`, `debuff`, the resources by key,
 -- `knownRank`, `stat`, `swingBase`, `mainhand_speed`, `offhand_speed`, `weapon`, `equipped`, `set_bonus`, `healthMax`,
 -- `now`, `combat`, `level`, `lastSwing`, `nextSwing`, `usable`, `window`, and the `now`-only `instant`, `cast_start`,
--- `target.health`: aura audit C8) with belief meanings. A window's evaluator
+-- `target.health`: aura audit C8; `cast_id`: item-restores-09) with belief meanings. A window's evaluator
 -- (Families/Windows.lua) runs in the same context, reads only. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An `applyBuff`/`applyDebuff` with no duration writes the aura's registered one: its number, or its function evaluated
 -- in this context (gear-aware spec §5), so a pack writes a duration once.
@@ -60,6 +60,9 @@ local NAMES = {
     -- a start flag staged at UNIT_SPELLCAST_START itself if a pack's instant-only spend shows it live
     cast_start = 0,
     instant = false,
+    -- `now`-only: the spell ID the cast was, one of the ability's IDs (its `id` or a `copy`: a rank, as a consumable's
+    -- use spell by the item used), 0 elsewhere
+    cast_id = 0,
     -- `now`-only (Lane R): inside a "kill" reaction, the key of our channel in progress on the victim (our target), its
     -- stop read at the kill's own instant included; false elsewhere (Obs.Kill below)
     victim_channel = false,
@@ -856,6 +859,7 @@ local function run(o, t)
     if A.now[a] then
         rawset(NAMES, "cast_start", started)
         rawset(NAMES, "instant", started == 0)
+        rawset(NAMES, "cast_id", A.ids[a][o.c] or A.id[a] or 0) -- `c`: the cast ID's place (Sources/Casts.lua)
         flight = A.lands[a] and travel(a) or 0
         local r, R = A.refundNow[a] and A.slot[a] or 0, I.res
         local e, l, h = R.est0[r], R.lo0[r], R.hi0[r] -- nil with no slot (r 0): not read
@@ -869,6 +873,7 @@ local function run(o, t)
         flight = 0
         rawset(NAMES, "cast_start", 0)
         rawset(NAMES, "instant", false)
+        rawset(NAMES, "cast_id", 0)
         I.ShareRead() -- the `now` may have moved what a regen share reads (Families/Resources.lua)
     end
 end

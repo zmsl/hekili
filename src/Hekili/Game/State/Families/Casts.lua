@@ -43,6 +43,7 @@ local A = {
 }
 I.ab = A
 A.bySpell = {}
+A.idPos = {} -- by spell ID: its place among its ability's IDs (A.ids), the rank a cast of it was (Obs.CastSuccess `c`)
 
 -- Unknown, not ready, ready (the plain isActive flag as last reported).
 local UNKNOWN, NOT, YES = -1, 0, 1
@@ -212,7 +213,7 @@ end
 
 I.OnBuild(function(def, now)
     for k in pairs(A.bySpell) do
-        A.bySpell[k] = nil
+        A.bySpell[k], A.idPos[k] = nil, nil
     end
     for r = 1, #def.resources do
         local b = def.resources[r].base
@@ -227,7 +228,7 @@ I.OnBuild(function(def, now)
         local ids = def.abilityIds[a]
         A.ids[a], A.id[a] = ids, ids[1]
         for k = 1, #ids do
-            A.bySpell[ids[k]] = a
+            A.bySpell[ids[k]], A.idPos[ids[k]] = a, k
         end
         A.slot[a] = def.abilitySlot[a]
         A.qid[a], A.readCost[a], A.multiCost[a] = ids[1], 0, false
@@ -481,9 +482,9 @@ function I.GcdModel(expires, t, event)
 end
 
 --- What our cast success `o` of ability a paid: the cost priced when it was heard (Sources/Casts.lua: `o.b`, with
---- `o.c` 1), else I.CostOf(a) now. Allocates nothing.
+--- `o.c` the cast ID's place, 1 or more), else I.CostOf(a) now. Allocates nothing.
 function I.CastCost(o, a)
-    if o.c == 1 then
+    if o.c >= 1 then
         return o.b
     end
     return I.CostOf(a)

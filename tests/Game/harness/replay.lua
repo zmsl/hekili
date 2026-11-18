@@ -312,8 +312,8 @@ end
 --- list out of combat (each line under its guard against recasting), so an on-GCD one is scored. creatureType: the mob's
 --- (`target.creature_type`'s key; the request's mobType: tests/Forever/helpers/wowsims.lua `creatureType`), distance (the request's distanceFromTarget: our yards from the target at the start,
 --- W.moveTo; the log's move lines step it; nil: no positions). An ItemID cast maps through the abilities' `item`/`items`:
---- a decision and a cooldown, no cast event (shortcut: the client is not shown the item's spell; emit it when a gate
---- reads an item's cast). notTargeted: the client answers our target's target as not us (UnitIsUnit("targettarget",
+--- a decision and a cooldown, and the success of the item's use spell when the kit names one (its `copy` in `items`
+--- order, L481). notTargeted: the client answers our target's target as not us (UnitIsUnit("targettarget",
 --- "player") false) though the mob still swings at us: wowsims's melee stands behind a mob that attacks the raid's tank.
 --- alias ({ [logged spell ID] = kit spell ID }): a cast (its Casting and Completed lines) wowsims logs under an ID the
 --- client does not cast, replayed as the kit's (a cast the log reports under another spell ID than the client's).
@@ -397,15 +397,17 @@ function M.new(text, H, o)
                 table.insert(rankIDs[key], id)
             end
         end
-        for _, id in ipairs(type(a.items) == "table" and a.items or { rawget(a, "item") }) do
-            if type(id) == "number" then
-                itemOf[id] = itemOf[id] or key
+        -- an item's use spell (L481), by item: the kit's positive IDs (its `copy`; an item's own `id` is negative) in
+        -- `items` order, the first for an item past them (a ranked consumable: each item its own rank's spell)
+        local uses = {}
+        for _, id in ipairs(rankIDs[key]) do
+            if id > 0 then
+                uses[#uses + 1] = id
             end
         end
-        -- an item's use spell (L481): its first positive ID (the kit's `copy`; an item's own `id` is negative)
-        for _, id in ipairs(rankIDs[key]) do
-            if useOf[key] == nil and id > 0 and (a.items or rawget(a, "item")) then
-                useOf[key] = id
+        for i, id in ipairs(type(a.items) == "table" and a.items or { rawget(a, "item") }) do
+            if type(id) == "number" and not itemOf[id] then
+                itemOf[id], useOf[id] = key, uses[i] or uses[1]
             end
         end
     end
@@ -851,7 +853,7 @@ function M.new(text, H, o)
                 if c > 0 then
                     us.cdUntil[key] = T + cdk
                 end
-                local use = useOf[key]
+                local use = useOf[e.item]
                 if use and e.kind == "completed" then
                     W.emit({ kind = "cast", src = us, dst = mob, spell = use })
                 end

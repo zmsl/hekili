@@ -1,7 +1,7 @@
 -- tools/wowsims/specs/mage_fire.lua (wowsims packs plan, Task 12): Fire (wowsims.com)'s wowsims/forever request
 -- and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/mage/dps/presets.ts:17,21,31-35
--- (FireAplPreset, FireTalents, DefaultOptions), :37-41 (OtherDefaults), the gear p1Arcane.gear.json (the spec's
+-- (FireAplPreset, FireTalents, DefaultOptions), :37-41 (OtherDefaults), the old pin's gear p1Arcane.gear.json (the spec's
 -- default, spec.ts:82) and ui/features/settings/model/apply_defaults.ts:68,97 (spec.ts names no race: the class's
 -- first, Human, ui/sim/player/classes/capabilities_auto_gen.ts:65; the reaction time the UI defaults to, 100 ms) at
 -- the pin.
@@ -28,7 +28,7 @@
 -- Deviation (Evocation's clip): wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the translator
 -- drops channelSpell.interruptIf (tools/wowsims/apl.lua; a shared gap, reported), so the pack's line has no clip
 -- condition; the world clips by wowsims's rule (mage_world.lua: any press while the belief channels it at 99%).
--- autocastOtherCooldowns (rule 13): the trinket (`use_items`; 18820 since the re-pin, was 19339), Combustion and the
+-- autocastOtherCooldowns (rule 13): the trinket (`use_items`; 272438 since the e4ef929e54 re-pin, 18820 on e2842f0a78, 19339 before), Combustion and the
 -- mana gem, off the GCD. Rule 12 drops Read Ley Line (mage_arcane.lua); Ignite (412538) and the missiles' 10274 are
 -- procs no key maps.
 -- Re-pin e2842f0a78 (Task 10): the build's talents (presets.ts FireTalents 0502052001001-55500001230133031-003), the
@@ -47,6 +47,11 @@
 -- shows one poll (fire_blast 0.50, 0.50 -> scorch, every 6 s cycle): central, gaps.md CQ, fixed by Task 10b (R21).
 -- Focus: the closing Scorch line is the filler, untiered (`{ 2, false }`; the first line is the upkeep).
 -- LIVE L10 0.0, L40 0.2, L60 6.0 s (was 12.6: the new list's Arcane Blast line).
+-- Re-pin e2842f0a78 -> e4ef929e54 (lane mage 0.9, R6): the gear is the pin's default preraid.gear.json (so "the gear
+-- p1Arcane.gear.json" above is the old pin's) and its trinket the Weakness Analyzer 272438, mapped to `use_items`
+-- (18820 before); Robe of the Archmage (item 14152, spell 18385) is a kit ability under the Potions toggle, emitted as
+-- robe_of_the_archmage,use_off_gcd=1 before use_items; the world rolls Arcane Concentration at a sixth of its chance
+-- at a channel's start and at each landed missile (wowsims 5ad9515c15).
 return {
     class = "MAGE",
     pack = "Fire (wowsims.com)",
@@ -57,7 +62,7 @@ return {
     player = {
         race = "RaceHuman",
         class = "ClassMage",
-        gear = "ui/specs/mage/dps/gear_sets/p1Arcane.gear.json",
+        gear = "ui/specs/mage/dps/gear_sets/preraid.gear.json",
         talentsString = "0502052001001-55500001230133031-003",
         specKey = "mage",
         options = { classOptions = { defaultMageArmor = "MageArmorMageArmor" } },
@@ -66,9 +71,9 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    -- the Talisman of Ephemeral Power (ItemSparse 18820: a trinket, InventoryType 12; the re-pin gear, was the Mind
+    -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear, was the Talisman 18820 and the Mind
     -- Quickening Gem 19339)
-    map = { ["item:18820"] = "use_items" },
+    map = { ["item:272438"] = "use_items" },
     focus = { pyroblast = 1, scorch = { 2, false }, arcane_missiles = 1 }, -- by role (docs/dev/wowsims-packs.md)
     leveling = {},
 }
