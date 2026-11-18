@@ -192,17 +192,37 @@ function M.unguarded(criteria, self, isAbility)
     return bad
 end
 
+--- The offences of one line's body (`<action>,...,if=<criteria>`): { read }. A `sequence` / `strict_sequence` line is
+--- checked a part at a time (its head, then each member: colon-separated outside parentheses), each as its own line.
+function M.line(body, isAbility)
+    local parts, depth, from = {}, 0, 1
+    if body:match("^sequence%f[^%w_]") or body:match("^strict_sequence%f[^%w_]") then
+        for i = 1, #body do
+            local ch = body:sub(i, i)
+            depth = depth + (ch == "(" and 1 or ch == ")" and -1 or 0)
+            if ch == ":" and depth == 0 then
+                parts[#parts + 1], from = body:sub(from, i - 1), i + 1
+            end
+        end
+    end
+    parts[#parts + 1] = body:sub(from)
+    local out = {}
+    for _, part in ipairs(parts) do
+        local criteria = part:match(",if=(.*)$")
+        for _, ref in ipairs(criteria and M.unguarded(criteria, part:match("^([%w_]+)"), isAbility) or {}) do
+            out[#out + 1] = ref
+        end
+    end
+    return out
+end
+
 --- The offences of a .simc file: { "<line>: <read>" }.
 function M.file(path, isAbility)
     local out = {}
     for line in io.lines(path) do
         local body = line:match("^actions[%w_.]*%+?=/?(.+)$")
-        if body then
-            local action = body:match("^([%w_]+)")
-            local criteria = body:match(",if=(.*)$")
-            for _, ref in ipairs(criteria and M.unguarded(criteria, action, isAbility) or {}) do
-                out[#out + 1] = line .. ": " .. ref
-            end
+        for _, ref in ipairs(body and M.line(body, isAbility) or {}) do
+            out[#out + 1] = line .. ": " .. ref
         end
     end
     return out

@@ -735,11 +735,12 @@ describe("Forever Priest priorities", function()
             berserking = true, -- rule 13's Troll racial
             call_action_list = true,
         }
+        local pe = require("Forever.helpers.pack_entries") -- a sequence's members walked too
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "priest")) do
             for list, entries in pairs(p.lists) do
-                for i, e in ipairs(entries) do
+                for i, e in ipairs(pe.flat(entries)) do
                     local where = p.name .. " " .. list .. " " .. i
-                    assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action], where)
+                    assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action] or pe.LINE[e.action], where)
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
                             assert.is_true(kinds[kind][key] ~= nil or shared[key] ~= nil, where .. ": " .. key)

@@ -846,7 +846,7 @@ describe("Forever Hunter priorities", function()
             n = n + 1
             local have = {}
             for _, entries in pairs(p.lists) do
-                for _, e in ipairs(entries) do
+                for _, e in ipairs(require("Forever.helpers.pack_entries").flat(entries)) do -- members too
                     have[e.action] = true
                 end
             end
@@ -878,13 +878,17 @@ describe("Forever Hunter priorities", function()
         end
         toc:close()
         assert.is_true(racials.blood_fury)
+        local pe = require("Forever.helpers.pack_entries") -- a sequence's members walked too
         for name, p in pairs(packs) do
             for list, entries in pairs(p.lists) do
-                for i, e in ipairs(entries) do
+                for i, e in ipairs(pe.flat(entries)) do
                     local where = name .. " " .. list .. " " .. i
                     local window = e.action == "open_window" or e.action == "close_window"
                     assert.is_true(
-                        e.action == "call_action_list" or window or cls.abilities[e.action] ~= nil or racials[e.action],
+                        e.action == "call_action_list"
+                            or pe.LINE[e.action]
+                            or cls.abilities[e.action] ~= nil
+                            or racials[e.action],
                         where
                     )
                     assert.is_true(not window or cls.windows[e.window_name or e.list_name] ~= nil, where)

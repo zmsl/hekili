@@ -44,10 +44,32 @@ local OPTIONS = {
     icon_if = "icon_if",
     value = "value", -- a `variable` line's (CN25: name= is then its var_name)
     pure = "pure", -- a `variable` line read in place (CN25, Scripts.lua MarkPure): 1
-} -- plus if=, which runs to the end of the line
+    mode = "mode", -- a `sequence` line's (windows design v6 §3.3): skip, wait or continue
+    start_on_first = "start_on_first", -- a `strict_sequence` line's flags: 1
+    hold_off_gcd = "hold_off_gcd",
+} -- plus if=, which runs to the end of the line (a sequence line: to its first member)
 -- kept as the line wrote them: text shown with the pick (label, icon) and its condition (label_if, icon_if)
-local VERBATIM =
-    { name = true, buff_name = true, label = true, label_if = true, icon = true, icon_if = true, value = true }
+local VERBATIM = {
+    name = true,
+    buff_name = true,
+    label = true,
+    label_if = true,
+    icon = true,
+    icon_if = true,
+    value = true,
+    mode = true,
+}
+-- name= by action, as Options.lua ParseActionList's nameMap (any other action's is its list_name)
+local NAMES = {
+    variable = "var_name",
+    sequence = "window_name",
+    strict_sequence = "window_name",
+    restart_sequence = "window_name",
+    open_window = "window_name",
+    close_window = "window_name",
+}
+-- a line whose members follow its options, one per `:` outside parentheses (Options.lua splitSequence)
+local SEQ = { sequence = true, strict_sequence = true }
 
 -- a literal | as the in-game importer stores it: || (a lone | starts a WoW colour escape in the editor); the engine
 -- reads either form (Scripts.lua)
@@ -60,6 +82,59 @@ end
 -- [,other_target=N][,focus=N][,label=text][,label_if=cond][,icon=texture file id or path][,icon_if=cond][,if=criteria];
 -- variable,name=var[,pure=1],value=expression (CN25: a translated wowsims variable; pure=1: read in place);
 -- focus is a tier, 1 highest; buff_name is cancel_buff's aura.
+-- (strict_)sequence,name=window[,mode=m][,start_on_first=1][,hold_off_gcd=1][,if=criteria]:member[:member...], each
+-- member an entry of its own (its `steps`, as Options.lua ParseActionList builds them); a window line's name= is its
+-- window_name.
+
+-- a sequence line's parts: its own options, then one per member (Options.lua splitSequence's rule)
+local function split(body)
+    local out, from, depth = {}, 1, 0
+    for pos, c in body:gmatch("()([():])") do
+        if c == "(" then
+            depth = depth + 1
+        elseif c == ")" then
+            depth = depth - 1
+        elseif depth == 0 then
+            out[#out + 1] = body:sub(from, pos - 1)
+            from = pos + 1
+        end
+    end
+    out[#out + 1] = body:sub(from)
+    return out
+end
+
+-- one entry's text (a line's body, or one sequence member) into its table; `line` names it in an error. `enabled`: a
+-- line's true, a member's nil (as the engine's parser leaves it); set in the constructor, as ever, so a line's table,
+-- and so its serialised bytes in the class file, stay as they were
+local function entry(body, line, enabled)
+    local action, opts = body:match("^([%w_]+),?(.*)$")
+    local e = { action = action, enabled = enabled }
+    opts = "," .. opts -- if= only as a whole option, never the tail of label_if= or icon_if=
+    e.criteria = opts:match(",if=(.*)$")
+    if e.criteria then
+        e.criteria = piped(e.criteria)
+    end
+    opts = opts:gsub(",if=.*$", "")
+    for opt in opts:gmatch("[^,]+") do
+        local k, v = opt:match("^([%w_]+)=(.+)$")
+        if not OPTIONS[k] then
+            error("unknown option " .. (k or opt) .. " in: " .. line, 0)
+        end
+        local value = VERBATIM[k] and v or tonumber(v)
+        if k == "focus" and not v:match("^[1-9]%d*$") then
+            value = nil -- a focus tier is a positive integer, 1 highest
+        end
+        if value == nil then
+            error("bad value " .. opt .. " in: " .. line, 0)
+        end
+        if k == "value" then
+            value = piped(value)
+        end
+        e[(k == "name" and NAMES[action]) or OPTIONS[k]] = value
+    end
+    return e
+end
+
 local function parse(simc)
     local lists = {}
     for line in simc:gmatch("[^\n]+") do
@@ -68,35 +143,46 @@ local function parse(simc)
             error("bad line: " .. line, 0)
         end
         list = list == "" and "default" or list
-        local action, opts = body:match("^([%w_]+),?(.*)$")
-        local e = { action = action, enabled = true }
-        opts = "," .. opts -- if= only as a whole option, never the tail of label_if= or icon_if=
-        e.criteria = opts:match(",if=(.*)$")
-        if e.criteria then
-            e.criteria = piped(e.criteria)
-        end
-        opts = opts:gsub(",if=.*$", "")
-        for opt in opts:gmatch("[^,]+") do
-            local k, v = opt:match("^([%w_]+)=(.+)$")
-            if not OPTIONS[k] then
-                error("unknown option " .. (k or opt) .. " in: " .. line, 0)
+        local parts = SEQ[body:match("^[%w_]+")] and split(body) or { body }
+        local e = entry(parts[1], line, true)
+        if SEQ[e.action] then
+            e.steps = {}
+            for k = 2, #parts do
+                e.steps[k - 1] = entry(parts[k], line)
             end
-            local value = VERBATIM[k] and v or tonumber(v)
-            if k == "focus" and not v:match("^[1-9]%d*$") then
-                value = nil -- a focus tier is a positive integer, 1 highest
-            end
-            if value == nil then
-                error("bad value " .. opt .. " in: " .. line, 0)
-            end
-            if k == "value" then
-                value = piped(value)
-            end
-            e[(k == "name" and action == "variable") and "var_name" or OPTIONS[k]] = value
         end
         lists[list] = lists[list] or {}
         table.insert(lists[list], e)
     end
     return lists
+end
+
+-- entry's inverse: the action, its options in this order, if= last; a sequence line's members after it, each after a :
+local function text(e)
+    local s = e.action
+        .. (e.list_name and ",name=" .. e.list_name or "")
+        .. (e.var_name and ",name=" .. e.var_name or "")
+        .. (e.window_name and ",name=" .. e.window_name or "")
+        .. (e.mode and ",mode=" .. e.mode or "")
+        .. (e.start_on_first and ",start_on_first=" .. e.start_on_first or "")
+        .. (e.hold_off_gcd and ",hold_off_gcd=" .. e.hold_off_gcd or "")
+        .. (e.buff_name and ",buff_name=" .. e.buff_name or "")
+        .. (e.use_off_gcd and ",use_off_gcd=" .. e.use_off_gcd or "")
+        .. (e.cycle_targets and ",cycle_targets=" .. e.cycle_targets or "")
+        .. (e.max_cycle_targets and ",max_cycle_targets=" .. e.max_cycle_targets or "")
+        .. (e.other_target and ",other_target=" .. e.other_target or "")
+        .. (e.focus and ",focus=" .. e.focus or "")
+        .. (e.label and ",label=" .. e.label or "")
+        .. (e.label_if and ",label_if=" .. e.label_if or "")
+        .. (e.icon and ",icon=" .. e.icon or "")
+        .. (e.icon_if and ",icon_if=" .. e.icon_if or "")
+        .. (e.pure and ",pure=" .. e.pure or "")
+        .. (e.value and ",value=" .. e.value:gsub("||", "|") or "")
+        .. (e.criteria and ",if=" .. e.criteria:gsub("||", "|") or "")
+    for _, m in ipairs(e.steps or {}) do
+        s = s .. ":" .. text(m)
+    end
+    return s
 end
 
 -- parse's inverse: the default list first, the others sorted by name.
@@ -114,24 +200,7 @@ local function unparse(lists)
     for _, name in ipairs(names) do
         local head = name == "default" and "actions" or "actions." .. name
         for i, e in ipairs(lists[name]) do
-            out[#out + 1] = head
-                .. (i == 1 and "=" or "+=/")
-                .. e.action
-                .. (e.list_name and ",name=" .. e.list_name or "")
-                .. (e.var_name and ",name=" .. e.var_name or "")
-                .. (e.buff_name and ",buff_name=" .. e.buff_name or "")
-                .. (e.use_off_gcd and ",use_off_gcd=" .. e.use_off_gcd or "")
-                .. (e.cycle_targets and ",cycle_targets=" .. e.cycle_targets or "")
-                .. (e.max_cycle_targets and ",max_cycle_targets=" .. e.max_cycle_targets or "")
-                .. (e.other_target and ",other_target=" .. e.other_target or "")
-                .. (e.focus and ",focus=" .. e.focus or "")
-                .. (e.label and ",label=" .. e.label or "")
-                .. (e.label_if and ",label_if=" .. e.label_if or "")
-                .. (e.icon and ",icon=" .. e.icon or "")
-                .. (e.icon_if and ",icon_if=" .. e.icon_if or "")
-                .. (e.pure and ",pure=" .. e.pure or "")
-                .. (e.value and ",value=" .. e.value:gsub("||", "|") or "")
-                .. (e.criteria and ",if=" .. e.criteria:gsub("||", "|") or "")
+            out[#out + 1] = head .. (i == 1 and "=" or "+=/") .. text(e)
         end
     end
     return table.concat(out, "\n") .. "\n"

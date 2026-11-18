@@ -978,10 +978,11 @@ describe("Forever Shaman priorities", function()
         }
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, settings = cls.settings }
         local elements = { fire = true, earth = true, water = true, air = true, main_hand_enchant = true }
+        local pe = require("Forever.helpers.pack_entries") -- a sequence's members walked too
         for list, entries in pairs(packs[PACK].lists) do
-            for i, e in ipairs(entries) do
+            for i, e in ipairs(pe.flat(entries)) do
                 local where = list .. " " .. i
-                assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action] == true, where)
+                assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action] == true or pe.LINE[e.action], where)
                 for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                     if kinds[kind] then
                         assert.is_true(kinds[kind][key] ~= nil or elements[key] == true, where .. ": " .. key)

@@ -188,6 +188,11 @@
 --    one before it is cast (wowsims holds the rotation for it, so nothing else is recommended between); a later member
 --    re-reads its sequence's remaining terms, which wowsims reads once at the start, so a change between the casts can
 --    stop it; a cast of a member outside the sequence also opens its next; the members must be casts (else rule 2).
+--    With the recipe's `sequences = true` (windows design v6 §10.1, ruling 14): one line at the entry's position,
+--    `strict_sequence,name=<first member>_<last member>,start_on_first=1,hold_off_gcd=1[,if=<condition>]:<member>:...`,
+--    each member its own line's text (rules 5-7), the condition's reads all guarded; a repeated name is an error. The
+--    engine holds the rotation for it, so none of the deviations above remain. A recipe `extra` before a member
+--    goes before its sequence's line (the member is part of that line).
 -- 15. Maintenance debuffs: the recipe's `maintenance` ({ [action key] = setting key }) names a debuff (or self-buff)
 --    kept up for the raid, which open-world play skips. Every emitted line whose action is that key (any list, the
 --    recipe's leveling and extra lines included) is its cast line and gets `settings.<key>&` before its condition (the
@@ -298,6 +303,15 @@
 --    `sequenceIsComplete` is dropped there (the window opens on the evaluator's edge: once); elsewhere one is
 --    `!window.<w>.up`. `resetSequence` is the window's `loop`. A strictSequence stays rule 14's chain until its lane
 --    moves it (§3a).
+--    With the recipe's `sequences = true` (windows design v6 §10, ruling 14): one line at the entry's position,
+--    `sequence,name=<w>,mode=continue[,if=<condition>]:<member>:...`, every cast member (a repeated one too) with its
+--    own condition and its range gate, `(toggle.movement|<gate>)` after a move; the condition is the line's own, any
+--    read; no header line. `sequenceIsComplete` is `window.<w>.done` (in its own condition too); `resetSequence` is
+--    `restart_sequence,name=<w>[,if=<condition>]` at its position (omitted with its sequence); the held gate reads the
+--    sequence running, `window.<w>.up&!window.<w>.done` (a finished sequence stays up, parked), and skips a later
+--    sequence's line as it skipped its steps. A member rule 19 copies to another position (a move arm) stays there
+--    as a reader line, `<member>,if=window.<w>.next.<member>&...`: the members are carried as such lines through
+--    rule 19 and joined into their sequence's line at output.
 -- One-line reads (re-pin plan, docs/superpowers/plans/2026-11-03-wowsims-repin.md, Task 3; wowsims sim/core
 --    apl_values_*.go): `talentIsKnown` (wowsims's constant: the build holds that rank or a higher one) of an ID that
 --    resolves to a talent (a kit talent's spell, or a recipe `map` to a talent's key, as rule 4) is
@@ -581,6 +595,7 @@ function M.context(set, r, log, player, encounter, tank)
         condition = r.condition or {}, -- rule 7: { [action key] = SimC expression }, an owner deviation's condition
         windowVars = r.windowVars or {}, -- rule 10: { [variable name] = window }, a time since read from the window
         ranges = r.ranges or {}, -- rule 19: { [action key] = { min, max } yards }, the DB2's, where the APL gives none
+        sequences = r.sequences == true, -- rules 14, 14b: sequences as APL sequence lines (windows Phase 3, per recipe)
         maintenance = {}, -- rule 15: { { action key, setting key } }, by action key
     }
     for key, setting in pairs(r.maintenance or {}) do
@@ -1498,7 +1513,9 @@ local function bool(c, n)
         return "gcd.remains<=0", nil, false
     elseif k == "sequenceIsComplete" then -- rule 14b: the sequence's window down; in its own condition, the edge's once
         local w = M.snake(v.sequenceName or "")
-        if w == c.ownSeq then
+        if c.sequences then -- the parked state, in its own condition too (design v6 §10)
+            return "window." .. w .. ".done", nil, false
+        elseif w == c.ownSeq then
             return nil, nil, true
         end
         return "!window." .. w .. ".up", nil, false
@@ -1954,6 +1971,58 @@ local function sequence(c, members, cond, node)
     return out
 end
 
+-- Rules 14, 14b (recipe `sequences`): sequence `w` of `n` members is declared once a priority.
+local function declare(c, w, n, what)
+    if c.seqSize[w] then
+        error(
+            ("%s: the %sname %s repeats (%s #%d)"):format(
+                what,
+                what == "strictSequence" and "generated " or "",
+                w,
+                c.listName,
+                c.entryNo
+            ),
+            0
+        )
+    end
+    c.seqSize[w] = n
+    c.windows[#c.windows + 1] = { name = w, list = c.listName, n = c.entryNo }
+end
+
+-- Rule 14 (recipe `sequences`): a strictSequence as one `strict_sequence` line (design v6 §10.1), named
+-- `<first member>_<last member>`, `start_on_first=1,hold_off_gcd=1` always, under its condition `cond`; its members (casts)
+-- are carried as lines `<member>,if=window.<name>.next.<key>[&<own>]` after it, joined into it at output.
+local function strictLine(c, members, cond)
+    local bodies, keys = {}, {}
+    for i, m in ipairs(members) do
+        local mk
+        for k in pairs(m) do
+            mk = k ~= "condition" and k or mk
+        end
+        if mk ~= "castSpell" and mk ~= "channelSpell" then
+            unsupported("strictSequence of " .. tostring(mk))
+        end
+        local body, why = entry(c, { action = m })
+        if not body then
+            unsupported(("strictSequence member %d: %s"):format(i, why))
+        end
+        bodies[i], keys[i] = body, c.self
+    end
+    c.self = nil
+    if #keys == 0 then
+        unsupported("strictSequence casts nothing")
+    end
+    local w = keys[1] .. "_" .. keys[#keys]
+    declare(c, w, #keys, "strictSequence")
+    local out =
+        { "strict_sequence,name=" .. w .. ",start_on_first=1,hold_off_gcd=1" .. (cond and (",if=" .. cond) or "") }
+    for i, body in ipairs(bodies) do
+        local base, own = body:match("^(.-),if=(.*)$")
+        out[i + 1] = (base or body) .. ",if=window." .. w .. ".next." .. keys[i] .. (own and ("&" .. paren(own)) or "")
+    end
+    return out
+end
+
 -- Rule 19: whether condition node `n` tests only the target's range (a rule 11 bracket, its `not`, a spellInRange;
 -- variables followed): a distance-only waitUntil.
 local function rangeOnly(c, n)
@@ -2003,6 +2072,10 @@ end
 -- `wait` members give no line (rule 19, decision 9). The condition is the window's evaluator (the class registers it
 -- from the header line), only when the belief can read it; its own `sequenceIsComplete` is dropped there (the window
 -- opens on the evaluator's edge, so once).
+-- With the recipe's `sequences` (design v6 §10): one `sequence,name=<w>,mode=continue[,if=<condition>]` line, its
+-- members carried as the lines above (every member, a repeated one too) after it and joined into it at output; a gate
+-- after a move is `(toggle.movement|<gate>)` (a member is due only while the sequence runs); the condition is the
+-- line's own, any read.
 local function windowed(c, a)
     local s = a.sequence
     local w = M.snake(s.name or "")
@@ -2012,7 +2085,7 @@ local function windowed(c, a)
     if cond == false then
         return nil, never(c)
     end
-    local bad = cond and unreadable(cond)
+    local bad = not c.sequences and cond and unreadable(cond)
     if bad then
         unsupported(("sequence %s: its condition is not readable by the belief (%s)"):format(w, bad))
     end
@@ -2039,11 +2112,12 @@ local function windowed(c, a)
             parts[#parts + 1] = own and paren(own) or nil
             local g = pending and condition(c, pending) -- the cast is the line's own: its range read unguarded
             if g then
-                parts[#parts + 1] = moved and ("(toggle.movement&window." .. w .. ".up|" .. g .. ")") or paren(g)
+                local up = c.sequences and "" or ("&window." .. w .. ".up")
+                parts[#parts + 1] = moved and ("(toggle.movement" .. up .. "|" .. g .. ")") or paren(g)
             end
             pending = nil
             local line = (base or body) .. ",if=" .. table.concat(parts, "&")
-            out[#out + 1] = line ~= out[#out] and line or nil
+            out[#out + 1] = (c.sequences or line ~= out[#out]) and line or nil
             steps[#steps + 1] = c.self
         elseif mk ~= "wait" then
             unsupported(("sequence %s of %s"):format(w, tostring(mk)))
@@ -2057,10 +2131,15 @@ local function windowed(c, a)
     if g then
         c.held[#c.held + 1] = { list = c.listName, n = c.entryNo, gate = g, window = w, moved = moved }
     end
-    c.windows[#c.windows + 1] = { name = w, steps = steps, cond = cond, list = c.listName, n = c.entryNo }
     if moved then -- rule 19: the sequence's move, reaching its steps' gates and its held one
         c.moving[#c.moving + 1] = { list = c.listName, n = c.entryNo, seq = w, reach = {} }
     end
+    if c.sequences then
+        declare(c, w, #steps, "sequence")
+        table.insert(out, 1, "sequence,name=" .. w .. ",mode=continue" .. (cond and (",if=" .. cond) or ""))
+        return out
+    end
+    c.windows[#c.windows + 1] = { name = w, steps = steps, cond = cond, list = c.listName, n = c.entryNo }
     return out
 end
 
@@ -2150,6 +2229,9 @@ local function entryBody(c, e)
         return windowed(c, a)
     elseif kind == "strictSequence" then -- rule 14: its condition's reads all guarded (no member is the line's own)
         c.self, seq = nil, a.strictSequence.actions or {}
+    elseif kind == "resetSequence" and c.sequences then -- rule 14b: the loop's restart line (design v6 §10)
+        c.self = nil
+        body, key = "restart_sequence,name=" .. M.snake(a.resetSequence.sequenceName or ""), "restart_sequence"
     elseif kind == "autocastOtherCooldowns" or kind == "castAllStatBuffCooldowns" then
         c.self, auto = nil, automatic(c, kind, a[kind])
         if #auto == 0 then
@@ -2163,6 +2245,9 @@ local function entryBody(c, e)
         return nil, never(c)
     end
     if seq then
+        if c.sequences then
+            return strictLine(c, seq, cond)
+        end
         return sequence(c, seq, cond, a.condition)
     end
     if auto then
@@ -2544,7 +2629,7 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
     for _, l in ipairs(lists) do
         local L, j = l[1], 1
         while j <= #l[2] do
-            local w = l[2][j]:match("window%.([%w_]+)%.")
+            local w = l[2][j]:match("window%.([%w_]+)%.") or l[2][j]:match("^restart_sequence,name=([%w_]+)")
             if w and not made[w] then
                 omitted[#omitted + 1] = ("%s #%d: reads window %s, whose sequence was omitted"):format(
                     L,
@@ -2580,7 +2665,9 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
     end
     local function later(L, after, into) -- the APL lines of `L` after entry `after` that no window's step holds
         for j, b in ipairs(byName[L]) do
-            if (tonumber(origin[L][j]) or -1) > after and not b:find(",if=window%.[%w_]+%.next%.") then
+            -- a plain sequence's line stands for its steps (recipe `sequences`), held as they were: not at all
+            local step = b:find(",if=window%.[%w_]+%.next%.") or (c.sequences and b:find("^sequence,"))
+            if (tonumber(origin[L][j]) or -1) > after and not step then
                 into[#into + 1] = { L, j }
             end
         end
@@ -2599,10 +2686,13 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
             end
             m.n = math.min(m.n, h.n)
             if h.window then
-                m.windows[#m.windows + 1] = "!window." .. h.window .. ".up"
+                local w = "window." .. h.window -- a parked sequence stays up: running is up and not done
+                m.windows[#m.windows + 1] = c.sequences and ("(!" .. w .. ".up|" .. w .. ".done)")
+                    or ("!" .. w .. ".up")
                 for _, mv in ipairs(h.moved and c.moving or {}) do
                     if mv.seq == h.window then
-                        m.conds[#m.conds + 1], m.movers[#m.movers + 1] = "window." .. h.window .. ".up", mv
+                        m.conds[#m.conds + 1], m.movers[#m.movers + 1] =
+                            c.sequences and (w .. ".up&!" .. w .. ".done") or (w .. ".up"), mv
                     end
                 end
             else
@@ -2643,6 +2733,7 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
             if
                 b:find("|toggle.movement&window." .. mv.seq .. ".up|", 1, true)
                 or b:find("&(toggle.movement&window." .. mv.seq .. ".up|", 1, true)
+                or (b:find("window." .. mv.seq .. ".next.", 1, true) and b:find("&(toggle.movement|", 1, true))
             then
                 add(mv, mv.list, b)
             end
@@ -2775,7 +2866,7 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
     end
     local header = {}
     for _, w in ipairs(c.windows) do
-        if not pre[w.list] then
+        if not pre[w.list] and not c.sequences then -- an APL sequence: nothing for the class to register
             header[#header + 1] = ("# Window: %s: steps %s%s; on_deviation stay; evaluator %s (the class registers it)."):format(
                 w.name,
                 table.concat(w.steps, ", "),
@@ -2811,6 +2902,7 @@ function M.translate(rotation, c)
     c.dropNote = {}
     c.callers, c.deviated, c.deviations, c.moves, c.movedAll = {}, {}, {}, {}, {}
     c.held, c.windows, c.loops, c.moving = {}, {}, {}, {} -- rules 14b, 19
+    c.seqSize = {} -- rules 14, 14b (recipe `sequences`): [name] = its member count, the lines joined into its line
     c.conditioned = {} -- rule 7: the recipe's condition keys a line took
     c.keyUsed = {} -- CN12: "<field>:<key>" of each recipe guard, requires and windowVars key a line took
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
@@ -2960,7 +3052,7 @@ function M.translate(rotation, c)
                 local ok, body, why = true, nil, "noted"
                 c.cycleMods = cycleAt[i] and ",cycle_targets=1" or nil -- rule 20 (rules 17 and 21 set it in `entry`)
                 local s = swapAt[i]
-                if a.move or a.waitUntil or a.resetSequence then -- rules 19, 14b: no line, but recorded
+                if a.move or a.waitUntil or (a.resetSequence and not c.sequences) then -- rules 19, 14b: no line, but recorded
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, motion(c, a))
                 elseif type(s) == "table" then -- rule 20: absorbed into its cast's line
                     c.deviated[#c.deviated + 1] = ("# Cycle: %s #%d changeTarget -> #%d %s: cycle_targets=1 (shown with Recommend Target Swaps on)"):format(
@@ -3058,6 +3150,10 @@ function M.translate(rotation, c)
         for i, body in ipairs(byName.default) do
             if body:match("^[%w_]+") == x.before then
                 at = i
+                -- a sequence's member (recipe `sequences`) is part of its sequence's line: the extra goes before that
+                while c.sequences and at > 1 and byName.default[at]:find(",if=window%.[%w_]+%.next%.") do
+                    at = at - 1
+                end
                 if not x.last then
                     break
                 end
@@ -3163,14 +3259,29 @@ function M.translate(rotation, c)
     local text, cast = {}, {}
     for _, l in ipairs(lists) do
         local head = l[1] == "default" and "actions" or ("actions." .. l[1])
-        local n = 0
-        for _, body in ipairs(l[2]) do
+        local n, j = 0, 0
+        while j < #l[2] do
+            j = j + 1
+            local body = l[2][j]
             local called = body:match("^call_action_list,name=([%w_]+)")
             if called and #(byName[called] or {}) == 0 then
                 omitted[#omitted + 1] = ("%s: empty group %s"):format(l[1], called)
             else
+                local line = maintained(c, body, cast)
+                local w = body:match("^sequence,name=([%w_]+)") or body:match("^strict_sequence,name=([%w_]+)")
+                for k = 1, w and c.seqSize[w] or 0 do -- rules 14, 14b: its member lines follow it, joined as members
+                    local m, rest = (l[2][j + k] or ""):match("^(.-),if=window%." .. w .. "%.next%.[%w_]+(.*)$")
+                    if not m then
+                        error(
+                            ("sequence %s: member %d is not the line after it (%s)"):format(w, k, tostring(l[2][j + k])),
+                            0
+                        )
+                    end
+                    line = line .. ":" .. maintained(c, rest == "" and m or (m .. ",if=" .. rest:sub(2)), cast)
+                end
+                j = j + (w and c.seqSize[w] or 0)
                 n = n + 1
-                text[#text + 1] = head .. (n == 1 and "=" or "+=/") .. maintained(c, body, cast)
+                text[#text + 1] = head .. (n == 1 and "=" or "+=/") .. line
             end
         end
     end

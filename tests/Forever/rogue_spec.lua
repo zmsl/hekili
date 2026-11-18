@@ -645,11 +645,15 @@ describe("Forever Rogue priorities", function()
         local shared = { thistle_tea = true, blood_fury = true, eureka = true, elunes_light = true, berserking = true }
         local kinds =
             { buff = w.auras, debuff = w.auras, talent = w.talents, settings = w.settings, action = w.abilities }
+        local pe = require("Forever.helpers.pack_entries") -- a sequence's members walked too
         for name, p in pairs(packs) do
             for list, entries in pairs(p.lists) do
-                for i, e in ipairs(entries) do
+                for i, e in ipairs(pe.flat(entries)) do
                     local where = name .. " " .. list .. " " .. i
-                    assert.is_true(w.abilities[e.action] ~= nil or shared[e.action], where .. ": " .. e.action)
+                    assert.is_true(
+                        w.abilities[e.action] ~= nil or shared[e.action] or pe.LINE[e.action],
+                        where .. ": " .. e.action
+                    )
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] and not shared[key] then
                             assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)

@@ -3654,3 +3654,538 @@ describe("CN25: a variable of many terms is one variable line, read by name", fu
         assert.is_truthy(text:find("actions+=/strike,if=(variable.v_outer&rage.lo>5)", 1, true))
     end)
 end)
+
+-- Windows design v6 §10 (rulings 14, 30, 31, 35; L1291 c, L1315), Part A of windows Phase 3: with the recipe's
+-- `sequences = true` a strictSequence is one `strict_sequence` line (rule 14) and a sequence one `sequence` line
+-- (rule 14b), each at its list position, the wowsims options always written.
+describe("the wowsims APL translator's sequence lines (recipe sequences = true)", function()
+    local d = { unitDistance = {} }
+    local mh = { autoTimeToNext = { autoType = "MainHandAuto" } }
+    local function member(id, cond)
+        return { castSpell = { spellId = { spellId = id } }, condition = cond }
+    end
+    local function lines(t)
+        return table.concat(t, "\n")
+    end
+    local function on(r)
+        r = r or {}
+        r.sequences = true
+        return ctx(r)
+    end
+    local BIG = "(!action.big_hit.known|cooldown.big_hit.ready)"
+
+    it("rule 14: a strictSequence is one strict_sequence line in place of the prev.1 chain", function()
+        local levels = assert(loadfile("tools/check_pack_levels.lua"))()
+        local text, omitted = apl.translate({
+            priorityList = {
+                {
+                    action = {
+                        condition = AND({ spellIsReady = { spellId = { spellId = 300 } } }, ready),
+                        strictSequence = { actions = { member(300), member(100, up), member(400) } },
+                    },
+                },
+                { action = { strictSequence = { actions = { member(300), { wait = {} } } } } },
+                cast(500),
+            },
+        }, on({ focus = { strike = 1 } }))
+        -- the sequence's condition, all reads guarded (no member is the line's own); each member its own line's text
+        local GO = "(!(action.roar.known|action.big_hit.known)|((!action.roar.known|cooldown.roar.ready)&"
+            .. BIG
+            .. "))"
+        assert.are.equal(
+            lines({
+                "actions=strict_sequence,name=roar_dot,start_on_first=1,hold_off_gcd=1,if="
+                    .. GO
+                    .. ":roar,use_off_gcd=1:strike,focus=1,if=(!action.dot.known|buff.dot.up):dot",
+                "actions+=/starfire",
+            }),
+            text
+        )
+        assert.are.same({ "default #2: strictSequence of wait" }, omitted)
+        assert.is_falsy(text:find("prev.1", 1, true))
+        local function isAbility(k)
+            return k == "strike" or k == "big_hit" or k == "roar" or k == "dot"
+        end
+        assert.are.same({}, levels.line(text:match("^actions=(.-)\n"), isAbility))
+    end)
+
+    it(
+        "rule 14: two strictSequences sharing a first member are told apart by name, each with its own condition",
+        function()
+            local text = apl.translate({
+                priorityList = {
+                    { action = { condition = up, strictSequence = { actions = { member(300), member(100) } } } },
+                    { action = { condition = NOT(up), strictSequence = { actions = { member(300), member(400) } } } },
+                },
+            }, on())
+            assert.are.equal(
+                lines({
+                    "actions=strict_sequence,name=roar_strike,start_on_first=1,hold_off_gcd=1,if="
+                        .. "(!action.dot.known|buff.dot.up):roar,use_off_gcd=1:strike",
+                    "actions+=/strict_sequence,name=roar_dot,start_on_first=1,hold_off_gcd=1,if="
+                        .. "(!action.dot.known|!buff.dot.up):roar,use_off_gcd=1:dot",
+                }),
+                text
+            )
+        end
+    )
+
+    -- (Priest Shadow's Starshards extra: the wowsims entry it stands for, #11, sits before the strict sequence, #13)
+    it("rule 7: a recipe extra `before` a sequence's member goes before that sequence's line", function()
+        local text = apl.translate({
+            priorityList = {
+                cast(500),
+                { action = { strictSequence = { actions = { member(300), member(100) } } } },
+                cast(100),
+            },
+        }, on({ extra = { { before = "strike", line = "dot" } } }))
+        assert.are.equal(
+            lines({
+                "actions=starfire",
+                "actions+=/dot",
+                "actions+=/strict_sequence,name=roar_strike,start_on_first=1,hold_off_gcd=1:roar,use_off_gcd=1:strike",
+                "actions+=/strike",
+            }),
+            text
+        )
+    end)
+
+    it("rule 14: a generated name that repeats in one priority is an error", function()
+        local seq = { action = { strictSequence = { actions = { member(300), member(100) } } } }
+        local ok, err = pcall(apl.translate, { priorityList = { seq, seq } }, on())
+        assert.is_false(ok)
+        assert.are.equal("strictSequence: the generated name roar_strike repeats (default #2)", err)
+    end)
+
+    it(
+        "L1315: a sequence in a group list is written in that list (the engine keeps sequences to Primary and AOE)",
+        function()
+            local text = apl.translate({
+                priorityList = { { action = { groupReference = { groupName = "Evocation" } } }, cast(500) },
+                groups = {
+                    {
+                        name = "Evocation",
+                        actions = { { action = { strictSequence = { actions = { member(300), member(400) } } } } },
+                    },
+                },
+            }, on())
+            assert.are.equal(
+                lines({
+                    "actions=call_action_list,name=evocation",
+                    "actions+=/starfire",
+                    "actions.evocation=strict_sequence,name=roar_dot,start_on_first=1,hold_off_gcd=1:roar,use_off_gcd=1:dot",
+                }),
+                text
+            )
+        end
+    )
+
+    it(
+        "rule 14b: a sequence is one line, mode=continue, repeated members kept; resetSequence a restart line",
+        function()
+            local done = { sequenceIsComplete = { sequenceName = "HHA" } }
+            local text, omitted, _, header = apl.translate({
+                priorityList = {
+                    { action = { resetSequence = { sequenceName = "HHA" }, condition = done } },
+                    {
+                        action = {
+                            condition = { talentIsKnown = { talentId = { spellId = 950 } } },
+                            sequence = { name = "HHA", actions = { member(100), member(100), member(200) } },
+                        },
+                    },
+                    cast(400, done),
+                },
+            }, on())
+            assert.are.equal(
+                lines({
+                    "actions=restart_sequence,name=hha,if=window.hha.done",
+                    "actions+=/sequence,name=hha,mode=continue,if=talent.cuts.enabled:strike:strike:big_hit",
+                    "actions+=/dot,if=window.hha.done",
+                }),
+                text
+            )
+            assert.are.same({}, omitted)
+            assert.are.same({}, header) -- no `# Window:` line: nothing for the class to register (G06)
+        end
+    )
+
+    it(
+        "rule 14b: sequenceIsComplete is window.<n>.done in its own condition; a held gate reads it in progress",
+        function()
+            local function inRange(id)
+                return { spellInRange = { spellId = { spellId = id } } }
+            end
+            local text, omitted, _, header = apl.translate({
+                priorityList = {
+                    { action = { groupReference = { groupName = "Move to melee" }, condition = NOT(inRange(100)) } },
+                    cast(200),
+                    cast(100),
+                },
+                groups = {
+                    {
+                        name = "Move to melee",
+                        actions = {
+                            {
+                                action = {
+                                    condition = AND(
+                                        { talentIsKnown = { talentId = { spellId = 900 } } },
+                                        NOT({ sequenceIsComplete = { sequenceName = "move1" } })
+                                    ),
+                                    sequence = {
+                                        name = "move1",
+                                        actions = {
+                                            { move = { rangeFromTarget = const("5") } },
+                                            { waitUntil = { condition = inRange(200) } },
+                                            { castSpell = { spellId = { spellId = 200 } } },
+                                            { wait = { duration = { inputDelay = {} } } },
+                                            { castSpell = { spellId = { spellId = 400 } } },
+                                            { waitUntil = { condition = inRange(100) } },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            }, on())
+            -- a parked sequence stays up, so "the sequence is running" is up and not done
+            local held = "(toggle.movement&(window.move1.up&!window.move1.done)|(!action.strike.known|action.strike.in_range)"
+                .. "|(!window.move1.up|window.move1.done))"
+            assert.are.equal(
+                lines({
+                    "actions=call_action_list,name=move_to_melee,if=(!action.strike.known|!action.strike.in_range)",
+                    "actions+=/big_hit,if=" .. held,
+                    "actions+=/strike,if=" .. held,
+                    "actions.move_to_melee=sequence,name=move1,mode=continue,if=(talent.furious.enabled&!window.move1.done)"
+                        .. ":big_hit,if=(toggle.movement|action.big_hit.in_range):dot",
+                }),
+                text
+            )
+            assert.are.same({}, omitted)
+            assert.are.same({
+                "# Movement: move_to_melee #1 reaches move_to_melee: big_hit; default: big_hit, strike",
+            }, header)
+        end
+    )
+
+    it("rule 19: two sequences' held gate skips the second sequence's line and goes to the caller's lines", function()
+        local function inRange(id)
+            return { spellInRange = { spellId = { spellId = id } } }
+        end
+        local function seq(name, id)
+            return {
+                action = {
+                    sequence = {
+                        name = name,
+                        actions = {
+                            { move = { rangeFromTarget = const("5") } },
+                            { waitUntil = { condition = inRange(200) } },
+                            { castSpell = { spellId = { spellId = id } } },
+                            { waitUntil = { condition = inRange(100) } },
+                        },
+                    },
+                },
+            }
+        end
+        local text, _, _, header = apl.translate({
+            priorityList = { { action = { groupReference = { groupName = "Move" } } }, cast(200), cast(100) },
+            groups = { { name = "Move", actions = { seq("move1", 200), seq("move2", 400) } } },
+        }, on())
+        local held = "(toggle.movement&((window.move1.up&!window.move1.done)|(window.move2.up&!window.move2.done))"
+            .. "|(!action.strike.known|action.strike.in_range)|(!window.move1.up|window.move1.done)&(!window.move2.up|window.move2.done))"
+        assert.are.equal(
+            lines({
+                "actions=call_action_list,name=move",
+                "actions+=/big_hit,if=" .. held,
+                "actions+=/strike,if=" .. held,
+                "actions.move=sequence,name=move1,mode=continue:big_hit,if=(toggle.movement|action.big_hit.in_range)",
+                "actions.move+=/sequence,name=move2,mode=continue"
+                    .. ":dot,if=(toggle.movement|(!action.big_hit.known|action.big_hit.in_range))",
+            }),
+            text
+        )
+        assert.are.same({
+            "# Movement: move #1 reaches move: big_hit; default: big_hit, strike",
+            "# Movement: move #2 reaches move: dot; default: big_hit, strike",
+        }, header)
+    end)
+
+    it("rule 14b: a member rule 19 places elsewhere is a reader line there; the member keeps its place", function()
+        local text, _, _, header = apl.translate({
+            priorityList = {
+                { action = { move = { rangeFromTarget = const("5") }, condition = cmp("OpGt", mh, const("0.5s")) } },
+                cast(500),
+                { action = { sequence = { name = "S", actions = { member(100, cmp("OpLe", d, const("5"))) } } } },
+            },
+        }, on())
+        assert.are.equal(
+            lines({
+                "actions=strike,if=window.s.next.strike&toggle.movement&mainhand_remains>0.5",
+                "actions+=/starfire",
+                "actions+=/sequence,name=s,mode=continue:strike,if=target.within5",
+            }),
+            text
+        )
+        assert.are.same({ "# Movement: default #1 reaches default: strike" }, header)
+    end)
+
+    -- The shipped recipes with sequences, translated with `sequences` set (nothing written): design v6 §10.1's 18 strict
+    -- lines and §10.2-10.3's plain ones, every option written as ruling 14 says and none other (L1291 c: no allow_skip),
+    -- no prev.1 chain or `# Window:` header left, every part of a line guarded (tools/check_pack_levels.lua).
+    it(
+        "every shipped recipe's sequences, as lines: the 18 strict lines of §10.1, the plain ones, their options",
+        function()
+            local ex = assert(loadfile("tools/wowsims/export.lua"))()
+            local levels = assert(loadfile("tools/check_pack_levels.lua"))()
+            local engine = require("Forever.helpers.engine")
+            local forced = setmetatable({
+                recipe = function(spec)
+                    local r = ex.recipe(spec)
+                    r.sequences = true
+                    return r
+                end,
+            }, { __index = ex })
+            local ROGUE = {
+                "default strict blood_fury_blade_flurry",
+                "default strict blood_fury_adrenaline_rush",
+                "default strict elunes_light_adrenaline_rush",
+            }
+            local want = {
+                rogue_assassination = ROGUE,
+                rogue_combat = ROGUE,
+                rogue_subtlety = ROGUE,
+                mage_arcane = {
+                    "default strict presence_of_mind_arcane_wrath",
+                    "evocation strict read_ley_line_evocation",
+                },
+                mage_fire = { "evocation strict read_ley_line_evocation" },
+                mage_frostfire = { "evocation strict read_ley_line_evocation" },
+                priest_shadow = { "default strict inner_focus_mind_flay" },
+                warrior_arms = { "default strict battle_stance_overpower", "default strict battle_stance_rend" },
+                warrior_fury = {
+                    "default strict battle_stance_rend",
+                    "overpower_weaving strict battle_stance_overpower",
+                },
+                hunter_beast_mastery_turret = { "default plain hha" },
+                paladin_retribution = { "move_to_melee plain move1", "move_to_melee plain move2" },
+            }
+            local strict = 0
+            for spec, lines in pairs(want) do
+                local _, text = apl.render(spec, forced)
+                local class = ex.recipe(spec).class
+                local abilities = engine.abilitySet(class).abilities
+                local function isAb(k)
+                    local a = abilities[k]
+                    return type(a) == "table" and a.key == k
+                end
+                local got = {}
+                for line in text:gmatch("[^\n]+") do
+                    local list, body = line:match("^actions%.?([%w_]*)%+?=/?(.+)$")
+                    if body then
+                        local headOpts = body:match("^[^:]*")
+                        local kind, name = body:match("^(s[%w_]*equence),name=([%w_]+)")
+                        if kind then
+                            got[#got + 1] = (list == "" and "default" or list)
+                                .. (kind == "strict_sequence" and " strict " or " plain ")
+                                .. name
+                            local opts = headOpts:gsub(",if=.*$", "")
+                            if kind == "strict_sequence" then
+                                strict = strict + 1
+                                assert.are.equal(
+                                    "strict_sequence,name=" .. name .. ",start_on_first=1,hold_off_gcd=1",
+                                    opts
+                                )
+                            else
+                                assert.are.equal("sequence,name=" .. name .. ",mode=continue", opts)
+                            end
+                        end
+                        assert.is_falsy(body:find("allow_skip", 1, true), line)
+                        -- L1270: the hold walks the normal lists only for a window or variable line (holdWalk)
+                        assert.is_falsy(
+                            body:match("^variable,") or body:match("^open_window") or body:match("^close_window"),
+                            line
+                        )
+                        assert.are.same({}, levels.line(body, isAb), line)
+                    end
+                end
+                assert.are.same(lines, got, spec)
+                assert.is_falsy(text:find("prev.1.", 1, true), spec)
+                assert.is_falsy(text:find("# Window:", 1, true), spec)
+            end
+            assert.are.equal(18, strict)
+        end
+    )
+
+    -- The engine reads the lines as written: Arms with `sequences` set parses without a warning, compiles with no window
+    -- error, and declares its two strict sequences with the two options on and allow_skip off.
+    it("the engine parses and compiles the Arms recipe's strict_sequence lines", function()
+        local ex = assert(loadfile("tools/wowsims/export.lua"))()
+        local headless = require("Game.harness.headless")
+        local ww = require("Forever.helpers.warrior_world")
+        local _, text = apl.render(
+            "warrior_arms",
+            setmetatable({
+                recipe = function(spec)
+                    local r = ex.recipe(spec)
+                    r.sequences = true
+                    return r
+                end,
+            }, { __index = ex })
+        )
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        local byList = {}
+        for line in text:gmatch("[^\n]+") do
+            local list = line:match("^actions%.?([%w_]*)%+?=")
+            if list then
+                list = list == "" and "default" or list
+                byList[list] = (byList[list] and (byList[list] .. "\n") or "") .. line
+            end
+        end
+        local lists = {}
+        for name, t in pairs(byList) do
+            local parsed, warnings = H.Hekili:ParseActionList(t, true)
+            assert.are.same({}, warnings or {}, name)
+            lists[name] = parsed
+        end
+        local cw = H.Hekili.Scripts.CheckWindows(lists, "pk")
+        assert.are.same({}, cw.errors)
+        assert.is_false(cw.holdWalk) -- L1270: no window or variable line, so the hold walks no normal list
+        local got = {}
+        for _, decl in ipairs(cw.decls) do
+            got[#got + 1] =
+                { decl.name, decl.strict, decl.start_on_first, decl.hold_off_gcd, decl.allow_skip, #decl.steps }
+        end
+        assert.are.same({
+            { "battle_stance_overpower", true, true, true, false, 2 },
+            { "battle_stance_rend", true, true, true, false, 2 },
+        }, got)
+    end)
+
+    -- a recipe's translation with `sequences` set in a test copy of the recipe (no shipped recipe sets it); its action
+    -- lines by list, and each list through the engine's parser on `H`
+    local function sequenced(spec)
+        local ex = assert(loadfile("tools/wowsims/export.lua"))()
+        local _, text = apl.render(
+            spec,
+            setmetatable({
+                recipe = function(s)
+                    local r = ex.recipe(s)
+                    r.sequences = true
+                    return r
+                end,
+            }, { __index = ex })
+        )
+        return text
+    end
+    local function engineLists(H, text)
+        local byList, lists, warn = {}, {}, {}
+        for line in text:gmatch("[^\n]+") do
+            local list = line:match("^actions%.?([%w_]*)%+?=")
+            if list then
+                list = list == "" and "default" or list
+                byList[list] = (byList[list] and (byList[list] .. "\n") or "") .. line
+            end
+        end
+        for name, t in pairs(byList) do
+            local parsed, warnings = H.Hekili:ParseActionList(t, true)
+            for _, w in ipairs(warnings or {}) do
+                warn[#warn + 1] = name .. ": " .. w
+            end
+            lists[name] = parsed
+        end
+        return lists, warn
+    end
+
+    -- I1: the Arms lines go through make_pack as a pack (load, encode, decode) unchanged, and the decoded lists, as a
+    -- built-in pack loads them (Packs.lua), declare the same two strict sequences
+    it("builds the Arms recipe's strict_sequence lines into a pack that declares both sequences", function()
+        local mp = assert(loadfile("tools/make_pack.lua"))("lib")
+        local headless = require("Game.harness.headless")
+        local ww = require("Forever.helpers.warrior_world")
+        local lines = {}
+        for line in sequenced("warrior_arms"):gmatch("[^\n]+") do
+            if line:match("^actions") then
+                lines[#lines + 1] = line
+            end
+        end
+        local root = os.tmpname()
+        os.remove(root)
+        assert(os.execute("mkdir -p " .. root) == 0)
+        local f = assert(io.open(root .. "/packs.lua", "wb"))
+        f:write('return { class = "WARRIOR", packs = { "Arms" }, specs = { Arms = "arms" } }\n')
+        f:close()
+        f = assert(io.open(root .. "/Arms.simc", "wb"))
+        f:write("# Arms, sequences on\n" .. table.concat(lines, "\n") .. "\n")
+        f:close()
+        local ok, packs = pcall(mp.load, "warrior", root .. "/", { src = "" })
+        os.execute("rm -r " .. root)
+        assert.is_true(ok, tostring(packs))
+        local payload = mp.decode(mp.encode(packs[1]))
+        local back = {}
+        for line in mp.unparse(payload.lists):gmatch("[^\n]+") do
+            back[#back + 1] = line
+        end
+        table.sort(lines)
+        table.sort(back)
+        assert.are.same(lines, back) -- every line written back byte for byte
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        local cw = H.Hekili.Scripts.CheckWindows(payload.lists, "pk")
+        assert.are.same({}, cw.errors)
+        local got = {}
+        for _, decl in ipairs(cw.decls) do
+            got[#got + 1] =
+                { decl.name, decl.strict, decl.start_on_first, decl.hold_off_gcd, decl.allow_skip, #decl.steps }
+        end
+        assert.are.same({
+            { "battle_stance_overpower", true, true, true, false, 2 },
+            { "battle_stance_rend", true, true, true, false, 2 },
+        }, got)
+    end)
+
+    -- M1: the BM and Ret plain sequence lines parse without a warning; until each Part B lane drops the class's Lua
+    -- window of the same name, CheckWindows reports exactly that clash (E3) and, for BM, the restart line on it (E1)
+    for _, case in ipairs({
+        {
+            "hunter_beast_mastery_turret",
+            "Forever.helpers.hunter_world",
+            "BeastMasteryTurret",
+            { "E1 restart_sequence: hha is not a plain sequence", "E3 hha is a class window" },
+        },
+        {
+            "paladin_retribution",
+            "Forever.helpers.paladin_world",
+            "Retribution",
+            { "E3 move1 is a class window", "E3 move2 is a class window" },
+        },
+    }) do
+        it("the engine parses the " .. case[1] .. " recipe's sequence lines", function()
+            local C = require(case[2])[case[3]]
+            local H = require("Game.harness.headless").new({ character = C.character(), pack = C.PACK })
+            local lists, warn = engineLists(H, sequenced(case[1]))
+            assert.are.same({}, warn)
+            local errs = {}
+            for _, x in ipairs(H.Hekili.Scripts.CheckWindows(lists, "pk").errors) do
+                errs[#errs + 1] = x.code .. " " .. x.text
+            end
+            table.sort(errs)
+            assert.are.same(case[4], errs)
+        end)
+    end
+
+    it("rule 14b: a restart line and a reader of an omitted sequence are omitted with it", function()
+        local text, omitted = apl.translate({
+            priorityList = {
+                { action = { resetSequence = { sequenceName = "S" } } },
+                { action = { sequence = { name = "S", actions = { { castFriendlySpell = {} } } } } },
+                cast(400, { sequenceIsComplete = { sequenceName = "S" } }),
+                cast(200),
+            },
+        }, on())
+        assert.are.equal("actions=big_hit", text)
+        assert.are.same({
+            "default #2: sequence s of castFriendlySpell",
+            "default #1: reads window s, whose sequence was omitted",
+            "default #3: reads window s, whose sequence was omitted",
+        }, omitted)
+    end)
+end)
