@@ -447,14 +447,17 @@ M.READY = {
     -- refund is the candidate)
     -- { 0.45, 10 } -> { 0.69, 3 }: scorch 126.20 0.25, 152.40 0.69 late, cost class on the new log's dry pool (gap BQ:
     -- lo 4.8 / 18.6 under the truth at Scorch's 150); 146.60 1.61 late (lo 73.7 under, past BQ's ~0.4 s) is untraced
-    -- (the BQ class or the unseen Master of Elements refund);
+    -- (traced, 0.9 measure lane: the unseen Master of Elements refund. The log's Fireball crit lands 0.83 s after the cast
+    -- (143.33) and refunds 118.5 at 143.34; the belief credits no refund for it (Fire Blast's and Scorch's instant crits
+    -- are credited), so at 146.60 truth 184.9 against est 121.3: Scorch waits on mana the player has);
     -- the same three before the restore credit, which moved scorch 42.00 (a 9.502 -> 0.001) and fire_blast 136.50
     -- (never -> in:grain at the Citrine's use, lo-truth -817.4 -> -42.4)
     mage_fire = { 0.69, 3 }, -- 0.690, 3
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
     -- { 0.42, 9 } -> { 1.51, 3 }: three late cost rows on the new log's dry pool (lo under the truth at the cost):
-    -- frostfire_bolt 112.80 0.23 (lo -7.1, gap BQ), scorch 118.00 2.51 (lo -41.9 at Scorch's 150; untraced: the BQ
-    -- class or the unseen Master of Elements refund), frostfire_bolt 141.10 1.51 (lo -32.8); the same three before the
+    -- frostfire_bolt 112.80 0.23 (lo -7.1, gap BQ), scorch 118.00 2.51 (lo -41.9 at Scorch's 150; traced, 0.9 measure
+    -- lane: the unseen Master of Elements refund, 37 mana of the Frostfire Bolt crit landing 0.83 s after its cast, 116.13
+    -- / 116.14, never credited: lo stays about 40 under until the usable answer), frostfire_bolt 141.10 1.51 (lo -32.8); the same three before the
     -- restore credit (only 141.10's est moved). 1.51 is the median over 3 rows; it rose because 6 rows closed (the
     -- restore credit), not because rows got worse
     mage_frostfire = { 1.51, 3 }, -- 1.510, 3 (Task FFB, ruling M13)
