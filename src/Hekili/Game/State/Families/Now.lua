@@ -26,6 +26,7 @@ local A = I.ab
 A.now = {} -- by ability index: the `now` function, bound to the context, or false
 A.onCrit = {} -- by ability index: the `onCrit` function (run at the cast's own crit, Obs.Crit), bound, or false
 A.onLand = {} -- by ability index: the `onLand` function (run once its cast landed, Obs.Landed), bound, or false
+A.onAvoid = {} -- by ability index: the `onAvoid` function (run at its latest cast's own avoid, Obs.Avoided), or false
 A.finish = {} -- by ability index: the `now_finish` function (run at a channel's stop at its end), bound, or false
 A.lands = {} -- by ability index: true when its `now`'s target auras start at its landing (`startsAtLanding`, L482)
 A.extra = {} -- by ability index: a `track_<id>` extra (VS.Track): no ability, no effects
@@ -674,6 +675,8 @@ I.OnBuild(function(def)
         A.onCrit[a] = type(c) == "function" and setfenv(c, ctx) or false
         local l = obj.onLand
         A.onLand[a] = type(l) == "function" and setfenv(l, ctx) or false
+        local av = obj.onAvoid
+        A.onAvoid[a] = type(av) == "function" and setfenv(av, ctx) or false
         local fin = obj.now_finish
         if type(fin) == "function" and fin == obj.finish then -- as `now` and `handler`: one function, one environment
             I.nowErrors, I.nowError = I.nowErrors + 1, "now: " .. tostring(A.key[a]) .. "'s now_finish is its finish"
@@ -944,8 +947,10 @@ end)
 -- the cost it paid, plus, with `refundNowOnAvoid`, what its `now` took from that slot (est, floor and top each their
 -- own: L1237), in one refund; both `modelled` at the outcome. Any other cast's avoid changes nothing (its effects are
 -- no longer the latest's to undo). The cooldown,
--- the GCD and the player auras stay (an avoided ability still triggers them). Allocates nothing.
-local DEFLECT, EVADE = I.HitKind.DEFLECT, I.HitKind.EVADE
+-- the GCD and the player auras stay (an avoided ability still triggers them), except what the ability's `onAvoid`
+-- takes back (a buff only its landing gives), run after the undo. A full resist or immunity (I.UNLANDED: the ability
+-- did not apply) gets the target undo only: no `onAvoid`, no refund (unmeasured in game). Allocates nothing.
+local DEFLECT, EVADE, UNLANDED = I.HitKind.DEFLECT, I.HitKind.EVADE, I.UNLANDED
 -- Forgets the CDM verdict's refund memory of the cast of ability a at castT on every target record it wrote (L1029):
 -- refunded, avoided with no refund, or proven landed. Allocates nothing.
 local function forget(a, castT)
@@ -970,7 +975,21 @@ I.On(Obs.Avoided, function(o, t)
         local rec = VS.Aura("target", auraSpell[j], t)
         local was, back = rec and rec.est or 0, undoE[k] > t and undoE[k] or 0
         I.AuraModel(2, j, undoAp[k], back, back > 0 and undoSt[k] or 0, t, Obs.Avoided, true)
+        if back == 0 then
+            I.AuraUndone(j, o.b, undoE[k], t) -- a close: an item lit since the cast re-opens it at once (Sources/Auras.lua)
+        end
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
+    end
+    I.avoidsRun = I.avoidsRun + 1
+    if o.c == UNLANDED then
+        return
+    end
+    -- onAvoid runs before the give-back check (L1295): a spend from the slot here would count as a spend since the
+    -- cast and cut the refund to the share (est low, the safe side); no pack's onAvoid spends today
+    if A.onAvoid[o.a] then
+        journal = false
+        call(A.onAvoid[o.a], o.a, o.t)
+        journal = true
     end
     local r = A.slot[o.a]
     local d = r > 0 and paid * A.refund[o.a] or 0
@@ -986,7 +1005,6 @@ I.On(Obs.Avoided, function(o, t)
     elseif r > 0 and d > 0 then
         I.Refund(r, d, t) -- at the fold; the answers since the cast's spend already saw it
     end
-    I.avoidsRun = I.avoidsRun + 1
 end)
 
 --- The CDM verdict closed target aura j's application `ap` as missed (Sources/Auras.lua, L1029): the cast whose own

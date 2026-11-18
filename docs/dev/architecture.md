@@ -437,7 +437,9 @@ direct-hit ticket (not a tick's or a swing's), when a wound or crit is paid to i
 A ticket closing with no row is not presumed landed: live, every target row is background (its amount, flag and school
 secret), so avoids pay nothing either and a presumed land would follow every avoid; until rows are plain again
 `onLand` runs only where they are (the harness, replays). An avoid never runs it, and an ability whose `expects` is
-NONE (no ticket) never lands. A channeled ability's
+NONE (no ticket) never lands. Its mirror `onAvoid` (bound the same way) runs in the avoid handler
+(`Families/Now.lua`, `Obs.Avoided`) after the latest cast's own dodge, parry or miss and its target undo: what only
+the landing gives, granted by the cast's `now` (a buff), is taken back there. A channeled ability's
 `now_finish` is the belief's twin of the sim's `finish` (run at CHANNEL_FINISH, `Engine/Sim/State.lua`): it runs at
 the channel's stop when that stop is at most 0.05 s before the channel's believed end (its start's plain end, moved
 by pushbacks) and at most 0.5 s after it; a broken channel, one whose times were secret, or a later stop (another

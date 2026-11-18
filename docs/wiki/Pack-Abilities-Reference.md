@@ -18,7 +18,7 @@ An **ability** is one entry of `RegisterAbilities` (or one `RegisterAbility` cal
 
 A field declared as a function runs in the simulation with the simulated `state` as its environment, each time the field is read, so `talent.ferocity.rank` or `buff.bear_form.up` inside it answers for the simulated moment. The effect functions `handler`, `start`, `tick`, `finish` and `impact` are not evaluated on read: the simulation calls them when the matching event happens.
 
-The belief reads the declared fields it needs to model a cast (cost, cooldown, charges, GCD, cast time, swing fields) and evaluates `spend`, `cooldown` and `gcdTime` functions in its own context, falling back to a value computed under `state` if one raises. It runs `now`, `onCrit`, `onLand` and `now_finish` in its own context. Write those functions with names both contexts have ([Pack environment names](Pack-Environment-Names)).
+The belief reads the declared fields it needs to model a cast (cost, cooldown, charges, GCD, cast time, swing fields) and evaluates `spend`, `cooldown` and `gcdTime` functions in its own context, falling back to a value computed under `state` if one raises. It runs `now`, `onCrit`, `onLand`, `onAvoid` and `now_finish` in its own context. Write those functions with names both contexts have ([Pack environment names](Pack-Environment-Names)).
 
 `known` is cached for a whole prediction, so it must depend only on the spellbook, talents and gear, never on buffs or time.
 
@@ -111,6 +111,7 @@ Declare a form requirement with `form`, never through `buff` or a `usable` funct
 | `now` | Belief | The client reports the player's cast succeeded, after the cost, cooldown and GCD are written |
 | `onCrit` | Belief | The target's row shows a critical hit by this cast |
 | `onLand` | Belief | The cast's hit is settled as landed; never on an avoid, and never for `expects = "none"` |
+| `onAvoid` | Belief | The target dodged, parried or missed the latest cast, after that cast's target auras are put back; for an effect only a landed hit gives, such as a buff the cast's `now` granted |
 | `start` | Simulation | A channel starts |
 | `tick` | Simulation | A channel ticks |
 | `finish` | Simulation | A channel finishes |

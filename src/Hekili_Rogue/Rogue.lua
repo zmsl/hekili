@@ -739,6 +739,9 @@ spec:RegisterAbilities(rogue({
             applyBuff("ghostly_strike")
             applyBuff("ghostly_strike_next")
         end,
+        onAvoid = function() -- the next-Garrote buff is the landing's: a dodge, parry or miss gives none
+            removeBuff("ghostly_strike_next")
+        end,
 
         handler = function()
             applyBuff("ghostly_strike")

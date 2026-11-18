@@ -1282,6 +1282,23 @@ describe("now handlers", function()
             assert.are.same({ 5, 10 }, lands)
         end)
 
+        -- hotfix 0.8.6 (L1239): `onAvoid` runs at the latest cast's own dodge, parry or miss, at the outcome; never at
+        -- a hit, a deflect or evade (reactions only), or an outcome nobody can attribute.
+        it("runs onAvoid at the latest cast's own avoid only, at the outcome's time", function()
+            local avoids = {}
+            h.Class.abilities.spender_c.funcs.onAvoid = function()
+                avoids[#avoids + 1] = now -- luacheck: ignore 113 (the `now` context's time)
+            end
+            begin()
+            h.Class.abilities.spender_c.funcs.onAvoid = nil
+            castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 100)
+            castOutcome(fs.SPENDER_C, 10, "PARRY", 0.3)
+            castOutcome(fs.SPENDER_C, 15, "EVADE")
+            castOutcome(fs.SPENDER_C, 20, "MISS", 0.7) -- past the landing window: no one's
+            assert.are.same({ 10.3 }, avoids)
+            assert.are.equal(0, I.nowErrors)
+        end)
+
         it("a crit a pending swing explains runs no onCrit; one in the newer cast's frame is its (GAP T)", function()
             local crits = 0
             h.Class.abilities.spender_c.funcs.onCrit = function()

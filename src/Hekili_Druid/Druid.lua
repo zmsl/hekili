@@ -690,11 +690,14 @@ spec:RegisterAuras({
         tick_time = 3,
         max_stack = 1,
     },
+    -- A stealth: the IsStealthed read puts it up or down (Sources/Forms.lua, C5), so a mob that breaks it takes it down.
+    -- shortcut: a Night Elf's Shadowmeld also reads IsStealthed true (unprobed in combat, Rogue Q5): believed prowled.
     prowl = {
         id = 5215,
         copy = rest(PROWL),
         duration = 3600,
         max_stack = 1,
+        isStealthed = true,
     },
     rake = {
         id = 1822,

@@ -52,6 +52,8 @@ local format = string.format
 --   ability's `now` spent after an avoid, as before.
 --   Also without a bump: the regen entry fields `mp5Mult` and `energize` (CN23); an older core ignores both and keeps
 --   the gear and buff MP5 at x 1 under such an entry, as before.
+--   Also without a bump: the ability field `onAvoid` (L1239); an older core never runs it and keeps what the cast's
+--   `now` granted through an avoid, as before.
 -- 15 (2026-11-16, mana-09): a cost modifier's `talent` (RegisterCostMod: a talent's rank gates it, no `aura` needed)
 -- and its `pct` / `flat` as a list by rank: an older core indexes the simulation's buff table with a nil aura key
 -- (raises) and ignores a list value.
