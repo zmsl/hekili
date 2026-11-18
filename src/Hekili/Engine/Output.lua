@@ -106,6 +106,8 @@ local annotators = slots()
 Output.steady = true
 Output.hold = 1
 Output.interval = ns.UPDATE_INTERVAL -- seconds between updates in combat (the driver's combatRate)
+-- Published for the displays and the harness, which read the engine through Hekili.Engine.
+Engine.READY, Engine.UPDATE_INTERVAL = READY, ns.UPDATE_INTERVAL
 local acts = 0
 
 --- Our own cast started or succeeded, our channel ended or a swing queue changed: the next publish of every display

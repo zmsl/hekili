@@ -31,9 +31,6 @@ ns.READY = 0.05
 -- it (loop.lua's TICK).
 ns.UPDATE_INTERVAL = 0.2
 
--- Published for the displays and the harness, which read the engine through Hekili.Engine.
-Hekili.Engine.READY, Hekili.Engine.UPDATE_INTERVAL = ns.READY, ns.UPDATE_INTERVAL
-
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 -- Class Localization
