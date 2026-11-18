@@ -1,4 +1,4 @@
-# wowsims e5a9cd2a2dfc9e29e63fd6ec1fc7245ad4b44664 priest_smite seed 101 180 s target 63
+# wowsims e4ef929e54794ea16dc9a3c4b4f9d4688d500679 priest_smite seed 101 180 s target 63
 # talents 1309969=5@1 14524=2@1 1225132=5@1 14523=2@1 1309957=3@1 18551=5@1 14520=3@1 14751=1@1 14521=3@1 402174=1@1 10060=1@1 14913=3@2 14889=5@2 27900=1@2 18530=5@2 15237=1@2 14909=2@2 15260=3@3
 [0.00] [Smite (#1)] Aura gained: {SpellID: 25898, Tag: -1}
 [0.00] [Smite (#1)] Dynamic dep enabled (Strength *= 1.10): {"Strength": 3.000,"AttackPower": 3.000,}
@@ -115,7 +115,7 @@
 [5.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (5105.776 --> 5109.355) of 6151 total.
 [5.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (5109.355 --> 5112.934) of 6151 total.
 [6.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (5112.934 --> 5116.512) of 6151 total.
-[6.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 297.864 damage (SpellSchool: 32). (Threat: 238.291)
+[6.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 292.068 damage (SpellSchool: 32). (Threat: 233.654)
 [6.00] [Smite (#1)] [Target 1] {SpellID: 1316993} Hit for 287.625 damage (SpellSchool: 2). (Threat: 230.100)
 [6.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (5116.512 --> 5120.091) of 6151 total.
 [6.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (5120.091 --> 5123.670) of 6151 total.
@@ -157,7 +157,7 @@
 [8.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4961.139 --> 4964.717) of 6151 total.
 [8.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4964.717 --> 4968.296) of 6151 total.
 [9.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4968.296 --> 4971.875) of 6151 total.
-[9.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 297.864 damage (SpellSchool: 32). (Threat: 238.291)
+[9.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 292.068 damage (SpellSchool: 32). (Threat: 233.654)
 [9.00] [Smite (#1)] [Target 1] {SpellID: 15261} tick Crit for 80.892 damage (SpellSchool: 2). (Threat: 64.714)
 [9.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4971.875 --> 4975.454) of 6151 total.
 [9.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4975.454 --> 4979.032) of 6151 total.
@@ -194,7 +194,7 @@
 [11.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4816.501 --> 4820.080) of 6151 total.
 [11.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4820.080 --> 4823.659) of 6151 total.
 [12.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4823.659 --> 4827.237) of 6151 total.
-[12.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 297.864 damage (SpellSchool: 32). (Threat: 238.291)
+[12.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 292.068 damage (SpellSchool: 32). (Threat: 233.654)
 [12.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4827.237 --> 4830.816) of 6151 total.
 [12.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4830.816 --> 4834.395) of 6151 total.
 [12.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4834.395 --> 4837.974) of 6151 total.
@@ -236,7 +236,7 @@
 [14.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4419.864 --> 4423.442) of 6151 total.
 [14.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4423.442 --> 4427.021) of 6151 total.
 [15.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4427.021 --> 4430.600) of 6151 total.
-[15.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[15.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [15.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4430.600 --> 4434.179) of 6151 total.
 [15.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4434.179 --> 4437.757) of 6151 total.
 [15.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4437.757 --> 4441.336) of 6151 total.
@@ -277,7 +277,7 @@
 [17.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3912.726 --> 3916.305) of 6151 total.
 [17.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3916.305 --> 3919.884) of 6151 total.
 [18.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3919.884 --> 3923.462) of 6151 total.
-[18.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[18.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [18.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3923.462 --> 3927.041) of 6151 total.
 [18.10] [Smite (#1)] [Target 1] {SpellID: 1316993} Crit for 359.532 damage (SpellSchool: 2). (Threat: 287.625)
 [18.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3927.041 --> 3930.620) of 6151 total.
@@ -322,7 +322,7 @@
 [20.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4020.089 --> 4023.667) of 6151 total.
 [20.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4023.667 --> 4027.246) of 6151 total.
 [21.00] [Target 1] Aura faded: {SpellID: 10894}
-[21.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[21.00] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [21.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4027.246 --> 4030.825) of 6151 total.
 [21.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4030.825 --> 4034.404) of 6151 total.
 [21.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (4034.404 --> 4037.982) of 6151 total.
@@ -372,7 +372,7 @@
 [24.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3477.502 --> 3481.081) of 6151 total.
 [24.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3481.081 --> 3484.660) of 6151 total.
 [24.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3484.660 --> 3488.239) of 6151 total.
-[24.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[24.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [24.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3488.239 --> 3491.817) of 6151 total.
 [24.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3491.817 --> 3495.396) of 6151 total.
 [25.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3495.396 --> 3498.975) of 6151 total.
@@ -414,7 +414,7 @@
 [27.60] [Smite (#1)] [Target 1] {SpellID: 15261} tick Hit for 44.940 damage (SpellSchool: 2). (Threat: 35.952)
 [27.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3084.444 --> 3088.022) of 6151 total.
 [27.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3088.022 --> 3091.601) of 6151 total.
-[27.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[27.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [27.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3091.601 --> 3095.180) of 6151 total.
 [27.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3095.180 --> 3098.759) of 6151 total.
 [28.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (3098.759 --> 3102.337) of 6151 total.
@@ -449,7 +449,7 @@
 [30.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2936.227 --> 2939.806) of 6151 total.
 [30.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2939.806 --> 2943.385) of 6151 total.
 [30.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2943.385 --> 2946.964) of 6151 total.
-[30.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 372.330 damage (SpellSchool: 32). (Threat: 297.864)
+[30.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 365.085 damage (SpellSchool: 32). (Threat: 292.068)
 [30.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2946.964 --> 2950.542) of 6151 total.
 [30.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2950.542 --> 2954.121) of 6151 total.
 [31.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2954.121 --> 2957.700) of 6151 total.
@@ -493,7 +493,7 @@
 [33.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2429.090 --> 2432.669) of 6151 total.
 [33.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2432.669 --> 2436.247) of 6151 total.
 [33.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2436.247 --> 2439.826) of 6151 total.
-[33.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[33.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [33.70] [Smite (#1)] [Target 1] {SpellID: 1316993} Hit for 239.688 damage (SpellSchool: 2). (Threat: 191.750)
 [33.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2439.826 --> 2443.405) of 6151 total.
 [33.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2443.405 --> 2446.984) of 6151 total.
@@ -536,7 +536,7 @@
 [36.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2284.452 --> 2288.031) of 6151 total.
 [36.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2288.031 --> 2291.610) of 6151 total.
 [36.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2291.610 --> 2295.189) of 6151 total.
-[36.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[36.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [36.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2295.189 --> 2298.767) of 6151 total.
 [36.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2298.767 --> 2302.346) of 6151 total.
 [37.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2302.346 --> 2305.925) of 6151 total.
@@ -576,7 +576,7 @@
 [39.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2139.815 --> 2143.394) of 6151 total.
 [39.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2143.394 --> 2146.972) of 6151 total.
 [39.70] [Target 1] Aura faded: {SpellID: 10894}
-[39.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[39.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [39.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2146.972 --> 2150.551) of 6151 total.
 [39.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2150.551 --> 2154.130) of 6151 total.
 [39.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (2154.130 --> 2157.709) of 6151 total.
@@ -626,7 +626,7 @@
 [43.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1593.650 --> 1597.229) of 6151 total.
 [43.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1597.229 --> 1600.807) of 6151 total.
 [43.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1600.807 --> 1604.386) of 6151 total.
-[43.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[43.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [43.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1604.386 --> 1607.965) of 6151 total.
 [43.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1607.965 --> 1611.544) of 6151 total.
 [43.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1611.544 --> 1615.122) of 6151 total.
@@ -661,7 +661,7 @@
 [46.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1449.012 --> 1452.591) of 6151 total.
 [46.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1452.591 --> 1456.170) of 6151 total.
 [46.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1456.170 --> 1459.749) of 6151 total.
-[46.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[46.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [46.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1459.749 --> 1463.327) of 6151 total.
 [46.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1463.327 --> 1466.906) of 6151 total.
 [46.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (1466.906 --> 1470.485) of 6151 total.
@@ -711,7 +711,7 @@
 [49.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (941.875 --> 945.454) of 6151 total.
 [49.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (945.454 --> 949.032) of 6151 total.
 [49.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (949.032 --> 952.611) of 6151 total.
-[49.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[49.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [49.30] [Smite (#1)] [Target 1] {SpellID: 1316993} Hit for 239.688 damage (SpellSchool: 2). (Threat: 191.750)
 [49.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (952.611 --> 956.190) of 6151 total.
 [49.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (956.190 --> 959.769) of 6151 total.
@@ -748,7 +748,7 @@
 [52.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (898.256 --> 901.835) of 6151 total.
 [52.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (901.835 --> 905.414) of 6151 total.
 [52.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (905.414 --> 908.992) of 6151 total.
-[52.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[52.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [52.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (908.992 --> 912.571) of 6151 total.
 [52.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (912.571 --> 916.150) of 6151 total.
 [52.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (916.150 --> 919.729) of 6151 total.
@@ -785,7 +785,7 @@
 [55.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (852.619 --> 856.197) of 6151 total.
 [55.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (856.197 --> 859.776) of 6151 total.
 [55.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (859.776 --> 863.355) of 6151 total.
-[55.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[55.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [55.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (863.355 --> 866.934) of 6151 total.
 [55.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (866.934 --> 870.512) of 6151 total.
 [55.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (870.512 --> 874.091) of 6151 total.
@@ -823,7 +823,7 @@
 [58.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (806.981 --> 810.560) of 6151 total.
 [58.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (810.560 --> 814.139) of 6151 total.
 [58.30] [Target 1] Aura faded: {SpellID: 10894}
-[58.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[58.30] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [58.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (814.139 --> 817.717) of 6151 total.
 [58.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (817.717 --> 821.296) of 6151 total.
 [58.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (821.296 --> 824.875) of 6151 total.
@@ -898,7 +898,7 @@
 [62.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (422.604 --> 426.182) of 6151 total.
 [62.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (426.182 --> 429.761) of 6151 total.
 [62.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (429.761 --> 433.340) of 6151 total.
-[62.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[62.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [63.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (433.340 --> 436.919) of 6151 total.
 [63.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (436.919 --> 440.497) of 6151 total.
 [63.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (440.497 --> 444.076) of 6151 total.
@@ -949,7 +949,7 @@
 [65.70] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 90.519 damage (SpellSchool: 4). (Threat: 90.519)
 [65.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (549.695 --> 555.292) of 6151 total.
 [65.90] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (555.292 --> 560.890) of 6151 total.
-[65.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[65.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [65.90] [Smite (#1)] [Target 1] {SpellID: 15265} tick Hit for 38.640 damage (SpellSchool: 2). (Threat: 30.912)
 [65.90] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [65.90] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
@@ -1011,7 +1011,7 @@
 [68.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (296.741 --> 300.320) of 6151 total.
 [68.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (300.320 --> 303.899) of 6151 total.
 [68.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (303.899 --> 307.477) of 6151 total.
-[68.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 372.330 damage (SpellSchool: 32). (Threat: 297.864)
+[68.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 365.085 damage (SpellSchool: 32). (Threat: 292.068)
 [69.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (307.477 --> 311.056) of 6151 total.
 [69.10] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (311.056 --> 314.635) of 6151 total.
 [69.20] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (314.635 --> 318.214) of 6151 total.
@@ -1057,7 +1057,7 @@
 [71.70] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 96.250 damage (SpellSchool: 4). (Threat: 96.250)
 [71.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (407.682 --> 411.261) of 6151 total.
 [71.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (411.261 --> 414.840) of 6151 total.
-[71.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[71.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [71.90] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [71.90] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
 [71.90] [Target 1] Aura faded: {SpellID: 5019}
@@ -1109,7 +1109,7 @@
 [74.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (561.935 --> 567.532) of 6151 total.
 [74.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (567.532 --> 573.130) of 6151 total.
 [74.90] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (573.130 --> 578.727) of 6151 total.
-[74.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[74.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [75.00] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (578.727 --> 584.325) of 6151 total.
 [75.10] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (584.325 --> 589.922) of 6151 total.
 [75.20] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (589.922 --> 595.520) of 6151 total.
@@ -1153,7 +1153,7 @@
 [77.70] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 69.123 damage (SpellSchool: 4). (Threat: 69.123)
 [77.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (735.457 --> 741.055) of 6151 total.
 [77.90] [Target 1] Aura faded: {SpellID: 10894}
-[77.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[77.90] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [77.90] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (741.055 --> 746.652) of 6151 total.
 [78.00] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (746.652 --> 752.250) of 6151 total.
 [78.10] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (752.250 --> 757.847) of 6151 total.
@@ -1233,7 +1233,7 @@
 [82.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (368.034 --> 371.612) of 6151 total.
 [82.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (371.612 --> 375.191) of 6151 total.
 [82.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (375.191 --> 378.770) of 6151 total.
-[82.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[82.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [82.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (378.770 --> 382.349) of 6151 total.
 [82.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (382.349 --> 385.927) of 6151 total.
 [83.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (385.927 --> 389.506) of 6151 total.
@@ -1280,7 +1280,7 @@
 [85.50] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 113.085 damage (SpellSchool: 4). (Threat: 113.085)
 [85.60] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (495.125 --> 500.722) of 6151 total.
 [85.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (500.722 --> 506.320) of 6151 total.
-[85.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[85.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [85.70] [Smite (#1)] [Target 1] {SpellID: 15265} tick Hit for 38.640 damage (SpellSchool: 2). (Threat: 30.912)
 [85.70] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [85.70] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
@@ -1342,7 +1342,7 @@
 [88.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (269.975 --> 273.554) of 6151 total.
 [88.60] [Smite (#1)] [Target 1] {SpellID: 1316993} Hit for 239.688 damage (SpellSchool: 2). (Threat: 191.750)
 [88.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (273.554 --> 277.132) of 6151 total.
-[88.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[88.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [88.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (277.132 --> 280.711) of 6151 total.
 [88.90] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (280.711 --> 284.290) of 6151 total.
 [89.00] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (284.290 --> 287.869) of 6151 total.
@@ -1390,7 +1390,7 @@
 [91.50] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 90.800 damage (SpellSchool: 4). (Threat: 90.800)
 [91.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (377.337 --> 380.916) of 6151 total.
 [91.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (380.916 --> 384.495) of 6151 total.
-[91.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[91.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [91.70] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [91.70] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
 [91.70] [Target 1] Aura faded: {SpellID: 5019}
@@ -1441,7 +1441,7 @@
 [94.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (507.365 --> 512.962) of 6151 total.
 [94.60] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (512.962 --> 518.560) of 6151 total.
 [94.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (518.560 --> 524.157) of 6151 total.
-[94.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 372.330 damage (SpellSchool: 32). (Threat: 297.864)
+[94.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 365.085 damage (SpellSchool: 32). (Threat: 292.068)
 [94.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (524.157 --> 529.755) of 6151 total.
 [94.90] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (529.755 --> 535.352) of 6151 total.
 [95.00] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (535.352 --> 540.950) of 6151 total.
@@ -1489,7 +1489,7 @@
 [97.51] [Smite (#1)] Gained 114.350 health from {SpellID: 1260198} (2287.000 --> 2287.000) of 2287 total.
 [97.60] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (680.887 --> 686.485) of 6151 total.
 [97.70] [Target 1] Aura faded: {SpellID: 10894}
-[97.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 372.330 damage (SpellSchool: 32). (Threat: 297.864)
+[97.70] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 365.085 damage (SpellSchool: 32). (Threat: 292.068)
 [97.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (686.485 --> 692.082) of 6151 total.
 [97.71] [Smite (#1)] Aura faded: {SpellID: 1284536}
 [97.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (692.082 --> 697.680) of 6151 total.
@@ -1566,7 +1566,7 @@
 [102.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (313.464 --> 317.042) of 6151 total.
 [102.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (317.042 --> 320.621) of 6151 total.
 [102.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (320.621 --> 324.200) of 6151 total.
-[102.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[102.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [102.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (324.200 --> 327.779) of 6151 total.
 [102.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (327.779 --> 331.357) of 6151 total.
 [102.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (331.357 --> 334.936) of 6151 total.
@@ -1613,7 +1613,7 @@
 [105.30] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 105.973 damage (SpellSchool: 4). (Threat: 105.973)
 [105.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (440.555 --> 446.152) of 6151 total.
 [105.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (446.152 --> 451.750) of 6151 total.
-[105.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[105.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [105.50] [Smite (#1)] [Target 1] {SpellID: 15265} tick Hit for 38.640 damage (SpellSchool: 2). (Threat: 30.912)
 [105.50] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [105.50] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
@@ -1666,7 +1666,7 @@
 [108.30] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (602.882 --> 608.480) of 6151 total.
 [108.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (608.480 --> 614.077) of 6151 total.
 [108.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (614.077 --> 619.675) of 6151 total.
-[108.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[108.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [108.60] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (619.675 --> 625.272) of 6151 total.
 [108.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (625.272 --> 630.870) of 6151 total.
 [108.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (630.870 --> 636.467) of 6151 total.
@@ -1722,7 +1722,7 @@
 [111.30] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Crit for 95.552 damage (SpellSchool: 4). (Threat: 95.552)
 [111.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (346.992 --> 350.571) of 6151 total.
 [111.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (350.571 --> 354.150) of 6151 total.
-[111.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[111.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [111.50] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [111.50] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
 [111.50] [Target 1] Aura faded: {SpellID: 5019}
@@ -1777,7 +1777,7 @@
 [114.30] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (452.795 --> 458.392) of 6151 total.
 [114.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (458.392 --> 463.990) of 6151 total.
 [114.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (463.990 --> 469.587) of 6151 total.
-[114.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[114.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [114.60] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (469.587 --> 475.185) of 6151 total.
 [114.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (475.185 --> 480.782) of 6151 total.
 [114.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (480.782 --> 486.380) of 6151 total.
@@ -1823,7 +1823,7 @@
 [117.30] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 65.333 damage (SpellSchool: 4). (Threat: 65.333)
 [117.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (626.317 --> 631.915) of 6151 total.
 [117.50] [Target 1] Aura faded: {SpellID: 10894}
-[117.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 372.330 damage (SpellSchool: 32). (Threat: 297.864)
+[117.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 365.085 damage (SpellSchool: 32). (Threat: 292.068)
 [117.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (631.915 --> 637.512) of 6151 total.
 [117.50] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [117.50] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
@@ -1916,7 +1916,7 @@
 [123.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (326.064 --> 329.642) of 6151 total.
 [123.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (329.642 --> 333.221) of 6151 total.
 [123.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (333.221 --> 336.800) of 6151 total.
-[123.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 372.330 damage (SpellSchool: 32). (Threat: 297.864)
+[123.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Crit for 365.085 damage (SpellSchool: 32). (Threat: 292.068)
 [123.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (336.800 --> 340.379) of 6151 total.
 [123.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (340.379 --> 343.957) of 6151 total.
 [123.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (343.957 --> 347.536) of 6151 total.
@@ -1964,7 +1964,7 @@
 [126.30] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 86.520 damage (SpellSchool: 4). (Threat: 86.520)
 [126.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (453.155 --> 458.752) of 6151 total.
 [126.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (458.752 --> 464.350) of 6151 total.
-[126.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[126.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [126.50] [Smite (#1)] [Target 1] {SpellID: 15265} tick Hit for 38.640 damage (SpellSchool: 2). (Threat: 30.912)
 [126.50] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [126.50] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
@@ -2022,7 +2022,7 @@
 [129.30] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (615.482 --> 621.080) of 6151 total.
 [129.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (621.080 --> 626.677) of 6151 total.
 [129.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (626.677 --> 632.275) of 6151 total.
-[129.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[129.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [129.60] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (632.275 --> 637.872) of 6151 total.
 [129.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (637.872 --> 643.470) of 6151 total.
 [129.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (643.470 --> 649.067) of 6151 total.
@@ -2078,7 +2078,7 @@
 [132.30] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 83.859 damage (SpellSchool: 4). (Threat: 83.859)
 [132.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (359.592 --> 363.171) of 6151 total.
 [132.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (363.171 --> 366.750) of 6151 total.
-[132.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[132.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [132.50] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [132.50] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
 [132.50] [Target 1] Aura faded: {SpellID: 5019}
@@ -2129,7 +2129,7 @@
 [135.30] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (465.395 --> 470.992) of 6151 total.
 [135.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (470.992 --> 476.590) of 6151 total.
 [135.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (476.590 --> 482.187) of 6151 total.
-[135.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[135.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [135.60] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (482.187 --> 487.785) of 6151 total.
 [135.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (487.785 --> 493.382) of 6151 total.
 [135.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (493.382 --> 498.980) of 6151 total.
@@ -2176,7 +2176,7 @@
 [138.30] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 115.221 damage (SpellSchool: 4). (Threat: 115.221)
 [138.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (638.917 --> 644.515) of 6151 total.
 [138.50] [Target 1] Aura faded: {SpellID: 10894}
-[138.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[138.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [138.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (644.515 --> 650.112) of 6151 total.
 [138.50] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [138.50] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
@@ -2610,7 +2610,7 @@
 [165.30] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (313.264 --> 316.842) of 6151 total.
 [165.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (316.842 --> 320.421) of 6151 total.
 [165.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (320.421 --> 324.000) of 6151 total.
-[165.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[165.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [165.60] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (324.000 --> 327.579) of 6151 total.
 [165.70] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (327.579 --> 331.157) of 6151 total.
 [165.80] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (331.157 --> 334.736) of 6151 total.
@@ -2657,7 +2657,7 @@
 [168.30] [Smite (#1)] [Target 1] {SpellID: 5019, Tag: 1} Hit for 92.965 damage (SpellSchool: 4). (Threat: 92.965)
 [168.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (440.355 --> 445.952) of 6151 total.
 [168.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (445.952 --> 451.550) of 6151 total.
-[168.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[168.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [168.50] [Smite (#1)] [Target 1] {SpellID: 15265} tick Hit for 38.640 damage (SpellSchool: 2). (Threat: 30.912)
 [168.50] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [168.50] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
@@ -2711,7 +2711,7 @@
 [171.30] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (602.682 --> 608.280) of 6151 total.
 [171.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (608.280 --> 613.877) of 6151 total.
 [171.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (613.877 --> 619.475) of 6151 total.
-[171.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[171.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [171.60] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (619.475 --> 625.072) of 6151 total.
 [171.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (625.072 --> 630.670) of 6151 total.
 [171.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (630.670 --> 636.267) of 6151 total.
@@ -2771,7 +2771,7 @@
 [174.31] [Smite (#1)] Gained 114.350 health from {SpellID: 1260198} (2287.000 --> 2287.000) of 2287 total.
 [174.40] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (346.792 --> 350.371) of 6151 total.
 [174.50] [Smite (#1)] Gained 3.579 mana from {OtherID: 2, Tag: 1} (350.371 --> 353.950) of 6151 total.
-[174.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[174.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [174.50] [Smite (#1)] Casting {SpellID: 5019, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [174.50] [Smite (#1)] Completed cast {SpellID: 5019, Tag: 1}
 [174.50] [Target 1] Aura faded: {SpellID: 5019}
@@ -2822,7 +2822,7 @@
 [177.30] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (452.595 --> 458.192) of 6151 total.
 [177.40] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (458.192 --> 463.790) of 6151 total.
 [177.50] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (463.790 --> 469.387) of 6151 total.
-[177.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 248.220 damage (SpellSchool: 32). (Threat: 198.576)
+[177.50] [Smite (#1)] [Target 1] {SpellID: 10894} tick Hit for 243.390 damage (SpellSchool: 32). (Threat: 194.712)
 [177.60] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (469.387 --> 474.985) of 6151 total.
 [177.70] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (474.985 --> 480.582) of 6151 total.
 [177.80] [Smite (#1)] Gained 5.598 mana from {OtherID: 2, Tag: 2} (480.582 --> 486.180) of 6151 total.

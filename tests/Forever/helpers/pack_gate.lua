@@ -581,7 +581,9 @@ M.FLICKER = {
     -- flicker-085 P1 (L755 / ruling L960: a mana pool with no tick seen pads nothing; seeds 1-20 / 21-40 / 41-60
     -- heldReady 406 / 404 / 403): heldReady 403 -> 406. The fights re-time; the event kind is the same as before
     -- (mind_flay waiting 0.07-0.2 s at the mana crossing, the floor under the cost, the truth over it)
-    ["Shadow"] = { flicker = 0.02, retracted = 0, heldReady = 406 }, -- 0 / 0 / 0, 0
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (Priest lane, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, heldReady 405 / 406 / 396):
+    -- flicker 0.02 -> 0 (the worst set reads 0); heldReady 406 holds. The new log moves 3 fixture rows and one decision (85 -> 86, a mind_flay tail), no loop-world value
+    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 406 }, -- 0 / 0 / 0, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
@@ -590,7 +592,9 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.02 / 0.00 / 0.02, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.03 -> 0.02
-    ["Smite"] = { flicker = 0.02, retracted = 0, heldReady = 0 }, -- 0.02 / 0 / 0.05, 0
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (Priest lane, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, heldReady 0 / 0 / 0):
+    -- flicker 0.02 -> 0 (the worst set reads 0; the old 0.05 at seeds 41-60 is gone)
+    ["Smite"] = { flicker = 0, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
