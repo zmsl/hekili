@@ -455,7 +455,9 @@ M.READY = {
     -- { 0.69, 3 } -> { 0.25, 4 } (lane mage-mana-belief; the Mage world's spells carry the client's DB2 ranges, so a
     -- travelling cast's flight window is 35 / 24 s, not the fake's 5 yd 0.36 s): the travelling crits' Master of
     -- Elements refunds are credited (Fireball 5 and Pyroblast 2 of the log's 6 and 3; one Pyroblast DoT tick crit at
-    -- log 17.33 is credited too, which the game does not refund: Events/Rows.lua runs onCrit for a TICKS payment). 146.60
+    -- log 17.33 is credited too, which the game does not refund: in that instant the old DoT's tick Crit and the new
+    -- Pyroblast's direct Hit land, both school 4, and the new cast's flight ticket takes the crit row, a mis-routing;
+    -- a tick's own crit runs no onCrit since lane mage-mana-belief's fix, which moves no row here). 146.60
     -- 1.61 late -> in:grain (lo-truth -73.7 -> -6.8), 152.40 0.69 -> 0.51; 172.90 / 177.50 in:cost -> 0.26 / 0.24 late
     -- (gap BQ: lo 7.7 / 4.8 under the truth at Scorch's 150; before, est sat 15-24 OVER the truth there and showed
     -- them in time); 159.40 / 166.20 stay in:cost (b 0.07 -> 0.19 / 0.16). Decisions 0.932 kept
