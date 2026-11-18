@@ -76,6 +76,11 @@ From `src/Hekili_Druid/Druid.lua`:
 
 Each spec reads the kit's abilities, auras and talents, and keeps its own settings and options.
 
+Beside `specs`, the definition may set `gcd`, the class's own GCD kind: `"spell"` (the default) or `"totem"`, or a
+function of the state that answers one. The simulation uses it where no ability names a kind: a wait, and `gcd.max`
+during an off-GCD ability. The Rogue sets `"totem"` (its strikes' 1 s GCD); the Druid answers `"totem"` in Cat Form.
+Each ability still declares its own `gcd`.
+
 ## Spec ids
 
 The ids are the addon's own, not the client's. Each class has one id per slot: slot 0 is the kit, and slots 1 and up are the entries of `specs` in order.

@@ -58,6 +58,7 @@ local spec = Hekili:NewClass("ROGUE", {
             package = "Subtlety (wowsims.com)",
         },
     },
+    gcd = "totem", -- the Rogue's own GCD (a wait, gcd.max of an off-GCD ability): the 1 s of its strikes
 })
 if not spec then
     return

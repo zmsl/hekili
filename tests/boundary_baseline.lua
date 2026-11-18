@@ -83,10 +83,7 @@ return {
     },
     ["src/Hekili/Engine/Sim/State.lua"] = {
         ["DEATHKNIGHT"] = 1,
-        ["DRUID"] = 1,
-        ["ROGUE"] = 1,
         ["active_flame_shock"] = 1,
-        ["adrenaline_rush"] = 2,
         ["bloodlust"] = 1,
         ["cat_form"] = 1,
         ["charge"] = 21,
@@ -100,7 +97,6 @@ return {
         ["shadowform"] = 1,
         ["travel_time"] = 4,
         ["voidbinding"] = 2,
-        ["voidform"] = 2,
     },
     ["src/Hekili/Engine/Sim/Targets.lua"] = {
         ["HUNTER"] = 1,
