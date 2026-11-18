@@ -1341,6 +1341,33 @@ end
 local forecastResources
 
 do
+    -- A regen-model entry as the sim reads it (engine pass E6, E-D7: the one evaluator of forecastResources and
+    -- state:CombinedResourceRegen): its gates on `resource` (resource, spec, equipment, talent, aura, set bonus, setting,
+    -- swing, channel), its interval at `now` (a number, a function of `now` and the pool's value `v`, or a state field's
+    -- name; else 0) and its gain at `now`. Allocate nothing.
+    local function regenEntryActive( v, resource )
+        return ( not v.resource or v.resource == resource ) and
+               ( not v.spec or state.spec[ v.spec ] ) and
+               ( not v.equip or state.equipped[ v.equip ] ) and
+               ( not v.talent or state.talent[ v.talent ].enabled ) and
+               ( not v.aura or state[ v.debuff and "debuff" or "buff" ][ v.aura ].remains > 0 ) and
+               ( not v.set_bonus or state.set_bonus[ v.set_bonus ] > 0 ) and
+               ( not v.setting or state.settings[ v.setting ] ) and
+               ( not v.swing or state.swings[ v.swing .. "_speed" ] and state.swings[ v.swing .. "_speed" ] > 0 ) and
+               ( not v.channel or state.buff.casting.up and state.buff.casting.v3 == 1 and state.buff.casting.v1 == class.abilities[ v.channel ].id )
+    end
+
+    local function regenInterval( v, now, value )
+        local i = v.interval
+        return type( i ) == "number" and i or
+               ( type( i ) == "function" and i( now, value ) or
+               ( type( i ) == "string" and state[ i ] or 0 ) )
+    end
+
+    local function regenGain( v, now )
+        return type( v.value ) == "number" and v.value or v.value( now )
+    end
+
     local events = {}
     local remains = {}
 
@@ -1387,20 +1414,10 @@ do
 
         if models then
             for k, v in pairs( models ) do
-                if ( not v.resource or v.resource == resource ) and
-                   ( not v.spec or state.spec[ v.spec ] ) and
-                   ( not v.equip or state.equipped[ v.equip ] ) and
-                   ( not v.talent or state.talent[ v.talent ].enabled ) and
-                   ( not v.aura or state[ v.debuff and "debuff" or "buff" ][ v.aura ].remains > 0 ) and
-                   ( not v.set_bonus or state.set_bonus[ v.set_bonus ] > 0 ) and
-                   ( not v.setting or state.settings[ v.setting ] ) and
-                   ( not v.swing or state.swings[ v.swing .. "_speed" ] and state.swings[ v.swing .. "_speed" ] > 0 ) and
-                   ( not v.channel or state.buff.casting.up and state.buff.casting.v3 == 1 and state.buff.casting.v1 == class.abilities[ v.channel ].id ) then
+                if regenEntryActive( v, resource ) then
 
                     local l = v.last()
-                    local i = type( v.interval ) == "number" and v.interval or
-                              ( type( v.interval ) == "function" and v.interval( now, r.actual ) or
-                              ( type( v.interval ) == "string" and state[ v.interval ] or 0 ) )
+                    local i = regenInterval( v, now, r.actual )
 
                     v.next = l + i
                     v.name = k
@@ -1491,7 +1508,7 @@ do
                     local last = r.fcount > 0 and r.forecast[ r.fcount ]
                     local val, vlo, vhi
                     if last then val, vlo, vhi = last.v, last.l, last.h else val, vlo, vhi = r.actual, r.actual_lo, r.actual_hi end
-                    local gain = type( e.value ) == "number" and e.value or e.value( now ) -- once: the same gain for the three streams
+                    local gain = regenGain( e, now ) -- once: the same gain for the three streams
                     local v = max( 0, min( r.max, val + bonus ) )
                     v = max( 0, min( r.max, v + gain ) )
                     local l = max( 0, min( r.max, vlo + bonus ) )
@@ -1514,9 +1531,7 @@ do
                     r.forecast[ idx ].e = e.name or "none"
                     r.fcount = idx
 
-                    local step = roundDown( type( e.interval ) == "number" and e.interval or
-                                           ( type( e.interval ) == "function" and e.interval( now, v ) or
-                                           ( type( e.interval ) == "string" and state[ e.interval ] or 0 ) ), 3 )
+                    local step = roundDown( regenInterval( e, now, v ), 3 )
 
                     remains[ e.resource ] = finish - e.next
                     if e.resume then
@@ -1558,6 +1573,27 @@ do
 
     ns.forecastResources = forecastResources
     state.forecastResources = forecastResources
+
+    -- The pool's rate a second: its continuous regen plus each aura-gated entry's gain over its interval, the entry read
+    -- as the forecast reads it (regenEntryActive, regenInterval, regenGain at query_time). Entries with no aura (periodic
+    -- gains such as a swing's out of a form) are left out. Allocates nothing.
+    function state:CombinedResourceRegen( t )
+        local regen = t.regen
+        if regen == 0.001 then regen = 0 end
+
+        local model = t.regenModel
+        if not model then return regen end
+
+        local resource, now = t.resource, state.query_time
+        for _, v in pairs( model ) do
+            if v.aura and regenEntryActive( v, resource ) then
+                local i = regenInterval( v, now, t.current )
+                if i > 0 then regen = regen + regenGain( v, now ) / i end
+            end
+        end
+
+        return regen
+    end
 end
 
 
@@ -3875,32 +3911,6 @@ local resource_meta_functions = {}
 
 function state:AddResourceMetaFunction( name, f )
     resource_meta_functions[ name ] = f
-end
-
-
-function state:CombinedResourceRegen( t )
-    local regen = t.regen
-    if regen == 0.001 then regen = 0 end
-
-    local model = t.regenModel
-    if not model then return regen end
-
-    for _, source in pairs( model ) do
-        local value = type( source.value ) == "function" and source.value() or source.value
-        local interval = type( source.interval ) == "function" and source.interval() or source.interval
-
-        local aura = source.aura
-
-        if aura then
-            aura = source.debuff and state.debuff[ aura ] or state.buff[ aura ]
-
-            if aura.up then
-                regen = regen + ( value / interval )
-            end
-        end
-    end
-
-    return regen
 end
 
 -- The seconds until the pool reaches `amount`, on the estimate's stream, or on the floor's with `lo` (border batch 2:
