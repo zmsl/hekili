@@ -9,6 +9,7 @@
 - Priorities can use SimC `sequence` and `strict_sequence` lines (with `restart_sequence` and `window.<name>.done`); they run in the Primary and AOE displays, each with a Sequences setting (on by default).
 - A sequence running in a display shows all its steps there, including a cooldown that is normally shown in its own display; a toggle that is switched off still keeps that step out.
 - A priority whose lines open and close the same window in one recommendation gets a one-time warning, also when a `close_window` line stops a sequence that then starts again.
+- Other addons can follow Hekili's recommendations with `Hekili:RegisterRecommendationListener`, described on the wiki's Integration reference page.
 
 ### Changed
 - Enhancement Shaman: Stormstrike's cooldown is now 8 seconds, and each Maelstrom Weapon stack takes 20% off Lightning Bolt's cast time and cost at every talent rank. Not yet checked in game.
@@ -31,6 +32,7 @@
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 - Mage, Arcane, Fire, Frost and Frostfire (wowsims.com): when you wear Robe of the Archmage, its use is now suggested with your other cooldowns, under the Potions toggle (not yet checked in game).
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
+- `/hekili set <toggle> on` or `off` shows the same message as the toggle's keybinding.
 
 ### Fixed
 - Shaman: Mana Tide Totem now counts its mana every 3 seconds (290 at its top rank, less at lower ranks), not five times that, so your mana is no longer overestimated while it is up.
@@ -43,6 +45,9 @@
 - Paladin: a second attack in the same instant as an Unsealed Wrath proc no longer stores or spends an extra Echo (the talent's 0.1 s cooldown; not yet checked in game).
 - Paladin: Retribution (17 mana a second outside the five-second rule, 5.1 while casting), Protection (16.5 outside, none while casting) and Holy Shock Retribution (25.13 outside, 7.54 while casting) start from the current Forever mana regeneration values until your own is measured (not yet checked in game).
 - When the game's out-of-combat mana or energy regeneration matches the expected rate, Hekili now takes it as exact, so its mana and energy estimates no longer start a little low.
+- Another addon that follows Hekili's displays can no longer take the place of the action bar glow, a display or the WeakAuras event.
+- WeakAuras that react to Hekili's toggles (the `HEKILI_TOGGLE` event) now also see pause and resume, a toggle set with `/hekili set` and a mode chosen in the options, and are no longer told about a `/hekili set mode` word that is not a mode.
+- `/hekili set pause on` and `/hekili set pause off` now pause and resume the displays.
 - Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 - Warrior: a hit you block in full no longer counts as rage gained, and the rage expected from hits taken follows the latest measurements by attacker level (not yet checked in game).
 - Warrior: a missed, dodged or parried Execute no longer gives back part of its cost, and the extra rage it would have used stays yours (not yet checked in game).

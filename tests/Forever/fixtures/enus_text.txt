@@ -29342,8 +29342,8 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili set	Use |cFFFFD100/hekili set|r to adjust toggles, display modes, and specialization settings via chat commands or macros.\n\n
 ~message	/hekili set cooldowns	Major Cooldowns: OFF
 ~message	/hekili set cooldowns	|cFFFFD100cooldowns|r is now |cFFFF0000OFF|r.
-~message	/hekili set cooldowns off	|cFFFFD100cooldowns|r is now |cFFFF0000OFF|r.
-~message	/hekili set cooldowns on	|cFFFFD100cooldowns|r is now |cFF00FF00ON|r.
+~message	/hekili set cooldowns off	Major Cooldowns: OFF
+~message	/hekili set cooldowns on	Major Cooldowns: ON
 ~message	/hekili set cycle	Target Swap toggle set to |cFF00FF00ON|r.
 ~message	/hekili set cycle 5	Target Swap minimum time to die set to 5 seconds.
 ~message	/hekili set cycle nope	Invalid input for 'cycle'. Use 'on', 'off', leave blank to toggle, or provide a whole number from 0 to 20 to set the minimum time to die.

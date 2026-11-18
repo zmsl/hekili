@@ -39,10 +39,12 @@ end
 
 Hekili.AllowSimCImports = true
 
+-- Public (the wiki's Integration overview): Hekili Forever runs only on the Forever client, so always true, whatever
+-- Flavor holds. Retail Hekili has no IsForever, so other addons tell the two apart by its presence.
 Hekili.IsForever = function()
-    return Hekili.Flavor == "Forever"
+    return true
 end
-Hekili.IsRetail = Hekili.IsForever -- upstream's name, kept for WeakAuras and plug-ins that call it
+Hekili.IsRetail = Hekili.IsForever -- upstream's name, kept for WeakAuras and plug-ins that call it; internal
 
 Hekili.BuiltFor = 16001
 Hekili.GameBuild = buildStr

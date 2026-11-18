@@ -111,7 +111,7 @@ UI\BarGlow.lua
 UI\Styles\Classic.lua
 UI\Styles\Timeline.lua
 UI\Truth.lua
-Integrations\WeakAuras.lua
+Integrations\Recommendations.lua
 Engine\Sim\AplWarnings.lua
 Engine\Sim\Scripts.lua
 Engine\Sim\Core.lua

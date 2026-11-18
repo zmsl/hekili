@@ -21,7 +21,7 @@ are relative to `src/Hekili/` unless they start with another top-level folder.
                  Content  loads the shared content, then the class pack
         |  Hekili.Engine.Subscribe(name, fn)          ^ Hekili.Engine.Configure(profile)
         v                                             |
- subscribers: UI/ (displays), Integrations/WeakAuras, Options/ (owns the AceDB profile, Options.lua, Profile.lua)
+ subscribers: UI/ (displays), Integrations/Recommendations, Options/ (owns the AceDB profile, Options.lua, Profile.lua)
  the headless loop (tests)
 
  Content addons (Hekili_Shared, Hekili_<Class>) call the public Hekili object: Hekili:NewClass,
@@ -92,19 +92,31 @@ through it.
   `icon=`, below), `item` (the item id), `keybind`, `keybindFrom`, `time`, `exact_time`,
   `delay`, `since`, `wait`, `waitSec`, `offGCD`, `interrupt`, `castStart`, `resource`, `resource_type`, `cost`, `busy`,
   `scriptType`, `script`, `hook`, plus the tables `resources`, `alts` (§7) and `belief` (empty until an annotator fills it).
-- `payload`: the WeakAuras copy, set by `Integrations/WeakAuras.lua` (a passive subscriber, outside `Engine/`) only
-  when WeakAuras is loaded.
+- `payload`: the copy for other addons (the WeakAuras event and the recommendation listeners), set by
+  `Integrations/Recommendations.lua` (a passive subscriber, outside `Engine/`) once WeakAuras is loaded at
+  `PLAYER_ENTERING_WORLD` or the first listener is registered.
 - Read it in a subscriber, or between publishes. Records are reused: copy a field you need to keep.
 
 **`Engine.Output.status`**: the engine's own record, published once (`count` is 1) when one of its fields changes:
 `combat`, `combatStart` (0 out of combat), `numTargets`, `specID`, `specKey`, `specName`, `packName`. Combat, target
 count, spec and pack are read here and nowhere else.
 
-**`Engine.Subscribe(name, fn, passive, needs)`** returns true, or false when the display's 4 slots are full. `fn(name, version,
+**`Engine.Subscribe(name, fn, passive, needs)`** returns true, or false when the display's 4 outside slots are full. `fn(name, version,
 output)` runs after each publish of `name` (`name` may be `"status"`). Subscribing the same `fn` again only updates its
 `passive` flag and `needs` (`needs.alts`: §7). A passive subscriber listens without asking for the display to be computed: the engine builds a display
 only when a non-passive subscriber exists. WeakAuras is passive, so it never makes the engine compute a hidden display.
-**`Engine.Unsubscribe(name, fn)`** is safe inside a subscriber; later subscribers are not skipped.
+**`Engine.Unsubscribe(name, fn)`** is safe inside a subscriber; later subscribers are not skipped. Hekili's own
+subscribers (the displays, `status` in `UI/UI.lua`, the action bar glow, `Integrations/Recommendations.lua`) subscribe
+through `ns.Output.Subscribe`, the same call in their own slots: 8 per display, at most 4 of them for `Engine.Subscribe`,
+so an outside caller of the port never takes the slot one of them needs. This is the one `ns.Output` call outside
+`Engine/`.
+
+**`Hekili:RegisterRecommendationListener(fn)`** / **`Hekili:UnregisterRecommendationListener(fn)`**
+(`Integrations/Recommendations.lua`): other addons' hook on each update. After every publish of the five displays (not
+`status`) the bridge calls `fn(display, payload)` inside pcall, in registration order, with the same `payload` as the
+WeakAuras event. 16 slots of its own (never an engine slot); a listener's first error goes to `geterrorhandler()`, later
+ones are dropped, and it stays registered. Allocation-free per publish
+(`tests/Forever/recommendation_listener_spec.lua`).
 
 **`Engine.Registry`**: read-only views of what content registered, each the engine's live table, never a copy:
 `Specs()`, `Abilities()`, `AbilityList()`, `ItemList()`, `Auras()`, `AuraList()`, `Potions()`, `PotionList()`, `Gear()`,
@@ -166,6 +178,7 @@ to the belief as `def.providers` (`Hekili:ProvidersChanged`).
   the functions. `ns.Output.Begin(name)`, `Publish(name, count)`, `Wanted(name)`: the build side of publish/subscribe.
   Only `Sim/Core.lua` builds records. `Begin` returns the scratch set; `Publish` runs the annotators, swaps scratch and `recs`, and calls
   the subscribers, so a reader never sees a half-built set.
+- `ns.Output.Subscribe(name, fn, passive, needs)`: `Engine.Subscribe` in Hekili's own slots (above).
 - `ns.Output.Annotate(fn)` / `Unannotate(fn)`: run `fn(name, rec, i)` over each record before the swap. Reserved for the
   belief annotator (section 7); 4 slots. Not on the port until that feature exists.
 - `ns.EngineFrame`: the `HekiliEngine` frame (`Engine/Driver.lua`). Only engine files touch it: `Driver.lua` (the loop

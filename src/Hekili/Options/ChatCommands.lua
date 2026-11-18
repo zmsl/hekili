@@ -153,14 +153,7 @@ function Hekili:HandleSetCommand( args )
 
     -- Handle display mode setting
     if mainToggle == "mode" then
-        if subToggleOrState then
-            self:SetMode( subToggleOrState )
-            if WeakAuras and WeakAuras.ScanEvents then WeakAuras.ScanEvents( "HEKILI_TOGGLE", "mode", args[3] ) end
-            if ns.UI.Minimap then ns.UI.Minimap:RefreshDataText() end
-        return true
-        else
-            Hekili:FireToggle( "mode" )
-        end
+        Hekili:FireToggle( "mode", subToggleOrState ) -- a rejected mode changes nothing and fires no HEKILI_TOGGLE
         return true
     end
 
@@ -178,11 +171,20 @@ function Hekili:HandleSetCommand( args )
     -- Explicit State Check for Main Toggle
     local toggleCategory = profile.toggles[ mainToggle ]
     if toggleCategory then
+        if subToggleOrState == "value" then subToggleOrState, explicitState = explicitState, nil end -- `set X value on` is `set X on`
+
         if subToggleOrState == "on" or subToggleOrState == "off" then
-            toggleCategory.value = ( subToggleOrState == "on" )
-            local stateText = toggleCategory.value and L["|cFF00FF00ON|r"] or L["|cFFFF0000OFF|r"]
-            self:Print( format( L["|cFFFFD100%s|r is now %s."], mainToggle, stateText ) )
-            self:ForceUpdate( "CLI_TOGGLE" )
+            local on = subToggleOrState == "on"
+            if mainToggle == "snapshot" then -- an action with no on or off; only a bare `set snapshot` takes one
+                self:Print( L["Invalid explicit state; use 'on' or 'off'."] )
+            elseif mainToggle ~= "pause" then
+                self:FireToggle( mainToggle, subToggleOrState ) -- prints, sends HEKILI_TOGGLE, updates
+            elseif on ~= ( self.Pause and true or false ) then
+                self:TogglePause()
+            else -- already so: nothing to pause or resume, sent like any toggle set to the value it has
+                self:Print( on and L["PAUSED."] or L["UNPAUSED."] )
+                if WeakAuras and WeakAuras.ScanEvents then WeakAuras.ScanEvents( "HEKILI_TOGGLE", "pause", on ) end
+            end
             return true
         end
 
@@ -287,7 +289,7 @@ function Hekili:HandleFixCommand( args )
         end
 
         -- Reset display mode to automatic.
-        self:SetMode( "automatic" )
+        self:FireToggle( "mode", "automatic" )
 
         self:Print( L["Your UI displays have been restored to default positions and visibility."] )
         self:BuildUI()

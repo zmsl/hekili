@@ -100,10 +100,11 @@ When WeakAuras is loaded, Hekili Forever fires the WeakAuras event `HEKILI_RECOM
 | 4 | Always nil (unused) |
 | 5 | A payload table: `payload[i]` is a copy of record `i`, and the payload's own fields read record 1 |
 
-The bridge listens passively: a display that is hidden is not computed only for WeakAuras. When a display publishes no recommendation, the event still fires, with empty records. The bridge is in `src/Hekili/Integrations/WeakAuras.lua`.
+The bridge listens passively: a display that is hidden is not computed only for WeakAuras. When a display publishes no recommendation, the event still fires, with empty records. The bridge is in `src/Hekili/Integrations/Recommendations.lua`.
 
 ## See also
 
 - [Reading the displays](Reading-The-Displays)
 - [Displays reference](Displays-Reference)
 - [Contributing architecture](Contributing-Architecture)
+- [Integration overview](Integration-Overview): what another addon may rely on

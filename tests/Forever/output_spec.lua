@@ -245,7 +245,7 @@ describe("Engine.Output (pure)", function()
         assert.are.equal(0, bytes)
     end)
 
-    it("Subscribe drops slots blanked by a publish a subscriber error cut short before the 4-slot check", function()
+    it("Subscribe drops slots blanked by a publish a subscriber error cut short before the slot check", function()
         local s1
         s1 = function()
             Engine.Unsubscribe("AOE", s1) -- mid-publish: blanks the slot, compaction waits for the loop's end
@@ -260,6 +260,36 @@ describe("Engine.Output (pure)", function()
         for _ = 1, 4 do
             assert.is_true(Engine.Subscribe("AOE", function() end))
         end
+        for _ = 1, 4 do -- the last two fit only once the two blanked slots are dropped
+            assert.is_true(Out.Subscribe("AOE", function() end))
+        end
+    end)
+
+    it("an outside caller gets 4 slots per display and never the ones Hekili's own subscribers use", function()
+        local outside = {}
+        for i = 1, 4 do
+            outside[i] = function() end
+            assert.is_true(Engine.Subscribe("Primary", outside[i]))
+        end
+        assert.is_false(Engine.Subscribe("Primary", function() end))
+        local calls = 0
+        for _ = 1, 4 do -- the display, the integrations' bridge, the action bar glow, one spare
+            assert.is_true(Out.Subscribe("Primary", function()
+                calls = calls + 1
+            end))
+        end
+        assert.is_false(Engine.Subscribe("Primary", function() end))
+        build(Out, "Primary", 1)
+        assert.are.equal(4, calls)
+        Engine.Unsubscribe("Primary", outside[2]) -- an outside slot freed is an outside slot again
+        assert.is_true(Engine.Subscribe("Primary", function() end))
+        assert.is_false(Engine.Subscribe("Primary", function() end))
+        local bytes = alloc.bytes(function()
+            Engine.Unsubscribe("Primary", outside[1])
+            Engine.Subscribe("Primary", outside[1])
+            build(Out, "Primary", 1)
+        end, 1000)
+        assert.are.equal(0, bytes)
     end)
 end)
 
