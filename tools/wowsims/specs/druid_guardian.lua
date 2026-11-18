@@ -72,8 +72,8 @@ return {
     focus = { maul = 2, lacerate = 2, demoralizing_roar = 2 },
     -- Before Primal Bite Maul is the only rage sink: queued whenever affordable instead of at
     -- wowsims's 20, which pools for the on-GCD strikes a low-level bear lacks (ruling L18; silent once Primal Bite is
-    -- known). The re-pin's adaptive list maintains Faerie Fire (#14) and Demoralizing Roar (#16, "Attack-power reduction
-    -- is covered") itself, whenever the debuff is down and at every level, above every strike: the leveling Roar and
+    -- known). The adaptive list maintains Faerie Fire (#15) and Demoralizing Roar (#16, "Maintain the attack-power
+    -- debuff") itself, whenever the debuff is down and at every level, above every strike: the leveling Roar and
     -- Faerie Fire lines R45 guarded were dead behind them and are gone (L47).
     -- Rule 15: the raid debuff, a setting off in game and on in the harness (the user's ruling, 2026-10-21)
     maintenance = { demoralizing_roar = "maintain_demoralizing_roar" },

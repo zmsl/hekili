@@ -2006,7 +2006,7 @@ describe("Forever Druid Claw vs Shred (L602)", function()
         return r and r.actionName, r and r.wait
     end
 
-    -- re-pin e4ef929e54: two adjacent Claw lines, one recipe condition (the OR of wowsims's two, the second guarded)
+    -- two adjacent Claw lines (since e4ef929e54), one recipe condition (the OR of wowsims's two, the second guarded)
     it("guards every Shred line, and the Claw lines, by position, the talent and Clearcasting", function()
         local shred, claw = lines("shred"), lines("claw")
         local S = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)"
