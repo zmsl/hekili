@@ -19,6 +19,8 @@
 
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
 
+- `/hekili set <toggle> on` or `off` shows the same message as the toggle's keybinding.
+
 ### Fixed
 
 - Another addon that follows Hekili's displays can no longer take the place of the action bar glow, a display or the WeakAuras event.
