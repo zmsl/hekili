@@ -55,6 +55,8 @@ barkskin = {
 
 The two functions look the same here, but they run in different places, at different times, with different names in scope.
 
+Where the two bodies are the same code, the ability may declare it once as `effect = function() return function() ... end end`: the core calls the factory for each missing one of `handler` and `now`, so each layer still gets its own function ([Pack abilities reference](Pack-Abilities-Reference#effect)).
+
 | | `now` | `handler` |
 |---|---|---|
 | Layer | Belief | Simulation |

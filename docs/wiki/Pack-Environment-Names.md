@@ -67,7 +67,7 @@ The simulated `state` holds every value a priority line can read: `cooldown.<key
 
 ### Helpers at file level
 
-A function defined at the top of a class file keeps the file's environment, not the layer's. Inside it, `buff`, `talent` and the verbs are Lua globals, which do not exist. A helper that needs the known rank takes it from a local set once as `local rankOf = state.knownRank`, which gives the same answer in both layers; anything else it needs is passed as an argument by the class pack function that calls it.
+A function defined at the top of a class file keeps the file's environment, not the layer's. Inside it, `buff`, `talent` and the verbs are Lua globals, which do not exist. A helper that needs the known rank takes it from a local set once as `local rankOf = state.knownRank`, which gives the same answer in both layers; a per-rank value the same way, from `local byRank = state.byRank` (`byRank(values, ids)`: the value of the highest known rank of `ids`, `values[1]` before any is known); anything else it needs is passed as an argument by the class pack function that calls it.
 
 ## Verbs
 
