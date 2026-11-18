@@ -4573,6 +4573,7 @@ found = true end
     }
 
     local windowLine = { window = true, open_window = true, close_window = true, sequence = true, strict_sequence = true,
+        call_action_list = true, run_action_list = true,
         restart_sequence = true }
 
     local nameMap = {

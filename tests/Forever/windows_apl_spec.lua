@@ -288,6 +288,39 @@ describe("the windows compiler (windows design v6 §3.4, §9)", function()
         assert.is_truthy(script.Error and script.Error:find("E1", 1, true))
     end)
 
+    it("an editor edit of a call line away from the windows list clears its E5, and one to it shows E5", function()
+        load({
+            default = "actions+=/call_action_list,name=windows\nactions+=/berserker_stance",
+            aoe = "actions+=/berserker_stance",
+        })
+        local at = ww.PACK .. ":default:"
+        assert.is_truthy(H.Hekili.Scripts.DB[at .. 1].Error:find("E5", 1, true))
+        H.Hekili:SetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "list_name" }, "aoe")
+        assert.is_nil(H.Hekili.Scripts.DB[at .. 1].Error)
+        H.Hekili:SetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "list_name" }, "windows")
+        assert.is_truthy(H.Hekili.Scripts.DB[at .. 1].Error:find("E5", 1, true))
+    end)
+
+    it("an editor edit of a non-window entry in the windows list is a full load", function()
+        load({
+            windows = "actions+=/window,name=x,duration=6\nactions+=/berserker_stance",
+            default = "actions+=/berserker_stance",
+        })
+        -- the editor selects the windows list, line 2 (the stance line): an edit of its if= is a full load
+        H.Hekili:SetPackOption({ "packs", ww.PACK, "listName" }, "windows")
+        H.Hekili:SetPackOption({ "packs", ww.PACK, "actionID" }, "0002")
+        local full = 0
+        local ls = H.Hekili.LoadScripts
+        H.Hekili.LoadScripts = function(...)
+            full = full + 1
+            return ls(...)
+        end
+        H.Hekili:SetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "criteria" }, "1")
+        H.Hekili.LoadScripts = ls
+        H.Hekili:SetPackOption({ "packs", ww.PACK, "listName" }, "default")
+        assert.are.equal(1, full)
+    end)
+
     it("a window another priority declares reads closed, done included (M4)", function()
         H.Hekili.Scripts.declaredWindows.other = true
         local w = S.window.other
