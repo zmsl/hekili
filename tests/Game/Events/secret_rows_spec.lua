@@ -129,6 +129,29 @@ describe("rows with a secret amount (kind-only routing)", function()
         assert.are.same({ 2, 10, 0 }, { T.done[i], T.tickAmt[i], T.bandRejected })
     end)
 
+    -- An ability's `onCrit` is a direct hit's (wowsims's crit procs never fire on a periodic tick), as `landed` is: a
+    -- schedule's or a channel's tick crit stages no Obs.Crit, paid at its row or final; a direct crit still does.
+    it("stages no Obs.Crit for a schedule's tick crit, plain or secret; a direct crit still stages it", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S)
+        ctl.now = 13.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 8)
+        local i = ticket(X.TICKS)
+        ctl.now = 16.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 20, 8)
+        ctl.now = 19.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8)
+        assert.are.same({ 3, 0 }, { T.done[i], count(VS.Obs.Crit) })
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.equal(0, count(VS.Obs.Crit))
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
+        ctl.now = 40.01
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 4)
+        assert.are.equal(1, count(VS.Obs.Crit))
+    end)
+
     it("credits our white crit to its swing by timing alone, its crit with it; teaches no lag", function()
         ctl.now = 5
         ctl.damage = { 40, 50, 0, 0 } -- a known UnitDamage: only the secret amount makes the class unknown
