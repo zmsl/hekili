@@ -282,7 +282,7 @@ end
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
 --- theirs (first icons by in-combat tick), pressed and shadowPress (the driver's press, the shadow's would-be press, by
---- in-combat tick: loop.flips), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
+--- in-combat tick: loop.flips; a replay's pressed: the set of keys wowsims casts before the next tick), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
 --- the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as Update, so it errs
 --- high; empty in a traced run, whose debug pass is not runtime cost), cal (M.calibrate's ms, timed once before an
 --- untraced run's first tick), bytes and sampled (allocated over `sampled` cycles, every M.BYTES_EVERY-th cpu
@@ -628,6 +628,9 @@ function M.run(L, seed, o, drivers)
             di = di + 1
             if d.t > t then
                 step(d.at and d.at > t and d.at or d.t) -- d.at: a reacted aura's window (replay.lua o.reacted)
+                if run.combat > 0 and not d.landing then -- wowsims's presses in (t_n, t_n+1]: tick n's (loop.flips)
+                    run.pressed[run.combat][d.key] = true
+                end
                 if d.gcd then
                     local n = #run.dec.ours + 1
                     run.dec.ours[n], run.dec.theirs[n] = firstGcd(steps[1].H), d.key
@@ -799,7 +802,7 @@ function M.run(L, seed, o, drivers)
             if out.count > 0 and out.recs[1].focus then
                 run.focus = run.focus + 1
             end
-            run.pressed[n] = pressedKey -- the driver's own press this tick (loop.flips)
+            run.pressed[n] = R and {} or pressedKey -- the driver's own press this tick; a replay's casts (loop.flips)
             if R then
                 run.theirs[n] = R.next(t)
             else
@@ -970,13 +973,21 @@ function M.fight(L, seed, o)
 end
 
 -- Flicker: A -> B -> A within 3 ticks in a first-icon sequence, unless the instance pressed B at the tick it showed or
--- the next (`press[i]`: the key it pressed at in-combat tick i, false none; nil, a replay: no presses). Owner rule
+-- the next (`press[i]`: the key it pressed at in-combat tick i, false none; a replay's: the set of keys wowsims cast
+-- before tick i + 1, B excused only if cast before the tick after it showed; nil: no presses). Owner rule
 -- 2026-10-26: a show-then-press within one tick is not jitter (a proc at a hard cast's landing, pressed at once).
 local function flips(seq, n, press)
     local f = 0
     for i = 1, n - 2 do
         local b = seq[i + 1]
-        if seq[i] ~= b and seq[i + 2] == seq[i] and not (press and (press[i + 1] == b or press[i + 2] == b)) then
+        local p = press and press[i + 1]
+        local pressed
+        if type(p) == "table" then
+            pressed = p[b]
+        else
+            pressed = press and (p == b or press[i + 2] == b)
+        end
+        if seq[i] ~= b and seq[i + 2] == seq[i] and not pressed then
             f = f + 1
         end
     end
@@ -1146,7 +1157,7 @@ function M.replay(L, R, o)
     reactions(a.ours, a.theirs, a.combat, m.react)
     local s = m.A
     s.combat, s.full, s.idle, s.damage, s.time = a.combat, a.full, a.idle, a.damage, a.combat / (o and o.hz or 5)
-    s.flicker = flips(a.ours, a.combat)
+    s.flicker = flips(a.ours, a.combat, a.pressed)
     m.B = s -- one side: a replay has no oracle run (the line's A/B fields read 1)
     m.errors, m.raises, m.cpu = a.errors, a.raises, a.cpu
     m.cal[1], m.bytes, m.sampled = a.cal, a.bytes, a.sampled

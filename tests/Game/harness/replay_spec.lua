@@ -533,6 +533,13 @@ describe("the replay world", function()
             end
             assert.are.same({ { "queue", 200 }, { "unqueue", 390 }, { "cast", 390 } }, got)
             assert.are.equal("strike", R.next(R.pull + 2.5)) -- the landing is no press: the next is 8.10's strike
+            local landing = {} -- each lunge decision's flag: the landing excuses no flip (loop.flips)
+            for _, d in ipairs(R.decisions) do
+                if d.key == "lunge" then
+                    landing[#landing + 1] = d.landing or false
+                end
+            end
+            assert.are.same({ false, true }, landing)
         end
     end)
 
