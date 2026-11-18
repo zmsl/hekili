@@ -2155,6 +2155,94 @@ local function padStore( page, key, aType, id )
     StoreKeybindInfo( page, key, aType, id, "pad" )
 end
 
+-- ConsolePort's current bindings, read once per refresh: binding id -> button and modifier (what GetCurrentBindingOwner
+-- rebuilds on every call).
+local cpKey, cpMod = {}, {}
+
+local function ReadConsolePortBindings()
+    wipe( cpKey )
+    wipe( cpMod )
+
+    for key, set in pairs( ConsolePort:GetCurrentBindings() ) do
+        for mod, binding in pairs( set ) do
+            cpKey[ binding ], cpMod[ binding ] = key, mod
+        end
+    end
+end
+
+local function StoreConsolePort( page, binding, action, id )
+    local key = cpKey[ binding ]
+
+    if key then
+        StoreKeybindInfo( page, ConsolePort:GetFormattedButtonCombination( key, cpMod[ binding ] ), action, id, "cPort" )
+    end
+end
+
+-- The player's error handler hears the first failure of a guarded ConsolePort call; later ones stay quiet.
+local cpReported = false
+
+local function GuardConsolePort( fn )
+    local ok, err = pcall( fn )
+
+    if not ok and not cpReported then
+        cpReported = true
+        geterrorhandler()( err )
+    end
+
+    return ok
+end
+
+-- ConsolePort on Camelot keeps its own gamepad bars (slots 185+, bindings "CLICK ConsolePortGamepadBar<n>Slot<i>"). The
+-- constants and paging come from its data (ConsolePort:GetData().Actionbar, Model/Game/Actionbar.lua), so a change there
+-- follows. Runs on bar events, not per update.
+local cpAb, cpGp, cpPaged, cpPage
+
+local function ConsolePortModel()
+    cpAb = ConsolePort:GetData().Actionbar
+    cpGp = cpAb and cpAb.Gamepad
+    return cpGp ~= nil
+end
+
+local function ReadConsolePortSlot( slot )
+    local action, id = GetActionInfo( slot )
+
+    if action and id then
+        local barID, index = cpAb:GetFormattedIDs( slot )
+        -- the shown page presses through the paged widget; the paged bar's own slots are on screen only while no other page replaces them
+        local widget = barID == cpPage and cpPaged or barID
+
+        if barID ~= cpPaged or cpPage == cpPaged then
+            StoreConsolePort( 1, cpGp.Format:format( widget - cpGp.BarOffset, index ), action, id )
+        end
+    end
+end
+
+local function ReadConsolePortGamepad()
+    local first = cpGp.First
+    cpPaged, cpPage = cpAb:GetGamepadPagedBar(), cpAb:GetGamepadPage()
+
+    -- later stores replace earlier ones: the other bars last-to-first (the earlier bar wins), then the page the player sees
+    -- now, last-to-first, so it wins over every other bar
+    for slot = first + cpGp.Width * cpGp.Bars - 1, first, -1 do
+        if cpAb:GetFormattedIDs( slot ) ~= cpPage then ReadConsolePortSlot( slot ) end
+    end
+
+    local shown = first + ( cpPage - cpGp.BarOffset - 1 ) * cpGp.Width
+    for slot = shown + cpGp.Width - 1, shown, -1 do
+        ReadConsolePortSlot( slot )
+    end
+end
+
+local function ReadConsolePortSlots()
+    for i = 1, 180 do
+        local action, id = GetActionInfo( i )
+
+        if action and id then
+            StoreConsolePort( math.ceil( i / 12 ), ConsolePort:GetActionBinding( i ), action, id )
+        end
+    end
+end
+
 local function ReadKeybindings( event )
         if not Hekili:IsValidSpec() then return end
 
@@ -2318,21 +2406,15 @@ local function ReadKeybindings( event )
                 end
             end
 
-        Pad.Read( padStore )
+        -- ConsolePort's gamepad model reuses slots 185+ with its own layout: the native reader would name the wrong buttons
+        local cport = _G.ConsolePort ~= nil
+        local model = cport and GuardConsolePort( ConsolePortModel ) and cpGp ~= nil
 
-        if _G.ConsolePort then
-            for i = 1, 180 do
-                local action, id = GetActionInfo( i )
+        if not model then Pad.Read( padStore ) end
 
-                if action and id then
-                    local bind = ConsolePort:GetActionBinding( i )
-                    local key, mod = ConsolePort:GetCurrentBindingOwner( bind )
-
-                    if key then
-                        StoreKeybindInfo( math.ceil( i / 12 ), ConsolePort:GetFormattedButtonCombination( key, mod ), action, id, "cPort" )
-                    end
-                end
-            end
+        if cport and GuardConsolePort( ReadConsolePortBindings ) then
+            GuardConsolePort( ReadConsolePortSlots )
+            if model then GuardConsolePort( ReadConsolePortGamepad ) end
         end
 
         for k, v in pairs( keys ) do
@@ -2391,6 +2473,8 @@ RegisterEvent( "SPELLS_CHANGED", DelayedUpdateKeybindings )
 RegisterEvent( "ACTIONBAR_SHOWGRID", DelayedUpdateKeybindings )
 RegisterEvent( "ACTIONBAR_HIDEGRID", DelayedUpdateKeybindings )
 RegisterEvent( "UPDATE_BONUS_ACTIONBAR", DelayedUpdateKeybindings ) -- a form change swaps the gamepad form bar
+RegisterEvent( "UPDATE_OVERRIDE_ACTIONBAR", DelayedUpdateKeybindings ) -- the pages ConsolePort's paged widget follows
+RegisterEvent( "UPDATE_VEHICLE_ACTIONBAR", DelayedUpdateKeybindings )
 -- a keyboard slot edit already raises SHOWGRID/HIDEGRID; only the gamepad storage slots (181 up) and "all" (0) matter here
 RegisterEvent( "ACTIONBAR_SLOT_CHANGED", function( event, slot )
     if slot == nil or slot == 0 or slot > 180 then DelayedUpdateKeybindings( event ) end

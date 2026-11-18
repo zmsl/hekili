@@ -478,3 +478,127 @@ describe("the Gamepad options tab", function()
         assert.are.equal("TOPRIGHT", kb.anchor)
     end)
 end)
+
+describe("ConsolePort gamepad bars", function()
+    before_each(reset)
+
+    -- ConsolePort on Camelot: its own gamepad bars (Model/Game/Actionbar.lua), bindings CLICK ConsolePortGamepadBar%dSlot%d
+    local calls
+    local function stub(H, page, owners)
+        calls = { bindings = 0 }
+        local gp = {
+            First = 185,
+            Width = 8,
+            Bars = 22,
+            BarOffset = 15,
+            Format = "CLICK ConsolePortGamepadBar%dSlot%d:LeftButton",
+        }
+        local ab = { Gamepad = gp }
+        function ab:GetFormattedIDs(slot)
+            local i = slot - gp.First
+            return gp.BarOffset + math.floor(i / gp.Width) + 1, (i % gp.Width) + 1
+        end
+        function ab:GetGamepadPagedBar()
+            return 16
+        end
+        function ab:GetGamepadPage()
+            return page
+        end
+        H.env.ConsolePort = {
+            GetActionBinding = function(_, slot)
+                return "ACTIONBUTTON" .. slot
+            end,
+            GetData = function()
+                return { Actionbar = ab }
+            end,
+            GetCurrentBindings = function()
+                calls.bindings = calls.bindings + 1
+                local set = {}
+                for b, key in pairs(owners) do
+                    set[key] = set[key] or {}
+                    set[key][b] = b
+                end
+                return set
+            end,
+            GetFormattedButtonCombination = function(_, key)
+                return "|TIcon" .. key .. ":0:0:0:0|t"
+            end,
+        }
+    end
+    local function bar(n, i)
+        return "CLICK ConsolePortGamepadBar" .. n .. "Slot" .. i .. ":LeftButton"
+    end
+    local function shown(H, name)
+        return H.Hekili:GetBindingForAction(name, H.Hekili.DB.profile.displays.Primary, 1)
+    end
+
+    it("shows the controller button for a spell on a ConsolePort gamepad bar, following the paged bar", function()
+        local H = boot()
+        stub(H, 26, { [bar(1, 2)] = "PAD1", [bar(3, 1)] = "PAD3" })
+        world.actions[186] = id(H, "mortal_strike") -- bar 16 is the paged bar, but the stance page 26 is showing: skipped
+        world.actions[266] = id(H, "bloodthirst") -- bar 26 slot 2: the stance page, shown through the paged widget
+        world.actions[201] = id(H, "whirlwind") -- bar 18 slot 1: ConsolePort bar 3, bound on its own widget
+        local info = read(H)
+        assert.are.equal("|TIconPAD1:0:0:0:0|t", info.bloodthirst.console[1])
+        assert.are.equal("|TIconPAD3:0:0:0:0|t", info.whirlwind.console[1])
+        assert.is_nil(info.mortal_strike and info.mortal_strike.console[1])
+        assert.are.equal(1, calls.bindings) -- one binding map per refresh, not per slot
+    end)
+
+    it("shows ConsolePort's button on the icon, not the native pad picture, with native bindings left bound", function()
+        local H = boot()
+        stub(H, 16, { [bar(1, 2)] = "PAD1", [bar(3, 1)] = "PAD3" })
+        world.actions[186] = id(H, "mortal_strike")
+        world.actions[201] = id(H, "whirlwind")
+        read(H)
+        assert.truthy(shown(H, "mortal_strike"):find("PAD1", 1, true))
+        assert.truthy(shown(H, "whirlwind"):find("PAD3", 1, true))
+    end)
+
+    it("ranks the page the player sees first, with or without a stance page", function()
+        local H = boot()
+        -- the spell sits on bar 16 (paged, slot 1) and bar 17 (slot 1)
+        local owners = { [bar(1, 1)] = "PAD1", [bar(2, 1)] = "PAD2" }
+        stub(H, 16, owners)
+        world.actions[185], world.actions[193] = id(H, "mortal_strike"), id(H, "mortal_strike")
+        assert.are.equal("|TIconPAD1:0:0:0:0|t", read(H).mortal_strike.console[1])
+        -- bar 17 is the page shown (through the paged widget Bar1): the same physical button wins
+        stub(H, 17, owners)
+        assert.are.equal("|TIconPAD1:0:0:0:0|t", read(H).mortal_strike.console[1])
+        -- a stance page showing: the spell on the stance page and on bar 17: the paged widget (PAD1) wins
+        stub(H, 26, owners)
+        world.actions[185], world.actions[193], world.actions[265] = nil, id(H, "mortal_strike"), id(H, "mortal_strike")
+        assert.are.equal("|TIconPAD1:0:0:0:0|t", read(H).mortal_strike.console[1])
+    end)
+
+    it("keeps the keyboard-slot path with a working ConsolePort", function()
+        local H = boot()
+        stub(H, 16, { ACTIONBUTTON30 = "PAD4" })
+        world.actions[30] = id(H, "mortal_strike")
+        assert.are.equal("|TIconPAD4:0:0:0:0|t", read(H).mortal_strike.console[3])
+    end)
+
+    it("raises nothing when the ConsolePort API lacks these methods, and reports the first error once", function()
+        local H = boot()
+        world.actions[5] = id(H, "mortal_strike")
+        H.errors = {}
+        H.env.ConsolePort = { GetActionBinding = function() end, GetCurrentBindingOwner = function() end }
+        assert.has_no.errors(function()
+            read(H)
+        end)
+        H.env.ConsolePort = {
+            GetData = function()
+                error("changed")
+            end,
+        }
+        assert.has_no.errors(function()
+            read(H)
+        end)
+        H.env.ConsolePort = {}
+        assert.has_no.errors(function()
+            read(H)
+        end)
+        assert.are.equal(1, #H.errors)
+        assert.truthy(tostring(H.errors[1]):find("attempt to call", 1, true))
+    end)
+end)
