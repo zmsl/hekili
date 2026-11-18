@@ -627,10 +627,10 @@ beside the number (DEVELOPMENT.md).
 | Arms (wowsims.com) | 0.88 | 1.81, 2 |
 | Fury (wowsims.com) | 0.86 | 0.42, 14 |
 | Protection (wowsims.com), Warrior | 0.92 | 0.37, 4 |
-| Feral (wowsims.com) | 0.96 | 0.40, 10 |
+| Feral (wowsims.com) | 0.96 | 0.12, 3 |
 | Guardian (wowsims.com) | 0.63 | 1.76, 55 |
 | Balance (wowsims.com) | 0.97 | 0.26, 22 |
-| Assassination (wowsims.com) | 0.96 | 0.20, 14 |
+| Assassination (wowsims.com) | 0.96 | 0.20, 13 |
 | Combat (wowsims.com) | 0.98 | 0, 0 |
 | Subtlety (wowsims.com) | 1.00 | 0.07, 5 |
 | Retribution (wowsims.com) | 0.93 | 0.10, 7 |

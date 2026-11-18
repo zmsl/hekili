@@ -376,7 +376,10 @@ M.READY = {
     -- { 0.50, 9 } -> { 0.12, 4 } (repin-druid-09 round 5, replay-fncd-09 fa9cb8a64: Shifting Power's 7.5 s computed
     -- cooldown read at each cast, L1320): shifting_power 37.63 late 0.50 -> in:grain, the 164.88 never row and its
     -- 167.63 Faerie Fire (early 1.63) in grain; real 4 (early 1, late 3), median 0.118
-    druid_feral = { 0.12, 4 },
+    -- { 0.12, 4 } -> { 0.12, 3 } (0.9 batch, regen-read-09 89d1613b5: an equal out-of-combat energy read no longer
+    -- reopens the closed band, L1341; bisected: green at d5186a639, red with regen-read-09 alone merged on it):
+    -- shred at 4.75 late 0.234 -> in:grain; real 3 (early 1, late 2), median 0.118
+    druid_feral = { 0.12, 3 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
@@ -513,12 +516,18 @@ M.READY = {
     -- 36 -> 10 (early 1, late 9), the median of the ones left 0.190 -> 0.280. The gain comes through a harness-only
     -- path: in game UNIT_POWER_FREQUENT sets energy's last_tick, so P1 reaches only mana there; the replay's energy pool
     -- sits at last_tick 0 (review M5; harness follow-up: the world fires the energy power event)
-    rogue_assassination = { 0.20, 14 }, -- 0.28, 36 -> 0.20, 14 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) re-times the log, the pack is logically unchanged; 78 timed, 14 real (all late; cost class)
+    -- { 0.20, 14 } -> { 0.20, 13 } (0.9 batch, regen-read-09 89d1613b5: an equal out-of-combat energy read no longer
+    -- reopens the closed band, L1341; bisected as druid_feral's): eviscerate at 7.00 late 0.18 -> in:cost 0.06
+    -- (lo-truth -1.77 -> -0.30); real 13 (all late), median 0.200
+    rogue_assassination = { 0.20, 13 }, -- 0.28, 36 -> 0.20, 14 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) re-times the log, the pack is logically unchanged; 78 timed, 14 real (all late; cost class)
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)
     -- { 0.24, 20 } -> { 0.24, 21 } R42 (the replay answers fight_remains from the log): only rows that were
     -- "never" moved, now timed (176.62 eviscerate late 0.19 s)
     rogue_combat = { 0, 0 }, -- 0.24, 21 -> 0, 0 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) and the dropped 4-point Eviscerate branch re-time the log; 104 timed, no real row
+    -- 0.9 batch, floor unchanged: the 0.8.6 hotfix e405c8ae5 (bisected: the Rogue tip merged on 0ca856b0b green, on
+    -- cb3214b4a red; not split by the hotfix's parts, stealth state or avoid undo) moves the 136.25 vanish (off-GCD)
+    -- never -> late 0.50 and its garrote stays in:grain (b -0.05 -> 0.00); real 5 (late 5), median 0.070
     rogue_subtlety = { 0.07, 5 }, -- 0.17, 40 -> 0.07, 5 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) and the Hemorrhage energy term re-time the log (Death Mark shuts Eviscerate); 98 timed, 5 real late (hemorrhage 3, death_mark 2); 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
     -- { 0.21, 7 } -> { 0.71, 16 } re-pin e2842f0a78 (lane 15, R6): the build's own list (Magma and Windfury Totems,
     -- Fire Nova the filler at 375, Skyborne); 85 decisions, 16 real (10 early, 6 late); by class cooldown 15, cost 9, gcd 43
@@ -540,6 +549,8 @@ M.READY = {
     -- fire_nova at 32.63, a slack-class row shown 1.23 s before wowsims's cast; 2 late: the flame_shock cost rows), median
     -- 1.230: the four other early rows (earth_shock, fire_nova, stormstrike x2) were replay GCD ends a log step off the next
     -- cast's rise
+    -- 0.9 batch, floor unchanged: gap-as-09 4a24d1895 (the swing-avoid give-back, L1304; bisected: green at 55d027f98,
+    -- red at its merge 8160d3d28) moves flame_shock at 28.31 never -> in:grain; real 3, median 1.230
     shaman_enhancement = { 1.23, 3 },
     -- { 0.48, 54 } -> { 2.20, 3 } re-pin 0.7 (lane shaman, R6): 91 decisions, 3 real (all late, cost class: the Major
     -- Mana Potion / Demonic Rune refills the belief cannot see leave lo ~2630 under the truth, gaps.md "Potion mana
