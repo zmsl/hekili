@@ -19,7 +19,7 @@ local KIT = {
     earth_shock = { { 8042, 8044, 8045, 8046, 10412, 10413, 10414 }, 450, 6, "spell" },
     flame_shock = { { 8050, 8052, 8053, 10447, 10448, 29228 }, 410, 6, "spell" },
     fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 375, 10, "spell" }, -- the game's (owner's tooltips, every rank; DB2 520)
-    stormstrike = { { 17364 }, 121, 6, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
+    stormstrike = { { 17364 }, 0.08, 6, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
     searing_totem = { { 3599, 6363, 6364, 6365, 10437, 10438 }, 170, 0, "totem" },
     flametongue_totem = { { 8227, 8249, 10526, 16387 }, 275, 0, "totem" },
     strength_of_earth_totem = { { 8075, 8160, 8161, 10442, 25361 }, 275, 0, "totem" },
@@ -46,12 +46,12 @@ local KIT = {
     nature_resistance_totem = { { 10595, 10600, 10601 }, 180, 0, "totem" },
     windwall_totem = { { 15107, 15111, 15112 }, 225, 0, "totem" },
     tremor_totem = { { 8143 }, 60, 0, "totem" },
-    poison_cleansing_totem = { { 8166 }, 152, 0, "totem" },
-    disease_cleansing_totem = { { 8170 }, 152, 0, "totem" },
+    poison_cleansing_totem = { { 8166 }, 0.1, 0, "totem" },
+    disease_cleansing_totem = { { 8170 }, 0.1, 0, "totem" },
     sentry_totem = { { 6495 }, 65, 0, "totem" },
-    earthbind_totem = { { 2484 }, 91, 15, "totem" },
+    earthbind_totem = { { 2484 }, 0.06, 15, "totem" },
     stoneclaw_totem = { { 5730, 6390, 6391, 6392, 10427, 10428 }, 140, 30, "totem" },
-    grounding_totem = { { 8177 }, 91, 15, "totem" },
+    grounding_totem = { { 8177 }, 0.06, 15, "totem" },
     -- the manual-press kit (wowsims pin spells_auto_gen.go); a percent cost is the fraction
     frost_shock = { { 8056, 8058, 10472, 10473 }, 430, 6, "spell" },
     healing_wave = { { 331, 332, 547, 913, 939, 959, 8005, 10395, 10396, 25357 }, 620, 0, "spell" },
@@ -189,6 +189,11 @@ describe("Forever Shaman", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
+        e.set_bonus = setmetatable({}, { -- no relic equipped
+            __index = function()
+                return 0
+            end,
+        })
         assert.are.same({ 14.12, 26.13, 0 }, seed("elemental")) -- no totem; re-pin log
         -- the static share follows Mindfulness's rank (17/33/50%, wowsims's curve; was 15% at 3/3), never the spec
         local shares = {}
@@ -196,8 +201,13 @@ describe("Forever Shaman", function()
             e.talent.mindfulness = { rank = rank }
             shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
         end
+        -- the Polished Driftwood Icon relic (249398; its equip aura 1248756: aura 134 +8, wowsims item_totems.go:13-20)
+        -- adds 8% of the spirit regen while casting
+        e.set_bonus.polished_driftwood_icon = 1
+        shares[#shares + 1] = ld.run(r.meta.fsr.share, e)
         e.talent.mindfulness = nil
-        assert.are.same({ 0, 0.17, 0.33, 0.5 }, shares)
+        e.set_bonus.polished_driftwood_icon = nil
+        assert.are.same({ 0, 0.17, 0.33, 0.5, 0.58 }, shares)
         assert.are.same({ 31.25, 12.8, 0 }, seed("enhancement")) -- re-pin log (Windshaper Skyborne)
         assert.are.same({ aura = "improved_stormstrike", share = 0.5 }, r.models.improved_stormstrike)
         assert.are.same({ 2, 1223031, 2 }, w.talents.improved_stormstrike)
@@ -648,7 +658,8 @@ describe("Forever Shaman", function()
 
     -- sim/shaman/item_totems.go:70-77: the relic Burning Totem (272433, the aura 1291077) adds 3 s to Flame Shock.
     it("lengthens Flame Shock by 3 s while the Burning Totem relic is equipped", function()
-        assert.are.same({ { "burning_totem", 272433 } }, w.gear) -- RegisterGear's calls, in order
+        -- RegisterGear's calls, in order
+        assert.are.same({ { "burning_totem", 272433 }, { "polished_driftwood_icon", 249398 } }, w.gear)
         local e = ld.env(w)
         assert.are.equal(12, ld.run(w.auras.flame_shock.duration, e))
         e.set_bonus = setmetatable({ burning_totem = 1 }, {
@@ -833,6 +844,43 @@ describe("Forever Shaman", function()
         end
     end)
 
+    -- L486: a Lightning Bolt or Chain Lightning spends only a charge up at its cast's start; one gained mid-cast (the
+    -- last bolt landing) survives and the next Earth Shock takes it (shaman_elemental.log 29.19 -> 30.90, 137.44 ->
+    -- 139.15, 165.87 -> 167.59). The belief reads `cast_start`, the sim its casting buff.
+    it("keeps a Revelation charge gained during a Lightning Bolt or Chain Lightning cast (L486)", function()
+        local function spends(key, field, revealedAt, set)
+            local e = ld.env(w)
+            e.buff = setmetatable({
+                revelation = { up = true, stack = 1, remains = 10, applied = revealedAt },
+            }, { __index = e.buff })
+            set(e)
+            ld.run(w.abilities[key][field], e)
+            for _, k in ipairs(e.removed) do
+                if k == "revelation" then
+                    return true
+                end
+            end
+            return false
+        end
+        local function hard(e) -- the belief: a cast started at 10
+            e.instant, e.cast_start = false, 10
+        end
+        local function casting(e) -- the sim: the casting buff from 10, up through CAST_FINISH
+            e.buff.casting = { up = true, applied = 10, remains = 0, stack = 1 }
+        end
+        local function instant(e)
+            e.instant, e.cast_start = true, 0
+        end
+        for _, key in ipairs({ "lightning_bolt", "chain_lightning" }) do
+            assert.is_false(spends(key, "now", 10.5, hard), key .. " now: gained mid-cast")
+            assert.is_true(spends(key, "now", 9, hard), key .. " now: up at the start")
+            assert.is_true(spends(key, "now", 9, instant), key .. " now: instant")
+            assert.is_false(spends(key, "handler", 10.5, casting), key .. " handler: gained mid-cast")
+            assert.is_true(spends(key, "handler", 9, casting), key .. " handler: up at the start")
+            assert.is_true(spends(key, "handler", 9, function() end), key .. " handler: instant (no casting buff)")
+        end
+    end)
+
     -- Enchant IDs: DB2 70707 SpellEffect.EffectMiscValue_0 of each rank's Effect 360, lowest rank first (weapon buffs
     -- review §1); Rockbiter rank 2's 6 read in game (probe 2026-11-05, Shaman L10). 60 minutes: the tooltip and that
     -- probe (3578906 ms left at the first read), not the effect's 1800.
@@ -1014,6 +1062,50 @@ describe("Forever Shaman through the engine", function()
             assert.is_nil(auras.tremor_totem)
         end
     )
+
+    -- L41: the percent-of-base costs price from the level-60 base 1520 (the mana meta's) before any cost read.
+    it("prices the percent-of-base costs at 60 from base mana 1520: 152, 91, 121", function()
+        local S, VS = H.Hekili.State, H.ns.VirtualState
+        assert.are.same({ 1520, 152, 152, 91, 91, 121 }, {
+            VS.BasePower(0),
+            S.action.poison_cleansing_totem.cost,
+            S.action.disease_cleansing_totem.cost,
+            S.action.earthbind_totem.cost,
+            S.action.grounding_totem.cost,
+            S.action.stormstrike.cost,
+        })
+    end)
+
+    -- Totemic Focus (16173, aura 108 misc 14, -5% a rank on mask 0x20081018: every totem, not Stormstrike; wowsims pin
+    -- spells_auto_gen.go:13198): the client's totem cost read carries the cut, so the base it teaches (I.LearnBases)
+    -- stays 1520 only when the totem's declared cost carries it too.
+    it("keeps base mana 1520 and Stormstrike at 121 under a Totemic Focus 5/5 totem cost read", function()
+        local c = character()
+        c.talents = { [16173] = 5 }
+        local T = headless.new({ character = c, pack = "Enhancement (wowsims.com)" })
+        local S, VS, I = T.Hekili.State, T.ns.VirtualState, T.ns.VirtualStateInternal
+        T.ctl.costs[8166] = { { type = 0, cost = 114 } } -- Poison Cleansing Totem: floor(0.1 x 1520) x 0.75
+        T.Fire("SPELLS_CHANGED")
+        local function belief(key) -- the belief's price at the cast (I.CostOf)
+            for a = 1, I.ab.n do
+                if I.ab.key[a] == key then
+                    return I.CostOf(a)
+                end
+            end
+        end
+        assert.are.same({ 1520, 121, 114, 65 * 0.75 }, {
+            VS.BasePower(0),
+            belief("stormstrike"),
+            belief("poison_cleansing_totem"),
+            belief("sentry_totem"),
+        })
+        -- the simulation's prices alike
+        assert.are.same(
+            { 121, 114, 65 * 0.75 },
+            { S.action.stormstrike.cost, S.action.poison_cleansing_totem.cost, S.action.sentry_totem.cost }
+        )
+        assert.are.same({}, T.loadErrors)
+    end)
 
     it("reads a totem buff through the engine by either name without an error", function()
         local S = H.Hekili.State

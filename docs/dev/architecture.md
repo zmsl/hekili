@@ -335,6 +335,21 @@ times its tick phase). An `icd` aura already up in the unit's first clean walk (
 so its ICD reads ready (its applied time is put one ICD back, a sentinel) until a gain is seen. The sim's `applyBuff`
 starts it too, and removing a down aura keeps it (`tests/Forever/aura_icd_spec.lua`, `tests/Game/State/auras_spec.lua`).
 
+**A family of auras on one Cooldown Manager entry** (owner rule L727). `RegisterAura{ family = "<name>" }` on each
+member of a set the client's Cooldown Manager shows as one entry, one member up at a time (the pack's casts take the
+others down, in `now` and `handler`). An entry whose every candidate spell names a member of one family (no untracked
+or secret candidate, no member switched off in the Cooldown Manager panel) is a family item
+(`Game/State/Sources/Presence/CooldownViewer.lua`): the client shows whether some member is up but, after an
+in-combat change, not which (probes L725/L726), so each sweep counts the item for the member the belief holds up (our
+last cast, or a later plain read) and treats it as that member's one-aura item while it is up (rules 1-4, the seen
+rule, the verdict). A member the Cooldown Manager closed (rule 1 or the verdict) stays named for `STRIKE_WIN`, so a
+late light re-opens it and, after a verdict, strikes as for a one-aura item; a write of another member of its family
+folded first in the light's drain (our cast) drops that open and its strike. Otherwise, with no member up, it stays
+ambiguous: a light then may be another member's (a cast we did not see), so it opens nothing and never re-establishes a
+member past its modelled duration. A plain
+direct read still wins: a form aura the shapeshift read owns is never judged by the Cooldown Manager. The family name
+is the pack's own; the core only compares it.
+
 **A charge spent by hits on us, with its own cooldown.** A player aura's `consumedBy` (a set of hit kinds:
 `WOUND`, `BLOCK`, `BLOCKED`, ...) makes each such hit on us spend one stack in the belief (`Families/Auras.lua`), and
 `consumeIcd = <seconds>` limits it to one stack a window from the last spend (wowsims's ICD timer: a recast keeps it
@@ -348,13 +363,26 @@ inverse, as the client rescales a running swing. The next PLAYER_SWING's duratio
 is never divided again; out of combat (or for a fall before the pull) nothing is rescaled: the plain speed reads say
 it. One multiplier for every hand; the sim's own forecast of a haste cast inside its window is not rescaled.
 
+**A buff's part of a stat (the stat split, L971).** `RegisterAura{ spellHaste = <multiplier> }`, `stats = { [index] =
+<points, function or { [spellID] = points }> }` and `statsPct = { [index] = <multiplier> }` (UnitStat's indices; a
+function runs in the `now` context at the pull, so a value follows the talent ranks; a table by spell ID takes the rank
+the player aura walk last found the aura under, so another player's buff counts at its own rank) declare what a player aura does to the spell haste and to
+UnitStat's effective value. Both are secret in combat. At the pull (`Families/Player.lua`) the belief splits the last
+out-of-combat read into a base and the parts of the declared auras that were up at the read's own time; in the fight
+it answers (base + the flat parts up) x the percent parts up (haste: base x the multipliers up) from its own aura
+records, so a buff that falls removes exactly its part and one gained adds it. Out of combat, and after any newer plain
+read, the read stands. `VS.Stat` and `VS.SpellHaste` answer the composed value, so the facade hybrids, the GCD and a
+`now`'s `haste` and `stat(...)` all see it. Melee haste keeps `swingHaste`'s event form.
+
 **What only a landed hit or a full channel gives** (aura audit C10, C11). An ability's `onLand` (bound like `onCrit`)
 runs in the `now` context once its cast is settled as landed: `Game/Events/Rows.lua` stages `Obs.Landed` once per
 direct-hit ticket (not a tick's or a swing's), when a wound or crit is paid to it or a provisional payment is final.
 A ticket closing with no row is not presumed landed: live, every target row is background (its amount, flag and school
 secret), so avoids pay nothing either and a presumed land would follow every avoid; until rows are plain again
 `onLand` runs only where they are (the harness, replays). An avoid never runs it, and an ability whose `expects` is
-NONE (no ticket) never lands. A channeled ability's
+NONE (no ticket) never lands. Its mirror `onAvoid` (bound the same way) runs in the avoid handler
+(`Families/Now.lua`, `Obs.Avoided`) after the latest cast's own dodge, parry or miss and its target undo: what only
+the landing gives, granted by the cast's `now` (a buff), is taken back there. A channeled ability's
 `now_finish` is the belief's twin of the sim's `finish` (run at CHANNEL_FINISH, `Engine/Sim/State.lua`): it runs at
 the channel's stop when that stop is at most 0.05 s before the channel's believed end (its start's plain end, moved
 by pushbacks) and at most 0.5 s after it; a broken channel, one whose times were secret, or a later stop (another
@@ -374,6 +402,13 @@ C9) adds s of the spirit regen inside the five-second window while the aura is b
 unmixed, not dropped: the client's casting rate is M + (c + s)S and the rest (1 - c - s)S, so the stored parts become
 M + cS and (1 - c)S; when c + s reaches all of it the pair holds only the total, which rescales the stored split. An
 entry with a `spirit` multiple (Evocation) still makes the pair no news.
+
+**The static share c** (the `fsr` meta's `share`, a number or a function: a talent's rank, an armor believed up) is
+read at the build, at each combat start and after each of our casts' `now` (`I.ShareRead`). The stored pair is the
+game's as read, so a combat start's re-read moves no part; a change our cast makes in combat (an armor swap) moves
+(c' - c)S from the spirit part to the casting one (S = spE / (1 - c), or the mp5 part at c = 1), and the interval
+across it measures nothing. Calibration also skips an `fsr` slot's interval that holds a regen entry's edge: the
+game lands the new rate on its tick grid, off by up to a tick of it (Evocation's first, 55 mana).
 
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack

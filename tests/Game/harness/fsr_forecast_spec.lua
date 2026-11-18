@@ -94,6 +94,22 @@ describe("the sim's five-second-rule forecast", function()
         assert.are.equal(0, under)
     end)
 
+    -- L755 (class TP): with no tick seen (a secret pool's last_tick 0) the tick's phase was read off the clock, so the
+    -- pad jumped between nothing and a whole tick from one poll to the next and a wait did not count down with time.
+    it("counts a ticked pool's wait down with the clock when no tick was seen", function()
+        r.fsr_until, r.active_regen, r.inactive_regen, r.tick_rate, r.last_tick = false, 10, 10, 0.1, 0
+        local X, t0, reach = 3 * 25, 100.037, nil
+        for k = 0, 20 do -- the floor reaches X 4.5 s on: every poll here still waits
+            -- polls 0.2 s apart at a clock unrelated to any tick grid; the pool's floor follows its regen
+            S.now = t0 + 0.2 * k + 0.013 * (k % 5)
+            r.actual = 30 + 10 * (S.now - t0)
+            S.forecastResources("mana")
+            local at = S.now + S:TimeToResource(r, X)
+            reach = reach or at
+            assert.is_true(math.abs(at - reach) < 1e-6, ("poll %d: reach %.6f, first %.6f"):format(k, at, reach))
+        end
+    end)
+
     -- Central fix 26: the forecast's slices are reused between passes, so one past `fcount` is an older, longer pass's;
     -- reading it as the next slice answered an amount out of the horizon with that pass's time (in the past: ready).
     it("never reads a slice past the forecast's end as the next one", function()

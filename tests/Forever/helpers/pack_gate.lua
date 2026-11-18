@@ -71,7 +71,12 @@ M.FLICKER = {
     -- regen phase lane, cause harness: the indexed poll clock (ledger L606/L667; a rage world has no regen grid) (R6;
     -- seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0.04 / 0.08, retracted 0.00 / 0.00 / 0.00, readyShort 3 / 0 / 0,
     -- heldReady 271 / 237 / 240): flicker 0.05 -> 0.08, readyShort 0 -> 3, heldReady 340 -> 271
-    ["Arms"] = { flicker = 0.08, retracted = 0.1, readyShort = 3, heldReady = 271 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    -- flicker-085 P3 (L872 (2): a pending swing newer than the last swing row is credited one poll after it; seeds
+    -- 1-20 / 21-40 / 41-60 heldReady 279 / 237 / 240): heldReady 271 -> 279, all in seed 11 (t 91-152, one per swing). A
+    -- float-rounding edge in the Warrior entry's last(), floor((t - swing) / speed), used to credit a landed swing at once
+    -- after a parry pull; P3 confirms it one poll later (GAP AK's ORACLE_MIN), so ours shows the oracle's icon waiting
+    -- 0.12-0.20 s. Not a rage error (trace: flicker-085 report, "Trace: Arms/Fury held trips")
+    ["Arms"] = { flicker = 0.08, retracted = 0.1, readyShort = 3, heldReady = 279 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
@@ -89,7 +94,9 @@ M.FLICKER = {
     -- ledger cause credit, reason cost) has one of those readyShort presses inside its ready window (traced per event)
     -- regen phase lane, cause harness: the indexed poll clock (ledger L606/L667; a rage world has no regen grid) (R6;
     -- seeds 1-20 / 21-40 / 41-60 flicker 0.24 / 0.32 / 0.40, retracted 0.20 / 0.00 / 0.00, readyShort 26 / 7 / 1,
-    -- heldReady 150 / 136 / 228): flicker 0.31 -> 0.41
+    -- heldReady 150 / 136 / 228): flicker 0.31 -> 0.41. The 21-40 / 41-60 rise predates that lane (L757 I1, bisected
+    -- on seeds 41-60: 0.30 at a9a6fff9f, 0.40 at 79feadc67): translator-2's merge above (the Bloodrage line), whose
+    -- re-measure covered seeds 1-20 only
     -- 0.41 -> 0.49 (L871): wowsims's per-swing Reckless Swings (world and addon) puts the opener's rage between Death Wish's
     -- 10 and Sunder's 15. 4 of the 6 opener flips (seeds 1-20) are a cooldown near-tie at the EARLY_EXIT edge (src/Hekili/Engine/Sim/Core.lua: the EARLY_EXIT list exit and the 0.05 s clash pad);
     -- 2 involve a landed, unpaid swing. Measured .48 / .39 / .44 (seeds 1-20 / 21-40 / 41-60) after the world charge fix 8a5dfbf2a.
@@ -132,7 +139,11 @@ M.FLICKER = {
     -- regen phase lane, cause harness: the indexed poll clock (ledger L606/L667; a rage world has no regen grid) (R6;
     -- seeds 1-20 / 21-40 / 41-60 flicker 0.43 / 0.38 / 0.25, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0,
     -- heldReady 309 / 305 / 370): flicker 0.5 -> 0.43, heldReady 439 -> 370
-    ["Fury L24"] = { flicker = 0.43, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 370 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
+    -- flicker-085 P3 (L872 (2): the opener counts the fight's first off-hand swing, newer than the combat-start
+    -- anchor; seeds 1-20 / 21-40 / 41-60 heldReady 309 / 306 / 371, the same after review R3): heldReady 370 -> 371, one
+    -- event, seed 58 tick 4: the forecast now equals the truth (15.05 with the off hand's rage), so ours shows the
+    -- oracle's sunder_armor waiting 0.20 s for the swing's confirmation where it showed rend before (a disagreement)
+    ["Fury L24"] = { flicker = 0.43, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 371 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -152,7 +163,18 @@ M.FLICKER = {
     -- regen phase lane, cause harness: the indexed poll clock (ledger L606/L667; a rage world has no regen grid) (R6;
     -- seeds 1-20 / 21-40 / 41-60 flicker 0.12 / 0.00 / 0.22, retracted 0.00 / 0.00 / 0.00, readyShort 1 / 0 / 0,
     -- heldReady 321 / 333 / 342): flicker 0.16 -> 0.22, heldReady 383 -> 342
-    ["Warrior Protection"] = { flicker = 0.22, retracted = 0.1, readyShort = 1, heldReady = 342 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
+    -- 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60 heldReady 344 / 362 /
+    -- 359, flicker 0.17 / 0.05 / 0.17, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 342 -> 362 (worst set);
+    -- cause harness, the world made more correct (L966): accuracy-085-timing dc913a80e pays Bloodrage by Improved
+    -- Bloodrage's rank (this build rank 1: 12.5 at once and 1.25 a tick, was 10 and 1, wowsims bloodrage.go), as the
+    -- class file already did; ablation (that world change reverted on the same tree) 322 / 336 / 341. Then +2 at
+    -- flicker-085 P3 (the opener's swing credit). Seeds 1-20 held ticks in the first 10 s 18 -> 39: the opener's
+    -- Bloodrage tick now crosses Demoralizing Shout's 7 (truth 6.2 -> 7.5, t 4.2) with our lo / est / hi at 7.0, so
+    -- ours waits one poll (w 1.00, to the next tick) in 12 of 20 fights: the cost-crossing class one poll late. Heroic
+    -- Strike's long waits (seed 6 t 124.4-125.4, w 0.99 -> 0.19): its line needs rage.lo >= 20 while our lo sits at
+    -- 17.0 (Shield Slam's cost) under the truth 21.9, so it waits for the next swing's credit (lo 27 the poll after
+    -- it); the same shape is in the ablated tree (seeds 12, 15) and before the change (seeds 12, 15, 18)
+    ["Warrior Protection"] = { flicker = 0.22, retracted = 0.1, readyShort = 1, heldReady = 362 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -190,7 +212,16 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 147 / 154 / 136):
     -- heldReady 140 -> 154
-    ["Balance"] = { flicker = 0, retracted = 0, heldReady = 154 }, -- 0.03 / 0.05 / 0.07, 0
+    -- Lane R2 (ledger L1082; seeds 1-20 / 21-40 / 41-60 heldReady 188 / 183 / 171, flicker 0 / 0 / 0): heldReady
+    -- 154 -> 188. The world now regenerates 12.61 a second while casting (the export's Reflection 3/3 share; was 0), so
+    -- the OOM phase runs Wrath to Wrath at 120 mana; each cost crossing shows one poll late (gap BT / G7: est 1-3 under
+    -- the truth, one tick per episode): Wrath held ticks 144 -> 181 at seeds 1-20
+    -- 0.8.5 close (ledger L1118, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60 heldReady 200 / 184 /
+    -- 180, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 188 -> 200. Cause harness: the
+    -- integ rest window (047aa7e82 + 97ba2a8e9, fights start at the true mana) adds to the Reflection share's OOM phase
+    -- above, the same cost-crossing class one poll late; reverting the rest change gives 188 (L1118). Balance-cc
+    -- (021dece2f, L1119) leaves it flat (199 -> 200)
+    ["Balance"] = { flicker = 0, retracted = 0, heldReady = 200 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
     -- is lacerate:swing/cost). Applied on the reported branch: Guardian clears M.gate's agreement (0.900 / 0.896 /
@@ -207,7 +238,18 @@ M.FLICKER = {
     -- seeds 1-20 / 21-40 / 41-60 flicker 0.19 / 0.17 / 0.07, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0,
     -- heldReady 299 / 285 / 293): flicker 0.23 -> 0.2 (seeds 1-20's 0.1900 is rounded: the raw value sits just over
     -- 0.19), heldReady 330 -> 299
-    ["Guardian"] = { flicker = 0.2, retracted = 0.7, readyShort = 0, heldReady = 299 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- flicker-085 P3 (L872 (2), the opener: the fight's first swing, newer than the combat-start anchor, is credited
+    -- one poll after it; seeds 1-20 / 21-40 / 41-60 heldReady 300 / 285 / 294): heldReady 299 -> 300, one event, seed 8
+    -- tick 9 (t 4.6): lacerate waiting 0.12 s on that swing's confirmation, truth 19.25 over its 15 cost
+    -- 0.8.5 close (ledger L1110 / L1119, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60 flicker 0.23
+    -- / 0.09 / 0.10, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 284 / 307 / 286): flicker 0.2 -> 0.24 (the
+    -- measured worst + 0.01: the line rounds to two decimals), heldReady 300 -> 307 (the worst set). Cause harness:
+    -- the Druid loop world grants Clearcasting at its cast's success (owner in game, L1110; a queued Maul's at its
+    -- swing, after the strike), not 0.25 s later (balance-cc 021dece2f), so the fights are re-timed. Traced flips 11 ->
+    -- 13 at seeds 1-20: 10 the lacerate <-> primal_bite swing-paid rage class above, one new maul -> primal_bite -> maul
+    -- (seed 6 t 122.0-122.6, both free under Clearcasting, swapped one poll at the swing); held ticks the same icons
+    -- (lacerate, maul, primal_bite) spread +0..+5 a fight, no single event (balance-cc-085 report)
+    ["Guardian"] = { flicker = 0.24, retracted = 0.7, readyShort = 0, heldReady = 307 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
@@ -262,7 +304,18 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.08 / 0.05 / 0.13, retracted 0.00 / 0.00 / 0.00, readyShort 1 / 1 / 1, heldReady 267 / 294 / 299):
     -- flicker 0.04 -> 0.14, heldReady 400 -> 299
-    ["Survival"] = { flicker = 0.14, retracted = 0, readyShort = 1, heldReady = 299 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- rest window lane (L987 addendum, L1069), cause harness: the between-fight rest keeps the five-second window
+    -- (047aa7e82): fights start at the true mana, so fights are re-timed; same cost/cooldown near-tie class (seeds 1-20
+    -- / 21-40 / 41-60 flicker 0.18 / 0.05 / 0.08, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 1 / 1, heldReady 280 /
+    -- 280 / 276): flicker 0.14 -> 0.19
+    -- flicker-085 P1 (L755 / ruling L960: a mana pool with no tick seen pads nothing; seeds 1-20 / 21-40 / 41-60
+    -- heldReady 292 / 313 / 323): heldReady 299 -> 323. At the gap BT cost crossing (floor pinned at cost - 1.01,
+    -- truth just over) raptor_strike's wait no longer jumps a tick, so ours shows the oracle's raptor_strike waiting
+    -- 0.23 s where strider_kick showed before (agreement rises).
+    -- 0.19 -> 0.03, heldReady 323 -> 314: FINAL, measured on integ/0.8.5-w2 after the Survival-moving lanes merged
+    -- (Serpent Sting debuff at landing, flicker-085, timing merges; L1037/L1103; close-085 seeds 1-20 / 21-40 / 41-60
+    -- flicker 0 / 0 / 0.017, heldReady 314 / 283 / 313): the worst printed + 0.01, the worst set
+    ["Survival"] = { flicker = 0.03, retracted = 0, readyShort = 1, heldReady = 314 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- 0 / 112 -> 0.1 / 116 (re-pin e2842f0a78, Task 19, R6; seeds 1-20 / 21-40 / 41-60: flicker 0.02 / 0.02 / 0, oracle
     -- 0 / 0 / 0, held 116 / 110 / 106, agreement 1.000 each; identical with R61 7a8972d4c): the flip (one a set) is
     -- multi_shot@0.50 -> serpent_sting@0.40 -> multi_shot@0 (seed 1, 48.4-48.8 s): Multi-Shot's last 0.5 s under
@@ -313,7 +366,12 @@ M.FLICKER = {
     -- phase (L667, cause harness), seeds 1-20 / 21-40 / 41-60 flicker 0 each, retracted 0, readyShort 0; floors the
     -- worst of the two measurements (first, then after L667)
     ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 128 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
-    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 118 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    -- Marksmanship Turret, 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60
+    -- heldReady 132 / 115 / 108, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 118 -> 132
+    -- (the worst set). Cause harness: ladder-usable-085 cc02f47e5's between-fight rest window (fights start at the true
+    -- mana, re-timed; the same cause as Balance, L1118; bisected 113 at its parent -> 132); the Hunter cost-crossing
+    -- class, seeds 1-20 held ticks arcane_shot 100 -> 118, rapid_fire 4 -> 8, hunters_mark 9 -> 6, +1..+4 a fight
+    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 132 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 117 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
     ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 183 }, -- heldReady 166 / 183 / 177; after L667 173 / 169 / 174
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
@@ -401,7 +459,17 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.13 / 0.10 / 0.05, retracted 0.00 / 0.00 / 0.00, readyShort 1 / 0 / 0, heldReady 136 / 138 / 126):
     -- flicker 0 -> 0.14, readyShort 0 -> 1, heldReady 152 -> 138
-    ["Enhancement"] = { flicker = 0.14, retracted = 0, heldReady = 138, readyShort = 1 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
+    -- re-measured on 246abf322 (L757 M2): flicker 0.13 / 0.12 / 0.05, heldReady 136 / 138 / 126 (the bar is the worst
+    -- set); every flip is a mana wait against Stormstrike's cooldown at the mana crossing: the tick pad, with no tick
+    -- seen, jumps between nothing and a whole tick from one poll to the next (Engine/Sim/State.lua tickReach; flicker-085).
+    -- With no pad at no tick seen (b97e59df0, ruling L960): flicker 0.02 / 0.03 / 0.08, heldReady 132 / 136 / 129
+    -- rest window lane (L987 addendum, L1069), cause harness: the between-fight rest keeps the five-second window
+    -- (047aa7e82): fights start at the true mana, so fights are re-timed; same cost/cooldown near-tie class (seeds 1-20
+    -- / 21-40 / 41-60 flicker 0.20 / 0.15 / 0.07, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 1 / 0, heldReady 127 /
+    -- 128 / 132): flicker 0.14 -> 0.21
+    -- 0.21 -> 0.08: FINAL, measured on integ/0.8.5-w2 after the merges (close-085 seeds 1-20 / 21-40 / 41-60 flicker
+    -- 0.033 / 0.05 / 0.067): the worst printed (0.07) + 0.01; the lanes' flicker-085 no-tick-pad change settled it
+    ["Enhancement"] = { flicker = 0.08, retracted = 0, heldReady = 138, readyShort = 1 }, -- heldReady ON THE BAR (= seeds 1-20): re-measure at integration; the flicker figures here (0.13 x3) are stale, see the history above (L104)
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
@@ -419,7 +487,9 @@ M.FLICKER = {
     -- 0.7 re-pin e5a9cd2a2d (lane mage, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 171 / 174 / 180, agreement .995 / .994 / .997): heldReady 182 -> 180 (the Fire Arcane Concentration 5/5 stream; cost crossings as before)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.02 / 0.00, readyShort 1 / 1 / 0, heldReady 169 / 173 / 175):
-    -- retracted 0 -> 0.02, readyShort 0 -> 1, heldReady 180 -> 175
+    -- retracted 0 -> 0.02, readyShort 0 -> 1, heldReady 180 -> 175. The 21-40 / 41-60 readyShort and retracted predate
+    -- that lane (L757 I1, bisected on seeds 21-40: readyShort 0 / retracted 0 at 2a65a4d79, 2 / 0.03 at 1e75b58e2, the
+    -- aura-paladin-mage merge's Mage auras); the lane measured them first
     ["Fire"] = { flicker = 0, retracted = 0.02, heldReady = 175, readyShort = 1 }, -- 0 / 0 / 0, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
@@ -440,7 +510,11 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 / 0), retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0,
     -- heldReady 112 / 111 / 109, agreement .996 / .998 / .998): heldReady 113 -> 112, flicker kept
-    ["Frost"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 112 },
+    -- rest window lane (L987 addendum, L1069), cause harness: the between-fight rest keeps the five-second window
+    -- (047aa7e82): fights start at the true mana, so fights are re-timed; same cost/cooldown near-tie class (seeds 1-20
+    -- / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 116 /
+    -- 117 / 110, agreement .995 / .997 / .998): heldReady 112 -> 117
+    ["Frost"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 117 },
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 396 / 398 / 399):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- Priest re-pin lane (pin e5a9cd2a2dfc, CN8 merged, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, readyShort 0, heldReady 395 / 395 / 397):
@@ -448,7 +522,10 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.02 / 0.02 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 400 / 400 / 403):
     -- flicker 0 -> 0.02, heldReady 397 -> 403
-    ["Shadow"] = { flicker = 0.02, retracted = 0, heldReady = 403 }, -- 0 / 0 / 0, 0
+    -- flicker-085 P1 (L755 / ruling L960: a mana pool with no tick seen pads nothing; seeds 1-20 / 21-40 / 41-60
+    -- heldReady 406 / 404 / 403): heldReady 403 -> 406. The fights re-time; the event kind is the same as before
+    -- (mind_flay waiting 0.07-0.2 s at the mana crossing, the floor under the cost, the truth over it)
+    ["Shadow"] = { flicker = 0.02, retracted = 0, heldReady = 406 }, -- 0 / 0 / 0, 0
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
@@ -479,7 +556,13 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 285 / 294 / 274):
     -- heldReady 284 -> 294
-    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 294, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
+    -- 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60 heldReady 300 / 292 /
+    -- 299, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 294 -> 300 (the worst set). Cause
+    -- flicker-085 b4036d424 (P1: a mana pool with no tick seen pads nothing; bisected 275 at its parent -> 300): every
+    -- mana wait is re-timed, the same cost-crossing class as above (gap BT, lo / est 2-6 under the truth at the cost,
+    -- our wait 0.07-0.20 s, the oracle ready); seeds 1-20 held ticks lightning_bolt 169 -> 191, flame_shock 73 -> 80,
+    -- searing_totem 33 -> 29, every fight the same length
+    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 300, readyShort = 1 }, -- 0.00 / 0.00 / 0.00, 0 (oracle 0.05 / 0.05 / 0.07)
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996

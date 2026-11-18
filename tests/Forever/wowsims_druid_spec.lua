@@ -33,12 +33,12 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local C = ws.logged(content("druid_balance", W.Balance, "Balance (wowsims.com)", 60), "druid_balance")
         local L = loop.new(C)
         local R = replay.new(ws.log("druid_balance"), L.oracle, ws.replayOptions(C, "druid_balance"))
-        local up, down = 0, math.huge -- the belief's rate at the log's 116-125 s and 130-170 s
+        local up, down = 0, math.huge -- the belief's casting rate at the log's 116-125 s and 130-170 s
         loop.replay(L, R, {
             on = function(_, steps, t)
                 local st = steps[1]
                 local VS = st.H.ns.VirtualState
-                local rate, at = VS.Regen(0, st.base + t, VS.NOT_CASTING).est, t - R.pull
+                local rate, at = VS.Regen(0, st.base + t, VS.CASTING).est, t - R.pull
                 if at > 116 and at < 125 then
                     up = math.max(up, rate)
                 elseif at > 130 and at < 170 then
@@ -47,8 +47,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             end,
         })
         -- re-pin e2842f0a78: the log's regen is 12.6 a second and 17.1 inside Serenity Field (112.21-127.21 s), all
-        -- Tag 1 (Reflection 3/3 in the new build); was Tag 2's 31 and 22 (up > 30, down < 24)
-        assert.is_true(up > 16 and down < 13, up .. " vs " .. down)
+        -- Tag 1 (Reflection 3/3 in the new build); was Tag 2's 31 and 22 (up > 30, down < 24). Lane R2: the casting
+        -- rate is the one the log shows (it never leaves the rule); the not-casting rate this read before (up > 16,
+        -- down < 13) was the replay world's, which answered a casting-only log with no spirit part (now M + S, 24.4)
+        assert.is_true(math.abs(up - 17.11) < 0.5 and math.abs(down - 12.61) < 0.5, up .. " vs " .. down)
     end)
 
     it("Feral's replay world reports the energy rate the client reads", function()

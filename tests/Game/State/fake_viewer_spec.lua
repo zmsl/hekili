@@ -170,6 +170,26 @@ describe("the any-layout Cooldown Manager fake", function()
             assert.are.equal(SECRET, item.auraInstanceID)
         end)
 
+        -- An entry naming several auras (a family, e.g. one entry for every member): the client clears an item only when
+        -- the aura it holds ends, then refreshes it from the auras still up. Red before: any named aura's removal
+        -- cleared it, so a swap that applied the new member before removing the old left the item dark.
+        it(
+            "an item naming two auras: the other one's removal leaves it lit; its own removal shows one still up",
+            function()
+                ctl.viewer.infos[505] = { spellID = 1001, linkedSpellIDs = { 1001, 1002 } }
+                local item = ctl.ViewerItem(ICON, 1, 505)
+                ctl.ViewerAuraBySpell("player", 1001, true, "player")
+                ctl.ViewerAuraBySpell("player", 1002, true, "player") -- the new member first
+                ctl.ViewerAuraBySpell("player", 1001, false, "player") -- then the old one's removal
+                assert.are.same({ true, 1002 }, { item.auraInstanceID ~= nil, item.litBy })
+                ctl.ViewerAuraBySpell("player", 1001, true, "player") -- shows 1001 now, 1002 still up
+                ctl.ViewerAuraBySpell("player", 1001, false, "player")
+                assert.are.same({ true, 1002 }, { item.auraInstanceID ~= nil, item.litBy }) -- the refresh finds 1002
+                ctl.ViewerAuraBySpell("player", 1002, false, "player")
+                assert.is_nil(item.auraInstanceID)
+            end
+        )
+
         it("a target item lights for the target's aura only", function()
             local t = ctl.ViewerItem(ICON, 1, 501)
             t.unit = "target"

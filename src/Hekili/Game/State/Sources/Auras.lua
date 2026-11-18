@@ -56,8 +56,9 @@ local KEY = {} -- aura index -> its key, for the Snapshot lines
 -- BY_CAST our cast (Families/Now.lua, I.AuraOurs), BY_CDM a CDM UP that opened it, BY_WALK an out-of-combat walk read with source
 -- player or pet; valid only while the record's applied time is still oursAp[k] (another application, a target swap's
 -- other mob, an undone cast or a close all move it). upAt[k]: the last poll the reduced fact read UP.
+-- claimT[k]: the t of the CDM UP or walk read that set ours; its fold re-anchors oursAp (I.AuraClaimFolded).
 local BY_CAST, BY_CDM, BY_WALK = 1, 2, 3
-local ours, oursAp, upAt = {}, {}, {}
+local ours, oursAp, upAt, claimT = {}, {}, {}, {}
 I.auraOurs = ours
 -- Rules 3-4 (C2, decision 112 as amended by the owner's rule, L310: trust the belief's duration). A CDM UP with no model
 -- record behind it opens one at once: its registered duration (DUR[j], -1 none) from max(fact.t, applied) when that
@@ -104,18 +105,33 @@ I.presenceHold = holdN
 -- (fact.pdark) and not UP for W past the latest of the write, the last UP and the dark's start (fact.pdarkT), is
 -- closed once. By key: W[k] its window
 -- (W0 for a walk or CDM opener, max(W0, travel + TOL) for our cast), verdictAt[k] the last verdict's t while a light
--- within STRIKE_WIN may still prove it wrong (0 none); per fight verdictN, strikeN, and darkN (1: pdark seen). A verdict
--- is counted when its close folds (I.AuraVerdictClosed), never at the stage.
+-- within STRIKE_WIN may still prove it wrong (0 none); per fight verdictN, strikeN, darkN (1: pdark seen) and refundN
+-- (the closes that refunded our missed cast, L1029) and backN (those refunds a strike took back); refPend[k] 1 while
+-- the last verdict's refund may still be struck (its strike window). A verdict is counted when its close folds (I.AuraVerdictClosed),
+-- never at the stage.
 -- shortcut: W0 1.0 s, TOL 0.3 s and STRIKE_WIN 2.0 s are the spec's (§6) from the 2026-11-09 sample; Task 10's P1 tunes them.
 local W0, TOL, STRIKE_WIN = 1.0, 0.3, 2.0
 -- strikePend[k]: the t of a light within STRIKE_WIN of a verdict (0 none), decided at the next poll, after this drain's
 -- fold has run our recast's write (the first Opus round's M2: the polls run before the fold).
-local W, verdictAt, verdictN, strikeN, darkN, strikePend = {}, {}, {}, {}, {}, {}
-I.auraVerdict = { W = W, at = verdictAt, n = verdictN, strikes = strikeN } -- read-only views for the tests
+local W, verdictAt, verdictN, strikeN, darkN, strikePend, refundN = {}, {}, {}, {}, {}, {}, {}
+local backN, refPend = {}, {}
+I.auraVerdict = { W = W, at = verdictAt, n = verdictN, strikes = strikeN, refunds = refundN, back = backN } -- read-only
 I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (loop.lua sums them per unit)
+-- lateTo[k]: STRIKE_WIN past the last close of k by the Cooldown Manager (rule 1's stage or a verdict's fold), 0 none. A
+-- family item lit before it with no member up names that member (the leaf's member()): its late light re-opens and
+-- strikes as a one-aura item's does (cdm-verdict §2.7).
+local lateTo = {}
+I.auraLateTo = lateTo
+local FAM = {} -- aura index -> the pack's family name (compared, never interpreted), false none
 local function zeroVerdict(k)
-    W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k] = W0, 0, 0, 0, 0, 0
+    W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], refundN[k] = W0, 0, 0, 0, 0, 0, 0
+    backN[k], refPend[k], lateTo[k] = 0, 0, 0
 end
+-- The class's talent spells (def.talents) that a tracked aura lists as a `copy` (not its own ID), set at the build: an
+-- aura that copies its talent's ID (the Cooldown Manager links both) must not read the talent's own passive aura, which
+-- has no expiry, as the buff (the walk below). An aura whose own ID is the talent's (a form, an until-used buff) reads
+-- as before.
+local TALENT_COPY = {}
 local function zeroEdge(k)
     anAp[k], emcN[k], emcSum[k], emcLast[k] = 0, 0, 0, 0
     cyT[k], cyD[k], cyAp[k], cyE[k], cyN[k], cySum[k], cyObs[k], cyMod[k], seedAp[k] = 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -123,6 +139,21 @@ end
 
 I.OnBuild(function(def)
     local U = I.auras
+    for id in pairs(TALENT_COPY) do
+        TALENT_COPY[id] = nil
+    end
+    local talent = {}
+    for k = 1, #(def.talents or talent) do
+        talent[def.talents[k].spell] = true
+    end
+    for j = 1, U.nAura do
+        local ids, own = def.auraIds[j], rawget(def.auras[j], "id")
+        for i = 1, #ids do
+            if ids[i] ~= own and talent[ids[i]] then
+                TALENT_COPY[ids[i]] = true
+            end
+        end
+    end
     for u = 1, U.n do
         WALK[u] = "aura walk " .. tostring(def.units[u])
         local f, s = {}, {}
@@ -142,11 +173,12 @@ I.OnBuild(function(def)
     playerPlain, targetPlain = true, true
     for j = 1, U.nAura do
         KEY[j] = tostring(def.auras[j].key)
+        FAM[j] = type(def.auras[j].family) == "string" and def.auras[j].family
         local d = rawget(def.auras[j], "duration")
         DUR[j], floor[j] = type(d) == "number" and d or -1, 0
-        facts[j], disagree[j], staged[j], exitFix[j], ours[j], oursAp[j], upAt[j] = 0, 0, 0, 0, 0, 0, 0
+        facts[j], disagree[j], staged[j], exitFix[j], ours[j], oursAp[j], upAt[j], claimT[j] = 0, 0, 0, 0, 0, 0, 0, 0
         local k = I.AURA_UNIT + j
-        facts[k], disagree[k], staged[k], exitFix[k], ours[k], oursAp[k], upAt[k] = 0, 0, 0, 0, 0, 0, 0
+        facts[k], disagree[k], staged[k], exitFix[k], ours[k], oursAp[k], upAt[k], claimT[k] = 0, 0, 0, 0, 0, 0, 0, 0
         lastE[j], lastSt[j], longE[j], lastE[k], lastSt[k], longE[k] = 0, 0, 0, 0, 0, 0
         zeroEdge(j)
         zeroEdge(k)
@@ -198,6 +230,9 @@ local function walk(api, u, unit, t)
                 break
             end
             local j = U.bySpell[id]
+            if j and u == 1 and TALENT_COPY[id] and Plain(api, data.expirationTime) == 0 then
+                j = nil -- the talent's passive aura (no expiry), not the buff that copies its ID
+            end
             if j then
                 local exp, apps = Plain(api, data.expirationTime), Plain(api, data.applications)
                 if type(exp) ~= "number" then
@@ -221,12 +256,15 @@ local function walk(api, u, unit, t)
                     if u <= 2 and not I.inCombat then -- rule 2.5.1: its source says whose it is (out of combat only)
                         local src = Plain(api, data.sourceUnit)
                         if src == "player" or src == "pet" then
-                            ours[k], oursAp[k], W[k] = BY_WALK, foldApplied(u, j, t), W0
+                            ours[k], oursAp[k], W[k], claimT[k] = BY_WALK, foldApplied(u, j, t), W0, t
                         elseif not (again and ours[k] == BY_WALK) then -- ours and a partner's in one walk: ours
                             ours[k] = 0
                         end
                     end
                     Direct(Obs.Read, t, k, remaining, ReadOf.Aura + stacks * I.AURA_STACK)
+                    if u == 1 then
+                        U.sid[j] = id -- its rank, for a `stats` part by spell ID (Families/Player.lua)
+                    end
                     U.harm[u][j] = filter == "HARMFUL"
                 end
             end
@@ -324,6 +362,18 @@ S.Poll(11, function(api, t)
     end
 end)
 
+--- The Read a CDM UP or walk claimed at t folded up on key k with applied time ap (Families/Auras.lua): foldApplied's
+--- guess at the stage misses a close folded first in the same drain (the open is then a new application at t), so ours
+--- names the application the fold wrote. Our cast's write since then (BY_CAST) stands. Allocates nothing.
+function I.AuraClaimFolded(k, t, ap)
+    if claimT[k] == t and ours[k] ~= BY_CAST then
+        if seedAp[k] == oursAp[k] and seedAp[k] ~= 0 then
+            seedAp[k] = ap
+        end
+        oursAp[k] = ap
+    end
+end
+
 --- Our cast wrote record (u, j) (Families/Now.lua's aura()): this application is ours (rule 2.5.1); `travel` (seconds,
 --- 0 or nil none) widens its verdict window (cdm-verdict §2.3). Allocates nothing.
 function I.AuraOurs(u, j, travel)
@@ -396,6 +446,9 @@ local function apply(j, u, up, t, edge)
     local k = (u - 1) * I.AURA_UNIT + j
     if up then
         upAt[k] = t
+        if u == 2 and I.VerdictLit then -- any record of our cast lit: it landed, no verdict refunds it (L1029)
+            I.VerdictLit(j, t)
+        end
     end
     if not judgeable(j, u) then
         return false
@@ -439,12 +492,17 @@ local function apply(j, u, up, t, edge)
         return false -- staged already in this drain (an edge, then the poll): the fold has not taken it yet
     end
     facts[k], staged[k] = facts[k] + 1, t
+    if not up then
+        -- rule 1's close; like any close it drops the debounce's memory (§2.6), so a light at the next poll re-opens
+        -- at once instead of waiting on the old expiry (review I-1)
+        lateTo[k], lastE[k], lastSt[k], longE[k] = t + STRIKE_WIN, 0, 0, 0
+    end
     if (e > t) ~= up then
         disagree[k] = disagree[k] + 1
     end
     local stacks = 0
     if up then -- an UP stages only on a record still down
-        ours[k], oursAp[k], W[k] = BY_CDM, foldApplied(u, j, t), W0 -- a CDM UP opened it
+        ours[k], oursAp[k], W[k], claimT[k] = BY_CDM, foldApplied(u, j, t), W0, t -- a CDM UP opened it
         stacks = lastSt[k] -- re-established: the model's last stacks (else 0)
         if seed then
             seedAp[k] = oursAp[k]
@@ -508,7 +566,8 @@ end
 
 -- The verdict for (j, u) at poll t (cdm-verdict §2.3), `a` its reduced answer: a record up that our evidence opened,
 -- not UP, its proven item dark (fact.pdark), W past the latest of the write, the last UP and the start of the watched
--- dark (fact.pdarkT: continuously dark for W, Fable 5.2 review M2): closed once (no refund). Allocates nothing.
+-- dark (fact.pdarkT: continuously dark for W, Fable 5.2 review M2): closed once (a missed cast of ours is refunded
+-- when the close folds, I.AuraVerdictClosed). Allocates nothing.
 local function verdict(j, u, k, a, t, F)
     if strikePend[k] > 0 and t > strikePend[k] then -- the light a drain ago: wrong unless our cast came since (§2.5)
         -- >=: a cast stamped at the verdict's own time (its event in the frame of the closing poll, staged after
@@ -519,10 +578,14 @@ local function verdict(j, u, k, a, t, F)
             if P.Strike then
                 P.Strike(j, u)
             end
+            -- it landed: the refund our verdict gave comes back out (L1029, the dangerous side: above the truth)
+            if refPend[k] > 0 and I.VerdictTakeBack and I.VerdictTakeBack(j, t) then
+                backN[k] = backN[k] + 1
+            end
         end
-        strikePend[k], verdictAt[k] = 0, 0
+        strikePend[k], verdictAt[k], refPend[k] = 0, 0, 0
     elseif strikePend[k] == 0 and verdictAt[k] > 0 and t - verdictAt[k] > STRIKE_WIN then
-        verdictAt[k] = 0
+        verdictAt[k], refPend[k] = 0, 0
     end
     if not F.pdark[k] then
         return
@@ -550,15 +613,58 @@ end
 --- verdict judged). Counted here, not at the stage: a close the fold drops (our recast folded first in the same
 --- drain, Fable 5.2 review M1) is no verdict, opens no strike window and counts nothing. Like any close it drops the
 --- debounce's memory, so a late light re-opens at once (rule 4) instead of waiting on the old expiry. The provider
---- counts it against the items dark for the thing (review M3: silent verdicts suspend a proof). Allocates nothing.
-function I.AuraVerdictClosed(k, t)
-    verdictAt[k], verdictN[k] = t, verdictN[k] + 1
+--- counts it against the items dark for the thing (review M3: silent verdicts suspend a proof). A target record our
+--- cast wrote (`ap` the application judged) that never read UP since that write is the cast's miss: its cost share
+--- comes back (L1029, Families/Now.lua I.VerdictRefund). One that read UP since landed and was then removed (no
+--- refund); the error: a refresh into a still-lit item reads UP from the old application, so its miss is not
+--- refunded. Allocates nothing.
+function I.AuraVerdictClosed(k, t, ap)
+    verdictAt[k], verdictN[k], refPend[k], lateTo[k] = t, verdictN[k] + 1, 0, t + STRIKE_WIN
     lastE[k], lastSt[k], longE[k] = 0, 0, 0
+    if k > I.AURA_UNIT and ours[k] == BY_CAST and oursAp[k] == ap and upAt[k] < ap and I.VerdictRefund then
+        if I.VerdictRefund(k - I.AURA_UNIT, ap, t) then
+            refundN[k], refPend[k] = refundN[k] + 1, 1
+        end
+    end
     local P = I.presence
     if P and P.Silent then
         local u = k > I.AURA_UNIT and 2 or 1
         P.Silent(k - (u - 1) * I.AURA_UNIT, u)
     end
+end
+
+--- Our cast's avoid undo closed target record j (Families/Now.lua) at t; castT the undone cast's time, preE the
+--- record's expiry before it (0 none). Like any close it drops the debounce's memory, so an item lit since the cast
+--- re-opens it at the next poll instead of HOLD past the undone cast's expiry; an item lit since before the cast is the
+--- earlier application's (the viewer's lag, review I1): it is judged against preE (now when none), as before the cast.
+--- Allocates nothing.
+function I.AuraUndone(j, castT, preE, t)
+    local k = I.AURA_UNIT + j
+    local F = I.presence and I.presence.fact
+    if F and F.state[k] == I.UP and (F.t[k] or 0) < castT then
+        lastE[k], anyLast = preE > 0 and preE or t, true
+    else
+        lastE[k], lastSt[k], longE[k] = 0, 0, 0
+    end
+end
+
+--- A Cooldown Manager open of j on unit u staged at t inside its late window (lateTo) while another member of j's family
+--- is up: the light is that member's (our cast of it folded first in this drain, before the open), so the fold drops
+--- the open and no strike is judged for j. Called by the fold for an open only. Allocates nothing.
+function I.AuraLateMember(u, j, t)
+    local k = (u - 1) * I.AURA_UNIT + j
+    local f = lateTo[k] >= t and FAM[j]
+    if not f then
+        return false
+    end
+    local e = I.auras.exp0[u]
+    for i = 1, I.auras.nAura do
+        if i ~= j and FAM[i] == f and e[i] > t then
+            strikePend[k], verdictAt[k] = 0, 0
+            return true
+        end
+    end
+    return false
 end
 
 local function onEdge(j, u, up, t)
@@ -660,7 +766,8 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
             clamp(j, 2, t)
         end
         longE[k], lastE[k], lastSt[k], cyT[k] = 0, 0, 0, 0
-        verdictAt[k], strikePend[k] = 0, 0 -- (review S1) a light on the next mob says nothing of mob A's verdict
+        -- (review S1) a light on the next mob says nothing of mob A's verdict
+        verdictAt[k], strikePend[k], refPend[k], lateTo[k] = 0, 0, 0, 0
     end
 end)
 
@@ -669,7 +776,8 @@ S.On("PLAYER_REGEN_DISABLED", nil, function()
         facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
         lastE[k], lastSt[k], longE[k] = 0, 0, 0 -- out of combat the walk answered
         emcN[k], emcSum[k], emcLast[k], cyT[k], cyN[k], cySum[k], cyObs[k], cyMod[k] = 0, 0, 0, 0, 0, 0, 0, 0
-        verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k] = 0, 0, 0, 0, 0
+        verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], refundN[k] = 0, 0, 0, 0, 0, 0
+        backN[k], refPend[k], lateTo[k] = 0, 0, 0
     end
     holdN.waits, holdN.fires = 0, 0
     anyLong, anyLast = false, false
@@ -778,14 +886,17 @@ I.OnSnapshot(function(out, now)
             local k = (u - 1) * I.AURA_UNIT + j
             if verdictN[k] + strikeN[k] + darkN[k] > 0 then
                 out[#out + 1] = string.format(
-                    "presence-verdict %s unit=%s W=%.2f verdicts=%d strikes=%d pdark=%s darkSlots=%d",
+                    "presence-verdict %s unit=%s W=%.2f verdicts=%d strikes=%d pdark=%s darkSlots=%d refunds=%d"
+                        .. " back=%d",
                     KEY[j],
                     u == 1 and "player" or "target",
                     W[k],
                     verdictN[k],
                     strikeN[k],
                     tostring(F and F.pdark and F.pdark[k] == true),
-                    select(7, leaf.Counts(j, u)) or 0
+                    select(7, leaf.Counts(j, u)) or 0,
+                    refundN[k],
+                    backN[k]
                 )
             end
         end
@@ -811,4 +922,18 @@ I.OnSnapshot(function(out, now)
         leaf.carried or 0,
         leaf.dropped or 0
     )
+    if leaf.SnapshotSlots then -- the raw bars (L1075): per slot, then per mapped aura on the layout or not
+        leaf.SnapshotSlots(out, now, KEY)
+        for j = 1, U.nAura do
+            if leaf.Mappable(j) then
+                local never, single = leaf.NeverLit(j) -- no single mapping: "-", the proof never covers it
+                out[#out + 1] = string.format(
+                    "presence-layout %s on=%s neverLit=%s",
+                    KEY[j],
+                    leaf.OnLayout(j),
+                    not single and "-" or never and "yes" or "no"
+                )
+            end
+        end
+    end
 end)

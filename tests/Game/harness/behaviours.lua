@@ -118,9 +118,15 @@ function M.melee(p)
                     end
                     -- our strike frame's order (P log 1's, then the brief's): 1 the success first, 2 the swing first
                     local order = p.land and (W.crng.chance(0.5) and 1 or 2) or nil
-                    -- our strike rolls its press's avoids (W.hit's sets: "melee" by default); a foreign one lands
-                    local act = q.spell and W.rollOutcome(tgt, q.outcomes) or "WOUND"
+                    -- our strike rolls its press's avoids (W.hit's sets: "melee" by default); a foreign one lands.
+                    -- Its crit shows only for a press that declares `crits` (the other worlds' strikes stay as they were)
+                    local act, flag = "WOUND", ""
+                    if q.spell then
+                        act, flag = W.rollOutcome(tgt, q.outcomes)
+                        flag = q.crits and flag or ""
+                    end
                     local hit = W.rng.int((q.amount or p.strike or w)[1], (q.amount or p.strike or w)[2])
+                    hit = flag == "CRITICAL" and hit * 2 or hit
                     if act ~= "WOUND" then
                         e.avoidAt[act] = W.t
                     end
@@ -130,7 +136,7 @@ function M.melee(p)
                         dst = tgt,
                         hand = 1,
                         act = act,
-                        flag = "",
+                        flag = flag,
                         amount = act == "WOUND" and hit or 0,
                         school = 1,
                         spell = q.spell,
@@ -142,6 +148,9 @@ function M.melee(p)
                     })
                     if act ~= "WOUND" and (q.refund or 0) > 0 and (q.cost or 0) > 0 then -- its press's refund (W.hit), after the strike frame's spend
                         W.emit({ kind = "gain", src = e, pt = q.pt, rage = q.refund * q.cost })
+                    end
+                    if q.spell and e.struck then -- our content sees its strike's outcome (a crit's proc)
+                        e.struck(W, act, flag)
                     end
                 else
                     local act, flag = roll(W.rng, rates)

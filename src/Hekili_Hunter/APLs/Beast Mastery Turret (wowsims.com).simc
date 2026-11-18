@@ -14,10 +14,14 @@
 # Omitted: walk_in #1: move
 # Omitted: walk_in #2: wait
 
-actions.precombat=hunters_mark,if=!debuff.hunters_mark.up
+actions.precombat=call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled
+actions.precombat+=/revive_pet,if=pet.dead
+actions.precombat+=/hunters_mark,if=!debuff.hunters_mark.up
 actions.precombat+=/aspect_of_the_hawk,if=!buff.aspect_of_the_hawk.up
 actions.precombat+=/sniper_shot
-actions=elunes_light,use_off_gcd=1,if=time>=5
+actions=call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled
+actions+=/revive_pet,if=pet.dead
+actions+=/elunes_light,use_off_gcd=1,if=time>=5
 actions+=/blood_fury,use_off_gcd=1,if=time>=5
 actions+=/berserking,use_off_gcd=1,if=time>=5
 actions+=/bestial_wrath,use_off_gcd=1,if=time>=5

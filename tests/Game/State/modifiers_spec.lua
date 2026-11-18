@@ -258,6 +258,70 @@ describe("resource modifiers", function()
         end
     )
 
+    -- L1110 (owner, in game): a free-cast proc comes on the cast's success, so the cast that raised it pays in full and
+    -- the next covered cast takes it, whichever of the success and the proc's read the drain meets first. With one up
+    -- before the cast (`up`), the cast takes that one free and its own proc is a fresh one (expires 21, not 20).
+    for _, case in ipairs({ { false, false }, { true, false }, { false, true }, { true, true } }) do
+        local readFirst, up = case[1], case[2]
+        it(
+            "never discounts a cast by the proc its own success raised (the proc's read "
+                .. (readFirst and "before" or "after")
+                .. " the success, one drain"
+                .. (up and ", one already up)" or ")"),
+            function()
+                ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -1, charges = 1, spells = { fs.SPENDER_B } } }
+                ns.BuildTracked()
+                VS.Drain(1.5)
+                local j = I.auras.bySpell[MOD_AURA]
+                if up then
+                    I.AuraModel(1, j, 5, 20, 1, 5, VS.Obs.CastSuccess, false)
+                end
+                local paid, shift = 0, I.ResourceShift
+                I.ResourceShift = function(r, d, ...)
+                    paid = paid - d
+                    return shift(r, d, ...)
+                end
+                ctl.now = 6
+                if readFirst then
+                    I.Sources.Direct(VS.Obs.Read, 6, j, 21, I.ReadOf.Aura + I.AURA_STACK)
+                end
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_B)
+                if not readFirst then
+                    I.Sources.Direct(VS.Obs.Read, 6, j, 21, I.ReadOf.Aura + I.AURA_STACK)
+                end
+                ctl.Tick(6.01)
+                VS.Drain(6.02)
+                I.ResourceShift = shift
+                local _, stacks = VS.Aura("player", MOD_AURA, 6.1)
+                -- paid in full (free on the one already up), the proc kept for the next cast
+                assert.are.same({ up and 0 or 15, 1 }, { paid, stacks })
+                I.clock = 6.1
+                assert.are.equal(0, I.CostOf(I.ab.bySpell[fs.SPENDER_B]))
+                cast(fs.SPENDER_B, 7) -- the next cast takes it
+                assert.is_nil(VS.Aura("player", MOD_AURA, 7.1))
+            end
+        )
+    end
+
+    -- Wrath's shape: a spell out of the modifier's scope, and a covered one that costs nothing, neither price by nor
+    -- take the charge (Families/Now.lua spends charges only when the declared cost is above 0).
+    it("keeps the charge through an out-of-scope cast and a covered zero-cost one", function()
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -1, charges = 1, spells = { fs.SPENDER_B } } }
+        ns.BuildTracked()
+        VS.Drain(1.5)
+        local spender_b = I.ab.bySpell[fs.SPENDER_B]
+        I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 1, 5, VS.Obs.CastSuccess, false)
+        cast(fs.SPENDER_C, 6) -- out of scope: priced in full, no charge
+        local _, stacks = VS.Aura("player", MOD_AURA, 6.1)
+        assert.are.equal(1, stacks)
+        local spend = rawget(I.ab.obj[spender_b], "spend")
+        I.ab.obj[spender_b].spend = 0 -- covered, free as declared
+        cast(fs.SPENDER_B, 6.5)
+        I.ab.obj[spender_b].spend = spend
+        _, stacks = VS.Aura("player", MOD_AURA, 6.6)
+        assert.are.equal(1, stacks)
+    end)
+
     it("prices a declared cost function in the belief's context: its aura reads are the belief's", function()
         local spender_c = I.ab.bySpell[fs.SPENDER_C]
         -- the record's `spend` is the declared function (Tracked.lua); this one reads the aura's stacks (a stacking

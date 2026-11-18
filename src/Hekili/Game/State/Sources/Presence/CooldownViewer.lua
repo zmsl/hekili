@@ -9,7 +9,14 @@
 -- (§2.2a, decision 115): a silent slot answers NONE only for an application it was seen holding (its record up, sSeen >= applied, its last held
 -- unit). A target change makes target and NONE slots settle for its frame: target answers stale (§3.4). A raise
 -- in the sweep, or in the router's reduction it calls, turns the leaf off for the session (§3.5). Read, never write: rawget on items, on Blizzard frames only
--- GetChildren, GetNumChildren and IsVisible; no hooks of any kind (§3.3, §3.5).
+-- GetChildren, GetNumChildren and IsVisible (the Debug dump below also calls IsShown); no hooks of any kind (§3.3, §3.5).
+-- Aura families (owner rule L727): an ambiguous item whose every candidate names a member of one family (the packs'
+-- aura field `family`) is a family item. The client's light says some member is up and its silence that none is, but
+-- not which (probes L725/L726: identity goes secret after an in-combat change), so the sweep counts it for the member
+-- the belief holds up (our last cast, or a later plain read): a one-aura item of that member while it is up, and for
+-- STRIKE_WIN after the Cooldown Manager closed it (a late light re-opens it and strikes, cdm-verdict §2.7). Otherwise,
+-- with no member up, it stays an ambiguous item: a light then may be another member's, so it opens or re-establishes
+-- none.
 -- The idea of reading the viewer's items for presence, the all-viewers presence bit, the hidden-viewer rule and the
 -- spell mapping are TellMeWhen's (Cybeloras), GPL-3.0; ideas only, no code copied.
 
@@ -26,6 +33,8 @@ local STOPPED = "Forever: Cooldown Manager reading stopped for this session afte
 
 local cdvToJ = {} -- cooldownID -> j, or -a (ambiguous: amb[a] lists its tracked js); built out of combat
 local amb = {} -- a -> { j, ... }
+local ambFam = {} -- a -> its family f (an index into famJs), 0 a plain ambiguous item
+local famJs = {} -- f -> { j, ... }: a declared family's members, built with the map
 local mappable = {} -- j -> true when some cooldownID's candidates name it (alone or ambiguously)
 local slotOf = setmetatable({}, { __mode = "k" }) -- child frame -> slot: the only in-combat insert (a new child)
 local known = { 0, 0, 0, 0 } -- children collected per viewer (GetNumChildren at the last collect)
@@ -93,6 +102,7 @@ local Q = {
     ambiguous = 0, -- ambiguous items' lights this fight (§2.2)
     map = cdvToJ, -- read-only views for the tests and the snapshot
     amb = amb,
+    family = ambFam,
     slotOf = slotOf,
     seen = sSeen,
     edgeT = eT, -- by k: the last sweep's t with an edge of the thing (the router's fact.edge)
@@ -166,7 +176,10 @@ local function build(api, def)
         cdvToJ[id], mapKey[id] = nil, nil
     end
     for k in pairs(amb) do
-        amb[k] = nil
+        amb[k], ambFam[k] = nil, nil
+    end
+    for k in pairs(famJs) do
+        famJs[k] = nil
     end
     for k in pairs(mappable) do
         mappable[k] = nil
@@ -183,13 +196,22 @@ local function build(api, def)
     if not ok or Plain(api, avail) ~= true then
         return false
     end
-    local byId = {}
+    local byId, famOf, famByName = {}, {}, {}
     for j = 1, #def.auraIds do
         -- (cdm-panel) a switched-off aura (def.auras[j].cdm == false, Tracked.lua) is no candidate: its items stay
         -- unmapped, the aura pure belief
         if not (def.auras[j] and def.auras[j].cdm == false) then
             for _, sid in ipairs(def.auraIds[j]) do
                 byId[sid] = j
+            end
+            local name = def.auras[j].family -- the pack's family name: compared, never interpreted
+            if type(name) == "string" then
+                local f = famByName[name]
+                if not f then
+                    f = #famJs + 1
+                    famByName[name], famJs[f] = f, {}
+                end
+                famJs[f][#famJs[f] + 1], famOf[j] = j, f
             end
         end
     end
@@ -214,12 +236,18 @@ local function build(api, def)
                     end
                     if one and (many or js[0]) then
                         local list = {}
+                        -- a family item: every candidate a member of one family (an untracked or secret one is not)
+                        local f = not js[0] and famOf[one] or 0
                         for j in pairs(js) do
                             if j > 0 then
                                 list[#list + 1] = j
+                                if famOf[j] ~= f then
+                                    f = 0
+                                end
                             end
                         end
                         amb[#amb + 1] = list
+                        ambFam[#amb] = f
                         cdvToJ[id] = -#amb
                     elseif one then
                         cdvToJ[id] = one
@@ -401,6 +429,34 @@ local function reduce(t)
     nTouched = 0
 end
 
+-- Family f's identity on unit u at t (L727): the member believed up with the latest application; with none up, the
+-- member the Cooldown Manager closed last within STRIKE_WIN (I.auraLateTo), so a late light re-opens it and strikes as
+-- for a one-aura item (cdm-verdict §2.7), even if its modelled duration ends inside that window; 0 none. A member that
+-- fell by a cast or the model is not named: the light may be another member's (a cast we did not see), so it opens
+-- nothing. Allocates nothing.
+local function member(f, u, t)
+    local U = I.auras
+    if u < 1 or u > U.n then
+        return 0
+    end
+    local e, ap, late, base = U.exp0[u], U.applied[u], I.auraLateTo, (u - 1) * I.AURA_UNIT
+    local list, best, bt, lj, lt = famJs[f], 0, 0, 0, 0
+    for n = 1, #list do
+        local j = list[n]
+        -- (4a review m5) an in-combat rebuild may shrink the set under this map
+        if j <= U.nAura then
+            if e[j] > t then
+                if ap[j] >= bt then
+                    best, bt = j, ap[j]
+                end
+            elseif late and late[base + j] >= t and late[base + j] > lt then
+                lj, lt = j, late[base + j]
+            end
+        end
+    end
+    return best > 0 and best or lj
+end
+
 -- One sweep (§3.2), under one pcall: each viewer's visibility and growth, then every slot's reading against what it is
 -- counted as. Un-count before count, so a raise between the two leaves the slot not counted, never counted twice.
 local function sweep(t)
@@ -436,6 +492,14 @@ local function sweep(t)
             sCd[s] = id or 0
         end
         local m = id ~= nil and Plain(api, rawget(item, "layoutIndex")) ~= nil and cdvToJ[id]
+        if m and m < 0 and ambFam[-m] > 0 then -- a family item: counted for the member believed up (L727)
+            local unit = Plain(api, rawget(item, "auraDataUnit"))
+            local fu = unit ~= nil and UNIT[unit] or sUnit[s] -- silent: the unit it last held for
+            local fj = member(ambFam[-m], fu, t)
+            if fj > 0 then
+                m = fj
+            end
+        end
         if m and m > 0 then -- configured and mapped to one aura (an ambiguous item counts for none)
             local aid = rawget(item, "auraInstanceID")
             if issecret(aid) or aid ~= nil then -- secret: only tested, never compared
@@ -587,18 +651,93 @@ function Q.Silent(j, u)
 end
 
 --- Whether aura j is mapped (alone) by some cooldownID and none of them lit this build (the snapshot's
---- mappedNeverLit; an item struck or suspended did light: provenU). Loops the map: debug only.
+--- mappedNeverLit; an item struck or suspended did light: provenU), and whether one maps it alone at all (the
+--- snapshot's presence-layout). Loops the map: debug only.
 function Q.NeverLit(j)
     local mapped = false
     for id, m in pairs(cdvToJ) do
         if m == j then
             if provenCd[id] or provenU[id] ~= 0 then
-                return false
+                return false, true
             end
             mapped = true
         end
     end
-    return mapped
+    return mapped, mapped
+end
+
+--- Where aura j is on the layout (the snapshot's presence-layout): "yes" a slot configured as the sweep counts it (a
+--- plain cooldownID and layoutIndex) holds an item mapped to j alone, "amb" only an ambiguous or family item naming j
+--- (no part of NeverLit's single-item proof), "?" no "yes" but some slot's cooldownID or layoutIndex is secret (it may
+--- be j's), "no" none. Loops the slots: debug only.
+function Q.OnLayout(j)
+    local api, on, sec = api0, "no", false
+    for s = 1, active and Q.nSlots or 0 do
+        local item = sFrame[s]
+        local rawId, rawIdx = rawget(item, "cooldownID"), rawget(item, "layoutIndex")
+        sec = sec or api.issecretvalue(rawId) or api.issecretvalue(rawIdx)
+        local id = Plain(api, rawId)
+        local m = id ~= nil and Plain(api, rawIdx) ~= nil and cdvToJ[id]
+        if m == j then
+            return "yes"
+        elseif m and m < 0 then
+            for _, x in ipairs(amb[-m]) do
+                if x == j then
+                    on = "amb"
+                end
+            end
+        end
+    end
+    return sec and "?" or on
+end
+
+local VNAME = { "E", "U", "B", "BB" }
+local ANS = { [NOT] = "-", [UP] = "up", [NONE] = "none", [STALE] = "stale" }
+local UNAME = { [0] = "-", "player", "target" }
+local function age(now, t) -- seconds before now, "-" none
+    return t > 0 and string.format("%.2f", now - t) or "-"
+end
+
+--- Appends one line per slot holding a cooldownID (plain or secret), viewer then slot order (L1075): the raw read now
+--- (cooldownID, layoutIndex, IsShown, the sweep's held test on auraInstanceID) beside what the sweep counts it as and
+--- its last light (sSeen), dark (sDark) and held unit (sUnit); resets clear the last three. `key` names an aura index.
+--- Debug only: allocates, and calls IsShown once per slot (the sweep never does: pcall, secret printed S).
+function Q.SnapshotSlots(out, now, key)
+    local api = api0
+    local issecret = api and api.issecretvalue
+    for v = 1, active and #VIEWERS or 0 do
+        for s = 1, Q.nSlots do
+            local item = sFrame[s]
+            local raw = sV[s] == v and rawget(item, "cooldownID")
+            local sec = issecret(raw)
+            if sec or raw then
+                local m = not sec and cdvToJ[raw]
+                local idx = rawget(item, "layoutIndex")
+                local aid = rawget(item, "auraInstanceID")
+                local ok, shown = pcall(item.IsShown or error, item)
+                shown = not ok and "?" or issecret(shown) and "S" or shown and "yes" or "no"
+                out[#out + 1] = string.format(
+                    "presence-slot %s s=%d i=%s cd=%s aura=%s shown=%s lit=%s ans=%s light=%s dark=%s unit=%s",
+                    VNAME[v],
+                    s,
+                    issecret(idx) and "S" or tostring(idx),
+                    sec and "S" or tostring(raw),
+                    -- a family item counted for the member believed up names it
+                    sec and "?"
+                        or not m and "-"
+                        or m > 0 and tostring(key[m])
+                        or sAns[s] == NOT and "amb"
+                        or "amb>" .. tostring(key[sJ[s]]),
+                    shown,
+                    (issecret(aid) or aid ~= nil) and "yes" or "no", -- secret: only tested, never compared
+                    sAmb[s] == 1 and "amb" or ANS[sAns[s]],
+                    age(now, sSeen[s]),
+                    age(now, sDark[s]),
+                    UNAME[sUnit[s]] or "-"
+                )
+            end
+        end
+    end
 end
 
 --- Builds the map and collects every viewer's children (out of combat), then sweeps once: the state now.

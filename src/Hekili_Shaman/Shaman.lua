@@ -217,12 +217,13 @@ local TOTEMS = {
         duration = { 300, 300, 300 },
     },
     tremor_totem = { element = "earth", ids = { 8143 }, cost = { 60 }, duration = { 300 } },
-    -- 10% of base mana (wowsims's CostPct). -- shortcut: the flat level-60 value (base mana 1520), less below 60; upgrade when the engine has percent-of-level-base-mana costs or after the launch in-game cost check
-    poison_cleansing_totem = { element = "water", ids = { 8166 }, cost = { 152 }, duration = { 300 } },
-    disease_cleansing_totem = { element = "water", ids = { 8170 }, cost = { 152 }, duration = { 300 } },
+    -- 10% of base mana (wowsims's CostPct): a fraction, priced from the mana meta's `base` (1520 at 60), which the
+    -- client's plain cost reads re-learn at the player's level (Families/Casts.lua I.LearnBases; L41)
+    poison_cleansing_totem = { element = "water", ids = { 8166 }, cost = { 0.1 }, duration = { 300 } },
+    disease_cleansing_totem = { element = "water", ids = { 8170 }, cost = { 0.1 }, duration = { 300 } },
     sentry_totem = { element = "air", ids = { 6495 }, cost = { 65 }, duration = { 300 } },
-    -- 6% of base mana, 45 s, 15 s cooldown. -- shortcut: the flat level-60 value (base mana 1520), less below 60; upgrade when the engine has percent-of-level-base-mana costs or after the launch in-game cost check
-    earthbind_totem = { element = "earth", ids = { 2484 }, cost = { 91 }, duration = { 45 }, cooldown = 15 },
+    -- 6% of base mana (a fraction, as the cleansers'), 45 s, 15 s cooldown
+    earthbind_totem = { element = "earth", ids = { 2484 }, cost = { 0.06 }, duration = { 45 }, cooldown = 15 },
     stoneclaw_totem = {
         element = "earth",
         ids = { 5730, 6390, 6391, 6392, 10427, 10428 },
@@ -230,8 +231,8 @@ local TOTEMS = {
         duration = { 15, 15, 15, 15, 15, 15 },
         cooldown = 30,
     },
-    -- 6% of base mana, 45 s, 15 s cooldown. -- shortcut: the flat level-60 value (base mana 1520), less below 60; upgrade when the engine has percent-of-level-base-mana costs or after the launch in-game cost check
-    grounding_totem = { element = "air", ids = { 8177 }, cost = { 91 }, duration = { 45 }, cooldown = 15 },
+    -- 6% of base mana (a fraction, as the cleansers'), 45 s, 15 s cooldown
+    grounding_totem = { element = "air", ids = { 8177 }, cost = { 0.06 }, duration = { 45 }, cooldown = 15 },
 }
 
 -- The buff each totem leaves on us (the aura keys below). A summon applies its own for the totem's life and takes down
@@ -311,6 +312,8 @@ local function summon(key)
     end
 end
 
+-- Totemic Focus (16173, aura 108 misc 14: -5% a rank on mask 0x20081018, every totem here; wowsims pin
+-- spells_auto_gen.go:13198): on the fraction too, so the client's cut cost read teaches the true base (I.LearnBases).
 local function totemAbility(key)
     local t = TOTEMS[key]
     return {
@@ -324,7 +327,6 @@ local function totemAbility(key)
         gcd = "totem",
 
         spend = function()
-            -- Totemic Focus 16173: -5% a rank on every totem
             return byRank(t.cost, t.ids) * (1 - 0.05 * talent.totemic_focus.rank)
         end,
         spendType = "mana",
@@ -420,11 +422,27 @@ local function costed(costs, ids, convection, focus)
     end
 end
 
--- Chain Lightning's `now` or `handler`: spends Revelation (one charge: the next Lightning Bolt or Chain Lightning) and
--- Nature's Swiftness.
-local function revealed()
+-- Revelation's charge goes to a Lightning Bolt or Chain Lightning only when it was up at the cast's start: one gained
+-- mid-cast (the last bolt landing) survives the cast and the next Earth Shock takes it (wowsims: shaman_elemental.log
+-- 29.19 -> 30.90, 137.44 -> 139.15, 165.87 -> 167.59; L486). The belief's `now` reads the cast's start (`cast_start`;
+-- `instant`: none seen), the sim's `handler` its casting buff (up through a hard cast's CAST_FINISH, down for an
+-- instant). Each test is written out in its function: a helper would run outside the handler's environment.
+-- Chain Lightning's `now` (`belief`) or `handler`: spends Revelation (one charge: the next Lightning Bolt or Chain
+-- Lightning) and Nature's Swiftness.
+local function revealed(belief)
+    if belief then
+        return function()
+            if instant or buff.revelation.applied <= cast_start then
+                removeBuff("revelation")
+            end
+            removeBuff("natures_swiftness")
+            removeDebuff("target", "stormstrike")
+        end
+    end
     return function()
-        removeBuff("revelation")
+        if not buff.casting.up or buff.revelation.applied <= buff.casting.applied then
+            removeBuff("revelation")
+        end
         removeBuff("natures_swiftness")
         removeDebuff("target", "stormstrike")
     end
@@ -500,8 +518,11 @@ spec:RegisterResource(
             mp5 = function()
                 return state.spec.elemental and 26.13 or 12.8
             end,
-            share = function() -- Mindfulness's rank (the belief reads it after its talent walk), never the spec
-                return MINDFULNESS[talent.mindfulness.rank] or 0
+            -- Mindfulness's rank (the belief reads it after its talent walk), never the spec; + 8% with the Polished
+            -- Driftwood Icon relic (its equip aura 1248756: aura 134 +8, wowsims item_totems.go:13-20)
+            share = function()
+                return (MINDFULNESS[talent.mindfulness.rank] or 0)
+                    + (set_bonus.polished_driftwood_icon > 0 and 0.08 or 0)
             end,
         },
         base = 1520, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
@@ -724,7 +745,9 @@ spec:RegisterAbilities({
         -- a pack reads it.
         now = function()
             removeBuff("maelstrom_weapon")
-            removeBuff("revelation")
+            if instant or buff.revelation.applied <= cast_start then -- a charge up at the start (`revealed`)
+                removeBuff("revelation")
+            end
             removeBuff("natures_swiftness")
             if debuff.stormstrike.up then
                 applyDebuff("target", "stormstrike", min(2, debuff.stormstrike.remains))
@@ -732,7 +755,9 @@ spec:RegisterAbilities({
         end,
         handler = function()
             removeBuff("maelstrom_weapon")
-            removeBuff("revelation")
+            if not buff.casting.up or buff.revelation.applied <= buff.casting.applied then
+                removeBuff("revelation")
+            end
             removeBuff("natures_swiftness")
             if debuff.stormstrike.up then
                 applyDebuff("target", "stormstrike", min(2, debuff.stormstrike.remains))
@@ -761,7 +786,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(CHAIN_LIGHTNING),
 
-        now = revealed(),
+        now = revealed(true),
         handler = revealed(),
     },
 
@@ -841,8 +866,8 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         -- wowsims spell data, absent from DB2 (wowdb spell 17364 costs 125 flat): 8% of base mana, 121 at level 60
-        -- (its log). shortcut: 121 at every level; below 60 it is less. IN-GAME CHECK: Stormstrike's cost.
-        spend = 121,
+        -- (its log): a fraction of the mana meta's `base`, which the client's plain cost read re-learns below 60.
+        spend = 0.08,
         spendType = "mana",
 
         startsCombat = true,
@@ -1182,6 +1207,8 @@ spec:RegisterTalents({
 
 -- Burning Totem (272433, the relic; wowsims item_totems.go:70-77): +3 s on Flame Shock, read as `set_bonus.burning_totem`.
 spec:RegisterGear("burning_totem", 272433)
+-- Polished Driftwood Icon (249398, the relic): 8% of the spirit regen while casting (the mana `fsr` share).
+spec:RegisterGear("polished_driftwood_icon", 249398)
 
 -- Improved Stormstrike's rank effect 2 (wowsims talents_enhancement.go:218-231): a dodge or parry of an attack on us
 -- resets Stormstrike's cooldown. The rows are the victim side's (plain live); the reset stands from the dodge until the

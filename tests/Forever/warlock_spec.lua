@@ -44,6 +44,22 @@ local KIT = {
     summon_felhunter = { { 691 }, 1, 0, "spell" },
     -- no cost, cooldown or GCD row (DB2; wowsims: "no cast time, cost or cooldown")
     demonic_sacrifice = { { 18788 }, 0, 0, "off" },
+    -- the rest of the kit (coverage lane; the pin's spell rows): Fear, Howl of Terror, Banish, the wards and armors, the
+    -- curses, Inferno, Fel Domination (300 s, no GCD row)
+    fear = { { 5782, 6213, 6215 }, 0.15, 0, "spell" },
+    howl_of_terror = { { 5484, 17928 }, 200, 40, "spell" },
+    banish = { { 710, 18647 }, 200, 0, "spell" },
+    shadow_ward = { { 6229, 11739, 11740, 28610 }, 320, 30, "spell" },
+    inferno = { { 1122 }, 1, 3600, "spell" }, -- 100% of base mana (CostPct 100)
+    demon_skin = { { 687, 696 }, 120, 0, "spell" },
+    demon_armor = { { 706, 1086, 11733, 11734, 11735 }, 1580, 0, "spell" },
+    detect_invisibility = { { 132, 2970, 11743 }, 140, 0, "spell" },
+    curse_of_tongues = { { 1714, 11719 }, 110, 0, "spell" },
+    curse_of_exhaustion = { { 18223 }, 0.08, 0, "spell" },
+    fel_domination = { { 18708 }, 0, 300, "off" },
+    subjugate_demon = { { 1098, 11725, 11726 }, 700, 0, "spell" }, -- 3 s cast, a Soul Shard; 300 s is its duration
+    health_funnel = { { 755, 3698, 3699, 3700, 11693, 11694, 11695 }, 0, 0, "spell" }, -- health, not mana (unmodelled)
+    drain_mana = { { 5138, 6226, 11703, 11704 }, 310, 0, "spell" },
 }
 
 local function idsOf(a)
@@ -121,7 +137,7 @@ describe("Forever Warlock", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(29, n)
+        assert.are.equal(43, n)
         assert.are.equal("cooldowns", w.abilities.amplify_curse.toggle)
         for _, key in ipairs({
             "summon_imp",
@@ -298,9 +314,24 @@ describe("Forever Warlock", function()
     it("keeps one Curse and one Bane on the target, Amplify Curse spent by Agony and Weakness", function()
         local A = w.abilities
         for _, case in ipairs({
-            { "curse_of_the_elements", { "curse_of_recklessness", "curse_of_weakness" } },
-            { "curse_of_recklessness", { "curse_of_the_elements", "curse_of_weakness" } },
-            { "curse_of_weakness", { "curse_of_the_elements", "curse_of_recklessness", "amplify_curse" } },
+            {
+                "curse_of_the_elements",
+                { "curse_of_recklessness", "curse_of_weakness", "curse_of_tongues", "curse_of_exhaustion" },
+            },
+            {
+                "curse_of_recklessness",
+                { "curse_of_the_elements", "curse_of_weakness", "curse_of_tongues", "curse_of_exhaustion" },
+            },
+            {
+                "curse_of_weakness",
+                {
+                    "curse_of_the_elements",
+                    "curse_of_recklessness",
+                    "curse_of_tongues",
+                    "curse_of_exhaustion",
+                    "amplify_curse",
+                },
+            },
             { "bane_of_agony", { "bane_of_doom", "amplify_curse" } },
             { "bane_of_doom", { "bane_of_agony" } },
             { "corruption", {} },
@@ -473,12 +504,12 @@ describe("Forever Warlock", function()
         "registers the Warlock's remaining own auras (Soul Harvest, Bane of Havoc, demon and armor auras, channels)",
         function()
             local want = {
-                soul_harvest = { 1242853, 10 },
+                soul_harvest = { 1242853, 10, { 437032 } }, -- the talent's id: the Cooldown Manager links it
                 fel_domination = { 18708, 15 },
                 soul_link = { 19028, 3600, 25228 },
                 demonic_knowledge = { 412732, 3600 },
                 master_demonologist = { 23785, 3600 },
-                demon_armor = { 11735, 1800 },
+                demon_armor = { 11735, 1800, { 706, 1086, 11733, 11734 } },
                 blood_pact = { 11767, 3600 },
                 hellfire_channel = { 11684, 15 },
                 rain_of_fire_channel = { 11678, 8 },
@@ -492,6 +523,49 @@ describe("Forever Warlock", function()
             end
         end
     )
+
+    it("carries the ids the Cooldown Manager links on the coverage auras", function()
+        local want = {
+            bane_of_havoc = { 1225228, 1324473 },
+            aftermath = { 18118, 18119 },
+            fear = { 1324448, 1324451, 1324453 },
+            howl_of_terror = { 5484, 17928 },
+            death_coil = { 1324459 },
+            banish = { 1324462, 1324463 },
+            demon_skin = { 687, 696 },
+            detect_invisibility = { 132, 2970, 11743 },
+            shadow_ward = { 6229, 11739, 11740, 28610 },
+            subjugate_demon = { 1324468 },
+            curse_of_tongues = { 1714, 11719 },
+            curse_of_exhaustion = { 18223 },
+        }
+        for key, ids in pairs(want) do
+            assert.are.same(ids, idsOf(w.auras[key]), key)
+        end
+    end)
+
+    it("shortens a summon 5.5 s and halves its cost under Fel Domination, and spends the buff", function()
+        local A = w.abilities
+        local e = env({ master_summoner = 2 })
+        e.buff = buffs({ fel_domination = 1 })
+        assert.are.same({ 0.5, 0.1 }, {
+            near(ld.run(A.summon_imp.cast, e)),
+            near(ld.run(A.summon_succubus.spend, e)),
+        })
+        e = env({})
+        e.buff = buffs({ fel_domination = 1 })
+        assert.are.same({ 4.5, 0.4 }, {
+            near(ld.run(A.summon_imp.cast, e)),
+            near(ld.run(A.summon_imp.spend, e)),
+        }) -- 10 - 5.5 s; 0.8 x (1 - 0.5)
+        e = env({})
+        e.summonPet, e.dismissPet = function() end, function() end
+        ld.run(A.summon_imp.handler, e)
+        assert.are.equal("fel_domination", e.removed[1])
+        e = env({})
+        ld.run(A.fel_domination.handler, e)
+        assert.are.same({ "fel_domination" }, e.applied)
+    end)
 
     it("brands the target from Searing Pain, 2 charges a rank of Demonic Brand", function()
         local sp = w.abilities.searing_pain
@@ -545,9 +619,59 @@ describe("Forever Warlock", function()
         assert.is_nil(lt.spend)
     end)
 
-    it("channels Drain Life, Drain Soul, Wrack, Rain of Fire and Hellfire, unhasted; Wrack's debuff", function()
+    -- The stat split (L971, accuracy-085 item 4), worked example 2: a +40 Spirit buff up at the pre-pull read (Spirit
+    -- 261 = 221 + 40) falls mid-fight; the belief's Spirit (VS.Stat, the `now` context's `stat`) drops by exactly its
+    -- part at once, and Life Tap's Spirit term with it. A generic aura: no aura the Warlock pack registers moves Spirit.
+    it("taps the Spirit a buff's fall in combat leaves, at once (L971)", function()
+        local vload = require("Game.State.helpers.load")
+        local fake = require("Game.State.helpers.fake_api")
+        local fs = require("Game.State.helpers.fake_spec")
+        local api = fake.new()
+        local ctl = api.ctl
+        local ns = vload.module()
+        local VS, I = ns.VirtualState, ns.VirtualStateInternal
+        local def = fs.def(fs.new(9))
+        def.auras[1] = { key = "spender_a", id = fs.SPENDER_A, duration = 120, stats = { [5] = 40 } }
+        I.Build(def, 90)
+        api.UnitStat = function(_, i)
+            return i, i == 5 and 261 or 0, 0, 0
+        end
+        I.AuraModel(1, 1, 90, 110, 1, 90, 0) -- up at the read, runs out at 110
+        ctl.now = 95
+        VS.Start(api)
+        ctl.now = 99
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        I.Sources.Flush()
+        I.Fold(99)
+        local lt = w.abilities.life_tap
+        w.game.known[11689] = true
+        local function tap(t)
+            local e = env({ improved_life_tap = 2 })
+            function e.stat(name, arg)
+                return VS.Stat(name, arg, t)
+            end
+            ld.run(lt.now, e)
+            return e.gained[1][1]
+        end
+        assert.are.equal(822, tap(100)) -- (424 + 261) x 1.2
+        assert.are.equal(774, tap(111)) -- (424 + 221) x 1.2: the 40 went with the buff
+    end)
+
+    it("starts combat with Banish (a hostile target's)", function()
+        assert.is_true(w.abilities.banish.startsCombat)
+    end)
+
+    it("channels Drain Life, Drain Soul, Wrack, Rain of Fire, Hellfire and the funnel and drain, unhasted", function()
         local out = {}
-        for _, key in ipairs({ "drain_life", "drain_soul", "wrack", "rain_of_fire", "hellfire" }) do
+        for _, key in ipairs({
+            "drain_life",
+            "drain_soul",
+            "wrack",
+            "rain_of_fire",
+            "hellfire",
+            "health_funnel",
+            "drain_mana",
+        }) do
             local a = w.abilities[key]
             out[#out + 1] = { key, a.channeled, a.cast, a.tick_time }
             assert.is_nil(a.handler, key) -- a channel's handler never runs in Hekili's simulation
@@ -558,6 +682,8 @@ describe("Forever Warlock", function()
             { "wrack", true, 6, 1 },
             { "rain_of_fire", true, 8, 2 },
             { "hellfire", true, 15, 1 },
+            { "health_funnel", true, 10, 1 },
+            { "drain_mana", true, 5, 1 },
         }, out)
         for _, field in ipairs({ "now", "start" }) do
             local e = env()
@@ -602,12 +728,12 @@ describe("Forever Warlock", function()
             for _, field in ipairs({ "now", "handler" }) do
                 local e = run(field)
                 assert.are.same(
-                    { { "imp" }, { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
+                    { { "imp" }, { "fel_domination", "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
                     { e.summoned, e.removed },
                     field
                 )
                 e = run(field, { demonic_pact = 1 })
-                assert.are.same({ { "imp" }, { "burning_shadow" } }, { e.summoned, e.removed }, field)
+                assert.are.same({ { "imp" }, { "fel_domination", "burning_shadow" } }, { e.summoned, e.removed }, field)
                 -- the simulation dismisses only the demon out first (wowsims summon.go: the same demon included)
                 assert.are.same({ "-succubus", "imp" }, run(field, nil, "succubus").summoned, field)
                 assert.are.same({ "-imp", "imp" }, run(field, nil, "imp").summoned, field)
@@ -774,6 +900,109 @@ describe("Forever Warlock through the engine", function()
             assert.is_truthy(a, c[1])
             assert.are.equal(t + c[4], a.est, c[1])
         end
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Hotfix 0.8.6 (L1239, fix round 1 I2): a full RESIST or IMMUNE of our latest cast undoes its target write as an
+    -- avoid does (Rows.lua UNLANDED): a resisted first Corruption goes down in both layers; a resisted refresh leaves
+    -- the earlier application running with its own remains (the core's `missable` hook no longer matches it).
+    it("drops a resisted first Corruption; a resisted refresh keeps the earlier application's remains", function()
+        local H = headless.new({ character = character() })
+        local S, VS, ctl = H.Hekili.State, H.ns.VirtualState, H.ctl
+        ctl.inRange.target, ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        local function corruption(act)
+            t = t + 2
+            ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. t, 25311)
+            H.Fire("UNIT_COMBAT", "target", act, "", act == "WOUND" and 100 or 0, 32)
+            assert.is_true(headless.cycle(H, t + 0.1))
+            assert.is_true(headless.cycle(H, t + 0.5))
+            S.reset("Primary", true)
+            return S.debuff.corruption.up, VS.Aura("target", 172, t + 0.5) ~= nil
+        end
+        assert.are.same({ false, false }, { corruption("RESIST") })
+        assert.are.same({ false, false }, { corruption("IMMUNE") })
+        assert.are.same({ true, true }, { corruption("WOUND") })
+        local expires = t + 18
+        assert.are.same({ true, true }, { corruption("RESIST") }) -- the refresh resisted: the earlier one runs
+        assert.is_true(math.abs(S.debuff.corruption.remains - (expires - (t + 0.5))) < 0.01)
+        assert.are.equal(expires, VS.Aura("target", 172, t + 0.5).est)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Review M1: a row past the cast's own frame (0.15 s: a RESIST or EVADE is ours only inside the cast window, 0.2 s,
+    -- Kinds.lua; a later one is background) still takes the resisted Corruption down, and the core's miss stamp is the
+    -- cast's own time, not the row's. An EVADE is undone by no belief write (Rows.lua REACTED), so there the core's
+    -- stamp match alone takes it down.
+    it("drops a Corruption resisted or evaded by a row 0.15 s after the cast; the miss stamp is the cast's", function()
+        local H = headless.new({ character = character() })
+        local S, VS, ctl = H.Hekili.State, H.ns.VirtualState, H.ctl
+        local spec = H.Hekili.Class.specs[H.Hekili.State.spec.id]
+        ctl.inRange.target, ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        local function corruption(act)
+            t = t + 20
+            ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. t, 25311)
+            assert.is_true(headless.cycle(H, t + 0.1))
+            S.reset("Primary", true)
+            assert.is_true(S.debuff.corruption.up, act) -- before the row: up
+            ctl.now = t + 0.15
+            H.Fire("UNIT_COMBAT", "target", act, "", 0, 32)
+            assert.is_true(headless.cycle(H, t + 0.4))
+            S.reset("Primary", true)
+            assert.are.equal(t, spec.missedAt.corruption, act)
+            return S.debuff.corruption.up, VS.Aura("target", 172, t + 0.4) ~= nil
+        end
+        assert.are.same({ false, false }, { corruption("RESIST") })
+        assert.are.same({ false, true }, { corruption("EVADE") }) -- the belief keeps it; the core's stamp drops it
+        assert.are.same({}, H.errors)
+    end)
+
+    -- The stat split's shared buffs (L971): a Priest's Divine Spirit on a Warlock. Hekili_Shared registers it for every
+    -- class, its Spirit by the aura's own spell ID (27841, rank 4: +40; wowsims spells_auto_gen.go aura 29, misc 4). Up
+    -- at the out-of-combat read (Spirit 261 = 221 + 40), it falls mid-fight: the belief's Spirit drops by its 40 at
+    -- once, and Life Tap's mana with it.
+    it("taps less once another Priest's Divine Spirit falls in combat (L971)", function()
+        local H = headless.new({ character = character() })
+        assert.are.same({}, H.loadErrors)
+        local VS, ctl = H.ns.VirtualState, H.ctl
+        local t = ctl.now + 1
+        ctl.now, ctl.stats[5] = t, 261
+        ctl.auras.player.HELPFUL[1] =
+            { spellId = 27841, expirationTime = t + 20, applications = 0, sourceUnit = "party1" }
+        H.Fire("UNIT_AURA", "player")
+        H.Fire("UNIT_STATS", "player")
+        assert.is_true(headless.cycle(H, t + 0.1))
+        ctl.now, ctl.combat = t + 1, true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.is_true(headless.cycle(H, t + 1.1))
+        local _, w = character()
+        w.game.known[11689] = true
+        local function tap(at)
+            local e = ld.env(w)
+            e.min, e.max = math.min, math.max
+            e.talent.improved_life_tap = { rank = 2, enabled = true }
+            function e.stat(name, arg)
+                return VS.Stat(name, arg, at)
+            end
+            ld.run(w.abilities.life_tap.now, e)
+            return e.gained[1][1]
+        end
+        assert.are.equal(822, tap(t + 10)) -- (424 + 261) x 1.2
+        ctl.now, ctl.auras.player.HELPFUL[1] = t + 20.5, nil -- it ran out at t + 20
+        H.Fire("UNIT_AURA", "player")
+        assert.is_true(headless.cycle(H, t + 20.6))
+        assert.are.equal(774, tap(t + 20.6)) -- (424 + 221) x 1.2: the 40 went with the buff
         assert.are.same({}, H.errors)
     end)
 

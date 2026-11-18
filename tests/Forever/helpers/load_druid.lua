@@ -39,6 +39,8 @@ function M.load(vs, file, class)
         base = { 0, 0 }, -- VS.SwingBase: each hand's unhasted speed (0: no plain read yet)
         now = 0, -- GetTime()
         row = {}, -- the combat-log row CombatLogGetCurrentEventInfo answers
+        exists = {}, -- UnitExists: [unit] = true
+        dead = {}, -- UnitIsDead: [unit] = true
     }
     local w = { game = game, abilities = {}, auras = {}, resources = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { buff = {}, swings = {} }
@@ -86,6 +88,12 @@ function M.load(vs, file, class)
         end,
         GetTime = function()
             return game.now
+        end,
+        UnitExists = function(unit)
+            return game.exists[unit] == true
+        end,
+        UnitIsDead = function(unit)
+            return game.dead[unit] == true
         end,
         CombatLogGetCurrentEventInfo = function()
             return unpack(game.row, 1, 24)
@@ -230,6 +238,7 @@ function M.env(w)
     e.set_bonus, e.equipped = default(0), default(false) -- no gear headless (State.lua's)
     e.level = 60 -- Hekili's state.level (UnitLevel), the belief's `level` (Families/Now.lua)
     e.victim_channel = false -- the belief's, outside a "kill" reaction (Families/Now.lua)
+    e.instant, e.cast_start = false, 0 -- the belief's `now`-only names, as Families/Now.lua seeds them
     e.pairs, e.ipairs = pairs, ipairs -- Hekili's state has them (State.lua)
     e.min = math.min -- state.min (State.lua)
     -- no duration: the aura's own duration function (the belief's `now` does the same)

@@ -80,6 +80,40 @@ describe("player start", function()
         )
     end)
 
+    -- L967 (1): a buff, food or talent out of combat changes a stat, the spell power or a rating with no UNIT_DAMAGE or
+    -- UNIT_ATTACK_POWER; the cache follows each event (all three on Forever: wow-ui-source's forever branch), so a pre-pull
+    -- `now` (the belief's cache) and the simulation (the client's plain read) price one amount.
+    it("re-reads the stats out of combat on UNIT_STATS, SPELL_POWER_CHANGED and COMBAT_RATING_UPDATE", function()
+        local ctl = api.ctl
+        local spirit, power, rating = 100, 300, 20
+        api.UnitStat = function(_, i)
+            return i * 10, i == 5 and spirit or i, 0, 0
+        end
+        api.GetSpellBonusDamage = function()
+            return power
+        end
+        api.GetCombatRating = function()
+            return rating
+        end
+        VS.Start(api)
+        assert.are.equal(100, (select(2, VS.Stat("UnitStat", 5))))
+        spirit = 140 -- a Spirit buff before the pull
+        ctl.Fire("UNIT_STATS", "target") -- another unit: no read
+        assert.are.equal(100, (select(2, VS.Stat("UnitStat", 5))))
+        ctl.Fire("UNIT_STATS", "player")
+        assert.are.equal(140, (select(2, VS.Stat("UnitStat", 5))))
+        power = 350
+        ctl.Fire("SPELL_POWER_CHANGED")
+        assert.are.equal(350, (VS.Stat("GetSpellBonusDamage", 7)))
+        rating = 25
+        ctl.Fire("COMBAT_RATING_UPDATE")
+        assert.are.equal(25, (VS.Stat("GetCombatRating", api.CR_HASTE_MELEE)))
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        spirit = 200 -- secret in combat: the cache keeps the last plain read
+        ctl.Fire("UNIT_STATS", "player")
+        assert.are.equal(140, (select(2, VS.Stat("UnitStat", 5))))
+    end)
+
     it("reads the gear facts a pack's function names, at the start and at each change", function()
         local ctx, ctl = I.nowCtx, nil
         api, ctl = fake.new()

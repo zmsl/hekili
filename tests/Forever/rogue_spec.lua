@@ -787,6 +787,33 @@ describe("Forever Rogue through the engine", function()
         assert.is_false(S.buff.deadly_poison.up)
         assert.are.same({}, H.errors)
     end)
+
+    -- Player report 1 (hotfix 0.8.6, L1239): Ghostly Strike's next-Garrote buff is its landing's; its `onAvoid` takes
+    -- it back on our own dodged, parried or missed strike, so Garrote and Ambush stay unusable out of stealth.
+    it("makes Garrote and Ambush usable after a landed Ghostly Strike, not after a missed one", function()
+        local S, VS = H.Hekili.State, H.ns.VirtualState
+        H.ctl.inRange.target, H.ctl.level.target, H.ctl.power[3] = true, 60, 100
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        local function strike(act)
+            t = t + 25 -- past its 20 s cooldown and the last strike's 7 s buff
+            H.ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. t, 14278)
+            H.Fire("UNIT_COMBAT", "target", act, "", act == "WOUND" and 100 or 0, 1)
+            assert.is_true(headless.cycle(H, t + 0.1))
+            S.reset("Primary", true)
+            local up = VS.Aura("player", 1329326, t + 0.1) ~= nil
+            return up, (S:IsUsable("garrote")), (S:IsUsable("ambush"))
+        end
+        assert.are.same({ true, true, true }, { strike("WOUND") })
+        for _, act in ipairs({ "DODGE", "PARRY", "MISS" }) do
+            assert.are.same({ false, false, false }, { strike(act) }, act)
+        end
+        assert.are.same({}, H.errors)
+    end)
 end)
 
 -- L90: combo points are bound to one target (owner probes 2026-11-06, memory forever-combo-points-plain). The pool
@@ -914,6 +941,81 @@ describe("Forever Rogue Poised under a read in the cast's frame", function()
         H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 1752)
         assert.is_true(headless.cycle(H, t + 0.1))
         assert.is_nil(VS.Aura("player", 1328826, t + 0.1))
+        assert.are.same({}, H.errors)
+    end)
+end)
+
+-- Shank rank 2 (user snapshot v0.8.0, level 46 Combat): Shank's ranks are two spells, the level-44 one superseding the
+-- level-24 one, so once rank 2 is learned the client no longer knows 1329283 (the ability's `id`) and answers its
+-- cooldown not active and its usability false. The core asks by `id`; the facade must ask the client by the known rank.
+describe("Forever Rogue Shank after learning rank 2", function()
+    local R1, R2 = 1329283, 1329549
+
+    it("reads Shank's cooldown and usability by the known rank, not the superseded rank 1", function()
+        local SECRET = require("Game.State.helpers.fake_api").SECRET
+        local C = require("Forever.helpers.rogue_world").Combat
+        local ch = C.character()
+        for i = #ch.known, 1, -1 do -- a level-24 rogue: rank 1 only
+            if ch.known[i] == R2 then
+                table.remove(ch.known, i)
+            end
+        end
+        local H = headless.new({ character = ch, pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        local S, F = H.Hekili.State, H.ns.Facade
+        H.ctl.inRange.target, H.ctl.level.target, H.ctl.power[3] = true, 60, 100
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        -- level 44: rank 2 learned, superseding rank 1
+        H.ctl.known[R1], H.ctl.known[R2] = nil, true
+        H.Fire("SPELLS_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        t = t + 1
+        assert.is_true(headless.cycle(H, t))
+        -- a Shank: the client's cooldown runs on the rank it cast (times secret in combat), rank 1 reads not active
+        H.ctl.now = t
+        H.ctl.cooldown[R2] = { isActive = true, isOnGCD = false, startTime = SECRET, duration = SECRET }
+        H.ctl.usable[R2] = { true, false }
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", R2)
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        t = t + 1
+        assert.is_true(headless.cycle(H, t))
+        assert.is_true(F.C_Spell.GetSpellCooldown(R1).isActive)
+        assert.is_true((F.C_Spell.IsSpellUsable(R1)))
+        S.reset("Primary", true)
+        assert.is_true(S.cooldown.shank.remains > 5, tostring(S.cooldown.shank.remains))
+        assert.are.same({}, H.errors)
+    end)
+
+    -- The pack's own rank list (its knownRank memo, cleared at SPELLS_CHANGED): 15 energy at rank 1, 25 at rank 2.
+    it("gives rank 2's energy in the sim's handler once rank 2 is learned", function()
+        local C = require("Forever.helpers.rogue_world").Combat
+        local ch = C.character()
+        for i = #ch.known, 1, -1 do
+            if ch.known[i] == R2 then
+                table.remove(ch.known, i)
+            end
+        end
+        local H = headless.new({ character = ch, pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        local S, shank = H.Hekili.State, H.Hekili.Class.abilities.shank
+        H.ctl.power[3] = 20 -- out of combat: plain, and room for the gain
+        local t = H.ctl.now + 1
+        local function gained()
+            t = t + 1
+            assert.is_true(headless.cycle(H, t))
+            S.reset("Primary", true)
+            local e0 = S.energy.current
+            shank.handler()
+            return S.energy.current - e0
+        end
+        local fos = 3 * S.talent.flash_of_steel.rank
+        assert.are.equal(15 + fos, gained())
+        H.ctl.known[R1], H.ctl.known[R2] = nil, true
+        H.Fire("SPELLS_CHANGED")
+        assert.are.equal(25 + fos, gained())
         assert.are.same({}, H.errors)
     end)
 end)

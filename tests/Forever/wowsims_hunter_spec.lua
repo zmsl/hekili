@@ -74,6 +74,10 @@ local REPLAY = { hidden = { [1310726] = true } }
 -- -> 4.6 with the recipe's leveling Arcane Shot (wowsims's non-hawk line, below Summon Hawk's 25). Survival's live bars
 -- run at 11 yd with a ranged weapon (R63, W.SurvivalRanged): at melee the shots sit inside their 8-35 band and Raptor
 -- Strike is off the GCD, so the GCD-idle metric read 116.8 s at L10; its loop and replay worlds stay melee.
+-- Re-floored (0.8.5 accuracy-timing item 1, controller-approved 2026-11-14): MM L40 7.6 -> 9.4, SV L60 14.0 -> 15.4,
+-- SV Melee L40 10.0 -> 10.2. Cause: the R41 mana-dry regen wait from a lower pool. Serpent Sting now lands after its
+-- travel time (W.distance / 40, belief and world), which moves its recasts and so the one 120 s fight's mana timeline:
+-- the worst streak dries out at 12.1 (was 14.5), 1.8 (14.7) and 1.8 (4.8) mana and waits for Arcane Shot's cost.
 local PACKS = {
     {
         "hunter_beast_mastery",
@@ -97,7 +101,10 @@ local PACKS = {
         "Marksmanship",
         "Marksmanship (wowsims.com)",
         0.98,
-        { [10] = 6, [40] = 7.6, [60] = 15.4 },
+        -- live L40 7.6 -> 10.0 (Lane R2, controller-accepted): Resourcefulness opens only at an ability's crit now
+        -- (the export's crit share), so the fight's worst OOM wait can start with it down: 5 s at 0 regen while casting,
+        -- then the outside rate to the next shot's cost; the belief tracks the truth within 3 mana throughout (traced)
+        { [10] = 6, [40] = 10.0, [60] = 15.4 },
         -- 0 -> 1.0 (1.00 measured = 3 flips; same with the v0.6.2 range fix): traced per tick (131, 429, 469): one-tick
         -- bounce of the filler (wing_clip, immolation_trap) to arcane_shot / strider_kick, which the log casts 1-2 ticks
         -- later: the replay's no-press-exclusion lead (BM's note)
@@ -111,10 +118,22 @@ local PACKS = {
         -- 5 misses are Serpent Sting: the belief starts its debuff at the cast, about 0.33 s before it lands (central belief
         -- work, no landing hook; not worked around); the 5th is the strike ordering (strider_kick -> multi_shot), the walk
         -- the replay cannot forecast (omitted weave waits, CN19). Ledger L160.
-        0.94,
-        { [10] = 6, [40] = 7.6, [60] = 14.0 },
+        -- 0.94 -> 0.93 (0.935 of 92 measured; flicker-085 P1, L755 / ruling L960: a mana pool with no tick seen pads
+        -- nothing, so the waits run less late; loop Survival wait error +.19 -> +.13 s, est - truth unchanged): one more
+        -- miss, wowsims casts Mongoose Bite where ours shows Strider Kick (mana) at a near-tie with Mongoose Bite's
+        -- cooldown.
+        -- 0.93 -> 0.96 (0.967 of 92 measured on integ/0.8.5-w2, the merged tree): the Serpent Sting debuff now starts at
+        -- its landing (startsAtLanding, L1103) and flicker-085 and the timing merges are in (L1037); 3 misses remain.
+        0.96,
+        -- live L40 7.6 -> 10.0, L60 14.0 -> 15.4 (Lane R2, controller-accepted): as Marksmanship's (above); at L60
+        -- the OOM wait runs to a 190-mana shot with the aura down
+        { [10] = 6, [40] = 10.0, [60] = 15.4 },
         -- 2.4 -> 0.7 (0.67 measured): R51's weave position bounces (above) are gone with the new weave
-        0.7,
+        -- 0.7 -> 1.1 (1.00 measured, 3 flips, was 2; flicker-085 P1, L755 / ruling L960: a mana pool with no tick seen
+        -- pads nothing, at the gap BT cost crossing; not traced per tick).
+        -- 1.1 -> 1.0 (1.00 measured on integ/0.8.5-w2, the merged tree, L1037/L1103): the Serpent Sting debuff at its
+        -- landing, flicker-085 and the timing merges are all in; one flip a minute remains.
+        1.0,
         "SurvivalRanged",
     },
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): new rows, first measured on this lane (R6; the
@@ -187,7 +206,7 @@ local PACKS = {
         "Survival Melee (wowsims.com)",
         0.94, -- 0.942 (86)
         -- in melee 116.8 / 7.2 / 8.6: the live bars run W.SurvivalMeleeRanged (R63, hunter_world.lua): 4.4 / 10.0 / 15.4
-        { [10] = 6, [40] = 10.0, [60] = 15.4 },
+        { [10] = 6, [40] = 10.2, [60] = 15.4 },
         0, -- 0.00
         "SurvivalMeleeRanged",
     },

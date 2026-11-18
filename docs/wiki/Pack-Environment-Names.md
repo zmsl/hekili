@@ -4,7 +4,7 @@ Type: Reference
 Audience: Lua developers
 Prerequisites: [Pack API reference](Pack-API-Reference).
 -->
-A content function, such as an ability's `now` or `handler`, runs with an **environment** the core sets, so a bare name inside it, like `buff` or `gain`, answers from that environment rather than from Lua's globals. There are two environments: the simulated `state`, where `handler`, field functions, state expressions and hooks run, and the belief's `now` context, where `now`, `onCrit`, `onLand`, `now_finish`, reactions and window evaluators run. This page lists the names each environment offers, and the verbs that write to it. Why there are two is explained on [Pack belief and simulation](Pack-Belief-And-Simulation).
+A content function, such as an ability's `now` or `handler`, runs with an **environment** the core sets, so a bare name inside it, like `buff` or `gain`, answers from that environment rather than from Lua's globals. There are two environments: the simulated `state`, where `handler`, field functions, state expressions and hooks run, and the belief's `now` context, where `now`, `onCrit`, `onLand`, `onAvoid`, `now_finish`, reactions and window evaluators run. This page lists the names each environment offers, and the verbs that write to it. Why there are two is explained on [Pack belief and simulation](Pack-Belief-And-Simulation).
 
 | Environment names | |
 |---|---|
@@ -74,7 +74,7 @@ The verbs write the effect of a cast. In a `handler` they change the simulated s
 
 | Verb | Meaning | Belief | Simulation |
 |---|---|---|---|
-| `gain(amount, resource)` | Adds to a resource | Yes | Yes |
+| `gain(amount, resource, extra)` | Adds to a resource. In a `now`, `extra` is the half-width of a roll the belief cannot see: the floor takes `amount - extra` and the top `amount + extra`. In a `handler`, it is the overcap. | Yes | Yes |
 | `spend(amount, resource)` | Takes from a resource | Yes | Yes |
 | `resetResource(resource, amount, upto)` | Sets a resource to `amount`, or up to `upto` more by a roll the belief cannot see | Yes | No |
 | `applyBuff(aura, duration, stacks)` | Puts a player aura up. Without `duration`, the aura's registered one. | Yes | Yes |

@@ -43,6 +43,7 @@ return {
         ["use_items"] = 5,
     },
     ["src/Hekili/Engine/Sim/Events.lua"] = {
+        ["132"] = 2, -- an action-bar slot number, which a Detect Invisibility aura id now matches
         ["72"] = 6,
         ["DRUID"] = 3,
         ["PRIEST"] = 1,

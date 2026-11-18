@@ -281,7 +281,8 @@ spec:RegisterStateExpr("soul_shards", function()
 end)
 
 -- The Curses and the Banes: one of each per Warlock per target (wowsims warlock.go deactivateOtherCurses/Banes).
-local CURSES = { "curse_of_the_elements", "curse_of_recklessness", "curse_of_weakness" }
+local CURSES =
+    { "curse_of_the_elements", "curse_of_recklessness", "curse_of_weakness", "curse_of_tongues", "curse_of_exhaustion" }
 local BANES = { "bane_of_agony", "bane_of_doom" }
 
 -- The Demonic Sacrifice effect each demon leaves (the demons' creature IDs: the summons' effect 0, DB2).
@@ -340,7 +341,7 @@ spec:RegisterAuras({
 
     -- Bane of Havoc's (1225228, 300 s; wowsims bane_of_havoc.go): one target at a time, never the main one (the pack's
     -- other_target=1 line, option D).
-    bane_of_havoc = { id = 1225228, duration = 300, max_stack = 1 },
+    bane_of_havoc = { id = 1225228, copy = { 1324473 }, duration = 300, max_stack = 1 }, -- 1324473: the client's buff
 
     -- The player's. The procs (their rolls unseen; the player aura walk reads them where plain, in combat the glow of
     -- the spell they light: `overlay`, needs in-game check): Nightfall's next Shadow Bolt instant; Decimation's
@@ -359,13 +360,13 @@ spec:RegisterAuras({
     shadow_and_flame_shadow = { id = 1293816, duration = 20, max_stack = 1 },
     shadow_and_flame_fire = { id = 426311, duration = 20, max_stack = 1 },
     -- Soul Harvest's kill buff (10 s, regen +100% at 2/2): opened at our kill (the "kill" reaction, below).
-    soul_harvest = { id = 1242853, duration = 10, max_stack = 1 },
+    soul_harvest = { id = 1242853, copy = { 437032 }, duration = 10, max_stack = 1 }, -- 437032: the talent's, which the Cooldown Manager links
     -- No priority reads these (wowsims talents_demonology.go, armors.go): the player aura walk shows them where plain.
     fel_domination = { id = 18708, duration = 15, max_stack = 1 },
     soul_link = { id = 19028, copy = 25228, duration = 3600, max_stack = 1 },
     demonic_knowledge = { id = 412732, duration = 3600, max_stack = 1 },
     master_demonologist = { id = 23785, duration = 3600, max_stack = 1 }, -- one id for the four demons' effects
-    demon_armor = { id = 11735, duration = 1800, max_stack = 1 },
+    demon_armor = { id = 11735, copy = { 706, 1086, 11733, 11734 }, duration = 1800, max_stack = 1 },
     blood_pact = { id = 11767, duration = 3600, max_stack = 1 },
     -- The channels' own auras (the kit models the channels: `channeled`).
     hellfire_channel = { id = 11684, duration = 15, max_stack = 1 },
@@ -383,6 +384,24 @@ spec:RegisterAuras({
         aliasType = "buff",
         duration = 7200,
     },
+})
+
+-- The coverage lane's auras, each on the ID the Cooldown Manager links (CooldownViewer.lua build); durations from the
+-- pin's spell rows at the top rank. The target's (Fear, Howl of Terror, Banish, Death Coil's horror, Subjugate Demon,
+-- Aftermath's daze, the two curses) are never applied here but by our own casts below; the player's are the wards, armor,
+-- Demon Skin and Detect Invisibility.
+spec:RegisterAuras({
+    fear = { id = 1324448, copy = { 1324451, 1324453 }, duration = 20, max_stack = 1 }, -- the client's ranks
+    howl_of_terror = { id = 5484, copy = { 17928 }, duration = 15, max_stack = 1 },
+    banish = { id = 1324462, copy = { 1324463 }, duration = 30, max_stack = 1 },
+    death_coil = { id = 1324459, duration = 3, max_stack = 1 }, -- the horror
+    subjugate_demon = { id = 1324468, duration = 300, max_stack = 1 },
+    aftermath = { id = 18118, copy = { 18119 }, duration = 5, max_stack = 1 }, -- Conflagrate's daze
+    curse_of_tongues = { id = 1714, copy = { 11719 }, duration = 30, max_stack = 1 },
+    curse_of_exhaustion = { id = 18223, duration = 12, max_stack = 1 },
+    shadow_ward = { id = 6229, copy = { 11739, 11740, 28610 }, duration = 30, max_stack = 1 },
+    demon_skin = { id = 687, copy = { 696 }, duration = 1800, max_stack = 1 },
+    detect_invisibility = { id = 132, copy = { 2970, 11743 }, duration = 600, max_stack = 1 },
 })
 
 -- A DoT's or Curse's `now` and `handler`: its debuff on the target, the others of its group (`group`: a Curse's or a
@@ -513,6 +532,7 @@ end
 -- demon's without Demonic Pact, the sacrificed demon's own with it).
 local function summons(key)
     return function()
+        removeBuff("fel_domination") -- the next summon spends it (wowsims talents_demonology.go applyFelDomination)
         local out = demonOut(pet) -- nil in the belief's `now` context (no `pet`)
         if out then
             dismissPet(out)
@@ -528,18 +548,19 @@ local function summons(key)
 end
 
 -- A summon: 10 s, -2 s and -20% cost a rank of Master Summoner (wowsims's curve; DB2 18709 mask: the five summons),
--- unhasted; `cost` a fraction of base mana (PowerCostPct), `shard` its Soul Shard.
+-- and Fel Domination's -5.5 s and -50% while its buff is up (DB2 18708 effects 0, 1, the same mask); unhasted; `cost` a fraction of base mana (PowerCostPct), `shard` its Soul Shard.
 local function summon(key, id, cost, shard)
     return {
         id = id,
         cast = function()
-            return 10 - 2 * talent.master_summoner.rank
+            return max(0, 10 - 2 * talent.master_summoner.rank - (buff.fel_domination.up and 5.5 or 0))
         end,
         cooldown = 0,
         gcd = "spell",
 
+        -- Fel Domination's -50% adds to Master Summoner's -20% a rank (both percent cost modifiers on the summons)
         spend = function()
-            return cost * (1 - 0.2 * talent.master_summoner.rank)
+            return cost * (1 - 0.2 * talent.master_summoner.rank - (buff.fel_domination.up and 0.5 or 0))
         end,
         spendType = "mana",
         spendBase = true, -- the 1 (100%) a fraction too
@@ -1058,6 +1079,345 @@ spec:RegisterAbilities({
         handler = sacrifices(),
     },
 })
+
+-- The coverage lane's casts (a manual press costs what it costs; no priority casts them). Ranks, costs, cooldowns from the
+-- pin's spell rows; `CostPct` ones as fractions of base mana.
+do
+    local FEAR = { 5782, 6213, 6215 }
+    local HOWL_OF_TERROR = { 5484, 17928 }
+    local HOWL_OF_TERROR_COST = { 150, 200 }
+    local BANISH = { 710, 18647 }
+    local BANISH_COST = { 100, 200 }
+    local SUBJUGATE_DEMON = { 1098, 11725, 11726 }
+    local SUBJUGATE_DEMON_COST = { 300, 500, 700 }
+    local HEALTH_FUNNEL = { 755, 3698, 3699, 3700, 11693, 11694, 11695 }
+    local DRAIN_MANA = { 5138, 6226, 11703, 11704 }
+    local DRAIN_MANA_COST = { 95, 155, 225, 310 }
+    local SHADOW_WARD = { 6229, 11739, 11740, 28610 }
+    local SHADOW_WARD_COST = { 135, 195, 255, 320 }
+    local DEMON_SKIN = { 687, 696 }
+    local DEMON_SKIN_COST = { 50, 120 }
+    local DEMON_ARMOR = { 706, 1086, 11733, 11734, 11735 }
+    local DEMON_ARMOR_COST = { 275, 520, 800, 1150, 1580 }
+    local DETECT_INVISIBILITY = { 132, 2970, 11743 }
+    local DETECT_INVISIBILITY_COST = { 50, 90, 140 }
+    local CURSE_OF_TONGUES = { 1714, 11719 }
+    local CURSE_OF_TONGUES_COST = { 80, 110 }
+
+    -- A buff on ourselves; a demon armor ends the other armor (one at a time).
+    local function armored(aura)
+        return function()
+            removeBuff(aura == "demon_armor" and "demon_skin" or "demon_armor")
+            applyBuff(aura)
+        end
+    end
+    local function buffed(aura)
+        return function()
+            applyBuff(aura)
+        end
+    end
+    -- A debuff on the target (Fear, Howl of Terror, Banish, Subjugate Demon).
+    local function debuffed(aura)
+        return function()
+            applyDebuff("target", aura)
+        end
+    end
+
+    spec:RegisterAbilities({
+        -- 15% of base mana, 1.5 s (the pin's rows; Forever's own aura ids are the client's).
+        fear = {
+            id = 5782,
+            school = "shadow",
+            copy = rest(FEAR),
+            cast = function()
+                return 1.5 * haste
+            end,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = 0.15,
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(FEAR),
+            usable = unlocked("shadow"),
+
+            now = debuffed("fear"),
+            handler = debuffed("fear"),
+        },
+
+        -- 2 s cast, 40 s category cooldown.
+        howl_of_terror = {
+            id = 5484,
+            school = "shadow",
+            copy = rest(HOWL_OF_TERROR),
+            cast = function()
+                return 2 * haste
+            end,
+            cooldown = 40,
+            gcd = "spell",
+
+            spend = byRank(HOWL_OF_TERROR_COST, HOWL_OF_TERROR),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(HOWL_OF_TERROR),
+            usable = unlocked("shadow"),
+
+            now = debuffed("howl_of_terror"),
+            handler = debuffed("howl_of_terror"),
+        },
+
+        banish = {
+            id = 710,
+            school = "shadow",
+            copy = rest(BANISH),
+            cast = function()
+                return 1.5 * haste
+            end,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(BANISH_COST, BANISH),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(BANISH),
+            usable = unlocked("shadow"),
+
+            now = debuffed("banish"),
+            handler = debuffed("banish"),
+        },
+
+        -- 3 s cast, a Soul Shard (the pin's rows; its 300 s is the control's duration, no cooldown row).
+        subjugate_demon = {
+            id = 1098,
+            school = "shadow",
+            copy = rest(SUBJUGATE_DEMON),
+            cast = function()
+                return 3 * haste
+            end,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(SUBJUGATE_DEMON_COST, SUBJUGATE_DEMON),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(SUBJUGATE_DEMON),
+            usable = sharded(),
+
+            now = debuffed("subjugate_demon"),
+            handler = debuffed("subjugate_demon"),
+        },
+
+        -- The pin's channels (10 s and 5 s, a tick a second, unhasted as Drain Life). Health Funnel needs a demon out.
+        -- shortcut: Health Funnel's cost is health (the pin's Type -2 power: an initial cost and a cost a second), no
+        -- spend here (no health spend type), so Improved Health Funnel stays inert; upgrade if a priority casts it.
+        health_funnel = {
+            id = 755,
+            copy = rest(HEALTH_FUNNEL),
+            cast = 10,
+            channeled = true,
+            tick_time = 1,
+            cooldown = 0,
+            gcd = "spell",
+
+            startsCombat = false,
+            known = knows(HEALTH_FUNNEL),
+            usable = function()
+                local p = pet -- the simulation's; the belief's `now` context has none (the client's answer decides)
+                if p and not demonOut(p) then
+                    return false, "no demon"
+                end
+                return not locked_out_shadow, "shadow locked out"
+            end,
+        },
+
+        -- shortcut: the mana Drain Mana gains (a tick takes up to its rank's amount, capped by the target's mana, which
+        -- is unseen) is unmodelled; the live mana read corrects it. Upgrade if a priority casts it.
+        drain_mana = {
+            id = 5138,
+            copy = rest(DRAIN_MANA),
+            cast = 5,
+            channeled = true,
+            tick_time = 1,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(DRAIN_MANA_COST, DRAIN_MANA),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(DRAIN_MANA),
+            usable = unlocked("shadow"),
+        },
+
+        -- 30 s category cooldown; the absorb's size is unmodelled.
+        shadow_ward = {
+            id = 6229,
+            school = "shadow",
+            copy = rest(SHADOW_WARD),
+            cast = 0,
+            cooldown = 30,
+            gcd = "spell",
+
+            spend = byRank(SHADOW_WARD_COST, SHADOW_WARD),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(SHADOW_WARD),
+            usable = unlocked("shadow"),
+
+            now = buffed("shadow_ward"),
+            handler = buffed("shadow_ward"),
+        },
+
+        -- 2 s cast, a 1 h cooldown, 100% of base mana (the pin's CostPct 100; no summon modifier's mask reaches it); an
+        -- Infernal Stone is the reagent (not read here); the demon is not modelled.
+        inferno = {
+            id = 1122,
+            school = "fire",
+            cast = function()
+                return 2 * haste
+            end,
+            cooldown = 3600,
+            gcd = "spell",
+
+            spend = 1,
+            spendType = "mana",
+            spendBase = true, -- the 1 (100%) a fraction too
+
+            startsCombat = true,
+            toggle = "cooldowns",
+            known = knows({ 1122 }),
+            usable = unlocked("fire"),
+        },
+
+        demon_skin = {
+            id = 687,
+            copy = rest(DEMON_SKIN),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(DEMON_SKIN_COST, DEMON_SKIN),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(DEMON_SKIN),
+            usable = unlocked("shadow"),
+
+            now = armored("demon_skin"),
+            handler = armored("demon_skin"),
+        },
+
+        demon_armor = {
+            id = 706,
+            copy = rest(DEMON_ARMOR),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(DEMON_ARMOR_COST, DEMON_ARMOR),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(DEMON_ARMOR),
+            usable = unlocked("shadow"),
+
+            now = armored("demon_armor"),
+            handler = armored("demon_armor"),
+        },
+
+        detect_invisibility = {
+            id = 132,
+            copy = rest(DETECT_INVISIBILITY),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(DETECT_INVISIBILITY_COST, DETECT_INVISIBILITY),
+            spendType = "mana",
+
+            startsCombat = false,
+            known = knows(DETECT_INVISIBILITY),
+            usable = unlocked("shadow"),
+
+            now = buffed("detect_invisibility"),
+            handler = buffed("detect_invisibility"),
+        },
+
+        -- The curse slot's other two (one curse per target: CURSES); Tongues is a plain cast, Exhaustion the Affliction
+        -- talent's (18223, 8% of base mana; wowsims leaves it a TODO). Amplify Curse reaches Exhaustion (DB2 18288).
+        curse_of_tongues = {
+            id = 1714,
+            expects = "debuff", -- no damage
+            copy = rest(CURSE_OF_TONGUES),
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = byRank(CURSE_OF_TONGUES_COST, CURSE_OF_TONGUES),
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows(CURSE_OF_TONGUES),
+            usable = unlocked("shadow"),
+            missable = true,
+
+            now = lands("curse_of_tongues", CURSES),
+            handler = lands("curse_of_tongues", CURSES),
+        },
+
+        curse_of_exhaustion = {
+            id = 18223,
+            expects = "debuff", -- no damage
+            cast = 0,
+            cooldown = 0,
+            gcd = "spell",
+
+            spend = 0.08,
+            spendType = "mana",
+
+            startsCombat = true,
+            known = knows({ 18223 }),
+            usable = unlocked("shadow"),
+            missable = true,
+
+            now = lands("curse_of_exhaustion", CURSES, true),
+            handler = lands("curse_of_exhaustion", CURSES, true),
+        },
+
+        -- The Demonology talent (18708): 300 s, off the GCD (no GCD row), the next summon 5.5 s faster for half the mana
+        -- within 15 s (the summons above read the buff).
+        fel_domination = {
+            id = 18708,
+            cast = 0,
+            cooldown = 300,
+            gcd = "off",
+
+            startsCombat = false,
+            toggle = "cooldowns",
+            known = knows({ 18708 }),
+
+            now = buffed("fel_domination"),
+            handler = buffed("fel_domination"),
+        },
+    })
+
+    -- Cooldown Manager items whose spells are bag items' uses (Healthstone, Soulstone Resurrection; no pin row): a
+    -- passive registration only names each ID for the Cooldown Manager map. No ability is made and nothing is tracked
+    -- (Tracked.lua tracks a spellbook rank; an item's use is never in the spellbook): the cooldown is Hekili_Shared's
+    -- healthstone's.
+    for _, id in ipairs({ 6262, 6263, 5720, 5723, 11732, 20707, 20762, 20763, 20764, 20765 }) do
+        spec:RegisterAbility("track_use_" .. id, { id = id, passive = true })
+    end
+
+    -- Not registered (one line each): Create Healthstone / Soulstone / Firestone / Spellstone (out of combat, a shard),
+    -- Unending Breath (utility), Sense Demons (tracking), Eye of Kilrogg (a channel that moves the camera), Ritual of
+    -- Summoning and Ritual of Doom (group rituals), Curse of Idiocy (the pin's row has no learn level: not trained).
+end
 
 -- Talents: { talent tree (1 Affliction, 2 Demonology, 3 Destruction: the dominant tree picks the spec), rank 1's spell,
 -- max rank }: Forever's live tree, wowsims/forever's (ui/sim/talents/trees/warlock.json: 17, 19 and 16 nodes, each

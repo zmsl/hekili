@@ -25,7 +25,9 @@ local A = I.ab
 A.now = {} -- by ability index: the `now` function, bound to the context, or false
 A.onCrit = {} -- by ability index: the `onCrit` function (run at the cast's own crit, Obs.Crit), bound, or false
 A.onLand = {} -- by ability index: the `onLand` function (run once its cast landed, Obs.Landed), bound, or false
+A.onAvoid = {} -- by ability index: the `onAvoid` function (run at its latest cast's own avoid, Obs.Avoided), or false
 A.finish = {} -- by ability index: the `now_finish` function (run at a channel's stop at its end), bound, or false
+A.lands = {} -- by ability index: true when its `now`'s target auras start at its landing (`startsAtLanding`, L482)
 A.extra = {} -- by ability index: a `track_<id>` extra (VS.Track): no ability, no effects
 A.known = A.known or {} -- by ability index: any rank in the spellbook (Sources/Spellbook.lua)
 
@@ -83,6 +85,7 @@ I.nowErrors, I.nowError, I.nowRuns, I.castsRun = 0, nil, 0, 0
 -- The cast's belief time and ability while its effects run; `live` only then: a `now` called from anywhere else (Hekili
 -- keeps it in `ability.funcs`, where RunStressTest or an APL reading `action.x.now` can call it) writes nothing.
 local T, curA, live = 0, 0, false
+local flight = 0 -- the running cast's travel (s): its target aura writes start this long after T (`startsAtLanding`)
 -- True while a reaction runs: it is folded after its outcome's time T (a swing's row comes ~0.47 s after the swing, an
 -- avoid at its window's close), so its aura reads answer as of T (I.AuraAsOf), not the belief's latest.
 local asOf = false
@@ -96,6 +99,14 @@ local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
     undoJ[k], undoE[k], undoAp[k], undoSt[k] = 0, 0, 0, 0
 end
+-- By target aura index (L1029): the refundable cast whose own `now` wrote that record (vA its ability, 0 none; vT its
+-- success time, the undo's undoT; vPaid; vAp the record's applied time then; vSpends / vRaised the slot's spend and
+-- raise serials after its spend), for the CDM verdict's refund (I.VerdictRefund). Filled at OnBuild.
+local vA, vT, vPaid, vAp, vSpends, vRaised = {}, {}, {}, {}, {}, {}
+-- And the refund the verdict gave on that record (bR its slot, 0 none; bD the share; bE/bL/bH what est, lo and hi took;
+-- bP the slot's pin time then), until a strike takes it back (I.VerdictTakeBack) or another refund on the record
+-- replaces it.
+local bR, bD, bE, bL, bH, bP = {}, {}, {}, {}, {}, {}
 local refund = {} -- by resource slot: the class's default share (the resource meta's `refundOnAvoid`), 0 none
 A.refund = {} -- by ability index: the share of its cost an avoid gives back (the ability's `refundOnAvoid`), 0 none
 I.avoidsRun = 0
@@ -300,7 +311,9 @@ I.On(Obs.Usable, function(o)
 end)
 
 --- The known rank's spell ID for any rank ID of a tracked ability with a known rank, else `spellID` unchanged (nil,
---- untracked or unknown). The client answers range only for a known rank: the facade's C_Spell.IsSpellInRange asks
+--- untracked or unknown). The client answers range and cooldown for the known rank (a rank that a later rank
+--- supersedes is no longer known and reads its cooldown not active; its usability is unprobed): the facade's
+--- C_Spell.IsSpellInRange, GetSpellCooldown, GetSpellCharges, IsSpellUsable and Display GetSpellCooldownDuration ask
 --- by it (Game/API/Facade.lua). Allocates nothing.
 function VS.KnownID(spellID)
     local a = spellID and A.bySpell[spellID]
@@ -313,7 +326,7 @@ end
 ----------------------------------------------------------------------------------------------------------------------
 -- Writes: Hekili's verbs, as `modelled` belief samples at T (and the combat log's aura and energize rows).
 
-local function shift(n, resource)
+local function shift(n, resource, spread)
     if not live then
         return
     end
@@ -324,13 +337,20 @@ local function shift(n, resource)
     if type(n) ~= "number" or n == 0 then
         return
     end
-    I.ResourceShift(r, n, T, CAST)
+    if n > 0 and type(spread) == "number" and spread > 0 then
+        I.ResourceGainSpread(r, n, spread, T, CAST)
+    else
+        I.ResourceShift(r, n, T, CAST)
+    end
     if n > 0 then
         I.Log.Energize(A.qid[curA] or 0, n, I.res.type[r], I.res.max[r], T) -- a reaction's: no ability (curA 0)
     end
 end
-function NAMES.gain(amount, resource)
-    shift(amount, resource)
+-- The `now` context's third argument is a roll's half-width the belief cannot see (L481: a potion's restore, `amount`
+-- its average): the floor takes amount - spread, the top amount + spread; a non-number is ignored. The simulation's
+-- third argument is `overcap`, so a `handler` never passes the spread.
+function NAMES.gain(amount, resource, spread)
+    shift(amount, resource, spread)
 end
 function NAMES.spend(amount, resource)
     shift(type(amount) == "number" and -amount or amount, resource)
@@ -370,7 +390,7 @@ local function aura(u, key, duration, stacks)
         if type(d) ~= "number" then
             return -- no number: a raising duration (counted by I.Eval) writes nothing
         end
-        after = T + d
+        after = (u == 2 and T + flight or T) + d
     end
     if u == 2 and journal and undoN < UNDO then
         local first = true
@@ -382,11 +402,22 @@ local function aura(u, key, duration, stacks)
             undoJ[undoN], undoE[undoN], undoAp[undoN], undoSt[undoN] = j, before, applied or 0, have or 0
         end
     end
-    I.AuraModel(u, j, T, after, stacks or 1, T, CAST, u == 2)
+    I.AuraModel(u, j, u == 2 and T + flight or T, after, stacks or 1, T, CAST, u == 2)
     -- cdm-default rule 2.5.1: this application is ours (Sources/Auras.lua); a projectile's travel widens the
     -- verdict's window (cdm-verdict §2.3; velocity > 0 only: the client raises on x/0)
     local v = A.velocity[curA] or 0
     I.AuraOurs(u, j, v > 0 and (A.rMax[curA] or 0) / v or 0)
+    if u == 2 and journal then -- the cast's own write: what a verdict that it missed gives back (L1029)
+        local r = curA > 0 and A.slot[curA] or 0
+        -- a swap at or after the cast's success folded first (the success is staged): the cast was on the old
+        -- target, this record is the new one's, and a verdict on it says nothing of the cast (viewer-swap trace)
+        if after > 0 and r > 0 and paid > 0 and A.refund[curA] > 0 and I.curSwapT < undoT then
+            vA[j], vT[j], vPaid[j], vAp[j] = curA, undoT, paid, I.auras.applied[2][j]
+            vSpends[j], vRaised[j] = I.res.spends[r], I.res.raised[r]
+        else
+            vA[j] = 0
+        end
+    end
     I.Log.Aura(u, j, auraSpell[j], before, after, T)
 end
 -- Hekili's own signatures (State.lua), so a Classic handler's lines port by copying.
@@ -638,12 +669,15 @@ I.OnBuild(function(def)
         A.onCrit[a] = type(c) == "function" and setfenv(c, ctx) or false
         local l = obj.onLand
         A.onLand[a] = type(l) == "function" and setfenv(l, ctx) or false
+        local av = obj.onAvoid
+        A.onAvoid[a] = type(av) == "function" and setfenv(av, ctx) or false
         local fin = obj.now_finish
         if type(fin) == "function" and fin == obj.finish then -- as `now` and `handler`: one function, one environment
             I.nowErrors, I.nowError = I.nowErrors + 1, "now: " .. tostring(A.key[a]) .. "'s now_finish is its finish"
             fin = false
         end
         A.finish[a] = type(fin) == "function" and setfenv(fin, ctx) or false
+        A.lands[a] = obj.startsAtLanding == true
         rawset(NAMES.action, A.key[a], setmetatable({ a = a }, actionMeta))
     end
     rawset(NAMES, "settings", def.settings or NO_SETTINGS) -- the spec's settings as plain values, the core's copy
@@ -664,6 +698,8 @@ I.OnBuild(function(def)
     for j = 1, #def.auras do
         local key = def.auras[j].key
         auraSpell[j] = def.auraIds[j][1]
+        vA[j], vT[j], vPaid[j], vAp[j], vSpends[j], vRaised[j] = 0, 0, 0, 0, 0, 0
+        bR[j], bD[j], bE[j], bL[j], bH[j], bP[j] = 0, 0, 0, 0, 0, 0
         local d = rawget(def.auras[j], "duration")
         auraDur[j] = type(d) == "number" and d or false
         auraFn[j] = type(d) == "function" and d or false
@@ -785,6 +821,18 @@ local function fire(w, o, t, hand)
     journal, asOf = true, false
 end
 
+-- Ability a's travel to the target (s): the believed distance (the range bracket's middle, Families/Enemies.lua) over
+-- its velocity (wowsims's TravelTime: distance / missile speed); 0 with no velocity or no range known.
+-- shortcut: an unknown range lands at the cast (the old timing, early by the flight); upgrade with the ticket's learned
+-- lag (Events/Tickets.lua T.LagOf) if a live trace shows ranged casts with no bracket
+local function travel(a)
+    local v, r = A.velocity[a] or 0, VS.TargetRange()
+    if v > 0 and (r.conf or 0) > 0 then
+        return r.est / v
+    end
+    return 0
+end
+
 local function run(o, t)
     local a = o.a
     if not A.obj[a] or not A.key[a] or A.extra[a] then
@@ -800,9 +848,12 @@ local function run(o, t)
     if A.now[a] then
         rawset(NAMES, "cast_start", started)
         rawset(NAMES, "instant", started == 0)
+        flight = A.lands[a] and travel(a) or 0
         call(A.now[a], a, t)
+        flight = 0
         rawset(NAMES, "cast_start", 0)
         rawset(NAMES, "instant", false)
+        I.ShareRead() -- the `now` may have moved what a regen share reads (Families/Resources.lua)
     end
 end
 -- CastSuccess only: a channel stages ChannelStart and CastSuccess both (Sources/Casts.lua), and must run once.
@@ -879,29 +930,104 @@ end)
 -- wrote (each back as it was, when the target is still the cast's) and gets back the ability's `refundOnAvoid` share of
 -- the cost it paid; both `modelled` at the outcome. Any other cast's avoid changes nothing (its effects are no longer
 -- the latest's to undo). The cooldown,
--- the GCD and the player auras stay (an avoided ability still triggers them). Allocates nothing.
-local DEFLECT, EVADE = I.HitKind.DEFLECT, I.HitKind.EVADE
+-- the GCD and the player auras stay (an avoided ability still triggers them), except what the ability's `onAvoid`
+-- takes back (a buff only its landing gives), run after the undo. A full resist or immunity (I.UNLANDED: the ability
+-- did not apply) gets the target undo only: no `onAvoid`, no refund (unmeasured in game). Allocates nothing.
+local DEFLECT, EVADE, UNLANDED = I.HitKind.DEFLECT, I.HitKind.EVADE, I.UNLANDED
+-- Forgets the CDM verdict's refund memory of the cast of ability a at castT on every target record it wrote (L1029):
+-- refunded, avoided with no refund, or proven landed. Allocates nothing.
+local function forget(a, castT)
+    for j = 1, I.auras.nAura do
+        if vA[j] == a and vT[j] == castT then
+            vA[j] = 0
+        end
+    end
+end
 I.On(Obs.Avoided, function(o, t)
     fire(2, OUTCOME_OF[o.c] or 0, o.t) -- first: the target's reactions, at the outcome's row
     if o.c == DEFLECT or o.c == EVADE then -- staged for reactions only (Events/Rows.lua REACTED): no undo, no refund
+        forget(o.a, o.b) -- nor by the verdict: the avoid path refunds none here (review 1b)
         return
     elseif o.a ~= undoA or o.b ~= undoT then
         return
     end
     undoA = 0
+    forget(o.a, o.b) -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
     for k = 1, I.curSwapN == undoSwap and undoN or 0 do -- another target since the cast: its auras are not these
         local j = undoJ[k]
         local rec = VS.Aura("target", auraSpell[j], t)
         local was, back = rec and rec.est or 0, undoE[k] > t and undoE[k] or 0
         I.AuraModel(2, j, undoAp[k], back, back > 0 and undoSt[k] or 0, t, Obs.Avoided, true)
+        if back == 0 then
+            I.AuraUndone(j, o.b, undoE[k], t) -- a close: an item lit since the cast re-opens it at once (Sources/Auras.lua)
+        end
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
+    end
+    I.avoidsRun = I.avoidsRun + 1
+    if o.c == UNLANDED then
+        return
+    end
+    if A.onAvoid[o.a] then
+        journal = false
+        call(A.onAvoid[o.a], o.a, o.t)
+        journal = true
     end
     local r = A.slot[o.a]
     if r > 0 and paid > 0 and A.refund[o.a] > 0 then
         I.Refund(r, paid * A.refund[o.a], t) -- at the fold; the answers since the cast's spend already saw it
     end
-    I.avoidsRun = I.avoidsRun + 1
 end)
+
+--- The CDM verdict closed target aura j's application `ap` as missed (Sources/Auras.lua, L1029): the cast whose own
+--- write it was gets back its `refundOnAvoid` share, as an avoid's (I.Refund), once: an avoid or a hand-back of that
+--- cast (Obs.Avoided) before it cleared it, and this consumes the cast's undo so neither after it undoes or refunds;
+--- every record of that cast is cleared (two debuffs of one cast refund once). Past another spend, an answer since the
+--- cast that raised the slot already held the refund (I.Refund's `held`). Returns the cast's success time, or nil.
+--- Allocates nothing.
+function I.VerdictRefund(j, ap, t)
+    local a = vA[j]
+    if not a or a == 0 or vAp[j] ~= ap then
+        return nil
+    end
+    local castT, r = vT[j], A.slot[a]
+    forget(a, castT)
+    if undoA == a and undoT == castT then
+        undoA = 0
+    end
+    -- shortcut: a target immune to this debuff only (the cast landed, its record never lights) reads as a miss and is
+    -- refunded; accepted as bounded by the owner (L1096): two unlit verdicts suspend the item's proof until it lights
+    -- again, so at most ~2 wrong refunds per item per immune target. Upgrade if an immune flag becomes readable.
+    -- shortcut: a short answer heard between the cast and a later spend no longer caps this late refund (that spend
+    -- reset sinceShort; the cap is valid only for answers after the cast's own spend); the error is at most the share,
+    -- until the next answer. Upgrade (a per-cast cap carried across spends) if traces show est above the truth after
+    -- a verdict refund.
+    local R, d = I.res, vPaid[j] * A.refund[a]
+    bR[j], bD[j], bP[j] = r, d, R.pinT[r]
+    bE[j], bL[j], bH[j] = I.Refund(r, d, t, R.spends[r] ~= vSpends[j] and R.raised[r] ~= vRaised[j])
+    return castT
+end
+
+--- The verdict that refunded target aura j's record was wrong (a strike, Sources/Auras.lua: the item lit with no cast
+--- of ours since): its refund comes back out, once. Returns whether there was one. Allocates nothing.
+function I.VerdictTakeBack(j, t)
+    local r = bR[j]
+    if not r or r == 0 then
+        return false
+    end
+    bR[j] = 0
+    I.Unrefund(r, bD[j], bE[j], bL[j], bH[j], t, bP[j])
+    return true
+end
+
+--- Target aura j read UP at t (Sources/Auras.lua, every UP: the polls run before the fold): when the memory names a
+--- cast whose write it was (an UP since that write), the cast landed, so no verdict refunds it on any record it wrote
+--- (a stun and a bleed of one cast: the bleed lights, the stun's item never does). Allocates nothing.
+function I.VerdictLit(j, t)
+    local a = vA[j]
+    if a ~= 0 and t >= vAp[j] then
+        forget(a, vT[j])
+    end
+end
 
 -- The other settled outcomes reactions run on (re-pin design §3a): our white swing's (Obs.SwingSettled, Events/Rows.lua:
 -- its avoid's own outcome, then every "swing" reaction of its hand), a hit on us (Obs.PlayerHit, Obs.PlayerCrit:

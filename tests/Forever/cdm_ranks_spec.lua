@@ -68,16 +68,15 @@ describe("the pack auras cover the ranks the Cooldown Manager reports", function
         assert.are.same({}, missing(war, dofile("tools/data/cooldownviewer/WARRIOR.lua")))
     end)
 
-    -- DB2 rank families (Forever's own same-rank IDs included), verified 2026-11-09
+    -- DB2 rank families (Forever's own same-rank IDs included), verified 2026-11-09. Mark and Gift of the Wild are
+    -- Hekili_Shared's now (L971): tests/Forever/shared_spec.lua checks their families.
     local FAMILIES = {
         bash = { 5211, 6798, 8983 },
         demoralizing_roar = { 99, 1735, 9490, 9747, 9898 },
         faerie_fire = { 770, 778, 9749, 9907 },
-        gift_of_the_wild = { 21849, 21850 },
         hurricane = { 16914, 17401, 17402, 1278965, 1278968, 1278759 }, -- the last three: the tick's target debuff
         insect_swarm = { 5570, 24974, 24975, 24976, 24977 },
         lacerate = { 414644, 414647, 1235826, 1235827 },
-        mark_of_the_wild = { 1126, 5232, 5234, 6756, 8907, 9884, 9885, 1291335, 1310503 },
         moonfire = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 },
         natures_grasp = { 16689, 16810, 16811, 16812, 16813, 17329 },
         pounce = { 9005, 9823, 9827 },

@@ -563,6 +563,49 @@ describe("the replay world", function()
     end)
 end)
 
+describe("the replay's move-only casts (an ability's `movesOnly`)", function()
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[-1.00] [Tester (#1)] Casting {SpellID: 900070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[-1.00] [Tester (#1)] Completed cast {SpellID: 900070}",
+        "[1.00] [Tester (#1)] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[1.00] [Tester (#1)] Completed cast {SpellID: 900001}",
+    }, "\n")
+    local HM = {
+        Hekili = {
+            Class = {
+                abilities = {
+                    strike = { key = "strike", id = 900001, gcd = "spell" },
+                    leap = { key = "leap", id = 900070, cooldown = 15, gcd = "spell", movesOnly = true },
+                },
+                auras = {},
+            },
+        },
+    }
+
+    it("is a cast in the world (its GCD, its cooldown) but neither a decision nor a next press", function()
+        local R = replay.new(LOG, HM, {})
+        local keys, casts = {}, {}
+        for i, d in ipairs(R.decisions) do
+            keys[i] = d.key
+        end
+        for i, d in ipairs(R.casts) do
+            casts[i] = d.key
+        end
+        assert.are.same({ "strike" }, keys)
+        assert.are.same({ "leap", "strike" }, casts) -- timing.new walks every mapped Casting line by R.casts' index
+        assert.are.equal("strike", R.next(R.pull - 2))
+        local W = at(R.world(setmetatable({ tag = "-mv" }, { __index = WO }), 1), R.pull)
+        local leap
+        for _, ev in ipairs(W.truth) do
+            leap = leap or (ev.kind == "cast" and ev.spell == 900070 and ev)
+        end
+        assert.is_truthy(leap)
+        assert.is_true(math.abs(leap.gcd - 1.5) < 1e-3)
+        assert.is_true(math.abs(leap.cd - 15) < 1e-3)
+    end)
+end)
+
 describe("the replay's casts: tags, items, pets, totems", function()
     local LOG = table.concat({
         "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
@@ -574,6 +617,8 @@ describe("the replay's casts: tags, items, pets, totems", function()
         "[1.00] [Tester (#1)] Completed cast {ItemID: 800001}",
         "[2.00] [Tester (#1) - Wolf] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
         "[2.00] [Tester (#1) - Wolf] Completed cast {SpellID: 900001}",
+        "[3.00] [Tester (#1)] Casting {ItemID: 800003} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+        "[3.00] [Tester (#1)] Completed cast {ItemID: 800003}",
     }, "\n")
     local HT = {
         Hekili = {
@@ -582,6 +627,15 @@ describe("the replay's casts: tags, items, pets, totems", function()
                     strike = { key = "strike", id = 900001, gcd = "spell" },
                     fire_post = { key = "fire_post", id = 900005, gcd = "totem" },
                     rune = { key = "rune", id = -101, items = { 800002, 800001 }, cooldown = 120, gcd = "off" },
+                    -- L481: an item whose use spell the kit names (`copy`): the client's success of that spell
+                    tonic = {
+                        key = "tonic",
+                        id = -102,
+                        copy = { 900077 },
+                        items = { 800003 },
+                        cooldown = 120,
+                        gcd = "off",
+                    },
                 },
                 auras = {},
             },
@@ -595,7 +649,7 @@ describe("the replay's casts: tags, items, pets, totems", function()
         for i, d in ipairs(R.decisions) do
             keys[i] = d.key
         end
-        assert.are.same({ "fire_post", "rune" }, keys)
+        assert.are.same({ "fire_post", "rune", "tonic" }, keys)
         local W = at(R.world(setmetatable({ tag = "-t" }, { __index = WO }), 1), R.pull + 1.5)
         local us = W.ents[1]
         local tt = W.totem(us, 1)
@@ -606,6 +660,13 @@ describe("the replay's casts: tags, items, pets, totems", function()
             casts = casts + (ev.kind == "cast" and 1 or 0)
         end
         assert.are.equal(1, casts) -- the totem's; the proc, the item and the pet emit none
+        W.run(R.pull + 3.5)
+        local use
+        for _, ev in ipairs(W.truth) do
+            use = use or (ev.kind == "cast" and ev.spell == 900077 and ev)
+        end
+        assert.is_truthy(use) -- the item with a named use spell: its success, as the client sends it
+        assert.is_true(math.abs(us.cdUntil.tonic - (R.pull + 3 + 120)) < 1e-3)
     end)
 end)
 
@@ -1010,6 +1071,41 @@ describe("the replay's mana regen (wowsims's regen lines)", function()
         assert.has_error(function()
             replay.new(text, HC, {})
         end)
+    end)
+
+    it("splits a casting-only log by the static share and the character's Spirit (no not-casting line)", function()
+        -- every tick inside the five-second rule: 1.261 a tick = M + c x S at c 0.5, Spirit 104 (S = 6.25 + 104 / 8 =
+        -- 19.25), so M = 2.985 and the not-casting rate M + S = 22.235
+        local text = log({ { 0.5, 1.261, 1 }, { 0.6, 1.261, 1 } })
+        local function booted(share)
+            return {
+                Hekili = {
+                    Class = {
+                        abilities = {},
+                        auras = {},
+                        resources = { mana = { state = { meta = { fsr = { spirit = 22, mp5 = 0, share = share } } } } },
+                    },
+                    State = { talent = { boosting = { rank = 3 } } },
+                },
+            }
+        end
+        local R = replay.new(
+            text,
+            booted(function()
+                return 0.5 * talent.boosting.rank / 3 -- luacheck: ignore 113
+            end),
+            {}
+        )
+        local W = R.world(setmetatable({ tag = "-s", stats = { [5] = 104 } }, { __index = WO }), 1)
+        local us = W.ents[1]
+        local idle, casting = W.regenRate(us, 0, "idle"), W.regenRate(us, 0, "casting")
+        assert.is_true(math.abs(idle - 22.235) < 1e-9 and math.abs(casting - 12.61) < 1e-9, idle .. " / " .. casting)
+        -- no static share: the casting rate stands for both, as before
+        R = replay.new(text, booted(nil), {})
+        W = R.world(setmetatable({ tag = "-s", stats = { [5] = 104 } }, { __index = WO }), 1)
+        us = W.ents[1]
+        idle, casting = W.regenRate(us, 0, "idle"), W.regenRate(us, 0, "casting")
+        assert.is_true(math.abs(idle - 12.61) < 1e-9 and math.abs(casting - 12.61) < 1e-9, idle .. " / " .. casting)
     end)
 
     it(

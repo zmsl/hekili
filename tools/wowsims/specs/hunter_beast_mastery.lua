@@ -80,4 +80,5 @@ return {
         { before = "call_action_list", line = "arcane_shot,if=target.outside8" },
     },
     leveling = {},
+    levelingFirst = { "call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled", "revive_pet,if=pet.dead" },
 }

@@ -7,8 +7,9 @@ local headless = require("Game.harness.headless")
 local mw = require("Forever.helpers.mage_world")
 
 local REGEN = 38 -- mana a second, casting or not
-local UNDER = 8 -- the floor under Fireball's cost: 0.31 s away (8 / 38 plus the forecast's 0.1 s tick), past EARLY_EXIT
--- (0.2) and within one update (0.2)
+-- the floor under Fireball's cost: 0.32 s away (12 / 38), past EARLY_EXIT (0.2) and within one update (0.2). It was 8
+-- (8 / 38 plus a 0.1 s tick pad) until L755 / L960: a pool with no tick seen pads nothing, so the distance is all regen.
+local UNDER = 12
 
 -- Boots, targets, hand-sets the mana belief (the floor `under` [UNDER] below Fireball's cost, the estimate `gap` above
 -- the floor, `frac` of a mana above a whole floor if given), loads the list (`list` if given), calls `before(H)` if
@@ -55,7 +56,7 @@ describe("the engine's near-cost hold on a booted Mage", function()
     it(
         "keeps the higher entry first at the floor's wait when its estimate reaches the cost within EARLY_EXIT",
         function()
-            local slot = first(5) -- the estimate 3 mana short: 0.18 s; the floor 8 short: 0.31 s
+            local slot = first(5) -- the estimate 7 mana short: 0.18 s; the floor 12 short: 0.32 s
             assert.are.equal("fireball", slot.actionName)
             assert.is_true(slot.wait > 0.2 and slot.wait < 0.4, slot.wait) -- the floor's wait: past EARLY_EXIT, never ready early
         end
@@ -80,15 +81,15 @@ end)
 describe("the near-cost hold behind a running GCD (L628 option A)", function()
     local GCD_LEFT = 0.6
     -- the GCD runs GCD_LEFT more (the belief's GCD stubbed as VS.Power is); Fireball's floor reaches its cost 0.89 s
-    -- away (30 under), its estimate 0.2 s away (4 under): the crossing falls under the GCD, as a free filler's GCD end
-    -- meets a pick's resource crossing
+    -- away (34 under; 30 plus the tick pad before L755 / L960), its estimate 0.21 s away (8 under): the crossing falls
+    -- under the GCD, as a free filler's GCD end meets a pick's resource crossing
     local function gcd(H)
         H.ns.VirtualState.GcdInfo = function(t)
             return t - (1.5 - GCD_LEFT), 1.5
         end
     end
     it("keeps the pick first over an entry ready at the GCD's end: the window opens where the GCD ends", function()
-        local slot = first(26, nil, gcd, nil, 30)
+        local slot = first(26, nil, gcd, nil, 34)
         assert.is_true(slot.wait > GCD_LEFT - 0.01, slot.wait) -- the GCD reached the sim: whichever wins waits for it
         assert.are.equal("fireball", slot.actionName)
         assert.is_true(slot.wait > GCD_LEFT + 0.05 and slot.wait < 1.0, slot.wait) -- the floor's wait, past the GCD
@@ -98,19 +99,19 @@ describe("the near-cost hold behind a running GCD (L628 option A)", function()
         local slot = first(26, nil, gcd, {
             { enabled = true, action = "fireball" },
             { enabled = true, action = "scorch", use_off_gcd = 1 },
-        }, 30)
+        }, 34)
         assert.are.equal("scorch", slot.actionName)
     end)
 
     it("does not hold when the estimate reaches the cost past the GCD's end + EARLY_EXIT", function()
-        local slot = first(0, nil, gcd, nil, 30) -- the estimate is the floor: 0.89 s, past 0.6 + 0.2
+        local slot = first(0, nil, gcd, nil, 34) -- the estimate is the floor: 0.89 s, past 0.6 + 0.2
         assert.are.equal("scorch", slot.actionName)
     end)
 end)
 
 describe("the Clash setting on a booted Mage", function()
-    -- the pick's Clash: Fireball (0.31 s on its floor, no near mark) is treated as ready `clash` sooner, so Scorch,
-    -- ready 0.31 s sooner (under clash + the 0.05 s pad), does not displace it
+    -- the pick's Clash: Fireball (0.32 s on its floor, no near mark) is treated as ready `clash` sooner, so Scorch,
+    -- ready 0.32 s sooner (under clash + the 0.05 s pad), does not displace it
     local function clashed(clash, key)
         key = key or "fireball"
         return function(H)
@@ -131,7 +132,7 @@ describe("the Clash setting on a booted Mage", function()
         assert.are.equal("scorch", slot.actionName)
     end)
 
-    -- the later entry's Clash: Fireball (off the GCD, 0.31 s on its floor) and Scorch at the GCD's end (0.29 s) are
+    -- the later entry's Clash: Fireball (off the GCD, 0.32 s on its floor) and Scorch at the GCD's end (0.29 s) are
     -- within the 0.05 s pad; Scorch's Clash 0.3 makes it ready sooner by more, so it takes over
     local function scorchClash(clash)
         local set = clashed(clash, "scorch")

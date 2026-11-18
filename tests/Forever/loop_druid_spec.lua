@@ -47,6 +47,28 @@ describe("the Druid loop worlds", function()
     end
 end)
 
+describe("the Feral loop world's press", function()
+    -- druid_loop_world prices the GCD kind from the ability as the engine reads it (no function branch of its own, as
+    -- druid_world has): the kit's form-dependent kind resolves through the engine's ability table (ledger L757)
+    it(
+        "prices a form-dependent GCD kind from the believed form: the totem kind in Cat Form, the spell kind else",
+        function()
+            local C = dlw.Feral
+            local H = headless.new({ character = C.character(), pack = C.PACK })
+            local got = {}
+            for _, form in ipairs({ dlw.FORM.cat_form, dlw.FORM.bear_form }) do
+                H.ctl.form = form
+                H.Fire("UPDATE_SHAPESHIFT_FORM")
+                headless.cycle(H, H.ctl.now + 0.2)
+                H.Hekili.State.reset("Primary", true)
+                got[#got + 1] = C.resolve("faerie_fire", H).gcd
+            end
+            local dw = require("Forever.helpers.druid_world")
+            assert.are.same({ dw.GCD.totem, dw.GCD.spell }, got)
+        end
+    )
+end)
+
 describe("the Guardian loop world's press", function()
     -- review fix: the press is checked at the cost the client sees (0 under Clearcasting); the swing prices it
     it("accepts a Maul pressed under Clearcasting with rage below its cost, and takes nothing at the queue", function()
@@ -65,6 +87,77 @@ describe("the Guardian loop world's press", function()
         local ok, why = W.press(us, "maul", p)
         assert.is_true(ok, tostring(why))
         assert.are.equal(5, us.power)
+    end)
+
+    -- L1110: a queued strike's own Omen proc comes at its swing, after its strike, so it never takes it
+    it("pays a Maul in full at its swing and raises its own Clearcasting after the strike", function()
+        local C = dlw.Guardian
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local cc = H.Hekili.Class.auras.clearcasting.id
+        local p = C.resolve("maul", H)
+        local W = scenarios.world(setmetatable({ power = 60, form = C.character().form }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1
+        local omen = dlw.OMEN
+        dlw.OMEN = 1
+        local ok, why = W.press(us, "maul", p)
+        dlw.OMEN = omen
+        assert.is_true(ok, tostring(why))
+        W.run(8)
+        local out = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "strike" and ev.src == us and ev.spell then
+                out[#out + 1] = "strike " .. tostring(ev.cost)
+            elseif ev.kind == "aura" and ev.aura == cc then
+                out[#out + 1] = "cc " .. ev.stacks
+            end
+        end
+        assert.is_true(p.cost > 0)
+        assert.are.same({ "strike " .. p.cost, "cc 1" }, { out[1], out[2] })
+    end)
+end)
+
+-- Owner ruling L1110 (in game): Omen of Clarity procs on the cast, at its success, so a hard cast started right after
+-- takes it; a cast never takes its own proc, and Wrath never takes one.
+describe("the Balance loop world's Clearcasting", function()
+    it("procs at the cast's success; the next hard cast pays at its landing, free; Wrath keeps it", function()
+        local C = dlw.Balance
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local cc = H.Hekili.Class.auras.clearcasting.id
+        local W = scenarios.world(setmetatable({ form = C.character().form }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        local omen = dlw.OMEN
+        local function press(key, procs, t)
+            dlw.OMEN = procs and 1 or 0
+            W.t = t
+            local p = C.resolve(key, H) -- the instance never hears the world here: its press price is always full
+            local c0, ok, why = p.cost, W.press(us, key, p)
+            assert.is_true(ok, key .. " " .. tostring(why) .. " at " .. t)
+            local n = #W.truth
+            W.run(t + (p.cast or 0) + 0.3)
+            dlw.OMEN = omen
+            local out = {}
+            for i = n + 1, #W.truth do
+                local ev = W.truth[i]
+                if ev.kind == "cast" and ev.src == us then
+                    out[#out + 1] = ("cast %s %.2f"):format(tostring(ev.cost), ev.t)
+                elseif ev.kind == "aura" and ev.aura == cc then
+                    out[#out + 1] = ("cc %d %.2f"):format(ev.stacks, ev.t)
+                end
+            end
+            return table.concat(out, ", "), p, c0
+        end
+        local a, pa = press("starfire", true, 1)
+        local land = 1 + pa.cast
+        -- A pays in full and procs at its success, not later
+        assert.are.equal(("cast %s %.2f, cc 1 %.2f"):format(tostring(pa.cost), land, land), a)
+        assert.is_true(pa.cost > 0)
+        local wrath, pw = press("wrath", false, land + 0.3)
+        assert.are.equal(("cast %s %.2f"):format(tostring(pw.cost), land + 0.3 + pw.cast), wrath) -- full, kept
+        local t = land + 0.3 + pw.cast
+        local b, pb, cb = press("starfire", false, t) -- priced full at its press (the instance saw nothing)
+        assert.is_true(cb > 0)
+        assert.are.equal(("cast 0 %.2f, cc 0 %.2f"):format(t + pb.cast, t + pb.cast), b) -- free at its landing
     end)
 end)
 
@@ -106,8 +199,11 @@ describe("the Balance loop at a hard cast's end (gap BD) #slow", function()
                     )
                 end
                 -- (2) A -> B -> A with no cast, spend, avoid or aura between the first two polls: a pick computed
-                -- from the cast's end that flips back at the end tick
-                local q = ev.cast[i] or ev.spend[i] or ev.avoid[i] or ev.aura[i]
+                -- from the cast's end that flips back at the end tick. A press of B at its tick or the next is no flip
+                -- (the owner's rule, loop.flips): its cast event is the next tick's (Lane R2: seed 1 tick 288, Starfire
+                -- shown and pressed the poll its usable answer lifted the floor to its cost, then the next pick)
+                local pressedB = a.pressed[i] == s[i] or a.pressed[i + 1] == s[i]
+                local q = ev.cast[i] or ev.spend[i] or ev.avoid[i] or ev.aura[i] or pressedB
                 if i < a.combat and s[i - 1] ~= s[i] and s[i + 1] == s[i - 1] and not q then
                     flips[#flips + 1] = ("seed %d tick %d %s -> %s"):format(seed, i, tostring(s[i - 1]), tostring(s[i]))
                 end

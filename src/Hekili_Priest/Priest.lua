@@ -377,7 +377,9 @@ spec:RegisterAuras({
     -- The procs (unseen, observed only: no producer, the player aura walk reads them where plain): Spirit Tap below
     -- 5/5 (5/5 opens at our kill: the "kill" reaction), Dark Inspiration from Mind Blast and a full Mind Flay (wowsims's:
     -- absent from the DB2), Holy Purpose from Holy Fire's ticks (Searing Light).
-    spirit_tap = { id = 15271, copy = { 15270 }, duration = 15, max_stack = 1 },
+    -- Spirit Tap's Spirit +100% (wowsims spells_auto_gen.go 15271: aura 137, misc 4): its part of Spirit (the stat
+    -- split, L971), so a fall in combat takes it out of the belief's Spirit.
+    spirit_tap = { id = 15271, copy = { 15270 }, duration = 15, max_stack = 1, statsPct = { [5] = 2 } },
     dark_inspiration = { id = 1326168, duration = 10, max_stack = 1 },
     -- The utility spells' auras (no priority casts them; registered for the displays and custom priorities).
     fade_buff = { id = 586, copy = rest(FADE), duration = 10, max_stack = 1 },
@@ -400,7 +402,7 @@ spec:RegisterAuras({
     abolish_disease = { id = 552, duration = 20, max_stack = 1 },
     mind_soothe = { id = 453, copy = { 8192, 10953 }, duration = 15, max_stack = 1 },
     shadow_protection = { id = 976, copy = { 10957, 10958, 27683 }, duration = 600, max_stack = 1 },
-    divine_spirit = { id = 14752, copy = { 14818, 14819, 27841, 27681 }, duration = 3600, max_stack = 1 },
+    -- divine_spirit (Prayer of Spirit's too) is Hekili_Shared/Shared/Auras.lua's: every class carries it (L971).
     blessed_recovery = { id = 27811, copy = { 27813 }, duration = 6, max_stack = 1 },
     inspiration = { id = 14892, copy = { 14893 }, duration = 15, max_stack = 1 },
     spirit_of_redemption = { id = 20711, copy = { 27827 }, duration = 15, max_stack = 1 },

@@ -645,6 +645,22 @@ describe("resources", function()
             assert.are.same({ 10, 10 }, { r.lo, r.est }) -- not 18: the answer's bound already holds the refund
         end)
 
+        it("takes a struck refund out of pinDelta only while no pin came since it (I.Unrefund)", function()
+            local R = I.res
+            R.est0[1], R.lo0[1], R.hi0[1] = 12, 10, 20
+            I.ResourceShift(1, -10, 5, Obs.CastSuccess) -- 2 [0, 10]
+            local before, p0 = R.pinDelta[1], R.pinT[1]
+            local dE, dL, dH = I.Refund(1, 8, 5.3)
+            I.Unrefund(1, 8, dE, dL, dH, 5.4, p0) -- no pin since: the refund leaves the measurement too
+            assert.are.equal(before, R.pinDelta[1])
+            dE, dL, dH = I.Refund(1, 8, 5.5)
+            obs(Obs.Read, 5.6, 1, 2, I.ReadOf.Resource) -- an exact read: the pin measures from here
+            I.Fold(5.6, false)
+            assert.are.equal(0, R.pinDelta[1])
+            I.Unrefund(1, 8, dE, dL, dH, 5.7, p0) -- the pin since already saw the pool without it
+            assert.are.equal(0, R.pinDelta[1])
+        end)
+
         it("lets a short answer right after a refund cap it: a refund is no declared gain (I.GAIN_SHOWS)", function()
             local R = I.res
             R.est0[1], R.lo0[1], R.hi0[1] = 12, 10, 20
@@ -1988,7 +2004,7 @@ describe("resources", function()
             I.Settle(10)
             read(10, 500)
             I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
-            I.AuraModel(1, 1, 10, 30, 1, 10, 0) -- up 10 to 30
+            I.AuraModel(1, 1, 9, 30, 1, 10, 0) -- up 9 to 30 (an edge at the pin's instant would measure nothing)
             within(400 + 50 * 2, VS.Power(MANA, 12).est) -- 5 x 10 inside the window
             assert.are.same({ 50, 50 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 12, VS.CASTING).est })
             read(14, 400 + 55 * 4) -- 11 a second of spirit, x 5
@@ -2359,6 +2375,44 @@ describe("resources", function()
             assert.are.same({ 320, 320 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 16).est })
         end)
 
+        -- the game credits regen in ticks, so a rate change (an entry's edge) lands on a grid the belief does not see:
+        -- the interval across it is off by up to a tick of the new rate (a replay's first channel tick, 55 mana
+        -- under a x 16 entry, cut the spirit part 11.43 -> 10.58)
+        it("takes no measurement across a regen entry's edge, and measures inside it", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", spirit = 16, share = 1 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 1, 11.5, 30, 1, 11.5, 0) -- surge from 11.5: 2 + 16 x 20 = 322 a second
+            local v = 400 + 12 * 1.5 + 322 * 0.4 -- the game's tick at 12 not yet in: a tenth of a second short
+            read(12, v)
+            assert.are.same({ 12, 10 }, { I.res.regE[1], I.res.spE[1] })
+            -- a second inside it: spirit weight (16 - 0.5) / 0.5 = 31, so 31 more is a spirit part of 11
+            read(13, v + 322 + 31)
+            local sp = 10 + I.ALPHA * 1
+            within(sp, I.res.spE[1])
+            assert.are.equal(12, I.res.regE[1])
+            -- its end, swept from the record before the next pin (a fall by time keeps fellAt), measures nothing
+            I.AuraModel(1, 1, 11.5, 13.5, 1, 13, 0)
+            I.Settle(14)
+            assert.are.equal(0, I.auras.exp0[1][1])
+            read(15, v + 322 + 31 + (12 + sp * 31) * 0.5 + 12 * 1.5 + 60) -- a tick of it more than the model's
+            within(sp, I.res.spE[1])
+            assert.are.equal(12, I.res.regE[1])
+        end)
+
+        it(
+            "takes no measurement from an interval starting at an entry's edge (the pin at the cast's instant)",
+            function()
+                shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", spirit = 16, share = 1 } })
+                read(10, 500)
+                I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+                read(11, 412)
+                I.AuraModel(1, 1, 11, 30, 1, 11, 0) -- surge from 11, the pin's own instant
+                read(12, 412 + 322 * 0.9) -- the game's first tick after 11 not yet in
+                assert.are.same({ 12, 10 }, { I.res.regE[1], I.res.spE[1] })
+            end
+        )
+
         it("multiplies overlapping `spirit` auras and adds their shares", function()
             shaped(
                 { spirit = 10, mp5 = 2 },
@@ -2382,7 +2436,7 @@ describe("resources", function()
             shaped({ spirit = 10, mp5 = 0 }, { { aura = "focus", share = 0.5 } })
             read(10, 500)
             I.ResourceShift(1, -100, 10, Obs.CastSuccess)
-            I.AuraModel(1, 2, 10, 30, 1, 10, 0)
+            I.AuraModel(1, 2, 9, 30, 1, 10, 0) -- up before the pin (an edge at its instant would measure nothing)
             read(14, 400 + 5.5 * 4) -- 11 a second of spirit, half of it in the window
             within(10 + I.ALPHA * 1, I.res.spE[1])
             assert.are.equal(0, I.res.regE[1])
@@ -2611,6 +2665,115 @@ describe("resources", function()
                 end,
             }, bad)
             assert.are.same({ 0, 0, 0 }, { I.res.spDecl[1], I.res.decl[1], I.res.decayIv[1] })
+        end)
+    end)
+
+    -- L961/L963: the static share reads an aura our own cast moves (an armor's casting share); the stored pair is the
+    -- game's, so only a change after it moves the parts: (c' - c) x S between casting M + cS and the spirit (1 - c)S.
+    describe("a static share our own cast changes (spirit regen S 20, mp5 M 2)", function()
+        local MANA = 0
+
+        local function bootShare(full, share)
+            boot({
+                abilities = {
+                    {
+                        key = "don",
+                        now = function()
+                            applyBuff("ward", 1800) -- luacheck: ignore 113 (the `now` context's verb)
+                        end,
+                    },
+                    {
+                        key = "doff",
+                        now = function()
+                            removeBuff("ward") -- luacheck: ignore 113 (the `now` context's verb)
+                        end,
+                    },
+                },
+                abilityIds = { { 1101 }, { 1102 } },
+                abilitySlot = { 0, 0 },
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 1000,
+                        rest = true,
+                        -- full: the ward's 0.5 on a talent's 0.5 (all of it: the mp5 part holds M + S, M 0)
+                        fsr = {
+                            spirit = full and 0 or 10,
+                            mp5 = full and 20 or 12,
+                            share = share or function()
+                                return (buff.ward.up and 0.5 or 0) + (full and 0.5 or 0) -- luacheck: ignore 113
+                            end,
+                        },
+                        mult = { { aura = "surge", spirit = 16, share = 1 } },
+                    },
+                },
+                auras = { { key = "ward", id = 1021 }, { key = "surge", id = 1022 } },
+                auraIds = { { 1021 }, { 1022 } },
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.AuraModel(1, 1, 1, 1801, 1, 1, 0) -- worn before the pull
+            I.Settle(10)
+            obs(Obs.CombatStart, 10, 0, 0, 0)
+            I.Fold(10, false)
+        end
+
+        local function parts()
+            local R = I.res
+            return { R.share[1], R.regE[1], R.spE[1], R.decl[1], R.spDecl[1] }
+        end
+
+        it("moves half of S from casting to the spirit part when our cast takes the ward off, and back", function()
+            bootShare(false)
+            assert.are.same({ 0.5, 12, 10, 12, 10 }, parts())
+            obs(Obs.CastSuccess, 11, 2)
+            I.Fold(11, false)
+            assert.are.same({ 0, 2, 20, 2, 20 }, parts())
+            assert.are.same({ 2, 22 }, { VS.Regen(MANA, 11, VS.CASTING).est, VS.Regen(MANA, 11, VS.NOT_CASTING).est })
+            obs(Obs.CastSuccess, 12, 1)
+            I.Fold(12, false)
+            assert.are.same({ 0.5, 12, 10, 12, 10 }, parts())
+            -- the interval across the change measures nothing
+            assert.is_false(I.res.pinValid[1])
+        end)
+
+        it("takes S from the mp5 part when the share was all of it (shortcut: M 0)", function()
+            bootShare(true)
+            assert.are.same({ 1, 20, 0, 20, 0 }, parts())
+            obs(Obs.CastSuccess, 11, 2)
+            I.Fold(11, false)
+            assert.are.same({ 0.5, 10, 10, 10, 10 }, parts())
+            I.AuraModel(1, 2, 12, 20, 1, 12, 0) -- a x 16 surge: M + 16 x S whatever the share
+            assert.are.equal(320, VS.Regen(MANA, 13).est)
+            obs(Obs.CastSuccess, 14, 1)
+            I.Fold(14, false)
+            assert.are.same({ 1, 20, 0, 20, 0 }, parts())
+            assert.are.equal(320, VS.Regen(MANA, 15).est)
+        end)
+
+        it("moves only the share out of combat: the poll's regen read keeps the parts the game's", function()
+            bootShare(false)
+            obs(Obs.CombatEnd, 10.5, 0, 0, 0)
+            I.Fold(10.5, false)
+            obs(Obs.CastSuccess, 11, 2)
+            I.Fold(11, false)
+            assert.are.same({ 0, 12, 10, 12, 10 }, parts())
+        end)
+
+        it("runs a share that raised no more at our casts (the build and combat start retry it)", function()
+            local calls = 0
+            bootShare(false, function()
+                calls = calls + 1
+                error("TacoDog: no stat yet")
+            end)
+            local before = calls
+            obs(Obs.CastSuccess, 11, 2)
+            I.Fold(11, false)
+            obs(Obs.CastSuccess, 12, 1)
+            I.Fold(12, false)
+            assert.are.equal(before, calls)
         end)
     end)
 

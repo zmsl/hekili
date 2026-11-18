@@ -69,6 +69,40 @@ describe("auras", function()
         assert.are.equal(20, readA(21, 35.2)) -- within I.AURA_REFRESH: the same application
     end)
 
+    -- An aura may copy its talent's spell ID (the Cooldown Manager links both): the talent's own passive aura, if the
+    -- client lists it, reads permanent (no expiry) and is not the buff
+    it(
+        "skips a talent's spell read permanent on the player; the same ID with an expiry, or the aura's own, counts",
+        function()
+            local def = fs.def(fs.new(9))
+            def.auraIds[SHOUT] = { fs.SPENDER_A, 1011 } -- 1011: talent_a's spell
+            I.Build(def, 1)
+            local function walk(t, id, expires)
+                ctl.now = t
+                ctl.auras.player.HELPFUL[1] = { spellId = id, expirationTime = expires, applications = 0 }
+                ctl.Fire("UNIT_AURA", "player")
+                fold(t)
+                return VS.Aura("player", fs.SPENDER_A, t)
+            end
+            assert.is_nil(walk(10, 1011, 0)) -- the talent's passive
+            assert.are.equal(25, walk(11, 1011, 25).est) -- a timed one under the talent's ID: the buff
+            ctl.auras.player.HELPFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "player")
+            fold(12)
+            assert.is_not_nil(walk(13, fs.SPENDER_A, 0)) -- the aura's own ID, permanent: up
+            -- an aura whose own ID is the talent's (a form, an until-used buff): its permanent read is the buff
+            def = fs.def(fs.new(9))
+            def.auras[SHOUT] = setmetatable({ id = 1011 }, { __index = def.auras[SHOUT] })
+            def.auraIds[SHOUT] = { 1011 }
+            I.Build(def, 20)
+            ctl.now = 21
+            ctl.auras.player.HELPFUL[1] = { spellId = 1011, expirationTime = 0, applications = 0 }
+            ctl.Fire("UNIT_AURA", "player")
+            fold(21)
+            assert.is_not_nil(VS.Aura("player", 1011, 21))
+        end
+    )
+
     it("finds a tracked aura past the 40th slot of one filter", function()
         ctl.now = 10
         for i = 1, 40 do
@@ -1105,6 +1139,65 @@ describe("auras", function()
             assert.is_true(math.abs(est("target", fs.SPENDER_C, 25.8) - 40.8) < 1e-9) -- opened at once from its light
         end)
 
+        -- A close and a CDM open of one record staged in one drain (the harness's Retribution live-auras trace at 87.6):
+        -- the close folds first, so the open writes a new application at its own t. It is ours (the CDM opened it): its
+        -- NONE closes it (rule 1). Red before the fix: ours named the closed application's applied time (10), so the
+        -- record stood its whole registered duration.
+        it("a close then a CDM open in one drain: a new application, ours, closed by its NONE", function()
+            cast(1, SHOUT, 10, 10) -- ours, applied 10, the model's expiry 20; the item never lit (UNKNOWN)
+            for t = 10.5, 19.5, 0.5 do
+                poll(t)
+            end
+            ctl.now = 20
+            S.Direct(Obs.Read, 20, SHOUT, 0, I.ReadOf.Aura) -- a down logged first in the drain
+            ctl.ViewerAura(pi, "player") -- a lone light at the model's expiry: poll 15 opens the record
+            poll(20)
+            local rec, _, applied = VS.Aura("player", fs.SPENDER_A, 20)
+            assert.are.same({ 140, 20 }, { rec and rec.est, applied })
+            ctl.ViewerClear(pi)
+            poll(20.5)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 20.5))
+        end)
+
+        -- The same claim for an out-of-combat walk read of ours on an `icd` aura, whose fold writes an applied time the
+        -- stage could not know: a first-walk sighting (one ICD back) and a re-application while up (the read's t). The
+        -- next fight's NONE closes it (rule 1). Red before the fix: ours named the stage's guess, so it stood.
+        for _, c in ipairs({ { "a first-walk sighting", false, 1 }, { "a re-application while up", true, 14 } }) do
+            it("a walk read of ours on an icd aura (" .. c[1] .. "): ours, closed by the next fight's NONE", function()
+                local def = fs.def(fs.new(9))
+                def.auras[SHOUT].icd = 10
+                start(def)
+                ctl.now = 11
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                local mine = { spellId = fs.SPENDER_A, expirationTime = 30, applications = 0, sourceUnit = "player" }
+                if c[2] then -- a clean walk with nothing up, then a gain the walks saw at 12
+                    ctl.auras.player.HELPFUL[1] = nil
+                    ctl.Fire("UNIT_AURA", "player")
+                    poll(11)
+                    ctl.now = 12
+                    ctl.auras.player.HELPFUL[1] = mine
+                    ctl.Fire("UNIT_AURA", "player")
+                    poll(12)
+                    ctl.now = 14
+                    mine.expirationTime = 50 -- a re-proc: a later expiry
+                end
+                ctl.auras.player.HELPFUL[1] = mine
+                ctl.Fire("UNIT_AURA", "player")
+                poll(ctl.now)
+                assert.are.equal(c[3], select(3, VS.Aura("player", fs.SPENDER_A, ctl.now)))
+                ctl.now = 15
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+                ctl.auras.player.HELPFUL[1] = fake.SECRET
+                ctl.Fire("UNIT_AURA", "player")
+                ctl.ViewerAura(pi, "player")
+                poll(15)
+                poll(15.5)
+                ctl.ViewerClear(pi)
+                poll(16)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 16))
+            end)
+        end
+
         it("C: a CDM UP with no model record opens at once; no numeric duration: long on the target too", function()
             local def = fs.def(fs.new(9))
             def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
@@ -1738,6 +1831,65 @@ describe("auras", function()
                 assert.are.same({ 1, 1 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
             end)
 
+            -- Hotfix 0.8.6 (L1239 cause 2): an avoid credited to a cast that landed (its item lit) undoes the cast's
+            -- write; like any close it drops the debounce's memory, so the still-lit item re-opens at the next poll
+            -- instead of HOLD past the undone cast's expiry.
+            it("an avoid undo's close drops the debounce's memory: the lit item re-opens at the next poll", function()
+                local def = fs.def(fs.new(9))
+                for _, ab in ipairs(def.abilities) do
+                    ab.now = ab.funcs and ab.funcs.now
+                end
+                start(def)
+                ctl.now = 11
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.ViewerAura(ti, "target") -- it landed and lights
+                drain(11)
+                drain(11.2) -- an UP on the record up: the debounce remembers its expiry
+                assert.are.equal(26, est("target", fs.SPENDER_C, 11.2))
+                ctl.now = 11.3
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- credited to the cast: the undo closes it
+                drain(11.3)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.3))
+                assert.are.equal(1, I.avoidsRun)
+                drain(11.5)
+                assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 11.5)) -- not debounced against the old 26
+            end)
+
+            -- Hotfix 0.8.6 fix round 1 (review I1): a light that began before the undone cast is the earlier
+            -- application's, still shown by the viewer's lag; the undo's close must not let it re-open the record.
+            it("an avoid undo's close keeps a light from before the cast debounced: no re-open", function()
+                local def = fs.def(fs.new(9))
+                for _, ab in ipairs(def.abilities) do
+                    ab.now = ab.funcs and ab.funcs.now
+                end
+                start(def)
+                ctl.now = 11
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.ViewerAura(ti, "target")
+                drain(11)
+                drain(11.2)
+                assert.are.equal(26, est("target", fs.SPENDER_C, 11.2))
+                for t = 12, 25, 1 do
+                    drain(t)
+                end
+                drain(26.05) -- expired in the model; the item still lit (viewer lag)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 26.05))
+                ctl.now = 26.1
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C) -- the recast
+                drain(26.15)
+                assert.are.equal(41.1, est("target", fs.SPENDER_C, 26.15))
+                ctl.now = 26.3
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- a true dodge: the undo closes it
+                drain(26.3)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 26.3))
+                assert.are.equal(1, I.avoidsRun)
+                drain(26.45) -- the old light, still lit: no re-open
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 26.45))
+                ctl.ViewerClear(ti)
+                drain(26.6)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 26.6))
+            end)
+
             it("F52-A (review M1): a recast folded in the verdict's own drain stands: no close, no strike", function()
                 local def = fs.def(fs.new(9))
                 for _, ab in ipairs(def.abilities) do
@@ -2274,6 +2426,80 @@ describe("auras", function()
             ctl.ViewerClear(e)
             poll(11)
             assert.is_truthy(VS.Snapshot():find("leaf=off(error", 1, true))
+        end)
+
+        -- L1075/L1076: the raw Cooldown Manager read beside the conclusions, so "believed up but wasn't" is answerable
+        -- from the snapshot alone: per slot in viewer then slot order, and per mapped aura on the layout or not.
+        local function lines(snap, want) -- each line present, in order, and every line under 255 characters
+            local at = 0
+            for _, line in ipairs(want) do
+                local i = snap:find(line .. "\n", 1, true)
+                assert.is_truthy(i, line .. "\n" .. snap)
+                assert.is_true(i > at, line) -- in order
+                at = i
+            end
+            for line in snap:gmatch("[^\n]+") do
+                assert.is_true(#line < 255, line)
+            end
+        end
+
+        it("the snapshot lists every viewer slot's raw read and each mapped aura's place on the layout", function()
+            ctl.viewer.sets[0] = { 504, 505, 700, 800 }
+            ctl.viewer.infos[504] = { spellID = fs.SPENDER_S } -- on the layout, never lit
+            ctl.viewer.infos[505] = { spellID = fs.SPENDER_H } -- mapped, no item: not on the layout
+            ctl.viewer.infos[700] = { spellID = 9999, linkedSpellIDs = { fs.SPENDER_M, 9998 } } -- ambiguous only
+            ctl.viewer.infos[800] = { spellID = 9997 } -- unmapped
+            ctl.ViewerItem("EssentialCooldownViewer", 1, 504).shown = true
+            local amb = ctl.ViewerItem("EssentialCooldownViewer", 2, 700)
+            ctl.ViewerItem("UtilityCooldownViewer", 1, 800).shown = true
+            start(fs.def(fs.new(9, nil, nil, true)))
+            ctl.ViewerAura(pi, "player")
+            ctl.ViewerAura(ti, "target")
+            ctl.ViewerAura(amb, "target")
+            poll(10.5)
+            ctl.ViewerClear(ti) -- lit, then dark from 11
+            poll(11)
+            poll(12)
+            local snap = VS.Snapshot()
+            lines(snap, {
+                -- slots 1-2 (pi, ti) were collected by before_each's start: the order is the viewers', not the slots'
+                "presence-slot E s=3 i=1 cd=504 aura=spender_s shown=yes lit=no ans=- light=- dark=- unit=-",
+                "presence-slot E s=4 i=2 cd=700 aura=amb shown=yes lit=yes ans=amb light=- dark=- unit=-",
+                "presence-slot U s=5 i=1 cd=800 aura=- shown=yes lit=no ans=- light=- dark=- unit=-",
+                "presence-slot B s=1 i=1 cd=501 aura=spender_a shown=yes lit=yes ans=up light=0.00 dark=- unit=player",
+                "presence-slot B s=2 i=2 cd=502 aura=spender_c shown=no lit=no ans=- light=1.50 dark=1.00 unit=target",
+                "presence-layout spender_a on=yes neverLit=no",
+                "presence-layout spender_c on=yes neverLit=no",
+                "presence-layout spender_m on=amb neverLit=-", -- no single mapping: neverLit has nothing to say
+                "presence-layout spender_s on=yes neverLit=yes",
+                "presence-layout spender_h on=no neverLit=yes",
+            })
+            assert.is_truthy(snap:find("presence-proof mappedNeverLit=spender_s,spender_h\n", 1, true), snap)
+        end)
+
+        it("the snapshot's slot lines print secrets as S, a failed IsShown as ?, and a family item's member", function()
+            ctl.viewer.sets[0] = { 504, 710 }
+            ctl.viewer.infos[504] = { spellID = fs.SPENDER_S }
+            ctl.viewer.infos[710] = { spellID = 9999, linkedSpellIDs = { fs.SPENDER_M, fs.SPENDER_H } } -- a family
+            local def = fs.def(fs.new(9, nil, nil, true))
+            def.auras[3].family, def.auras[5].family = "fam", "fam" -- spender_m, spender_h
+            ctl.ViewerItem("EssentialCooldownViewer", 1, fake.SECRET).IsShown = function()
+                return fake.SECRET
+            end
+            ctl.ViewerItem("EssentialCooldownViewer", fake.SECRET, 504).IsShown = nil -- no method: the call raises, ?
+            local fam = ctl.ViewerItem("UtilityCooldownViewer", 1, 710)
+            start(def)
+            cast(2, 3, 10, 12) -- our spender_m on the target: the family item counts for it
+            ctl.ViewerAura(fam, "target")
+            poll(10.5)
+            lines(VS.Snapshot(), {
+                "presence-slot E s=3 i=1 cd=S aura=? shown=S lit=no ans=- light=- dark=- unit=-",
+                "presence-slot E s=4 i=S cd=504 aura=spender_s shown=? lit=no ans=- light=- dark=- unit=-",
+                "presence-slot U s=5 i=1 cd=710 aura=amb>spender_m shown=yes lit=yes ans=up light=0.00 dark=- unit=target",
+                "presence-layout spender_a on=yes neverLit=yes", -- a plain single item beats the secret ones
+                "presence-layout spender_m on=? neverLit=-", -- a secret slot may be it: not "not on your bars"
+                "presence-layout spender_s on=? neverLit=yes",
+            })
         end)
     end)
 end)

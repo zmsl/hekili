@@ -18,7 +18,7 @@ An **ability** is one entry of `RegisterAbilities` (or one `RegisterAbility` cal
 
 A field declared as a function runs in the simulation with the simulated `state` as its environment, each time the field is read, so `talent.ferocity.rank` or `buff.bear_form.up` inside it answers for the simulated moment. The effect functions `handler`, `start`, `tick`, `finish` and `impact` are not evaluated on read: the simulation calls them when the matching event happens.
 
-The belief reads the declared fields it needs to model a cast (cost, cooldown, charges, GCD, cast time, swing fields) and evaluates `spend`, `cooldown` and `gcdTime` functions in its own context, falling back to a value computed under `state` if one raises. It runs `now`, `onCrit`, `onLand` and `now_finish` in its own context. Write those functions with names both contexts have ([Pack environment names](Pack-Environment-Names)).
+The belief reads the declared fields it needs to model a cast (cost, cooldown, charges, GCD, cast time, swing fields) and evaluates `spend`, `cooldown` and `gcdTime` functions in its own context, falling back to a value computed under `state` if one raises. It runs `now`, `onCrit`, `onLand`, `onAvoid` and `now_finish` in its own context. Write those functions with names both contexts have ([Pack environment names](Pack-Environment-Names)).
 
 `known` is cached for a whole prediction, so it must depend only on the spellbook, talents and gear, never on buffs or time.
 
@@ -44,6 +44,7 @@ The belief reads the declared fields it needs to model a cast (cost, cooldown, c
 | `spend` | number or function | The cost. A value between 0 and 1 is a share of the resource's base power ([Pack resources and regen](Pack-Resources-And-Regen#meta-fields)); any other value is points. |
 | `spendType` | string | The resource paid, such as `"energy"`, `"rage"` or `"mana"`. Without it, the class's primary resource. |
 | `spendBase` | boolean | Reads `spend` as a share of base power at any size, for a percent cost that an aura can raise past 100% |
+| `excess_cap` | number or function | The most extra of the spent resource the ability converts beyond its cost. A line with `max_energy` waits for the cost plus this, at most the resource's maximum ([APL line options](APL-Line-Options)). |
 | `refundOnAvoid` | boolean or number | The share of the cost given back when the target dodges, parries or misses. `true` uses the resource's default share. Belief only. |
 | `ladder` | boolean | `false`: the client's usability answers for this ability do not bound the resource. Use it when the answer depends on something else, such as a finisher that is unusable at 0 combo points. |
 
@@ -107,6 +108,7 @@ Declare a form requirement with `form`, never through `buff` or a `usable` funct
 | `now` | Belief | The client reports the player's cast succeeded, after the cost, cooldown and GCD are written |
 | `onCrit` | Belief | The target's row shows a critical hit by this cast |
 | `onLand` | Belief | The cast's hit is settled as landed; never on an avoid, and never for `expects = "none"` |
+| `onAvoid` | Belief | The target dodged, parried or missed the latest cast, after that cast's target auras are put back; for an effect only a landed hit gives, such as a buff the cast's `now` granted |
 | `start` | Simulation | A channel starts |
 | `tick` | Simulation | A channel ticks |
 | `finish` | Simulation | A channel finishes |
@@ -129,6 +131,7 @@ These fields tell the belief what the cast's hit looks like, so that it can pay 
 | `school` | string | `"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"` or `"arcane"` |
 | `velocity` | number | A projectile's speed in yards a second |
 | `flightTime` | number | A projectile's fixed flight time in seconds |
+| `startsAtLanding` | boolean | Beside a `velocity`: the belief starts the target auras a `now` puts on at the cast's landing, the target's believed distance over the velocity after the cast, as a projectile's debuff starts. The simulation's `handler` still applies at the cast. |
 | `missable` | boolean or string | A miss leaves the debuff off the target: `true` for the debuff of the ability's own key, or another debuff's key |
 | `cycle` | string | The debuff that a target swap or a ticking kind reads, when it is not the ability's own key |
 | `aura` | string | The aura the ability applies, when it is not the ability's own key |

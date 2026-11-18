@@ -311,6 +311,9 @@ spec:RegisterResource(
     }
 )
 
+-- Reflection (17106): 17/33/50% of the spirit regen while casting by rank (wowsims's curve, e5a9cd2a2d).
+local REFLECTION = { 0.17, 0.33, 0.5 }
+
 -- Mana: secret even out of combat. A cost below 1 is a percent of base mana (DB2 PowerCostPct: the forms, Shifting
 -- Power, Innervate), priced in both layers from `base`: wowsims's 1244 at 60 (its log: Shifting Power and Cat Form
 -- 684 = 55%, Innervate 62 = 5%, whole mana rounded down) until the client's cost read teaches the player's own. The
@@ -319,16 +322,12 @@ spec:RegisterResource(
 spec:RegisterResource(
     Enum.PowerType.Mana,
     {
-        -- Innervate (DB2 29166), as wowsims/forever applies its two effects (sim/core/spelldata/parse_effects_table.go):
-        -- A_MOD_POWER_REGEN_PERCENT +400% (spirit regen x 5) and A_MOD_MANA_REGEN_INTERRUPT 100% (all of it while
-        -- casting), so 5 x the full spirit regen inside the five-second rule too (its Feral log: 108.75 = 5 x 21.75 a
-        -- second over 22-41 s). wowsims's rule (owner: matches the game), not yet measured on Forever.
-        -- DB2 29166: aura 110 +400% (`spirit` x 5), aura 134 100% (`share` 1). Its seconds weigh the calibration.
-        innervate = { aura = "innervate", spirit = 5, share = 1 },
+        -- Innervate's regen (spirit x 5, all of it while casting) is the shared entry every mana user has
+        -- (Hekili_Shared/Shared/Auras.lua), the Druid's own cast included: not declared here (it would count twice).
         -- The Serenity Field trinket's buff (item 272439; DB2 aura 1291103: aura 29 Spirit +72, 15 s; an item's buff any
         -- Druid may wear; the other classes' packs: docs/dev/gaps.md): Spirit +72 raises the spirit regen S = 6.25 +
         -- Spirit/8 by 9 a second, so the part x (S + 9) / S, Spirit the belief's out-of-combat read (druid_balance.log:
-        -- Tag 2 22.0 -> 31.0 over 114.9-126 s at Spirit 126); 1 before that read.
+        -- 12.61 -> 17.11 a second casting at Spirit 139 and Reflection 3/3, + 0.5 x 9); 1 before that read.
         serenity_field = {
             aura = "serenity_field",
             item = 272439, -- the replay's key: wowsims logs the buff by its item
@@ -340,7 +339,16 @@ spec:RegisterResource(
     },
     nil,
     {
-        fsr = { spirit = 22, mp5 = 0 },
+        -- the share: Reflection's rank (the belief reads it after its talent walk). shortcut: the seeds are the
+        -- unreflected builds' (Feral, Guardian); a Reflection build (wowsims's Balance export, 3/3) starts from them
+        -- until the out-of-combat read splits its own parts.
+        fsr = {
+            spirit = 22,
+            mp5 = 0,
+            share = function()
+                return REFLECTION[talent.reflection.rank] or 0
+            end,
+        },
         base = 1244, -- wowsims's ExtraClassBaseStats, level 60
     }
 )
@@ -425,10 +433,13 @@ spec:RegisterSetBonus("haruspex_3pc", GEAR.haruspex_3pc)
 
 spec:RegisterAuras({
     serenity_field = { id = 1291103, duration = 15, max_stack = 1 },
+    -- The forms are one family (L727, owner: as the seals): the Cooldown Manager's Druid Forms entry says a form is up
+    -- or none is, our last form cast says which; the plain shapeshift read (Game/State/Sources/Forms.lua) wins.
     aquatic_form = {
         id = 1066,
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     barkskin = {
         id = 22812,
@@ -449,6 +460,7 @@ spec:RegisterAuras({
         copy = { 9634 },
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     berserk = {
         id = 417141,
@@ -491,6 +503,7 @@ spec:RegisterAuras({
         id = 768,
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     challenging_roar = {
         id = 5209,
@@ -581,12 +594,7 @@ spec:RegisterAuras({
         tick_time = 1,
         max_stack = 1,
     },
-    gift_of_the_wild = {
-        id = 21849,
-        copy = rest(GIFT_OF_THE_WILD),
-        duration = 3600,
-        max_stack = 1,
-    },
+    -- mark_of_the_wild and gift_of_the_wild are Hekili_Shared/Shared/Auras.lua's: every class carries them (L971).
     growl = {
         id = 6795,
         duration = 3,
@@ -626,13 +634,6 @@ spec:RegisterAuras({
         tick_time = 3,
         max_stack = 5,
     },
-    mark_of_the_wild = {
-        id = 1126,
-        -- 1291335/1310503: Forever's own rank 7 (level 60) beside 9885, same name
-        copy = { 5232, 6756, 5234, 8907, 9884, 9885, 1291335, 1310503 },
-        duration = 3600,
-        max_stack = 1,
-    },
     -- Maul queued on the next swing (C_Spell.IsCurrentSpell, applied in reset_precast), a full swing long.
     maul = {
         duration = function()
@@ -654,6 +655,7 @@ spec:RegisterAuras({
         id = 24858,
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     natures_grace = {
         id = 16886,
@@ -688,11 +690,14 @@ spec:RegisterAuras({
         tick_time = 3,
         max_stack = 1,
     },
+    -- A stealth: the IsStealthed read puts it up or down (Sources/Forms.lua, C5), so a mob that breaks it takes it down.
+    -- shortcut: a Night Elf's Shadowmeld also reads IsStealthed true (unprobed in combat, Rogue Q5): believed prowled.
     prowl = {
         id = 5215,
         copy = rest(PROWL),
         duration = 3600,
         max_stack = 1,
+        isStealthed = true,
     },
     rake = {
         id = 1822,
@@ -718,6 +723,7 @@ spec:RegisterAuras({
         id = 783,
         duration = 3600,
         max_stack = 1,
+        family = "forms",
     },
     -- Auras the Cooldown Manager's buff entries link (cdm fixture, the owner's export): every rank, the pin's durations.
     -- Nothing reads them but the map; Wild Growth's and Abolish Poison's land on the healed ally.
@@ -1237,6 +1243,11 @@ spec:RegisterAbilities({
 
         spend = 35,
         spendType = "energy",
+        -- max_energy=1's cap: Bite converts all the energy it has, uncapped (wowsims ferocious_bite.go
+        -- `extra := CurrentEnergy()`), so the core's cost-plus-cap clamp at the pool's max means full energy
+        excess_cap = function()
+            return energy.max
+        end,
 
         startsCombat = true,
         known = knows(FEROCIOUS_BITE),

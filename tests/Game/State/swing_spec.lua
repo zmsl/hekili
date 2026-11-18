@@ -115,6 +115,9 @@ describe("swings", function()
         I.AuraModel(1, 1, 101, 116, 1, 101, 0) -- up at 101: 1.8 s left becomes 1.8 / 1.4
         near(101 + 1.8 / 1.4, VS.Swing(1, 101).est)
         near(2.0, VS.SwingSpeed(1, 101).est)
+        -- L967 3c: the melee haste follows, so the simulation's base (speed x haste, Engine/Sim/State.lua) stays 2.8
+        near(1.4, VS.Haste(101).est)
+        near(2.8, VS.SwingSpeed(1, 101).est * VS.Haste(101).est)
         near(101 + 1.8 / 1.4 + 2.0, VS.Swing(1, 102.5).est)
         I.AuraModel(1, 1, 101.5, 116, 1, 101.5, 0) -- a refresh while up: no second rescale
         near(2.0, VS.SwingSpeed(1, 101.5).est)
@@ -122,6 +125,7 @@ describe("swings", function()
         drain(116.5) -- the aura ran out at 116: 1.0 s left there becomes 1.4
         near(117.4, VS.Swing(1, 116.5).est)
         near(2.8, VS.SwingSpeed(1, 116.5).est)
+        near(1.0, VS.Haste(116.5).est)
     end)
 
     describe("parry haste (parry-haste spec decisions 57-59, the owner's ruling 2026-10-23)", function()
@@ -283,6 +287,21 @@ describe("swings", function()
                 assert.are.same({}, rows) -- a shot is no melee swing
             end
         )
+
+        -- L967 side bug: the ranged speed came from the stat cache, which UNIT_ATTACK_SPEED did not refresh; a ranged
+        -- haste change out of combat (a quiver, a buff) fires UNIT_RANGEDDAMAGE (wow-ui-source forever branch).
+        it("re-reads the ranged speed out of combat on UNIT_ATTACK_SPEED and UNIT_RANGEDDAMAGE", function()
+            VS.Start(api)
+            at(2, "PLAYER_ENTERING_WORLD")
+            assert.are.equal(3.1, VS.SwingSpeed(3, 2).est)
+            ctl.ranged[1] = 2.8
+            at(3, "UNIT_ATTACK_SPEED", "player")
+            assert.are.equal(2.8, VS.SwingSpeed(3, 3).est)
+            ctl.ranged[1] = 2.5
+            at(4, "UNIT_RANGEDDAMAGE", "player")
+            assert.are.equal(2.5, VS.SwingSpeed(3, 4).est)
+            assert.are.equal(2.5, (VS.Stat("UnitRangedDamage"))) -- the cache follows too
+        end)
 
         it("anchors at a PLAYER_SWING of swingType 2 with weight 1 and takes its duration as the speed", function()
             VS.Start(api)

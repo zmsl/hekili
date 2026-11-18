@@ -42,6 +42,14 @@ local format = string.format
 -- 14 (2026-11-11, aura audit C8-C12): the `now` names `instant`, `cast_start` and `target.health`, the ability fields
 -- `onLand` and `now_finish`, `spec:RegisterGcdMod`: an older core never runs the fields, reads nil for the names and
 -- raises on the call.
+--   Since then, without a bump: the aura field `family` (L727); an older core ignores it and keeps the Cooldown
+--   Manager's entry for the family unused, as before.
+--   Since then, without a bump: the `now` verb `gain`'s third argument, a roll's spread (L481); an older core ignores
+--   it and shifts the floor and the top by the average too.
+--   Also without a bump: the aura fields `spellHaste`, `stats` and `statsPct` (the stat split, L971); an older core
+--   ignores them and holds the out-of-combat spell haste and stats through a fight, as before.
+--   Also without a bump: the ability field `onAvoid` (L1239); an older core never runs it and keeps what the cast's
+--   `now` granted through an avoid, as before.
 local CONTENT_API = 14
 
 local done, notice = false, nil

@@ -50,7 +50,7 @@ C_Spell.IsSpellHarmful	passthrough
 C_Spell.IsSpellHelpful	passthrough
 C_Spell.IsSpellInRange	hybrid
 C_Spell.IsSpellPassive	passthrough
-C_Spell.IsSpellUsable	passthrough
+C_Spell.IsSpellUsable	hybrid
 C_Spell.RequestLoadSpellData	passthrough
 C_SpellActivationOverlay.IsSpellOverlayed	passthrough
 C_SpellBook.FindSpellBookSlotForSpell	passthrough
@@ -137,7 +137,7 @@ IsResting	passthrough
 IsSpellKnown	passthrough
 IsSpellKnownOrOverridesKnown	passthrough
 IsStealthed	hybrid
-IsUsableSpell	passthrough
+IsUsableSpell	hybrid
 LibRangeCheck.GetRange	hybrid
 RangeLib	hybrid
 SecureCmdOptionParse	passthrough

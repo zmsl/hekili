@@ -224,6 +224,69 @@ local function proc(p)
     return p * PROC_RAGE, max(p, 1 - p) * PROC_RAGE
 end
 
+-- Reckless Swings' charges in the sim's rage forecast (L872 (3); the belief pays them by the reckless_swings reaction):
+-- a forecast swing pays 5 while it is one of the stack's next swings of either hand in real-time order. The sim keeps
+-- the stack as the reset read it, so the swings count from the reset (state.now); an unpaid pending swing (the reset's
+-- mh_pending / oh_pending, forecast by State.lua's GAP AK branch) still holds its charge (the reaction runs at its row)
+-- and is counted at its own time, before the forecast's own swings. Allocates nothing.
+-- hand() reads the pending swing forecastResources accepted from the regen entry's `pending` (flicker-085); shortcut:
+-- it still repeats the core's origin test (newer than the last swing row, mh_actual / oh_actual + 1 ms: the swings
+-- after it run off it, else off the anchor's grid), and a pending event is told from the grid swings by its time off
+-- the hand's grid (GRID); read the entry's `resume` instead if the core's origin rule changes again.
+local GRID = 0.005 -- the forecast rounds each swing step to 1 ms (State.lua's roundDown)
+
+-- Hand h's forecast swings: its speed, its grid's origin (0: none) and its pending swing's time (0: none), as
+-- forecastResources places them (the rule above: a pending swing newer than the last swing row, L872 (2)'s opener
+-- swing after the combat-start pseudo swing or an early swing, is the origin of the swings after it).
+local function hand(h)
+    local s = h == 1 and state.mainhand_speed or state.offhand_speed
+    local a = h == 1 and state.swings.mainhand or state.swings.offhand
+    if s <= 0 or a <= 0 then
+        return s, 0, 0
+    end
+    local e = state.rage.regenModel[h == 1 and "reckless_mainhand" or "reckless_offhand"]
+    local p = e and e.pending or 0 -- the pending swing this forecast accepted (State.lua's GAP AK branch; 0: none)
+    if p > 0 then
+        local actual = (h == 1 and state.swings.mh_actual or state.swings.oh_actual) or 0
+        return s, p > actual + 0.001 and p or a, p
+    end
+    return s, a, 0
+end
+
+-- The Reckless Swings rage of hand `own`'s forecast swing at `now` (nil: CombinedResourceRegen's rate read, 0).
+local function recklessRage(own, now)
+    local stack = state.buff.reckless_swings.stack
+    if not now or stack <= 0 then
+        return 0
+    end
+    local i, g, pOwn = hand(own)
+    local x = i > 0 and (now - g) / i or 0
+    local isPending = pOwn > 0 and math.abs(x - floor(x + 0.5)) * i > GRID
+    local before = 0
+    for h = 1, 2 do
+        local s, a, p = hand(h)
+        if s > 0 then
+            if isPending then -- the pending swing: only an older pending one is before it (main first at a tie)
+                if h ~= own and p > 0 and (p < pOwn or (p == pOwn and h == 1)) then
+                    before = before + 1
+                end
+            else
+                if p > 0 then
+                    before = before + 1
+                end
+                if a > 0 then -- the grid swings in (state.now, now): k from the first after the reset to the last before now
+                    local k0 = floor((state.now - a) / s) + 1
+                    local k1 = floor((now - a - GRID) / s)
+                    if k1 >= k0 then
+                        before = before + k1 - k0 + 1
+                    end
+                end
+            end
+        end
+    end
+    return before < stack and 5 or 0
+end
+
 spec:RegisterResource(
     Enum.PowerType.Rage,
     {
@@ -322,6 +385,47 @@ spec:RegisterResource(
             crit = function()
                 local speed = swingBase(2)
                 return 1.73 * (speed > 0 and speed or offhand_speed) * (1 + 0.1 * talent.dual_wield_specialization.rank)
+            end,
+        },
+
+        -- Reckless Swings' 5 rage a landed swing of either hand while charges last, for the sim's forecast only
+        -- (`forecastOnly`: the belief pays it by the reaction; recklessRage above)
+        reckless_mainhand = {
+            swing = "mainhand",
+            aura = "reckless_swings",
+            forecastOnly = true,
+            last = function()
+                local swing = state.swings.mainhand
+                if state.mainhand_speed == 0 then
+                    return 0
+                end
+                return swing + floor((state.query_time - swing) / state.mainhand_speed) * state.mainhand_speed
+            end,
+            interval = "mainhand_speed",
+            stop = function()
+                return state.swings.mainhand == 0
+            end,
+            value = function(now)
+                return recklessRage(1, now)
+            end,
+        },
+        reckless_offhand = {
+            swing = "offhand",
+            aura = "reckless_swings",
+            forecastOnly = true,
+            last = function()
+                local swing = state.swings.offhand
+                if state.offhand_speed == 0 then
+                    return 0
+                end
+                return swing + floor((state.query_time - swing) / state.offhand_speed) * state.offhand_speed
+            end,
+            interval = "offhand_speed",
+            stop = function()
+                return state.swings.offhand == 0
+            end,
+            value = function(now)
+                return recklessRage(2, now)
             end,
         },
 

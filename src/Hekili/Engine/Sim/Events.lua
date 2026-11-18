@@ -884,6 +884,7 @@ RegisterEvent( "PLAYER_REGEN_DISABLED", function( event )
         Hekili:UpdateDisplayVisibility()
     end
 
+    ns.Output.Acted() -- L842: the pull changes the whole list at once; the steady icons show it without a hold
     Hekili:ForceUpdate( event ) -- Force update on entering combat since OOC refresh can be very slow (0.5s).
 end )
 

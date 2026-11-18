@@ -212,7 +212,8 @@ function M.new(seed)
     --- "reagent"), cast (a cast time in seconds), channel ({ length, tick, gain = { pt, amount }, effect = fn(W, e,
     --- p, n) }: a channel of `length` s ticking every `tick` s, each tick's gain and effect; the cast, its cost and its
     --- effects at the start), clip (a press during our channel stops it first, the client's cancel; else refused
-    --- "casting"), requires = fn(W, e) -> ok, why, effect = fn(W, e, p), and the
+    --- "casting"), requires = fn(W, e) -> ok, why, price = fn(W, e) -> cost (its cost when the cast succeeds: a hard
+    --- cast's landing, else the press; the press is still checked at `cost`), effect = fn(W, e, p), and the
     --- generic effects run after `effect`: gain { pt, amount }, points { pt, 1 | "all" } (1: one more on a landed hit
     --- of `effect`'s; "all": spend them all, unless `effect`'s hit was avoided), drain (a power type: spend what is left of it), aura { id, duration,
     --- tick = { pt, every, amount } } (named fields; on us), shift (W.shift's `sh`), item ({ itemID, n }: W.item), pet
@@ -279,6 +280,10 @@ function M.new(seed)
         local hard = (p.cast or 0) > 0 and not p.onNextSwing
         local function land(chanEnds)
             local gcd = not hard and gcdLen or nil -- a hard cast's GCD rose at its start
+            -- shortcut: a free-cast aura expiring mid-cast at low mana clamps the cost instead of failing the cast; upgrade if a harness case needs it
+            if p.price then -- priced at its success (a free-cast aura up then counts, as in game: L1110)
+                p.cost = p.price(W, e)
+            end
             local order = e.gcdOrder or 1
             if gcd and order == "mixed" then
                 order = W.grng.chance(0.5) and 2 or 1
@@ -626,6 +631,7 @@ function M.new(seed)
             refund = p.refund,
             pt = p.pt,
             price = p.price,
+            crits = p.crits,
         }
         W.emit({ kind = "queue", src = e, spell = p.spell, ids = p.ids })
     end

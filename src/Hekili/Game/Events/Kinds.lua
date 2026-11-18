@@ -15,6 +15,7 @@ I.Kinds = K
 -- ticket's own frame, is nobody's. UNMEASURED: a chosen bound (the Affliction log's thrown explosive, 1.43 s).
 L.UNMAPPED_WINDOW = 2
 local SAME_FRAME, CAST_WINDOW = M.SAME_FRAME, M.CAST_WINDOW
+-- narrower than Rows.lua's REFUSED on purpose: a RESIST or IMMUNE keeps the cast window only (a later one: another's)
 local REFUSED = { DODGE = true, PARRY = true, MISS = true }
 local FRAME, STRIKE, MELEE, UNMAPPED, NONE, ANY = X.FRAME, X.STRIKE, X.MELEE, X.UNMAPPED, X.NONE, X.ANY
 local FLIGHT, TICKS, CHANNEL = X.FLIGHT, X.TICKS, X.CHANNEL

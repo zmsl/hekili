@@ -71,16 +71,21 @@ actions+=/rip,focus=2,if=((!action.cat_form.known|buff.cat_form.up)&...
 > [!WARNING]
 > **Different from retail Hekili:** A priority does not need `pool_resource` to wait for energy, rage or mana. Every line already waits for its own cost in the forecast ([Comparisons that wait](APL-Expression-Reference#comparisons-that-wait)).
 
+## Options that change when a line is ready
+
+| Option | Editor field | Effect |
+|---|---|---|
+| `max_energy` | **Max Energy** | On an ability whose pack declares an `excess_cap` (the energy or other resource it converts beyond its cost), the line waits for the cost plus that cap, at most the resource's maximum. Only when the line is ready changes; the cost and the spend stay the ability's own. Shown only for such an ability, such as Ferocious Bite. |
+| `use_while_casting` | **Use While Casting** | An instant ability does not wait for the player's current cast or channel to end. An ability with its own cast time still waits. |
+| `interrupt_global` | none | On a channel's line: any line above it in the priority may break the channel at once. Beside `interrupt_if` or a holding `interrupt`, their checks decide instead. |
+
 ## Ignored options
 
-These options are accepted and stored, but nothing in Hekili Forever reads them:
+These options are accepted and stored, but nothing in Hekili Forever reads them. The channel-breaking options that work are `interrupt`, `interrupt_global`, `interrupt_if`, `interrupt_immediate`, `chain` and `early_chain_if`.
 
 | Option | Editor field | Note |
 |---|---|---|
 | `wait` on `pool_resource` | **Pooling Time** | Pooling for a fixed time is not implemented. |
-| `max_energy` | **Max Energy** | Shown only for Ferocious Bite; part of a pooling option that nothing reads |
-| `use_while_casting` | **Use While Casting** | |
-| `interrupt_global` | none | The channel-breaking options that work are `interrupt`, `interrupt_if`, `interrupt_immediate`, `chain` and `early_chain_if`. |
 | `strict`, `strict_if` on an ability line | **Test Conditions Immediately**, **Additional Immediate Criteria** | They act only on `call_action_list`, `run_action_list` and `use_items` lines. |
 
 The importer drops SimulationCraft lines for `snapshot_stats`, `flask`, `food` and `augmentation` without a warning.

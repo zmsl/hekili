@@ -45,7 +45,7 @@ local DROPPED = {
 local STUBS = { "voidbinding", "voidform", "shadowform", "adrenaline_rush" }
 -- Keys `all` gave up to the class or race file that registers them.
 local OWNERS = {
-    mark_of_the_wild = "Hekili_Druid/Druid.lua",
+    mark_of_the_wild = "Hekili_Shared/Shared/Auras.lua", -- back from the Druid pack: every class carries it (L971)
     battle_shout = "Hekili_Warrior/Warrior.lua",
     berserking = "Hekili_Shared/Races/Troll.lua",
     blood_fury = "Hekili_Shared/Races/Orc.lua",
@@ -168,9 +168,13 @@ describe("shared content", function()
         shared:RegisterResourceMod({ max = 0.05 })
         local def = { aura = "x", pct = -0.1 }
         shared:RegisterCostMod(def)
+        local regen = { resource = "pool_a", aura = "x", spirit = 2 }
+        shared:RegisterRegenMod(regen)
+        shared:RegisterRegenMod({ aura = "x", spirit = 2 }) -- no resource: ignored
         assert.are.same({ a, b }, { all.abilities.x, all.auras.x })
         assert.are.same({ { pct = 0.05 } }, ns.raceMods.maxMods)
         assert.are.equal(def, ns.raceMods.costMods[1])
+        assert.are.same({ regen }, ns.raceMods.regenMods)
     end)
 
     it("registers exactly Forever's shared auras: the external ones on the player and the stubs core reads", function()
@@ -183,7 +187,11 @@ describe("shared content", function()
             "dispellable_disease",
             "dispellable_magic",
             "dispellable_poison",
+            "divine_spirit",
+            "gift_of_the_wild",
+            "innervate",
             "main_hand_enchant",
+            "mark_of_the_wild",
             "off_hand_enchant",
             "power_infusion",
             "revelation_1248808",
@@ -206,6 +214,37 @@ describe("shared content", function()
             assert.are.same({ id, 15, 1 }, { a.id, a.duration, a.max_stack })
         end
         assert.are.same({ 10060, 15 }, { all.auras.power_infusion.id, all.auras.power_infusion.duration })
+        -- Innervate on any mana user (another Druid's too, DB2 29166): the spirit regen x 5, all of it while casting
+        -- (aura 110 +400%, aura 134 100%: wowsims parse_effects_table.go), one shared regen entry for every class
+        assert.are.same(
+            { 29166, 20, "player" },
+            { all.auras.innervate.id, all.auras.innervate.duration, all.auras.innervate.shared }
+        )
+        assert.are.same({ { resource = "mana", aura = "innervate", spirit = 5, share = 1 } }, ns.raceMods.regenMods)
+        -- The Spirit buffs another class puts on us (the stat split, L971): every rank's ID (the DB2's families,
+        -- Forever's own Mark rank 7 IDs included), each one's Spirit by its own ID (wowsims spells_auto_gen.go aura 29).
+        local function ids(a)
+            local out = { a.id, unpack(a.copy) }
+            table.sort(out)
+            return out
+        end
+        local ds, mark, gift = all.auras.divine_spirit, all.auras.mark_of_the_wild, all.auras.gift_of_the_wild
+        assert.are.same({ 14752, 14818, 14819, 27681, 27841 }, ids(ds))
+        assert.are.same({ 1126, 5232, 5234, 6756, 8907, 9884, 9885, 1291335, 1310503 }, ids(mark))
+        assert.are.same({ 21849, 21850 }, ids(gift))
+        assert.are.same({ [14752] = 17, [14818] = 23, [14819] = 33, [27841] = 40, [27681] = 40 }, ds.stats[5])
+        assert.are.same({ 3, 5, 8, 11, 14, 16, 16, 16 }, {
+            mark.stats[5][5232],
+            mark.stats[5][6756],
+            mark.stats[5][5234],
+            mark.stats[5][8907],
+            mark.stats[5][9884],
+            mark.stats[5][9885],
+            mark.stats[5][1291335],
+            mark.stats[5][1310503],
+        })
+        assert.is_nil(mark.stats[5][1126]) -- rank 1 is armor only
+        assert.are.same({ [21849] = 14, [21850] = 16 }, gift.stats[5])
         assert.are.same(
             { 0, 1 },
             { all.auras.main_hand_enchant.weaponEnchant, all.auras.off_hand_enchant.weaponEnchant }
@@ -294,8 +333,10 @@ describe("shared content", function()
         for _, key in ipairs({ "major_mana_potion", "demonic_rune", "thistle_tea", "mana_gem" }) do
             assert.are.same({ "off", false, true }, { a[key].gcd, a[key].startsCombat, a[key].bagItem }, key)
             assert.are.equal("potions", a[key].toggle, key) -- a resource consumable: under Potions (user, 2026-10-21)
-            assert.is_nil(a[key].now, key) -- an item action: no cast the belief sees
             assert.is_false((a[key].usable()), key)
+        end
+        for _, key in ipairs({ "thistle_tea", "mana_gem" }) do
+            assert.is_nil(a[key].now, key) -- no use spell the belief tracks
         end
         assert.are.equal(5514, a.mana_gem.item()) -- the lowest rank when none is in the bags
         bags[5513], bags[8007] = 1, 1
@@ -303,6 +344,27 @@ describe("shared content", function()
         assert.is_true(a.mana_gem.usable())
         bags[7676] = 2
         assert.is_true(a.thistle_tea.usable())
+    end)
+
+    -- L481 (owner L969): the belief cannot know the roll, so a refill credits its average (the midpoint of the use
+    -- spell's range, wowsims pin spelldata: 17531 BasePoints 1800, 16666 1200, both Variance 0.5: +-450, +-300), est at
+    -- the midpoint and the floor and top at the range's ends; the simulation gains the midpoint.
+    it("credits a mana potion's and a Demonic Rune's average restore at their use spell", function()
+        load({ "Consumables" })
+        local a = all.abilities
+        for key, want in pairs({ major_mana_potion = { 17531, 1800, 450 }, demonic_rune = { 16666, 1200, 300 } }) do
+            assert.are.equal(a[key], a[want[1]], key) -- the use spell's success is the item's cast
+            local got = {}
+            local env = {
+                gain = function(...)
+                    got[#got + 1] = { ... }
+                end,
+            }
+            setfenv(a[key].now, env)()
+            setfenv(a[key].handler, env)()
+            assert.are.same({ { want[2], "mana", want[3] }, { want[2], "mana" } }, got, key)
+            assert.are_not.equal(a[key].now, a[key].handler, key) -- the belief rejects a `now` that is its handler
+        end
     end)
 
     it("uses the best Healthstone in the bags, and the Minor one when there is none", function()

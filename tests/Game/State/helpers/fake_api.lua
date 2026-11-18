@@ -343,7 +343,10 @@ function M.new()
     function api.UnitHealthMax(unit)
         return ctl.unitHealthMax[unit] or ctl.healthMax
     end
-    function api.UnitSpellHaste()
+    function api.UnitSpellHaste() -- secret in combat, as the game's [W PR2, PR4] (the stat split's case, L971)
+        if ctl.combat then
+            return SECRET
+        end
         return ctl.spellHaste
     end
     function api.GetMeleeHaste()
@@ -412,7 +415,7 @@ function M.new()
         if not c then
             return nil
         end
-        return "Channel", "", 0, c[1], c[2]
+        return "Channel", "", 0, c[1], c[2], nil, nil, c.spell -- `spell`: a spec's own channel ID (the drive sets none)
     end
     local stats = { 0, 0, 0, 0, 0, 0, 0 }
     local function zeros()
@@ -857,8 +860,8 @@ function M.new()
     -- either (CDV_FRAME 5609).
     ctl.viewer = {
         available = true,
-        sets = { [0] = {}, [1] = {}, [2] = {}, [3] = {} },
-        unlearned = { [0] = {}, [1] = {}, [2] = {}, [3] = {} }, -- added by GetCooldownViewerCategorySet(c, true)
+        sets = { [0] = {}, {}, {}, {}, {}, {}, {}, {}, {} }, -- the client's categories 0-8 (a fixture's 5 and 7 too)
+        unlearned = { [0] = {}, {}, {}, {}, {}, {}, {}, {}, {} }, -- added by GetCooldownViewerCategorySet(c, true)
         infos = {},
         items = {}, -- [viewer name] = its children in order (items, unconfigured items, non-item children)
         shown = {}, -- [viewer name] = false: that viewer is not visible (nil: visible)
@@ -936,6 +939,9 @@ function M.new()
             item.writes[#item.writes + 1] = what
         end
     end
+    local function isShown(item) -- the frame method the snapshot reads (the sweep never does)
+        return item.shown == true
+    end
     --- A child of viewer `name` tracking cooldown `id` at `layoutIndex` (`id` nil: an unconfigured slot), hidden.
     function ctl.ViewerItem(name, layoutIndex, id)
         local list = ctl.viewer.items[name]
@@ -946,6 +952,7 @@ function M.new()
             hooks = {},
             writes = {},
             HookScript = hookScript,
+            IsShown = isShown,
         }
         list[#list + 1] = item
         return item
@@ -1043,11 +1050,24 @@ function M.new()
             end
         end
     end
+    -- A removal clears only the item holding that aura (litBy nil: lit by hand, any removal clears it), then the
+    -- client's refresh shows another aura it names that is still up (an entry naming several auras: a family's).
     local function light(item, unit, up, spellID)
         if up then
             ctl.ViewerAura(item, unit, spellID)
-        elseif item.auraInstanceID ~= nil then
+        elseif item.auraInstanceID ~= nil and (item.litBy == nil or item.litBy == spellID and item.litUnit == unit) then
             clearAura(item)
+            local info = ctl.viewer.infos[item.cooldownID]
+            for _, a in ipairs(ctl.viewer.applied) do
+                if item.auraInstanceID == nil and a[1] == unit and names(info, a[2]) then
+                    if ctl.viewer.lag then -- as a re-point's refresh: at the next Tick
+                        local p = ctl.viewer.pending
+                        p[#p + 1] = { item, a[1], true, a[2] }
+                        break
+                    end
+                    ctl.ViewerAura(item, a[1], a[2])
+                end
+            end
         end
     end
     --- An aura of `spellID` goes up or down on `unit`: every configured, non-`silent` item in any viewer whose info

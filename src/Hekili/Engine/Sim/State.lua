@@ -1284,9 +1284,16 @@ end
 -- Central fix 29: a slice on a tick reads a phase of 0 or a hair under L through the clock's rounding; the latter
 -- padded about 1e-11 s, under the clock's own rounding, so the forecast at the answer read X a rounding error short and
 -- a `>=` recheck there failed. The pad is at least 1e-6 s (the tick after instead moved Feral and Balance's flicker up).
+-- L755 / owner ruling L960: with no tick seen (last_tick 0: a secret pool) the phase was read off the poll clock, an
+-- arbitrary grid, so the pad jumped between nothing and a whole tick from one poll to the next. It pads nothing there
+-- (fix 29's 1e-6): measured against the world's ticks the shown waits run late, and no pad is the truest fixed choice.
+-- Review M4: it is truest only because the believed floor lags the truth at cost waits (est - truth -0.5 to -3.6);
+-- with an exact floor no pad is early by half a tick on average and a half-tick pad is the unbiased one. Re-measure
+-- none against half a tick when the floor-lag fix lands.
 local function tickReach( t, a, dt )
     local L = rawget( t, "tick_rate" )
     if not L or L <= 0 then return a + dt end
+    if ( rawget( t, "last_tick" ) or 0 ) <= 0 then return a + 1e-6 + dt end
     return a + max( 1e-6, L - ( ( a - ( rawget( t, "last_tick" ) or 0 ) ) % L ) ) + dt
 end
 
@@ -1368,13 +1375,24 @@ do
                     -- UnitAttackSpeed read: state.swings.mh_pending / oh_pending): its gain is forecast one poll after
                     -- the usability answers can show it (ORACLE_MIN), not lost as past; the icon keeps its line, and
                     -- nothing is pressable on it before an answer confirms it (the swings after it keep their own
-                    -- times: `resume`)
-                    v.resume = nil
+                    -- times: `resume`). `pending` records the pending swing time this forecast accepted (0: none), so
+                    -- a pack's `value` reads it instead of repeating this test.
+                    v.resume, v.pending = nil, 0
                     if v.swing and i > 0 then
-                        local p
-                        if v.swing == "offhand" then p = state.swings.oh_pending else p = state.swings.mh_pending end
-                        if p > 0 and l > p - i / 2 then
-                            v.next, v.resume = max( now, p + 2 * ns.ORACLE_MIN ), l + i
+                        local p, a
+                        if v.swing == "offhand" then
+                            p, a = state.swings.oh_pending, state.swings.oh_actual
+                        else
+                            p, a = state.swings.mh_pending, state.swings.mh_actual
+                        end
+                        -- L872 / review I1: a pending swing newer than the last swing row (mh_actual / oh_actual,
+                        -- within the parry pull's 1 ms) is not the anchor's swing: the swings after it run off it.
+                        -- That is the fight's first swing after the combat-start pseudo swing, however soon after the
+                        -- pull, or an early (hasted) swing mid-fight. Else it is the anchor's own swing, and the
+                        -- anchor keeps its phase (a parry-haste pull moves it).
+                        if p > 0 then
+                            local from = p > a + 0.001 and p or l
+                            v.next, v.resume, v.pending = max( now, p + 2 * ns.ORACLE_MIN ), from + i, p
                         end
                     end
 
@@ -2649,7 +2667,7 @@ local mt_stat = {
         elseif k == "weapon_dps" or k == "weapon_offhand_dps" then
             local low, high, offlow, offhigh = Facade.UnitDamage( "player" )
             t.weapon_dps = 0.5 * ( low + high )
-            t.weapon_offhand_dps = 0.5 * ( low + high )
+            t.weapon_offhand_dps = 0.5 * ( ( offlow or 0 ) + ( offhigh or 0 ) ) -- the off hand's own range (L967)
 
         elseif k == "weapon_speed" or k == "weapon_offhand_speed" then
             local main, off = UnitAttackSpeed( "player" )
@@ -6682,7 +6700,8 @@ do
             -- a pull taken before this fight's first swing (from: 0 or an older fight's swing; CombatEnd clears it)
             -- moves the combat-start anchor; nextMH stays 0 as E8 has it
             if pull > 0 and pullFrom < state.combat then state.swings.mh_pseudo = state.combat - pull end
-            if state.offhand_speed > 0 then state.swings.oh_pseudo = state.combat + state.offhand_speed / 2 end
+            -- review R3: only until the off hand's own first swing row lands (it may swing before the main hand)
+            if state.offhand_speed > 0 and state.swings.oh_actual == 0 then state.swings.oh_pseudo = state.combat + state.offhand_speed / 2 end
             state:ForecastSwingbasedResources()
         end
 
@@ -6754,8 +6773,10 @@ do
             -- Delay to end of GCD.
             if dispName == "Primary" or dispName == "AOE" then
                 local delay = 0
+                -- a pack with use_while_casting lines hands the cast to the event loop, as can_dual_cast does
+                local info = scripts.PackInfo[ state.system.packName ]
 
-                if not state.spec.can_dual_cast and state.buff.casting.up and state.buff.casting.v3 ~= 1 then -- v3=1 means it's channeled.
+                if not state.spec.can_dual_cast and not ( info and info.hasWhileCasting ) and state.buff.casting.up and state.buff.casting.v3 ~= 1 then -- v3=1 means it's channeled.
                     delay = max( delay, state.buff.casting.remains )
                 end
 
@@ -7541,7 +7562,9 @@ function state:TimeToReady( action, pool )
 
     if not state.channel_breakable and not ability.dual_cast then
         z = self.buff.casting.remains
-        if z > wait then
+        -- use_while_casting=1 (SimC): an instant need not wait for the player's cast or channel (read only when it
+        -- would); one with its own cast time would end that cast, so it still waits
+        if z > wait and not ( self.safebool( self.args.use_while_casting ) and ( ability.cast or 0 ) == 0 ) then
             wait = z
         end
     end
@@ -7569,6 +7592,20 @@ function state:TimeToReady( action, pool )
         z = ability.readySpend
         if z then
             spend = z
+        end
+    end
+
+    -- max_energy=1 (SimC): wait for the cost plus the most extra the ability converts (its `excess_cap`, pack data), at
+    -- most the pool's maximum (an unknown maximum, 0, caps nothing). Readiness only: the cost and the handler's spend
+    -- stay the ability's own.
+    -- The declaration is read raw first (no field call), so the line's args are read only for an ability that has one.
+    if spend and resource and ( rawget( ability, "excess_cap" ) ~= nil or ability.funcs.excess_cap )
+        and self.safebool( self.args.max_energy ) then
+        z = ability.excess_cap
+        if z then
+            spend = spend + z
+            z = self[ resource ].max
+            if z and z > 0 and spend > z then spend = z end
         end
     end
 
