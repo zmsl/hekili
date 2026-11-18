@@ -841,11 +841,13 @@ do
         return ConvertTimeComparison( expr )
     end
 
-    function scripts:BuildRecheck( conditions )
+    -- parts (optional): filled with each distinct time in order, and [ part ] = true (the times are a set: a repeat
+    -- adds nothing, so each is kept once)
+    function scripts:BuildRecheck( conditions, parts )
         if type( conditions ) ~= "string" then return end
 
-        -- parts: each distinct time in order, and [ part ] = true (the times are a set: a repeat adds nothing)
-        local recheck, parts
+        local recheck
+        parts = parts or {}
 
         conditions = conditions:gsub( " +", "" )
         conditions = self:EmulateSyntax( conditions, true )
@@ -863,7 +865,6 @@ do
                         part = self:EmulateSyntax( part, true )
 
                         local rslt, msg = Hekili:Loadstring( "return " .. part )
-                        parts = parts or {}
                         if not rslt then
                             Hekili:Debug( "Recheck failed to loadstring: %s", msg )
                         elseif not parts[ part ] then
@@ -875,7 +876,7 @@ do
             end
         end
 
-        return recheck, parts
+        return recheck
     end
 
 
@@ -1481,11 +1482,12 @@ local function ConvertScript( node, hasModifiers, header )
     local hasValueElse = node.value_else and node.value_else ~= ""
 
     if hasCriteria or hasValue or hasValueElse then
+        rParts = {}
         if node.action == "variable" then
             rs = format( "%s | %s | %s", hasCriteria and node.criteria or "1", hasValue and node.value or "1", hasValueElse and node.value_else or "1" )
-            rs, rParts = scripts:BuildRecheck( rs )
+            rs = scripts:BuildRecheck( rs, rParts )
         else
-            rs, rParts = scripts:BuildRecheck( node.criteria )
+            rs = scripts:BuildRecheck( node.criteria, rParts )
         end
 
         if rs then
