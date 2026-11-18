@@ -171,6 +171,20 @@ describe("RegisterAbility's ranks and effect", function()
         end)
     end)
 
+    -- A table field with an __index function (a state table, a lazy lookup) is data: its metatable is never asked.
+    it("reads byRank raw, never through a field's metatable", function()
+        local lazy = setmetatable({}, {
+            __index = function(_, k)
+                error("indexed " .. tostring(k))
+            end,
+        })
+        local data = { id = 990131, lazy = lazy }
+        H.ns.DeriveAbility("dry_lazy", data, function()
+            return 0
+        end)
+        assert.are.equal(lazy, data.lazy)
+    end)
+
     -- A recording environment: each verb call appended to `log` as "verb arg arg".
     local function recorder(log)
         return setmetatable({}, {

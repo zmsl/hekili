@@ -13,16 +13,19 @@ local _, ns = ...
 function ns.DeriveAbility(key, data, knownRank)
     local ranks, name = data.ranks, tostring(key)
     for k, v in pairs(data) do
-        if type(v) == "table" and v.byRank ~= nil then
+        if type(v) == "table" and rawget(v, "byRank") ~= nil then -- raw: a field's __index is never asked
             assert(ranks, "RegisterAbility: " .. name .. "'s " .. tostring(k) .. " reads byRank without ranks")
-            local values = v.byRank
+            local values = rawget(v, "byRank")
             data[k] = function()
                 return values[knownRank(ranks)] or values[1]
             end
         end
     end
     if ranks ~= nil then
-        assert(type(ranks) == "table" and type(ranks[1]) == "number", "RegisterAbility: " .. name .. "'s ranks must list spell IDs")
+        assert(
+            type(ranks) == "table" and type(ranks[1]) == "number",
+            "RegisterAbility: " .. name .. "'s ranks must list spell IDs"
+        )
         assert(data.id == nil or data.id == ranks[1], "RegisterAbility: " .. name .. "'s id is not its first rank")
         data.id = ranks[1]
         if data.copy == nil then
