@@ -4,6 +4,7 @@
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
+local alloc = require("Game.State.helpers.alloc")
 
 describe("the ticket pool", function()
     local api, ctl, ns, VS, I, T, X, U, saved, got, cleu
@@ -649,6 +650,174 @@ describe("the ticket pool", function()
             ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
             ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
             assert.are.equal(0, count(VS.Obs.Swing, 1)) -- no credit from an unknown-class wound
+        end)
+
+        -- gap AS, the forward order (Fury L30 live loop, 0.9 re-pin): our main-hand swing 59.749 misses, its row comes
+        -- at 60.480 (lag 0.731, outside its core band), 80 ms past the 60.400 Sunder's own frame; the off hand swung at
+        -- 60.229 (its row 60.930). The swing from before the cast still owes its row: the miss is the swing's, held.
+        describe("an avoid past a cast's own frame while a swing from before the cast owes its row (AS)", function()
+            local mh, oh
+            local function sunder(rowT, act, unmappedAt)
+                local c = fs.new(9, nil, nil, true)
+                c.Class.abilities.spender_c.expects = "debuff" -- no damage: avoids only (Sunder Armor's declaration)
+                I.Build(fs.def(c), 1)
+                if unmappedAt then
+                    ctl.now = unmappedAt
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 999999)
+                end
+                ctl.now = 59.749
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = 60.229
+                ctl.Fire("PLAYER_SWING", 2.6, 1)
+                oh = T.lastSwing[2]
+                ctl.now = 60.4
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = rowT
+                ctl.Fire("UNIT_COMBAT", "target", act or "MISS", "", 0, 1)
+            end
+
+            it("is the oldest such swing's, held: the cast keeps its effect", function()
+                sunder(60.48)
+                assert.are.equal(0, count(VS.Obs.Avoided))
+                assert.are.same({ T.PROV, "MISS" }, { T.state[mh], T.avoid[mh] })
+                assert.are.equal(T.OPEN, T.state[oh])
+                ctl.Tick(62) -- every window closed: the swing's miss row, never the cast's
+                local swingMissed, spellMissed = 0, 0
+                for _, r in ipairs(got) do
+                    swingMissed = swingMissed + (r[2] == "SWING_MISSED" and 1 or 0)
+                    spellMissed = spellMissed + (r[2] == "SPELL_MISSED" and 1 or 0)
+                end
+                assert.are.same({ 1, 0, 0 }, { swingMissed, spellMissed, count(VS.Obs.Avoided) })
+            end)
+
+            it("goes back to the cast when that swing's own wound lands after it (a true avoid of the cast)", function()
+                ctl.now = 50
+                ctl.damage = { 40, 50, 10, 12 } -- 45 is the main hand's (exact), not the off hand's
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                sunder(60.48)
+                ctl.now = 60.55 -- the main swing's own wound, late (lag 0.80)
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+                assert.are.equal(1, count(VS.Obs.Swing, 1)) -- the swing landed
+                assert.are.equal(1, count(VS.Obs.Avoided)) -- the miss was the cast's: its effect undone
+            end)
+
+            it("never holds a non-avoid miss (IMMUNE) on the swing: a swing takes avoids only", function()
+                sunder(60.48, "IMMUNE")
+                assert.are.same({ T.OPEN, "" }, { T.state[mh], T.avoid[mh] })
+            end)
+
+            it("leaves it to an unmapped success's window as nobody's, never held on the swing", function()
+                local a0 = T.absorbed
+                sunder(60.48, "MISS", 60.0)
+                assert.are.same({ 1, T.OPEN, "" }, { T.absorbed - a0, T.state[mh], T.avoid[mh] })
+            end)
+
+            it("stays the cast's in its own frame (pass 1), the older swing still in flight", function()
+                sunder(60.4)
+                assert.are.equal(1, count(VS.Obs.Avoided))
+                assert.are.same({ T.OPEN, T.OPEN }, { T.state[mh], T.state[oh] })
+            end)
+
+            it("is the cast's past its frame when no swing from before the cast owes a row", function()
+                local c = fs.new(9, nil, nil, true)
+                c.Class.abilities.spender_c.expects = "debuff"
+                I.Build(fs.def(c), 1)
+                ctl.now = 60.4
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 60.48
+                ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+                assert.are.equal(1, count(VS.Obs.Avoided))
+            end)
+
+            it("leaves a swing's avoid with no cast near it to the swing (its core band)", function()
+                ctl.now = 59.749
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = 60.223
+                ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+                assert.are.same({ T.PROV, "MISS", 0 }, { T.state[mh], T.avoid[mh], count(VS.Obs.Avoided) })
+            end)
+
+            it("leaves a secret-amount avoid past the cast's frame to nobody, as before (live)", function()
+                local c = fs.new(9, nil, nil, true)
+                c.Class.abilities.spender_c.expects = "debuff"
+                I.Build(fs.def(c), 1)
+                ctl.now = 59.749
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = 60.4
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 60.48
+                ctl.Fire("UNIT_COMBAT", "target", "MISS", "", fake.SECRET, 1)
+                assert.are.same({ 0, T.OPEN }, { count(VS.Obs.Avoided), T.state[mh] })
+            end)
+
+            it("allocates nothing on the held avoid nor on the tied cast's wound (the hot row path)", function()
+                I.Sources.Stage = stage -- the spy allocates
+                cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+                ctl.now = 5
+                ctl.damage = { 25, 35, 10, 12 }
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                local L = I.Log
+                local a0, b0 = L.avoids, L.avoidsBack
+                local bytes = alloc.bytes(function(i)
+                    local t = 10 * i
+                    ctl.now = t
+                    ctl.Fire("PLAYER_SWING", 2.6, 0)
+                    ctl.now = t + 0.65
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                    ctl.now = t + 0.731 -- past the cast's frame, the swing still owes its row: held on it
+                    ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+                    ctl.now = t + 3
+                    ctl.Fire("PLAYER_SWING", 2.6, 0)
+                    ctl.now = t + 3.41
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C)
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- the tie
+                    ctl.now = t + 3.674 -- the swing's own wound past the cast's frame: the dodge back to the cast
+                    ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+                    ctl.Tick(t + 6)
+                    I.Sources.Flush()
+                end, 2000)
+                assert.are.equal(0, bytes)
+                assert.is_true(L.avoids - a0 >= 2 * 2200 and L.avoidsBack - b0 >= 2200) -- both paths ran each time
+            end)
+        end)
+
+        -- gap AS, the tie's wound (ledger L80, Rend): the cast's own-frame dodge went to the swing in flight by the
+        -- MELEE tie; the swing's own wound 6 ms later falls in the cast's frame too, and the cast's open ticket took it
+        it("gives the swing its own wound in the tied cast's frame, and the dodge back to the cast (L80)", function()
+            ctl.now = 150
+            ctl.damage = { 25, 35, 10, 12 } -- 30 is the main hand's (exact)
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.now = 163.13
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local sw = T.lastSwing[1]
+            ctl.now = 163.54
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- no expects: an instant, any school
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.same({ T.PROV, 0 }, { T.state[sw], count(VS.Obs.Avoided) }) -- MELEE wins the tie
+            ctl.now = 163.546
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(1, count(VS.Obs.Swing, 1)) -- the swing's own wound
+            assert.are.equal(1, count(VS.Obs.Avoided)) -- the dodge was the cast's: its effect undone
+            assert.are.equal(0, count(VS.Obs.Landed)) -- the cast never landed
+        end)
+
+        -- gap AS (ledger L629, Feral Rake): the same tie, the swing's own wound outside its core band (lag 0.674) and
+        -- past the cast's frame; the cast's open ticket took it, so the cast was believed landed with no refund
+        it("gives the swing its own wound past the tied cast's frame outside its core band (L629)", function()
+            ctl.now = 150
+            ctl.damage = { 25, 35, 10, 12 }
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.now = 163.13
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 163.54
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.now = 163.804
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.same({ 1, 1, 0 }, { count(VS.Obs.Swing, 1), count(VS.Obs.Avoided), count(VS.Obs.Landed) })
         end)
 
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
