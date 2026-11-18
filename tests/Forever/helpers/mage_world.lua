@@ -654,6 +654,7 @@ for _, key in ipairs({
     "arcane_wrath",
     "blizzard",
     "counterspell",
+    "frost_blast", -- assumed Frostbolt's: not in the pin, no DB2 row read for 1326053
     "frostbolt",
     "ice_lance",
     "scorch",

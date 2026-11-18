@@ -640,6 +640,21 @@ describe("now handlers", function()
         assert.is_nil(VS.Aura("target", fs.SPENDER_C, 1.5))
     end)
 
+    -- mage-mana-belief review M6: the context's reads (I.NowAt) run before the verbs go live, so a raise there leaves
+    -- them inert
+    it("keeps the verbs inert after the context's reads raise before a `now`", function()
+        start()
+        local haste = I.Haste
+        I.Haste = function()
+            error("haste raised")
+        end
+        pcall(cast, fs.SPENDER_C, 30)
+        I.Haste = haste
+        local gen = VS.AuraGen("target")
+        pcall(I.ab.now[I.ab.bySpell[fs.SPENDER_C]])
+        assert.are.equal(gen, VS.AuraGen("target"))
+    end)
+
     it("gives a tracked passive (ns.TrackPassive) no effects: no GCD, no cooldown", function()
         ns.TrackPassive(9898)
         start()

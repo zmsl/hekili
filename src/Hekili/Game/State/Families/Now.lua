@@ -812,10 +812,14 @@ end
 -- Runs ability a's bound function f in the shared context at belief time t; an error is counted, never raised.
 local function call(f, a, t)
     curA = a
+    I.NowAt(t) -- before `live`: a raise in the context's reads leaves the verbs inert
     live = true
-    I.Guard(f, t)
+    local ok, err = pcall(f)
     live = false
     I.nowRuns = I.nowRuns + 1
+    if not ok then
+        I.nowErrors, I.nowError = I.nowErrors + 1, err
+    end
 end
 
 -- Runs who's reactions to outcome slot o at the outcome's time t: no ability (curA 0), its writes no avoid's to undo

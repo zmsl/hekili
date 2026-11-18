@@ -74,6 +74,7 @@ local function inScope(r, k, a)
 end
 
 -- Whether modifier k of slot r is held at `now` by its `unless` aura (its index), believed up on the player then.
+-- prices() asks it at the clock too, where it equals VS.Aura only because no record is applied after the clock.
 local function held(r, k, now)
     local u = M.modUnless[r][k]
     return u > 0 and I.AuraUpAt(1, u, now) -- unit 1: "player"
