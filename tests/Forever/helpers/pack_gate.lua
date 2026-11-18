@@ -236,7 +236,11 @@ M.FLICKER = {
     -- combo point on a builder's crit, Predatory Discipline's Bite, Shifting Power, Ferocity 5/5's Rake 35); at seeds
     -- 1-20 the round 2 world read flicker 0.02, heldReady 426. Flicker row NOT moved: the owner's hold at 0.03 (L660
     -- (b)); seeds 1-20's 0.04 is red for the owner (both flips traced in repin-druid-09-6.md; green with steady-hold-09, ledger L1328)
-    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 326 }, -- 0.56 / 0.89 / 0.56, 0
+    -- re-pin e4ef929e54 -> ab0f00e4fc: wowsims #1087 (repin-ab0f-druid; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 /
+    -- 0.00 (oracle 0.00 / 0.02 / 0.04), retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 309 / 336 / 314, agreement
+    -- .981 / .989 / .982): heldReady 326 -> 336 (the worst set). Cause: #1087's flat Feral list; A/B on one tree (the tip
+    -- with the e4ef Feral .simc + make packs), seeds 21-40: old list 321, new list 336
+    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 336 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
@@ -255,6 +259,8 @@ M.FLICKER = {
     -- flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, agreement .997 / .997 / .998): heldReady 200 -> 189,
     -- cause not proven: likely mana-09 (043d29b57: the Innervate entry's regen = 5, druid_loop_world.lua:37 / :404, and CN22's percent-cost
     -- rounding), not the re-pin (the Balance .simc changed only its header); likely, not A/B'd
+    -- re-pin e4ef929e54 -> ab0f00e4fc (repin-ab0f-druid; the Balance .simc moved only its header): seeds 1-20 / 21-40 /
+    -- 41-60 every cell identical (heldReady 189 / 174 / 174, flicker 0 / 0 / 0, agreement .997 / .997 / .998)
     ["Balance"] = { flicker = 0, retracted = 0, heldReady = 189 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
@@ -302,7 +308,12 @@ M.FLICKER = {
     -- readyShort 0 / 0 / 0, heldReady 423 / 411 / 410, agreement .908 / .924 / .907): heldReady 420 -> 423, bisected to gap-as-09
     -- (the swing-avoid give-back, which the Druid lane did not carry), mechanism not traced (no held tick read): the
     -- Druid merge e98ef8506 reads 423, the same minus gap-as's src + harness diff 420; steady-hold-09 moves flicker 0.28 -> 0.26 (its own A/B)
-    ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 423 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- re-pin e4ef929e54 -> ab0f00e4fc: wowsims #1087 (repin-ab0f-druid; seeds 1-20 / 21-40 / 41-60 flicker 0.29 / 0.28 /
+    -- 0.24 (oracle 0.09 / 0.04 / 0.10), retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 450 / 381 / 412, agreement
+    -- .900 / .912 / .914): heldReady 423 -> 450 (the worst set). Cause: #1087's Guardian list (no Swipe, Enrage under
+    -- Lacerate's cost, no 5-stack Lacerate refresh line); A/B on one tree (the tip with the e4ef Guardian .simc + make
+    -- packs), seeds 1-20: old list 423 (flicker 0.26), new list 450 (0.29). Flicker row unchanged (worst 0.29)
+    ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 450 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
