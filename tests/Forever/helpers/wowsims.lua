@@ -526,8 +526,9 @@ M.READY = {
     -- "never" moved, now timed (176.62 eviscerate late 0.19 s)
     rogue_combat = { 0, 0 }, -- 0.24, 21 -> 0, 0 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) and the dropped 4-point Eviscerate branch re-time the log; 104 timed, no real row
     -- 0.9 batch, floor unchanged: the 0.8.6 hotfix e405c8ae5 (bisected: the Rogue tip merged on 0ca856b0b green, on
-    -- cb3214b4a red; not split by the hotfix's parts, stealth state or avoid undo) moves the 136.25 vanish (off-GCD)
-    -- never -> late 0.50 and its garrote stays in:grain (b -0.05 -> 0.00); real 5 (late 5), median 0.070
+    -- cb3214b4a red, on e405c8ae5 itself red; not split by the hotfix's parts, stealth state or avoid undo) moves the
+    -- 136.25 vanish (off-GCD) never -> late 0.50; its garrote stays in:grain (b -0.05 -> 0.00, predicted a 0 -> 0.50);
+    -- real 5 (late 5), median 0.070
     rogue_subtlety = { 0.07, 5 }, -- 0.17, 40 -> 0.07, 5 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) and the Hemorrhage energy term re-time the log (Death Mark shuts Eviscerate); 98 timed, 5 real late (hemorrhage 3, death_mark 2); 0.20, 45 -> 0.15, 32 -> 0.17, 40 (gap CE): as rogue_assassination, a mark inside the ready wait
     -- { 0.21, 7 } -> { 0.71, 16 } re-pin e2842f0a78 (lane 15, R6): the build's own list (Magma and Windfury Totems,
     -- Fire Nova the filler at 375, Skyborne); 85 decisions, 16 real (10 early, 6 late); by class cooldown 15, cost 9, gcd 43
