@@ -2079,6 +2079,26 @@ function scripts:MarkPure( pack )
 end
 
 
+-- (windows design v6 §6) pack `pack`'s sequences' generated lines: its members' own conditions and its hidden lists.
+-- LoadScripts, and Hekili:LoadScript's pure-variable reload (L1329: those lines read pure values too).
+function scripts:LoadSequences( pack )
+    self.HiddenLists[ pack ] = {}
+    for _, d in ipairs( self.Windows[ pack ].decls ) do
+        if d.seq then
+            self.HiddenLists[ pack ][ d.hidden ], self.HiddenLists[ pack ][ d.startList ] = d.hiddenEntries, d.startEntries
+            for k, m in ipairs( d.members ) do
+                self.DB[ d.memberIDs[ k ] ] = ConvertScript( m, false, d.memberIDs[ k ] )
+                for _, h in ipairs( { { d.hiddenEntries, d.hiddenIDs, d.hidden }, { d.startEntries, d.startIDs, d.startList } } ) do
+                    local sid = h[ 2 ][ k ]
+                    Hekili:LoadScript( pack, h[ 3 ], k, h[ 1 ], sid ) -- an ordinary line's bookkeeping (off-GCD, channels, items, auras)
+                    self.DB[ sid ].ReadsWindow = true
+                end
+            end
+        end
+    end
+end
+
+
 function scripts:LoadScripts()
     if not Hekili.PLAYER_ENTERING_WORLD then
         C_Timer.After( 1, scriptLoader )
@@ -2120,21 +2140,7 @@ function scripts:LoadScripts()
                 end
             end
 
-            -- (windows design v6 §6) each sequence's generated lines: its members' own conditions and its hidden lists
-            self.HiddenLists[ pack ] = {}
-            for _, d in ipairs( cw.decls ) do
-                if d.seq then
-                    self.HiddenLists[ pack ][ d.hidden ], self.HiddenLists[ pack ][ d.startList ] = d.hiddenEntries, d.startEntries
-                    for k, m in ipairs( d.members ) do
-                        self.DB[ d.memberIDs[ k ] ] = ConvertScript( m, false, d.memberIDs[ k ] )
-                        for _, h in ipairs( { { d.hiddenEntries, d.hiddenIDs, d.hidden }, { d.startEntries, d.startIDs, d.startList } } ) do
-                            local sid = h[ 2 ][ k ]
-                            Hekili:LoadScript( pack, h[ 3 ], k, h[ 1 ], sid ) -- an ordinary line's bookkeeping (off-GCD, channels, items, auras)
-                            self.DB[ sid ].ReadsWindow = true
-                        end
-                    end
-                end
-            end
+            self:LoadSequences( pack )
 
             -- (windows design v6 §3.4) a window compile error disables its line (the walk skips a script with an Error)
             for _, e in ipairs( cw.errors ) do
@@ -2338,6 +2344,7 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
                 Hekili:LoadScript( pack, l, i )
             end
         end
+        if scripts.Windows[ pack ] then scripts:LoadSequences( pack ) end
         Hekili.LoadingScripts = false
         return
     end

@@ -250,6 +250,29 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- L1329: the reload also covers a sequence's generated lines (windows design v6 §6): their rechecks read purity too.
+    it("follows the editor: a pure variable made stock reloads a sequence's generated lines", function()
+        local H = boot(false)
+        local list = H.Hekili.DB.profile.packs[ww.PACK].lists.default
+        table.insert(
+            list,
+            1,
+            { action = "variable", enabled = true, var_name = "a", value = "buff.battle_shout.remains<=10", pure = 1 }
+        )
+        table.insert(list, 2, {
+            action = "strict_sequence",
+            enabled = true,
+            window_name = "s",
+            steps = { { action = "bloodrage", criteria = "variable.a" } },
+        })
+        H.Hekili:LoadScripts()
+        local Sc, at = H.Hekili.Scripts, ww.PACK .. ":seq:s:1"
+        assert.is_nil(Sc.DB[at].RecheckScript) -- a pure read has no recheck of its own (State.lua reads its value's)
+        list[1].criteria = "active_enemies>1" -- an if= given: raised, `a` read as a stock variable
+        H.Hekili:LoadScript(ww.PACK, "default", 1)
+        assert.are.equal("safenum(variable.a)", Sc.DB[at].RecheckScript)
+    end)
+
     -- CN25 fix round 3 (m7): a pure value reading itself, directly or through another pure variable, would recurse at
     -- every read: each such line raises at load and is a stock variable.
     it("raises at load on pure=1 lines whose values read each other in a loop", function()
