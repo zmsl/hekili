@@ -3,7 +3,7 @@
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warlock/dps/builds/destro.build.json
 -- (the build: race Human, talents 2550002013--0050355103101351, Succubus out, Demon Armor, curse Elements, 32 Soul
 -- Shards, Engineering/Tailoring, 20 yd; its rotation) and presets.ts:11,20,29,91 (DESTRO_APL, DestroTalents, the Builds
--- list) at the pin. The build carries no gear: gear_sets/preraid.gear.json (central fix 27).
+-- list) at the pin. The build's own gear (#1048, owner L1397; was preraid.gear.json, central fix 27).
 -- Spec binding: 33 Destruction points to 14 Affliction and 4 Demonology: Destruction's default.
 -- Re-pin e2842f0a78 (Task 16): the build is now Human (Sesam's lists: Life Tap below 30% mana, Major Mana Potion and
 -- Demonic Rune lines); the replay answers `fight_remains` from the log's length (R42, a replay-world assumption; in
@@ -49,8 +49,8 @@ return {
     name = "Destruction",
     talentTree = "warlock",
     build = "ui/specs/warlock/dps/builds/destro.build.json",
-    gear = "ui/specs/warlock/dps/gear_sets/preraid.gear.json",
-    map = { ["item:272438"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
+    -- no `gear`: the build carries its own at ab0f00e4fc (wowsims #1048; owner L1397)
+    map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
     select = {
         castWarlockAssignedCurse = {
             setting = "assigned_curse",

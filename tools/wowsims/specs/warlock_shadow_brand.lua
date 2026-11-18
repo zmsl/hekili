@@ -4,8 +4,8 @@
 -- ui/specs/warlock/dps/builds/demo_shadow_brand.build.json (the build: race Human, talents
 -- 011-0005003231220301351-0550005003, the Succubus out and the Imp sacrificed (Burning Shadow), Demon Armor, curse
 -- Elements, 32 Soul Shards, Engineering/Tailoring, 20 yd; its rotation) and presets.ts:10,19,28,90
--- (DEMO_SHADOW_BRAND_APL, DemoShadowBrandTalents, the Builds list) at the pin. The build carries no gear:
--- gear_sets/preraid.gear.json (central fix 27).
+-- (DEMO_SHADOW_BRAND_APL, DemoShadowBrandTalents, the Builds list) at the pin. The build's own gear (#1048,
+-- owner L1397; was preraid.gear.json, central fix 27).
 -- Spec binding: 31 Demonology points to 18 Destruction and 2 Affliction, so the pack is Demonology's second (the
 -- Fire/Frostfire shape: mage_frostfire.lua); Demonology's default stays "Demonology (wowsims.com)" (demo_fire_brand,
 -- wowsims's Auto rotation). The name is wowsims's "Demo (Shadow Brand)" without the spec.
@@ -45,8 +45,8 @@ return {
     name = "Shadow Brand",
     talentTree = "warlock",
     build = "ui/specs/warlock/dps/builds/demo_shadow_brand.build.json",
-    gear = "ui/specs/warlock/dps/gear_sets/preraid.gear.json",
-    map = { ["item:272438"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
+    -- no `gear`: the build carries its own at ab0f00e4fc (wowsims #1048; owner L1397)
+    map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
     -- the build's "Improved Shadow Bolt Known" variable is auraIsKnown(Shadow Vulnerability 17794): the talent that makes it
     knownAs = { [17794] = "improved_shadow_bolt" },
     select = {

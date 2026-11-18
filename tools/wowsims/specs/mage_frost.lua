@@ -43,7 +43,7 @@ return {
         distanceFromTarget = 28,
     },
     -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear)
-    map = { ["item:272438"] = "use_items" },
+    map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" },
     -- by role (docs/dev/wowsims-packs.md): Cone of Cold on five Winter's Chill stacks and Ice Lance (one Fingers of
     -- Frost charge while Frostbolt casts; 0 casts in wowsims's fight) are windows to catch (1); Ice Barrier, kept up for Frigid Power, is upkeep (2)
     focus = { cone_of_cold = 1, ice_lance = 1, ice_barrier = 2 },

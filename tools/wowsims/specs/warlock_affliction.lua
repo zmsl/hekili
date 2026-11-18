@@ -3,8 +3,8 @@
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever)
 -- ui/specs/warlock/dps/builds/aff_wrack.build.json (the build: race Orc, talents 25500020135201351-0050203001-05,
 -- the Imp sacrificed (no demon out), Demon Armor, curse Elements, 32 Soul Shards, Engineering/Tailoring, 20 yd; its
--- rotation) and presets.ts (AFF_WRACK_APL, the Builds list) at the pin. The build carries no gear:
--- gear_sets/preraid.gear.json (central fix 27). Spec binding: 35 Affliction points to 11 Demonology and 5 Destruction:
+-- rotation) and presets.ts (AFF_WRACK_APL, the Builds list) at the pin. The build's own gear (#1048,
+-- owner L1397; was preraid.gear.json, central fix 27). Spec binding: 35 Affliction points to 11 Demonology and 5 Destruction:
 -- Affliction's default.
 -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9; owner ruling L1154 (2): follow wowsims): the new Wrack APL (202831a0a0).
 -- Bane of Doom only on 2+ targets (one target never casts it); the Cooldowns call always on one target; Amplify Curse
@@ -61,7 +61,7 @@ return {
     name = "Affliction",
     talentTree = "warlock",
     build = "ui/specs/warlock/dps/builds/aff_wrack.build.json",
-    gear = "ui/specs/warlock/dps/gear_sets/preraid.gear.json",
+    -- no `gear`: the build carries its own at ab0f00e4fc (wowsims #1048; owner L1397)
     map = { ["item:272438"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
     -- the build's "Improved Shadow Bolt Known" variable is auraIsKnown(Shadow Vulnerability 17794): the talent that makes it
     knownAs = { [17794] = "improved_shadow_bolt" },
