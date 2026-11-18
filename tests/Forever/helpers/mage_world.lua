@@ -641,6 +641,37 @@ M.MAP = {
 -- logs cast 10151, 10181 and 10212), so the worlds' character has not learned them.
 local BOOK = { [25306] = true, [25304] = true, [25345] = true }
 
+-- The ranges in yards (DB2 70707 SpellMisc.RangeIndex -> SpellRange, every rank alike): GetSpellInfo's, so a travelling
+-- cast's flight window (Events/Tickets.lua: max range / velocity) is the client's, not the fake's 5 yd default.
+-- Medium-Long 0-35, Medium 0-30, Short 0-20 (Fire Blast), Self Only 0 (no range check).
+local RANGE = { fire_blast = { 0, 20 } }
+for _, key in ipairs({ "fireball", "frostfire_bolt", "pyroblast" }) do
+    RANGE[key] = { 0, 35 }
+end
+for _, key in ipairs({
+    "arcane_blast",
+    "arcane_missiles",
+    "arcane_wrath",
+    "blizzard",
+    "counterspell",
+    "frostbolt",
+    "ice_lance",
+    "scorch",
+}) do
+    RANGE[key] = { 0, 30 }
+end
+for _, key in ipairs({
+    "arcane_power",
+    "cold_snap",
+    "combustion",
+    "cone_of_cold",
+    "evocation",
+    "ice_barrier",
+    "presence_of_mind",
+}) do
+    RANGE[key] = { 0, 0 }
+end
+
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, SPEC = P.spec, IDS = {} }
@@ -667,6 +698,15 @@ local function content(name)
                 known[#known + 1] = id
             end
         end
+        local ranges = {}
+        for key, r in pairs(RANGE) do -- every ability's ranks, known or not (the client's spell data)
+            local a = w.abilities[key]
+            if a then
+                for _, id in ipairs({ a.id, unpack(type(a.copy) == "table" and a.copy or { a.copy }) }) do
+                    ranges[id] = r
+                end
+            end
+        end
         return {
             class = "MAGE",
             classID = M.CLASS_ID,
@@ -676,6 +716,7 @@ local function content(name)
             talents = P.talents,
             power = { type = MANA, token = "MANA", max = MAX },
             speed = { 3.0 },
+            ranges = ranges,
         }
     end
 

@@ -452,7 +452,16 @@ M.READY = {
     -- are credited), so at 146.60 truth 184.9 against est 121.3: Scorch waits on mana the player has);
     -- the same three before the restore credit, which moved scorch 42.00 (a 9.502 -> 0.001) and fire_blast 136.50
     -- (never -> in:grain at the Citrine's use, lo-truth -817.4 -> -42.4)
-    mage_fire = { 0.69, 3 }, -- 0.690, 3
+    -- { 0.69, 3 } -> { 0.25, 4 } (lane mage-mana-belief; the Mage world's spells carry the client's DB2 ranges, so a
+    -- travelling cast's flight window is 35 / 24 s, not the fake's 5 yd 0.36 s): the travelling crits' Master of
+    -- Elements refunds are credited (Fireball 5 and Pyroblast 2 of the log's 6 and 3; one Pyroblast DoT tick crit at
+    -- log 17.33 is credited too, which the game does not refund: in that instant the old DoT's tick Crit and the new
+    -- Pyroblast's direct Hit land, both school 4, and the new cast's flight ticket takes the crit row, a mis-routing;
+    -- a tick's own crit runs no onCrit since lane mage-mana-belief's fix, which moves no row here). 146.60
+    -- 1.61 late -> in:grain (lo-truth -73.7 -> -6.8), 152.40 0.69 -> 0.51; 172.90 / 177.50 in:cost -> 0.26 / 0.24 late
+    -- (gap BQ: lo 7.7 / 4.8 under the truth at Scorch's 150; before, est sat 15-24 OVER the truth there and showed
+    -- them in time); 159.40 / 166.20 stay in:cost (b 0.07 -> 0.19 / 0.16). Decisions 0.932 kept
+    mage_fire = { 0.25, 4 }, -- 0.250, 4
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
     -- { 0.42, 9 } -> { 1.51, 3 }: three late cost rows on the new log's dry pool (lo under the truth at the cost):
     -- frostfire_bolt 112.80 0.23 (lo -7.1, gap BQ), scorch 118.00 2.51 (lo -41.9 at Scorch's 150; traced, 0.9 measure
