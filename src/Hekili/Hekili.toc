@@ -66,6 +66,7 @@ Game\Events\Rows.lua
 Game\Events\Attackers.lua
 Game\API\Facade.lua
 Locales\enUS.lua
+Locales\itIT.lua
 Locales\zhCN.lua
 Locales\Locales.lua
 

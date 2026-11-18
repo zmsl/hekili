@@ -4,6 +4,8 @@
 
 ### New
 
+- Italian translation of the core interface, thanks to Sairiin.
+
 ### Changed
 
 ### Fixed
@@ -11,6 +13,8 @@
 
 - At very high spell haste, the icons after the first no longer come up a little early: a global cooldown is never
   shorter than 1 second.
+
+- Dominos users no longer get repeated Lua errors when Hekili reads keybindings before all action bars or buttons exist.
 
 ### Known issues
 
