@@ -28,6 +28,7 @@ An option written `=1` is on; `=0` or leaving it out is off. Options that hold a
 | `for_next` | 1 | `pool_resource` delays the walk for the next line ([Pooling](#pooling)) | Pool for Next Entry (*ability*) |
 | `extra_amount` | Number | With `for_next=1`, the resource to pool beyond the next line's cost | **Extra Pooling** |
 | `value`, `value_else`, `op`, `default` | Expression, operation | A `variable` line's value ([Variables](APL-Syntax-Reference#variables)) | **Value**, **Value when Conditions are Not Met**, **Operation** |
+| `pure` | 1 | A `variable` line read in place at each line that reads it ([Pure variables](APL-Syntax-Reference#pure-variables)) | none |
 | `duration`, `refresh`, `max_refresh`, `max_duration`, `reset_on_target_change` | seconds or `combat`, 0 or 1, count, seconds, 0 or 1 | A `window` entry's length, refresh and caps, in the `windows` list only; an `open_window` or `close_window` line takes none of them ([APL windows](APL-Windows#declaring-a-window-in-the-priority)) | none |
 | `line_cd` | Seconds | After the ability is cast in combat, the line waits this long before it can be chosen again. | **Entry Cooldown** |
 | `sync` | Ability key | The line waits until that ability is ready too. | none |

@@ -214,6 +214,83 @@ describe("tools/make_pack.lua", function()
             assert.is_false(ok)
             assert.matches("packs%.lua: pack Host imports Other's list sub as o_sub, a list it already has$", err)
         end)
+
+        it("refuses a variable the host pack defines too (CN25: one per name in a pack)", function()
+            local ok, err = load(MANIFEST, {
+                ["Host.simc"] = HOST .. "actions+=/variable,name=v_x,value=a\n",
+                ["Other.simc"] = OTHER .. "actions+=/variable,name=v_x,value=b\n",
+            })
+            assert.is_false(ok)
+            assert.matches("Other imports variable v_x, which the host pack has too$", err)
+        end)
+
+        -- CN25 fix round 1 (I1): a guard would give the line an if=, so it is no longer a pure variable (Scripts.lua);
+        -- its readers carry the guard, and a pure read does not depend on the line's position. A stock variable line
+        -- (no pure=1) is guarded like any host line: where the walk reaches it is what sets it.
+        it("leaves the host's pure=1 variable lines unguarded and guards its stock ones", function()
+            local ok, packs = load(MANIFEST, {
+                ["Host.simc"] = HOST
+                    .. "actions+=/variable,name=v_x,pure=1,value=a&b\nactions+=/variable,name=w,value=c\n",
+            })
+            assert.is_true(ok, packs)
+            local simc = packs[1].simc
+            assert.is_truthy(simc:find("\nactions+=/variable,name=v_x,pure=1,value=a&b\n", 1, true), simc)
+            assert.is_truthy(simc:find("\nactions+=/variable,name=w,value=c,if=!buff.o_form.up\n", 1, true), simc)
+        end)
+
+        -- CN25 fix round 2 (L1211): a pure=1 line must sit in default or a list reached only by unconditional calls
+        -- (Scripts.lua MarkPure); the imported lists are entered under the aura's condition, so the source's pure=1
+        -- lines join the host's default instead (unguarded: their readers carry the guard). A stock one keeps its list.
+        it("moves the source's pure=1 variable lines into the host's default list", function()
+            local ok, packs = load(MANIFEST, {
+                ["Other.simc"] = OTHER
+                    .. "actions+=/variable,name=v_y,pure=1,value=b\nactions+=/variable,name=w,value=c\n",
+            })
+            assert.is_true(ok, packs)
+            local simc = packs[1].simc
+            assert.is_truthy(simc:find("\nactions+=/variable,name=v_y,pure=1,value=b\n", 1, true), simc)
+            assert.is_nil(simc:find("actions.o+=/variable,name=v_y", 1, true), simc)
+            assert.is_truthy(simc:find("\nactions.o+=/variable,name=w,value=c\n", 1, true), simc)
+        end)
+
+        -- CN25 fix round 3 (m1): only pure=1 is pure (Scripts.lua MarkPure reads pure=0 as stock): a pure=0 host line is
+        -- guarded, a pure=0 source line keeps its list
+        it("treats a pure=0 variable line as a stock one", function()
+            local ok, packs = load(MANIFEST, {
+                ["Host.simc"] = HOST .. "actions+=/variable,name=w,pure=0,value=c\n",
+                ["Other.simc"] = OTHER .. "actions+=/variable,name=u,pure=0,value=d\n",
+            })
+            assert.is_true(ok, packs)
+            local simc = packs[1].simc
+            assert.is_truthy(
+                simc:find("\nactions+=/variable,name=w,pure=0,value=c,if=!buff.o_form.up\n", 1, true),
+                simc
+            )
+            assert.is_truthy(simc:find("\nactions.o+=/variable,name=u,pure=0,value=d\n", 1, true), simc)
+        end)
+
+        -- CN25 fix round 3 (m2): only a source pure=1 line its own pack accepts (default, or a list reached only by
+        -- unconditional calls from it) moves; another stays in its list, read as a stock variable, with a warning
+        it("moves only the source's pure=1 lines its own pack reads in place", function()
+            local stderr, warned = io.stderr, {}
+            io.stderr = { -- luacheck: ignore 122 (make_pack's build warnings, captured)
+                write = function(_, msg)
+                    warned[#warned + 1] = msg
+                end,
+            }
+            local ok, packs = load(MANIFEST, {
+                ["Other.simc"] = OTHER
+                    .. "actions+=/call_action_list,name=cond,if=q\nactions+=/call_action_list,name=all\n"
+                    .. "actions.cond=variable,name=v_z,pure=1,value=e\nactions.all=variable,name=v_a,pure=1,value=f\n",
+            })
+            io.stderr = stderr -- luacheck: ignore 122
+            assert.is_true(ok, packs)
+            local simc = packs[1].simc
+            assert.is_truthy(simc:find("\nactions.o_cond=variable,name=v_z,pure=1,value=e\n", 1, true), simc)
+            assert.is_truthy(simc:find("\nactions+=/variable,name=v_a,pure=1,value=f\n", 1, true), simc)
+            assert.are.equal(1, #warned)
+            assert.matches("Other's variable v_z %(list cond%) is not read in place", warned[1])
+        end)
     end)
 
     describe("write (the version changes only with the text)", function()
@@ -318,6 +395,19 @@ describe("tools/make_pack.lua", function()
             mp.parse("actions=x,cycle_targets=yes\n")
         end, "bad value cycle_targets=yes in: actions=x,cycle_targets=yes")
     end)
+
+    it(
+        "round-trips a variable line: name= as its var_name, pure=1, value= verbatim with | stored doubled (CN25)",
+        function()
+            local simc = "actions=variable,name=v_x,pure=1,value=(a|!b)&c.d>=2\nactions+=/e,if=variable.v_x\n"
+            local lists = mp.parse(simc)
+            assert.are.same(
+                { action = "variable", enabled = true, var_name = "v_x", pure = 1, value = "(a||!b)&c.d>=2" },
+                lists.default[1]
+            )
+            assert.are.equal(simc, mp.unparse(lists))
+        end
+    )
 
     it("round-trips cancel_buff's buff_name as a string, written after name=", function()
         local simc = "actions=cancel_buff,buff_name=cat_form,if=a\n"

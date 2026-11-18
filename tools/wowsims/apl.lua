@@ -13,7 +13,10 @@
 --    `flightTime`, else the request's `distanceFromTarget` over its `velocity`, else 0: wowsims's distance over the
 --    missile speed, translator-2), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
---    order as first called; `valueVariables` are inlined where referenced.
+--    order as first called; `valueVariables` are inlined where referenced, except a text of M.HOIST_TERMS or more
+--    term occurrences (CN25: Lua 5.1's limits on one line, the engine's debug print and recheck): it is one
+--    `variable,name=v_<snake>,pure=1,value=<text>` line heading the default list and read as `variable.v_<snake>` (an
+--    engine pure variable; never a text reading a window, the target's range or holding a comma).
 --    The pre-pull guard (owner ruling 2026-10-21: a guard against recasting, the player decides when to press): each
 --    cast line of the precombat list, and of a list only pre-pull lists call, gets one term ahead of its condition,
 --    derived from what its ability's handler does (called once under pcall in the kit's stub state with the verbs
@@ -322,9 +325,10 @@
 --    up) and `timeUntilTargetDies` `fight_remains` (one target, no despawn schedule: wowsims's fight end, as
 --    `remainingTime`); another target unit is unsupported, for these and `isExecutePhase`. CN24, an API-forced
 --    deviation: Forever gives no other target's time to die, so an entry reading another target's (wowsims's
---    NextTarget, Feral's 2/3-target lists) is omitted with that reason, and so is one comparing the current target's
---    with `remainingTime` (both `fight_remains` here: a term always false, as Guardian's "dies before the fight
---    ends"), never folded. `numActiveAdds` (no boss/add
+--    NextTarget, Feral's 2/3-target lists) is omitted with that reason. A comparison of the current target's with
+--    `remainingTime` (both `fight_remains` here, gap AN: Guardian's "dies before the fight ends") is a constant term,
+--    folded as S4's: false for `<`, `>` and `!=`, true for `<=`, `>=` and `=`, with a `# Deviation:` line and the
+--    reason on an entry it empties. `numActiveAdds` (no boss/add
 --    split in the engine) and `remainingCastTime` (no read mapped; no APL uses it) stay unsupported.
 -- Absent enum fields (protojson omits a zero value; zeros from the pinned proto/*.proto): rule 16's option is its
 -- recipe `zero`; every other enum read here has an "unknown" zero that wowsims rejects, so an absent one is
@@ -982,6 +986,8 @@ local function currentTarget(k, v, why)
     end
 end
 local OTHER_DEATH = ": Forever gives no other target's time to die" -- CN24, API-forced
+local FIGHT_END = "timeUntilTargetDies against remainingTime: the target's time to die is fight_remains here (gap AN),"
+    .. " so the comparison is a constant."
 local FACING = "frontOfTarget is the request's in-front setting (%s the target); the client gives no facing."
 local MOB_TYPE = "targetIsMobType is the request's target type (%s); the client's creature type is not read."
 local PREPULL_CAST = "the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast."
@@ -1083,6 +1089,47 @@ local function sinceHand(c, n)
     return n.autoTimeSinceLast and SINCE[n.autoTimeSinceLast.autoType]
 end
 
+-- CN25: a variable's text is inlined where read unless it holds at least M.HOIST_TERMS term occurrences; then the
+-- read is `variable.<name>` and the text is emitted once as a `variable` line (see translate).
+M.HOIST_TERMS = 40
+
+--- The term occurrences of condition text `s` (Engine/Sim/Scripts.lua generateDebugPrint's tokens).
+function M.terms(s)
+    local n = 0
+    for _ in (s:gsub("'[^']*'", "")):gmatch("[a-zA-Z][A-Za-z0-9_%.]+") do
+        n = n + 1
+    end
+    return n
+end
+
+-- Variable `name`'s translated text `s` as read here (CN25). A text reading a window stays inline (the line's own
+-- window recheck, Scripts.lua ReadsWindow), as does one reading the target's range (rule 19 scans the line's own
+-- `target.within`/`target.outside`/`in_range` terms) and one with a comma (the SimC line's separator).
+local function hoisted(c, name, s)
+    if
+        s == nil
+        or M.terms(s) < M.HOIST_TERMS
+        or s:find("window.", 1, true)
+        or s:find("target.within", 1, true)
+        or s:find("target.outside", 1, true)
+        or s:find(".in_range", 1, true)
+        or s:find(",", 1, true)
+    then
+        return s
+    end
+    local base, k = "v_" .. M.snake(name), 1
+    local x = base
+    while c.hoist[x] and c.hoist[x] ~= s do -- the same variable translated differently in another context
+        k = k + 1
+        x = base .. "_" .. k
+    end
+    if not c.hoist[x] then
+        c.hoist[x] = s
+        c.hoistOrder[#c.hoistOrder + 1] = x
+    end
+    return "variable." .. x
+end
+
 -- A value: its text and nil condition (`true`: nil, no text). `pct`: compared directly with a percent read (rule 8).
 local function value(c, n, pct)
     local k, v = next(n)
@@ -1107,7 +1154,7 @@ local function value(c, n, pct)
         local n0 = c.movedN or 0
         local s, u = value(c, c.vars[v.name] or unsupported("variable " .. v.name), pct)
         movedVar(c, v.name, n0, u)
-        return s, u
+        return hoisted(c, v.name, s), u
     elseif k == "unitMovementSpeed" or k == "unitDistance" then -- rule 18 (rule 11 compares yards in bool())
         return moved(c, k)
     elseif k == "math" and (isYards(c, v.lhs) or isYards(c, v.rhs)) then -- rule 18 (R17): a walk time is one
@@ -1357,10 +1404,10 @@ local function bool(c, n)
         local l, lu = value(c, v.lhs, percentRead(c, v.rhs))
         local r, ru = value(c, v.rhs, percentRead(c, v.lhs))
         local op = M.OPS[v.op] or unsupported("op " .. tostring(v.op))
-        if l == M.VALUES.remainingTime and r == l then -- CN24: the target's death against the fight's end
-            unsupported(
-                "timeUntilTargetDies against remainingTime" .. OTHER_DEATH .. " (one target: both are fight_remains)"
-            )
+        if l == M.VALUES.remainingTime and r == l then -- CN24: the target's death against the fight's end, a constant
+            deviate(c, FIGHT_END)
+            c.folds[#c.folds + 1] = FIGHT_END -- S4: an entry this fold empties keeps the reason on its `never`
+            return nil, v.op == "OpLe" or v.op == "OpGe" or v.op == "OpEq", false
         end
         local u = nilOr(lu, ru)
         if u == true then
@@ -1593,7 +1640,7 @@ local function bool(c, n)
         local n0 = c.movedN or 0
         local s, b, u = bool(c, c.vars[v.name] or unsupported("variable " .. v.name))
         movedVar(c, v.name, n0, u)
-        return s, b, u
+        return hoisted(c, v.name, s), b, u
     elseif c.selectValue[k] then -- rule 16
         local kind, sel = c.selectValue[k][1], c.selectValue[k][2]
         sel.used = true
@@ -2760,6 +2807,7 @@ end
 --- ON/OFF groups in its order, then the recipe's `settings` by key).
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
+    c.hoist, c.hoistOrder = {}, {} -- CN25: { [variable] = text }, in first-read order
     c.dropNote = {}
     c.callers, c.deviated, c.deviations, c.moves, c.movedAll = {}, {}, {}, {}, {}
     c.held, c.windows, c.loops, c.moving = {}, {}, {}, {} -- rules 14b, 19
@@ -3081,6 +3129,37 @@ function M.translate(rotation, c)
             guard(c, l[1], l[2], origin[l[1]], omitted)
         end
     end
+    -- CN25: each hoisted variable an emitted line reads (directly or through another), in first-read order (a text
+    -- reads only variables hoisted before it), as `variable` lines heading the default list; rule 15 rewrites them too
+    local need = {}
+    local function reads(s)
+        for x in s:gmatch("variable%.([%w_]+)") do
+            if c.hoist[x] and not need[x] then
+                need[x] = true
+                reads(c.hoist[x])
+            end
+        end
+    end
+    for _, l in ipairs(lists) do
+        for _, body in ipairs(l[2]) do
+            reads(body)
+        end
+    end
+    local defs = {}
+    for _, x in ipairs(c.hoistOrder) do
+        if need[x] then
+            defs[#defs + 1] = "variable,name="
+                .. x
+                .. ",pure=1,value="
+                .. maintained(c, "x,if=" .. c.hoist[x], {}):sub(6)
+        end
+    end
+    if #defs > 0 then
+        local default = byName.default or error("CN25: hoisted variables but no default list", 0)
+        for i = #defs, 1, -1 do
+            table.insert(default, 1, defs[i])
+        end
+    end
     local text, cast = {}, {}
     for _, l in ipairs(lists) do
         local head = l[1] == "default" and "actions" or ("actions." .. l[1])
@@ -3148,10 +3227,9 @@ function M.translate(rotation, c)
     return text, omitted, read, header
 end
 
---- Writes spec `spec`'s pack: src/Hekili_<Class>/APLs/<recipe.pack>.simc from the checked-in request (`ex`:
---- export.lua's module), its description (with the recipe's `notes`, player-facing lines), toggles and omitted entries in
---- the header.
--- The pack file of recipe `spec` (`ex`: tools/wowsims/export.lua): its path, its text, its omitted and toggle counts.
+--- The pack file of recipe `spec` (`ex`: tools/wowsims/export.lua's module) from its checked-in request: its path
+--- (src/Hekili_<Class>/APLs/<recipe.pack>.simc), its text (the description with the recipe's `notes`, player-facing
+--- lines, the toggles and omitted entries in the header), its omitted and toggle counts.
 function M.render(spec, ex)
     local json = require("dkjson")
     local r = ex.recipe(spec)
@@ -3201,6 +3279,7 @@ function M.render(spec, ex)
     return ("src/Hekili_%s/APLs/%s.simc"):format(Class, r.pack), table.concat(out, "\n") .. "\n", #omitted, #toggles
 end
 
+--- Writes spec `spec`'s pack (M.render's text to its path) and prints its counts.
 function M.write(spec, ex)
     local path, text, omitted, toggles = M.render(spec, ex)
     local w = assert(io.open(path, "wb"))

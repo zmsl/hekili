@@ -53,7 +53,6 @@ local function forgetMeNots( str )
    -- Such as !5>2+(1*3).
    -- So we'll start from the !, then go through the string until it's time to stop.
 
-   local i = 1
    local substring
 
    while( str:find("!") ) do
@@ -86,10 +85,8 @@ local function forgetMeNots( str )
       substring = str:sub( start + 1, finish )
       substring = substring:trim()
 
+      -- each pass turns one `!` into `not`, so the loop ends (CN25: a cap at 100 left the rest in the Lua text)
       str = format( "%s not ( %s ) %s", str:sub( 1, start - 1 ) or "", substring, str:sub( finish + 1, str:len() ) or "" )
-
-      i = i + 1
-      if i >= 100 then Hekili:Debug( "Was unable to convert '!' to 'not' in string [%s].", str ); break end
    end
 
    str = str:gsub( "%s%s", " " )
@@ -395,6 +392,10 @@ end
 scripts.SimToLua = SimToLua
 
 
+-- CN25: the pure variables ({ [name] = scriptID }, scripts:MarkPure) of the pack whose line is being converted
+local loadingPure
+
+
 do
     -- Okay, this is the auto-recheck parser.
 
@@ -636,6 +637,10 @@ do
         while expr:match( "^%b()$" ) do
             expr = expr:sub( 2, -2 )
         end
+
+        -- CN25: a pure variable's read has no time of its own: its value's are the line's (State.lua recurseRechecks)
+        local pure = loadingPure and expr:match( "^!?variable%.([a-z0-9_]+)$" )
+        if pure and loadingPure[ pure ] then return false, nil end
 
         local orig = expr
 
@@ -1974,6 +1979,103 @@ function scripts:SwapScripts( s1, s2 )
     local swap = scripts.DB[ s1 ]
     scripts.DB[ s1 ] = scripts.DB[ s2 ]
     scripts.DB[ s2 ] = swap
+
+    -- CN25: the editor moved a line (its list is already reordered): the pure variables' script IDs follow it
+    local pack = s1:match( "^(.*):[^:]*:%d+$" )
+    if pack then scripts:MarkPure( pack ) end
+end
+
+
+-- CN25: pack `pack`'s pure variables, each read in place (State.lua) and never registered (Core.lua): a `variable` line
+-- marked pure=1 (explicit: a line without it is a stock variable, whatever its shape), enabled, with a value and no if=,
+-- value_else= or op but set, the only line of its name, in default or a list reached only by unconditional calls from
+-- default. A pure=1 line that is not raises at load (the line and the reason) and is read as a stock variable.
+-- PackInfo[pack].pure maps each variable name to its line's script ID (false: not pure), pureText to its value. Returns
+-- whether a name's purity or a pure value's text changed (a line's compiled rechecks and time-sensitivity read them:
+-- Hekili:LoadScript then reloads the pack). Runs only outside the load's own loop (load time and editor edits).
+function scripts:MarkPure( pack )
+    local pData, info = Hekili.Engine.settings.packs[ pack ], self.PackInfo[ pack ]
+    if not ( pData and info ) then return false end
+
+    -- the lists every call to which is unconditional from a list already reached so (default first)
+    local reach, count, grew = { default = true }, {}, true
+    while grew do
+        grew = false
+        for list in pairs( pData.lists ) do
+            if not reach[ list ] then
+                local called, ok = false, true
+                for from, fData in pairs( pData.lists ) do
+                    for _, e in ipairs( fData ) do
+                        if e.list_name == list and e.enabled ~= false and ( e.action == "call_action_list" or e.action == "run_action_list" ) then
+                            called = true
+                            ok = ok and reach[ from ] and ( e.criteria or "" ) == "" and ( e.strict_if or "" ) == ""
+                        end
+                    end
+                end
+                if called and ok then reach[ list ], grew = true, true end
+            end
+        end
+    end
+    for _, lData in pairs( pData.lists ) do
+        for _, e in ipairs( lData ) do
+            if e.action == "variable" and e.var_name then count[ e.var_name ] = ( count[ e.var_name ] or 0 ) + 1 end
+        end
+    end
+
+    local pure, text = {}, {}
+    for list, lData in pairs( pData.lists ) do
+        for id, e in ipairs( lData ) do
+            local name = e.action == "variable" and e.var_name
+            if name then
+                local at = pack .. ":" .. list .. ":" .. id
+                local why
+                if tonumber( e.pure ) == 1 and e.enabled ~= false then
+                    why = ( e.criteria or "" ) ~= "" and "if= is set"
+                        or ( e.value_else or "" ) ~= "" and "value_else= is set"
+                        or ( e.op or "set" ) ~= "set" and ( "op=" .. e.op )
+                        or ( e.value or "" ) == "" and "no value="
+                        or count[ name ] > 1 and ( count[ name ] .. " lines of the name" )
+                        or not reach[ list ] and "its list is reached through a conditional call (or not from default)"
+                    if why then
+                        Hekili:Error( ( "Pure variable '%s' at %s: %s; it is read as a stock variable." ):format( name, at, why ) )
+                    end
+                end
+                pure[ name ] = not why and tonumber( e.pure ) == 1 and e.enabled ~= false and count[ name ] == 1 and at
+                text[ name ] = e.value
+            end
+        end
+    end
+
+    -- a pure variable whose value reads itself, directly or through other pure variables, would recurse at every read
+    local function loops( root, name, seen )
+        for ref in ( text[ name ] or "" ):gmatch( "variable%.([%w_]+)" ) do
+            if ref == root then return true end
+            if pure[ ref ] and not seen[ ref ] then
+                seen[ ref ] = true
+                if loops( root, ref, seen ) then return true end
+            end
+        end
+        return false
+    end
+    local looped = {}
+    for name, at in pairs( pure ) do
+        if at and loops( name, name, {} ) then looped[ name ] = at end
+    end
+    for name, at in pairs( looped ) do
+        Hekili:Error( ( "Pure variable '%s' at %s: its value reads itself; it is read as a stock variable." ):format( name, at ) )
+        pure[ name ] = false
+    end
+
+    local old, oldText = info.pure or {}, info.pureText or {}
+    info.pure, info.pureText = pure, text
+    for name, v in pairs( pure ) do
+        if not v ~= not old[ name ] then return true end
+        if v and text[ name ] ~= oldText[ name ] then return true end -- its readers' time-sensitivity reads the text
+    end
+    for name, v in pairs( old ) do
+        if v and pure[ name ] == nil then return true end
+    end
+    return false
 end
 
 
@@ -2006,6 +2108,7 @@ function scripts:LoadScripts()
                 hasWhileCasting = false
             }
 
+            self:MarkPure( pack )
             -- (windows design v6 §9) the priority's windows first: a line reading one compiles against a known name
             local cw = scripts.CheckWindows( pData.lists, pack )
             self.Windows[ pack ] = cw
@@ -2185,6 +2288,35 @@ function Hekili:LoadItemScripts()
 end
 
 
+-- Whether condition `lua` reads something that moves with time; CN25: a pure variable's (`info`: the pack's PackInfo)
+-- value is read through, as when its text was inlined (`seen`: the variables followed).
+local function timeSensitive( lua, specData, info, seen )
+    -- If resources are checked, it's time-sensitive.
+    for k in pairs( GetResourceInfo() ) do
+        local resource = specData.resources[ k ]
+        resource = resource and resource.state
+
+        if resource and lua:find( k ) and ( resource.regenModel or resource.regen ~= 0.001 ) then
+            return true
+        end
+    end
+
+    -- Check for other time-sensitive variables.
+    if lua:find( "time" ) or lua:find( "cooldown" ) or lua:find( "charge" ) or lua:find( "remain" ) or lua:find( "up" ) or lua:find( "down" ) or lua:find( "ticking" ) or lua:find( "refreshable" ) or lua:find( "stealthed" ) or lua:find( "rune" ) then
+        return true
+    end
+
+    for name in lua:gmatch( "variable%.([a-z0-9_]+)" ) do
+        local text = info and info.pure and info.pure[ name ] and info.pureText[ name ]
+        if text and not seen[ name ] then
+            seen[ name ] = true
+            if timeSensitive( text, specData, info, seen ) then return true end
+        end
+    end
+    return false
+end
+
+
 -- `entries`, `scriptID`: a sequence's generated list and its line's ID (windows design v6 §6), else the pack's list.
 function Hekili:LoadScript( pack, list, id, entries, scriptID )
     local pData = Hekili.Engine.settings.packs[ pack ]
@@ -2194,7 +2326,26 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     scriptID = scriptID or pack .. ":" .. list .. ":" .. id
     recordID( entries, id, scriptID )
 
+    -- CN25: an edited `variable` or list-call line outside a full load (a call's condition, state or target sets which
+    -- lists a pure line may sit in): the pack's pure map follows it, and a change in which names are pure or in a pure
+    -- value reloads every line of the pack (their rechecks and time-sensitivity read through pure variables)
+    if not Hekili.LoadingScripts
+        and ( data.action == "variable" or data.action == "call_action_list" or data.action == "run_action_list" )
+        and scripts:MarkPure( pack ) then
+        Hekili.LoadingScripts = true
+        for l, lData in pairs( pData.lists ) do
+            for i in ipairs( lData ) do
+                Hekili:LoadScript( pack, l, i )
+            end
+        end
+        Hekili.LoadingScripts = false
+        return
+    end
+
+    local info = scripts.PackInfo[ pack ]
+    loadingPure = info and info.pure
     local script = ConvertScript( data, true, scriptID )
+    loadingPure = nil
 
     if script.Error then
         Hekili:Error( "Error in " .. scriptID .. " conditions:  " .. ( script.rs or "null" ) .. "\n\n" .. script.Error )
@@ -2237,23 +2388,7 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
         script.TimeSensitive = false
 
         if lua then
-            -- If resources are checked, it's time-sensitive.
-            for k in pairs( GetResourceInfo() ) do
-                local resource = specData.resources[ k ]
-                resource = resource and resource.state
-
-                if resource and lua:find( k ) and ( resource.regenModel or resource.regen ~= 0.001 ) then
-                    script.TimeSensitive = true
-                    break
-                end
-            end
-
-            if not script.TimeSensitive then
-                -- Check for other time-sensitive variables.
-                if lua:find( "time" ) or lua:find( "cooldown" ) or lua:find( "charge" ) or lua:find( "remain" ) or lua:find( "up" ) or lua:find( "down" ) or lua:find( "ticking" ) or lua:find( "refreshable" ) or lua:find( "stealthed" ) or lua:find( "rune" ) then
-                    script.TimeSensitive = true
-                end
-            end
+            script.TimeSensitive = timeSensitive( lua, specData, info, {} )
         end
     end
 

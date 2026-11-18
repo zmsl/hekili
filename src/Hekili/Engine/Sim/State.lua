@@ -1924,9 +1924,14 @@ do
         else seen[ script.ID ] = script.Recheck or true end
 
         if script.Variables then
+            local info = scripts.PackInfo[ state.system.packName ]
             for _, var in ipairs( script.Variables ) do
                 local varIDs = state:GetVariableIDs( var )
-                if varIDs then
+                local pure = info and info.pure and info.pure[ var ] -- CN25: its value's rechecks, as when inlined
+                if pure then
+                    local subscript = not seen[ pure ] and scripts.DB[ pure ]
+                    if subscript then recurseRechecks( subscript, seen ) end
+                elseif varIDs then
                     for _, entry in ipairs( varIDs ) do
                         if not seen[ entry.id ] then
                             local subscript = scripts.DB[ entry.id ]
@@ -4801,6 +4806,17 @@ do
 
             if Hekili.LoadingScripts then
                 return defaultValue
+            end
+
+            -- CN25: a pure variable (Scripts.lua scripts:MarkPure) is its value, read now in the reader's context, as its
+            -- text inlined there would be: no cache, no path, nothing built
+            local info = scripts.PackInfo[ state.system.packName ]
+            local pure = info and info.pure and info.pure[ var ]
+            local script = pure and scripts.DB[ pure ]
+            if script and script.Modifiers and script.Modifiers.value then
+                local v = script.Modifiers.value()
+                if debug then Hekili:Debug( " - variable.%s = %s (pure: %s)", var, tostring( v ), scripts:GetModifierValues( "value", pure ) or "?" ) end
+                return v
             end
 
             if not db[ var ] then
