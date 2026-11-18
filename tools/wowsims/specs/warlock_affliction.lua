@@ -54,6 +54,10 @@
 -- the loops (docs/dev/wowsims-packs.md, Deviations by ruling).
 -- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in Shadow Bolt then Life Tap under its cost,
 -- so no bracket idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (owner L1396/L1397: follow wowsims): each build carries its own gear (wowsims #1048/#1070)
+-- (Affliction already was Orc; Succubus summoned, Major Spellblasting Potion 250937 added) (Blood Fury is the race's racial; the Human's logs are gone), so the request loses the Human
+-- gear and Elixir of Firepower, and the Orc's Life Tap / regen are the world's seeds (Spirit 170, 1.2 a 0.1 s tick inside
+-- the rule; warlock_world.lua).
 return {
     class = "WARLOCK",
     pack = "Affliction (wowsims.com)",

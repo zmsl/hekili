@@ -19,6 +19,8 @@
         "players":[{
             "profession1":"Engineering",
             "distanceFromTarget":20,
+            "profession2":"Tailoring",
+            "class":"ClassWarlock",
             "rotation":{
               "type":"TypeAPL",
               "groups":[{
@@ -2838,47 +2840,10 @@
                   }
                 }]
             },
-            "class":"ClassWarlock",
-            "equipment":{
-              "items":[{
-                  "id":16698
-                },{
-                  "id":22149
-                },{
-                  "id":16701
-                },{
-                  "id":272413
-                },{
-                  "id":14153
-                },{
-                  "id":16703
-                },{
-                  "id":16705
-                },{
-                  "id":16702
-                },{
-                  "id":16699
-                },{
-                  "id":16704
-                },{
-                  "id":275738
-                },{
-                  "id":19518
-                },{
-                  "id":272438
-                },{
-                  "id":270225
-                },{
-                  "id":22379
-                },{
-                  "id":249455
-                },{
-                  "id":15283
-                }]
-            },
             "consumables":{
               "potions":[118,858,929,1072,1710,2455,2456,3087,3384,3385,3827,3928,6048,6049,6050,6051,6052,6149,9036,9144,13443,13444,13446,13456,13457,13458,13459,13460,13461,14894,17348,17349,17351,17352,18253,18839,18841,250932,250933,250934,250935,250936,250937,250951,250953,250954,255663,268881,268882,268883,274935,282011,282013],
               "conjuredItems":[1703,5509,5510,5511,5512,9421,11951,11952,12662,15723,17747],
+              "offensivePotId":250937,
               "conjuredId":12662,
               "flaskId":13512,
               "mhImbueId":20750,
@@ -2893,6 +2858,7 @@
                 "classOptions":{
                   "armor":"DemonArmor",
                   "soulShards":32,
+                  "summon":"Succubus",
                   "sacrificedDemon":"Imp"
                 }
               }
@@ -2904,7 +2870,52 @@
               "greaterBlessingOfWisdom":2,
               "greaterBlessingOfKings":true
             },
-            "profession2":"Tailoring",
+            "equipment":{
+              "items":[{
+                  "id":22267,
+                  "enchant":2544
+                },{
+                  "id":18691,
+                  "enchant":8218
+                },{
+                  "id":19050
+                },{
+                  "id":272411,
+                  "enchant":2621
+                },{
+                  "id":14136,
+                  "enchant":8492
+                },{
+                  "id":18497,
+                  "enchant":1901
+                },{
+                  "id":18407,
+                  "enchant":8492
+                },{
+                  "id":254087
+                },{
+                  "id":22342,
+                  "enchant":8492
+                },{
+                  "id":11822,
+                  "enchant":911
+                },{
+                  "id":22433
+                },{
+                  "id":12545
+                },{
+                  "id":18467
+                },{
+                  "id":272438
+                },{
+                  "id":18372,
+                  "enchant":2568
+                },{
+                  "id":18316
+                },{
+                  "id":13396
+                }]
+            },
             "race":"RaceOrc"
           }]
       }]

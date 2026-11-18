@@ -1,7 +1,7 @@
 -- tools/wowsims/specs/warlock_demonology.lua (wowsims packs plan, Task 13): Demonology (wowsims.com)'s wowsims/forever
 -- request and translation; wowsims's preset build "Demo (Fire Brand)" (presets.ts Builds).
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever)
--- ui/specs/warlock/dps/builds/demo_fire_brand.build.json (the build: race Human, talents
+-- ui/specs/warlock/dps/builds/demo_fire_brand.build.json (the build: race Orc, talents
 -- 011-0305003201220301351-0050055003, the Imp out and the Succubus sacrificed (Touch of Fire), Demon Armor, curse
 -- Elements, 32 Soul Shards, Engineering/Tailoring, 20 yd; its rotation, which is also wowsims's Auto rotation:
 -- spec.ts:125 autoRotation) and presets.ts:9,18,27,89 (DEMO_FIRE_BRAND_APL, DemoFireBrandTalents, the Builds list's
@@ -27,9 +27,8 @@
 -- the brand its full 10 s); before the Demonic Brand talent the brand is never up, so `searing_pain,if=!debuff.
 -- demonic_brand.up` leads the list (as wowsims's own list at that level would).
 -- "Execute at" (35%) reads 0.35 (rule 8); wowsims's pet-spell cost 115 ("Firebolt cost") is kept verbatim (ruling W7).
--- Deviations: Berserking (Troll) and
--- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
--- 13).
+-- Deviations: Berserking (Troll) and Eureka! are other races' racials, never known to the Orc. The on-use trinkets
+-- (Weakness Analyzer 272438, Eye of the Beast 13968) are `use_items` (rule 13).
 -- Filler (owner 2026-11-12, a player's report: "after putting my dots, Hekili wants me to spam Life Tap, even with full
 -- mana"; owner: "Life tap is not a good filler"): wowsims's list ends `searing_pain` then an unconditional Life Tap, so
 -- a Warlock below Searing Pain (18) was shown Life Tap at full mana. An `extra` Shadow Bolt (known at 1) goes before
@@ -40,6 +39,10 @@
 -- so no bracket idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
 -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9): the build, talents and gear are unchanged; the log moves on the Weakness
 -- Analyzer's 6 min cooldown (was 90 s: one use in the fight, was two).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (owner L1396/L1397: follow wowsims): each build carries its own gear (wowsims #1048/#1070)
+-- and every build is Orc (Blood Fury is the race's racial; the Human's logs are gone), so the request loses the Human
+-- gear and Elixir of Firepower, and the Orc's Life Tap / regen are the world's seeds (Spirit 170, 1.2 a 0.1 s tick inside
+-- the rule; warlock_world.lua).
 return {
     class = "WARLOCK",
     pack = "Demonology (wowsims.com)",

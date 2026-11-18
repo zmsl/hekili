@@ -59,10 +59,10 @@ end
 describe("a wowsims pack's absolute mana threshold on a small pool (rule 22)", function()
     -- Warlock: the cooldowns list's Life Tap, Shadow Bolt after it (any line below a quiet Life Tap)
     for _, p in ipairs({
-        { "Affliction", 6277, 1800 }, -- the kit's pool: tests/Forever/wowsims/warlock_affliction.log
-        { "Destruction", 5503, 2600 }, -- warlock_destruction.log
-        { "Demonology", 6328, 2600 }, -- warlock_demonology.log
-        { "ShadowBrand", 6328, 2600 }, -- warlock_shadow_brand.log
+        { "Affliction", 6311, 1800 }, -- the kit's pool: tests/Forever/wowsims/warlock_affliction.log
+        { "Destruction", 5323, 2600 }, -- warlock_destruction.log
+        { "Demonology", 6121, 2600 }, -- warlock_demonology.log
+        { "ShadowBrand", 6294, 2600 }, -- warlock_shadow_brand.log
     }) do
         local name, kit, n = p[1], p[2], p[3]
         local function at(max)
