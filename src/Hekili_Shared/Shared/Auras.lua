@@ -69,8 +69,9 @@ local function dispellable(dispelType)
 end
 
 local auras = {
-    -- Core reads these by name (State.lua: the cooldown read, `prowling`, the GCD's length); none exists on Forever, so
-    -- each is a stub with no ID, never up. Smaller than the core edit removing the reads (spec §4.1).
+    -- Core reads voidbinding/shadowform by name (State.lua: the cooldown read, `prowling`; the GCD rule reads none of
+    -- these); none exists on Forever, so each is a stub with no ID, never up. Smaller than the core edit removing the
+    -- reads (spec §4.1).
     voidbinding = {},
     voidform = {},
     shadowform = {},
