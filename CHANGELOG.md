@@ -3,62 +3,76 @@
 ## Unreleased
 
 ### New
-- Shaman: Hekili now knows Totemic Recall; casting it takes your totems and their buffs down in the recommendations (the mana it gives back is not counted yet). Not yet checked in game.
-- Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
-- A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
-- A priority's `variable` line can take `pure=1`: each line that reads the variable then works it out at that line, instead of reading a stored value.
-- Priorities can use SimC `sequence` and `strict_sequence` lines (with `restart_sequence` and `window.<name>.done`); they run in the Primary and AOE displays, each with a Sequences setting (on by default).
-- A sequence running in a display shows all its steps there, including a cooldown that is normally shown in its own display; a toggle that is switched off still keeps that step out.
-- A priority whose lines open and close the same window in one recommendation gets a one-time warning, also when a `close_window` line stops a sequence that then starts again.
-- Other addons can follow Hekili's recommendations with `Hekili:RegisterRecommendationListener`, described on the wiki's Integration reference page.
 
 ### Changed
-- Enhancement Shaman: Stormstrike's cooldown is now 8 seconds, and each Maelstrom Weapon stack takes 20% off Lightning Bolt's cast time and cost at every talent rank. Not yet checked in game.
-- Warlock, Affliction (wowsims.com): follows wowsims's new Wrack priority: Bane of Doom only with two or more enemies, Bane of Agony and Amplify Curse no longer wait for Doom, Blood Fury is saved for Amplify Curse, and the Major Mana Potion line is gone (not yet checked in game).
-- Warlock: Bane of Havoc now waits for the global cooldown, as in wowsims (not yet checked in game).
-- Rogue priorities follow the newest wowsims fights: Eviscerate no longer shows at 4 combo points when Slice and Dice has 6 seconds or less left (Mutilate builds still finish at 4 combo points); with Serrated Blades, Eviscerate shows only while Rupture has at least 3 seconds left; and with Ghostly Strike, Hemorrhage also shows at 75 energy or more, not only while Garrote has at least 8 seconds left. Not yet checked in game.
-- Hunter: the Beast Mastery and Marksmanship weave priorities are retired, because wowsims.com no longer has them. If you had one selected, you now run that spec's Turret priority, and Hekili tells you once.
-- Hunter: Arcane Shot and Summon Hawk now cost 11% of your base mana at every rank, as wowsims.com prices them (not yet checked in game).
-- Hunter: Sniper Shot's mana cost now includes the Efficiency talent's discount, as wowsims.com charges it (not yet checked in game).
-- Hunter: Efficiency and Resourcefulness now take their discounts after a percent cost is rounded to whole mana, and with both talents the two discounts multiply instead of adding up, as wowsims.com prices them (not yet checked in game).
-- Hunter: after an Arcane Shot, Summon Hawk is ready again as soon as Arcane Shot is, since Improved Arcane Shot shortens both, as wowsims.com shows (not yet checked in game).
-- Hunter: Hekili now tracks Strider Kick's speed after your Strider Kick, and Lacerating Strikes' bleed after your Mongoose Bite.
-- Hunter: Beast Mastery Turret now follows wowsims.com's hawk rotation: Summon Hawk twice, then Arcane Shot, and no longer suggests Sniper Shot. Until you have Summon Hawk, it suggests Arcane Shot on its own (not yet checked in game).
-- Hunter: Survival Melee now runs out to reapply Serpent Sting while Strider Kick's speed is up and you have more than 30% mana, as wowsims.com does, and no longer suggests a Major Mana Potion (not yet checked in game).
-- Hunter: before it learns your own mana regeneration, Hekili now starts from the regeneration of wowsims.com's current level 60 gear, so early fights forecast mana closer to the game.
-- Feral: the default priority follows wowsims's new Feral build (Rend and Tear 5/5). With two or three enemies it keeps the single-target priority, because wowsims's lists for two and three enemies switch targets, which Hekili cannot follow.
-- Guardian: the default priority follows wowsims's new Bear build and lists, with its own priorities for two and three enemies (Swipe). Not yet checked in game.
-- Guardian: in the Timeline style, Maul no longer takes the now circle ahead of keeping up Lacerate and Demoralizing Roar.
-- Feral: a dodged or missed Ferocious Bite now gives back 28 energy and keeps the extra energy it would have used, and the Idol of Ferocity (Claw and Rake cost 2 less) and the Idol of the Dream (Rip lasts 2 seconds longer) are counted. Not yet checked in game.
-- Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
-- Mage, Arcane, Fire, Frost and Frostfire (wowsims.com): when you wear Robe of the Archmage, its use is now suggested with your other cooldowns, under the Potions toggle (not yet checked in game).
-- `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
-- `/hekili set <toggle> on` or `off` shows the same message as the toggle's keybinding.
 
 ### Fixed
-- Shaman: Mana Tide Totem now counts its mana every 3 seconds (290 at its top rank, less at lower ranks), not five times that, so your mana is no longer overestimated while it is up.
-- Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
-- A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
-- Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
-- Using a mana gem or Robe of the Archmage now adds its mana to Hekili's mana forecast, the gem's by the gem you used (not yet checked in game).
-- A recommendation that changes and changes straight back no longer flashes the other ability for a split second.
-- ConsolePort: the recommendation now shows the controller button for spells on ConsolePort's action bars.
-- Paladin: a second attack in the same instant as an Unsealed Wrath proc no longer stores or spends an extra Echo (the talent's 0.1 s cooldown; not yet checked in game).
-- Paladin: Retribution (17 mana a second outside the five-second rule, 5.1 while casting), Protection (16.5 outside, none while casting) and Holy Shock Retribution (25.13 outside, 7.54 while casting) start from the current Forever mana regeneration values until your own is measured (not yet checked in game).
-- When the game's out-of-combat mana or energy regeneration matches the expected rate, Hekili now takes it as exact, so its mana and energy estimates no longer start a little low.
-- Another addon that follows Hekili's displays can no longer take the place of the action bar glow, a display or the WeakAuras event.
-- WeakAuras that react to Hekili's toggles (the `HEKILI_TOGGLE` event) now also see pause and resume, a toggle set with `/hekili set` and a mode chosen in the options, and are no longer told about a `/hekili set mode` word that is not a mode.
-- `/hekili set pause on` and `/hekili set pause off` now pause and resume the displays.
-- Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
-- Warrior: a hit you block in full no longer counts as rage gained, and the rage expected from hits taken follows the latest measurements by attacker level (not yet checked in game).
-- Warrior: a missed, dodged or parried Execute no longer gives back part of its cost, and the extra rage it would have used stays yours (not yet checked in game).
-- Warrior: Overpower now shows after a dodge that comes soon after your last Overpower; it used to wait 5 seconds from that Overpower (not yet checked in game).
 
 ### Known issues
-- Warrior, Arms and Fury (wowsims.com): Blackhand's Breadth, which wowsims's latest gear sets use, is not suggested yet.
 
 ### Upgrade notes
-- A priority list named `windows` is now reserved for window declarations: a custom priority with an ordinary list of that name shows an error on that list until it is renamed.
+
+## v0.9.0
+
+_Released 2026-11-18_
+
+Hekili Forever v0.9.0 follows the newest wowsims.com rotations for most classes, adds SimC sequences to custom priorities, and makes mana, energy and rage forecasts more accurate.
+
+### Druid
+- Feral: the default priority follows wowsims's new Feral build (Rend and Tear 5/5). Note: with two or three enemies it keeps the single-target priority, so players must determine for themselves whether to spread bleeds or not.
+- Feral: a dodged or missed Ferocious Bite gives back 28 energy plus the extra energy it would have used; Idol of Ferocity and Idol of the Dream are now counted.
+- Guardian: the default priority follows wowsims's new Bear build, with its own Swipe priorities for two and three enemies.
+- Guardian: in the Timeline style, Maul no longer takes the now circle ahead of keeping up Lacerate and Demoralizing Roar.
+### Hunter
+- The Beast Mastery and Marksmanship weave priorities are retired; if you used one, you now run that spec's Turret priority, and Hekili tells you once.
+- Beast Mastery Turret: Summon Hawk twice, then Arcane Shot, with no more Sniper Shot; until you learn Summon Hawk, it suggests Arcane Shot on its own.
+- Survival Melee: runs out to reapply Serpent Sting while Strider Kick's speed is up and you have over 30% mana, and no longer suggests a Major Mana Potion.
+- Arcane Shot and Summon Hawk cost 11% of base mana at every rank, and Sniper Shot now gets Efficiency's discount.
+- Efficiency and Resourcefulness discounts apply after the cost is rounded, and they multiply when you have both.
+- After an Arcane Shot, Summon Hawk is ready as soon as Arcane Shot is, since Improved Arcane Shot shortens both.
+- Strider Kick's speed and Lacerating Strikes' bleed after Mongoose Bite are now tracked, and early-fight mana forecasts start from level 60 gear regeneration.
+### Mage
+- Robe of the Archmage, when worn, is suggested with your other cooldowns under the Potions toggle.
+- Using a mana gem or Robe of the Archmage now adds its mana to the mana forecast, based on the gem you used.
+### Paladin
+- Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (any living enemy for the Exorcist talent's Exorcism), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
+- Retribution, Protection and Holy Shock Retribution start from current Forever mana regeneration until your own is measured.
+- A second attack in the same instant as an Unsealed Wrath proc no longer stores or spends an extra Echo.
+### Rogue
+- Eviscerate no longer shows at 4 combo points when Slice and Dice has 6 seconds or less left (Mutilate builds still finish at 4).
+- With Serrated Blades, Eviscerate shows only while Rupture has at least 3 seconds left.
+- With Ghostly Strike, Hemorrhage also shows at 75 energy or more, not only while Garrote has at least 8 seconds left.
+### Shaman
+- Totemic Recall is now known: it takes your totems and their buffs down in the recommendations (the mana it returns is not counted yet).
+- Enhancement: Stormstrike's cooldown is 8 seconds, and each Maelstrom Weapon stack cuts Lightning Bolt's cast time and cost by 20% at every talent rank.
+- Mana Tide Totem counts its mana every 3 seconds (290 at top rank) instead of five times that, so mana is no longer overestimated while it is up.
+### Warlock
+- Affliction: follows wowsims's new Wrack priority. Bane of Doom is used only on two or more enemies, Bane of Agony and Amplify Curse no longer wait for Doom, Blood Fury is saved for Amplify Curse, and Major Mana Potion is gone.
+- Bane of Havoc now waits for the global cooldown.
+### Warrior
+- A hit you block in full no longer counts as rage gained, and the rage expected from hits taken now follows the attacker's level.
+- A missed, dodged or parried Execute no longer gives back part of its cost, and the extra rage it would have used stays yours.
+- Overpower now shows after a dodge that comes soon after your last Overpower, instead of waiting 5 seconds from that Overpower.
+### Core and display
+- Spells that cost a share of base mana now cost what the game charges, rounded to the nearest mana (Stormstrike at level 60: 122, not 121), and discounts such as Bestial Wrath apply after rounding.
+- Innervate now also multiplies mana regeneration from gear and buffs, while totem mana ticks such as Mana Spring stay as they are.
+- Mana and energy estimates no longer start a little low when your out-of-combat regeneration matches the expected rate.
+- Cooldown Manager icons that have proven themselves are remembered across logouts and reloads, so a debuff that misses in your first pull can be caught.
+- A recommendation that changes and then changes straight back no longer flashes the other ability for a split second.
+- ConsolePort: recommendations now show the controller button for spells on ConsolePort's action bars.
+- Custom priorities can use SimC `sequence` and `strict_sequence` lines (with `restart_sequence` and `window.<name>.done`) in the Primary and AOE displays, each with a Sequences setting (on by default).
+- A running sequence shows all its steps in its display, even a cooldown normally shown separately, unless that step's toggle is off.
+- Custom priorities can declare windows in a `windows` list and open and close them with `open_window` and `close_window` lines (`name=` and `if=` only). You get a one-time warning when lines open and close the same window in one recommendation.
+- A `variable` line can take `pure=1`, so each line that reads the variable works it out at that line.
+- `/hekili set pause on` and `off` now pause and resume the displays, and `/hekili set <toggle> on` or `off` shows the same message as the toggle's keybinding.
+- WeakAuras that react to Hekili's toggles now also see pause and resume, `/hekili set` changes and modes chosen in the options, and are no longer told about invalid mode words.
+- Other addons can now follow Hekili's recommendations (see the wiki's Integration reference page), and can no longer take the place of the action bar glow, a display or the WeakAuras event.
+- Debug snapshots keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
+- Simplified Chinese: the Cooldown Manager panel, overlays, Action Bar Glow and wowsims priority names are now translated.
+### Known issues
+- Warrior, Arms and Fury: Blackhand's Breadth, used in wowsims's latest gear sets, is not suggested yet.
+### Upgrade notes
+- A priority list named `windows` is now reserved for window declarations. A custom priority with an ordinary list of that name shows an error on that list until you rename it.
 
 ## v0.8.6
 
