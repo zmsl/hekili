@@ -75,10 +75,11 @@ return {
         "Demoralizing Shout is off unless you turn on Maintain Demoralizing Shout. To keep it (when on) and Thunder Clap for bosses, tick Boss Encounter Only on those abilities, or put them under the Custom 1 toggle.",
         "Rend is used on every target, boss or not.",
     },
-    -- a tank: the raid's tank (the target swings at it) and presets.ts:127-142's healing model (apply_defaults.ts:108-122)
+    -- a tank: the raid's tank (the target swings at it) and presets.ts:130-147's healing model (apply_defaults.ts:108-122);
+    -- hps 770 at e4ef929e54 (abc0b19e9c: 2.4 x the Pre-BiS gear's 321 damage taken a second; was 815; owner L1154 (4))
     tank = true,
     healingModel = {
-        hps = 815,
+        hps = 770,
         cadenceSeconds = 0.3,
         cadenceVariation = 0.64,
         absorbFrac = 0.015,

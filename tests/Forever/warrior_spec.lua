@@ -501,6 +501,22 @@ describe("Forever Warrior", function()
             assert.is_nil(e.durations.overpower_ready)
         end)
 
+        -- re-pin e4ef929e54 trace (Fury replay 157.70 / 161.44): a dodge 1.76 s after our Overpower opens a new window
+        -- (Classic's "5 s since the last Overpower" kept it shut); the row's own time, not its delivery, dates the dodge
+        it("opens a new window on a dodge after our last Overpower, dated by the row's own time", function()
+            row(10, "SWING_MISSED", ME, MOB, "DODGE")
+            row(10.5, "SPELL_CAST_SUCCESS", ME, MOB, 7384)
+            row(12, "SWING_MISSED", ME, MOB, "DODGE")
+            assert.are.equal(4, reset(13).durations.overpower_ready)
+            row(13.5, "SPELL_CAST_SUCCESS", ME, MOB, 7384)
+            w.game.now = 16 -- a held avoid's row (R46): delivered late, its dodge before that Overpower
+            w.game.row = { 13.2, "SWING_MISSED", false, ME, "", 0, 0, MOB, "", 0, 0, "DODGE", "", 1, 0 }
+            w.events.COMBAT_LOG_EVENT_UNFILTERED()
+            for _, k in ipairs(reset(16.2).applied) do
+                assert.are_not.equal("overpower_ready", k) -- spent by the 13.5 Overpower
+            end
+        end)
+
         it("gates Overpower on its window, not on the usability read", function()
             local e = lw.env(w)
             w.game.usable[7384] = true
@@ -751,9 +767,12 @@ describe("Forever Warrior", function()
             w.game.healthMax = 5000 -- our health plays no part
             near(g, (run("WOUND", 1000, 63)))
             w.game.stat.UnitArmor = { 0, 0 }
-            near(1000 * perPoint(0.38 + 0.02 * 10 / 13, 230.60000004), (run("WOUND", 1000, 60))) -- A between 50 and 63
-            near(1000 * perPoint(0.37, 180.0852468984), (run("WOUND", 1000, 48))) -- between 46 (0.36) and 50 (0.38)
-            near(1000 * perPoint(0.2, 37.43235079), (run("WOUND", 1000, 10))) -- 0.20 up to 42
+            -- A by wowsims's rows at e4ef929e54 (rage.go:34-46): 38 0.218, 42 0.239, 44 0.31, 46 0.36, 47 0.377,
+            -- 50 0.38, 55 0.381, 59 0.38, 63 0.40
+            near(1000 * perPoint(0.38 + 0.02 / 4, 230.60000004), (run("WOUND", 1000, 60))) -- A between 59 and 63
+            near(1000 * perPoint(0.377 + 0.003 / 3, 180.0852468984), (run("WOUND", 1000, 48))) -- 47 0.377, 50 0.38
+            near(1000 * perPoint(0.218 + 0.021 / 2, 147.86647018), (run("WOUND", 1000, 40))) -- 38 0.218, 42 0.239
+            near(1000 * perPoint(0.218, 37.43235079), (run("WOUND", 1000, 10))) -- 0.218 up to 38
             near(1000 * perPoint(0.4, 274.70000005), (run("WOUND", 1000, 70))) -- 0.40 from 63
         end)
 
@@ -774,24 +793,17 @@ describe("Forever Warrior", function()
             near(2 * open, (run("WOUND", 1000, 63)))
         end)
 
-        it(
-            "adds the cached block value to a partial block, and estimates a full block from the unblocked amounts",
-            function()
-                w.game.stat.UnitArmor = { 0, 0 }
-                w.game.healthMax = 100
-                w.game.stat.GetShieldBlock = { 20 }
-                local k = perPoint(0.2, 20.621051355) -- a level-5 attacker's
-                local g, wd = run("BLOCKED", 10, 5) -- 10 + 20 unblocked
-                near(30 * k, g)
-                near(0.15 * g, wd)
-                -- min(block value 20, the average unblocked amount 0.2 x 30)
-                near(6 * k, (run("BLOCK", 0, 5)))
-                local g, wd = run("BLOCK", 0, 5)
-                assert.are.equal(g, wd) -- a full block's band is its whole estimate
-                w.events.PLAYER_REGEN_ENABLED() -- the fight ends: the next fight learns its own unblocked amounts
-                assert.are.same({ 0, 0 }, { run("BLOCK", 0, 5) })
-            end
-        )
+        it("adds the cached block value to a partial block, and gives a full block no rage", function()
+            w.game.stat.UnitArmor = { 0, 0 }
+            w.game.healthMax = 100
+            w.game.stat.GetShieldBlock = { 20 }
+            local k = perPoint(0.218, 20.621051355) -- a level-5 attacker's
+            local g, wd = run("BLOCKED", 10, 5) -- 10 + 20 unblocked
+            near(30 * k, g)
+            near(0.15 * g, wd)
+            -- a hit blocked in full gives none (wowsims rage.go:112-115; 6 of 6 in its in-game logs)
+            assert.are.same({ 0, 0 }, { run("BLOCK", 0, 5) })
+        end)
 
         it("takes the rage from the hit after Defensive Stance's and Shield Wall's reduction (W2, wowsims)", function()
             local open = run("WOUND", 50, 20)
@@ -810,7 +822,7 @@ describe("Forever Warrior", function()
             assert.are.same({ 0, 0 }, { run("DODGE", 0, 20) })
             w.game.stat.UnitArmor = { 0, 0 }
             ctx({}, { shield_specialization = 1 })
-            local hit = 30 * perPoint(0.2, 72.4215672) -- a level-20 attacker's
+            local hit = 30 * perPoint(0.218, 72.4215672) -- a level-20 attacker's
             local g, wd = run("BLOCKED", 30, 20) -- a partial block: the hit's, plus the proc
             near(hit + 1, g)
             near(0.15 * hit + 4, wd)
@@ -894,8 +906,10 @@ describe("Forever Warrior", function()
     end)
 
     it(
-        "gives back 80% of an avoided ability's rage where wowsims does, per ability (not Cleave or Whirlwind)",
+        "gives back 80% of an avoided ability's rage where wowsims does, per ability (not Cleave, Whirlwind or Execute)",
         function()
+            -- Execute: an avoid costs the base rage, none of it back (wowsims execute.go at e4ef929e54, 7025f28b98:
+            -- 36 avoided Executes in in-game logs)
             assert.are.equal(0.8, w.resource[4].refundOnAvoid)
             local yes = {}
             for key, a in pairs(w.abilities) do
@@ -908,7 +922,6 @@ describe("Forever Warrior", function()
                 "bloodthirst",
                 "concussion_blow",
                 "disarm",
-                "execute",
                 "hamstring",
                 "heroic_strike",
                 "mocking_blow",
@@ -925,6 +938,19 @@ describe("Forever Warrior", function()
             }, yes)
         end
     )
+
+    it("gives back an avoided Execute's extra rage, the base cost kept (refundNowOnAvoid on Execute only)", function()
+        -- wowsims execute.go at e4ef929e54 (7025f28b98): an avoid costs the base rage and keeps the extra, which
+        -- the belief's `now` took (L1237)
+        local yes = {}
+        for key, a in pairs(w.abilities) do
+            if a.refundNowOnAvoid then
+                yes[#yes + 1] = key
+            end
+        end
+        assert.are.same({ "execute" }, yes)
+        assert.is_nil(w.abilities.execute.refundOnAvoid)
+    end)
 
     it("declares no rage maximum of its own: a Gnome's 105 is the race pack's Expansive Mind", function()
         assert.is_nil(w.resource[4].max) -- 100 by default; the Gnome's race pack adds Expansive Mind
@@ -1297,3 +1323,47 @@ end)
 
 -- The wowsims lines (class-completion Task 5) on the headless engine, as fury_spec checks Fury's: each line's `if=` runs
 -- through the real Scripts.lua against a booted Arms Warrior (helpers/warrior_world.lua) with the state pinned per case.
+
+-- Execute's `refundNowOnAvoid` on the belief (L1237): its `now` spends all the rest of the rage; a DODGE with no usable
+-- answer in between gives that back, the base cost kept (wowsims execute.go at e4ef929e54: an avoid costs the base only).
+describe("the belief's rage after an avoided Execute", function()
+    local headless = require("Game.harness.headless")
+    local ww = require("Forever.helpers.warrior_world")
+    local EXECUTE = 5308
+
+    local function avoided(field)
+        local c = ww.character()
+        local H = headless.new({ character = c, pack = "Fury (wowsims.com)" })
+        assert.are.same({}, H.loadErrors)
+        local VS, I = H.ns.VirtualState, H.ns.VirtualStateInternal
+        local a = I.ab.bySpell[EXECUTE]
+        I.ab.refundNow[a] = field
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local t = H.ctl.now + 1
+        H.ctl.power[1] = 60 -- a plain read seeds the belief, then rage goes secret (as in combat)
+        H.Fire("UNIT_POWER_FREQUENT", "player", "RAGE")
+        assert.is_true(headless.cycle(H, t))
+        H.ctl.power[1] = nil
+        local R = VS.Power(1, t).est
+        H.ctl.now = t + 0.1
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-X", EXECUTE)
+        assert.is_true(headless.cycle(H, t + 0.15))
+        assert.are.equal(0, VS.Power(1, t + 0.15).est) -- the `now` spent the rest
+        H.ctl.now = t + 0.2
+        H.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+        assert.is_true(headless.cycle(H, t + 0.25))
+        VS.Drain(t + 0.3)
+        return R, VS.Power(1, t + 0.3).est, I.CostOf(a)
+    end
+
+    it("is back to R less Execute's cost with the field on, and 0 with it off", function()
+        local R, back, cost = avoided(true)
+        assert.is_true(R > 0 and cost > 0 and R >= cost, tostring(R) .. " " .. tostring(cost))
+        assert.are.equal(R - cost, back)
+        local _, off = avoided(false)
+        assert.are.equal(0, off)
+    end)
+end)

@@ -162,8 +162,12 @@ end)
 `RegisterEvent(event, fn)` runs a function on a game event while the class's spec is active. From `src/Hekili_Warrior/Warrior.lua`:
 
 ```lua
-spec:RegisterEvent("PLAYER_REGEN_ENABLED", function()
-    unblockedAvg = 0
+spec:RegisterEvent("SPELL_UPDATE_USABLE", function()
+    local u = reactive(VICTORY_RUSH)
+    if u ~= victory_usable then
+        victory_usable = u
+        victorious_at = u and GetTime() or 0
+    end
 end)
 ```
 

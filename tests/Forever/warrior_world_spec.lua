@@ -35,5 +35,27 @@ describe(
             C.resolve("berserker_rage", H).effect(W, e)
             assert.are.same({ 10 }, gains)
         end)
+
+        -- wowsims execute.go at e4ef929e54 (7025f28b98): the extra rage goes into a landed strike only; an avoided one
+        -- keeps it and gives none of the base cost back
+        it("spends Execute's extra rage on a landed strike only, and refunds none of an avoided one's cost", function()
+            local p = C.resolve("execute", H)
+            assert.are.equal(0, p.refund or 0)
+            e.power, e.target = 40, {}
+            local amounts = {}
+            function W.hit(_, _, amount)
+                amounts[#amounts + 1] = amount
+                return { act = "DODGE" }
+            end
+            p.effect(W, e)
+            assert.are.same({}, gains)
+            function W.hit(_, _, amount)
+                amounts[#amounts + 1] = amount
+                return { act = "WOUND" }
+            end
+            p.effect(W, e)
+            assert.are.same({ -40 }, gains)
+            assert.are.same({ 600 + 15 * 40, 600 + 15 * 40 }, amounts)
+        end)
     end
 )

@@ -47,13 +47,13 @@
                 },{
                   "id":16735
                 },{
-                  "id":21998
+                  "id":13072
                 },{
-                  "id":21994
+                  "id":13077
                 },{
                   "id":12619
                 },{
-                  "id":21995
+                  "id":13070
                 },{
                   "id":18821
                 },{
@@ -455,6 +455,123 @@
                         "castSpell":{
                           "spellId":{
                             "itemId":274759
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "not":{
+                                  "val":{
+                                    "actionGroupUsed":{
+                                      "name":"Recklessness ON/OFF"
+                                    }
+                                  }
+                                }
+                              },{
+                                "or":{
+                                  "vals":[{
+                                      "cmp":{
+                                        "op":"OpLe",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"20s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "remainingTime":{
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpGt",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"310s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "remainingTime":{
+                                          }
+                                        }
+                                      }
+                                    }]
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":13965
+                          }
+                        }
+                      }
+                    },{
+                      "action":{
+                        "condition":{
+                          "and":{
+                            "vals":[{
+                                "actionGroupUsed":{
+                                  "name":"Recklessness ON/OFF"
+                                }
+                              },{
+                                "auraIsInactive":{
+                                  "auraId":{
+                                    "spellId":1719
+                                  }
+                                }
+                              },{
+                                "cmp":{
+                                  "op":"OpGt",
+                                  "rhs":{
+                                    "const":{
+                                      "val":"15s"
+                                    }
+                                  },
+                                  "lhs":{
+                                    "remainingTime":{
+                                    }
+                                  }
+                                }
+                              },{
+                                "or":{
+                                  "vals":[{
+                                      "cmp":{
+                                        "op":"OpGt",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"320s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "remainingTime":{
+                                          }
+                                        }
+                                      }
+                                    },{
+                                      "cmp":{
+                                        "op":"OpLe",
+                                        "rhs":{
+                                          "const":{
+                                            "val":"35s"
+                                          }
+                                        },
+                                        "lhs":{
+                                          "remainingTime":{
+                                          }
+                                        }
+                                      }
+                                    }]
+                                }
+                              }]
+                          }
+                        },
+                        "castSpell":{
+                          "spellId":{
+                            "itemId":13965
                           }
                         }
                       }

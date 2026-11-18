@@ -76,7 +76,8 @@ local PROT = {
         end,
     },
 }
-local PROT_REPLAY = { hidden = hideQueue({ [5302] = true, [25288] = true }), procs = {}, speed = 2.35 }
+-- speed: the log's main-hand period (2.40 s at e4ef929e54: the Pre-BiS gear; 2.35 s before)
+local PROT_REPLAY = { hidden = hideQueue({ [5302] = true, [25288] = true }), procs = {}, speed = 2.40 }
 
 describe("the Warrior wowsims.com packs #slow #wowsims", function()
     it("Arms (wowsims.com) follows wowsims's casts", function()
@@ -94,7 +95,12 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- ruled berserker_rage gate (1), Overpower weaves (overpower -> rend 9.55 and 92.45, -> sunder 65.85, -> slam 101.55:
             -- the usability answer's delay after a dodge), spearing_strike -> mortal_strike (50.65, 100.05) and mortal_strike
             -- slam (131.95) at the cooldown's edge
-            0.88,
+            -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6): 0.91 (61 of 67; measured 0.910) from 0.88: wowsims's new
+            -- Arms gear re-times the fight after 79.85 (the old log with today's kit still reads 0.886, so the Overpower window
+            -- fix f2812da55 moves none of its decisions): the shared four (berserker_rage -> battle_shout -4.50, overpower
+            -- -> rend 10.05, spearing_strike -> mortal_strike 57.00, overpower -> sunder_armor 79.85) and two of the old
+            -- classes (mortal_strike -> spearing_strike 144.45 at the cooldown's edge, overpower -> slam 163.45, R46)
+            0.91,
             ARMS_REPLAY
         )
     end)
@@ -152,7 +158,24 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- Re-pin 4b0030a44b/e5a9cd2a2d (R6): 0.86 (86 of 99; measured 0.869) from 0.85: Overpower weaves (the R46 latency, and
             -- the stance keep fixed to 25: 4 overpower -> bloodthirst), 3 Reckless Swings (the 20-rage shortcut moves the belief's
             -- rage, blocker note warrior-1), execute -> death_wish, execute -> reckless_swings
-            0.86,
+            -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6): 0.82 (82 of 100; measured 0.820, after the Overpower
+            -- window fix f2812da55; 0.800 before it) from 0.86. The old log with today's kit reads 0.879 (87 of 99), so the
+            -- drop is the new log (wowsims's new Fury gear, 3 slots, re-times the fight after 43.50). Misses by class, new
+            -- log 18 / old log 12: Overpower weaves (R46 latency) 5 / 5 (10.50, 19.43, 32.00, 98.06, 155.94); a cast on a
+            -- swing's rage inside one poll 2 / 1 (167.34; 177.34: the off-hand miss at 176.00, then Bloodrage +12.5 and
+            -- Execute at 177.34); an own main-hand miss just before the GCD, its rage still forecast (Sunder over
+            -- Execute) 2 / 0 (171.84, 175.84); gap AS, a Sunder avoid credited across our own swings (central, blocker
+            -- note repin-warrior-09-2) 1 / 0 (123.24, now fixed); Sunder's own avoid on a fresh application 2 / 0
+            -- (94.00, 135.24, ledger L1323); Reckless Swings (the 20-rage
+            -- shortcut, warrior-1) 3 / 3 (13.50, 43.50, 154.74); execute -> death_wish 1 / 1 (149.88); the opening
+            -- whirlwind -> sunder_armor 1 / 1 (0.00); a Sunder fade at or just before wowsims's cast 1 / 1 (79.00). The one avoided
+            -- Execute (145.09) moves no decision (belief 12 vs truth 14.9)
+            -- 0.82 -> 0.83 (83 of 100; measured 0.830) with gap-as-09 merged: 123.24 bloodthirst agrees (the 93.76 swing's
+            -- MISS no longer undoes the 94.00 Sunder's refresh). 94.00 and 135.24 stay, a different class than the gap AS
+            -- above: Sunder's own MISS / DODGE on a fresh application (80.50, 126.24) keeps the belief's first stack, so a
+            -- later Sunder reads 5 one cast early (central, repin-warrior-09-4). The avoided Execute's give-back
+            -- (refundNowOnAvoid) moves no decision: the same-frame avoid reads lo 12 with the field on or off
+            0.83,
             FURY_REPLAY
         )
     end)
@@ -297,7 +320,14 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- Re-pin 4b0030a44b/e5a9cd2a2d (R6): 0.92 (92 of 100; measured 0.920) from 0.98: the new rotation (Revenge reorder, Retaliation
             -- precombat) leaves Shield Slam ties at the cooldown's edge (sunder_armor -> shield_slam x2, rend -> shield_slam),
             -- shatter_curse -> revenge (our health is not replayed: the old class), shield_slam -> thunder_clap 5.50
-            0.92,
+            -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9 warrior lane, R6): 0.91 (91 of 99; measured 0.919) from 0.92: wowsims's
+            -- pre-raid Protection gear (14 slots) and healing 770 (L1154(4)) re-time the fight; every miss is an old class:
+            -- Shield Slam at its cooldown edge (shield_slam -> thunder_clap 3.03, rend -> shield_slam 60.12), a cast 0.08-0.09 s
+            -- after a hit taken's or a block's rage, before its row reaches the belief (shield_slam -> sunder_armor 16.03,
+            -- -> demoralizing_shout 42.43, revenge -> sunder_armor 78.42; the old log had 2 of its 11 such casts),
+            -- shatter_curse -> revenge 6.43 (health not replayed), rend -> battle_shout 166.92 (the pack's remains <= 10 vs
+            -- wowsims recasting after the fade), sunder_armor -> battle_shout 179.19 (the log's fight-end fade at 180.00)
+            0.91,
             PROT_REPLAY
         )
     end)
