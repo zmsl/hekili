@@ -2275,9 +2275,9 @@ local function ReadKeybindings( event )
             for i = 1, 14 do
                 local bar = _G["DominosFrame" .. i]
                 for b = 1, 12 do
-                    local btn = bar.buttons[b]
+                    local btn = bar and bar.buttons and bar.buttons[b]
 
-                    if btn.action then
+                    if btn and btn.action then
                         local keybind
                         local action = btn.action
                         if action <= 0 then
