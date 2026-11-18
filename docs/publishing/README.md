@@ -81,7 +81,7 @@ CurseForge as a beta file.
    body empty.
 3. **Publish.** Press Publish release (tick "Set as a pre-release" only if it already is one). Actions > publish
    (`.github/workflows/publish.yml`) uploads the attached zip to CurseForge project 1753387 with the release body as
-   the markdown changelog, the tag as the file name and game version 1.60.1; the Discord webhook posts the release.
+   the markdown changelog, the tag as the file name and game version 1.60.1; its discord job posts the full notes to Discord #releases.
    For a final release its changelog job then writes `## vX.Y.Z` (the published notes, dated) into CHANGELOG.md on
    `forever` with `tools/changelog_release.py` and resets Unreleased to the five empty headings, keeping lines merged
    after the tag; it commits as github-actions[bot] (`docs(changelog): vX.Y.Z released [skip ci]`) and pushes. So the
@@ -100,11 +100,14 @@ unticked, it creates the draft (use this when a tag's run failed after the push,
 - **Release run fails:** no draft exists. Read the log: `release_notes:` lines name the cause (missing key, API
   error, refusal, no changes since the last release). Fix it and re-run the job, or run the workflow on the tag with
   `dry_run` unticked. If a draft for the tag already exists, delete the draft first.
-- **The curseforge job fails:** the release is public on GitHub (and the Discord webhook has posted it) but not on
+- **The curseforge job fails:** the release is public on GitHub (and the discord job has posted it) but not on
   CurseForge. `cf_upload:` lines name the cause. Re-run the failed job once the cause is fixed
   (Actions > publish > Re-run). A re-run replays the original event, so it reuses the release body as it was when
   published; when the cause is the body (for example `cf_upload: the release body is empty`), edit the release, set it
-  back to a draft and publish again, which makes the Discord webhook post again.
+  back to a draft and publish again, which makes the discord job post again.
+- **The discord job fails** (`discord_notes:` lines name the cause, never the URL): re-run that job alone
+  (Actions > publish > Re-run failed jobs) to repost; messages already sent before the failure appear twice. With no
+  `DISCORD_RELEASES_WEBHOOK` secret the job ends green with a notice and posts nothing.
 - **The changelog job fails** (a push race the job's one retry did not win, or a `changelog_release:` refusal):
   CurseForge already has the file. For a push race, re-run it (Actions > publish > Re-run failed jobs); it starts from
   the current `forever` and does nothing if the section is already there. A body refusal (for example a `##` heading
@@ -126,10 +129,12 @@ unticked, it creates the draft (use this when a tag's run failed after the push,
 - **Branch rules:** `forever` must accept pushes from the workflow's GITHUB_TOKEN (no ruleset or protection rule
   requiring pull requests or status checks, or the Actions bot on its bypass list), or every final release's changelog
   job fails after the upload. Checked 2026-10-19: no rule on `forever`.
-- **Discord webhook** (the user): in the channel's settings > Integrations, create a Discord webhook and copy its URL.
-  Then GitHub repo > Settings > Webhooks > Add webhook: Payload URL is that Discord webhook URL with `/github`
-  appended, content type `application/json`, "Let me select individual events", tick Releases only (untick Pushes).
-  The Discord webhook posts each published release; the rehearsal confirms it stays quiet for drafts.
+- **Discord webhook** (the user): in #releases, channel settings > Integrations, create a Discord webhook and copy
+  its URL. Store it with `gh secret set DISCORD_RELEASES_WEBHOOK` (paste the URL). publish.yml's discord job
+  (`tools/discord_notes.py`) posts each published release, pre-releases too: a header with the link, then the notes
+  in order, split at line ends into messages of at most 2000 characters, with no mention ever pinging. The repo has
+  no GitHub webhook to Discord (Settings > Webhooks), or the release would post twice. Preview the payloads with
+  `python3 tools/discord_notes.py --dry-run <event.json>`.
 
 The CurseForge game version, with the same token:
 
@@ -148,11 +153,11 @@ or is deleted (step 5).
 2. `git tag v0.1.1-rc.1 && git push origin v0.1.1-rc.1`. Actions > release goes green. Releases shows a draft
    pre-release `v0.1.1-rc.1` with `Hekili-v0.1.1-rc.1-forever.zip` attached. Read the notes: player language, one
    section per class then core and display, a Known issues list, under 60 lines, no file or task names. Nothing on
-   CurseForge; no post from the Discord webhook.
+   CurseForge; nothing in Discord.
 3. Edit the notes if needed and publish. Actions > publish goes green (log: `cf_upload: v0.1.1-rc.1 (beta) uploaded
    as CurseForge file <id>`).
 4. CurseForge project > Files shows `v0.1.1-rc.1`, type Beta, game version 1.60.1, its changelog equal to the release
-   body. The Discord webhook has posted the release once.
+   body. Discord #releases shows the full notes once.
 5. Then, per the controller's decision: keep it as the public beta, or delete it: the file on CurseForge
    (Files > the file > Delete), then `gh release delete v0.1.1-rc.1 --cleanup-tag --yes` and
    `git tag -d v0.1.1-rc.1`.

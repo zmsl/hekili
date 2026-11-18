@@ -29,6 +29,24 @@ jobs:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
         run: python3 tools/cf_upload.py "$GITHUB_EVENT_PATH" dist/Hekili-*.zip
 
+  # The full notes go to Discord #releases (tools/discord_notes.py); a pre-release posts too. Its own job, so a re-run
+  # reposts without touching CurseForge, and a CurseForge failure does not hold the post back.
+  discord:
+    needs: curseforge
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Post the notes to Discord
+        env:
+          DISCORD_RELEASES_WEBHOOK: ${{ secrets.DISCORD_RELEASES_WEBHOOK }}
+        run: |
+          if [ -z "$DISCORD_RELEASES_WEBHOOK" ]; then
+            echo "::notice::DISCORD_RELEASES_WEBHOOK is not set; the notes were not posted to Discord"
+            exit 0
+          fi
+          python3 tools/discord_notes.py "$GITHUB_EVENT_PATH"
+
   # A final release's notes become its CHANGELOG.md section on forever (tools/changelog_release.py), so the file is
   # never edited by hand for a release. A workflow pushing to forever is the user's decision (2026-10-19).
   changelog:

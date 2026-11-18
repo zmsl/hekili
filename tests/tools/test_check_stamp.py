@@ -312,6 +312,7 @@ def read(rel):
 NOT_INPUTS = {
     "ANTHROPIC_API_KEY": "release-only tool, mocked in its tests",
     "CF_API_KEY": "release-only tool, mocked in its tests",
+    "DISCORD_RELEASES_WEBHOOK": "release-only tool, mocked in its tests",
     "XDG_CACHE_HOME": "scripts/busted_parallel.sh's run-order cache: order only",
     "GATE_TAGS": "tools/accuracy/run.sh: make accuracy, not check",
     "WOWSIMS_NEW": "tools/wowsims/drift.lua: a dev-only report, not check",

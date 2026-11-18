@@ -1,7 +1,7 @@
 # Builds a release when a v* tag is pushed (docs/publishing/README.md, "Cutting a release"): the BigWigs packager
 # builds the zip without uploading anything, tools/release_notes.py drafts the player-facing notes with the Anthropic
 # API, and a DRAFT GitHub release carries both. Nothing is public until the user publishes the draft; publishing fires
-# publish.yml (CurseForge) and the repo's Discord webhook. A tag with a "-" suffix (v0.2.0-rc.1) drafts a pre-release.
+# publish.yml (CurseForge, Discord). A tag with a "-" suffix (v0.2.0-rc.1) drafts a pre-release.
 # Run by hand (Actions > release > Run workflow, on a tag or branch) it builds and prints the notes only.
 name: release
 
