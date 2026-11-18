@@ -69,10 +69,15 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- 4-point branch (Eviscerates all at 5 points). The other misses are in the old log too (Assassination opener 1.00/2.00; Combat 120.00
 -- blade_flurry, the old 117.18 row: the Human build never shows Blade Flurry in combat, its line needs Blood Fury and default #9 is omitted).
 -- Subtlety LIVE40 8.2 -> the 6 s bar (4.2 measured; the new Hemorrhage `energy.lo>=75` term removes the garrote.remains>=8 shut that set 8.2); LIVE60 kept (L60 idle measured 5.0 / 3.0 / 3.0, all inside the 6 s bar that governs).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (Rogue lane): replay floors Assassination 0.96 -> 0.99 (0.990 of 100), Combat 0.98 -> 0.97 (0.973 of 113),
+-- Subtlety 1.00 -> 0.99 (0.991 of 108). Cause: the new gear sets (wowsims #1067) wear four Darkmantle reissue pieces, whose 4-piece Rogue
+-- Armor Energize (27788, +20 energy, 0.8 PPM since #1086) fires in the new logs (Assassination 0 -> 2, Combat 0 -> 1, Subtlety 0 -> 5). The
+-- proc is a random resource source and is not modelled (owner L1396/L1397); energy is secret in combat, so the belief sees each gain at the
+-- next read. Live idle bars unchanged (L10/40/60 all under 6 s).
 local PACKS = {
-    { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.96, 5.2, MUTILATE_HANDS },
-    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.98, 3.0 },
-    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 1.00, 3.6 },
+    { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.99, 5.2, MUTILATE_HANDS },
+    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.97, 3.0 },
+    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.99, 3.6 },
 }
 
 describe("the Rogue wowsims.com packs #slow #wowsims", function()

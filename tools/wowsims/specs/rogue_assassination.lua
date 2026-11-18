@@ -38,6 +38,10 @@
 -- Poised's attribute word; no recipe key changes. Strict sequences (prev.1 chains) as before: no rule 14 in this build.
 -- For this build the pack is logically unchanged: the dropped branch is covered by `combo_points.current=4&action.mutilate.known`,
 -- no Serrated Blades, no Hemorrhage. Its log moves by the gear change (four slots, Darkmantle 27788 rows 8 -> 0).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (wowsims #1067 gear sets, #1086 PPM sweep): the build's gear (muti / sinister / hemo) wears four Darkmantle
+-- reissue pieces again, so the 4-piece Rogue Armor Energize (27788, +20 energy, 0.8 PPM on landed white swings) fires in the log (the old
+-- "inert" note is void; darkmantle-set-512 is not in the ab0f oracle set), and Stormshroud's 3-piece 23863 (+30 energy) too. Both are random
+-- resource procs and are NOT modelled (owner L1396/L1397); energy is secret in combat, so the belief sees each gain at its next read.
 return {
     class = "ROGUE",
     pack = "Assassination (wowsims.com)",
