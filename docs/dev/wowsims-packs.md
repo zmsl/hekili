@@ -387,7 +387,7 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   breaks Prowl) behind Ravage while Prowled. No 'behind the target' signal and no fallback timer: Ravage stays the
   first icon while Prowl is up and the target is in range; Prowl ends when Ravage lands or the player attacks. The
   replay and loop worlds do not know Prowl or Ravage, so they do not see the deviation (unit-tested in druid_spec).
-- Druid Feral, Claw vs Shred (owner, 2026-11-11, L597-L603): solo, the mob attacks
+- Druid Feral (and Guardian's imported Cat lines), Claw vs Shred (owner, 2026-11-11, L597-L603): solo, the mob attacks
   the player, who cannot be behind it, and Claw out-damages Shred per energy below 2 ranks of Shredding Attacks (Claw
   r2 140% + 39 for 40 energy with Ferocity, Shred r2 200% + 32 for 60, -6 a rank; both free under Clearcasting, where
   Shred wins). `guard = { shred = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)" }`
