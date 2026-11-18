@@ -623,7 +623,7 @@ M.FLICKER = {
     -- arms (97 / 102; only lo and the wait's length differ, shorter with the read). Seeds 1-20 fight 1: an Arcane Wrath
     -- pressed under Arcane Power (t 18.6) lands after it; the world charges 513.5 at the press, the belief 395 at the
     -- success (L1110's rule, not checked in game for a cost-raising aura), so est runs 118.5 over truth from t 22.2 in
-    -- both arms. The old seed band's lo sat under truth and hid it; the read puts lo = est, the first decision
+    -- both arms. By t 51 the old seed band's lo sat under truth and hid it; the read puts lo = est, the first decision
     -- difference is t 51.6 (arcane_blast wait 1.30 vs 5.27, oracle 4.55; Evocation pressed at 53.0 vs 54.6) and fights 2-20 run
     -- on other trajectories (per seed -2 to +3). The held ticks are the cost crossing one poll late in both arms
     ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 109 }, -- 0 / 0 / 0, 0

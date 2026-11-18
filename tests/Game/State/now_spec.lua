@@ -2102,7 +2102,6 @@ describe("now handlers", function()
                         spend(2, "rage") -- luacheck: ignore 113 (the `now` context's verb)
                     end
                     rest(true, true)
-                    h.Class.abilities.spender_c.funcs.onAvoid = nil
                     cast(fs.SPENDER_C, 5)
                     outcome(5.05, "DODGE")
                     assert.are.equal(1, I.avoidsRun)
