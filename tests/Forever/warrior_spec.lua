@@ -1302,7 +1302,8 @@ describe("Forever Warrior", function()
         local src = assert(io.open("src/Hekili/Engine/Sim/State.lua")):read("*a")
         assert.is_truthy(
             src:find(
-                "local timeout = state.ForecastWindow( Hekili.Engine.settings.performance.forecastWindow or 15 )\n",
+                "local timeout = state.ForecastWindow( state.forecastHorizon"
+                    .. " or Hekili.Engine.settings.performance.forecastWindow or 15 )\n",
                 1,
                 true
             )

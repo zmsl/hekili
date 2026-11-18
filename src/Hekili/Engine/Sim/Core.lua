@@ -1813,6 +1813,7 @@ local displayRules = {
     Primary    = { function(   ) return true                                                         end, "AOE"        },
     AOE        = { aoeDisplayRule                                                                       , "Interrupts" },
 }
+local separateDisplays = { "Interrupts", "Defensives", "Cooldowns" } -- the displays that walk their own Forecast Period
 
 -- Alternatives under resource uncertainty (display styles plan, Task 3c), for a display a subscriber asked them of
 -- (needs.alts): after the slot loop, so the main records never depend on them, records 1 and 2 each get the picks the
@@ -1936,6 +1937,19 @@ function Hekili.Update()
         status.specName = state.spec.name
         Output.Publish( "status", 1 )
     end
+
+    -- E-D6: the resource forecast's horizon, the longest window a display in use walks: the global forecast window
+    -- (Primary, AOE), or a separate display's Forecast Period (it reuses the last full reset's forecast). No allocation.
+    local horizon = settings.performance.forecastWindow or 15
+    for i = 1, #separateDisplays do
+        local name = separateDisplays[ i ]
+        local d = rawget( settings.displays, name )
+        if d and Output.Wanted( name ) and displayRules[ name ][ 1 ]( settings ) then
+            local p = d.forecastPeriod or 15
+            if p > horizon then horizon = p end
+        end
+    end
+    state.forecastHorizon = horizon
 
     local snaps
 

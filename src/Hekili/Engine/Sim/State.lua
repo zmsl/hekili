@@ -79,6 +79,7 @@ state.offset = 0
 state.modified = false
 state.resetType = "heavy"
 state.fullNext = false -- Core's alternative passes ran: the next reset is full (Engine/Sim/Core.lua altPasses)
+state.forecastHorizon = false -- the longest window a display in use walks, set per update (Core.lua; false: the global window)
 -- Counts the simulated mutations below (auras, debuffs, resources, cooldowns and charges, stance, pets, totems, advance and
 -- reset): Engine/Schema/Races.lua's memoised cost holds while it and query_time stand. Not auto-reset.
 state.changes = 0
@@ -1355,9 +1356,10 @@ do
         wipe( remains )
 
         local now = state.now + state.offset
-        -- Forever E9: the horizon is the global forecast window (Core.lua's delayMax), read here because a pass can
-        -- shorten delayMax and the reset forecast would inherit that.
-        local timeout = state.ForecastWindow( Hekili.Engine.settings.performance.forecastWindow or 15 )
+        -- Forever E9: the horizon is the forecast window, not Core.lua's delayMax (a pass can shorten delayMax and the
+        -- reset forecast would inherit that). E-D6: the longest a display in use walks (state.forecastHorizon), since a
+        -- separate display reuses the last full reset's forecast; outside an update, the global window.
+        local timeout = state.ForecastWindow( state.forecastHorizon or Hekili.Engine.settings.performance.forecastWindow or 15 )
 
         timeout = timeout + state.gcd.remains
         local r = state[ resource ]
