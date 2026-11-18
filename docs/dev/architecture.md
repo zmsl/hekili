@@ -631,8 +631,8 @@ an unknown option or a non-numeric value errors; `unparse` writes them in this o
 highest; the record carries `focus = N` and the timeline shows it in the now circle ahead of time, below). The tool
 refuses 0, negatives and non-integers; the in-game importer drops `focus=0` (off) and warns on and drops anything that
 is not a whole number; the priority editor's Focus Tier slider sets it (0 is off). The tier is per line, not per
-ability. The Druid pack flags Feral's `rip` (tier 1); the Warrior pack's Fury tiers Heroic Strike and Cleave 1 near the
-rage cap and 2 otherwise.
+ability. The packs' rage dumps are always tier 2 (Heroic Strike and Cleave in the Warrior packs, Maul in Guardian);
+Feral tiers Shred and Claw 1 and Rip and Rake 2.
 
 Four more, from the tbc branch's `label` (no shipped pack uses them): `label=<text>` puts the text on the pick's
 record as `label` (the displays draw it on the icon, top centre), `label_if=<condition>` keeps it only while the

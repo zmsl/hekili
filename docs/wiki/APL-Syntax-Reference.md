@@ -149,7 +149,7 @@ A `pure=1` line must:
 
 - have a `value` and no `if=`, `value_else=` or `op=` other than `set`;
 - be the only line of its name in the priority (a disabled line of the same name counts too);
-- sit in the default list, or in a list that every call reaches without a condition (no `if=` and no `strict_if=` on the call), starting from the default list. The precombat list is never allowed;
+- sit in the default list, or in a list that every call reaches without a condition (no `if=` and no `strict_if=` on the call), starting from the default list. The precombat list counts only when the default list calls it with no condition; Hekili's own walk of precombat before the default list does not;
 - not read itself, directly or through other pure variables.
 
 When a `pure=1` line breaks one of these rules, loading the priority reports an error that names the line and the rule, and the line works as a variable without `pure=1`. The same happens at once when an edit in the priority editor breaks a rule, for example a condition added to the call that reaches the line. A disabled line is never pure.
