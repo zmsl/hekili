@@ -195,7 +195,7 @@ describe("Forever Shaman", function()
                 return 0
             end,
         })
-        assert.are.same({ 14.31, 26.31, 0 }, seed("elemental")) -- no totem; re-pin e4ef929e54 log
+        assert.are.same({ 13.25, 26.85, 0 }, seed("elemental")) -- no totem; re-pin ab0f00e4fc log
         -- the static share follows Mindfulness's rank (17/33/50%, wowsims's curve; was 15% at 3/3), never the spec
         local shares = {}
         for rank = 0, 3 do

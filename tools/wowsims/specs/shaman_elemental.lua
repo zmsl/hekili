@@ -55,6 +55,11 @@ return {
     spec = "elemental",
     name = "Elemental",
     talentTree = "shaman",
+    -- Re-pin ab0f00e4fc (lane repin-ab0f-shaman): default.build.json (renamed from testing.build.json): new gear,
+    -- main-hand imbue 20750 (was 20749), an extra elixir 250335, distance 20, Eye of the Beast 13968 as the on-use
+    -- trinket; the list's variables inlined (Fire Nova above Elemental Mastery; Chain Lightning only at mana.pct_lo >
+    -- 40 without Elemental Mastery up, no multi-target branch; Earth Shock on Revelation at any target count).
+    -- Elemental Focus also rolls once per Lightning Overload launch (sim/shaman/talents_elemental.go): the world does.
     build = "ui/specs/shaman/elemental/builds/default.build.json",
     -- the build's resourcePotId 13444, Major Mana Potion; the Weakness Analyzer (ItemSparse 272438: a trinket) as
     -- Shadow and Affliction map it

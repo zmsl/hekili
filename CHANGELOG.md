@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Elemental Shaman: the default priority follows wowsims's newest Elemental build: Fire Nova comes before Elemental Mastery, Chain Lightning is cast only above 40% mana, and Earth Shock on Revelation no longer waits for a single target.
+
 ### Fixed
 
 ### Known issues

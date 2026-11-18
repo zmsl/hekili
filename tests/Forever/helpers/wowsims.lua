@@ -564,7 +564,11 @@ M.READY = {
     -- with Searing Totem's 2.425 s cadence, the resist constant 8L + 19 and the Weakness Analyzer's 6 min cooldown (one
     -- use): 90 decisions, 2 real, both late lightning_bolt (104.93 cost class, lo 2.3 under the truth; 176.89 the
     -- fight's end), median 1.220
-    shaman_elemental = { 1.22, 2 },
+    -- { 1.22, 2 } -> { 1.49, 3 } re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-shaman, R6): the new build (gear, imbue
+    -- 20750, distance 20, 180 s / 1 target) and its list (Fire Nova above Elemental Mastery, Chain Lightning `mana.pct_lo>40`
+    -- only): 98 decisions, 3 real, all late lightning_bolt: 115.94 and 120.40 the cost class (lo 1.9 and 2.0 under the
+    -- truth, as 104.93 at the old pin), 176.89 the fight's end as before; median 1.490
+    shaman_elemental = { 1.49, 3 },
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready
     -- at the GCD's end inside it (Shadow's Mind Flay likewise). Count 18 -> 21 on fix 31 (06eec227): G4 keeps
     -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s.
