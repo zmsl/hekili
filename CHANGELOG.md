@@ -4,6 +4,8 @@
 
 ### New
 
+- Italian translation of the core interface, thanks to Sairiin.
+
 ### Changed
 
 ### Fixed
