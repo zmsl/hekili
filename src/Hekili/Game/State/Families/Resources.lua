@@ -1953,7 +1953,7 @@ end
 --- a credit after it adds to the truth); lo takes it only when no usable answer raised lo since the cast, est only
 --- when none raised est (else that answer's bound already holds the refund). `held`: an answer since the cast raised
 --- either, before a later spend reset those marks (a late refund: the CDM verdict's), so lo and est stay. `dL`, `dH`
---- (optional, default d): what lo and hi take instead (a `now`'s spend clamped each at 0 apart: Families/Now.lua).
+--- (optional, both or neither; neither: d): what lo and hi take instead (a `now`'s spend clamped each at 0 apart: Families/Now.lua).
 --- `fE`, `fL` (optional): floors est and lo reach at least, before the tops clamp them (what the slot held before a
 --- `now` whose spend the avoid gives back, plus the share: an answer since the cast only bounds it from below, so it
 --- can raise that give-back, never cancel it). Returns what est, lo and hi took (I.Unrefund's). Allocates nothing.
