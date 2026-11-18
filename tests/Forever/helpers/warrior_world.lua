@@ -181,6 +181,35 @@ function M.dropReckless()
         end
     end)
 end
+-- Unbridled Wrath's rage on a landed white swing, Heroic Strike or Cleave at talent rank `rank`: the class file's
+-- expected value (11.9% a rank of 1 rage, wowsims EV-0148; these worlds' one-handers), not a roll: a draw would re-time
+-- every later draw of the fight.
+local WRATH, UNBRIDLED_WRATH = 0.119, 12322
+local function wrath(rank)
+    return WRATH * (rank or 0)
+end
+-- Our queued Heroic Strike's or Cleave's outcome (behaviours.lua's `e.struck`), set at its press: a landed one rolls
+-- Unbridled Wrath and spends one Reckless Swings charge for 5 rage, once a cast (wowsims talents_fury.go at
+-- ab0f00e4fc; EV-0148, EV-0138). shortcut: one target, so one roll a Cleave. Its Flurry charge is not modelled (the
+-- world's swings keep their speed).
+local function struck(e, X)
+    e.struck = e.struck
+        or function(W, act)
+            if act ~= "WOUND" then
+                return
+            end
+            local n = wrath(X.talent.unbridled_wrath.rank)
+            if M.charges > 0 and M.chargesE == e then
+                M.charges, n = M.charges - 1, n + 5
+                if M.charges == 0 then
+                    M.dropReckless()
+                end
+            end
+            if n > 0 then
+                W.gain(e, n)
+            end
+        end
+end
 local function strike(amount, key) -- a hit on the target for `amount` (nil: none), and debuff `key` when it lands
     return {
         effect = function(W, e, _, X)
@@ -221,8 +250,18 @@ M.MAP = {
         end,
     },
     -- shortcut: a queued strike that lands has no crit or armour. It rolls its avoids (W.hit's sets, the swing's).
-    cleave = { amount = 50 },
-    heroic_strike = { amount = 157 },
+    cleave = {
+        amount = 50,
+        effect = function(_, e, _, X)
+            struck(e, X)
+        end,
+    },
+    heroic_strike = {
+        amount = 157,
+        effect = function(_, e, _, X)
+            struck(e, X)
+        end,
+    },
     demoralizing_shout = strike(nil, "demoralizing_shout"),
     sunder_armor = strike(nil, "sunder_armor"),
     hamstring = strike(45, "hamstring"),
@@ -506,7 +545,7 @@ M.Fury = setmetatable({
     end,
     -- The class file's rates restated (as M.gain): 3.46 x speed main hand with a one-hander, 1.73 x speed off hand, +10%
     -- per rank of Dual Wield Specialization the character has (5/5 at 60, 0 at L24: the cut stops short of it); a crit
-    -- doubles the swing's rage (W1). Unbridled Wrath's procs are not modelled.
+    -- doubles the swing's rage (W1); Unbridled Wrath's expected rage (wrath above) at the character's rank.
     gain = function(_, hand, _, flag, character)
         local rate = hand == 1 and 3.46 or 1.73 * (1 + 0.1 * (character.talents[DUAL_WIELD_SPEC] or 0))
         local paid = 0
@@ -516,7 +555,9 @@ M.Fury = setmetatable({
                 M.dropReckless()
             end
         end
-        return rate * FURY_SPEED[hand] * (flag == "CRITICAL" and 2 or 1) + paid
+        return rate * FURY_SPEED[hand] * (flag == "CRITICAL" and 2 or 1)
+            + paid
+            + wrath(character.talents[UNBRIDLED_WRATH])
     end,
 }, { __index = M })
 
@@ -541,12 +582,13 @@ M.Protection = setmetatable({
         c.items = { [16] = { 1, "One-Hander", "INVTYPE_WEAPON" }, [17] = { 2, "Shield", "INVTYPE_SHIELD" } }
         return c
     end,
-    -- The class file's rate restated (as M.gain): 3.46 x speed with a one-hander; a crit one more base swing.
-    gain = function(_, hand, _, flag)
+    -- The class file's rate restated (as M.gain): 3.46 x speed with a one-hander; a crit one more base swing; Unbridled
+    -- Wrath's expected rage at the character's rank.
+    gain = function(_, hand, _, flag, character)
         if hand ~= 1 then
             return 0
         end
-        return 3.46 * PROT_SPEED * (flag == "CRITICAL" and 2 or 1)
+        return 3.46 * PROT_SPEED * (flag == "CRITICAL" and 2 or 1) + wrath(character.talents[UNBRIDLED_WRATH])
     end,
 }, { __index = M })
 

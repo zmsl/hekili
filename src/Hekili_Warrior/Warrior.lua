@@ -153,13 +153,15 @@ end
 -- one-hander, 4.5 with a two-hander, 1.73 off hand. Misses, dodges and parries give none, glancing blows full rage, a
 -- white crit doubles the swing's rage, the two-hand rate too (owner ruling W1 2026-11-02, wowsims 7c28cfa731 from
 -- Forever combat logs; supersedes the compendium's 3.46 for two-handers; yellow crits none): the swing entries' `crit`. Dual Wield Specialization: the tooltip's +10% off-hand rage a rank (unverified on
--- Forever). Unbridled Wrath: 1 rage a proc (2 with a two-hander) at a measured ~7.5% a rank (36% at 5/5; the tooltip
--- says 60%). The two-hander flag is Hekili's gear scan (main_hand.size from C_Item.GetItemInfo's equip location on
+-- Forever). Unbridled Wrath: 1 rage a proc (2 with a two-hander) at 11.9% a rank: 59.5% at 5/5, measured in game over
+-- 5,252 landed swings, strikes, Heroic Strikes and Cleave hits (wowsims EV-0148, build 1.60.1.70938; owner ruling L1397
+-- (3); wowsims's own ladder is the tooltip's 12% a rank). The two-hander flag is Hekili's gear scan (main_hand.size from C_Item.GetItemInfo's equip location on
 -- PLAYER_EQUIPMENT_CHANGED, and the belief's own read of the same answers; the Forever API data marks neither it nor
 -- GetInventoryItemID secret). The helpers below run in the file's environment: the entry functions, which run in the sim's
 -- `state` and the belief's context both, read those names and pass them in.
+local WRATH_CHANCE = 0.119 -- a rank
 local function wrathRage(rank, twoHand)
-    return 0.075 * rank * (twoHand and 2 or 1)
+    return WRATH_CHANCE * rank * (twoHand and 2 or 1)
 end
 
 -- Rage from damage taken: wowsims/forever's rule (MIT, sim/core/rage.go:11-49 and 91-103; owner ruling 2026-10-25,
@@ -220,8 +222,10 @@ local function proc(p)
     return p * PROC_RAGE, max(p, 1 - p) * PROC_RAGE
 end
 
--- Reckless Swings' charges in the sim's rage forecast (L872 (3); the belief pays them by the reckless_swings reaction):
--- a forecast swing pays 5 while it is one of the stack's next swings of either hand in real-time order. The sim keeps
+-- Reckless Swings' charges in the sim's rage forecast (L872 (3); the belief pays them by the reckless_swings reaction
+-- and a strike's `now`): a forecast swing pays 5 while it is one of the stack's next swings of either hand in real-time
+-- order. A queued Heroic Strike or Cleave spends one charge too (wowsims ab0f00e4fc, EV-0138), and the sim counts its
+-- swing as a white one (it ignores onNextSwing, heroic_strike below), so the count holds for it. The sim keeps
 -- the stack as the reset read it, so the swings count from the reset (state.now); an unpaid pending swing (the reset's
 -- mh_pending / oh_pending, forecast by State.lua's GAP AK branch) still holds its charge (the reaction runs at its row)
 -- and is counted at its own time, before the forecast's own swings. Allocates nothing.
@@ -249,7 +253,7 @@ local function hand(h)
     return s, a, 0
 end
 
--- The Reckless Swings rage of hand `own`'s forecast swing at `now` (nil: CombinedResourceRegen's rate read, 0).
+-- The Reckless Swings rage of hand `own`'s forecast swing at `now` (nil: a caller with no time, 0).
 local function recklessRage(own, now)
     local stack = state.buff.reckless_swings.stack
     if not now or stack <= 0 then
@@ -989,8 +993,9 @@ local function stanceReady()
     return max(cooldown.battle_stance.remains, cooldown.defensive_stance.remains, cooldown.berserker_stance.remains)
 end
 
--- Reckless Swings' charges (wowsims talents_fury.go:360-391): each landed white swing of either hand spends one and pays
--- 5 rage, at the swing's own time (a reaction at the landed outcome; Families/Now.lua).
+-- Reckless Swings' charges (wowsims talents_fury.go:374-420 at ab0f00e4fc): each landed white swing of either hand spends
+-- one and pays 5 rage, at the swing's own time (a reaction at the landed outcome; Families/Now.lua). A Heroic Strike or
+-- Cleave spends one a cast: its `now` (strikeNow below), as its swing is no white one (Events/Rows.lua T.Swallows).
 spec:RegisterReaction("reckless_swings", {
     who = "target",
     outcome = "land",
@@ -1001,6 +1006,37 @@ spec:RegisterReaction("reckless_swings", {
         end
     end,
 })
+
+-- A landed Heroic Strike or Cleave (wowsims talents_fury.go:65-87 and :374-420 at ab0f00e4fc; EV-0148, EV-0138): it
+-- rolls Unbridled Wrath (its expected rage; the floor gains none, as no proc is seen) and spends one Reckless Swings
+-- charge for 5 rage once a cast. Paid at the cast, which comes with its swing (onNextSwing): an `onLand` would idle on
+-- live (target rows secret). Its own avoid (strikeAvoid) takes both back and gives the charge back. Its Flurry charge
+-- (one a cast, landed or not) is not modelled: the belief reads the swings live.
+-- shortcut: one Unbridled Wrath roll a Cleave, as on one target (wowsims rolls each target it lands on: a second target
+-- is a roll short, the low side); upgrade with the belief's enemy count if a pack line reads rage after a Cleave.
+local strikeWrath, strikeCharge = 0, 0 -- the latest strike's Unbridled Wrath rage and its charge's expiry (0: none)
+local function strikeNow()
+    strikeWrath = wrathRage(talent.unbridled_wrath.rank, weapon.size == 2)
+    strikeCharge = 0
+    if strikeWrath > 0 then
+        gain(strikeWrath, "rage", strikeWrath)
+    end
+    if buff.reckless_swings.up then
+        strikeCharge = buff.reckless_swings.expires
+        gain(5, "rage")
+        removeStack("reckless_swings")
+    end
+end
+local function strikeAvoid()
+    if strikeWrath > 0 then
+        spend(strikeWrath, "rage")
+    end
+    if strikeCharge > now then -- the charge back, to the aura's own expiry
+        spend(5, "rage")
+        addStack("reckless_swings", strikeCharge - now)
+    end
+    strikeWrath, strikeCharge = 0, 0
+end
 
 spec:RegisterAbilities({
     battle_shout = {
@@ -1251,6 +1287,8 @@ spec:RegisterAbilities({
         startsCombat = true,
         onNextSwing = true, -- The belief: paid at the main hand's next swing, which then brings no rage
         known = knows(CLEAVE),
+        now = strikeNow,
+        onAvoid = strikeAvoid,
 
         usable = function()
             return not buff.heroic_strike.up and not buff.cleave.up, "a strike is already queued"
@@ -1487,6 +1525,8 @@ spec:RegisterAbilities({
         -- belief (checkpoint Q9). Cleave alike.
         onNextSwing = true,
         known = knows(HEROIC_STRIKE),
+        now = strikeNow,
+        onAvoid = strikeAvoid,
 
         usable = function()
             return not buff.heroic_strike.up and not buff.cleave.up, "a strike is already queued"

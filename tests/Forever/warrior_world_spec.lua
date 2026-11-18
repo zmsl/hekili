@@ -57,5 +57,29 @@ describe(
             assert.are.same({ -40 }, gains)
             assert.are.same({ 600 + 15 * 40, 600 + 15 * 40 }, amounts)
         end)
+
+        -- wowsims talents_fury.go at ab0f00e4fc (EV-0148, EV-0138): a landed Heroic Strike or Cleave rolls Unbridled
+        -- Wrath (5/5: 0.595 expected) and spends one Reckless Swings charge for 5; an avoided one neither
+        it("pays a landed strike's Unbridled Wrath and one Reckless Swings charge, an avoided one's nothing", function()
+            local ww = require("Forever.helpers.warrior_world")
+            for _, key in ipairs({ "heroic_strike", "cleave" }) do
+                local us = { auras = {}, power = 0 }
+                ww.charges, ww.chargesE = 2, us
+                gains = {}
+                C.resolve(key, H).effect(W, us)
+                us.struck(W, "DODGE")
+                assert.are.same({}, gains)
+                us.struck(W, "WOUND")
+                assert.are.equal(1, #gains)
+                assert.is_true(math.abs(gains[1] - 5.595) < 1e-9, key .. " " .. tostring(gains[1]))
+                assert.are.equal(1, ww.charges)
+                ww.charges = 0
+                us.struck(W, "WOUND")
+                assert.is_true(math.abs(gains[2] - 0.595) < 1e-9, key .. " " .. tostring(gains[2]))
+            end
+            -- and a landed white swing its Unbridled Wrath: 3.46 x 2.1 main hand at 5/5
+            local c = C.character()
+            assert.is_true(math.abs(C.gain(1, 1, 100, "", c) - (3.46 * 2.1 + 0.595)) < 1e-9)
+        end)
     end
 )
