@@ -363,15 +363,18 @@ describe("now handlers", function()
             local text = fh:read("*a")
             fh:close()
             local function check(key, body, ind)
+                -- an `effect` (RegisterAbility's one factory for both) is a handler with its `now`
                 local sim = body:match("\n" .. ind .. "handler = function%(%)(.-)\n" .. ind .. "end,")
                     or body:match("\n" .. ind .. "start = function%(%)(.-)\n" .. ind .. "end,")
+                    or body:match("\n" .. ind .. "effect = function%(%)(.-)\n" .. ind .. "end,")
                 if not sim then
                     return
                 end
                 for _, v in ipairs(VERB) do
                     if sim:find(v) then
                         scanned = scanned + 1
-                        if not body:find("\n" .. ind .. "now = function") and not EXEMPT[key] then
+                        local now = body:find("\n" .. ind .. "now = function") or body:find("\n" .. ind .. "effect = ")
+                        if not now and not EXEMPT[key] then
                             missing[#missing + 1] = path .. ": " .. key
                         end
                         return

@@ -9,23 +9,15 @@
 
 local _, ns = ...
 
---- byRank(values, ids): the value of the highest rank of `ids` that `knownRank` knows, `values[1]` before any.
-function ns.RankReader(knownRank)
-    return function(values, ids)
-        return values[knownRank(ids)] or values[1]
-    end
-end
-
 --- Fills `data`'s derived fields in place and removes `ranks` and `effect` (neither crosses to the belief).
 function ns.DeriveAbility(key, data, knownRank)
     local ranks, name = data.ranks, tostring(key)
-    local byRank = ranks and ns.RankReader(knownRank)
     for k, v in pairs(data) do
         if type(v) == "table" and v.byRank ~= nil then
             assert(ranks, "RegisterAbility: " .. name .. "'s " .. tostring(k) .. " reads byRank without ranks")
             local values = v.byRank
             data[k] = function()
-                return byRank(values, ranks)
+                return values[knownRank(ranks)] or values[1]
             end
         end
     end

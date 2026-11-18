@@ -110,7 +110,6 @@ function M.load()
     function w.state.healthMax()
         return game.healthMax
     end
-    w.state.byRank = Ranks.RankReader(w.state.knownRank) -- State's per-rank read over the same knownRank
     local ok, err = pcall(assert(loadfile("src/Hekili_Warrior/Warrior.lua")))
     for k, v in pairs(saved) do
         _G[k] = v or nil

@@ -31,10 +31,8 @@ local protectedFunctions = {
 -- (ruling 36) the gates `sequence_ignore` may name: the ability fields the usable test and the time to ready read
 local SEQUENCE_GATES = { form = true, noform = true, buff = true, nobuff = true }
 
--- `ranks` and `effect` (Spec/Ranks.lua) read the spellbook through the facade, as the packs' own rank helpers do; a pack
--- function's body takes the same per-rank read as a file local, `local byRank = state.byRank` (as `state.knownRank`).
+-- `ranks` and `effect` (Spec/Ranks.lua) read the spellbook through the facade, as the packs' own rank helpers do.
 local KnownRank = Facade.KnownRank
-state.byRank = ns.RankReader( KnownRank )
 
 
 -- A missable DoT (an ability's `missable`, C15): a dodged, parried or missed cast still raised SPELL_CAST_SUCCESS, so

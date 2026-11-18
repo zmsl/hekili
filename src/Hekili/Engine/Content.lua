@@ -59,8 +59,8 @@ local format = string.format
 -- (raises) and ignores a list value.
 --   Since then, without a bump: the `now` name `cast_id` (item-restores-09); an older core reads nil, so a ranked
 --   restore credits its first rank.
--- 16 (2026-11-18, dry-pack-api): the ability fields `ranks` (with a field's `{ byRank = values }`) and `effect`, and
--- `state.byRank`: an older core registers such an ability with no id, copy, known, handler or now.
+-- 16 (2026-11-18, dry-pack-api): the ability fields `ranks` (with a field's `{ byRank = values }`) and `effect`: an
+-- older core registers such an ability with no id, copy, known, handler or now.
 local CONTENT_API = 16
 
 local done, notice = false, nil

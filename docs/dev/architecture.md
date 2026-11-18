@@ -327,8 +327,7 @@ spellbook through the facade); the sim never sees it.
 `ranks` gives `id`, `copy` (ranks 2..n) and `known` (`Facade.KnownRank(ranks) > 0`), and a field declared
 `{ byRank = values }` reads the highest known rank's value (rank 1's before any); `effect` is called once for each
 missing one of `handler` and `now`, two closures for the two environments. A declared field wins; neither `ranks` nor
-`effect` crosses `Build(def)`. `state.byRank(values, ids)` is the same per-rank read for a pack function's body (a
-file-level helper takes it as a local, as `state.knownRank`).
+`effect` crosses `Build(def)`.
 
 **Target creature type.** `target.creature_type` (`Engine/Sim/State.lua`'s target table, cached per reset) is the
 target's creature type as a key: UnitCreatureType's second return, CreatureType.db2's ID (the same on every client

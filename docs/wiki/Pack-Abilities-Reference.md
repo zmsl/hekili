@@ -28,7 +28,7 @@ The belief reads the declared fields it needs to model a cast (cost, cooldown, c
 |---|---|---|
 | `id` | number | Rank 1's spell ID. Without one, the ability gets a negative pseudo-ID (an item ability gets its own range). |
 | `copy` | number, string or list | The other ranks' spell IDs, in rank order, or other keys the ability answers to |
-| `ranks` | list | Every rank's spell ID, rank 1 first. Gives `id` (rank 1), `copy` (ranks 2 and up) and `known` (true while the spellbook knows any rank). A declared `copy` or `known` wins; a declared `id` must be rank 1. With `ranks`, any field may be `{ byRank = { v1, v2, ... } }`: the value of the highest known rank, rank 1's before any is known. |
+| `ranks` | list | Every rank's spell ID, rank 1 first. Gives `id` (rank 1), `copy` (ranks 2 and up) and `known` (true while the spellbook knows any rank). A declared `copy` or `known` wins; a declared `id` must be rank 1. With `ranks`, any field may be `{ byRank = { v1, v2, ... } }`: the value of the highest known rank, rank 1's before any is known. Such a field is a function, so a `cast` or `cooldown` given this way is not multiplied by haste. |
 | `name` | string | The name shown, when it should not come from the spell's own name |
 | `listName` | string | The text the options' ability list shows |
 | `texture` | number | The icon, when it should not come from the spell |

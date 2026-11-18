@@ -1,8 +1,9 @@
 -- tests/Forever/ability_ranks_spec.lua (dry-pack-api): RegisterAbility's `ranks` and `effect`
 -- (Engine/Schema/Spec/Ranks.lua). `ranks` derives what the packs' file-local `rest`, `knows` and `byRank` helpers
--- compute: checked against the helpers' own text, read out of Mage.lua and Warrior.lua (the two packs whose helpers
--- read the same), for every rank list those packs hand them. `effect` builds the sim `handler` and the belief `now` from
--- one factory: two closures, each in its own layer, doing the same.
+-- compute: checked, for every rank list Mage.lua and Warrior.lua declare (handed to those helpers or to `ranks`), against
+-- the rule and, while the file still defines them, against the helpers' own text (the two packs whose helpers read the
+-- same). `effect` builds the sim `handler` and the belief `now` from one factory: two closures, each in its own layer,
+-- doing the same.
 local headless = require("Game.harness.headless")
 
 local PACKS = { "src/Hekili_Mage/Mage.lua", "src/Hekili_Warrior/Warrior.lua" }
@@ -34,7 +35,7 @@ local function list(src, arg)
     return assert(loadstring("return " .. text))()
 end
 
--- Every rank list the pack hands rest/knows, and every (values, ids) pair it hands byRank.
+-- Every rank list the pack hands rest, knows or `ranks`, and every (values, ids) pair it hands byRank.
 local function uses(src)
     local lists, pairs_ = {}, {}
     for helper, arg in src:gmatch("(%f[%w]%a+)%(([%u_%d]+)%)") do
@@ -43,6 +44,12 @@ local function uses(src)
         end
     end
     for arg in src:gmatch("%f[%w]knows%((%b{})%)") do
+        lists[arg] = true
+    end
+    for arg in src:gmatch("%f[%w]ranks = ([%u_%d]+)") do
+        lists[arg] = true
+    end
+    for arg in src:gmatch("%f[%w]ranks = (%b{})") do
         lists[arg] = true
     end
     for values, ids in src:gmatch("%f[%w]byRank%(([%u_%d]+), ([%u_%d]+)%)") do
@@ -78,51 +85,76 @@ describe("RegisterAbility's ranks and effect", function()
     end
 
     for _, path in ipairs(PACKS) do
-        it("derives id, copy and known as " .. path .. "'s rest and knows give them, at every known rank", function()
+        it(
+            "derives id, copy and known for every rank list of " .. path .. ", as its rest and knows give them",
+            function()
+                local src = read(path)
+                local rest, knows = helpers(src, H.ns.Facade.KnownRank)
+                local lists, count = uses(src), 0
+                for arg in pairs(lists) do
+                    local ids = list(src, arg)
+                    local a = register({ ranks = ids })
+                    local tail = {}
+                    for i = 2, #ids do
+                        tail[i - 1] = ids[i]
+                    end
+                    assert.are.same({ ids[1], tail }, { a.id, a.copy }, arg)
+                    if rest then
+                        assert.are.same(rest(ids), a.copy, arg)
+                    end
+                    local known, want = a.funcs.known, knows and knows(ids)
+                    for r = 0, #ids do
+                        learn(ids, r)
+                        assert.are.equal(r > 0, known(), arg .. " at rank " .. r)
+                        if want then
+                            assert.are.equal(want(), known(), arg .. " at rank " .. r)
+                        end
+                    end
+                    learn(ids, 0)
+                    assert.is_nil(rawget(a, "ranks"), "ranks stays out of the record")
+                    count = count + 1
+                end
+                assert.is_true(count > 10, "found " .. count .. " rank lists")
+            end
+        )
+
+        it("reads a { byRank = values } field for every rank list of " .. path .. ", as its byRank", function()
             local src = read(path)
-            local rest, knows = helpers(src, H.ns.Facade.KnownRank)
-            assert.is_function(rest)
-            assert.is_function(knows)
-            local lists, count = uses(src), 0
-            for arg in pairs(lists) do
+            local _, _, byRank = helpers(src, H.ns.Facade.KnownRank)
+            local lists, pairs_ = uses(src)
+            local cases = {}
+            for arg in pairs(lists) do -- a value per rank but the last: past the list reads the first rank's
                 local ids = list(src, arg)
-                local a = register({ ranks = ids })
-                assert.are.equal(ids[1], a.id, arg)
-                assert.are.same(rest(ids), a.copy, arg)
-                local known, want = a.funcs.known, knows(ids)
+                local values = {}
+                for i = 1, math.max(#ids - 1, 1) do
+                    values[i] = i * 10 + 0.5
+                end
+                cases[#cases + 1] = { arg, values, ids }
+            end
+            if byRank then -- the pack's own (values, ids) pairs, while its helper exists
+                for key, u in pairs(pairs_) do
+                    cases[#cases + 1] = { key, list(src, u[1]), list(src, u[2]) }
+                end
+            end
+            for _, c in ipairs(cases) do
+                local name, values, ids = c[1], c[2], c[3]
+                local a = register({ ranks = ids, spend = { byRank = values }, spendType = "mana" })
+                -- the field as declared (Races.lua's memoised `spend` wraps it, keyed by the state's changes only)
+                local spend = rawget(a, "declaredSpend")
                 for r = 0, #ids do
                     learn(ids, r)
-                    assert.are.equal(want(), known(), arg .. " at rank " .. r)
+                    local want = values[r] or values[1]
+                    assert.are.equal(want, spend(), name .. " at rank " .. r)
+                    if byRank then
+                        local got = byRank(values, ids)
+                        assert.are.equal(want, type(got) == "function" and got() or got, name .. " at rank " .. r)
+                    end
                 end
                 learn(ids, 0)
-                assert.is_nil(rawget(a, "ranks"), "ranks stays out of the record")
-                count = count + 1
             end
-            assert.is_true(count > 10, "found " .. count .. " rank lists")
+            assert.is_true(#cases > 10, "found " .. #cases .. " cases")
         end)
     end
-
-    it("reads a { byRank = values } field and state.byRank as Mage.lua's byRank, at every known rank", function()
-        local src = read("src/Hekili_Mage/Mage.lua")
-        local _, _, byRank = helpers(src, H.ns.Facade.KnownRank)
-        assert.is_function(byRank)
-        local _, uses_ = uses(src)
-        local count = 0
-        for _, u in pairs(uses_) do
-            local values, ids = list(src, u[1]), list(src, u[2])
-            local a = register({ ranks = ids, spend = { byRank = values }, spendType = "mana" })
-            -- the field as declared (Races.lua's memoised `spend` wraps it, keyed by the state's changes only)
-            local spend, want = rawget(a, "declaredSpend"), byRank(values, ids)
-            for r = 0, #ids do
-                learn(ids, r)
-                assert.are.equal(want(), spend(), u[1] .. " at rank " .. r)
-                assert.are.equal(want(), S.byRank(values, ids), u[1] .. " at rank " .. r)
-            end
-            learn(ids, 0)
-            count = count + 1
-        end
-        assert.is_true(count > 10, "found " .. count .. " byRank uses")
-    end)
 
     it("keeps an explicit copy and known, refuses an id that is not the first rank and byRank without ranks", function()
         local known = function()
@@ -183,19 +215,15 @@ describe("RegisterAbility's ranks and effect", function()
 
     -- The recording loaders (load_druid, load_warrior) run the same derivation on the abilities they record, so a
     -- converted class file reads the same fields there as through the core.
-    it("derives the same fields in the recording loader, its state.byRank over the loader's knownRank", function()
+    it("derives the same fields in the recording loader, over the loader's knownRank", function()
         local path = os.tmpname()
         local f = assert(io.open(path, "w"))
         f:write([[
 local spec = Hekili:NewClass("MAGE", {})
-local byRank = Hekili.State.byRank
 spec:RegisterAbilities({
     dry = {
         ranks = { 990301, 990302, 990303 },
         spend = { byRank = { 10, 20, 30 } },
-        cast = function()
-            return byRank({ 1.5, 2, 2.5 }, { 990301, 990302, 990303 })
-        end,
         effect = function()
             return function() end
         end,
@@ -209,10 +237,10 @@ spec:RegisterAbilities({
         local d = w.abilities.dry
         assert.are.same({ 990301, { 990302, 990303 } }, { d.id, d.copy })
         assert.is_false(d.known())
-        assert.are.same({ 10, 1.5 }, { d.spend(), d.cast() })
+        assert.are.equal(10, d.spend())
         w.game.known[990302] = true
         assert.is_true(d.known())
-        assert.are.same({ 20, 2 }, { d.spend(), d.cast() })
+        assert.are.equal(20, d.spend())
         assert.is_function(d.handler)
         assert.is_function(d.now)
         assert.is_nil(d.ranks)
