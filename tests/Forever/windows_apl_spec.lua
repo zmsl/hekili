@@ -252,6 +252,27 @@ describe("the windows compiler (windows design v6 §3.4, §9)", function()
         assert.are.same({}, sent)
     end)
 
+    it("a one-line reload of a line with a window error keeps it disabled, with no new report (L1329 sibling)", function()
+        load({ default = "actions+=/open_window,name=nope\nactions+=/berserker_stance" })
+        local n = #H.errors
+        H.Hekili:LoadScript(ww.PACK, "default", 1) -- an editor edit of the line's if=, say
+        local script = H.Hekili.Scripts.DB[ww.PACK .. ":default:1"]
+        assert.is_truthy(script.Error and script.Error:find("E1", 1, true))
+        assert.are.equal(n, #H.errors)
+    end)
+
+    it("an editor edit of a window line checks the priority's windows again", function()
+        load({
+            windows = "actions+=/window,name=x,duration=6",
+            default = "actions+=/open_window,name=x\nactions+=/berserker_stance",
+        })
+        assert.is_nil(H.Hekili.Scripts.DB[ww.PACK .. ":default:1"].Error)
+        -- the editor on default line 1 (its default selection) names a window this priority does not declare
+        H.Hekili:SetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "window_name" }, "nope")
+        local script = H.Hekili.Scripts.DB[ww.PACK .. ":default:1"]
+        assert.is_truthy(script.Error and script.Error:find("E1", 1, true))
+    end)
+
     it("a window another priority declares reads closed, done included (M4)", function()
         H.Hekili.Scripts.declaredWindows.other = true
         local w = S.window.other
