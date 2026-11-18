@@ -942,7 +942,7 @@ describe("Forever Rogue forecast window", function()
         H.ctl.inRange.target, H.ctl.level.target = true, 60
         H.Fire("PLAYER_TARGET_CHANGED")
         assert.is_true(headless.cycle(H, H.ctl.now + 0.5))
-        return H.Hekili.State
+        return H.Hekili.State, H
     end
 
     it("stretches Assassination's to a full energy bar's regen, never below the display's own", function()
@@ -957,6 +957,15 @@ describe("Forever Rogue forecast window", function()
         local S = boot("Combat")
         assert.is_falsy(S.spec.fillWindow) -- state.spec answers false for a key it lacks
         assert.are.equal(5, S.ForecastWindow(5))
+    end)
+
+    -- dry-forecast review M7: a `fillWindow` naming no resource the class registers stretches nothing and never raises.
+    it("ignores a fillWindow that names no registered resource", function()
+        local S, H = boot("Assassination")
+        S.spec.fillWindow = "runic_power"
+        assert.are.equal(5, S.ForecastWindow(5))
+        assert.is_true(headless.cycle(H, H.ctl.now + 0.5))
+        assert.are.same({}, H.errors)
     end)
 end)
 

@@ -4458,6 +4458,8 @@ found = true end
 
                                             "|cFF00B4FFDefault|r: |cFFFFD10015 s|r\n\n"] ..
 
+                                            L["A separate Cooldowns, Defensives or Interrupts display with a longer Forecast Period makes the resource forecast run that far."] .. "\n\n" ..
+
                                             format( L["Current window: |cFF00FF00%s s|r"], window )
                                     end,
                                     fontSize = "medium",

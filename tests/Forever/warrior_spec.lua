@@ -1321,6 +1321,7 @@ describe("Forever Warrior", function()
         -- dry-forecast (engine pass E3): one window rule, its stretch pack data (Kits.lua `fillWindow`)
         assert.is_nil(core:find("DEATHKNIGHT", 1, true))
         assert.is_nil(core:find("assassination", 1, true))
+        assert.is_nil(src:find("assassination", 1, true)) -- time_to_max_combined: one rule for every spec
     end)
     it("the forecast window is a global Performance option, default 15 s (core edit E9)", function()
         local opts = assert(io.open("src/Hekili/Options/Options.lua")):read("*a")

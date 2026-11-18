@@ -78,7 +78,9 @@ state.offset = 0
 state.modified = false
 state.resetType = "heavy"
 state.fullNext = false -- Core's alternative passes ran: the next reset is full (Engine/Sim/Core.lua altPasses)
-state.forecastHorizon = false -- the longest window a display in use walks, set per update (Core.lua; false: the global window)
+-- The longest window a display in use walks, set per update (Core.lua). Never reset: false (the global window) only
+-- before the first update, then the last update's.
+state.forecastHorizon = false
 -- Counts the simulated mutations below (auras, debuffs, resources, cooldowns and charges, stance, pets, totems, advance and
 -- reset): Engine/Schema/Races.lua's memoised cost holds while it and query_time stand. Not auto-reset.
 state.changes = 0
@@ -1328,8 +1330,8 @@ end
 -- plain, stretches nothing). The slot's window, its retry's and the resource forecast's horizon. Allocates nothing.
 function state.ForecastWindow( base )
     local key = state.spec.fillWindow
-    if key then
-        local r = state[ key ]
+    local r = key and rawget( state, key ) -- nil for a key naming no resource the class registered (Activation.lua)
+    if r then
         local rate = r.regen_combined
         if rate > 0 then return max( base, 0.01 + r.max / rate ) end
     end
@@ -1384,7 +1386,8 @@ do
         local now = state.now + state.offset
         -- Forever E9: the horizon is the forecast window, not Core.lua's delayMax (a pass can shorten delayMax and the
         -- reset forecast would inherit that). E-D6: the longest a display in use walks (state.forecastHorizon), since a
-        -- separate display reuses the last full reset's forecast; outside an update, the global window.
+        -- separate display reuses the last full reset's forecast; outside an update, the last update's horizon (the
+        -- global window before the first).
         local timeout = state.ForecastWindow( state.forecastHorizon or Hekili.Engine.settings.performance.forecastWindow or 15 )
 
         timeout = timeout + state.gcd.remains
@@ -4071,14 +4074,8 @@ local mt_resource = {
         elseif k == "max_nonproc" then
             return t.max -- need to accommodate buffs that increase mana, etc.
 
-        elseif k == "time_to_max" or k == "base_time_to_max" then
-            return state:TimeToResource( t, t.max )
-
-        elseif k == "time_to_max_combined" then
-            if not state.spec.assassination then return t.time_to_max end
-
-            -- Assassination, April 2021
-            -- Using the same as time_to_max because our time_to_max uses modeled regen events...
+        elseif k == "time_to_max" or k == "base_time_to_max" or k == "time_to_max_combined" then
+            -- time_to_max_combined: the same, since the forecast already holds the modelled regen events
             return state:TimeToResource( t, t.max )
 
         elseif k:sub(1, 16) == "time_to_deficit_" then

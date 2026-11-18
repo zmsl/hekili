@@ -82,4 +82,19 @@ describe("the combined regen rate", function()
             "rate " .. tostring(rate)
         )
     end)
+
+    -- review M4: an entry a gate excludes adds nothing. With Bear Form gone the swing entry's aura gate fails.
+    it("leaves out an entry its aura gate excludes", function()
+        local C = require("Forever.helpers.druid_loop_world").Guardian
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        local S = H.Hekili.State
+        assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
+        assert.is_true(S.rage.regenModel.mainhand.value() / S.mainhand_speed > 0)
+        S.removeBuff("bear_form")
+        assert.is_false(S.buff.bear_form.up)
+        local base = S.rage.regen > 0.001 and S.rage.regen or 0
+        local enrage = S.buff.enrage.up and S.rage.regenModel.enrage.value or 0
+        assert.is_true(math.abs(S.rage.regen_combined - (base + enrage)) < 1e-9, "rate " .. S.rage.regen_combined)
+    end)
 end)

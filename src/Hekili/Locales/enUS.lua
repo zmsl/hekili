@@ -495,6 +495,7 @@ L["Forecast"] = true
 L["Forecast window (s)"] = true
 L["How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds."] = true
 L["\nThis setting determines how far ahead the Primary and AOE recommendations look for the next affordable action, and how far the resource forecast runs.\n\n|cFFFFD100• Higher values|r show the next action while a resource paid by swings is still building, so the queue |cFF00FF00stays filled at the pull|r, at a small cost per recommendation that grows with the window.\n|cFFFFD100• Lower values|r |cFF00FF00cost less|r and suit a resource that regenerates steadily.\n\nThe other displays (Cooldowns, Defensives, Interrupts) keep their own |cFFFFD100Forecast Period|r in their display settings.\n\n|cFF00B4FFDefault|r: |cFFFFD10015 s|r\n\n"] = true
+L["A separate Cooldowns, Defensives or Interrupts display with a longer Forecast Period makes the resource forecast run that far."] = true
 L["Current window: |cFF00FF00%s s|r"] = true
 L["%s Preferences"] = true
 L["No priorities on Forever for %s: Hekili Forever recommends nothing while this specialization is active."] = true
