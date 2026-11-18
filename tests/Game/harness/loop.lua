@@ -296,12 +296,14 @@ end
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
 --- theirs (first icons by in-combat tick), pressed and shadowPress (the driver's press, the shadow's would-be press, by
---- in-combat tick: loop.flips; a replay's pressed: the set of keys wowsims casts before the next tick), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
---- the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as Update, so it errs
---- high; empty in a traced run, whose debug pass is not runtime cost), cals (M.calibrate's ms, timed before every
---- M.CAL_EVERY-th cpu tick: M.ratios), cal (their mean, nil in a traced run), bytes and sampled (allocated over `sampled` cycles, every M.BYTES_EVERY-th cpu
---- tick, the collector stopped for each), damage, t }. `o.replay` (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle just before each
---- decision; `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
+--- in-combat tick: loop.flips; a replay's pressed: the set of keys wowsims casts before the next tick), focus
+--- (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu
+--- (ms per tick of the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as
+--- Update, so it errs high; empty in a traced run, whose debug pass is not runtime cost), cals (M.calibrate's ms, timed
+--- before every M.CAL_EVERY-th cpu tick: M.ratios), cal (their mean, nil in a traced run), bytes and sampled (allocated
+--- over `sampled` cycles, every M.BYTES_EVERY-th cpu tick, the collector stopped for each), damage, t }. `o.replay`
+--- (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle just before each decision;
+--- `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
 function M.run(L, seed, o, drivers)
     o = o or {}
     local content = L.content
@@ -1237,9 +1239,10 @@ local function quantile(list, p)
 end
 
 --- The tally's derived metrics: agreement, react (median, p90, share never; in ticks), refusals per 100 attempts by
---- reason (per100; per100U the unmatched ones, M.unmatched; per100B the oracle's own in run B), episodes per minute, damage per second A / B, full-power and GCD-idle shares and debuff uptimes (A, B),
---- flicker per minute (ours, the oracle's), CPU per Update (mean, p99 ms; cpuRatio the mean of each tick's ms over its
---- window's calibration (M.ratios), calMean the counted runs' mean calibration ms; bytes allocated per Update, sampled, reported only), and
+--- reason (per100; per100U the unmatched ones, M.unmatched; per100B the oracle's own in run B), episodes per minute,
+--- damage per second A / B, full-power and GCD-idle shares and debuff uptimes (A, B), flicker per minute (ours, the
+--- oracle's), CPU per Update (mean, p99 ms; cpuRatio the mean of each tick's ms over its window's calibration
+--- (M.ratios), calMean the counted runs' mean calibration ms; bytes allocated per Update, sampled, reported only), and
 --- the tally's focus and run A's presses by key (pressedBy) (neither in M.line).
 function M.summary(m)
     local r = { focus = m.focus, pressedBy = m.pressedBy, readyShort = m.readyShort or 0, heldReady = m.heldReady or 0 }
