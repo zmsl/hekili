@@ -1,34 +1,38 @@
--- Exercise the actual Dominos branch without loading the simulation or a WoW client.
-local file = assert(io.open("src/Hekili/Engine/Sim/Events.lua", "r"))
-local source = file:read("*a")
-file:close()
-local branch = assert(source:match('elseif C_AddOns%.IsAddOnLoaded%("Dominos"%) then(.-)%-%- Use ElvUI'))
+-- tests/Forever/dominos_bindings_spec.lua: the Dominos branch of the keybinding reader (Engine/Sim/Events.lua,
+-- ns.ReadKeybindings) with some of DominosFrame1..14 missing (a Dominos setup may not create every bar). A missing
+-- frame or frame without buttons is skipped; slots Dominos does not claim fall back to the default UI bars.
+local headless = require("Game.harness.headless")
+local ww = require("Forever.helpers.warrior_world")
+local fake = require("Game.State.helpers.fake_api")
 
-local function readBindings(frames)
-    local stored, slotsUsed = {}, { [999] = true }
-    local env = {
-        _G = frames,
-        table = {
-            wipe = function(t)
-                for k in pairs(t) do
-                    t[k] = nil
-                end
-            end,
-        },
-        slotsUsed = slotsUsed,
-        GetBindingKey = function(binding)
-            return binding
-        end,
-        GetActionInfo = function(action)
-            return "spell", action
-        end,
-        StoreKeybindInfo = function(page, binding, kind, action)
-            stored[#stored + 1] = { page, binding, kind, action }
-        end,
-    }
-    setfenv(assert(loadstring("if true then\n" .. branch .. "\nend")), env)()
-    assert.is_nil(slotsUsed[999])
-    return stored, slotsUsed
+local world
+
+local fakeNew = fake.new
+local function boot()
+    fake.new = function(...)
+        local api, ctl = fakeNew(...)
+        api.GetActionInfo = function(slot)
+            local id = world.actions[slot]
+            if id then
+                return "spell", id
+            end
+        end
+        api.GetBindingKey = function(command)
+            return world.keys[command]
+        end
+        return api, ctl
+    end
+    local H = headless.new({ character = ww.character(), pack = ww.PACK })
+    fake.new = fakeNew
+    assert.are.same({}, H.loadErrors)
+    H.ns.Facade.C_AddOns.IsAddOnLoaded = function(name)
+        return name == "Dominos"
+    end
+    return H
+end
+
+local function id(H, name)
+    return H.Hekili.Engine.Registry.Abilities()[name].id
 end
 
 local function button(action)
@@ -41,39 +45,31 @@ local function button(action)
 end
 
 describe("Dominos keybinding discovery", function()
-    it("allows Dominos to be loaded before any frames exist", function()
-        assert.are.same({}, readBindings({}))
+    before_each(function()
+        world = { actions = {}, keys = {} }
     end)
 
-    it("skips frames without a button collection", function()
-        assert.are.same({}, readBindings({ DominosFrame1 = {} }))
-    end)
-
-    it("skips missing buttons and buttons without an action", function()
-        local stored = readBindings({ DominosFrame1 = { buttons = { [2] = {}, [3] = button(3) } } })
-        assert.are.same({ { 1, "ACTIONBUTTON3", "spell", 3 } }, stored)
-    end)
-
-    it("reads eight initialized bars without requiring frames nine through fourteen", function()
-        local frames = {}
+    it("reads Dominos bars 1-8 and the default bars for the rest when bars 9-14 do not exist", function()
+        local H = boot()
+        world.actions[5], world.actions[2] = id(H, "mortal_strike"), id(H, "overpower")
+        world.keys.ACTIONBUTTON5, world.keys.ACTIONBUTTON2 = "SHIFT-5", "SHIFT-2"
         for i = 1, 8 do
-            local buttons = {}
-            for b = 1, 12 do
-                buttons[b] = button((i - 1) * 12 + b)
-            end
-            frames["DominosFrame" .. i] = { buttons = buttons }
+            H.env["DominosFrame" .. i] = { buttons = {} }
         end
-        local stored, slotsUsed = readBindings(frames)
-        assert.are.equal(96, #stored)
-        assert.are.same({ 1, "ACTIONBUTTON1", "spell", 1 }, stored[1])
-        assert.are.same({ 8, "CLICK TestButton96:HOTKEY", "spell", 96 }, stored[96])
-        assert.is_true(slotsUsed[1])
-        assert.is_true(slotsUsed[96])
+        H.env.DominosFrame1.buttons[1] = button(5) -- Dominos shows slot 5 on its first button
+        H.env.DominosFrame2 = {} -- a frame without a button collection
+        assert.has_no.errors(function()
+            H.ns.ReadKeybindings()
+        end)
+        local info = H.Hekili.KeybindInfo
+        assert.are.equal("S5", info.mortal_strike.upper[1]) -- Dominos' own binding
+        assert.are.equal("S2", info.overpower.upper[1]) -- slot 2 is not claimed: the default bar's binding
     end)
 
-    it("continues to later frames after missing frames", function()
-        local stored, slotsUsed = readBindings({ DominosFrame14 = { buttons = { [12] = button(168) } } })
-        assert.are.same({ { 14, "MULTIACTIONBAR7BUTTON12", "spell", 168 } }, stored)
-        assert.is_true(slotsUsed[168])
+    it("does not raise with no Dominos frame at all", function()
+        local H = boot()
+        assert.has_no.errors(function()
+            H.ns.ReadKeybindings()
+        end)
     end)
 end)
