@@ -15,7 +15,7 @@ local UnitCanAttack, UnitClassification, UnitCreatureType, UnitExists = Facade.U
 local UnitGUID, UnitGetTotalAbsorbs, UnitHealth, UnitHealthMax = Facade.UnitGUID, Facade.UnitGetTotalAbsorbs, Facade.UnitHealth, Facade.UnitHealthMax
 local UnitInRange, UnitIsConnected, UnitIsDead, UnitIsDeadOrGhost = Facade.UnitInRange, Facade.UnitIsConnected, Facade.UnitIsDead, Facade.UnitIsDeadOrGhost
 local UnitIsPlayer, UnitLevel, UnitPower, UnitPowerMax = Facade.UnitIsPlayer, Facade.UnitLevel, Facade.UnitPower, Facade.UnitPowerMax
-local UnitPowerType, UnitRangedDamage, UnitStat, UnitThreatSituation = Facade.UnitPowerType, Facade.UnitRangedDamage, Facade.UnitStat, Facade.UnitThreatSituation
+local UnitRangedDamage, UnitStat, UnitThreatSituation = Facade.UnitRangedDamage, Facade.UnitStat, Facade.UnitThreatSituation
 local Hekili = _G[ addon ]
 
 local auras = ns.auras
@@ -3726,9 +3726,25 @@ local mt_dot = {
 ns.metatables.mt_dot = mt_dot
 
 
-local one_sec_gcd = {
-    ROGUE = true,
-}
+-- The spell-kind GCD's floor: wowsims's GCDMin (sim/core/constants.go), after the GCD modifiers and the haste
+-- (cast.go GCDTime). The belief's I.GcdLen (Game/State/Families/Casts.lua GCD_FLOOR) keeps the same value;
+-- tests/Forever/gcd_rule_spec.lua pins the two together.
+local GCD_FLOOR = 1.0
+
+-- The class's own GCD kind (Hekili:NewClass `gcd`: a kind, or a function of the state), else the spell kind: a
+-- wait's, no ability's, and gcd.max's for an off-GCD ability.
+local function classKind()
+    local g = class.kit and class.kit.gcd
+    if type( g ) == "function" then g = g() end
+    return g == "totem" and "totem" or "spell"
+end
+
+-- The one GCD-length rule (gcd.execute and gcd.max): the totem kind 1 s; the spell kind 1.5 s x haste x the GCD
+-- modifiers in `ability`'s scope (aura audit C12), floored.
+local function gcdFor( ability, kind )
+    if kind == "totem" then return 1 end
+    return max( 1.5 * state.haste * ns.costMods.GcdMult( ability ), GCD_FLOOR )
+end
 
 local mt_gcd = {
     __index = function( t, k )
@@ -3738,18 +3754,10 @@ local mt_gcd = {
             -- We can specify this for any ability, if we want.
             if ability and ability.gcdTime then return ability.gcdTime end
 
-            local gcd = ( state.this_action == "wait" and "spell" ) or ( ability and ability.gcd or "spell" )
-
+            -- Forever E10: an ability's own kind in every power type; a 1 s ability declares gcd = "totem" (checkpoint G1)
+            local gcd = state.this_action ~= "wait" and ability and ability.gcd or classKind()
             if gcd == "off" then return 0 end
-            if gcd == "totem" then return 1 end
-
-            -- Forever E10: a spell-kind press keeps 1.5 s x haste in every power type; a 1 s ability declares gcd = "totem" (checkpoint G1).
-            if one_sec_gcd[ class.file ] then
-                return state.buff.adrenaline_rush.up and max( 0.75, state.haste ) or 1
-            end
-
-            -- a GCD modifier in scope (aura audit C12) before the floor, as wowsims applies it
-            return max( 1.5 * state.haste * ns.costMods.GcdMult( ability ), state.buff.voidform.up and 0.67 or 0.75 )
+            return gcdFor( ability, gcd )
 
         elseif k == "remains" then
             return state.cooldown.global_cooldown.remains
@@ -3758,12 +3766,11 @@ local mt_gcd = {
             return state.cooldown.global_cooldown.expires
 
         elseif k == "max" or k == "duration" then
-            if one_sec_gcd[ class.file ] or class.file == "DRUID" and UnitPowerType( "player" ) == Enum.PowerType.Energy then
-                return state.buff.adrenaline_rush.up and max( 0.75, state.haste ) or 1
-            end
-
+            -- execute's rule without its per-ability gcdTime: an off-GCD ability or a wait reads the class's kind
             local ability = state.this_action and class.abilities[ state.this_action ]
-            return max( 1.5 * state.haste * ns.costMods.GcdMult( ability ), state.buff.voidform.up and 0.67 or 0.75 )
+            local gcd = state.this_action ~= "wait" and ability and ability.gcd
+            if gcd ~= "spell" and gcd ~= "totem" then gcd = classKind() end
+            return gcdFor( ability, gcd )
 
         elseif k == "lastStart" then
             return 0

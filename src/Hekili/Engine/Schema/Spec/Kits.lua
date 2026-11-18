@@ -113,7 +113,9 @@ end
 --- (its default priority), movement (true: its priorities read the Movement toggle, whose options row it then
 --- shows), unsupported (true: no
 --- priorities on Forever; the engine idles and the options page says so) }. Ids are ours: ns.TreeSpecID(client class
---- id, slot), the kit at slot 0. Nil when `token` is not the player's class.
+--- id, slot), the kit at slot 0. Nil when `token` is not the player's class. `def.gcd`: the class's own GCD kind
+--- ("spell" or "totem", or a function of the state answering one; nil: "spell"), what a wait or no ability triggers
+--- and gcd.max reads for an off-GCD ability (Engine/Sim/State.lua mt_gcd).
 function Hekili:NewClass( token, def )
     local _, playerToken, classID = UnitClass( "player" )
     if token ~= playerToken or type( classID ) ~= "number" or type( def ) ~= "table" or type( def.specs ) ~= "table" then return end
@@ -121,6 +123,7 @@ function Hekili:NewClass( token, def )
     class.initialized = true
     local kit = buildSpec( ns.TreeSpecID( classID, 0 ), "kit", token, nil, nil, token, true )
     kit.token, kit.trees, kit.specs = token, {}, {}
+    kit.gcd = type( def.gcd ) == "function" and setfenv( def.gcd, Hekili.State ) or def.gcd
 
     for slot, d in ipairs( def.specs ) do
         local id = ns.TreeSpecID( classID, slot )

@@ -53,6 +53,9 @@ local UNKNOWN, NOT, YES = -1, 0, 1
 -- shortcut: a fall seen late by under 0.01 s still teaches, and a hasted spell GCD can learn up to 1.5; upgrade by
 -- learning only below the haste default if a hasted class shows it.
 local GCD_MIN, GCD_MAX = { 1.0, 0.9 }, { 1.51, 1.01 }
+-- A spell-kind GCD's floor (wowsims GCDMin): the simulation's GCD_FLOOR (Engine/Sim/State.lua) holds the same value,
+-- pinned by tests/Forever/gcd_rule_spec.lua.
+local GCD_FLOOR = 1.0
 -- An own cast within this of the GCD's rising edge, before or after it, opened it (UNMEASURED until checkpoint G3).
 local GCD_EDGE = 0.1
 
@@ -180,10 +183,10 @@ function I.GcdLen(a, t, t0)
         -- spell haste (the belief's UnitSpellHaste %, composed in a fight: Families/Player.lua), never melee haste: attack
         -- speed does not shorten a GCD on Forever
         local h = VS.SpellHaste and VS.SpellHaste(t).est or 0
-        len = max(1.0, 1.5 / (1 + (h > 0 and h or 0) / 100)) -- 1 + h/100 >= 1: h > 0 checked
+        len = max(GCD_FLOOR, 1.5 / (1 + (h > 0 and h or 0) / 100)) -- 1 + h/100 >= 1: h > 0 checked
     end
     local f = a > 0 and GM.n > 0 and gcdMult(a, t0 or t) or 1
-    return f ~= 1 and max(1.0, len * f) or len
+    return f ~= 1 and max(GCD_FLOOR, len * f) or len
 end
 
 -- Whether a GCD modifier cut the current GCD, fixed where its length is (review M2): its fall teaches no length then,

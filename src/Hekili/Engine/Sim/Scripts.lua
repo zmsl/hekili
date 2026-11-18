@@ -299,8 +299,8 @@ local function SimcWithResources( str )
         str = extendExpression( str, "spell_targets", "any" )
     end
 
-    if str:find( "gcd" ) then
-        str = extendExpression( str, "gcd", "execute" )
+    if str:find( "gcd" ) then -- bare `gcd` is gcd.max, as the SimC importer reads it (Options.lua)
+        str = extendExpression( str, "gcd", "max" )
     end
 
     return str

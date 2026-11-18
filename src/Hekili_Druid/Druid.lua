@@ -62,6 +62,10 @@ local spec = Hekili:NewClass("DRUID", {
         },
         { key = "restoration", name = L["Restoration"], tree = 3, icon = 136041, role = "healer", unsupported = true },
     },
+    -- the Druid's own GCD (a wait, gcd.max of an off-GCD ability): Cat Form's 1 s strikes, else the spell GCD
+    gcd = function()
+        return buff.cat_form.up and "totem" or "spell"
+    end,
 })
 if not spec then
     return

@@ -8,6 +8,9 @@
 
 ### Fixed
 
+- At very high spell haste, the icons after the first no longer come up a little early: a global cooldown is never
+  shorter than 1 second.
+
 ### Known issues
 
 ### Upgrade notes

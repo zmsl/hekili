@@ -212,11 +212,11 @@ describe("the engine's threat table (tank design §2)", function()
 end)
 
 -- Hekili's own GCD in the simulation (GCD kinds design §1.4, core edit E10), from the whole addon headless
--- (tests/Game/harness/headless.lua) as a level 60 Druid whose power is energy (all the stock clause reads; no form).
+-- (tests/Game/harness/headless.lua) as a level 60 Druid whose power is energy (no form).
 describe("the simulation's GCD by kind in energy (core edit E10)", function()
     local headless = require("Game.harness.headless")
 
-    it("prices a spell-kind press at 1.5 x haste and a totem-kind one at 1.0; gcd.max stays the typical 1.0", function()
+    it("prices a spell-kind press at 1.5 x haste and a totem-kind one at 1.0; gcd.max reads the same kinds", function()
         local H = headless.new({
             character = {
                 class = "DRUID",
@@ -233,7 +233,7 @@ describe("the simulation's GCD by kind in energy (core edit E10)", function()
         assert.are.equal(1.5 * S.haste, S.gcd.execute)
         S.this_action = "shred"
         assert.are.equal(1, S.gcd.execute)
-        assert.are.equal(1, S.gcd.max) -- no ability context: the clause E10 keeps
+        assert.are.equal(1, S.gcd.max) -- shred's own totem kind (dry-gcd: no power-type clause)
     end)
 
     -- L578: a `gcd` declared as a function picks the kind by state, in the sim and in the belief's build record.

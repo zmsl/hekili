@@ -59,6 +59,7 @@ local format = string.format
 -- (raises) and ignores a list value.
 --   Since then, without a bump: the `now` name `cast_id` (item-restores-09); an older core reads nil, so a ranked
 --   restore credits its first rank.
+--   Also without a bump: Hekili:NewClass's `gcd` (dry-gcd); an older core ignores it and keeps its own class clauses.
 local CONTENT_API = 15
 
 local done, notice = false, nil
