@@ -142,11 +142,10 @@ spec file at one tag: `.lua/bin/busted --tags=druid tests/Forever/loop_druid_fer
 experimental options and their Snapshot audit lines.
 The CPU budget (`pack_gate.health`) is process CPU time (`os.clock` around each Update in
 `tests/Game/harness/loop.lua`; a traced fight, every tally's first, adds no sample: its debug pass formats a line per
-APL entry, Feral 3-fight 6.25 / 27.55 -> 4.47 / 6.80 ms mean / p99 when it left the metric), so other processes
-waiting for a core do not count; shared cores (SMT, cache) still raise it: Arms read 4.1 ms alone and 6.1-6.7 ms in
-`make check`'s 16-wide run. So the bar is on a ratio: each tick's ms over `loop.calibrate`'s (a fixed pure-Lua
-workload, about 6 ms alone, re-timed in the same process before every `loop.CAL_EVERY` (50) counted ticks, so a load
-that changes during a fight changes the calibration of the ticks it slows; `loop.ratios`),
+APL entry, which would inflate the mean and p99), so other processes waiting for a core do not count; shared cores
+(SMT, cache) still raise it: a line's ms read higher in `make check`'s 16-wide run than alone. So the bar is on a
+ratio: each tick's ms over `loop.calibrate`'s (a fixed pure-Lua workload, about 6 ms alone, re-timed in the same
+process before every `loop.CAL_EVERY` (50) counted ticks, so a load that changes during a fight changes the calibration of the ticks it slows; `loop.ratios`),
 `r.cpuRatio <= pack_gate.CPU_RATIO` (1.0, 20-fight lines stay under 0.6; `pack_gate.CPU_RATIO_ONE_FIGHT` 1.2 for a
 one-fight line, a replay, whose ratios read 0.23-0.60 quiet over about 20 calibration windows), the ms mean and p99
 reported beside it. Load moves a line's ratio by under 0.1: Feral's 3-fight
