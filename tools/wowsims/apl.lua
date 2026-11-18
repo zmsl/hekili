@@ -191,8 +191,8 @@
 --    With the recipe's `sequences = true` (windows design v6 §10.1, ruling 14): one line at the entry's position,
 --    `strict_sequence,name=<first member>_<last member>,start_on_first=1,hold_off_gcd=1[,if=<condition>]:<member>:...`,
 --    each member its own line's text (rules 5-7), the condition's reads all guarded; a repeated name is an error. The
---    engine holds the rotation for it, so none of the deviations above remain. A recipe `extra`'s `before` skips
---    members (they are part of their sequence's line).
+--    engine holds the rotation for it, so none of the deviations above remain. A recipe `extra` before a member
+--    goes before its sequence's line (the member is part of that line).
 -- 15. Maintenance debuffs: the recipe's `maintenance` ({ [action key] = setting key }) names a debuff (or self-buff)
 --    kept up for the raid, which open-world play skips. Every emitted line whose action is that key (any list, the
 --    recipe's leveling and extra lines included) is its cast line and gets `settings.<key>&` before its condition (the
@@ -3148,10 +3148,12 @@ function M.translate(rotation, c)
     for _, x in ipairs(c.extra) do
         local at
         for i, body in ipairs(byName.default) do
-            -- a sequence's member (recipe `sequences`) is part of its sequence's line, not a line of its own
-            local member = c.sequences and body:find(",if=window%.[%w_]+%.next%.")
-            if body:match("^[%w_]+") == x.before and not member then
+            if body:match("^[%w_]+") == x.before then
                 at = i
+                -- a sequence's member (recipe `sequences`) is part of its sequence's line: the extra goes before that
+                while c.sequences and at > 1 and byName.default[at]:find(",if=window%.[%w_]+%.next%.") do
+                    at = at - 1
+                end
                 if not x.last then
                     break
                 end

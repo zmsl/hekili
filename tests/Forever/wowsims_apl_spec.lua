@@ -3730,25 +3730,25 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
         end
     )
 
-    it(
-        "rule 7: a recipe extra's `before` skips a sequence's members (part of its line, not lines of their own)",
-        function()
-            local text = apl.translate({
-                priorityList = {
-                    { action = { strictSequence = { actions = { member(300), member(100) } } } },
-                    cast(100),
-                },
-            }, on({ extra = { { before = "strike", line = "dot" } } }))
-            assert.are.equal(
-                lines({
-                    "actions=strict_sequence,name=roar_strike,start_on_first=1,hold_off_gcd=1:roar,use_off_gcd=1:strike",
-                    "actions+=/dot",
-                    "actions+=/strike",
-                }),
-                text
-            )
-        end
-    )
+    -- (Priest Shadow's Starshards extra: the wowsims entry it stands for, #11, sits before the strict sequence, #13)
+    it("rule 7: a recipe extra `before` a sequence's member goes before that sequence's line", function()
+        local text = apl.translate({
+            priorityList = {
+                cast(500),
+                { action = { strictSequence = { actions = { member(300), member(100) } } } },
+                cast(100),
+            },
+        }, on({ extra = { { before = "strike", line = "dot" } } }))
+        assert.are.equal(
+            lines({
+                "actions=starfire",
+                "actions+=/dot",
+                "actions+=/strict_sequence,name=roar_strike,start_on_first=1,hold_off_gcd=1:roar,use_off_gcd=1:strike",
+                "actions+=/strike",
+            }),
+            text
+        )
+    end)
 
     it("rule 14: a generated name that repeats in one priority is an error", function()
         local seq = { action = { strictSequence = { actions = { member(300), member(100) } } } }
