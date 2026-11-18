@@ -207,7 +207,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "\nactions%+=/demoralizing_roar,focus=2,if=settings%.maintain_demoralizing_roar&%(!%(!%(debuff%.demoralizing_roar%.remains<=0%)%)&",
             simc
         )
-        assert.matches("\nactions%+=/faerie_fire,if=%(action%.faerie_fire%.known&debuff%.faerie_fire%.remains<=0%)&", simc)
+        assert.matches(
+            "\nactions%+=/faerie_fire,if=%(action%.faerie_fire%.known&debuff%.faerie_fire%.remains<=0%)&",
+            simc
+        )
         assert.matches("demoralizing_roar", first(true, false))
         assert.not_matches("demoralizing_roar", first(true, true)) -- R45: only while the debuff is down
         assert.not_matches("demoralizing_roar", first(false, false))
