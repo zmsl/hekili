@@ -1952,20 +1952,34 @@ end
 --- set since the cast plus what the slot gained since that answer (the answer already saw the refunded pool; regen or
 --- a credit after it adds to the truth); lo takes it only when no usable answer raised lo since the cast, est only
 --- when none raised est (else that answer's bound already holds the refund). `held`: an answer since the cast raised
---- either, before a later spend reset those marks (a late refund: the CDM verdict's), so lo and est stay. Returns what
---- est, lo and hi took (I.Unrefund's). Allocates nothing.
-function I.Refund(r, d, t, held)
+--- either, before a later spend reset those marks (a late refund: the CDM verdict's), so lo and est stay. `dL`, `dH`
+--- (optional, default d): what lo and hi take instead (a `now`'s spend clamped each at 0 apart: Families/Now.lua).
+--- `fE`, `fL` (optional): floors est and lo reach at least, before the tops clamp them (what the slot held before a
+--- `now` whose spend the avoid gives back, plus the share: an answer since the cast only bounds it from below, so it
+--- can raise that give-back, never cancel it). Returns what est, lo and hi took (I.Unrefund's). Allocates nothing.
+function I.Refund(r, d, t, held, dL, dH, fE, fL)
     local lo, e, top, hi = R.lo0[r], R.est0[r], R.sinceShort[r], R.hi0[r]
     if top < math.huge then
         local moved = e - R.sinceShortEst[r]
         top = top + (moved > 0 and moved or 0)
     end
     I.ResourceShift(r, d, t, Obs.Avoided)
+    if dL then
+        R.lo0[r], R.hi0[r] = clamp(lo + dL, R.max[r]), clamp(hi + dH, R.max[r])
+        norm(r)
+    end
     if held or R.sinceYes[r] then
         R.lo0[r] = lo
     end
     if held or R.sinceSnap[r] then
         R.est0[r] = e
+    end
+    if fL and R.lo0[r] < fL then
+        R.lo0[r] = clamp(fL, R.max[r])
+        norm(r)
+    end
+    if fE and R.est0[r] < fE then
+        R.est0[r] = clamp(fE, R.max[r])
     end
     if R.hi0[r] > top then
         R.hi0[r] = top
@@ -1982,7 +1996,27 @@ function I.Refund(r, d, t, held)
     if R.hi0[r] < R.est0[r] then
         R.hi0[r] = R.est0[r]
     end
+    if dL then -- a `now`'s give-back explains a flip (R.gain) by what est took, not by the whole take
+        local took = R.est0[r] - e
+        R.gain[r] = R.gain[r] - d + (took > 0 and took or 0)
+    end
     return R.est0[r] - e, R.lo0[r] - lo, R.hi0[r] - hi
+end
+
+--- An avoid's give-back of what a `now` spent (Families/Now.lua) explains the rung lifts of slot r since that cast
+--- (sE, sL, sH: R.liftE/L/H at the cast) up to what it gave back (gE, gL, gH): the pool was never spent, so no swing's
+--- wound owes that part (owe). A window reset since the cast reads as less lift since (kept owed: est low, the safe
+--- side). Allocates nothing.
+function I.LiftExplained(r, sE, sL, sH, gE, gL, gH)
+    local u = R.liftE[r] - sE
+    u = u < gE and u or gE
+    R.liftE[r] = u > 0 and R.liftE[r] - u or R.liftE[r]
+    u = R.liftL[r] - sL
+    u = u < gL and u or gL
+    R.liftL[r] = u > 0 and R.liftL[r] - u or R.liftL[r]
+    u = R.liftH[r] - sH
+    u = u < gH and u or gH
+    R.liftH[r] = u > 0 and R.liftH[r] - u or R.liftH[r]
 end
 
 --- A refund `d` proven wrong (the CDM verdict's, struck: Families/Now.lua I.VerdictTakeBack) comes back out of slot r:
