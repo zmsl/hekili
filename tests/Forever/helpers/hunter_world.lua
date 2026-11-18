@@ -1,6 +1,6 @@
 -- tests/Forever/helpers/hunter_world.lua (class-completion plan, "The per-pack gate"): the Hunter content of the
--- class-neutral headless loop, in shaman_world.lua's shape, one content per pack (M.BeastMastery, M.Marksmanship,
--- M.Survival): the character the instance logs in as, each ability's press in the world's generic verbs, the client's
+-- class-neutral headless loop, in shaman_world.lua's shape, one content per pack (M.Survival, the Turrets,
+-- M.SurvivalMelee): the character the instance logs in as, each ability's press in the world's generic verbs, the client's
 -- usability answers. IDs, costs, cooldowns and aura durations come from the class file (load_druid's recording load of
 -- Hunter.lua for the character, the booted oracle's Hekili.Class and Hekili.State for the rest). The world's own,
 -- restated from the DB2 and wowsims/forever (so the class file's belief is measured against them): the shared
@@ -21,7 +21,6 @@ local M = {}
 
 M.CLIENT_SPEC, M.CLASS_ID = 1484, 3 -- the client's Hunter pseudo-spec
 local MANA = 0 -- Enum.PowerType
-local MAX = 5000
 local GCD = { spell = 1.5, off = 0 }
 -- The default regen parts (a pack's `fsr` replaces them; the class file declares them per spec, as wowsims's logs).
 local FSR = { 18, 3 }
@@ -30,7 +29,7 @@ local RESOURCEFULNESS = 1242688 -- its aura: +50% of the spirit regen while cast
 -- crit at its swing, `struck`). The worlds' W.crit for a build that has it: the share of its melee and ranged ability
 -- hits that crit in its wowsims log (Arcane Shot, Raptor Strike, Strider Kick, Multi-Shot, Wing Clip, Mongoose Bite,
 -- Aimed Shot; each crit gave Resourcefulness there: 13, 11 and 7 gains or refreshes). Other worlds keep world.CRIT.
-local CRIT = { Marksmanship = 13 / 91, Survival = 11 / 93, SurvivalRanged = 11 / 93, SurvivalTurret = 7 / 41 }
+local CRIT = { Survival = 11 / 93, SurvivalRanged = 11 / 93, SurvivalTurret = 7 / 41 }
 local DEADLY_ASPECTS = 19552 -- wowsims aspects.go: Quick Shots' chance is Deadly Aspects' 2% a rank (5 ranks: 10%)
 local AUTO_SHOT = 75
 
@@ -50,8 +49,8 @@ local COST = {
     aspect_of_the_beast = { 50, 70, 90, 110 },
     rapid_fire = 100,
     serpent_sting = { 15, 30, 50, 80, 115, 150, 190, 230, 250 },
-    arcane_shot = { 25, 35, 50, 80, 105, 135, 160, 190 },
-    summon_hawk = { 80, 105, 135, 190 },
+    arcane_shot = pctOfBase(0.11), -- 189.2: 189, 11% of base mana (wowsims e4ef929e54's CostPct 11; its logs pay 189)
+    summon_hawk = pctOfBase(0.11), -- the same 11% (was 80-190 by rank, as Arcane Shot's 25-190)
     aimed_shot = { 75, 115, 160, 210, 260, 310 },
     multi_shot = pctOfBase(0.139), -- 239.08: 239, as wowsims's log (239 MM/SV, 224.66 under BM's Efficiency)
     sniper_shot = 365,
@@ -154,8 +153,8 @@ local function shot(key, crits)
         crits = crits, -- a landed hit may give Resourcefulness (C.resolve)
         effect = function(W, e, p, X)
             local other = SHARED[key]
-            if other then
-                e.cdUntil[other] = W.t + 6
+            if other then -- the pressed ability's own recovery (Arcane Shot's under Improved Arcane Shot: wowsims's log)
+                e.cdUntil[other] = W.t + p.cooldown
             end
             if AMOUNT[key] then
                 W.hit(e, e.target, AMOUNT[key], key == "arcane_shot" and 64 or 1) -- the rest physical (DB2)
@@ -228,7 +227,13 @@ M.MAP = {
     strider_kick = shot("strider_kick", true),
     wing_clip = shot("wing_clip", true), -- a main-hand special that crits (wowsims wing_clip.go): Resourcefulness
     immolation_trap = {}, -- the trap's burn is unmodelled (no read of it)
-    bestial_wrath = {}, -- the BM talent: its rage is the pet's (no pet modelled), nothing on us
+    -- the BM talent: its rage is the pet's; The Beast Within's window on us (owner L1105: every cost -50%, costOf's
+    -- callers), opened after its own full-price spend
+    bestial_wrath = {
+        effect = function(W, e, _, X)
+            e.beastWithin = W.t + X.aura.bestial_wrath.duration
+        end,
+    },
     -- the Orc racial (Hekili_Shared, the wowsims build's race): its buff on us; the attack power it adds is unmodelled
     blood_fury = {
         effect = function(W, e, _, X)
@@ -254,54 +259,6 @@ M.MAP = {
 -- one the character keeps up, `uptime` the debuffs reported, `distance` our yards from the mob (none: every check in
 -- range).
 local PACKS = {
-    BeastMastery = {
-        pack = "Beast Mastery (wowsims.com)",
-        distance = 11, -- wowsims's range between weaves (the request's distanceFromTarget): Raptor Strike out of reach
-        kit = {
-            "auto_shot",
-            "aspect_of_the_hawk",
-            "hunters_mark",
-            "rapid_fire",
-            "summon_hawk",
-            "arcane_shot",
-            "serpent_sting",
-            "aimed_shot",
-            "multi_shot",
-            "raptor_strike",
-        },
-        weapon = { 150, 220, 3.5 },
-        ranged = { 140, 200, 3.0 },
-        aspect = "aspect_of_the_hawk",
-        -- the export's Efficiency 2/5 (the log header's 19416=2): the shots and Sting 6% off; its Bestial Discipline 2/2
-        -- (19590=2): the belief's static share by rank (the 0.5 below)
-        talents = { [19416] = 2, [19590] = 2 },
-        -- wowsims's log (hunter_beast_mastery.log): 7.94 a second while casting (Bestial Discipline's 50%), 15.88 outside
-        fsr = { 7.94, 7.94, share = 0.5 },
-        uptime = { "serpent_sting", "hunters_mark" },
-    },
-    Marksmanship = {
-        pack = "Marksmanship (wowsims.com)",
-        distance = 11, -- wowsims's range between weaves (the request's distanceFromTarget): Raptor Strike out of reach
-        kit = {
-            "auto_shot",
-            "aspect_of_the_hawk",
-            "hunters_mark",
-            "rapid_fire",
-            "aimed_shot",
-            "serpent_sting",
-            "sniper_shot",
-            "arcane_shot",
-            "multi_shot",
-            "raptor_strike",
-        },
-        weapon = { 150, 220, 3.5 },
-        ranged = { 140, 200, 3.0 },
-        aspect = "aspect_of_the_hawk",
-        talents = { [440529] = 2 }, -- the export's Resourcefulness 2/2 (hunter_marksmanship.json)
-        -- wowsims's log: 15.88 outside the rule, 0 while casting, Resourcefulness adding half the 15.88 while casting
-        fsr = { 15.88, 0, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
-        uptime = { "serpent_sting", "hunters_mark" },
-    },
     -- Melee: a two-hander, no Auto Shots fired (no `ranged`); Auto Shot is still known, as on every Hunter (its 8 yd
     -- minimum gives LibRangeCheck its 8 yd edge).
     Survival = {
@@ -320,25 +277,29 @@ local PACKS = {
             "arcane_shot",
             "multi_shot",
         },
-        weapon = { 180, 260, 3.6 },
+        weapon = { 180, 260, 3.8 }, -- prebis_weave's Arcanite Reaper (wowsims db: 3.8 s)
         aspect = "aspect_of_the_hawk", -- the pack's (its precombat Aspect of the Hawk)
         talents = { [440529] = 2 }, -- the export's Resourcefulness 2/2 (hunter_survival.json)
-        fsr = { 15.88, 0, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
+        -- its log (Pre-BiS weave gear): 1.200 a tick casting (mp5 part 12.00 a second), 2.950 outside (spirit part
+        -- 29.50 - 12.00 = 17.50), 2.075 casting under Resourcefulness (12.00 + 0.5 x 17.50 = 20.75); 3555 mana
+        fsr = { 17.5, 12, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
+        max = 3555,
         uptime = { "hunters_mark" },
     },
 }
--- Survival at the weave's range with a ranged weapon, as BM and MM (R63): its live bars only. At melee the shots sit
+-- Survival at the weave's range (11 yd) with a ranged weapon (R63): its live bars only. At melee the shots sit
 -- inside their 8-35 band and Raptor Strike is off the GCD, so the GCD-idle metric never ends a streak; the loop and
 -- replay worlds stay M.Survival.
-PACKS.SurvivalRanged = setmetatable({ distance = 11, ranged = { 140, 200, 3.0 } }, { __index = PACKS.Survival })
+-- prebis_weave's Bloodseeker (3.3 s)
+PACKS.SurvivalRanged = setmetatable({ distance = 11, ranged = { 140, 200, 3.3 } }, { __index = PACKS.Survival })
 
 -- The non-weave builds (owner 2026-11-12, ledger L661): each world takes its export's whole talent string (the log
 -- header's), so the costs (Efficiency, Resourcefulness), Improved Arcane Shot's cooldown and Quick Shots' chance (Deadly
 -- Aspects) are the build's, and each world runs its own pack. The kit is what the build knows that its list
 -- casts. The Turret worlds stand at the list's 12 yd shoot spot, shooting; Survival Melee in melee with two one-handers
--- (p1_melee's Annihilator and Heartseeker, 1.7 s each; the amounts UNMEASURED) under Aspect of the Beast.
+-- (prebis_melee's Annihilator 2.4 s and Bonescraper 1.4 s; the amounts UNMEASURED) under Aspect of the Beast.
 -- Known gap: Quick Strikes (aura 1299448, melee haste) is not modelled. wowsims procs it off our white melee hits under
--- Aspect of the Beast with Deadly Aspects 5/5 (sim/hunter/aspects.go:103-111; 5 gains in hunter_survival_melee.log), so
+-- Aspect of the Beast with Deadly Aspects 5/5 (sim/hunter/aspects.go:103-111; 17 gains in hunter_survival_melee.log at e4ef929e54), so
 -- the Survival Melee world swings at its base speed where the log's character is hasted for those windows.
 local function header(spec) -- the export's talents: { [rank-1 spell] = rank }
     local f = assert(io.open("tests/Forever/wowsims/" .. spec .. ".log"))
@@ -351,6 +312,9 @@ local function header(spec) -- the export's talents: { [rank-1 spell] = rank }
     end
     return out
 end
+-- The turret builds' logs (one gear set, 3330 mana): 1.240 a tick casting with no share (mp5 part 12.40 a second), 2.990
+-- outside (spirit part 29.90 - 12.40 = 17.50), 2.115 casting under a 50% share (12.40 + 0.5 x 17.50 = 21.15).
+local TURRET_FSR = { 17.5, 12.4 }
 local function turret(pack, spec, extra, fsr, uptime)
     local kit = {
         "auto_shot",
@@ -368,33 +332,36 @@ local function turret(pack, spec, extra, fsr, uptime)
         pack = pack,
         distance = 12, -- the list's Shoot spot (walk_in.apl.siml) and the build's distance_from_target
         kit = kit,
-        weapon = { 150, 220, 3.5 },
-        ranged = { 140, 200, 3.0 },
+        weapon = { 150, 220, 3.2 }, -- prebis_turret's Legionite Glaive (wowsims db: 3.2 s)
+        ranged = { 140, 200, 1.8 }, -- its Eaglehorn Long Bow (1.8 s; the quiver's haste unmodelled)
         aspect = "aspect_of_the_hawk",
         talents = header(spec),
         fsr = fsr,
+        max = 3330,
         uptime = uptime or { "serpent_sting", "hunters_mark" },
     }
 end
 PACKS.BeastMasteryTurret = turret(
     "Beast Mastery Turret (wowsims.com)",
     "hunter_beast_mastery_turret",
-    { "bestial_wrath" },
-    PACKS.BeastMastery.fsr -- Bestial Discipline 2/2, as the weave build
+    { "bestial_wrath", "summon_hawk" }, -- the hawk list (e4ef929e54)
+    -- Bestial Discipline 2/2 (19590=2): a static 50% share, so the casting rate 21.15 (the log's 2.115 a tick) and the
+    -- spirit part outside it (1 - 0.5) x 17.50 = 8.75 (outside 29.90: 2.990)
+    { 8.75, 21.15, share = 0.5 }
 )
 PACKS.MarksmanshipTurret = turret(
     "Marksmanship Turret (wowsims.com)",
     "hunter_marksmanship_turret",
     { "sniper_shot" },
     -- no Resourcefulness in this build; its Rapid Recuperation 2/2 (the log header's 1223987=2): half the spirit regen
-    -- while casting for 15 s after each landed Serpent Sting (the log's 2.554 a tick casting under it, 1.36 without)
-    { 15.88, 0, auras = { [1242512] = { share = 0.5 } } }
+    -- while casting for 15 s after each landed Serpent Sting (the log's 2.115 a tick casting under it, 1.240 without)
+    { TURRET_FSR[1], TURRET_FSR[2], auras = { [1242512] = { share = 0.5 } } }
 )
 PACKS.SurvivalTurret = turret(
     "Survival Turret (wowsims.com)",
     "hunter_survival_turret",
     {},
-    PACKS.Survival.fsr -- Resourcefulness 2/2, as the weave build
+    { TURRET_FSR[1], TURRET_FSR[2], auras = { [RESOURCEFULNESS] = { share = 0.5 } } } -- Resourcefulness 2/2
 )
 PACKS.SurvivalMelee = {
     pack = "Survival Melee (wowsims.com)",
@@ -414,18 +381,21 @@ PACKS.SurvivalMelee = {
         "arcane_shot",
         "multi_shot",
     },
-    weapon = { 49, 92, 1.7 },
-    offhand = { 49, 92, 1.7 },
+    weapon = { 49, 92, 2.4 }, -- prebis_melee's Annihilator (wowsims db and log: 2.4 s)
+    offhand = { 49, 92, 1.4 }, -- its Bonescraper (1.4 s)
     aspect = "aspect_of_the_beast",
     talents = header("hunter_survival_melee"),
-    fsr = { 15.88, 0 }, -- no Resourcefulness in this build
+    -- no Resourcefulness in this build; its log (Pre-BiS melee gear, 3270 mana): 1.240 a tick casting (12.40 a second),
+    -- 2.915 outside (spirit part 29.15 - 12.40 = 16.75)
+    fsr = { 16.75, 12.4 },
+    max = 3270,
     uptime = { "hunters_mark" },
 }
 -- Survival Melee's live bars only, at the weave's range with a ranged weapon (R63, as SurvivalRanged): in melee at
 -- level 10 the GCD-idle metric counts Arcane Shot usable on cost though it is out of range (8-35 yd), and Raptor Strike
 -- is off the GCD, so the in-melee world read 116.8 s idle; its loop and replay worlds stay in melee.
 PACKS.SurvivalMeleeRanged = setmetatable(
-    { distance = 11, ranged = { 140, 200, 3.0 } },
+    { distance = 11, ranged = { 140, 200, 2.8 } }, -- prebis_melee's Ancient Bone Bow (2.8 s)
     { __index = PACKS.SurvivalMelee }
 )
 
@@ -447,10 +417,11 @@ local function classData(H)
 end
 
 -- The talents' cost cuts, restated from the DB2 masks and wowsims's data (the world's truth the class file's are
--- measured against), their percents added: Resourcefulness (440529) 30% / 60% a rank, Efficiency (19416) 3% a rank.
+-- measured against), multiplied: Resourcefulness (440529) 30% / 60% a rank, Efficiency (19416) 3% a rank.
 local RESOURCEFUL = { raptor_strike = true, mongoose_bite = true, wing_clip = true, immolation_trap = true }
 RESOURCEFUL.strider_kick = true -- wowsims's mask word 2 (0x200000) and log (39.6); our DB2 row lacks that word
 local EFFICIENT = {
+    sniper_shot = true, -- wowsims's MM logs: 321.2 under Efficiency 4/5 (365 x 0.88); our DB2 mask lacks it
     raptor_strike = true,
     mongoose_bite = true,
     wing_clip = true,
@@ -486,9 +457,15 @@ local function costOf(key, ids, H)
         end
         c = c[rank]
     end
-    local off = (RESOURCEFUL[key] and ({ 0.3, 0.6 })[talentRank(H, 440529)] or 0)
-        + (EFFICIENT[key] and 0.03 * talentRank(H, 19416) or 0)
-    return c * (1 - off)
+    -- two cost rows multiply, as in game (wowsims spell_mod.go SpellMod_PowerCost_Pct)
+    local res = RESOURCEFUL[key] and ({ 0.3, 0.6 })[talentRank(H, 440529)] or 0
+    return c * (1 - res) * (1 - (EFFICIENT[key] and 0.03 * talentRank(H, 19416) or 0))
+end
+
+-- The Beast Within (1223758, owner L1105): every mana cost x 0.5 while `e`'s window is open at `t`, unrounded (the
+-- kit's cost mod; wowsims omits it, so its logs pay full).
+local function beastWithin(cost, e, t)
+    return (e.beastWithin or 0) > t and cost * 0.5 or cost
 end
 
 -- The ranged haste on us at `now` in belief `VS`: Rapid Fire's 1.4 times Quick Shots' 1.3.
@@ -504,9 +481,8 @@ local function content(name)
     local res = P.talents and P.talents[440529]
     local rate = res and res / 2
     local recup = P.talents and (P.talents[1223987] or 0) > 0 -- Rapid Recuperation (its log header's rank)
+    local lacerate = P.talents and (P.talents[1310533] or 0) > 0 -- Lacerating Strikes (its log header's rank)
     C.SPEC = ({
-        BeastMastery = 100031,
-        Marksmanship = 100032,
         Survival = 100033,
         SurvivalRanged = 100033,
         BeastMasteryTurret = 100031,
@@ -546,7 +522,7 @@ local function content(name)
             level = 60,
             known = known,
             talents = P.talents or {},
-            power = { type = MANA, token = "MANA", max = MAX },
+            power = { type = MANA, token = "MANA", max = P.max },
             speed = { P.weapon[3], P.offhand and P.offhand[3] },
             ranges = ranges,
         }
@@ -588,7 +564,7 @@ local function content(name)
         W.at(W.t, roll)
     end
 
-    -- Level 60 against a level 60 mob in melee range swinging at us, 5000 mana full and under the five-second rule.
+    -- Level 60 against a level 60 mob in melee range swinging at us, the log's pool full and under the five-second rule.
     -- Neither side dies (the mob's health here, ours in `hooks`): each fight ends at its stop, out of combat. A kill
     -- ends the loop before the client sees it, so the next fight's prepull would be believed in combat (the harness
     -- quirk shaman_world works around the same way).
@@ -596,9 +572,9 @@ local function content(name)
         level = 60,
         weapons = { P.weapon, P.offhand },
         ranged = P.ranged,
-        max = MAX,
+        max = P.max,
         fsr = { [MANA] = P.fsr or FSR },
-        power = MAX,
+        power = P.max,
         mobHealth = 1e9,
         distance = P.distance,
         script = hooks,
@@ -651,10 +627,15 @@ local function content(name)
                 end
             end
         end
+        local full = costOf(key, idsOf(key), H)
         local p = {
             spell = VS.KnownID(a.id),
             ids = ids,
-            cost = costOf(key, idsOf(key), H),
+            -- the press checked at the oracle's (true) belief of The Beast Within, the charge at the world's (`price`)
+            cost = VS.Aura("player", X.aura.bestial_wrath.id, now) and full * 0.5 or full,
+            price = function(W, e)
+                return beastWithin(full, e, W.t)
+            end,
             pt = MANA,
             -- Improved Arcane Shot (19454): -0.3 s a rank, as the kit
             -- Survivalist's Discipline (1310496): -20% a rank on the trap (the world's truth, restated from the pin's curve)
@@ -697,6 +678,14 @@ local function content(name)
             if key == "serpent_sting" and recup and e.lastHit and e.lastHit.act == "WOUND" then
                 aura(W, X, e, "rapid_recuperation")
             end
+            -- Strider Kick's speed (1317257, 3 s) on us with every kick, hit or miss; Lacerating Strikes (1310533, a
+            -- build that has it) bleeds the target on a landed Mongoose Bite, a new bite replacing it (wowsims
+            -- e4ef929e54 talents_survival.go)
+            if key == "strider_kick" then
+                aura(W, X, e, "strider_kick")
+            elseif key == "mongoose_bite" and lacerate and e.lastHit and e.lastHit.act == "WOUND" then
+                aura(W, X, e.target, "lacerating_strikes")
+            end
         end
         return p
     end
@@ -713,7 +702,8 @@ local function content(name)
                     if m.requires and not m.requires(W, e, X) then
                         return false, false
                     end
-                    return power >= cost, power < cost
+                    local c = beastWithin(cost, e, W.t)
+                    return power >= c, power < c
                 end
                 for _, id in ipairs(C.IDS[key]) do
                     out[#out + 1] = { id, answer }
@@ -738,8 +728,6 @@ local function content(name)
     return C
 end
 
-M.BeastMastery = content("BeastMastery")
-M.Marksmanship = content("Marksmanship")
 M.Survival = content("Survival")
 M.SurvivalRanged = content("SurvivalRanged")
 M.BeastMasteryTurret = content("BeastMasteryTurret")

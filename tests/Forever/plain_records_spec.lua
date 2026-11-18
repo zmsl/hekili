@@ -8,7 +8,7 @@ local WORLDS = {
     { "Forever.helpers.warrior_world" },
     { "Forever.helpers.rogue_world", "Combat" },
     { "Forever.helpers.mage_world", "Arcane" },
-    { "Forever.helpers.hunter_world", "BeastMastery" },
+    { "Forever.helpers.hunter_world", "Survival" },
     { "Forever.helpers.paladin_world", "Retribution" },
     { "Forever.helpers.priest_world", "Smite" },
     { "Forever.helpers.shaman_world", "Enhancement" },
@@ -181,7 +181,7 @@ end
 local KNOWN_MISSING = {
     ["warrior_world"] = with(),
     ["rogue_world Combat"] = with(),
-    ["hunter_world BeastMastery"] = with(),
+    ["hunter_world Survival"] = with(),
     ["shaman_world Enhancement"] = with(),
     ["druid_loop_world Feral"] = with(),
     -- removeStack is a `now` verb since aura audit C4, so the `now`s that share Mage.lua casts(spends)'s closure no
@@ -311,7 +311,7 @@ local KNOWN_MISSING = {
 local ENGINE_ONLY = {
     -- the strikes queued on the next swing, timed from the core's state.mainhand_remains / mainhand_speed, no id
     ["warrior_world"] = { "cleave.duration", "heroic_strike.duration" },
-    ["hunter_world BeastMastery"] = { "raptor_strike.duration" },
+    ["hunter_world Survival"] = { "raptor_strike.duration" },
     ["druid_loop_world Feral"] = { "maul.duration" },
 }
 

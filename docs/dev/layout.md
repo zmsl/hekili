@@ -375,7 +375,7 @@ under Aspect of the Hawk (10%); they run the same pack text and kit, so their li
 distance (every check in range), swings a two-hander and keeps the pack's Aspect of the Hawk up. Its Mongoose Bite
 window never opens: our dodge is meant to open it for 5 s, but `dodged()` in `tests/Forever/helpers/hunter_world.lua`
 reads `W.t`/`W.truth`, which a batched list answer sees at the finished world. Each world prices the known rank under
-the character's Resourcefulness and Efficiency (the leveling brackets; the replay's builds). Their mana regen is wowsims's logs' (Beast Mastery 7.94 casting / 15.88 outside; Marksmanship and Survival 0 / 15.88, Resourcefulness adding half the 15.88 while casting for 30 s, rolled on a landed ability at the crit rate counted in the logs; the Marksmanship and Survival loop worlds take the exports' Resourcefulness 2/2, so its cost cut applies there too, gap BV). Raptor Strike's cooldown
+the character's Resourcefulness and Efficiency (the leveling brackets; the replay's builds). Their mana pool and regen are each wowsims log's (the turret builds 3330 mana, 12.40 a second casting and 29.90 outside, Beast Mastery 21.15 casting under Bestial Discipline; Survival 3555 and 12.00 / 29.50; Survival Melee 3270 and 12.40 / 29.15; Resourcefulness and Rapid Recuperation adding half the 17.50 spirit regen while casting, rolled on a landed ability at the crit rate counted in the logs; the Marksmanship and Survival loop worlds take the exports' Resourcefulness 2/2, so its cost cut applies there too, gap BV). Raptor Strike's cooldown
 starts at its swing (class-neutral: a queued strike's cooldown). Each fight's fresh world gets the pack's aspect at the
 pull (the character keeps a permanent buff between fights). Neither side dies (shaman_world's workaround for the loop's
 missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Range 0-5). "The Hunter at range, then
@@ -393,17 +393,21 @@ Marksmanship solo: fights=20 agreement 1.000 (16624 ticks); react median 0 p90 1
 Survival solo: fights=20 agreement 0.958 (18040 ticks); react median 0 p90 1 never 0.007; ready while short 0; held while ready 323; refused per 100 [cost 0.0 (oracle 0.4, unmatched 0.0)], episodes 0.00/min; dps A/B 1.013; ...
 ```
 
-wowsims's non-weave Hunter builds (owner 2026-11-12, ledger L661) ship beside the weave packs: Beast Mastery Turret,
-Marksmanship Turret and Survival Turret (wowsims's `bm`, `mm` and `sv` builds on `turret.apl.siml`: Hunter's Mark,
-Serpent Sting, Arcane Shot, Aimed Shot, Sniper Shot as the filler and the pull's opener, no melee) and Survival Melee
-(`sv_melee.siml` on `melee.apl.siml`). The Turret packs are each Hunter spec's default (owner 2026-11-13, L859: `package` in Hunter.lua; the weave packs and Survival
-Melee are picked by hand). The weave was the default before, so each spec lists it in `formerPackages`: a profile that
-names it without a hand pick (`packManual`) moves to the Turret (`ns.SelectPack`), one picked by hand stays.
+wowsims's non-weave Hunter builds (owner 2026-11-12, ledger L661): Beast Mastery Turret (wowsims's hawk rotation,
+`turret_hawk.apl.siml`: Summon Hawk twice, then Arcane Shot, through the class's `hha` window), Marksmanship Turret and
+Survival Turret (`turret.apl.siml`: Hunter's Mark, Serpent Sting, Arcane Shot, Aimed Shot, Sniper Shot, no melee) and
+Survival Melee (`sv_melee.siml` on `melee.apl.siml`). The Turret packs are each Hunter spec's default (owner
+2026-11-13, L859: `package` in Hunter.lua; Survival's weave and Survival Melee are picked by hand); the Beast Mastery
+and Marksmanship weave packs are retired (L1154: `spec:RetirePacks`, a profile that had one selected moves to the
+Turret with a one-time notice). Survival's weave was its default before, so Survival lists it in `formerPackages`.
 Their worlds take the export's whole talent string; the Turret worlds stand at 12 yd shooting, Survival Melee at 5 yd
-with two one-handers (its live bars at 11 yd, R63, `W.SurvivalMeleeRanged`). Replay decisions on-GCD: 1.000 (59),
-0.955 (66), 0.962 (53), 0.942 (86); the 20-fight lines (seeds 1-20, after the seeded regen phase) read agreement 0.998 / 1.000 /
-1.000 / 0.994, flicker 0, held while ready 121 / 118 / 104 / 173 (rows in `pack_gate.FLICKER`: floors at or above the worst of
-three seed sets, 127 / 118 / 105 / 174 measured).
+with two one-handers (its live bars at 11 yd, R63, `W.SurvivalMeleeRanged`). At the re-pin e4ef929e54 (Pre-BiS gear),
+replay decisions on-GCD: 0.980 (51), 0.982 (56), 1.000 (51), 1.000 (67); the 20-fight lines (seeds 1-20 / 21-40 /
+41-60), with each world's pool and regen from its log, read held while ready 226 / 236 / 237, 201 / 204 / 213, 210 /
+236 / 186 and 346 / 342 / 361, flicker 0 (rows in `pack_gate.FLICKER`: floors at the worst of the three seed sets).
+The held ticks are the near-cost edge (a dry pool at a cost, our estimate a few mana under the truth), plus, in the
+Beast Mastery and Survival Turret worlds, Rapid Fire behind an Aimed Shot paid at the cast's end, its wait paced from
+the belief's floor at an unpinned fight-opening pool.
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter
 research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`), plus:
@@ -634,9 +638,11 @@ beside the number (DEVELOPMENT.md).
 | Protection (wowsims.com), Paladin | 0.95 | 0.43, 1 |
 | Enhancement (wowsims.com) | 0.96 | 1.05, 7 |
 | Elemental (wowsims.com) | 0.93 | 1.22, 2 |
-| Beast Mastery (wowsims.com) | 0.95 | 0.46, 28 |
-| Marksmanship (wowsims.com) | 0.98 | 0.32, 22 |
-| Survival (wowsims.com) | 0.94 | 0.29, 22 |
+| Survival (wowsims.com) | 0.96 | 0.41, 23 |
+| Beast Mastery Turret (wowsims.com) | 0.98 | 0.24, 5 |
+| Marksmanship Turret (wowsims.com) | 0.95 | 0.15, 2 |
+| Survival Turret (wowsims.com) | 0.96 | 0.27, 2 |
+| Survival Melee (wowsims.com) | 0.94 | 0.23, 3 |
 | Arcane (wowsims.com) | 0.95 | 0.76, 9 |
 | Fire (wowsims.com) | 0.96 | 0.45, 10 |
 | Frostfire (wowsims.com) | 0.96 | 0.42, 9 |

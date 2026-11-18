@@ -3,14 +3,12 @@
 -- this file) and each pack's spec key. Dev-only (no TOC lists it); the pack date lives in Hunter.lua's generated
 -- blocks, and `make packs` sets it to today only when a pack changed.
 -- Each pack is generated from wowsims/forever's APLs (ui/specs/hunter/dps/apls/; MIT) by `make wowsims-packs` from its
--- recipe in tools/wowsims/specs/: the Turret packs (each tree's default, Hunter.lua's `package`), the Melee Weave
--- packs and Survival Melee (wowsims's other builds, picked by hand).
+-- recipe in tools/wowsims/specs/: the Turret packs (each tree's default, Hunter.lua's `package`), Survival's Melee
+-- Weave and Survival Melee (wowsims's other builds, picked by hand).
 
 return {
     class = "HUNTER",
     packs = {
-        "Beast Mastery (wowsims.com)",
-        "Marksmanship (wowsims.com)",
         "Survival (wowsims.com)",
         "Beast Mastery Turret (wowsims.com)",
         "Marksmanship Turret (wowsims.com)",
@@ -18,8 +16,6 @@ return {
         "Survival Melee (wowsims.com)",
     },
     specs = {
-        ["Beast Mastery (wowsims.com)"] = "beast_mastery",
-        ["Marksmanship (wowsims.com)"] = "marksmanship",
         ["Survival (wowsims.com)"] = "survival",
         ["Beast Mastery Turret (wowsims.com)"] = "beast_mastery",
         ["Marksmanship Turret (wowsims.com)"] = "marksmanship",

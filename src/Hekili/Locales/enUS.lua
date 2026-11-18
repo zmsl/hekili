@@ -24,9 +24,7 @@ L["off"] = true
 L["%s\n\nThe wowsims gate runs this as %s."] = true
 
 -- Hekili/Engine/Schema/Spec/Packs.lua
-L[" and "] = true
-L["The %s priority was retired; a spec that used it now runs its default priority."] = true
-L["The %s priorities were retired; a spec that used one now runs its default priority."] = true
+L["The %s priority was retired; a spec that used it now runs %s."] = true
 L["The |cFFFFD100%s|r priority was updated."] = true
 L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were updated."] = true
 L["The %s, and |cFFFFD100%s|r priorities were updated."] = true

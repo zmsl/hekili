@@ -24,8 +24,9 @@ local KIT = {
     -- the BM talent (19574): its pet's 18 s rage, autocast as a major cooldown in wowsims's BM log
     bestial_wrath = { { 19574 }, 0.12, 120, "off" }, -- 12% of base mana (the pin's row CostPct 12; the DB2 had it free)
     serpent_sting = { { 1978, 13549, 13550, 13551, 13552, 13553, 13554, 13555, 25295 }, 250, 0, "spell" },
-    arcane_shot = { { 3044, 14281, 14282, 14283, 14284, 14285, 14286, 14287 }, 190, 6, "spell" },
-    summon_hawk = { { 1293241, 1293525, 1293526, 1293527 }, 190, 6, "spell" },
+    -- 11% of base mana at every rank (wowsims e4ef929e54's spell data, CostPct 11; was 25-190 by rank)
+    arcane_shot = { { 3044, 14281, 14282, 14283, 14284, 14285, 14286, 14287 }, 0.11, 6, "spell" },
+    summon_hawk = { { 1293241, 1293525, 1293526, 1293527 }, 0.11, 6, "spell" },
     aimed_shot = { { 19434, 20900, 20901, 20902, 20903, 20904 }, 310, 6, "spell" },
     multi_shot = { { 2643 }, 0.139, 6, "spell" },
     sniper_shot = { { 1310687, 1310785, 1310786 }, 365, 15, "spell" },
@@ -93,6 +94,27 @@ local function idsOf(a)
     return out
 end
 
+-- Ability `a`'s declared cost in env `e` (class load `w`) under the class file's talent-gated cost modifiers
+-- (RegisterCostMod `talent`, no aura) in scope at e's ranks, each a factor (two SPELLMOD_COST pct rows multiply:
+-- wowsims spell_mod.go SpellMod_PowerCost_Pct). The engine's own pricing is checked in both layers below ("prices
+-- Efficiency's cut on the whole cost in both layers").
+local function cutCost(w, a, e)
+    local c, ids = ld.run(a.spend, e), idsOf(a)
+    for _, m in ipairs(w.costMods) do
+        local rank = m.talent and e.talent[m.talent].rank or 0
+        local hit = m.spells == nil
+        for _, s in ipairs(m.spells or {}) do
+            for _, id in ipairs(ids) do
+                hit = hit or s == id
+            end
+        end
+        if m.aura == nil and rank > 0 and hit then
+            c = c * (1 + (type(m.pct) == "table" and m.pct[rank] or m.pct))
+        end
+    end
+    return c
+end
+
 -- `buff` with the keys in `up` up.
 local function buffs(up)
     return setmetatable({}, {
@@ -150,9 +172,9 @@ describe("Forever Hunter", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
-        assert.are.same({ 7.94, 7.94, 0 }, seed("beast_mastery"))
-        assert.are.same({ 15.88, 0, 0 }, seed("marksmanship"))
-        assert.are.same({ 15.88, 0, 0 }, seed("survival"))
+        assert.are.same({ 8.75, 21.15, 0 }, seed("beast_mastery"))
+        assert.are.same({ 17.5, 12.4, 0 }, seed("marksmanship"))
+        assert.are.same({ 17.5, 12.4, 0 }, seed("survival"))
         -- the static share follows Bestial Discipline's rank (25/50%, wowsims's curve), never the spec
         local shares = {}
         for rank = 0, 2 do
@@ -279,11 +301,12 @@ describe("Forever Hunter", function()
                 e.talent.resourcefulness = { rank = res, enabled = res > 0 }
                 e.talent.efficiency = { rank = eff, enabled = eff > 0 }
                 e.talent.improved_mend_pet = { rank = mend or 0, enabled = (mend or 0) > 0 }
-                return math.floor(ld.run(w.abilities[key].spend, e) * 100000 + 0.5) / 100000
+                return math.floor(cutCost(w, w.abilities[key], e) * 100000 + 0.5) / 100000
             end
             -- Efficiency's mask (19416, 5/5 = -15%): the stings, Concussive, Scatter, Distracting, Tranquilizing, Counterattack,
-            -- Volley; not the traps
+            -- Volley; Sniper Shot (wowsims's MM logs: 321.2 of 365 under 4/5); not the traps
             for key, want in pairs({
+                sniper_shot = { 365, 310.25 },
                 viper_sting = { 215, 182.75 },
                 scorpid_sting = { 0.09, 0.0765 },
                 concussive_shot = { 0.08, 0.068 },
@@ -380,6 +403,22 @@ describe("Forever Hunter", function()
                 end
                 ld.run(w.abilities[case[1]][field], e)
                 assert.are.same({ { case[2], 6 } }, cds, case[1] .. " " .. field)
+            end
+        end
+        -- Improved Arcane Shot shortens the category recovery Arcane Shot puts on Summon Hawk too (wowsims's
+        -- hunter_beast_mastery_turret.log, 2/5: Summon Hawk 5.4 s after an Arcane Shot at the earliest, Arcane Shot 6.0 s
+        -- after a Summon Hawk); Summon Hawk's own stays 6
+        for _, case in ipairs({ { "arcane_shot", "summon_hawk", 5.4 }, { "summon_hawk", "arcane_shot", 6 } }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                e.talent.improved_arcane_shot = { rank = 2, enabled = true }
+                local cds = {}
+                e.setCooldown = function(k, v)
+                    cds[#cds + 1] = { k, math.floor(v * 1000 + 0.5) / 1000 }
+                end
+                e.summonPet = function() end
+                ld.run(w.abilities[case[1]][field], e)
+                assert.are.same({ { case[2], case[3] } }, cds, case[1] .. " " .. field)
             end
         end
     end)
@@ -590,9 +629,9 @@ describe("Forever Hunter", function()
     end)
 
     -- Resourcefulness (440529: 30% / 60% at ranks 1 / 2) and Efficiency (19416: 3% a rank) on each ability's top-rank
-    -- price, their percents added (one SPELLMOD_COST percent each). wowsims's logs: the 2/2 Resourcefulness builds pay
-    -- 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap, 39.6 Strider Kick; the 2/5 Efficiency BM
-    -- build 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting, 224.66 Multi-Shot (of 239).
+    -- price, each a talent-gated cost modifier (one SPELLMOD_COST percent each, multiplied). wowsims's logs: the 2/2
+    -- Resourcefulness builds pay 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap, 39.6 Strider
+    -- Kick; the 2/5 Efficiency BM build 94 Raptor Strike, 75.2 Wing Clip, 235 Serpent Sting, 224.66 Multi-Shot (of 239).
     it("prices the abilities under Resourcefulness and Efficiency by rank", function()
         local KEYS = {
             "raptor_strike",
@@ -618,17 +657,31 @@ describe("Forever Hunter", function()
             e.talent.efficiency = { rank = eff, enabled = eff > 0 }
             local out = {}
             for _, key in ipairs(KEYS) do
-                out[#out + 1] = math.floor(ld.run(w.abilities[key].spend, e) * 100000 + 0.5) / 100000
+                out[#out + 1] = math.floor(cutCost(w, w.abilities[key], e) * 100000 + 0.5) / 100000
             end
             return out
         end
         -- raptor, bite, clip, trap, kick, arcane, sting, multi, aimed, hawk, mark, rapid fire
-        assert.are.same({ 100, 65, 80, 245, 0.0581, 190, 250, 0.139, 310, 190, 60, 100 }, costs(0, 0))
-        assert.are.same({ 70, 45.5, 56, 171.5, 0.04067, 190, 250, 0.139, 310, 190, 60, 100 }, costs(1, 0))
-        assert.are.same({ 40, 26, 32, 98, 0.02324, 190, 250, 0.139, 310, 190, 60, 100 }, costs(2, 0))
+        -- Arcane Shot and Summon Hawk 11% of base mana (wowsims e4ef929e54; was 190 at the top rank)
+        assert.are.same({ 100, 65, 80, 245, 0.0581, 0.11, 250, 0.139, 310, 0.11, 60, 100 }, costs(0, 0))
+        assert.are.same({ 70, 45.5, 56, 171.5, 0.04067, 0.11, 250, 0.139, 310, 0.11, 60, 100 }, costs(1, 0))
+        assert.are.same({ 40, 26, 32, 98, 0.02324, 0.11, 250, 0.139, 310, 0.11, 60, 100 }, costs(2, 0))
         -- Efficiency on Strider Kick since hotfix 113554 (19416's mask, wowsims)
-        assert.are.same({ 94, 61.1, 75.2, 245, 0.05461, 178.6, 235, 0.13066, 291.4, 178.6, 60, 100 }, costs(0, 2))
-        assert.are.same({ 34, 22.1, 27.2, 98, 0.01975, 178.6, 235, 0.13066, 291.4, 178.6, 60, 100 }, costs(2, 2))
+        assert.are.same({ 94, 61.1, 75.2, 245, 0.05461, 0.1034, 235, 0.13066, 291.4, 0.1034, 60, 100 }, costs(0, 2))
+        -- both talents: two cost rows, multiplied (0.4 x 0.94), not their percents added (wowsims spell_mod.go)
+        assert.are.same({ 37.6, 24.44, 30.08, 98, 0.02185, 0.1034, 235, 0.13066, 291.4, 0.1034, 60, 100 }, costs(2, 2))
+        -- the two talent-gated modifiers carry the cuts (no aura; the ability's own `spend` is the uncut price)
+        local mods = {}
+        for _, m in ipairs(w.costMods) do
+            if m.talent then
+                mods[#mods + 1] = { m.talent, m.aura or false, m.pct, #m.spells }
+            end
+        end
+        assert.are.same({
+            { "resourcefulness", false, { -0.3, -0.6 }, 9 },
+            { "efficiency", false, { -0.03, -0.06, -0.09, -0.12, -0.15 }, 18 },
+        }, mods)
+        assert.are.same({ 100, 0.11 }, { ld.run(w.abilities.raptor_strike.spend, e), w.abilities.arcane_shot.spend })
     end)
 
     -- Improved Arcane Shot (19454, 5 ranks): Arcane Shot's cooldown -0.3 s a rank (wowsims's 19454 curve
@@ -694,6 +747,23 @@ describe("Forever Hunter", function()
         end
     )
 
+    -- wowsims e4ef929e54 (talents_survival.go): Strider Kick's speed (1317257, 3 s) comes with the kick, hit or miss;
+    -- Lacerating Strikes (1310533) bleeds the target on each Mongoose Bite, a new bite replacing the bleed on a new
+    -- timer (774fc188dd). Survival Melee's run out for the Sting reads the speed.
+    it("puts Strider Kick's speed on us, and Lacerating Strikes' bleed on the bitten target when talented", function()
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            ld.run(w.abilities.strider_kick[field], e)
+            assert.are.same({ "strider_kick" }, e.applied, field)
+            for rank, want in pairs({ [0] = {}, [1] = { "lacerating_strikes" } }) do
+                e = ld.env(w)
+                e.talent.lacerating_strikes = { rank = rank, enabled = rank > 0 }
+                ld.run(w.abilities.mongoose_bite[field], e)
+                assert.are.same(want, e.applied, field .. " " .. rank)
+            end
+        end
+    end)
+
     it("opens Mongoose Bite's window from the usability flip, 5 s from the flip, and the bite spends it", function()
         local b = w.abilities.mongoose_bite
         local e = ld.env(w)
@@ -742,7 +812,7 @@ describe("Forever Hunter priorities", function()
                 }, name .. " " .. list)
             end
         end
-        assert.are.equal(14, n)
+        assert.are.equal(10, n)
     end)
 
     it("keeps the class file's generated blocks in step with APLs/ and retires the hand-built lists", function()
@@ -761,6 +831,10 @@ describe("Forever Hunter priorities", function()
             "Survival Turret (wowsims.com)",
         }, names)
         assert.is_truthy(src:find('spec:RetirePacks({ "BeastMastery", "Marksmanship", "Survival" })', 1, true))
+        -- the weave packs whose wowsims builds are gone (L1154)
+        assert.is_truthy(
+            src:find('spec:RetirePacks({ "Beast Mastery (wowsims.com)", "Marksmanship (wowsims.com)" })', 1, true)
+        )
     end)
 
     -- Ledger L682: every Hunter pack carries the racials wowsims's autocast would use for a Hunter's races (rule 13's racial block,
@@ -781,7 +855,7 @@ describe("Forever Hunter priorities", function()
             end
             assert.is_nil(have.stoneform, name)
         end
-        assert.are.equal(7, n)
+        assert.are.equal(5, n)
     end)
 
     it("names only registered abilities, auras, settings and the hawk", function()
@@ -859,7 +933,7 @@ describe("Forever Hunter through the engine", function()
     end
 
     before_each(function()
-        H = headless.new({ character = character(), pack = "Beast Mastery (wowsims.com)" })
+        H = headless.new({ character = character(), pack = "Beast Mastery Turret (wowsims.com)" })
     end)
 
     it("runs every declared `now` in VirtualState's context without an error", function()
@@ -1023,7 +1097,7 @@ describe("Forever Hunter through the engine", function()
     local function weaveWorld(distance)
         local c = character()
         c.speed = { 2.6 }
-        H = headless.new({ character = c, pack = "Beast Mastery (wowsims.com)" })
+        H = headless.new({ character = c, pack = "Beast Mastery Turret (wowsims.com)" })
         H.ctl.level.target, H.ctl.distance.target = 60, distance
         H.Fire("PLAYER_TARGET_CHANGED")
         H.ctl.now = H.ctl.now + 1
@@ -1040,7 +1114,7 @@ describe("Forever Hunter through the engine", function()
         for _, l in ipairs(parsed) do
             l.enabled = true
         end
-        H.Hekili.DB.profile.packs["Beast Mastery (wowsims.com)"].lists = { precombat = {}, default = parsed }
+        H.Hekili.DB.profile.packs["Beast Mastery Turret (wowsims.com)"].lists = { precombat = {}, default = parsed }
         H.Hekili:LoadScripts()
         assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
     end
@@ -1312,7 +1386,7 @@ describe("Forever Hunter through the engine", function()
     it("ends the queued Raptor Strike at the next swing, and the pick after the swing is made without it", function()
         local c, w = character()
         c.speed = { 2.6 }
-        H = headless.new({ character = c, pack = "Beast Mastery (wowsims.com)" })
+        H = headless.new({ character = c, pack = "Beast Mastery Turret (wowsims.com)" })
         local S = H.Hekili.State
         local ids = idsOf(w.abilities.raptor_strike)
         H.ctl.level.target, H.ctl.distance.target = 60, 3 -- in melee
@@ -1451,19 +1525,19 @@ describe("the Hunter worlds' Resourcefulness", function()
         for _, key in ipairs({ "wing_clip", "multi_shot", "strider_kick" }) do
             applied = {}
             C.resolve(key, H).effect(fake("CRITICAL"), e)
-            assert.are.same({ 1242688 }, applied, key)
+            -- Strider Kick's own speed (1317257) comes with every kick
+            assert.are.same(key == "strider_kick" and { 1242688, 1317257 } or { 1242688 }, applied, key)
         end
     end)
 
     -- Lane R2: the worlds grant it as the game would, at the export's own crit rate and on the queued Raptor Strike's crit
     it("rolls a Resourcefulness build's ability crits at its log's rate; the queued Raptor Strike crits too", function()
-        assert.are.same({ 13 / 91, 11 / 93, 11 / 93, 7 / 41 }, {
-            hw.Marksmanship.WORLD.crit,
+        assert.are.same({ 11 / 93, 11 / 93, 7 / 41 }, {
             hw.Survival.WORLD.crit,
             hw.SurvivalRanged.WORLD.crit,
             hw.SurvivalTurret.WORLD.crit,
         })
-        assert.is_nil(hw.BeastMastery.WORLD.crit) -- no Resourcefulness: world.CRIT
+        assert.is_nil(hw.BeastMasteryTurret.WORLD.crit) -- no Resourcefulness: world.CRIT
         local C = hw.Survival
         local H = headless.new({ character = C.character(), pack = "Survival (wowsims.com)" })
         assert.is_true(C.resolve("raptor_strike", H).crits)
@@ -1489,4 +1563,150 @@ describe("the Hunter worlds' Resourcefulness", function()
         us.struck(W, "WOUND", "CRITICAL")
         assert.are.same({ 1242688 }, applied)
     end)
+end)
+
+-- Ledger L1154 (owner, 0.9 re-pin): the Beast Mastery and Marksmanship weave packs are retired (wowsims deleted their
+-- builds and APLs, PR #1041). A player who picked one runs the same spec's Turret pack, the spec's default, and is told
+-- once (RestoreDefaults' retired notice); the next login says nothing.
+-- Efficiency (19416) as a talent-gated cost modifier (mana-09's RegisterCostMod `talent`): the cut lands on the whole
+-- price, unrounded, as wowsims e4ef929e54 (mana.go rounds 11% of 1720 to 189, spell.go then multiplies): the MM Turret
+-- build's 4/5 pays 189 x 0.88 = 166.32 for Arcane Shot in its log, and the belief and the simulation both price it so.
+describe("the Hunter talent cost cuts through the engine", function()
+    local hw = require("Forever.helpers.hunter_world")
+
+    it("prices Efficiency's cut on the whole cost in both layers (MM Turret Arcane Shot 166.32)", function()
+        local H =
+            headless.new({ character = hw.MarksmanshipTurret.character(), pack = "Marksmanship Turret (wowsims.com)" })
+        local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
+        local t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        VS.Drain(t)
+        S.reset("Primary", true)
+        local function r(x)
+            return math.floor(x * 1000 + 0.5) / 1000
+        end
+        assert.are.same({ 4, 166.32, 166.32 }, {
+            S.talent.efficiency.rank,
+            r(I.CostOf(I.ab.bySpell[3044])),
+            r(S.action.arcane_shot.cost),
+        })
+        assert.are.same({}, H.errors)
+    end)
+
+    -- mana-09's LearnBases on the class that caused the 0.9 regression (L1230): a client read cut by Efficiency (3% a
+    -- rank: Arcane Shot's 189 reads 183, 178, 172, 166, 161) must teach base mana 1720 out of combat, alone and beside
+    -- an uncut read (Bestial Wrath's 12% reads 206).
+    it("learns base mana 1720 from Efficiency-cut and uncut cost reads at every rank", function()
+        for rank = 1, 5 do
+            local c = hw.BeastMasteryTurret.character()
+            c.talents = { [19416] = rank }
+            local H = headless.new({ character = c, pack = "Beast Mastery Turret (wowsims.com)" })
+            local VS, S = H.ns.VirtualState, H.Hekili.State
+            H.ctl.costs[3044] = { { type = 0, cost = math.floor(189 * (1 - 0.03 * rank) + 0.5) } }
+            H.Fire("SPELLS_CHANGED")
+            assert.are.same({ rank, 1720 }, { S.talent.efficiency.rank, VS.BasePower(0) }, "cut alone, rank " .. rank)
+            H.ctl.costs[19574] = { { type = 0, cost = 206 } }
+            H.Fire("SPELLS_CHANGED")
+            assert.are.equal(1720, VS.BasePower(0), "beside an uncut read, rank " .. rank)
+            assert.are.same({}, H.errors)
+        end
+    end)
+
+    -- no wowsims log takes both talents: the engine's own product of the two talent mods (Raptor Strike rank 8's 100
+    -- x (1 - 0.6) x (1 - 0.06) = 37.6, not the added 34), in the belief and the simulation
+    it("multiplies Resourcefulness 2/2 and Efficiency 2/5 in both layers (Raptor Strike 37.6)", function()
+        local c = hw.Survival.character()
+        c.talents = { [440529] = 2, [19416] = 2 }
+        local H = headless.new({ character = c, pack = "Survival (wowsims.com)" })
+        local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
+        local t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        VS.Drain(t)
+        S.reset("Primary", true)
+        local function r(x)
+            return math.floor(x * 1000 + 0.5) / 1000
+        end
+        assert.are.same({ 2, 2, 37.6, 37.6 }, {
+            S.talent.resourcefulness.rank,
+            S.talent.efficiency.rank,
+            r(I.CostOf(I.ab.bySpell[VS.KnownID(H.Hekili.Class.abilities.raptor_strike.id)])),
+            r(S.action.raptor_strike.cost),
+        })
+        assert.are.same({}, H.errors)
+    end)
+end)
+
+describe("the retired Hunter weave packs", function()
+    for _, case in ipairs({
+        { "BeastMasteryTurret", 100031, "Beast Mastery (wowsims.com)", "Beast Mastery Turret (wowsims.com)" },
+        { "MarksmanshipTurret", 100032, "Marksmanship (wowsims.com)", "Marksmanship Turret (wowsims.com)" },
+    }) do
+        local world, id, old, new = case[1], case[2], case[3], case[4]
+        it("moves a profile that picked " .. old .. " to " .. new .. " with a one-time notice", function()
+            local hw = require("Forever.helpers.hunter_world")
+            local saved = {
+                profiles = {
+                    Default = {
+                        packs = {
+                            [old] = { builtIn = true, spec = id, version = 1, date = 1, lists = {}, profile = "" },
+                        },
+                        specs = { [id] = { package = old, packManual = true } },
+                    },
+                },
+            }
+            local lines = {}
+            local H = headless.new({ -- no pack forced: the spec's own (the build's talents pick it)
+                character = hw[world].character(),
+                saved = saved,
+                beforeLogin = function(core)
+                    core.Print = function(_, m)
+                        lines[#lines + 1] = m
+                    end
+                    core.Notify = function() end
+                end,
+            })
+            assert.are.same({}, H.loadErrors)
+            local p = H.Hekili.DB.profile
+            assert.is_nil(rawget(p.packs, old))
+            assert.are.equal(new, p.specs[id].package)
+            assert.is_nil(p.specs[id].packManual)
+            H.RunTimers(H.ctl.now + 6)
+            local said = table.concat(lines, "\n")
+            assert.is_truthy(said:find(old .. "|r priority was retired", 1, true), said)
+            assert.is_truthy(said:find("runs |cFFFFD100" .. new .. "|r", 1, true), said) -- names the replacement
+            assert.is_falsy(said:find("default priority", 1, true), said)
+            lines = {}
+            H.Hekili:RestoreDefaults() -- the next login: nothing retired is left to say
+            H.RunTimers(H.ctl.now + 12)
+            assert.is_falsy(table.concat(lines, "\n"):find("retired", 1, true))
+        end)
+
+        it("says nothing to a profile that never picked " .. old .. " (the pack still leaves)", function()
+            local hw = require("Forever.helpers.hunter_world")
+            local saved = {
+                profiles = {
+                    Default = {
+                        packs = {
+                            [old] = { builtIn = true, spec = id, version = 1, date = 1, lists = {}, profile = "" },
+                        },
+                    },
+                },
+            }
+            local lines = {}
+            local H = headless.new({
+                character = hw[world].character(),
+                saved = saved,
+                beforeLogin = function(core)
+                    core.Print = function(_, m)
+                        lines[#lines + 1] = m
+                    end
+                    core.Notify = function() end
+                end,
+            })
+            assert.are.same({}, H.loadErrors)
+            assert.is_nil(rawget(H.Hekili.DB.profile.packs, old))
+            H.RunTimers(H.ctl.now + 6)
+            assert.is_falsy(table.concat(lines, "\n"):find("retired", 1, true))
+        end)
+    end
 end)

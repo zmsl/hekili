@@ -10,12 +10,11 @@ local pack_gate = require("Forever.helpers.pack_gate")
 local hw = require("Forever.helpers.hunter_world")
 
 -- pack, the label its line prints
-local PACKS = { { "BeastMastery", "Beast Mastery" }, { "Marksmanship", "Marksmanship" }, { "Survival", "Survival" } }
--- every pack: the weave packs, then wowsims's non-weave builds (owner 2026-11-12, ledger L661)
+local PACKS = { { "Survival", "Survival" } }
+-- every pack: the weave pack, then wowsims's non-weave builds (owner 2026-11-12, ledger L661); the Beast Mastery and
+-- Marksmanship weave packs are retired (L1154)
 local ALL = {
     PACKS[1],
-    PACKS[2],
-    PACKS[3],
     { "BeastMasteryTurret", "Beast Mastery Turret" },
     { "MarksmanshipTurret", "Marksmanship Turret" },
     { "SurvivalTurret", "Survival Turret" },
@@ -43,9 +42,8 @@ describe("the Hunter loop worlds", function()
         end)
     end
 
-    -- Gap BV: the wowsims exports carry Resourcefulness (440529) 2/2 in Marksmanship and Survival, none in Beast
-    -- Mastery; wowsims cuts the strikes' cost 60% under it (its log's 40-mana Raptor Strike). Beast Mastery carries
-    -- Efficiency (19416) 2/5 instead: 6% off (its log's 94). World and belief agree.
+    -- Gap BV: the Survival weave export carries Resourcefulness (440529) 2/2; wowsims cuts the strikes' cost 60% under
+    -- it (its log's 40-mana Raptor Strike). World and belief agree.
     it("price Raptor Strike under the builds' Resourcefulness and Efficiency, the world and the pack alike", function()
         local out = {}
         for _, pk in ipairs(PACKS) do
@@ -53,7 +51,7 @@ describe("the Hunter loop worlds", function()
             local H = headless.new({ character = C.character(), pack = C.PACK })
             out[pk[1]] = { C.resolve("raptor_strike", H).cost, H.Hekili.State.action.raptor_strike.cost }
         end
-        assert.are.same({ BeastMastery = { 94, 94 }, Marksmanship = { 40, 40 }, Survival = { 40, 40 } }, out)
+        assert.are.same({ Survival = { 40, 40 } }, out)
         -- every Resourcefulness-cut ability of the Survival kit: the world's price is the pack's (the client pays whole
         -- mana, so the world's is floored)
         local C = hw.Survival
@@ -61,6 +59,53 @@ describe("the Hunter loop worlds", function()
         for _, k in ipairs({ "mongoose_bite", "wing_clip", "strider_kick" }) do
             assert.are.equal(H.Hekili.State.action[k].cost, math.floor(C.resolve(k, H).cost), k)
         end
+    end)
+
+    -- Each world's pool and regen are its wowsims log's (OtherID 2 regen ticks, 0.1 s apart): the max mana, the casting
+    -- tick (Tag 1; with each casting-share aura's boost) and the tick outside the five-second rule (Tag 2)
+    for _, pk in ipairs(ALL) do
+        it(pk[1] .. ": the pool and the five-second rule's rates are its wowsims log's", function()
+            local Wd = hw[pk[1]].WORLD
+            local f = Wd.fsr[0]
+            local spec = "hunter_" .. pk[2]:lower():gsub(" ", "_")
+            local log = assert(io.open("tests/Forever/wowsims/" .. spec .. ".log")):read("*a")
+            assert.are.equal(
+                tonumber(log:match("Spent [%d.]+ mana from {SpellID: %d+} %([%d.]+ %-%-> [%d.]+%) of (%d+) total")),
+                Wd.max
+            )
+            local rows = { { 1, f[2] }, { 2, f[1] + f[2] } }
+            for _, a in pairs(f.auras or {}) do -- S = f[1] / (1 - c) with no static share c here
+                rows[#rows + 1] = { 1, f[2] + a.share * f[1] }
+            end
+            for _, t in ipairs(rows) do
+                local row = ("Gained %.3f mana from {OtherID: 2, Tag: %d}"):format(t[2] / 10, t[1])
+                assert.is_truthy(log:find(row, 1, true), row)
+            end
+        end)
+    end
+
+    -- The Beast Within (owner L1105): every mana cost -50% for Bestial Wrath's 18 s, its own cast at full price. The
+    -- world's truth: the charge (`price`) and the client's answer; the BM Turret build has no Efficiency (189 whole).
+    it("halves every cost during The Beast Within: the world's charge and the client's answer", function()
+        local C = hw.BeastMasteryTurret
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local by = {}
+        for _, u in ipairs(C.usable(H)) do
+            by[u[1]] = u[2]
+        end
+        local id = H.Hekili.Class.abilities.arcane_shot.id
+        local W, e = { t = 10, truth = {} }, { guid = "Player-1", auras = {} }
+        local shot = C.resolve("arcane_shot", H)
+        assert.are.same({ 189, 189 }, { shot.cost, shot.price(W, e) })
+        assert.is_false((by[id](W, e, 100)))
+        local bw = C.resolve("bestial_wrath", H)
+        assert.are.equal(206, bw.price(W, e)) -- its own cast before its window
+        bw.effect(W, e)
+        assert.are.same({ 94.5, 206 * 0.5 }, { shot.price(W, e), bw.price(W, e) })
+        assert.is_true((by[id](W, setmetatable({}, { __index = e }), 100)))
+        W.t = 28.01
+        assert.are.equal(189, shot.price(W, e))
+        assert.is_false((by[id](W, e, 100)))
     end)
 
     -- The observer hands the usability answers a proxy of us (its own view of our form), never the entity itself, so

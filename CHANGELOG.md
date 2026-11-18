@@ -18,6 +18,15 @@
 - Warlock, Affliction (wowsims.com): follows wowsims's new Wrack priority: Bane of Doom only with two or more enemies, Bane of Agony and Amplify Curse no longer wait for Doom, Blood Fury is saved for Amplify Curse, and the Major Mana Potion line is gone (not yet checked in game).
 - Warlock: Bane of Havoc now waits for the global cooldown, as in wowsims (not yet checked in game).
 - Rogue priorities follow the newest wowsims fights: Eviscerate no longer shows at 4 combo points when Slice and Dice has 6 seconds or less left (Mutilate builds still finish at 4 combo points); with Serrated Blades, Eviscerate shows only while Rupture has at least 3 seconds left; and with Ghostly Strike, Hemorrhage also shows at 75 energy or more, not only while Garrote has at least 8 seconds left. Not yet checked in game.
+- Hunter: the Beast Mastery and Marksmanship weave priorities are retired, because wowsims.com no longer has them. If you had one selected, you now run that spec's Turret priority, and Hekili tells you once.
+- Hunter: Arcane Shot and Summon Hawk now cost 11% of your base mana at every rank, as wowsims.com prices them (not yet checked in game).
+- Hunter: Sniper Shot's mana cost now includes the Efficiency talent's discount, as wowsims.com charges it (not yet checked in game).
+- Hunter: Efficiency and Resourcefulness now take their discounts after a percent cost is rounded to whole mana, and with both talents the two discounts multiply instead of adding up, as wowsims.com prices them (not yet checked in game).
+- Hunter: after an Arcane Shot, Summon Hawk is ready again as soon as Arcane Shot is, since Improved Arcane Shot shortens both, as wowsims.com shows (not yet checked in game).
+- Hunter: Hekili now tracks Strider Kick's speed after your Strider Kick, and Lacerating Strikes' bleed after your Mongoose Bite.
+- Hunter: Beast Mastery Turret now follows wowsims.com's hawk rotation: Summon Hawk twice, then Arcane Shot, and no longer suggests Sniper Shot. Until you have Summon Hawk, it suggests Arcane Shot on its own (not yet checked in game).
+- Hunter: Survival Melee now runs out to reapply Serpent Sting while Strider Kick's speed is up and you have more than 30% mana, as wowsims.com does, and no longer suggests a Major Mana Potion (not yet checked in game).
+- Hunter: before it learns your own mana regeneration, Hekili now starts from the regeneration of wowsims.com's current level 60 gear, so early fights forecast mana closer to the game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.

@@ -273,7 +273,7 @@ end
 
 local WORLDS = {
     druid = require("Forever.helpers.druid_loop_world").Feral,
-    hunter = require("Forever.helpers.hunter_world").BeastMastery,
+    hunter = require("Forever.helpers.hunter_world").BeastMasteryTurret,
     mage = require("Forever.helpers.mage_world").Fire,
     warlock = require("Forever.helpers.warlock_world").Affliction,
     paladin = require("Forever.helpers.paladin_world").Retribution,
@@ -317,9 +317,7 @@ local SHIPPED = {
     druid_feral = { "druid", 100112, "Feral (wowsims.com)" },
     druid_guardian = { "druid", 100113, "Guardian (wowsims.com)", "guardian" },
     -- Hunter: no selectors, the Turret pack is each spec's default whatever the build (owner 2026-11-13, L859)
-    hunter_beast_mastery = { "hunter", 100031, "Beast Mastery Turret (wowsims.com)" },
     hunter_beast_mastery_turret = { "hunter", 100031, "Beast Mastery Turret (wowsims.com)" },
-    hunter_marksmanship = { "hunter", 100032, "Marksmanship Turret (wowsims.com)" },
     hunter_marksmanship_turret = { "hunter", 100032, "Marksmanship Turret (wowsims.com)" },
     hunter_survival = { "hunter", 100033, "Survival Turret (wowsims.com)" },
     hunter_survival_turret = { "hunter", 100033, "Survival Turret (wowsims.com)" },
@@ -562,10 +560,9 @@ describe("the shipped selectors (headless)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- the Beast Mastery and Marksmanship weave packs are retired (L1154): their move is tests/Forever/hunter_spec.lua's
     it("gives a Hunter profile that never picked a pack the Turret, and keeps one picked by hand", function()
         for id, names in pairs({
-            [100031] = { "Beast Mastery (wowsims.com)", "Beast Mastery Turret (wowsims.com)", "hunter_beast_mastery" },
-            [100032] = { "Marksmanship (wowsims.com)", "Marksmanship Turret (wowsims.com)", "hunter_marksmanship" },
             [100033] = { "Survival (wowsims.com)", "Survival Turret (wowsims.com)", "hunter_survival" },
         }) do
             -- (a) a new profile

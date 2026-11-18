@@ -1,15 +1,22 @@
 -- tools/wowsims/specs/hunter_survival_melee.lua (non-weave Hunter packs, owner 2026-11-12, ledger L661): Survival
 -- Melee (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e5a9cd2a2d: the request is the SIML build
--- ui/specs/hunter/dps/builds/sv_melee.siml (wowsims's "SV Melee" build: talents :3, gear
--- ../gear_sets/p1_melee.gear.siml :4 (two one-handers), rotation ../apls/melee.apl.siml :5, settings :7-14 at 5 yd;
--- pet_type raptor (:12), whose casts are not scored; its own consumables :17-31, both hands sharpened), layered over
--- the spec's defaults.siml as wowsims's siml.LoadBuild does, converted by `make wowsims-siml`
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e4ef929e54 (0.9 re-pin): the request is the
+-- SIML build ui/specs/hunter/dps/builds/sv_melee.siml (wowsims's "SV Melee" build: talents :3, the retuned
+-- 53200005001-004-530200230050022151 (ec4a7402fd: Lacerating Strikes, Lethal Attacks 4), gear
+-- ../gear_sets/prebis_melee.gear.siml :4 (Pre-BiS, two one-handers), rotation ../apls/melee.apl.siml :5, settings
+-- :7-14 at 5 yd; pet_type raptor (:12), whose casts are not scored; its own consumables :17-31, both hands sharpened),
+-- layered over the spec's defaults.siml as wowsims's siml.LoadBuild does, converted by `make wowsims-siml`
 -- (tests/Forever/wowsims/hunter_survival_melee.build.json).
--- The Melee list: Aspect of the Beast, Raptor Strike on every swing, Hunter's Mark kept up, the walk into melee
--- (Serpent Sting, Arcane Shot and Multi-Shot on the way in), then Mongoose Bite, Strider Kick, Immolation Trap, Summon
--- Hawk and Wing Clip. Picked from the talents (Hunter.lua's selectors): Survivalist's Discipline taken (no other
--- Hunter build of wowsims's takes it).
+-- The Melee list: Aspect of the Beast, Raptor Strike on every swing, Hunter's Mark kept up, the run out for Serpent
+-- Sting (Strider Kick's speed up, the Sting down, mana over 30%: the walk in's group, which stings on the way back in),
+-- the walk into melee (Serpent Sting, Arcane Shot and Multi-Shot on the way in), then Mongoose Bite, Strider Kick,
+-- Immolation Trap, Summon Hawk and Wing Clip. Talents (the build's): Survivalist's Discipline taken (no other Hunter
+-- build of wowsims's takes it).
+-- Lacerating Strikes (1310536) is the bite's bleed (the kit applies it at the bite; no list reads it); 1265634 (an
+-- arcane hit, no cost, off the GCD) is a gear proc no key maps.
+-- The Major Mana Potion line is gone at e4ef929e54: rule 13 writes one line per cooldown the log's "Major cooldown
+-- used" lines name, and the new fight drinks the Major Frenzy Potion (250943, unmapped) at 18.68 s and 138.73 s,
+-- whose shared potion cooldown keeps the mana potion from ever being used (the old log drank it at 45.79 and 165.80).
 -- Movement (rule 19): the walk in's move reaches the shots on the way in.
 return {
     class = "HUNTER",

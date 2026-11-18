@@ -18,8 +18,6 @@ end
 L["Beast Mastery"] = "野兽控制"
 L["Marksmanship"] = "射击"
 L["Survival"] = "生存"
--- L["Beast Mastery (wowsims.com)"] = ""
--- L["Marksmanship (wowsims.com)"] = ""
 -- L["Survival (wowsims.com)"] = ""
 -- L["Beast Mastery Turret (wowsims.com)"] = ""
 -- L["Marksmanship Turret (wowsims.com)"] = ""

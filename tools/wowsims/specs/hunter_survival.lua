@@ -1,6 +1,6 @@
 -- tools/wowsims/specs/hunter_survival.lua (wowsims packs plan, Task 11): Survival (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e5a9cd2a2d (0.7 re-pin; the weave is upstream acc6bcb5f8's: reaction 150-350 ms, no weave window read, so no `extra`, `windowVars` or `guard`): the request is the
--- SIML build ui/specs/hunter/dps/builds/sv_weave.siml (SV Weave: talents :3, gear ../gear_sets/p1.gear.siml :4, rotation
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e4ef929e54 (0.9 re-pin; the weave is upstream acc6bcb5f8's: reaction 150-350 ms, no weave window read, so no `extra`, `windowVars` or `guard`): the request is the
+-- SIML build ui/specs/hunter/dps/builds/sv_weave.siml (SV Weave: talents :3, gear ../gear_sets/prebis_weave.gear.siml :4 (Pre-BiS), rotation
 -- ../apls/default.apl.siml :5, settings :7-14; no pet (:7, Lone Wolf)), layered over the spec's
 -- defaults.siml as wowsims's siml.LoadBuild does (the recipe's `defaults`: race Orc, Engineering and Blacksmithing, the
 -- consumables (flask, food, elixirs, Demonic Rune, the Major Mana and Major Frenzy potions, EZ-Thro Dynamite II, Goblin

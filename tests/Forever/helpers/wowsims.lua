@@ -385,22 +385,6 @@ M.READY = {
     -- opens the weave window); wowsims logs the cast at arrival; the offset is the walk time, which Hekili does not model
     -- (owner rule: no movement in Hekili or the belief) and which is the lead a player needs to start walking. Every new
     -- real row is a weave strike shown early (the replay now feeds wowsims's OtherID 4 Auto Shots, so the weave runs).
-    -- { 0.36, 7 } -> { 1.09, 13 } re-pin e2842f0a78 (Task 19, the new log, R51): the weave cause above at the new
-    -- distance (11.67 yd): weave rows (wing_clip, immolation_trap) 1.03 to 1.37 s early, the off-GCD cooldowns at
-    -- 6.22 and 127.83 (-1.12, -1.33), a Serpent Sting row late (0.17, the cast-anchored dot)
-    -- { 1.09, 13 } -> { 0.46, 28 } re-pin e5a9cd2a2d (0.7 floors, CN8 merged, steady icons on): upstream's new weave (melee strikes
-    -- on `ranged_remains>=ranged_speed-(mainhand_speed-mainhand_remains)`, shots otherwise): 28 real rows, 26 early (slack 26,
-    -- gcd 25, aura 10: wing_clip 22, max 3.32), the walk the replay cannot forecast (triage Case 1) plus the melee range
-    -- read as unknown (wing_clip:unknown 40; hotfix-0.6.2's maxRange 0 bug, probable, untraced); median is the larger set's
-    -- { 0.46, 28 } -> { 0.49, 28 } (flicker-085 P1, L755 / L960: a mana pool with no tick seen pads nothing): real
-    -- 28 -> 26 (all early), the median of the ones left 0.460 -> 0.490
-    hunter_beast_mastery = { 0.49, 28 }, -- was { 1.09, 13 }; before that { 0.32, 5 }: wing_clip 27.49 / 115.64 early (-1.59 / -0.74)
-    -- { 0.15, 7 } -> { 0.38, 13 } (re-pin 8b-2, the weave cause above): six strike rows early, strider_kick 11.40 -0.10 -> -0.70
-    -- { 0.38, 13 } -> { 0.98, 10 } re-pin e2842f0a78 (Task 19, the new log, R51): the weave cause above, strike rows
-    -- 0.48 to 1.32 s early at 11.67 yd
-    -- { 0.98, 10 } -> { 0.32, 22 } re-pin e5a9cd2a2d (0.7 floors): the same new-weave cause as Beast Mastery (22 real, 20 early:
-    -- strider_kick 7, mongoose_bite 6 max 1.36, wing_clip 4); the median fell as the set grew
-    hunter_marksmanship = { 0.32, 22 }, -- was { 0.98, 10 }; before that { 0.15, 10 } (b8d673eb8 raised it to 0.18 for gap BW, reverted with BW's fix): measured real 8 median 0.15 once the replay seeds the casting rate from unboosted ticks (168.28 strider_kick back to never); real 7 since gap CE's fractional read
     -- { 0.14, 9 } -> { 0.14, 10 } (Task 5): row 91.49 mongoose_bite now late 0.14 s, a cost decision with the belief's
     -- lo 1.9 mana under truth (the lo lag, gaps BQ/BT, G7); the base row rested on the replay artifact (belief 5.5
     -- mana over truth); owner-approved 2026-10-30.
@@ -416,16 +400,25 @@ M.READY = {
     -- { 0.39, 10 } -> { 0.29, 22 } re-pin e5a9cd2a2d (0.7 floors): the new weave's strikes: 22 real, all early (strider_kick 10 max
     -- 2.34, wing_clip 6 max 2.80, immolation_trap 3): the walk the replay cannot forecast (triage Case 1) and the weave's omitted
     -- `wait` rows #2/#3 (CN19, second translator lane); the median fell as the set grew
-    hunter_survival = { 0.29, 22 },
+    -- { 0.29, 22 } -> { 0.41, 23 } re-pin e5a9cd2a2d -> e4ef929e54 (R6, the flipped log: Pre-BiS weave gear, Arcanite
+    -- Reaper 3.8 s, same talents and list): the same classes re-timed, all early (strider_kick slack 10, wing_clip
+    -- aura 4 + slack 1, mongoose_bite aura 2 + slack 3, immolation_trap 2, strider_kick aura 1): the walk the replay
+    -- cannot forecast and the omitted weave waits (CN19); the largest fell 2.80 -> 1.39, the middle rose
+    hunter_survival = { 0.41, 23 },
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): first measurement (fixtures recorded once). Turrets:
     -- Serpent Sting early (the cast-anchored dot) and Arcane Shot cost rows; Survival Melee: wing_clip 2 (max 3.10),
     -- strider_kick 1
-    hunter_beast_mastery_turret = { 0.36, 4 },
+    -- { 0.36, 4 } -> { 0.24, 5 } re-pin e5a9cd2a2d -> e4ef929e54 (R6; the hawk rotation): 5 late, 3 of them the new
+    -- 189 spends at the cost crossing (summon_hawk 1, arcane_shot 2: lo 5.8-7.7 under the truth, gap BQ), Serpent Sting 2
+    hunter_beast_mastery_turret = { 0.24, 5 },
     -- { 0.42, 4 } -> { 0.43, 4 } (flicker-085 P1, L755 / L960: no tick pad on a mana pool with no tick seen): real
     -- 4 -> 3 (early 2, late 1), the median of the ones left 0.420 -> 0.430
-    hunter_marksmanship_turret = { 0.43, 4 },
-    hunter_survival_turret = { 0.30, 5 },
-    hunter_survival_melee = { 0.41, 3 },
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (R6, re-set to the measurement on the flipped logs, Pre-BiS gear): Marksmanship
+    -- Turret { 0.43, 4 } -> { 0.15, 2 }, Survival Turret { 0.30, 5 } -> { 0.27, 2 }, Survival Melee { 0.41, 3 } ->
+    -- { 0.23, 3 }
+    hunter_marksmanship_turret = { 0.15, 2 },
+    hunter_survival_turret = { 0.27, 2 },
+    hunter_survival_melee = { 0.23, 3 },
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
     -- a cost after the truth), fire_blast 7 (max 0.76: the dry-mana waits on its 340)
     mage_arcane = { 0.76, 9 }, -- 0.760, 9 (ruling M13)
