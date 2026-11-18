@@ -58,7 +58,7 @@ return {
     build = "ui/specs/shaman/elemental/builds/default.build.json",
     -- the build's resourcePotId 13444, Major Mana Potion; the Weakness Analyzer (ItemSparse 272438: a trinket) as
     -- Shadow and Affliction map it
-    map = { OtherActionResourcePotion = "major_mana_potion", ["item:272438"] = "use_items" },
+    map = { OtherActionResourcePotion = "major_mana_potion", ["item:272438"] = "use_items", ["item:13968"] = "use_items" },
     -- by role (docs/dev/wowsims-packs.md): Flame Shock upkeep, Earth Shock on Revelation; Chain Lightning, Lightning
     -- Bolt and the AoE lines rotational; the totems none (the user, 2026-10-21)
     focus = { flame_shock = 2, earth_shock = 1 },

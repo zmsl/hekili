@@ -44,7 +44,7 @@ return {
     talentTree = "warlock",
     build = "ui/specs/warlock/dps/builds/sm_ruin.build.json",
     -- no `gear`: the build carries its own at ab0f00e4fc (wowsims #1048; owner L1397)
-    map = { ["item:272438"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
+    map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
     select = {
         castWarlockAssignedCurse = {
             setting = "assigned_curse",

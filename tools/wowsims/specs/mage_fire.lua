@@ -73,7 +73,7 @@ return {
     },
     -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear, was the Talisman 18820 and the Mind
     -- Quickening Gem 19339)
-    map = { ["item:272438"] = "use_items" },
+    map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" },
     focus = { pyroblast = 1, scorch = { 2, false }, arcane_missiles = 1 }, -- by role (docs/dev/wowsims-packs.md)
     leveling = {},
 }

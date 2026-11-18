@@ -46,7 +46,7 @@ return {
     talentTree = "warlock",
     build = "ui/specs/warlock/dps/builds/demo_shadow_brand.build.json",
     -- no `gear`: the build carries its own at ab0f00e4fc (wowsims #1048; owner L1397)
-    map = { ["item:272438"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
+    map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
     -- the build's "Improved Shadow Bolt Known" variable is auraIsKnown(Shadow Vulnerability 17794): the talent that makes it
     knownAs = { [17794] = "improved_shadow_bolt" },
     select = {
