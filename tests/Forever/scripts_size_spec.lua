@@ -403,4 +403,33 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         end
         assert.are.same({}, H.errors)
     end)
+
+    -- The join falls back to each function on its own when one Lua function cannot return them all (Lua 5.1's register
+    -- limit, about 250 values): the times are the same and nothing raises.
+    it("keeps a line's recheck times when its variables' distinct times are too many to join", function()
+        local H = boot(false)
+        H.Hekili.Class.stateExprs.probe_remains = function()
+            return 10
+        end
+        local function value(from)
+            local t = {}
+            for k = from, from + 149 do
+                t[#t + 1] = "probe_remains<=" .. k
+            end
+            return table.concat(t, "|")
+        end
+        local list = H.Hekili.DB.profile.packs[ww.PACK].lists.default
+        table.insert(list, 1, { action = "bloodrage", enabled = true, criteria = "variable.a&variable.b" })
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "b", value = value(151), pure = 1 })
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "a", value = value(1), pure = 1 })
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        assert(headless.cycle(H, H.ctl.now + 0.5))
+        local S, Sc = H.Hekili.State, H.Hekili.Scripts
+        S.system.packName, S.delayMin, S.delayMax = ww.PACK, 0, 3600
+        S.recheck("bloodrage", Sc.DB[ww.PACK .. ":default:3"])
+        assert.are.same({ 1, 2, 3, 4, 5, 6, 7, 8, 9 }, S.recheckTimes)
+        assert.is_false(Sc.DB[ww.PACK .. ":default:3"].JoinedRecheck) -- 300 distinct times: not joined
+        assert.are.same({}, H.errors)
+    end)
 end)

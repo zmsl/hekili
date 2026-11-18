@@ -1945,10 +1945,10 @@ do
         return seen
     end
 
-    -- feral-cpu-09: a line's own times and those of every variable it reads, joined once (the first recheck after a
-    -- load) into one function of their distinct times (scripts:BuildRecheck's parts): the times are a set, and a
-    -- pack's variants of one variable repeat most comparisons (the re-pinned Feral pack: 86-146 values, 23-27
-    -- distinct). False: not joined (a part list missing, or too many values for one Lua function): called one by one.
+    -- A line's own times and those of every variable it reads, joined once (the first recheck after a load) into one
+    -- function of their distinct times (scripts:BuildRecheck's parts): the times are a set, and a pack's variants of one
+    -- variable repeat most comparisons, so each is evaluated once per recheck. False: not joined (a part list missing,
+    -- or too many values for one Lua function): the functions are called one by one.
     local joinParts = {}
 
     local function addParts( parts )

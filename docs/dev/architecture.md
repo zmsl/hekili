@@ -672,7 +672,9 @@ priority editor moves a line (`SwapScripts`), and when one `variable` or list-ca
 A read `variable.<v>` calls its compiled value in the reader's own state: no cache, no registration (`Sim/Core.lua`
 skips the line in the walk), no string built (`state.variable` in `Sim/State.lua`; under a debug snapshot it logs the
 value and the expression). The reader's recheck times are its value's (`recurseRechecks` follows it), never a time of
-the bare read, and the time-sensitivity of a line reads through it. It is the expression written in the reader's place
+the bare read; `state.recheck` joins a line's own times with those of every variable it reads into one compiled
+function of their distinct comparisons (once per load), so a comparison repeated across a pack's variants is
+evaluated once. The time-sensitivity of a line reads through it. It is the expression written in the reader's place
 in what it reads and when, with these limits: the value is compiled as a value (`EmulateSyntax`'s numeric mode, so a
 boolean expression must compile the same both ways: the wowsims packs' do, `tests/Forever/wowsims_pin_spec.lua`); a
 pure read does not make the reader a window reader (`ReadsWindow`: its own text only); a comparison of the read
