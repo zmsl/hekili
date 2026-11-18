@@ -67,6 +67,43 @@ describe("the Feral loop world's press", function()
             assert.are.same({ dw.GCD.totem, dw.GCD.spell }, got)
         end
     )
+
+    -- The build the Feral log plays (its header: 16958=2 Blood Frenzy, 1328613=1 Predatory Discipline): wowsims
+    -- e4ef929e54 talents_feral_combat.go:146 (a builder's crit in Cat Form, one more combo point: 100% at 2/2, the
+    -- log's 2.01 "from {SpellID: 16958}") and ferocious_bite.go:22-35 (the extra energy stays).
+    local POINTS = require("Forever.helpers.druid_world").POINTS
+    local function feralPress(key, power, points, crit)
+        local C = dlw.Feral
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local p = C.resolve(key, H)
+        local W = scenarios.world(setmetatable({ power = power, form = C.character().form }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1
+        W.crit = crit and 1 or 0
+        us.target.avoid = {}
+        us.res[POINTS].cur = points
+        local ok, why = W.press(us, key, p)
+        assert.is_true(ok, tostring(why))
+        return W.res(us, POINTS), us.power, p.cost
+    end
+    it("gives a builder's crit in Cat Form Blood Frenzy's second combo point, a plain hit one", function()
+        local got = { (feralPress("shred", 100, 0, true)), (feralPress("rake", 100, 0, false)) }
+        got[3] = feralPress("claw", 100, 4, true) -- capped at 5
+        assert.are.same({ 2, 1, 5 }, got)
+    end)
+    -- Ferocity 5/5 in both e4ef929e54 builds (the log headers' 16934=5): the logs' Rake 35 and Maul 10
+    it("prices Rake and Guardian's Maul at the logs' costs", function()
+        local got = {}
+        for _, c in ipairs({ { "Feral", "rake" }, { "Guardian", "maul" } }) do
+            local C = dlw[c[1]]
+            got[#got + 1] = C.resolve(c[2], headless.new({ character = C.character(), pack = C.PACK })).cost
+        end
+        assert.are.same({ 35, 10 }, got)
+    end)
+    it("keeps Ferocious Bite's extra energy (Predatory Discipline) and spends the combo points", function()
+        local points, energy, cost = feralPress("ferocious_bite", 90, 5, false)
+        assert.are.same({ 0, 90 - cost }, { points, energy })
+    end)
 end)
 
 describe("the Guardian loop world's press", function()
@@ -114,6 +151,32 @@ describe("the Guardian loop world's press", function()
         end
         assert.is_true(p.cost > 0)
         assert.are.same({ "strike " .. p.cost, "cc 1" }, { out[1], out[2] })
+    end)
+
+    -- Blood Frenzy 1/2 (the e4ef929e54 log's 16958=1): its 5 rage (16959) on half our crits in Bear Form, Maul's
+    -- included: the log's 18 Maul crits bring 10 of its 21 gains, plus one tied with a Lacerate crit (each 0.01 s after the crit), so the world pays the
+    -- class file's expected 2.5 on a Maul crit at its swing, as on the on-GCD strikes' and the white swings'
+    it("pays Primal Fury's rage on a Maul crit at its swing", function()
+        local C = dlw.Guardian
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local p = C.resolve("maul", H)
+        local W = scenarios.world(setmetatable({ power = 60, form = C.character().form }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1
+        W.crit = 1
+        us.target.avoid = {}
+        local ok, why = W.press(us, "maul", p)
+        assert.is_true(ok, tostring(why))
+        W.run(8)
+        local out = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "strike" and ev.src == us and ev.spell then
+                out[#out + 1] = "strike " .. ev.flag
+            elseif ev.kind == "gain" and ev.src == us and #out > 0 then
+                out[#out + 1] = "gain " .. tostring(ev.rage)
+            end
+        end
+        assert.are.same({ "strike CRITICAL", "gain 2.5" }, { out[1], out[2] })
     end)
 end)
 

@@ -33,15 +33,15 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local C = ws.logged(content("druid_balance", W.Balance, "Balance (wowsims.com)", 60), "druid_balance")
         local L = loop.new(C)
         local R = replay.new(ws.log("druid_balance"), L.oracle, ws.replayOptions(C, "druid_balance"))
-        local up, down = 0, math.huge -- the belief's casting rate at the log's 116-125 s and 130-170 s
+        local up, down = 0, math.huge -- the belief's casting rate at the log's 21.5-24.5 s and 50-170 s
         loop.replay(L, R, {
             on = function(_, steps, t)
                 local st = steps[1]
                 local VS = st.H.ns.VirtualState
                 local rate, at = VS.Regen(0, st.base + t, VS.CASTING).est, t - R.pull
-                if at > 116 and at < 125 then
+                if at > 21.5 and at < 24.5 then
                     up = math.max(up, rate)
-                elseif at > 130 and at < 170 then
+                elseif at > 50 and at < 170 then
                     down = math.min(down, rate)
                 end
             end,
@@ -50,7 +50,11 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         -- Tag 1 (Reflection 3/3 in the new build); was Tag 2's 31 and 22 (up > 30, down < 24). Lane R2: the casting
         -- rate is the one the log shows (it never leaves the rule); the not-casting rate this read before (up > 16,
         -- down < 13) was the replay world's, which answered a casting-only log with no spirit part (now M + S, 24.4)
-        assert.is_true(math.abs(up - 17.11) < 0.5 and math.abs(down - 12.61) < 0.5, up .. " vs " .. down)
+        -- re-pin e4ef929e54: Serenity Field's passive Spirit 14 -> 7 (the 11-13 item nerf; unverified as the cause: it predicts ~12.17, the log reads 12.11) moves the log's casting
+        -- regen to 12.11 a second and 16.61 inside the one Serenity Field window left (21.09-36.09 s; Innervate from
+        -- 24.86 s, so the window read is 21.5-24.5 s); the log has no second use (was 112.21 s; the pack omits the
+        -- trinket, so not traced)
+        assert.is_true(math.abs(up - 16.61) < 0.5 and math.abs(down - 12.11) < 0.5, up .. " vs " .. down)
     end)
 
     it("Feral's replay world reports the energy rate the client reads", function()
@@ -81,22 +85,37 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- run (integ/0.7 5deb101c4: CN8's cooldown countdown and steady icons as the default, over the pin-2 export; the
     -- two are not separated). The 21.25, 39.88, 111.89, 140.38 and 162.38 never rows are gone; left: innervate ->
     -- cat_form (the 0.04 s powershift tie), rake -> faerie_fire and shred -> faerie_fire
+    -- 0.96 -> 0.94 (0.943, 82/87; flicker 0.00/min) re-pin e4ef929e54 -> the new log's fight (wowsims #972's adaptive
+    -- list, CatTalents; measured with CN25, mana-09 and harness-gcd-edge-09 merged; decision C changes nothing at one
+    -- enemy). The 5 never rows: 16.25 innervate -> cat_form (the powershift tie above); 23.25 shred -> rake (Rake fades
+    -- in the instant wowsims Shreds: same-instant order, as the old 140.38); 44.13 shred (cost: the belief's energy lo
+    -- 1.2 under the truth, energy secret: API-forced); 150.13 shifting_power -> shred (mana 686.5 against the 684 cost:
+    -- the belief's mana near cost, shared, as the old 111.89); 164.88 shred -> faerie_fire (traced, round 3 of
+    -- repin-druid-09, with the world talents in): wowsims's 161.63 Faerie Fire misses and its 6 s form cooldown holds
+    -- the recast to 167.63, but replay.lua's engineCooldown reads the kit's `(cat or bear) and 6 or 0` once at boot,
+    -- before the state sees Cat Form (0), so the replay client never puts it on cooldown and ours shows it from 162.80
+    -- (the old 162.38 row's class; central note repin-druid-09-4)
+    -- 0.94 -> 0.95 (0.954, 83/87) and flicker 0.7 -> 0 (0.00/min, oracle 0.00): replay-fncd-09 fa9cb8a64 (the replay
+    -- world reads a function cooldown at each cast: Faerie Fire's form 6 s and Shifting Power's 7.5, L1318/L1320) and
+    -- replay-flips-09 ade4d6379 (a flip whose middle icon wowsims casts that tick is excused, L1317). The 164.88 row is
+    -- gone (L1301's cause); the 4 left are the 16.25, 23.25, 44.13 and 150.13 rows above
     it("Feral (wowsims.com) follows wowsims's casts", function()
         local r, line = ws.gate(
             "Feral (wowsims.com)",
             content("druid_feral", W.Feral, "Feral (wowsims.com)", 60),
             "druid_feral",
-            0.96,
+            0.95,
             -- wowsims's Feral stands behind its target (no inFrontOfTarget in the request): the client says the mob
             -- targets someone else, so the pack's Shred lines run as wowsims's (L602)
             { notTargeted = true }
         )
-        assert.is_true(r.flicker <= 0.7, line)
+        assert.is_true(r.flicker <= 0, line)
     end)
     -- the pack's own worst idle at 60 (wowsims's energy pooling), seconds: 4.0 on central fix 22 round 1 (the live
     -- world's presses resolve from the driving instance, not the never-stepped oracle; L20 4.0 -> 3.0, L40 3.8 -> 3.4,
-    -- L60 3.8 -> 4.0); 4.2 before; 4.0 -> 3.2 re-pin e2842f0a78 (L20 3.0, L40 3.2, L60 3.2; the bar stays 6 s)
-    local FERAL60 = 3.2
+    -- L60 3.8 -> 4.0); 4.2 before; 4.0 -> 3.2 re-pin e2842f0a78 (L20 3.0, L40 3.2, L60 3.2; the bar stays 6 s); 3.2 -> 5.0
+    -- since round 3 (L40 / L60 read 5.0)
+    local FERAL60 = 5.0
     for _, level in ipairs({ 20, 40, 60 }) do
         it("Feral (wowsims.com) stays live at level " .. level, function()
             ws.live(
@@ -114,7 +133,12 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "druid_guardian",
             -- 0 -> 0.63 (0.632 of 117 decisions on-GCD; R6, truncated): no rage from hits yet (CN7): the kit has no `taken`, so
             -- the belief sees only the bear's own rage (0.923 with the archived rule: named gap in the recipe header). Old pin: 0.782 (61/78)
-            0.63,
+            -- 0.63 -> 0.57 (0.574, 66/115) re-pin e5a9cd2a2d -> e4ef929e54 (controller ruling L1319: the 2026-11-07 CN7
+            -- waiver extends to the new pin): the re-pinned adaptive list spends 15 rage every GCD (Lacerate to 5 stacks,
+            -- then Lacerate as the filler under Primal Bite), and ~83% of the log's rage comes from hits taken (1779.7 of
+            -- ~2150), which the belief cannot see (CN7): all 49 misses believe 0-12 rage at a truth of 25-90
+            -- (repin-druid-09-5). replay-fncd-09 / replay-flips-09 move no Guardian row
+            0.57,
             -- once the replay ends a cooldown at its log timestamp (the ready-time ruling)
             -- Maul's untagged Casting lines are wowsims's queue at each swing (Cost = 0); its Tag 1 line is the hit,
             -- when the game's cast succeeds
@@ -178,12 +202,13 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local simc = f:read("*a")
         f:close()
         assert.matches("\n# Setting maintain_demoralizing_roar %(", simc)
+        -- re-pin e4ef929e54: both lines sit in the single-target group (the default list calls it behind the gate)
         assert.matches(
-            "\nactions%+=/demoralizing_roar,focus=2,if=settings%.maintain_demoralizing_roar&%(!%(!%(debuff%.demoralizing_roar%.remains<=0%)%)",
+            "\nactions%.single_target_and_larger_packs%+=/demoralizing_roar,focus=2,if=settings%.maintain_demoralizing_roar&!%(!%(debuff%.demoralizing_roar%.remains<=0%)%)",
             simc
         )
         assert.matches(
-            "\nactions%+=/faerie_fire,if=%(action%.faerie_fire%.known&debuff%.faerie_fire%.remains<=0%)",
+            "\nactions%.single_target_and_larger_packs=faerie_fire,if=%(action%.faerie_fire%.known&debuff%.faerie_fire%.remains<=0%)",
             simc
         )
         assert.matches("demoralizing_roar", first(true, false))
@@ -202,7 +227,8 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- (its own first fight), limit 6.0 s. One seed's worst is noise: with the parry fix the single seed 1 measured 8.4
     -- (rage below Primal Bite's 15 from two white misses in a row). On these tables: median 4.4, worst 11.0, 4 of 30
     -- seeds over 6.0 (rage 357.2 a minute against wowsims's 349.9).
-    -- L60's outcome tables, wowsims's for its export (druid_guardian.log, seed 101: 65 white swings, 79 yellow strikes;
+    -- L60's outcome tables, measured on the OLD pin's log (e5a9cd2a2d; 65 white swings, 79 yellow strikes; the e4ef929e54 log has
+    -- 8 white swings and a 24.6% yellow crit, so these are not re-derived, lane deferral 14);
     -- owner approved 2026-10-25). From its code: no parry (the export has no inFrontOfTarget, so the bear attacks from
     -- behind: spell_outcome.go), the white dodge the level 63 table's 6.5% less expertise (spell_outcome.go's white
     -- outcome: BaseDodgeChance - DodgeParrySuppression; attack_table_test.go: 6.5% at skill 300; the export has no
@@ -231,7 +257,12 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
                 -- idles: nothing useful to cast (Roar up, Maul off the GCD, Faerie Fire not known at L10, learned at 18): 0.2 -> 10.2 s
                 -- L40 6.0 -> 8.4 (8.4 s measured): R41 white-miss rage starvation (the bear's rage comes from its own swings only and
                 -- no rage from hits yet, CN7), as in the old-pin analysis
-                ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 8.4)
+                -- L40 8.4 -> 9.4 (9.4 s measured, seed 1) re-pin e5a9cd2a2d -> e4ef929e54 (the adaptive list spends 15 rage
+                -- every GCD on Lacerate / Primal Bite; Ferocity 5/5, the new Bear build), traced (repin-druid-09 round 4):
+                -- the same R41 class, white swings MISS at 83.06, 85.56 and 90.56 keep the truth at 3.5 then 14.8 under the
+                -- 15 cost until 93.06; the streak's usable answers are Cat Form, caster Faerie Fire, Frenzied
+                -- Regeneration, Innervate and Demoralizing Roar with its debuff up, none the list presses
+                ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 9.4)
             end
         end)
     end

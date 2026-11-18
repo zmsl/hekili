@@ -49,7 +49,7 @@ return {
             id = "D1",
             class = "DRUID",
             item = "Idol of the Dream 220606",
-            effect = "Rip duration +2 s",
+            effect = "Rip duration +2 s (446212); pack models it as a plain aura",
             status = "todo",
         },
         {

@@ -37,6 +37,16 @@
 -- Translation gaps: Thistle Tea (selectedConjured), potions, sapper charges, item swaps, autocastOtherCooldowns (GAP
 -- 14: no class cooldown lost). Time to die is unknown on Forever (3600), so the `fight_remains` lines read a long fight
 -- (API-forced).
+-- Re-pin e4ef929e54 (0.9): the adaptive APL rewritten (wowsims #972): the default list calls 2- and 3-target groups by
+-- talent shape and `single_target` (the old lines, with talent-shape terms); the talents follow the new preset
+-- CatTalents (presets.ts:71, Rend and Tear 5/5; owner L1154 (4)). The idol branches resolve to the kit's auras (Idol of
+-- Ferocity 27851, Idol of the Dream 446212; the request wears neither). Claw: two adjacent lines now (`condition.claw`).
+-- Owner deviation L1169 (decision C, owner-confirmed L1205): the six 2/3-target group calls are omitted (`condition`
+-- false) and `single_target` runs at every enemy count, behind the same movement/range gate. wowsims's groups are the
+-- single-target rotation plus swaps to spread Rake/Rip, every Bite/Shred/Rip/Claw line guarded by another target's read
+-- (NextTarget's time to die, Next/PreviousTarget swaps: omitted on Forever, CN24), so they kept only Shifting Power, Rake
+-- and Innervate; wowsims itself runs `single_target` at 4+ enemies. The un-called lists stay in the pack (the
+-- translator writes every called group, an omitted call included); they never run.
 return {
     class = "DRUID",
     pack = "Feral (wowsims.com)",
@@ -48,7 +58,7 @@ return {
         race = "RaceTauren",
         class = "ClassDruid",
         gear = "ui/specs/druid/feralcat/gear_sets/pre_raid.gear.json",
-        talentsString = "050022-53200032123012124001-055",
+        talentsString = "050021-53200032123012125001-055",
         specKey = "feralCatDruid",
         options = { assumeBleedActive = true },
         profession1 = "Engineering",
@@ -64,10 +74,23 @@ return {
     condition = {
         -- owner deviation R69 (header): no Prowl cancel line; Prowl ends when Ravage lands or the player attacks
         cancel_buff = false,
-        -- Claw vs Shred (header): wowsims's translated Claw condition, `!action.shred.ready` -> the cases the Shred guard
-        -- refuses and `energy.lo>=action.shred.cost` -> `energy.lo>=action.claw.cost`; the rest as generated (re-copy it
-        -- on a re-pin)
-        claw = "(((!(action.cat_form.known|action.shred.known)|((!action.cat_form.known|buff.cat_form.up)&(!action.shred.known|(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up))&(!action.shred.known|energy.lo>=action.claw.cost)))&energy.lo>=action.claw.cost)&!((talent.predatory_discipline.enabled&(!action.cat_form.known|buff.cat_form.up)&combo_points.current>=4&(!action.rip.known|debuff.rip.remains>=2))&!((talent.predatory_discipline.enabled&(!action.cat_form.known|buff.cat_form.up)&combo_points.current>=4&(!action.rip.known|debuff.rip.remains>=2))&(((buff.clearcasting.up&energy.lo>=60)|(!buff.clearcasting.up&energy.lo>=85))|(combo_points.current>=5&((!buff.clearcasting.up&energy.lo>=70)|(buff.clearcasting.up&energy.lo>=50)))))))",
+        -- owner deviation L1169 (header): the six 2/3-target group calls are omitted
+        ["2_targets_shred"] = false,
+        ["2_targets_hybrid_with_blood_frenzy"] = false,
+        ["2_targets_hybrid"] = false,
+        ["3_targets_shred"] = false,
+        ["3_targets_hybrid_with_blood_frenzy"] = false,
+        ["3_targets_hybrid"] = false,
+        -- owner deviation L1169 (header): no 2/3-target group; single_target at every enemy count. shortcut: rule 7 has
+        -- no "no condition" value, so an always-true term stands in; upgrade if the translator takes one
+        single_target = "active_enemies>=1",
+        -- Claw vs Shred (header): wowsims's two adjacent single_target Claw lines (rule 7 keys a condition by action, so
+        -- both take this one: adjacent lines of one action are their conditions' OR, so it is `(A)|(B)`): A, the Claw
+        -- builder of a build without Shredding Attacks, as generated; B, "Claw can replace Shred", with
+        -- `!action.shred.ready` -> the cases the Shred guard refuses and `energy.lo>=action.shred.cost` ->
+        -- `energy.lo>=action.claw.cost`; the rest as generated (re-derive both on a re-pin: translate with this key
+        -- removed, take the two Claw lines)
+        claw = "(((!action.cat_form.known|buff.cat_form.up)&talent.improved_shred.rank=0&energy.lo>=action.claw.cost&variable.v_paid_builder_fits_the_energy_pool))|((((!(action.cat_form.known|action.shred.known)|((!action.cat_form.known|buff.cat_form.up)&(!action.shred.known|(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up))&(!action.shred.known|energy.lo>=action.claw.cost)))&energy.lo>=action.claw.cost)&!variable.v_pool_energy_for_bite))",
     },
     guard = {
         -- R69 too: Faerie Fire (wowsims's line above Ravage) breaks Prowl, so it waits while Prowl is up
@@ -75,8 +98,15 @@ return {
         -- Claw vs Shred (header): Shred only from behind (or `settings.behind`) and where it beats Claw
         shred = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)",
     },
-    -- by role (docs/dev/wowsims-packs.md): Shred's first line (Clearcasting) at 1, not the builder; Claw's one line is
-    -- wowsims's "Claw can replace Shred" builder fallback, kept at tier 1 as before (R66)
-    focus = { shred = { 1, false }, claw = { 1, false }, rip = 2, rake = 2 },
+    -- by role (docs/dev/wowsims-packs.md): Shred's first line (Clearcasting) at 1, not the builder; Claw's lines are
+    -- wowsims's "Claw can replace Shred" builder fallback (one condition, above), kept at tier 1 as before (R66). The
+    -- occurrences count the omitted entries too: the un-called 2/3-target lists' Shred and Claw entries (omitted,
+    -- CN24) are occurrences 1-8, so single_target's Clearcasting Shred is the 9th and its two Claw lines the 9th and 10th
+    focus = {
+        shred = { false, false, false, false, false, false, false, false, 1, false },
+        claw = { false, false, false, false, false, false, false, false, 1, 1 },
+        rip = 2,
+        rake = 2,
+    },
     leveling = {},
 }

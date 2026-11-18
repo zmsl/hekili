@@ -27,6 +27,10 @@
 - Hunter: Beast Mastery Turret now follows wowsims.com's hawk rotation: Summon Hawk twice, then Arcane Shot, and no longer suggests Sniper Shot. Until you have Summon Hawk, it suggests Arcane Shot on its own (not yet checked in game).
 - Hunter: Survival Melee now runs out to reapply Serpent Sting while Strider Kick's speed is up and you have more than 30% mana, as wowsims.com does, and no longer suggests a Major Mana Potion (not yet checked in game).
 - Hunter: before it learns your own mana regeneration, Hekili now starts from the regeneration of wowsims.com's current level 60 gear, so early fights forecast mana closer to the game.
+- Feral: the default priority follows wowsims's new Feral build (Rend and Tear 5/5). With two or three enemies it keeps the single-target priority, because wowsims's lists for two and three enemies switch targets, which Hekili cannot follow.
+- Guardian: the default priority follows wowsims's new Bear build and lists, with its own priorities for two and three enemies (Swipe). Not yet checked in game.
+- Guardian: in the Timeline style, Maul no longer takes the now circle ahead of keeping up Lacerate and Demoralizing Roar.
+- Feral: a dodged or missed Ferocious Bite now gives back 28 energy and keeps the extra energy it would have used, and the Idol of Ferocity (Claw and Rake cost 2 less) and the Idol of the Dream (Rip lasts 2 seconds longer) are counted. Not yet checked in game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 - Mage, Arcane, Fire, Frost and Frostfire (wowsims.com): when you wear Robe of the Archmage, its use is now suggested with your other cooldowns, under the Potions toggle (not yet checked in game).
 

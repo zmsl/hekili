@@ -373,14 +373,20 @@ M.READY = {
     -- pool sits at last_tick 0 (review M5; harness follow-up: the world fires the energy power event)
     -- integ/0.8.5-w2 merge (lane-r2-mage + lane-r2-dh + flicker-085), measured on the merged tree: real 6 (early 2,
     -- late 4), median 0.500: flicker's accepted { 0.50, 9 }
-    druid_feral = { 0.50, 9 },
+    -- { 0.50, 9 } -> { 0.12, 4 } (repin-druid-09 round 5, replay-fncd-09 fa9cb8a64: Shifting Power's 7.5 s computed
+    -- cooldown read at each cast, L1320): shifting_power 37.63 late 0.50 -> in:grain, the 164.88 never row and its
+    -- 167.63 Faerie Fire (early 1.63) in grain; real 4 (early 1, late 3), median 0.118
+    druid_feral = { 0.12, 4 },
     -- { 0.54, 41 } -> { 2.50, 10 } (lane 14, replay world fix): a GCD now ends at its cast's log time plus the GCD (a
     -- late line of its timestamp ended it after the next GCD's rise, clearing the client's flag), so the 11 early
     -- GCD-chain rows are in grain; the 10 left are the late ones, so the median rises by the metric alone
     -- { 2.50, 10 } -> { 1.76, 55 } (re-pin e5a9cd2a2d, floors step): 55 late GCD-chain rows (median 1.751): with no rage from hits
     -- yet (CN7) Lacerate/Primal Bite show a GCD after wowsims casts them (24 lacerate -> primal_bite replay misses); the median falls (1.751 measured; a ceiling rounds up)
     -- 2.50 -> 1.75, the count rises by the same cause (not by the metric)
-    druid_guardian = { 1.76, 55 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
+    -- { 1.76, 55 } -> { 2.50, 50 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log; CN7 waiver extended, L1319): real 50 (all
+    -- late), median 2.500: the re-pinned list spends 15 rage every GCD and the belief cannot see the rage from hits
+    -- taken (~83% of the log's), so Lacerate / Primal Bite show late or never (49 never rows; repin-druid-09-5)
+    druid_guardian = { 2.50, 50 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     -- re-pin 8b-2 (controller ruling, round 3): move-reached weave strikes show at the decision to walk (the Auto Shot that
     -- opens the weave window); wowsims logs the cast at arrival; the offset is the walk time, which Hekili does not model
     -- (owner rule: no movement in Hekili or the belief) and which is the lead a player needs to start walking. Every new

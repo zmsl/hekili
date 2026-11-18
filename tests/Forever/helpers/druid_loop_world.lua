@@ -105,8 +105,8 @@ local function hit(key)
     end
 end
 -- A bear strike's hit (`key`'s amount; with `debuffKey`, the debuff when it lands): Primal Fury's rage on its crit in
--- Bear Form (X.primalFury, the class file's rule at the character's rank). Maul's queued strike never crits in the
--- world (behaviours.lua's strike frame), so it pays none.
+-- Bear Form (X.primalFury, the class file's rule at the character's rank). Maul's queued strike crits at its swing
+-- (its press's `crits`) and pays the same through C.WORLD's `struck` hook.
 local function bearHit(key, debuffKey)
     return function(W, e, _, X)
         local r = W.hit(e, e.target, AMOUNT[key], SCHOOL[key] or 1)
@@ -115,6 +115,21 @@ local function bearHit(key, debuffKey)
         end
         if r.flag == "CRITICAL" and e.form == FORM.bear_form and X.primalFury > 0 then
             W.gain(e, X.primalFury)
+        end
+    end
+end
+-- A cat builder's hit (`key`'s amount): Blood Frenzy's extra combo point on its crit in Cat Form, at X.bloodFrenzy's
+-- chance (wowsims e4ef929e54 talents_feral_combat.go:146; the rank's curve 16958 {50, 100}: rank / 2), before the
+-- press's own point (the log's 0.01 s later; the 5 cap makes the order moot). `after(W, e, r, X)`: the builder's own.
+local function catHit(key, after)
+    return function(W, e, _, X)
+        local r = W.hit(e, e.target, AMOUNT[key], SCHOOL[key] or 1)
+        if after then
+            after(W, e, r, X)
+        end
+        local bf = X.bloodFrenzy
+        if r.flag == "CRITICAL" and e.form == FORM.cat_form and bf > 0 and (bf >= 1 or W.rng.chance(bf)) then
+            W.emit({ kind = "gain", src = e, pt = POINTS, rage = 1 })
         end
     end
 end
@@ -168,18 +183,30 @@ M.MAP = {
     cat_form = shift("cat_form", 1),
     bear_form = shift("bear_form", 1),
     moonkin_form = shift("moonkin_form", 1),
-    claw = { effect = hit("claw"), points = 1 },
-    shred = { effect = hit("shred"), points = 1 },
+    claw = { effect = catHit("claw"), points = 1 },
+    shred = { effect = catHit("shred"), points = 1 },
     rake = { -- the debuff only on a landed hit (the class file removes a missed one from the combat log)
-        effect = function(W, e, _, X)
-            if W.hit(e, e.target, AMOUNT.rake, 1).act == "WOUND" then
+        effect = catHit("rake", function(W, e, r, X)
+            if r.act == "WOUND" then
                 aura(W, X, e.target, "rake")
             end
-        end,
+        end),
         points = 1,
     },
     rip = { effect = debuff("rip"), points = "all" },
-    ferocious_bite = { effect = hit("ferocious_bite"), points = "all", drain = ENERGY },
+    -- the extra energy goes with the hit, kept with Predatory Discipline (wowsims e4ef929e54 ferocious_bite.go:22-35)
+    -- shortcut: world.lua's `drain` runs on an avoided bite too; no world plays Bite without Predatory Discipline
+    -- (Feral's build has it), upgrade to a drain on the landed hit when one does
+    ferocious_bite = {
+        effect = hit("ferocious_bite"),
+        points = "all",
+        drain = ENERGY,
+        extra = function(p, _, _, P)
+            if P.talents and (P.talents[1328613] or 0) > 0 then
+                p.drain = nil
+            end
+        end,
+    },
     shifting_power = {
         extra = function(p)
             p.gain = { ENERGY, rules().shiftingPower }
@@ -210,7 +237,7 @@ M.MAP = {
     lacerate = { effect = bearHit("lacerate", "lacerate") },
     swipe_bear = { effect = bearHit("swipe_bear") },
     demoralizing_roar = { effect = debuff("demoralizing_roar") },
-    maul = { amount = { 110, 140 } },
+    maul = { amount = { 110, 140 }, crits = true }, -- its crit at the swing pays Primal Fury (C.WORLD's script)
     enrage = {
         extra = function(p)
             local R, a = rules(), class().auras.enrage
@@ -288,17 +315,19 @@ local PACKS = {
             "thorns",
         },
         power = { type = ENERGY, token = TOKENS[ENERGY], max = 100 },
-        -- mana: wowsims/forever's Feral log's pool (pre-raid gear) and regen (2.175 a 0.1 s tick outside the
-        -- five-second rule, none inside it: { spirit, mp5 } = { 22, 0 } a second); stats: UnitStat's Spirit (S = 6.25 + 124/8
-        -- = 21.75), the belief's read for the Serenity Field entry
-        res = { [POINTS] = { cur = 0, max = 5 }, [MANA] = { cur = 2674, max = 2674 } },
+        -- mana: wowsims/forever's Feral log's pool (pre-raid gear, e4ef929e54) and regen (2.2 a 0.1 s tick outside the
+        -- five-second rule, none inside it: { spirit, mp5 } = { 22, 0 } a second); stats: UnitStat's Spirit (S = 6.25 + 126/8
+        -- = 22), the belief's read for the Serenity Field entry
+        res = { [POINTS] = { cur = 0, max = 5 }, [MANA] = { cur = 2584, max = 2584 } },
         form = "cat_form",
         weapon = { 55, 75, 1.0 },
-        world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = manaFsr(22), power = 100, stats = { [5] = 124 } },
+        world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = manaFsr(22), power = 100, stats = { [5] = 126 } },
         -- Furor 3/5 (wowsims's Feral build, the log header's 17056=3); wowsims's Feral scenario, which the pack's Shred
         -- and Claw lines read (L602): Shredding Attacks 3/3 (the log header's 16966=3), and a DPS behind its target, so
-        -- the client says our target targets someone else
-        talents = { [17056] = 3, [16966] = 3 },
+        -- the client says our target targets someone else. The log's build also has Blood Frenzy 2/2 (16958: catHit's
+        -- combo point, the bear's Primal Fury rage), Predatory Discipline 1/1 (1328613: Bite keeps its extra energy)
+        -- and Shifting Power 1/1 (1322605), which the pack's talent terms read, and Ferocity 5/5 (16934: the log's Rake 35)
+        talents = { [17056] = 3, [16966] = 3, [16958] = 2, [1328613] = 1, [1322605] = 1, [16934] = 5 },
         uptime = { "rip", "rake" },
         notTargeted = true,
     },
@@ -321,7 +350,10 @@ local PACKS = {
             "mark_of_the_wild",
             "thorns",
         },
-        talents = { [16958] = 2 }, -- Primal Fury (wowsims's bear build's 2/2): its rage on our crits
+        -- wowsims's e4ef929e54 Bear build (its log header), the talents the class file or the pack reads: Blood Frenzy 1/2
+        -- (16958, "Primal Fury": its rage on our crits; was 2/2 at e5a9cd2a2d), Ferocity 5/5 (16934: the log's Maul 10),
+        -- Feral Instinct 3/3 (16947: the Maul lines' terms), Thick Hide 3/3 (16929: the Guardian selector); no Furor
+        talents = { [16958] = 1, [16934] = 5, [16947] = 3, [16929] = 3 },
         power = { type = RAGE, token = TOKENS[RAGE], max = 100 },
         res = {},
         form = "bear_form",
@@ -396,6 +428,7 @@ local function classData(H)
         end
     end
     X.eclipse = (H.Hekili.State.talent.eclipse.rank or 0) > 0
+    X.bloodFrenzy = (H.Hekili.State.talent.primal_fury.rank or 0) / 2 -- "Blood Frenzy" on Forever (catHit)
     -- Primal Fury's rage on a crit of ours in Bear Form at the character's rank: the class file's white-crit rule read
     -- under the booted state's talents, less its rank-0 crit (the recording load's)
     local w, base = class(), rules().crit
@@ -498,10 +531,19 @@ local function content(name)
         regenPause = rules().pause, -- energy stops in Bear Form (the class file's bear_pause; both lists put Bear first)
         mobHealth = 15000,
         canParry = false, -- druids never parry (wowsims's CanParry: no parry haste of ours)
+        -- our queued strike's outcome at its swing (behaviours.lua): a Maul crit in Bear Form pays Primal Fury's
+        -- rage, as bearHit does for the on-GCD strikes (the e4ef929e54 Guardian log: 10 of its 21 16959 gains, plus one tied with a Lacerate crit)
+        script = function(_, us)
+            us.struck = function(W, act, flag)
+                if act == "WOUND" and flag == "CRITICAL" and us.form == FORM.bear_form and pfRage > 0 then
+                    W.gain(us, pfRage)
+                end
+            end
+        end,
     }, { __index = P.world })
 
     -- The client's other power reads: combo points plain (research addendum), the rest never. UnitPowerMax answers the
-    -- world's pools where it keeps mana (Feral's 2674, Balance's 4000; else the fake's 100).
+    -- world's pools where it keeps mana (Feral's 2584, Balance's 4000; else the fake's 100).
     C.OBSERVE = {
         plainPower = { [POINTS] = "always" },
         powerTokens = TOKENS,
@@ -598,6 +640,7 @@ local function content(name)
             drain = m.drain,
             refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
             outcomes = M.OUTCOMES[key], -- nil: the special melee tables
+            crits = m.crits, -- a queued strike's crit at its swing (behaviours.lua)
         }
         if m.points then
             p.points = { POINTS, m.points }

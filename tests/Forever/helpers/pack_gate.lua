@@ -230,7 +230,13 @@ M.FLICKER = {
     -- heldReady 357 -> 479 (R6, cause Faerie Fire 1.0 s Cat GCD (pin Cat Form passive 3025; owner in game, Rake shown
     -- ~0.5 s late); seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 369 / 407 / 479,
     -- agreement .971 / .947 / .975, was .971 / .974 / .974): flicker under the held 0.03
-    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 479 }, -- 0.56 / 0.89 / 0.56, 0
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (repin-druid-09 round 4; seeds 1-20 / 21-40 / 41-60 flicker 0.04 / 0.00 / 0.02
+    -- (oracle 0.00 / 0.02 / 0.02), retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 301 / 326 / 322, agreement
+    -- .977 / .980 / .972): heldReady 479 -> 326. Cause: the world plays the new Feral log's build (Blood Frenzy 2/2's
+    -- combo point on a builder's crit, Predatory Discipline's Bite, Shifting Power, Ferocity 5/5's Rake 35); at seeds
+    -- 1-20 the round 2 world read flicker 0.02, heldReady 426. Flicker row NOT moved: the owner's hold at 0.03 (L660
+    -- (b)); seeds 1-20's 0.04 is red for the owner (both flips traced in repin-druid-09-6.md; green with steady-hold-09, ledger L1328)
+    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 326 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
@@ -245,7 +251,11 @@ M.FLICKER = {
     -- integ rest window (047aa7e82 + 97ba2a8e9, fights start at the true mana) adds to the Reflection share's OOM phase
     -- above, the same cost-crossing class one poll late; reverting the rest change gives 188 (L1118). Balance-cc
     -- (021dece2f, L1119) leaves it flat (199 -> 200)
-    ["Balance"] = { flicker = 0, retracted = 0, heldReady = 200 }, -- 0.03 / 0.05 / 0.07, 0
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (repin-druid-09 round 4; seeds 1-20 / 21-40 / 41-60 heldReady 189 / 174 / 174,
+    -- flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, agreement .997 / .997 / .998): heldReady 200 -> 189,
+    -- likely mana-09 (043d29b57: the Innervate entry's regen = 5, druid_loop_world.lua:37 / :404, and CN22's percent-cost
+    -- rounding), not the re-pin (the Balance .simc changed only its header); likely, not A/B'd
+    ["Balance"] = { flicker = 0, retracted = 0, heldReady = 189 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
     -- is lacerate:swing/cost). Applied on the reported branch: Guardian clears M.gate's agreement (0.900 / 0.896 /
@@ -273,7 +283,22 @@ M.FLICKER = {
     -- 13 at seeds 1-20: 10 the lacerate <-> primal_bite swing-paid rage class above, one new maul -> primal_bite -> maul
     -- (seed 6 t 122.0-122.6, both free under Clearcasting, swapped one poll at the swing); held ticks the same icons
     -- (lacerate, maul, primal_bite) spread +0..+5 a fight, no single event (balance-cc-085 report)
-    ["Guardian"] = { flicker = 0.24, retracted = 0.7, readyShort = 0, heldReady = 307 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (repin-druid-09 round 4; seeds 1-20 / 21-40 / 41-60 flicker 0.28 / 0.34 / 0.24
+    -- (oracle 0.09 / 0.05 / 0.09), retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 420 / 411 / 396, agreement
+    -- .906 / .923 / .907): flicker 0.24 -> 0.35 (the measured worst + 0.01), heldReady 307 -> 420. Cause: the new
+    -- adaptive list (its single-target Maul at rage.lo>=20, Lacerate as the filler) and the new Bear build in the world
+    -- (Blood Frenzy 1/2, Feral Instinct 3/3, Thick Hide 3/3, no Furor, Ferocity 5/5: Maul 10, Primal Bite 15; a Maul
+    -- crit's Primal Fury). Traced (seeds 1-20, 16 flips): maul <-> lacerate 9, maul -> primal_bite 4, the rest
+    -- lacerate -> primal_bite and maul -> demoralizing_roar; seed 5 t 60.6-61.2: Maul shows on a forecast swing's rage (lo 15,
+    -- maul@0.08), drops for one poll when the swing is due but not yet credited (truth 29.0, lo 15), and returns at
+    -- its credit (lo 28.5): the swing-paid rage class this row already names, now on the Maul line
+    -- heldReady's two causes, separated (round 5 A/B, loop.tally, on repin-druid-09 13272efff; the world's Maul-crit
+    -- Primal Fury, f0b6fc018, off / on): seeds 1-20 / 21-40 / 41-60 off 423 / 423 / 402 (flicker 0.31 / 0.35 / 0.25),
+    -- on 420 / 411 / 396 (0.28 / 0.34 / 0.24). The re-pin (list + build) moves it 307 -> 423 (worst, off); the world fix
+    -- lowers it 3 / 12 / 6 (its truth now pays the 2.5 the kit's Maul onCrit declares). The row stays the worst on, 420.
+    -- retracted 0.7 -> 0 (round 5 review M2: all three sets measured 0, the measured worst)
+    -- avoid-refund-09, replay-fncd-09 and replay-flips-09 merged: every cell identical (seeds 1-20 re-run)
+    ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 420 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159

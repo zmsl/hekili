@@ -981,6 +981,7 @@ describe("Forever Druid", function()
             "bash",
             "claw",
             "cower",
+            "ferocious_bite", -- re-pin e4ef929e54: ferocious_bite.go refundOnMiss (80% of its 35 base energy)
             "lacerate",
             "maul",
             "pounce",
@@ -1000,8 +1001,22 @@ describe("Forever Druid", function()
         )
     end)
 
+    it("declares the Idol of Ferocity's aura as a flat -2 on Claw and Rake (wowsims e4ef929e54, 27851)", function()
+        assert.are.equal(27851, w.auras.idol_of_ferocity.id)
+        local m = w.costMods[3]
+        assert.are.same({ "idol_of_ferocity", -2, nil, { 1082, 1822 } }, { m.aura, m.flat, m.charges, m.spells })
+    end)
+
+    it("lengthens Rip by 2 s under the Idol of the Dream's aura (wowsims e4ef929e54, 446212)", function()
+        assert.are.equal(446212, w.auras.idol_of_the_dream.id)
+        local e = ld.env(w)
+        assert.are.equal(12, ld.run(w.auras.rip.duration, e))
+        e.buff = auras({ idol_of_the_dream = { up = true } })
+        assert.are.equal(14, ld.run(w.auras.rip.duration, e))
+    end)
+
     it("declares Clearcasting as one cost modifier over the covered rank-1 IDs, and no `spend` reads it", function()
-        assert.are.equal(2, #w.costMods) -- Clearcasting, then Poised
+        assert.are.equal(3, #w.costMods) -- Clearcasting, Poised, the Idol of Ferocity
         local m = w.costMods[1]
         assert.are.same({ "clearcasting", -1, 1, COVERED }, { m.aura, m.pct, m.charges, m.spells })
         local first = {}
@@ -1073,7 +1088,7 @@ describe("Forever Druid", function()
         -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items; Hekili_Shared/Races' Night Elf racial and the
         -- Skyborne racial's aura (energized); the core's cancel_buff (tests/Forever/apl_entry_spec.lua), its buff_name a
         -- registered aura
-        local sharedActions = { use_items = true, elunes_light = true, cancel_buff = true }
+        local sharedActions = { use_items = true, elunes_light = true, cancel_buff = true, variable = true }
         local sharedAuras = { energized = true }
         local shared = { buff = sharedAuras, debuff = sharedAuras, action = sharedActions, cooldown = sharedActions }
         local kinds = {
@@ -1100,7 +1115,7 @@ describe("Forever Druid", function()
                             where .. ": no aura " .. tostring(e.buff_name)
                         )
                     end
-                    local c = e.criteria or ""
+                    local c = (e.criteria or "") .. " " .. (e.value or "") -- CN25: a pure variable's text too
                     for kind, key in c:gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
                             local ok = kinds[kind][key] ~= nil or (shared[kind] or {})[key]
@@ -1622,6 +1637,50 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.are.equal(I.BaseCostOf(claw), I.CostOf(claw))
     end)
 
+    local function avoided(id, castT, t)
+        I.Sources.Direct(VS.Obs.Avoided, t, I.ab.bySpell[id], castT, I.HitKind.DODGE)
+        VS.Drain(t + 0.01)
+    end
+
+    -- re-pin e4ef929e54 (ferocious_bite.go:32-42): a failed Bite gets 80% of its 35 base energy back, and its extra
+    -- energy is spent on a landed bite only (refundNowOnAvoid, L1237)
+    it("gives an avoided Ferocious Bite 80% of its 35 base energy and all its extra energy back", function()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        I.SetTalentRank(I.talents.bySpell[17056], 5) -- Furor 5/5: the Cat entry keeps the 100
+        cast(768, 2)
+        cast(22568, 3) -- Bite: 35 of 100, then the 65 left (no Predatory Discipline)
+        near(1, power(3, 3.1))
+        avoided(22568, 3, 3.1)
+        near(1 + 65 + 28 + 1, power(3, 3.2))
+    end)
+
+    -- re-pin e4ef929e54 (poised.go, EV-0035): an avoided cast spends Poised too; the refund is 80% of what it paid
+    it("keeps Poised spent and refunds 80% of the discounted cost when the Claw it priced is dodged", function()
+        local j = I.auras.bySpell[1328827]
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        I.SetTalentRank(I.talents.bySpell[17056], 5)
+        cast(768, 2)
+        I.AuraModel(1, j, 2.5, 3600, 1, 2.5, VS.Obs.CastSuccess, false)
+        cast(1082, 3) -- Claw: 45 - 10 = 35 of 100
+        near(65 + 1, power(3, 3.1))
+        avoided(1082, 3, 3.1)
+        assert.is_nil(VS.Aura("player", 1328827, 3.2))
+        near(65 + 28 + 2, power(3, 3.2))
+    end)
+
+    -- re-pin e4ef929e54 (pounce.go): a missed Pounce stuns nothing, applies no bleed and refunds 80% of its 50
+    it("takes a missed Pounce's stun and bleed back and refunds 40 energy", function()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        I.SetTalentRank(I.talents.bySpell[17056], 5)
+        cast(768, 2)
+        cast(9005, 3)
+        assert.is_not_nil(VS.Aura("target", 9005, 3.05))
+        avoided(9005, 3, 3.1)
+        assert.is_nil(VS.Aura("target", 9005, 3.2))
+        assert.is_nil(VS.Aura("target", 9007, 3.2))
+        near(50 + 40 + 2, power(3, 3.2))
+    end)
+
     it("allocates nothing over 1000 casts with `now` handlers", function()
         function h:ForceUpdate() end -- the fake records each call; Hekili's own only sets fields
         local t = 2
@@ -1641,20 +1700,28 @@ describe("Forever Druid Movement (R8)", function()
     local dlw = require("Forever.helpers.druid_loop_world")
     local PACK = "Feral (wowsims.com)"
 
-    local function lines(key, pack)
+    -- The pack's `key` lines of list `group` (nil: the default list).
+    local function lines(key, pack, group)
         local f = assert(io.open("src/Hekili_Druid/APLs/" .. (pack or PACK) .. ".simc"))
         local s = f:read("*a")
         f:close()
         local out = {}
-        for l in s:gmatch("\n(actions%+=/" .. key .. ",[^\n]+)") do
+        local at = group and ("actions%." .. group .. "%+=/") or "actions%+?=/?"
+        for l in s:gmatch("\n(" .. at .. key .. ",[^\n]+)") do
             out[#out + 1] = l
         end
         return out
     end
 
-    -- A Cat at `yd` yards from a level 60 target, in combat, energy full, the pack's Shred lines alone; returns a poll
-    -- of the first icon with the toggle set.
-    local function world(yd, C, pack, key, ptype)
+    local function parse(H, l)
+        local parsed = H.Hekili:ParseActionList(l)
+        parsed[1].enabled = true
+        return parsed[1]
+    end
+
+    -- A Cat at `yd` yards from a level 60 target, in combat, energy full, the pack's `key` lines alone (in list `group`
+    -- behind the default list's call to it, when given); returns a poll of the first icon with the toggle set.
+    local function world(yd, C, pack, key, ptype, group)
         C, pack, key, ptype = C or dlw.Feral, pack or PACK, key or "shred", ptype or 3
         local H = headless.new({ character = C.character(), pack = pack })
         assert.are.same({}, H.loadErrors)
@@ -1662,15 +1729,25 @@ describe("Forever Druid Movement (R8)", function()
         H.Fire("PLAYER_TARGET_CHANGED")
         local t = H.ctl.now + 0.2
         assert(headless.cycle(H, t))
-        local list = {}
+        local list, vars = {}, {}
         for _, k in ipairs(type(key) == "table" and key or { key }) do
-            for _, l in ipairs(lines(k, pack)) do
-                local parsed = H.Hekili:ParseActionList(l)
-                parsed[1].enabled = true
-                list[#list + 1] = parsed[1]
+            for _, l in ipairs(lines(k, pack, group)) do
+                list[#list + 1] = parse(H, l)
             end
         end
-        H.Hekili.DB.profile.packs[pack].lists = { precombat = {}, default = list }
+        -- CN25: the pack's pure variables head its default list; the lines read them
+        for _, l in ipairs(lines("variable", pack)) do
+            vars[#vars + 1] = parse(H, l)
+        end
+        local lists = { precombat = {}, default = vars }
+        if group then
+            vars[#vars + 1], lists[group] = parse(H, lines("call_action_list,name=" .. group, pack)[1]), list
+        else
+            for _, e in ipairs(list) do
+                vars[#vars + 1] = e
+            end
+        end
+        H.Hekili.DB.profile.packs[pack].lists = lists
         H.Hekili:LoadScripts()
         H.Fire("PLAYER_REGEN_DISABLED")
         local VS = H.ns.VirtualState
@@ -1690,32 +1767,37 @@ describe("Forever Druid Movement (R8)", function()
         end
     end
 
+    -- re-pin e4ef929e54: the gate sits on the default list's group calls; the Shred lines are single_target's
     it("OFF hides Shred outside 5 yd and shows it inside; ON shows it outside too", function()
-        local l = lines("shred")
-        assert.are.equal(2, #l)
-        for _, line in ipairs(l) do
-            assert.matches("&%(toggle%.movement&target%.outside5|target%.within5%)$", line)
+        local call = lines("call_action_list,name=single_target")
+        assert.are.equal(1, #call)
+        assert.matches("&%(toggle%.movement&target%.outside5|target%.within5%)$", call[1])
+        assert.are.equal(2, #lines("shred", nil, "single_target"))
+        local function at(yd)
+            return world(yd, nil, nil, nil, nil, "single_target")
         end
-        local far, near = world(11), world(3)
+        local far, near = at(11), at(3)
         assert.is_nil(far(false))
         assert.are.equal("shred", near(false))
         assert.are.equal("shred", far(true))
     end)
 
-    -- Guardian's Maul (off the GCD, rage full): its first line carries the same gate; the second (the leveling Maul,
-    -- before Primal Bite is known) is silent at 60.
+    -- Guardian's Maul (off the GCD, rage full). re-pin e4ef929e54: the gate sits on the default list's group calls (the
+    -- new adaptive list's gate has no Feral Charge clause); single_target_and_larger_packs holds one Maul; the leveling
+    -- Maul (before Primal Bite) stays in the default list, silent at 60.
     it("OFF hides Guardian's Maul outside 5 yd and shows it inside", function()
-        local g = "Guardian (wowsims.com)"
-        local l = lines("maul", g)
-        assert.are.equal(2, #l)
-        assert.matches("&%(toggle%.movement&%(target%.outside5.*%)|target%.within5%)$", l[1])
+        local g, grp = "Guardian (wowsims.com)", "single_target_and_larger_packs"
+        local call = lines("call_action_list,name=" .. grp, g)
+        assert.are.equal(1, #call)
+        assert.matches("&%(toggle%.movement&target%.outside5|target%.within5%)$", call[1])
+        assert.are.equal(1, #lines("maul", g, grp))
         local function at(yd)
-            return world(yd, dlw.Guardian, g, "maul", 1)
+            return world(yd, dlw.Guardian, g, "maul", 1, grp)
         end
         local far, near = at(11), at(3)
         assert.is_nil(far(false))
         assert.are.equal("maul", near(false))
-        -- ON at range shows no Maul either here: the pack waits for Feral Charge (`cooldown.feral_charge.ready`) first
+        -- ON at range shows no Maul here either (as at the old pin; not traced: a melee swing queue out of range)
     end)
 end)
 
@@ -1810,6 +1892,63 @@ describe("Forever Druid Ravage opener (R69)", function()
     end)
 end)
 
+-- Owner deviation L1169 / L1205 (decision C): wowsims's 2- and 3-target groups read other targets on every strike
+-- (all omitted on Forever), so the pack omits the six group calls and single_target runs at every enemy count.
+describe("Forever Druid 2-3 enemies (L1169)", function()
+    local headless = require("Game.harness.headless")
+    local dlw = require("Forever.helpers.druid_loop_world")
+    local PACK = "Feral (wowsims.com)"
+
+    -- The icons of a Cat in melee range, energy full, Faerie Fire on the target, 1 s into combat with `n` enemies.
+    local function recs(n)
+        local H = headless.new({ character = dlw.Feral.character(), pack = PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.level.target, H.ctl.distance.target = 60, 3
+        H.ctl.auras.target.HARMFUL[1] = { spellId = 9907, expirationTime = H.ctl.now + 40, applications = 0 }
+        H.Fire("UNIT_AURA", "target")
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ns.getNumberTargets = function()
+            return n, n
+        end
+        local VS = H.ns.VirtualState
+        local power, full = VS.Power, { est = 100, lo = 100, hi = 100, conf = 1 }
+        VS.Power = function(pt, now)
+            return pt == 3 and full or power(pt, now)
+        end
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        H.Fire("PLAYER_REGEN_DISABLED")
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert(headless.cycle(H, t + 1))
+        assert.are.same({}, H.errors)
+        local names = {}
+        for i, r in ipairs(H.Hekili.Engine.Output.Primary.recs) do
+            names[i] = r.actionName
+        end
+        return table.concat(names, " ")
+    end
+
+    it("calls no 2/3-target group and gates single_target by range only", function()
+        local f = assert(io.open("src/Hekili_Druid/APLs/" .. PACK .. ".simc"))
+        local s = f:read("*a")
+        f:close()
+        assert.is_nil(s:find("\nactions[^\n]*call_action_list,name=[23]_targets"))
+        local call = s:match("\n(actions%+=/call_action_list,name=single_target,[^\n]+)")
+        assert.are.equal(
+            "actions+=/call_action_list,name=single_target,if=active_enemies>=1&(toggle.movement&target.outside5|target.within5)",
+            call
+        )
+    end)
+
+    it("shows the single-target strikes at 2 and 3 enemies as at 1 and 4", function()
+        local one = recs(1)
+        assert.matches("shred", one)
+        for _, n in ipairs({ 2, 3, 4 }) do
+            assert.are.equal(one, recs(n), n .. " enemies")
+        end
+    end)
+end)
+
 -- Claw vs Shred (owner L597-L603): a Shred line runs while `settings.behind` is on or the target is not attacking us
 -- (target.is_targeting_player), and with Shredding Attacks at 2+ ranks or Clearcasting up; the Claw line takes the
 -- other cases at Claw's own cost. The pack's Shred and Claw lines alone, a Cat in melee range, in combat.
@@ -1819,12 +1958,14 @@ describe("Forever Druid Claw vs Shred (L602)", function()
     local SECRET = require("Game.State.helpers.fake_api").SECRET
     local PACK = "Feral (wowsims.com)"
 
+    -- re-pin e4ef929e54: the Shred and Claw lines sit in the single_target list
     local function lines(key)
         local f = assert(io.open("src/Hekili_Druid/APLs/" .. PACK .. ".simc"))
         local s = f:read("*a")
         f:close()
         local out = {}
-        for l in s:gmatch("\n(actions%+=/" .. key .. ",[^\n]+)") do
+        local at = key == "variable" and "actions%+?=/?" or "actions%.single_target%+=/"
+        for l in s:gmatch("\n(" .. at .. key .. ",[^\n]+)") do
             out[#out + 1] = l
         end
         return out
@@ -1846,7 +1987,7 @@ describe("Forever Druid Claw vs Shred (L602)", function()
         H.Fire("UNIT_AURA", "player")
         H.Fire("PLAYER_TARGET_CHANGED")
         local list = {}
-        for _, k in ipairs({ "shred", "claw" }) do
+        for _, k in ipairs({ "variable", "shred", "claw" }) do -- CN25: the pure variables the lines read first
             for _, l in ipairs(lines(k)) do
                 local parsed = H.Hekili:ParseActionList(l)
                 parsed[1].enabled = true
@@ -1870,7 +2011,8 @@ describe("Forever Druid Claw vs Shred (L602)", function()
         return r and r.actionName, r and r.wait
     end
 
-    it("guards every Shred line, and the Claw line, by position, the talent and Clearcasting", function()
+    -- re-pin e4ef929e54: two adjacent Claw lines, one recipe condition (the OR of wowsims's two, the second guarded)
+    it("guards every Shred line, and the Claw lines, by position, the talent and Clearcasting", function()
         local shred, claw = lines("shred"), lines("claw")
         local S = "(settings.behind|!target.is_targeting_player)&(talent.improved_shred.rank>=2|buff.clearcasting.up)"
         local C = "(!settings.behind&target.is_targeting_player|talent.improved_shred.rank<2&!buff.clearcasting.up)"
@@ -1878,7 +2020,8 @@ describe("Forever Druid Claw vs Shred (L602)", function()
         for _, l in ipairs(shred) do
             assert.is_truthy(l:find(S, 1, true), l)
         end
-        assert.are.equal(1, #claw)
+        assert.are.equal(2, #claw)
+        assert.are.equal(claw[1], claw[2])
         assert.is_truthy(claw[1]:find(C, 1, true), claw[1])
         assert.is_nil(claw[1]:find("action.shred.ready", 1, true))
         assert.is_nil(claw[1]:find("action.shred.cost", 1, true))
