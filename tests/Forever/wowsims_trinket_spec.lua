@@ -25,7 +25,8 @@ describe("the on-use trinket 13968", function()
     end
 
     it("translates a cast of it to the use_items line", function()
-        local kit = { abilities = { use_items = { key = "use_items", id = -1, gcd = "off" } }, auras = {}, talents = {} }
+        local kit =
+            { abilities = { use_items = { key = "use_items", id = -1, gcd = "off" } }, auras = {}, talents = {} }
         local c = apl.context(kit, { map = { ["item:13968"] = "use_items" } })
         local text, omitted = apl.translate({
             priorityList = { { action = { castSpell = { spellId = { itemId = 13968 } } } } },
