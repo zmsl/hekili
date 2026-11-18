@@ -268,6 +268,19 @@ describe("now handlers", function()
         assert.are.equal(150, shout.est) -- the aura's registered duration (120) when the `now` passes none
     end)
 
+    it("works out a function duration at each application: gear put on after login counts (review c4)", function()
+        local long = false -- an idol's aura, say: up from the second cast on
+        h.Class.auras.spender_a.duration = function()
+            return long and 14 or 12
+        end
+        start()
+        cast(fs.SPENDER_A, 5)
+        assert.are.equal(17, VS.Aura("player", fs.SPENDER_A, 5.1).est)
+        long = true
+        cast(fs.SPENDER_A, 20)
+        assert.are.equal(34, VS.Aura("player", fs.SPENDER_A, 20.1).est)
+    end)
+
     it("pays an on-next-swing strike's cost at its success, which arrives with its swing", function()
         start()
         cast(fs.SPENDER_B, 14)
