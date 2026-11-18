@@ -101,8 +101,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- gone (L1301's cause); the 4 left are the 16.25, 23.25, 44.13 and 150.13 rows above
     -- 0.95 -> 0.96 (0.964, 80/83; flicker 0.00/min, oracle 0.00) re-pin e4ef929e54 -> ab0f00e4fc: wowsims #1087's flat
     -- list (Shifting Power at 53 energy, the new Bite pooling) and the new log's fight. Misses: shred -> rake 2 (one is
-    -- 76.64, where Rake fades in the instant wowsims Shreds: same-instant order, as 23.25 above; the other not located
-    -- by time) and innervate -> cat_form 1 (the powershift tie, now at 14.79)
+    -- 76.64, where Rake fades in the instant wowsims Shreds: same-instant order, as 23.25 above; the other is 44.13,
+    -- the fixture's Shred never row (timing_druid_feral.lua; read as a Shred cost edge, mechanism not traced); both
+    -- located by a scratch print of each miss's time) and innervate -> cat_form 1 (the powershift tie, now at 14.79)
     it("Feral (wowsims.com) follows wowsims's casts", function()
         local r, line = ws.gate(
             "Feral (wowsims.com)",

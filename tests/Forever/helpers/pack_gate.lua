@@ -310,9 +310,10 @@ M.FLICKER = {
     -- Druid merge e98ef8506 reads 423, the same minus gap-as's src + harness diff 420; steady-hold-09 moves flicker 0.28 -> 0.26 (its own A/B)
     -- re-pin e4ef929e54 -> ab0f00e4fc: wowsims #1087 (repin-ab0f-druid; seeds 1-20 / 21-40 / 41-60 flicker 0.29 / 0.28 /
     -- 0.24 (oracle 0.09 / 0.04 / 0.10), retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 450 / 381 / 412, agreement
-    -- .900 / .912 / .914): heldReady 423 -> 450 (the worst set). Cause: #1087's Guardian list (no Swipe, Enrage under
-    -- Lacerate's cost, no 5-stack Lacerate refresh line); A/B on one tree (the tip with the e4ef Guardian .simc + make
-    -- packs), seeds 1-20: old list 423 (flicker 0.26), new list 450 (0.29). Flicker row unchanged (worst 0.29)
+    -- .900 / .912 / .914): heldReady 423 -> 450 (the worst set). Cause: #1087's Guardian list; the A/B proves the #1087
+    -- list as a whole (its diff: Enrage under Lacerate's cost, no 5-stack Lacerate refresh line; the old Swipe line
+    -- needs 2+ enemies, so it cannot act in the one-mob loop); A/B on one tree (the tip with the e4ef Guardian .simc +
+    -- make packs), seeds 1-20: old list 423 (flicker 0.26), new list 450 (0.29). Flicker row unchanged (worst 0.29)
     ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 450 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
