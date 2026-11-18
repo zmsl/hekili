@@ -8,6 +8,9 @@
 
 ### Changed
 
+- In a custom condition, `gcd` on its own now means the full global cooldown (`gcd.max`), as it already did in an
+  imported priority.
+
 ### Fixed
 
 - A separate Cooldowns, Interrupts or Defensives display whose Forecast Period is longer than the Forecast window
