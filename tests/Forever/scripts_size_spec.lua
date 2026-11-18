@@ -370,7 +370,7 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         assert.is_truthy(all:find(at .. "2: 2 lines of the name", 1, true), all)
     end)
 
-    -- feral-cpu-09: a line's recheck times are a set, built from its own time comparisons and those of every variable it
+    -- A line's recheck times are a set, built from its own time comparisons and those of every variable it
     -- reads (State.lua recurseRechecks). A pack's variants of one variable repeat most comparisons, inside one value and
     -- across values (the re-pinned Feral pack: 8 to 13 functions, 86 to 146 values, 23 to 27 distinct): each distinct
     -- comparison is evaluated once per recheck, and the times are the same.
@@ -430,6 +430,48 @@ describe("a pure variable reads as its inlined text (CN25)", function()
         S.recheck("bloodrage", Sc.DB[ww.PACK .. ":default:3"])
         assert.are.same({ 1, 2, 3, 4, 5, 6, 7, 8, 9 }, S.recheckTimes)
         assert.is_false(Sc.DB[ww.PACK .. ":default:3"].JoinedRecheck) -- 300 distinct times: not joined
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Boots with the pure variables a (<=3) and b (<=4) read by a bloodrage line whose criteria begin with `own`.
+    local function joined(own, a)
+        local H = boot(false)
+        H.Hekili.Class.stateExprs.probe_remains = function()
+            return 10
+        end
+        local list = H.Hekili.DB.profile.packs[ww.PACK].lists.default
+        table.insert(list, 1, { action = "bloodrage", enabled = true, criteria = own .. "variable.a&variable.b" })
+        table.insert(
+            list,
+            1,
+            { action = "variable", enabled = true, var_name = "b", value = "probe_remains<=4", pure = 1 }
+        )
+        table.insert(list, 1, { action = "variable", enabled = true, var_name = "a", value = a, pure = 1 })
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        assert(headless.cycle(H, H.ctl.now + 0.5))
+        local S = H.Hekili.State
+        S.system.packName, S.delayMin, S.delayMax = ww.PACK, 0, 3600
+        return H, list, S, H.Hekili.Scripts.DB[ww.PACK .. ":default:3"]
+    end
+
+    it("joins a line's own recheck times with those of the variables it reads", function()
+        local H, _, S, line = joined("probe_remains<=1&", "probe_remains<=3")
+        S.recheck("bloodrage", line)
+        assert.is_function(line.JoinedRecheck)
+        assert.are.same({ 6, 7, 9 }, S.recheckTimes)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("rebuilds a line's joined recheck after a reload: the times follow the new value", function()
+        local H, list, S, line = joined("", "probe_remains<=3")
+        S.recheck("bloodrage", line)
+        assert.are.same({ 6, 7 }, S.recheckTimes)
+        list[1].value = "probe_remains<=2"
+        H.Hekili:LoadScript(ww.PACK, "default", 1)
+        S.system.packName, S.delayMin, S.delayMax = ww.PACK, 0, 3600
+        S.recheck("bloodrage", H.Hekili.Scripts.DB[ww.PACK .. ":default:3"])
+        assert.are.same({ 6, 8 }, S.recheckTimes)
         assert.are.same({}, H.errors)
     end)
 end)
