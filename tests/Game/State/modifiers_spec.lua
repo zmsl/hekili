@@ -274,6 +274,35 @@ describe("resource modifiers", function()
         )
     end
 
+    -- B-D3 (DRY belief pass): a success folded late (staged, behind a later direct observation) spends at the cast's
+    -- own time, so an aura a Cooldown Manager open gained after the cast was not up at it: it neither loses a charge
+    -- nor holds another modifier by `unless` (I.AuraUpAt: applied at or before the cast, expiring after it).
+    local function lateCast(id, t, j, lit)
+        ctl.now = t
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", id) -- staged until the frame's flush
+        I.Sources.Direct(VS.Obs.Read, lit, j, 15, I.ReadOf.AuraOpen) -- lit after the cast, logged before it
+        ctl.Tick(lit + 0.01)
+        VS.Drain(lit + 0.02)
+    end
+
+    it("keeps the charge of an aura a Cooldown Manager open gained after a late-folded cast", function()
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -1, charges = 1, spells = { fs.SPENDER_B } } }
+        ns.BuildTracked()
+        VS.Drain(1.5)
+        lateCast(fs.SPENDER_B, 6, I.auras.bySpell[MOD_AURA], 6.05)
+        local _, stacks, applied = VS.Aura("player", MOD_AURA, 6.1)
+        assert.are.same({ 1, 6.05 }, { stacks, applied })
+    end)
+
+    it("spends a charge its `unless` aura did not hold at a late-folded cast (the `unless` gained after it)", function()
+        unlessMods(true)
+        local ja = I.auras.bySpell[MOD_AURA]
+        I.AuraModel(1, ja, 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        lateCast(fs.SPENDER_B, 6, I.auras.bySpell[1032], 6.05)
+        local _, stacks = VS.Aura("player", MOD_AURA, 6.1)
+        assert.are.equal(2, stacks)
+    end)
+
     it("carries `unless` into the build as a plain copy, and an aura key the class lacks never holds", function()
         unlessMods(true)
         local built = I.mods.costMods[1]
