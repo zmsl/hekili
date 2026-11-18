@@ -361,6 +361,75 @@ describe("Engine.Output steady icons (the experimental hold, pure)", function()
         assert.are.same({ "a", "b" }, shown(Out, { { { "a", 1 } }, { { "b", 0.4 } } }))
     end)
 
+    -- L1328: a return to the icon the hold just kept shown is held too, even inside the window, so a raw a,b,b,a never
+    -- shows b for one publish (repin-druid-09-6: Feral's shifting_power/rake/shifting_power@0.20). Times as traced.
+    it("holds the return to the icon a released hold kept shown, inside the window too", function()
+        Out.steady, Out.hold = true, 1
+        local q = shown(Out, { { { "a", 0.8 } }, { { "b", 0.49 } }, { { "b", 0.29 } }, { { "a", 0.2 } } })
+        assert.are.same({ "a", "a", "b", "b" }, q)
+        assert.is_true(Out.Primary.held[1]) -- the snapshot's "(held)"
+        pub(Out, { { "a", 0 } }) -- ready: shows at once, so the hold never delays a press
+        assert.are.equal("a", Out.Primary.recs[1].actionName)
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 1 -- outside the window the return was already held
+        assert.are.same(
+            { "a", "a", "b", "b" },
+            shown(Out, { { { "a", 1 } }, { { "b", 1 } }, { { "b", 1 } }, { { "a", 1 } } })
+        )
+    end)
+
+    it("a single-publish raw icon and every return but the held one behave as before", function()
+        Out.steady, Out.hold = true, 1
+        assert.are.same({ "a", "a", "a" }, shown(Out, { { { "a", 0.8 } }, { { "b", 0.6 } }, { { "a", 0.2 } } }))
+        local function from(last)
+            Out = select(2, load())
+            Out.steady, Out.hold = true, 1
+            return shown(Out, { { { "a", 0.8 } }, { { "b", 0.49 } }, { { "b", 0.29 } }, last })
+        end
+        assert.are.same({ "a", "a", "b", "a" }, from({ { "a", 0 } })) -- a ready return
+        assert.are.same({ "a", "a", "b", "a" }, from({ { "a", 0.05 } })) -- ready at READY: never held
+        assert.are.same({ "a", "a", "b", "b" }, from({ { "a", 0.06 } })) -- just past READY: held
+        assert.are.same({ "a", "a", "b", "c" }, from({ { "c", 0.2 } })) -- another icon due within the window
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 1 -- the held return lives one publish: b shown twice, then a returns at once
+        assert.are.same(
+            { "a", "a", "b", "b", "a" },
+            shown(Out, { { { "a", 0.8 } }, { { "b", 0.69 } }, { { "b", 0.49 } }, { { "b", 0.29 } }, { { "a", 0.2 } } })
+        )
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 1 -- a hold cut short by an in-window c is no held change coming through
+        assert.are.same(
+            { "a", "a", "c", "a" },
+            shown(Out, { { { "a", 0.8 } }, { { "b", 0.49 } }, { { "c", 0.2 } }, { { "a", 0.2 } } })
+        )
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 1
+        shown(Out, { { { "a", 0.8 } }, { { "b", 0.49 } }, { { "b", 0.29 } } })
+        Out.Acted()
+        pub(Out, { { "a", 0.2 } }) -- after our own cast
+        assert.are.equal("a", Out.Primary.recs[1].actionName)
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 1 -- b due within the window shows at once: no hold, so no held return
+        assert.are.same(
+            { "a", "b", "b", "a" },
+            shown(Out, { { { "a", 0.8 } }, { { "b", 0.2 } }, { { "b", 0.2 } }, { { "a", 0.2 } } })
+        )
+    end)
+
+    it("allocates nothing on the held-return path over 1000 publishes", function()
+        Out.steady, Out.hold = true, 1
+        local names, times = { "a", "b", "b", "a" }, { 0.8, 0.49, 0.29, 0.2 }
+        local holds = 0
+        local bytes = alloc.bytes(function(r)
+            local sc = Out.Begin("Primary")
+            sc[1].actionName, sc[1].time = names[r % 4 + 1], times[r % 4 + 1]
+            Out.Publish("Primary", 1)
+            holds = holds + (r % 4 == 3 and Out.Primary.held[1] and 1 or 0) -- the return a@0.2, held
+        end, 1000)
+        assert.are.equal(0, bytes)
+        assert.is_true(holds > 0)
+    end)
+
     it("N=2 hides a two-publish countdown blip", function()
         Out.steady, Out.hold = true, 2
         assert.are.same(

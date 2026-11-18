@@ -57,6 +57,8 @@ local function display()
         rawName = filled(false),
         streak = filled(0),
         held = filled(false),
+        -- per slot the icon a hold kept shown, the publish its held change came through (else false)
+        kept = filled(false),
         acts = 0,
     }
 end
@@ -115,13 +117,16 @@ end
 -- back to waiting, and anything after our own cast show at once. A swap is not started when the new icon is due
 -- within the hold window (READY + hold * Output.interval, the driver's combat update rate): it turns ready before
 -- the hold could end, the ready exemption would cut the hold short, and a 2-update raw change would show as a
--- 1-update blip. That swap is the next press, not flicker.
+-- 1-update blip. That swap is the next press, not flicker. The exception (L1328): the publish after a held change
+-- came through, a change back to the icon the hold kept shown is held even inside the window (only the ready exemption
+-- applies), else a raw a,b,b,a would show b for one update. At the shipped hold 1 an icon inside the window turns
+-- ready by the next update, which shows it at once, so no press waits.
 local function steady(o, built, count)
-    local recs, rawName, held, streak = o.recs, o.rawName, o.held, o.streak
+    local recs, rawName, held, streak, kept = o.recs, o.rawName, o.held, o.streak, o.kept
     local acted, last, hold = o.acts ~= acts, o.count, Output.hold
     local window = READY + hold * Output.interval
     for i = 1, SLOTS do
-        local name, t, keep, run = false, 0, false, 0
+        local name, t, keep, run, back = false, 0, false, 0, false
         if i <= count then
             local new, old = built[i], recs[i]
             name, t = new.actionName or false, new.time or 0
@@ -130,15 +135,17 @@ local function steady(o, built, count)
             end
             keep = not acted
                 and i <= last
-                and t > window
+                and t > (name and name == kept[i] and READY or window)
                 and (old.time or 0) > READY
                 and old.actionName ~= name
                 and run <= hold
             if keep then
                 built[i], recs[i] = old, new
+            elseif held[i] and run > 1 then
+                back = old.actionName or false -- the held change came through: a return to `old` is held next publish
             end
         end
-        held[i], rawName[i], streak[i] = keep, name, run
+        held[i], rawName[i], streak[i], kept[i] = keep, name, run, back
     end
 end
 
