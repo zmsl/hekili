@@ -164,6 +164,9 @@ Translation:
   `"<list> #<n>"`) is an error (CN12: an upstream rename would drop it silently; an omitted entry still
   matches). A deviation from wowsims, so only on the user's ruling, named in the recipe and under "Deviations by
   ruling" below.
+- `sequences` (`true`): the APL's `strictSequence` and `sequence` entries are written as `strict_sequence` and
+  `sequence` lines (rules 14 and 14b below; windows design v6 §10). Unset, they stay `prev.1` chains and
+  class-registered windows. Set per recipe as each spec moves to APL sequences.
 - `windowVars` (`{ [variable name] = window }`): an APL variable that times "since the last shot or swing", read from
   the kit's registered window instead (rule 10: `window.<w>.up&window.<w>.elapsed<op>x`; the hunters' "Just shot"
   from `weave`). A name the APL's variables lack is an error (CN12).
@@ -283,7 +286,12 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
     race. Not modelled: explosives' after-GCD timing; trinkets and explosives of other gear (one sampled gear set); an
     unmapped item is listed, not written.
 14. `strictSequence`: consecutive lines behind `prev.1`. Deviations: nothing else is held off between members, a later
-    member re-reads the sequence's condition, an outside cast of a member opens the next.
+    member re-reads the sequence's condition, an outside cast of a member opens the next. With the recipe's
+    `sequences = true`: one `strict_sequence,name=<first>_<last>,start_on_first=1,hold_off_gcd=1,if=<condition>`
+    line with its members, in place of the chain (windows design v6 §10.1); a repeated generated name is an error.
+    14b likewise: a `sequence` is one `sequence,name=<snake>,mode=continue` line (every member, a repeated one too),
+    `resetSequence` a `restart_sequence` line, `sequenceIsComplete` `window.<n>.done`, no `# Window:` header; a
+    member that rule 19 copies elsewhere stays there as a reader line (`window.<n>.next.<member>&...`).
 15. `maintenance`: the action's lines behind its setting; other lines' reads of its aura as "up or disabled"; an
     absence read stays. Not a wowsims rule: the in-game default (off) is ours, the harness runs wowsims's (on).
 16. `select`: an option-selected cast as one line a candidate under its choice setting's term; its "active" value as
