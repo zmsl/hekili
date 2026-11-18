@@ -6,6 +6,7 @@
 - Shaman: Hekili now knows Totemic Recall; casting it takes your totems and their buffs down in the recommendations (the mana it gives back is not counted yet). Not yet checked in game.
 - Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
 - A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
+- A priority's `variable` line can take `pure=1`: each line that reads the variable then works it out at that line, instead of reading a stored value.
 - Priorities can use SimC `sequence` and `strict_sequence` lines (with `restart_sequence` and `window.<name>.done`); they run in the Primary and AOE displays, each with a Sequences setting (on by default).
 - A sequence running in a display shows all its steps there, including a cooldown that is normally shown in its own display; a toggle that is switched off still keeps that step out.
 - A priority whose lines open and close the same window in one recommendation gets a one-time warning, also when a `close_window` line stops a sequence that then starts again.
@@ -39,7 +40,7 @@
 - Spells that cost a share of your base mana now cost what the game charges, rounded to the nearest mana instead of down (Stormstrike at level 60 costs 122, not 121).
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
-- Using a mana gem or Robe of the Archmage now adds its mana to Hekili's mana forecast, the gem's by the gem you used.
+- Using a mana gem or Robe of the Archmage now adds its mana to Hekili's mana forecast, the gem's by the gem you used (not yet checked in game).
 - A recommendation that changes and changes straight back no longer flashes the other ability for a split second.
 - ConsolePort: the recommendation now shows the controller button for spells on ConsolePort's action bars.
 - Paladin: a second attack in the same instant as an Unsealed Wrath proc no longer stores or spends an extra Echo (the talent's 0.1 s cooldown; not yet checked in game).
@@ -52,13 +53,11 @@
 - Warrior: a hit you block in full no longer counts as rage gained, and the rage expected from hits taken follows the latest measurements by attacker level (not yet checked in game).
 - Warrior: a missed, dodged or parried Execute no longer gives back part of its cost, and the extra rage it would have used stays yours (not yet checked in game).
 - Warrior: Overpower now shows after a dodge that comes soon after your last Overpower; it used to wait 5 seconds from that Overpower (not yet checked in game).
-- Warrior, Arms and Fury (wowsims.com): checked against wowsims's latest gear sets, which change three gear pieces; the priorities are unchanged, and Blackhand's Breadth, which wowsims now uses, is not suggested yet.
-- Warrior, Protection (wowsims.com): checked against wowsims's pre-raid gear set and its new healing rate; the priorities are unchanged.
 
 ### Known issues
+- Warrior, Arms and Fury (wowsims.com): Blackhand's Breadth, which wowsims's latest gear sets use, is not suggested yet.
 
 ### Upgrade notes
-
 - A priority list named `windows` is now reserved for window declarations: a custom priority with an ordinary list of that name shows an error on that list until it is renamed.
 
 ## v0.8.6

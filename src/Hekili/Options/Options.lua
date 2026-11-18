@@ -4572,6 +4572,10 @@ found = true end
         newPackSpec = "",
     }
 
+    local windowLine = { window = true, open_window = true, close_window = true, sequence = true, strict_sequence = true,
+        call_action_list = true, run_action_list = true,
+        restart_sequence = true }
+
     local nameMap = {
         call_action_list = "list_name",
         run_action_list = "list_name",
@@ -4720,7 +4724,9 @@ found = true end
             data.use_while_casting = nil
         end
 
-        if option == "action" then
+        -- a window or sequence line, or the `windows` list, changes what the priority declares: a full load checks the
+        -- windows again (Scripts.lua CheckWindows)
+        if option == "action" or windowLine[ data.action ] or packControl.listName == "windows" then
             self:LoadScripts()
         else
             self:LoadScript( pack, packControl.listName, actionID )

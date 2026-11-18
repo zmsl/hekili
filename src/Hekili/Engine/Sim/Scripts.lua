@@ -1726,7 +1726,7 @@ local WINDOW_OPTS = { duration = true, refresh = true, max_duration = true, max_
 local PLAIN_OPTS = { mode = true, wait_on_ready = true, reset_on_target_change = true }
 local STRICT_OPTS = { allow_skip = true, start_on_first = true, hold_off_gcd = true, step_timeout = true, reset_on_target_change = true }
 local MODES = { skip = true, wait = true, continue = true }
-local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {}, byName = {}, seqByID = {}, startByID = {}, nStrict = 0, holdWalk = false, fireIDs = {} }
+local NO_APL_WINDOWS = { decls = {}, records = {}, cap = 0, errors = {}, errorAt = {}, byName = {}, seqByID = {}, startByID = {}, nStrict = 0, holdWalk = false, fireIDs = {} }
 
 -- (windows design v6 §7, rulings 10, 19; L1315) a display's Sequences setting: Primary and AOE only, on by default;
 -- Cooldowns, Interrupts and Defensives never sequence (a value stored there by an older build is ignored)
@@ -1756,12 +1756,13 @@ local function flag( v ) -- an "=1" option: nil (unwritten), else 0 or 1, else f
     return ( v == 0 or v == 1 ) and v or false
 end
 
---- `lists`: a priority's lists by name (parsed entries). Returns { decls, records, cap, errors }; each error
---- { code, list, line, text, entry }. The shared empty result when nothing is declared and nothing is wrong.
+--- `lists`: a priority's lists by name (parsed entries). Returns { decls, records, cap, errors, errorAt }; each error
+--- { code, list, line, text, entry }; errorAt: "list:line" -> "code: text" (the line's last error, LoadScript's stamp). The shared empty result when nothing is declared and nothing is wrong.
 function scripts.CheckWindows( lists, packName )
-    local errors, decls, records, byName, cap, fireIDs = {}, {}, {}, {}, 0, {}
+    local errors, errorAt, decls, records, byName, cap, fireIDs = {}, {}, {}, {}, {}, 0, {}
     local function err( code, list, i, entry, text )
         errors[ #errors + 1 ] = { code = code, list = list, line = i, entry = entry, text = text }
+        errorAt[ list .. ":" .. i ] = code .. ": " .. text
     end
 
     -- the `windows` list first: "before use" (§3.1)
@@ -1933,7 +1934,7 @@ function scripts.CheckWindows( lists, packName )
     end
 
     if #decls == 0 and #errors == 0 then return NO_APL_WINDOWS end
-    return { decls = decls, records = records, cap = cap, errors = errors, byName = byName, seqByID = seqByID,
+    return { decls = decls, records = records, cap = cap, errors = errors, errorAt = errorAt, byName = byName, seqByID = seqByID,
         startByID = startByID, nStrict = nStrictDecl, holdWalk = holdWalk, fireIDs = fireIDs }
 end
 
@@ -1989,6 +1990,10 @@ function scripts:SwapScripts( s1, s2 )
     -- CN25: the editor moved a line (its list is already reordered): the pure variables' script IDs follow it
     local pack = s1:match( "^(.*):[^:]*:%d+$" )
     if pack then scripts:MarkPure( pack ) end
+
+    -- a pack with windows or window errors: the checks (and errorAt, LoadScript's stamp) follow the lines' new order
+    local w = pack and scripts.Windows[ pack ]
+    if w and ( #w.decls > 0 or #w.errors > 0 ) then Hekili:LoadScripts() end
 end
 
 
@@ -2363,6 +2368,11 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     if script.Error then
         Hekili:Error( "Error in " .. scriptID .. " conditions:  " .. ( script.rs or "null" ) .. "\n\n" .. script.Error )
     end
+
+    -- (windows design v6 §3.4) a pack list line keeps its window compile error on every reload, not only the full
+    -- load's (LoadScripts reports it); the walk skips a script with an Error
+    local cw = entries == pData.lists[ list ] and scripts.Windows[ pack ]
+    if cw and cw.errorAt[ list .. ":" .. id ] then script.Error = cw.errorAt[ list .. ":" .. id ] end
 
     -- Forever: target health is secret, so the belief answers it with constants (spec §6.5, §7.4); time to die is unwarned.
     local scan = ns.AplSecretToken

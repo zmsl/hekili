@@ -253,7 +253,7 @@ M.FLICKER = {
     -- (021dece2f, L1119) leaves it flat (199 -> 200)
     -- re-pin e5a9cd2a2d -> e4ef929e54 (repin-druid-09 round 4; seeds 1-20 / 21-40 / 41-60 heldReady 189 / 174 / 174,
     -- flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, agreement .997 / .997 / .998): heldReady 200 -> 189,
-    -- likely mana-09 (043d29b57: the Innervate entry's regen = 5, druid_loop_world.lua:37 / :404, and CN22's percent-cost
+    -- cause not proven: likely mana-09 (043d29b57: the Innervate entry's regen = 5, druid_loop_world.lua:37 / :404, and CN22's percent-cost
     -- rounding), not the re-pin (the Balance .simc changed only its header); likely, not A/B'd
     ["Balance"] = { flicker = 0, retracted = 0, heldReady = 189 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
@@ -299,9 +299,9 @@ M.FLICKER = {
     -- retracted 0.7 -> 0 (round 5 review M2: all three sets measured 0, the measured worst)
     -- avoid-refund-09, replay-fncd-09 and replay-flips-09 merged: every cell identical (seeds 1-20 re-run)
     -- 0.9 batch (integ/0.9 a464ca6a4; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.32 / 0.16, retracted 0 / 0 / 0,
-    -- readyShort 0 / 0 / 0, heldReady 423 / 411 / 410, agreement .908 / .924 / .907): heldReady 420 -> 423. Cause gap-as-09
-    -- (the swing-avoid give-back, which the Druid lane did not carry), A/B on one tree: the Druid merge e98ef8506 reads
-    -- 423, the same minus gap-as's src + harness diff 420; steady-hold-09 moves flicker 0.28 -> 0.26 (its own A/B)
+    -- readyShort 0 / 0 / 0, heldReady 423 / 411 / 410, agreement .908 / .924 / .907): heldReady 420 -> 423, bisected to gap-as-09
+    -- (the swing-avoid give-back, which the Druid lane did not carry), mechanism not traced (no held tick read): the
+    -- Druid merge e98ef8506 reads 423, the same minus gap-as's src + harness diff 420; steady-hold-09 moves flicker 0.28 -> 0.26 (its own A/B)
     ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 423 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
@@ -445,7 +445,7 @@ M.FLICKER = {
     -- 189-192 against its 189, hunters_mark 2; rapid_fire 14 = 11 + 1 + 2: 11 are Rapid Fire behind an Aimed Shot whose
     -- 310 is paid at the cast's end, waiting from the belief's floor at a fight-opening pool no read has pinned (t 8.6:
     -- lo 352.2, (100 - (lo - 310)) / 12.40 = 4.67 s; the oracle's exact 513.3 covers both; central, repin-hunter-09-3);
-    -- 1 is fight 15 at t 8.80, 3.23 s at truth 101 (untraced, plausibly the same unpinned floor); 2 are near-cost edge
+    -- 1 is untraced (fight 15 at t 8.80, 3.23 s at truth 101; plausibly the same unpinned floor, not shown); 2 are near-cost edge
     -- ticks (0.09 s, 0.07 s): the worst set
     ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 236 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
     -- heldReady 183 -> 361 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
@@ -585,8 +585,8 @@ M.FLICKER = {
     -- stormstrike 144 / 128 / 31 with the rows, 79 / 37 / 15 without (agreement .987 / .992 / .995 vs .992 / .994 /
     -- .997; heldReady 153 / 166 / 155 vs - / 179 / 171); on a fresh boot a fight 51 / 47. The traced episodes (seed 19,
     -- fresh boot) are the gap BT tie (belief and truth agree Flame Shock down and Stormstrike's cooldown; lo 5 under the
-    -- truth puts Flame Shock's cost 0.08 s past Stormstrike's ready) and no avoid row paid a Flame Shock ticket; how the
-    -- rows raise the count across a boot's fights is not identified (swing-ticket payments unlogged)
+    -- truth puts Flame Shock's cost 0.08 s past Stormstrike's ready) and no avoid row paid a Flame Shock ticket; not traced:
+    -- how the rows raise the count across a boot's fights (swing-ticket payments unlogged)
     -- lane mana-09 merged (8827f860d; CN22 nearest rounding, Stormstrike 121 -> 122; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 /
     -- 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 1, heldReady 153 / 166 / 155, agreement .987 / .992 / .995, react p90 0 / 0 / 0):
     -- heldReady 146 -> 166 (the worst set), readyShort 0 -> 1, flicker 0.03 -> 0.01 (the worst, 0, + 0.01). Cause: CN22 nearest
@@ -617,7 +617,15 @@ M.FLICKER = {
     -- 0.9 batch (integ/0.9 a464ca6a4; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort
     -- 0 / 0 / 0, heldReady 109 / 97 / 102, agreement .990 / .989 / .990): heldReady 102 -> 109. Cause regen-read-09 (an
     -- out-of-combat regen read equal to the seed narrows the band), A/B on one tree: the Paladin merge 03b05f947 (which
-    -- carries it) reads 109, the same minus its Power.lua diff 96
+    -- carries it) reads 109, the same minus its Power.lua diff 96. Traced (integ-09-fixes, both arms on one tree): the
+    -- world's regen is 29.13/s in and out of the five-second rule, so the boot's read (29.13, the seed) closes the band at
+    -- the in-combat rate (the in-combat EMA re-opens it about 2 %); seeds 21-40 and 41-60 hold the same ticks in both
+    -- arms (97 / 102; only lo and the wait's length differ, shorter with the read). Seeds 1-20 fight 1: an Arcane Wrath
+    -- pressed under Arcane Power (t 18.6) lands after it; the world charges 513.5 at the press, the belief 395 at the
+    -- success (L1110's rule, not checked in game for a cost-raising aura), so est runs 118.5 over truth from t 22.2 in
+    -- both arms. By t 51 the old seed band's lo sat under truth and hid it; the read puts lo = est, the first decision
+    -- difference is t 51.6 (arcane_blast wait 1.30 vs 5.27, oracle 4.55; Evocation pressed at 53.0 vs 54.6) and fights 2-20 run
+    -- on other trajectories (per seed -2 to +3). The held ticks are the cost crossing one poll late in both arms
     ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 109 }, -- 0 / 0 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one

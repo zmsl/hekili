@@ -252,6 +252,75 @@ describe("the windows compiler (windows design v6 §3.4, §9)", function()
         assert.are.same({}, sent)
     end)
 
+    it(
+        "a one-line reload of a line with a window error keeps it disabled, with no new report (L1329 sibling)",
+        function()
+            load({ default = "actions+=/open_window,name=nope\nactions+=/berserker_stance" })
+            local n = #H.errors
+            H.Hekili:LoadScript(ww.PACK, "default", 1) -- an editor edit of the line's if=, say
+            local script = H.Hekili.Scripts.DB[ww.PACK .. ":default:1"]
+            assert.is_truthy(script.Error and script.Error:find("E1", 1, true))
+            assert.are.equal(n, #H.errors)
+        end
+    )
+
+    it("a line the editor moves takes its window error with it, and the line moved past it has none", function()
+        load({ default = "actions+=/open_window,name=nope\nactions+=/berserker_stance" })
+        local lines = H.Hekili.DB.profile.packs[ww.PACK].lists.default
+        lines[1], lines[2] = lines[2], lines[1] -- the editor's move down (Options.lua moveDownBtn)
+        local at = ww.PACK .. ":default:"
+        H.Hekili.Scripts:SwapScripts(at .. 1, at .. 2)
+        H.Hekili:LoadScript(ww.PACK, "default", 1) -- then an edit of the stance line, now first
+        assert.is_nil(H.Hekili.Scripts.DB[at .. 1].Error)
+        local moved = H.Hekili.Scripts.DB[at .. 2]
+        assert.is_truthy(moved.Error and moved.Error:find("E1", 1, true))
+    end)
+
+    it("an editor edit of a window line checks the priority's windows again", function()
+        load({
+            windows = "actions+=/window,name=x,duration=6",
+            default = "actions+=/open_window,name=x\nactions+=/berserker_stance",
+        })
+        assert.is_nil(H.Hekili.Scripts.DB[ww.PACK .. ":default:1"].Error)
+        -- the editor on default line 1 (its default selection) names a window this priority does not declare
+        H.Hekili:SetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "window_name" }, "nope")
+        local script = H.Hekili.Scripts.DB[ww.PACK .. ":default:1"]
+        assert.is_truthy(script.Error and script.Error:find("E1", 1, true))
+    end)
+
+    it("an editor edit of a call line away from the windows list clears its E5, and one to it shows E5", function()
+        load({
+            default = "actions+=/call_action_list,name=windows\nactions+=/berserker_stance",
+            aoe = "actions+=/berserker_stance",
+        })
+        local at = ww.PACK .. ":default:"
+        assert.is_truthy(H.Hekili.Scripts.DB[at .. 1].Error:find("E5", 1, true))
+        H.Hekili:SetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "list_name" }, "aoe")
+        assert.is_nil(H.Hekili.Scripts.DB[at .. 1].Error)
+        H.Hekili:SetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "list_name" }, "windows")
+        assert.is_truthy(H.Hekili.Scripts.DB[at .. 1].Error:find("E5", 1, true))
+    end)
+
+    it("an editor edit of a non-window entry in the windows list is a full load", function()
+        load({
+            windows = "actions+=/window,name=x,duration=6\nactions+=/berserker_stance",
+            default = "actions+=/berserker_stance",
+        })
+        -- the editor selects the windows list, line 2 (the stance line): an edit of its if= is a full load
+        H.Hekili:SetPackOption({ "packs", ww.PACK, "listName" }, "windows")
+        H.Hekili:SetPackOption({ "packs", ww.PACK, "actionID" }, "0002")
+        local full = 0
+        local ls = H.Hekili.LoadScripts
+        H.Hekili.LoadScripts = function(...)
+            full = full + 1
+            return ls(...)
+        end
+        H.Hekili:SetActionOption({ "packs", ww.PACK, "lists", "entry", "x", "criteria" }, "1")
+        H.Hekili.LoadScripts = ls
+        H.Hekili:SetPackOption({ "packs", ww.PACK, "listName" }, "default")
+        assert.are.equal(1, full)
+    end)
+
     it("a window another priority declares reads closed, done included (M4)", function()
         H.Hekili.Scripts.declaredWindows.other = true
         local w = S.window.other
@@ -504,6 +573,26 @@ describe("APL window lines as commands (windows design v6 §4, §5)", function()
         assert.are.same({}, VSI.def.aplWindows)
         assert.are.equal(0, VSI.def.aplOpCap)
         assert.are_not.equal(gen, VSI.def.aplGen)
+    end)
+
+    it("a rebuild drops the old lines' per-slot marks: WIN.fired does not grow over a session (L1324)", function()
+        load({
+            windows = "actions+=/window,name=x,duration=6",
+            default = "actions+=/open_window,name=x\nactions+=/berserker_stance",
+        })
+        tick()
+        local WIN
+        for i = 1, 200 do
+            local name, v = debug.getupvalue(S.WindowSlot, i)
+            if not name then
+                break
+            elseif name == "WIN" then
+                WIN = v
+            end
+        end
+        assert.is_not_nil(next(WIN.fired))
+        load({ default = "actions+=/berserker_stance" })
+        assert.is_nil(next(WIN.fired))
     end)
 
     it("L05: export then import: plain names and the windows list in the string; the same operations on W09", function()
