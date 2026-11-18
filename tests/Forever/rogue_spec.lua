@@ -931,6 +931,35 @@ describe("Forever Assassination with no plain energy rate", function()
     end)
 end)
 
+-- dry-forecast (engine pass E3): the forecast window's stretch is pack data. Assassination declares `fillWindow =
+-- "energy"`: every window (the slot's, the retry's, the resource forecast's horizon) reaches at least the time a full
+-- bar takes at the combined rate, 0.01 + 100 / 10 here; Combat declares none and keeps its window.
+describe("Forever Rogue forecast window", function()
+    local function boot(name)
+        local C = require("Forever.helpers.rogue_world")[name]
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_true(headless.cycle(H, H.ctl.now + 0.5))
+        return H.Hekili.State
+    end
+
+    it("stretches Assassination's to a full energy bar's regen, never below the display's own", function()
+        local S = boot("Assassination")
+        assert.are.equal("energy", S.spec.fillWindow)
+        assert.are.equal(10, S.energy.regen_combined)
+        assert.is_true(math.abs(S.ForecastWindow(5) - 10.01) < 1e-9)
+        assert.are.equal(15, S.ForecastWindow(15))
+    end)
+
+    it("leaves Combat's as the display's own", function()
+        local S = boot("Combat")
+        assert.is_falsy(S.spec.fillWindow) -- state.spec answers false for a key it lacks
+        assert.are.equal(5, S.ForecastWindow(5))
+    end)
+end)
+
 -- L576 bug 2, the Rogue's Poised (1328826): a plain read that saw it up 20 ms before Sinister Strike does not keep the
 -- charge the strike spent, so the next covered ability is not discounted again.
 describe("Forever Rogue Poised under a read in the cast's frame", function()

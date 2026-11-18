@@ -34,7 +34,6 @@ return {
     },
     ["src/Hekili/Engine/Sim/Core.lua"] = {
         ["99"] = 1,
-        ["DEATHKNIGHT"] = 3,
         ["UseItems"] = 2,
         ["execute"] = 1,
         ["main_hand"] = 1,
@@ -82,7 +81,6 @@ return {
         ["vanish"] = 1,
     },
     ["src/Hekili/Engine/Sim/State.lua"] = {
-        ["DEATHKNIGHT"] = 1,
         ["DRUID"] = 1,
         ["ROGUE"] = 1,
         ["active_flame_shock"] = 1,

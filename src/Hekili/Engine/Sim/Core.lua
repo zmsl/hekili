@@ -2006,13 +2006,7 @@ function Hekili.Update()
                 local action, wait, depth
                 local isMain = ( dispName == "Primary" or dispName == "AOE" )
                 -- Forever E9: Primary and AOE use the global forecast window (Options, Performance); other displays their Forecast Period.
-                local defaultMax = isMain and ( Hekili.Engine.settings.performance.forecastWindow or 15 ) or ( display.forecastPeriod or 15 )
-
-                if class.file == "DEATHKNIGHT" then
-                    defaultMax = max( defaultMax, 0.01 + 20 * state.haste )
-                elseif state.spec.assassination and state.energy.regen_combined > 0 then -- a rate never read plain is 0: keep the default window
-                    defaultMax = max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined )
-                end
+                local defaultMax = state.ForecastWindow( isMain and ( Hekili.Engine.settings.performance.forecastWindow or 15 ) or ( display.forecastPeriod or 15 ) )
                 if i <= 2 then altMax[ i ] = defaultMax end
 
                 state.delay = 0
@@ -2226,14 +2220,7 @@ function Hekili.Update()
 
                 if not action then
                     state.delay = 0
-                    state:SetConstraint( 0, defaultMax )
-
-                    if class.file == "DEATHKNIGHT" then
-                        state:SetConstraint( 0, max( state.delayMax, 0.01 + 20 * state.haste ) )
-                    elseif state.spec.assassination and state.energy.regen_combined > 0 then
-                        -- Cap recommend generation above worst-case energy generation.
-                        state:SetConstraint( 0, max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined ) )
-                    end
+                    state:SetConstraint( 0, defaultMax ) -- the slot's window (state.ForecastWindow), its fill stretch included
 
                     if hadProj and debug then Hekili:Debug( "[ ** ] No recommendation before queued event(s), checking recommendations after %.2f.", state.offset ) end
 

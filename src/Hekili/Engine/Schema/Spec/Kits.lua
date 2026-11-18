@@ -111,7 +111,8 @@ end
 --- role ("attack"|"tank"|"healer": shown, not simulated), ranged, nameplateRange (its Enemy Range Radius default in
 --- yards; a ranged spec's is 30 unless set, a melee spec's 10, the radius the target count falls back to), package
 --- (its default priority), movement (true: its priorities read the Movement toggle, whose options row it then
---- shows), unsupported (true: no
+--- shows), fillWindow (a resource key: the forecast window reaches at least the time that pool takes to fill from
+--- empty at its combined rate, Engine/Sim/State.lua state.ForecastWindow), unsupported (true: no
 --- priorities on Forever; the engine idles and the options page says so) }. Ids are ours: ns.TreeSpecID(client class
 --- id, slot), the kit at slot 0. Nil when `token` is not the player's class.
 function Hekili:NewClass( token, def )
@@ -133,6 +134,7 @@ function Hekili:NewClass( token, def )
             tree = d.tree or 0,
             slot = slot,
             unsupported = d.unsupported or nil,
+            fillWindow = d.fillWindow,
             melee = not d.ranged,
             kit = kit,
             settings = {},

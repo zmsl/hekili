@@ -119,6 +119,7 @@ Each entry of `def.specs` in `Hekili:NewClass` describes one spec. The fields, f
 | `nameplateRange` | The spec's default enemy range radius in yards, which target counting falls back to. 30 for a ranged spec and 10 for a melee spec unless set. |
 | `package` | The spec's default priority, such as `"Feral (wowsims.com)"`. |
 | `movement` | `true` when the spec's priority reads `toggle.movement`; the options then show the Movement toggle for it. `tests/Forever/packs_spec.lua` checks that the two agree. |
+| `fillWindow` | A resource key, such as `"energy"`. Every forecast window of the spec reaches at least the time that pool takes to fill from empty at its combined regeneration. Assassination sets it. |
 | `unsupported` | `true` for a spec with no priority on Forever. Its displays are off, the engine idles and the options page says so. |
 | `formerPackages` | Priority names that count as the spec's default: a player on one of them counts as on the default when the spec picks its priority. |
 

@@ -1322,6 +1322,20 @@ local function tickReach( t, a, dt )
     return a + max( 1e-6, L - ( ( a - ( rawget( t, "last_tick" ) or 0 ) ) % L ) ) + dt
 end
 
+-- The forecast window (engine pass E3): a display's own window `base` (Engine/Sim/Core.lua: the global forecast window
+-- for Primary and AOE, a display's Forecast Period for the others), at least the time the spec's `fillWindow` pool
+-- takes to fill from empty at its combined rate (pack data, Engine/Schema/Spec/Kits.lua; a rate of 0, never read
+-- plain, stretches nothing). The slot's window, its retry's and the resource forecast's horizon. Allocates nothing.
+function state.ForecastWindow( base )
+    local key = state.spec.fillWindow
+    if key then
+        local r = state[ key ]
+        local rate = r.regen_combined
+        if rate > 0 then return max( base, 0.01 + r.max / rate ) end
+    end
+    return base
+end
+
 -- Resource Modeling!
 local forecastResources
 
@@ -1343,14 +1357,7 @@ do
         local now = state.now + state.offset
         -- Forever E9: the horizon is the global forecast window (Core.lua's delayMax), read here because a pass can
         -- shorten delayMax and the reset forecast would inherit that.
-        local timeout = Hekili.Engine.settings.performance.forecastWindow or 15
-
-        if state.class.file == "DEATHKNIGHT" and state.runes then
-            -- Adjust timeout based on rune cooldowns and regen models for Frost DK
-            timeout = max( timeout, 0.01 + state.runes.expiry[ 6 ] - state.query_time )
-        elseif state.spec.assassination then
-            timeout = max( timeout, 0.01 + state.energy.max / max( 0.001, state.energy.regen_combined ) )
-        end
+        local timeout = state.ForecastWindow( Hekili.Engine.settings.performance.forecastWindow or 15 )
 
         timeout = timeout + state.gcd.remains
         local r = state[ resource ]

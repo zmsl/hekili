@@ -40,6 +40,7 @@ local spec = Hekili:NewClass("ROGUE", {
             icon = 132292,
             role = "attack",
             package = "Assassination (wowsims.com)",
+            fillWindow = "energy", -- the forecast window reaches a full energy bar's regen (upstream Hekili's)
         },
         {
             key = "combat",
