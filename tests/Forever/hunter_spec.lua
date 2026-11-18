@@ -24,7 +24,6 @@ local KIT = {
     -- the BM talent (19574): its pet's 18 s rage, autocast as a major cooldown in wowsims's BM log
     bestial_wrath = { { 19574 }, 0.12, 120, "off" }, -- 12% of base mana (the pin's row CostPct 12; the DB2 had it free)
     serpent_sting = { { 1978, 13549, 13550, 13551, 13552, 13553, 13554, 13555, 25295 }, 250, 0, "spell" },
-    volley = { { 1510, 14294, 14295 }, 490, 0, "spell" },
     arcane_shot = { { 3044, 14281, 14282, 14283, 14284, 14285, 14286, 14287 }, 190, 6, "spell" },
     summon_hawk = { { 1293241, 1293525, 1293526, 1293527 }, 190, 6, "spell" },
     aimed_shot = { { 19434, 20900, 20901, 20902, 20903, 20904 }, 310, 6, "spell" },

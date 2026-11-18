@@ -705,24 +705,6 @@ spec:RegisterAbilities({
         handler = stings(),
     },
 
-    volley = {
-        id = 1510,
-        school = "arcane",
-        copy = rest(VOLLEY),
-        cast = 6,
-        fixedCast = true,
-        channeled = true,
-        tick_time = 1,
-        cooldown = 0,
-        gcd = "spell",
-
-        spend = cost(VOLLEY_COST, VOLLEY),
-        spendType = "mana",
-
-        startsCombat = true,
-        known = knows(VOLLEY),
-    },
-
     arcane_shot = {
         id = 3044,
         onCrit = resourceful, -- Resourcefulness at 2/2
@@ -1152,8 +1134,10 @@ spec:RegisterAbilities({
     -- A 6 s channel, a tick a second.
     volley = {
         id = 1510,
+        school = "arcane",
         copy = rest(VOLLEY),
         cast = 6,
+        fixedCast = true,
         channeled = true,
         tick_time = 1,
         cooldown = 0,
