@@ -117,6 +117,7 @@ function Hekili:SpecializationChanged()
     state.spec.kitID = kit and kit.id or currentID
     state.spec.source = source or "client"
     state.spec.selector = selector and selector.key
+    state.spec.fillWindow = tree and tree.fillWindow -- state.ForecastWindow's pool (Kits.lua NewClass)
 
     for k in pairs( state.role ) do
         state.role[ k ] = false

@@ -12,7 +12,7 @@ local SUBS = 8 -- subscriber slots per display: OUTSIDE of them for Engine.Subsc
 local OUTSIDE = 4 -- so an outside caller never takes the slot of the display, the integrations or the action bar glow
 local ANNOTATORS = 4
 local ALTS = 2 -- alternatives per record: the picks at the low and the high bound of the gating resource
-local READY = 0.05 -- steady icons: a record due within this is shown as ready (the harness's press threshold)
+local READY = ns.READY -- steady icons: a record due within this is shown as ready (the harness's press threshold)
 
 local function records()
     local t = {}
@@ -105,7 +105,9 @@ local annotators = slots()
 -- headless harness turns them off or holds longer, per instance (tests/Game/harness/loop.lua's measurement arms).
 Output.steady = true
 Output.hold = 1
-Output.interval = 0.2 -- seconds between updates in combat (the driver's combatRate)
+Output.interval = ns.UPDATE_INTERVAL -- seconds between updates in combat (the driver's combatRate)
+-- Published for the displays and the harness, which read the engine through Hekili.Engine.
+Engine.READY, Engine.UPDATE_INTERVAL = READY, ns.UPDATE_INTERVAL
 local acts = 0
 
 --- Our own cast started or succeeded, our channel ended or a swing queue changed: the next publish of every display

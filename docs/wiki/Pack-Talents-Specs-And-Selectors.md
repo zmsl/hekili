@@ -57,6 +57,7 @@ Each entry of `specs` in `Hekili:NewClass(token, { specs = { ... } })` is one sp
 | `package` | The spec's default priority, by name, such as `"Feral (wowsims.com)"` |
 | `formerPackages` | A set of priority names that count as the default: a profile on one of them counts as being on the default. |
 | `movement` | True when the spec's priorities read the Movement toggle, whose options row is then shown |
+| `fillWindow` | A resource key, such as `"energy"`: the forecast window reaches at least the time that pool takes to fill from empty at its combined regeneration |
 | `unsupported` | True for a spec with no priorities on Forever: its displays are off and its options page says so |
 
 From `src/Hekili_Druid/Druid.lua`:

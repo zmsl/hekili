@@ -195,9 +195,10 @@ What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforc
 - `Hekili:NewClass(token, { specs = { ... } })`, `Hekili:NewShared(...)`, `Hekili:NewRace(...)` and the `Register*`
   calls on the object they return (abilities, auras, hooks, settings, packs, ...). `NewClass` (`Engine/Schema/Spec/Kits.lua`)
   returns the class's kit, or nil on another class (the pack then returns). The kit holds every ability, aura and talent;
-  each entry of `specs` is one talent tree's spec: `{ key, name, tree (1-3), icon, role, ranged, package, unsupported }`
-  (`package`: the default priority's name; `unsupported`: no priorities on Forever, its displays off and its page a
-  notice). A spec reads the kit through its metatable and keeps its own settings and options. Ids are the core's:
+  each entry of `specs` is one talent tree's spec: `{ key, name, tree (1-3), icon, role, ranged, package, unsupported,
+  fillWindow }` (`package`: the default priority's name; `unsupported`: no priorities on Forever, its displays off and
+  its page a notice; `fillWindow`: a resource key, every forecast window of the spec reaching at least the time that
+  pool takes to fill from empty at its combined rate, `state.ForecastWindow`). A spec reads the kit through its metatable and keeps its own settings and options. Ids are the core's:
   `100000 + client class id x 10 + slot` (`ns.TreeSpecID`, `Engine/Schema/Trees.lua`; slot 0 the kit, 1..n the specs
   in `specs` order: Warrior Arms 100011). `RegisterTalents` entries are `{ tree, spell, max rank }`, the tree from the
   DB2 (`Talent.TabID`, ordered by `TalentTab.OrderIndex`; 0 when unknown, counted nowhere). `kit:RegisterSetting(key,

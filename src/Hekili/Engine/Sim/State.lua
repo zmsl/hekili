@@ -78,6 +78,7 @@ state.offset = 0
 state.modified = false
 state.resetType = "heavy"
 state.fullNext = false -- Core's alternative passes ran: the next reset is full (Engine/Sim/Core.lua altPasses)
+state.forecastHorizon = false -- the longest window a display in use walks, set per update (Core.lua; false: the global window)
 -- Counts the simulated mutations below (auras, debuffs, resources, cooldowns and charges, stance, pets, totems, advance and
 -- reset): Engine/Schema/Races.lua's memoised cost holds while it and query_time stand. Not auto-reset.
 state.changes = 0
@@ -546,6 +547,14 @@ function ns.SpendPoints( c, res, ability )
     end
     return c
 end
+--- The declared spend of `ability` (an entry of class.abilities) and its resource, in one read: the cost the
+--- modifiers' wrapper answers (Engine/Schema/Races.lua M.Wrap), a number or nil, never a function (an ability's
+--- metatable calls it), and the ability's `spendType`, else the class's primary resource (even with no spend).
+--- Points: ns.SpendPoints. Allocates nothing.
+function state.SpendOf( ability )
+    return ability.spend, ability.spendType or class.primaryResource
+end
+
 -- (audit E8) Through the facade: knownRank(ids) is the highest rank of the list the spellbook knows (0 none; memoised
 -- there); swingBase(hand) the hand's unhasted swing speed, the attack speed with the melee haste taken out (0 unknown;
 -- hands 1 and 2); healthMax(unit) the client's. Allocate nothing.
@@ -1313,10 +1322,51 @@ local function tickReach( t, a, dt )
     return a + max( 1e-6, L - ( ( a - ( rawget( t, "last_tick" ) or 0 ) ) % L ) ) + dt
 end
 
+-- The forecast window (engine pass E3): a display's own window `base` (Engine/Sim/Core.lua: the global forecast window
+-- for Primary and AOE, a display's Forecast Period for the others), at least the time the spec's `fillWindow` pool
+-- takes to fill from empty at its combined rate (pack data, Engine/Schema/Spec/Kits.lua; a rate of 0, never read
+-- plain, stretches nothing). The slot's window, its retry's and the resource forecast's horizon. Allocates nothing.
+function state.ForecastWindow( base )
+    local key = state.spec.fillWindow
+    if key then
+        local r = state[ key ]
+        local rate = r.regen_combined
+        if rate > 0 then return max( base, 0.01 + r.max / rate ) end
+    end
+    return base
+end
+
 -- Resource Modeling!
 local forecastResources
 
 do
+    -- A regen-model entry as the sim reads it (engine pass E6, E-D7: the one evaluator of forecastResources and
+    -- state:CombinedResourceRegen): its gates on `resource` (resource, spec, equipment, talent, aura, set bonus, setting,
+    -- swing, channel), its interval at `now` (a number, a function of `now` and the pool's value `v`, or a state field's
+    -- name; else 0) and its gain at `now`. Allocate nothing.
+    local function regenEntryActive( v, resource )
+        return ( not v.resource or v.resource == resource ) and
+               ( not v.spec or state.spec[ v.spec ] ) and
+               ( not v.equip or state.equipped[ v.equip ] ) and
+               ( not v.talent or state.talent[ v.talent ].enabled ) and
+               ( not v.aura or state[ v.debuff and "debuff" or "buff" ][ v.aura ].remains > 0 ) and
+               ( not v.set_bonus or state.set_bonus[ v.set_bonus ] > 0 ) and
+               ( not v.setting or state.settings[ v.setting ] ) and
+               ( not v.swing or state.swings[ v.swing .. "_speed" ] and state.swings[ v.swing .. "_speed" ] > 0 ) and
+               ( not v.channel or state.buff.casting.up and state.buff.casting.v3 == 1 and state.buff.casting.v1 == class.abilities[ v.channel ].id )
+    end
+
+    local function regenInterval( v, now, value )
+        local i = v.interval
+        return type( i ) == "number" and i or
+               ( type( i ) == "function" and i( now, value ) or
+               ( type( i ) == "string" and state[ i ] or 0 ) )
+    end
+
+    local function regenGain( v, now )
+        return type( v.value ) == "number" and v.value or v.value( now )
+    end
+
     local events = {}
     local remains = {}
 
@@ -1332,16 +1382,10 @@ do
         wipe( remains )
 
         local now = state.now + state.offset
-        -- Forever E9: the horizon is the global forecast window (Core.lua's delayMax), read here because a pass can
-        -- shorten delayMax and the reset forecast would inherit that.
-        local timeout = Hekili.Engine.settings.performance.forecastWindow or 15
-
-        if state.class.file == "DEATHKNIGHT" and state.runes then
-            -- Adjust timeout based on rune cooldowns and regen models for Frost DK
-            timeout = max( timeout, 0.01 + state.runes.expiry[ 6 ] - state.query_time )
-        elseif state.spec.assassination then
-            timeout = max( timeout, 0.01 + state.energy.max / max( 0.001, state.energy.regen_combined ) )
-        end
+        -- Forever E9: the horizon is the forecast window, not Core.lua's delayMax (a pass can shorten delayMax and the
+        -- reset forecast would inherit that). E-D6: the longest a display in use walks (state.forecastHorizon), since a
+        -- separate display reuses the last full reset's forecast; outside an update, the global window.
+        local timeout = state.ForecastWindow( state.forecastHorizon or Hekili.Engine.settings.performance.forecastWindow or 15 )
 
         timeout = timeout + state.gcd.remains
         local r = state[ resource ]
@@ -1369,20 +1413,10 @@ do
 
         if models then
             for k, v in pairs( models ) do
-                if ( not v.resource or v.resource == resource ) and
-                   ( not v.spec or state.spec[ v.spec ] ) and
-                   ( not v.equip or state.equipped[ v.equip ] ) and
-                   ( not v.talent or state.talent[ v.talent ].enabled ) and
-                   ( not v.aura or state[ v.debuff and "debuff" or "buff" ][ v.aura ].remains > 0 ) and
-                   ( not v.set_bonus or state.set_bonus[ v.set_bonus ] > 0 ) and
-                   ( not v.setting or state.settings[ v.setting ] ) and
-                   ( not v.swing or state.swings[ v.swing .. "_speed" ] and state.swings[ v.swing .. "_speed" ] > 0 ) and
-                   ( not v.channel or state.buff.casting.up and state.buff.casting.v3 == 1 and state.buff.casting.v1 == class.abilities[ v.channel ].id ) then
+                if regenEntryActive( v, resource ) then
 
                     local l = v.last()
-                    local i = type( v.interval ) == "number" and v.interval or
-                              ( type( v.interval ) == "function" and v.interval( now, r.actual ) or
-                              ( type( v.interval ) == "string" and state[ v.interval ] or 0 ) )
+                    local i = regenInterval( v, now, r.actual )
 
                     v.next = l + i
                     v.name = k
@@ -1473,7 +1507,7 @@ do
                     local last = r.fcount > 0 and r.forecast[ r.fcount ]
                     local val, vlo, vhi
                     if last then val, vlo, vhi = last.v, last.l, last.h else val, vlo, vhi = r.actual, r.actual_lo, r.actual_hi end
-                    local gain = type( e.value ) == "number" and e.value or e.value( now ) -- once: the same gain for the three streams
+                    local gain = regenGain( e, now ) -- once: the same gain for the three streams
                     local v = max( 0, min( r.max, val + bonus ) )
                     v = max( 0, min( r.max, v + gain ) )
                     local l = max( 0, min( r.max, vlo + bonus ) )
@@ -1496,9 +1530,7 @@ do
                     r.forecast[ idx ].e = e.name or "none"
                     r.fcount = idx
 
-                    local step = roundDown( type( e.interval ) == "number" and e.interval or
-                                           ( type( e.interval ) == "function" and e.interval( now, v ) or
-                                           ( type( e.interval ) == "string" and state[ e.interval ] or 0 ) ), 3 )
+                    local step = roundDown( regenInterval( e, now, v ), 3 )
 
                     remains[ e.resource ] = finish - e.next
                     if e.resume then
@@ -1540,6 +1572,27 @@ do
 
     ns.forecastResources = forecastResources
     state.forecastResources = forecastResources
+
+    -- The pool's rate a second: its continuous regen plus each aura-gated entry's gain over its interval, the entry read
+    -- as the forecast reads it (regenEntryActive, regenInterval, regenGain at query_time). Entries with no aura (periodic
+    -- gains such as a swing's out of a form) are left out. Allocates nothing.
+    function state:CombinedResourceRegen( t )
+        local regen = t.regen
+        if regen == 0.001 then regen = 0 end
+
+        local model = t.regenModel
+        if not model then return regen end
+
+        local resource, now = t.resource, state.query_time
+        for _, v in pairs( model ) do
+            if v.aura and regenEntryActive( v, resource ) then
+                local i = regenInterval( v, now, t.current )
+                if i > 0 then regen = regen + regenGain( v, now ) / i end
+            end
+        end
+
+        return regen
+    end
 end
 
 
@@ -2589,24 +2642,14 @@ do
             if k == "action_cooldown" then return ability and ability.cooldown or 0
             elseif k == "cast_delay" then return 0
             elseif k == "cast_regen" then
-                local resType = class.primaryResource
-                local amount, resource
-
-                if ability then
-                    amount, resource = ability.spend
-
-                    if not resource and ability.spendType then
-                        resource = ability.spendType
-                    end
-                end
-
-                resType = resource or resType
+                local amount, resType = nil, class.primaryResource
+                if ability then amount, resType = state.SpendOf( ability ) end
 
                 local regen = t[ resType ].regen
                 if regen == 0.001 then regen = 0 end
 
                 if not amount then return t.gcd.execute * regen end
-                return ( max( t.gcd.execute, ability.cast or 0 ) * regen ) - ( ability.spend or 0 )
+                return ( max( t.gcd.execute, ability.cast or 0 ) * regen ) - amount
 
             elseif k == "cast_time" then return ability and ability.cast or 0
             elseif k == "charges" then return cooldown.charges
@@ -2621,8 +2664,9 @@ do
                 local c = ability.cost
                 if c then return c end
 
-                c = ability.spend
-                if c then c = ns.SpendPoints( c, t[ ability.spendType or class.primaryResource ], ability ) end
+                local r
+                c, r = state.SpendOf( ability )
+                if c then c = ns.SpendPoints( c, t[ r ], ability ) end
                 return c or 0
 
             elseif k == "crit_pct_current" or k == "crit_percent_current" then return ability and ability.critical or t.stat.crit
@@ -3873,32 +3917,6 @@ local resource_meta_functions = {}
 
 function state:AddResourceMetaFunction( name, f )
     resource_meta_functions[ name ] = f
-end
-
-
-function state:CombinedResourceRegen( t )
-    local regen = t.regen
-    if regen == 0.001 then regen = 0 end
-
-    local model = t.regenModel
-    if not model then return regen end
-
-    for _, source in pairs( model ) do
-        local value = type( source.value ) == "function" and source.value() or source.value
-        local interval = type( source.interval ) == "function" and source.interval() or source.interval
-
-        local aura = source.aura
-
-        if aura then
-            aura = source.debuff and state.debuff[ aura ] or state.buff[ aura ]
-
-            if aura.up then
-                regen = regen + ( value / interval )
-            end
-        end
-    end
-
-    return regen
 end
 
 -- The seconds until the pool reaches `amount`, on the estimate's stream, or on the floor's with `lo` (border batch 2:
@@ -5558,9 +5576,10 @@ local mt_default_action = {
 
                 if c then return c end
 
-                c = ability.spend
+                local r
+                c, r = state.SpendOf( ability )
 
-                if c then c = ns.SpendPoints( c, state[ ability.spendType or class.primaryResource ], ability ) end
+                if c then c = ns.SpendPoints( c, state[ r ], ability ) end
 
                 return c or 0
             end
@@ -5568,13 +5587,8 @@ local mt_default_action = {
             return 0
 
         elseif k == "cost_type" then
-            local a, _ = ability.spendType
-            if type( a ) == "string" then return a end
-
-            a = ability.spend
-            if type( a ) == "function" then _, a = a() end
-            if type( a ) == "string" then return a end
-            return class.primaryResource
+            local _, r = state.SpendOf( ability )
+            return r
 
         elseif k == "in_flight" or k == "in_flight_to_target" then
             if ability.flightTime then
@@ -7080,15 +7094,8 @@ function state.GetResourceType( ability )
 
     if not action then return end
 
-    if action.spend ~= nil then
-        if type( action.spend ) == "number" then
-            return action.spendType or class.primaryResource
-
-        elseif type( action.spend ) == "function" then
-            return select( 2, action.spend() ) or action.spendType or class.primaryResource
-
-        end
-    end
+    local c, resource = state.SpendOf( action )
+    if c ~= nil then return resource end
 
     return nil
 end
@@ -7100,20 +7107,8 @@ ns.spendResources = function( ability )
     if not action then return end
 
     -- First, spend resources.
-    if action.spend ~= nil then
-        local cost, resource
-
-        if type( action.spend ) == "number" then
-            cost = action.spend
-            resource = action.spendType or class.primaryResource
-        elseif type( action.spend ) == "function" then
-            cost, resource = action.spend()
-            resource = resource or action.spendType or class.primaryResource
-        else
-            cost = cost or 0
-            resource = resource or "health"
-        end
-
+    local cost, resource = state.SpendOf( action )
+    if cost ~= nil then
         cost = ns.SpendPoints( cost, state[ resource ], action )
 
         -- a charged cost modifier's buff loses a stack when the declared cost is above 0, even at a discounted 0 (Engine/Schema/Races.lua)
@@ -7654,16 +7649,8 @@ ns.hasRequiredResources = function( ability )
     if not action then return end
 
     -- First, spend resources.
-    if action.spend and action.spend ~= 0 then
-        local spend, resource
-
-        if type( action.spend ) == "number" then
-            spend = action.spend
-            resource = action.spendType or class.primaryResource
-        elseif type( action.spend ) == "function" then
-            spend, resource = action.spend()
-        end
-
+    local spend, resource = state.SpendOf( action )
+    if spend and spend ~= 0 then
         if resource == "focus" or resource == "energy" then
             -- Thought: We'll already delay CD based on time to get energy/focus.
             -- So let's leave it alone.
@@ -7744,17 +7731,8 @@ function state:TimeToReady( action, pool )
         end
     end
 
-    local spend, resource = ability.spend
-    if spend then
-        if type( spend ) == "number" then
-            resource = ability.spendType or class.primaryResource
-        elseif type( spend ) == "function" then
-            spend, resource = spend()
-            resource = resource or ability.spendType or class.primaryResource
-        end
-
-        spend = spend or 0
-    end
+    local spend, resource = state.SpendOf( ability )
+    if spend == nil then resource = nil end -- no spend: no resource wait (a `readySpend` below included)
 
     if spend and resource then spend = ns.SpendPoints( spend, self[ resource ], ability ) end
 
@@ -7792,11 +7770,9 @@ function state:TimeToReady( action, pool )
     end
     if spend and z and z > wait then
         wait = max( wait, ceil( z * 100 ) / 100 )
-        -- a resource wait inside Output's READY (0.05 s) would show ready while the floor is still under the cost
-        -- (dim never promote, CN8 C1): shown one update later instead
-        -- shortcut: 0.05 is READY in three places (Engine/Output.lua's READY, tests/Game/harness/loop.lua's REACT, here);
-        -- change them together, or share one engine constant if a fourth reader appears
-        if wait <= 0.05 then wait = 0.06 end
+        -- a resource wait inside the ready margin (ns.READY, 0.05 s) would show ready while the floor is still under
+        -- the cost (dim never promote, CN8 C1): shown one update later instead
+        if wait <= ns.READY then wait = 0.06 end
         -- Forever (mana-regen plan, Task 4a): near its cost when the belief's estimate (the `current` stream) reaches
         -- the cost within EARLY_EXIT (at the estimate the pick would end the scan) while the floor reaches it within
         -- one more update (the usability poll that settles it; the client answers a gain late, so the floor runs a few
@@ -7808,7 +7784,7 @@ function state:TimeToReady( action, pool )
         -- further out, where the forecast is less settled (measured: the mark toggled, flicker and readyShort rose).
         z = self[ resource ]
         nearRes = not z.swingGen
-            and wait <= pre + ns.EARLY_EXIT + 0.2 -- the driver's combat update interval
+            and wait <= pre + ns.EARLY_EXIT + ns.UPDATE_INTERVAL
             and self:TimeToResource( z, spend ) <= pre + ns.EARLY_EXIT
         waitRes = wait
     end
@@ -7893,16 +7869,8 @@ function state:IsReady( action )
         return false
     end
 
-    if ability.spend then
-        local spend, resource
-
-        if type( ability.spend ) == "number" then
-            spend = ability.spend
-            resource = ability.spendType or class.primaryResource
-        elseif type( ability.spend ) == "function" then
-            spend, resource = ability.spend()
-        end
-
+    local spend, resource = state.SpendOf( ability )
+    if spend then
         if resource == "focus" or resource == "energy" or state.script.entry then
             local ttr = self:TimeToReady( action )
 

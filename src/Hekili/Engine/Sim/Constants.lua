@@ -22,6 +22,15 @@ ns.FSR = 5
 -- belief: Game/Events/Melee.lua, L.ORACLE_MIN).
 ns.ORACLE_MIN = 0.1
 
+-- The ready margin (seconds): a record due within this is shown as ready (Engine/Output.lua's steady icons, the
+-- Timeline's ETA), so a resource wait inside it reads just past it (Engine/Sim/State.lua's TimeToReady). The harness
+-- presses a first icon due within it (tests/Game/harness/loop.lua's REACT).
+ns.READY = 0.05
+
+-- The driver's combat update interval (seconds; Engine/Driver.lua's combatRate, Output.interval); the harness polls at
+-- it (loop.lua's TICK).
+ns.UPDATE_INTERVAL = 0.2
+
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 -- Class Localization

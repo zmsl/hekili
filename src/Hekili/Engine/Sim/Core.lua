@@ -1813,6 +1813,7 @@ local displayRules = {
     Primary    = { function(   ) return true                                                         end, "AOE"        },
     AOE        = { aoeDisplayRule                                                                       , "Interrupts" },
 }
+local separateDisplays = { "Interrupts", "Defensives", "Cooldowns" } -- the displays that walk their own Forecast Period
 
 -- Alternatives under resource uncertainty (display styles plan, Task 3c), for a display a subscriber asked them of
 -- (needs.alts): after the slot loop, so the main records never depend on them, records 1 and 2 each get the picks the
@@ -1937,6 +1938,19 @@ function Hekili.Update()
         Output.Publish( "status", 1 )
     end
 
+    -- E-D6: the resource forecast's horizon, the longest window a display in use walks: the global forecast window
+    -- (Primary, AOE), or a separate display's Forecast Period (it reuses the last full reset's forecast). No allocation.
+    local horizon = settings.performance.forecastWindow or 15
+    for i = 1, #separateDisplays do
+        local name = separateDisplays[ i ]
+        local d = rawget( settings.displays, name )
+        if d and Output.Wanted( name ) and displayRules[ name ][ 1 ]( settings ) then
+            local p = d.forecastPeriod or 15
+            if p > horizon then horizon = p end
+        end
+    end
+    state.forecastHorizon = horizon
+
     local snaps
 
     local dispName = "Interrupts"
@@ -2006,13 +2020,7 @@ function Hekili.Update()
                 local action, wait, depth
                 local isMain = ( dispName == "Primary" or dispName == "AOE" )
                 -- Forever E9: Primary and AOE use the global forecast window (Options, Performance); other displays their Forecast Period.
-                local defaultMax = isMain and ( Hekili.Engine.settings.performance.forecastWindow or 15 ) or ( display.forecastPeriod or 15 )
-
-                if class.file == "DEATHKNIGHT" then
-                    defaultMax = max( defaultMax, 0.01 + 20 * state.haste )
-                elseif state.spec.assassination and state.energy.regen_combined > 0 then -- a rate never read plain is 0: keep the default window
-                    defaultMax = max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined )
-                end
+                local defaultMax = state.ForecastWindow( isMain and ( Hekili.Engine.settings.performance.forecastWindow or 15 ) or ( display.forecastPeriod or 15 ) )
                 if i <= 2 then altMax[ i ] = defaultMax end
 
                 state.delay = 0
@@ -2226,14 +2234,7 @@ function Hekili.Update()
 
                 if not action then
                     state.delay = 0
-                    state:SetConstraint( 0, defaultMax )
-
-                    if class.file == "DEATHKNIGHT" then
-                        state:SetConstraint( 0, max( state.delayMax, 0.01 + 20 * state.haste ) )
-                    elseif state.spec.assassination and state.energy.regen_combined > 0 then
-                        -- Cap recommend generation above worst-case energy generation.
-                        state:SetConstraint( 0, max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined ) )
-                    end
+                    state:SetConstraint( 0, defaultMax ) -- the slot's window (state.ForecastWindow), its fill stretch included
 
                     if hadProj and debug then Hekili:Debug( "[ ** ] No recommendation before queued event(s), checking recommendations after %.2f.", state.offset ) end
 
@@ -2358,9 +2359,7 @@ function Hekili.Update()
 
                     -- For a timeline: the pick's spend of resource_type now (as ns.spendResources reads it) and how long
                     -- it keeps the player busy (its GCD, or its cast or channel when longer).
-                    local cost = ability.spend
-                    if type( cost ) == "function" then cost = cost() end
-                    if type( cost ) ~= "number" then cost = 0 end
+                    local cost = state.SpendOf( ability ) or 0
                     if slot.resource_type then cost = ns.SpendPoints( cost, state[ slot.resource_type ], ability ) end
                     slot.cost = cost
                     slot.busy = max( ability.gcd ~= "off" and gcdLength( action ) or 0, ability.cast or 0 )

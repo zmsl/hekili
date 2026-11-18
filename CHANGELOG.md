@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- A Cooldowns, Interrupts or Defensives display with a Forecast Period longer than the global forecast window now sees a resource cost that far ahead, instead of showing the ability as not ready.
 
 - At very high spell haste, the icons after the first no longer come up a little early: a global cooldown is never
   shorter than 1 second.

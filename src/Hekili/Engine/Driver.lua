@@ -156,7 +156,7 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
     if Hekili.Engine.settings.enabled and not Hekili.Pause then
         -- Set refresh rates to default values
         self.refreshRate = self.refreshRate or 0.25
-        self.combatRate = self.combatRate or 0.2
+        self.combatRate = self.combatRate or ns.UPDATE_INTERVAL
 
         local thread = self.activeThread
 
@@ -214,7 +214,7 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
                 parked = err == DONE
 
                 self.refreshRate = restRate()
-                self.combatRate = 0.2
+                self.combatRate = ns.UPDATE_INTERVAL
 
                 if ok then
                     if self.firstThreadCompleted then
