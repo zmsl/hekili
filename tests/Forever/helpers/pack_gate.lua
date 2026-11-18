@@ -593,7 +593,10 @@ M.FLICKER = {
     -- press's price (content.resolve in the loop) read no stack: 220 against 58.8 mana, a refusal for cost): the harness
     -- pricing the press, not the belief
     -- react bar 8 -> 3 (owner L1205): the 0.7 mana-wait tie no longer occurs (react p90 0 on all seed sets)
-    ["Enhancement"] = { flicker = 0.01, retracted = 0, heldReady = 166, readyShort = 1 },
+    -- readyShort 1 -> 0 (re-pin batch, L1267): harness-press-price-09 prices the press with the world's current auras
+    -- (loop.lua passes the world's us to content.resolve), so seed 44's last-tick Lightning Bolt reads its 5 Maelstrom
+    -- Weapon stacks; A/B seeds 41-60 readyShort 1 -> 0, every other cell identical
+    ["Enhancement"] = { flicker = 0.01, retracted = 0, heldReady = 166, readyShort = 0 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
