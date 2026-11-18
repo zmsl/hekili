@@ -18,8 +18,12 @@ end
 L["Beast Mastery"] = "野兽控制"
 L["Marksmanship"] = "射击"
 L["Survival"] = "生存"
--- L["Survival (wowsims.com)"] = ""
--- L["Beast Mastery Turret (wowsims.com)"] = ""
--- L["Marksmanship Turret (wowsims.com)"] = ""
--- L["Survival Turret (wowsims.com)"] = ""
--- L["Survival Melee (wowsims.com)"] = ""
+L["Survival (wowsims.com)"] = "生存（wowsims）"
+L["Beast Mastery Turret (wowsims.com)"] = "野兽控制站桩（wowsims）"
+L["Marksmanship Turret (wowsims.com)"] = "射击站桩（wowsims）"
+L["Survival Turret (wowsims.com)"] = "生存站桩（wowsims）"
+L["Survival Melee (wowsims.com)"] = "生存近战（wowsims）"
+
+-- No longer used (the English changed or went away): reuse or delete
+L["Beast Mastery (wowsims.com)"] = "野兽控制（wowsims）"
+L["Marksmanship (wowsims.com)"] = "射击（wowsims）"
