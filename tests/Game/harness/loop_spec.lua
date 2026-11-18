@@ -132,17 +132,20 @@ describe("the headless loop's CPU metric", function()
         assert.are.equal(0, grew)
     end)
 
-    it("divides each tick's cpu by its own window's calibration, so a load step mid-fight does not move the ratio", function()
-        -- the load doubles at tick 5: the ticks cost twice as much and so does the calibration timed before them
-        local ratios = loop.ratios({ 4, 4, 4, 4, 8, 8, 8, 8 }, { 7, 14 }, 4)
-        assert.are.equal(8, #ratios)
-        for _, x in ipairs(ratios) do
-            assert.are.equal(4 / 7, x)
+    it(
+        "divides each tick's cpu by its own window's calibration, so a load step mid-fight does not move the ratio",
+        function()
+            -- the load doubles at tick 5: the ticks cost twice as much and so does the calibration timed before them
+            local ratios = loop.ratios({ 4, 4, 4, 4, 8, 8, 8, 8 }, { 7, 14 }, 4)
+            assert.are.equal(8, #ratios)
+            for _, x in ipairs(ratios) do
+                assert.are.equal(4 / 7, x)
+            end
+            local out = { 1 } -- appended to the caller's list
+            assert.are.equal(out, loop.ratios({ 3, 6 }, { 6 }, 4, out))
+            assert.are.same({ 1, 0.5, 1 }, out)
         end
-        local out = { 1 } -- appended to the caller's list
-        assert.are.equal(out, loop.ratios({ 3, 6 }, { 6 }, 4, out))
-        assert.are.same({ 1, 0.5, 1 }, out)
-    end)
+    )
 
     it("re-times the calibration every CAL_EVERY counted ticks and reports cpu as a ratio to it", function()
         local real, every, calls = loop.calibrate, loop.CAL_EVERY, 0

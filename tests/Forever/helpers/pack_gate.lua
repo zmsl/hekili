@@ -825,17 +825,19 @@ function M.flicker(label, r, line, reported)
     end
 end
 
--- The CPU bar (D5), on the ratio of each tick's process CPU to the in-process calibration timed once per fight
--- (loop.calibrate), not on ms: load from other processes slows both, so the bar stops depending on what else runs. Set
+-- The CPU bar (D5), on the ratio of each tick's process CPU to the in-process calibration (loop.calibrate) re-timed
+-- every loop.CAL_EVERY counted ticks (loop.ratios), not on ms: load from other processes slows both, so the bar stops
+-- depending on what else runs, also when the load changes during a fight (a calibration timed once per fight read
+-- Feral 0.744-0.959 against 0.626-0.696 re-timed, same ticks, `make test` starting mid-fight; quiet 0.58-0.63). Set
 -- to the old 10 ms bar on a quiet run, so it did not loosen: 10 ms / the ~7 ms calibration = 1.4. Measured: Arms 20
 -- fights alone 3.96 ms, ratio 0.555 (2026-10-30, under the lock); under a 16-wide `make test` beside it: Feral 3 fights
 -- 4.25 -> 5.82 ms, ratio 0.634 -> 0.494; Arms 3 fights 3.78 -> 5.92 ms, ratio 0.624 -> 0.547 (the calibration slows a
 -- little more than the engine, so load lowers the ratio: the safe direction). 1.4 -> 1.0 (2026-11-01, the pre-launch perf
 -- work left room: 20-fight lines stay under 0.6).
 M.CPU_RATIO = 1.0
--- A one-fight line's bar (wowsims.gate's replay): one calibration per fight, so a single slow or fast calibration moves
--- the whole line's ratio, where a many-fight line averages them. Feral replay alone: median 0.50, p90 0.81; worst 0.893
--- at 16-wide, 0.909 at 24-wide.
+-- A one-fight line's bar (wowsims.gate's replay): measured when a fight had one calibration, so a single slow or fast
+-- calibration moved the whole line's ratio. Feral replay alone: median 0.50, p90 0.81; worst 0.893 at 16-wide, 0.909 at
+-- 24-wide.
 M.CPU_RATIO_ONE_FIGHT = 1.2
 
 --- The engine's health, gated at any fight count: no error, raise, self-check miss, unlisted read or secret, CPU.
