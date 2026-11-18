@@ -54,8 +54,9 @@ function M.auraUp(e, ids, t)
 end
 
 -- The CPU calibration (pack_gate.CPU_RATIO): a fixed pure-Lua workload, hash reads through a metatable chain over a
--- preallocated working set (the engine's state reads, in miniature), timed once per counted run in the same process,
--- so load that slows the engine through shared cores and cache slows it too. About 7 ms here alone; allocates nothing.
+-- preallocated working set (the engine's state reads, in miniature), timed in the same process before every
+-- M.CAL_EVERY-th counted tick, so load that slows the engine through shared cores and cache slows it too, and a load
+-- that changes during a fight changes the calibration of the ticks it slows. About 6 ms here alone; allocates nothing.
 local CAL_N, CAL_ROUNDS = 4096, 30
 local calSet = {}
 do
@@ -64,6 +65,9 @@ do
         calSet[i] = setmetatable({ a = i, b = 2 * i }, meta)
     end
 end
+
+-- 50 ticks of a ~6 ms pack (0.3 s) per ~6 ms calibration: about 2% more process time, outside the timed ticks.
+M.CAL_EVERY = 50
 
 --- The calibration workload's process CPU time, in ms (and its checksum, so no step is dead code).
 function M.calibrate()
@@ -75,6 +79,16 @@ function M.calibrate()
         end
     end
     return (os.clock() - c0) * 1000, sum
+end
+
+--- Each tick's ms (`cpu`) over its window's calibration: tick i's window is ceil(i / `every`), `cals[w]` timed just
+--- before that window's first tick. Appended to `out` (a new list if nil), which is returned.
+function M.ratios(cpu, cals, every, out)
+    out = out or {}
+    for i, ms in ipairs(cpu) do
+        out[#out + 1] = ms / cals[math.floor((i - 1) / every) + 1]
+    end
+    return out
 end
 
 -- Bytes per Update (reported, never gated): every this many counted ticks, one cycle with the collector stopped. A
@@ -282,12 +296,14 @@ end
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
 --- theirs (first icons by in-combat tick), pressed and shadowPress (the driver's press, the shadow's would-be press, by
---- in-combat tick: loop.flips; a replay's pressed: the set of keys wowsims casts before the next tick), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
---- the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as Update, so it errs
---- high; empty in a traced run, whose debug pass is not runtime cost), cal (M.calibrate's ms, timed once before an
---- untraced run's first tick), bytes and sampled (allocated over `sampled` cycles, every M.BYTES_EVERY-th cpu
---- tick, the collector stopped for each), damage, t }. `o.replay` (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle just before each
---- decision; `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
+--- in-combat tick: loop.flips; a replay's pressed: the set of keys wowsims casts before the next tick), focus
+--- (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu
+--- (ms per tick of the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as
+--- Update, so it errs high; empty in a traced run, whose debug pass is not runtime cost), cals (M.calibrate's ms, timed
+--- before every M.CAL_EVERY-th cpu tick: M.ratios), cal (their mean, nil in a traced run), bytes and sampled (allocated
+--- over `sampled` cycles, every M.BYTES_EVERY-th cpu tick, the collector stopped for each), damage, t }. `o.replay`
+--- (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle just before each decision;
+--- `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
 function M.run(L, seed, o, drivers)
     o = o or {}
     local content = L.content
@@ -537,7 +553,7 @@ function M.run(L, seed, o, drivers)
         end
     end
     local traced = {}
-    run.cal = not o.trace and M.calibrate() or nil
+    run.cals = {}
     run.bytes, run.sampled = 0, 0
     if o.trace then -- the facade's trace (§5.1): Hekili's own debug pass, its lines counted and dropped
         for i, st in ipairs(steps) do
@@ -588,6 +604,9 @@ function M.run(L, seed, o, drivers)
             st.H.Hekili.ActiveDebug = o.trace or false
             local counted = i == 1 and not o.trace -- the traced fight's debug pass is not runtime cost
             -- the seed turns the phase: a fight's first cycle, the most expensive, must not be every fight's first sample
+            if counted and #run.cpu % M.CAL_EVERY == 0 then -- outside the tick's time and its sampled bytes
+                run.cals[#run.cals + 1] = M.calibrate()
+            end
             local sampled = counted and (#run.cpu + seed) % M.BYTES_EVERY == 0
             local b0
             if sampled then -- a sweep inside the cycle would swamp the delta
@@ -932,6 +951,13 @@ function M.run(L, seed, o, drivers)
         end
     end
     run.t = t
+    if run.cals[1] then
+        local sum = 0
+        for _, ms in ipairs(run.cals) do
+            sum = sum + ms
+        end
+        run.cal = sum / #run.cals
+    end
     if not R then
         local past = tEnd - W.t -- the instances' clocks ran to tEnd: the next base is that + M.GAP
         local c = { power = M.rest(W, us, us.pt, us.power, wo.decay, us.powerMax, past), res = {} }
@@ -1035,7 +1061,7 @@ local function blank()
     m.B = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
     m.oracleFlicker, m.errors, m.raises, m.misses, m.secrets, m.selfCheck = 0, 0, 0, {}, {}, 0
     m.cpu, m.gap, m.focus, m.pressedBy = {}, {}, 0, {}
-    m.ratio, m.cal = {}, {} -- per counted tick its cpu over its run's calibration; per counted run the calibration ms
+    m.ratio, m.cal = {}, {} -- per counted tick its cpu over its window's calibration (M.ratios); per counted run their mean
     m.bytes, m.sampled = 0, 0 -- allocated over the sampled ticks (M.BYTES_EVERY)
     m.led = { ours = flicker.merge(), oracle = flicker.merge() } -- run A's ledgers (flicker.ledger): ours, the shadow's
     return m
@@ -1122,8 +1148,8 @@ function M.tally(L, n, o)
         end
         for _, ms in ipairs(a.cpu) do
             m.cpu[#m.cpu + 1] = ms
-            m.ratio[#m.ratio + 1] = ms / a.cal
         end
+        M.ratios(a.cpu, a.cals, M.CAL_EVERY, m.ratio)
         m.cal[#m.cal + 1] = a.cal
         m.bytes, m.sampled = m.bytes + a.bytes, m.sampled + a.sampled
         for _, g in ipairs(a.gap) do
@@ -1162,9 +1188,7 @@ function M.replay(L, R, o)
     m.B = s -- one side: a replay has no oracle run (the line's A/B fields read 1)
     m.errors, m.raises, m.cpu = a.errors, a.raises, a.cpu
     m.cal[1], m.bytes, m.sampled = a.cal, a.bytes, a.sampled
-    for i, ms in ipairs(a.cpu) do
-        m.ratio[i] = ms / a.cal
-    end
+    M.ratios(a.cpu, a.cals, M.CAL_EVERY, m.ratio)
     for _, name in ipairs(a.misses) do
         m.misses[name] = true
     end
@@ -1215,9 +1239,10 @@ local function quantile(list, p)
 end
 
 --- The tally's derived metrics: agreement, react (median, p90, share never; in ticks), refusals per 100 attempts by
---- reason (per100; per100U the unmatched ones, M.unmatched; per100B the oracle's own in run B), episodes per minute, damage per second A / B, full-power and GCD-idle shares and debuff uptimes (A, B),
---- flicker per minute (ours, the oracle's), CPU per Update (mean, p99 ms; cpuRatio the mean of each tick's ms over its
---- run's calibration, calMean the calibration's mean ms; bytes allocated per Update, sampled, reported only), and
+--- reason (per100; per100U the unmatched ones, M.unmatched; per100B the oracle's own in run B), episodes per minute,
+--- damage per second A / B, full-power and GCD-idle shares and debuff uptimes (A, B), flicker per minute (ours, the
+--- oracle's), CPU per Update (mean, p99 ms; cpuRatio the mean of each tick's ms over its window's calibration
+--- (M.ratios), calMean the counted runs' mean calibration ms; bytes allocated per Update, sampled, reported only), and
 --- the tally's focus and run A's presses by key (pressedBy) (neither in M.line).
 function M.summary(m)
     local r = { focus = m.focus, pressedBy = m.pressedBy, readyShort = m.readyShort or 0, heldReady = m.heldReady or 0 }

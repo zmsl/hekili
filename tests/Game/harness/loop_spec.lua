@@ -132,12 +132,46 @@ describe("the headless loop's CPU metric", function()
         assert.are.equal(0, grew)
     end)
 
-    it("reports cpu as a ratio to the calibration timed once per counted fight", function()
+    it(
+        "divides each tick's cpu by its own window's calibration, so a load step mid-fight does not move the ratio",
+        function()
+            -- the load doubles at tick 5: the ticks cost twice as much and so does the calibration timed before them
+            local ratios = loop.ratios({ 4, 4, 4, 4, 8, 8, 8, 8 }, { 7, 14 }, 4)
+            assert.are.equal(8, #ratios)
+            for _, x in ipairs(ratios) do
+                assert.are.equal(4 / 7, x)
+            end
+            local out = { 1 } -- appended to the caller's list
+            assert.are.equal(out, loop.ratios({ 3, 6 }, { 6 }, 4, out))
+            assert.are.same({ 1, 0.5, 1 }, out)
+        end
+    )
+
+    it("re-times the calibration every CAL_EVERY counted ticks and reports cpu as a ratio to it", function()
+        local real, every, calls = loop.calibrate, loop.CAL_EVERY, 0
+        finally(function()
+            loop.calibrate, loop.CAL_EVERY = real, every
+        end)
+        loop.calibrate = function() -- 7, 14, 21, ...: each window's own calibration
+            calls = calls + 1
+            return 7 * calls, 0
+        end
+        loop.CAL_EVERY = 10 -- a 6 s fight's ~45 ticks: several windows
         local m = loop.tally(loop.new(stub()), 2, { duration = 6 })
-        assert.are.equal(1, #m.cal) -- fight 2: the traced fight 1 is not counted
+        local n = #m.cpu
+        local windows = math.ceil(n / loop.CAL_EVERY)
+        assert.is_true(windows > 1)
+        -- fight 2 only (the traced fight 1 times none): run A's windows first, then run B's (the oracle's, uncounted)
+        assert.are.equal(2 * windows, calls)
+        assert.are.equal(1, #m.cal) -- one entry per counted fight (pack_gate.health's one-fight bar)
+        assert.are.equal(7 * (windows + 1) / 2, m.cal[1]) -- the mean of the fight's windows
+        local sum = 0
+        for i, ms in ipairs(m.cpu) do
+            sum = sum + ms / (7 * math.ceil(i / loop.CAL_EVERY))
+        end
         local r = loop.summary(m)
-        assert.is_true(r.calMean > 0 and r.cpuRatio > 0)
-        assert.is_true(math.abs(r.cpuRatio - r.cpuMean / m.cal[1]) < 1e-9) -- one fight: the mean over its calibration
+        assert.is_true(math.abs(r.cpuRatio - sum / n) < 1e-9)
+        assert.are.equal(m.cal[1], r.calMean)
         assert.is_truthy(loop.line(m):find(("ratio %.3f (calibration %.2f ms)"):format(r.cpuRatio, r.calMean), 1, true))
     end)
 
