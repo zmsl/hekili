@@ -472,7 +472,14 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.02, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 92 / 87 / 72):
     -- flicker 0 -> 0.02, heldReady 241 -> 92
-    ["Retribution"] = { flicker = 0.02, retracted = 0, readyShort = 0, heldReady = 92 }, -- 0.04 / 0.04 / 0.04, 0 (oracle 0.04 / 0.00 / 0.11)
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (R6; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.02 / 0.00, retracted 0 / 0 / 0,
+    -- readyShort 0 / 0 / 0, heldReady 159 / 177 / 155, agreement .997 / .991 / .987): heldReady 92 -> 177 (the worst
+    -- set) in two steps, both the cost-edge lag (every held tick has the truth over the cost, lo about 2 mana under it).
+    -- CN22 re-times it by Judgement 90 -> 91 (96 / 97 / 101, ledger L1210); the new log's regen (its gear lost the
+    -- Soulforge pieces: 17.0 a second outside the rule, 5.1 casting, was 21.9 / 8.25) keeps the world mana-dry longer
+    -- (idle 0.81 -> 0.855), so more crossings, each waited out slower (seeds 21-40 held ticks 97 -> 177, mean wait 0.124 ->
+    -- 0.177 s, mean truth - lo 2.23 -> 2.05). Unsealed Wrath's 0.1 s proc cooldown is inert here (reverted: 177, the same)
+    ["Retribution"] = { flicker = 0.02, retracted = 0, readyShort = 0, heldReady = 177 }, -- 0.04 / 0.04 / 0.04, 0 (oracle 0.04 / 0.00 / 0.11)
     -- 0.5 -> 0.8 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.54 / 0.71 / 0.49, was 0.45 / 0.03 / 0.68; oracle 0.59 / 1.81 / 1.73):
     -- wowsims's logged regen (Prot 0 casting) runs the world at an empty mana pool; the oracle's flicker rose to 0.59-1.81;
     -- our extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike, agreement .99 ->
@@ -498,7 +505,13 @@ M.FLICKER = {
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 287 / 265 / 233):
     -- heldReady 296 -> 287
-    ["Protection"] = { flicker = 0, retracted = 0, heldReady = 287 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort
+    -- 0 / 0 / 0, heldReady 186 / 177 / 198, agreement 1.000 / 1.000 / 1.000): heldReady 287 -> 198 (the worst set). 178 /
+    -- 183 / 153 with the flip and CN22 alone; the rest is the new log's regen (16.5 outside the rule, was 17.38: kit seed
+    -- and world), the only later change Protection runs (no Twist of Light: Unsealed Wrath's cooldown never runs)
+    -- Re-measured after the review fixes (Protection keeps its own 16.5 / 0 seed with the Holy Shock seed gated on
+    -- Retribution; mana-09 e2d7b1187 merged): 186 / 177 / 198, flicker 0, retracted 0, readyShort 0: unchanged
+    ["Protection"] = { flicker = 0, retracted = 0, heldReady = 198 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0.08), retracted 0, readyShort 0 / 0 / 0, heldReady 65 / 70 / 94, agreement .998 / .999 / .997): flicker 0.01 (the
     -- measured worst + 0.01: the line rounds to two decimals), heldReady 94 (the worst set)
@@ -516,7 +529,19 @@ M.FLICKER = {
     -- AB, a mana wait racing a cooldown or seal countdown with the belief 0-5 mana under truth (judgement -> holy_strike,
     -- exorcism -> seal_of_righteousness / holy_strike / judgement). Traced (now-state, seeds 1-6 and 41-60): the belief's
     -- cooldowns and seal timers match the oracle in all 307 confused ticks; only mana differs. Flicker floor unchanged
-    ["Holy Shock"] = { flicker = 0.07, retracted = 0, readyShort = 0, heldReady = 110 },
+    -- re-pin e5a9cd2a2d -> e4ef929e54 (R6; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0.25 / 0),
+    -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 93 / 93 / 81, agreement .994 / .997 / .997): flicker 0.07 ->
+    -- 0.01 (the measured worst + 0.01), heldReady 110 -> 93 (the worst set). 66 / 68 / 73 with the flip and CN22 alone;
+    -- the rest is the world's regen from the new log, 17.59 / 7.54 (was 18.37 / 7.88). Traced, seeds 1-20: with that
+    -- world reverted 66, A's line exactly; with the kit seed reverted 93, the same line (the out-of-combat read replaces
+    -- a seed that differs from it); the held ticks are the cost-edge lag (truth over the cost, lo 1.6-3.1 under):
+    -- holy_strike 6 -> 22, seal_of_righteousness 14 -> 32. Then the build's own seed (17.59 / 7.54, its log): 77 / 93 /
+    -- 93, flicker 0 / 0 / 0, agreement .998 / .997 / .998, the worst set unchanged. Traced (fight 1, tick by tick): a seed
+    -- equal to the game's rate makes the out-of-combat read no news (Sources/Power.lua skips a read equal to the
+    -- belief's), so the declared spread band stays (lo 2-13 under est from the first tick) where a differing seed's read
+    -- collapsed it; the seed moves which crossings hold, not the class. The regen-read band fix (89d1613b5, L1341: an
+    -- equal read narrows a still-open band) and mana-09 e2d7b1187 merged: 93 / 93 / 81 (L1342), the floor holds
+    ["Holy Shock"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 93 },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was

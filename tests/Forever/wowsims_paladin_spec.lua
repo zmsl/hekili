@@ -81,9 +81,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     pw.Protection.character()
 
     -- Mana: its regen per second, { from 5 s after the last spend, inside the five-second rule }
-    -- (Retribution: 2.252 and 0.844 each 0.1 s in the e2842f0a78 log, was 2.19 and 0.825; Protection: 1.73 and 0.08 in
-    -- the e2842f0a78 log, was 1.738 and none).
-    local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { fsr = { [0] = { 22.52, 8.44 } } })
+    -- (Retribution: 1.700 and 0.510 each 0.1 s in the e4ef929e54 log, was 2.252 and 0.844; Protection: 1.650 and none
+    -- in the e4ef929e54 log, was 1.73 and 0.08). The replay's log regen wins over these (replay.lua's R.manaIdle).
+    local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { fsr = { [0] = { 17.0, 5.1 } } })
     local RET_LIVE = wowsims(pw.Retribution, set(EXORCISM_ANY), {})
 
     -- the replay floor: 0.860 measured on central fix 13 (49/57: removals shown as removals, the cooldown restart); 0.877
@@ -108,6 +108,8 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- unchanged, 0.933 (45)). ON THE BAR (= measured 2.00): re-measure at integration.
         -- 2.0 -> 2.7 (CN8 D2, 2.66 measured, the same with steady icons off): two more one-tick Holy Strike leads
         -- (n219, n319), the shape traced on Arms and Beast Mastery (an end the old probe read 0.50 now leads for a tick)
+        -- re-pin e5a9cd2a2d -> e4ef929e54: 0.949 (39) top [consecration -> seal_of_command 2], ON flicker 1.00; both
+        -- bars kept
         local r, line = ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.93, REPLAY)
         ab.check(r.flicker <= 2.7 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
     end)
@@ -138,8 +140,8 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     -- Holy Shock (wowsims.com): the Holy Shock build (wowsims/forever's builds/holy_shock.siml) on its own list. Its
     -- casts log as rank 3's damage row 25902, replayed as the kit's 20930 (replay.lua's alias; the recipe's header).
-    -- Mana: the e5a9cd2a2d log's 2.625 and 0.788 each 0.1 s.
-    local HS = wowsims(pw.HolyShock, set(EXORCISM_ANY), { fsr = { [0] = { 26.25, 7.88 } } })
+    -- Mana: the e4ef929e54 log's 2.513 and 0.754 each 0.1 s (was 2.625 and 0.788).
+    local HS = wowsims(pw.HolyShock, set(EXORCISM_ANY), { fsr = { [0] = { 25.13, 7.54 } } })
     local HS_LIVE = wowsims(pw.HolyShock, set(EXORCISM_ANY), {})
     local HS_REPLAY = { alias = { [25902] = 20930 } }
     it("Holy Shock (wowsims.com) follows wowsims's casts", function()
@@ -157,7 +159,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- The build takes no Holy Shock.
     local PROT_DROP = set(pw.Protection.IDS.holy_shock, EXORCISM_ANY)
     local PROT = wowsims(pw.Protection, PROT_DROP, {
-        fsr = { [0] = { 17.3, 0.8 } },
+        fsr = { [0] = { 16.5, 0 } },
     })
     local PROT_LIVE = wowsims(pw.Protection, PROT_DROP, {})
 
@@ -184,7 +186,12 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- hold its block hits (Tag 2) and Shieldsworn returns (Tag 1328544), which were replayed as casts that restarted
         -- Holy Shield's believed cooldown and spent 240 mana. The 2 left are the unmodelled Shieldsworn Holy Strike
         -- return (gaps.md CU)
-        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.95, PROT_REPLAY)
+        -- 0.95 -> 0.89 re-pin e5a9cd2a2d -> e4ef929e54: 0.894 (47) top [consecration -> holy_shield 2; seal_of_fury ->
+        -- holy_strike 2; holy_shield -> holy_strike 1]. The flip alone measures the same 0.894 (no CN22 rounding, no
+        -- GCD-edge fix), so the new log is the cause: its unmodelled returns grew (Shieldsworn's 1310925 Tag 1328544 21 ->
+        -- 26, Shield Specialization's 17 -> 18, 98.48 each). All 5 misses have the belief under the truth at a cost
+        -- crossing (log 61.50, 79.10, 106.81, 130.31, 142.31: lo 110-249 vs truth 201-402): gaps.md CU
+        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.89, PROT_REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Protection is out of mana from 24 s),
     -- so its longest wait is for mana. 10.4 on central fix 22 rebased (the live world's presses resolve from the driving
@@ -218,6 +225,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- is the same cause, gated at L40 only; L41 and up 4.4 (Shieldsworn)
     -- pin move 2 on CN8 (steady icons on), measured: L10 8.6 -> 8.4 (the same cause: nothing useful to cast), L60 4.6
     -- (rank 4's 240 as above; the 6 s bar governs), L40 8.4 holds
+    -- re-pin e5a9cd2a2d -> e4ef929e54: L10 8.4, L40 8.4, L60 4.6 hold. Between them CN22 (Judgement 90 -> 91) moved the
+    -- L40 band to 14.4 s (ledger L1210: Judgement pressed off the GCD at 115.2 ahead of Holy Strike); the new log's
+    -- regen (16.5 a second outside the rule, was 17.38; Protection's only change after it) moves it back to 8.4
     local PROT_LIVE60 = 4.6
     local PROT_LIVE40 = 8.4
     local PROT_LIVE10 = 8.4

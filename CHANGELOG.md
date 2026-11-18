@@ -46,6 +46,10 @@
 - A recommendation that changes and changes straight back no longer flashes the other ability for a split second.
 
 - ConsolePort: the recommendation now shows the controller button for spells on ConsolePort's action bars.
+- Paladin: a second attack in the same instant as an Unsealed Wrath proc no longer stores or spends an extra Echo (the talent's 0.1 s cooldown; not yet checked in game).
+- Paladin: Retribution (17 mana a second outside the five-second rule, 5.1 while casting), Protection (16.5 outside, none while casting) and Holy Shock Retribution (25.13 outside, 7.54 while casting) start from the current Forever mana regeneration values until your own is measured (not yet checked in game).
+
+- When the game's out-of-combat mana or energy regeneration matches the expected rate, Hekili now takes it as exact, so its mana and energy estimates no longer start a little low.
 
 - Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 - Warrior: a hit you block in full no longer counts as rage gained, and the rage expected from hits taken follows the latest measurements by attacker level (not yet checked in game).

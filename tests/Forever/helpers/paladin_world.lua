@@ -107,10 +107,10 @@ local function selfAura(key)
 end
 
 -- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's paladin/*.go):
--- a judgement (the seal's, OutcomeMeleeSpecialNoBlockDodgeParry) and Hammer of Wrath (OutcomeRangedHitAndCrit) can be
--- missed only, except Seal of the Crusader's judgement, which always hits (seal_of_the_crusader.go, OutcomeAlwaysHit:
--- the judgement's effect picks it); the holy spells are magic hits (OutcomeMagicHit*). Consecration's ground stays
--- (its ticks roll).
+-- a judgement (Righteousness's and Fury's OutcomeRangedHitAndCrit since 70938, wowsims 8f7ad04996; Command's
+-- OutcomeMeleeSpecialNoBlockDodgeParry) and Hammer of Wrath (OutcomeRangedHitAndCrit) can be missed only, except Seal
+-- of the Crusader's judgement, which always hits (seal_of_the_crusader.go, OutcomeAlwaysHit: the judgement's effect
+-- picks it); the holy spells are magic hits (OutcomeMagicHit*). Consecration's ground stays (its ticks roll).
 M.OUTCOMES =
     { judgement = "miss", hammer_of_wrath = "miss", exorcism = "spell", holy_shock = "spell", holy_wrath = "spell" }
 
@@ -202,8 +202,9 @@ local PACKS = {
         },
         talents = { [1310735] = 1, [20375] = 1, [1310899] = 2 }, -- Reverence 2/2: its export's (paladin_retribution.log)
         weapon = { 150, 230, 3.6 },
-        -- the true regen parts: wowsims's logs at 60 (the class file declares the same, per spec); they hold Reverence's 30%
-        fsr = { 13.65, 8.25, share = 0.3 },
+        -- the true regen parts: wowsims's e4ef929e54 logs at 60 (the class file declares the same, per spec); they hold
+        -- Reverence's 30% (17.00 outside, 5.10 casting; was 13.65 / 8.25 before the gear lost the Soulforge pieces)
+        fsr = { 11.9, 5.1, share = 0.3 },
         uptime = { "consecrated_ground" },
     },
     -- Seal of Fury, Holy Shield and Swift Judgement, a one-hander and a shield; the mob's swings at us blocked.
@@ -225,12 +226,12 @@ local PACKS = {
         },
         talents = { [1310994] = 1, [20925] = 1, [20473] = 1, [1328544] = 1, [1311015] = 1 }, -- Shieldsworn: the pin's preset (R28)
         weapon = { 70, 130, 2.7 },
-        fsr = { 17.38, 0 },
+        fsr = { 16.5, 0 }, -- the e4ef929e54 log: 16.50 outside, none casting (was 17.38)
         uptime = { "consecrated_ground" },
     },
     -- Holy Shock: Seal of Righteousness, Holy Shock under Divine Favor; wowsims/forever's builds/holy_shock.siml talents
     -- (05025210221021--0523330110130033, 23 Holy to 28 Retribution: the selector's build), the log's pool (4667), its
-    -- regen parts (2.625 a 0.1 s tick outside the rule, 0.788 inside) and its main hand's swing (2.2 s; the amounts
+    -- regen parts (2.513 a 0.1 s tick outside the rule, 0.754 inside, the e4ef929e54 log; was 2.625 / 0.788) and its main hand's swing (2.2 s; the amounts
     -- UNMEASURED).
     HolyShock = {
         kit = {
@@ -270,7 +271,7 @@ local PACKS = {
             [1311084] = 3, -- Champion of the Light
         },
         weapon = { 100, 160, 2.2 },
-        fsr = { 18.37, 7.88, share = 0.3 }, -- Reverence 2/2 (its talents above): the parts hold its 30%
+        fsr = { 17.59, 7.54, share = 0.3 }, -- Reverence 2/2 (its talents above): the parts hold its 30%
         max = 4667,
         uptime = { "consecrated_ground" },
     },

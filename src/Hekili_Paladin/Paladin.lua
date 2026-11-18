@@ -251,18 +251,27 @@ end
 local REVERENCE = { 0.15, 0.3 }
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace, as wowsims's logs measure them at 60: Retribution 13.65 spirit + 8.25 casting =
--- 21.9 outside (Reverence 2/2's share is inside the 8.25: the share below is the static share those parts hold),
--- Protection 0 while casting and 17.38 outside. Forever's Spirit regen is `6.25 + Spirit/8` a second for every class
--- (wowsims mana.go:75-76), not Classic's formula.
--- state.spec: the functions run in the state's environment (the file's `spec` is the class).
+-- the in-combat calibration replace, as wowsims's e4ef929e54 logs measure them at 60: Retribution 11.9 spirit + 5.1
+-- casting = 17.0 outside (Reverence 2/2's share is the 5.1: the share below is the static share those parts hold; was
+-- 13.65 + 8.25 before its gear lost the Soulforge pieces), Protection 0 while casting and 16.5 outside (was 17.38). Forever's Spirit regen is `6.25 + Spirit/8` a second for every class
+-- (wowsims mana.go:75-76), not Classic's formula. Holy Shock known (the Holy Shock build, a Retribution spec on its own
+-- gear): its own e4ef929e54 log, 2.513 a 0.1 s tick outside, 0.754 casting: 17.59 spirit + 7.54 casting (was
+-- Retribution's 11.9 / 5.1).
+-- state.spec: the functions run in the state's environment (the file's `spec` is the class). The core resolves them
+-- at the build, before its talent walk, so the Holy Shock build is told by the spellbook (knownRank), not talent.*.
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
     fsr = {
         spirit = function()
-            return state.spec.retribution and 13.65 or 17.38
+            if state.spec.retribution and knownRank(HOLY_SHOCK) > 0 then
+                return 17.59
+            end
+            return state.spec.retribution and 11.9 or 16.5
         end,
         mp5 = function()
-            return state.spec.retribution and 8.25 or 0
+            if state.spec.retribution and knownRank(HOLY_SHOCK) > 0 then
+                return 7.54
+            end
+            return state.spec.retribution and 5.1 or 0
         end,
         share = function() -- Reverence's rank (the belief reads it after its talent walk), never the spec
             return REVERENCE[talent.reverence.rank] or 0
@@ -392,7 +401,8 @@ spec:RegisterAuras({
     consecrated_ground = { id = 1280353, duration = 8.6, max_stack = 1 },
 
     -- Judgement's debuffs on the target (B4; wowsims judgement.go, buffs/paladin.go): 40 s (Justice's 10 s, Fury's taunt
-    -- 3 s), refreshed by our landed melee hits (unmodelled: Judgement itself recasts every cooldown).
+    -- 3 s), refreshed by our landed white swings and Windfury Totem's strike, not by Holy Strike, Seal of Command or the
+    -- judgements (wowsims 016f21f4cc, EV-0117; unmodelled: Judgement itself recasts every cooldown).
     judgement_of_the_crusader = {
         id = 20188,
         copy = { 20300, 20301, 20302, 20303, 21183 },
@@ -422,8 +432,8 @@ spec:RegisterAuras({
         consumedBy = { BLOCK = true, BLOCKED = true },
     },
     reckoning = { id = 1326084, copy = { 20177 }, duration = 3600, max_stack = 4 },
-    -- Iron Creed's 6 s (-2/4/6% damage taken, a Holy Strike under Righteous Fury) and Shieldsworn's spell block (6 s, a
-    -- landed Holy Strike with a shield): modelled from our Holy Strikes, neither has a Cooldown Manager item.
+    -- Iron Creed's 6 s (-2/4/6% damage taken, a Holy Strike under Righteous Fury) and Shieldsworn's spell block (6 s, every
+    -- Holy Strike with a shield, landed or avoided: wowsims 61607b27d7): modelled from our Holy Strikes, neither has a Cooldown Manager item.
     iron_creed = { id = 1311033, copy = { 440668 }, duration = 6, max_stack = 1 }, -- 440668: the ID the Cooldown Manager links
     shieldsworn_block = { id = 1328551, duration = 6, max_stack = 1 },
 
@@ -567,6 +577,11 @@ local ECHOES = {
 }
 -- The Echoes at a landed main-hand swing, and only there (the Retribution log stores no Echo at a Holy Strike's hit,
 -- 3.50 and 13.50). The core runs it as of the swing's time (a seal swapped before its row is not yet up).
+-- Unsealed Wrath's proc cooldown, 0.1 s (1310735's ICDMs on 70938, hotfix push 114060; wowsims 8f7ad04996): every
+-- proc refreshes the own Echo to its full 15 s, so one with more than 14.9 s left was stored under 0.1 s ago, and an
+-- extra attack in that swing's instant (Windfury Totem's, an item's) neither stores nor spends.
+-- shortcut: a proc under another seal inside those 0.1 s is not seen; upgrade if reactions get their own cooldown.
+local ECHO_TIME, UNSEALED_WRATH_ICD = 15, 0.1
 local function landing()
     if not talent.twist_of_light.enabled then
         return
@@ -577,7 +592,7 @@ local function landing()
             own = ECHO_OF[SEALS[i]]
         end
     end
-    if not own then
+    if not own or buff[own].remains > ECHO_TIME - UNSEALED_WRATH_ICD then
         return
     end
     for i = 1, #ECHOES do
@@ -593,7 +608,7 @@ spec:RegisterReaction("unsealed_wrath", { who = "target", outcome = "land", hand
 -- A Holy Strike's effects, the `now` and the `handler` (two closures). A Shieldsworn Holy Strike with a shield restores
 -- 4% of the maximum mana only when it lands (the Shield Specialization trigger, wowsims talents_protection.go:137-174: its
 -- chance is 100% at rank 2 only; 105 at 2627 in the Protection log, none on the log's misses and dodges) and grants the
--- spell block for 6 s; under Righteous Fury it grants Iron Creed's 6 s. `landed` (the `handler`'s: the simulation's
+-- spell block for 6 s on every strike, avoided too (wowsims 61607b27d7); under Righteous Fury it grants Iron Creed's 6 s. `landed` (the `handler`'s: the simulation's
 -- forecast) adds the mana. The belief's `now` does not: an avoid undoes only a target aura (Families/Now.lua), so a
 -- gain at the cast would stay on a miss and promote a cast we cannot afford; its `onLand` (audit C10, run at a paid
 -- wound or crit) adds the mana. Live that is idle until target rows are plain again (gaps.md).
@@ -1329,18 +1344,18 @@ spec:RegisterSelector(
 -- (tests/Forever/paladin_spec.lua checks they match).
 spec:RegisterPack(
     "Retribution (wowsims.com)",
-    20261107001,
-    [[Hekili:LR16VjUrq8)wYxOM2CgWxZD9IQJuQov1uDn6u99zBwSxWBX2lY76qIeY)T3z9l8RDbc5bxUVKa745XV5X6zgH9e7VzB5H4y7BngB8Hjtg)XXJNyBXFyf22AfYDjAb8Hiui83)fZJjZs4eAu6uT101msit3Lgou8OpeqrEcXnlHeWVjYEwVsMTc7AB91R)Y1F(MBVmERiTT8jEE4C(Wmxv67Y0PCFC60IZgnNgJVdhNo1dphLeWtNE9x)s6u440PnLsczKWcyJwHcqEKOr1SGrOvbSrfIqh(Ioi8GHNdklgfXcaW4bFMkuoHLof55rJ(j4dlXpW0tN(zehDzpgL2)CZ3aH4Z5RyxoA0cc3pzMahJA9Odbzc2o(c0NC9mqgEZD1bxBmDoja8)ixHvY0xfJbMNH4MUOGaN8JDcim(5IaLP4G7aJ1bXyKfryphusmk9V7W)VyoQFj4Iy8TC)FjElWH4iELiKO4q6Dyho1jehGXNtMBQDw(ZO7tdEWHbE6Ly9Lr01rB6JcjYbC0lWdRueyHvA)8eg2HoFUZcxpZjzIperI8rrEoXyXhz)Uz1jqug79UX6tg0(HUYeoD4anoDXIaSUWOfIFG2AsKhDD2bt0twTP23nGVpCJc4OcnBoRLKhCwBrxhWcys44qwxaZjHyW8pDTDFuyiogmAN1XiU)5ZPUjSIGvPAA(i6ICnZXB6eL6ejnoHJz1KrgwpUmZstUk1VSMXLsdaBOoLymY7bf80llfMKwpe9GRkec6DJho8e2HZWOaroeCrwi4bZkoqbcaWxd3hjifqw4Z1XrOzbyVbfuBXxf5ZMLmFEhQGvubNsAXcXIPjSimJvgyAWDZNamCqiz0a3Lw)HPbYdtxbbcviVwjMApGMMmqUrtg6798UP0fNisyotPrSrQnKRkSRpTRlKXHgrUYCYWFCZZB4qoOyU6e)nk5x4VvMA3kZPn5bkOEmzr7cu7WQBMRvYCwwM57)bmjtstGarSBoaYEP23xMp(EASlHfEsB69FzUHWMvxci9fw77Lh56O172kft(7K2JIxOZu9q09)SX2Ple)V70hM1MZk7Gm1NPH2uQdcDjtIywAwWyGoUXjmKhoERi7JAdXkcgvtQyQyeJgrZi898Tv3DRNBNu15wKUd400su)69U2sRhEGYug56C)WVXHGFJJf)sFHxxlQxw2xFr51enVVOtN5t0VaAxpcPVYL7eqHMrgFC9P3ZeXvCvNwoF1Cy1VwU5D01kSpfbGT1D4ygWARncjUYMjwCuJub4GBZ2ovreZ(pSTQLDkiwSqeBRkJ02YnggDoMGSToQkxfPU2CW(BzyQ06bvJUftTyZ2kl6kGnO)3)e5yo8s6D4y(19XX84lB76EAWCdNeG5Ys6(YLkfu1ZuZwpYQNhz5J66NCevSCY(aunZxLou18YwVs7wQYRsDY3dCZ60EkhoO0XJBvj7SXUUD2PQ1o192Thn3DivNvl6RU7y)xX3RaYKxEVJT79uTEVxAmxfRAHRMxhFHK7wQP3g(QJlL)OU2Pdtp3J0(shXGWXhKeo68k1AvDVE7o8awE4JC7HcFYhLw5UZfijBPHVGBn85BTHV5Y)3Vgi)ThF6Wow92XUqXxPnkUZvk(STtX3(zGY7r)2pjVHItxCPS546tKlq4KXV5Gy1itc4jFmKh5cm39nygzkw(m4pDB1CFZLnYNoR6hwHQbov6AfN3D5P9nJ1EjojBpn3ALruHT33EvB45vT91cTwV(q9ySNItHV1VxhhTYdKefv4yBVd8Uo1E2sUDrGeLW9PqC4VWljbK0PA)zXpNOmY2))d]]
+    20261116000,
+    [[Hekili:LR16VjUrq8)wYxOM2CMh3LCnr1rkvNQAQUgDQCF2Mf7byBS9I8UoKiH4V9oRFHFTlqipO5(scSJNh)MhRNze2dS)U9ipIaSVDy)HNpyWGZ73VV9iXJla7rliU3rMHFiKeG)9FareDsSGYcxp2yjBjNgWnDzbDLp6J(mINuCtIP(IBcTN0QK5lax7rF76VE9xU52lJ2is7rZPEEqkFa3vN(UC9yXCy94SZ6nLfb3drRh7btjX(I1JV(BFD9y841JRkLyApPfW7TG4t8OH9kzb9il859YeHj(ftu4(DpfvwejK7JGXd)mtQCkF9yINhl8NWpCh8i3C94VqeKlBXOm(7B(okK5cXc(L96nJkMhprIJE1E0UOmrBh(em9IHxaN9PpFHj6AJytP(O)N4kTsU5IiazEcry5s89Dsp2XNYfNkduwYdUhnwhcNtNfcEoK4iY6)Qb))IvV2LGlHl2W9)g7ndcGqrHiuO4a29GJG5ea(aCkDQLXjPpJ5CM)JoC0tFhyExiBz4Q2OqdDqh9mOBHIqlSq7NgZbh20PoZC9SgKi(acnCoj0ZjcKFK)BwfNGrzW7d9nh0P(dDLfEA3ogc2Sz(GP0OLIVJXsAOhBzYbdmJxSQ03hIFV7knWrhAwDsnj35K6IUmGLWKkGaEtalObaA(hV2(CsqaeHgTZYiIy(PtzUX8SGvUAQ(iMYCnR(RAeLAejhEehZkjJeSEyzM5MCrQFEnJlJ5J2qzkraX7rn80klzMKrle9WRkKc6d9729i2HZbIVmhcVila9GjfheFjaelX7JKK8PZMlmHqYeFWRtg1A8vq(KjXtN2GkAffWjNwKuSalMhcCEEGPc3vFc0WrHKqdDxgThM6OomDfgi0H8sLy69aggQa5kdvOV1ZBMsNDImH5eTgXkL2qQQa35SMUqUaBe5kRbD)XnpVIdzVI56t8xPLFP)wBQDTmN6K7OH6HKfTnqTfRUAUwoZjzzwF8hWKmfnbIeb3uaK8sT)Fz(WdSixkp4O20B)Y8HsBwFjGYxyTRxEKQJAVBlxmPVtAhkEXotndip8Zd3mDH8)nN(WQ0CwjhKO(enuNszqyQyseRCZchd0XnkMt8GOnISnQveRmyumPILMrmQendHheBQUBwpxpPQXTinhWPQLO)17nTLApChTPmQ15UH)H7d(hEO4x5l8AArTYYU6lYVMO69fn6mFG5zy76HeZfUchFg2ms)dRp9wMiUGRY0s5RKdR81YvVJUuH9XiaShDpeXrwRTri5v2C5IJQKkGhCBY2PYIy2)U9OszNsIzleXEuHrApYnchDoIsShDqvUAsDTfO9xZW0P19QgDdMQXM9OKORe2O()4ZKJz)lP3IJ5t7IJ5Px2209uH5kojeZ5L0TLlLlOINPKTEGvppXYh91pPikB5KTbOsMVoDOR5LnEL6TuLwL6KUh4Q1PTuoSxPJh2Qs2AJDn7StxRD67TBhAUBFQolw0xz3XUVIV3aKPU8ElB375A9EV2yUiwvdxvVo(mf3TusVv8vhwk)bDTtdMEPhP91oIHHJZveoA8k1svDVD7oCpwE4tC7HsFYNvw5U1fiPAPHVIBn8LBTHV7Y)3Tgi)1NE6Www92HUqX3OnkU1vk(ITtX3)zGQ7r)2lu3qXXlU02CC5jYLiCq)3DqSyKjj8upgYtCbMB)gSHjkw9m4pFB1CxZLhMoDwXpScDdCQ11kpV5YtBBgRDsCk2EAQ1QIOgBVT9QwXZRB7RzATC9H(XypgNcFJFVmoQLhOikQXXwFh4nDQTSLC7SajjwmNHXH)eUJ6txp24pY(5eLq2()o]]
 )
 spec:RegisterPack(
     "Protection (wowsims.com)",
-    20261111000,
-    [[Hekili:Lwv3oonpq0NL9gOvSFjTf2LVTIEXIwHyrWkKcx7eh7jnM6gh5FOujuE2zCAB2K0Kcs0lsD8CMZmEMJNqMt(gjItTa5PfZwC7C83SzZir29LajQKY2qxJlkOBXNFvRSaZkufvjt2P2zeBnbm12PEK7Lkk3ZwQtiTpwqshKytjWqMU)Z3)WJpTSSHrsuUGZHdUbg2fI2YQeBouLCCVWmLg(bORs4qg1jTvj3)1pxLGBxL0HeNi0hEtyjvs5IIWNdFiTuAcpsqa(sasTC61yO00cJepiCCTYhAHPkHY5QIxIl2a7nbvjpqT0LdKst(YJFdjj3AlnlddxlS5Uu)PiSh0PiNyMd3qVJXxqxWZybyzvRYesS0tRZstqPgqNtP2vAX6ClOCM4mNE)1ISvxL6YYc6UFGRS6tN58RwfQbRwK68gIPonTfb9SmkfgGkJvzXyZiMPDgkh0ptZqwBt1kJvva4PFBZwiNwyBPKQnXPo5oQEZ1odGSKfVMXxnVnYV74RHTqHDCiMDImB8ia9z6KRoaoObtWMc1UIFXukjhx0YGg2sffM3TAYag5yDYt0)nB60ozWXIqDlktXCMvlQdCNsuDJ6e)(N50cE8XnEXvNJ1v2jkm8pGDidAVFUsUp2KRyBoCyTuPpzBGd841ALRGhaf0ujW)fhQd2ai6fYJulaj)056CZOoAd0EB4NkntyWoojc18g)9(UJhKcJ1upt6WvrC5t1ZOoMHK3F6Uaok5KaIyrw6bQvV2ZqJt9fyEFF9FPVn9BVtV5V0PEIqsetlSGwqjrJk)(N0F(K7MEjxRy(pR8AD0AzHevld8ncm(3oslRTs1J7TJG7zLB361FwbFzjSpM))LJPxs39WC3fDOwK7HnF2i4oP6jEDtuZe0ljT7oeVDnyKH8dDfOHSEd0hGUZh5p09I(992J2pN0r(aqDvaRduNnxHU9ryJqkWVu(HJFiS2m53d]]
+    20261116000,
+    [[Hekili:Lwv3UTnpm0NLEZwdwNDsw)zj4lx0HIH1HUIc4ETSLTOJ1IILH(5llaf(zFuojU2o2zfO3KQsE4HuKhrtMqEMeWOgG840XtVEYKjxpE8ysGzBbqckOjROlXd5014VpPKgiXWL5LrNVrUrZxR9sKRh5qUviPmhBXwUWCFojUxI1fqcY0TpC7D3)48IAgjbzCgd2fgOtor2MxgzYGYO928tLk4)bvzedsPwHPm62NEOmcnxg1Iel33LETFbvqz8C)xtVpTqO93tGh(pEi1IrxGPsrZ1c8IWWZsxQ56YikJjZ)iEyfSv7vgDh1qN3tjD(VU)zKKmJPqp33Fj3KzJD3c)oqhHCIvoCjKoB6m4QlVzMh2wvYuUaB90QQu7vOam4yQzHIVmZasRom1Q2EbpDXzX20uV229SfL)8OG)0cFfyu8yRZri1QOniOJNbPqdurOmnehgHjkRMYa1R00N3MuTqBK5aE7xxBc50aRleuLom2k2qvRUWQbKL0WLjSftAI83w2synKBggIEdp1eoaqxLE(z7a7vJXBvUCt(ljsPGHhA4qbRP8C9)T48ECYW(KJOppE0OwvW(Mq1ikvMy1lMwL4wTOQb1b(D)MrZzH7n8HZogRTOvwsW)aj7QGM2ZKITH6mzYQDxwdv4k2A4alCPsAZzEqonwaSxyqvY6brNuUNAoiyhUxh7g1rRGMMH)ivjCnoXjbOMx7E33E9GGRn6QDs7EkIhFSAh1(kK8TdVfWvjheqedYshqnM1ogQdQRaZf7xEJXwpVDbD5BmOoIqsqIIBafNscgu(9U0FUI7QofxJC(UvEnUAn8qcQKbUbbM)RhyK1uP6WDZa4Ev52UF9VvWNwc7Y5xpDoDs62xMzNmGkrUd2KXdG7GQN40nb1BqpL0U9s8M9GbwY33tGAY6SqVh6oELFFVl6o3BUA)ysh4davDbSpqTMmjg2pGvCbh)s533)HWk3K)(d]]
 )
 spec:RegisterPack(
     "Holy Shock (wowsims.com)",
-    20261112001,
-    [[Hekili:9AvyVnUnm0Fl3xULGLzNKT72wX8a6WHHRd3kkG7NTnJeDSwuScKKBxak8V9rfN4iN44lfO7qbAvjPEpkjYhDYSKhtI5GftUF(05FC2SzZNoDwsSD7gmjEdWwblPfLWA63Fwj3wNfxOyRQZg9S6zJyTjGPwp2f6wPc4o4wujK27ktw0lYMnilj(HB)YTF6U7VrJwTyrLvOktIleCo2Sp0WgIVBQZSfyD2EBH5kn(eQRZ4youjT1z3(WxQZiZ1zDrPse6Yat4gqcCrzOxgecBKMWck(uJl8a6)di8LJNq8PHsJKopCATYXVWuNbCUQ87OfRWTMG6Spbw4MEYRr)9DpsGuyTBm3egUuylQw4okHNe6yctk9Xpa)kJphMZZzb0TRwLlK0taWCjQjyJgPnVaSrmqktBmNkfg7e3BvKZWtuYMcgJyzjYtHknu)xNT)VpkSFeyGXEC3)tfFjUglTTqe1AAsLbtv55Plz8OzTb4qM(dY0G7)NKRyvMO5D8FzMnOez0LnTaKte5rJg1eyGZarxQwSSWIQktjAmbRkvpx((3TOkp)cruTz8lJg9UVokVmaiACnikn)w0SPJF)vbwBq(xg79XukjNw013Eo(9ObrNUSh)AtbVs7tsapp)Ftp1UTc7N)gxVIey8y)Yjpq8nZfpjkX0C4jLUBT6U6Qx5LdW32dP7ux8TcRxJAxw)m9QwSV4VHWd81nKaxzF00xCN9cOKNE4AO1aPBH8FyAW8o8J)RsZeM1h7T7V3pYtOBNbxU00VCQhQv5iAxqhi6WRcPdNY0vgGJ6Jq2N3ZHTttEuVVZhLnsIj5rdT5tgO4eomU5oNdjz9(Dt4WsyHe5j)XbfuAouFSLeVJoIHel9t8(Xj9HJxHKZzlUT3q0(jy6NC)(9oCE)pEYoyAHf1cij(nra8kvaFBLahud8BLi4aQGFBKbhsh8nqi0R46KPQnTiPnFdxpnjuv3pDH6uVSXf2hUYEaFf3oLWV2NaNyRJ4poy(5c2f1pF5ENH1CVkrxpw7IsBd8mxs8lxivpOt3iS0(9xdjrn4dz)Q8dk68vRloxMVjBVKZRqE1FaG)lYGJjAy9cNWbi90bzNtypJ6s2FiHkBHRC9Z4kHuqFY(FU)lY35o5)(d]]
+    20261116000,
+    [[Hekili:9AvyVTnom0Fl7l7sWLzNK11DTyEaDy4q7HEfdW7Z2wrIowlkwbsYTlaf(3(OItCKtS9sa6kkqRkj17rjr(OJMe99OqgXarpmD80lNmzYLJhpok0SEfefUIqxqMJlYjlXFFRuSUmjmtsxuMm4j5tA(sThvUCOn01cjHzHBwbxyUlpAwRiRxb0OWVDZ93817E4Afyu8zfgUmpkmJZyq1(anTp(UUmXKbLjBT5NkvWJGQmHbPKcHPm5MVDFzcAUmPjkfCFBgO9xreegp33jd8jReA)mm(yTnCp8)9q8fdhH8Pi5AbEEy4APLFUUmHWyY8)cxSawR9kt(kXqUUL8AW)F33rqYmMv6R99NZnzfZShf)dcDiIjM(Wfq6vtVc(WfF8kp82vjt5c8jGqTjQ2BLcWnpJycOeHiUYCSGRnJSVvbwdpIjBmrR5ZZbwmPqrk)VJ2)Fh43ocuI2SF3)OGnhwc5MAicQnnQqdXY0045uwWK6aSiJ)bOkI9)hLkPf6GPn83nZAqau8YgxqeJ4PbdgufON1asxSIppZaYcDoO1ElYLpL)23mRinTJikwn85bdEZVhLN7befSKWZ1FkyY4HV9KaRoi3lJT(OsPGHlA6BlhFoOx0Xl7HNBk4uAFqc445pn9y72cOD(RCDgjWWHULtoG4AMXFKNdXPKhLQM1QBQRoZlhcBDlKUrDX1kz5sqzZ6NWx1STf)veUJVMH4zl7dg)S9SNrYzX7UgQnG6wa7DJ9M2GF4NsfLRxUV3U9E)ahHUngS5sv)YHEWwL9O1HoqWUxfuhoMQk0egO2dzBEpg2gn5bT(oVx2ikeLh14MpyGIv4qBN7CmKO1h2mHdYjZeal6l7uqX5qTXwu4g6qgIm4pHBhN0goofswN14wFdH7hHPDYD73BW5dV)GDqvCdO4KOWxebWtub8LvcSxnWxlrWEubFDKb7th8fqi0P46GPQvTiXvFdxlnjyv3fDuN6Kn2W(Wj2d4Q42Oe(CFcSITwIVS38ZgSnQp2DVt)AUNKORdRnrPUbEInj(Nos1D60vcl1F)vFsu9(q2UkFVIo)26IJL5RY2UCEcYRUdaCFr6DmrfRDCc7H0dhKDmHTmQlA7HKuyYSLR3cl4co(j7)72ViFJ7OFn]]
 )
 
 -- The hand-built lists the wowsims.com priorities replaced: a saved choice of one falls back to its spec's default.
