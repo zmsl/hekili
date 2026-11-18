@@ -5,7 +5,7 @@
 -- 011-0305003201220301351-0050055003, the Imp out and the Succubus sacrificed (Touch of Fire), Demon Armor, curse
 -- Elements, 32 Soul Shards, Engineering/Tailoring, 20 yd; its rotation, which is also wowsims's Auto rotation:
 -- spec.ts:125 autoRotation) and presets.ts:9,18,27,89 (DEMO_FIRE_BRAND_APL, DemoFireBrandTalents, the Builds list's
--- first) at the pin. The build carries no gear: gear_sets/preraid.gear.json (central fix 27).
+-- first) at the pin. The build's own gear (#1048, owner L1397; was preraid.gear.json, central fix 27).
 -- Spec binding: 31 Demonology points to 18 Destruction and 2 Affliction: Demonology's default.
 -- Re-pin e2842f0a78 (Task 16): the build is now Human (Sesam's lists: Life Tap below 30% mana, Major Mana Potion and
 -- Demonic Rune lines); the replay answers `fight_remains` from the log's length (R42, a replay-world assumption; in
@@ -47,7 +47,7 @@ return {
     name = "Demonology",
     talentTree = "warlock",
     build = "ui/specs/warlock/dps/builds/demo_fire_brand.build.json",
-    gear = "ui/specs/warlock/dps/gear_sets/preraid.gear.json",
+    -- no `gear`: the build carries its own at ab0f00e4fc (wowsims #1048; owner L1397)
     map = { ["item:272438"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
     select = {
         castWarlockAssignedCurse = {

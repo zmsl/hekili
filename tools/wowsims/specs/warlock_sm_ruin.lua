@@ -3,7 +3,7 @@
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warlock/dps/builds/sm_ruin.build.json
 -- (the build: race Human, talents 2550002013520105--0550205003, Succubus out, Demon Armor, curse Elements, 32 Soul
 -- Shards, Engineering/Tailoring, 20 yd; its rotation) and presets.ts:12,21,30,92 (SM_RUIN_APL, SmRuinTalents, the
--- Builds list) at the pin. The build carries no gear: gear_sets/preraid.gear.json (central fix 27).
+-- Builds list) at the pin. The build's own gear (#1048, owner L1397; was preraid.gear.json, central fix 27).
 -- Spec binding: 30 Affliction points to 21 Destruction (0 Demonology), so the pack is Affliction's second (the
 -- Fire/Frostfire shape: mage_frostfire.lua); Affliction's default stays "Affliction (wowsims.com)" (aff_wrack). The
 -- name is wowsims's "SM/Ruin" without the slash (a pack name is a file name: src/Hekili_Warlock/APLs/<pack>.simc).
@@ -43,7 +43,7 @@ return {
     name = "SM Ruin",
     talentTree = "warlock",
     build = "ui/specs/warlock/dps/builds/sm_ruin.build.json",
-    gear = "ui/specs/warlock/dps/gear_sets/preraid.gear.json",
+    -- no `gear`: the build carries its own at ab0f00e4fc (wowsims #1048; owner L1397)
     map = { ["item:272438"] = "use_items" }, -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12)
     select = {
         castWarlockAssignedCurse = {

@@ -48,7 +48,7 @@ return {
     player = {
         race = "RaceHuman",
         class = "ClassRogue",
-        gear = "ui/specs/rogue/dps/gear_sets/p1_muti.gear.json",
+        gear = "ui/specs/rogue/dps/gear_sets/muti.gear.json", -- renamed upstream at ab0f00e4fc (wowsims #1067)
         talentsString = "00530311231251031-32030302020103-001",
         specKey = "rogue",
         options = { classOptions = setmetatable({}, { __jsontype = "object" }) }, -- an empty message (dkjson: {} is [])
