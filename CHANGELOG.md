@@ -5,12 +5,9 @@
 ### New
 - Shaman: Hekili now knows Totemic Recall; casting it takes your totems and their buffs down in the recommendations (the mana it gives back is not counted yet). Not yet checked in game.
 - Hekili now remembers across logouts and reloads which Cooldown Manager icons have proven themselves, so a debuff that misses in your first pull of a session can be caught.
-
 - A priority can declare its own windows in a list named `windows`, and open and close them with `open_window` and `close_window` lines.
-
 - Priorities can use SimC `sequence` and `strict_sequence` lines (with `restart_sequence` and `window.<name>.done`); they run in the Primary and AOE displays, each with a Sequences setting (on by default).
 - A sequence running in a display shows all its steps there, including a cooldown that is normally shown in its own display; a toggle that is switched off still keeps that step out.
-
 - A priority whose lines open and close the same window in one recommendation gets a one-time warning, also when a `close_window` line stops a sequence that then starts again.
 
 ### Changed
@@ -33,7 +30,6 @@
 - Feral: a dodged or missed Ferocious Bite now gives back 28 energy and keeps the extra energy it would have used, and the Idol of Ferocity (Claw and Rake cost 2 less) and the Idol of the Dream (Rip lasts 2 seconds longer) are counted. Not yet checked in game.
 - Debug snapshots now keep each Cooldown Manager bar's last light and dark times when you change target or edit your bars.
 - Mage, Arcane, Fire, Frost and Frostfire (wowsims.com): when you wear Robe of the Archmage, its use is now suggested with your other cooldowns, under the Potions toggle (not yet checked in game).
-
 - `open_window` and `close_window` lines take only `name=` and `if=`; a window's length and refresh settings are set where the window is declared.
 
 ### Fixed
@@ -42,15 +38,11 @@
 - A cost discount, such as Bestial Wrath's, on a spell that costs a share of your base mana now applies after the cost is rounded, as in the game.
 - Innervate now also multiplies your mana regeneration from gear and buffs, as in the game, while a totem's mana tick such as Mana Spring stays as it is.
 - Using a mana gem or Robe of the Archmage now adds its mana to Hekili's mana forecast, the gem's by the gem you used.
-
 - A recommendation that changes and changes straight back no longer flashes the other ability for a split second.
-
 - ConsolePort: the recommendation now shows the controller button for spells on ConsolePort's action bars.
 - Paladin: a second attack in the same instant as an Unsealed Wrath proc no longer stores or spends an extra Echo (the talent's 0.1 s cooldown; not yet checked in game).
 - Paladin: Retribution (17 mana a second outside the five-second rule, 5.1 while casting), Protection (16.5 outside, none while casting) and Holy Shock Retribution (25.13 outside, 7.54 while casting) start from the current Forever mana regeneration values until your own is measured (not yet checked in game).
-
 - When the game's out-of-combat mana or energy regeneration matches the expected rate, Hekili now takes it as exact, so its mana and energy estimates no longer start a little low.
-
 - Exorcism and Holy Wrath wait until the target is confirmed Undead or Demon (the Exorcist talent's Exorcism: any living enemy), so they no longer show with no target, a friendly or dead target, or the wrong creature type.
 - Warrior: a hit you block in full no longer counts as rage gained, and the rage expected from hits taken follows the latest measurements by attacker level (not yet checked in game).
 - Warrior: a missed, dodged or parried Execute no longer gives back part of its cost, and the extra rage it would have used stays yours (not yet checked in game).
