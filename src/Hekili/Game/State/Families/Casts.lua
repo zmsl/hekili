@@ -545,9 +545,9 @@ function VS.BasePower(pt)
     return b and b > 0 and b or nil
 end
 
--- The wholes lo..hi a cut read R stands for: each W with nearest(m, W) = R (R itself when m = 1). When no whole gives R
--- (only a factor above 1 can step over it; no shipped talent raises a cost) both are R / m, the read's own middle, which
--- pins nothing. m > 0; about 1 / m steps, out of combat only. Allocates nothing.
+-- The wholes lo..hi a cut read R stands for: each W with nearest(m, W) = R (R itself when m = 1). When no whole gives
+-- R (only a factor above 1 can step over it; no shipped talent raises a cost) both are R / m, the read's own middle,
+-- which pins nothing. m > 0; about 1 / m steps, out of combat only. Allocates nothing.
 local function wholeWindow(R, m)
     local lo = floor((R - 0.5) / m) - 1
     while nearest(m, lo) < R do
@@ -569,9 +569,10 @@ end
 --- W = nearest(f, base) cut by m, then whole again: to the nearest, as assumed here (nearest(m, W) = R), or, unprobed,
 --- truncated (0 <= W m - R < 1). The wholes W the read allows are lo..hi (wholeWindow; R itself when m = 1); the pack's
 --- base stays while it prices the finest read either way (-0.5 <= W m - R < 1; with m = 1 exactly W = R) and the finest
---- uncut read exactly (never looser than with no cut read), else the base is the whole nearest (lo + hi) / 2 / f. Under nearest rounding the true base lies within ((hi - lo) / 2 + 0.5) / f of
---- that middle (0.5 / f when the read pins W, always uncut), so the learned base within that + 0.5, never worse than
---- (0.5 / m + 0.5) / f + 0.5; under truncation within (1.5 / m + 0.5) / f + 0.5. The finest read is the one with the
+--- uncut read exactly (never looser than with no cut read), else the base is the whole nearest (lo + hi) / 2 / f.
+--- Under nearest rounding the true base lies within ((hi - lo) / 2 + 0.5) / f of that middle (0.5 / f when the read
+--- pins W, always uncut), so the learned base within that + 0.5, never worse than (0.5 / m + 0.5) / f + 0.5; under
+--- truncation within (1.5 / m + 0.5) / f + 0.5. The finest read is the one with the
 --- smallest half-width under either rounding: 0.5 / f uncut, (1.5 / m + 0.5) / f cut, so an uncut read, which has no
 --- rounding doubt, wins any near tie and the chosen read is never coarser than the finest uncut one. Runs after the
 --- reads and again after a talent walk that changed a rank (Sources/Talents.lua), so a talent-scaled fraction and a

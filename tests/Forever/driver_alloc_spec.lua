@@ -190,6 +190,7 @@ describe("Engine/Driver.lua through the engine frame", function()
         local codes, bytes = sequenceRun("actions+=/strict_sequence,name=s:bloodrage:berserker_stance\n")
         assert.are.equal(0, codes[2], table.concat(codes, " ")) -- never given up: both members stay castable
         assert.is_true(codes[1] < 10, table.concat(codes, " ")) -- held: reopened only after its 4 s step_timeout
+        assert.is_true(codes[1] >= 1, table.concat(codes, " ")) -- and that reopen falls inside the measured Updates
         assert.are.equal(0, bytes)
         assert.are.same({}, H.errors)
     end)

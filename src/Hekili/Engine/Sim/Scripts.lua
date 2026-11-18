@@ -1931,14 +1931,14 @@ function scripts.CheckWindows( lists, packName )
         startByID = startByID, nStrict = nStrictDecl, holdWalk = holdWalk, fireIDs = fireIDs }
 end
 
---- The active pack's APL windows into the belief's def (Tracked.lua ns.SetAplWindows: a new generation) and as the
---- core copy's source (State.lua BuildWindows reads scripts.appliedWindows). Before a Build (Activation.lua) and when
---- the active pack or its scripts change (Core.lua Hekili.Update). Allocates only a key's snapshot counters, the
---- first time that key is applied.
 -- (windows design v6 §15) the snapshot's two rolling numbers per key (Core.lua winSend, count10): the operations and
 -- the opens sent in the last 10 s, in one-second buckets; built here so the walk never allocates them.
 scripts.winCount = {}
 
+--- The active pack's APL windows into the belief's def (Tracked.lua ns.SetAplWindows: a new generation) and as the
+--- core copy's source (State.lua BuildWindows reads scripts.appliedWindows). Before a Build (Activation.lua) and when
+--- the active pack or its scripts change (Core.lua Hekili.Update). Allocates only a key's snapshot counters, the
+--- first time that key is applied.
 function scripts:ApplyWindows( packName )
     local cw = packName and self.Windows[ packName ] or NO_APL_WINDOWS
     self.appliedWindows = cw

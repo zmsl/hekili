@@ -1077,6 +1077,35 @@ describe("the replay's cooldowns: the engine's, a shared category's, the log's",
         assert.are.equal(0, lastCast().cd) -- out of the form: no cooldown
         assert.is_true(math.abs(us.cdUntil.gust - (R.pull + 1 + 6)) < 1e-3)
     end)
+
+    it("caps the run instance's answer at the log's spacing (replay-fncd M3)", function()
+        local log = table.concat({
+            "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 20 s target 63",
+            "[1.00] [Tester (#1)] Casting {SpellID: 900070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+            "[1.00] [Tester (#1)] Completed cast {SpellID: 900070}",
+            "[4.00] [Tester (#1)] Casting {SpellID: 900070} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+            "[4.00] [Tester (#1)] Completed cast {SpellID: 900070}",
+        }, "\n")
+        local gust = { -- a raw function cooldown (a stand-in's): no boot value, the log's spacing is its cap
+            key = "gust",
+            id = 900070,
+            gcd = "spell",
+            cooldown = function()
+                return 6
+            end,
+        }
+        local HF = { Hekili = { Class = { abilities = { gust = gust }, auras = {} }, State = { action = {} } } }
+        local TH = { -- answers 6 s at every cast: wowsims cast it 3 s apart, so the log's spacing wins
+            Hekili = { State = { reset = function() end, action = { gust = { cooldown = 6 } } } },
+        }
+        local R = replay.new(log, HF)
+        local W = at(R.world(setmetatable({ tag = "-fn3" }, { __index = WO }), 1, TH), R.pull + 2)
+        local first
+        for _, ev in ipairs(W.truth) do
+            first = first or ev.kind == "cast" and ev
+        end
+        assert.are.equal(3, tonumber(("%.4f"):format(first.cd)))
+    end)
 end)
 
 describe("the replay's position", function()

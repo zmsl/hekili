@@ -701,13 +701,18 @@ describe("the headless loop's flicker counter (loop.flips)", function()
                 { t = 4.1, key = "c", gcd = true },
             },
         }
-        function R.world(wo, seed)
+        local truth
+        function R.world(wo, seed, TH)
+            truth = TH -- the instance a computed cooldown is read from (replay-fncd M2: the driven oracle, else ours)
             return scenarios.world(wo, seed)
         end
         function R.next()
             return false
         end
+        loop.run(L, 1, { replay = R, trace = false }, { { H = L.us }, { H = L.oracle, plain = true } })
+        assert.are.equal(L.oracle, truth)
         local run = loop.run(L, 1, { replay = R, trace = false }, { { H = L.us } })
+        assert.are.equal(L.us, truth)
         assert.are.same({ a = true, b = true }, run.pressed[2])
         assert.are.same({ c = true }, run.pressed[6])
         for n = 1, run.combat do

@@ -618,7 +618,7 @@ function M.new(text, H, o)
             if not (a.movesOnly or a.onNextSwing and ((e.cost or 0) > 0 or e.landed)) then
                 presses[#presses + 1] = d
             else
-                d.landing = true -- no press: excuses no flip either (loop.flips)
+                d.landing = true -- no press (a swing's landing or a move-only cast): excuses no flip either (loop.flips)
             end
         end
     end
@@ -731,7 +731,10 @@ function M.new(text, H, o)
         -- the key's cooldown at its cast: a computed one as TH answers it, reset to its now, capped at the log's spacing
         -- where the boot value was (a raw function's; the boot value stands in when TH cannot say). shortcut: TH's
         -- belief as of its last cycle (the decision's, just before the cast), not the world's entity; read the world
-        -- when a gate needs a cooldown on a state the belief does not see.
+        -- when a gate needs a cooldown on a state the belief does not see. The world follows the graded instance's
+        -- belief, so a cooldown that depends on an aura hidden in the live-auras-none arm would read differently
+        -- there; none today (Faerie Fire 6.000 x6, Shifting Power 7.500 x9; Berserk and Elemental Mastery windows
+        -- never hit).
         local function cooldownOf(key)
             if not (TS and computed[key]) then
                 return cd[key]

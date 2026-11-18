@@ -629,7 +629,7 @@ function M.run(L, seed, o, drivers)
             di = di + 1
             if d.t > t then
                 step(d.at and d.at > t and d.at or d.t) -- d.at: a reacted aura's window (replay.lua o.reacted)
-                if run.combat > 0 and not d.landing then -- wowsims's presses in (t_n, t_n+1]: tick n's (loop.flips)
+                if run.combat > 0 and not d.landing then -- wowsims's presses in [t_n, t_n+1): tick n's (loop.flips)
                     run.pressed[run.combat][d.key] = true
                 end
                 if d.gcd then
@@ -975,7 +975,7 @@ end
 
 -- Flicker: A -> B -> A within 3 ticks in a first-icon sequence, unless the instance pressed B at the tick it showed or
 -- the next (`press[i]`: the key it pressed at in-combat tick i, false none; a replay's: the set of keys wowsims cast
--- before tick i + 1, B excused only if cast before the tick after it showed; nil: no presses). Owner rule
+-- in [t_i, t_i+1), B excused only if cast before the tick after it showed; nil: no presses). Owner rule
 -- 2026-10-26: a show-then-press within one tick is not jitter (a proc at a hard cast's landing, pressed at once).
 local function flips(seq, n, press)
     local f = 0
