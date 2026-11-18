@@ -2082,17 +2082,20 @@ describe("now handlers", function()
                 assert.are.equal(0, I.avoidsRun)
             end)
 
-            it("an onAvoid that spends from the slot runs before the give-back check: the share alone (L1295)", function()
-                h.Class.abilities.spender_c.funcs.onAvoid = function()
-                    spend(2, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+            it(
+                "an onAvoid that spends from the slot runs before the give-back check: the share alone (L1295)",
+                function()
+                    h.Class.abilities.spender_c.funcs.onAvoid = function()
+                        spend(2, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+                    end
+                    rest(true, true)
+                    h.Class.abilities.spender_c.funcs.onAvoid = nil
+                    cast(fs.SPENDER_C, 5)
+                    outcome(5.05, "DODGE")
+                    assert.are.equal(1, I.avoidsRun)
+                    assert.are.equal(8, rage(5.1).est) -- the take back first, then the spend, would read 38 - 2 = 36
                 end
-                rest(true, true)
-                h.Class.abilities.spender_c.funcs.onAvoid = nil
-                cast(fs.SPENDER_C, 5)
-                outcome(5.05, "DODGE")
-                assert.are.equal(1, I.avoidsRun)
-                assert.are.equal(8, rage(5.1).est) -- the take back first, then the spend, would read 38 - 2 = 36
-            end)
+            )
 
             it("without the field the avoid gives back none of the `now`'s spend", function()
                 rest(false, false)
