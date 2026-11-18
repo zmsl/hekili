@@ -101,13 +101,14 @@ local REPLAY = {
 -- Blast on a dry pool, scorch waiting before and after). The cause is a replay flicker-metric artefact, not jitter:
 -- wowsims presses B inside the next tick (the loops' flips() excuses that through run.pressed; a replay passes no
 -- presses). The interim 0.67 ceiling stands until lane replay-flips-09 (ledger L1296) fixes the metric centrally;
--- the batch then re-measures and restores the ceiling. LIVE60 kept (measured Arcane 8.4 under 10.0, Fire 6.2,
+-- the batch then re-measures and restores the ceiling: 0.67 -> 0 (Arcane and Fire 0.00/min measured at the batch),
+-- replay-flips-09 ade4d6379 (a flip whose middle icon wowsims casts before the next tick is excused, L1317). LIVE60 kept (measured Arcane 8.4 under 10.0, Fire 6.2,
 -- Frostfire 11.8, Frost 6.0).
 local PACKS = {
-    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0, 0.67 },
+    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0, 0 },
     -- LIVE60 6.0 -> 6.2 (CN8 D2): the same dry-pool wait for Scorch (96.4-102.4 s, mana 49-153), one poll longer on
     -- the re-timed fight
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.93, 6.2, 0.67 },
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.93, 6.2, 0 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 1.00, 11.8, 0 },
     -- Frost (new pack, 2026-11-12, R6 first measurement): 0.93 (0.934, 57 of 61; the recipe's header names the misses),
     -- LIVE60 6.0 (the 6 s bar: 6.0 measured, L10 0.2, L40 0.0), flicker 0 (0.00/min measured). LIVE60's cause (traced

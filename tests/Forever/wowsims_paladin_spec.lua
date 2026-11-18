@@ -56,7 +56,8 @@ end
 -- left at 5.0), Seal of Righteousness and Retribution Aura up, Judgement (off the GCD) cooling, Exorcism (level 20),
 -- Consecration and Holy Shock (talents) not reachable at 10. Re-measured after the seeded regen phase (forever
 -- c740f3242): replay 0.977, flicker 0.67, live 8.4 / 4.8 / 4.8, the same; only the timing fixture's cost rows moved
-local HS_FLOOR, HS_FLICKER, HS_LIVE_LIMIT = 0.97, 0.7, { [10] = 8.4, [40] = 6, [60] = 6 }
+-- HS_FLICKER 0.7 -> 0 (0.00/min measured at the batch): replay-flips-09 ade4d6379 (a flip whose middle icon wowsims casts before the next tick is excused, L1317)
+local HS_FLOOR, HS_FLICKER, HS_LIVE_LIMIT = 0.97, 0, { [10] = 8.4, [40] = 6, [60] = 6 }
 
 -- wowsims's Paladin knows the 879 ranks of Exorcism only (Undead or Demon targets; its target is Mechanical).
 local EXORCISM_ANY = { 415068, 415069, 415070, 415071, 415072, 415073 }
@@ -110,8 +111,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- (n219, n319), the shape traced on Arms and Beast Mastery (an end the old probe read 0.50 now leads for a tick)
         -- re-pin e5a9cd2a2d -> e4ef929e54: 0.949 (39) top [consecration -> seal_of_command 2], ON flicker 1.00; both
         -- bars kept
+        -- ON flicker 2.7 -> 0 (0.00/min measured at the batch): replay-flips-09 ade4d6379 (a flip whose middle icon wowsims casts before the next tick is excused, L1317)
         local r, line = ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.93, REPLAY)
-        ab.check(r.flicker <= 2.7 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
+        ab.check(r.flicker <= 0 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
     -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while

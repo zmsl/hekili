@@ -112,7 +112,8 @@ local PACKS = {
         -- pads nothing, at the gap BT cost crossing; not traced per tick).
         -- 1.1 -> 1.0 (1.00 measured on integ/0.8.5-w2, the merged tree, L1037/L1103): the Serpent Sting debuff at its
         -- landing, flicker-085 and the timing merges are all in; one flip a minute remains.
-        1.0,
+        -- 1.0 -> 0.4 (0.33 measured at the batch): replay-flips-09 ade4d6379 (L1317)
+        0.4,
         "SurvivalRanged",
     },
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): new rows, first measured on this lane (R6; the
@@ -162,7 +163,7 @@ local PACKS = {
         -- 0 -> 0.7 (0.67 measured, 2 flips; re-pin, the hawk rotation, traced per tick): both are aimed_shot ->
         -- summon_hawk -> aimed_shot at the tick the log presses Summon Hawk (48.0 s, 173.4 s): "shown, then cast", which a
         -- replay counts because it passes no press array (the MM / SV Turret note below)
-        0.7,
+        0, -- 0.7 -> 0 (0.00 measured at the batch): replay-flips-09 ade4d6379 (L1317)
         nil,
         {},
         {},
@@ -176,7 +177,7 @@ local PACKS = {
         -- (Efficiency 4/5) are 2328 of 6020 mana; the streak (t 96.2-105.8) runs the pool 14.4 -> 139.8 waiting on Aimed
         -- Shot 140.8.
         { [10] = 6, [40] = 9.8, [60] = 14.0 }, -- 4.4 / 9.8 / 13.8
-        1.7, -- 1.66
+        0, -- 1.7 -> 0 (0.00 measured at the batch; 1.66 before): replay-flips-09 ade4d6379 (L1317)
         nil,
         {},
         {},
@@ -190,7 +191,7 @@ local PACKS = {
         -- 2646 of 5661 mana; the streak (t 110.0-120.0) runs the pool 33.4 -> 112.8 waiting on Hunter's Mark 60 to the
         -- fight's end.
         { [10] = 6, [40] = 10.2, [60] = 15.4 }, -- 4.4 / 10.2 / 15.4
-        1.0, -- 1.00
+        0, -- 1.0 -> 0 (0.00 measured at the batch; 1.00 before): replay-flips-09 ade4d6379 (L1317)
         nil,
         {},
         {},
@@ -208,7 +209,7 @@ local PACKS = {
         -- 0 -> 0.4 (0.33 measured, 1 flip; re-pin, the Pre-BiS gear and the run-out line re-time the fight; traced per
         -- tick): summon_hawk -> mongoose_bite -> summon_hawk at 59.0 s, the tick the log presses Mongoose Bite (its
         -- Expose Prey window just open): "shown, then cast", counted because a replay passes no press array
-        0.4,
+        0, -- 0.4 -> 0 (0.00 measured at the batch): replay-flips-09 ade4d6379 (L1317)
         "SurvivalMeleeRanged",
     },
 }
