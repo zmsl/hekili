@@ -489,7 +489,7 @@ function T.Pick(t, g, p, act, flag, amount, sch, isAvoid)
             local ok, banded = K.Accepts(i, act, flag, amount, sch, isAvoid)
             refused = refused or (not ok and banded == true)
             if ok then
-                local lo, h, e = K.Band(i, p, t, isAvoid, act, sch)
+                local lo, h, e = K.Band(i, p, t, isAvoid, act, sch, amount == nil)
                 if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
                     n, banded = n + 1, banded == true
                     if (banded and not bestBanded) or (banded == bestBanded and e < bestE) then
@@ -516,7 +516,7 @@ function T.Divergent(p, t, pass, act, flag, amount, sch, isAvoid)
     local tickP, same = kind[p] == X.TICKS or kind[p] == X.CHANNEL, false
     for i = 1, CAP do
         if state[i] >= OPEN and guid[i] == guid[p] and K.Accepts(i, act, flag, amount, sch, isAvoid) then
-            local lo, h = K.Band(i, pass, t, isAvoid, act, sch)
+            local lo, h = K.Band(i, pass, t, isAvoid, act, sch, amount == nil)
             if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
                 if isAvoid and at[i] >= T.latestT then
                     return true, false
@@ -574,8 +574,8 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
     -- past the narrow band, so it is final at once (§2.1) and never teaches
     teachFrom(i, t, isAvoid, amount, flag, clean and pass ~= 4)
     local d0 = done[i]
-    -- (L1442) a tick pays its own index (K.TickN): the unseen ones before it are past, done + owed kept
-    local n = (k == X.TICKS and not isAvoid) and I.Kinds.TickN(i, t) or d0 + 1
+    -- (L1442) a tick pays its own index (K.TickN; past unseen ones for a secret row), done + owed kept
+    local n = (k == X.TICKS and not isAvoid) and I.Kinds.TickN(i, t, amount == nil) or d0 + 1
     done[i], owed[i] = n, owed[i] - (n - d0)
     if owed[i] < 0 then
         T.overpaid = T.overpaid + 1 -- never: a ticket is paid at most `owed` times (the sweep asserts it)

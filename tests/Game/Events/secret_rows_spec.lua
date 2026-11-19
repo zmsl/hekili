@@ -264,6 +264,22 @@ describe("rows with a secret amount (kind-only routing)", function()
         assert.are.equal(3, T.done[i])
     end)
 
+    -- A plain row keeps the next owed tick (decision 47): with amounts plain a missing tick is truly missing (taken by
+    -- another ticket, or a first row that was not ours snapped the schedule off phase: the detect sweep's mixed seed 1,
+    -- a partner's lockstep rows), so a later slot's row is not taken.
+    it("keeps a plain row's band on the next owed tick past a missing one", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S)
+        ctl.now = 13.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 8) -- tick 1 (anchor 10.7); tick 2 at 16.7 never comes
+        local i = ticket(X.TICKS)
+        ctl.now = 19.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 8)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 20, 8)
+        assert.are.same({ 1, 0 }, { T.done[i], T.bandRejected })
+    end)
+
     -- An older schedule's first paid tick confirms its application over older ones only: a recast's newer schedule (its
     -- direct row secret, so nothing refreshed the old one) stays open though the old one took a row in its phase.
     it("closes no newer schedule of the ability when an older one pays its first tick", function()
