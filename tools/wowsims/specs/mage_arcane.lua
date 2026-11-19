@@ -30,7 +30,7 @@
 -- Frostbolt rank 10, Arcane Missiles rank 7); the world's pools and regen the logs' (6678; 29.13 a second, all of it
 -- while casting under Arcane Meditation 3/3). Evocation is never clipped in this fight (mana never reaches 99% inside
 -- the channel), so the belief keeping its aura after a clip does not show here.
--- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): the trinket (`use_items`; 272438 since e4ef929e54, 18820 on e2842f0a78,
+-- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): the trinket (`use_items`; Eye of the Beast 13968 since ab0f00e4fc, 272438 on e4ef929e54, 18820 on e2842f0a78,
 -- 19339 before), Presence of Mind, Arcane Power and the mana gem, off the GCD, at the top of the list.
 -- Deviation (Evocation's clip): wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the translator
 -- drops channelSpell.interruptIf (tools/wowsims/apl.lua; a shared gap, reported), so the pack's line has no clip
@@ -60,10 +60,12 @@
 -- only when Missile Barrage is not up, and each landed missile rolls Arcane Concentration under a 1 s ICD (ef6fb99ee1;
 -- the world, mage_world.lua; the kit's rule is the cost mod's `unless`, CN11).
 -- Re-pin e2842f0a78 -> e4ef929e54 (lane mage 0.9, R6): the gear is the pin's default preraid.gear.json (so "the gear
--- p1Arcane.gear.json" above is the old pin's) and its trinket the Weakness Analyzer 272438, mapped to `use_items`
+-- p1Arcane.gear.json" above is the old pin's) and its trinket then the Weakness Analyzer 272438, mapped to `use_items`
 -- (18820 before); Robe of the Archmage (item 14152, spell 18385) is a kit ability under the Potions toggle, emitted as
 -- robe_of_the_archmage,use_off_gcd=1 before use_items; the world rolls Arcane Concentration at a sixth of its chance
 -- at a channel's start and at each landed missile (wowsims 5ad9515c15).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-mage): preraid.gear.json's contents (wowsims #1085/#1090: Eye of
+-- the Beast 13968 for the Weakness Analyzer 272438, main hand 22383, off hand 19315, enchants); APL and talents unchanged.
 return {
     class = "MAGE",
     pack = "Arcane (wowsims.com)",
@@ -83,8 +85,8 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear, was the Talisman 18820 and the Mind
-    -- Quickening Gem 19339)
+    -- the preraid gear's on-use trinket: Eye of the Beast 13968 since ab0f00e4fc (wowsims #1085/#1090), the Weakness
+    -- Analyzer 272438 before (still mapped: wowsims_trinket_spec)
     map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" },
     focus = { arcane_missiles = 1 }, -- by role (docs/dev/wowsims-packs.md)
     leveling = { "frostbolt,if=!talent.arcane_instability.enabled" },

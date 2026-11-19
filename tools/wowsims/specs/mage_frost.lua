@@ -19,10 +19,12 @@
 -- Loops (20 fights, seeds 1-20 / 21-40 / 41-60; the harness's seeded regen phase, 2026-11-13): agreement .996 / .998 /
 -- .998, flicker 0 x3, heldReady 112 / 111 / 109.
 -- Re-pin e2842f0a78 -> e4ef929e54 (lane mage 0.9, R6): the gear is the pin's default preraid.gear.json (so "the gear
--- p1Arcane.gear.json" above is the old pin's) and its trinket the Weakness Analyzer 272438, mapped to `use_items`
+-- p1Arcane.gear.json" above is the old pin's) and its trinket then the Weakness Analyzer 272438, mapped to `use_items`
 -- (18820 before); Robe of the Archmage (item 14152, spell 18385) is a kit ability under the Potions toggle, emitted as
 -- robe_of_the_archmage,use_off_gcd=1 before use_items; the world rolls Arcane Concentration at a sixth of its chance
 -- at a channel's start and at each landed missile (wowsims 5ad9515c15).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-mage): preraid.gear.json's contents (wowsims #1085/#1090: Eye of
+-- the Beast 13968 for the Weakness Analyzer 272438, main hand 22383, off hand 19315, enchants); APL and talents unchanged.
 return {
     class = "MAGE",
     pack = "Frost (wowsims.com)",
@@ -42,7 +44,8 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 28,
     },
-    -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear)
+    -- the preraid gear's on-use trinket: Eye of the Beast 13968 since ab0f00e4fc (wowsims #1085/#1090), the Weakness
+    -- Analyzer 272438 before (still mapped: wowsims_trinket_spec)
     map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" },
     -- by role (docs/dev/wowsims-packs.md): Cone of Cold on five Winter's Chill stacks and Ice Lance (one Fingers of
     -- Frost charge while Frostbolt casts; 0 casts in wowsims's fight) are windows to catch (1); Ice Barrier, kept up for Frigid Power, is upkeep (2)

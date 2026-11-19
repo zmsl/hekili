@@ -28,7 +28,7 @@
 -- Deviation (Evocation's clip): wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the translator
 -- drops channelSpell.interruptIf (tools/wowsims/apl.lua; a shared gap, reported), so the pack's line has no clip
 -- condition; the world clips by wowsims's rule (mage_world.lua: any press while the belief channels it at 99%).
--- autocastOtherCooldowns (rule 13): the trinket (`use_items`; 272438 since the e4ef929e54 re-pin, 18820 on e2842f0a78, 19339 before), Combustion and the
+-- autocastOtherCooldowns (rule 13): the trinket (`use_items`; Eye of the Beast 13968 since the ab0f00e4fc re-pin, 272438 on e4ef929e54, 18820 on e2842f0a78, 19339 before), Combustion and the
 -- mana gem, off the GCD. Rule 12 drops Read Ley Line (mage_arcane.lua); Ignite (412538) and the missiles' 10274 are
 -- procs no key maps.
 -- Re-pin e2842f0a78 (Task 10): the build's talents (presets.ts FireTalents 0502052001001-55500001230133031-003), the
@@ -48,10 +48,12 @@
 -- Focus: the closing Scorch line is the filler, untiered (`{ 2, false }`; the first line is the upkeep).
 -- LIVE L10 0.0, L40 0.2, L60 6.0 s (was 12.6: the new list's Arcane Blast line).
 -- Re-pin e2842f0a78 -> e4ef929e54 (lane mage 0.9, R6): the gear is the pin's default preraid.gear.json (so "the gear
--- p1Arcane.gear.json" above is the old pin's) and its trinket the Weakness Analyzer 272438, mapped to `use_items`
+-- p1Arcane.gear.json" above is the old pin's) and its trinket then the Weakness Analyzer 272438, mapped to `use_items`
 -- (18820 before); Robe of the Archmage (item 14152, spell 18385) is a kit ability under the Potions toggle, emitted as
 -- robe_of_the_archmage,use_off_gcd=1 before use_items; the world rolls Arcane Concentration at a sixth of its chance
 -- at a channel's start and at each landed missile (wowsims 5ad9515c15).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-mage): preraid.gear.json's contents (wowsims #1085/#1090: Eye of
+-- the Beast 13968 for the Weakness Analyzer 272438, main hand 22383, off hand 19315, enchants); APL and talents unchanged.
 return {
     class = "MAGE",
     pack = "Fire (wowsims.com)",
@@ -71,8 +73,8 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear, was the Talisman 18820 and the Mind
-    -- Quickening Gem 19339)
+    -- the preraid gear's on-use trinket: Eye of the Beast 13968 since ab0f00e4fc (wowsims #1085/#1090), the Weakness
+    -- Analyzer 272438 before (still mapped: wowsims_trinket_spec)
     map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" },
     focus = { pyroblast = 1, scorch = { 2, false }, arcane_missiles = 1 }, -- by role (docs/dev/wowsims-packs.md)
     leveling = {},

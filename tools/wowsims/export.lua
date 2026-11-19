@@ -48,13 +48,13 @@ M.SPEC_PIN = {
 
     hunter_survival_turret = OLD,
 
-    mage_arcane = OLD,
+    mage_arcane = NEW,
 
-    mage_fire = OLD,
+    mage_fire = NEW,
 
-    mage_frost = OLD,
+    mage_frost = NEW,
 
-    mage_frostfire = OLD,
+    mage_frostfire = NEW,
 
     paladin_holy_shock = OLD,
 
