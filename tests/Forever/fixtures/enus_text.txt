@@ -18613,18 +18613,19 @@ options.packs.affliction.Affliction (wowsims.com).lists.actionID	name	Entry
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 20554
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r |cff00ccff[Use Items]|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r [Item 12662]
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_multi_target_curse_logic|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 603 - |cFFFFD100|cffffd100(fight_remains>debuff.bane_of_doom.duration&active_enemies>1)|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 686 - |cFFFFD100|cffffd100(buff.shadow_trance.up||(talent.improved_shadow_bolt.enabled&buff.revelation.up&(!debuff.shadow_vulnerability.up||debuff.shadow_vulnerability.remains<(action.shadow_bolt.cast+action.shadow_bolt.travel_time))))|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r [Item 13444]
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_multi_target_curse_logic|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 603 - |cFFFFD100|cffffd100(fight_remains>debuff.bane_of_doom.duration&active_enemies>1)|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffsingle_target_dot_logic|r, if |cffffd100active_enemies=1|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmulti_target_dot_logic|r, if |cffffd100active_enemies>1|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 686 - |cFFFFD100|cffffd100(buff.shadow_trance.up||(talent.improved_shadow_bolt.enabled&buff.revelation.up&(!debuff.shadow_vulnerability.up||debuff.shadow_vulnerability.remains<(action.shadow_bolt.cast+action.shadow_bolt.travel_time))))|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100(active_enemies=1||(action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||(action.bane_of_doom.known&debuff.bane_of_doom.up))|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 6789 - |cFFFFD100|cffffd100(!action.shadow_bolt.known||(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1316697
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 686
-options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1454 - |cFFFFD100|cffffd100!action.shadow_bolt.known||mana.lo<action.shadow_bolt.cost|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 686 - |cFFFFD100|cffffd100(buff.shadow_trance.up||(talent.improved_shadow_bolt.enabled&buff.revelation.up&(!debuff.shadow_vulnerability.up||debuff.shadow_vulnerability.remains<(action.shadow_bolt.cast+action.shadow_bolt.travel_time))))|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcooldowns|r, if |cffffd100(active_enemies=1||(action.bane_of_doom.known&((!action.bane_of_doom.known||((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known||!debuff.bane_of_doom.up)))||(action.bane_of_doom.known&debuff.bane_of_doom.up))|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6789 - |cFFFFD100|cffffd100(!action.shadow_bolt.known||(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1454 - |cFFFFD100|cffffd100(mana.pct_lo<30&fight_remains>60)|r|r
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1316697
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 686
+options.packs.affliction.Affliction (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1454 - |cFFFFD100|cffffd100!action.shadow_bolt.known||mana.lo<action.shadow_bolt.cost|r|r
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	name	Action Name
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.amplify_curse	|T136000:0|t Spell 18288
@@ -19757,7 +19758,6 @@ options.packs.arms.Arms (wowsims.com).lists.buff_name	values.demoralizing_shout	
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.gore_drinker	|T136000:0|t Spell 1323969
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.inspiration	|T136000:0|t Spell 14893
-options.packs.arms.Arms (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.reckless_swings	|T136000:0|t Spell 1329555
@@ -25127,7 +25127,6 @@ options.packs.fury.Fury (wowsims.com).lists.buff_name	values.demoralizing_shout	
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.gore_drinker	|T136000:0|t Spell 1323969
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.inspiration	|T136000:0|t Spell 14893
-options.packs.fury.Fury (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.reckless_swings	|T136000:0|t Spell 1329555
@@ -25425,17 +25424,15 @@ options.packs.guardian.Guardian (wowsims.com).lists.actionID	name	Entry
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcat|r, if |cffffd100buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 5487 - |cFFFFD100|cffffd100(!buff.bear_form.up)&!buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1238122 - |cFFFFD100|cffffd100(target.outside5)&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 22812 - |cFFFFD100|cffffd100(health.pct<=60&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1259799 - |cFFFFD100|cffffd100(action.elunes_light.known&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 22842 - |cFFFFD100|cffffd100(health.pct<25&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 5229 - |cFFFFD100|cffffd100((action.lacerate.known&gcd.remains<=0&(!action.lacerate.known||rage.lo<action.lacerate.cost))&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 770 - |cFFFFD100|cffffd100((action.faerie_fire.known&debuff.faerie_fire.remains<=0)&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 99 - |cFFFFD100|cffffd100(settings.maintain_demoralizing_roar&(!(!(debuff.demoralizing_roar.remains<=0))&(toggle.movement&target.outside5||target.within5)))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 407995 - |cFFFFD100|cffffd100(action.primal_bite.known&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 1328617 - |cFFFFD100|cffffd100((toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6807 - |cFFFFD100|cffffd100((rage.lo>=20&(!action.primal_bite.known||(action.primal_bite.known&cooldown.primal_bite.remains>1.5)||(action.primal_bite.known&(rage.lo-action.maul.cost)>=action.primal_bite.cost)))&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 6807 - |cFFFFD100|cffffd100(!action.primal_bite.known)&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r |cff00ccff[Variable]|r - |cFFFFD100set |cff00ccffv_paid_builder_fits_the_energy_pool|r (|cffffd100(!(((!action.cat_form.known||buff.cat_form.up)&talent.predatory_discipline.enabled&((talent.primal_fury.enabled&combo_points.current>=4)||(!talent.primal_fury.enabled&combo_points.current>=5))&((talent.primal_fury.enabled&(!action.rip.known||debuff.rip.remains>=3))||(!talent.primal_fury.enabled&(((!talent.improved_shred.enabled&!(!talent.primal_fury.enabled&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)&(time+fight_remains)<=60)&(!action.rip.known||debuff.rip.remains>=2))||(!(!talent.improved_shred.enabled&!(!talent.primal_fury.enabled&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)&(time+fight_remains)<=60)&(!action.rip.known||debuff.rip.remains>=4))))))&!((buff.clearcasting.up&energy.lo>=45)||(!buff.clearcasting.up&(energy.lo>=75||((combo_points.current>=5||(talent.primal_fury.rank>=2&!talent.improved_shred.enabled))&energy.lo>=60)))))&(talent.primal_fury.rank=1||energy.lo>=60||((!talent.primal_fury.enabled||(talent.primal_fury.rank>=2&((talent.primal_fury.rank>=2&talent.shifting_power.enabled)&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)))&combo_points.current<4)||(talent.primal_fury.rank>=2&!((talent.primal_fury.rank>=2&talent.shifting_power.enabled)&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)&combo_points.current<3)))|r)|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1259799 - |cFFFFD100|cffffd100(action.elunes_light.known&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 5229 - |cFFFFD100|cffffd100((action.lacerate.known&gcd.remains<=0&(!action.lacerate.known||rage.lo<action.lacerate.cost))&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 770 - |cFFFFD100|cffffd100((action.faerie_fire.known&debuff.faerie_fire.remains<=0)&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 99 - |cFFFFD100|cffffd100(settings.maintain_demoralizing_roar&(!(!(debuff.demoralizing_roar.remains<=0))&(toggle.movement&target.outside5||target.within5)))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 407995 - |cFFFFD100|cffffd100(action.primal_bite.known&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1328617 - |cFFFFD100|cffffd100((toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 6807 - |cFFFFD100|cffffd100((rage.lo>=20&(!action.primal_bite.known||(action.primal_bite.known&cooldown.primal_bite.remains>1.5)||(action.primal_bite.known&(rage.lo-action.maul.cost)>=action.primal_bite.cost)))&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 6807 - |cFFFFD100|cffffd100(!action.primal_bite.known)&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r |cff00ccff[Variable]|r - |cFFFFD100set |cff00ccffv_paid_builder_fits_the_energy_pool|r (|cffffd100(!(((!action.cat_form.known||buff.cat_form.up)&talent.predatory_discipline.enabled&((talent.primal_fury.enabled&combo_points.current>=4)||(!talent.primal_fury.enabled&combo_points.current>=5))&((talent.primal_fury.enabled&(!action.rip.known||debuff.rip.remains>=3))||(!talent.primal_fury.enabled&(((!talent.improved_shred.enabled&!(!talent.primal_fury.enabled&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)&(time+fight_remains)<=60)&(!action.rip.known||debuff.rip.remains>=2))||(!(!talent.improved_shred.enabled&!(!talent.primal_fury.enabled&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)&(time+fight_remains)<=60)&(!action.rip.known||debuff.rip.remains>=4))))))&!((buff.clearcasting.up&energy.lo>=45)||(!buff.clearcasting.up&(energy.lo>=75||((combo_points.current>=5||(talent.primal_fury.rank>=2&!talent.improved_shred.enabled))&energy.lo>=60)))))&(talent.primal_fury.rank=1||energy.lo>=60||((!talent.primal_fury.enabled||(talent.primal_fury.rank>=2&((talent.primal_fury.rank>=2&talent.shifting_power.enabled)&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)))&combo_points.current<4)||(talent.primal_fury.rank>=2&!((talent.primal_fury.rank>=2&talent.shifting_power.enabled)&!talent.improved_shred.enabled&talent.predatory_discipline.enabled&talent.shifting_power.enabled&buff.idol_of_ferocity.up)&combo_points.current<3)))|r)|r
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	name	Action Name
 options.packs.guardian.Guardian (wowsims.com).lists.action_name	values.abolish_poison	|T136000:0|t Spell 2893
@@ -26251,41 +26248,36 @@ options.packs.protection.Protection (wowsims.com).lists.action	values.wait	|T136
 options.packs.protection.Protection (wowsims.com).lists.action	values.whirlwind	|T136000:0|t Spell 1680
 options.packs.protection.Protection (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.protection.Protection (wowsims.com).lists.actionID	name	Entry
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 12975 - |cFFFFD100|cffffd100(!(buff.last_stand.up||(action.shield_wall.known&buff.shield_wall.up))&health.pct<=40)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 1329555
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 20594
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 12328
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1311015
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 871 - |cFFFFD100|cffffd100(health.pct<=35&!((action.last_stand.known&buff.last_stand.up)||buff.shield_wall.up))|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20271
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20594 - |cFFFFD100|cffffd100((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1299026 - |cFFFFD100|cffffd100((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcd_racials|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1310994 - |cFFFFD100|cffffd100(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 2565 - |cFFFFD100|cffffd100(rage.lo>=40||(!buff.revenge_usable.up&(!action.revenge.known||cooldown.revenge.remains<=1.5)))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1311649 - |cFFFFD100|cffffd100(buff.seal_of_fury.remains<mainhand_remains&!buff.seal_of_fury.up)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.pct<=30|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1329555
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 26573
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 12328
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>2|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1311606 - |cFFFFD100|cffffd100(!talent.consecrated_ground.enabled||debuff.consecrated_ground.up)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 6572
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 20925
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcd_racials|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2565 - |cFFFFD100|cffffd100(rage.lo>=40||(!buff.revenge_usable.up&(!action.revenge.known||cooldown.revenge.remains<=1.5)))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 23922
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 402927
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 679
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 23881
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 879
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>2|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6572
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 23922
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 402927
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 23881
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 12294
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>1|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1160 - |cFFFFD100|cffffd100settings.maintain_demoralizing_shout&debuff.demoralizing_shout.remains<=6|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 6343 - |cFFFFD100|cffffd100(!debuff.thunderfury.up&debuff.thunder_clap.remains<=6)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 6673 - |cFFFFD100|cffffd100buff.battle_shout.remains<=10|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 772 - |cFFFFD100|cffffd100(!debuff.rend.up&(!(offhand_speed=0)||(offhand_speed=0&(!action.shield_slam.known||cooldown.shield_slam.remains>=1.5))))|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 7386 - |cFFFFD100|cffffd100(debuff.sunder_armor.stack<5||((!action.shield_slam.known||cooldown.shield_slam.remains>=1.5)&debuff.sunder_armor.remains<=10))|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 78 - |cFFFFD100|cffffd100(active_enemies=1&rage.lo>=20)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 2687 - |cFFFFD100|cffffd100rage.lo<90|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 12294
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 6343 - |cFFFFD100|cffffd100active_enemies>1|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1160 - |cFFFFD100|cffffd100settings.maintain_demoralizing_shout&debuff.demoralizing_shout.remains<=6|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 6343 - |cFFFFD100|cffffd100(!debuff.thunderfury.up&debuff.thunder_clap.remains<=6)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 6673 - |cFFFFD100|cffffd100buff.battle_shout.remains<=10|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 772 - |cFFFFD100|cffffd100(!debuff.rend.up&(!(offhand_speed=0)||(offhand_speed=0&(!action.shield_slam.known||cooldown.shield_slam.remains>=1.5))))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 7386 - |cFFFFD100|cffffd100(debuff.sunder_armor.stack<5||((!action.shield_slam.known||cooldown.shield_slam.remains>=1.5)&debuff.sunder_armor.remains<=10))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 78 - |cFFFFD100|cffffd100(active_enemies=1&rage.lo>=20)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 2687 - |cFFFFD100|cffffd100rage.lo<90|r|r
 options.packs.protection.Protection (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.protection.Protection (wowsims.com).lists.action_name	name	Action Name
 options.packs.protection.Protection (wowsims.com).lists.action_name	values.battle_shout	|T136000:0|t Spell 6673
@@ -26421,7 +26413,6 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.judgeme
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.justice_armor_5pc	|T136000:0|t Spell 1301694
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.justice_battlegear_5pc	|T136000:0|t Spell 1301702
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.justice_battleplate_5pc	|T136000:0|t Spell 1301697
-options.packs.protection.Protection (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.oath_of_light	|T136000:0|t Spell 1328548
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
@@ -26507,8 +26498,8 @@ options.packs.protection.Protection (wowsims.com).lists.modMoving.moving	values.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
+options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 12328)
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 1311015)
-options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 871)
 options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.protection.Protection (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -28493,19 +28484,20 @@ options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0004	|
 options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20554 - |cFFFFD100|cffffd100time>=5|r|r
 options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r [Item 12662] - |cFFFFD100|cffffd100time>=5|r|r
 options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 3045 - |cFFFFD100|cffffd100time>=5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffwalk_in|r, if |cffffd100toggle.movement&((!action.strider_kick.known||buff.strider_kick.up)&(!action.serpent_sting.known||!debuff.serpent_sting.up)&mana.pct_lo>30)|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2974 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffwalk_in|r, if |cffffd100target.outside5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 13795
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1293241
-options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 2974 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 2973 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffwalk_in|r, if |cffffd100toggle.movement&((!action.strider_kick.known||buff.strider_kick.up)&(!action.serpent_sting.known||!debuff.serpent_sting.up)&mana.pct_lo>30)|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 2973 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1495 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1317257 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 2974 - |cFFFFD100|cffffd100toggle.movement&(target.outside5&(!((!action.arcane_shot.known||action.arcane_shot.in_range)&((ranged_remains<=0||ranged_remains>=(ranged_speed-(ranged_speed-ranged_remains)))||ranged_remains>ranged_speed-0))))|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffwalk_in|r, if |cffffd100target.outside5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 13795
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 1495 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1317257 - |cFFFFD100|cffffd100target.within5|r|r
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 1293241
+options.packs.survival.Survival Melee (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 2974 - |cFFFFD100|cffffd100target.within5|r|r
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	name	Action Name
 options.packs.survival.Survival Melee (wowsims.com).lists.action_name	values.aimed_shot	|T136000:0|t Spell 19434
