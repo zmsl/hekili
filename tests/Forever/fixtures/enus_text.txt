@@ -18730,11 +18730,13 @@ options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.touch_o
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.affliction.Affliction (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.affliction.Affliction (wowsims.com).lists.caption	name	Caption
+options.packs.affliction.Affliction (wowsims.com).lists.condHeader	name	Condition
 options.packs.affliction.Affliction (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.affliction.Affliction (wowsims.com).lists.criteria	name	Conditions
 options.packs.affliction.Affliction (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.affliction.Affliction (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.affliction.Affliction (wowsims.com).lists.description	name	Description
+options.packs.affliction.Affliction (wowsims.com).lists.displayHeader	name	Display
 options.packs.affliction.Affliction (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.affliction.Affliction (wowsims.com).lists.enabled	name	Enabled
 options.packs.affliction.Affliction (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -19049,11 +19051,13 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.touch_of_f
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.affliction.SM Ruin (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.affliction.SM Ruin (wowsims.com).lists.caption	name	Caption
+options.packs.affliction.SM Ruin (wowsims.com).lists.condHeader	name	Condition
 options.packs.affliction.SM Ruin (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.affliction.SM Ruin (wowsims.com).lists.criteria	name	Conditions
 options.packs.affliction.SM Ruin (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.affliction.SM Ruin (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.affliction.SM Ruin (wowsims.com).lists.description	name	Description
+options.packs.affliction.SM Ruin (wowsims.com).lists.displayHeader	name	Display
 options.packs.affliction.SM Ruin (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.affliction.SM Ruin (wowsims.com).lists.enabled	name	Enabled
 options.packs.affliction.SM Ruin (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -19395,11 +19399,13 @@ options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.presence_of_min
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.arcane.Arcane (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.arcane.Arcane (wowsims.com).lists.caption	name	Caption
+options.packs.arcane.Arcane (wowsims.com).lists.condHeader	name	Condition
 options.packs.arcane.Arcane (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.arcane.Arcane (wowsims.com).lists.criteria	name	Conditions
 options.packs.arcane.Arcane (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.arcane.Arcane (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.arcane.Arcane (wowsims.com).lists.description	name	Description
+options.packs.arcane.Arcane (wowsims.com).lists.displayHeader	name	Display
 options.packs.arcane.Arcane (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.arcane.Arcane (wowsims.com).lists.enabled	name	Enabled
 options.packs.arcane.Arcane (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -19774,11 +19780,13 @@ options.packs.arms.Arms (wowsims.com).lists.buff_name	values.thunder_clap	|T1360
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.victorious	|T136000:0|t Spell 402975
 options.packs.arms.Arms (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.arms.Arms (wowsims.com).lists.caption	name	Caption
+options.packs.arms.Arms (wowsims.com).lists.condHeader	name	Condition
 options.packs.arms.Arms (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.arms.Arms (wowsims.com).lists.criteria	name	Conditions
 options.packs.arms.Arms (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.arms.Arms (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.arms.Arms (wowsims.com).lists.description	name	Description
+options.packs.arms.Arms (wowsims.com).lists.displayHeader	name	Display
 options.packs.arms.Arms (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.arms.Arms (wowsims.com).lists.enabled	name	Enabled
 options.packs.arms.Arms (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -20134,11 +20142,13 @@ options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.s
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
 options.packs.assassination.Assassination (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.assassination.Assassination (wowsims.com).lists.caption	name	Caption
+options.packs.assassination.Assassination (wowsims.com).lists.condHeader	name	Condition
 options.packs.assassination.Assassination (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.assassination.Assassination (wowsims.com).lists.criteria	name	Conditions
 options.packs.assassination.Assassination (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.assassination.Assassination (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.assassination.Assassination (wowsims.com).lists.description	name	Description
+options.packs.assassination.Assassination (wowsims.com).lists.displayHeader	name	Display
 options.packs.assassination.Assassination (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.assassination.Assassination (wowsims.com).lists.enabled	name	Enabled
 options.packs.assassination.Assassination (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -20523,11 +20533,13 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.travel_form	|
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.wolfshead_helm	|T136000:0|t Spell 17768
 options.packs.balance.Balance (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.balance.Balance (wowsims.com).lists.caption	name	Caption
+options.packs.balance.Balance (wowsims.com).lists.condHeader	name	Condition
 options.packs.balance.Balance (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.balance.Balance (wowsims.com).lists.criteria	name	Conditions
 options.packs.balance.Balance (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.balance.Balance (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.balance.Balance (wowsims.com).lists.description	name	Description
+options.packs.balance.Balance (wowsims.com).lists.displayHeader	name	Display
 options.packs.balance.Balance (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.balance.Balance (wowsims.com).lists.enabled	name	Enabled
 options.packs.balance.Balance (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -20890,11 +20902,13 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	v
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.caption	name	Caption
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.condHeader	name	Condition
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.criteria	name	Conditions
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.description	name	Description
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.displayHeader	name	Display
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.enabled	name	Enabled
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -21237,11 +21251,13 @@ options.packs.combat.Combat (wowsims.com).lists.buff_name	values.slice_and_dice	
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
 options.packs.combat.Combat (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.combat.Combat (wowsims.com).lists.caption	name	Caption
+options.packs.combat.Combat (wowsims.com).lists.condHeader	name	Condition
 options.packs.combat.Combat (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.combat.Combat (wowsims.com).lists.criteria	name	Conditions
 options.packs.combat.Combat (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.combat.Combat (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.combat.Combat (wowsims.com).lists.description	name	Description
+options.packs.combat.Combat (wowsims.com).lists.displayHeader	name	Display
 options.packs.combat.Combat (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.combat.Combat (wowsims.com).lists.enabled	name	Enabled
 options.packs.combat.Combat (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -21611,11 +21627,13 @@ options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.touch_o
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.demonology.Demonology (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.demonology.Demonology (wowsims.com).lists.caption	name	Caption
+options.packs.demonology.Demonology (wowsims.com).lists.condHeader	name	Condition
 options.packs.demonology.Demonology (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.demonology.Demonology (wowsims.com).lists.criteria	name	Conditions
 options.packs.demonology.Demonology (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.demonology.Demonology (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.demonology.Demonology (wowsims.com).lists.description	name	Description
+options.packs.demonology.Demonology (wowsims.com).lists.displayHeader	name	Display
 options.packs.demonology.Demonology (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.demonology.Demonology (wowsims.com).lists.enabled	name	Enabled
 options.packs.demonology.Demonology (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -21930,11 +21948,13 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.touch
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.demonology.Shadow Brand (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.caption	name	Caption
+options.packs.demonology.Shadow Brand (wowsims.com).lists.condHeader	name	Condition
 options.packs.demonology.Shadow Brand (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.criteria	name	Conditions
 options.packs.demonology.Shadow Brand (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.demonology.Shadow Brand (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.description	name	Description
+options.packs.demonology.Shadow Brand (wowsims.com).lists.displayHeader	name	Display
 options.packs.demonology.Shadow Brand (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.enabled	name	Enabled
 options.packs.demonology.Shadow Brand (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -22322,11 +22342,13 @@ options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.touch
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.destruction.Destruction (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.destruction.Destruction (wowsims.com).lists.caption	name	Caption
+options.packs.destruction.Destruction (wowsims.com).lists.condHeader	name	Condition
 options.packs.destruction.Destruction (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.destruction.Destruction (wowsims.com).lists.criteria	name	Conditions
 options.packs.destruction.Destruction (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.destruction.Destruction (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.destruction.Destruction (wowsims.com).lists.description	name	Description
+options.packs.destruction.Destruction (wowsims.com).lists.displayHeader	name	Display
 options.packs.destruction.Destruction (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.destruction.Destruction (wowsims.com).lists.enabled	name	Enabled
 options.packs.destruction.Destruction (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -22694,11 +22716,13 @@ options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.vampiric_emb
 options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.weakened_soul	|T136000:0|t Spell 6788
 options.packs.discipline.Smite (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.discipline.Smite (wowsims.com).lists.caption	name	Caption
+options.packs.discipline.Smite (wowsims.com).lists.condHeader	name	Condition
 options.packs.discipline.Smite (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.discipline.Smite (wowsims.com).lists.criteria	name	Conditions
 options.packs.discipline.Smite (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.discipline.Smite (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.discipline.Smite (wowsims.com).lists.description	name	Description
+options.packs.discipline.Smite (wowsims.com).lists.displayHeader	name	Display
 options.packs.discipline.Smite (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.discipline.Smite (wowsims.com).lists.enabled	name	Enabled
 options.packs.discipline.Smite (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -23048,11 +23072,13 @@ options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.stormstri
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.water_shield	|T136000:0|t Spell 408510
 options.packs.elemental.Elemental (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.elemental.Elemental (wowsims.com).lists.caption	name	Caption
+options.packs.elemental.Elemental (wowsims.com).lists.condHeader	name	Condition
 options.packs.elemental.Elemental (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.elemental.Elemental (wowsims.com).lists.criteria	name	Conditions
 options.packs.elemental.Elemental (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.elemental.Elemental (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.elemental.Elemental (wowsims.com).lists.description	name	Description
+options.packs.elemental.Elemental (wowsims.com).lists.displayHeader	name	Display
 options.packs.elemental.Elemental (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.elemental.Elemental (wowsims.com).lists.enabled	name	Enabled
 options.packs.elemental.Elemental (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -23402,11 +23428,13 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.storm
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.water_shield	|T136000:0|t Spell 408510
 options.packs.enhancement.Enhancement (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.enhancement.Enhancement (wowsims.com).lists.caption	name	Caption
+options.packs.enhancement.Enhancement (wowsims.com).lists.condHeader	name	Condition
 options.packs.enhancement.Enhancement (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.enhancement.Enhancement (wowsims.com).lists.criteria	name	Conditions
 options.packs.enhancement.Enhancement (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.enhancement.Enhancement (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.enhancement.Enhancement (wowsims.com).lists.description	name	Description
+options.packs.enhancement.Enhancement (wowsims.com).lists.displayHeader	name	Display
 options.packs.enhancement.Enhancement (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.enhancement.Enhancement (wowsims.com).lists.enabled	name	Enabled
 options.packs.enhancement.Enhancement (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -23802,11 +23830,13 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.travel_form	|T136
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.wolfshead_helm	|T136000:0|t Spell 17768
 options.packs.feral.Feral (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.feral.Feral (wowsims.com).lists.caption	name	Caption
+options.packs.feral.Feral (wowsims.com).lists.condHeader	name	Condition
 options.packs.feral.Feral (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.feral.Feral (wowsims.com).lists.criteria	name	Conditions
 options.packs.feral.Feral (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.feral.Feral (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.feral.Feral (wowsims.com).lists.description	name	Description
+options.packs.feral.Feral (wowsims.com).lists.displayHeader	name	Display
 options.packs.feral.Feral (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.feral.Feral (wowsims.com).lists.enabled	name	Enabled
 options.packs.feral.Feral (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -24153,11 +24183,13 @@ options.packs.fire.Fire (wowsims.com).lists.buff_name	values.presence_of_mind	|T
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.fire.Fire (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.fire.Fire (wowsims.com).lists.caption	name	Caption
+options.packs.fire.Fire (wowsims.com).lists.condHeader	name	Condition
 options.packs.fire.Fire (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.fire.Fire (wowsims.com).lists.criteria	name	Conditions
 options.packs.fire.Fire (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.fire.Fire (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.fire.Fire (wowsims.com).lists.description	name	Description
+options.packs.fire.Fire (wowsims.com).lists.displayHeader	name	Display
 options.packs.fire.Fire (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.fire.Fire (wowsims.com).lists.enabled	name	Enabled
 options.packs.fire.Fire (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -24430,11 +24462,13 @@ options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.presence_of_mi
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.fire.Frostfire (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.fire.Frostfire (wowsims.com).lists.caption	name	Caption
+options.packs.fire.Frostfire (wowsims.com).lists.condHeader	name	Condition
 options.packs.fire.Frostfire (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.fire.Frostfire (wowsims.com).lists.criteria	name	Conditions
 options.packs.fire.Frostfire (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.fire.Frostfire (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.fire.Frostfire (wowsims.com).lists.description	name	Description
+options.packs.fire.Frostfire (wowsims.com).lists.displayHeader	name	Display
 options.packs.fire.Frostfire (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.fire.Frostfire (wowsims.com).lists.enabled	name	Enabled
 options.packs.fire.Frostfire (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -24770,11 +24804,13 @@ options.packs.frost.Frost (wowsims.com).lists.buff_name	values.presence_of_mind	
 options.packs.frost.Frost (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.frost.Frost (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.frost.Frost (wowsims.com).lists.caption	name	Caption
+options.packs.frost.Frost (wowsims.com).lists.condHeader	name	Condition
 options.packs.frost.Frost (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.frost.Frost (wowsims.com).lists.criteria	name	Conditions
 options.packs.frost.Frost (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.frost.Frost (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.frost.Frost (wowsims.com).lists.description	name	Description
+options.packs.frost.Frost (wowsims.com).lists.displayHeader	name	Display
 options.packs.frost.Frost (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.frost.Frost (wowsims.com).lists.enabled	name	Enabled
 options.packs.frost.Frost (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -25143,11 +25179,13 @@ options.packs.fury.Fury (wowsims.com).lists.buff_name	values.thunder_clap	|T1360
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.victorious	|T136000:0|t Spell 402975
 options.packs.fury.Fury (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.fury.Fury (wowsims.com).lists.caption	name	Caption
+options.packs.fury.Fury (wowsims.com).lists.condHeader	name	Condition
 options.packs.fury.Fury (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.fury.Fury (wowsims.com).lists.criteria	name	Conditions
 options.packs.fury.Fury (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.fury.Fury (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.fury.Fury (wowsims.com).lists.description	name	Description
+options.packs.fury.Fury (wowsims.com).lists.displayHeader	name	Display
 options.packs.fury.Fury (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.fury.Fury (wowsims.com).lists.enabled	name	Enabled
 options.packs.fury.Fury (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -25549,11 +25587,13 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.travel_form
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.wolfshead_helm	|T136000:0|t Spell 17768
 options.packs.guardian.Guardian (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.guardian.Guardian (wowsims.com).lists.caption	name	Caption
+options.packs.guardian.Guardian (wowsims.com).lists.condHeader	name	Condition
 options.packs.guardian.Guardian (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.guardian.Guardian (wowsims.com).lists.criteria	name	Conditions
 options.packs.guardian.Guardian (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.guardian.Guardian (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.guardian.Guardian (wowsims.com).lists.description	name	Description
+options.packs.guardian.Guardian (wowsims.com).lists.displayHeader	name	Display
 options.packs.guardian.Guardian (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.guardian.Guardian (wowsims.com).lists.enabled	name	Enabled
 options.packs.guardian.Guardian (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -25928,11 +25968,13 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	val
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.caption	name	Caption
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.condHeader	name	Condition
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.criteria	name	Conditions
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.description	name	Description
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.displayHeader	name	Display
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.enabled	name	Enabled
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -26446,11 +26488,13 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.vindica
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.voice_of_truth	|T136000:0|t Spell 1310897
 options.packs.protection.Protection (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.protection.Protection (wowsims.com).lists.caption	name	Caption
+options.packs.protection.Protection (wowsims.com).lists.condHeader	name	Condition
 options.packs.protection.Protection (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.protection.Protection (wowsims.com).lists.criteria	name	Conditions
 options.packs.protection.Protection (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.protection.Protection (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.protection.Protection (wowsims.com).lists.description	name	Description
+options.packs.protection.Protection (wowsims.com).lists.displayHeader	name	Display
 options.packs.protection.Protection (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.protection.Protection (wowsims.com).lists.enabled	name	Enabled
 options.packs.protection.Protection (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -26818,11 +26862,13 @@ options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.vindic
 options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.voice_of_truth	|T136000:0|t Spell 1310897
 options.packs.retribution.Holy Shock (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.retribution.Holy Shock (wowsims.com).lists.caption	name	Caption
+options.packs.retribution.Holy Shock (wowsims.com).lists.condHeader	name	Condition
 options.packs.retribution.Holy Shock (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.retribution.Holy Shock (wowsims.com).lists.criteria	name	Conditions
 options.packs.retribution.Holy Shock (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.retribution.Holy Shock (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.retribution.Holy Shock (wowsims.com).lists.description	name	Description
+options.packs.retribution.Holy Shock (wowsims.com).lists.displayHeader	name	Display
 options.packs.retribution.Holy Shock (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.retribution.Holy Shock (wowsims.com).lists.enabled	name	Enabled
 options.packs.retribution.Holy Shock (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -27119,11 +27165,13 @@ options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.vindi
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.voice_of_truth	|T136000:0|t Spell 1310897
 options.packs.retribution.Retribution (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.retribution.Retribution (wowsims.com).lists.caption	name	Caption
+options.packs.retribution.Retribution (wowsims.com).lists.condHeader	name	Condition
 options.packs.retribution.Retribution (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.retribution.Retribution (wowsims.com).lists.criteria	name	Conditions
 options.packs.retribution.Retribution (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.retribution.Retribution (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.retribution.Retribution (wowsims.com).lists.description	name	Description
+options.packs.retribution.Retribution (wowsims.com).lists.displayHeader	name	Display
 options.packs.retribution.Retribution (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.retribution.Retribution (wowsims.com).lists.enabled	name	Enabled
 options.packs.retribution.Retribution (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -27496,11 +27544,13 @@ options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.vampiric_embrac
 options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.weakened_soul	|T136000:0|t Spell 6788
 options.packs.shadow.Shadow (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.shadow.Shadow (wowsims.com).lists.caption	name	Caption
+options.packs.shadow.Shadow (wowsims.com).lists.condHeader	name	Condition
 options.packs.shadow.Shadow (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.shadow.Shadow (wowsims.com).lists.criteria	name	Conditions
 options.packs.shadow.Shadow (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.shadow.Shadow (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.shadow.Shadow (wowsims.com).lists.description	name	Description
+options.packs.shadow.Shadow (wowsims.com).lists.displayHeader	name	Display
 options.packs.shadow.Shadow (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.shadow.Shadow (wowsims.com).lists.enabled	name	Enabled
 options.packs.shadow.Shadow (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -27896,11 +27946,13 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.slice_and_d
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
 options.packs.subtlety.Subtlety (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.subtlety.Subtlety (wowsims.com).lists.caption	name	Caption
+options.packs.subtlety.Subtlety (wowsims.com).lists.condHeader	name	Condition
 options.packs.subtlety.Subtlety (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.subtlety.Subtlety (wowsims.com).lists.criteria	name	Conditions
 options.packs.subtlety.Subtlety (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.subtlety.Subtlety (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.subtlety.Subtlety (wowsims.com).lists.description	name	Description
+options.packs.subtlety.Subtlety (wowsims.com).lists.displayHeader	name	Display
 options.packs.subtlety.Subtlety (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.subtlety.Subtlety (wowsims.com).lists.enabled	name	Enabled
 options.packs.subtlety.Subtlety (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -28285,11 +28337,13 @@ options.packs.survival.Survival (wowsims.com).lists.buff_name	values.serpent_sti
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.survival.Survival (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.survival.Survival (wowsims.com).lists.caption	name	Caption
+options.packs.survival.Survival (wowsims.com).lists.condHeader	name	Condition
 options.packs.survival.Survival (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.survival.Survival (wowsims.com).lists.criteria	name	Conditions
 options.packs.survival.Survival (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.survival.Survival (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.survival.Survival (wowsims.com).lists.description	name	Description
+options.packs.survival.Survival (wowsims.com).lists.displayHeader	name	Display
 options.packs.survival.Survival (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.survival.Survival (wowsims.com).lists.enabled	name	Enabled
 options.packs.survival.Survival (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -28595,11 +28649,13 @@ options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.serpe
 options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.survival.Survival Melee (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.survival.Survival Melee (wowsims.com).lists.caption	name	Caption
+options.packs.survival.Survival Melee (wowsims.com).lists.condHeader	name	Condition
 options.packs.survival.Survival Melee (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.survival.Survival Melee (wowsims.com).lists.criteria	name	Conditions
 options.packs.survival.Survival Melee (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.survival.Survival Melee (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.survival.Survival Melee (wowsims.com).lists.description	name	Description
+options.packs.survival.Survival Melee (wowsims.com).lists.displayHeader	name	Display
 options.packs.survival.Survival Melee (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.survival.Survival Melee (wowsims.com).lists.enabled	name	Enabled
 options.packs.survival.Survival Melee (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -28899,11 +28955,13 @@ options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.serp
 options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.survival.Survival Turret (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.survival.Survival Turret (wowsims.com).lists.caption	name	Caption
+options.packs.survival.Survival Turret (wowsims.com).lists.condHeader	name	Condition
 options.packs.survival.Survival Turret (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.survival.Survival Turret (wowsims.com).lists.criteria	name	Conditions
 options.packs.survival.Survival Turret (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.survival.Survival Turret (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.survival.Survival Turret (wowsims.com).lists.description	name	Description
+options.packs.survival.Survival Turret (wowsims.com).lists.displayHeader	name	Display
 options.packs.survival.Survival Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.survival.Survival Turret (wowsims.com).lists.enabled	name	Enabled
 options.packs.survival.Survival Turret (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
