@@ -16,11 +16,11 @@ if not L then
 end
 
 -- Hekili_Hunter/Hunter.lua
--- L["Beast Mastery"] = ""
--- L["Marksmanship"] = ""
--- L["Survival"] = ""
--- L["Survival (wowsims.com)"] = ""
--- L["Beast Mastery Turret (wowsims.com)"] = ""
--- L["Marksmanship Turret (wowsims.com)"] = ""
--- L["Survival Turret (wowsims.com)"] = ""
--- L["Survival Melee (wowsims.com)"] = ""
+L["Beast Mastery"] = "Dominio de bestias"
+L["Marksmanship"] = "Puntería"
+L["Survival"] = "Supervivencia"
+L["Survival (wowsims.com)"] = "Supervivencia (wowsims.com)"
+L["Beast Mastery Turret (wowsims.com)"] = "Dominio de bestias estático (wowsims.com)"
+L["Marksmanship Turret (wowsims.com)"] = "Puntería estático (wowsims.com)"
+L["Survival Turret (wowsims.com)"] = "Supervivencia estático (wowsims.com)"
+L["Survival Melee (wowsims.com)"] = "Supervivencia cuerpo a cuerpo (wowsims.com)"
