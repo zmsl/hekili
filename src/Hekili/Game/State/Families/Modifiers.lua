@@ -46,7 +46,7 @@ I.OnBuild(function(def)
                 -- the talent's spell ID (VS.Talent), 0 without `talent`, -1 for a key the class did not register
                 jt[k] = mods[k].talent == nil and 0 or talentByKey[mods[k].talent] or -1
                 local u = mods[k].unless and auraByKey[mods[k].unless]
-                ju[k], held[k] = u and def.auraIds[u][1] or 0, false
+                ju[k], held[k] = u or 0, false
                 -- the scope as ability indices: a listed ID matches an ability's id or a `copy` rank (I.ab.bySpell);
                 -- an ID the class did not register is absent; no `spells`: every ability
                 local spells = mods[k].spells
@@ -73,10 +73,11 @@ local function inScope(r, k, a)
     return not set or set[a] == true
 end
 
--- Whether modifier k of slot r is held at `now` by its `unless` aura, believed up on the player.
+-- Whether modifier k of slot r is held at `now` by its `unless` aura (its index), believed up on the player then.
+-- prices() asks it at the clock too, where it equals VS.Aura only because no record is applied after the clock.
 local function held(r, k, now)
     local u = M.modUnless[r][k]
-    return u > 0 and VS.Aura("player", u, now) ~= nil
+    return u > 0 and I.AuraUpAt(1, u, now) -- unit 1: "player"
 end
 
 -- Modifier k of slot r's believed talent rank: 1 without `talent`, 0 for a key the class did not register.
@@ -146,7 +147,9 @@ end
 
 --- A paid cast of ability a at t on slot r spends one believed stack of each charged modifier in its scope whose aura
 --- is up and whose talent (if any) has a rank, but none of a modifier its `unless` aura holds as the cast starts
---- (decided before any stack goes); at 0 the aura goes. Called by the `now` family's cost step (Families/Now.lua).
+--- (decided before any stack goes); at 0 the aura goes. Called by the `now` family's cost step (Families/Now.lua) at
+--- the cast's own time, which is before the clock when its success folds late: an aura applied after t (a Cooldown
+--- Manager open folded first) was not up at the cast, so it neither holds nor loses a stack (I.AuraUpAt, B-D3).
 --- Allocates nothing.
 function I.SpendCostCharges(a, r, t, event)
     local mods = r and M.costMods[r]
@@ -160,7 +163,7 @@ function I.SpendCostCharges(a, r, t, event)
     for k = 1, #mods do
         if mods[k].charges and ja[k] > 0 and not hk[k] and rankOf(r, k) > 0 and inScope(r, k, a) then
             local rec, stacks, applied = VS.Aura("player", js[k], t)
-            if rec then
+            if rec and I.AuraUpAt(1, ja[k], t) then
                 local left = (stacks or 1) - 1
                 -- shortcut: a partial spend keeps the read-wins guard (a read in the frame may already show it); every
                 -- shipped charged modifier has charges = 1. Upgrade with the read's stack count if one ships with more.

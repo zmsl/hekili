@@ -324,8 +324,12 @@ for k = 1, T.CAP do
     quiet[k] = false
 end
 local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
-    local divergent = (avoid or crit) and n > 1 and T.Divergent(p, t, pass, act, flag, amount, school, avoid)
+    local divergent, lands = false, false -- lands: only the same-ability direct-vs-tick crit diverged (landed either way)
+    if (avoid or crit) and n > 1 then
+        divergent, lands = T.Divergent(p, t, pass, act, flag, amount, school, avoid)
+    end
     local kk, xx, dst, at0, sch = T.kind[p], T.x[p], T.guid[p], T.at[p], T.school[p]
+    crit = crit and T.ab[p] > 0 and kk ~= TICKS and kk ~= CHANNEL -- `onCrit` is a direct hit's, as `landed`: no tick's
     local held = T.PayTentative(p, t, avoid, amount, flag, n == 1 and not rerouting, pass, act, school)
     if held then
         quiet[p] = divergent and avoid
@@ -333,13 +337,13 @@ local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
     if divergent then
         T.divergent = T.divergent + 1
     elseif held then
-        T.held[p] = avoid and 2 or (crit and T.ab[p] > 0 and 1 or 0)
+        T.held[p] = avoid and 2 or (crit and 1 or 0)
     elseif avoid then
         avoided(p, t, act)
-    elseif crit and T.ab[p] > 0 then
+    elseif crit then
         S.Stage(Obs.Crit, t, T.ab[p], at0, 0) -- our cast's own crit (the target's row carries the flag plain): GAP T
     end
-    if not held and not avoid and not divergent then
+    if not held and not avoid and (lands or not divergent) then
         landed(p, t)
     end
     L.credited[3] = L.credited[3] + 1

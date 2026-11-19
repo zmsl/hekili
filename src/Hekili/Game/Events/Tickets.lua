@@ -499,22 +499,32 @@ end
 
 --- (spec §4.2, decision 25) Whether a row Pick gave to p at pass `pass` with a second candidate is divergent: another
 --- candidate implies a different state. An avoid: one of the candidates is the latest cast (Now undoes only that one's
---- effects: hit vs miss). A crit: a candidate of another ability, either running an `onCrit`. Allocates nothing.
+--- effects: hit vs miss). A crit: a candidate of another ability, either running an `onCrit`; or of the same ability
+--- with an `onCrit`, one candidate a direct hit and the other a tick not of its own composed schedule (only a direct
+--- crit runs it: ledger L1415 as reworded L1418). The second answer: the divergence is only that same-ability one, where the direct cast landed
+--- either way. Allocates nothing.
 function T.Divergent(p, t, pass, act, flag, amount, sch, isAvoid)
     local K, oc = I.Kinds, A.onCrit
+    local tickP, same = kind[p] == X.TICKS or kind[p] == X.CHANNEL, false
     for i = 1, CAP do
         if state[i] >= OPEN and guid[i] == guid[p] and K.Accepts(i, act, flag, amount, sch, isAvoid) then
             local lo, h = K.Band(i, pass, t, isAvoid, act, sch)
             if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
                 if isAvoid and at[i] >= T.latestT then
-                    return true
-                elseif not isAvoid and ab[i] ~= ab[p] and oc and (oc[ab[i]] or oc[ab[p]]) then
-                    return true
+                    return true, false
+                elseif not isAvoid and oc and (oc[ab[i]] or oc[ab[p]]) then
+                    if ab[i] ~= ab[p] then
+                        return true, false
+                    end
+                    -- not the direct ticket's own composed schedule (T.link, equal `at`): its ticks start at that row
+                    same = same
+                        or (kind[i] == X.TICKS or kind[i] == X.CHANNEL) ~= tickP
+                            and not ((T.link[p] == i or T.link[i] == p) and at[i] == at[p])
                 end
             end
         end
     end
-    return false
+    return same, same
 end
 
 -- What a clean payment teaches: a flight's lag (any pass, pass 3 included: with no record a ticket is a candidate at

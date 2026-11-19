@@ -22,7 +22,7 @@
 -- Deviations: Evocation's clip (the translator drops channelSpell.interruptIf; mage_fire.lua); rule 12 drops Read Ley
 -- Line (mage_arcane.lua); Ignite (412538) is a proc no key maps; includeReactionTime on the Fingers of Frost read is
 -- ignored (rule 5), and no decision here turns on it. autocastOtherCooldowns (rule 13): the trinket
--- (`use_items`; 272438 since the e4ef929e54 re-pin, 18820 on e2842f0a78, 19339 before) and the mana gem, off the GCD (this build has no Combustion).
+-- (`use_items`; Eye of the Beast 13968 since the ab0f00e4fc re-pin, 272438 on e4ef929e54, 18820 on e2842f0a78, 19339 before) and the mana gem, off the GCD (this build has no Combustion).
 -- Focus (M5): Pyroblast on Hot Streak and Fire Blast (unless two Fingers of Frost charges are up) tier 1, Scorch and
 -- Evocation tier 2.
 -- Loops (20 fights, 0.958; frostfire_bolt -> scorch 680): measured (Task FFB fix round 1) as the believed mana a few
@@ -45,10 +45,14 @@
 -- castable line (Frostfire Bolt unlearned until L40), Fireball affordable and unlisted: the filler Fireball until
 -- Frostfire Bolt.
 -- Re-pin e2842f0a78 -> e4ef929e54 (lane mage 0.9, R6): the gear is the pin's default preraid.gear.json (so "the gear
--- p1Arcane.gear.json" above is the old pin's) and its trinket the Weakness Analyzer 272438, mapped to `use_items`
+-- p1Arcane.gear.json" above is the old pin's) and its trinket then the Weakness Analyzer 272438, mapped to `use_items`
 -- (18820 before); Robe of the Archmage (item 14152, spell 18385) is a kit ability under the Potions toggle, emitted as
 -- robe_of_the_archmage,use_off_gcd=1 before use_items; the world rolls Arcane Concentration at a sixth of its chance
 -- at a channel's start and at each landed missile (wowsims 5ad9515c15).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-mage): preraid.gear.json's contents (wowsims #1085/#1090: Eye of
+-- the Beast 13968 for the Weakness Analyzer 272438, main hand 22383, off hand 19315, Sorcerer's Regalia 3 -> 6
+-- pieces (crown 226935, mantle 226936, sandals 226931 for 22267, 19050, 22231: set 1671's 4-piece Sudden Insight,
+-- 200 mana at random on a cast (450554), unmodelled per owner L1396), enchants); APL and talents unchanged.
 return {
     class = "MAGE",
     pack = "Frostfire (wowsims.com)",
@@ -68,8 +72,8 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 20,
     },
-    -- the Weakness Analyzer (ItemSparse 272438: a trinket, InventoryType 12; the preraid gear, was the Talisman 18820 and the Mind
-    -- Quickening Gem 19339)
+    -- the preraid gear's on-use trinket: Eye of the Beast 13968 since ab0f00e4fc (wowsims #1085/#1090), the Weakness
+    -- Analyzer 272438 before (still mapped: wowsims_trinket_spec)
     map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" },
     focus = { pyroblast = 1, scorch = 2, evocation = 2, fire_blast = 1, counterspell = 1 },
     leveling = { "fireball,if=!action.frostfire_bolt.known" },

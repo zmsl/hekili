@@ -104,12 +104,28 @@ local REPLAY = {
 -- the batch then re-measures and restores the ceiling: 0.67 -> 0 (Arcane and Fire 0.00/min measured at the batch),
 -- replay-flips-09 ade4d6379 (a flip whose middle icon wowsims casts before the next tick is excused, L1317). LIVE60 kept (measured Arcane 8.4 under 10.0, Fire 6.2,
 -- Frostfire 11.8, Frost 6.0).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-mage, R6; the new preraid gear, wowsims #1085/#1090, wears 6
+-- pieces of Sorcerer's Regalia, whose 4-piece Sudden Insight restores 200 mana at random on a cast: not modelled, owner
+-- L1396; the same decisions with and without the ambiguous-crit rule e0804ba84):
+-- Arcane 0.96 -> 0.98 (0.983, 59 of 60): arcane_wrath -> evocation at log 32.00, `mana.pct_lo<=10` on lo 595 against
+-- the truth's 695 (10% = 651): the belief 200 under from the Sudden Insight at 9.01, half recovered by then.
+-- Fire 0.93 -> 0.97 (0.974, 76 of 78): two equality ties at the decision instant, the 30.00 / 70.50 class of
+-- mage_fire.lua's header: 52.00 fireball -> arcane_blast (Arcane Blast's aura has exactly the 1.5 s cast left), 58.00
+-- fireball -> scorch (Fire Blast's cooldown exactly Fireball's 3.0 s cast).
+-- Frostfire 1.00 -> 0.96 (0.963, 52 of 54): 32.50 frostfire_bolt -> scorch and 61.50 fire_blast -> scorch, Fire
+-- Vulnerability exactly 5.000 s from its expiry at the decision (the belief agrees to 1 us). Scorch's `remains<5`
+-- recheck is 0.010 s away (Scripts.lua `<` pad), within the 0.2 s early exit (Core.lua:974), so the higher Scorch line
+-- ends the walk; wowsims evaluates at the instant (false). Not an exact-equality tie in game: Scorch shows whenever FV
+-- has remains in (5, ~5.2], by design "ready within 0.2 s". The replay meets it at exact 5.000 because wowsims's casts
+-- sit on a 0.5 s grid; the new gear re-times the fight onto it.
+-- Frost 0.96 kept (0.966, 56 of 58; frostbolt -> cone_of_cold 2, the old log's class). LIVE60 kept (measured Arcane
+-- 8.4, Fire 6.2, Frostfire 11.8, Frost 6.0).
 local PACKS = {
-    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.96, 10.0, 0 },
+    { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.98, 10.0, 0 },
     -- LIVE60 6.0 -> 6.2 (CN8 D2): the same dry-pool wait for Scorch (96.4-102.4 s, mana 49-153), one poll longer on
     -- the re-timed fight
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.93, 6.2, 0 },
-    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 1.00, 11.8, 0 },
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.2, 0 },
+    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
     -- Frost (new pack, 2026-11-12, R6 first measurement): 0.93 (0.934, 57 of 61; the recipe's header names the misses),
     -- LIVE60 6.0 (the 6 s bar: 6.0 measured, L10 0.2, L40 0.0), flicker 0 (0.00/min measured). LIVE60's cause (traced
     -- 2026-11-13): a dry-pool wait for Frostbolt (117.2-123.0 s; the client answers it unusable, the mana under its

@@ -286,6 +286,13 @@ end)
 
 I.auraReadsWon = 0
 
+--- Whether aura j on unit index u is believed up at t by its current record: applied at or before t and expiring after
+--- it (VS.Aura tests the expiry alone, which equals this only at the clock; I.AuraAsOf also reads one fall deep).
+--- Allocates nothing.
+function I.AuraUpAt(u, j, t)
+    return U.applied[u][j] <= t and U.exp0[u][j] > t
+end
+
 --- VS.Aura for our cast's own handler at t (Families/Now.lua's reads): a record a Cooldown Manager light opened in this
 --- drain's fold or the one just before, with no model since, is the cast's own application seen early (the light polled
 --- a drain before the cast's event was logged), so it reads down: a handler's `stack + 1` or addStack does not count

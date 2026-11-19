@@ -132,6 +132,18 @@ function I.NowAt(t)
     rawset(NAMES, "offhand_speed", VS.SwingSpeed(2, t).est)
 end
 
+--- The guarded pack call: f run with the context's reads at t (I.NowAt) and up to three arguments, pcall'd. Whether it
+--- ran clean, then its first two answers; a raise is counted (I.nowErrors, I.nowError, the error the second answer)
+--- and never raised. What follows a raise (skip it from now on, call it again) is each caller's own. Allocates nothing.
+function I.Guard(f, t, a1, a2, a3)
+    I.NowAt(t)
+    local ok, v, w = pcall(f, a1, a2, a3)
+    if not ok then
+        I.nowErrors, I.nowError = I.nowErrors + 1, v
+    end
+    return ok, v, w
+end
+
 --- The sim's `haste` (State.lua: 1 / (1 + spell haste), a slow above 1, unclamped as there) from the belief's spell
 --- haste (Families/Player.lua, a percent).
 function I.Haste(t)
@@ -789,10 +801,8 @@ function I.NowEval(f, t, raised)
     if raised then
         return false, false
     end
-    I.NowAt(t)
-    local ok, v = pcall(f)
+    local ok, v = I.Guard(f, t)
     if not ok then
-        I.nowErrors, I.nowError = I.nowErrors + 1, v
         return false, false
     end
     local api = I.api
@@ -802,7 +812,7 @@ end
 -- Runs ability a's bound function f in the shared context at belief time t; an error is counted, never raised.
 local function call(f, a, t)
     curA = a
-    I.NowAt(t)
+    I.NowAt(t) -- before `live`: a raise in the context's reads leaves the verbs inert
     live = true
     local ok, err = pcall(f)
     live = false

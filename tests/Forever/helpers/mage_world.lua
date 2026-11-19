@@ -109,6 +109,9 @@ local POWERED = CLEARCAST
 local BARRAGE = { arcane_blast = 1, fireball = 0.5, frostbolt = 0.5, frostfire_bolt = 0.5, arcane_wrath = 0.5 }
 local HEATING = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true }
 local FIRE = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true, pyroblast = true }
+-- The DoT a landed Fireball (10151) or Pyroblast (18809) leaves: { every, ticks, amount } (wowsims pin spelldata; the
+-- amounts the Fire log's ticks show)
+local DOT = { fireball = { 2, 4, 18 }, pyroblast = { 3, 4, 120 } }
 -- Permafrost's mask's (wowsims's chillFlags) the kit casts
 local CHILL = { frostbolt = true, frostfire_bolt = true, cone_of_cold = true }
 -- DB2 11160 effect 0's mask
@@ -464,6 +467,9 @@ local function spell(key, extra)
                     aura(W, X, e, "heating_up", n)
                 end
             end
+            if landed and DOT[key] then -- a recast's replaces it; W.dot's ticks never crit
+                W.dot(e, e.target, DOT[key][1], DOT[key][2], DOT[key][3], 4, key)
+            end
             if extra then
                 extra(W, e, X, H, landed, instant)
             end
@@ -641,6 +647,38 @@ M.MAP = {
 -- logs cast 10151, 10181 and 10212), so the worlds' character has not learned them.
 local BOOK = { [25306] = true, [25304] = true, [25345] = true }
 
+-- The ranges in yards (DB2 70707 SpellMisc.RangeIndex -> SpellRange, every rank alike): GetSpellInfo's, so a travelling
+-- cast's flight window (Events/Tickets.lua: max range / velocity) is the client's, not the fake's 5 yd default.
+-- Medium-Long 0-35, Medium 0-30, Short 0-20 (Fire Blast), Self Only 0 (no range check).
+local RANGE = { fire_blast = { 0, 20 } }
+for _, key in ipairs({ "fireball", "frostfire_bolt", "pyroblast" }) do
+    RANGE[key] = { 0, 35 }
+end
+for _, key in ipairs({
+    "arcane_blast",
+    "arcane_missiles",
+    "arcane_wrath",
+    "blizzard",
+    "counterspell",
+    "frost_blast", -- 1326053: DB2 70707 RangeIndex 4, Medium 0-30 (as Frostbolt's); not in the pin
+    "frostbolt",
+    "ice_lance",
+    "scorch",
+}) do
+    RANGE[key] = { 0, 30 }
+end
+for _, key in ipairs({
+    "arcane_power",
+    "cold_snap",
+    "combustion",
+    "cone_of_cold",
+    "evocation",
+    "ice_barrier",
+    "presence_of_mind",
+}) do
+    RANGE[key] = { 0, 0 }
+end
+
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, SPEC = P.spec, IDS = {} }
@@ -667,6 +705,15 @@ local function content(name)
                 known[#known + 1] = id
             end
         end
+        local ranges = {}
+        for key, r in pairs(RANGE) do -- every ability's ranks, known or not (the client's spell data)
+            local a = w.abilities[key]
+            if a then
+                for _, id in ipairs({ a.id, unpack(type(a.copy) == "table" and a.copy or { a.copy }) }) do
+                    ranges[id] = r
+                end
+            end
+        end
         return {
             class = "MAGE",
             classID = M.CLASS_ID,
@@ -676,6 +723,7 @@ local function content(name)
             talents = P.talents,
             power = { type = MANA, token = "MANA", max = MAX },
             speed = { 3.0 },
+            ranges = ranges,
         }
     end
 

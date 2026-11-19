@@ -129,6 +129,95 @@ describe("rows with a secret amount (kind-only routing)", function()
         assert.are.same({ 2, 10, 0 }, { T.done[i], T.tickAmt[i], T.bandRejected })
     end)
 
+    -- An ability's `onCrit` is a direct hit's (wowsims's crit procs never fire on a periodic tick), as `landed` is: a
+    -- schedule's or a channel's tick crit stages no Obs.Crit, paid at its row or final; a direct crit still does.
+    it("stages no Obs.Crit for a schedule's tick crit, plain or secret; a direct crit still stages it", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S)
+        ctl.now = 13.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 8)
+        local i = ticket(X.TICKS)
+        ctl.now = 16.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 20, 8)
+        ctl.now = 19.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8)
+        assert.are.same({ 3, 0 }, { T.done[i], count(VS.Obs.Crit) })
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.equal(0, count(VS.Obs.Crit))
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
+        ctl.now = 40.01
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 4)
+        assert.are.equal(1, count(VS.Obs.Crit))
+    end)
+
+    -- (ledger L1415 as reworded L1418) A crit row in band for a recast's direct hit and the old schedule's tick of the
+    -- same ability, in the same instant and school, may be either: one runs the `onCrit`, the other nothing. It credits
+    -- no crit (an under-credit is a briefly late spell, an over-credit an unaffordable one shown); the direct cast still
+    -- landed either way.
+    it("stages no Obs.Crit for a crit ambiguous between a recast's direct hit and the old tick; still lands", function()
+        local m = I.ab.bySpell[fs.SPENDER_M]
+        I.ab.onCrit[m] = function() end
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        ctl.now = 10.002
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 9, 64)
+        ctl.now = 13
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 4, 64)
+        ctl.now = 15.998
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
+        local landed, divergent = count(VS.Obs.Landed), T.divergent
+        ctl.now = 16 -- the old schedule's second tick and the recast's direct hit, one a crit
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.same({ 0, 1, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
+    end)
+
+    -- Another ability's tick in band makes a direct crit ambiguous (a Fire spell's crit beside a Fire DoT's tick): two
+    -- abilities of one school, one ticking, the other's direct crit. No Obs.Crit and no landing (it may be the tick's); divergent counted.
+    it("stages no Obs.Crit for a direct crit beside another ability's tick of the same school", function()
+        local m, f = I.ab.bySpell[fs.SPENDER_M], I.ab.bySpell[fs.SPENDER_F]
+        I.ab.onCrit[f], I.ab.school[f] = function() end, I.ab.school[m]
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        ctl.now = 10.002
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 9, 64)
+        ctl.now = 13
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 4, 64)
+        ctl.now = 15.998
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
+        local landed, divergent = count(VS.Obs.Landed), T.divergent
+        ctl.now = 16 -- the ticking ability's third tick and the other's direct hit, a crit
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.same({ 0, 0, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
+    end)
+
+    -- A projectile's own schedule (composed at its success, widened by the flight until its direct row) is no rival
+    -- for that direct row: its debuff, and so its ticks, start there.
+    it("stages a travelling cast's own direct crit though its own composed schedule is in band", function()
+        local p = I.ab.bySpell[fs.SPENDER_P]
+        I.ab.onCrit[p], I.ab.rMax[p] = function() end, 30
+        ctl.now = 1
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-0", fs.SPENDER_P)
+        ctl.now = 1.8 -- a clean hit: the flight's lag learned (0.8 s), its band now narrow around it
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 40, 8)
+        I.ab.ticking[p], I.ab.tickAura[p] = true, { tick_time = 2, duration = 8 }
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        assert.is_truthy(ticket(X.TICKS)) -- its band 10 + 2 -+ (0.1 + the flight's hard window) holds 10.8
+        ctl.now = 10.8
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8)
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.same({ 1, 0 }, { count(VS.Obs.Crit), T.divergent })
+    end)
+
     it("credits our white crit to its swing by timing alone, its crit with it; teaches no lag", function()
         ctl.now = 5
         ctl.damage = { 40, 50, 0, 0 } -- a known UnitDamage: only the secret amount makes the class unknown
