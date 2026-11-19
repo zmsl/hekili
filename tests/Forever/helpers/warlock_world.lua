@@ -39,7 +39,7 @@ local GCD = { spell = 1.5, off = 0 }
 -- 712.8 = (424 + 170) x 1.2 (Improved Life Tap 2/2) in Affliction, Destruction and SM Ruin, 594 = 424 + 170 in Demonology
 -- (no Improved Life Tap), 603 = 424 + 179 in Shadow Brand; so Spirit 170 (179), the spirit part 6.25 + 170 / 8 = 27.5
 -- (6.25 + 179 / 8 = 28.625; wowsims mana.go's default curve) and the mp5 part the logs' 1.200 a 0.1 s tick inside the
--- rule (the logs never leave it, so the spirit part is derived, not logged). UNMEASURED in game. A pack's `fsr` /
+-- rule (the logs leave it only briefly, so the spirit part is derived, not logged). UNMEASURED in game. A pack's `fsr` /
 -- `spirit` override them.
 local FSR = { 27.5, 12 }
 local SPIRIT = 170

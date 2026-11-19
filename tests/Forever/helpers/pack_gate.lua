@@ -769,7 +769,8 @@ M.FLICKER = {
     -- flicker 0.03 -> 0.02
     -- re-pin e4ef929e54 -> ab0f00e4fc (R6; the five Orc builds, the world's pools and regen seeds; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.017 / 0 / 0.033 (the oracle's the same), retracted 0, heldReady 2 / 1 / 1, readyShort 0): heldReady 5 -> 2
-    ["SM Ruin"] = { flicker = 0.02, retracted = 0, heldReady = 2 }, -- 0.02 / 0 / 0.03, 0
+    -- flicker 0.02 -> 0.033 (seeds 41-60, the oracle's the same 0.033: the worst of the three sets)
+    ["SM Ruin"] = { flicker = 0.033, retracted = 0, heldReady = 2 }, -- 0.017 / 0 / 0.033, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 2 / 0):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0): heldReady 4 -> 0
@@ -786,8 +787,8 @@ M.FLICKER = {
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 11 / 11 / 10):
     -- heldReady 7 -> 11
     -- re-pin e4ef929e54 -> ab0f00e4fc (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, heldReady 10 / 18 / 21, readyShort 0):
-    -- heldReady 11 -> 21 (the Orc build's pool 6294 and Spirit 179 regen move the Life Tap / Searing Pain near-ties; not
-    -- traced tick by tick, oracle flicker 0)
+    -- heldReady 11 -> 21 (traced: the held ticks are Searing Pain waiting 0.11 s at an exact Demonic Brand remains =
+    -- 2.500 s boundary tie (remains<2.5); no Life Tap or mana hold; oracle flicker 0)
     ["Shadow Brand"] = { flicker = 0, retracted = 0, heldReady = 21 }, -- 0 / 0 / 0, 0
     -- the excess over the oracle (0 / 0 / 0) is at Conflagrate's and Shadowburn's cooldown ends, as Fire's Fire Blast
     -- (the not-ready flag's CD_PROBE, central). 0.4 -> 0.2 (Task 10b, gap CQ: the flag keeps a modelled end the GCD or a
@@ -813,7 +814,8 @@ M.FLICKER = {
     -- 41-60 flicker 0.02 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.03 -> 0.02, heldReady 3 -> 0
     -- re-pin e4ef929e54 -> ab0f00e4fc (R6; Orc build, pool 5323, Spirit 170; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0,
-    -- heldReady 1 / 1 / 0, readyShort 0, agreement .999): heldReady 0 -> 1, one tick of 18020 (not traced tick by tick)
+    -- heldReady 1 / 1 / 0, readyShort 0, agreement .999): heldReady 0 -> 1, one tick of 18020: Corruption held one 0.20 s poll
+    -- at seed 15, 47.2 s (not mana; cause untraced)
     ["Destruction"] = { flicker = 0.02, retracted = 0, heldReady = 1 }, -- 0 / 0 / 0, 1
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
