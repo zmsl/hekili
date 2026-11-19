@@ -18,7 +18,7 @@ Read [APL overview](APL-Overview) first if lists, lines and conditions are new t
 
 1. Type `/hekili` to open the options.
 2. Open **Priorities**, then Feral, then Feral (wowsims.com). The **Summary** tab opens, with a note that this is a default priority.
-3. Click the copy icon to the right of **Priority Name**. Its tooltip reads Copy Priority.
+3. Click the copy icon to the right of **Priority Name**. It is the same copy icon the note on a built-in priority shows, and its tooltip reads Copy Priority.
 4. Confirm. The copy, named "Feral (wowsims.com) (2)", opens on its own **Summary** tab.
 5. Check **Active**. Hekili Forever now uses the copy for Feral.
 

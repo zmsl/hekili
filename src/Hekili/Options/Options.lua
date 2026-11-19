@@ -5325,8 +5325,7 @@ found = true end
                                     desc = L["Copy Priority"],
                                     order = 0.26,
                                     width = 0.15,
-                                    image = GetAtlasFile( "communities-icon-addgroupplus" ),
-                                    imageCoords = GetAtlasCoords( "communities-icon-addgroupplus" ),
+                                    image = "Interface\\Addons\\Hekili\\Textures\\WhiteCopy",
                                     imageHeight = 20,
                                     imageWidth = 20,
                                     confirm = function () return L["Create a copy of this priority pack?"] end,
@@ -6112,7 +6111,7 @@ packControl.actionID = format( "%04d", id ) end
                                     desc = L["Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\n" ..
                                         "This can be useful for understanding why an ability was recommended at a particular time.\n\n" ..
                                         "Requires Captions to be enabled on each display."],
-                                    order = 3.202,
+                                    order = 3.71,
                                     width = 1.5,
                                     validate = function( info, val )
                                         val = val:trim()
@@ -6132,7 +6131,7 @@ packControl.actionID = format( "%04d", id ) end
                                     type = "input",
                                     name = L["Label"],
                                     desc = L["Text shown on the recommendation while the Label Condition (if any) holds, e.g. a downranking note."],
-                                    order = 3.203,
+                                    order = 3.72,
                                     width = 1.5,
                                     hidden = function() return hideNoAbility( pack ) end,
                                 },
@@ -6141,7 +6140,7 @@ packControl.actionID = format( "%04d", id ) end
                                     type = "input",
                                     name = L["Label Condition"],
                                     desc = L["If entered, the Label shows only while this is true."],
-                                    order = 3.2031,
+                                    order = 3.73,
                                     width = "full",
                                     multiline = 2,
                                     dialogControl = "HekiliCustomEditor",
@@ -6155,7 +6154,7 @@ packControl.actionID = format( "%04d", id ) end
                                     type = "input",
                                     name = L["Icon"],
                                     desc = L["A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked."],
-                                    order = 3.2032,
+                                    order = 3.74,
                                     width = 1.5,
                                     hidden = function() return hideNoAbility( pack ) end,
                                 },
@@ -6173,7 +6172,7 @@ packControl.actionID = format( "%04d", id ) end
                                     end,
                                     imageWidth = 24,
                                     imageHeight = 24,
-                                    order = 3.2033,
+                                    order = 3.75,
                                     width = 1.5,
                                     hidden = function() return hideNoAbility( pack ) or not GetListEntry( pack ).icon end,
                                 },
@@ -6182,7 +6181,7 @@ packControl.actionID = format( "%04d", id ) end
                                     type = "input",
                                     name = L["Icon Condition"],
                                     desc = L["If entered, the Icon shows only while this is true."],
-                                    order = 3.2034,
+                                    order = 3.76,
                                     width = "full",
                                     multiline = 2,
                                     dialogControl = "HekiliCustomEditor",
@@ -6190,6 +6189,12 @@ packControl.actionID = format( "%04d", id ) end
                                         return Hekili.Engine.Evaluate( pack, packControl.listName, tonumber( packControl.actionID ), "icon_if", {} )
                                     end,
                                     hidden = function() return hideNoAbility( pack ) end,
+                                },
+
+                                condHeader = {
+                                    type = "header",
+                                    name = L["Condition"],
+                                    order = 3.204,
                                 },
 
                                 description = {
@@ -6360,6 +6365,13 @@ n = tonumber( n ) + 1
                                         local e = GetListEntry( pack )
                                         return e.action ~= "variable" or e.op == "reset" or e.op == "ceil" or e.op == "floor"
                                     end,
+                                },
+
+                                displayHeader = {
+                                    type = "header",
+                                    name = L["Display"],
+                                    order = 3.7,
+                                    hidden = function() return hideNoAbility( pack ) end,
                                 },
 
                                 showModifiers = {

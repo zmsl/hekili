@@ -6,6 +6,9 @@
 
 ### Changed
 
+- Action Lists: an entry's Description and Conditions now come first, with its Caption, Label and Icon settings below them under Display.
+- The Copy Priority button now shows the same copy icon as the note above it.
+
 ### Fixed
 
 ### Known issues
