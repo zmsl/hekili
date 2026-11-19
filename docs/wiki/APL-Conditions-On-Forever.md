@@ -12,27 +12,27 @@ What each expression means is in [APL expression reference](APL-Expression-Refer
 
 | Support | Meaning |
 |---|---|
-| Read | The game reports the value. The condition works as in retail Hekili. |
-| Estimated | The game hides the value in combat, or always. Hekili Forever estimates it from what the game still reports. |
+| Read | The game reports the value, so the condition works as in retail Hekili. |
+| Estimated | The game hides the value in combat or always, and Hekili Forever estimates it from what the game still reports. |
 | Limited | The condition works, except in the situations the table names. |
-| Fixed | The value does not change on Forever. The table gives what it reads. |
+| Fixed | The value does not change on Forever; the table gives what it reads. |
 
 In the tables, "n/a" in the **Write this instead** column means the expression can be used as it is, or that nothing replaces it.
 
 ## Common rewrites
 
-From a priority written for retail Hekili or SimulationCraft:
+| Written for retail Hekili | Write on Forever | Why |
+|---|---|---|
+| `mana.pct<30` | `mana.pct_lo<30` | The game hides mana; the low end is the amount certain to be there. |
+| `energy.current>=50` | `energy.lo>=50` | The same for energy and rage |
+| `target.health.pct<20` | `target.health.pct<=20` | Target health reads the ability's threshold itself, not less. |
+| `fight_remains<8` | Remove the test | The time to die is unknown, so the test never passes. |
+| `target.time_to_die>12` | Remove the test | The test always passes. |
+
+From Affliction (wowsims.com), a line written this way:
 
 ```simc
-# hidden resources: test the low end
-mana.pct<30                 ->  mana.pct_lo<30
-energy.current>=50          ->  energy.lo>=50
-# a cooldown being ready: read, not estimated
-cooldown.<key>.remains=0    ->  cooldown.<key>.ready
-# target health: reads the threshold itself
-target.health.pct<20        ->  target.health.pct<=20
-# time to die: never true on Forever
-fight_remains<8             ->  remove the test
+actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 ```
 
 ## Resources
@@ -71,7 +71,7 @@ fight_remains<8             ->  remove the test
 |---|---|---|---|
 | `target.health.pct`, `target.health.current`, `target.health_pct` | Limited | 100 until an ability usable only below a target-health threshold becomes usable; then that threshold, such as 20 | `<=` at the ability's threshold: `target.health.pct<=20`, not `target.health.pct<20` |
 | `health.pct`, `health.current` | Limited | The player's health as the game reports it; full (100) while the game hides it | n/a |
-| `group_health`, `at_risk` | Fixed | `group_health` reads 100: the health of other group members is hidden. `at_risk` does not measure health. | n/a |
+| `group_health`, `at_risk` | Fixed | `group_health` reads 100 and `at_risk` does not measure health, because the game hides other players' health | n/a |
 | `incoming_damage_<N>s`, `incoming_physical_damage_<N>s`, `incoming_magic_damage_<N>s`, `incoming_heal_<N>s` | Fixed | 0: the game hides the amount of each hit and heal on the player | n/a |
 
 - On a specialization with no ability limited by target health, `target.health.pct` always reads 100. A priority that reads target health gets a warning in **Warnings** when it loads.
@@ -83,12 +83,12 @@ fight_remains<8             ->  remove the test
 
 | Expression | Support | On Forever | Write this instead |
 |---|---|---|---|
-| `buff.<key>.up`, `buff.<key>.down` | Estimated | Read out of combat. In combat, estimated from the player's casts, and confirmed by the [Cooldown Manager](Cooldown-Manager) when the aura is on one of its bars. | n/a; add the aura to a Cooldown Manager bar |
+| `buff.<key>.up`, `buff.<key>.down` | Estimated | Read out of combat; in combat, estimated from the player's casts and confirmed by the [Cooldown Manager](Cooldown-Manager) when the aura is on one of its bars | n/a; add the aura to a Cooldown Manager bar |
 | `buff.<key>.remains`, `buff.<key>.refreshable` | Estimated | In combat, from the cast and the aura's length | n/a |
 | `buff.<key>.stack`, `buff.<key>.react` | Estimated | In combat, from the casts and procs the class pack models; the Cooldown Manager shows whether the aura is up, not its stacks | `buff.<key>.up` when any stack is enough |
 | `buff.<key>.duration`, `buff.<key>.max_stack` | Read | From the class pack | n/a |
 | `debuff.<key>.up`, `.remains`, `.stack`, `.ticking`, `.refreshable` | Estimated | From the player's casts: the game hides the target's auras in combat | n/a |
-| `active_dot.<key>` | Limited | The target and the enemies Hekili Forever remembers; needs enemy nameplates. While unknown, every enemy counts as carrying the aura. | n/a |
+| `active_dot.<key>` | Limited | The target and the enemies Hekili Forever remembers, which needs enemy nameplates; while unknown, every enemy counts as carrying the aura | n/a |
 | `buff.<key>.icd_ready`, `buff.<key>.icd_remains` | Estimated | From the proc's last application | n/a |
 
 ## Cooldowns and abilities
@@ -96,10 +96,10 @@ fight_remains<8             ->  remove the test
 | Expression | Support | On Forever | Write this instead |
 |---|---|---|---|
 | `cooldown.<key>.ready`, `cooldown.<key>.up` | Read | Whether the cooldown has ended | n/a |
-| `cooldown.<key>.remains`, `.charges`, `.charges_fractional`, `.full_recharge_time` | Estimated | Read out of combat; in combat, from the last cast and the cooldown's length | `cooldown.<key>.ready` when the test is whether it is ready |
-| `action.<key>.known`, `.enabled`, `.disabled` | Read | | n/a |
+| `cooldown.<key>.remains`, `.charges`, `.charges_fractional`, `.full_recharge_time` | Estimated | Read out of combat; in combat, from the last cast and the cooldown's length, set to 0 when the game reports the cooldown ready | n/a |
+| `action.<key>.known`, `.enabled`, `.disabled` | Read | Read from the game and the options | n/a |
 | `action.<key>.in_range` | Read | The game's range check for the ability | n/a |
-| `action.<key>.ready`, `action.<key>.usable_in` | Estimated | Built on the cooldown estimate | `cooldown.<key>.ready` |
+| `action.<key>.ready`, `action.<key>.usable_in` | Estimated | Built on the cooldown and resource estimates | n/a |
 | `action.<key>.cost`, `.cast`, `.execute_time`, `.gcd`, `.travel_time` | Estimated | From the class pack, scaled by the haste estimate in combat | n/a |
 | `gcd.remains`, `gcd.max` | Estimated | From the player's casts and the haste estimate | n/a |
 | `prev.<N>.<key>`, `prev_gcd.<N>.<key>`, `prev_off_gcd.<N>.<key>` | Read | The player's own casts, then the forecast's | n/a |
@@ -110,9 +110,9 @@ fight_remains<8             ->  remove the test
 
 | Expression | Support | On Forever | Write this instead |
 |---|---|---|---|
-| `target.exists`, `target.is_player`, `target.is_dead`, `target.level` | Read | | n/a |
+| `target.exists`, `target.is_player`, `target.is_dead`, `target.level` | Read | Read from the game | n/a |
 | `target.within<N>`, `target.outside<N>`, `target.range<A>to<B>`, `target.distance` | Estimated | From the range checks of the abilities Hekili Forever tracks; while the range is unknown, all are true | n/a |
-| `target.is_boss` | Limited | Read in the open world. In dungeons and raids, a boss that is not shown as a world boss can read false. | n/a |
+| `target.is_boss` | Limited | Read in the open world; in dungeons and raids, a boss that the game does not show as a world boss can read false | n/a |
 | `target.creature_type`, `target.is_undead`, `target.is_demon` | Limited | Read in the open world; `unknown` and false in dungeons and raids | n/a |
 | `target.is_targeting_player` | Limited | Read in the open world; false while the game hides it, as in dungeon fights | n/a |
 | `target.casting` | Estimated | Whether the target is casting is read; how long the cast lasts is not | n/a |
@@ -135,12 +135,12 @@ fight_remains<8             ->  remove the test
 | `time` | Read | Seconds since combat started | n/a |
 | `moving` | Read | The player is moving | n/a |
 | `aggro`, `tanking` | Read | From the game's threat status | n/a |
-| `level`, `solo`, `group`, `latency` | Read | | n/a |
+| `level`, `solo`, `group`, `latency` | Read | Read from the game | n/a |
 | `haste`, `spell_haste`, `melee_haste`, `crit`, `mastery_value` | Estimated | Read out of combat; in combat, the last read adjusted for the buffs the class pack knows | n/a |
-| `talent.<key>.enabled`, `talent.<key>.rank` | Read | | n/a |
+| `talent.<key>.enabled`, `talent.<key>.rank` | Read | Read from the game | n/a |
 | `equipped.<item>`, `set_bonus.<name>`, `main_hand.<kind>`, `off_hand.<kind>` | Read | From the equipped gear | n/a |
 | `trinket.t1.cooldown.ready`, `trinket.t2.cooldown.ready` and other item cooldowns | Read | The game reports item cooldowns | n/a |
-| `pet.<key>.up` and the other pet values | Read | | n/a |
+| `pet.alive` and the other pet values | Read | Read from the game | n/a |
 | Swing timers, such as `mainhand_remains` | Estimated | Names a class pack registers; from the swings the game reports, with the swing speed estimated in combat | n/a |
 | `toggle.<name>`, `settings.<key>`, `variable.<name>` | Read | Values of the addon, not of the game | n/a |
 | `window.<name>.*` | Read | Rotation windows a class pack opens from what the game reports ([APL windows](APL-Windows)) | n/a |
