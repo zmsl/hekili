@@ -12,7 +12,7 @@
     "equipment":{
       "items":[{
           "id":252605,
-          "enchant":1508
+          "enchant":2543
         },{
           "id":15411,
           "enchant":904
@@ -31,10 +31,10 @@
           "id":15063,
           "enchant":2564
         },{
-          "id":22232
+          "id":272397
         },{
           "id":15062,
-          "enchant":1508
+          "enchant":2543
         },{
           "id":226881,
           "enchant":1887
@@ -43,23 +43,23 @@
         },{
           "id":13098
         },{
-          "id":260205
+          "id":22321
         },{
-          "id":272437
+          "id":19289
         },{
           "id":12798,
           "enchant":1900
         },{
-          "id":13368,
+          "id":18392,
           "enchant":2564
         },{
-          "id":18680,
+          "id":18323,
           "enchant":8720
         }]
     },
     "reactionTimeMaxMs":350,
     "race":"RaceOrc",
-    "talentsString":"53200005001-004-530200230050022151",
+    "talentsString":"53200005001-005005-5302002300500221",
     "profession2":"Blacksmithing",
     "hunter":{
       "options":{
@@ -74,14 +74,14 @@
     },
     "consumables":{
       "extraIds":[10646,10310,12460,12217,8412],
-      "ohImbueId":18262,
+      "ohImbueId":12404,
       "offensivePotId":250943,
       "flaskId":274274,
       "mhImbueId":18262,
       "conjuredId":12662,
       "foodId":250072,
       "resourcePotId":13444,
-      "elixirIds":[13452,250341],
+      "elixirIds":[13452,250341,9179],
       "explosiveId":18588
     },
     "rotation":{
@@ -317,6 +317,15 @@
           "action":{
             "castSpell":{
               "spellId":{
+                "spellId":14305,
+                "rank":5
+              }
+            }
+          }
+        },{
+          "action":{
+            "castSpell":{
+              "spellId":{
                 "spellId":14271,
                 "rank":4
               }
@@ -328,15 +337,6 @@
               "spellId":{
                 "spellId":1317257,
                 "rank":1
-              }
-            }
-          }
-        },{
-          "action":{
-            "castSpell":{
-              "spellId":{
-                "spellId":14305,
-                "rank":5
               }
             }
           }

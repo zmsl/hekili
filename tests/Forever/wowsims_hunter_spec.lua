@@ -177,7 +177,11 @@ local PACKS = {
         -- (Efficiency 4/5) are 2328 of 6020 mana; the streak (t 96.2-105.8) runs the pool 14.4 -> 139.8 waiting on Aimed
         -- Shot 140.8.
         { [10] = 6, [40] = 9.8, [60] = 14.0 }, -- 4.4 / 9.8 / 13.8
-        0, -- 1.7 -> 0 (0.00 measured at the batch; 1.66 before): replay-flips-09 ade4d6379 (L1317)
+        -- 0 -> 0.4 (0.33 measured, 1 flip; re-pin e4ef929e54 -> ab0f00e4fc, the Turret builds' mana consumables re-time the
+        -- fight): the Serpent Sting refresh at 64.57 s, the fight's one on-GCD decision miss (arcane_shot -> serpent_sting,
+        -- 0.983 of 60) and its one late ready row (0.57 s): the sting faded at 63.37 and wowsims casts it at the GCD's end,
+        -- we still show Arcane Shot first (the Turret rows' Serpent Sting class); not traced per tick
+        0.4,
         nil,
         {},
         {},

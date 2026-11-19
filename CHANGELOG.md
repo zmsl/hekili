@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Hunter: Survival Melee follows wowsims's new build (new talents and gear; Immolation Trap is now the first melee shot and it drinks a Major Mana Potion again). Not yet checked in game.
+
 ### Fixed
 
 ### Known issues
