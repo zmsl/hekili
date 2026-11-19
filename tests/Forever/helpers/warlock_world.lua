@@ -35,16 +35,15 @@ local MANA = 0 -- Enum.PowerType
 local BASE = 1373 -- base mana at 60 (wowsims's ExtraClassBaseStats): a percent-of-base cost's base
 local GCD = { spell = 1.5, off = 0 }
 -- The regen a second, outside the five-second rule and inside it: the spirit part (paused inside it) and the mp5 part.
--- Affliction's Orc build at e4ef929e54 (the preraid gear): Spirit 235 = Life Tap 790.8 / 1.2 - 424 (2/2 Improved Life
--- Tap); the spirit part 6.25 + 235 / 8 = 35.625 (wowsims mana.go's default curve, which gives the Human logs' 38.13 at
--- 255); the mp5 part the log's 1.520 a 0.1 s tick inside the rule (1810 of them). The log never leaves the rule, so
--- the spirit part is derived, not logged. UNMEASURED in game.
-local FSR = { 35.625, 15.2 }
-local SPIRIT = 235
--- Re-pin e2842f0a78: the four Human builds (Demonology, Shadow Brand, Destruction, SM Ruin; the new preraid gear) log
--- 1.52 a 0.1 s tick inside the rule and 5.333 outside it, and Life Tap 679 = 424 + 255 (814.8 x 1.2 at 2/2 Improved
--- Life Tap); Affliction (Orc) keeps the values above. A pack's `fsr` / `spirit` override them.
-local FSR_HUMAN, SPIRIT_HUMAN = { 38.13, 15.2 }, 255
+-- The five builds at ab0f00e4fc (wowsims #1048/#1070: each carries its own gear; every build is Orc): Life Tap
+-- 712.8 = (424 + 170) x 1.2 (Improved Life Tap 2/2) in Affliction, Destruction and SM Ruin, 594 = 424 + 170 in Demonology
+-- (no Improved Life Tap), 603 = 424 + 179 in Shadow Brand; so Spirit 170 (179), the spirit part 6.25 + 170 / 8 = 27.5
+-- (6.25 + 179 / 8 = 28.625; wowsims mana.go's default curve) and the mp5 part the logs' 1.200 a 0.1 s tick inside the
+-- rule (the logs leave it only briefly, so the spirit part is derived, not logged). UNMEASURED in game. A pack's `fsr` /
+-- `spirit` override them.
+local FSR = { 27.5, 12 }
+local SPIRIT = 170
+local FSR_SB, SPIRIT_SB = { 28.625, 12 }, 179
 local SOUL_SHARD = 6265 -- the item (ItemSparse); wowsims's builds carry 32 (classOptions.soulShards)
 -- The demons the builds summon: their mana and regen a second at 60 (wowsims's logs, the preraid gear: "Pet stats"
 -- Mana, MP5 / 5), the spell each casts on its own (DB2: Firebolt 11763 115 mana, 2 s cast; Lash of Pain 11780 160
@@ -212,11 +211,11 @@ local PACKS = {
     -- aff_wrack.build.json 25500020135201351-0050203001-05 (35/11/5; the request's talents, the log's header at
     -- e4ef929e54): Improved Corruption 5/5 (an instant Corruption), no Bane (Shadow Bolt 3 s); no demon out, the Imp
     -- sacrificed (classOptions.sacrificedDemon: the log's Burning Wish 18789 from 0.00, "No pet summoned" for all
-    -- four); the pool the log's 6277
+    -- four); the pool the log's 6311
     Affliction = {
         pack = "Affliction (wowsims.com)",
         spec = 100091,
-        max = 6277,
+        max = 6311,
         sacrificed = "imp",
         kit = { "siphon_life", "wrack", "amplify_curse", "demonic_sacrifice" },
         talents = {
@@ -244,9 +243,7 @@ local PACKS = {
     Demonology = {
         pack = "Demonology (wowsims.com)",
         spec = 100092,
-        max = 6328,
-        fsr = FSR_HUMAN,
-        spirit = SPIRIT_HUMAN,
+        max = 6121,
         demon = "imp",
         sacrificed = "succubus",
         kit = { "demonic_sacrifice" },
@@ -276,9 +273,7 @@ local PACKS = {
     Destruction = {
         pack = "Destruction (wowsims.com)",
         spec = 100093,
-        max = 5503,
-        fsr = FSR_HUMAN,
-        spirit = SPIRIT_HUMAN,
+        max = 5323,
         demon = "succubus",
         kit = { "conflagrate", "shadowburn", "incinerate", "amplify_curse" },
         -- destro.build.json at e2842f0a78 (re-pin Task 16): 2550002013--0050355103101351 (was 2530000013-0004-...)
@@ -307,9 +302,7 @@ local PACKS = {
     SMRuin = {
         pack = "SM Ruin (wowsims.com)",
         spec = 100091,
-        max = 5503,
-        fsr = FSR_HUMAN,
-        spirit = SPIRIT_HUMAN,
+        max = 5113,
         demon = "succubus",
         kit = { "siphon_life", "amplify_curse" },
         -- sm_ruin.build.json at e2842f0a78 (re-pin Task 16): 2550002013520105--0550205003 (was ...--0550305003)
@@ -337,9 +330,9 @@ local PACKS = {
     ShadowBrand = {
         pack = "Shadow Brand (wowsims.com)",
         spec = 100092,
-        max = 6328,
-        fsr = FSR_HUMAN,
-        spirit = SPIRIT_HUMAN,
+        max = 6294,
+        fsr = FSR_SB,
+        spirit = SPIRIT_SB,
         demon = "succubus",
         petMax = 2151.65,
         sacrificed = "imp",

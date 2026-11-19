@@ -136,11 +136,12 @@ describe("the Warlock loop worlds", function()
     it(
         "declares the shards, the demon and Spirit; the shard spells take a reagent, the summons and Sacrifice the pet",
         function()
+            assert.are.same({ [5] = 179 }, ww.ShadowBrand.WORLD.stats)
             for _, name in ipairs({ "Affliction", "Demonology", "Destruction" }) do
                 local C = ww[name]
                 assert.are.same({ [6265] = 32 }, C.WORLD.bags, name)
-                -- the re-pin's Human builds (Demonology, Destruction) read Spirit 255; Affliction (Orc) 235
-                assert.are.same({ [5] = name == "Affliction" and 235 or 255 }, C.WORLD.stats, name)
+                -- the re-pin ab0f00e4fc Orc builds read Spirit 170 (Shadow Brand 179, below)
+                assert.are.same({ [5] = 170 }, C.WORLD.stats, name)
                 local pet = C.WORLD.pet
                 -- wowsims's logs at 60: the Imp 2180 mana, 85.2 mp5; the Succubus 1871, 28.4 mp5; Affliction's Imp is
                 -- sacrificed (no demon out)

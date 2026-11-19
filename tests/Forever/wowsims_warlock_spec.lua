@@ -77,15 +77,31 @@ end
 --   floor follows the measurement (R6). LIVE60 Destruction 0.4 -> 0.2 (worst idle 0.2 s at 60): identical at the old
 --   log and pack on this tree (BASE run); the fall predates this re-pin, not bisected; floor follows the measurement
 --   (R6).
+-- Re-pin e4ef929e54 -> ab0f00e4fc (R6, DECISIONS on-GCD; replay flicker 0.00/min in all five, oracle 0.00): every build
+-- carries its own gear and is Orc (wowsims #1048/#1070; owner L1397), so the logs move on the new pools (6311 / 6121 /
+-- 5323 / 6294 / 5113), Life Tap gains (712.8 / 594 / 712.8 / 603 / 712.8, Spirit 170, Shadow Brand 179) and the mp5
+-- part 12 (was 15.2); the world and the kit's fsr seed follow ({27.5, 12}). Central's measure with the old kit seeds read
+-- Affliction 0.954 (65), Demonology 0.940, Destruction 0.927, SM Ruin 0.787, Shadow Brand 0.812 (repin-ab0f-measure.md):
+-- the seeds move Demonology and Destruction up; Affliction's rise is not the seeds (the old floor sat below its
+-- measurement) and Shadow Brand's is mostly a loose old floor (0.71 against 0.812):
+--   Affliction 0.93 -> 0.95 (0.954, 65): the old floor was loose; top [siphon_life -> corruption 1; wrack ->
+--   corruption 1; wrack -> life_tap 1].
+--   SM Ruin 0.85 -> 0.80 (0.809, 94; traced): the new main hand's Revelation enchant (8217) gives the Revelation buff
+--   (1323392; 0 -> 6 gains in the log), which makes wowsims prefer Shadow Bolt over Immolate (8 Immolate misses); the
+--   rest is 6 end-of-fight DoT, 2 Bane of Agony, 1 Corruption and 1 early Life Tap; top [shadow_bolt -> immolate 5;
+--   shadow_bolt -> siphon_life 4; life_tap -> immolate 3].
+--   Demonology 0.94 -> 0.96 (0.966, 117): Life Tap at mana.pct_lo<43 (was 42); top [searing_pain -> life_tap 3].
+--   Shadow Brand 0.71 -> 0.82 (0.822, 101): mostly the loose old floor; top [searing_pain -> shadow_bolt 6; shadow_bolt -> life_tap 2].
+--   Destruction 0.95 -> 0.97 (0.972, 109): Life Tap at mana.pct_lo<49 (was 48); top [incinerate -> life_tap 3].
 -- The replay flicker ceiling (per minute, the last column): plain flicker bars, 0 in all five, measured 0.00/min (oracle
 -- 0.00) at the re-pin e2842f0a78. They say nothing about Movement: Demonology and Shadow Brand replay with it ON (R8) but
 -- every replay is single-target and the Hellfire line needs active_enemies>=3.
 local PACKS = {
-    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.93, 0.2, 0 },
-    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.85, 0.2, 0 },
-    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.94, 0.2, 0 },
-    { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.71, 0.2, 0 },
-    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.95, 0.2, 0 },
+    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.95, 0.2, 0 },
+    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.80, 0.2, 0 },
+    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.96, 0.2, 0 },
+    { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.82, 0.2, 0 },
+    { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.97, 0.2, 0 },
 }
 
 describe("the Warlock wowsims.com packs #slow #wowsims", function()

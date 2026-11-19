@@ -165,7 +165,7 @@ describe("Forever Warlock", function()
     it("declares mana under the five-second rule, base 1373, from wowsims's logs", function()
         assert.are.same({ 0 }, w.order)
         local r = w.resources[0]
-        assert.are.same({ spirit = 38.13, mp5 = 15.2 }, r.meta.fsr)
+        assert.are.same({ spirit = 27.5, mp5 = 12 }, r.meta.fsr)
         assert.are.equal(1373, r.meta.base)
     end)
 

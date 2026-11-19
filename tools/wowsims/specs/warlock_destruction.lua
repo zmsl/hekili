@@ -1,7 +1,7 @@
 -- tools/wowsims/specs/warlock_destruction.lua (wowsims packs plan, Task 13): Destruction (wowsims.com)'s
 -- wowsims/forever request and translation; wowsims's preset build "Destro" (presets.ts Builds).
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warlock/dps/builds/destro.build.json
--- (the build: race Human, talents 2550002013--0050355103101351, Succubus out, Demon Armor, curse Elements, 32 Soul
+-- (the build: race Orc, talents 2550002013--0050355103101351, Succubus out, Demon Armor, curse Elements, 32 Soul
 -- Shards, Engineering/Tailoring, 20 yd; its rotation) and presets.ts:11,20,29,91 (DESTRO_APL, DestroTalents, the Builds
 -- list) at the pin. The build's own gear (#1048, owner L1397; was preraid.gear.json, central fix 27).
 -- Spec binding: 33 Destruction points to 14 Affliction and 4 Demonology: Destruction's default.
@@ -20,9 +20,8 @@
 -- Leveling note: without Incinerate (a talent from 40) the list fills with its `searing_pain,if=!action.incinerate.
 -- known|...` line, and below Searing Pain (18) with the Shadow Bolt below (the Immolate refresh guards below keep
 -- Immolate out of it).
--- Deviations: Berserking (Troll) and
--- Eureka! and Blood Fury are other races' racials, never known to the Human. The Weakness Analyzer trinket (272438) is `use_items` (rule
--- 13).
+-- Deviations: Berserking (Troll) and Eureka! are other races' racials, never known to the Orc. The on-use trinkets
+-- (Weakness Analyzer 272438, Eye of the Beast 13968) are `use_items` (rule 13).
 -- Filler (owner 2026-11-12, a player's report: "after putting my dots, Hekili wants me to spam Life Tap, even with full
 -- mana"; owner: "Life tap is not a good filler"): wowsims's list ends `incinerate` then an unconditional Life Tap. An
 -- `extra` Shadow Bolt (known at 1) goes before that last Life Tap, and `guard` "default #18" shows the Life Tap only
@@ -42,6 +41,10 @@
 -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9): the build, talents and gear are unchanged; the log moves on the Weakness
 -- Analyzer's 6 min cooldown (was 90 s: one use in the fight, was two). Bane of Havoc takes the GCD (its spell row at
 -- the pin: 1.5 s, category 133): its 2+ target line loses `use_off_gcd=1`.
+-- Re-pin e4ef929e54 -> ab0f00e4fc (owner L1396/L1397: follow wowsims): each build carries its own gear (wowsims #1048/#1070)
+-- and every build is Orc (Blood Fury is the race's racial; the Human's logs are gone), so the request loses the Human
+-- gear and Elixir of Firepower, and the Orc's Life Tap / regen are the world's seeds (Spirit 170, 1.2 a 0.1 s tick inside
+-- the rule; warlock_world.lua).
 return {
     class = "WARLOCK",
     pack = "Destruction (wowsims.com)",
