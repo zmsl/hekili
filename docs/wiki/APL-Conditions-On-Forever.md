@@ -71,14 +71,12 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 | Expression | Support | On Forever | Write this instead |
 |---|---|---|---|
 | `target.health.pct`, `target.health.current`, `target.health_pct` | Limited | 100 until an ability usable only below a target-health threshold becomes usable; then that threshold, such as 20 | `<=` at the ability's threshold: `target.health.pct<=20`, not `target.health.pct<20` |
-| `health.pct`, `health.current` | Limited | The player's health as the game reports it; full (100) while the game hides it | n/a |
-| `group_health`, `at_risk` | Fixed | `group_health` counts every other group member as full and `at_risk` does not measure health, because the game hides other players' health | n/a |
+| `health.pct`, `health.current` | Limited | The player's health as the game reports it out of combat; full (100) in combat, where the game hides it | Leave the test out: a low-health check never passes in combat |
+| `group_health`, `at_risk` | Fixed | Every other group member reads as full, because the game hides other players' health, and the player reads as `health.pct` does. `group_health` is the group's average health; `at_risk` counts the members below 70% health, so in combat it reads 0 | n/a |
 | `incoming_damage_<N>s`, `incoming_physical_damage_<N>s`, `incoming_magic_damage_<N>s`, `incoming_heal_<N>s` | Fixed | 0, because the game hides the amount of each hit and heal on the player | n/a |
 
-- On a specialization with no ability limited by target health, `target.health.pct` always reads 100. A priority that reads target health gets a warning in **Warnings** when it loads.
+- On a specialization with no ability limited by target health, `target.health.pct` always reads 100. A priority that reads target health gets a warning in **Warnings** when it loads. A priority that reads the player's health gets one too.
 - A class pack can name the low-health phase itself; its class file lists such names ([Pack class file anatomy](Pack-Class-File-Anatomy)).
-
-<!-- UNVERIFIED: whether the game hides the player's own health in combat is not measured for every state; health.pct reads 100 whenever it is hidden. -->
 
 ## Buffs and debuffs
 

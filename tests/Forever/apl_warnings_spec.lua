@@ -26,7 +26,7 @@ describe("APL secret-token scan", function()
     it("finds the player's health, hidden in combat", function()
         assert.are.same({
             "health.pct",
-            "your health is hidden in combat on Forever",
+            "your health is hidden in combat",
             "this line never passes in combat",
         }, { scan("(health.pct<35)") })
         for _, hp in ipairs({ "health.current<5000", "health.deficit>5000", "health.percent>50", "health.actual<9" }) do
