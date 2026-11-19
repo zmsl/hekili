@@ -15,9 +15,9 @@ if not L then
 end
 
 -- Hekili_Rogue/Rogue.lua
--- L["Assassination"] = ""
--- L["Combat"] = ""
--- L["Subtlety"] = ""
--- L["Combat (wowsims.com)"] = ""
--- L["Assassination (wowsims.com)"] = ""
--- L["Subtlety (wowsims.com)"] = ""
+L["Assassination"] = "Meucheln"
+L["Combat"] = "Kampf"
+L["Subtlety"] = "Täuschung"
+L["Combat (wowsims.com)"] = "Kampf (wowsims.com)"
+L["Assassination (wowsims.com)"] = "Meucheln (wowsims.com)"
+L["Subtlety (wowsims.com)"] = "Täuschung (wowsims.com)"
