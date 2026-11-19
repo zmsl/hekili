@@ -33,9 +33,9 @@
 - Dominos users no longer get repeated Lua errors when Hekili reads keybindings before all action bars or buttons exist.
 - Custom priorities: `group_health` now averages you and party members 1 to 4, and `at_risk` counts only members below 70% health (it counted every living member).
 
-### Known issues
-
 ### Upgrade notes
+
+- A copy of the Guardian or Protection Warrior priority you made before this version keeps its health-based defensive lines; they never pass in combat and show a warning on the Warnings page.
 
 ## v0.9.0
 
