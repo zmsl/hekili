@@ -35,6 +35,14 @@ describe("APL secret-token scan", function()
         assert.are.equal("target.health.pct", scan("target.health.pct<20&health.pct<50")) -- target rows first
     end)
 
+    it("finds a bare `health`, not health.max or a longer name", function()
+        assert.are.equal("health", scan("health<5000"))
+        assert.are.equal("health", scan("buff.spender_c.up&!(health>10)"))
+        assert.is_nil(scan("health.max>5"))
+        assert.is_nil(scan("target.health<5"))
+        assert.is_nil(scan("health_regen>5"))
+    end)
+
     it("finds a token in a target_if expression", function()
         assert.are.equal("target.health.pct", scan("min:target.health.pct"))
     end)

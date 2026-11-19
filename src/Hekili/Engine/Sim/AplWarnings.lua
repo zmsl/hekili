@@ -32,6 +32,7 @@ local ROWS = {
     { "health.current", OWN_HP, NEVER },
     { "health.actual", OWN_HP, NEVER },
     { "health.deficit", OWN_HP, NEVER },
+    { "health", OWN_HP, NEVER, true }, -- bare: Scripts.lua expands it to health.current; not health.max
 }
 
 local DOT, UNDERSCORE, LOWER_Z = 46, 95, ("z"):byte()
@@ -58,7 +59,8 @@ function ns.AplSecretToken(condition)
         local s, e = find(condition, token, 1, true)
         while s do
             local before = s > 1 and byte(condition, s - 1) or nil
-            if before ~= DOT and not isIdent(before) and (prefix or not isIdent(byte(condition, e + 1))) then
+            if before ~= DOT and not isIdent(before) and (prefix or not isIdent(byte(condition, e + 1)))
+                and not (row[4] and byte(condition, e + 1) == DOT) then
                 return token, row[2], row[3]
             end
             s, e = find(condition, token, e + 1, true)
