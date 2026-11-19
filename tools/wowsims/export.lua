@@ -38,15 +38,15 @@ M.SPEC_PIN = {
 
     druid_guardian = NEW,
 
-    hunter_beast_mastery_turret = OLD,
+    hunter_beast_mastery_turret = NEW,
 
-    hunter_marksmanship_turret = OLD,
+    hunter_marksmanship_turret = NEW,
 
-    hunter_survival = OLD,
+    hunter_survival = NEW,
 
-    hunter_survival_melee = OLD,
+    hunter_survival_melee = NEW,
 
-    hunter_survival_turret = OLD,
+    hunter_survival_turret = NEW,
 
     mage_arcane = OLD,
 

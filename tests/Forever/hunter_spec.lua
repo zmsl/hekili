@@ -172,9 +172,9 @@ describe("Forever Hunter", function()
             w.state.spec = { [key] = true } -- the pack's functions read state.spec (the file's `spec` is the class)
             return { ld.run(r.meta.fsr.spirit, e), ld.run(r.meta.fsr.mp5, e), ld.run(r.meta.fsr.share, e) or 0 }
         end
-        assert.are.same({ 8.75, 21.15, 0 }, seed("beast_mastery"))
-        assert.are.same({ 17.5, 12.4, 0 }, seed("marksmanship"))
-        assert.are.same({ 17.5, 12.4, 0 }, seed("survival"))
+        assert.are.same({ 8.75, 24.15, 0 }, seed("beast_mastery"))
+        assert.are.same({ 17.5, 15.4, 0 }, seed("marksmanship"))
+        assert.are.same({ 17.5, 15.4, 0 }, seed("survival"))
         -- the static share follows Bestial Discipline's rank (25/50%, wowsims's curve), never the spec
         local shares = {}
         for rank = 0, 2 do

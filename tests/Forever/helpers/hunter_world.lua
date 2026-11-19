@@ -280,10 +280,11 @@ local PACKS = {
         weapon = { 180, 260, 3.8 }, -- prebis_weave's Arcanite Reaper (wowsims db: 3.8 s)
         aspect = "aspect_of_the_hawk", -- the pack's (its precombat Aspect of the Hawk)
         talents = { [440529] = 2 }, -- the export's Resourcefulness 2/2 (hunter_survival.json)
-        -- its log (Pre-BiS weave gear): 1.200 a tick casting (mp5 part 12.00 a second), 2.950 outside (spirit part
-        -- 29.50 - 12.00 = 17.50), 2.075 casting under Resourcefulness (12.00 + 0.5 x 17.50 = 20.75); 3555 mana
+        -- its log (Pre-BiS weave gear, ab0f00e4fc: +elixir 9179, 3975 mana, was 3555): 1.200 a tick casting (mp5 part 12.00
+        -- a second), 2.950 outside (spirit part 29.50 - 12.00 = 17.50), 2.075 casting under Resourcefulness (12.00 + 0.5 x
+        -- 17.50 = 20.75)
         fsr = { 17.5, 12, auras = { [RESOURCEFULNESS] = { share = 0.5 } } },
-        max = 3555,
+        max = 3975,
         uptime = { "hunters_mark" },
     },
 }
@@ -297,7 +298,7 @@ PACKS.SurvivalRanged = setmetatable({ distance = 11, ranged = { 140, 200, 3.3 } 
 -- header's), so the costs (Efficiency, Resourcefulness), Improved Arcane Shot's cooldown and Quick Shots' chance (Deadly
 -- Aspects) are the build's, and each world runs its own pack. The kit is what the build knows that its list
 -- casts. The Turret worlds stand at the list's 12 yd shoot spot, shooting; Survival Melee in melee with two one-handers
--- (prebis_melee's Annihilator 2.4 s and Bonescraper 1.4 s; the amounts UNMEASURED) under Aspect of the Beast.
+-- (prebis_melee's Annihilator 2.4 s and Distracting Dagger 1.3 s; the amounts UNMEASURED) under Aspect of the Beast.
 -- Known gap: Quick Strikes (aura 1299448, melee haste) is not modelled. wowsims procs it off our white melee hits under
 -- Aspect of the Beast with Deadly Aspects 5/5 (sim/hunter/aspects.go:103-111; 17 gains in hunter_survival_melee.log at e4ef929e54), so
 -- the Survival Melee world swings at its base speed where the log's character is hasted for those windows.
@@ -312,9 +313,10 @@ local function header(spec) -- the export's talents: { [rank-1 spell] = rank }
     end
     return out
 end
--- The turret builds' logs (one gear set, 3330 mana): 1.240 a tick casting with no share (mp5 part 12.40 a second), 2.990
--- outside (spirit part 29.90 - 12.40 = 17.50), 2.115 casting under a 50% share (12.40 + 0.5 x 17.50 = 21.15).
-local TURRET_FSR = { 17.5, 12.4 }
+-- The turret builds' logs (one gear set, 3750 mana, ab0f00e4fc: was 3330 and 12.40 mp5): 1.540 a tick casting with no
+-- share (mp5 part 15.40 a second), 3.290 outside (spirit part 32.90 - 15.40 = 17.50), 2.415 casting under a 50% share
+-- (15.40 + 0.5 x 17.50 = 24.15).
+local TURRET_FSR = { 17.5, 15.4 }
 local function turret(pack, spec, extra, fsr, uptime)
     local kit = {
         "auto_shot",
@@ -337,7 +339,7 @@ local function turret(pack, spec, extra, fsr, uptime)
         aspect = "aspect_of_the_hawk",
         talents = header(spec),
         fsr = fsr,
-        max = 3330,
+        max = 3750,
         uptime = uptime or { "serpent_sting", "hunters_mark" },
     }
 end
@@ -345,16 +347,17 @@ PACKS.BeastMasteryTurret = turret(
     "Beast Mastery Turret (wowsims.com)",
     "hunter_beast_mastery_turret",
     { "bestial_wrath", "summon_hawk" }, -- the hawk list (e4ef929e54)
-    -- Bestial Discipline 2/2 (19590=2): a static 50% share, so the casting rate 21.15 (the log's 2.115 a tick) and the
-    -- spirit part outside it (1 - 0.5) x 17.50 = 8.75 (outside 29.90: 2.990)
-    { 8.75, 21.15, share = 0.5 }
+    -- Bestial Discipline 2/2 (19590=2): a static 50% share, so the casting rate 24.15 (the log's 2.415 a tick) and the
+    -- spirit part outside it (1 - 0.5) x 17.50 = 8.75 (outside 32.90: 3.290); derived from TURRET_FSR so a re-pin moves
+    -- one number (15.4 + 0.5 x 17.5 is exactly the double 24.15)
+    { TURRET_FSR[1] * 0.5, TURRET_FSR[2] + 0.5 * TURRET_FSR[1], share = 0.5 }
 )
 PACKS.MarksmanshipTurret = turret(
     "Marksmanship Turret (wowsims.com)",
     "hunter_marksmanship_turret",
     { "sniper_shot" },
     -- no Resourcefulness in this build; its Rapid Recuperation 2/2 (the log header's 1223987=2): half the spirit regen
-    -- while casting for 15 s after each landed Serpent Sting (the log's 2.115 a tick casting under it, 1.240 without)
+    -- while casting for 15 s after each landed Serpent Sting (the log's 2.415 a tick casting under it, 1.540 without)
     { TURRET_FSR[1], TURRET_FSR[2], auras = { [1242512] = { share = 0.5 } } }
 )
 PACKS.SurvivalTurret = turret(
@@ -382,20 +385,20 @@ PACKS.SurvivalMelee = {
         "multi_shot",
     },
     weapon = { 49, 92, 2.4 }, -- prebis_melee's Annihilator (wowsims db and log: 2.4 s)
-    offhand = { 49, 92, 1.4 }, -- its Bonescraper (1.4 s)
+    offhand = { 49, 92, 1.3 }, -- its Distracting Dagger (1.3 s; the amounts are the old Bonescraper's)
     aspect = "aspect_of_the_beast",
     talents = header("hunter_survival_melee"),
-    -- no Resourcefulness in this build; its log (Pre-BiS melee gear, 3270 mana): 1.240 a tick casting (12.40 a second),
-    -- 2.915 outside (spirit part 29.15 - 12.40 = 16.75)
-    fsr = { 16.75, 12.4 },
-    max = 3270,
+    -- no Resourcefulness in this build; its log (Pre-BiS melee gear, ab0f00e4fc, 3915 mana, was 3270): 1.200 a tick casting
+    -- (12.00 a second), 2.875 outside (spirit part 28.75 - 12.00 = 16.75)
+    fsr = { 16.75, 12 },
+    max = 3915,
     uptime = { "hunters_mark" },
 }
 -- Survival Melee's live bars only, at the weave's range with a ranged weapon (R63, as SurvivalRanged): in melee at
 -- level 10 the GCD-idle metric counts Arcane Shot usable on cost though it is out of range (8-35 yd), and Raptor Strike
 -- is off the GCD, so the in-melee world read 116.8 s idle; its loop and replay worlds stay in melee.
 PACKS.SurvivalMeleeRanged = setmetatable(
-    { distance = 11, ranged = { 140, 200, 2.8 } }, -- prebis_melee's Ancient Bone Bow (2.8 s)
+    { distance = 11, ranged = { 140, 200, 2.4 } }, -- prebis_melee's Satyr's Bow (2.4 s)
     { __index = PACKS.SurvivalMelee }
 )
 
@@ -474,6 +477,11 @@ local function haste(VS, now, X)
     return (rf and 1.4 or 1) * (qs and 1.3 or 1)
 end
 
+-- The book ranks (Guide: Serpent Sting IX, Guide: Aspect of the Hawk VII; DB2 level 60) no trainer teaches:
+-- wowsims/forever's APL names resolve to the trainer rank (sim/core/spelldata/book_ranks.go; every Hunter log casts
+-- 13555 and 14322, Serpent Sting for 230), so the worlds' character has not learned them (as mage_world.lua's).
+M.BOOK = { [25295] = true, [25296] = true }
+
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, IDS = {} }
@@ -500,7 +508,7 @@ local function content(name)
             local a = assert(w.abilities[key], key)
             local ids = { a.id }
             for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
-                ids[#ids + 1] = id
+                ids[#ids + 1] = not M.BOOK[id] and id or nil
             end
             C.IDS[key] = ids
             for _, id in ipairs(ids) do

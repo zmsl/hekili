@@ -53,7 +53,7 @@
                 },{
                   "id":13965
                 },{
-                  "id":260205
+                  "id":22321
                 },{
                   "id":12784,
                   "enchant":2646
@@ -76,7 +76,7 @@
               "extraIds":[10646,10310,12460,12217,8412],
               "foodId":250072,
               "resourcePotId":13444,
-              "elixirIds":[13452,250341],
+              "elixirIds":[13452,250341,9179],
               "mhImbueId":18262
             },
             "reactionTimeMaxMs":350,

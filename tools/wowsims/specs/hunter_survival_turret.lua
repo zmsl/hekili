@@ -1,6 +1,6 @@
 -- tools/wowsims/specs/hunter_survival_turret.lua (non-weave Hunter packs, owner 2026-11-12, ledger L661): Survival
 -- Turret (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e4ef929e54 (0.9 re-pin): the request is the
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at ab0f00e4fc (re-pin e4ef929e54 -> ab0f00e4fc): the request is the
 -- SIML build ui/specs/hunter/dps/builds/sv.siml (wowsims's "SV" build: talents :3, the retuned
 -- 3-00510503113-52225303000021004 (ec4a7402fd), gear ../gear_sets/prebis_turret.gear.siml :4 (Pre-BiS), rotation
 -- ../apls/turret.apl.siml :5, settings :8-14; no pet (:7, Lone Wolf)), layered over the spec's defaults.siml as

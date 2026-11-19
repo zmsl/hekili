@@ -1,6 +1,6 @@
 -- tools/wowsims/specs/hunter_beast_mastery_turret.lua (non-weave Hunter packs, owner 2026-11-12, ledger L661): Beast
 -- Mastery Turret (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at e4ef929e54 (0.9 re-pin): the request is the
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) at ab0f00e4fc (re-pin e4ef929e54 -> ab0f00e4fc): the request is the
 -- SIML build ui/specs/hunter/dps/builds/bm.siml (wowsims's "BM" build: talents :3, gear
 -- ../gear_sets/prebis_turret.gear.siml :4 (Pre-BiS), rotation ../apls/turret_hawk.apl.siml :5, settings :7-14;
 -- pet_type raptor (:12): the Raptor, whose casts are not scored), layered over the spec's defaults.siml as wowsims's

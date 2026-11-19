@@ -417,7 +417,10 @@ M.READY = {
     -- Reaper 3.8 s, same talents and list): the same classes re-timed, all early (strider_kick slack 10, wing_clip
     -- aura 4 + slack 1, mongoose_bite aura 2 + slack 3, immolation_trap 2, strider_kick aura 1): the walk the replay
     -- cannot forecast and the omitted weave waits (CN19); the largest fell 2.80 -> 1.39, the middle rose
-    hunter_survival = { 0.41, 23 },
+    -- { 0.41, 23 } -> { 0.54, 22 } re-pin e4ef929e54 -> ab0f00e4fc (R6; the flipped log: +elixir 9179, the new gear): the
+    -- same walk classes re-timed, all early (strider_kick 11 max 0.67, mongoose_bite 6 max 2.64, wing_clip 3 max 1.17;
+    -- aura 13 + slack 22): the walk the replay cannot forecast and the omitted weave waits (CN19); the median rose
+    hunter_survival = { 0.54, 22 },
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661): first measurement (fixtures recorded once). Turrets:
     -- Serpent Sting early (the cast-anchored dot) and Arcane Shot cost rows; Survival Melee: wing_clip 2 (max 3.10),
     -- strider_kick 1
@@ -429,9 +432,17 @@ M.READY = {
     -- re-pin e5a9cd2a2d -> e4ef929e54 (R6, re-set to the measurement on the flipped logs, Pre-BiS gear): Marksmanship
     -- Turret { 0.43, 4 } -> { 0.15, 2 }, Survival Turret { 0.30, 5 } -> { 0.27, 2 }, Survival Melee { 0.41, 3 } ->
     -- { 0.23, 3 }
-    hunter_marksmanship_turret = { 0.15, 2 },
+    -- re-pin e4ef929e54 -> ab0f00e4fc (R6; the Turret builds gain mana consumables: brilliant mana oil, elixir of greater
+    -- intellect, major mana potion, 1 gear slot): Marksmanship Turret { 0.15, 2 } -> { 0.00, 0 }: the two cost-class late
+    -- rows (aimed_shot 52.48 0.92, arcane_shot 84.57 0.15) are gone (more mana: the cost crossings now in:cost); the
+    -- 64.57 Serpent Sting row (late 0.57, traced per tick in the fix round) was a harness gap: the worlds' Hunter knew the
+    -- Guide book's rank 9 (250, 220 under Efficiency 4/5) where wowsims's casts rank 8 (202.4), so the belief's wait ran
+    -- to 220; trainer-taught since (hunter_world.lua BOOK), it is in grain. Survival Turret { 0.27, 2 } holds; Survival Melee
+    -- { 0.23, 3 } -> { 0.17, 5 } (new talents, gear and Immolation Trap first: mongoose_bite 3 max 0.30, wing_clip 2 max
+    -- 0.16; early 2, late 3, median 0.161)
+    hunter_marksmanship_turret = { 0.00, 0 },
     hunter_survival_turret = { 0.27, 2 },
-    hunter_survival_melee = { 0.23, 3 },
+    hunter_survival_melee = { 0.17, 5 },
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches
     -- a cost after the truth), fire_blast 7 (max 0.76: the dry-mana waits on its 340)
     -- Re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6; the new preraid gear's logs, with item-restores-09's Robe of
