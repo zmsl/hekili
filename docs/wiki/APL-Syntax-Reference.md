@@ -91,7 +91,7 @@ actions+=/innervate,if=((!action.cat_form.known|buff.cat_form.up)&cooldown.inner
 
 ### Short forms
 
-A bare resource name stands for its current value: `energy>=40` reads `energy.current>=40`. The same holds for `health` and `spell_targets` (read as `spell_targets.any`), and `gcd` reads `gcd.execute`.
+A bare resource name stands for its current value: `energy>=40` reads `energy.current>=40`. The same holds for `health` and `spell_targets` (read as `spell_targets.any`), and `gcd` reads `gcd.max`, the full global cooldown.
 
 The importer also rewrites a few SimulationCraft forms and lists each in the **Import Log**: `talent.<key>` becomes `talent.<key>.enabled`, `toggle.essences` becomes `toggle.minor_cooldowns`, and a bare `gcd` becomes `gcd.max`.
 
