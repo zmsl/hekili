@@ -39,7 +39,7 @@
  #39 1051.5500 1051.5500 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 11574 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
  #40 1051.5500 1051.5500 SPELL_AURA_APPLIED false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 772 "" 1 DEBUFF 0 via=tick
  #41 1051.4500 1051.4500 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 250.3800 0 1 0 0 0 false true false false via=UNIT_COMBAT
- #42 1051.5500 1051.5500 SPELL_DAMAGE false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 11574 "" 1 40.6440 0 1 0 0 0 false false false false via=UNIT_COMBAT
+ #42 1051.5500 1051.5500 SPELL_DAMAGE false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 11574 "" 1 38.3440 0 1 0 0 0 false false false false via=UNIT_COMBAT
  #43 1053.0500 1053.0500 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 1310222 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
  #44 1053.0500 1053.0500 SPELL_DAMAGE false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 1310222 "" 1 286.5930 0 1 0 0 0 false false false false via=UNIT_COMBAT
  #45 1055.2000 1055.2000 SPELL_AURA_REMOVED false Player-1 "" 1297 0 Player-1 "" 1297 0 20572 "" 1 BUFF 0 via=tick
@@ -137,7 +137,7 @@
  #137 1137.5500 1137.5500 SPELL_MISSED false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 11605 "" 1 MISS false 0 false via=UNIT_COMBAT
  #138 1137.5500 1137.5500 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 11574 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
  #139 1137.5500 1137.5500 SPELL_AURA_APPLIED false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 772 "" 1 DEBUFF 0 via=tick
- #140 1137.5500 1137.5500 SPELL_DAMAGE false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 11574 "" 1 32.5150 0 1 0 0 0 false false false false via=UNIT_COMBAT
+ #140 1137.5500 1137.5500 SPELL_DAMAGE false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 11574 "" 1 30.6750 0 1 0 0 0 false false false false via=UNIT_COMBAT
  #141 1139.0500 1139.0500 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 1310222 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
  #142 1139.0500 1139.0500 SPELL_DAMAGE false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 1310222 "" 1 276.4780 0 1 0 0 0 false false false false via=UNIT_COMBAT
  #143 1138.8500 1138.8500 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1-1-1 "" 2632 0 345.6370 0 1 0 0 0 false false false false via=UNIT_COMBAT
