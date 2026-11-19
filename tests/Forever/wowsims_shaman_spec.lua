@@ -113,10 +113,11 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     -- unchanged, the log moves with Searing Totem's 2.425 s cadence, the resist constant 8L + 19 and the Weakness
     -- Analyzer's 6 min cooldown; six misses [lightning_bolt -> searing_totem 4 (gap BL: wowsims down-ranks at low
     -- mana), chain_lightning -> flame_shock 1, flame_shock -> lightning_bolt 1] (not traced row by row)
-    -- 0.93 -> 0.97 re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-shaman, R6): 0.980 (98; 96 of 98, truncated), was 0.937 (95); the build
-    -- (default.build.json: new gear, imbue 20750, distance 20, 180 s / 1 target) and its list (Fire Nova above Elemental
-    -- Mastery, Chain Lightning only at mana.pct_lo > 40 without Elemental Mastery, Earth Shock on Revelation at any
-    -- target count) drop the old misses; two left [chain_lightning -> lightning_bolt 1, lightning_bolt -> searing_totem 1]
+    -- 0.93 -> 0.97 re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-shaman, R6): 0.980 (98; 96 of 98, truncated), was
+    -- 0.937 (95); the build (default.build.json: new gear, imbue 20750, distance 20, 180 s / 1 target) and its list
+    -- (Fire Nova above Elemental Mastery, Chain Lightning only at mana.pct_lo > 40 without Elemental Mastery, Earth
+    -- Shock on Revelation at any target count) drop the old misses; two left [chain_lightning -> lightning_bolt 1,
+    -- lightning_bolt -> searing_totem 1]
     it(ELE .. " follows wowsims's casts", function()
         ws.gate(ELE, content("shaman_elemental", sw.Elemental, ELE, 60), "shaman_elemental", 0.97, ELE_REPLAY)
     end)

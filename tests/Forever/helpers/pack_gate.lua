@@ -750,10 +750,11 @@ M.FLICKER = {
     -- 45.25; repin-shaman-09 fix round 1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, readyShort 0 / 0
     -- / 0, heldReady 277 / 290 / 300, agreement .997 / .997 / .997), the same after the mana-09 merge: floors unchanged
     -- heldReady 300 -> 308 re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-shaman, R6; seeds 1-20 / 21-40 / 41-60
-    -- flicker 0 / 0 / 0, retracted 0, readyShort 0 / 0 / 0, heldReady 288 / 308 / 297): the world's mana 6295 and regen
-    -- 13.25 / 26.85 from the new log, the Lightning Overload roll of Elemental Focus (more Clearcasting, so seeded fights
-    -- reorder) and the new list (Fire Nova above Elemental Mastery, Chain Lightning only above 40% mana); the worst set is
-    -- 21-40 (cost crossings, lo under the truth at the threshold, as before)
+    -- flicker 0 / 0 / 0, retracted 0, readyShort 0 / 0 / 0, heldReady 288 / 308 / 297): re-pin; causes not separated
+    -- by an A/B. Candidates: the world's mana 6295 and regen 13.25 / 26.85 from the new log, the Lightning Overload roll
+    -- of Elemental Focus (more Clearcasting, so seeded fights reorder) and the new list (Fire Nova above Elemental
+    -- Mastery, Chain Lightning only above 40% mana); the worst set is 21-40 (cost crossings, lo under the truth at the
+    -- threshold, as before)
     ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 308, readyShort = 0 }, -- 0.00 / 0.00 / 0.00, 0
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
