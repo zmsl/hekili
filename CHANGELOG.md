@@ -5,6 +5,7 @@
 ### New
 - German translation (machine-assisted; native speakers are welcome to suggest fixes on GitHub).
 - Spanish translation for Spain and Latin America (machine-assisted; native speakers are welcome to suggest fixes on GitHub).
+- French translation (machine-assisted; native speakers are welcome to suggest fixes on GitHub).
 
 ### Changed
 
