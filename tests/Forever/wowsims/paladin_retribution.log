@@ -1,4 +1,4 @@
-# wowsims e4ef929e54794ea16dc9a3c4b4f9d4688d500679 paladin_retribution seed 101 180 s target 63
+# wowsims ab0f00e4fc83cdede13ba8a184f2a384b8efa3ab paladin_retribution seed 101 180 s target 63
 # talents 20262=5@1 1310899=2@1 20224=5@1 1237268=2@1 20257=5@2 20189=1@2 20101=5@3 25956=2@3 20117=3@3 1311074=3@3 9453=1@3 20375=1@3 26022=2@3 1311087=1@3 20111=3@3 20066=1@3 20049=3@3 1311084=5@3 1310735=1@3
 [0.00] [Retribution (#1)] Aura gained: {SpellID: 26022}
 [-20.00] [Retribution (#1)] Casting {SpellID: 10301} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: prepull 1 > group 1.1
@@ -355,7 +355,7 @@
 [7.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2023.460 --> 2023.970) of 2612 total.
 [7.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2023.970 --> 2024.480) of 2612 total.
 [7.30] [Target 1] Aura refreshed: {SpellID: 1280353}
-[7.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.861 damage (SpellSchool: 2). (Threat: 42.289)
+[7.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.240 damage (SpellSchool: 2). (Threat: 41.792)
 [7.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2024.480 --> 2024.990) of 2612 total.
 [7.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2024.990 --> 2025.500) of 2612 total.
 [7.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2025.500 --> 2026.010) of 2612 total.
@@ -405,7 +405,7 @@
 [10.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2095.460 --> 2095.970) of 2612 total.
 [10.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2095.970 --> 2096.480) of 2612 total.
 [10.30] [Target 1] Aura refreshed: {SpellID: 1280353}
-[10.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.861 damage (SpellSchool: 2). (Threat: 42.289)
+[10.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.240 damage (SpellSchool: 2). (Threat: 41.792)
 [10.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2096.480 --> 2096.990) of 2612 total.
 [10.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2096.990 --> 2097.500) of 2612 total.
 [10.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2097.500 --> 2098.010) of 2612 total.
@@ -417,7 +417,7 @@
 [11.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2100.560 --> 2101.070) of 2612 total.
 [11.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2101.070 --> 2101.580) of 2612 total.
 [11.30] [Target 1] Aura refreshed: {SpellID: 1280353}
-[11.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.861 damage (SpellSchool: 2). (Threat: 42.289)
+[11.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.240 damage (SpellSchool: 2). (Threat: 41.792)
 [11.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2101.580 --> 2102.090) of 2612 total.
 [11.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2102.090 --> 2102.600) of 2612 total.
 [11.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2102.600 --> 2103.110) of 2612 total.
@@ -429,7 +429,7 @@
 [12.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2105.660 --> 2106.170) of 2612 total.
 [12.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2106.170 --> 2106.680) of 2612 total.
 [12.30] [Target 1] Aura refreshed: {SpellID: 1280353}
-[12.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.861 damage (SpellSchool: 2). (Threat: 42.289)
+[12.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.240 damage (SpellSchool: 2). (Threat: 41.792)
 [12.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2106.680 --> 2107.190) of 2612 total.
 [12.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2107.190 --> 2107.700) of 2612 total.
 [12.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2107.700 --> 2108.210) of 2612 total.
@@ -443,7 +443,7 @@
 [13.21] [Retribution (#1)] Queueing up {SpellID: 10333} to cast at 13.500000001s.
 [13.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2111.270 --> 2111.780) of 2612 total.
 [13.30] [Target 1] Aura refreshed: {SpellID: 1280353}
-[13.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.861 damage (SpellSchool: 2). (Threat: 42.289)
+[13.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.240 damage (SpellSchool: 2). (Threat: 41.792)
 [13.31] [Retribution (#1)] Queueing up {SpellID: 10333} to cast at 13.500000001s.
 [13.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2111.780 --> 2112.290) of 2612 total.
 [13.41] [Retribution (#1)] Queueing up {SpellID: 10333} to cast at 13.500000001s.
@@ -469,7 +469,7 @@
 [14.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2097.860 --> 2098.370) of 2612 total.
 [14.30] [Retribution (#1)] Aura faded: {SpellID: 20924}
 [14.30] [Target 1] Aura refreshed: {SpellID: 1280353}
-[14.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.861 damage (SpellSchool: 2). (Threat: 42.289)
+[14.30] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 52.240 damage (SpellSchool: 2). (Threat: 41.792)
 [14.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2098.370 --> 2098.880) of 2612 total.
 [14.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2098.880 --> 2099.390) of 2612 total.
 [14.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (2099.390 --> 2099.900) of 2612 total.
@@ -572,7 +572,7 @@
 [19.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1499.870 --> 1500.380) of 2612 total.
 [19.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1500.380 --> 1500.890) of 2612 total.
 [19.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[19.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 54.401 damage (SpellSchool: 2). (Threat: 43.521)
+[19.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 53.565 damage (SpellSchool: 2). (Threat: 42.852)
 [19.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1500.890 --> 1501.400) of 2612 total.
 [19.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1501.400 --> 1501.910) of 2612 total.
 [19.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1501.910 --> 1502.420) of 2612 total.
@@ -584,7 +584,7 @@
 [20.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1504.970 --> 1505.480) of 2612 total.
 [20.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1505.480 --> 1505.990) of 2612 total.
 [20.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[20.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 54.401 damage (SpellSchool: 2). (Threat: 43.521)
+[20.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 53.565 damage (SpellSchool: 2). (Threat: 42.852)
 [20.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1505.990 --> 1506.500) of 2612 total.
 [20.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1506.500 --> 1507.010) of 2612 total.
 [20.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1507.010 --> 1507.520) of 2612 total.
@@ -613,7 +613,7 @@
 [21.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1510.070 --> 1510.580) of 2612 total.
 [21.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1510.580 --> 1511.090) of 2612 total.
 [21.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[21.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.480 damage (SpellSchool: 2). (Threat: 45.984)
+[21.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 56.214 damage (SpellSchool: 2). (Threat: 44.971)
 [21.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1511.090 --> 1511.600) of 2612 total.
 [21.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1511.600 --> 1512.110) of 2612 total.
 [21.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1512.110 --> 1512.620) of 2612 total.
@@ -625,7 +625,7 @@
 [22.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1515.170 --> 1515.680) of 2612 total.
 [22.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1515.680 --> 1516.190) of 2612 total.
 [22.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[22.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.480 damage (SpellSchool: 2). (Threat: 45.984)
+[22.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 56.214 damage (SpellSchool: 2). (Threat: 44.971)
 [22.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1516.190 --> 1516.700) of 2612 total.
 [22.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1516.700 --> 1517.210) of 2612 total.
 [22.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1517.210 --> 1517.720) of 2612 total.
@@ -640,7 +640,7 @@
 [23.30] [Retribution (#1)] Queueing up {SpellID: 10333} to cast at 23.500000002s.
 [23.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1520.780 --> 1521.290) of 2612 total.
 [23.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[23.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.480 damage (SpellSchool: 2). (Threat: 45.984)
+[23.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 56.214 damage (SpellSchool: 2). (Threat: 44.971)
 [23.40] [Retribution (#1)] Queueing up {SpellID: 10333} to cast at 23.500000002s.
 [23.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1521.290 --> 1521.800) of 2612 total.
 [23.50] [Retribution (#1)] Casting {SpellID: 10333} (Cost = 18.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 5
@@ -657,7 +657,7 @@
 [24.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1507.370 --> 1507.880) of 2612 total.
 [24.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1507.880 --> 1508.390) of 2612 total.
 [24.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[24.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.480 damage (SpellSchool: 2). (Threat: 45.984)
+[24.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 56.214 damage (SpellSchool: 2). (Threat: 44.971)
 [24.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1508.390 --> 1508.900) of 2612 total.
 [24.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1508.900 --> 1509.410) of 2612 total.
 [24.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1509.410 --> 1509.920) of 2612 total.
@@ -682,7 +682,7 @@
 [25.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1512.980 --> 1513.490) of 2612 total.
 [25.40] [Retribution (#1)] Aura faded: {SpellID: 20924}
 [25.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[25.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.480 damage (SpellSchool: 2). (Threat: 45.984)
+[25.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 56.214 damage (SpellSchool: 2). (Threat: 44.971)
 [25.40] [Retribution (#1)] Casting {SpellID: 20924} (Cost = 305.100, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 8 > group 7.1
 [25.40] [Retribution (#1)] Completed cast {SpellID: 20924}
 [25.40] [Retribution (#1)] Spent 305.100 mana from {SpellID: 20924} (1513.490 --> 1208.390) of 2612 total.
@@ -711,7 +711,7 @@
 [26.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1269.170 --> 1269.680) of 2612 total.
 [26.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1269.680 --> 1270.190) of 2612 total.
 [26.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[26.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.480 damage (SpellSchool: 2). (Threat: 45.984)
+[26.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 56.214 damage (SpellSchool: 2). (Threat: 44.971)
 [26.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1270.190 --> 1270.700) of 2612 total.
 [26.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1270.700 --> 1271.210) of 2612 total.
 [26.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1271.210 --> 1271.720) of 2612 total.
@@ -723,7 +723,7 @@
 [27.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1274.270 --> 1274.780) of 2612 total.
 [27.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1274.780 --> 1275.290) of 2612 total.
 [27.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[27.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.480 damage (SpellSchool: 2). (Threat: 45.984)
+[27.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 56.214 damage (SpellSchool: 2). (Threat: 44.971)
 [27.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1275.290 --> 1275.800) of 2612 total.
 [27.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1275.800 --> 1276.310) of 2612 total.
 [27.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1276.310 --> 1276.820) of 2612 total.
@@ -735,7 +735,7 @@
 [28.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1279.370 --> 1279.880) of 2612 total.
 [28.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1279.880 --> 1280.390) of 2612 total.
 [28.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[28.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.480 damage (SpellSchool: 2). (Threat: 45.984)
+[28.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 56.214 damage (SpellSchool: 2). (Threat: 44.971)
 [28.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1280.390 --> 1280.900) of 2612 total.
 [28.56] [Retribution (#1)] Casting {OtherID: 3, Tag: 14} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
 [28.56] [Retribution (#1)] Completed cast {OtherID: 3, Tag: 14}
@@ -760,7 +760,7 @@
 [29.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1104.470 --> 1104.980) of 2612 total.
 [29.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1104.980 --> 1105.490) of 2612 total.
 [29.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[29.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Crit for 86.220 damage (SpellSchool: 2). (Threat: 68.976)
+[29.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Crit for 84.321 damage (SpellSchool: 2). (Threat: 67.457)
 [29.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1105.490 --> 1106.000) of 2612 total.
 [29.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1106.000 --> 1106.510) of 2612 total.
 [29.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1106.510 --> 1107.020) of 2612 total.
@@ -772,7 +772,7 @@
 [30.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1109.570 --> 1110.080) of 2612 total.
 [30.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1110.080 --> 1110.590) of 2612 total.
 [30.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[30.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.480 damage (SpellSchool: 2). (Threat: 45.984)
+[30.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 56.214 damage (SpellSchool: 2). (Threat: 44.971)
 [30.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1110.590 --> 1111.100) of 2612 total.
 [30.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1111.100 --> 1111.610) of 2612 total.
 [30.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1111.610 --> 1112.120) of 2612 total.
@@ -811,7 +811,7 @@
 [32.31] [Retribution (#1)] {SpellID: 20050} stacks: 4 --> 5
 [32.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (1120.280 --> 1120.790) of 2612 total.
 [32.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[32.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[32.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [32.42] [Retribution (#1)] Casting {SpellID: 20920} (Cost = 189.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s) APL: priority 6
 [32.42] [Retribution (#1)] Completed cast {SpellID: 20920}
 [32.42] [Retribution (#1)] Spent 189.000 mana from {SpellID: 20920} (1120.790 --> 931.790) of 2612 total.
@@ -829,7 +829,7 @@
 [33.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (936.380 --> 936.890) of 2612 total.
 [33.40] [Retribution (#1)] Aura faded: {SpellID: 20924}
 [33.40] [Target 1] Aura refreshed: {SpellID: 1280353}
-[33.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[33.40] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [33.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (936.890 --> 937.400) of 2612 total.
 [33.60] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (937.400 --> 937.910) of 2612 total.
 [33.70] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (937.910 --> 938.420) of 2612 total.
@@ -896,7 +896,7 @@
 [36.90] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (687.830 --> 688.340) of 2612 total.
 [37.00] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (688.340 --> 688.850) of 2612 total.
 [37.02] [Target 1] Aura refreshed: {SpellID: 1280353}
-[37.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[37.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [37.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (688.850 --> 689.360) of 2612 total.
 [37.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (689.360 --> 689.870) of 2612 total.
 [37.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (689.870 --> 690.380) of 2612 total.
@@ -908,7 +908,7 @@
 [37.90] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (692.930 --> 693.440) of 2612 total.
 [38.00] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (693.440 --> 693.950) of 2612 total.
 [38.02] [Target 1] Aura refreshed: {SpellID: 1280353}
-[38.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[38.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [38.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (693.950 --> 694.460) of 2612 total.
 [38.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (694.460 --> 694.970) of 2612 total.
 [38.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (694.970 --> 695.480) of 2612 total.
@@ -937,7 +937,7 @@
 [39.90] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (703.130 --> 703.640) of 2612 total.
 [40.00] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (703.640 --> 704.150) of 2612 total.
 [40.02] [Target 1] Aura refreshed: {SpellID: 1280353}
-[40.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Crit for 88.529 damage (SpellSchool: 2). (Threat: 70.824)
+[40.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Crit for 86.308 damage (SpellSchool: 2). (Threat: 69.046)
 [40.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (704.150 --> 704.660) of 2612 total.
 [40.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (704.660 --> 705.170) of 2612 total.
 [40.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (705.170 --> 705.680) of 2612 total.
@@ -949,7 +949,7 @@
 [40.90] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (708.230 --> 708.740) of 2612 total.
 [41.00] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (708.740 --> 709.250) of 2612 total.
 [41.02] [Target 1] Aura refreshed: {SpellID: 1280353}
-[41.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[41.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [41.10] [Retribution (#1)] Gained 0.102 mana from {OtherID: 2, Tag: 1} (709.250 --> 709.352) of 2612 total.
 [41.10] [Retribution (#1)] Gained 1.360 mana from {OtherID: 2, Tag: 2} (709.352 --> 710.712) of 2612 total.
 [41.20] [Retribution (#1)] Gained 1.700 mana from {OtherID: 2, Tag: 2} (710.712 --> 712.412) of 2612 total.
@@ -974,7 +974,7 @@
 [41.92] [Retribution (#1)] Gained 138.600 mana from {SpellID: 1311074} (642.752 --> 781.352) of 2612 total.
 [42.00] [Retribution (#1)] Gained 0.408 mana from {OtherID: 2, Tag: 1} (781.352 --> 781.760) of 2612 total.
 [42.02] [Target 1] Aura refreshed: {SpellID: 1280353}
-[42.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[42.02] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [42.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (781.760 --> 782.270) of 2612 total.
 [42.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (782.270 --> 782.780) of 2612 total.
 [42.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (782.780 --> 783.290) of 2612 total.
@@ -1086,7 +1086,7 @@
 [48.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (309.260 --> 309.770) of 2612 total.
 [48.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (309.770 --> 310.280) of 2612 total.
 [48.22] [Target 1] Aura refreshed: {SpellID: 1280353}
-[48.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[48.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [48.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (310.280 --> 310.790) of 2612 total.
 [48.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (310.790 --> 311.300) of 2612 total.
 [48.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (311.300 --> 311.810) of 2612 total.
@@ -1103,7 +1103,7 @@
 [49.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (125.360 --> 125.870) of 2612 total.
 [49.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (125.870 --> 126.380) of 2612 total.
 [49.22] [Target 1] Aura refreshed: {SpellID: 1280353}
-[49.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[49.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [49.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (126.380 --> 126.890) of 2612 total.
 [49.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (126.890 --> 127.400) of 2612 total.
 [49.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (127.400 --> 127.910) of 2612 total.
@@ -1122,7 +1122,7 @@
 [50.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (187.160 --> 187.670) of 2612 total.
 [50.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (187.670 --> 188.180) of 2612 total.
 [50.22] [Target 1] Aura refreshed: {SpellID: 1280353}
-[50.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Crit for 88.529 damage (SpellSchool: 2). (Threat: 70.824)
+[50.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Crit for 86.308 damage (SpellSchool: 2). (Threat: 69.046)
 [50.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (188.180 --> 188.690) of 2612 total.
 [50.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (188.690 --> 189.200) of 2612 total.
 [50.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (189.200 --> 189.710) of 2612 total.
@@ -1144,7 +1144,7 @@
 [51.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (192.260 --> 192.770) of 2612 total.
 [51.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (192.770 --> 193.280) of 2612 total.
 [51.22] [Target 1] Aura refreshed: {SpellID: 1280353}
-[51.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[51.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [51.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (193.280 --> 193.790) of 2612 total.
 [51.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (193.790 --> 194.300) of 2612 total.
 [51.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (194.300 --> 194.810) of 2612 total.
@@ -1168,7 +1168,7 @@
 [53.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (202.460 --> 202.970) of 2612 total.
 [53.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (202.970 --> 203.480) of 2612 total.
 [53.22] [Target 1] Aura refreshed: {SpellID: 1280353}
-[53.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[53.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [53.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (203.480 --> 203.990) of 2612 total.
 [53.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (203.990 --> 204.500) of 2612 total.
 [53.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (204.500 --> 205.010) of 2612 total.
@@ -1188,7 +1188,7 @@
 [54.10] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (189.560 --> 190.070) of 2612 total.
 [54.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (190.070 --> 190.580) of 2612 total.
 [54.22] [Target 1] Aura refreshed: {SpellID: 1280353}
-[54.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 59.020 damage (SpellSchool: 2). (Threat: 47.216)
+[54.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Hit for 57.539 damage (SpellSchool: 2). (Threat: 46.031)
 [54.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (190.580 --> 191.090) of 2612 total.
 [54.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (191.090 --> 191.600) of 2612 total.
 [54.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (191.600 --> 192.110) of 2612 total.
@@ -1207,7 +1207,7 @@
 [55.20] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (195.170 --> 195.680) of 2612 total.
 [55.22] [Retribution (#1)] Aura faded: {SpellID: 20924}
 [55.22] [Target 1] Aura refreshed: {SpellID: 1280353}
-[55.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Crit for 88.529 damage (SpellSchool: 2). (Threat: 70.824)
+[55.22] [Retribution (#1)] [Target 1] {SpellID: 20924} tick Crit for 86.308 damage (SpellSchool: 2). (Threat: 69.046)
 [55.30] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (195.680 --> 196.190) of 2612 total.
 [55.40] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (196.190 --> 196.700) of 2612 total.
 [55.50] [Retribution (#1)] Gained 0.510 mana from {OtherID: 2, Tag: 1} (196.700 --> 197.210) of 2612 total.
