@@ -2430,7 +2430,7 @@ do
                 local health, maxHealth, absorbs = UnitHealth( "player" ), UnitHealthMax( "player" ), UnitGetTotalAbsorbs( "player" )
                 local count = 1
 
-                for i = 2, 5 do
+                for i = 1, 4 do
                     local token = "party" .. i
                     if UnitExists( token ) and not UnitIsDeadOrGhost( token )then
                         count = count + 1
@@ -2441,21 +2441,17 @@ do
                     end
                 end
 
-                local effHealthPct = 100 * ( health + absorbs ) / maxHealth
+                local effHealthPct = 100 * ( health + absorbs ) / max( 1, maxHealth )
                 t[k] = effHealthPct
 
             elseif k == "at_risk" then
-                local health, maxHealth, absorbs = UnitHealth( "player" ), UnitHealthMax( "player" ), UnitGetTotalAbsorbs( "player" )
-                local count = ( 100 * ( health + absorbs ) / maxHealth ) < 70 and 1 or 0
+                -- the members (player included) below 70% health with their absorbs, each on its own
+                local count = ( 100 * ( UnitHealth( "player" ) + UnitGetTotalAbsorbs( "player" ) ) / max( 1, UnitHealthMax( "player" ) ) ) < 70 and 1 or 0
 
-                for i = 2, 5 do
+                for i = 1, 4 do
                     local token = "party" .. i
-                    if UnitExists( token ) and not UnitIsDeadOrGhost( token )then
-                        health = health + UnitHealth( token )
-                        maxHealth = maxHealth + UnitHealthMax( token )
-                        absorbs = absorbs + UnitGetTotalAbsorbs( token )
-
-                        if ( 100 * ( health + absorbs ) / maxHealth ) < 70 and 1 or 0 then count = count + 1 end
+                    if UnitExists( token ) and not UnitIsDeadOrGhost( token ) and ( 100 * ( UnitHealth( token ) + UnitGetTotalAbsorbs( token ) ) / max( 1, UnitHealthMax( token ) ) ) < 70 then
+                        count = count + 1
                     end
                 end
 
