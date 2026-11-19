@@ -30,8 +30,9 @@
 -- pin's replay was 0.923 (117) with 14.65/min flicker (off-GCD Maul alternation; oracle 0.00).
 -- Worked (Task 7g): the bear's 11.25 rage a white swing and a crit's 8.65 more; Primal Fury's 5 on our crits (16959) as
 -- the strikes' `onCrit`.
--- Translation: `health.pct<25` (Frenzied Regeneration) and `<=60` (Barkskin) read the player's health, full while the
--- game keeps it secret (API-forced, never fire in combat).
+-- Translation: Frenzied Regeneration (< 25%) and Barkskin (<= 60%) read the player's health, which the client hides in
+-- combat: both lines are omitted (translator rule 23, owner L1462); Feral imports this list, so its bear lines lose
+-- them too.
 -- Sim-setup difference (ruling L16): wowsims's sim starts in Dire Bear Form (its pre-pull) and its list never shifts, so out of form
 -- the list showed nothing; the `bear_form` line (the Feral APL's own cat_form pattern) never fires in the replay.
 return {
@@ -52,6 +53,10 @@ return {
         profession2 = "Enchanting",
         reactionTimeMs = 250,
         distanceFromTarget = 25,
+    },
+    -- player-facing lines of the in-game description
+    notes = {
+        "Barkskin and Frenzied Regeneration are not in this priority: they wait for low health, and the game hides your health from addons in combat. Use them by hand.",
     },
     -- a tank: the raid's tank (the target swings at it) and presets.ts:55-69's healing model (apply_defaults.ts:108-125)
     tank = true,

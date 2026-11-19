@@ -142,6 +142,9 @@ function M.new(content)
     scenario = scenario ~= "game" and scenario or nil
     L.us = headless.new({ character = character, pack = content.PACK, scenario = scenario })
     L.oracle = headless.new({ character = character, pack = content.PACK, raw = M.RAW, scenario = scenario })
+    -- the raw rows (M.RAW) take the player's health too, which State.lua does arithmetic on: the oracle reads the
+    -- truth, plain in combat (ours is secret there, owner L1461)
+    L.oracle.ctl.healthPlain = true
     for _, H in ipairs({ L.us, L.oracle }) do
         H.ctl.inRange.target = true -- a world without positions (no W.distance): every target in range
     end

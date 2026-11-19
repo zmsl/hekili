@@ -21,7 +21,7 @@ A rule that changes what a wowsims line does, because the Forever client forces 
 | 5 | Keys | A wowsims spell, aura or item ID becomes an addon key from the character's ability set: the class kit, the shared content and every race's racials. The recipe's `map` and `auras` come first, then an ability's `id` and `copy`, then the registered auras. An aura on the player reads as `buff.`, one on the target as `debuff.`, a pet's resource as `pet.<resource>`. `includeReactionTime`, `rank` and tags are ignored. |
 | 6 | Leveling guard | In wowsims, a read of an ability the character has not learned is nil, and nil drops out of `and` and `or`; a nil condition is true. The translator writes the same effect: a term that reads ability X is guarded by `action.X.known`, so it drops away while X is unlearned. The line's own action is never guarded, because the engine already skips an unknown action. `min` and `max` skip a dropped term. `tools/check_pack_levels.lua` checks every priority for these guards. |
 | 7 | Recipe additions | Applies the recipe's fields: `focus` tiers (none on a pre-pull line), `use_off_gcd=1` on an off-GCD ability, `leveling` lines after the list, `levelingFirst` lines before it, `extra` lines before a named action, `settings`, `prepullSkip`, `requires`, `guard` and `condition`. A term repeated in an `and` or `or` is written once. |
-| 8 | Constants | `true` and `false`, numbers, and Go durations (`1.5s`, `300ms`, `1m30s`) in seconds. A percentage is N when compared directly with a percent read such as `mana.pct` or `health.pct` (which run from 0 to 100), and N/100 anywhere else, as wowsims reads it. A percent read inside `math`, `min` or `max` is unsupported. |
+| 8 | Constants | `true` and `false`, numbers, and Go durations (`1.5s`, `300ms`, `1m30s`) in seconds. A percentage is N when compared directly with a percent read, `mana.pct` (which runs from 0 to 100), and N/100 anywhere else, as wowsims reads it. A percent read inside `math`, `min` or `max` is unsupported. |
 | 9 | Internal cooldowns | `auraIcdIsReady` becomes `buff.<key>.icd_ready` for an aura that declares an `icd`. Any other aura is unsupported. |
 | 10 | Refresh, swing timers, fight length | `auraShouldRefresh` works only for an aura in the recipe's `exclusive` set, as a remaining-time test (plus a stack test for a stacking aura). `cancelAura` becomes `cancel_buff,buff_name=<key>`. Swing speeds and swing timers become `mainhand_speed`, `offhand_speed`, `ranged_speed`, `mainhand_remains` and `ranged_remains`; a "time since the last swing" comparison is rewritten on the timer, or on a kit window named by the recipe's `windowVars`. `remainingTime` becomes `fight_remains`. `multipleCdUsages` without a base spell becomes wowsims's own test on the fight's remaining time. |
 | 11 | Distance | `unitDistance` compared with a whole number N becomes `target.within<N>` or `target.outside<N>`. The client reports only whether each ability is in range, not yards, so the engine brackets the distance between the tracked abilities' ranges. An unknown distance answers both tests and never blocks a line. |
@@ -37,6 +37,7 @@ A rule that changes what a wowsims line does, because the Forever client forces 
 | 20 | Target swaps | A target change to the next target, when X is up here but not on every target, after a cast of X in the same list, gives no line of its own. Instead the cast's lines carry `cycle_targets=1` and are listed under `# Cycle:`. Any other target change is left out with its reason. |
 | 21 | Casts at a second target | A cast aimed at wowsims's second target carries `other_target=1`: it is shown only on another target, with Recommend Target Swaps on, never on the current one. |
 | 22 | Mana under an amount | A test of the player's mana under an absolute amount N becomes a test of both the amount and its share of the mana pool, `mana.lo<N&mana.pct_lo<P`. P comes from the maximum mana in the exported log, rounded up. At the level the log was made for, the share never binds; a smaller pool at a lower level uses the share. |
+| 23 | The player's health | The game hides the player's health in combat, so an entry that reads it (`currentHealthPercent`, `currentHealth`), directly or through a variable, is omitted and listed in the header. |
 
 ## Direct values
 
@@ -52,8 +53,6 @@ Some wowsims values map one to one. A resource the game hides reads its low end 
 | `maxMana` | `mana.max` |
 | `currentManaRegen` | `mana.regen` |
 | `currentComboPoints` | `combo_points.current` |
-| `currentHealthPercent` | `health.pct` |
-| `currentHealth` | `health.current` |
 | `currentTime` | `time` |
 | `remainingTime` | `fight_remains` |
 | `gcdTimeToReady` | `gcd.remains` |

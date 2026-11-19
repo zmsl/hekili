@@ -1,7 +1,7 @@
 -- tests/Forever/apl_warnings_spec.lua: ns.AplSecretToken (Task 9b; Engine/Sim/AplWarnings.lua, the core's own
 -- load-time scan since border batch 3), the scan behind Hekili:LoadScript's "Forever: ... is secret" warnings for
--- conditions that read target health (spec §6.5, §7.4); time to die answers "unknown" (Targets.lua's FOREVER) and
--- player health plain or full: neither is warned.
+-- conditions that read target health (spec §6.5, §7.4) or the player's (hidden in combat, owner L1462); time to die
+-- answers "unknown" (Targets.lua's FOREVER): unwarned.
 local alloc = require("Game.State.helpers.alloc")
 
 describe("APL secret-token scan", function()
@@ -23,6 +23,18 @@ describe("APL secret-token scan", function()
         assert.are.equal("target.health_percent", scan("target.health_percent>80"))
     end)
 
+    it("finds the player's health, hidden in combat", function()
+        assert.are.same({
+            "health.pct",
+            "your health is hidden in combat on Forever",
+            "this line never passes in combat",
+        }, { scan("(health.pct<35)") })
+        for _, hp in ipairs({ "health.current<5000", "health.deficit>5000", "health.percent>50", "health.actual<9" }) do
+            assert.are.equal(hp:match("^[%a.]+"), scan("buff.spender_c.up&" .. hp), hp)
+        end
+        assert.are.equal("target.health.pct", scan("target.health.pct<20&health.pct<50")) -- target rows first
+    end)
+
     it("finds a token in a target_if expression", function()
         assert.are.equal("target.health.pct", scan("min:target.health.pct"))
     end)
@@ -35,9 +47,8 @@ describe("APL secret-token scan", function()
         for _, ttd in ipairs({ "target.time_to_die>12", "fight_remains<20", "time_to_pct_20>10", "longest_ttd<10" }) do
             assert.is_nil(scan(ttd), ttd) -- time to die answers "unknown", unwarned
         end
-        for _, hp in ipairs({ "(health.pct<35)", "health.current<5000", "health.deficit>5000", "health.percent>50" }) do
-            assert.is_nil(scan(hp), hp) -- player health reads plain or full (Families/Player.lua), unwarned
-        end
+        assert.is_nil(scan("pet.health.current<50"))
+        assert.is_nil(scan("group_health<50")) -- not the player's own row
         assert.is_nil(scan("variable.time_to_die_soon"))
         assert.is_nil(scan("time_to_dies>1"))
         assert.is_nil(scan("rage.time_to_42"))

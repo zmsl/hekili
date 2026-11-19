@@ -408,7 +408,7 @@ kept("UnitHealth", "virtual", function(unit)
         return 0
     end
     return 100 -- keeps the enemy scan's UnitHealth( unit ) > 1 (Targets.lua:407, 484) meaningful
-end, "target secret always [W PR14]; Health()")
+end, "target secret always [W PR14], player secret in combat (owner L1461); Health()")
 
 -- The player's maximum: the raw read while plain, the belief's when secret; another unit's (secret always) the belief's,
 -- without a call. Allocates nothing.

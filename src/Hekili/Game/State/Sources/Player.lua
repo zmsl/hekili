@@ -255,8 +255,8 @@ S.On("UNIT_SPELL_HASTE", "player", function(api, t, unit)
     end
 end)
 
--- Poll 1.5: the player's health, when plain (unprobed on Forever, cleanup Q11), and its maximum. A secret read is
--- "unknown" (b = -1): the belief reads full until the next plain one (Families/Player.lua).
+-- Poll 1.5: the player's health, when plain (out of combat; secret in combat on Forever, owner L1461), and its
+-- maximum. A secret read is "unknown" (b = -1): the belief reads full until the next plain one (Families/Player.lua).
 S.Poll(1.5, function(api, t)
     local rawMax = api.UnitHealthMax("player") -- secret: Plain next
     local max = Plain(api, rawMax)

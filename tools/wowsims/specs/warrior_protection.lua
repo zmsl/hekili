@@ -34,6 +34,9 @@
 -- 11-02 catch-up ruling).
 -- Disagreements (P7; floor 0.93 -> 0.98, decisions on-GCD 0.990 (97 of 98), n 98): shatter_curse -> shield_slam 45.03 (the Orc
 -- racial at <= 50% health; the replay does not replay our health: the old class). Nothing else disagrees.
+-- Owner L1462 (translator rule 23): the five lines reading the player's health (Last Stand <= 40%, Shield Wall <= 35%,
+-- Stoneform and Shatter Curse <= 50%, Healthstone <= 30%) are omitted: the client hides it in combat. The 45.03
+-- disagreement stays (wowsims casts Shatter Curse; ours has no line for it now).
 -- Thunder Clap's and Demoralizing Shout's `debuff.X.remains<=6` are wowsims's own refresh lines, kept as wowsims has
 -- them (R47, owner 2026-11-05: a refresh in the debuff's last 6 s is a maintenance need, not a filler).
 -- Measured after 5049ede22 (the replay's GCD end): 0.990 (98); ready-time real 3, all early (wowsims's queued Shield
@@ -70,8 +73,8 @@ return {
     -- player-facing lines of the in-game description (the user's audit rulings, 2026-10-21)
     notes = {
         "Cooldowns toggle hides: Retaliation, Death Wish, Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).",
-        "Defensives toggle hides: Shield Wall, Last Stand, Healthstone and the racials Stoneform and Shatter Curse. No line here sits under the Potions toggle.",
-        "Last Stand, Shield Wall, Stoneform, Shatter Curse and Healthstone wait for low health, and the game hides your health from addons in combat, so they never show there: use them by hand.",
+        "No line here sits under the Potions or Defensives toggles.",
+        "Last Stand, Shield Wall, Stoneform, Shatter Curse and Healthstone are not in this priority: they wait for low health, and the game hides your health from addons in combat. Use them by hand.",
         "Demoralizing Shout is off unless you turn on Maintain Demoralizing Shout. To keep it (when on) and Thunder Clap for bosses, tick Boss Encounter Only on those abilities, or put them under the Custom 1 toggle.",
         "Rend is used on every target, boss or not.",
     },

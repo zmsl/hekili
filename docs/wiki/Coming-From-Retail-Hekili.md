@@ -34,7 +34,7 @@ Problems with Hekili Forever are reported to the Hekili Forever project ([Report
 ## What is different or gone
 
 - **Time to die.** The game hides target health, so the time until a target dies is always unknown and reads as 3600 seconds. Priority lines that wait for a target to be nearly dead do not fire, and the **Filter by Time-to-Die** option of target swaps is hidden.
-- **The player's health.** While the game hides it, the player's health reads as full, so a defensive line based on low health does not fire.
+- **The player's health.** The game hides it in combat, where it reads as full, so a defensive line based on low health never fires in combat. The built-in priorities leave those lines out, and a custom line that reads it gets a warning in **Warnings** when the priority loads.
 - **Counting damaged enemies.** The game does not report hits landed on other enemies, so **Count Damaged Enemies** finds fewer targets. Nameplate counting is the reliable method ([How targets are counted](How-Targets-Are-Counted)).
 - **Resource pooling.** `pool_resource` works only in its `for_next=1` form, which waits for the next line's cost. Other forms are ignored: the forecast already waits until a cost is covered.
 - **Minor Cooldowns.** In `/hekili set`, the **Minor Cooldowns** toggle is `minor_cooldowns`; the word `essences`, used by retail macros, also works.

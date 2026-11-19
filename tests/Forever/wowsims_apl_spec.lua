@@ -992,8 +992,8 @@ describe("the wowsims APL translator", function()
                 { name = "Mana", value = math("OpAdd", { currentManaPercent = {} }, const("1")) },
             },
             priorityList = {
-                cast(100, cmp("OpLe", const("20%"), { currentHealthPercent = {} })), -- either side
-                cast(100, cmp("OpLt", { currentHealthPercent = {} }, at)), -- a variable, still the direct operand
+                cast(100, cmp("OpLe", const("20%"), { currentManaPercent = {} })), -- either side
+                cast(100, cmp("OpLt", { currentManaPercent = {} }, at)), -- a variable, still the direct operand
                 -- wowsims's Demonology "In execute": the fight's elapsed plus remaining time scaled by the fraction
                 cast(
                     100,
@@ -1010,15 +1010,15 @@ describe("the wowsims APL translator", function()
                 cast(100, cmp("OpGt", { currentManaPercent = {} }, math("OpAdd", const("10%"), const("5")))),
                 cast(100, cmp("OpLt", { currentRage = {} }, const("50%"))), -- not a percent read
                 -- a percent read inside math or min / max: its scale (0-100 here, 0-1 in wowsims) leaks, unsupported
-                cast(100, cmp("OpLt", math("OpSub", { currentHealthPercent = {} }, const("10%")), const("20%"))),
+                cast(100, cmp("OpLt", math("OpSub", { currentManaPercent = {} }, const("10%")), const("20%"))),
                 cast(100, cmp("OpLt", math("OpMul", const("2"), at), { variableRef = { name = "Mana" } })),
                 cast(100, cmp("OpLt", { min = { vals = { { currentManaPercent = {} }, const("5") } } }, const("20%"))),
             },
         }, ctx({}))
         assert.are.equal(
             table.concat({
-                "actions=strike,if=20<=health.pct",
-                "actions+=/strike,if=health.pct<35",
+                "actions=strike,if=20<=mana.pct_lo",
+                "actions+=/strike,if=mana.pct_lo<35",
                 "actions+=/strike,if=(fight_remains-((time+fight_remains)*0.35))<=0",
                 "actions+=/strike,if=mana.pct_lo>(0.1+5)",
                 "actions+=/strike,if=rage.lo<0.5",
@@ -2079,15 +2079,25 @@ describe("the wowsims APL translator's re-pin reads", function()
         assert.are.equal("actions=strike,if=action.strike.gcd<1.5", lines(g(100)))
     end)
 
-    it("currentHealth is health.current; another unit's is unsupported", function()
-        assert.are.equal(
-            "actions=strike,if=health.current>1000",
-            lines(cmp("OpGt", { currentHealth = {} }, const("1000")))
-        )
-        local pet = cmp("OpGt", { currentHealth = { sourceUnit = { type = "Pet" } } }, const("1000"))
-        local text, omitted = one(pet)
-        assert.are.equal("", text)
-        assert.are.same({ "default #1: currentHealth of Pet" }, omitted)
+    it("omits a line reading the player's health, hidden in combat (rule 23); another unit's is unsupported", function()
+        local hidden = ": the player's health, hidden in combat"
+        local text, omitted = apl.translate({
+            valueVariables = { { name = "Low", value = cmp("OpLt", { currentHealthPercent = {} }, const("50%")) } },
+            priorityList = {
+                cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("60%"))),
+                cast(100, AND(cmp("OpGt", { currentHealth = {} }, const("1000")), const("true"))),
+                cast(100, { variableRef = { name = "Low" } }), -- through a variable too
+                cast(100, cmp("OpGt", { currentHealth = { sourceUnit = { type = "Pet" } } }, const("1000"))),
+                cast(100, cmp("OpLt", { currentManaPercent = {} }, const("50%"))), -- not health: kept
+            },
+        }, ctx({}))
+        assert.are.equal("actions=strike,if=mana.pct_lo<50", text)
+        assert.are.same({
+            "default #1: currentHealthPercent" .. hidden,
+            "default #2: currentHealth" .. hidden,
+            "default #3: currentHealthPercent" .. hidden,
+            "default #4: currentHealth of Pet",
+        }, omitted)
     end)
 
     it("auraDuration is the aura's duration on its unit, guarded; another player's is dropped", function()

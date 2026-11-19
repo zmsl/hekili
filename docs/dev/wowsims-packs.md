@@ -268,7 +268,7 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 6. The leveling guard: a read of an unlearned ability is wowsims's nil and drops its term, as wowsims's nil
    propagation does; `tools/check_pack_levels.lua` checks every pack for it. `min` / `max` values are the engine's
    `min(...)` / `max(...)` with each term that may be nil as `(<known>&<term>)` (false, which they skip).
-8. Constants: Go durations in seconds; `"N%"` as N against a percent read (`mana.pct`, `health.pct` run 0-100), N/100
+8. Constants: Go durations in seconds; `"N%"` as N against a percent read (`mana.pct` runs 0-100), N/100
    anywhere else (in `math`, against any other read), as wowsims reads it; a percent read inside `math`, `min` or
    `max` is unsupported (its 0-100 scale would leak).
 7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` and `extra` lines, `prepullSkip`, `requires`, `guard`,
@@ -437,12 +437,12 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
 
 What players read in a pack's description (the recipe's `notes`), and why. Warrior (the user's rulings, 2026-10-21):
 - The kit's toggles: Cooldowns hides Death Wish, Sweeping Strikes and Recklessness (Arms and Fury; Recklessness also
-  behind its `wowsims_recklessness` pack setting, off by default) and the racials; Defensives hides Healthstone and
-  Disarm (no Warrior pack line casts Disarm) and, in Protection, Shield Wall, Last Stand, Stoneform and Shatter Curse;
-  Potions hides none in Warrior. Bloodrage, Intimidating Shout and Mocking Blow are under no toggle.
-- Protection's defensive lines (Last Stand, Shield Wall, Stoneform, Shatter Curse, Healthstone) wait on a health
-  threshold, and the client hides player health in combat, so they never fire there: API-forced, players press them
-  by hand.
+  behind its `wowsims_recklessness` pack setting, off by default) and the racials; Defensives hides Healthstone, Disarm,
+  Shield Wall, Last Stand, Stoneform and Shatter Curse, none of which a Warrior pack line casts; Potions hides none in
+  Warrior. Bloodrage, Intimidating Shout and Mocking Blow are under no toggle.
+- Protection's defensive lines (Last Stand, Shield Wall, Stoneform, Shatter Curse, Healthstone) and Guardian's
+  (Barkskin, Frenzied Regeneration) wait on a health threshold, and the client hides player health in combat, so the
+  translator omits them (rule 23, owner L1462): players press them by hand, and each pack's notes say so.
 - Protection's Demoralizing Shout (off unless Maintain Demoralizing Shout is on, rule 15) and Thunder Clap: a player
   keeps them for bosses with the per-ability Boss Encounter Only option or the Custom 1 toggle (no code change; the
   user approved the audit's proposal).
