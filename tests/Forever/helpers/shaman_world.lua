@@ -35,6 +35,10 @@ local MAELSTROM_PPM = { 6, 7, 8, 9, 10 }
 -- (talents_enhancement.go: EV-0009), resets no swing and rolls no proc of its own (it lands inside the ICD).
 local WINDFURY = { chance = 0.2, icd = 0.1 }
 local CLEARCASTING = 0.1 -- Elemental Focus's chance (DB2 16164 ProcChance)
+-- Lightning Overload 3/3 (wowsims's curve for 408438: 10/20/30): a Lightning Bolt's chance, a third of it per target a
+-- Chain Lightning lands on (one target here). The overload's launch rolls Elemental Focus once more (wowsims PR 1066),
+-- spends no Clearcasting; its own damage and mana are not modelled (shortcut: upgrade if a gate measures them).
+local OVERLOAD = { lightning_bolt = 0.1, chain_lightning = 0.1 / 3 } -- per talent rank
 
 -- The totems the kit summons at level 60: the slot (1 fire, 2 earth, 3 water, 4 air) and the top rank's duration (DB2).
 local TOTEM = {
@@ -201,6 +205,14 @@ local function spell(key, extra)
                 extra(W, e, p, X)
             end
             elemental(W, e, X)
+            if
+                X.overload > 0
+                and OVERLOAD[key]
+                and W.rng.chance(OVERLOAD[key] * X.overload)
+                and W.rng.chance(CLEARCASTING)
+            then
+                aura(W, X, e, "clearcasting")
+            end
         end,
     }
 end
@@ -332,7 +344,7 @@ local PACKS = {
         fsr = { 25.75, 12.0, auras = { [1238931] = { share = 0.5 }, [10494] = { mp5 = 5, energize = true } } },
         uptime = { "flame_shock" },
     },
-    -- wowsims/forever's Elemental build (builds/testing.build.json, talents 5500331023001351-05500001-053): the casts,
+    -- wowsims/forever's Elemental build (builds/default.build.json, talents 5500331023001351-05500001-053): the casts,
     -- the totems its pre-pull and list summon, at a caster's range. Mana Tide Totem and Water Shield are left out:
     -- the build lacks their Restoration talents, so wowsims never casts them.
     Elemental = {
@@ -370,12 +382,12 @@ local PACKS = {
             [1223033] = 3, -- Mindfulness (wowsims's tree; not in the DB2's Talent table)
         },
         weapon = { 40, 70, 3.0 },
-        -- wowsims's log (shaman_elemental.log, re-pin e4ef929e54; 5650 / 31.13 / 45.25 at e2842f0a78): 5950 mana, 31.31
-        -- a second while casting (OtherID 2 Tag 1, 3.131 a tick: Mana Spring Totem and Mindfulness's share included;
-        -- 26.31 without the totem's 5, 2.631 a tick before it stands) and 45.62 outside the five-second rule (Tag 2,
-        -- 4.562 a tick), so the spirit part 45.62 - 31.31 = 14.31
-        mana = 5950,
-        fsr = { 14.31, 26.31, share = 0.5, auras = { [10494] = { mp5 = 5, energize = true } } }, -- Mindfulness 3/3: 50% (wowsims's curve)
+        -- wowsims's log (shaman_elemental.log, re-pin ab0f00e4fc; 5950 / 31.31 / 45.62 at e4ef929e54): 6295 mana, 31.85
+        -- a second while casting (OtherID 2 Tag 1, 3.185 a tick: Mana Spring Totem and Mindfulness's share included;
+        -- 26.85 without the totem's 5, 2.685 a tick before it stands) and 45.10 outside the five-second rule (Tag 2,
+        -- 4.510 a tick), so the spirit part 45.10 - 31.85 = 13.25
+        mana = 6295,
+        fsr = { 13.25, 26.85, share = 0.5, auras = { [10494] = { mp5 = 5, energize = true } } }, -- Mindfulness 3/3: 50% (wowsims's curve)
         distance = 20, -- the build's distanceFromTarget: the shocks reach 20 yd
         uptime = { "flame_shock" },
     },
@@ -406,6 +418,7 @@ local function classData(H, C)
     X.convection = T.convection.rank
     X.alacrity = ALACRITY[T.elemental_alacrity.rank] or 0
     X.maelstromRank = T.maelstrom_weapon.rank
+    X.overload = T.lightning_overload.rank
     X.windfury = windfuryIds()
     return X
 end

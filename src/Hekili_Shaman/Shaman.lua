@@ -18,7 +18,7 @@
 -- reads: their crits are unobservable), Burning Totem (the relic: +3 s on Flame Shock), Totemic Recall (every totem
 -- down; its refund is not modelled).
 -- The Elemental kit (class-completion Task 17; its priority Elemental (wowsims.com)): what wowsims/forever's
--- Elemental list casts (ui/specs/shaman/elemental/builds/testing.build.json): Chain Lightning (its 6 s cooldown lifted
+-- Elemental list casts (ui/specs/shaman/elemental/builds/default.build.json): Chain Lightning (its 6 s cooldown lifted
 -- by Elemental Mastery), Elemental Mastery, Magma, Windfury and Mana Tide Totems (Windfury Totem only for a
 -- pack that casts it, as that list's pre-pull does), Water Shield (one shield at a time), Convection's and Elemental
 -- Alacrity's cuts, Clearcasting on Chain Lightning, Revelation's charge (Lava Burst is gone from the game).
@@ -508,11 +508,11 @@ end
 local MINDFULNESS = { 0.17, 0.33, 0.5 }
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace, as wowsims's e4ef929e54 logs measure them at 60. The mp5 is the casting rate
--- without Mana Spring Totem's buff (the casting tick before the totem stands), the spirit part the rate outside the
--- rule less the casting one, both with the totem: shaman_elemental 2.631 a tick before -2.0 s (26.31 a second), 31.31
--- with the totem (Mindfulness 3/3's 50% share inside), 45.62 outside, so spirit 14.31 and mp5 26.31 (5950 mana; was
--- 14.12 / 26.13 at e2842f0a78); shaman_enhancement 1.200 a tick before -3.0 s (12.0), 17.0 with the totem, 42.75
+-- the in-combat calibration replace, as wowsims's e4ef929e54 and ab0f00e4fc logs measure them at 60. The mp5 is the
+-- casting rate without Mana Spring Totem's buff (the casting tick before the totem stands), the spirit part the rate
+-- outside the rule less the casting one, both with the totem: shaman_elemental 2.685 a tick before -2.0 s (26.85 a
+-- second), 31.85 with the totem (Mindfulness 3/3's 50% share inside), 45.10 outside, so spirit 13.25 and mp5 26.85
+-- (6295 mana at ab0f00e4fc; was 14.31 / 26.31, 5950 at e4ef929e54, 14.12 / 26.13 at e2842f0a78); shaman_enhancement 1.200 a tick before -3.0 s (12.0), 17.0 with the totem, 42.75
 -- outside, so spirit 25.75 and mp5 12.0 (its gear lost the Five Thunders pieces; was 17.8 / 49.05 at e2842f0a78, 9.8 /
 -- 38.42 as an Orc). Forever's Spirit regen is `6.25 + Spirit/8` a second for every class (wowsims mana.go:75-76), not
 -- Classic's formula. The totem's own entry (below) adds its mp5 while the buff is up, as wowsims models it
@@ -548,10 +548,10 @@ spec:RegisterResource(
     {
         fsr = {
             spirit = function()
-                return state.spec.elemental and 14.31 or 25.75
+                return state.spec.elemental and 13.25 or 25.75
             end,
             mp5 = function()
-                return state.spec.elemental and 26.31 or 12.0
+                return state.spec.elemental and 26.85 or 12.0
             end,
             -- Mindfulness's rank (the belief reads it after its talent walk), never the spec; + 8% with the Polished
             -- Driftwood Icon relic (its equip aura 1248756: aura 134 +8, wowsims item_totems.go:13-20)
@@ -1331,13 +1331,13 @@ end)
 -- it, never this block (tests/Forever/shaman_spec.lua checks it matches).
 spec:RegisterPack(
     "Elemental (wowsims.com)",
-    20261118000,
-    [[Hekili:TEzBVTTnqC8pl9nz2ygs2UjnpG6cKHTH2I1GbO(AjrlDYI1sKcKuXZab6Z(osBlRNOIxxqacye59))Xth)jg)f(F33lMOa)NwoF5hwSyXDZNp33tTVa89kirBjBWbmso(7)idYbMIKvfozhFNKMlDI45t1lCFgNeRfBDjnt9fM)6b1vwar(EEF(XV94tpaN0Z3lLghdhccKr2T6HQqvkufE8zUjCb8miQcJHeszMQk8X)(VQcXhxf2uJsQR2APRmLKtyU1w7QZ3yP7X4Dm)PZpKC20zOxcctMHBJyCmx7nvwfsIJ5SFbhSf2lDQc)DII8Wa50KV9LVJIKQufYhCD3qvPLR1Bd3olDkQjM6W1qY9lVhU56BV3blQcEcndR7KifLZKofcadEnrTAhMsIazkfYINrtw9U1LjjonFQtzr1x7f4VUYvQeaBJknGNeaeboqXvqUrfZihZtTg)okloPuSVxyeQWAqyjNeileu2MEXzYA7PlMndfvcvayqxPJ5ziayqofKRwyZ)n5KluJpDwJv5KFWfbMSVGRF0SsjGvUKGnrXRwO1spPtrKkiJ)X7MxhkAAmKZz0OarjdgpUBBfNXofngoNWnx8nTw8)TobmaDIqrzLTtPMlPxnFs3Q8vnkGciNqzYpUA(027IwL8jDlYxGe1hsX3asCdTVFvCY7oSCNKmerH7yE0wNTm(o2lXGPu0CIYIw6VoJZJd0nZV1cdcji2I1W3yHJsX6uqgDtQIPvFOc7ltA0T8Pvxp)QAl7vqpA8HMM(ZIUpTL)63wbm(ZeTZwp2Ox459WSO9rzyVmrSbuyVZSCY)e0(zVFwcpQuUAPw2bQcN7pA1EyOxh84q8lgUz1ONg0IKCDzOtrTUCgSMNP6ECB5C7RT6R(Ei(wIt257CzuPsA(26HVRGdFY8TwGrwNbX()MVxJwd9KhX8(E9Go(Erc8iRGs0t2e34RqFVqzBIJSP4TgfFFhfpNyTat2e5gJixBrKMOPMkmi4sl0nx4(RgSPd6dwCVfARP9xkItl(TwRp1iVrK2k6tl9Dx4MT3z1wgAhXyHXOT((l06ZuZ))EUy(LAAnr9nW0Uhepzsh66OVdF5NaZooN1KADpmFk1QbVntQU5KrbBhEBuiqnAIFnf6EqzngWZGv1iMgUokF2KcDp6p2PSbyZn6Ypt4RZLd7YUqHtr0MpBJqT8qEAds0re9pE13MCis(pnBZ2RBlxsVLMTVS(yC72xzFaroC19XO29Ua)aQC6I8dbTFv(7RCT(Xy6wWUVYL89p(ILuQs5cFVpdBPzu8FA7pp()KzM2)Fd]]
+    20261118001,
+    [[Hekili:TEvyVTTnq0Fl9lPoOgsYojnzb1fidBfTfRbdq5ZuMwIYI1sKcKuXZad63(os7irkz64oeeGagsEV3JhV7jg0m0tO4mSIGECE08poB2S7IIMHIv7QjO4AC6g8Ayadxb)(pljveMcx2UCYw(wjTsgKYRUuVXDLCCMgSvn0s13yOvhfxznjffh)1h(XdpEp5f8qXf0SmY(GiYu)uDF7svbPD5H5cZ5cYZer7YmsoUPu1U8H)(VAxct3U0gJgAOMAzOSaxHzHDuhQ1BMm8q8bM)m4Nso7YPaxcmtwchJmymxZnv2UeNLXzVhgSHStg0U8pWk89hrtt(X3EcaPqPQL3hgUMQkAwPpgHd26LaMG0XRIYJIixNNE3vbqsvWZPLqEhNQOCMmOwqGGxHvl2cssKilOKYSP08fVBvtEEG9Sbn1TFFuGFyrOujiS1QIeEEcblGbkUIuzqXmkWmR343szz5nIDJcdtfEdcs54ezTGYwpkoJQ9lxqnhlQCQGabDHoMNjjegPIsKlM5J)1v4ZeJp3JXIk8p5IeJ6R56PM2ijqMlpzDA2IzAS0lguNQsk5F6UOUqbsZivCgnnr0WiNoUBDIZqNIMr6fS9MVXzZ)AvcqaAHqbyLUsYElJY5tgMLVWkbkivykt(Pfrx6EkCs5tgMKpdi0RLW4pJ1a49sc2yx3mCvjHt(UXP7jVB)2dYlbVmi1Wt3eSHX3Y(3mIjNzVqtTJqwvY5zj6Q(3AGjcjrSbs2VXaNwaj0Ks66cftJUgpRIOpFD0fD4pk7DGL9LsJxfOY9AQxgtt3Lwc1TyXAIcQtMwH)Ne35UAAopTrUyUwth5G0xl4CdBCQ2ZX(4n5it0AluWJwFuCl17o(jR4LQH9rZJ8V32VJIbFzjS4GpGvsLkP5JM7)Gbm8rZhrjm8Qssg63rXwxL6fp4FJIh5MGItfqVOGI1lA7JGuaVNjS2(m(q8wdIxnaXEH5444dKBmGCThqS9CSr4OosAGU5mpFDow6G(Oh2D8SSP)C9U0GFR38tNx2jG2RNMg678aDNhNnWdXvdWVDMzRr9Rok2VNIhtfn1ZIotU79jFdi9C7Q69qFdiDyp3lKmWp1HPFvF1tASAuHV(ulfdkW2w1Krgz2Q74Jn2LA3elnFsFxJeg2L3h7ypxRIVEB6oInvVZg2S)seU(U(CEMVxu(A(haI(N4UN)Dmh6)3Ew(Qp88QAhmDFD9P8JDFJ9raz)BTpLB8OxCFeuE5L3hZm(v9vFL3HFkVAp2PVYRYrhUyXnQcUaf)vYgAjf(VS(YH)jkZYO)l]]
 )
 spec:RegisterPack(
     "Enhancement (wowsims.com)",
-    20261115000,
-    [[Hekili:DJ1wVTTnu4Fl9LmBmd5ljPPjOoazyBODynyaQplzAPJSzTePajv8mWG)TVdPDSPOeLfYq7d7LeD5C)8Do8ZkAA0xJctjki65ztM9(PtNE7KjtIcv7kHOWssYgYk8cgPa)7VXwtyjqbWu7xmylFRKwids4fd1IUlNts1MBzfnx9zw0YwTSSesIcd)0tF5PNFaoBXOW100u4GAGmPl39W(fQ1W(fhF24mUaEbe7xKczKQCu8N(R)C)c8X7xu3kv0X6aqowUMuqyJTcGX64ovowbsfLTkWCBW3KC2WrO)eeMmhtNu8AU2)u5(fK0uo7NWl2a7Kb7x8Ref5HwIRbF5ZFfnYALQu(W4XROQ1vl1PYyhrhI2eJt4gi7(z3d3EZD3hGfxbpJMJDasIIYzYGsbGkVKOMNLJTgfNTQcI3cKsoBenB(7wwLLfuqOSym)sJbwc(Fvqv5()OHn(55Jf8KnlPkq0lBC17oyJGMopydJVL1Ut2s0oqUMc5PNDG9t9gFBPS0SkXUyfxbfgLnxfqOcVkH9xsSSuGnZg6z8QxnLkbWwPwhZZIbIaVWvFZt7WZRkin0jJkaBvE79UVJDmt0)nUi2u9k56hoQscyPilEvs68PApPFzqzIkoN)XpmXw5uOGZOjXIkg0TE3vtVAGJmEsLC(SldsAfACgziaDXq(X5ZS1OJURDZTDLBfuzJP8PwneHfGOD5xMZ5PX68QErSMmGqcInyK4xg9lqusH0VicCdVUuGBuJZiOjbHFHti55XhUnoNkvJ0NmmxIXqoeRiIvGkwWvedSbtuTOVaisekOGSp2IWHoSWJ1SqoD1Aft3kwYZvg4YrCUuXffyJMUbCxj1EWEyyeHy4CLn(lfmaqR3EUJn5sg1a2ofi9qANe6qCyMCgOi54Hu40nKJMJx864lWilZH0Roo778wPcpcF(Td7HVpmkysXEiTg7gZ4VqolRDNBoU5HQBRhZh7uaYnN3sWMFojrqv7cWdx3848RVAG3(3)CSry)IQYHxvqzd0TdZcVJDMri01((HpE0QobvqcrQg2EcC5uulHfMjzxYPcLUNvq(746p763aUYXHTIMCK5hagYXJ1qorHingj(chEF6jCPMEOTY49pBOGEmcI(Lx54ef60SWhi0N3rjrH)3qsF)GsrkmP9KoNqtAHU2NqNHdy(AJE01PWgykTLcnDyTJTQqDcV0rWnEIaRIIwSBDeRzp4ncMo7X641tPZuT7FVNO0cXHIHk1(EQ2Gx9Tg1Ep5uTUJoTtj0Tx)dUe6RrxVe2Or3gSvPRzMFGvxZTnPyANZ(5O2vj1LTB)S4fz92w7XI6JzM71qObRy7yOoF42k7(mRnFzFw8UjDpk2kh5ZUW(f1rW(gVQZP22vTXTwBP78ol0kx7MM0LZT2OFWJrBWbVP5C5IRn39En3jU5nnKdhDTDMoPN92ZK4nQ5oW4vTt86nQ5ot4tTtu9nA1xyDlS)n67IFpxx0AAtP36eBhc9ho0p(WhpYZgATV8JSR7Rh7RVQrXq7bFaD3fNwZuhxD0G(WH9GN(1()pEty77pU0ANooYX)ALAFnNUooQZrFNVTtxB46XEjNV0txB58SbP(39XaCqOdPsTMlIc)eSHMt3VyWVF8t)zED0)(d]]
+    20261118000,
+    [[Hekili:DJv3UTTnu4NLEtMnwGSCsBtwqDaYW2q7WAWauVwY0shzZAjsbsQ4zGb)SVdPDSOOeveYq7f9Me9Z5)Z35WpR45XFjokJOG4hVk8Q3pF(8BdddJJu7RG4Oks6wYA8cgPe)7VZ2qyPqjWuhwozhFNKwkds5Lt1IUVGtY0MBvnTq9jw8QETSScsJJI(4dF(HhVdASyC0gAwgCunqMoK7U7Ws1g4WYtpBwoxapbIdlZGCsDbk(d)9FDyj(4dlBBLA6mDaiNj3qkjSzwbWmDCNjNPaPIYwhyUn4RsoB6LO)eeMSatNm8AU2)u5HLKSmo7NWl2c7Lbhw(Bef5UEIRjF(tFbnYgLQsE3SzRPQn1R0PYmhrNI2eJtYQW8Wq4T5P3EDawCf8CAb2biPkkNjdQeaQ8kIArEb2AuC26AizhqQ4SlP5lEZQ688GscLLG5xwcWsX)RcQRo8NDSXpVyMGNUDfvbIrzJlEZrBe015bBz8DS(DYoI2bYnuOiRXb2p1B8TJYYYRf7tuCfuAu2CvaHk8Qe2FjjYkb2m7ONXRE1uQeaBTAtcppbic8cx9npDapVUK0rNCQaSv5137(g2Xmr)x5Iet1RIRF4L1salf5jRtZwmx7j9ldQsvjf8pCBOTYzqjNrtte1myy9UPLETah580A5IREzqsVqJgKHa0fd5hwCLTgd0DTBU9RCVGkBmLp1AHiSae9l)QcoplrNxTlITKbesqSfJe)YOFbIskL(frGB41LcCJAsobnji8lCkPOi54TjfuP6s9jdlKymuajkIynOseCfXaBWevl6taIeHskihJTiCyalCFlluqxVrX0TIv8cLbUCcNlvCrj2OPBb3vs9hShhgrigoxzJ)Yada06TnDSWxYOgW25azes7KqhJdZKZefPapKcNUHc0C8YNhFbgzvbKDXPzFN3kv4r4lE30r47JJcMuCesRXUjm(tKgzT7ClWnpuDB9u(yNcqH58wc28liPcQAFaE4627xC9ft82)(3tnc7xuxn9IskBIUDyw4DQZCjcDTVF69NSQtqfKsKQP9NaVCkQLWcZKUp9CHs3Zkj)ts7ND9Rax54WErtoY8Dad54XwiN4iKgJeFHdVp9eUutp0wz8(hnuqpfbX)6ZCCIJCAw4de6Z7OK4O)FiPVDqPyfM0EsNZOjTqx7tOg4aMV2OhDDkQdMsBPithw7yRk0GWlDe8wprGvrrl27CeRBp4vcMA8yB8650zU29V3tuAH4qXqL6FpvFWRXwJ6VNCUwpqN2Pe62R)oxc91OBxc70O7d2Q01mZpWAO52UumTZz)CuhQK6Y2DCw8fz92x7XI6JzM75qOdRy7yOnF4(k7(mRnFzFw8MWHhf7LJCJlSFrBeSVXR2CQTDvFCR1w6gVZc9Y1URjD5CRn6TEmAho4DnNlxCT5(fVM7m38UgYHJU2oZdhzVTHeVrn3bgVQDMxVrn3zcFQDMQVrRXcR7H9VrFx8BtDrRPnLERtSDi0F8q)KJF8ipBO1(YpYUTVUFS(QffdTh8b0DxCAntDA1rh6dh3dE(x7)d8MW(3F8sRDg4ih)RvA91Cg64Obh9D(2odTHBe7LC(spdTLZZgK2F3hdWbHoKA1gUio6JWwAb9WYj)XPp9N51X)3]]
 )
 
 -- The hand-built Enhancement list, replaced by Enhancement (wowsims.com): a saved choice of it falls back to the default.

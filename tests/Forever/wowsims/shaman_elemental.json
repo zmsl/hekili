@@ -20,7 +20,7 @@
             "bonusStats":{
               "apiVersion":2,
               "stats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-              "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+              "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
             },
             "class":"ClassShaman",
             "itemSwap":{
@@ -45,16 +45,16 @@
               "prepullBonusStats":{
                 "apiVersion":2,
                 "stats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                "pseudoStats":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
               }
             },
             "consumables":{
               "conjuredId":12662,
               "flaskId":13512,
-              "mhImbueId":20749,
+              "mhImbueId":20750,
               "foodId":13935,
               "resourcePotId":13444,
-              "elixirIds":[250343,9155,250338,250341,250337],
+              "elixirIds":[250343,9155,250338,250341,250337,250335],
               "extraIds":[8423]
             },
             "race":"RaceWindshaperSkyborne",
@@ -69,53 +69,51 @@
             "reactionTimeMs":100,
             "equipment":{
               "items":[{
-                  "id":252604,
-                  "enchant":1509
+                  "id":227002,
+                  "enchant":2544
                 },{
-                  "id":23125,
+                  "id":22403,
                   "enchant":8218
                 },{
-                  "id":19050
+                  "id":227003
                 },{
-                  "id":279270,
+                  "id":272411,
                   "enchant":2621
                 },{
-                  "id":10143,
-                  "randomSuffix":12734,
-                  "enchant":1893
-                },{
-                  "id":10248,
-                  "randomSuffix":12734,
-                  "enchant":1901
-                },{
-                  "id":21178,
-                  "enchant":8213
-                },{
-                  "id":20047
-                },{
-                  "id":252486,
-                  "enchant":1509
-                },{
-                  "id":254129,
+                  "id":280057,
                   "enchant":8492
                 },{
-                  "id":272407
+                  "id":227001,
+                  "enchant":7665
                 },{
-                  "id":19147
+                  "id":227006,
+                  "enchant":8213
+                },{
+                  "id":227008
+                },{
+                  "id":252486,
+                  "enchant":2544
+                },{
+                  "id":227007,
+                  "enchant":8492
+                },{
+                  "id":272406
+                },{
+                  "id":22339
                 },{
                   "id":272438
                 },{
-                  "id":270225
+                  "id":13968
                 },{
-                  "id":22688,
+                  "id":20214,
                   "enchant":8217
                 },{
-                  "id":15968
+                  "id":19315
                 },{
                   "id":23199
                 }]
             },
-            "distanceFromTarget":5,
+            "distanceFromTarget":20,
             "name":"Elemental",
             "talentsString":"5500331023001351-05500001-053",
             "profession2":"Enchanting",
@@ -124,39 +122,6 @@
               "greaterBlessingOfKings":true
             },
             "rotation":{
-              "valueVariables":[{
-                  "name":"Single Target",
-                  "value":{
-                    "cmp":{
-                      "op":"OpEq",
-                      "rhs":{
-                        "const":{
-                          "val":"1"
-                        }
-                      },
-                      "lhs":{
-                        "numberTargets":{
-                        }
-                      }
-                    }
-                  }
-                },{
-                  "name":"Multi Target",
-                  "value":{
-                    "cmp":{
-                      "op":"OpGt",
-                      "rhs":{
-                        "const":{
-                          "val":"1"
-                        }
-                      },
-                      "lhs":{
-                        "numberTargets":{
-                        }
-                      }
-                    }
-                  }
-                }],
               "type":"TypeAPL",
               "prepullActions":[{
                   "action":{
@@ -214,8 +179,17 @@
                 },{
                   "action":{
                     "condition":{
-                      "variableRef":{
-                        "name":"Single Target"
+                      "cmp":{
+                        "op":"OpEq",
+                        "rhs":{
+                          "const":{
+                            "val":"1"
+                          }
+                        },
+                        "lhs":{
+                          "numberTargets":{
+                          }
+                        }
                       }
                     },
                     "castSpell":{
@@ -232,8 +206,17 @@
                 },{
                   "action":{
                     "condition":{
-                      "variableRef":{
-                        "name":"Multi Target"
+                      "cmp":{
+                        "op":"OpGt",
+                        "rhs":{
+                          "const":{
+                            "val":"1"
+                          }
+                        },
+                        "lhs":{
+                          "numberTargets":{
+                          }
+                        }
                       }
                     },
                     "castSpell":{
@@ -344,8 +327,17 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "variableRef":{
-                              "name":"Single Target"
+                            "cmp":{
+                              "op":"OpEq",
+                              "rhs":{
+                                "const":{
+                                  "val":"1"
+                                }
+                              },
+                              "lhs":{
+                                "numberTargets":{
+                                }
+                              }
                             }
                           },{
                             "cmp":{
@@ -375,8 +367,17 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "variableRef":{
-                              "name":"Multi Target"
+                            "cmp":{
+                              "op":"OpGt",
+                              "rhs":{
+                                "const":{
+                                  "val":"1"
+                                }
+                              },
+                              "lhs":{
+                                "numberTargets":{
+                                }
+                              }
                             }
                           },{
                             "cmp":{
@@ -398,6 +399,28 @@
                     "castSpell":{
                       "spellId":{
                         "spellId":10587
+                      }
+                    }
+                  }
+                },{
+                  "action":{
+                    "condition":{
+                      "cmp":{
+                        "op":"OpGt",
+                        "rhs":{
+                          "const":{
+                            "val":"1"
+                          }
+                        },
+                        "lhs":{
+                          "numberTargets":{
+                          }
+                        }
+                      }
+                    },
+                    "castSpell":{
+                      "spellId":{
+                        "spellId":408345
                       }
                     }
                   }
@@ -452,38 +475,30 @@
                 },{
                   "action":{
                     "condition":{
-                      "or":{
+                      "and":{
                         "vals":[{
-                            "variableRef":{
-                              "name":"Multi Target"
+                            "cmp":{
+                              "op":"OpGt",
+                              "rhs":{
+                                "const":{
+                                  "val":"40%"
+                                }
+                              },
+                              "lhs":{
+                                "currentManaPercent":{
+                                }
+                              }
                             }
                           },{
-                            "and":{
-                              "vals":[{
-                                  "cmp":{
-                                    "op":"OpGe",
-                                    "rhs":{
-                                      "const":{
-                                        "val":"40%"
-                                      }
-                                    },
-                                    "lhs":{
-                                      "currentManaPercent":{
-                                      }
-                                    }
+                            "not":{
+                              "val":{
+                                "auraIsActive":{
+                                  "includeReactionTime":true,
+                                  "auraId":{
+                                    "spellId":16166
                                   }
-                                },{
-                                  "not":{
-                                    "val":{
-                                      "auraIsActive":{
-                                        "includeReactionTime":true,
-                                        "auraId":{
-                                          "spellId":16166
-                                        }
-                                      }
-                                    }
-                                  }
-                                }]
+                                }
+                              }
                             }
                           }]
                       }
@@ -491,19 +506,6 @@
                     "castSpell":{
                       "spellId":{
                         "spellId":10605
-                      }
-                    }
-                  }
-                },{
-                  "action":{
-                    "condition":{
-                      "variableRef":{
-                        "name":"Multi Target"
-                      }
-                    },
-                    "castSpell":{
-                      "spellId":{
-                        "spellId":408345
                       }
                     }
                   }
@@ -527,10 +529,6 @@
                     "condition":{
                       "and":{
                         "vals":[{
-                            "variableRef":{
-                              "name":"Single Target"
-                            }
-                          },{
                             "auraIsKnown":{
                               "auraId":{
                                 "spellId":1323418

@@ -11,6 +11,7 @@
 - Guardian: the default priority follows wowsims's simplified Bear priority: one priority at every enemy count, and Swipe is no longer suggested.
 - In a custom condition, `gcd` on its own now means the full global cooldown (`gcd.max`), as it already did in an
   imported priority.
+- Elemental Shaman: the default priority follows wowsims's newest Elemental build: Fire Nova comes before Elemental Mastery, Chain Lightning is cast only above 40% mana, and Earth Shock on Revelation no longer waits for a single target.
 
 ### Fixed
 
