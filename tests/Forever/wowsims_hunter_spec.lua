@@ -100,7 +100,7 @@ local PACKS = {
         -- cooldown.
         -- 0.93 -> 0.96 (0.967 of 92 measured on integ/0.8.5-w2, the merged tree): the Serpent Sting debuff now starts at
         -- its landing (startsAtLanding, L1103) and flicker-085 and the timing merges are in (L1037); 3 misses remain.
-        0.96,
+        0.97, -- 0.96 -> 0.97 (0.977 of 86; re-pin e4ef929e54 -> ab0f00e4fc: set to the measurement on the new log)
         -- live L40 7.6 -> 10.0, L60 14.0 -> 15.4 (Lane R2, controller-accepted): as Marksmanship's (above); at L60
         -- the OOM wait runs to a 190-mana shot with the aura down
         -- live L40 10.0 -> 13.8, the re-pin's L40 cause (above, traced): Arcane Shot 12 x 189
@@ -155,7 +155,7 @@ local PACKS = {
         -- traced per tick): the one miss is the Serpent Sting refresh against Summon Hawk at 84.41 s: our sting comes due
         -- 0.07 s after the decision tick and outranks the hawk (0.01 s), wowsims's sting is still up for its hawk (the
         -- Turret rows' Serpent Sting class; the old list had no hawk at that refresh)
-        0.98,
+        1.0, -- 0.98 -> 1.00 (1.000 of 55; re-pin ab0f00e4fc: the new log's hawk rotation has no sting miss)
         -- live L40 6 -> 11.0 (4.4 before: the old list cast neither shot at 40), the re-pin's L40 cause (above, traced): Summon Hawk 10 x 189 and
         -- Arcane Shot 5 x 189 are 2835 of 6006 mana; the streak (t 99.8-110.6) runs the pool 15.2 -> 159.7 waiting on
         -- Aimed Shot 160.
@@ -172,7 +172,7 @@ local PACKS = {
         "hunter_marksmanship_turret",
         "MarksmanshipTurret",
         "Marksmanship Turret (wowsims.com)",
-        0.95, -- 0.955 (66); 0.982 (56) at the re-pin
+        0.98, -- 0.95 -> 0.98 (0.983 of 60; re-pin ab0f00e4fc: the one miss is the 64.57 Serpent Sting refresh); 0.982 (56) before
         -- live L40 9.4 -> 9.8, the re-pin's L40 cause (above, traced): Arcane Shot 14 x 166.3
         -- (Efficiency 4/5) are 2328 of 6020 mana; the streak (t 96.2-105.8) runs the pool 14.4 -> 139.8 waiting on Aimed
         -- Shot 140.8.
@@ -190,7 +190,7 @@ local PACKS = {
         "hunter_survival_turret",
         "SurvivalTurret",
         "Survival Turret (wowsims.com)",
-        0.96, -- 0.962 (53); 1.000 (51) at the re-pin
+        1.0, -- 0.96 -> 1.00 (1.000 of 55; re-pin ab0f00e4fc, set to the measurement)
         -- live L40 6 -> 10.2, the re-pin's L40 cause (above, traced): Arcane Shot 14 x 189 are
         -- 2646 of 5661 mana; the streak (t 110.0-120.0) runs the pool 33.4 -> 112.8 waiting on Hunter's Mark 60 to the
         -- fight's end.
@@ -204,7 +204,7 @@ local PACKS = {
         "hunter_survival_melee",
         "SurvivalMelee",
         "Survival Melee (wowsims.com)",
-        0.94, -- 0.942 (86); 1.000 (67) at the re-pin
+        1.0, -- 0.94 -> 1.00 (1.000 of 81; re-pin ab0f00e4fc, set to the measurement)
         -- in melee 116.8 / 7.2 / 8.6: the live bars run W.SurvivalMeleeRanged (R63, hunter_world.lua): 4.4 / 10.0 / 15.4
         -- live L40 10.2 -> 12.0, the re-pin's L40 cause (above, traced): Arcane Shot 10 x 189
         -- and Multi-Shot 8 x 239 are 3802 of 5552 mana; the streak (t 69.8-81.6) runs the pool 2.0 -> 135.4 waiting on
