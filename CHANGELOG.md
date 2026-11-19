@@ -13,6 +13,11 @@
 
 ### Fixed
 
+- Fire and Frostfire Mage: the mana estimate is less likely to count a Master of Elements refund for a critical hit
+  that came from Fireball's or Pyroblast's burn rather than a spell, which could show a spell as affordable too early.
+  A Fire spell's critical hit that lands at the same moment as one of those burns no longer counts its refund, so the
+  next spell can show a moment late.
+
 - A separate Cooldowns, Interrupts or Defensives display whose Forecast Period is longer than the Forecast window
   (Performance) now recommends an ability whose resources arrive within that period, instead of treating it as not
   ready.

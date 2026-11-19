@@ -176,6 +176,28 @@ describe("rows with a secret amount (kind-only routing)", function()
         assert.are.same({ 0, 1, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
     end)
 
+    -- Another ability's tick in band makes a direct crit ambiguous (a Fire spell's crit beside a Fire DoT's tick): two
+    -- abilities of one school, one ticking, the other's direct crit. No Obs.Crit and no landing (it may be the tick's); divergent counted.
+    it("stages no Obs.Crit for a direct crit beside another ability's tick of the same school", function()
+        local m, f = I.ab.bySpell[fs.SPENDER_M], I.ab.bySpell[fs.SPENDER_F]
+        I.ab.onCrit[f], I.ab.school[f] = function() end, I.ab.school[m]
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        ctl.now = 10.002
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 9, 64)
+        ctl.now = 13
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 4, 64)
+        ctl.now = 15.998
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
+        local landed, divergent = count(VS.Obs.Landed), T.divergent
+        ctl.now = 16 -- the ticking ability's third tick and the other's direct hit, a crit
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.same({ 0, 0, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
+    end)
+
     -- A projectile's own schedule (composed at its success, widened by the flight until its direct row) is no rival
     -- for that direct row: its debuff, and so its ticks, start there.
     it("stages a travelling cast's own direct crit though its own composed schedule is in band", function()

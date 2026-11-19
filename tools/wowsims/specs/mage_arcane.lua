@@ -65,7 +65,9 @@
 -- robe_of_the_archmage,use_off_gcd=1 before use_items; the world rolls Arcane Concentration at a sixth of its chance
 -- at a channel's start and at each landed missile (wowsims 5ad9515c15).
 -- Re-pin e4ef929e54 -> ab0f00e4fc (lane repin-ab0f-mage): preraid.gear.json's contents (wowsims #1085/#1090: Eye of
--- the Beast 13968 for the Weakness Analyzer 272438, main hand 22383, off hand 19315, enchants); APL and talents unchanged.
+-- the Beast 13968 for the Weakness Analyzer 272438, main hand 22383, off hand 19315, Sorcerer's Regalia 3 -> 6
+-- pieces (crown 226935, mantle 226936, sandals 226931 for 22267, 19050, 22231: set 1671's 4-piece Sudden Insight,
+-- 200 mana at random on a cast (450554), unmodelled per owner L1396), enchants); APL and talents unchanged.
 return {
     class = "MAGE",
     pack = "Arcane (wowsims.com)",
