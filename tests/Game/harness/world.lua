@@ -53,6 +53,7 @@ function M.new(seed)
     -- its tick, the phase a draw in [0, 1) (regenPhase[pt] / .pet), as live's server ticks fall at an arbitrary phase
     -- to the client's polls; apart from every other draw
     W.prng, W.regenPhase = rng.new(seed + 49979687), {}
+    W.krng = rng.new(seed + 67867967) -- a world content's own proc rolls (a talent's chance a hit), apart from every other
     W.combat = false
     W.rates = {} -- [powerType] = regen per second (W.startRegen)
     W.fsr = {} -- [powerType] = { spirit, mp5, share?, mp5?, auras? } per second: the five-second rule's two parts (W.startRegen)

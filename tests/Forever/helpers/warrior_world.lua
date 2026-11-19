@@ -116,19 +116,20 @@ M.WORLD = {
         if M.chargesW ~= W then
             M.charges = 0
         end
+        M.wrng = W.krng -- this world's Unbridled Wrath rolls (wrath below)
     end,
 }
 
--- Unbridled Wrath's rage on a landed white swing, Heroic Strike or Cleave at talent rank `rank`: the class file's
--- expected value (11.9% a rank of 1 rage with any weapon, wowsims EV-0148, owner L1419), not a roll: a draw would re-time
--- every later draw of the fight.
+-- Unbridled Wrath's rage on a landed white swing, Heroic Strike or Cleave at talent rank `rank`: rolled, 11.9% a rank,
+-- 1 rage a proc with any weapon (wowsims ab0f talents_fury.go:65-87, aura_helpers.go:163; EV-0148, owner L1419), from
+-- the world's own stream (W.krng, handed over at the pull) so no other draw moves. No rank, no draw.
 local WRATH, UNBRIDLED_WRATH = 0.119, 12322
 local function wrath(rank)
-    return WRATH * (rank or 0)
+    return (rank or 0) > 0 and M.wrng.chance(WRATH * rank) and 1 or 0
 end
 -- True rage per landed white wound: the class file's own model restated (Hekili_Warrior/Warrior.lua, "Rage per white
--- swing": 4.5 x the unhasted speed with a two-hander; a crit doubles it, W1), plus Unbridled Wrath's expected rage at
--- the character's rank (none at M.TALENTS). Circular on purpose:
+-- swing": 4.5 x the unhasted speed with a two-hander; a crit doubles it, W1), plus Unbridled Wrath's roll at the
+-- character's rank (none at M.TALENTS). Circular on purpose:
 -- the loop measures recommendations, not the rage model (its own specs measure that). The loop's gain hook: rage is
 -- the character's only power, so `pt` is always rage's.
 function M.gain(_, hand, _, flag, character)
@@ -546,7 +547,7 @@ M.Fury = setmetatable({
     end,
     -- The class file's rates restated (as M.gain): 3.46 x speed main hand with a one-hander, 1.73 x speed off hand, +10%
     -- per rank of Dual Wield Specialization the character has (5/5 at 60, 0 at L24: the cut stops short of it); a crit
-    -- doubles the swing's rage (W1); Unbridled Wrath's expected rage (wrath above) at the character's rank.
+    -- doubles the swing's rage (W1); Unbridled Wrath's roll (wrath above) at the character's rank.
     gain = function(_, hand, _, flag, character)
         local rate = hand == 1 and 3.46 or 1.73 * (1 + 0.1 * (character.talents[DUAL_WIELD_SPEC] or 0))
         local paid = 0
@@ -584,7 +585,7 @@ M.Protection = setmetatable({
         return c
     end,
     -- The class file's rate restated (as M.gain): 3.46 x speed with a one-hander; a crit one more base swing; Unbridled
-    -- Wrath's expected rage at the character's rank.
+    -- Wrath's roll at the character's rank.
     gain = function(_, hand, _, flag, character)
         if hand ~= 1 then
             return 0
