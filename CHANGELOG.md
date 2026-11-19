@@ -13,6 +13,7 @@
 - In a custom condition, `gcd` on its own now means the full global cooldown (`gcd.max`), as it already did in an
   imported priority.
 - Elemental Shaman: the default priority follows wowsims's newest Elemental build: Fire Nova comes before Elemental Mastery, Chain Lightning is cast only above 40% mana, and Earth Shock on Revelation no longer waits for a single target.
+- Guardian and Protection Warrior priorities no longer include health-based defensive suggestions (your health is hidden from addons in combat); custom priorities that check your health get a warning.
 
 ### Fixed
 

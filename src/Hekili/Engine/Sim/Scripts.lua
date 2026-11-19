@@ -2374,14 +2374,15 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     local cw = entries == pData.lists[ list ] and scripts.Windows[ pack ]
     if cw and cw.errorAt[ list .. ":" .. id ] then script.Error = cw.errorAt[ list .. ":" .. id ] end
 
-    -- Forever: target health is secret, so the belief answers it with constants (spec §6.5, §7.4); time to die is unwarned.
+    -- Forever: target health is secret, so the belief answers it with constants (spec §6.5, §7.4), and the player's is
+    -- hidden in combat (owner L1462); time to die is unwarned.
     local scan = ns.AplSecretToken
     local token, subject, reads = scan( data.criteria )
     if not token then token, subject, reads = scan( data.value ) end
     if not token then token, subject, reads = scan( data.value_else ) end
     if not token then token, subject, reads = scan( data.target_if ) end
     if token then
-        Hekili:Error( "Forever: %s; `%s` in pack `%s` list `%s` entry %d (%s) %s.", subject, token, pack, list, id, data.action or "?", reads )
+        Hekili:Error( "Forever: %s; `%s` in pack `%s` list `%s` entry %d (%s): %s.", subject, token, pack, list, id, data.action or "?", reads )
     end
 
     script.action = data.action

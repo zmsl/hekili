@@ -104,7 +104,7 @@
 --    deviation from wowsims, with its reason in the recipe header.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N when
 --    it is a direct operand (a variable followed) of a comparison with a percent read (M.PERCENT: `mana.pct`,
---    `health.pct`, which run 0-100 where wowsims's run 0-1), else N/100 as wowsims reads it (inside `math`, or
+--    which runs 0-100 where wowsims's runs 0-1), else N/100 as wowsims reads it (inside `math`, or
 --    compared with anything else: Demonology's "Execute at" 35% scales a time). A percent read inside `math`, `min`
 --    or `max` is unsupported (rule 2): its scale would leak into the result.
 -- 9. `auraIcdIsReady` (wowsims: the proc aura's internal cooldown is ready): the aura declaring `icd` (RegisterAura,
@@ -291,6 +291,9 @@
 --    pool (a lower level, whose N may exceed its whole pool) reads the share. No log: unsupported (rule 2). A `not` of
 --    our mana under a number is rewritten too (`!(mana.lo<N&mana.pct_lo<P)`), while a direct `>` or `>=` a number
 --    stays absolute; no APL at the pins has either form.
+-- 23. The player's health (`currentHealthPercent`, `currentHealth`; owner L1462): the client hides it in combat, so a
+--    read of it is unsupported (rule 2): the entry is omitted, as is a call or variable reading it. Another unit's
+--    health read is unsupported as any other unit's (`... of <unit>`).
 -- 14b. A `sequence` (wowsims: its members in order, each once, once per reset; design §3a) is a stepped window `<w>`
 --    (the snake of its name) whose steps are its cast members: one line a cast, `<key>,if=window.<w>.next.<key>`, its
 --    own condition after, consecutive equal lines once. A distance-only waitUntil member is the next cast's range gate,
@@ -320,7 +323,7 @@
 --    `talent.<key>.rank`, else 0; `spellFullCooldown` `cooldown.<key>.duration`, `spellTravelTime`
 --    `action.<key>.travel_time` and `spellGcdHastedDuration` `action.<key>.gcd` (each nil while the spell is unknown:
 --    rules 6, 12); `gcdIsReady` `gcd.remains<=0` (wowsims also counts the queue window); `currentHealth`
---    `health.current` (Self only); `auraDuration` `<unit>.<key>.duration` (as `auraRemainingTime`) and
+--    unsupported (rule 23); `auraDuration` `<unit>.<key>.duration` (as `auraRemainingTime`) and
 --    `dotBaseDuration` `debuff.<key>.duration` (as `dotRemainingTime`); `druidBleedIsActive` (the target's only)
 --    the Druid kit's state expression `druid_bleed_active`. Re-pin plan Task 4: `spellIsCasting` is
 --    `action.<key>.executing` when the kit ability has a cast time (its `cast` above 0 or unreadable), else false;
@@ -377,8 +380,6 @@ M.VALUES = {
     maxMana = "mana.max",
     currentManaRegen = "mana.regen",
     currentComboPoints = "combo_points.current",
-    currentHealthPercent = "health.pct",
-    currentHealth = "health.current",
     currentTime = "time",
     remainingTime = "fight_remains", -- API-forced: wowsims knows its fight length; ours answers "unknown" (3600 s)
     gcdTimeToReady = "gcd.remains",
@@ -884,7 +885,7 @@ local function reads(c, x)
 end
 
 -- Rule 8's percent reads (0-100 in the engine, 0-1 in wowsims).
-M.PERCENT = { currentManaPercent = true, currentHealthPercent = true }
+M.PERCENT = { currentManaPercent = true }
 
 -- Whether value node `n` is a percent read (variables followed).
 local function percentRead(c, n)
@@ -1156,6 +1157,9 @@ local function value(c, n, pct)
             unsupported("boolean as a value")
         end
         return s, false
+    elseif k == "currentHealthPercent" or k == "currentHealth" then -- rule 23
+        local u = v.sourceUnit and v.sourceUnit.type or "Self"
+        unsupported(k .. (u == "Self" and ": the player's health, hidden in combat" or " of " .. tostring(u)))
     elseif M.VALUES[k] then
         local u = v.sourceUnit and v.sourceUnit.type or "Self"
         local res = u == "Pet" and M.VALUES[k]:match("^(%a+)%.lo$") -- the pet's power: the sim's pet.<resource> (no band)
