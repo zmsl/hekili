@@ -100,4 +100,5 @@ The importer drops SimulationCraft lines for `snapshot_stats`, `flask`, `food` a
 ## See also
 
 - [APL Forever differences](APL-Forever-Differences)
+- [APL conditions on Forever](APL-Conditions-On-Forever): which conditions are read, estimated, limited or fixed, and what to write instead
 - [APL debugging](APL-Debugging)
