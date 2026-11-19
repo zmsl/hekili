@@ -544,7 +544,7 @@ function M.new()
         return "1.60.1", "70338", "Oct 1 2026", 16001
     end
     function api.GetLocale()
-        return "enUS"
+        return ctl.locale or "enUS"
     end
     ctl.cvars = { cooldownViewerEnabled = "1" } -- GetCVar's answers (the game options' Cooldown Manager on)
     function api.GetCVar(name)
