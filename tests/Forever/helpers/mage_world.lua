@@ -660,7 +660,7 @@ for _, key in ipairs({
     "arcane_wrath",
     "blizzard",
     "counterspell",
-    "frost_blast", -- assumed Frostbolt's: not in the pin, no DB2 row read for 1326053
+    "frost_blast", -- 1326053: DB2 70707 RangeIndex 4, Medium 0-30 (as Frostbolt's); not in the pin
     "frostbolt",
     "ice_lance",
     "scorch",

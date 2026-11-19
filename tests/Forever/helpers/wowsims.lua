@@ -441,7 +441,9 @@ M.READY = {
     -- new line, item-restores mapping the Robe) at its log use.
     -- Arcane { 0.76, 9 } -> { 0.22, 2 }: fire_blast 110.70 / 128.80 late 0.22, cost class (gap BQ, lo 6.7 / 6.9 under
     -- the truth at Fire Blast's 340).
-    mage_arcane = { 0.22, 2 }, -- 0.220, 2 (ruling M13)
+    -- { 0.22, 2 } -> { 0.00, 0 } (re-pin e4ef929e54 -> ab0f00e4fc, lane repin-ab0f-mage, R6: the new preraid gear's log
+    -- re-times the fight): real 0, no late row
+    mage_arcane = { 0.00, 0 }, -- 0.000, 0
     -- { 0.37, 31 } -> { 0.45, 10 } re-pin e2842f0a78: cost class, scorch 10; the median is gap BQ's size, but the
     -- max 2.23 s rows sit about 50 mana under the truth, past BQ's ~0.4 s (untraced: an unseen Master of Elements
     -- refund is the candidate)
@@ -461,7 +463,15 @@ M.READY = {
     -- 1.61 late -> in:grain (lo-truth -73.7 -> -6.8), 152.40 0.69 -> 0.51; 172.90 / 177.50 in:cost -> 0.26 / 0.24 late
     -- (gap BQ: lo 7.7 / 4.8 under the truth at Scorch's 150; before, est sat 15-24 OVER the truth there and showed
     -- them in time); 159.40 / 166.20 stay in:cost (b 0.07 -> 0.19 / 0.16). Decisions 0.932 kept
-    mage_fire = { 0.25, 4 }, -- 0.250, 4
+    -- { 0.25, 4 } -> { 0.23, 6 } (re-pin e4ef929e54 -> ab0f00e4fc, lane repin-ab0f-mage, R6): the new preraid gear
+    -- (wowsims #1085/#1090) wears 6 pieces of Sorcerer's Regalia (set 1671, was 3), whose 4-piece Sudden Insight
+    -- restores 200 mana (450554) at random on a cast (wowsims sim/common/forever/items_sets.go:155-165): not modelled
+    -- (random resource proc, owner L1396). scorch 115.80 3.52 late (lo -203.6: the proc at 115.71,
+    -- 0.01 s after the Scorch crit before it) and 114.20 0.72 (lo -15.7: the belief ran ~247 under from the proc at
+    -- 98.01 until the usable answer pulled lo up to Scorch's 150 at 105.70 against the truth's 161.8); 128.80, 160.70,
+    -- 170.10, 174.80 0.21-0.28 the cost-crossing edge (gap BQ, lo 4.9-5.8 under). The ambiguous-crit rule (e0804ba84)
+    -- moves no row (the same rows on the flip alone)
+    mage_fire = { 0.23, 6 }, -- 0.230, 6
     -- { 0.38, 31 } -> { 0.42, 9 } re-pin e2842f0a78: cost class (gap BQ), scorch 6 (max 1.39)
     -- { 0.42, 9 } -> { 1.51, 3 }: three late cost rows on the new log's dry pool (lo under the truth at the cost):
     -- frostfire_bolt 112.80 0.23 (lo -7.1, gap BQ), scorch 118.00 2.51 (lo -41.9 at Scorch's 150; traced, 0.9 measure
@@ -469,10 +479,15 @@ M.READY = {
     -- / 116.14, never credited: lo stays about 40 under until the usable answer), frostfire_bolt 141.10 1.51 (lo -32.8); the same three before the
     -- restore credit (only 141.10's est moved). 1.51 is the median over 3 rows; it rose because 6 rows closed (the
     -- restore credit), not because rows got worse
-    mage_frostfire = { 1.51, 3 }, -- 1.510, 3 (Task FFB, ruling M13)
+    -- { 1.51, 3 } -> { 0.39, 2 } (re-pin e4ef929e54 -> ab0f00e4fc, lane repin-ab0f-mage, R6: the new gear's log):
+    -- frostfire_bolt 131.80 0.56 (lo -17.0, est -4.1) and 167.50 0.39 (lo -13.0, est -1.6) late, cost class (lo under
+    -- the truth; candidate, not traced: the unseen Sudden Insight +200 at 84.01, as Fire's 114.20)
+    mage_frostfire = { 0.39, 2 }, -- 0.390, 2
     -- { 0.23, 3 } -> { 0.29, 3 }: frostbolt 132.00 / 157.30 late 0.29 (cost class, lo 8.3 / 8.1 under the truth),
     -- 179.20 0.16 (slack)
-    mage_frost = { 0.29, 3 }, -- 0.290, 3 (new pack 2026-11-12, R6 first measurement: frostbolt late, cost class)
+    -- { 0.29, 3 } -> { 0.23, 4 } (re-pin e4ef929e54 -> ab0f00e4fc, lane repin-ab0f-mage, R6: the new gear's log):
+    -- frostbolt 119.90 / 152.70 / 163.70 / 174.70 late 0.21-0.27, the cost-crossing edge (gap BQ, lo 7.4-8.6 under)
+    mage_frost = { 0.23, 4 }, -- 0.230, 4
     -- { 0.24, 5 } -> { 0.00, 0 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log, the GCD-edge replay fix): real 0; the
     -- one late row left, judgement 154.44 (0.20 s, cost), is off the GCD
     paladin_holy_shock = { 0.00, 0 }, -- was { 0.24, 5 } (new pack 2026-11-12, R6 first measurement: cost and slack classes)
