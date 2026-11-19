@@ -4,12 +4,18 @@ local ab = require("Game.harness.ab")
 local ws = require("Forever.helpers.wowsims")
 local W = require("Forever.helpers.hunter_world")
 
+-- the learn levels without the book ranks (W.BOOK: wowsims's character is trainer-taught; no level teaches them)
+local LEARN = ws.learn("HUNTER")
+for id in pairs(W.BOOK) do
+    LEARN[id] = math.huge
+end
+
 local function content(spec, base, pack, level, extra)
     local o = {
         pack = pack,
         level = level,
         talents = ws.header(spec).talents,
-        learn = ws.learn("HUNTER"),
+        learn = LEARN,
         race = ws.race(spec),
     }
     for k, v in pairs(extra or {}) do
@@ -172,16 +178,22 @@ local PACKS = {
         "hunter_marksmanship_turret",
         "MarksmanshipTurret",
         "Marksmanship Turret (wowsims.com)",
-        0.98, -- 0.95 -> 0.98 (0.983 of 60; re-pin ab0f00e4fc: the one miss is the 64.57 Serpent Sting refresh); 0.982 (56) before
+        -- 0.95 -> 0.98 (0.983 of 60; re-pin ab0f00e4fc; 0.982 (56) before). The one miss, located per decision (fix
+        -- round): 155.96, wowsims casts Arcane Shot at its GCD end with the sting fading 0.03 s later (155.99); our
+        -- sting ends 156.00, so serpent_sting 0.04 s off outranks it (the Turret rows' Serpent Sting near-tie class)
+        0.98,
         -- live L40 9.4 -> 9.8, the re-pin's L40 cause (above, traced): Arcane Shot 14 x 166.3
         -- (Efficiency 4/5) are 2328 of 6020 mana; the streak (t 96.2-105.8) runs the pool 14.4 -> 139.8 waiting on Aimed
         -- Shot 140.8.
         { [10] = 6, [40] = 9.8, [60] = 14.0 }, -- 4.4 / 9.8 / 13.8
-        -- 0 -> 0.4 (0.33 measured, 1 flip; re-pin e4ef929e54 -> ab0f00e4fc, the Turret builds' mana consumables re-time the
-        -- fight): the Serpent Sting refresh at 64.57 s, the fight's one on-GCD decision miss (arcane_shot -> serpent_sting,
-        -- 0.983 of 60) and its one late ready row (0.57 s): the sting faded at 63.37 and wowsims casts it at the GCD's end,
-        -- we still show Arcane Shot first (the Turret rows' Serpent Sting class); not traced per tick
-        0.4,
+        -- 0 -> 0.34 (0.333 measured: 1 flip in 180 s, above 0.33; re-pin e4ef929e54 -> ab0f00e4fc, traced per tick):
+        -- arcane_shot -> aimed_shot -> arcane_shot at 58.10-58.50. During Sniper Shot's cast (321.2, paid at 58.24) the
+        -- belief's mana lo sits 464 under the truth (530 vs 994) since the build's new Demonic Rune (23.72: +1377.6, a
+        -- 900-1500 roll the secret pool never shows); on lo Aimed Shot (272.8) is short after Sniper's spend, so Arcane
+        -- Shot shows (its 58.57 cooldown end); at 58.30 the spend is seen, Aimed shows (its GCD end 58.40); at 58.50
+        -- Arcane, 0.07 s off, outranks it again, as wowsims's own re-queue (58.16 Aimed -> 58.36 Arcane). On the true
+        -- pool Aimed shows at 58.10 too: no flip
+        0.34,
         nil,
         {},
         {},
@@ -233,6 +245,33 @@ describe("the Hunter wowsims.com packs #slow #wowsims", function()
             end)
         end
     end
+end)
+
+-- The replay and live characters learn the kit's ranks by level (ws.content's learn levels), so the book ranks wowsims's
+-- character never casts (hunter_world.lua BOOK) must stay unlearned there too: Serpent Sting at rank 8's 230 (202.4
+-- under Marksmanship's Efficiency 4/5), as every log pays.
+describe("the Hunter replay characters", function()
+    it("know no book rank at 60: Serpent Sting is rank 8's price", function()
+        local headless = require("Game.harness.headless")
+        local out = {}
+        for _, p in ipairs(PACKS) do
+            local C = content(p[1], W[p[2]], p[3], 60, p[8] or REPLAY_EXTRA)
+            local H = headless.new({ character = C.character(), pack = C.PACK })
+            out[p[1]] = {
+                ("%.2f"):format(H.Hekili.State.action.serpent_sting.cost),
+                H.ctl.known[25295] or false,
+                H.ctl.known[25296] or false,
+            }
+        end
+        local rank8 = { "230.00", false, false }
+        assert.are.same({
+            hunter_survival = rank8,
+            hunter_beast_mastery_turret = rank8,
+            hunter_marksmanship_turret = { "202.40", false, false },
+            hunter_survival_turret = rank8,
+            hunter_survival_melee = rank8,
+        }, out)
+    end)
 end)
 
 -- Task 9 (S2's unknown-bracket pin, the real client path): a replay world at 20 yd (beyond melee, inside the shots'

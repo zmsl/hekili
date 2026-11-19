@@ -477,6 +477,11 @@ local function haste(VS, now, X)
     return (rf and 1.4 or 1) * (qs and 1.3 or 1)
 end
 
+-- The book ranks (Guide: Serpent Sting IX, Guide: Aspect of the Hawk VII; DB2 level 60) no trainer teaches:
+-- wowsims/forever's APL names resolve to the trainer rank (sim/core/spelldata/book_ranks.go; every Hunter log casts
+-- 13555 and 14322, Serpent Sting for 230), so the worlds' character has not learned them (as mage_world.lua's).
+M.BOOK = { [25295] = true, [25296] = true }
+
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, IDS = {} }
@@ -503,7 +508,7 @@ local function content(name)
             local a = assert(w.abilities[key], key)
             local ids = { a.id }
             for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
-                ids[#ids + 1] = id
+                ids[#ids + 1] = not M.BOOK[id] and id or nil
             end
             C.IDS[key] = ids
             for _, id in ipairs(ids) do

@@ -429,13 +429,14 @@ M.READY = {
     -- Turret { 0.43, 4 } -> { 0.15, 2 }, Survival Turret { 0.30, 5 } -> { 0.27, 2 }, Survival Melee { 0.41, 3 } ->
     -- { 0.23, 3 }
     -- re-pin e4ef929e54 -> ab0f00e4fc (R6; the Turret builds gain mana consumables: brilliant mana oil, elixir of greater
-    -- intellect, major mana potion, 1 gear slot): Marksmanship Turret { 0.15, 2 } -> { 0.57, 1 }: the two cost-class late
-    -- rows (aimed_shot 52.48 0.92, arcane_shot 84.57 0.15) are gone (more mana: the cost crossings now in:cost), one gcd-class
-    -- Serpent Sting row is late (64.57, 0.57; the sting faded 63.37, the log casts it at the GCD's end, we show it 0.57
-    -- after; not traced row by row, the cast-anchored dot class). Survival Turret { 0.27, 2 } holds; Survival Melee
+    -- intellect, major mana potion, 1 gear slot): Marksmanship Turret { 0.15, 2 } -> { 0.00, 0 }: the two cost-class late
+    -- rows (aimed_shot 52.48 0.92, arcane_shot 84.57 0.15) are gone (more mana: the cost crossings now in:cost); the
+    -- 64.57 Serpent Sting row (late 0.57, traced per tick in the fix round) was a harness gap: the worlds' Hunter knew the
+    -- Guide book's rank 9 (250, 220 under Efficiency 4/5) where wowsims's casts rank 8 (202.4), so the belief's wait ran
+    -- to 220; trainer-taught since (hunter_world.lua BOOK), it is in grain. Survival Turret { 0.27, 2 } holds; Survival Melee
     -- { 0.23, 3 } -> { 0.17, 5 } (new talents, gear and Immolation Trap first: mongoose_bite 3 max 0.30, wing_clip 2 max
     -- 0.16; early 2, late 3, median 0.161)
-    hunter_marksmanship_turret = { 0.57, 1 },
+    hunter_marksmanship_turret = { 0.00, 0 },
     hunter_survival_turret = { 0.27, 2 },
     hunter_survival_melee = { 0.17, 5 },
     -- { 0.47, 21 } -> { 0.76, 9 } re-pin e2842f0a78 (the new log): the 9 real rows late, cost class (gap BQ: lo reaches

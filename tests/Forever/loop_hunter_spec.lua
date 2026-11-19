@@ -61,6 +61,31 @@ describe("the Hunter loop worlds", function()
         end
     end)
 
+    -- Trainer-taught, as wowsims's character (its APL names resolve to the trainer rank, book_ranks.go): every Hunter
+    -- log casts Serpent Sting rank 8 (13555) for 230 (Marksmanship's Efficiency 4/5: 202.4) and Aspect of the Hawk
+    -- rank 6 (14322), never the Guide books' 25295 / 25296
+    it("know no book rank: Serpent Sting is rank 8's price, the world and the pack alike", function()
+        local out = {}
+        for _, pk in ipairs(ALL) do
+            local C = hw[pk[1]]
+            local H = headless.new({ character = C.character(), pack = C.PACK })
+            out[pk[1]] = {
+                ("%.2f"):format(C.resolve("serpent_sting", H).cost),
+                ("%.2f"):format(H.Hekili.State.action.serpent_sting.cost),
+                H.ctl.known[25295] or false,
+                H.ctl.known[25296] or false,
+            }
+        end
+        local rank8, mm = { "230.00", "230.00", false, false }, { "202.40", "202.40", false, false }
+        assert.are.same({
+            Survival = rank8,
+            BeastMasteryTurret = rank8,
+            MarksmanshipTurret = mm,
+            SurvivalTurret = rank8,
+            SurvivalMelee = rank8,
+        }, out)
+    end)
+
     -- Each world's pool and regen are its wowsims log's (OtherID 2 regen ticks, 0.1 s apart): the max mana, the casting
     -- tick (Tag 1; with each casting-share aura's boost) and the tick outside the five-second rule (Tag 2)
     for _, pk in ipairs(ALL) do
