@@ -12,8 +12,9 @@ describe("the headless Fury gates, 20 fights #loop", function()
         -- dps 0.98 -> 0.97 (re-pin ab0f: UW 59.5% x 1 rage rolled per hit (wowsims) + HS/Cleave Reckless charge; R6,
         -- seeds 1-20 / 21-40 / 41-60 dps A/B 0.976 / 1.028 / 1.017, mean 1.007; 0.983 / 1.003 / 1.005 on the world's
         -- fixed average): the rolled world re-times the fights. Seeds 1-20 per fight (a 15000-health kill each, so the
-        -- ratio is the kill-time ratio): 0.82 to 1.28, ours 302098 in 1718 s, the oracle's 304116 in 1688 s; the spread
-        -- is the two runs' kill times diverging after their first different press (fight noise), no systematic loss
+        -- ratio is the kill-time ratio): 0.82 to 1.28, ours 303102 in 1697.4 s, the oracle's 304116 in 1661.6 s; ours
+        -- kills slower in 15 of the 20, but the other sets read 1.028 / 1.017 and the fixed world already sat at 0.983:
+        -- read as seed-set noise of the diverging runs' kill times, not traced to a mechanism
         gate.solo(60, { agreement = 0.92, reactP90 = 1, unmatched = 2.5, dps = 0.97, overpower = 10 })
     end)
 end)
