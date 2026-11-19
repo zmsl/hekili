@@ -41,7 +41,10 @@ for _, locale in ipairs({ "deDE", "esES", "esMX", "frFR", "itIT", "zhCN" }) do
             assert.are.equal(AceLocale:GetLocale("Hekili"), H.ns.L)
             assert.are.equal(AceLocale:GetLocale("Hekili_Warrior"), H.Hekili:GetLocale("Hekili_Warrior"))
             assert.are.equal("a key nobody wrote", H.ns.L["a key nobody wrote"])
-            if locale ~= "itIT" and locale ~= "zhCN" then -- not translated yet
+            if locale == "frFR" then -- translated: core and pack tables read French
+                assert.are.equal("Fenêtre de prévision (s)", H.ns.L["Forecast window (s)"])
+                assert.are.equal("Armes", AceLocale:GetLocale("Hekili_Warrior")["Arms"])
+            elseif locale ~= "itIT" and locale ~= "zhCN" then -- not translated yet
                 assert.are.equal("Forecast window (s)", H.ns.L["Forecast window (s)"])
                 assert.are.equal("Arms", AceLocale:GetLocale("Hekili_Warrior")["Arms"])
             end
