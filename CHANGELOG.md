@@ -16,6 +16,7 @@
   imported priority.
 - Elemental Shaman: the default priority follows wowsims's newest Elemental build: Fire Nova comes before Elemental Mastery, Chain Lightning is cast only above 40% mana, and Earth Shock on Revelation no longer waits for a single target.
 - Hunter: Survival Melee follows wowsims's new build (new talents and gear; Immolation Trap is now the first melee shot and it drinks a Major Mana Potion again). Not yet checked in game.
+- Affliction Warlock: the default priority now suggests a Major Mana Potion, as wowsims's priority does.
 - Guardian and Protection Warrior priorities no longer include health-based defensive suggestions (your health is hidden from addons in combat); custom priorities that check your health get a warning on the Warnings page.
 
 ### Fixed
