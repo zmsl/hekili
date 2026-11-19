@@ -106,16 +106,14 @@ M.FLICKER = {
     -- refundNowOnAvoid; seeds 1-20 / 21-40 / 41-60 flicker 0.18 / 0.34 / 0.49 (oracle 0.65 / 0.61 / 0.70), retracted
     -- 0.07 / 0.04 / 0, readyShort 15 / 2 / 5, heldReady 156 / 169 / 171): tightened to the measurement, flicker 0.56 ->
     -- 0.51 (the measured worst + 0.01), readyShort 26 -> 15, heldReady 228 -> 171; retracted kept
-    -- re-pin e4ef929e54 -> ab0f00e4fc (R6; seeds 1-20 / 21-40 / 41-60 flicker 0.21 / 0.37 / 0.25 (oracle 0.81 / 0.77 /
-    -- 0.51), retracted 0.04 / 0.04 / 0.07, readyShort 5 / 1 / 11, heldReady 208 / 202 / 271): heldReady 171 -> 271,
-    -- wowsims's rage rules
-    -- (#1069/#1099, owner L1397 (3) / L1419): the world now pays Unbridled Wrath's expected rage (59.5% x 1 at 5/5) on
-    -- every landed white swing, Heroic Strike and Cleave and a Reckless Swings charge on a landed strike (6fda60cb8,
-    -- 0ee92565a). A/B (this kit with the old world) reads the old values, so the move is the truth's: the
-    -- richer rage flickers the oracle too, and the belief's floor counts no unseen proc (strikeNow's gain spread = the
-    -- amount), so truth is ready ahead of our floor more often (lo-truth at cost -1.1
-    -- -> -1.3); tip kit + old world 160 / 170 / 172. Flicker, retracted and readyShort hold
-    ["Fury L60"] = { flicker = 0.51, flickerK = 0.6, retracted = 0.21, readyShort = 15, heldReady = 271 }, -- 0.85 / 0.84 / 0.54, 0.07 / 0.00 / 0.06
+    -- re-pin ab0f: UW 59.5% x 1 rage rolled per hit (wowsims) + HS/Cleave Reckless charge (R6, the world rolling
+    -- Unbridled Wrath from its own stream, eb63112ff; seeds 1-20 / 21-40 / 41-60 flicker 0.18 / 0.30 / 0.26 (oracle
+    -- 0.67 / 0.48 / 0.40), retracted 0.07 / 0.04 / 0, readyShort 2 / 6 / 5, heldReady 226 / 197 / 229): tightened to the
+    -- measurement, flicker 0.51 -> 0.31 (the measured worst + 0.01), readyShort 15 -> 6; heldReady 171 -> 229: the old
+    -- world paid no Unbridled Wrath while the kit credited it, so the belief ran ahead of truth; truth now pays it and
+    -- the belief's floor counts no unseen proc (strikeNow's gain spread = the amount; owner: no optimistic procs), so
+    -- truth covers a cost before our floor more often (lo-truth at cost -1.1 -> -1.4); retracted kept
+    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.21, readyShort = 6, heldReady = 229 }, -- flicker 0.18 / 0.30 / 0.26, retracted 0.07 / 0.04 / 0 (ab0f, rolled)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -165,16 +163,21 @@ M.FLICKER = {
     -- another boot clock (seeds 6, 9, 14, 15, 17, 20 alone on a fresh boot read the same before and after ab8ad0acc;
     -- seed 11 alone 30 -> 14, ab8ad0acc moving that fight directly); the gap-as-09 / avoid-refund-09 merges (field off reads the same) moves seed 1, the boot's
     -- first fight, 21 -> 22 (an Execute held at 102.80)
-    -- re-pin e4ef929e54 -> ab0f00e4fc (R6; seeds 1-20 / 21-40 / 41-60 flicker 0.42 / 0.39 / 0.12 (oracle 0.76 / 0.75 /
-    -- 0.37), retracted 0, readyShort 0, heldReady 642 / 429 / 630): flicker 0.30 -> 0.43 (the measured worst + 0.01),
-    -- heldReady 377 -> 642, wowsims's rage rules
-    -- (#1069/#1099, owner L1397 (3) / L1419): the world now pays Unbridled Wrath's expected rage (59.5% x 1 at 5/5) on
-    -- every landed white swing, Heroic Strike and Cleave and a Reckless Swings charge on a landed strike (6fda60cb8,
-    -- 0ee92565a). A/B (this kit with the old world) reads the old values, so the move is the truth's: the
-    -- richer rage flickers the oracle too, and the belief's floor counts no unseen proc (strikeNow's gain spread = the
-    -- amount), so truth is ready ahead of our floor more often (lo-truth at cost -0.9 ->
-    -- -1.4..-2.5, est-truth stays 0.0..0.5); tip kit + old world flicker 0.20 / 0.23 / 0.19, heldReady 329 / 272 / 338
-    ["Fury L24"] = { flicker = 0.43, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 642 }, -- 0.46 / 0.52 / 1.25, 0.06 / 0.06 / 0.16; 53 / 47 / 47, 406 / 328 / 260
+    -- re-pin ab0f: UW 59.5% x 1 rage rolled per hit (wowsims) + HS/Cleave Reckless charge (R6, the world rolling
+    -- Unbridled Wrath from its own stream, eb63112ff; seeds 1-20 / 21-40 / 41-60 flicker 0.35 / 0.26 / 0.23 (oracle
+    -- 0.71 / 0.61 / 0.47), retracted 0, readyShort 0, heldReady 484 / 547 / 617; the lane's base b7c26392f read flicker
+    -- 0.20 / 0.29 / 0.25, heldReady 377 / 282 / 363): flicker 0.30 -> 0.36 (the measured worst + 0.01), traced (seeds
+    -- 1-20, 12 flips over 33.8 min): 7 with the oracle flipping too (5 the queued Heroic Strike cycle: pressed at w0.00,
+    -- queued next poll so a long wait shows, back at the swing, e.g. seed 9 t=69.20-69.60; 2 the fight's own), 5 ours
+    -- alone (3 the swing row a poll behind truth at a cost edge, e.g. seed 5 t=4.20: truth 7.79 -> 17.05 at a landed
+    -- swing, lo 5.50 with the swing pending, rend shown for one poll over sunder_armor, the row lands at 4.40, lo 15.23;
+    -- 2 a near-tie at the usability pin, lo 9.99 against rend's 10). Both classes pre-exist; the richer truth rage
+    -- (Unbridled Wrath now paid, in 1-rage steps, plus the strike's charge) brings more Heroic Strike casts and more
+    -- cost-edge crossings. heldReady 377 -> 617: the old world paid no Unbridled Wrath while the kit credited it, so
+    -- the belief ran ahead of truth; truth now pays it and the belief's floor counts no unseen proc (strikeNow's gain
+    -- spread = the amount; owner: no optimistic procs), so truth covers a cost before our floor (lo-truth at cost -0.9
+    -- -> -1.6 / -2.1 / -2.2, est-truth +0.3 / -0.3 / -0.2): true waits of the floor
+    ["Fury L24"] = { flicker = 0.36, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 617 }, -- flicker 0.35 / 0.26 / 0.23, retracted 0 / 0 / 0 (ab0f, rolled)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -216,16 +219,14 @@ M.FLICKER = {
     -- ours and the oracle both count it and show the icon at 0.00, and the loop presses before the world resolves the swing
     -- (truth 2.95 / 0.86 before the press; lo 2.13 / 1.99): a same-instant press-order tie in the harness, not a rage
     -- error (refused cost 0.1, unmatched 0.0). Seed 59 alone reads 0 (the mob's swings fall at .69, off the poll grid)
-    -- re-pin e4ef929e54 -> ab0f00e4fc (R6; seeds 1-20 / 21-40 / 41-60 flicker 0.27 / 0.14 / 0.15 (oracle 0.59 / 0.44 /
-    -- 0.49), retracted 0, readyShort 1 / 0 / 0, heldReady 373 / 272 / 286): flicker 0.14 -> 0.28 (the measured worst +
-    -- 0.01), heldReady 351 -> 373, wowsims's rage rules
-    -- (#1069/#1099, owner L1397 (3) / L1419): the world now pays Unbridled Wrath's expected rage (59.5% x 1 at 5/5) on
-    -- every landed white swing, Heroic Strike and Cleave and a Reckless Swings charge on a landed strike (6fda60cb8,
-    -- 0ee92565a). A/B (this kit with the old world) reads the old values, so the move is the truth's: the
-    -- richer rage flickers the oracle too, and the belief's floor counts no unseen proc (strikeNow's gain spread = the
-    -- amount), so truth is ready ahead of our floor more often (lo-truth at cost -0.4 ->
-    -- -0.5); tip kit + old world flicker 0.08 / 0.13 / 0.07, heldReady 356 / 285 / 320
-    ["Warrior Protection"] = { flicker = 0.28, retracted = 0.1, readyShort = 2, heldReady = 373 }, -- 0.62 / 0.64 / 0.54, 0 / 0.03 / 0.02
+    -- re-pin ab0f: UW 59.5% x 1 rage rolled per hit (wowsims) + HS/Cleave Reckless charge (R6, the world rolling
+    -- Unbridled Wrath from its own stream, eb63112ff; seeds 1-20 / 21-40 / 41-60 flicker 0.12 / 0.12 / 0.02 (oracle
+    -- 0.42 / 0.50 / 0.59), retracted 0, readyShort 0 / 0 / 0, heldReady 402 / 310 / 335; the lane's base b7c26392f
+    -- read 349 / 270 / 320): flicker 0.14 -> 0.13 (the measured worst + 0.01); heldReady 351 -> 402, every set up: the old world
+    -- paid no Unbridled Wrath while the kit credited it (est-truth at cost +0.8), so the belief ran ahead of truth and
+    -- hid held ticks; truth now pays it (est-truth +0.3 / +0.5 / +0.4) and the belief's floor counts no unseen proc
+    -- (strikeNow's gain spread = the amount; owner: no optimistic procs): true waits of the floor
+    ["Warrior Protection"] = { flicker = 0.13, retracted = 0.1, readyShort = 2, heldReady = 402 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
