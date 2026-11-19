@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- German translation (machine-assisted; native speakers are welcome to suggest fixes on GitHub).
 
 ### Changed
 
