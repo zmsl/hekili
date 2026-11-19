@@ -1027,6 +1027,71 @@ describe("resources", function()
             end)
         end)
 
+        -- L1456 (i): a swing entry's `width` is the half-width of its value, a random part the belief cannot see (a
+        -- proc's expected gain): the floor steps without it, the top with it, the estimate on the value.
+        describe("a swing value's width (swingWidth)", function()
+            local function widths(main, off)
+                local def = fs.def(fs.new(9))
+                def.resources[1].swingWidth, def.resources[1].swingOff = main, off and 4.5 or nil
+                def.resources[1].swingOffWidth = off
+                boot(def)
+                I.res.scale[1] = 1.2
+                I.res.hi0[1] = 0 -- the top from 0 too (it starts at the maximum)
+            end
+
+            it("steps lo by (value - width) and hi by (value + width), each scaled; est by the value", function()
+                widths(2, 1)
+                local sp = I.res.spread[1]
+                obs(Obs.Swing, 5, 1, 2.6, 1)
+                I.Fold(5, false)
+                local r = VS.Power(fs.RAGE, 5)
+                within(9 * 1.2, r.est)
+                within(7 * (1.2 - sp), r.lo)
+                within(11 * (1.2 + sp), r.hi)
+                obs(Obs.Swing, 5.5, 2, 2.6, 1) -- the off hand: its own width
+                I.Fold(5.5, false)
+                r = VS.Power(fs.RAGE, 5.5)
+                within((9 + 4.5) * 1.2, r.est)
+                within((7 + 3.5) * (1.2 - sp), r.lo)
+            end)
+
+            it("lifts lo by the step without the width when a provider's assumed hit is confirmed", function()
+                widths(2)
+                local R, sp = I.res, I.res.spread[1]
+                obs(Obs.Swing, 5, 1, 3, 5) -- record 3: assumed (est and hi only)
+                I.Fold(5, false)
+                assert.are.equal(0, R.lo0[1])
+                obs(Obs.Swing, 5, 1, 3, 7) -- its row
+                I.Fold(5.1, false)
+                within(7 * (1.2 - sp), R.lo0[1])
+                within(9 * 1.2, R.est0[1])
+            end)
+
+            it("judges a landed swing missed only by a short answer under the floor without the width", function()
+                local function missed(w)
+                    widths(w)
+                    local R = I.res
+                    R.scale[1] = 1
+                    R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 5
+                    obs(Obs.Swing, 10, 1, 2.6, 4) -- the swing: its floor before, 5
+                    obs(Obs.Usable, 10.5, I.ab.bySpell[fs.SPENDER_A], 0, 1) -- short of 10, once the swing shows
+                    I.Fold(10.5, false)
+                    return I.Missed(1, 10)
+                end
+                assert.is_true(missed(nil)) -- 5 + 9 x 0.98 > 10: a landed swing would have made it usable
+                assert.is_false(missed(4)) -- 5 + 5 x 0.98 < 10: a landed swing without the proc stays short
+            end)
+
+            it("changes nothing for a swing entry without `width`", function()
+                widths(nil)
+                obs(Obs.Swing, 5, 1, 2.6, 1)
+                I.Fold(5, false)
+                local r = VS.Power(fs.RAGE, 5)
+                within(9 * (1.2 - I.res.spread[1]), r.lo)
+                within(9 * (1.2 + I.res.spread[1]), r.hi)
+            end)
+        end)
+
         it("pays nothing for a swing that did not land (PLAYER_SWING, c = 4), and models the hit rate", function()
             obs(Obs.Swing, 5, 1, 2.6, 4)
             I.Fold(5, false)

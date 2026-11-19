@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- Warrior: a white swing's guaranteed rage no longer counts Unbridled Wrath before it procs, so a rage-gated ability is no longer shown ready a fraction of a rage early.
 
 ### Known issues
 

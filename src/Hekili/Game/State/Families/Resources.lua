@@ -31,8 +31,10 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- By resource slot r. `swing[r]` is the hand that pays it (1 main, 2 off; 0: continuous regen) and `swingOff[r]` the
 -- off hand's own value when both hands pay it (0: none); `swingAura[r]` the player aura index its swings need (0: none;
 -- -1: named but not tracked, so no swing pays); `swingCrit[r]` / `swingOffCrit[r]` the extra a critical white hit of
--- that hand adds (0: none). Continuous regen is per second (regE/regL/regH); a swing-paid
--- resource's step is the spec's model value of that hand x scale (spread around it). `restMax[r]`: a regenerating
+-- that hand adds (0: none); `swingWidth[r]` / `swingOffWidth[r]` the half-width of that hand's value, a random part the
+-- belief cannot see (a proc's expected gain; 0: none). Continuous regen is per second (regE/regL/regH); a swing-paid
+-- resource's step is the spec's model value of that hand x scale (spread around it), its floor step (value - width) x
+-- (scale - spread) and its top step (value + width) x (scale + spread). `restMax[r]`: a regenerating
 -- resource rests at its maximum (energy, mana), the others at 0 (rage).
 -- The five-second rule (C3): a slot with an `fsr` meta splits its continuous regen in two parts, each with its own
 -- calibrated state: the `mp5` part (regE/regL/regH, decl, dev) always, the `spirit` part (spE/spL/spH, spDecl, spDev;
@@ -74,6 +76,8 @@ local R = {
     swingOff = {},
     swingCrit = {},
     swingOffCrit = {},
+    swingWidth = {},
+    swingOffWidth = {},
     est0 = {},
     lo0 = {},
     hi0 = {},
@@ -399,6 +403,7 @@ I.OnBuild(function(def, now)
         R.swingValue[r] = d.swingValue or 0
         R.swingOff[r] = d.swingOff or 0
         R.swingCrit[r], R.swingOffCrit[r] = d.swingCrit or 0, d.swingOffCrit or 0
+        R.swingWidth[r], R.swingOffWidth[r] = d.swingWidth or 0, d.swingOffWidth or 0
         R.est0[r], R.lo0[r], R.hi0[r] = R.rest[r], 0, R.max[r]
         estDebt[r] = 0
         R.assume[r] = R.restMax[r] and R.swing[r] == 0
@@ -561,6 +566,19 @@ end
 --- The spec's white-crit extra of a swing-paid slot for `hand` (its swing entry's `crit`), as I.SwingValue.
 function I.SwingCrit(r, hand, at)
     return perSwing(r, hand, R.swingCrit, R.swingOffCrit, at)
+end
+
+--- The half-width of the per-swing value of a swing-paid slot for `hand` (its swing entry's `width`: a proc the belief
+--- cannot see), as I.SwingValue.
+function I.SwingWidth(r, hand, at)
+    return perSwing(r, hand, R.swingWidth, R.swingOffWidth, at)
+end
+
+-- The floor step of a landed swing of `hand` at `at` for slot r: its value without the width (never below 0) x
+-- (scale - spread). Allocates nothing.
+local function lowStep(r, hand, at)
+    local v = I.SwingValue(r, hand, at) - I.SwingWidth(r, hand, at)
+    return (v > 0 and v or 0) * (R.scale[r] - R.spread[r])
 end
 
 -- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
@@ -1081,8 +1099,7 @@ function I.Missed(hand, at)
             (R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0))
             and R.spends[r] == swSp[hand]
         then
-            local step = I.SwingValue(r, hand, at) * (R.scale[r] - R.spread[r]) -- its form or aura at the swing
-            return swTop[hand] < swL[hand] + step
+            return swTop[hand] < swL[hand] + lowStep(r, hand, at) -- its form or aura at the swing
         end
     end
     return false
@@ -1098,14 +1115,14 @@ end
 -- its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. `owed`: the step first covers the
 -- slot's rung lift (R.liftE/L/H). Allocates nothing.
 local function swingStep(r, hand, c, t, owed, at)
-    local max, v, s, sp = R.max[r], 0, 1, 0
+    local max, v, s, sp, w = R.max[r], 0, 1, 0, 0
     if c == 1 then
-        v, s, sp = I.SwingValue(r, hand, at), R.scale[r], R.spread[r]
+        v, s, sp, w = I.SwingValue(r, hand, at), R.scale[r], R.spread[r], I.SwingWidth(r, hand, at)
     else
         v = I.SwingCrit(r, hand, at)
     end
     if c == 1 or v ~= 0 then -- a slot with no `crit` takes no sample for a crit
-        local de, dl, dh = v * s, v * (s - sp), v * (s + sp)
+        local de, dl, dh = v * s, (v > w and v - w or 0) * (s - sp), (v + w) * (s + sp)
         if owed then
             de, R.liftE[r] = net(de, R.liftE[r])
             dl, R.liftL[r] = net(dl, R.liftL[r])
@@ -1284,7 +1301,7 @@ local function pendingStep(r, hand, t)
     if p == 0 or t <= p + I.Log.ORACLE_MIN - 1e-6 then
         return 0
     end
-    return I.SwingValue(r, hand, p) * (R.scale[r] - R.spread[r])
+    return lowStep(r, hand, p)
 end
 
 -- Slot r's floor raised to v (a yes that showed a pending swing landed: its low step), within the believed top, the
@@ -1429,7 +1446,8 @@ I.On(Obs.Usable, function(o, t, lag)
             else
                 -- a swing-paid resource crosses at a swing: [c, c + one step of the larger hand), measured at its
                 -- midpoint
-                local v, off = I.SwingValue(r), R.swingOff[r] ~= 0 and I.SwingValue(r, 2) or 0
+                local v = I.SwingValue(r) + I.SwingWidth(r)
+                local off = R.swingOff[r] ~= 0 and I.SwingValue(r, 2) + I.SwingWidth(r, 2) or 0
                 local step = (v > off and v or off) * (R.scale[r] + R.spread[r])
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
                 pin(r, c, step, t, "pinned", Obs.Usable, true)
@@ -1610,7 +1628,9 @@ I.On(Obs.Swing, function(o, t)
                     end
                 elseif k > 0 and recR[k] == r then -- confirmed: the rest of a landed step, and its floor
                     R.liftRec[r] = owes and o.b or 0 -- as a landed swing's (c = 1): its crit pays the rest it owed
-                    local de, dh, dl = v * sc * (1 - recAsm[k]), v * (sc + sp) - v * sc * recAsm[k], v * (sc - sp)
+                    local w = I.SwingWidth(r, hand, o.t)
+                    local de, dh = v * sc * (1 - recAsm[k]), (v + w) * (sc + sp) - v * sc * recAsm[k]
+                    local dl = lowStep(r, hand, o.t)
                     if owes then
                         de, R.liftE[r] = net(de, R.liftE[r])
                         dh, R.liftH[r] = net(dh > 0 and dh or 0, R.liftH[r])
