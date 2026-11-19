@@ -100,6 +100,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- fix f2812da55 moves none of its decisions): the shared four (berserker_rage -> battle_shout -4.50, overpower
             -- -> rend 10.05, spearing_strike -> mortal_strike 57.00, overpower -> sunder_armor 79.85) and two of the old
             -- classes (mortal_strike -> spearing_strike 144.45 at the cooldown's edge, overpower -> slam 163.45, R46)
+            -- Re-pin e4ef929e54 -> ab0f00e4fc (R6): 0.91 kept (61 of 67; measured 0.910), the same six misses: the new log
+            -- (Unbridled Wrath 5/5 on the two-hander, 1 rage a proc) re-times no decision; the kit's Unbridled Wrath
+            -- (59.5%, 1 rage a proc with any weapon, owner L1397 (3) / L1419) moves none either
             0.91,
             ARMS_REPLAY
         )
@@ -175,7 +178,14 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- above: Sunder's own MISS / DODGE on a fresh application (80.50, 126.24) keeps the belief's first stack, so a
             -- later Sunder reads 5 one cast early (central, repin-warrior-09-4). The avoided Execute's give-back
             -- (refundNowOnAvoid) moves no decision: the same-frame avoid reads lo 12 with the field on or off
-            0.83,
+            -- Re-pin e4ef929e54 -> ab0f00e4fc (R6): 0.89 (90 of 101; measured 0.891) from 0.83: the new log, wowsims's rage
+            -- rules (#1069/#1099: Unbridled Wrath rolls on Heroic Strike and Cleave, which spend a Reckless Swings and a
+            -- Flurry charge a cast; Heroic Strike 12 -> 5 casts) re-time the fight; the old kit reads the same 0.891 on
+            -- this log, so the kit's Unbridled Wrath 59.5% / strike changes move no decision. Misses (11): Overpower weaves
+            -- (R46 latency) overpower -> rend 12.00, -> bloodthirst 18.10, -> whirlwind 29.40 and 51.61, -> reckless_swings
+            -- 139.36; whirlwind -> sunder_armor 0.00 (the opening) and 117.30, -> rend 53.15, -> reckless_swings 62.26;
+            -- sunder_armor -> overpower 124.96; execute -> sunder_armor 161.30 (not traced per row)
+            0.89,
             FURY_REPLAY
         )
     end)
@@ -327,6 +337,12 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- -> demoralizing_shout 42.43, revenge -> sunder_armor 78.42; the old log had 2 of its 11 such casts),
             -- shatter_curse -> revenge 6.43 (health not replayed), rend -> battle_shout 166.92 (the pack's remains <= 10 vs
             -- wowsims recasting after the fade), sunder_armor -> battle_shout 179.19 (the log's fight-end fade at 180.00)
+            -- Re-pin e4ef929e54 -> ab0f00e4fc (R6): 0.91 kept (90 of 98; measured 0.918): the new log (wowsims's rage rules
+            -- #1069/#1099, Heroic Strike 45 -> 39) re-times the fight; the old kit reads the same 0.918. Misses, the old
+            -- classes: Shield Slam at its cooldown edge (shield_slam -> thunder_clap 3.03, shield_wall -> shield_slam 54.54,
+            -- sunder_armor -> shield_slam 66.34, shield_slam -> revenge 133.62), shield_slam -> demoralizing_shout 78.34,
+            -- shatter_curse -> revenge 95.14 (health not replayed), rend -> battle_shout 167.62 and sunder_armor ->
+            -- battle_shout 174.42 (the fight-end fades)
             0.91,
             PROT_REPLAY
         )

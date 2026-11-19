@@ -57,5 +57,76 @@ describe(
             assert.are.same({ -40 }, gains)
             assert.are.same({ 600 + 15 * 40, 600 + 15 * 40 }, amounts)
         end)
+
+        -- wowsims talents_fury.go at ab0f00e4fc (EV-0148, EV-0138; aura_helpers.go:163 rolls it): a landed Heroic
+        -- Strike or Cleave rolls Unbridled Wrath (11.9% a rank, 1 rage a proc) and spends one Reckless Swings charge for
+        -- 5; an avoided one neither. The roll is stubbed: `procs` answers each draw, `asked` keeps its chance.
+        it(
+            "pays a landed strike's Unbridled Wrath roll and one Reckless Swings charge, an avoided one's nothing",
+            function()
+                local ww = require("Forever.helpers.warrior_world")
+                local procs, asked = {}, {}
+                ww.wrng = {
+                    chance = function(p)
+                        asked[#asked + 1] = p
+                        return table.remove(procs, 1)
+                    end,
+                }
+                for _, key in ipairs({ "heroic_strike", "cleave" }) do
+                    local us = { auras = {}, power = 0 }
+                    ww.charges, ww.chargesE = 3, us
+                    gains, asked = {}, {}
+                    C.resolve(key, H).effect(W, us)
+                    us.struck(W, "DODGE")
+                    assert.are.same({}, gains)
+                    assert.are.same({}, asked) -- an avoided strike rolls nothing
+                    procs = { true, false, true, false }
+                    us.struck(W, "WOUND") -- a proc and a charge
+                    us.struck(W, "WOUND") -- no proc, a charge
+                    assert.are.equal(1, ww.charges)
+                    ww.charges = 0
+                    us.struck(W, "WOUND") -- a proc, no charge
+                    us.struck(W, "WOUND") -- neither: no gain
+                    assert.are.same({ 6, 5, 1 }, gains, key)
+                    assert.are.equal(4, #asked)
+                    assert.is_near(0.595, asked[1], 1e-9)
+                end
+                -- and a landed white swing its roll: 3.46 x 2.1 main hand, + 1 on a proc
+                local c = C.character()
+                procs = { true, false }
+                assert.is_near(3.46 * 2.1 + 1, C.gain(1, 1, 100, "", c), 1e-9)
+                assert.is_near(3.46 * 2.1, C.gain(1, 1, 100, "", c), 1e-9)
+                -- a two-hander's swing (the Arms world) 1 rage a proc too (owner L1419, wowsims ab0f EnergizeEffect 10 tenths)
+                procs = { true }
+                assert.is_near(4.5 * 3.6 + 1, ww.gain(1, 1, 100, "", c), 1e-9)
+                -- no rank, no draw (the Arms build; kill_rows' rage hook passes no character)
+                asked = {}
+                assert.is_near(4.5 * 3.6, ww.gain(1, 1, 100, "", nil), 1e-9)
+                assert.is_near(3.46 * 2.1, C.gain(1, 1, 100, "", { talents = {} }), 1e-9)
+                assert.are.same({}, asked)
+                ww.wrng = nil
+            end
+        )
+
+        -- the roll draws from the world's own stream (its pull hands it over): the rate over many swings is the
+        -- chance, and its draws leave every other stream of the world where it was
+        it("rolls Unbridled Wrath from a stream of its own at about its chance", function()
+            local ww = require("Forever.helpers.warrior_world")
+            local world = require("Game.harness.world")
+            local A, B = world.new(7), world.new(7)
+            ww.WORLD.script(A)
+            local c, n, procs = C.character(), 20000, 0
+            for _ = 1, n do
+                local d = C.gain(1, 1, 100, "", c) - 3.46 * 2.1
+                assert.is_true(math.abs(d) < 1e-9 or math.abs(d - 1) < 1e-9, tostring(d)) -- 0 or 1, never a share
+                procs = procs + d
+            end
+            assert.is_near(0.595, procs / n, 0.015)
+            for _, k in ipairs({ "rng", "crng", "grng", "mrng", "prng" }) do
+                assert.are.equal(B[k].next(), A[k].next(), k)
+            end
+            assert.are_not.equal(B.krng.next(), B.rng.next())
+            ww.wrng = nil
+        end)
     end
 )

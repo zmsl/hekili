@@ -19,7 +19,7 @@
 - Guardian and Protection Warrior priorities no longer include health-based defensive suggestions (your health is hidden from addons in combat); custom priorities that check your health get a warning on the Warnings page.
 
 ### Fixed
-
+- Warrior: Unbridled Wrath now counts its measured 60% chance per swing and 1 rage per proc with a two-hander too, and Heroic Strike and Cleave now count the Unbridled Wrath and Reckless Swings rage they give.
 - Fire and Frostfire Mage: the mana estimate is less likely to count a Master of Elements refund for a critical hit
   that came from Fireball's or Pyroblast's burn rather than a spell, which could show a spell as affordable too early.
   A Fire spell's critical hit that lands at the same moment as one of those burns no longer counts its refund, so the

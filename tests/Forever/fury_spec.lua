@@ -95,11 +95,19 @@ describe("the Fury world's off hand", function()
     local gate = require("Forever.helpers.fury_gate")
 
     it("pays Dual Wield Specialization by the character's rank", function()
+        local ww = require("Forever.helpers.warrior_world")
         local function offHand(level)
             local C = gate.content(level)
             return C.gain(1, 2, 0, "HIT", C.character())
         end
-        assert.is_near(1.73 * 1.9, offHand(24), 1e-9) -- the L24 cut stops short of the talent
-        assert.is_near(1.73 * 1.5 * 1.9, offHand(60), 1e-9)
+        -- both cuts carry Unbridled Wrath 5/5: a proc's 1 rage on top (the roll stubbed to a proc)
+        ww.wrng = {
+            chance = function()
+                return true
+            end,
+        }
+        assert.is_near(1.73 * 1.9 + 1, offHand(24), 1e-9) -- the L24 cut stops short of the talent
+        assert.is_near(1.73 * 1.5 * 1.9 + 1, offHand(60), 1e-9)
+        ww.wrng = nil
     end)
 end)
