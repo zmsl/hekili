@@ -295,10 +295,18 @@ local function schedule(i, a, app, wide)
 end
 
 -- A new application of a on g, confirmed by a row (the direct hit, or an alone schedule's first tick), closes its older
--- TICKS ticket as refreshed (unpaid rows not lost; decision 37): a recast that is avoided leaves the old one open.
+-- TICKS ticket as refreshed (unpaid rows not lost; decision 37): a recast that is avoided leaves the old one open. A
+-- newer one stays (L1442: an older schedule may pay its first tick late, past unseen ones).
 local function refresh(a, g, t, except)
     for j = 1, CAP do
-        if j ~= except and state[j] >= OPEN and kind[j] == X.TICKS and ab[j] == a and guid[j] == g then
+        if
+            j ~= except
+            and state[j] >= OPEN
+            and kind[j] == X.TICKS
+            and ab[j] == a
+            and guid[j] == g
+            and at[j] <= at[except]
+        then
             close(j, t, "refreshed")
         end
     end
@@ -565,7 +573,10 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
     -- an Overdue payment (pass 4) teaches neither the lag nor the band (attribution-recovery spec §1.1): its row is
     -- past the narrow band, so it is final at once (§2.1) and never teaches
     teachFrom(i, t, isAvoid, amount, flag, clean and pass ~= 4)
-    done[i], owed[i] = done[i] + 1, owed[i] - 1
+    local d0 = done[i]
+    -- (L1442) a tick pays its own index (K.TickN): the unseen ones before it are past, done + owed kept
+    local n = (k == X.TICKS and not isAvoid) and I.Kinds.TickN(i, t) or d0 + 1
+    done[i], owed[i] = n, owed[i] - (n - d0)
     if owed[i] < 0 then
         T.overpaid = T.overpaid + 1 -- never: a ticket is paid at most `owed` times (the sweep asserts it)
     end
@@ -573,7 +584,7 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         if amount then -- nil: a secret crit's; the last known amount stays the band
             T.tickAmt[i] = flag == "CRITICAL" and amount / 2 or amount
         end
-        if done[i] == 1 then -- the first tick confirms the application
+        if d0 == 0 then -- the first tick confirms the application
             refresh(a, guid[i], t, i)
         end
     end

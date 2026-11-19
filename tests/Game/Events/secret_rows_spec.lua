@@ -198,6 +198,104 @@ describe("rows with a secret amount (kind-only routing)", function()
         assert.are.same({ 0, 0, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
     end)
 
+    -- (ledger L1442) Live, every plain tick's amount is secret, so no tick is paid: the band follows the owed tick
+    -- nearest the row by elapsed time, not the first unseen one. The two shapes above with the old schedule's rows
+    -- all secret: its second tick at 16 is still in band, so the recast's (17.33) or the other ability's (1139.83)
+    -- direct crit there is ambiguous.
+    it("keeps a schedule's later ticks in band though its earlier rows were secret (17.33, all secret)", function()
+        local m = I.ab.bySpell[fs.SPENDER_M]
+        I.ab.onCrit[m] = function() end
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        ctl.now = 10.002
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 13
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 15.998
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
+        local landed, divergent = count(VS.Obs.Landed), T.divergent
+        ctl.now = 16
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.same({ 0, 1, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
+    end)
+
+    it(
+        "keeps another ability's later ticks in band though its earlier rows were secret (1139.83, all secret)",
+        function()
+            local m, f = I.ab.bySpell[fs.SPENDER_M], I.ab.bySpell[fs.SPENDER_F]
+            I.ab.onCrit[f], I.ab.school[f] = function() end, I.ab.school[m]
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            ctl.now = 10.002
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+            ctl.now = 13
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+            ctl.now = 15.998
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
+            local landed, divergent = count(VS.Obs.Landed), T.divergent
+            ctl.now = 16
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+            ctl.now = 40
+            I.Sources.Flush()
+            assert.are.same({ 0, 0, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
+        end
+    )
+
+    -- A paid tick past unseen ones pays its own index: the schedule's next band is the tick after it, so a second row
+    -- in the same instant is not that tick again (one row per tick).
+    it("pays a later tick by its index past unseen ones: done jumps, the count kept", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S) -- a nature schedule (3 s ticks)
+        ctl.now = 13.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 8) -- the first tick: the schedule snaps (anchor 10.7)
+        local i = ticket(X.TICKS)
+        local total = T.done[i] + T.owed[i]
+        ctl.now = 16.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8) -- tick 2 secret: background
+        ctl.now = 19.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8) -- tick 3, a crit
+        assert.are.same({ 3, total }, { T.done[i], T.done[i] + T.owed[i] })
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8) -- the same instant again: not tick 3 twice
+        assert.are.equal(3, T.done[i])
+    end)
+
+    -- An older schedule's first paid tick confirms its application over older ones only: a recast's newer schedule (its
+    -- direct row secret, so nothing refreshed the old one) stays open though the old one took a row in its phase.
+    it("closes no newer schedule of the ability when an older one pays its first tick", function()
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        local old = ticket(X.TICKS)
+        ctl.now = 13 -- the recast on the old schedule's first tick (its rows secret)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        local new
+        for j = 1, T.CAP do
+            if j ~= old and T.state[j] ~= T.FREE and T.kind[j] == X.TICKS then
+                new = j
+            end
+        end
+        ctl.now = 16 -- both schedules' tick, a crit: the older one takes it (the least expected closure, first slot)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        assert.are.same({ 2, true }, { T.done[old], T.state[new] >= T.OPEN })
+    end)
+
+    -- While a flight's schedule has no anchor (its direct row unseen, wide > 0) its band stays on its next owed tick:
+    -- by elapsed time its overlapping bands would hold nearly every row of its school.
+    it("keeps an unanchored flight schedule's band on its next owed tick", function()
+        local p = I.ab.bySpell[fs.SPENDER_P]
+        I.ab.rMax[p], I.ab.ticking[p], I.ab.tickAura[p] = 30, true, { tick_time = 2, duration = 8 }
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        local i = ticket(X.TICKS)
+        assert.are.same({ 1, 1, 1 }, { I.Kinds.TickN(i, 12), I.Kinds.TickN(i, 16), I.Kinds.TickN(i, 18) })
+    end)
+
     -- A projectile's own schedule (composed at its success, widened by the flight until its direct row) is no rival
     -- for that direct row: its debuff, and so its ticks, start there.
     it("stages a travelling cast's own direct crit though its own composed schedule is in band", function()

@@ -116,6 +116,20 @@ function K.Accepts(i, act, flag, amount, sch, isAvoid)
     return true, false
 end
 
+--- (ledger L1442) The index of TICKS ticket i's owed tick a row at t would be: the one nearest t by elapsed time, from
+--- done + 1 to done + owed, so an unseen tick (live, a plain tick's amount is secret: background) does not hold the band
+--- at itself. While the anchor is unknown (wide > 0: a flight's schedule before its first row) the next owed tick:
+--- its bands would overlap (Fireball 0.1 + 1.6 s each way on a 2 s period). Allocates nothing.
+function K.TickN(i, t)
+    local n, p = T.done[i] + 1, T.period[i]
+    if T.wide[i] > 0 or p <= 0 then
+        return n
+    end
+    local m, last = math.floor((t - T.anchor[i]) / p + 0.5), T.done[i] + T.owed[i]
+    m = m < last and m or last
+    return m > n and m or n
+end
+
 --- Ticket i's band at pass p for a row at t: lo, hi (absolute) and its expected closure E; nil when it has none. Pass
 --- 4, Overdue (attribution-recovery spec decision 46 as amended): late, never early: from the end of the ticket's
 --- expected tolerance (a learned flight's narrow band, an unlearned flight's expected landing, a wound's cast window)
@@ -162,7 +176,7 @@ function K.Band(i, p, t, isAvoid, act, sch)
             end
             return a0, a0 + L.LandWindow(1), a0
         end
-        local e = T.anchor[i] + (T.done[i] + 1) * T.period[i]
+        local e = T.anchor[i] + K.TickN(i, t) * T.period[i]
         local half = T.TICK_BAND + T.wide[i] -- the schedule is the only discriminator: every pass alike
         return e - half, e + half, e
     elseif k == CHANNEL then
