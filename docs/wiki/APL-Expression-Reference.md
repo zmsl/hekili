@@ -41,7 +41,7 @@ When a comparison asks a resource to reach a value, as in `energy.lo>=60` or `60
 <!-- /GENERATED -->
 
 > [!NOTE]
-> **On Forever:** The game hides target health, so every time-to-die value reads as unknown: 3600 seconds, or 2520 for `target.time_to_pct_<N>`. In the Affliction line above, `fight_remains>60` always passes. A line that needs `fight_remains<8` never fires.
+> **On Forever:** The game hides target health, so every time-to-die value reads as unknown: 3600 seconds. In the Affliction line above, `fight_remains>60` always passes. A line that needs `fight_remains<8` never fires.
 
 ### Edge cases
 

@@ -20,6 +20,7 @@
 - Guardian and Protection Warrior priorities no longer include health-based defensive suggestions (your health is hidden from addons in combat); custom priorities that check your health get a warning on the Warnings page.
 
 ### Fixed
+- `target.time_to_pct_<N>` now reads 3600 when the target's time to die is unknown, like `fight_remains` and `target.time_to_die` (it read 2520), so custom conditions see the same unknown time everywhere.
 - Warrior: Unbridled Wrath now counts its measured 60% chance per swing and 1 rage per proc with a two-hander too, and Heroic Strike and Cleave now count the Unbridled Wrath and Reckless Swings rage they give.
 - Fire and Frostfire Mage: the mana estimate is less likely to count a Master of Elements refund for a critical hit
   that came from Fireball's or Pyroblast's burn rather than a spell, which could show a spell as affordable too early.

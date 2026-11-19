@@ -1365,7 +1365,7 @@ do
     end
 
     function Hekili:GetTimeToPct( unit, percent )
-        local default = 0.7 * ( FEED and UnitIsTrivial( unit ) and TRIVIAL or FOREVER )
+        local default = FEED and UnitIsTrivial( unit ) and TRIVIAL or FOREVER
         local guid = UnitExists( unit ) and UnitCanAttack( "player", unit ) and UnitGUID( unit )
 
         if percent >= 1 then

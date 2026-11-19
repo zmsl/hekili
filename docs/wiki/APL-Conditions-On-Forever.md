@@ -59,7 +59,7 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 |---|---|---|---|
 | `fight_remains`, `time_to_die` | Fixed | 3600 s, meaning unknown, less the time the forecast looks ahead | Remove the test |
 | `target.time_to_die` | Fixed | 3600 s, meaning unknown | Remove the test |
-| `target.time_to_pct_<N>` | Fixed | 2520 s, meaning unknown, less the time the forecast looks ahead | Remove the test |
+| `target.time_to_pct_<N>` | Fixed | 3600 s, meaning unknown, less the time the forecast looks ahead | Remove the test |
 | `time_to_pct_<N>` | Fixed | 3600 s, less the time the forecast looks ahead | Remove the test |
 | `expected_combat_length` | Fixed | 3600 s plus `time` | Remove the test |
 
@@ -112,13 +112,11 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 |---|---|---|---|
 | `target.exists`, `target.is_player`, `target.is_dead`, `target.level` | Read | Read from the game | n/a |
 | `target.within<N>`, `target.outside<N>`, `target.range<A>to<B>`, `target.distance` | Estimated | From the range checks of the abilities Hekili Forever tracks; while the range is unknown, all are true | n/a |
-| `target.is_boss` | Limited | Read in the open world; in dungeons and raids, a boss that the game does not show as a world boss can read false | n/a |
+| `target.is_boss` | Read | Read from the game, in the open world and in dungeon and raid boss fights | n/a |
 | `target.creature_type`, `target.is_undead`, `target.is_demon` | Limited | Read in the open world; `unknown` and false in dungeons and raids | n/a |
 | `target.is_targeting_player` | Limited | Read in the open world; false while the game hides it, as in dungeon fights | n/a |
 | `target.casting` | Estimated | Whether the target is casting is read; how long the cast lasts is not | n/a |
 | `target.moving` | Limited | Read out of combat; false in combat, because the game hides the target's speed | n/a |
-
-<!-- UNVERIFIED: target.is_boss inside a dungeon boss fight is not measured; the boss comparison is hidden there under the identity restriction. -->
 
 ## Enemies
 
