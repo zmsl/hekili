@@ -899,4 +899,13 @@ of the core (core-is-generic) and stop one key meaning two things (the core's "C
   a violation unless its line ends `-- l10n: verbatim` (for the never-localized list). `Libs/`, `Locales/`, DevTools and
   the snapshot files are skipped. It is token-level: a literal returned from a function in a sink is not seen.
 - **Adding a language:** create an empty `Locales/<locale>.lua` in each addon with text, list it in that addon's TOC
-  after `enUS.lua`, and run `python3 tools/locales.py`.
+  after `enUS.lua` (languages in alphabetical order, then `Locales.lua`), and run `python3 tools/locales.py`. Every
+  language the core has must have a file in each addon with text (a pack without one shows as out of date). The shipped
+  languages are deDE, esES, frFR, itIT and zhCN. One file may serve two clients: `esES.lua` registers for esES and esMX
+  (`ALIASES` in the tool), written in neutral Spanish. Until translated, a file lists every key as a comment and the
+  English text shows.
+- **Coverage and length.** `python3 tools/locales.py --report` prints, per language, how many keys are untranslated
+  (`-v` per addon, `--keys` each key; it always exits 0; `make check-full` prints it as information, and a language
+  more than 5% behind is marked). A translation of a label of 24 characters or fewer that is longer than 1.5 times the
+  English prints a warning (not a failure); German and French run long, so check the widest panels in game. Terms:
+  `docs/dev/translation-glossary.md`.

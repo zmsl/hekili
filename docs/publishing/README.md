@@ -69,6 +69,9 @@ published release is not released**: it has a draft on GitHub and nothing on Cur
 Tags are `vMAJOR.MINOR.PATCH`; a pre-release adds a suffix with a `-` (`v0.2.0-rc.1`, `v0.2.0-beta.1`) and goes to
 CurseForge as a beta file.
 
+0. **Translations.** Run `python3 tools/locales.py --report` and read the per-language counts; a language marked BEHIND
+   (more than 5% of its keys untranslated) is either shipped as it is (the English shows for the rest) or its delta is
+   translated first. `make check-full` prints the same lines as information.
 1. **Tag.** On `forever` with `make check` green: `git tag vX.Y.Z && git push origin vX.Y.Z` (that one tag, never
    `--tags`). CHANGELOG.md is not touched by hand.
 2. **Read the draft.** Actions > release (`.github/workflows/release.yml`) builds the zip with the BigWigs packager
