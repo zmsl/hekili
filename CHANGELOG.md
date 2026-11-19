@@ -5,6 +5,8 @@
 ### New
 
 - Italian translation of the core interface, thanks to Sairiin.
+- A new wiki page, APL Conditions On Forever, lists which priority conditions work on Forever, which are estimated or
+  limited, and what to write instead, such as `mana.pct_lo` for `mana.pct`.
 
 ### Changed
 - Feral: the default priority follows wowsims's simplified Feral priority: one priority at every enemy count, with new energy points for Shifting Power and Ferocious Bite.

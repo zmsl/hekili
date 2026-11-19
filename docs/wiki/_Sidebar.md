@@ -16,7 +16,7 @@
 **Write priorities**
 - [Overview](APL-Overview) · [Tutorial](APL-Tutorial-Your-First-Custom-Priority)
 - Reference: [Syntax](APL-Syntax-Reference) · [Expressions](APL-Expression-Reference) · [Line options](APL-Line-Options) · [Editor](APL-Priority-Editor)
-- [Forever differences](APL-Forever-Differences) · [Windows](APL-Windows) · [Debugging](APL-Debugging)
+- [Forever differences](APL-Forever-Differences) · [Conditions on Forever](APL-Conditions-On-Forever) · [Windows](APL-Windows) · [Debugging](APL-Debugging)
 - [wowsims priorities explained](APL-wowsims-Packs-Explained)
 
 **Write class packs**

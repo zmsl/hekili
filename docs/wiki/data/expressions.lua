@@ -104,7 +104,7 @@ return {
     ["target.time_to_pct_<N>"] = {
         type = "seconds",
         meaning = "Time until the target falls to N percent health",
-        forever = "Always 3600 (unknown)",
+        forever = "Always 2520 (unknown)",
         example = "target.time_to_pct_20>5",
     },
 }
