@@ -30,6 +30,7 @@
 - At very high spell haste, the icons after the first no longer come up a little early: a global cooldown is never
   shorter than 1 second.
 - Dominos users no longer get repeated Lua errors when Hekili reads keybindings before all action bars or buttons exist.
+- Custom priorities: `group_health` now averages you and party members 1 to 4, and `at_risk` counts only members below 70% health (it counted every living member).
 
 ### Known issues
 
