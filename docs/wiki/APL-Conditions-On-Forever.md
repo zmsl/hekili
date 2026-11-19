@@ -4,7 +4,7 @@ Type: Reference
 Audience: theorycrafters
 Prerequisites: [APL expression reference](APL-Expression-Reference).
 -->
-**APL conditions on Forever** lists how well each family of condition expressions works on the Forever client, for authors who write their own priority. Most expressions work as they do in the original Hekili. Some read an estimate, because the game hides the value from addons; some work only in some places; and a few never change. The tables give each family's support and, where a better test exists, what to write instead.
+**APL conditions on Forever** lists how well each family of condition expressions works on the Forever client, for authors who write their own priority. Most expressions work as they do in the original Hekili. Some read an estimate, because the game hides the value from addons; some work only in some places; and a few never change. The tables, written by hand, give each family's support and, where a better test exists, what to write instead.
 
 What each expression means is in [APL expression reference](APL-Expression-Reference). Why the game hides values is in [What Hekili Forever can and cannot know](What-Hekili-Forever-Can-And-Cannot-Know).
 
@@ -17,7 +17,7 @@ What each expression means is in [APL expression reference](APL-Expression-Refer
 | Limited | The condition works, except in the situations the table names. |
 | Fixed | The value does not change on Forever; the table gives what it reads. |
 
-In the tables, "n/a" in the **Write this instead** column means the expression can be used as it is, or that nothing replaces it.
+In the tables, "n/a" in the "Write this instead" column means the expression can be used as it is, or that nothing replaces it.
 
 ## Common rewrites
 
@@ -25,7 +25,7 @@ In the tables, "n/a" in the **Write this instead** column means the expression c
 |---|---|---|
 | `mana.pct<30` | `mana.pct_lo<30` | The game hides mana; the low end is the amount certain to be there. |
 | `energy.current>=50` | `energy.lo>=50` | The same for energy and rage |
-| `target.health.pct<20` | `target.health.pct<=20` | Target health reads the ability's threshold itself, not less. |
+| `target.health.pct<20` | `target.health.pct<=20` | Target health reads the threshold of an ability limited by target health, not less; on a specialization without one, remove the test. |
 | `fight_remains<8` | Remove the test | The time to die is unknown, so the test never passes. |
 | `target.time_to_die>12` | Remove the test | The test always passes. |
 
@@ -57,7 +57,8 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 
 | Expression | Support | On Forever | Write this instead |
 |---|---|---|---|
-| `fight_remains`, `target.time_to_die`, `time_to_die` | Fixed | 3600 s, meaning unknown, less the time the forecast looks ahead | Remove the test |
+| `fight_remains`, `time_to_die` | Fixed | 3600 s, meaning unknown, less the time the forecast looks ahead | Remove the test |
+| `target.time_to_die` | Fixed | 3600 s, meaning unknown | Remove the test |
 | `target.time_to_pct_<N>` | Fixed | 2520 s, meaning unknown, less the time the forecast looks ahead | Remove the test |
 | `time_to_pct_<N>` | Fixed | 3600 s, less the time the forecast looks ahead | Remove the test |
 | `expected_combat_length` | Fixed | 3600 s plus `time` | Remove the test |
@@ -71,8 +72,8 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 |---|---|---|---|
 | `target.health.pct`, `target.health.current`, `target.health_pct` | Limited | 100 until an ability usable only below a target-health threshold becomes usable; then that threshold, such as 20 | `<=` at the ability's threshold: `target.health.pct<=20`, not `target.health.pct<20` |
 | `health.pct`, `health.current` | Limited | The player's health as the game reports it; full (100) while the game hides it | n/a |
-| `group_health`, `at_risk` | Fixed | `group_health` reads 100 and `at_risk` does not measure health, because the game hides other players' health | n/a |
-| `incoming_damage_<N>s`, `incoming_physical_damage_<N>s`, `incoming_magic_damage_<N>s`, `incoming_heal_<N>s` | Fixed | 0: the game hides the amount of each hit and heal on the player | n/a |
+| `group_health`, `at_risk` | Fixed | `group_health` counts every other group member as full and `at_risk` does not measure health, because the game hides other players' health | n/a |
+| `incoming_damage_<N>s`, `incoming_physical_damage_<N>s`, `incoming_magic_damage_<N>s`, `incoming_heal_<N>s` | Fixed | 0, because the game hides the amount of each hit and heal on the player | n/a |
 
 - On a specialization with no ability limited by target health, `target.health.pct` always reads 100. A priority that reads target health gets a warning in **Warnings** when it loads.
 - A class pack can name the low-health phase itself; its class file lists such names ([Pack class file anatomy](Pack-Class-File-Anatomy)).
@@ -87,7 +88,7 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 | `buff.<key>.remains`, `buff.<key>.refreshable` | Estimated | In combat, from the cast and the aura's length | n/a |
 | `buff.<key>.stack`, `buff.<key>.react` | Estimated | In combat, from the casts and procs the class pack models; the Cooldown Manager shows whether the aura is up, not its stacks | `buff.<key>.up` when any stack is enough |
 | `buff.<key>.duration`, `buff.<key>.max_stack` | Read | From the class pack | n/a |
-| `debuff.<key>.up`, `.remains`, `.stack`, `.ticking`, `.refreshable` | Estimated | From the player's casts: the game hides the target's auras in combat | n/a |
+| `debuff.<key>.up`, `.remains`, `.stack`, `.ticking`, `.refreshable` | Estimated | From the player's casts, since the game hides the target's auras in combat, and corrected by the Cooldown Manager when the debuff is on one of its bars | n/a |
 | `active_dot.<key>` | Limited | The target and the enemies Hekili Forever remembers, which needs enemy nameplates; while unknown, every enemy counts as carrying the aura | n/a |
 | `buff.<key>.icd_ready`, `buff.<key>.icd_remains` | Estimated | From the proc's last application | n/a |
 
@@ -100,7 +101,8 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 | `action.<key>.known`, `.enabled`, `.disabled` | Read | Read from the game and the options | n/a |
 | `action.<key>.in_range` | Read | The game's range check for the ability | n/a |
 | `action.<key>.ready`, `action.<key>.usable_in` | Estimated | Built on the cooldown and resource estimates | n/a |
-| `action.<key>.cost`, `.cast`, `.execute_time`, `.gcd`, `.travel_time` | Estimated | From the class pack, scaled by the haste estimate in combat | n/a |
+| `action.<key>.cost`, `action.<key>.travel_time` | Read | From the class pack | n/a |
+| `action.<key>.cast`, `.execute_time`, `.gcd` | Estimated | From the class pack, scaled by the haste estimate in combat | n/a |
 | `gcd.remains`, `gcd.max` | Estimated | From the player's casts and the haste estimate | n/a |
 | `prev.<N>.<key>`, `prev_gcd.<N>.<key>`, `prev_off_gcd.<N>.<key>` | Read | The player's own casts, then the forecast's | n/a |
 | `channeling`, `channel_remains` | Read | The player's own cast | n/a |
@@ -116,7 +118,7 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 | `target.creature_type`, `target.is_undead`, `target.is_demon` | Limited | Read in the open world; `unknown` and false in dungeons and raids | n/a |
 | `target.is_targeting_player` | Limited | Read in the open world; false while the game hides it, as in dungeon fights | n/a |
 | `target.casting` | Estimated | Whether the target is casting is read; how long the cast lasts is not | n/a |
-| `target.moving` | Fixed | False in combat: the game hides the target's speed | n/a |
+| `target.moving` | Limited | Read out of combat; false in combat, because the game hides the target's speed | n/a |
 
 <!-- UNVERIFIED: target.is_boss inside a dungeon boss fight is not measured; the boss comparison is hidden there under the identity restriction. -->
 

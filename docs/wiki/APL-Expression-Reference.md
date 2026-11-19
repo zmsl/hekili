@@ -234,7 +234,7 @@ actions+=/mind_flay,if=((action.inner_focus.known&prev.1.inner_focus)|(!action.i
 | `gcd.remains` | seconds | Time until the running GCD ends | Read | `gcd.remains<=0` |
 | `gcd.max` | seconds | The length of a GCD | Modelled | `gcd.max<1.5` |
 | `health.pct` | percent | The player's health | Read; 100 while hidden | `health.pct<=30` |
-| `totem.<element>.up` | boolean | A totem of that element is placed | Read | `!totem.fire.up` |
+| `totem.<element>.up` | boolean | A totem of that element is placed | Read out of combat; estimated in combat | `!totem.fire.up` |
 | `totem.<element>.remains` | seconds | Time until it expires | Estimated | `totem.fire.remains<2` |
 | `main_hand.<kind>`, `off_hand.<kind>` | boolean | The weapon in that hand is of a kind, such as `dagger` or `two_handed` | Read | `main_hand.dagger` |
 | `equipped.shield` | boolean | A shield is equipped | Read | `equipped.shield` |

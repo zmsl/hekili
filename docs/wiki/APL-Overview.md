@@ -64,5 +64,6 @@ A recommendation that changes and changes back within a few updates is called fl
 
 - [APL tutorial: your first custom priority](APL-Tutorial-Your-First-Custom-Priority)
 - [APL Forever differences](APL-Forever-Differences): what differs from SimulationCraft and retail Hekili
+- [APL conditions on Forever](APL-Conditions-On-Forever): which conditions are read, estimated, limited or fixed, and what to write instead
 - [APL priority editor](APL-Priority-Editor)
 - [Choosing a priority](Choosing-A-Priority)
