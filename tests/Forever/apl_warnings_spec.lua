@@ -27,7 +27,7 @@ describe("APL secret-token scan", function()
         assert.are.same({
             "health.pct",
             "your health is hidden in combat",
-            "this line never passes in combat",
+            "your health reads full in combat, so a low-health check never passes there",
         }, { scan("(health.pct<35)") })
         for _, hp in ipairs({ "health.current<5000", "health.deficit>5000", "health.percent>50", "health.actual<9" }) do
             assert.are.equal(hp:match("^[%a.]+"), scan("buff.spender_c.up&" .. hp), hp)

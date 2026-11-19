@@ -14,7 +14,7 @@ local find, byte = string.find, string.byte
 local TARGET_HP = "target health is secret"
 local ALWAYS_100 = "reads 100 until a health-gated ability pins it, always on a spec without one"
 local OWN_HP = "your health is hidden in combat"
-local NEVER = "this line never passes in combat"
+local NEVER = "your health reads full in combat, so a low-health check never passes there"
 
 -- { token, subject, what it reads }: the names Hekili's state resolves through target health (State.lua: mt_target's
 -- health_*; mt_target_health), then the player's (state.health). Qualified

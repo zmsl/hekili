@@ -32,7 +32,7 @@ describe("a player health read in a priority", function()
         assert.are.same(warned, H.errors)
         local text = (
             "Forever: your health is hidden in combat; `health.pct` in pack `%s` list `%s` entry 1"
-            .. " (frenzied_regeneration): this line never passes in combat."
+            .. " (frenzied_regeneration): your health reads full in combat, so a low-health check never passes there."
         ):format(pack, list)
         assert.are.same({ text }, H.Hekili.ErrorKeys)
     end)
