@@ -33,6 +33,8 @@
 - Dominos users no longer get repeated Lua errors when Hekili reads keybindings before all action bars or buttons exist.
 - Custom priorities: `group_health` now averages you and party members 1 to 4, and `at_risk` counts only members below 70% health (it counted every living member).
 
+### Known issues
+
 ### Upgrade notes
 
 - A copy of the Guardian or Protection Warrior priority you made before this version keeps its health-based defensive lines; they never pass in combat and show a warning on the Warnings page.
@@ -96,6 +98,8 @@ Hekili Forever v0.9.0 follows the newest wowsims.com rotations for most classes,
 - Simplified Chinese: the Cooldown Manager panel, overlays, Action Bar Glow and wowsims priority names are now translated.
 ### Known issues
 - Warrior, Arms and Fury: Blackhand's Breadth, used in wowsims's latest gear sets, is not suggested yet.
+### Known issues
+
 ### Upgrade notes
 - A priority list named `windows` is now reserved for window declarations. A custom priority with an ordinary list of that name shows an error on that list until you rename it.
 
@@ -486,6 +490,8 @@ Hekili Forever 0.7.0 picks some Druid, Mage and Warlock priorities from your tal
 - Fury Warriors: the rage from Reckless Swings is counted the moment you cast it.
 - Subtlety Rogues: Death Mark's payout and Boot Knife's chance of a combo point aren't counted yet.
 
+### Known issues
+
 ### Upgrade notes
 - Update Hekili together with its class addons. A mismatched pair loads no priorities and says "update the older one".
 - Druids: if you chose Feral yourself on 0.6.2 and have all three points of Thick Hide, you may be switched to Guardian at first login without a notice. Press "Activate Feral" on the Feral spec page once and your choice stays.
@@ -611,6 +617,8 @@ This release updates most wowsims.com priorities to wowsims as it was on 2 Novem
 - Warlock: after a Demonic Rune or Major Mana Potion, Life Tap may show for up to 40 s even though your mana is high.
 - In dungeons and raids, only one enemy is counted, so AoE abilities are not recommended there.
 - A display can occasionally fail to build and stay blank; the cause is still being investigated.
+
+### Known issues
 
 ### Upgrade notes
 - In custom or imported priorities, `energy.current` and `mana.pct` now give the addon's best estimate. Use `energy.lo` or `mana.pct_lo` for the old cautious reading.
@@ -792,6 +800,8 @@ v0.3.0 adds the Warlock and Priest with default priorities, an Elemental Shaman 
 - A priority updated on the same day no longer shows as reverted when you log in.
 - Built-in priorities no longer show a Delete button.
 
+### Known issues
+
 ### Upgrade notes
 - Saved or imported priorities that set a pre-pull timing now ignore it without a warning. Their pre-pull lines follow the new show-while-needed rule.
 
@@ -864,6 +874,8 @@ Hekili Forever v0.2.0 makes priorities translated from wowsims.com the default f
 - Hunter: Multi-Shot rarely appears if you never walk into melee, and Beast Mastery and Marksmanship use the same list. The defaults never suggest Aimed Shot, Sniper Shot or Summon Hawk.
 - Shaman: there is no weapon-imbue reminder. The mana potion, Demonic Rune and Fire Nova lines are always on and use estimated mana, and Fire Nova is expected to cost 520 mana where wowsims.com uses 375.
 - Every fight is treated as a long one: Feral's end-of-fight Ferocious Bite and the Rogue end-of-fight lines never show, and Rip can be suggested on a mob that dies first.
+
+### Known issues
 
 ### Upgrade notes
 - Update the core addon (Hekili) together with its class addons. A mismatched pair loads no priorities and says "update the older one".
