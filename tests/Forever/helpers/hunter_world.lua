@@ -348,8 +348,9 @@ PACKS.BeastMasteryTurret = turret(
     "hunter_beast_mastery_turret",
     { "bestial_wrath", "summon_hawk" }, -- the hawk list (e4ef929e54)
     -- Bestial Discipline 2/2 (19590=2): a static 50% share, so the casting rate 24.15 (the log's 2.415 a tick) and the
-    -- spirit part outside it (1 - 0.5) x 17.50 = 8.75 (outside 32.90: 3.290)
-    { 8.75, 24.15, share = 0.5 }
+    -- spirit part outside it (1 - 0.5) x 17.50 = 8.75 (outside 32.90: 3.290); derived from TURRET_FSR so a re-pin moves
+    -- one number (15.4 + 0.5 x 17.5 is exactly the double 24.15)
+    { TURRET_FSR[1] * 0.5, TURRET_FSR[2] + 0.5 * TURRET_FSR[1], share = 0.5 }
 )
 PACKS.MarksmanshipTurret = turret(
     "Marksmanship Turret (wowsims.com)",
