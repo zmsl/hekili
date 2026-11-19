@@ -347,16 +347,16 @@ PACKS.BeastMasteryTurret = turret(
     "Beast Mastery Turret (wowsims.com)",
     "hunter_beast_mastery_turret",
     { "bestial_wrath", "summon_hawk" }, -- the hawk list (e4ef929e54)
-    -- Bestial Discipline 2/2 (19590=2): a static 50% share, so the casting rate 21.15 (the log's 2.115 a tick) and the
-    -- spirit part outside it (1 - 0.5) x 17.50 = 8.75 (outside 29.90: 2.990)
-    { 8.75, 21.15, share = 0.5 }
+    -- Bestial Discipline 2/2 (19590=2): a static 50% share, so the casting rate 24.15 (the log's 2.415 a tick) and the
+    -- spirit part outside it (1 - 0.5) x 17.50 = 8.75 (outside 32.90: 3.290)
+    { 8.75, 24.15, share = 0.5 }
 )
 PACKS.MarksmanshipTurret = turret(
     "Marksmanship Turret (wowsims.com)",
     "hunter_marksmanship_turret",
     { "sniper_shot" },
     -- no Resourcefulness in this build; its Rapid Recuperation 2/2 (the log header's 1223987=2): half the spirit regen
-    -- while casting for 15 s after each landed Serpent Sting (the log's 2.115 a tick casting under it, 1.240 without)
+    -- while casting for 15 s after each landed Serpent Sting (the log's 2.415 a tick casting under it, 1.540 without)
     { TURRET_FSR[1], TURRET_FSR[2], auras = { [1242512] = { share = 0.5 } } }
 )
 PACKS.SurvivalTurret = turret(

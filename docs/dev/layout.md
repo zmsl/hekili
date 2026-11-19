@@ -403,10 +403,10 @@ Survival Melee (`sv_melee.siml` on `melee.apl.siml`). The Turret packs are each 
 and Marksmanship weave packs are retired (L1154: `spec:RetirePacks`, a profile that had one selected moves to the
 Turret with a one-time notice). Survival's weave was its default before, so Survival lists it in `formerPackages`.
 Their worlds take the export's whole talent string; the Turret worlds stand at 12 yd shooting, Survival Melee at 5 yd
-with two one-handers (its live bars at 11 yd, R63, `W.SurvivalMeleeRanged`). At the re-pin e4ef929e54 (Pre-BiS gear),
-replay decisions on-GCD: 0.980 (51), 0.982 (56), 1.000 (51), 1.000 (67); the 20-fight lines (seeds 1-20 / 21-40 /
-41-60), with each world's pool and regen from its log, read held while ready 226 / 236 / 237, 201 / 204 / 213, 210 /
-236 / 186 and 346 / 342 / 361, flicker 0 (rows in `pack_gate.FLICKER`: floors at the worst of the three seed sets).
+with two one-handers (its live bars at 11 yd, R63, `W.SurvivalMeleeRanged`). At the re-pin ab0f00e4fc (Pre-BiS gear),
+replay decisions on-GCD: 1.000 (55), 0.983 (60), 1.000 (55), 1.000 (81); the 20-fight lines (seeds 1-20 / 21-40 /
+41-60), with each world's pool and regen from its log, read held while ready 239 / 237 / 241, 203 / 225 / 219, 253 /
+253 / 255 and 280 / 285 / 290, flicker 0 (Beast Mastery Turret 0.02; rows in `pack_gate.FLICKER`: floors at the worst of the three seed sets).
 The held ticks are the near-cost edge (a dry pool at a cost, our estimate a few mana under the truth), plus, in the
 Beast Mastery and Survival Turret worlds, Rapid Fire behind an Aimed Shot paid at the cast's end, its wait paced from
 the belief's floor at an unpinned fight-opening pool.
