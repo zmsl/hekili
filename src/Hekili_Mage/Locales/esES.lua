@@ -16,10 +16,10 @@ if not L then
 end
 
 -- Hekili_Mage/Mage.lua
--- L["Arcane"] = ""
--- L["Fire"] = ""
--- L["Frost"] = ""
--- L["Arcane (wowsims.com)"] = ""
--- L["Fire (wowsims.com)"] = ""
--- L["Frostfire (wowsims.com)"] = ""
--- L["Frost (wowsims.com)"] = ""
+L["Arcane"] = "Arcano"
+L["Fire"] = "Fuego"
+L["Frost"] = "Escarcha"
+L["Arcane (wowsims.com)"] = "Arcano (wowsims.com)"
+L["Fire (wowsims.com)"] = "Fuego (wowsims.com)"
+L["Frostfire (wowsims.com)"] = "Pirofrío (wowsims.com)"
+L["Frost (wowsims.com)"] = "Escarcha (wowsims.com)"
