@@ -5,6 +5,7 @@
 ### New
 
 - Italian translation of the core interface, thanks to Sairiin.
+- Simplified Chinese: Cooldowns now reads 爆发 where it means burst abilities, and the sequence options are translated (thanks to dodoels).
 
 ### Changed
 
