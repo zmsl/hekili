@@ -480,8 +480,9 @@ M.READY = {
     -- restore credit (only 141.10's est moved). 1.51 is the median over 3 rows; it rose because 6 rows closed (the
     -- restore credit), not because rows got worse
     -- { 1.51, 3 } -> { 0.39, 2 } (re-pin e4ef929e54 -> ab0f00e4fc, lane repin-ab0f-mage, R6: the new gear's log):
-    -- frostfire_bolt 131.80 0.56 (lo -17.0, est -4.1) and 167.50 0.39 (lo -13.0, est -1.6) late, cost class (lo under
-    -- the truth; candidate, not traced: the unseen Sudden Insight +200 at 84.01, as Fire's 114.20)
+    -- frostfire_bolt 131.80 0.56 (lo -17.0, est -4.1) and 167.50 0.39 (lo -13.0, est -1.6) late, cost class (gap BQ:
+    -- the regen band's lo under est after the five-second rule; traced at 131.80: the Sudden Insight deficit of 84.01
+    -- was gone by 120.7)
     mage_frostfire = { 0.39, 2 }, -- 0.390, 2
     -- { 0.23, 3 } -> { 0.29, 3 }: frostbolt 132.00 / 157.30 late 0.29 (cost class, lo 8.3 / 8.1 under the truth),
     -- 179.20 0.16 (slack)

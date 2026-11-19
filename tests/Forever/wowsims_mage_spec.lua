@@ -113,10 +113,11 @@ local REPLAY = {
 -- mage_fire.lua's header: 52.00 fireball -> arcane_blast (Arcane Blast's aura has exactly the 1.5 s cast left), 58.00
 -- fireball -> scorch (Fire Blast's cooldown exactly Fireball's 3.0 s cast).
 -- Frostfire 1.00 -> 0.96 (0.963, 52 of 54): 32.50 frostfire_bolt -> scorch and 61.50 fire_blast -> scorch, Fire
--- Vulnerability exactly 5.000 s from its expiry at the decision (the belief agrees to 1 us); the engine's pick slot
--- sits 0.010 s later (exact_time), where 4.990 is left and the Scorch line's `remains<5` holds; wowsims reads it at
--- the instant (false). A replay tie at an exact wowsims instant (central clock family, ledger L1296); the new gear
--- re-times the fight onto it.
+-- Vulnerability exactly 5.000 s from its expiry at the decision (the belief agrees to 1 us). The forecast finds the
+-- Scorch line's `remains<5` true a microsecond on and pads that crossing by 0.010 s (Scorch's slot time 0.010), and
+-- the higher line ready within the pad wins; wowsims evaluates strictly at the instant (false). A forecast equality
+-- tie, not the line-position class: a log-timestamp clock (ledger L1296) would leave it. The new gear re-times the
+-- fight onto it; no game cast lands on an exact 5.000.
 -- Frost 0.96 kept (0.966, 56 of 58; frostbolt -> cone_of_cold 2, the old log's class). LIVE60 kept (measured Arcane
 -- 8.4, Fire 6.2, Frostfire 11.8, Frost 6.0).
 local PACKS = {
