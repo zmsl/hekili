@@ -2430,7 +2430,7 @@ do
                 local health, maxHealth, absorbs = UnitHealth( "player" ), UnitHealthMax( "player" ), UnitGetTotalAbsorbs( "player" )
                 local count = 1
 
-                for i = 2, 5 do
+                for i = 1, 4 do
                     local token = "party" .. i
                     if UnitExists( token ) and not UnitIsDeadOrGhost( token )then
                         count = count + 1
@@ -2441,7 +2441,7 @@ do
                     end
                 end
 
-                local effHealthPct = 100 * ( health + absorbs ) / maxHealth
+                local effHealthPct = 100 * ( health + absorbs ) / max( 1, maxHealth )
                 t[k] = effHealthPct
 
             elseif k == "at_risk" then

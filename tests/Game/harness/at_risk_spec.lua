@@ -26,4 +26,13 @@ describe("the at_risk condition", function()
     it("is 0 for a full party", function()
         assert.are.equal(0, count({ [1] = 100, [2] = 100, [3] = 70 }))
     end)
+
+    it("group_health pools party1 too (the loop once started at party2)", function()
+        count({ [1] = 100 })
+        rawset(S, "group_health", nil)
+        local full = S.group_health
+        count({ [1] = 10 })
+        rawset(S, "group_health", nil)
+        assert.is_true(S.group_health < full)
+    end)
 end)
