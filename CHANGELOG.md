@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Spanish translation for Spain and Latin America (machine-assisted; native speakers are welcome to suggest fixes on GitHub).
 
 ### Changed
 
