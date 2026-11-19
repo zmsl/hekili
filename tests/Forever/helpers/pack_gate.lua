@@ -111,7 +111,7 @@ M.FLICKER = {
     -- 0.67 / 0.48 / 0.40), retracted 0.07 / 0.04 / 0, readyShort 2 / 6 / 5, heldReady 226 / 197 / 229): tightened to the
     -- measurement, flicker 0.51 -> 0.31 (the measured worst + 0.01), readyShort 15 -> 6; heldReady 171 -> 229: the old
     -- world paid no Unbridled Wrath while the kit credited it, so the belief ran ahead of truth; truth now pays it and
-    -- the belief's floor counts no unseen proc (strikeNow's gain spread = the amount; owner: no optimistic procs), so
+    -- the belief's floor counts strikes only (strikeNow's gain spread = the amount; a white swing's floor still carries the expected Unbridled Wrath, L1456 i), so
     -- truth covers a cost before our floor more often (lo-truth at cost -1.1 -> -1.4); retracted kept
     ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.21, readyShort = 6, heldReady = 229 }, -- flicker 0.18 / 0.30 / 0.26, retracted 0.07 / 0.04 / 0 (ab0f, rolled)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
@@ -174,8 +174,8 @@ M.FLICKER = {
     -- 2 a near-tie at the usability pin, lo 9.99 against rend's 10). Both classes pre-exist; the richer truth rage
     -- (Unbridled Wrath now paid, in 1-rage steps, plus the strike's charge) brings more Heroic Strike casts and more
     -- cost-edge crossings. heldReady 377 -> 617: the old world paid no Unbridled Wrath while the kit credited it, so
-    -- the belief ran ahead of truth; truth now pays it and the belief's floor counts no unseen proc (strikeNow's gain
-    -- spread = the amount; owner: no optimistic procs), so truth covers a cost before our floor (lo-truth at cost -0.9
+    -- the belief ran ahead of truth; truth now pays it and the belief's floor counts strikes only (strikeNow's gain
+    -- spread = the amount; a white swing's floor still carries the expected Unbridled Wrath, L1456 i), so truth covers a cost before our floor (lo-truth at cost -0.9
     -- -> -1.6 / -2.1 / -2.2, est-truth +0.3 / -0.3 / -0.2): true waits of the floor
     ["Fury L24"] = { flicker = 0.36, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 617 }, -- flicker 0.35 / 0.26 / 0.23, retracted 0 / 0 / 0 (ab0f, rolled)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
@@ -224,8 +224,8 @@ M.FLICKER = {
     -- 0.42 / 0.50 / 0.59), retracted 0, readyShort 0 / 0 / 0, heldReady 402 / 310 / 335; the lane's base b7c26392f
     -- read 349 / 270 / 320): flicker 0.14 -> 0.13 (the measured worst + 0.01); heldReady 351 -> 402, every set up: the old world
     -- paid no Unbridled Wrath while the kit credited it (est-truth at cost +0.8), so the belief ran ahead of truth and
-    -- hid held ticks; truth now pays it (est-truth +0.3 / +0.5 / +0.4) and the belief's floor counts no unseen proc
-    -- (strikeNow's gain spread = the amount; owner: no optimistic procs): true waits of the floor
+    -- hid held ticks; truth now pays it (est-truth +0.3 / +0.5 / +0.4) and the belief's floor counts strikes only
+    -- (strikeNow's gain spread = the amount; a white swing's floor still carries the expected Unbridled Wrath, L1456 i): true waits of the floor
     ["Warrior Protection"] = { flicker = 0.13, retracted = 0.1, readyShort = 0, heldReady = 402 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
