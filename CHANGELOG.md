@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- A critical tick from one of your damage-over-time spells late in its duration is no longer taken for a critical hit of the spell you just cast, so effects that come from your critical hits, such as Master of Elements' mana refund, are no longer counted when they did not happen.
 
 ### Known issues
 
