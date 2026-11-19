@@ -15,10 +15,10 @@ if not L then
 end
 
 -- Hekili_Priest/Priest.lua
--- L["Discipline"] = ""
--- L["Holy"] = ""
--- L["Shadow"] = ""
--- L["Prefer Starshards"] = ""
--- L["Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards."] = ""
--- L["Shadow (wowsims.com)"] = ""
--- L["Smite (wowsims.com)"] = ""
+L["Discipline"] = "Discipline"
+L["Holy"] = "Sacré"
+L["Shadow"] = "Ombre"
+L["Prefer Starshards"] = "Préférer Éclats stellaires"
+L["Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards."] = "Ombre uniquement, et seulement si tu connais Éclats stellaires (le racial des elfes de la nuit). Si activé, la priorité montre Éclats stellaires avant Fouet mental chaque fois qu’Attaque mentale est à 4 secondes ou plus d’être prête. Désactivé : la priorité ne montre jamais Éclats stellaires."
+L["Shadow (wowsims.com)"] = "Ombre (wowsims.com)"
+L["Smite (wowsims.com)"] = "Châtiment (wowsims.com)"

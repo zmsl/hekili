@@ -15,8 +15,8 @@ if not L then
 end
 
 -- Hekili_Shaman/Shaman.lua
--- L["Elemental"] = ""
--- L["Enhancement"] = ""
--- L["Restoration"] = ""
--- L["Elemental (wowsims.com)"] = ""
--- L["Enhancement (wowsims.com)"] = ""
+L["Elemental"] = "Élémentaire"
+L["Enhancement"] = "Amélioration"
+L["Restoration"] = "Restauration"
+L["Elemental (wowsims.com)"] = "Élémentaire (wowsims.com)"
+L["Enhancement (wowsims.com)"] = "Amélioration (wowsims.com)"

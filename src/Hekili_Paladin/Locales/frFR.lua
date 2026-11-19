@@ -15,9 +15,9 @@ if not L then
 end
 
 -- Hekili_Paladin/Paladin.lua
--- L["Holy"] = ""
--- L["Protection"] = ""
--- L["Retribution"] = ""
--- L["Retribution (wowsims.com)"] = ""
--- L["Protection (wowsims.com)"] = ""
--- L["Holy Shock (wowsims.com)"] = ""
+L["Holy"] = "Sacré"
+L["Protection"] = "Protection"
+L["Retribution"] = "Vindicte"
+L["Retribution (wowsims.com)"] = "Vindicte (wowsims.com)"
+L["Protection (wowsims.com)"] = "Protection (wowsims.com)"
+L["Holy Shock (wowsims.com)"] = "Horion sacré (wowsims.com)"
