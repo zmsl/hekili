@@ -109,6 +109,9 @@ local POWERED = CLEARCAST
 local BARRAGE = { arcane_blast = 1, fireball = 0.5, frostbolt = 0.5, frostfire_bolt = 0.5, arcane_wrath = 0.5 }
 local HEATING = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true }
 local FIRE = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true, pyroblast = true }
+-- The DoT a landed Fireball (10151) or Pyroblast (18809) leaves: { every, ticks, amount } (wowsims pin spelldata; the
+-- amounts the Fire log's ticks show)
+local DOT = { fireball = { 2, 4, 18 }, pyroblast = { 3, 4, 120 } }
 -- Permafrost's mask's (wowsims's chillFlags) the kit casts
 local CHILL = { frostbolt = true, frostfire_bolt = true, cone_of_cold = true }
 -- DB2 11160 effect 0's mask
@@ -463,6 +466,9 @@ local function spell(key, extra)
                 if n > 0 and talentRank(H, T.heating_up) > 0 then
                     aura(W, X, e, "heating_up", n)
                 end
+            end
+            if landed and DOT[key] then -- a recast's replaces it; W.dot's ticks never crit
+                W.dot(e, e.target, DOT[key][1], DOT[key][2], DOT[key][3], 4, key)
             end
             if extra then
                 extra(W, e, X, H, landed, instant)

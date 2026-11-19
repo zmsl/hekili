@@ -572,6 +572,21 @@ describe("Forever Mage through the engine", function()
         end
     )
 
+    -- (ledger L1415 as reworded L1418, part a) Fireball's and Pyroblast's DoTs are tick schedules the belief composes
+    -- (wowsims pin spelldata: Fireball 2 s ticks over 4/6/8 s by rank, Pyroblast 3 s over 12 s), so a tick's crit row
+    -- is a candidate beside a direct ticket (Events/Tickets.lua T.Divergent) and never reads as a cast's own crit.
+    it("composes Fireball's and Pyroblast's DoT tick schedules in the belief", function()
+        local H = headless.new({ character = character() })
+        local I = H.ns.VirtualStateInternal
+        local out = {}
+        for _, id in ipairs({ 25306, 18809 }) do
+            local a = I.ab.bySpell[id]
+            local period, count = I.Expect.Tick(a)
+            out[#out + 1] = { I.ab.ticking[a], period, count }
+        end
+        assert.are.same({ { true, 2, 4 }, { true, 3, 4 } }, out)
+    end)
+
     -- The belief's charges and their price at the cast, in both layers: `spendBase` prices every declared fraction of
     -- base, the 1.2 at 4 charges included (central fix 22, gap BB).
     it("counts Arcane Blast's charges in the belief and the simulation, four at most, each pricing the next", function()

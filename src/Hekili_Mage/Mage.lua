@@ -306,6 +306,21 @@ spec:RegisterAuras({
     -- The target's (unreadable in combat), modelled from our Scorches: Improved Scorch's 3% more Fire damage from us a
     -- stack, 5 at most, 30 s (wowsims: each Mage's own).
     fire_vulnerability = { id = 22959, duration = 30, max_stack = 5 },
+    -- The DoTs our Fireball and Pyroblast leave on the target (wowsims pin spelldata: Fireball 2 s ticks over 4 s at
+    -- rank 1, 6 s at ranks 2-3, 8 s after; Pyroblast 3 s over 12 s): the belief composes their tick schedules, so a
+    -- tick's crit is never read as a cast's own (ledger L1415 as reworded L1418).
+    fireball = {
+        id = 133,
+        copy = rest(FIREBALL),
+        duration = function()
+            local r = knownRank(FIREBALL)
+            return r > 3 and 8 or r > 1 and 6 or 4
+        end,
+        tick_time = 2,
+        dot = "debuff",
+        max_stack = 1,
+    },
+    pyroblast = { id = 11366, copy = rest(PYROBLAST), duration = 12, tick_time = 3, dot = "debuff", max_stack = 1 },
 })
 
 -- Fingers of Frost (wowsims talents_frost.go registerFingersOfFrost): every damage spell cast, a channel aside, spends a
