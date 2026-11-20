@@ -6,6 +6,8 @@
 
 ### Changed
 
+- The snapshot help text no longer sends you to training dummies, which Forever does not have. It suggests an enemy in the open world.
+- The ability list's Require Toggle dropdown now shows the toggle's name (for example "Cooldowns") in its "Default" entry, not the internal key.
 - Action Lists: an entry's Description and Conditions now come first, with its Caption, Label and Icon settings below them under Display.
 - The Copy Priority button now shows the same copy icon as the note above it.
 

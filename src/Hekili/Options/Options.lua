@@ -79,6 +79,13 @@ local function AbilityLabel( key )
     return actionLabel( Registry.AbilityList()[ key ] )
 end
 
+-- The player-facing name of an ability's toggle, as the Require Toggle dropdown lists it (the raw key when unknown).
+local toggleLabels = {
+    cooldowns = L["Cooldowns"], minor_cooldowns = L["Minor CDs"], defensives = L["Defensives"],
+    interrupts = L["Interrupts"], potions = L["Potions"], custom1 = L["Custom 1"], custom2 = L["Custom 2"],
+}
+local function toggleLabel( key ) return toggleLabels[ key ] or key end
+
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 
@@ -3087,7 +3094,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                     table.wipe( toggles )
 
                     local t = Registry.Abilities()[ v ].toggle or "none"
-                    if t == "minor_cooldowns" then t = L["Minor CDs"] end
+                    t = toggleLabel( t )
 
                     toggles.none = L["None"]
                     toggles.default = format( L["Default |cffffd100(%s)|r"], t )
@@ -3222,7 +3229,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                             table.wipe( toggles )
 
                             local t = Registry.Abilities()[ v ].toggle or "none"
-                            if t == "minor_cooldowns" then t = L["Minor CDs"] end
+                            t = toggleLabel( t )
 
                             toggles.none = L["None"]
                             toggles.default = format( L["Default |cffffd100(%s)|r"], t )
@@ -3509,7 +3516,7 @@ found = true end
                     table.wipe( toggles )
 
                     toggles.none = L["None"]
-                    toggles.default = ( Registry.Abilities()[ v ].toggle and format( L["Default |cffffd100(%s)|r"], Registry.Abilities()[ v ].toggle ) or L["Default |cffffd100(none)|r"] )
+                    toggles.default = ( Registry.Abilities()[ v ].toggle and format( L["Default |cffffd100(%s)|r"], toggleLabel( Registry.Abilities()[ v ].toggle ) ) or L["Default |cffffd100(none)|r"] )
                     toggles.cooldowns = L["Cooldowns"]
                     toggles.minor_cooldowns = L["Minor CDs"]
                     toggles.defensives = L["Defensives"]
@@ -3626,7 +3633,7 @@ found = true end
                             table.wipe( toggles )
 
                             toggles.none = L["None"]
-                            toggles.default = ( Registry.Abilities()[ v ].toggle and format( L["Default |cffffd100(%s)|r"], Registry.Abilities()[ v ].toggle ) or L["Default |cffffd100(none)|r"] )
+                            toggles.default = ( Registry.Abilities()[ v ].toggle and format( L["Default |cffffd100(%s)|r"], toggleLabel( Registry.Abilities()[ v ].toggle ) ) or L["Default |cffffd100(none)|r"] )
                             toggles.cooldowns = L["Cooldowns"]
                             toggles.minor_cooldowns = L["Minor CDs"]
                             toggles.defensives = L["Defensives"]
@@ -7943,7 +7950,7 @@ do
                         type = "execute",
                         name = L["Reset"],
                         order = 4,
-                        width = 0.6,
+                        width = 0.8,
                         func = function()
                             local spec = Status.specID and Hekili.DB.profile.specs[ Status.specID ]
                             if type( spec ) == "table" then spec.cdm = nil end
@@ -8039,7 +8046,7 @@ do
                                 type = "description",
                                 name = function()
                                 return format( L["|cFFFFD100When should I do it|r\n" ..
-                                "You should generate the snapshot when the issue is actively happening. If you look at the recommendations and think \"this seems wrong\", that's when you should do it. Most of the time, issues can be recreated at training dummies." ..
+                                "You should generate the snapshot when the issue is actively happening. If you look at the recommendations and think \"this seems wrong\", that's when you should do it. Most of the time, issues can be recreated on an enemy in the open world." ..
                                 "\n\nFor example, if the issue usually happens 20 seconds into your rotation, then an out-of-combat prepull snapshot isn't going to help the Dev or other community members diagnose and fix the issue." ..
                                 "\n\n|cFFFFD100How do I do it|r\n" ..
                                 "You can generate a snapshot one of 2 ways:\n" ..
