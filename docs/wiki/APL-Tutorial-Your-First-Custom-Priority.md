@@ -22,7 +22,8 @@ Read [APL overview](APL-Overview) first if lists, lines and conditions are new t
 4. Confirm. The copy, named "Feral (wowsims.com) (2)", opens on its own **Summary** tab.
 5. Check **Active**. Hekili Forever now uses the copy for Feral.
 
-<!-- TODO-SCREENSHOT: the Summary tab of the copy, Active checked, the copy icon marked -->
+![The Summary tab of the built-in Feral (wowsims.com) priority, Active checked, with the copy icon to the right of Priority Name circled in magenta](images/APL-Tutorial-Your-First-Custom-Priority-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; options, Priorities, Feral, Feral (wowsims.com), Summary tab (the built-in priority, before copying) -->
 
 The copy is yours. It does not change when the addon updates the built-in priority ([Next steps](#next-steps)).
 
@@ -60,7 +61,20 @@ If the condition has a typing error, an error appears in **Warnings** and the li
 4. Open `/hekili` again, then **Snapshots (Troubleshooting)**, and choose the newest snapshot in **Select a Snapshot**.
 5. Find the `faerie_fire` entry of the `default` list. Its criteria read FAILS, with `combo_points.current` shown as 5. A finisher is recommended instead.
 
-<!-- TODO-SCREENSHOT: the snapshot text around the faerie_fire entry, with FAILS marked -->
+From an abridged snapshot of the built-in Feral (wowsims.com) priority, the `faerie_fire` entry of the second recommendation, shortened with `...`:
+
+```text
+RECOMMENDATION #2 ( Offset: 0.00, GCD: 1.30, Casting: 0.00 ).
+
+        6.   faerie_fire ( default - 3 )
+        The action (faerie_fire) is usable at (0.00 + 1.30) with cost of 95 mana (have 2506).
+         - the action is ready before the current recommendation (at +1.30 vs. +15.00).
+         - this entry's criteria FAILS: ( ( action.faerie_fire.known[true] & debuff.faerie_fire.remains[38.70] <= 0 ) & ... )
+        There were no recheck events to check.
+```
+
+The `criteria FAILS` line is the one to look for. It shows each value of the condition in square brackets. This excerpt is from the unedited priority, so the failing value is `debuff.faerie_fire.remains[38.70] <= 0`: the debuff still had 38.70 seconds left. In the snapshot of your edited line, read the same line for the value you changed.
+<!-- Hekili Forever 0.11.0; Druid Feral; abridged snapshot of an out-of-combat test character -->
 
 [Reading a snapshot](Reading-A-Snapshot) explains the rest of the snapshot.
 

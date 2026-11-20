@@ -41,13 +41,14 @@ Each part of an icon has a meaning:
 
 The Timeline style lays the recommendations out along time:
 
-- The **Next** box holds the ability to press now, with its keybind.
-- The **Now** circle holds a focus ability that is coming up: an ability that a priority marks as worth watching, such as a buff to refresh or a proc to use. It counts down until the ability is ready, and its ring changes colour when it is time to press it. With no focus ability coming up, the circle stays empty by default (**Without Focus**).
-- The **Lane** places the abilities after that by how far ahead they are, so it shows what is coming and when.
+- **1, Next**: the **Next** box holds the ability to press now, with its keybind.
+- **2, Now**: the **Now** circle holds a focus ability that is coming up: an ability that a priority marks as worth watching, such as a buff to refresh or a proc to use. It counts down until the ability is ready, and its ring changes colour when it is time to press it. With no focus ability coming up, the circle stays empty by default (**Without Focus**).
+- **3, Lane**: the **Lane** places the abilities after that by how far ahead they are, so it shows what is coming and when.
 
 When Hekili Forever cannot be sure that a resource will be there in time, the Timeline can show the abilities the priority would pick instead, stacked beside the cell (**Show Alternatives**). A pick on the lane that is still short of its resource is marked (**Resource Gate**).
 
-<!-- TODO-SCREENSHOT: the Primary display in the Timeline style with each element numbered -->
+![The Primary display in the Timeline style, three elements numbered: 1 the Next box, 2 the Now circle with its countdown, 3 the Lane](images/Reading-The-Displays-2.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; in game, in combat on an open-world enemy -->
 
 ## Modern overlays
 

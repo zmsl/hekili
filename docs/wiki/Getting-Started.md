@@ -35,7 +35,8 @@ A specialization marked "no priorities on Forever" recommends nothing. [Supporte
 
 To place a display by number instead, set **X** and **Y** on the **Icons** tab of **/hekili > Displays > Primary**.
 
-<!-- TODO-SCREENSHOT: the Primary and AOE displays unlocked for moving -->
+![The Primary and AOE displays unlocked for moving: dark boxes labelled Primary and AOE, with the Notifications panel above and the Defensives, Interrupts and Cooldowns icons beside the Primary box](images/Getting-Started-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; in game, out of combat, options window open -->
 
 ## Bind the toggles
 
@@ -65,7 +66,8 @@ A toggle is a switch that lets the priority use, or skip, one group of abilities
 
 Hekili Forever shows recommendations; it never presses anything for you.
 
-<!-- TODO-SCREENSHOT: the Primary display with a first recommendation on an open-world enemy -->
+![The Primary display in combat: the first icon, marked E for its keybind, followed by two queued icons](images/Getting-Started-2.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; in game, in combat on an open-world enemy -->
 
 ## Next steps
 

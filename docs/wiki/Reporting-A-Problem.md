@@ -14,7 +14,7 @@ A snapshot records how Hekili Forever chose the recommendations on screen at tha
 
 1. Wait until the problem is on screen, for example the wrong ability in the first icon. A snapshot from before the pull does not show a problem that happens twenty seconds into a fight.
 2. Take the snapshot in one of these ways:
-   - press the **Snapshot** key, ALT-SHIFT-[ by default;
+   - press the **Snapshot** key, `ALT-SHIFT` plus the left square bracket key by default;
    - press the **Pause** key, ALT-SHIFT-P by default, which also freezes the displays (press it again to resume);
    - type `/hekili snapshot`, or `/hek snap`, for example from a macro.
 3. Open **/hekili > Snapshots (Troubleshooting)**.
