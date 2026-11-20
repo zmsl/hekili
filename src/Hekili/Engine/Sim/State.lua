@@ -1511,12 +1511,16 @@ do
                     local val, vlo, vhi
                     if last then val, vlo, vhi = last.v, last.l, last.h else val, vlo, vhi = r.actual, r.actual_lo, r.actual_hi end
                     local gain = regenGain( e, now ) -- once: the same gain for the three streams
+                    -- a swing entry's `width` (a proc the belief cannot see, L1456 i): the floor takes value - width,
+                    -- the top value + width, as the belief's own swing step
+                    local w = e.width
+                    w = type( w ) == "number" and w or type( w ) == "function" and w( now ) or 0
                     local v = max( 0, min( r.max, val + bonus ) )
                     v = max( 0, min( r.max, v + gain ) )
                     local l = max( 0, min( r.max, vlo + bonus ) )
-                    l = max( 0, min( r.max, l + gain ) )
+                    l = max( 0, min( r.max, l + ( gain >= 0 and max( 0, gain - w ) or gain - w ) ) ) -- a decay keeps falling
                     local h = max( 0, min( r.max, vhi + bonus ) )
-                    h = max( 0, min( r.max, h + gain ) )
+                    h = max( 0, min( r.max, h + gain + w ) )
                     local idx
 
                     if r.forecast[ r.fcount ].t == now then

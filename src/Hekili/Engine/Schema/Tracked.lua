@@ -259,6 +259,7 @@ local function buildDef()
         local r = class.resources[k]
         local swing, value, offValue, auraRegen, swingAura = 0, nil, nil, nil, nil
         local crit, offCrit -- a white crit's extra amount by hand (Resources.lua, I.SwingCrit)
+        local width, offWidth -- a swing value's half-width by hand: a proc the belief cannot see (I.SwingWidth)
         local taken -- the paying entry's gain from a hit on the player (Resources.lua, tank design §1.2)
         local model = r.state and r.state.regenModel
         if model then
@@ -266,10 +267,10 @@ local function buildDef()
                 if m.forecastOnly then -- luacheck: ignore 542
                     -- the sim's forecast only: the belief pays it another way (a reaction), so it never reads it
                 elseif m.swing == "offhand" then
-                    offValue, offCrit = m.value, m.crit
+                    offValue, offCrit, offWidth = m.value, m.crit, m.width
                 elseif m.swing and HANDS[m.swing] and swing == 0 then
                     swing, value, swingAura = HANDS[m.swing], m.value, m.aura -- `aura`: swings pay only while it is up
-                    crit, taken = m.crit, m.taken
+                    crit, width, taken = m.crit, m.width, m.taken
                 elseif
                     name ~= DECAY
                     and name ~= TAKEN
@@ -285,6 +286,7 @@ local function buildDef()
         end
         if swing == 0 and offValue ~= nil then
             swing, value, offValue, crit, offCrit = 2, offValue, nil, offCrit, nil -- the off hand alone pays it
+            width, offWidth = offWidth, nil
         end
         local meta = r.state and r.state.meta or NO_META
         local d = {
@@ -299,6 +301,8 @@ local function buildDef()
             swingOff = offValue,
             swingCrit = crit,
             swingOffCrit = offCrit,
+            swingWidth = width,
+            swingOffWidth = offWidth,
             swingAura = swingAura,
             taken = taken,
             auraRegen = auraRegen,

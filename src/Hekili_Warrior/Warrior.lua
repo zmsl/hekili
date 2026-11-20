@@ -156,7 +156,8 @@ end
 -- Forever). Unbridled Wrath: 1 rage a proc with any weapon (owner L1419, wowsims ab0f00e4fc: the Arms log's two-hander procs
 -- all give 1.000) at 11.9% a rank: 59.5% at 5/5, measured in game over
 -- 5,252 landed swings, strikes, Heroic Strikes and Cleave hits (wowsims EV-0148, build 1.60.1.70938; owner ruling L1397
--- (3); wowsims's own ladder is the tooltip's 12% a rank). The two-hander flag is Hekili's gear scan (main_hand.size from C_Item.GetItemInfo's equip location on
+-- (3); wowsims's own ladder is the tooltip's 12% a rank); the belief cannot see a proc, so its floor counts none: the
+-- swing entries pass the expected rage as their value's `width`, a strike's `now` as its gain's spread. The two-hander flag is Hekili's gear scan (main_hand.size from C_Item.GetItemInfo's equip location on
 -- PLAYER_EQUIPMENT_CHANGED, and the belief's own read of the same answers; the Forever API data marks neither it nor
 -- GetInventoryItemID secret). The helpers below run in the file's environment: the entry functions, which run in the sim's
 -- `state` and the belief's context both, read those names and pass them in.
@@ -313,6 +314,11 @@ spec:RegisterResource(
                 speed = speed > 0 and speed or mainhand_speed
                 return (twoHand and 4.5 or 3.46) * speed + wrathRage(talent.unbridled_wrath.rank)
             end,
+            -- Unbridled Wrath's part is a roll the belief cannot see: its expected rage is the value's half-width, so a
+            -- swing's floor counts no proc and its top a whole one (5/5; L1456 i, no optimistic proc modelling)
+            width = function()
+                return wrathRage(talent.unbridled_wrath.rank)
+            end,
             crit = function()
                 local speed = swingBase(1)
                 return (weapon.size == 2 and 4.5 or 3.46) * (speed > 0 and speed or mainhand_speed)
@@ -377,6 +383,9 @@ spec:RegisterResource(
                 speed = speed > 0 and speed or offhand_speed
                 return 1.73 * speed * (1 + 0.1 * talent.dual_wield_specialization.rank)
                     + wrathRage(talent.unbridled_wrath.rank)
+            end,
+            width = function() -- Unbridled Wrath's roll, as the main hand's
+                return wrathRage(talent.unbridled_wrath.rank)
             end,
             -- A crit doubles the off hand's rage, Dual Wield Specialization included (W1, wowsims core/rage.go).
             crit = function()
