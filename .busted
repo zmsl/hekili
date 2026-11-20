@@ -6,6 +6,7 @@ return {
             "tests/Game/State",
             "tests/Game/harness",
             "tests/Forever",
+            "tests/LibHiddenValues",
             "tests/boundary_spec.lua",
             "tests/wiki_spec.lua",
         },

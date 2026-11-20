@@ -7,6 +7,7 @@ codes = true
 
 exclude_files = {
     "src/Hekili/Libs/",
+    "src/LibHiddenValues/Libs/",
     ".claude/",
     ".lua/",
     ".release/",
@@ -178,3 +179,16 @@ end
 files["src/Hekili_Warlock/Warlock.lua"] = { globals = warlockEnv }
 files["src/Hekili_Shared/Races/"] = { globals = stateEnv }
 files["src/Hekili_Shared/Shared/"] = { globals = stateEnv }
+-- LibHiddenValues (a standalone library in src/LibHiddenValues, not part of the addon above): it reads the client
+-- directly, so its client globals are declared here; its tests run on its own fake client.
+files["src/LibHiddenValues/"] = {
+    globals = { "SlashCmdList" },
+    read_globals = {
+        "CreateFrame", "C_CurveUtil", "UnitHealthPercent", "UnitPowerPercent", "UnitPowerType", "UnitExists",
+        "UnitIsDead", "GetTime", "IsLoggedIn", "UISpecialFrames",
+    },
+}
+files["tests/LibHiddenValues/"] = {
+    std = "+busted",
+    read_globals = { "LibStub", "Enum", "GetTime", "LibHiddenValuesCopyFrame" },
+}

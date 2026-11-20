@@ -1,0 +1,316 @@
+-- LibHiddenValues.lua: the entry point. LibStub("LibHiddenValues-1.0"): threshold events for values the client hides
+-- (unit health and power percent), as plain numbers. Consumers declare what they want (Watch); the library owns the
+-- hidden bars, the client events, the priming and the capability state. This file: the registry, the handles, the
+-- capability answers and the kill switch. Bars.lua: the bar pool, curves, priming, the firing and the decode.
+-- Feed.lua: the driver, the client events, the statistics. Kinds/*.lua: one file per family of kinds.
+--
+-- Upgrades: the newest minor on the client runs; every file after this one returns unless this copy won LibStub
+-- (lib.loading). All state lives on lib, as plain data; scripts are one-line dispatchers through lib, so a newer minor
+-- replaces behaviour by replacing functions. Nothing is built before PLAYER_LOGIN. The addon name and the private
+-- table from `...` are never used (an embedded copy would receive its host's).
+local MAJOR, MINOR = "LibHiddenValues-1.0", 1
+local lib, oldMinor = LibStub:NewLibrary(MAJOR, MINOR)
+if not lib then
+    return
+end
+lib.loading, lib.oldMinor = true, oldMinor
+
+-- Quality codes (the major's contract).
+lib.UNKNOWN, lib.COARSE, lib.BAND, lib.EXACT = 0, 1, 2, 3
+
+-- Every kind name of the major's contract; only those with a file in Kinds/ are built (lib.kinds). The aura kind stays
+-- unproven for good: the client's aura container only takes widgets owned by its forbidden aura button.
+lib.KNOWN = {
+    health = true,
+    power = true,
+    cooldown = true,
+    charges = true,
+    cast = true,
+    totem = true,
+    loc = true,
+    bool = true,
+    aura = true,
+    threat = true,
+    absorb = true,
+    meter = true,
+}
+
+lib.reg = lib.reg or {} -- every handle not released
+lib.sources = lib.sources or {} -- one per canonical key; never removed (a key's table is reused when watched again)
+lib.srcByKey = lib.srcByKey or {}
+lib.kinds = lib.kinds or {}
+lib.capCb = lib.capCb or {}
+lib.capSeen = lib.capSeen or {}
+lib.errored = lib.errored or {}
+lib.stWaiters = lib.stWaiters or {}
+lib.H = lib.H or {}
+lib.handleMeta = lib.handleMeta or { __index = lib.H }
+lib.apiMissing = not (
+    C_CurveUtil
+    and C_CurveUtil.CreateCurve
+    and Enum
+    and Enum.LuaCurveType
+    and Enum.LuaCurveType.Step
+    and issecretvalue
+    and CreateFrame
+    and UIParent
+    and GetTime
+    and debugprofilestop
+)
+
+function lib:GetVersion()
+    return MAJOR, MINOR
+end
+
+-- Passes an error to the client's handler (never a secret: a plain stand-in replaces it).
+function lib.report(err)
+    local handler = geterrorhandler and geterrorhandler()
+    if handler then
+        handler(issecretvalue and issecretvalue(err) and "LibHiddenValues: an error with a secret message" or err)
+    end
+end
+
+-- Capability ------------------------------------------------------------------------------------------------------
+
+-- state "ready" | "pending" | "unavailable", reason (nil when not unavailable).
+function lib.capOf(kind)
+    if not lib.KNOWN[kind] then
+        return "unavailable", "unknown-kind"
+    end
+    local k = lib.kinds[kind]
+    if not k then
+        return "unavailable", "unproven"
+    end
+    if lib.apiMissing or _G[k.api] == nil then
+        return "unavailable", "api"
+    end
+    if lib.disabled then
+        return "unavailable", "off"
+    end
+    if lib.errored[kind] then
+        return "unavailable", "error"
+    end
+    if lib.stVerdict == false then
+        return "unavailable", "selftest"
+    end
+    if lib.stVerdict == nil then
+        return "pending"
+    end
+    return "ready"
+end
+
+function lib:IsAvailable(kind, unit)
+    local state, reason = lib.capOf(kind)
+    if state ~= "unavailable" and unit ~= nil and not lib.kinds[kind].units[unit] then
+        return false, "unavailable", "unproven"
+    end
+    return state == "ready", state, reason
+end
+
+function lib:OnCapability(owner, fn)
+    lib.capCb[owner] = fn
+end
+
+-- After anything that can change a kind's capability: tell the callbacks what changed, then re-sync every source.
+function lib.capChanged()
+    for kind in pairs(lib.kinds) do
+        local state, reason = lib.capOf(kind)
+        local key = state .. ":" .. (reason or "")
+        if lib.capSeen[kind] ~= key then
+            lib.capSeen[kind] = key
+            for _, fn in pairs(lib.capCb) do
+                local ok, err = pcall(fn, kind, state, reason)
+                if not ok then
+                    lib.report(err)
+                end
+            end
+        end
+    end
+    for i = 1, #lib.sources do
+        lib.sync(lib.sources[i])
+    end
+end
+
+-- The kill switch for this session. On again: pending until a fresh self-test passes.
+function lib:SetEnabled(on)
+    if on then
+        if not lib.disabled then
+            return
+        end
+        lib.disabled, lib.stVerdict = nil, nil
+        lib.capChanged()
+        lib:SelfTest()
+    elseif not lib.disabled then
+        lib.disabled = true
+        lib.capChanged()
+    end
+end
+
+-- Watch -------------------------------------------------------------------------------------------------------------
+
+local function badSpec(msg)
+    return nil, "bad-spec: " .. msg
+end
+
+function lib:Watch(owner, spec, sink)
+    if type(owner) ~= "string" then
+        return badSpec("owner must be a string")
+    end
+    if type(spec) ~= "table" then
+        return badSpec("spec must be a table")
+    end
+    if sink ~= nil and type(sink) ~= "function" then
+        return badSpec("sink must be a function or nil")
+    end
+    local kind = spec.kind
+    if not lib.KNOWN[kind] then
+        return badSpec("unknown kind " .. tostring(kind))
+    end
+    local h = setmetatable({ owner = owner, kind = kind, sink = sink, q = lib.UNKNOWN }, lib.handleMeta)
+    local k = lib.kinds[kind]
+    if k then
+        local err = k.validate(spec, h)
+        if err then
+            return badSpec(err)
+        end
+    else
+        h.unproven = "unproven"
+    end
+    lib.reg[#lib.reg + 1] = h
+    if not h.unproven then
+        lib.attach(h)
+    end
+    return h
+end
+
+-- Joins the handle to the source of its canonical key (created on first use) and references its edges.
+function lib.attach(h)
+    local key = h.kind .. "|" .. h.unit .. "|" .. tostring(h.power) .. "|" .. tostring(h.predicted)
+    local s = lib.srcByKey[key]
+    if not s then
+        s = { kind = h.kind, unit = h.unit, power = h.power, predicted = h.predicted, bar = {}, ref = {}, handles = {} }
+        lib.srcByKey[key] = s
+        lib.sources[#lib.sources + 1] = s
+    end
+    for i = 1, #h.edges do
+        local e = h.edges[i]
+        s.ref[e] = (s.ref[e] or 0) + 1
+    end
+    s.handles[#s.handles + 1] = h
+    h.src = s
+    lib.sync(s)
+end
+
+local function remove(list, x)
+    for i = #list, 1, -1 do
+        if list[i] == x then
+            table.remove(list, i)
+            return
+        end
+    end
+end
+
+function lib:ReleaseAll(owner)
+    for i = #lib.reg, 1, -1 do
+        local h = lib.reg[i]
+        if h and h.owner == owner then
+            h:Release()
+        end
+    end
+end
+
+-- Handles -----------------------------------------------------------------------------------------------------------
+
+-- "live" | "priming" | "pending" | "gone" | "paused" | "suspended" | "unavailable" | "released", reason.
+function lib.stateOf(h)
+    if h.released then
+        return "released"
+    end
+    if h.unproven then
+        return "unavailable", h.unproven
+    end
+    local state, reason = lib.capOf(h.kind)
+    if state ~= "ready" then
+        return state, reason
+    end
+    local s = h.src
+    if s.unproven then
+        return "unavailable", s.unproven
+    end
+    if h.paused then
+        return "paused"
+    end
+    if s.gone then
+        return "gone"
+    end
+    local prime = lib.barPrime
+    for k = 1, #h.edges do
+        local i = s.bar[h.edges[k]]
+        if not i then
+            return "suspended" -- the bar cap was reached
+        end
+        if prime[i] > 0 then
+            return "priming"
+        end
+    end
+    return "live"
+end
+
+local H = lib.H
+
+function H:Get()
+    return self.lo, self.hi, self.t, self.q
+end
+
+function H:State()
+    return lib.stateOf(self)
+end
+
+-- step, min, max granted. Position (step) is a later stage: only the edges are served, so the step is nil.
+function H:Domain()
+    return nil, 0, 100
+end
+
+-- The plain value when the client gives it right now: not read in this stage.
+function H:Exact()
+    return nil
+end
+
+-- Worst-case seconds from a change to its callback: a one-edge handle is called in the frame of the push, a handle on
+-- several edges one frame later.
+function H:Latency()
+    return lib.frameSec * ((self.edges and #self.edges == 1) and 1 or 2)
+end
+
+function H:SetSink(fn)
+    if fn == nil or type(fn) == "function" then
+        self.sink = fn
+    end
+end
+
+function H:SetPaused(paused)
+    self.paused = paused and true or nil
+    if self.src and not self.released then
+        lib.sync(self.src)
+    end
+end
+
+-- shortcut: a bar whose last reference goes is freed at once (the design's 5 s grace is not built); add the grace if
+-- consumers re-register often enough to churn bars.
+function H:Release()
+    if self.released then
+        return
+    end
+    self.released = true
+    self.lo, self.hi, self.q = nil, nil, lib.UNKNOWN
+    remove(lib.reg, self)
+    local s = self.src
+    if s then
+        for i = 1, #self.edges do
+            local e = self.edges[i]
+            s.ref[e] = s.ref[e] - 1
+        end
+        remove(s.handles, self)
+        lib.sync(s)
+    end
+end

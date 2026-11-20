@@ -29,6 +29,7 @@ ignore:
     - DEVELOPMENT.md
     - CHANGELOG.md
     - src/Hekili_Shared/README.md
+    - src/LibHiddenValues
     - tests
     - tools
     - docs

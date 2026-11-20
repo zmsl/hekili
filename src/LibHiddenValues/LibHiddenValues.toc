@@ -1,0 +1,14 @@
+## Interface: 16001
+## Title: LibHiddenValues
+## Notes: Threshold events for unit health and power. A library for other addons. /lhv
+## Author: zmsl
+## Version: 0.1.0
+## X-License: MIT
+
+Libs\LibStub\LibStub.lua
+LibHiddenValues.lua
+Bars.lua
+Feed.lua
+Kinds\Percent.lua
+SelfTest.lua
+Slash.lua

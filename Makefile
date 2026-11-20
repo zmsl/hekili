@@ -153,6 +153,7 @@ api-check:
 	LUACHECK=$(LUACHECK) bash tools/check_api_reads.sh
 	bash tools/check_engine_reads.sh
 	bash tools/check_border.sh
+	bash tools/libhiddenvalues/check_standalone.sh
 
 # The generated RegisterPack blocks match src/Hekili_*/APLs/ (make_pack writes only a changed file, so `make -j` is safe).
 packs-check: wowsims-packs packs
