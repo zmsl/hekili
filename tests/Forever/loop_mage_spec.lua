@@ -63,6 +63,30 @@ describe("the Mage loop worlds", function()
         end)
     end
 
+    -- Each damage spell's landed row carries its own school, the class file's declared one, so its ticket takes it: a
+    -- frost spell's 16 (an arcane 64 left Frostbolt's ticket open for another source's avoid to pay; inv crowd-drops F1),
+    -- a fire one's 4.
+    it("Frost: a frost spell's row is school 16, a fire one's 4", function()
+        local C = mw.Frost
+        local H = headless.new({ character = C.character() })
+        local W = scenarios.world(C.WORLD, 1)
+        local us = W.ents[1]
+        local got = {}
+        for i, key in ipairs({ "frostbolt", "cone_of_cold", "ice_lance", "fireball" }) do
+            local n = #W.truth
+            W.t = 10 * i
+            assert.is_true(W.press(us, key, C.resolve(key, H)))
+            W.run(10 * i + 5)
+            for j = n + 1, #W.truth do
+                local ev = W.truth[j]
+                if ev.kind == "spell" and ev.src == us and ev.act == "WOUND" then
+                    got[key] = ev.school
+                end
+            end
+        end
+        assert.are.same({ frostbolt = 16, cone_of_cold = 16, ice_lance = 16, fireball = 4 }, got)
+    end)
+
     -- The presses in the world: a cast bar (castStart at the press, the cast at its end) and Evocation's channel (its
     -- mana the regen's while its aura is up, stopped at its end; a later press with `clip` cuts it).
     it("Arcane: casts Arcane Wrath as a cast bar and channels Evocation's mana, clipped by a `clip` press", function()
