@@ -16,8 +16,9 @@ and include `LibHiddenValues.xml` from your `embeds.xml`.
 local LHV = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not LHV then return end -- keep your own fallback
 
--- An execute icon: shown while the target is below 20%. lo == nil means unknown (priming, no target, a dead
--- target, the capability lost): hide it then.
+-- An execute icon: shown while the target is below 20%. lo == nil means unknown (priming, no target, the
+-- capability lost): hide it then. A dead target is unknown only when the client tells the death plainly; under the
+-- dungeon restrictions it may not, and the band then stays at 0-20: check death yourself if a corpse must not count.
 local h = LHV:Watch("MyAddon", { kind = "health", unit = "target", edges = { 20 } }, function(h, lo, hi, dir, t, q)
     icon:SetShown(lo ~= nil and hi <= 20)
 end)

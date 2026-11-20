@@ -9,8 +9,8 @@ For the owner, one session on the live client. About 15 minutes. Everything the 
    so run it once more, then restart the client fully (a reload does not pick up a new folder).
 2. At the character screen, AddOns: tick **LibHiddenValues**. Leave everything else as usual. It runs on its own: no
    other addon needs it.
-3. Before the first test, force the dungeon conditions, and undo it at the end:
-   `/run C_CVar.SetCVar("addonMapRestrictionsForced", 1)` (end: the same with `0`).
+3. Before the first test, out of combat, force the dungeon conditions, and undo it at the end (also out of combat):
+   `/run C_CVar.SetCVar("addonMapRestrictionsForced", "1")` (end: the same with `"0"`).
 
 ## Steps and what to report
 
@@ -31,4 +31,4 @@ For the owner, one session on the live client. About 15 minutes. Everything the 
 | 13 | A dungeon, if one is at hand: steps 3 to 5 on a pack and a boss | as in the open world |
 | 14 | `/lhv copy`, Ctrl+A, Ctrl+C, paste back | |
 
-Also report any Lua error that names LibHiddenValues, and set the CVar back to 0.
+Also report any Lua error that names LibHiddenValues, and set the CVar back to "0".

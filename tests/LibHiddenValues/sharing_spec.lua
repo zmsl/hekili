@@ -57,6 +57,20 @@ describe("LibHiddenValues sharing", function()
         assert.are.equal(0, bars())
     end)
 
+    it("stops at the bar cap: the handle is suspended, and its release frees every bar", function()
+        local edges = {}
+        for k = 1, 300 do
+            edges[k] = k / 3
+        end
+        local h = lib:Watch("A", { kind = "health", unit = "target", edges = edges })
+        Fake.tick(2)
+        assert.are.equal(256, bars())
+        assert.are.equal("suspended", (h:State()))
+        assert.is_nil((h:Get()))
+        h:Release()
+        assert.are.equal(0, bars())
+    end)
+
     it("cuts each handle's band by its own edges", function()
         local a = lib:Watch("A", { kind = "health", unit = "target", edges = { 20 } }, sinkFor("a"))
         local b = lib:Watch("B", { kind = "health", unit = "target", edges = { 50 } }, sinkFor("b"))

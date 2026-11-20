@@ -243,17 +243,15 @@ function lib.stateOf(h)
     if s.gone then
         return "gone"
     end
-    local prime = lib.barPrime
+    local prime, priming = lib.barPrime, false
     for k = 1, #h.edges do
         local i = s.bar[h.edges[k]]
         if not i then
             return "suspended" -- the bar cap was reached
         end
-        if prime[i] > 0 then
-            return "priming"
-        end
+        priming = priming or prime[i] > 0
     end
-    return "live"
+    return priming and "priming" or "live"
 end
 
 local H = lib.H
