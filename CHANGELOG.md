@@ -6,23 +6,38 @@
 
 ### Changed
 
-- The snapshot help text no longer sends you to training dummies, which Forever does not have. It suggests an enemy in the open world.
-- The ability list's Require Toggle dropdown now shows the toggle's name (for example "Cooldowns") in its "Default" entry, not the internal key.
-- Action Lists: an entry's Description and Conditions now come first, with its Caption, Label and Icon settings below them under Display.
-- The Copy Priority button now shows the same copy icon as the note above it.
-
 ### Fixed
 
-- Warrior: the guaranteed rage from a white swing no longer counts Unbridled Wrath before it procs, so a rage-gated ability may light up slightly later, once the rage is certain.
-- Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted twice when the game had already shown that rage, so a rage-gated ability no longer lights up before you can afford it.
-- `target.time_to_pct_<N>` now reads 3600 when the target's time to die is unknown, like `fight_remains` and `target.time_to_die` (it read 2520), so custom conditions see the same unknown time everywhere.
-- A critical tick late in one of your damage-over-time spells is no longer taken for a critical hit of the spell you just cast when that damage-over-time spell was applied instantly or its first hit was a critical hit, so effects of your critical hits, such as Master of Elements' mana refund, are no longer counted then when they did not happen. A real critical hit that lands at the same moment as such a tick no longer counts either, so the next spell can show as ready a moment late.
+- Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.
 
 ### Known issues
 
-- Fire and Frostfire Mage: after a travelling spell's first hit that was not critical, a late critical tick of its damage-over-time effect can still be counted as a critical hit of your next spell, so a Master of Elements refund may be counted that did not happen.
-
 ### Upgrade notes
+
+## v0.11.0
+
+_Released 2026-11-20_
+
+This release adds German, Spanish and French translations, makes Warrior rage timing more careful, and polishes several options screens.
+
+### Warrior
+- Rage-costing abilities, such as Fury's Bloodthirst, no longer count Unbridled Wrath rage from a white swing before it procs, so they may light up a moment later, once the rage is certain.
+
+### Core and display
+- New German translation (machine-assisted; native speakers are welcome to suggest fixes on GitHub).
+- New Spanish translation for Spain and Latin America (machine-assisted; native speakers are welcome to suggest fixes on GitHub).
+- New French translation (machine-assisted; native speakers are welcome to suggest fixes on GitHub).
+- A critical tick late in one of your damage-over-time spells is no longer mistaken for a critical hit of the spell you just cast when that damage-over-time spell was applied instantly or its first hit was a critical hit. Crit-based effects such as Master of Elements' mana refund are no longer counted when they did not happen.
+- As a side effect of that fix, a real critical hit that lands at the same moment as such a tick is no longer counted either, so your next spell can show as ready a moment late.
+- Custom conditions that check how long until the target reaches a health percentage now read 3600 when the target's time to die is unknown, the same as other unknown times (they read 2520).
+- The snapshot help text now suggests an enemy in the open world instead of training dummies, which Forever does not have.
+- The Require Toggle dropdown in the ability list now shows the toggle's name (for example "Cooldowns") in its "Default" entry.
+- Action Lists: an entry's Description and Conditions now come first, with its Caption, Label and Icon settings below them under Display.
+- The Copy Priority button now uses the same copy icon as the note above it.
+- The Cooldown Manager Reset button is wider, so longer translated labels fit.
+
+### Known issues
+- Fire and Frostfire Mage: after a travelling spell's first hit that was not critical, a late critical tick of its damage-over-time effect can still be counted as a critical hit of your next spell, so a Master of Elements refund may be counted that did not happen.
 
 ## v0.10.0
 

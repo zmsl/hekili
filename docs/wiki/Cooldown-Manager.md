@@ -36,7 +36,8 @@ Turning a switch off makes Hekili Forever ignore that aura on the bars, and go b
 
 A switch changed during combat takes effect when combat ends; the panel says so.
 
-<!-- TODO-SCREENSHOT: the Cooldown Manager panel with gold and grey switches -->
+![The Cooldown Manager panel: every aura has its switch on; auras on a Cooldown Manager bar are gold, the others (Eclipse, Insect Swarm, Nature's Grace, Wild Growth and more) are grey](images/Cooldown-Manager-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; options, Cooldown Manager -->
 
 ## Effect on accuracy
 

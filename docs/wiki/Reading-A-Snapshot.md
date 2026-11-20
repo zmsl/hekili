@@ -98,7 +98,54 @@ Here `rage.lo[15.00]>=90` reads: the low end of the rage estimate was 15, so the
 
 Some lines in a record are written for the developers rather than for players. The `[vs]` lines, and the block of `read ...` lines just below the `New Recommendations` line, record each value Hekili Forever asked the game for, and whether the game answered it or Hekili Forever estimated it. Lines that begin with `TimeData` record how long each step took, and a `Performance` table at the end records the update rate. Keep all of them when sending a snapshot.
 
-<!-- TODO-SCREENSHOT: a short snapshot with each section numbered -->
+## A short Feral snapshot, numbered
+
+The same parts in a snapshot of a level 50 Feral Druid, shortened with `...`. The `<1>` to `<8>` marks are added here to point at each part; a real snapshot has none.
+
+```text
+Feral (wowsims.com); Primary - faerie_fire(0.00), cat_form(1.30), rake(3.80)   <1>
+Hekili Forever build: Dev-1.60.1 (20261120)
+level: 50 (50)
+class: DRUID
+spec: feral (stored)
+...
+### Talents ###   <2>
+...
+### Warnings ###   <3>
+
+none
+
+### Targets ###   <4>
+
+detected_targets:  Nameplates are enabled.
+
+### Auras ###   <5>
+
+player_buffs:
+     n  | ID      | Token             | A. Count | A. Remains | S. Count | S. Remains
+    --- | ------- | ----------------- | -------- | ---------- | -------- | ----------
+     1  |    1126 |  mark_of_the_wild |        1 |       7.60 |        1 |       7.60
+
+New Recommendations for [ Primary ] requested at 10:24:04 ( 234380.59 ); using built-in ( Feral (wowsims.com) ) priority.   <6>
+
+RECOMMENDATION #1 ( Offset: 0.00, GCD: 0.00, Casting: 0.00 ).   <7>
+
+    Resources: combo_points[ 0.00 / 5.00 ], energy[ 100.00 / 100.00 ], mana[ 2599.00 / 2599.00 ], rage[ 0.00 / 100.00 ]
+    ...
+        6.   faerie_fire ( default - 3 )   <8>
+         - this entry's criteria PASSES: ( ( action.faerie_fire.known[true] & debuff.faerie_fire.remains[0.00] <= 0 ) & ... )
+        Action chosen:  faerie_fire at 0.00!
+```
+
+1. The first line: the priority, the display, and each recommendation with the time it is due.
+2. The header sections (`Talents`, `Gear & Items`, `Settings`, `Toggles`, `Keybinds`), cut here to the first heading.
+3. `Warnings`: problems noticed while running. Here there are none.
+4. `Targets`: how many enemies were counted and from where.
+5. `Auras`: each buff and debuff by its priority name.
+6. The `New Recommendations` line, where the walk starts.
+7. The block of the first icon, with the resources at that moment.
+8. A tested priority line: its number, the list and line it came from, and `criteria PASSES` or `criteria FAILS` with the values.
+<!-- Hekili Forever 0.11.0; Druid Feral; abridged snapshot of an out-of-combat test character -->
 
 ## See also
 

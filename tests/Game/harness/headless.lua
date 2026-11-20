@@ -255,6 +255,7 @@ function M.new(o)
     o = o or {}
     local api, ctl = fake.new()
     ctl.now = o.now or 1000
+    ctl.locale = o.locale -- the client's language (nil: enUS)
     local H = { api = api, ctl = ctl, frames = {}, timers = {}, errors = {}, loadErrors = {}, prints = {} }
     H.phase, H.misses = "load", { load = {}, login = {}, run = {} }
     local env = {}

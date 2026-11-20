@@ -24,11 +24,14 @@ Each recommendation is worked out by simulating the next few seconds of the figh
 
 The Classic style is the original Hekili's look: a row of icons. The first icon is the largest; the queued icons follow it. The **Primary** display shows three icons by default.
 
-<!-- TODO-SCREENSHOT: the Primary display in the Classic style with each element numbered -->
+![The Primary display in the Classic style, three elements numbered: 1 the first icon, 2 a queued icon, 3 the keybind text](images/Reading-The-Displays-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; in game, in combat on an open-world enemy -->
+
+In the picture, **1** is the first icon, the ability to press now, and **2** is a queued icon after it. The other parts below appear when they apply.
 
 Each part of an icon has a meaning:
 
-- **Keybind text**, top right by default: the key bound to that ability on the action bars. With a gamepad, the controller button picture shows there instead.
+- **3, Keybind text**, top right by default: the key bound to that ability on the action bars. With a gamepad, the controller button picture shows there instead.
 - **Target count**, bottom right of the first icon: the number of enemies counted, shown only when there is more than one ([How targets are counted](How-Targets-Are-Counted)).
 - **Cooldown spiral**: the time until the ability can be used. When the ability should wait even after it is ready, the spiral can run on until the moment to press it (**Extend Spiral**).
 - **Delay indicator**: when the ability should be pressed a little later, a coloured icon or a countdown can show the wait (**Indicator**, on the **Delays** tab).
@@ -41,13 +44,14 @@ Each part of an icon has a meaning:
 
 The Timeline style lays the recommendations out along time:
 
-- The **Next** box holds the ability to press now, with its keybind.
-- The **Now** circle holds a focus ability that is coming up: an ability that a priority marks as worth watching, such as a buff to refresh or a proc to use. It counts down until the ability is ready, and its ring changes colour when it is time to press it. With no focus ability coming up, the circle stays empty by default (**Without Focus**).
-- The **Lane** places the abilities after that by how far ahead they are, so it shows what is coming and when.
+- **1, Next**: the **Next** box holds the ability to press now, with its keybind.
+- **2, Now**: the **Now** circle holds a focus ability that is coming up: an ability that a priority marks as worth watching, such as a buff to refresh or a proc to use. It counts down until the ability is ready, and its ring changes colour when it is time to press it. With no focus ability coming up, the circle stays empty by default (**Without Focus**).
+- **3, Lane**: the **Lane** places the abilities after that by how far ahead they are, so it shows what is coming and when.
 
 When Hekili Forever cannot be sure that a resource will be there in time, the Timeline can show the abilities the priority would pick instead, stacked beside the cell (**Show Alternatives**). A pick on the lane that is still short of its resource is marked (**Resource Gate**).
 
-<!-- TODO-SCREENSHOT: the Primary display in the Timeline style with each element numbered -->
+![The Primary display in the Timeline style, three elements numbered: 1 the Next box, 2 the Now circle with its countdown, 3 the Lane](images/Reading-The-Displays-2.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; in game, in combat on an open-world enemy -->
 
 ## Modern overlays
 

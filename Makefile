@@ -194,6 +194,7 @@ check-full:
 	$(MAKE) -j4 -Otarget lint fmt-check typecheck test
 	$(if $(FULL),$(MAKE) test-warlock)
 	$(MAKE) syntax api-check packs-check tools-test wiki-check
+	@python3 tools/locales.py --report || true  # information only: untranslated keys per language, never a failure
 	@$(if $(STAMP_OFF),:,scripts/check_stamp.sh write $(STAMP_START))
 
 # Rewrites each class file's RegisterPack blocks from its APLs/ (tools/make_pack.lua write), re-dating a class (today,

@@ -17,6 +17,8 @@ Keys are grouped by the file that first uses them, so a translator can see where
 repository root after changing any text:
 
     python3 tools/locales.py            write every addon's Locales/enUS.lua and update its Locales/<locale>.lua
+    python3 tools/locales.py --report   change nothing; per language, how many keys are untranslated (-v: per addon, --keys:
+                                        each key); always exits 0, check-full prints it as information
     python3 tools/locales.py --check    change nothing; exit 1 if a file is out of date, a key is not a literal, a
                                         translation drops a format code (%s, %d...), a colour (|c...|r) or a line
                                         break, a pack's key is translated in a core language file, or a priority's translated
@@ -46,7 +48,7 @@ NAMES = {
     "koKR": "Korean",
     "deDE": "German",
     "frFR": "French",
-    "esES": "Spanish (Spain)",
+    "esES": "Spanish",
     "esMX": "Spanish (Mexico)",
     "ptBR": "Portuguese (Brazil)",
     "ruRU": "Russian",
@@ -55,7 +57,7 @@ NAMES = {
 
 HEADER = """\
 -- Locales/{locale}.lua
--- {name} ({locale}) translation of Hekili Forever ({app}). Written by tools/locales.py, which keeps the translations and adds
+-- {name} ({locales}) translation of Hekili Forever ({app}). Written by tools/locales.py, which keeps the translations and adds
 -- new text as it appears: only edit the L[...] lines, other changes here are lost.
 --
 -- To translate a line, remove the "-- " in front and type the translation between the empty quotes:
@@ -65,11 +67,20 @@ HEADER = """\
 -- The key in L["..."] is the English text: leave it exactly as it is. Untranslated lines show in English. Keep every
 -- format code (%s, %d, %.1f...), colour (|cFFFFD100...|r), texture (|T...|t) and line break (\\n) of the English text.
 
-local L = LibStub("AceLocale-3.0"):NewLocale("{app}", "{locale}")
+{open}
 if not L then
     return
 end
 """
+
+# One file serves several clients: Spanish is written once, in neutral Latin-America-friendly wording, for Spain and Mexico.
+ALIASES = {"esES": ("esMX",)}
+
+# A label of at most this many characters whose translation is longer than LENGTH_RATIO times it is flagged (German and
+# French run long; the headless tests cannot measure pixels, so an in-game pass checks the widest panels).
+SHORT_LABEL = 24
+LENGTH_RATIO = 1.5
+BEHIND = 0.05  # the report marks a language with more than this share of keys untranslated
 
 ENUS_HEADER = """\
 -- Locales/enUS.lua
@@ -304,8 +315,21 @@ def render_enus(app, grouped):
     return "\n".join(lines) + "\n"
 
 
+def client_locales(locale):
+    """The client locales one language file serves: itself, then its aliases."""
+    return [locale, *ALIASES.get(locale, ())]
+
+
 def render(app, locale, grouped, translations):
-    lines = [HEADER.format(app=app, locale=locale, name=NAMES.get(locale, locale)).rstrip("\n")]
+    own = client_locales(locale)
+    if len(own) == 1:
+        opening = 'local L = LibStub("AceLocale-3.0"):NewLocale("%s", "%s")' % (app, locale)
+    else:  # the client's own NewLocale answers a table, the others nil
+        opening = 'local Locale = LibStub("AceLocale-3.0")\nlocal L = ' + " or ".join(
+            'Locale:NewLocale("%s", "%s")' % (app, loc) for loc in own
+        )
+    header = HEADER.format(app=app, locale=locale, locales=", ".join(own), name=NAMES.get(locale, locale), open=opening)
+    lines = [header.rstrip("\n")]
     used = set()
     for rel, keys in grouped.items():
         lines.append("")
@@ -332,6 +356,13 @@ CODES = [
     ("texture", re.compile(r"\|T[^|]*\|t|\|A[^|]*\|a")),
     ("line break", re.compile(r"\n")),
 ]
+
+
+def length_warning(key, value):
+    """A warning when a short label's translation is much longer than its English (not a failure: German runs long)."""
+    if len(key) <= SHORT_LABEL and len(value) > LENGTH_RATIO * len(key):
+        return "%r is %d characters, %r is %d: check it fits" % (key, len(key), value, len(value))
+    return None
 
 
 def code_problems(key, value):
@@ -557,7 +588,39 @@ def label_problems(name, packs, translations, locale):
     return out
 
 
+def coverage():
+    """{locale: {addon: (translated, total, [missing keys])}} of every language file on disk."""
+    out = {}
+    for name, toc in addons():
+        grouped = collect(toc)[0]
+        keys = [k for ks in grouped.values() for k in ks]
+        for locale in languages(name) if grouped else []:
+            tr = read_translations(os.path.join(locales_dir(name), locale + ".lua"))
+            missing = [k for k in keys if k not in tr]
+            out.setdefault(locale, {})[name] = (len(keys) - len(missing), len(keys), missing)
+    return out
+
+
+def report(detail, listing):
+    """Prints each language's untranslated keys per addon (information: the exit code stays 0)."""
+    for locale, per in sorted(coverage().items()):
+        done = sum(d for d, _, _ in per.values())
+        total = sum(t for _, t, _ in per.values())
+        share = (total - done) / total if total else 0
+        flag = "  BEHIND: more than %d%% untranslated" % round(BEHIND * 100) if share > BEHIND else ""
+        print("%s: %d of %d translated, %d missing%s" % ("/".join(client_locales(locale)), done, total, total - done, flag))
+        for name, (d, t, missing) in per.items():
+            if (detail or listing) and missing:
+                print("    %s: %d of %d translated" % (name, d, t))
+            if listing:
+                for k in missing:
+                    print("        " + lua_quote(k))
+    return 0
+
+
 def main(argv):
+    if "--report" in argv:
+        return report("-v" in argv, "--keys" in argv)
     check = "--check" in argv
     problems, stale, found = [], [], {}
     for name, toc in addons():
@@ -567,15 +630,18 @@ def main(argv):
     pack_only = {k for n, f in found.items() if n != CORE for keys in f[0].values() for k in keys} - core_keys
     # read before any file is rewritten: the packs adopt from them, and the core drops what a pack now holds
     core_tr = {loc: read_translations(os.path.join(locales_dir(CORE), loc + ".lua")) for loc in languages(CORE)}
+    core_langs = languages(CORE)
+    warnings = []
     held = {}  # [locale] = the keys some pack's file of that language holds
     for name, (grouped, _, packs) in sorted(found.items(), key=lambda f: f[0] == CORE):  # the packs first, then the core
         if not grouped:
             continue  # an addon with no text (Hekili_Shared) has no Locales/
         keys = [k for ks in grouped.values() for k in ks]
         sync(os.path.join(locales_dir(name), "enUS.lua"), render_enus(name, grouped), check, stale)
-        for locale in languages(name):
+        for locale in sorted(set(languages(name)) | set(core_langs)):
             path = os.path.join(locales_dir(name), locale + ".lua")
             translations = read_translations(path)
+            # a pack without the core's language gets its file here (and shows as stale under --check)
             if name == CORE:
                 for k in sorted(k for k in translations if k in pack_only):
                     if check:
@@ -589,11 +655,16 @@ def main(argv):
                 held.setdefault(locale, set()).update(translations)
             for key, value in translations.items():
                 problems += ["%s/Locales/%s.lua: %s" % (name, locale, p) for p in code_problems(key, value)]
+                w = length_warning(key, value)
+                if w:
+                    warnings.append("warning: %s/Locales/%s.lua: %s" % (name, locale, w))
             problems += label_problems(name, packs, translations, locale)
             sync(path, render(name, locale, grouped, translations), check, stale)
             done = sum(1 for k in keys if k in translations)
             print("%s %s: %d of %d translated" % (name, locale, done, len(keys)))
     problems += lint()
+    for w in warnings:
+        print(w)
     for p in problems:
         print(p)
     for rel in stale:

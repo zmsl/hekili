@@ -12,7 +12,8 @@ This page shows how to change how one ability or item is recommended: never reco
 2. Choose the specialization in **Specialization** at the top. It starts on your current one.
 3. Pick the ability or item from the list on the left. Its page opens.
 
-<!-- TODO-SCREENSHOT: an ability's page with its options -->
+![The Abilities page for Abolish Poison with its options: Disable and Boss Encounter Only unchecked, Require Toggle Default (none), target limits all 0](images/Abilities-And-Items-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; options, Abilities -->
 
 ## Disable an ability
 

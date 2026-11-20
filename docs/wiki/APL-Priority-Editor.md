@@ -8,7 +8,8 @@ The **priority editor** is the part of the options where a priority is viewed, c
 
 A built-in priority is replaced by the shipped version whenever the addon updates, so changes made to it are not kept, and its name and specialization are locked. To change one, copy it first ([APL tutorial: your first custom priority](APL-Tutorial-Your-First-Custom-Priority)).
 
-<!-- TODO-SCREENSHOT: the Action Lists tab of a copied Feral priority, one entry selected -->
+![The Action Lists tab of a copied Feral priority with entry 6, Ferocious Bite, selected: Enabled checked, its condition shown in the Conditions box](images/APL-Priority-Editor-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; options, Priorities, Feral copy, Action Lists tab -->
 
 ## The tabs
 

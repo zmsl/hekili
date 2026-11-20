@@ -50,7 +50,8 @@ To fix it, install the core and every class addon again from one release. A noti
 2. In the game, type `/hekili`. The options window opens.
 3. Target an enemy. The **Primary** display shows the ability to press next.
 
-<!-- TODO-SCREENSHOT: the addon list on the character screen with the eleven Hekili Forever addons enabled -->
+![The AddOn List on the character screen: Hekili Forever and its ten class and shared addons, all checked and marked "Only loadable on demand"](images/Installing-1.png)
+<!-- Hekili Forever 0.11.0; any class; character screen, AddOn List -->
 
 If nothing appears, see [Troubleshooting and FAQ](Troubleshooting-And-FAQ).
 

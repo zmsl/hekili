@@ -14,7 +14,7 @@ A snapshot records how Hekili Forever chose the recommendations on screen at tha
 
 1. Wait until the problem is on screen, for example the wrong ability in the first icon. A snapshot from before the pull does not show a problem that happens twenty seconds into a fight.
 2. Take the snapshot in one of these ways:
-   - press the **Snapshot** key, ALT-SHIFT-[ by default;
+   - press the **Snapshot** key, `ALT-SHIFT` plus the left square bracket key by default;
    - press the **Pause** key, ALT-SHIFT-P by default, which also freezes the displays (press it again to resume);
    - type `/hekili snapshot`, or `/hek snap`, for example from a macro.
 3. Open **/hekili > Snapshots (Troubleshooting)**.
@@ -24,7 +24,8 @@ A snapshot records how Hekili Forever chose the recommendations on screen at tha
 
 With **Take Screenshot** checked, Hekili Forever also takes a game screenshot when you take a snapshot. A screenshot of the displays at that moment helps too.
 
-<!-- TODO-SCREENSHOT: the Snapshots tab with a snapshot selected -->
+![The Snapshots tab with snapshot 1 selected: its data line is shown in the Snapshot Data box, ready to copy with Ctrl+A and Ctrl+C](images/Reporting-A-Problem-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; options, Snapshots (Troubleshooting) -->
 
 ## Capture Lua errors
 
