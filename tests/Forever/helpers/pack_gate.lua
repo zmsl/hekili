@@ -118,7 +118,13 @@ M.FLICKER = {
     -- seeds 1-20 / 21-40 / 41-60, base 314a87b86 -> 81a216585: flicker 0.18 / 0.30 / 0.26 -> 0.11 / 0.26 / 0.29, retracted
     -- 0.07 / 0.04 / 0 -> 0.04 / 0.04 / 0, readyShort 2 / 6 / 5 -> 6 / 1 / 0, heldReady 226 / 197 / 229 -> 219 / 217 / 226,
     -- dps .976 / 1.028 / 1.017 -> .977 / 1.026 / 1.022): no floor moves (the belief-only step read readyShort 5 / 7 / 6:
-    -- a pending off-hand swing's forecast still carried the proc; traced in the lane report)
+    -- a pending off-hand swing's forecast still carried the proc; traced in the lane report). readyShort sits AT its
+    -- floor on the gate's set (seeds 1-20: 6, zero headroom): t 55.60 Whirlwind (on the base too: lo 20.00 under truth
+    -- 21.43, an off-hand swing pending in the forecast), 17.40-17.80 Bloodthirst (3: lo 25.06 over truth 23.61, a
+    -- Reckless Swings land gain on the floor not netted against a rung's lift, L1504), 73.00-73.20 Whirlwind (2: that
+    -- reaction's +5 at an off-hand swing the world shows avoided, never taken back, then a short at 20 collapses the band
+    -- to 19.99 over truth 15.09; the same L1504 path, reached since the sim's forecast re-timed the fight). The yes
+    -- test's proc-aware hand attribution (review I2) changes none of them
     ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.21, readyShort = 6, heldReady = 229 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
@@ -190,7 +196,11 @@ M.FLICKER = {
     -- 617 -> 848, the floor now waits for the procs it cannot see: at-cost lo-truth -1.6 / -2.1 / -2.2 -> -2.2 / -2.6 /
     -- -2.5 (one proc's expected 0.6 lower), est-truth -0.1 / -0.2 / -0.1, so Heroic Strike's `rage.lo>=40` line and the
     -- cost-gated lines cross later than the truth
-    ["Fury L24"] = { flicker = 0.36, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 848 }, -- flicker 0.23 / 0.30 / 0.21, retracted 0 / 0 / 0 (swing width)
+    -- heldReady 848 -> 862 (review I2, 8a7885cee: with both hands pending, a yes shows a hand's swing only past the
+    -- other hand's step WITH its proc, so a yes the other hand alone may have paid lifts the floor no further than the
+    -- rung; R6, seeds 1-20 / 21-40 / 41-60 heldReady 797 / 803 / 862, flicker 0.23 / 0.30 / 0.24, agreement .949 / .945
+    -- / .952; an A/B on 8a7885cee alone reads the same, Fury L60, Arms and Protection unchanged)
+    ["Fury L24"] = { flicker = 0.36, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 862 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
