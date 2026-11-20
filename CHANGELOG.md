@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- `target.time_to_pct_<N>` now reads 3600 when the target's time to die is unknown, like `fight_remains` and `target.time_to_die` (it read 2520), so custom conditions see the same unknown time everywhere.
+
 ### Known issues
 
 ### Upgrade notes
