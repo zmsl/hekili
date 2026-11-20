@@ -1381,6 +1381,23 @@ describe("now handlers", function()
             assert.are.equal(2, crits)
         end)
 
+        -- (ledger L1513, W2) a `now` that first clears a group of debuffs that are down (one of a kind on the target)
+        -- wrote more auras than the undo journal holds, so its own application went unjournaled and an avoid left it up
+        it("undoes the cast's own debuff after its `now` cleared four others that were down", function()
+            for k = 1, 4 do
+                h.Class.auras["other_" .. k] = { key = "other_" .. k, id = 9100 + k, duration = 30 }
+            end
+            h.Class.abilities.spender_c.funcs.now = function()
+                for k = 1, 4 do
+                    removeDebuff("target", "other_" .. k) -- luacheck: ignore 113 (the `now` context's verb)
+                end
+                applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+            end
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "MISS")
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.2))
+        end)
+
         it("keeps an onCrit's target writes out of the cast's undo: an avoid after it leaves them (GAP T)", function()
             h.Class.abilities.spender_c.funcs.onCrit = function()
                 applyDebuff("target", "spender_a", 120) -- luacheck: ignore 113 (the `now` context's verb)
@@ -2074,6 +2091,7 @@ describe("now handlers", function()
             -- its cost share (false: none), `debuff` its target debuff (the verdict's record)
             local function rest(field, share, debuff)
                 h.Class.abilities.spender_c.refundNowOnAvoid = field or nil
+                h.Class.abilities.spender_c.school = "physical" -- a weapon ability either way: a DODGE can refuse it
                 h.Class.abilities.spender_c.funcs.now = spendRest(debuff)
                 begin(40, nil, nil, share)
             end

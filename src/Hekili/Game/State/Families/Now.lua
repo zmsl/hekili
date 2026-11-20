@@ -413,7 +413,9 @@ local function aura(u, key, duration, stacks)
         end
         after = (u == 2 and T + flight or T) + d
     end
-    if u == 2 and journal and undoN < UNDO then
+    -- a removal of an aura already down changes nothing to undo: unjournaled, so a `now` clearing a group of one-of-a-kind
+    -- debuffs first still journals its own application (L1513: a curse's four siblings filled the journal)
+    if u == 2 and journal and undoN < UNDO and (after > 0 or before > T) then
         local first = true
         for k = 1, undoN do
             first = first and undoJ[k] ~= j
