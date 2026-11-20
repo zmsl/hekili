@@ -1988,6 +1988,7 @@ spec:RegisterAbilities({
 
     swipe_bear = {
         id = 779,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         copy = rest(SWIPE),
         cast = 0,
         cooldown = 0,

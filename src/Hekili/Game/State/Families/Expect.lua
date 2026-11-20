@@ -8,8 +8,9 @@
 -- `now` context (I.Eval, Families/Casts.lua), never under Hekili's state. Declared: the pack's own value, before the haste wrapper RegisterAura installs (Engine/Schema/
 -- Spec.lua keeps it as `base_tick_time`), as Families/Casts.lua reads `declaredSpend`. A declared instant or travel
 -- ability also ticks when that aura is upstream's debuff dot (`dot = "debuff"`, the field mt_dot reads). "debuff" is
--- an effect that deals no damage: the instant kind with school 0, so its ticket takes only its own MISS, DODGE or PARRY
--- (Kinds.lua K.Accepts) and closes `expired`, never `lost` (Tickets.lua); an "instant" must name its school. An absent
+-- an effect that deals no damage: the instant kind with school 0, so its ticket takes only its own avoid (a DODGE or
+-- PARRY only for a weapon ability's: A.weapon; Kinds.lua K.Accepts) and closes `expired`, never `lost` (Tickets.lua);
+-- an "instant" must name its school. An absent
 -- `expects` takes today's behaviour: "strike" with `onNextSwing`, "instant" with `startsCombat`, else "none", with
 -- school ANY unless the ability names one (CHANNEL is opt-in). A malformed declaration is counted once in
 -- I.nowErrors (Snapshot's error line) and takes the default. Pure: no client read.
@@ -25,6 +26,10 @@ X.ANY = -1 -- school: any WOUND or avoid pays, never lost (a default type on an 
 X.KIND = { none = 0, instant = 1, debuff = 1, travel = 2, melee = 3, strike = 4, ticks = 5, channel = 6 }
 
 A.expKind, A.expDeclared, A.velocity, A.school, A.tickAura, A.ticking = {}, {}, {}, {}, {}, {}
+-- (ledger L1507) by ability index: true for a weapon ability, the only kind a dodge, parry or block can refuse (wowsims
+-- spell_outcome.go: a spell rolls a miss only): an on-next-swing strike, a declared physical school, or an ability whose
+-- avoid gives power back (`refundOnAvoid`, `refundNowOnAvoid`: DB2 Discount Power On Miss); false for any other
+A.weapon = {}
 
 -- Aura record `au`'s declared field: `base` (where RegisterAura moves a wrapped one), else `k` (the plain record,
 -- Engine/Schema/Tracked.lua: a number or the pack's function).
@@ -110,6 +115,14 @@ local function malformed(obj, e, k, s, au)
 end
 X.Malformed = malformed -- the pack check (tests/Forever/expects_spec.lua) runs the build's own rule
 
+--- Whether ability `obj` (declared school mask `s`, nil none; `SCHOOL` the core's names) is a weapon ability (A.weapon).
+function X.Weapon(obj, s, SCHOOL)
+    if obj.onNextSwing then
+        return true
+    end
+    return s == SCHOOL.physical or obj.refundOnAvoid ~= nil or obj.refundNowOnAvoid == true
+end
+
 I.OnBuild(function(def)
     local SCHOOL = def.school -- the core's spell schools by name (Spec.lua), carried in the build
     local byKey = {} -- once a build
@@ -146,6 +159,7 @@ I.OnBuild(function(def)
         local direct = isDeclared and (kind == X.FRAME or kind == X.FLIGHT) and au and rawget(au, "dot") == "debuff"
         local ticks = kind == X.TICKS or kind == X.CHANNEL or direct == true
         A.expKind[a], A.school[a], A.expDeclared[a] = kind, school, isDeclared
+        A.weapon[a] = X.Weapon(obj, s, SCHOOL)
         A.tickAura[a], A.ticking[a] = ticks and au or false, ticks
     end
 end)

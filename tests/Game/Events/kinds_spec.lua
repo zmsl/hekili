@@ -58,7 +58,25 @@ describe("the kinds", function()
         assert.is_true(K.Accepts(c, "WOUND", "", 30, 32, false))
         T.school[f] = 0
         assert.is_false(K.Accepts(f, "WOUND", "", 30, 4, false))
-        assert.is_true(K.Accepts(f, "PARRY", "", 0, 1, true))
+        assert.is_true(K.Accepts(f, "MISS", "", 0, 1, true))
+    end)
+
+    it("a DODGE, PARRY or BLOCK pays only a weapon ability's ticket; a MISS, RESIST or IMMUNE any (L1507)", function()
+        local f, c, b = open(fs.SPENDER_F, 10), open(fs.SPENDER_C, 10), open(fs.SPENDER_B, 10)
+        for _, act in ipairs({ "DODGE", "PARRY", "BLOCK" }) do
+            assert.is_false(K.Accepts(f, act, "", 0, 1, true), act) -- a fire instant: a spell
+            assert.is_false(K.Accepts(c, act, "", 0, 1, true), act) -- a default type naming nothing: a spell
+            assert.is_true(K.Accepts(b, act, "", 0, 1, true), act) -- an on-next-swing strike
+        end
+        for _, act in ipairs({ "MISS", "RESIST", "IMMUNE" }) do
+            assert.is_true(K.Accepts(f, act, "", 0, 1, true), act)
+            assert.is_true(K.Accepts(c, act, "", 0, 1, true), act)
+        end
+        I.ab.weapon[T.ab[c]] = true -- a weapon special (a physical school or an avoid refund: expect_spec)
+        assert.is_true(K.Accepts(c, "DODGE", "", 0, 1, true))
+        T.school[f] = 0 -- a no-damage debuff a spell applies (a curse): its own miss only
+        assert.is_false(K.Accepts(f, "PARRY", "", 0, 1, true))
+        assert.is_true(K.Accepts(f, "MISS", "", 0, 1, true))
     end)
 
     it("Overdue (pass 4): late in the hard window, oldest first, after every band; none for a ticking kind", function()

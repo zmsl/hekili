@@ -807,6 +807,7 @@ spec:RegisterAbilities(rogue({
     -- Combat priority, in the window (owner R70).
     riposte = {
         id = 14251,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         cast = 0,
         cooldown = 6,
         gcd = "off",
@@ -1042,6 +1043,7 @@ spec:RegisterAbilities(rogue({
     -- 17 of 17 Shanks), ranks 1-4 are a chance that is not modelled.
     shank = {
         id = 1329283,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         copy = { 1329549 },
         cast = 0,
         cooldown = function()
@@ -1149,6 +1151,7 @@ spec:RegisterAbilities(rogue({
     -- 45 energy, 10 s, +1 combo point (the pin's Energize effect).
     gouge = {
         id = 1776,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         copy = rest(GOUGE),
         cast = 0,
         cooldown = 10,
@@ -1175,6 +1178,7 @@ spec:RegisterAbilities(rogue({
     -- A finisher: 25 energy and every combo point, 20 s; in Relentless Strikes's mask.
     kidney_shot = {
         id = 408,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         copy = rest(KIDNEY_SHOT),
         cast = 0,
         cooldown = 20,
@@ -1205,6 +1209,7 @@ spec:RegisterAbilities(rogue({
     -- The Stealth opener: 60 energy (Dirty Deeds -10 a rank), +2 combo points.
     cheap_shot = {
         id = 1833,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         cast = 0,
         cooldown = 0,
         gcd = "totem",
@@ -1234,6 +1239,7 @@ spec:RegisterAbilities(rogue({
     -- 65 energy (Dirty Tricks -25% a rank), from Stealth.
     sap = {
         id = 6770,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         copy = rest(SAP),
         cast = 0,
         cooldown = 0,

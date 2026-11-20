@@ -1,6 +1,7 @@
 -- Game/Events/Kinds.lua
 -- Each engine kind's matching rule, once (unit-registry spec §3.3, §3.4): which rows an open ticket accepts (an avoid
--- pays any kind that owes a row; a WOUND only a kind of its school, or ANY; a school of 0 only an avoid) and its band
+-- pays any kind that owes a row, but a DODGE, PARRY or BLOCK only a weapon ability's; a WOUND only a kind of its school,
+-- or ANY; a school of 0 only an avoid) and its band
 -- per pass (1 narrow, 2 widened, 3 hard) with its expected closure E. MELEE's rule is Events/Melee.lua's; NONE and
 -- UNMAPPED accept no row. Packs write no matching code: they declare data (Families/Expect.lua). Pure.
 
@@ -17,6 +18,10 @@ L.UNMAPPED_WINDOW = 2
 local SAME_FRAME, CAST_WINDOW = M.SAME_FRAME, M.CAST_WINDOW
 -- narrower than Rows.lua's REFUSED on purpose: a RESIST or IMMUNE keeps the cast window only (a later one: another's)
 local REFUSED = { DODGE = true, PARRY = true, MISS = true }
+-- (ledger L1507) the avoids only a weapon ability can take (Families/Expect.lua A.weapon): a spell is missed, never
+-- dodged, parried or blocked (wowsims spell_outcome.go), so another's melee avoid never closes a spell's ticket
+local WEAPON_AVOIDS = { DODGE = true, PARRY = true, BLOCK = true }
+local weapon = I.ab.weapon
 local FRAME, STRIKE, MELEE, UNMAPPED, NONE, ANY = X.FRAME, X.STRIKE, X.MELEE, X.UNMAPPED, X.NONE, X.ANY
 local FLIGHT, TICKS, CHANNEL = X.FLIGHT, X.TICKS, X.CHANNEL
 K.SPELL_BAND_LO, K.SPELL_BAND_HI, K.BAND_N = 0.6, 1.6, 3
@@ -84,7 +89,7 @@ function K.Accepts(i, act, flag, amount, sch, isAvoid)
     if T.owed[i] <= 0 or k == MELEE or k == UNMAPPED or k == NONE then
         return false
     elseif isAvoid then
-        return true
+        return not WEAPON_AVOIDS[act] or weapon[T.ab[i]] ~= false
     end
     local s = T.school[i]
     if not (s == ANY or (s > 0 and s == sch)) then

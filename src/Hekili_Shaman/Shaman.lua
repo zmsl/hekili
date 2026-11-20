@@ -897,6 +897,7 @@ spec:RegisterAbilities({
 
     stormstrike = {
         id = 17364,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         cast = 0,
         cooldown = 8, -- wowsims e4ef929e54 (hotfix push 113722, a63f2b37f0; 6 at 4b0030a44b)
         gcd = "spell",

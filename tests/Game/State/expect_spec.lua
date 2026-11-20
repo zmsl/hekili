@@ -182,4 +182,25 @@ describe("expectation compile", function()
         local kind, school, errors = one({ startsCombat = true, school = "frost" })
         assert.are.same({ X.FRAME, 16, 0 }, { kind, school, errors })
     end)
+
+    -- (ledger L1507) a dodge, parry or block can refuse only a weapon ability: an on-next-swing strike, a physical
+    -- school, or an ability whose avoid gives power back; a spell (any other) only a miss
+    it("compiles the weapon flag from the declared data", function()
+        local cases = {
+            { {}, false },
+            { { startsCombat = true }, false },
+            { { startsCombat = true, school = "fire" }, false },
+            { { startsCombat = true, expects = "debuff" }, false },
+            { { onNextSwing = true }, true },
+            { { startsCombat = true, school = "physical" }, true },
+            { { startsCombat = true, refundOnAvoid = true }, true },
+            { { startsCombat = true, refundOnAvoid = 0.8 }, true },
+            { { startsCombat = true, refundNowOnAvoid = true }, true },
+            { { startsCombat = true, expects = "debuff", refundOnAvoid = true }, true },
+        }
+        for n, case in ipairs(cases) do
+            one(case[1])
+            assert.are.equal(case[2], A.weapon[1], "case " .. n)
+        end
+    end)
 end)

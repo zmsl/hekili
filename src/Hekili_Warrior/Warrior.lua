@@ -2132,6 +2132,7 @@ spec:RegisterAbilities({
     -- Forever: usable within Victorious (20 s) after a kill that yields experience or honor; free, 30 s cooldown (DB2 402927).
     victory_rush = {
         id = 402927,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         cast = 0,
         cooldown = 30,
         gcd = "spell",
@@ -2155,6 +2156,7 @@ spec:RegisterAbilities({
 
     whirlwind = {
         id = 1680,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         cast = 0,
         -- Improved Whirlwind (1310315): -1 s a rank (wowsims/forever's curve {-1000, -2000}, misc 11)
         cooldown = function()

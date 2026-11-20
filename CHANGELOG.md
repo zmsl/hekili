@@ -16,6 +16,7 @@
 - Warrior: the guaranteed rage from a white swing no longer counts Unbridled Wrath before it procs, so a rage-gated ability may light up slightly later, once the rage is certain.
 - `target.time_to_pct_<N>` now reads 3600 when the target's time to die is unknown, like `fight_remains` and `target.time_to_die` (it read 2520), so custom conditions see the same unknown time everywhere.
 - A critical tick late in one of your damage-over-time spells is no longer taken for a critical hit of the spell you just cast when that damage-over-time spell was applied instantly or its first hit was a critical hit, so effects of your critical hits, such as Master of Elements' mana refund, are no longer counted then when they did not happen. A real critical hit that lands at the same moment as such a tick no longer counts either, so the next spell can show as ready a moment late.
+- In a group, another player's dodged or parried attack on your target no longer counts as your spell missing, so a debuff of yours, such as a curse or Winter's Chill, is no longer shown as gone while it is still on the target.
 
 ### Known issues
 

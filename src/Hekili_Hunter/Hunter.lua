@@ -893,6 +893,7 @@ spec:RegisterAbilities({
 
     mongoose_bite = {
         id = 1495,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         onCrit = resourceful, -- Resourcefulness at 2/2
         copy = rest(MONGOOSE_BITE),
         cast = 0,
@@ -917,6 +918,7 @@ spec:RegisterAbilities({
     -- 3 s) comes with every kick, hit or miss (wowsims talents_survival.go).
     strider_kick = {
         id = 1317257,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         onCrit = resourceful, -- Resourcefulness at 2/2
         cast = 0,
         cooldown = 8,
@@ -934,6 +936,7 @@ spec:RegisterAbilities({
 
     wing_clip = {
         id = 2974,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         onCrit = resourceful, -- Resourcefulness at 2/2
         copy = rest(WING_CLIP),
         cast = 0,
@@ -1093,6 +1096,7 @@ spec:RegisterAbilities({
     -- Usable after a parry (like Mongoose Bite's window; no window is modelled: the usability read decides).
     counterattack = {
         id = 19306,
+        school = "physical", -- DB2 School 1, DefenseType melee: a dodge, parry or block can refuse it
         copy = rest(COUNTERATTACK),
         cast = 0,
         cooldown = 5,
