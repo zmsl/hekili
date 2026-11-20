@@ -1098,6 +1098,21 @@ describe("resources", function()
                 assert.is_true(R.lo0[1] <= 10 + I.EPS, "lo " .. R.lo0[1]) -- the rung, not 6 + 7 x 0.98
             end)
 
+            it("pins a swing's crossing to one value step, measured at its midpoint: no width (review M1)", function()
+                widths(2)
+                local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+                R.scale[1] = 1
+                R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 20
+                obs(Obs.Usable, 10, A, 0, 1) -- short of 10
+                I.Fold(10, false)
+                obs(Obs.Usable, 11, A, 1, 0) -- usable at the same cost, no gain of ours: a swing crossed it
+                I.Fold(11, false)
+                local step = 9 * (1 + R.spread[1])
+                within(10, R.lo0[1])
+                within(10 + step, R.hi0[1])
+                within(10 + step / 2, R.pinV[1])
+            end)
+
             it("changes nothing for a swing entry without `width`", function()
                 widths(nil)
                 obs(Obs.Swing, 5, 1, 2.6, 1)

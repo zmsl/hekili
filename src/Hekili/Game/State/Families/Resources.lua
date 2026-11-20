@@ -1450,9 +1450,9 @@ I.On(Obs.Usable, function(o, t, lag)
                 owe(r, e, lo, hi, o.t)
             else
                 -- a swing-paid resource crosses at a swing: [c, c + one step of the larger hand), measured at its
-                -- midpoint
-                local v = I.SwingValue(r) + I.SwingWidth(r)
-                local off = R.swingOff[r] ~= 0 and I.SwingValue(r, 2) + I.SwingWidth(r, 2) or 0
+                -- midpoint. The value, not value + width: the crossing's expected overshoot is half the expected step,
+                -- and a midpoint a width higher would bias the scale where this pin chains with an exact read (review M1)
+                local v, off = I.SwingValue(r), R.swingOff[r] ~= 0 and I.SwingValue(r, 2) or 0
                 local step = (v > off and v or off) * (R.scale[r] + R.spread[r])
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
                 pin(r, c, step, t, "pinned", Obs.Usable, true)
