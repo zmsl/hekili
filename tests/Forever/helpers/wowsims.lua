@@ -684,7 +684,12 @@ M.READY = {
     -- Unbridled Wrath proc): the same 9 rows; Sunder Armor 44.00 (0.99 -> 1.22) and 46.40 (0.17 -> 0.92) now wait for
     -- the next main-hand swing (45.21 / 47.31) instead of a proc the floor cannot promise; A/B with only that floor
     -- line reverted reproduces the old fixture
-    warrior_fury = { 0.64, 9 },
+    -- -> { 0.64, 10 } (lo-truth-gate fix (a), L1504/L1538/L1560, ruling L1568): the re-recorded timing fixture moves the
+    -- belief lower in all 7 changed rows (Whirlwind 53.15, Bloodthirst 98.30, Sunder Armor 124.96, Rend 136.96,
+    -- Overpower 139.36, Execute 161.30, and the Whirlwind 101.30 gcd row); the one new late row, Whirlwind 101.30 (0.68 s
+    -- late), is an honest floor on the tip (rung lo = est = 25.000 vs truth 29.898 after the 100.334 main-hand credit is
+    -- fully netted against the 100.00 rung); the base side was not traced (base tree removed after the bite test)
+    warrior_fury = { 0.64, 10 },
     -- { 0.38, 11 } -> { 0.37, 3 } re-pin e2842f0a78 (lane 14, R6; after 5049ede22's GCD fix): 98 decisions, 3 real, all
     -- early, class aura: Shield Slam 49.84 (0.24), Sunder Armor 71.77 / 143.44 (0.37 / 0.44): wowsims queues Shield Block
     -- (`Queueing up 2565 to cast at`) and casts the on-GCD ability at that instant, after ours shows it ready

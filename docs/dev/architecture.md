@@ -316,7 +316,9 @@ settled wound, or a swing that closed with no row at all, at the swing's own tim
 secret, so its row is background and only avoids are plain: a swing with no avoid seen is presumed landed; it is
 staged as `Obs.SwingSettled` with c = -1, which runs `land` only). A reaction is folded after its time, so its aura reads
 answer as of that time (`I.AuraAsOf`, `Families/Auras.lua`: an aura applied later reads down, the last one fallen
-later reads up as it was). The owner's order: an aura first, a usability flip
+later reads up as it was), and a resource a swing's reaction gains first covers a rung's lift (a usable answer,
+within `I.LIFT_WINDOW`) up to what the rungs since that swing lifted, less what its own steps covered (L1504: the rung
+already saw the pool with it); never a lift an earlier swing owes. The owner's order: an aura first, a usability flip
 where it works, a reaction only where only an outcome reveals the span.
 
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec/Abilities.lua`) is a spell the spellbook knows and the

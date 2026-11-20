@@ -48,6 +48,9 @@ M.REACT_P90_BY = {}
 -- readyShort (loop.readyShort, the owner's rule dim never promote): ticks an icon was pressed as ready with the truth before
 -- the press under its cost and nothing in flight, worst of seeds 1-20 / 21-40 / 41-60, a floor that only tightens; absent
 -- is 0. The class left over is swing-paid rage: a forecast swing's gain shows a cost-gated ability ready (Arms, Fury, Guardian).
+-- loOver (L1504, the danger mirror: the floor never above the truth): run A's combat polls whose believed floor `lo`
+-- sat over the world's power at the same poll, before that poll's press, by more than loop.LO_EPS (0.05); every gated
+-- label, absent is 0; worst of seeds 1-20 / 21-40 / 41-60 with a traced cause, a floor that only tightens.
 -- heldReady (loop.heldReady, the mirror): ticks our first icon waited past REACT while the truth covered its cost and the
 -- oracle shadow showed the same icon ready; the worst of seeds 1-20 / 21-40 / 41-60 on the fix-round-4 sweep (gap CG), a
 -- floor that only tightens. Agreement compares names only, so these passed it. The class left over, per family (the
@@ -94,7 +97,9 @@ M.FLICKER = {
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0.038 / 0.039 /
     -- 0.057, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 322 / 238 / 285): flicker 0.08 -> 0.06, retracted 0.1
     -- -> 0
-    ["Arms"] = { flicker = 0.06, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    -- loOver 2998 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 2528 / 2695 / 2998): untraced -> per-cell follow-
+    -- up lane (mostly 0.05-2 rage: the floor's scale - spread step, candidate)
+    ["Arms"] = { loOver = 2998, flicker = 0.06, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
@@ -147,7 +152,13 @@ M.FLICKER = {
     -- 0.294, retracted 0.035 / 0.036 / 0, readyShort 6 / 1 / 0, heldReady 221 / 217 / 226): flicker 0.31 -> 0.3,
     -- retracted 0.21 -> 0.04, heldReady 229 -> 226 (swing width f4789d144, measured 324100d36 -> 8e31c1cb7: retracted
     -- 0.07 / 0.04 / 0 -> 0.04 / 0.04 / 0)
-    ["Fury L60"] = { flicker = 0.3, flickerK = 0.6, retracted = 0.04, readyShort = 6, heldReady = 226 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
+    -- heldReady 226 -> 276 (276 / 259 / 265; L1560): fix (a): a reaction gain netted against its own swing's lift
+    -- (L1504/L1538); each boot's first divergence is that netting (3/3; 40/60 fights directly, 20 via carried
+    -- learned/world state), after which fights re-time; loGate 1602 -> 728
+    -- loOver 754 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 728 / 754 / 699): fix (a) lowered it from 1602 /
+    -- 1556 / 1500; the rest untraced -> follow-up lane; a +5 on an avoided swing whose MISS row L.THETA refused
+    -- is one traced class (fix 2, after foreign-avoids)
+    ["Fury L60"] = { loOver = 754, flicker = 0.3, flickerK = 0.6, retracted = 0.04, readyShort = 6, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -231,7 +242,9 @@ M.FLICKER = {
     -- equals the swing width lane's f4789d144 in 19 of 20 fights; only seed 50 holds one tick more (62 -> 63), the
     -- fight the harness-timing poll tie already moved by one (48 -> 49, f3ad60903: our rage gain at 64.8000000000000x
     -- is the poll's): both lanes' causes, added
-    ["Fury L24"] = { flicker = 0.31, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
+    -- loOver 337 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 337 / 177 / 251): untraced -> per-cell follow-up
+    -- lane (mostly 0.05-2 rage, as Arms)
+    ["Fury L24"] = { loOver = 337, flicker = 0.31, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -296,7 +309,9 @@ M.FLICKER = {
     -- 0.017, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 383 / 289 / 331): flicker 0.16 -> 0.11, retracted 0.1
     -- -> 0, heldReady 402 -> 383 (swing width f4789d144 on top of harness-timing: flicker 0.15 / 0.12 / 0.02 -> 0.10 /
     -- 0.08 / 0.02, heldReady 392 / 295 / 337 -> 383 / 289 / 331, measured 324100d36 -> 8e31c1cb7)
-    ["Warrior Protection"] = { flicker = 0.11, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
+    -- loOver 2007 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 2007 / 1647 / 1889): untraced -> per-cell follow-
+    -- up lane (mostly 0.05-2 rage, as Arms)
+    ["Warrior Protection"] = { loOver = 2007, flicker = 0.11, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -342,7 +357,8 @@ M.FLICKER = {
     -- 307 / 325 / 314): heldReady 336 -> 325 (the fights re-timed by the tie)
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 307 / 325 / 314): flicker 0.03 -> 0
-    ["Feral"] = { flicker = 0, retracted = 0, heldReady = 325 }, -- 0.56 / 0.89 / 0.56, 0
+    -- loOver 73 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 35 / 73 / 45): untraced -> per-cell follow-up lane
+    ["Feral"] = { loOver = 73, flicker = 0, retracted = 0, heldReady = 325 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
@@ -363,7 +379,8 @@ M.FLICKER = {
     -- rounding), not the re-pin (the Balance .simc changed only its header); likely, not A/B'd
     -- re-pin e4ef929e54 -> ab0f00e4fc (repin-ab0f-druid; the Balance .simc moved only its header): seeds 1-20 / 21-40 /
     -- 41-60 every cell identical (heldReady 189 / 174 / 174, flicker 0 / 0 / 0, agreement .997 / .997 / .998)
-    ["Balance"] = { flicker = 0, retracted = 0, heldReady = 189 }, -- 0.03 / 0.05 / 0.07, 0
+    -- loOver 107 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 0 / 0 / 107): untraced -> per-cell follow-up lane
+    ["Balance"] = { loOver = 107, flicker = 0, retracted = 0, heldReady = 189 }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
     -- is lacerate:swing/cost). Applied on the reported branch: Guardian clears M.gate's agreement (0.900 / 0.896 /
@@ -420,7 +437,8 @@ M.FLICKER = {
     -- 0.29 / 0.25 / 0.26, heldReady 447 / 390 / 410): heldReady 450 -> 447 (the fights re-timed by the tie)
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0.295 / 0.249 /
     -- 0.261, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 447 / 390 / 410): flicker 0.35 -> 0.3
-    ["Guardian"] = { flicker = 0.3, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- loOver 2374 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 745 / 2374 / 999): untraced -> per-cell follow-up lane
+    ["Guardian"] = { loOver = 2374, flicker = 0.3, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
@@ -430,7 +448,8 @@ M.FLICKER = {
     -- 21-40 (base + mana-09 without the flip / the flip alone / the tip) 142 / 142 / 142, so no re-pin move
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 130 / 141 / 127): heldReady 159 -> 141
-    ["Assassination"] = { flicker = 0, retracted = 0, heldReady = 141 }, -- 0 / 0 / 0, 0
+    -- loOver 105 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 86 / 105 / 83): untraced -> per-cell follow-up lane
+    ["Assassination"] = { loOver = 105, flicker = 0, retracted = 0, heldReady = 141 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
     -- tree, flips match base's tick for tick; Sinister Strike's entry is gated on `!(buff.slice_and_dice.remains<=2)`,
@@ -451,7 +470,8 @@ M.FLICKER = {
     -- 8.6000000000000x is the poll's; fights 12 (10 -> 9) and 20 (0 -> 10) re-time
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 164 / 160 / 157): flicker 0.01 -> 0
-    ["Combat"] = { flicker = 0, retracted = 0, heldReady = 164 }, -- 0.15 / 0 / 0.02, 0
+    -- loOver 419 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 0 / 419 / 386): untraced -> per-cell follow-up lane
+    ["Combat"] = { loOver = 419, flicker = 0, retracted = 0, heldReady = 164 }, -- 0.15 / 0 / 0.02, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 382 / 364 / 363):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
@@ -468,7 +488,8 @@ M.FLICKER = {
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 189 / 216 / 197): flicker 0.01 -> 0, heldReady 239 -> 216 (seeds 21-40
     -- heldReady 223 -> 216 from crowd-harness bc6bef45c, the oracle without the missable tracker; measured at 0a8e22c7d
     -- -> 324100d36)
-    ["Subtlety"] = { flicker = 0, retracted = 0, heldReady = 216 }, -- 0.02 / 0 / 0, 0 (gap CE)
+    -- loOver 9 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 5 / 9 / 5): untraced -> per-cell follow-up lane
+    ["Subtlety"] = { loOver = 9, flicker = 0, retracted = 0, heldReady = 216 }, -- 0.02 / 0 / 0, 0 (gap CE)
     -- 0.1 -> 0.2 (Task 5b, gap BV: the world takes the export's Resourcefulness 2/2, so wowsims's 60% cut makes the
     -- strikes cheap; seeds 1-20 / 21-40 / 41-60: 0.20 / 0.02 / 0.07, was 0.05 / 0 / 0; oracle 2.18 / 1.68 / 2.26, was 0):
     -- no longer mana-gated, Raptor Strike comes up on its cooldown end beside Wing Clip or Strider Kick, and in its last
@@ -532,7 +553,8 @@ M.FLICKER = {
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0.017 / 0.033 / 0.05,
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 83 / 107 / 86): flicker 0.11 -> 0.05, readyShort 1 -> 0,
     -- heldReady 112 -> 107
-    ["Survival"] = { flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 107 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- loOver 5711 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 5711 / 2335 / 2664): untraced -> per-cell follow-up lane
+    ["Survival"] = { loOver = 5711, flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 107 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661), first measured (R6; seeds 1-20 / 21-40 / 41-60, steady
     -- icons on): flicker 0 / 0 / 0 each (Survival Melee's oracle 0.02 / 0.03 / 0.02, the others' 0), retracted 0,
     -- readyShort 0; heldReady the Hunter rows' cost-crossing class (the floor a few units under the truth, gap BT),
@@ -576,7 +598,8 @@ M.FLICKER = {
     -- 0 / 0 / 0.0166, heldReady 234 / 235 / 249): flicker 0 -> 0.02, one flip in the set. First divergence seed 41
     -- t 156.00: our Auto Shot (75) and its hit at 156.0000000000000x, now at that poll; seed 53, re-timed, shows
     -- summon_hawk > aimed_shot > summon_hawk at 26.20 (aimed_shot 4.15 vs Summon Hawk 4.60 s out, a near-tie)
-    ["Beast Mastery Turret"] = { flicker = 0.02, retracted = 0, heldReady = 249 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
+    -- loOver 302 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 302 / 103 / 2): untraced -> per-cell follow-up lane
+    ["Beast Mastery Turret"] = { loOver = 302, flicker = 0.02, retracted = 0, heldReady = 249 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
     -- Marksmanship Turret, 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60
     -- heldReady 132 / 115 / 108, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 118 -> 132
     -- (the worst set). Cause harness: ladder-usable-085 cc02f47e5's between-fight rest window (fights start at the true
@@ -592,7 +615,8 @@ M.FLICKER = {
     -- 0 / 0 / 0.0166, heldReady 211 / 218 / 211): flicker 0 -> 0.02, one flip in the set. First divergence seed 41
     -- t 179.40: our Auto Shot (75) and its hit at 179.4000000000002, now at that poll; seed 43, re-timed, shows arcane_shot >
     -- rapid_fire > arcane_shot at 182.80, the poll after an Arcane Shot press
-    ["Marksmanship Turret"] = { flicker = 0.02, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    -- loOver 196 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 0 / 196 / 0): untraced -> per-cell follow-up lane
+    ["Marksmanship Turret"] = { loOver = 196, flicker = 0.02, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     -- heldReady 117 -> 236 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
     -- spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 210 / 236 / 186, flicker 0, retracted 0, readyShort
@@ -604,7 +628,8 @@ M.FLICKER = {
     -- ticks (0.09 s, 0.07 s): the worst set
     -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 heldReady
     -- 224 / 260 / 248): heldReady 279 -> 260 (the fights re-timed by the tie)
-    ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 260 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
+    -- loOver 164 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 164 / 0 / 1): untraced -> per-cell follow-up lane
+    ["Survival Turret"] = { loOver = 164, flicker = 0, retracted = 0, heldReady = 260 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
     -- heldReady 183 -> 361 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3270 mana, 12.40 mp5 + 16.75 spirit (was 5000 and spirit 15.88, no mp5); seeds 1-20 / 21-40 /
     -- 41-60 heldReady 346 / 342 / 361, flicker 0 (oracle 0.13 / 0 / 0.02), retracted 0, readyShort 0, agreement .992 /
@@ -713,7 +738,8 @@ M.FLICKER = {
     -- equal read narrows a still-open band) and mana-09 e2d7b1187 merged: 93 / 93 / 81 (L1342), the floor holds
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 85 / 93 / 81): flicker 0.01 -> 0
-    ["Holy Shock"] = { flicker = 0, retracted = 0, readyShort = 0, heldReady = 93 },
+    -- loOver 5 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 5 / 3 / 0): untraced -> per-cell follow-up lane
+    ["Holy Shock"] = { loOver = 5, flicker = 0, retracted = 0, readyShort = 0, heldReady = 93 },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was
@@ -819,7 +845,9 @@ M.FLICKER = {
     -- re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0 / 0 /
     -- 0, readyShort 0 / 0 / 0, heldReady 172 / 170 / 175, agreement .996 / .991 / .997): floors kept (heldReady at the
     -- floor; retracted and readyShort under it, not separated)
-    ["Fire"] = { flicker = 0, retracted = 0.02, heldReady = 175, readyShort = 1 }, -- 0 / 0 / 0, 0
+    -- loOver 2260 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 1769 / 2260 / 2143): harness gap: the Mage world
+    -- pays no Master of Elements refund, the belief pays it as wowsims does
+    ["Fire"] = { loOver = 2260, flicker = 0, retracted = 0.02, heldReady = 175, readyShort = 1 }, -- 0 / 0 / 0, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
     -- after its Evocation, more fights reach the existing frostfire_bolt <-> scorch pooling edge (gap BS); isolated by
@@ -837,7 +865,9 @@ M.FLICKER = {
     -- seeds 41-60 read 113 with Arcane Concentration's old full chance too)
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0.017 / 0,
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 109 / 113): flicker 0.04 -> 0.02, heldReady 121 -> 113
-    ["Frostfire"] = { flicker = 0.02, retracted = 0, heldReady = 113 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
+    -- loOver 877 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 877 / 570 / 492): untraced -> per-cell follow-up
+    -- lane (candidate: Fire's Master of Elements harness gap)
+    ["Frostfire"] = { loOver = 877, flicker = 0.02, retracted = 0, heldReady = 113 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0), retracted 0, readyShort 0 / 0 / 0, heldReady 113 / 113 / 109, agreement .999 / .998 / .997): flicker 0.01 (the
     -- measured worst + 0.01), heldReady 113 (the worst set)
@@ -1041,6 +1071,11 @@ function M.flicker(label, r, line, reported)
         ab.check(r.readyShort <= (fl.readyShort or 0), label, "ready-while-short floor: " .. line)
         ab.check(r.heldReady <= (fl.heldReady or 0), label, "held-while-ready floor: " .. line)
     end
+    ab.check(
+        r.loOver <= (fl and fl.loOver or 0),
+        label,
+        ("floor-above-truth floor (%d polls lo > truth + %.2f): "):format(r.loOver, loop.LO_EPS) .. line
+    )
     if not reported then
         ab.check(
             r.flicker <= r.oracleFlicker + (fl and fl.flickerK or M.FLICKER_K),

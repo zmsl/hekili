@@ -141,6 +141,9 @@ local R = {
     liftH = {},
     liftT = {},
     liftRec = {},
+    liftCE = {},
+    liftCL = {},
+    liftCH = {},
     sinceShort = {},
     capT = {},
     capB = {},
@@ -251,6 +254,14 @@ local usable, ansT, shortCost, shortT, shortGain, shortCast, shortEst = {}, {}, 
 -- Per hand (1 main, 2 off): the swing-paid slot's estimate and floor at its latest PLAYER_SWING, that swing's time,
 -- the lowest top a short answer set from ORACLE_MIN after it (math.huge: none) and the slot's spend count then (I.Missed).
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
+-- Per hand, its latest SWN swings (a ring at (hand - 1) x SWN + 1..SWN, keyed by the swing's time: an off-hand row
+-- settles after that hand's next swing): the slot's R.liftCE/L/H at that swing plus what its own steps covered since (a
+-- reaction's gain covers only the rest: I.ResourceShift).
+local SWN = 3 -- shortcut: a row settling past its hand's 3rd next swing adds its gain in full; widen if a trace shows one
+local snT, snCE, snCL, snCH, snI = {}, {}, {}, {}, { 0, 0 }
+for j = 1, 2 * SWN do
+    snT[j], snCE[j], snCL[j], snCH[j] = -1, 0, 0, 0
+end
 -- Per hand: the latest usability answer's time that set a rung above its slot's floor and could show that hand's gain
 local heardT = { 0, 0 }
 -- By ability index: its ladder precondition (C9): false for `ladder = false` (its short answers are no rungs), its
@@ -428,6 +439,7 @@ I.OnBuild(function(def, now)
         R.crossT[r], R.crossLo[r] = -1e9, 0
         R.pinN[r], R.pinErr[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
+        R.liftCE[r], R.liftCL[r], R.liftCH[r] = 0, 0, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
         R.raised[r] = 0
         R.capT[r], R.capB[r] = -1e9, false
@@ -1080,9 +1092,9 @@ local function owe(r, e, lo, hi, t)
     if t - R.liftT[r] > I.LIFT_WINDOW then
         R.liftE[r], R.liftL[r], R.liftH[r] = 0, 0, 0
     end
-    R.liftE[r] = R.liftE[r] + (de > 0 and de or 0)
-    R.liftL[r] = R.liftL[r] + (dl > 0 and dl or 0)
-    R.liftH[r] = R.liftH[r] + (dh > 0 and dh or 0)
+    de, dl, dh = de > 0 and de or 0, dl > 0 and dl or 0, dh > 0 and dh or 0
+    R.liftE[r], R.liftL[r], R.liftH[r] = R.liftE[r] + de, R.liftL[r] + dl, R.liftH[r] + dh
+    R.liftCE[r], R.liftCL[r], R.liftCH[r] = R.liftCE[r] + de, R.liftCL[r] + dl, R.liftCH[r] + dh
     R.liftT[r] = t
 end
 
@@ -1109,6 +1121,33 @@ end
 local function net(d, lift)
     local u = lift < d and lift or d
     return d - u, lift - u
+end
+
+-- Gain d less what of `pool` it covers, at most `since`; and that part.
+local function cover(d, pool, since)
+    local u = pool < since and pool or since
+    u = u < d and u or d
+    u = u > 0 and u or 0
+    return d - u, u
+end
+
+-- Hand h's swing at `at`: its ring entry (snT), 0 when it is not among the hand's latest SWN.
+local function snap(h, at)
+    for j = (h - 1) * SWN + 1, h * SWN do
+        if abs(snT[j] - at) < 1e-6 then
+            return j
+        end
+    end
+    return 0
+end
+
+-- Hand h's swing at `at` covered part of slot r's lift (pE, pL, pH: the lift before) with its own step: its reaction's
+-- gain covers only what is left of what the rungs since that swing lifted (I.ResourceShift). Allocates nothing.
+local function ownCover(r, h, at, pE, pL, pH)
+    local j = snap(h, at)
+    if j > 0 then
+        snCE[j], snCL[j], snCH[j] = snCE[j] + pE - R.liftE[r], snCL[j] + pL - R.liftL[r], snCH[j] + pH - R.liftH[r]
+    end
 end
 
 -- One swing step of slot r for `hand` at t: c = 1 a landed swing (the hand's value x scale, spread around it), c = 3
@@ -1580,6 +1619,9 @@ I.On(Obs.Swing, function(o, t)
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
                 swE[hand], swL[hand], swT[hand], swTop[hand], swSp[hand] =
                     R.est0[r], R.lo0[r], o.t, math.huge, R.spends[r]
+                snI[hand] = snI[hand] % SWN + 1
+                local j = (hand - 1) * SWN + snI[hand]
+                snT[j], snCE[j], snCL[j], snCH[j] = o.t, R.liftCE[r], R.liftCL[r], R.liftCH[r]
                 break
             end
         end
@@ -1609,6 +1651,7 @@ I.On(Obs.Swing, function(o, t)
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
                 local v, sc, sp, max = I.SwingValue(r, hand, o.t), R.scale[r], R.spread[r], R.max[r]
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
+                local pE, pL, pH = R.liftE[r], R.liftL[r], R.liftH[r]
                 -- a rung that lifted the slot while this swing was out already holds its rage (owe): net it first
                 local owes = o.t <= R.liftT[r] and t - R.liftT[r] <= I.LIFT_WINDOW
                 if c == 5 then -- est and hi only: affordability never rests on an assumption
@@ -1649,6 +1692,7 @@ I.On(Obs.Swing, function(o, t)
                     predict(k, r, hand, recE0[k], recLo0[k], recHi0[k], h - hitRate[hand], recX0[k], math.huge)
                     hitRate[hand] = h
                 end
+                ownCover(r, hand, o.t, pE, pL, pH)
                 norm(r)
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
                 break
@@ -1675,7 +1719,9 @@ I.On(Obs.Swing, function(o, t)
             else
                 owes = R.liftRec[r] == o.b -- its crit pays the rest of what its landed step owed
             end
+            local pE, pL, pH = R.liftE[r], R.liftL[r], R.liftH[r]
             swingStep(r, hand, c, t, owes, at)
+            ownCover(r, hand, at, pE, pL, pH)
             if k > 0 and c == 1 then
                 local x = abs(o.t - swT[hand]) < 1e-6 and swE[hand] < e and swE[hand] or e
                 predict(k, r, hand, e, lo, hi, hit, x, math.huge)
@@ -1934,18 +1980,33 @@ I.On(Obs.ChannelStop, function(o)
 end)
 
 --- Our own cast changed slot r by `delta` at t (spec §5.3): the interval moves by the same amount, written as a
---- `modelled` sample. Allocates nothing.
-function I.ResourceShift(r, delta, t, event)
+--- `modelled` sample. `late` (a swing's reaction, folded at its row after t: the swing's hand, 1 or 2): a gain of
+--- that hand's swing at t (one of its latest SWN: an off-hand row may settle after that hand's next swing) first covers
+--- the slot's rung lift (owe) up to what the rungs since that swing lifted, less what its own steps covered (ownCover),
+--- within I.LIFT_WINDOW: the rung already showed the pool with it (L1504). Never a lift an earlier swing owes (L1525
+--- ruling (a)). Allocates nothing.
+function I.ResourceShift(r, delta, t, event, late)
     local max = R.max[r]
-    R.est0[r] = clamp(R.est0[r] + delta, max)
+    local de, dl, dh = delta, delta, delta
+    local j = (late == 1 or late == 2) and delta > 0 and snap(late, t) or 0
+    if j > 0 and I.clock - R.liftT[r] <= I.LIFT_WINDOW then
+        local u
+        de, u = cover(delta, R.liftE[r], R.liftCE[r] - snCE[j])
+        R.liftE[r], snCE[j] = R.liftE[r] - u, snCE[j] + u
+        dl, u = cover(delta, R.liftL[r], R.liftCL[r] - snCL[j])
+        R.liftL[r], snCL[j] = R.liftL[r] - u, snCL[j] + u
+        dh, u = cover(delta, R.liftH[r], R.liftCH[r] - snCH[j])
+        R.liftH[r], snCH[j] = R.liftH[r] - u, snCH[j] + u
+    end
+    R.est0[r] = clamp(R.est0[r] + de, max)
     local lo = R.lo0[r]
-    R.lo0[r] = clamp(lo + delta, max)
+    R.lo0[r] = clamp(lo + dl, max)
     if delta < 0 and R.over[r] > 0 then -- the part the measured floor could not lose (at 0) comes off the model's
         local o = R.over[r] + delta - (R.lo0[r] - lo)
         R.over[r] = o > 0 and o or 0
     end
     norm(r)
-    R.hi0[r] = clamp(R.hi0[r] + delta, max)
+    R.hi0[r] = clamp(R.hi0[r] + dh, max)
     R.pinDelta[r] = R.pinDelta[r] + delta
     if delta > 0 then
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
