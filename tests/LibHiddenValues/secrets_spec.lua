@@ -33,7 +33,9 @@ describe("LibHiddenValues secrets and efficiency", function()
             lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50, 80 } }, sink)
             lib:Watch("A", { kind = "health", unit = "player", edges = { 35 } }, sink)
             lib:Watch("B", { kind = "power", unit = "player", power = Enum.PowerType.Mana, edges = { 30, 60 } }, sink)
-            lib:Watch("B", { kind = "power", unit = "player", edges = { 50 } }, sink)
+            assert(
+                lib:Watch("B", { kind = "power", unit = "player", power = Enum.PowerType.Energy, edges = { 50 } }, sink)
+            )
             Fake.login()
             for i = 1, 300 do
                 W.unit.target.health = math.max(0, 1 - i / 250)

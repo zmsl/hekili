@@ -57,7 +57,7 @@ describe("LibHiddenValues sharing", function()
         assert.are.equal(0, bars())
     end)
 
-    it("stops at the bar cap: the handle is suspended, and its release frees every bar", function()
+    it("stops at the bar cap: the handle is suspended, unfed, and its release frees every bar", function()
         local edges = {}
         for k = 1, 300 do
             edges[k] = k / 3
@@ -67,6 +67,17 @@ describe("LibHiddenValues sharing", function()
         assert.are.equal(256, bars())
         assert.are.equal("suspended", (h:State()))
         assert.is_nil((h:Get()))
+        local pushes = lib.nPush
+        Fake.tick(3)
+        assert.are.equal(pushes, lib.nPush) -- a suspended handle's bars are not pushed
+        local pass, lines
+        lib:SelfTest(function(p, l)
+            pass, lines = p, l
+        end)
+        assert.is_false(pass) -- no free bar: reported, the earlier verdict stands
+        assert.truthy(lines[1]:find("no free bar", 1, true))
+        assert.are.same({ true, "ready" }, { lib:IsAvailable("health") })
+        assert.are.equal("suspended", (h:State()))
         h:Release()
         assert.are.equal(0, bars())
     end)

@@ -25,8 +25,9 @@ end)
 ```
 
 - The value is in `lo <= value < hi` (percent 0-100; `hi` is inclusive at 100). `dir` is `1` up, `-1` down, `0` for
-  the first band after unknown. `t` is `GetTime()` of the frame; `q` is the quality (`LHV.BAND` = 2, `LHV.UNKNOWN` =
-  0).
+  the first band after unknown. `t` is `GetTime()` of the frame in which the change was seen (for a handle on several
+  edges, the frame before the call; for an unknown call, the frame of the call); `q` is the quality (`LHV.BAND` = 2,
+  `LHV.UNKNOWN` = 0).
 - At most one call per handle per frame. A handle on one edge is called in the frame of the change; on several edges,
   one frame later, with the net band (a jump over three edges is one call).
 - `h:Get()` returns `lo, hi, t, q` without a callback; `h:State()` returns `state, reason`; `h:SetPaused(true)` stops
@@ -40,10 +41,12 @@ end)
 | Kind | Spec | Proven on |
 |---|---|---|
 | `health` | `unit`, `edges`, `predicted` (default true) | `player`, `target` |
-| `power` | `unit`, `edges`, `power` (`Enum.PowerType`; omitted: the displayed power) | `player`: mana, energy |
+| `power` | `unit`, `edges`, `power` (`Enum.PowerType`, required) | `player`: mana, energy |
 
-Every other kind, token or option (`step`, `points`, rage, `focus`, ...) returns a handle whose state is
-`"unavailable", "unproven"`: write against it now, it comes alive when its stage ships. Bad input returns
+`power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
+other kind, token or option (a `step` without `edges`, `points`, rage, `focus`, ...) returns a handle whose state is
+`"unavailable", "unproven"`: write against it now, it comes alive when its stage ships. A `step` beside `edges` is
+ignored for now: the edges are served and `h:Domain()` returns a nil step. Bad input (a missing `power` too) returns
 `nil, "bad-spec: ..."`.
 
 ## Testing your addon
@@ -66,8 +69,9 @@ it does not model.
 
 ## Diagnostics
 
-`/lhv` (status), `/lhv selftest`, `/lhv stats`, `/lhv watch health target 20 50`, `/lhv watch off`, `/lhv copy` (all
-output in a box you can copy from), `/lhv off` and `/lhv on` (this session only).
+`/lhv` (status), `/lhv selftest`, `/lhv stats`, `/lhv watch health target 20 50`, `/lhv watch power player 30 mana`,
+`/lhv watch off`, `/lhv copy` (all output in a box you can copy from), `/lhv off` and `/lhv on` (this session only; `on`
+runs the self-test again, also after a failed one).
 
 ## Credits
 

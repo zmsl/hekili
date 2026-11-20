@@ -1,6 +1,7 @@
 -- Kinds/Percent.lua: health and power, in percent 0-100 (the client's reads give 0-1 through the curve; the scale is
 -- fixed and checked by the self-test, never read). Proven (BandProbe run 2026-11-20): health on player and target,
--- power mana and energy on the player. Anything else is a handle that reports "unavailable", "unproven".
+-- power mana and energy on the player, by the type the spec names (required). Anything else is a handle that reports
+-- "unavailable", "unproven".
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return
@@ -24,8 +25,9 @@ local function validate(spec, h)
     if (edges == nil or #edges == 0) and step == nil then
         return "edges or step required"
     end
-    if spec.power ~= nil and type(spec.power) ~= "number" then
-        return "power must be an Enum.PowerType number"
+    if h.kind == "power" and type(spec.power) ~= "number" then
+        -- required: a default (the displayed power) would let a form change swap what the handle measures
+        return "power required (an Enum.PowerType number)"
     end
     local list = {}
     for i = 1, edges and #edges or 0 do
@@ -47,7 +49,7 @@ local function validate(spec, h)
         not lib.kinds[h.kind].units[unit]
         or #out == 0 -- a step alone: position is a later stage
         or spec.points
-        or (h.kind == "power" and spec.power ~= nil and not PROVEN_POWER[spec.power])
+        or (h.kind == "power" and not PROVEN_POWER[spec.power])
     then
         h.unproven = "unproven"
     end
@@ -67,20 +69,6 @@ lib.kinds.power = {
     units = { player = true },
     validate = validate,
     read = function(s, curve)
-        return UnitPowerPercent(s.unit, s.pt, false, curve)
-    end,
-    -- The power type fed: the named one, or the unit's displayed one (followed through UNIT_DISPLAYPOWER) while it is
-    -- proven. Returns true when it changed (the source primes).
-    resolve = function(s)
-        local old = s.pt
-        if s.power ~= nil then
-            s.pt = s.power
-        else
-            local pt = UnitPowerType(s.unit)
-            local ok = not issecretvalue(pt) and PROVEN_POWER[pt]
-            s.pt = ok and pt or nil
-            s.unproven = not ok and "unproven" or nil
-        end
-        return s.pt ~= old
+        return UnitPowerPercent(s.unit, s.power, false, curve)
     end,
 }

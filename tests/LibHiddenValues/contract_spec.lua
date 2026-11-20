@@ -51,6 +51,7 @@ describe("LibHiddenValues contract", function()
             { "A", { kind = "health", unit = "target", edges = 20 } },
             { "A", { kind = "health", unit = "target", step = 0 } },
             { "A", { kind = "power", unit = "player", power = "energy", edges = { 20 } } },
+            { "A", { kind = "power", unit = "player", edges = { 20 } } },
         }
         for i, b in ipairs(bad) do
             local h, err = lib:Watch(b[1], b[2], sink)

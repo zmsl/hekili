@@ -128,6 +128,9 @@ function lib:SelfTest(fn)
             for j = 1, #st.bars do
                 lib.freeBar(st.bars[j])
             end
+            if lib.stVerdict ~= nil then -- a full pool says nothing about the mechanism
+                return lib.stDone(false, { "selftest not run: no free bar (the earlier verdict stands)" })
+            end
             lib.stVerdict = false
             lib.stDone(false, { "selftest FAIL: no bar could be made" })
             return lib.capChanged()

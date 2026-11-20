@@ -1,5 +1,5 @@
 -- Feed.lua: the driver (every live bar pushed every frame: the measured mode), the client events (login, target
--- change, health for death, displayed power), the unit checks and the statistics. Every script and event handler runs
+-- change, health for death, re-layouts), the unit checks and the statistics. Every script and event handler runs
 -- under pcall: an error turns the kind being fed off for the session (reason "error"), reported once.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
@@ -11,6 +11,10 @@ lib.nPush = lib.nPush or 0
 lib.usAvg, lib.usPeak, lib.winPeak = lib.usAvg or 0, lib.usPeak or 0, lib.winPeak or 0
 lib.pushRate, lib.fireRate = lib.pushRate or 0, lib.fireRate or 0
 lib.winStart, lib.winPush, lib.winFire = lib.winStart or 0, lib.winPush or 0, lib.winFire or 0
+
+-- Re-layouts (UI scale, window size, the end of a loading screen) may fire a clip whose fill did not change (unprobed):
+-- every fed source re-primes. That corrects a stray firing that came before the event or within the HOLD frames after.
+local RELAYOUT = { UI_SCALE_CHANGED = true, DISPLAY_SIZE_CHANGED = true, LOADING_SCREEN_DISABLED = true }
 
 lib.onUpdate = lib.onUpdate
     or function(_, elapsed)
@@ -94,7 +98,9 @@ function lib.realise()
     evf:RegisterEvent("PLAYER_ALIVE")
     evf:RegisterEvent("PLAYER_UNGHOST")
     evf:RegisterUnitEvent("UNIT_HEALTH", "player", "target")
-    evf:RegisterUnitEvent("UNIT_DISPLAYPOWER", "player")
+    for ev in pairs(RELAYOUT) do
+        pcall(evf.RegisterEvent, evf, ev) -- the client raises on an event it does not have
+    end
     lib.winStart = GetTime()
     for i = 1, #lib.sources do
         local s = lib.sources[i]
@@ -146,8 +152,15 @@ function lib.event(event, unit)
                 end
             end
         end
-    elseif event == "UNIT_HEALTH" or event == "UNIT_DISPLAYPOWER" then
+    elseif event == "UNIT_HEALTH" then
         syncUnit(unit)
+    elseif RELAYOUT[event] then
+        local srcs = lib.sources
+        for i = 1, #srcs do
+            if srcs[i].active then
+                lib.reprime(srcs[i])
+            end
+        end
     elseif event == "PLAYER_DEAD" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then
         syncUnit("player")
     end
@@ -166,6 +179,7 @@ function lib.feed(s)
         else
             if p == 1 then
                 lib.barState[i], prime[i], s.dirty = false, 0, true
+                s.seen, s.seenFrame = GetTime(), lib.frameNo
             end
             local x = read(s, curves[e])
             if issecretvalue(x) or x ~= nil then

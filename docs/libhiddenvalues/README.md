@@ -26,13 +26,14 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 - The plain self-test at login (three bars, ten values, about 45 frames): firings must equal changes, within 3
   frames, and every curve output must follow the convention. Kinds are `pending` until it passes.
 - Capability reasons `api`, `selftest`, `error`, `off`, `unproven`, `unknown-kind`.
-- `/lhv` with `selftest`/`test`, `stats`, `watch`, `watch off`, `copy`, `off`, `on`.
+- `/lhv` with `selftest`/`test`, `stats`, `watch`, `watch off`, `copy`, `off`, `on` (`on` runs the self-test and
+  prints its lines, so it also recovers from a failed verdict).
 
 ## Choices taken where the design left one open
 
 | Question | Taken | Why |
 |---|---|---|
-| Power type field | `power` (the design's name), optional | Omitted means the unit's displayed power (`UnitPowerType`, followed through `UNIT_DISPLAYPOWER`); while that is not mana or energy (or is secret) the handle reports `unavailable, unproven`, so an omitted type never lets rage through |
+| Power type field | `power` (the design's name), required: omitted is `bad-spec` | a default (the displayed power) would let a form change turn an energy handle into a mana one with nothing in the API saying so (review I1, owner question 1); adding a default later stays compatible, removing one would not |
 | `unit` | required for both kinds | the design gives no default |
 | Edges | numbers in (0.05, 100]; duplicates and edges closer than 0.05 merge into the lower | an edge needs room for its guard point above 0 |
 | `step` | with edges: the edges are granted and `Domain()` returns `nil, 0, 100`; alone: `unavailable, unproven` | position is stage 3 (the design's own coarsening rule: report the granted domain) |
@@ -42,6 +43,10 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 | Views (owner question 5) | per-handle views only | the design's recommendation |
 | Death | plain `UnitIsDead` true: health handles go `gone`; a secret answer keeps the bands | the `dead` boolean bar is stage 6 |
 | Inconsistent edges (above a higher edge, below a lower one) | counted as a desync; the source re-primes | the shadow check that would correct it is stage 2 |
+| Re-layouts | every fed source re-primes on `UI_SCALE_CHANGED`, `DISPLAY_SIZE_CHANGED`, `LOADING_SCREEN_DISABLED` (each registered under `pcall`: the client raises on an unknown event) | a re-layout may fire a clip whose fill did not change, which inverts a one-edge handle (review I3); this corrects a stray firing before the event or within the 4 hold frames after it, not a later one |
+| Sink `t` | `GetTime()` of the frame the change was seen: the firing, or the live push that ends priming, when that was this frame or the last; else the call's frame | design 2.3 (review M3) |
+| Bar cap | a handle missing a bar is `suspended` and does not keep its source fed; its partial bars stay allocated | the governor (stage 4) owns the cap (review M1) |
+| Self-test with a full pool | reports `selftest not run: no free bar`, the earlier verdict stands | a full pool says nothing about the mechanism (review M2) |
 | Root frame | parented and anchored to `UIParent` (bottom left), alpha 0 | the run's measured shape; a parentless root is unprobed (owner question 11) |
 | `OnSizeChanged` | `SetScript` on our own child frame | the design forbids `HookScript` (a hook cannot be removed); the probe used `HookScript`, so the self-test proves `SetScript` in game |
 | SavedVariables | none | nothing needs to persist yet: no cached verdict, `/lhv off` is per session |

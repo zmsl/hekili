@@ -234,9 +234,6 @@ function lib.stateOf(h)
         return state, reason
     end
     local s = h.src
-    if s.unproven then
-        return "unavailable", s.unproven
-    end
     if h.paused then
         return "paused"
     end

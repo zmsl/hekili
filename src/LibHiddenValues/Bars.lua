@@ -107,14 +107,21 @@ function lib.reprime(s)
     lib.wake()
 end
 
+-- Every edge of the handle has a bar on its source (false: the cap was reached, the handle is suspended).
+local function served(s, h)
+    for k = 1, #h.edges do
+        if not s.bar[h.edges[k]] then
+            return false
+        end
+    end
+    return true
+end
+
 -- Brings a source in line with the capability, its references, its unit and its handles: allocates a bar for each
 -- referenced edge when the kind is ready (only a new bar primes), frees the rest, and feeds it while any handle is
--- not paused and its unit is there.
+-- neither paused nor suspended and its unit is there.
 function lib.sync(s)
-    local k = lib.kinds[s.kind]
     local ready = lib.realised and lib.capOf(s.kind) == "ready"
-    local changed = ready and k.resolve and k.resolve(s)
-    ready = ready and not s.unproven
     local want = false
     if ready then
         s.gone = not lib.present(s.unit) or (s.kind == "health" and lib.dead(s.unit))
@@ -125,7 +132,8 @@ function lib.sync(s)
         end
         if not s.gone then
             for j = 1, #s.handles do
-                if not s.handles[j].paused then
+                local h = s.handles[j]
+                if not h.paused and served(s, h) then
                     want = true
                     break
                 end
@@ -138,7 +146,7 @@ function lib.sync(s)
             s.bar[e] = nil
         end
     end
-    if want and (changed or not s.active) then
+    if want and not s.active then
         lib.reprime(s)
     end
     s.active = want
@@ -161,7 +169,7 @@ function lib.fire(i)
     end
     lib.barState[i] = not lib.barState[i]
     lib.nFire = lib.nFire + 1
-    s.dirty = true
+    s.dirty, s.seen, s.seenFrame = true, GetTime(), lib.frameNo
     local hs = s.handles
     for j = #hs, 1, -1 do
         local h = hs[j]
@@ -204,7 +212,10 @@ function lib.decode(h)
     if lo and h.lo then
         dir = (lo > h.lo or hi > h.hi) and 1 or -1
     end
-    local t, q = GetTime(), lo and lib.BAND or lib.UNKNOWN
+    -- t: the frame the change was seen (a firing or the end of priming, this frame or the last), else now
+    local sf = h.src and h.src.seenFrame
+    local t = (lo and sf and sf >= frame - 1) and h.src.seen or GetTime()
+    local q = lo and lib.BAND or lib.UNKNOWN
     h.lo, h.hi, h.t, h.q, h.stamp = lo, hi, t, q, frame
     local fn = h.sink
     if fn then

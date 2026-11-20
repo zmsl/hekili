@@ -207,21 +207,68 @@ describe("LibHiddenValues edges", function()
         assert.are.same({ 0, 20 }, lohi(h))
     end)
 
-    it("bands mana and energy, and follows the displayed power when no type is named", function()
-        W.unit.player.powerType = Enum.PowerType.Rage
-        W.unit.player.power = { [0] = 0.9, [1] = 0.0, [3] = 0.3 }
+    it("bands mana and energy, each by its named type whatever power is displayed", function()
+        W.unit.player.powerType = Enum.PowerType.Energy
+        W.unit.player.power = { [0] = 0.9, [1] = 0.0, [3] = 0.1 }
+        local h, err = lib:Watch("A", { kind = "power", unit = "player", edges = { 50 } })
+        assert.is_nil(h)
+        assert.are.equal("bad-spec: power required (an Enum.PowerType number)", err)
         local mana = lib:Watch("A", { kind = "power", unit = "player", power = Enum.PowerType.Mana, edges = { 50 } })
-        local shown = lib:Watch("A", { kind = "power", unit = "player", edges = { 50 } })
+        local energy =
+            lib:Watch("A", { kind = "power", unit = "player", power = Enum.PowerType.Energy, edges = { 50 } })
         Fake.login()
         untilLive(mana)
+        untilLive(energy)
         assert.are.same({ 50, 100 }, lohi(mana))
-        assert.are.same({ "unavailable", "unproven" }, { shown:State() })
-        W.unit.player.powerType = Enum.PowerType.Energy
+        assert.are.same({ 0, 50 }, lohi(energy))
+        W.unit.player.powerType = Enum.PowerType.Mana -- a form change: the energy handle stays energy
         Fake.event("UNIT_DISPLAYPOWER", "player")
-        untilLive(shown)
-        assert.are.same({ 0, 50 }, lohi(shown))
+        Fake.tick(10)
+        assert.are.same({ 0, 50 }, lohi(energy))
+        assert.are.equal("live", (energy:State()))
         W.unit.player.power[3] = 0.7
         Fake.tick(1)
-        assert.are.same({ 50, 100 }, lohi(shown))
+        assert.are.same({ 50, 100 }, lohi(energy))
+        assert.are.same({ 50, 100 }, lohi(mana))
     end)
+
+    it("stamps a several-edge call with the time of the frame the change was seen, a joining one with now", function()
+        local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50 } }, sink)
+        Fake.login()
+        untilLive(h)
+        W.unit.target.health = 0.4
+        Fake.tick(1) -- pushed and fired
+        local seen = GetTime()
+        assert.are.equal(0, #calls)
+        Fake.tick(1) -- decoded
+        assert.are.equal(1, #calls)
+        assert.are.equal(seen, calls[1].t)
+        assert.are.equal(seen, select(3, h:Get()))
+        Fake.tick(10)
+        lib:Watch("B", { kind = "health", unit = "target", edges = { 20, 50 } }, sink) -- no new bar
+        Fake.tick(1)
+        assert.are.equal(2, #calls)
+        assert.are.equal(GetTime(), calls[2].t)
+    end)
+
+    for _, ev in ipairs({ "UI_SCALE_CHANGED", "DISPLAY_SIZE_CHANGED", "LOADING_SCREEN_DISABLED" }) do
+        it("re-primes a fed source on " .. ev .. ", correcting a stray firing", function()
+            W.unit.target.health = 0.6
+            local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 50 } }, sink)
+            Fake.login()
+            untilLive(h)
+            assert.are.same({ 50, 100 }, lohi(h))
+            local clip = lib.barClip[h.src.bar[50]]
+            clip:GetScript("OnSizeChanged")(clip) -- a re-layout fires the clip with no fill change
+            assert.are.same({ 0, 50 }, lohi(h)) -- inverted
+            Fake.event(ev)
+            assert.are.equal("priming", (h:State()))
+            untilLive(h)
+            assert.are.same({ 50, 100 }, lohi(h))
+            W.unit.target.health = 0.4
+            Fake.tick(1)
+            assert.are.same({ 0, 50, -1 }, band(calls[#calls]))
+            assert.are.equal(0, lib.desyncs)
+        end)
+    end
 end)

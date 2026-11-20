@@ -4,10 +4,11 @@
 --   /lhv                                   version, bars, capability per kind
 --   /lhv selftest | test                   the self-test now, PASS / FAIL lines
 --   /lhv stats                             GetStats, and one line per source
---   /lhv watch <kind> <unit> [edges...] [mana|energy|rage]   an ad-hoc watch printing every sink call
+--   /lhv watch <kind> <unit> <edges...> [mana|energy|rage]   an ad-hoc watch printing every sink call (power: the
+--                                          type word is required)
 --   /lhv watch off                         releases the ad-hoc watches
 --   /lhv copy                              everything /lhv printed this session, in a box to copy from
---   /lhv off | on                          the kill switch for this session
+--   /lhv off | on                          the kill switch for this session; on also runs the self-test
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return
@@ -93,6 +94,12 @@ local function stats()
     end
 end
 
+local function sayLines(_, lines)
+    for i = 1, #lines do
+        say(lines[i])
+    end
+end
+
 local function watch(args)
     if args[2] == "off" then
         lib:ReleaseAll(OWNER)
@@ -116,7 +123,7 @@ local function watch(args)
         end
     end)
     if not h then
-        return say(err .. "; usage: /lhv watch <health|power> <player|target> <edges...> [mana|energy]")
+        return say(err .. "; usage: /lhv watch <health|power> <player|target> <edges...>, power also mana|energy")
     end
     say(format("watching %s: %s", label, tostring((h:State()))))
 end
@@ -167,11 +174,7 @@ function lib.slash(msg)
         status()
     elseif cmd == "selftest" or cmd == "test" then
         say("self-test running")
-        lib:SelfTest(function(_, lines)
-            for i = 1, #lines do
-                say(lines[i])
-            end
-        end)
+        lib:SelfTest(sayLines)
     elseif cmd == "stats" then
         stats()
     elseif cmd == "watch" then
@@ -183,7 +186,8 @@ function lib.slash(msg)
         say("off for this session (/lhv on)")
     elseif cmd == "on" then
         lib:SetEnabled(true)
-        say("on: pending until the self-test passes")
+        say("on: self-test running (the kinds come on when it passes)")
+        lib:SelfTest(sayLines) -- joins the run SetEnabled started, else runs one (a failed verdict otherwise stands)
     else
         say("/lhv [selftest | stats | watch <kind> <unit> <edges...> | watch off | copy | off | on]")
     end

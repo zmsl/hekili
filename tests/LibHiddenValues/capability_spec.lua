@@ -149,4 +149,19 @@ describe("LibHiddenValues capability", function()
         untilLive(h)
         assert.are.same({ 50, 100, 0 }, { calls[2].lo, calls[2].hi, calls[2].dir })
     end)
+
+    it("re-runs the self-test on /lhv on after a failed one", function()
+        boot()
+        Fake.set("drop", 1)
+        assert.is_false(Fake.login())
+        Fake.set("drop", 0)
+        Fake.slash("on")
+        Fake.tick(60)
+        assert.are.same({ true, "ready" }, { lib:IsAvailable("health") })
+        local passed = false
+        for _, l in ipairs(Fake.printed) do
+            passed = passed or l:find("selftest PASS", 1, true) ~= nil
+        end
+        assert.is_true(passed)
+    end)
 end)
