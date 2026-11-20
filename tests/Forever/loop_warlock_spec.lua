@@ -62,6 +62,46 @@ describe("the Warlock loop worlds", function()
         end)
     end
 
+    -- The oracle reads the target's debuff rows raw (loop.RAW): another source's DODGE that closes our curse's ticket
+    -- (an avoid pays any open ticket) must not take down the curse its raw row shows, applied at the cast (inv
+    -- crowd-drops H2: the core's missable tracker removed it at every reset, the whole fight).
+    it(
+        "Affliction: the loop's oracle keeps a curse its raw row shows after a foreign dodge closes our ticket",
+        function()
+            local loop = require("Game.harness.loop")
+            local C = ww.Affliction
+            local H = loop.new(C).oracle
+            local S, ctl = H.Hekili.State, H.ctl
+            ctl.inRange.target, ctl.level.target, ctl.exists.target = true, 60, true
+            H.Fire("PLAYER_TARGET_CHANGED")
+            ctl.combat = true
+            H.Fire("PLAYER_REGEN_DISABLED")
+            local t = ctl.now + 1
+            assert.is_true(headless.cycle(H, t))
+            ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", C.resolve("curse_of_the_elements", H).spell)
+            ctl.auras.target.HARMFUL[1] = {
+                name = "Curse of the Elements",
+                spellId = 440892,
+                applications = 1,
+                duration = 300,
+                expirationTime = t + 300,
+                sourceUnit = "player",
+                isFromPlayerOrPlayerPet = true,
+            }
+            H.Fire("UNIT_AURA", "target")
+            assert.is_true(headless.cycle(H, t + 0.1))
+            S.reset("Primary", true)
+            assert.is_true(S.debuff.curse_of_the_elements.up) -- before the row: up
+            ctl.now = t + 0.15
+            H.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.is_true(headless.cycle(H, t + 0.4))
+            S.reset("Primary", true)
+            assert.is_true(S.debuff.curse_of_the_elements.up)
+            assert.are.same({}, H.errors)
+        end
+    )
+
     -- The presses in the world: Corruption's instant cast and its ticks on the target, then Wrack's channel and its
     -- debuff.
     it("Affliction: casts Corruption instantly, ticks it, and channels Wrack with its debuff", function()

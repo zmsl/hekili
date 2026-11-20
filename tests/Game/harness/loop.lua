@@ -145,6 +145,13 @@ function M.new(content)
     -- the raw rows (M.RAW) take the player's health too, which State.lua does arithmetic on: the oracle reads the
     -- truth, plain in combat (ours is secret there, owner L1461)
     L.oracle.ctl.healthPlain = true
+    -- the core's missable tracker (Spec/Abilities.lua trackMisses) off in the oracle: its raw debuff row is the truth,
+    -- and a SPELL_MISSED its belief synthesized from another source's avoid would remove a debuff that row shows
+    for _, spec in pairs(L.oracle.Hekili.Class.specs) do
+        for id in pairs(type(spec) == "table" and spec.missAura or {}) do
+            spec.missAura[id] = nil
+        end
+    end
     for _, H in ipairs({ L.us, L.oracle }) do
         H.ctl.inRange.target = true -- a world without positions (no W.distance): every target in range
     end
