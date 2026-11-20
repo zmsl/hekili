@@ -5,6 +5,7 @@
 ### New
 
 ### Changed
+- The snapshot help text no longer sends you to training dummies, which Forever does not have. It suggests an enemy in the open world.
 - The ability list's Require Toggle dropdown now shows the toggle's name (for example "Cooldowns") in its "Default" entry, not the internal key.
 
 ### Fixed

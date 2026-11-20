@@ -8034,7 +8034,7 @@ do
                                 type = "description",
                                 name = function()
                                 return format( L["|cFFFFD100When should I do it|r\n" ..
-                                "You should generate the snapshot when the issue is actively happening. If you look at the recommendations and think \"this seems wrong\", that's when you should do it. Most of the time, issues can be recreated at training dummies." ..
+                                "You should generate the snapshot when the issue is actively happening. If you look at the recommendations and think \"this seems wrong\", that's when you should do it. Most of the time, issues can be recreated on an enemy in the open world." ..
                                 "\n\nFor example, if the issue usually happens 20 seconds into your rotation, then an out-of-combat prepull snapshot isn't going to help the Dev or other community members diagnose and fix the issue." ..
                                 "\n\n|cFFFFD100How do I do it|r\n" ..
                                 "You can generate a snapshot one of 2 ways:\n" ..
