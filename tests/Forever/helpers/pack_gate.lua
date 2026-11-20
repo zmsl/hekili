@@ -113,19 +113,13 @@ M.FLICKER = {
     -- world paid no Unbridled Wrath while the kit credited it, so the belief ran ahead of truth; truth now pays it and
     -- the belief's floor counts strikes only (strikeNow's gain spread = the amount; a white swing's floor carried the expected Unbridled Wrath until the
     -- swing width below), so truth covers a cost before our floor more often (lo-truth at cost -1.1 -> -1.4); retracted kept
-    -- swing width (wave 0.10.1, L1456 i: a white swing's floor counts no Unbridled Wrath, the hands pass its expected rage as their value's `width`;
-    -- R6, seeds 1-20 / 21-40 / 41-60, base 314a87b86 -> 680e8a723: flicker 0.18 / 0.30 / 0.26 -> 0.18 / 0.30 / 0.22, retracted 0.07 / 0.04 / 0 same,
-    -- readyShort 2 / 6 / 5 -> 5 / 7 / 6, heldReady 226 / 197 / 229 -> 221 / 224 / 237, dps .976 / 1.028 / 1.017 -> .978 / 1.030 / 1.008):
-    -- heldReady 229 -> 237 (per set -5 / +27 / +8): the accepted kind (the floor waits for a proc it cannot see), not separated
-    -- from the fights' re-timing (at-cost lo-truth -1.4 / -1.4 / -1.4 -> -1.3 / -1.4 / -1.4: L60's floor rides the rungs).
-    -- readyShort 6 -> 7, traced (every poll of seeds 1-20 and 21-40, base vs tip): all 13 base presses recur; each new tick is an
-    -- off-hand swing kept pending a poll or more longer, so the sim's forecast of its whole rage (the proc included) shows
-    -- Bloodthirst (30) ready (the forecast class above). A short answer ends a pending swing only within the floor + the pending
-    -- low steps, which now leave the proc out. Seeds 1-20 (3 ticks, truth 23.61): the floor stood at 25.06, ABOVE truth, at
-    -- the same polls on base and tip (pre-existing); seeds 21-40 (1 tick, t 32.80, truth 29.73 with both swings landed): the
-    -- main hand's credit after a rung at 25 nets to 0 on tip (base +1.22, the proc's part), so the floor stays 25.00 and the
-    -- off hand stays pending; the forecast then adds its whole step over a rung that already holds part of it
-    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.21, readyShort = 7, heldReady = 237 }, -- flicker 0.18 / 0.30 / 0.22, retracted 0.07 / 0.04 / 0 (swing width)
+    -- swing width (wave 0.10.1, L1456 i: a white swing's floor counts no Unbridled Wrath, the hands pass its expected rage as
+    -- their value's `width`, and the sim's forecast swings, the pending one included, step the floor by value - width; R6,
+    -- seeds 1-20 / 21-40 / 41-60, base 314a87b86 -> 81a216585: flicker 0.18 / 0.30 / 0.26 -> 0.11 / 0.26 / 0.29, retracted
+    -- 0.07 / 0.04 / 0 -> 0.04 / 0.04 / 0, readyShort 2 / 6 / 5 -> 6 / 1 / 0, heldReady 226 / 197 / 229 -> 219 / 217 / 226,
+    -- dps .976 / 1.028 / 1.017 -> .977 / 1.026 / 1.022): no floor moves (the belief-only step read readyShort 5 / 7 / 6:
+    -- a pending off-hand swing's forecast still carried the proc; traced in the lane report)
+    ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.21, readyShort = 6, heldReady = 229 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -190,10 +184,11 @@ M.FLICKER = {
     -- spread = the amount; a white swing's floor carried the expected Unbridled Wrath until the swing width below), so truth covers a cost before our floor (lo-truth at cost -0.9
     -- -> -1.6 / -2.1 / -2.2, est-truth +0.3 / -0.3 / -0.2): true waits of the floor
     -- swing width (wave 0.10.1, L1456 i: a white swing's floor counts no Unbridled Wrath, the hands pass its expected
-    -- rage as their value's `width`; R6, seeds 1-20 / 21-40 / 41-60, base 314a87b86 -> 680e8a723: flicker 0.35 / 0.26 /
-    -- 0.23 -> 0.23 / 0.30 / 0.21, retracted 0, readyShort 0, heldReady 484 / 547 / 617 -> 797 / 806 / 848): heldReady
-    -- 617 -> 848, the floor now waits for the procs it cannot see: at-cost lo-truth -1.6 / -2.1 / -2.2 -> -2.3 / -2.8 /
-    -- -2.7 (one proc's expected 0.6 lower), est-truth -0.1 / -0.3 / -0.2, so Heroic Strike's `rage.lo>=40` line and the
+    -- rage as their value's `width`, the sim's forecast swings step the floor by value - width; R6, seeds 1-20 / 21-40 /
+    -- 41-60, base 314a87b86 -> 81a216585: flicker 0.35 / 0.26 / 0.23 -> 0.23 / 0.30 / 0.21, retracted 0, readyShort 0,
+    -- heldReady 484 / 547 / 617 -> 797 / 803 / 848, agreement .946 / .958 / .961 -> .948 / .945 / .952): heldReady
+    -- 617 -> 848, the floor now waits for the procs it cannot see: at-cost lo-truth -1.6 / -2.1 / -2.2 -> -2.2 / -2.6 /
+    -- -2.5 (one proc's expected 0.6 lower), est-truth -0.1 / -0.2 / -0.1, so Heroic Strike's `rage.lo>=40` line and the
     -- cost-gated lines cross later than the truth
     ["Fury L24"] = { flicker = 0.36, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 848 }, -- flicker 0.23 / 0.30 / 0.21, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
@@ -244,8 +239,9 @@ M.FLICKER = {
     -- paid no Unbridled Wrath while the kit credited it (est-truth at cost +0.8), so the belief ran ahead of truth and
     -- hid held ticks; truth now pays it (est-truth +0.3 / +0.5 / +0.4) and the belief's floor counts strikes only
     -- (strikeNow's gain spread = the amount; a white swing's floor carried the expected Unbridled Wrath until the swing width below): true waits of the floor
-    -- swing width (wave 0.10.1, L1456 i; R6, seeds 1-20 / 21-40 / 41-60, base 314a87b86 -> 680e8a723: flicker 0.12 /
-    -- 0.12 / 0.02 same, retracted 0, readyShort 0, heldReady 402 / 310 / 335 -> 401 / 309 / 334): no floor moves
+    -- swing width (wave 0.10.1, L1456 i; R6, seeds 1-20 / 21-40 / 41-60, base 314a87b86 -> 81a216585: flicker 0.12 /
+    -- 0.12 / 0.02 -> 0.12 / 0.08 / 0.02, retracted 0, readyShort 0, heldReady 402 / 310 / 335 -> 394 / 303 / 329,
+    -- agreement .885 / .882 / .885 -> .850 / .873 / .865): no floor moves
     ["Warrior Protection"] = { flicker = 0.13, retracted = 0.1, readyShort = 0, heldReady = 402 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
