@@ -25,7 +25,10 @@ local function validate(spec, h)
     if (edges == nil or #edges == 0) and step == nil then
         return "edges or step required"
     end
-    if h.kind == "power" and type(spec.power) ~= "number" then
+    if spec.power ~= nil and type(spec.power) ~= "number" then
+        return "power must be an Enum.PowerType number"
+    end
+    if h.kind == "power" and spec.power == nil then
         -- required: a default (the displayed power) would let a form change swap what the handle measures
         return "power required (an Enum.PowerType number)"
     end
