@@ -198,6 +198,216 @@ describe("rows with a secret amount (kind-only routing)", function()
         assert.are.same({ 0, 0, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
     end)
 
+    -- (ledger L1442) Live, every plain tick's amount is secret, so no tick is paid: the band follows the owed tick
+    -- nearest the row by elapsed time, not the first unseen one. The two shapes above with the old schedule's rows
+    -- all secret, an instant's schedule anchored at its cast: its second tick at 16 is still in band, so the recast's
+    -- or the other ability's direct crit there is ambiguous.
+    it("keeps a schedule's later ticks in band though its earlier rows were secret (17.33, all secret)", function()
+        local m = I.ab.bySpell[fs.SPENDER_M]
+        I.ab.onCrit[m] = function() end
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        ctl.now = 10.002
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 13
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 15.998
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
+        local landed, divergent = count(VS.Obs.Landed), T.divergent
+        ctl.now = 16
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.same({ 0, 1, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
+    end)
+
+    it(
+        "keeps another ability's later ticks in band though its earlier rows were secret (an instant anchored at its cast)",
+        function()
+            local m, f = I.ab.bySpell[fs.SPENDER_M], I.ab.bySpell[fs.SPENDER_F]
+            I.ab.onCrit[f], I.ab.school[f] = function() end, I.ab.school[m]
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            ctl.now = 10.002
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+            ctl.now = 13
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+            ctl.now = 15.998
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
+            local landed, divergent = count(VS.Obs.Landed), T.divergent
+            ctl.now = 16
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+            ctl.now = 40
+            I.Sources.Flush()
+            assert.are.same({ 0, 0, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
+        end
+    )
+
+    -- Two travelling spells of one school, the ticking one's schedule composed at its success (ledger L1503, the
+    -- e4ef Fire log's shapes, its times): the flight's lag already learned.
+    local function flights()
+        local p, f = I.ab.bySpell[fs.SPENDER_P], I.ab.bySpell[fs.SPENDER_F]
+        I.ab.onCrit[p], I.ab.rMax[p] = function() end, 30
+        I.ab.onCrit[f], I.ab.school[f], I.ab.rMax[f] = function() end, I.ab.school[p], 30
+        I.ab.expKind[f], I.ab.velocity[f] = X.FLIGHT, I.ab.velocity[p]
+        ctl.now = 1
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-0", fs.SPENDER_P)
+        ctl.now = 1.83 -- a clean hit: the lag learned (0.83 s)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 40, 8)
+        I.ab.ticking[p], I.ab.tickAura[p] = true, { tick_time = 3, duration = 12 }
+    end
+
+    -- e4ef 17.33: the old schedule anchored by its own direct crit (8.33), its ticks at 11.33 and 14.33 unseen; the
+    -- recast's direct crit at 17.33 meets the old schedule's slot 3: ambiguous, no crit credited, the recast landed.
+    it("leaves a recast's direct crit on an anchored flight schedule's later tick ambiguous (17.33)", function()
+        flights()
+        ctl.now = 7.5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        local i = ticket(X.TICKS)
+        ctl.now = 8.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8)
+        assert.are.same({ 8.33, 0 }, { T.anchor[i], T.wide[i] })
+        ctl.now = 11.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8)
+        ctl.now = 14.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8)
+        local crits = count(VS.Obs.Crit)
+        assert.are.equal(1, crits) -- the 8.33 direct crit's own
+        ctl.now = 16.5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_P)
+        local divergent, paid = T.divergent, T.paid[X.FLIGHT]
+        ctl.now = 17.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8)
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.same({ 0, 1, 1 }, { count(VS.Obs.Crit) - crits, T.divergent - divergent, T.paid[X.FLIGHT] - paid })
+    end)
+
+    -- KNOWN RESIDUAL (review D1, e4ef secret arm 1139.83 = log 98.33): the old schedule's direct row (89.33) was a
+    -- plain hit, unseen, so its schedule never anchors (wide > 0) and only its first tick is in band. Its slot-3 crit
+    -- at 98.33 goes to the other spell's open flight (cast 97.00, its own row at 97.83 unseen): a false crit credit.
+    -- Pinned as today's behaviour; D1 (compose a flight's schedule from the learned lag) turns it red.
+    it("credits an unanchored schedule's later tick crit to another open flight (known residual, D1)", function()
+        flights()
+        ctl.now = 88.5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        local i = ticket(X.TICKS)
+        for _, t in ipairs({ 89.33, 92.33, 95.33 }) do
+            ctl.now = t
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8)
+        end
+        assert.is_true(T.wide[i] > 0)
+        ctl.now = 97
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
+        ctl.now = 97.83
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8)
+        local divergent = T.divergent
+        assert.is_true(T.state[i] >= T.OPEN) -- the old schedule still open, unanchored
+        ctl.now = 98.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8)
+        ctl.now = 120
+        I.Sources.Flush()
+        assert.are.same({ 1, 0 }, { count(VS.Obs.Crit), T.divergent - divergent })
+    end)
+
+    -- A paid tick past unseen ones pays its own index: the schedule's next band is the tick after it, so a second row
+    -- in the same instant is not that tick again (one row per tick).
+    it("pays a later tick by its index past unseen ones: done jumps, the count kept", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S) -- a nature schedule (3 s ticks)
+        ctl.now = 13.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 8) -- the first tick: the schedule snaps (anchor 10.7)
+        local i = ticket(X.TICKS)
+        local total = T.done[i] + T.owed[i]
+        ctl.now = 16.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8) -- tick 2 secret: background
+        ctl.now = 19.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8) -- tick 3, a crit
+        assert.are.same({ 3, total }, { T.done[i], T.done[i] + T.owed[i] })
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8) -- the same instant again: not tick 3 twice
+        assert.are.equal(3, T.done[i])
+    end)
+
+    -- A plain row keeps the next owed tick (decision 47): with amounts plain a missing tick is truly missing (taken by
+    -- another ticket, or a first row that was not ours snapped the schedule off phase: the detect sweep's mixed seed 1,
+    -- a partner's lockstep rows), so a later slot's row is not taken.
+    it("keeps a plain row's band on the next owed tick past a missing one", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S)
+        ctl.now = 13.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 8) -- tick 1 (anchor 10.7); tick 2 at 16.7 never comes
+        local i = ticket(X.TICKS)
+        ctl.now = 19.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 8)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 20, 8)
+        assert.are.same({ 1, 0 }, { T.done[i], T.bandRejected })
+    end)
+
+    -- A recast (its direct row secret, so nothing refreshed the old schedule) at the old one's first tick: a crit in
+    -- that instant may be the old tick (it pays it: done 1), and that first paid tick confirms the old application over
+    -- older ones only, so the newer schedule stays open.
+    local function recast()
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        local old = ticket(X.TICKS)
+        ctl.now = 13
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        local new
+        for j = 1, T.CAP do
+            if j ~= old and T.state[j] ~= T.FREE and T.kind[j] == X.TICKS then
+                new = j
+            end
+        end
+        return old, new
+    end
+
+    it("closes no newer schedule of the ability when an older one pays its first tick", function()
+        local old, new = recast()
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        assert.are.same({ 1, true }, { T.done[old], T.state[new] >= T.OPEN })
+    end)
+
+    -- A secret row's tick past its schedule's next owed one ranks last (T.Pick): it makes the row ambiguous but takes
+    -- it from no other candidate. The newer schedule's tick, in phase with the old schedule's slot 2, is the newer one's.
+    it("gives an old schedule's later slot no row another candidate holds: the newer schedule's tick", function()
+        local old, new = recast()
+        ctl.now = 16
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        assert.are.same({ 0, 1 }, { T.done[old], T.done[new] })
+    end)
+
+    -- (detect sweep K19, secret arm) A recast on the old schedule's last slot: the crit in that instant goes to the
+    -- recast's direct ticket, as before (the old tick only makes it ambiguous: divergent counted).
+    it("pays a recast's direct crit to its cast, not the old schedule's later slot in the same instant", function()
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        local old = ticket(X.TICKS)
+        ctl.now = 22 -- the old schedule's slot 4 (13, 16, 19 secret, unseen)
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
+        local paid = T.paid[X.FRAME]
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        assert.are.same({ 0, 1 }, { T.done[old], T.paid[X.FRAME] - paid })
+    end)
+
+    -- While a flight's schedule has no anchor (its direct row unseen, wide > 0) its band stays on its next owed tick:
+    -- by elapsed time its overlapping bands would hold nearly every row of its school.
+    it("keeps an unanchored flight schedule's band on its next owed tick", function()
+        local p = I.ab.bySpell[fs.SPENDER_P]
+        I.ab.rMax[p], I.ab.ticking[p], I.ab.tickAura[p] = 30, true, { tick_time = 2, duration = 8 }
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        local i = ticket(X.TICKS)
+        assert.are.same(
+            { 1, 1, 1 },
+            { I.Kinds.TickN(i, 12, true), I.Kinds.TickN(i, 16, true), I.Kinds.TickN(i, 18, true) }
+        )
+    end)
+
     -- A projectile's own schedule (composed at its success, widened by the flight until its direct row) is no rival
     -- for that direct row: its debuff, and so its ticks, start there.
     it("stages a travelling cast's own direct crit though its own composed schedule is in band", function()
