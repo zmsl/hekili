@@ -69,9 +69,23 @@ it does not model.
 
 ## Diagnostics
 
-`/lhv` (status), `/lhv selftest`, `/lhv stats`, `/lhv watch health target 20 50`, `/lhv watch power player 30 mana`,
-`/lhv watch off`, `/lhv copy` (all output in a box you can copy from), `/lhv off` and `/lhv on` (this session only; `on`
-runs the self-test again, also after a failed one).
+Diagnostics are a consumer's job: the library prints nothing (an error goes to the client's error handler), registers
+no slash command and shows no frame of its own. The calls below answer everything a diagnostic tool needs; LHVProbe is
+the reference consumer (`/lhvp`).
+
+| Call | Returns |
+|---|---|
+| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 1`) |
+| `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, then the unproven ones); `state` and `reason` as `IsAvailable` |
+| `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable) |
+| `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change |
+| `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, barsMade`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now), bars made |
+| `LHV:GetSources()` | a fresh array, one `{ kind =, unit =, power =, handles =, bars =, active = }` per source with a watch, in creation order (`power` nil for health; `active`: fed every frame) |
+| `LHV:SelfTest(fn)` | nothing; runs the self-test (or joins the run going) and calls `fn(pass, lines)` when it ends: `pass` a boolean, `lines` an array of strings under 255 characters, the last one `selftest PASS ...` or `selftest FAIL ...`. Called at once (inside `SelfTest`) when it cannot run: the client lacks the API, switched off, or no free bar (the earlier verdict then stands). Before login it waits for the login run. `lines` is shared: read it, do not change it |
+| `LHV:GetSelfTest()` | `verdict, lines, running`: the last completed run's verdict (`true`/`false`; nil before the first, and after `SetEnabled(true)` until a run ends), its lines (the array `fn` got; nil before the first) and whether a run is going |
+| `LHV:SetEnabled(on)` | nothing. `false`: every kind `unavailable, off` for this session. `true` after `false`: pending until a fresh self-test passes (it starts one). Already on, it changes nothing: after a failed self-test, `LHV:SelfTest(fn)` runs it again and the kinds come back when it passes |
+
+`GetKinds`, `GetSources` and `GetSelfTest` build or hand out tables: call them from a command, not every frame.
 
 ## Credits
 

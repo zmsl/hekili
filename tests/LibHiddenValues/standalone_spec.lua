@@ -1,7 +1,7 @@
 -- tests/LibHiddenValues/standalone_spec.lua: the library stands alone and embeds. The no-host-reference grep passes;
 -- the TOC and the embedders' XML list the same files; LibStub keeps one running copy (the same minor twice builds and
--- replaces nothing, an older minor after a newer one returns at once, a newer one inherits the registry); the slash
--- command works.
+-- replaces nothing, an older minor after a newer one returns at once, a newer one inherits the registry); it is a pure
+-- API (no slash command, no chat output, no global but LibStub) and every diagnostic fact has a getter.
 local FAKE = "src/LibHiddenValues/Testing/FakeClient.lua"
 
 local function lohi(h)
@@ -102,36 +102,111 @@ describe("LibHiddenValues standalone", function()
         assert.are.equal("live", (h:State()))
     end)
 
-    it("answers /lhv: status, watch, stats, selftest, copy, off and on", function()
+    it("is a pure API: no slash command, no chat output, no global but LibStub, over a whole session", function()
+        Fake.restore()
+        local before = {}
+        Fake = loadfile(FAKE)({
+            before = function()
+                for k in pairs(_G) do
+                    before[k] = true
+                end
+            end,
+        })
+        W = Fake.world
+        lib = LibStub("LibHiddenValues-1.0")
         W.unit.target = { health = 0.6 }
+        local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50 } }, function() end)
+        lib:OnCapability("A", function() end)
         Fake.login()
-        Fake.slash("")
-        assert.is_truthy(Fake.printed[#Fake.printed]:match("health"))
-        Fake.slash("watch health target 20 50")
         Fake.tick(10)
         W.unit.target.health = 0.3
         Fake.tick(3)
-        local seen
-        for _, l in ipairs(Fake.printed) do
-            seen = seen or l:match("health target .*0%-50")
-        end
-        assert.is_truthy(seen)
-        Fake.slash("stats")
-        Fake.slash("watch off")
-        assert.are.equal(0, (lib:GetStats()))
-        Fake.slash("selftest")
+        assert.are.same({ 20, 50 }, lohi(h))
+        lib:GetStats()
+        lib:GetSources()
+        lib:GetKinds()
+        lib:GetSelfTest()
+        lib:SelfTest(function() end)
         Fake.tick(60)
-        assert.is_truthy(Fake.printed[#Fake.printed]:match("PASS"))
-        Fake.slash("test")
+        lib:SetEnabled(false)
+        lib:SelfTest(function() end) -- the switched-off path
+        lib:SetEnabled(true)
         Fake.tick(60)
-        Fake.slash("copy")
-        assert.is_truthy(LibHiddenValuesCopyFrame)
-        Fake.slash("off")
-        assert.are.same({ false, "unavailable", "off" }, { lib:IsAvailable("health") })
-        Fake.slash("on")
-        assert.are.same({ false, "pending" }, { lib:IsAvailable("health") })
-        for _, l in ipairs(Fake.printed) do
-            assert.is_true(#l < 255, l)
+        Fake.set("drop", 1)
+        lib:SelfTest(function() end) -- a failing run
+        Fake.tick(60)
+        assert.are.same({ false, "unavailable", "selftest" }, { lib:IsAvailable("health") })
+        lib:ReleaseAll("A")
+        Fake.loadLibrary(2) -- a newer minor after login
+        Fake.tick(10)
+        assert.are.same({}, Fake.printed)
+        assert.are.same({}, _G.SlashCmdList)
+        local added = {}
+        for k in pairs(_G) do
+            if not before[k] then
+                added[#added + 1] = tostring(k)
+            end
         end
+        assert.are.same({ "LibStub" }, added)
+    end)
+
+    it("names no chat, slash or print call in its code", function()
+        local hits = {}
+        for line in io.lines(ROOT .. "LibHiddenValues.toc") do
+            line = line:gsub("\r", "")
+            if line:match("%.lua$") and not line:match("^Libs") then
+                local n = 0
+                for l in io.lines(ROOT .. line:gsub("\\", "/")) do
+                    n = n + 1
+                    local code = l:gsub("%-%-.*$", "")
+                    for _, pat in ipairs({ "print%s*%(", "DEFAULT_CHAT_FRAME", "ChatFrame", "SLASH_", "SlashCmdList" }) do
+                        if code:find(pat) then
+                            hits[#hits + 1] = line .. ":" .. n .. ": " .. l
+                        end
+                    end
+                end
+            end
+        end
+        assert.are.same({}, hits)
+    end)
+
+    it("answers every diagnostic fact through getters", function()
+        W.unit.target = { health = 0.6 }
+        assert.are.same({ nil, nil, false }, { lib:GetSelfTest() })
+        local kinds = lib:GetKinds()
+        assert.are.equal(12, #kinds)
+        assert.are.same({ kind = "health", state = "pending" }, kinds[1])
+        assert.are.same({ kind = "power", state = "pending" }, kinds[2])
+        assert.are.same({ kind = "aura", state = "unavailable", reason = "unproven" }, kinds[9])
+        local seen = {}
+        for i, row in ipairs(kinds) do
+            assert.is_nil(seen[row.kind], i)
+            seen[row.kind] = true
+            assert.is_true(lib.KNOWN[row.kind], row.kind)
+        end
+        local a = lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50 } })
+        lib:Watch("B", { kind = "health", unit = "target", edges = { 50 } })
+        lib:Watch("B", { kind = "power", unit = "player", power = Enum.PowerType.Mana, edges = { 30 } })
+        lib:Watch("B", { kind = "health", unit = "player", edges = { 40 } }):Release()
+        Fake.login()
+        Fake.tick(10)
+        local pass, lines, running = lib:GetSelfTest()
+        assert.is_true(pass)
+        assert.is_false(running)
+        assert.truthy(lines[#lines]:find("selftest PASS", 1, true))
+        assert.are.same({ kind = "health", state = "ready" }, lib:GetKinds()[1])
+        assert.are.same({
+            { kind = "health", unit = "target", handles = 2, bars = 2, active = true },
+            { kind = "power", unit = "player", power = Enum.PowerType.Mana, handles = 1, bars = 1, active = true },
+        }, lib:GetSources())
+        local made = select(8, lib:GetStats())
+        assert.are.equal(#lib.barFrame, made)
+        assert.are.equal(3, (lib:GetStats()))
+        lib:SelfTest()
+        assert.is_true(select(3, lib:GetSelfTest()))
+        assert.is_true((lib:GetSelfTest())) -- the earlier verdict stands while a run is going
+        Fake.tick(60)
+        a:Release()
+        assert.are.equal(1, lib:GetSources()[1].handles)
     end)
 end)

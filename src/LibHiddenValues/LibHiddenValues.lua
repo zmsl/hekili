@@ -20,20 +20,12 @@ lib.UNKNOWN, lib.COARSE, lib.BAND, lib.EXACT = 0, 1, 2, 3
 
 -- Every kind name of the major's contract; only those with a file in Kinds/ are built (lib.kinds). The aura kind stays
 -- unproven for good: the client's aura container only takes widgets owned by its forbidden aura button.
-lib.KNOWN = {
-    health = true,
-    power = true,
-    cooldown = true,
-    charges = true,
-    cast = true,
-    totem = true,
-    loc = true,
-    bool = true,
-    aura = true,
-    threat = true,
-    absorb = true,
-    meter = true,
-}
+lib.KINDS =
+    { "health", "power", "cooldown", "charges", "cast", "totem", "loc", "bool", "aura", "threat", "absorb", "meter" }
+lib.KNOWN = {}
+for i = 1, #lib.KINDS do
+    lib.KNOWN[lib.KINDS[i]] = true
+end
 
 lib.reg = lib.reg or {} -- every handle not released
 lib.sources = lib.sources or {} -- one per canonical key; never removed (a key's table is reused when watched again)
@@ -107,6 +99,18 @@ function lib:IsAvailable(kind, unit)
     return state == "ready", state, reason
 end
 
+-- Every kind of the major in contract order, each { kind =, state =, reason = } as IsAvailable gives them (a fresh
+-- array: a cold path).
+function lib:GetKinds()
+    local out = {}
+    for i = 1, #lib.KINDS do
+        local kind = lib.KINDS[i]
+        local state, reason = lib.capOf(kind)
+        out[i] = { kind = kind, state = state, reason = reason }
+    end
+    return out
+end
+
 function lib:OnCapability(owner, fn)
     lib.capCb[owner] = fn
 end
@@ -131,7 +135,8 @@ function lib.capChanged()
     end
 end
 
--- The kill switch for this session. On again: pending until a fresh self-test passes.
+-- The kill switch for this session. On again: pending until a fresh self-test passes. Already on: nothing (a failed
+-- verdict stands; lib:SelfTest() runs again).
 function lib:SetEnabled(on)
     if on then
         if not lib.disabled then

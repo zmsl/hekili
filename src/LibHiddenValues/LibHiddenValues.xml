@@ -5,5 +5,4 @@
     <Script file="Feed.lua"/>
     <Script file="Kinds\Percent.lua"/>
     <Script file="SelfTest.lua"/>
-    <Script file="Slash.lua"/>
 </Ui>

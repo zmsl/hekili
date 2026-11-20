@@ -150,18 +150,20 @@ describe("LibHiddenValues capability", function()
         assert.are.same({ 50, 100, 0 }, { calls[2].lo, calls[2].hi, calls[2].dir })
     end)
 
-    it("re-runs the self-test on /lhv on after a failed one", function()
+    it("recovers from a failed self-test through the API: SetEnabled(true) then SelfTest", function()
         boot()
         Fake.set("drop", 1)
         assert.is_false(Fake.login())
         Fake.set("drop", 0)
-        Fake.slash("on")
+        lib:SetEnabled(true) -- already on: changes nothing, the failed verdict stands
+        assert.are.same({ false, "unavailable", "selftest" }, { lib:IsAvailable("health") })
+        local pass, lines
+        lib:SelfTest(function(p, l)
+            pass, lines = p, l
+        end)
         Fake.tick(60)
         assert.are.same({ true, "ready" }, { lib:IsAvailable("health") })
-        local passed = false
-        for _, l in ipairs(Fake.printed) do
-            passed = passed or l:find("selftest PASS", 1, true) ~= nil
-        end
-        assert.is_true(passed)
+        assert.is_true(pass)
+        assert.truthy(lines[#lines]:find("selftest PASS", 1, true))
     end)
 end)

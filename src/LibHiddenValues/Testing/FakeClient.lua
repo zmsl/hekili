@@ -13,7 +13,7 @@
 -- Surface: Fake.world (W.unit[token] = { health, power = { [Enum.PowerType] = fraction }, powerType, dead };
 -- W.secret: reads return secrets, true by default, as under the map lockdown; W.combat does the same; W.secretBool:
 -- UnitIsDead returns a secret), Fake.tick(n), Fake.event(name, ...), Fake.advance(seconds), Fake.set(knob, value),
--- Fake.login(), Fake.slash(msg), Fake.restore(). Knobs: "closed" (bars fed a secret stop firing: the leak is closed),
+-- Fake.login(), Fake.restore(), Fake.printed (every print call: the library makes none). Knobs: "closed" (bars fed a secret stop firing: the leak is closed),
 -- "lag" n (firings arrive n frames late), "drop" n (every nth firing is lost), "snap" "left"|"right"|"nearest" (how a
 -- Step curve picks its point), "maxpoints" n (curve size limit), "refuse" name (that global function raises).
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
@@ -294,8 +294,6 @@ install("print", function(...)
     Fake.printed[#Fake.printed + 1] = table.concat(t, " ")
 end)
 install("SlashCmdList", {})
-install("UISpecialFrames", {})
-install("ChatFontNormal", {})
 install("UIParent", CreateFrame("Frame"))
 install("LibStub", nil) -- each fake client gets its own LibStub and library
 install("UnitHealthPercent", function(unit, predicted, curve)
@@ -415,10 +413,6 @@ function Fake.set(knob, value)
     end
 end
 
-function Fake.slash(msg)
-    _G.SlashCmdList.LIBHIDDENVALUES(msg)
-end
-
 function Fake.restore()
     for name in pairs(installed) do
         rawset(_G, name, saved[name])
@@ -442,10 +436,8 @@ function Fake.loadLibrary(minor)
         end
     end
     -- Globals the library or LibStub created are restored with the rest.
-    for _, name in ipairs({ "LibStub", "SLASH_LIBHIDDENVALUES1", "LibHiddenValuesCopyFrame" }) do
-        if not installed[name] then
-            installed[name], saved[name] = true, nil
-        end
+    if not installed.LibStub then
+        installed.LibStub, saved.LibStub = true, nil
     end
 end
 

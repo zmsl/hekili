@@ -1,9 +1,10 @@
--- SelfTest.lua: the plain self-test (runs at login; lib:SelfTest(fn) and /lhv selftest run it again). Three pooled
+-- SelfTest.lua: the plain self-test (runs at login; lib:SelfTest(fn) runs it again). Three pooled
 -- bars on the 25/50/75% curves are pushed plain values, one value every HOLDF frames: every change of a curve's output
 -- must fire once, within MAXLAG frames, and every output must be the curve convention's (1 below the edge, 2 at or
 -- above it, under whatever snapping the client does). About 45 frames, invisible. It proves the firing mechanism and
 -- the curves, not the secret path (that is the later shadow check). Until it passes the built kinds are "pending";
--- while a later run is going the earlier verdict stands.
+-- while a later run is going the earlier verdict stands. Last file of the list: it ends the load and, after login (a
+-- late or upgraded copy), realises at once.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return
@@ -112,11 +113,11 @@ function lib:SelfTest(fn)
         lib.stWaiters[#lib.stWaiters + 1] = fn
     end
     if lib.apiMissing then
-        lib.stVerdict = false
-        return lib.stDone(false, { "selftest FAIL: the client lacks the curve or frame API" })
+        lib.stVerdict, lib.stLines = false, { "selftest FAIL: the client lacks the curve or frame API" }
+        return lib.stDone(false, lib.stLines)
     end
     if lib.disabled then
-        return lib.stDone(false, { "selftest not run: switched off (/lhv on)" })
+        return lib.stDone(false, { "selftest not run: switched off (SetEnabled(true))" })
     end
     if lib.st or not lib.realised then
         return -- running, or runs at login
@@ -131,8 +132,8 @@ function lib:SelfTest(fn)
             if lib.stVerdict ~= nil then -- a full pool says nothing about the mechanism
                 return lib.stDone(false, { "selftest not run: no free bar (the earlier verdict stands)" })
             end
-            lib.stVerdict = false
-            lib.stDone(false, { "selftest FAIL: no bar could be made" })
+            lib.stVerdict, lib.stLines = false, { "selftest FAIL: no bar could be made" }
+            lib.stDone(false, lib.stLines)
             return lib.capChanged()
         end
         lib.barPrime[i] = 0
@@ -145,4 +146,15 @@ function lib:SelfTest(fn)
     end
     lib.st = st
     lib.wake()
+end
+
+-- The last completed run's verdict (nil before the first and again after SetEnabled(true) until a run ends) and lines
+-- (the array the callbacks got: read only; nil before the first), and whether a run is going.
+function lib:GetSelfTest()
+    return lib.stVerdict, lib.stLines, lib.st ~= nil
+end
+
+lib.loading = nil
+if IsLoggedIn and IsLoggedIn() then
+    lib.realise()
 end

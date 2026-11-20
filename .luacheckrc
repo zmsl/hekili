@@ -182,13 +182,13 @@ files["src/Hekili_Shared/Shared/"] = { globals = stateEnv }
 -- LibHiddenValues (a standalone library in src/LibHiddenValues, not part of the addon above): it reads the client
 -- directly, so its client globals are declared here; its tests run on its own fake client.
 files["src/LibHiddenValues/"] = {
-    globals = { "SlashCmdList" },
+    not_globals = { "print" }, -- a pure API: no chat output (owner 2026-11-20)
     read_globals = {
-        "CreateFrame", "C_CurveUtil", "UnitHealthPercent", "UnitPowerPercent", "UnitPowerType", "UnitExists",
-        "UnitIsDead", "GetTime", "IsLoggedIn", "UISpecialFrames",
+        "CreateFrame", "C_CurveUtil", "UnitHealthPercent", "UnitPowerPercent", "UnitExists", "UnitIsDead", "GetTime",
+        "IsLoggedIn",
     },
 }
 files["tests/LibHiddenValues/"] = {
     std = "+busted",
-    read_globals = { "LibStub", "Enum", "GetTime", "LibHiddenValuesCopyFrame" },
+    read_globals = { "LibStub", "Enum", "GetTime" },
 }

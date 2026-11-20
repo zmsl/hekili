@@ -51,14 +51,16 @@ describe("LibHiddenValues secrets and efficiency", function()
                 end
                 Fake.tick(1)
             end
-            Fake.slash("stats")
+            lib:GetStats()
+            lib:GetSources()
+            lib:GetKinds()
             assert.are.same({}, Fake.errors)
             assert.is_true(n > 10)
         end)
     end
 
     it("uses each secret-returning read once, behind issecretvalue first", function()
-        local reads = { "UnitHealthPercent", "UnitPowerPercent", "UnitIsDead", "UnitExists", "UnitPowerType", "read" }
+        local reads = { "UnitHealthPercent", "UnitPowerPercent", "UnitIsDead", "UnitExists", "read" }
         local checked = 0
         for line in io.lines(ROOT .. "LibHiddenValues.toc") do
             line = line:gsub("\r", "")
@@ -130,7 +132,7 @@ describe("LibHiddenValues secrets and efficiency", function()
 
     it("keeps statistics finite with no elapsed time", function()
         local stats = { lib:GetStats() }
-        assert.are.equal(7, #stats)
+        assert.are.equal(8, #stats)
         for i, x in ipairs(stats) do
             assert.is_true(finite(x), i)
         end

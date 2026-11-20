@@ -13,12 +13,13 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 
 ## Built in stages 0 and 1
 
-- LibStub major `LibHiddenValues-1.0`, minor 1. Six files after LibStub; the first calls `NewLibrary` and sets
-  `lib.loading`, the others return unless it is set, the last clears it. All state on `lib`; scripts are one-line
-  dispatchers through `lib`. Nothing but the event frame is built before `PLAYER_LOGIN`; a copy loaded after login
-  (load on demand, or a newer minor) realises at once, keeps the frames and re-primes every source.
+- LibStub major `LibHiddenValues-1.0`, minor 1. Five files after LibStub; the first calls `NewLibrary` and sets
+  `lib.loading`, the others return unless it is set, the last (`SelfTest.lua`) clears it. All state on `lib`; scripts
+  are one-line dispatchers through `lib`. Nothing but the event frame is built before `PLAYER_LOGIN`; a copy loaded
+  after login (load on demand, or a newer minor) realises at once, keeps the frames and re-primes every source.
 - `Watch`, the handle (`Get`, `State`, `Domain`, `Exact`, `Latency`, `SetPaused`, `SetSink`, `Release`), `IsAvailable`,
-  `OnCapability`, `SelfTest`, `GetStats`, `SetEnabled`, `ReleaseAll`, `GetVersion`, the quality codes.
+  `OnCapability`, `SelfTest`, `GetSelfTest`, `GetStats`, `GetSources`, `GetKinds`, `SetEnabled`, `ReleaseAll`,
+  `GetVersion`, the quality codes.
 - Sources by canonical key (kind, unit, power type, predicted); one bar per edge per source, reference counted; each
   handle a view cut by its own edges; a new edge primes only its own bar.
 - The pool (32 made at login, cap 256, growth in combat under pcall), one Step curve per edge (guard point 0.0005
@@ -26,8 +27,8 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 - The plain self-test at login (three bars, ten values, about 45 frames): firings must equal changes, within 3
   frames, and every curve output must follow the convention. Kinds are `pending` until it passes.
 - Capability reasons `api`, `selftest`, `error`, `off`, `unproven`, `unknown-kind`.
-- `/lhv` with `selftest`/`test`, `stats`, `watch`, `watch off`, `copy`, `off`, `on` (`on` runs the self-test and
-  prints its lines, so it also recovers from a failed verdict).
+- A pure API: no slash command, no chat output, no frame of its own that shows. Every diagnostic fact is a getter
+  (the consumer README's Diagnostics table); LHVProbe, outside this repository, is the reference consumer (`/lhvp`).
 
 ## Choices taken where the design left one open
 
@@ -49,7 +50,8 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 | Self-test with a full pool | reports `selftest not run: no free bar`, the earlier verdict stands | a full pool says nothing about the mechanism (review M2) |
 | Root frame | parented and anchored to `UIParent` (bottom left), alpha 0 | the run's measured shape; a parentless root is unprobed (owner question 11) |
 | `OnSizeChanged` | `SetScript` on our own child frame | the design forbids `HookScript` (a hook cannot be removed); the probe used `HookScript`, so the self-test proves `SetScript` in game |
-| SavedVariables | none | nothing needs to persist yet: no cached verdict, `/lhv off` is per session |
+| SavedVariables | none | nothing needs to persist yet: no cached verdict, `SetEnabled(false)` is per session |
+| Diagnostics (owner 2026-11-20) | no `/lhv` command, no print, no copy box: getters only (`GetKinds`, `GetSources`, `GetSelfTest`, `GetStats`' 8th value bars made); the consumer (LHVProbe `/lhvp`) prints | a library is a pure API surface; output, commands and UI belong to the addon that wants them. Recovery after a failed self-test is `SelfTest(fn)` (`SetEnabled(true)` alone changes nothing when already on) |
 
 ## Not built (later stages)
 
