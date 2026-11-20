@@ -115,6 +115,9 @@ function M.heldReady(q, q2, react, pre)
     local key = q.name[1]
     return key and q.time[1] > react and not M.unmatched(key, q2, react) and (q2.cost[1] or 0) <= pre or false
 end
+--- The floor above the truth (L1504, the danger mirror of readyShort): run A's believed floor `lo` over the world's
+--- power at the same poll, before that poll's press (the frames' truth reads after it), by more than M.LO_EPS.
+M.LO_EPS = 0.05
 M.PULL = 3 -- the world starts this long before the pull, the target selected (precombat presses)
 M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
 -- The display-side hold experiment (flicker.hold) on our instance's shown queue: o.hold, else this switch (off)
@@ -372,6 +375,7 @@ function M.run(L, seed, o, drivers)
         selfCheck = {},
         readyShort = 0,
         heldReady = 0,
+        loOver = 0,
     }
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
@@ -736,6 +740,7 @@ function M.run(L, seed, o, drivers)
                 end
             end
         end
+        run.preTruth = W.res(us, L.power.type) -- before this tick's press (M.LO_EPS)
         -- the press policy (§2.2 step 6): the driver's first icon, once it has shown as ready for `o.reaction` s
         local q = steps[1].q
         local key = q.name[1]
@@ -858,6 +863,9 @@ function M.run(L, seed, o, drivers)
                 end
                 local p = VS.Power(L.power.type, now)
                 f.lo[n], f.est[n], f.hi[n], f.truth[n] = p.lo, p.est, p.hi, us.power
+                if k == 1 and not R and p.lo > run.preTruth + M.LO_EPS then
+                    run.loOver = run.loOver + 1
+                end
                 f.pend[n] = VS.SwingPending(1) > 0 or VS.SwingPending(2) > 0
                 f.cd[n], f.gcd[n], f.t[n], f.n = cd, math.max(0, us.gcdUntil - t), t, n
             end
@@ -1068,6 +1076,7 @@ local function blank()
         episodes = 0,
         readyShort = 0,
         heldReady = 0,
+        loOver = 0,
     }
     m.unmatched = {} -- run A's refusals the oracle shadow would not have made (M.unmatched)
     m.refusedB, m.attemptsB = {}, 0 -- the oracle's own, driving run B (the projection's share: §5.2 as built)
@@ -1128,6 +1137,7 @@ function M.tally(L, n, o)
         m.attempts, m.episodes = m.attempts + a.attempts, m.episodes + a.episodes
         m.readyShort = m.readyShort + a.readyShort
         m.heldReady = m.heldReady + a.heldReady
+        m.loOver = m.loOver + a.loOver
         m.focus = m.focus + a.focus
         for key, k in pairs(a.pressedBy) do
             m.pressedBy[key] = (m.pressedBy[key] or 0) + k
@@ -1260,6 +1270,7 @@ end
 --- the tally's focus and run A's presses by key (pressedBy) (neither in M.line).
 function M.summary(m)
     local r = { focus = m.focus, pressedBy = m.pressedBy, readyShort = m.readyShort or 0, heldReady = m.heldReady or 0 }
+    r.loOver = m.loOver or 0
     r.agreement = m.agree / math.max(1, m.both)
     local reacted, never = {}, 0
     for _, d in ipairs(m.react) do
