@@ -301,6 +301,27 @@ describe("reactions", function()
             assert.are.equal(0, I.nowErrors)
         end)
 
+        -- L1504: a rung (a usable yes) after the swing already showed the pool with the swing's whole rage in it, its
+        -- reaction's gain too; the gain, folded at the row, first covers that lift as the swing's own step does
+        it("a gain dated at or before a rung's lift covers the lift first; one after the rung adds in full", function()
+            local r = reaction("landed", "target", "land")
+            r.now = function()
+                gain(5, "rage")
+            end
+            build({ r })
+            local S, Obs, K, R = I.Sources, VS.Obs, I.HitKind, I.res
+            local function landAt(swingT, foldT)
+                R.est0[1], R.lo0[1], R.hi0[1] = 20, 20, 20
+                R.liftE[1], R.liftL[1], R.liftH[1], R.liftT[1] = 8, 8, 8, 10.2 -- a rung at 10.2 lifted 12 -> 20
+                S.Direct(Obs.SwingSettled, foldT, 1, swingT, K.WOUND)
+                VS.Drain(foldT + 0.01)
+                return { R.est0[1], R.lo0[1], R.hi0[1], R.liftL[1] }
+            end
+            assert.are.same({ 20, 20, 20, 3 }, landAt(10, 10.47)) -- the swing at 10, before the rung: netted
+            assert.are.same({ 25, 25, 25, 8 }, landAt(10.3, 10.77)) -- after the rung: the pool had not got it
+            assert.are.equal(0, I.nowErrors)
+        end)
+
         it("hand filters by the swing's hand", function()
             local main, off = reaction("main_land", "target", "land"), reaction("off_land", "target", "land")
             main.hand, off.hand = "main", "off"

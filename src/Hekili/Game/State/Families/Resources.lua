@@ -1934,18 +1934,26 @@ I.On(Obs.ChannelStop, function(o)
 end)
 
 --- Our own cast changed slot r by `delta` at t (spec §5.3): the interval moves by the same amount, written as a
---- `modelled` sample. Allocates nothing.
-function I.ResourceShift(r, delta, t, event)
+--- `modelled` sample. `late` (a reaction's, folded at its outcome's row after t): a gain dated at or before the slot's
+--- latest lifting rung, within I.LIFT_WINDOW, first covers that rung's lift (owe), as a swing's own step does
+--- (swingStep): the rung already showed the pool with it (L1504). Allocates nothing.
+function I.ResourceShift(r, delta, t, event, late)
     local max = R.max[r]
-    R.est0[r] = clamp(R.est0[r] + delta, max)
+    local de, dl, dh = delta, delta, delta
+    if late and delta > 0 and t <= R.liftT[r] and I.clock - R.liftT[r] <= I.LIFT_WINDOW then
+        de, R.liftE[r] = net(delta, R.liftE[r])
+        dl, R.liftL[r] = net(delta, R.liftL[r])
+        dh, R.liftH[r] = net(delta, R.liftH[r])
+    end
+    R.est0[r] = clamp(R.est0[r] + de, max)
     local lo = R.lo0[r]
-    R.lo0[r] = clamp(lo + delta, max)
+    R.lo0[r] = clamp(lo + dl, max)
     if delta < 0 and R.over[r] > 0 then -- the part the measured floor could not lose (at 0) comes off the model's
         local o = R.over[r] + delta - (R.lo0[r] - lo)
         R.over[r] = o > 0 and o or 0
     end
     norm(r)
-    R.hi0[r] = clamp(R.hi0[r] + delta, max)
+    R.hi0[r] = clamp(R.hi0[r] + dh, max)
     R.pinDelta[r] = R.pinDelta[r] + delta
     if delta > 0 then
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)

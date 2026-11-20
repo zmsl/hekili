@@ -361,7 +361,7 @@ local function shift(n, resource, spread)
     if n > 0 and type(spread) == "number" and spread > 0 then
         I.ResourceGainSpread(r, n, spread, T, CAST)
     else
-        I.ResourceShift(r, n, T, CAST)
+        I.ResourceShift(r, n, T, CAST, asOf) -- a reaction's gain may already sit under a rung's lift (L1504)
     end
     if n > 0 then
         I.Log.Energize(A.qid[curA] or 0, n, I.res.type[r], I.res.max[r], T) -- a reaction's: no ability (curA 0)
