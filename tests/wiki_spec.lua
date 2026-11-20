@@ -165,6 +165,15 @@ describe("wiki-check", function()
         }, errs)
         assert.are.equal(2, #check.banned({ P = "L1000\nR123" }))
     end)
+
+    it("warns about an open placeholder, not about a backticked mention of the marker", function()
+        assert.are.same(
+            { "P:1: TODO-SCREENSHOT", "P:3: TODO" },
+            check.todos({
+                P = "<!-- TODO-SCREENSHOT: x -->\n| a | `TODO-SCREENSHOT:` marks it |\nTODO: lead\nOpen `TODO` markers",
+            })
+        )
+    end)
 end)
 
 describe("the expression check", function()
