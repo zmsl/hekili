@@ -1295,11 +1295,15 @@ I.OnSettle(function()
 end)
 
 -- The low step of `hand`'s swing still pending (VS.SwingPending) for slot r, at its swing, if an answer at t can show
--- it (ORACLE_MIN after it); else 0. Allocates nothing.
-local function pendingStep(r, hand, t)
+-- it (ORACLE_MIN after it); else 0. `proc`: the step with its width's whole proc, (value + width) x (scale - spread):
+-- what that hand alone may have paid. Allocates nothing.
+local function pendingStep(r, hand, t, proc)
     local p = VS.SwingPending(hand)
     if p == 0 or t <= p + I.Log.ORACLE_MIN - 1e-6 then
         return 0
+    end
+    if proc then
+        return (I.SwingValue(r, hand, p) + I.SwingWidth(r, hand, p)) * (R.scale[r] - R.spread[r])
     end
     return lowStep(r, hand, p)
 end
@@ -1396,7 +1400,8 @@ I.On(Obs.Usable, function(o, t, lag)
                 heardT[1], heardT[2] = o.t, o.t
             end
         else
-            local e1, e2 = c > lo + f + I.EPS, c > lo + m + I.EPS
+            -- the other hand alone may have paid up to its step with the proc (L1456 i): only past that is a hand shown
+            local e1, e2 = c > lo + pendingStep(r, 2, o.t, true) + I.EPS, c > lo + pendingStep(r, 1, o.t, true) + I.EPS
             -- each shown hand gave more than none (it landed), but only where the yes contradicts the estimate: one the
             -- estimate already reached may follow an avoided swing (lifting there put the floor above the truth).
             -- shortcut: est0 is no bound (truth may sit above it before a dodge); the sound test, c > hi0 + the other

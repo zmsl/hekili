@@ -1082,6 +1082,22 @@ describe("resources", function()
                 assert.is_false(missed(4)) -- 5 + 5 x 0.98 < 10: a landed swing without the proc stays short
             end)
 
+            it("judges a yes a hand's gain only past the other hand's step with its proc", function()
+                -- floor 6; main 9 +-2 at 5.1, off 4.5 +-1 at 4.8, both pending. A yes at spender_a's 10 is past 6 + the
+                -- off hand's proc-free step (3.5) but not past 6 + its step with the proc (5.5): the off hand alone may
+                -- have paid it (main avoided), so no hand's low step lifts the floor (L1456 i, review I2)
+                widths(2, 1)
+                local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+                R.scale[1] = 1
+                R.est0[1], R.lo0[1], R.hi0[1] = 6, 6, 30
+                obs(Obs.Swing, 4.8, 2, 1.8, 4)
+                obs(Obs.Swing, 5.1, 1, 2.6, 4)
+                I.Fold(5.1, false)
+                obs(Obs.Usable, 5.3, A, 1, 0)
+                I.Fold(5.3, false)
+                assert.is_true(R.lo0[1] <= 10 + I.EPS, "lo " .. R.lo0[1]) -- the rung, not 6 + 7 x 0.98
+            end)
+
             it("changes nothing for a swing entry without `width`", function()
                 widths(nil)
                 obs(Obs.Swing, 5, 1, 2.6, 1)
