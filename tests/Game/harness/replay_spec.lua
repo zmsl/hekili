@@ -1078,6 +1078,25 @@ describe("the replay's cooldowns: the engine's, a shared category's, the log's",
         assert.is_true(math.abs(us.cdUntil.gust - (R.pull + 1 + 6)) < 1e-3)
     end)
 
+    it("a form's higher rank (its copy ID) in the log enters the form: every rank maps", function()
+        local log = table.concat({
+            "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 20 s target 63",
+            "[0.00] [Tester (#1)] Aura gained: {SpellID: 900081}",
+        }, "\n")
+        local HR = {
+            Hekili = {
+                Class = {
+                    abilities = { stance_r = { key = "stance_r", id = 900080, copy = { 900081 }, gcd = "off" } },
+                    auras = {},
+                },
+            },
+        }
+        local R = replay.new(log, HR, { forms = { 900080 } })
+        local W = R.world(setmetatable({ tag = "-rank" }, { __index = WO }), 1)
+        at(W, 0.05)
+        assert.are.equal(1, W.ents[1].form)
+    end)
+
     it("caps the run instance's answer at the log's spacing (replay-fncd M3)", function()
         local log = table.concat({
             "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 20 s target 63",
