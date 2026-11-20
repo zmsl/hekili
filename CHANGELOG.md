@@ -12,12 +12,14 @@
 - The Copy Priority button now shows the same copy icon as the note above it.
 
 ### Fixed
-- Warrior: the guaranteed rage from a white swing no longer counts Unbridled Wrath before it procs, so a rage-gated ability may light up slightly later, once the rage is certain.
 
+- Warrior: the guaranteed rage from a white swing no longer counts Unbridled Wrath before it procs, so a rage-gated ability may light up slightly later, once the rage is certain.
 - `target.time_to_pct_<N>` now reads 3600 when the target's time to die is unknown, like `fight_remains` and `target.time_to_die` (it read 2520), so custom conditions see the same unknown time everywhere.
-- A critical tick late in one of your damage-over-time spells is no longer taken for a critical hit of the spell you just cast when that damage-over-time spell was applied instantly or its first hit was a critical hit, so effects of your critical hits, such as Master of Elements' mana refund, are no longer counted then when they did not happen. After a travelling spell's first hit that was not critical this can still happen. A real critical hit that lands at the same moment as such a tick no longer counts either, so the next spell can show as ready a moment late.
+- A critical tick late in one of your damage-over-time spells is no longer taken for a critical hit of the spell you just cast when that damage-over-time spell was applied instantly or its first hit was a critical hit, so effects of your critical hits, such as Master of Elements' mana refund, are no longer counted then when they did not happen. A real critical hit that lands at the same moment as such a tick no longer counts either, so the next spell can show as ready a moment late.
 
 ### Known issues
+
+- Fire and Frostfire Mage: after a travelling spell's first hit that was not critical, a late critical tick of its damage-over-time effect can still be counted as a critical hit of your next spell, so a Master of Elements refund may be counted that did not happen.
 
 ### Upgrade notes
 
