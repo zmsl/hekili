@@ -5,6 +5,7 @@
 ### New
 
 ### Changed
+- The ability list's Require Toggle dropdown now shows the toggle's name (for example "Cooldowns") in its "Default" entry, not the internal key.
 
 ### Fixed
 
