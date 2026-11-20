@@ -200,8 +200,8 @@ describe("rows with a secret amount (kind-only routing)", function()
 
     -- (ledger L1442) Live, every plain tick's amount is secret, so no tick is paid: the band follows the owed tick
     -- nearest the row by elapsed time, not the first unseen one. The two shapes above with the old schedule's rows
-    -- all secret: its second tick at 16 is still in band, so the recast's (17.33) or the other ability's (1139.83)
-    -- direct crit there is ambiguous.
+    -- all secret, an instant's schedule anchored at its cast: its second tick at 16 is still in band, so the recast's
+    -- or the other ability's direct crit there is ambiguous.
     it("keeps a schedule's later ticks in band though its earlier rows were secret (17.33, all secret)", function()
         local m = I.ab.bySpell[fs.SPENDER_M]
         I.ab.onCrit[m] = function() end
@@ -223,7 +223,7 @@ describe("rows with a secret amount (kind-only routing)", function()
     end)
 
     it(
-        "keeps another ability's later ticks in band though its earlier rows were secret (1139.83, all secret)",
+        "keeps another ability's later ticks in band though its earlier rows were secret (an instant anchored at its cast)",
         function()
             local m, f = I.ab.bySpell[fs.SPENDER_M], I.ab.bySpell[fs.SPENDER_F]
             I.ab.onCrit[f], I.ab.school[f] = function() end, I.ab.school[m]
@@ -244,6 +244,73 @@ describe("rows with a secret amount (kind-only routing)", function()
             assert.are.same({ 0, 0, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Landed) - landed, T.divergent - divergent })
         end
     )
+
+    -- Two travelling spells of one school, the ticking one's schedule composed at its success (ledger L1503, the
+    -- e4ef Fire log's shapes, its times): the flight's lag already learned.
+    local function flights()
+        local p, f = I.ab.bySpell[fs.SPENDER_P], I.ab.bySpell[fs.SPENDER_F]
+        I.ab.onCrit[p], I.ab.rMax[p] = function() end, 30
+        I.ab.onCrit[f], I.ab.school[f], I.ab.rMax[f] = function() end, I.ab.school[p], 30
+        I.ab.expKind[f], I.ab.velocity[f] = X.FLIGHT, I.ab.velocity[p]
+        ctl.now = 1
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-0", fs.SPENDER_P)
+        ctl.now = 1.83 -- a clean hit: the lag learned (0.83 s)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 40, 8)
+        I.ab.ticking[p], I.ab.tickAura[p] = true, { tick_time = 3, duration = 12 }
+    end
+
+    -- e4ef 17.33: the old schedule anchored by its own direct crit (8.33), its ticks at 11.33 and 14.33 unseen; the
+    -- recast's direct crit at 17.33 meets the old schedule's slot 3: ambiguous, no crit credited, the recast landed.
+    it("leaves a recast's direct crit on an anchored flight schedule's later tick ambiguous (17.33)", function()
+        flights()
+        ctl.now = 7.5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        local i = ticket(X.TICKS)
+        ctl.now = 8.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8)
+        assert.are.same({ 8.33, 0 }, { T.anchor[i], T.wide[i] })
+        ctl.now = 11.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8)
+        ctl.now = 14.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8)
+        local crits = count(VS.Obs.Crit)
+        assert.are.equal(1, crits) -- the 8.33 direct crit's own
+        ctl.now = 16.5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_P)
+        local divergent, paid = T.divergent, T.paid[X.FLIGHT]
+        ctl.now = 17.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8)
+        ctl.now = 40
+        I.Sources.Flush()
+        assert.are.same({ 0, 1, 1 }, { count(VS.Obs.Crit) - crits, T.divergent - divergent, T.paid[X.FLIGHT] - paid })
+    end)
+
+    -- KNOWN RESIDUAL (review D1, e4ef secret arm 1139.83 = log 98.33): the old schedule's direct row (89.33) was a
+    -- plain hit, unseen, so its schedule never anchors (wide > 0) and only its first tick is in band. Its slot-3 crit
+    -- at 98.33 goes to the other spell's open flight (cast 97.00, its own row at 97.83 unseen): a false crit credit.
+    -- Pinned as today's behaviour; D1 (compose a flight's schedule from the learned lag) turns it red.
+    it("credits an unanchored schedule's later tick crit to another open flight (known residual, D1)", function()
+        flights()
+        ctl.now = 88.5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        local i = ticket(X.TICKS)
+        for _, t in ipairs({ 89.33, 92.33, 95.33 }) do
+            ctl.now = t
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8)
+        end
+        assert.is_true(T.wide[i] > 0)
+        ctl.now = 97
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
+        ctl.now = 97.83
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 8)
+        local divergent = T.divergent
+        assert.is_true(T.state[i] >= T.OPEN) -- the old schedule still open, unanchored
+        ctl.now = 98.33
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 8)
+        ctl.now = 120
+        I.Sources.Flush()
+        assert.are.same({ 1, 0 }, { count(VS.Obs.Crit), T.divergent - divergent })
+    end)
 
     -- A paid tick past unseen ones pays its own index: the schedule's next band is the tick after it, so a second row
     -- in the same instant is not that tick again (one row per tick).

@@ -121,7 +121,7 @@ end
 --- done + owed. Otherwise the next owed tick (decision 47): with amounts plain a missing tick is truly missing, and a
 --- schedule a foreign first row snapped off phase would take later foreign rows on that phase (detect sweep, mixed
 --- seed 1). Also the next owed tick while the anchor is unknown (wide > 0: a flight's schedule before its first row):
---- its bands would overlap (Fireball 0.1 + 1.6 s each way on a 2 s period). Allocates nothing.
+--- its bands would overlap (a 1.6 s flight's half band on a 2 s period). Allocates nothing.
 function K.TickN(i, t, secret)
     local n, p = T.done[i] + 1, T.period[i]
     if not secret or T.wide[i] > 0 or p <= 0 then
