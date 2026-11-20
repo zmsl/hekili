@@ -166,4 +166,28 @@ describe("LibHiddenValues capability", function()
         assert.is_true(pass)
         assert.truthy(lines[#lines]:find("selftest PASS", 1, true))
     end)
+
+    it(
+        "turns back on through SetEnabled(false), SetEnabled(true), SelfTest(fn): one PASS call, handles synced",
+        function()
+            boot()
+            local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 50 } }, sink)
+            assert.is_true(Fake.login())
+            untilLive(h)
+            lib:SetEnabled(false)
+            lib:SetEnabled(true)
+            assert.are.same({ nil, nil, true }, { lib:GetSelfTest() }) -- no earlier run's lines beside a nil verdict
+            local got = {}
+            lib:SelfTest(function(pass, lines)
+                got[#got + 1] = { pass, lines[#lines], h:State(), (lib:IsAvailable("health")) }
+            end)
+            Fake.tick(60)
+            assert.are.equal(1, #got)
+            assert.is_true(got[1][1])
+            assert.truthy(got[1][2]:find("selftest PASS", 1, true))
+            assert.are.equal("priming", got[1][3]) -- the sources were re-synced before the callback, not "suspended"
+            assert.is_true(got[1][4])
+            assert.are.equal("live", (h:State()))
+        end
+    )
 end)

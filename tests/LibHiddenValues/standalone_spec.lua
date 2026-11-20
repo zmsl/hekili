@@ -162,6 +162,7 @@ describe("LibHiddenValues standalone", function()
 
     it("names no chat, slash or print call in its code", function()
         local hits = {}
+        local pats = { "print%s*%(", "DEFAULT_CHAT_FRAME", "ChatFrame", "SLASH_", "SlashCmdList" }
         for line in io.lines(ROOT .. "LibHiddenValues.toc") do
             line = line:gsub("\r", "")
             if line:match("%.lua$") and not line:match("^Libs") then
@@ -169,7 +170,7 @@ describe("LibHiddenValues standalone", function()
                 for l in io.lines(ROOT .. line:gsub("\\", "/")) do
                     n = n + 1
                     local code = l:gsub("%-%-.*$", "")
-                    for _, pat in ipairs({ "print%s*%(", "DEFAULT_CHAT_FRAME", "ChatFrame", "SLASH_", "SlashCmdList" }) do
+                    for _, pat in ipairs(pats) do
                         if code:find(pat) then
                             hits[#hits + 1] = line .. ":" .. n .. ": " .. l
                         end
@@ -207,8 +208,8 @@ describe("LibHiddenValues standalone", function()
         assert.truthy(lines[#lines]:find("selftest PASS", 1, true))
         assert.are.same({ kind = "health", state = "ready" }, lib:GetKinds()[1])
         assert.are.same({
-            { kind = "health", unit = "target", handles = 2, bars = 2, active = true },
-            { kind = "power", unit = "player", power = Enum.PowerType.Mana, handles = 1, bars = 1, active = true },
+            { kind = "health", unit = "target", predicted = true, handles = 2, bars = 2, active = true },
+            { kind = "power", unit = "player", power = 0, predicted = true, handles = 1, bars = 1, active = true },
         }, lib:GetSources())
         assert.are.same({ #lib.barFrame, 256 }, { lib:GetPool() })
         assert.is_true(#lib.barFrame >= 32)

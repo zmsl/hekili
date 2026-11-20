@@ -254,8 +254,8 @@ function lib:GetStats()
     return #lib.barFrame - #lib.free, lib.usAvg, lib.usPeak, lib.pushRate, lib.fireRate, lib.desyncs, 0
 end
 
--- One row per source with a handle, in creation order: { kind =, unit =, power =, handles =, bars =, active = }
--- (active: fed every frame). A fresh array: a cold path.
+-- One row per source with a handle, in creation order: { kind =, unit =, power =, predicted =, handles =, bars =,
+-- active = } (the first four are the source's key; active: fed every frame). A fresh array: a cold path.
 function lib:GetSources()
     local out = {}
     for i = 1, #lib.sources do
@@ -269,6 +269,7 @@ function lib:GetSources()
                 kind = s.kind,
                 unit = s.unit,
                 power = s.power,
+                predicted = s.predicted,
                 handles = #s.handles,
                 bars = n,
                 active = s.active and true or false,

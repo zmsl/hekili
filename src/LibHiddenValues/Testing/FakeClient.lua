@@ -13,9 +13,10 @@
 -- Surface: Fake.world (W.unit[token] = { health, power = { [Enum.PowerType] = fraction }, powerType, dead };
 -- W.secret: reads return secrets, true by default, as under the map lockdown; W.combat does the same; W.secretBool:
 -- UnitIsDead returns a secret), Fake.tick(n), Fake.event(name, ...), Fake.advance(seconds), Fake.set(knob, value),
--- Fake.login(), Fake.restore(), Fake.printed (every print call: the library makes none). Knobs: "closed" (bars fed a secret stop firing: the leak is closed),
--- "lag" n (firings arrive n frames late), "drop" n (every nth firing is lost), "snap" "left"|"right"|"nearest" (how a
--- Step curve picks its point), "maxpoints" n (curve size limit), "refuse" name (that global function raises).
+-- Fake.login(), Fake.restore(), Fake.printed (every print call: the library makes none). Knobs: "closed" (bars fed a
+-- secret stop firing: the leak is closed), "lag" n (firings arrive n frames late), "drop" n (every nth firing is
+-- lost), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit), "refuse"
+-- name (that global function raises).
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
 --
 -- Fidelity limits: no taint model; a secret is a table, so only arithmetic, ordering, concatenation, tostring, length,

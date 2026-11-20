@@ -1,10 +1,10 @@
--- SelfTest.lua: the plain self-test (runs at login; lib:SelfTest(fn) runs it again). Three pooled
--- bars on the 25/50/75% curves are pushed plain values, one value every HOLDF frames: every change of a curve's output
--- must fire once, within MAXLAG frames, and every output must be the curve convention's (1 below the edge, 2 at or
--- above it, under whatever snapping the client does). About 45 frames, invisible. It proves the firing mechanism and
--- the curves, not the secret path (that is the later shadow check). Until it passes the built kinds are "pending";
--- while a later run is going the earlier verdict stands. Last file of the list: it ends the load and, after login (a
--- late or upgraded copy), realises at once.
+-- SelfTest.lua: the plain self-test (runs at login; lib:SelfTest(fn) runs it again). Three pooled bars on the
+-- 25/50/75% curves are pushed plain values, one value every HOLDF frames: every change of a curve's output must fire
+-- once, within MAXLAG frames, and every output must be the curve convention's (1 below the edge, 2 at or above it,
+-- under whatever snapping the client does). About 45 frames, invisible. It proves the firing mechanism and the curves,
+-- not the secret path (that is the later shadow check). Until it passes the built kinds are "pending"; while a later
+-- run is going the earlier verdict stands. Last file of the list: it ends the load and, after login (a late or
+-- upgraded copy), realises at once.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return
@@ -42,8 +42,8 @@ local function finish(fail)
         fail and (": " .. fail) or ""
     )
     lib.stVerdict, lib.stLines = pass, lines
+    lib.capChanged() -- before the callbacks: inside them the handles are already synced to the verdict
     lib.stDone(pass, lines)
-    lib.capChanged()
 end
 
 -- Calls and clears the waiting callbacks.
@@ -133,8 +133,8 @@ function lib:SelfTest(fn)
                 return lib.stDone(false, { "selftest not run: no free bar (the earlier verdict stands)" })
             end
             lib.stVerdict, lib.stLines = false, { "selftest FAIL: no bar could be made" }
-            lib.stDone(false, lib.stLines)
-            return lib.capChanged()
+            lib.capChanged()
+            return lib.stDone(false, lib.stLines)
         end
         lib.barPrime[i] = 0
         st.bars[k], st.changes[k], st.fires[k] = i, 0, 0
@@ -148,8 +148,8 @@ function lib:SelfTest(fn)
     lib.wake()
 end
 
--- The last completed run's verdict (nil before the first and again after SetEnabled(true) until a run ends) and lines
--- (the array the callbacks got: read only; nil before the first), and whether a run is going.
+-- The last completed run's verdict and lines (the array the callbacks got: read only), both nil before the first run
+-- and again after SetEnabled(true) until the new run ends; and whether a run is going.
 function lib:GetSelfTest()
     return lib.stVerdict, lib.stLines, lib.st ~= nil
 end

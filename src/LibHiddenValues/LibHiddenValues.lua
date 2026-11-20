@@ -142,7 +142,7 @@ function lib:SetEnabled(on)
         if not lib.disabled then
             return
         end
-        lib.disabled, lib.stVerdict = nil, nil
+        lib.disabled, lib.stVerdict, lib.stLines = nil, nil, nil
         lib.capChanged()
         lib:SelfTest()
     elseif not lib.disabled then
