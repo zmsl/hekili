@@ -257,7 +257,7 @@ local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, 
 -- Per hand, its latest SWN swings (a ring at (hand - 1) x SWN + 1..SWN, keyed by the swing's time: an off-hand row
 -- settles after that hand's next swing): the slot's R.liftCE/L/H at that swing plus what its own steps covered since (a
 -- reaction's gain covers only the rest: I.ResourceShift).
-local SWN = 3
+local SWN = 3 -- shortcut: a row settling past its hand's 3rd next swing adds its gain in full; widen if a trace shows one
 local snT, snCE, snCL, snCH, snI = {}, {}, {}, {}, { 0, 0 }
 for j = 1, 2 * SWN do
     snT[j], snCE[j], snCL[j], snCH[j] = -1, 0, 0, 0
