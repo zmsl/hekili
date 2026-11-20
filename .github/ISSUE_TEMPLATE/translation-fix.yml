@@ -1,0 +1,69 @@
+name: Translation fix
+description: Suggest a better translation for text in Hekili Forever
+title: "[Translation] <language>: <short description>"
+labels: [translation]
+body:
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Deutsch
+        - Español (España)
+        - Español (México)
+        - Français
+        - Italiano
+        - 简体中文
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Hekili Forever version
+      placeholder: 0.11.0 (shown at the top of /hekili)
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does the text appear?
+      options:
+        - Options panel (a label, button or heading)
+        - Tooltip
+        - Warnings page or a chat message
+        - On the display itself
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: path
+    attributes:
+      label: Where exactly?
+      placeholder: "e.g. /hekili > Priorities > Action Lists > the 'Display' heading"
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text (copy it exactly)
+    validations:
+      required: true
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Your suggested text
+    validations:
+      required: true
+  - type: checkboxes
+    id: reason
+    attributes:
+      label: What's wrong with it?
+      options:
+        - label: Wrong game term (the game client uses a different word)
+        - label: Wrong meaning
+        - label: Sounds unnatural / machine-translated
+        - label: Too long (cut off or overlapping)
+        - label: Typo or grammar
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else? (optional)
+      description: "Several strings? List each as 'current → suggested'. A screenshot helps for cut-off text. If the game itself uses a different word, say where you saw it."
