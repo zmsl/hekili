@@ -601,6 +601,7 @@ L["A texture file ID or path to show on the recommendation in place of the abili
 L["Not a texture file; this line's icon is not overridden."] = true
 L["Icon Condition"] = true
 L["If entered, the Icon shows only while this is true."] = true
+L["Condition"] = true
 L["This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended."] = true
 L["Variable Name"] = true
 L["Specify a name for this variable.  Variables must be lowercase with no spaces or symbols aside from the underscore."] = true
@@ -634,6 +635,7 @@ L["Value"] = true
 L["Provide the value to store (or calculate) when this variable is invoked.\n\nIf Conditions are provided, this value is set when Conditions are met."] = true
 L["Value when Conditions are Not Met"] = true
 L["Provide the value to store (or calculate) if Conditions are not met."] = true
+L["Display"] = true
 L["Show Unused Modifiers (if applicable)"] = true
 L["If checked, additional modifiers that are not currently used by this entry."] = true
 L["Cycle Targets"] = true

@@ -37,6 +37,7 @@ Each **Action Lists** field stores one line option. [APL line options](APL-Line-
 - Choose the list in **Action List** and the line in **Entry**. A new list is added with **Add List** and a new line with **Create New Entry**.
 - A change to a field takes effect at once, without an import. The **Conditions** box keeps the text exactly as typed, so the importer's conversions do not apply there ([Line edge cases](APL-Syntax-Reference#line-edge-cases)).
 - **Enabled** switches one line off without deleting it.
+- An entry's fields come in this order: the action and its parameters, a **Condition** section (**Description**, then the variable fields on a `variable` line, the pooling fields on a `pool_resource` line, **Conditions**, and the variable's **Value** fields), then a **Display** section (**Caption**, **Label**, **Label Condition**, **Icon**, **Icon Condition**), then the modifiers.
 
 ### Importing text
 

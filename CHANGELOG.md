@@ -6,6 +6,9 @@
 
 ### Changed
 
+- Action Lists: an entry's Description and Conditions now come first, with its Caption, Label and Icon settings below them under Display.
+- The Copy Priority button now shows the same copy icon as the note above it.
+
 ### Fixed
 
 - `target.time_to_pct_<N>` now reads 3600 when the target's time to die is unknown, like `fight_remains` and `target.time_to_die` (it read 2520), so custom conditions see the same unknown time everywhere.
