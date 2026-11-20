@@ -7938,7 +7938,7 @@ do
                         type = "execute",
                         name = L["Reset"],
                         order = 4,
-                        width = 0.6,
+                        width = 0.8,
                         func = function()
                             local spec = Status.specID and Hekili.DB.profile.specs[ Status.specID ]
                             if type( spec ) == "table" then spec.cdm = nil end
