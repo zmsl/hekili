@@ -185,7 +185,10 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- (R46 latency) overpower -> rend 12.00, -> bloodthirst 18.10, -> whirlwind 29.40 and 51.61, -> reckless_swings
             -- 139.36; whirlwind -> sunder_armor 0.00 (the opening) and 117.30, -> rend 53.15, -> reckless_swings 62.26;
             -- sunder_armor -> overpower 124.96; execute -> sunder_armor 161.30 (not traced per row)
-            0.89,
+            -- 0.89 -> 0.881 (89 of 101; L1560): fix (a): a reaction gain netted against its own swing's lift (L1504/L1538);
+            -- one decision moves, 141.96 rend -> bloodthirst: at 141.80 the old floor read 6.49 over the log's 5.43 after
+            -- each un-netted Reckless Swings +5 (133.20, 135.40, 137.40), the netted one 1.87, so the 10-rage Rend waits
+            0.881,
             FURY_REPLAY
         )
     end)
