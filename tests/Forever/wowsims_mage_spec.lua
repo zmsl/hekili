@@ -124,7 +124,11 @@ local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.98, 10.0, 0 },
     -- LIVE60 6.0 -> 6.2 (CN8 D2): the same dry-pool wait for Scorch (96.4-102.4 s, mana 49-153), one poll longer on
     -- the re-timed fight
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 6.2, 0 },
+    -- LIVE60 6.2 -> 7.0 (harness-timing, cause harness: the world charges a cast bar at its landing, L1383): the
+    -- Arcane Blast pressed at 36.4 lands at 37.9 after its charge from 19.1 ran out (37.1), so it pays 182, not the
+    -- press's 364; the re-timed fight (52 -> 57 presses) meets the same dry-pool Scorch wait at 105.6-112.4 (mana 28-150).
+    -- That wait sits on the belief's mana band, not on the world alone: see the Mage mana lo-above-truth deferral (L1499)
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.97, 7.0, 0 },
     { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.96, 11.8, 0 },
     -- Frost (new pack, 2026-11-12, R6 first measurement): 0.93 (0.934, 57 of 61; the recipe's header names the misses),
     -- LIVE60 6.0 (the 6 s bar: 6.0 measured, L10 0.2, L40 0.0), flicker 0 (0.00/min measured). LIVE60's cause (traced

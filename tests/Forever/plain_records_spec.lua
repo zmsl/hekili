@@ -18,7 +18,18 @@ local WORLDS = {
 -- the function fields the belief evaluates, by record kind (Casts.lua, Resources.lua, Expect.lua)
 local ABILITY = { "cooldown", "spend", "gcdTime", "usable", "now", "onCrit", "onLand", "onAvoid", "now_finish" }
 local AURA = { "duration", "tick_time", "base_tick_time" }
-local RESOURCE = { "max", "decay", "decayInterval", "swingValue", "swingOff", "swingCrit", "swingOffCrit", "taken" }
+local RESOURCE = {
+    "max",
+    "decay",
+    "decayInterval",
+    "swingValue",
+    "swingOff",
+    "swingCrit",
+    "swingOffCrit",
+    "swingWidth",
+    "swingOffWidth",
+    "taken",
+}
 local ENTRY = { "spirit", "mp5", "share", "value", "mult", "when" }
 local WINDOW = { "evaluator" } -- a window's (Families/Windows.lua), run once per Drain in the same context
 local REACTION = { "now" } -- a reaction's (RegisterReaction, Families/Now.lua), run at a settled outcome

@@ -58,6 +58,7 @@ A swing entry pays the resource on each white melee swing, as rage is paid. The 
 | `forecastOnly` | Simulation | True when the belief pays this entry another way (a reaction), so only the simulation's forecast reads it |
 | `value` | Both | The amount one landed swing pays: a number or a function |
 | `crit` | Both | The amount a critical swing pays instead |
+| `width` | Both | The half-width of `value`: a random part the belief cannot see, such as a proc's expected gain. A landed swing raises the floor by `value - width` and the top by `value + width`; each forecast swing, a pending one included, steps the simulation's floor and top the same way. A number or a function; none when absent |
 | `taken` | Belief | `function(kind, amount, attacker)`: the resource gained from a hit on the player, as an expected gain and its half-width. The simulation forecasts the rate the belief learns from it. `kind` is `"WOUND"`, `"BLOCKED"`, `"BLOCK"`, `"DODGE"`, `"PARRY"` or `"MISS"`. |
 | `last` | Simulation | The time of the last swing, from which the forecast steps |
 | `interval` | Simulation | The swing period, such as `"mainhand_speed"` |
@@ -83,7 +84,7 @@ mainhand = {
 },
 ```
 
-The Warrior's main-hand entry in `src/Hekili_Warrior/Warrior.lua` adds a `taken` function for rage from hits on the player.
+The Warrior's main-hand entry in `src/Hekili_Warrior/Warrior.lua` adds a `taken` function for rage from hits on the player, and both hands pass Unbridled Wrath's expected rage as `width`.
 
 ### Aura entries
 

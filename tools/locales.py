@@ -381,6 +381,11 @@ def code_problems(key, value):
             want, got = sorted(want), sorted(got)
         if want != got:
             out.append("%s %s: %r has %s, translation has %s" % (what, "differs", key[:60], want, got))
+    # Edge spaces glue the string to its neighbours in concatenations, so they must survive translation.
+    for what, rx in (("leading space", r"^ *"), ("trailing space", r" *$")):
+        want, got = re.search(rx, key).group(), re.search(rx, value).group()
+        if want != got:
+            out.append("%s differs: %r has %d, translation has %d" % (what, key[:60], len(want), len(got)))
     return out
 
 

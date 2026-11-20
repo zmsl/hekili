@@ -262,6 +262,7 @@ function M.todos(pages)
         local n = 0
         for line in (s .. "\n"):gmatch("([^\n]*)\n") do
             n = n + 1
+            line = line:gsub("`[^`]*`", "") -- a backticked mention documents the marker
             local what = line:match("(TODO%-%u+)") or line:match("%f[%w](TODO)%f[%W]")
             if what then
                 out[#out + 1] = ("%s:%d: %s"):format(name, n, what)

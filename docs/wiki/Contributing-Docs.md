@@ -62,7 +62,7 @@ The accuracy table reads `docs/wiki/data/accuracy.json`, a copy of the report of
 - a link to a page or heading that does not exist, or to a site other than GitHub, wowsims.com and CurseForge;
 - a local file path, a hidden debug switch, an internal reference number, or a link to a private artifact.
 
-Open TODO markers and screenshots not yet in `images/` are warnings and never fail the check. The page checks themselves are tested with `.lua/bin/busted tests/wiki_spec.lua`.
+Open `TODO` markers and screenshots not yet in `images/` are warnings and never fail the check. The page checks themselves are tested with `.lua/bin/busted tests/wiki_spec.lua`.
 
 ## See also
 

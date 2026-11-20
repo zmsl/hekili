@@ -94,7 +94,7 @@ options.abilities.adrenaline_rush.toggle	name	Require Toggle
 options.abilities.adrenaline_rush.toggle	values.cooldowns	Cooldowns
 options.abilities.adrenaline_rush.toggle	values.custom1	Custom 1
 options.abilities.adrenaline_rush.toggle	values.custom2	Custom 2
-options.abilities.adrenaline_rush.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.adrenaline_rush.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.adrenaline_rush.toggle	values.defensives	Defensives
 options.abilities.adrenaline_rush.toggle	values.interrupts	Interrupts
 options.abilities.adrenaline_rush.toggle	values.minor_cooldowns	Minor CDs
@@ -193,7 +193,7 @@ options.abilities.amplify_curse.toggle	name	Require Toggle
 options.abilities.amplify_curse.toggle	values.cooldowns	Cooldowns
 options.abilities.amplify_curse.toggle	values.custom1	Custom 1
 options.abilities.amplify_curse.toggle	values.custom2	Custom 2
-options.abilities.amplify_curse.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.amplify_curse.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.amplify_curse.toggle	values.defensives	Defensives
 options.abilities.amplify_curse.toggle	values.interrupts	Interrupts
 options.abilities.amplify_curse.toggle	values.minor_cooldowns	Minor CDs
@@ -424,7 +424,7 @@ options.abilities.arcane_power.toggle	name	Require Toggle
 options.abilities.arcane_power.toggle	values.cooldowns	Cooldowns
 options.abilities.arcane_power.toggle	values.custom1	Custom 1
 options.abilities.arcane_power.toggle	values.custom2	Custom 2
-options.abilities.arcane_power.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.arcane_power.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.arcane_power.toggle	values.defensives	Defensives
 options.abilities.arcane_power.toggle	values.interrupts	Interrupts
 options.abilities.arcane_power.toggle	values.minor_cooldowns	Minor CDs
@@ -952,7 +952,7 @@ options.abilities.barkskin.toggle	name	Require Toggle
 options.abilities.barkskin.toggle	values.cooldowns	Cooldowns
 options.abilities.barkskin.toggle	values.custom1	Custom 1
 options.abilities.barkskin.toggle	values.custom2	Custom 2
-options.abilities.barkskin.toggle	values.default	Default |cffffd100(defensives)|r
+options.abilities.barkskin.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.barkskin.toggle	values.defensives	Defensives
 options.abilities.barkskin.toggle	values.interrupts	Interrupts
 options.abilities.barkskin.toggle	values.minor_cooldowns	Minor CDs
@@ -1117,7 +1117,7 @@ options.abilities.berserk.toggle	name	Require Toggle
 options.abilities.berserk.toggle	values.cooldowns	Cooldowns
 options.abilities.berserk.toggle	values.custom1	Custom 1
 options.abilities.berserk.toggle	values.custom2	Custom 2
-options.abilities.berserk.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.berserk.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.berserk.toggle	values.defensives	Defensives
 options.abilities.berserk.toggle	values.interrupts	Interrupts
 options.abilities.berserk.toggle	values.minor_cooldowns	Minor CDs
@@ -1216,7 +1216,7 @@ options.abilities.bestial_wrath.toggle	name	Require Toggle
 options.abilities.bestial_wrath.toggle	values.cooldowns	Cooldowns
 options.abilities.bestial_wrath.toggle	values.custom1	Custom 1
 options.abilities.bestial_wrath.toggle	values.custom2	Custom 2
-options.abilities.bestial_wrath.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.bestial_wrath.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.bestial_wrath.toggle	values.defensives	Defensives
 options.abilities.bestial_wrath.toggle	values.interrupts	Interrupts
 options.abilities.bestial_wrath.toggle	values.minor_cooldowns	Minor CDs
@@ -1249,7 +1249,7 @@ options.abilities.blade_flurry.toggle	name	Require Toggle
 options.abilities.blade_flurry.toggle	values.cooldowns	Cooldowns
 options.abilities.blade_flurry.toggle	values.custom1	Custom 1
 options.abilities.blade_flurry.toggle	values.custom2	Custom 2
-options.abilities.blade_flurry.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.blade_flurry.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.blade_flurry.toggle	values.defensives	Defensives
 options.abilities.blade_flurry.toggle	values.interrupts	Interrupts
 options.abilities.blade_flurry.toggle	values.minor_cooldowns	Minor CDs
@@ -1744,7 +1744,7 @@ options.abilities.challenging_shout.toggle	name	Require Toggle
 options.abilities.challenging_shout.toggle	values.cooldowns	Cooldowns
 options.abilities.challenging_shout.toggle	values.custom1	Custom 1
 options.abilities.challenging_shout.toggle	values.custom2	Custom 2
-options.abilities.challenging_shout.toggle	values.default	Default |cffffd100(defensives)|r
+options.abilities.challenging_shout.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.challenging_shout.toggle	values.defensives	Defensives
 options.abilities.challenging_shout.toggle	values.interrupts	Interrupts
 options.abilities.challenging_shout.toggle	values.minor_cooldowns	Minor CDs
@@ -1975,7 +1975,7 @@ options.abilities.cold_blood.toggle	name	Require Toggle
 options.abilities.cold_blood.toggle	values.cooldowns	Cooldowns
 options.abilities.cold_blood.toggle	values.custom1	Custom 1
 options.abilities.cold_blood.toggle	values.custom2	Custom 2
-options.abilities.cold_blood.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.cold_blood.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.cold_blood.toggle	values.defensives	Defensives
 options.abilities.cold_blood.toggle	values.interrupts	Interrupts
 options.abilities.cold_blood.toggle	values.minor_cooldowns	Minor CDs
@@ -2008,7 +2008,7 @@ options.abilities.cold_snap.toggle	name	Require Toggle
 options.abilities.cold_snap.toggle	values.cooldowns	Cooldowns
 options.abilities.cold_snap.toggle	values.custom1	Custom 1
 options.abilities.cold_snap.toggle	values.custom2	Custom 2
-options.abilities.cold_snap.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.cold_snap.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.cold_snap.toggle	values.defensives	Defensives
 options.abilities.cold_snap.toggle	values.interrupts	Interrupts
 options.abilities.cold_snap.toggle	values.minor_cooldowns	Minor CDs
@@ -2041,7 +2041,7 @@ options.abilities.combustion.toggle	name	Require Toggle
 options.abilities.combustion.toggle	values.cooldowns	Cooldowns
 options.abilities.combustion.toggle	values.custom1	Custom 1
 options.abilities.combustion.toggle	values.custom2	Custom 2
-options.abilities.combustion.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.combustion.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.combustion.toggle	values.defensives	Defensives
 options.abilities.combustion.toggle	values.interrupts	Interrupts
 options.abilities.combustion.toggle	values.minor_cooldowns	Minor CDs
@@ -2649,7 +2649,7 @@ options.abilities.dark_sacrifice.toggle	name	Require Toggle
 options.abilities.dark_sacrifice.toggle	values.cooldowns	Cooldowns
 options.abilities.dark_sacrifice.toggle	values.custom1	Custom 1
 options.abilities.dark_sacrifice.toggle	values.custom2	Custom 2
-options.abilities.dark_sacrifice.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.dark_sacrifice.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.dark_sacrifice.toggle	values.defensives	Defensives
 options.abilities.dark_sacrifice.toggle	values.interrupts	Interrupts
 options.abilities.dark_sacrifice.toggle	values.minor_cooldowns	Minor CDs
@@ -2781,7 +2781,7 @@ options.abilities.death_wish.toggle	name	Require Toggle
 options.abilities.death_wish.toggle	values.cooldowns	Cooldowns
 options.abilities.death_wish.toggle	values.custom1	Custom 1
 options.abilities.death_wish.toggle	values.custom2	Custom 2
-options.abilities.death_wish.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.death_wish.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.death_wish.toggle	values.defensives	Defensives
 options.abilities.death_wish.toggle	values.interrupts	Interrupts
 options.abilities.death_wish.toggle	values.minor_cooldowns	Minor CDs
@@ -3144,7 +3144,7 @@ options.abilities.disarm.toggle	name	Require Toggle
 options.abilities.disarm.toggle	values.cooldowns	Cooldowns
 options.abilities.disarm.toggle	values.custom1	Custom 1
 options.abilities.disarm.toggle	values.custom2	Custom 2
-options.abilities.disarm.toggle	values.default	Default |cffffd100(defensives)|r
+options.abilities.disarm.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.disarm.toggle	values.defensives	Defensives
 options.abilities.disarm.toggle	values.interrupts	Interrupts
 options.abilities.disarm.toggle	values.minor_cooldowns	Minor CDs
@@ -3342,7 +3342,7 @@ options.abilities.divine_favor.toggle	name	Require Toggle
 options.abilities.divine_favor.toggle	values.cooldowns	Cooldowns
 options.abilities.divine_favor.toggle	values.custom1	Custom 1
 options.abilities.divine_favor.toggle	values.custom2	Custom 2
-options.abilities.divine_favor.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.divine_favor.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.divine_favor.toggle	values.defensives	Defensives
 options.abilities.divine_favor.toggle	values.interrupts	Interrupts
 options.abilities.divine_favor.toggle	values.minor_cooldowns	Minor CDs
@@ -3672,7 +3672,7 @@ options.abilities.elemental_mastery.toggle	name	Require Toggle
 options.abilities.elemental_mastery.toggle	values.cooldowns	Cooldowns
 options.abilities.elemental_mastery.toggle	values.custom1	Custom 1
 options.abilities.elemental_mastery.toggle	values.custom2	Custom 2
-options.abilities.elemental_mastery.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.elemental_mastery.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.elemental_mastery.toggle	values.defensives	Defensives
 options.abilities.elemental_mastery.toggle	values.interrupts	Interrupts
 options.abilities.elemental_mastery.toggle	values.minor_cooldowns	Minor CDs
@@ -4266,7 +4266,7 @@ options.abilities.fel_domination.toggle	name	Require Toggle
 options.abilities.fel_domination.toggle	values.cooldowns	Cooldowns
 options.abilities.fel_domination.toggle	values.custom1	Custom 1
 options.abilities.fel_domination.toggle	values.custom2	Custom 2
-options.abilities.fel_domination.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.fel_domination.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.fel_domination.toggle	values.defensives	Defensives
 options.abilities.fel_domination.toggle	values.interrupts	Interrupts
 options.abilities.fel_domination.toggle	values.minor_cooldowns	Minor CDs
@@ -4827,7 +4827,7 @@ options.abilities.frenzied_regeneration.toggle	name	Require Toggle
 options.abilities.frenzied_regeneration.toggle	values.cooldowns	Cooldowns
 options.abilities.frenzied_regeneration.toggle	values.custom1	Custom 1
 options.abilities.frenzied_regeneration.toggle	values.custom2	Custom 2
-options.abilities.frenzied_regeneration.toggle	values.default	Default |cffffd100(defensives)|r
+options.abilities.frenzied_regeneration.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.frenzied_regeneration.toggle	values.defensives	Defensives
 options.abilities.frenzied_regeneration.toggle	values.interrupts	Interrupts
 options.abilities.frenzied_regeneration.toggle	values.minor_cooldowns	Minor CDs
@@ -6312,7 +6312,7 @@ options.abilities.ice_block.toggle	name	Require Toggle
 options.abilities.ice_block.toggle	values.cooldowns	Cooldowns
 options.abilities.ice_block.toggle	values.custom1	Custom 1
 options.abilities.ice_block.toggle	values.custom2	Custom 2
-options.abilities.ice_block.toggle	values.default	Default |cffffd100(defensives)|r
+options.abilities.ice_block.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.ice_block.toggle	values.defensives	Defensives
 options.abilities.ice_block.toggle	values.interrupts	Interrupts
 options.abilities.ice_block.toggle	values.minor_cooldowns	Minor CDs
@@ -6477,7 +6477,7 @@ options.abilities.inferno.toggle	name	Require Toggle
 options.abilities.inferno.toggle	values.cooldowns	Cooldowns
 options.abilities.inferno.toggle	values.custom1	Custom 1
 options.abilities.inferno.toggle	values.custom2	Custom 2
-options.abilities.inferno.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.inferno.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.inferno.toggle	values.defensives	Defensives
 options.abilities.inferno.toggle	values.interrupts	Interrupts
 options.abilities.inferno.toggle	values.minor_cooldowns	Minor CDs
@@ -6543,7 +6543,7 @@ options.abilities.inner_focus.toggle	name	Require Toggle
 options.abilities.inner_focus.toggle	values.cooldowns	Cooldowns
 options.abilities.inner_focus.toggle	values.custom1	Custom 1
 options.abilities.inner_focus.toggle	values.custom2	Custom 2
-options.abilities.inner_focus.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.inner_focus.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.inner_focus.toggle	values.defensives	Defensives
 options.abilities.inner_focus.toggle	values.interrupts	Interrupts
 options.abilities.inner_focus.toggle	values.minor_cooldowns	Minor CDs
@@ -6576,7 +6576,7 @@ options.abilities.innervate.toggle	name	Require Toggle
 options.abilities.innervate.toggle	values.cooldowns	Cooldowns
 options.abilities.innervate.toggle	values.custom1	Custom 1
 options.abilities.innervate.toggle	values.custom2	Custom 2
-options.abilities.innervate.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.innervate.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.innervate.toggle	values.defensives	Defensives
 options.abilities.innervate.toggle	values.interrupts	Interrupts
 options.abilities.innervate.toggle	values.minor_cooldowns	Minor CDs
@@ -6774,7 +6774,7 @@ options.abilities.kick.toggle	name	Require Toggle
 options.abilities.kick.toggle	values.cooldowns	Cooldowns
 options.abilities.kick.toggle	values.custom1	Custom 1
 options.abilities.kick.toggle	values.custom2	Custom 2
-options.abilities.kick.toggle	values.default	Default |cffffd100(interrupts)|r
+options.abilities.kick.toggle	values.default	Default |cffffd100(Interrupts)|r
 options.abilities.kick.toggle	values.defensives	Defensives
 options.abilities.kick.toggle	values.interrupts	Interrupts
 options.abilities.kick.toggle	values.minor_cooldowns	Minor CDs
@@ -6873,7 +6873,7 @@ options.abilities.last_stand.toggle	name	Require Toggle
 options.abilities.last_stand.toggle	values.cooldowns	Cooldowns
 options.abilities.last_stand.toggle	values.custom1	Custom 1
 options.abilities.last_stand.toggle	values.custom2	Custom 2
-options.abilities.last_stand.toggle	values.default	Default |cffffd100(defensives)|r
+options.abilities.last_stand.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.last_stand.toggle	values.defensives	Defensives
 options.abilities.last_stand.toggle	values.interrupts	Interrupts
 options.abilities.last_stand.toggle	values.minor_cooldowns	Minor CDs
@@ -7870,7 +7870,7 @@ options.abilities.natures_swiftness.toggle	name	Require Toggle
 options.abilities.natures_swiftness.toggle	values.cooldowns	Cooldowns
 options.abilities.natures_swiftness.toggle	values.custom1	Custom 1
 options.abilities.natures_swiftness.toggle	values.custom2	Custom 2
-options.abilities.natures_swiftness.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.natures_swiftness.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.natures_swiftness.toggle	values.default	Default |cffffd100(none)|r
 options.abilities.natures_swiftness.toggle	values.defensives	Defensives
 options.abilities.natures_swiftness.toggle	values.interrupts	Interrupts
@@ -8102,7 +8102,7 @@ options.abilities.potion.toggle	name	Require Toggle
 options.abilities.potion.toggle	values.cooldowns	Cooldowns
 options.abilities.potion.toggle	values.custom1	Custom 1
 options.abilities.potion.toggle	values.custom2	Custom 2
-options.abilities.potion.toggle	values.default	Default |cffffd100(potions)|r
+options.abilities.potion.toggle	values.default	Default |cffffd100(Potions)|r
 options.abilities.potion.toggle	values.defensives	Defensives
 options.abilities.potion.toggle	values.interrupts	Interrupts
 options.abilities.potion.toggle	values.minor_cooldowns	Minor CDs
@@ -8168,7 +8168,7 @@ options.abilities.power_infusion.toggle	name	Require Toggle
 options.abilities.power_infusion.toggle	values.cooldowns	Cooldowns
 options.abilities.power_infusion.toggle	values.custom1	Custom 1
 options.abilities.power_infusion.toggle	values.custom2	Custom 2
-options.abilities.power_infusion.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.power_infusion.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.power_infusion.toggle	values.defensives	Defensives
 options.abilities.power_infusion.toggle	values.interrupts	Interrupts
 options.abilities.power_infusion.toggle	values.minor_cooldowns	Minor CDs
@@ -8234,7 +8234,7 @@ options.abilities.power_word_shield.toggle	name	Require Toggle
 options.abilities.power_word_shield.toggle	values.cooldowns	Cooldowns
 options.abilities.power_word_shield.toggle	values.custom1	Custom 1
 options.abilities.power_word_shield.toggle	values.custom2	Custom 2
-options.abilities.power_word_shield.toggle	values.default	Default |cffffd100(defensives)|r
+options.abilities.power_word_shield.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.power_word_shield.toggle	values.defensives	Defensives
 options.abilities.power_word_shield.toggle	values.interrupts	Interrupts
 options.abilities.power_word_shield.toggle	values.minor_cooldowns	Minor CDs
@@ -8399,7 +8399,7 @@ options.abilities.premeditation.toggle	name	Require Toggle
 options.abilities.premeditation.toggle	values.cooldowns	Cooldowns
 options.abilities.premeditation.toggle	values.custom1	Custom 1
 options.abilities.premeditation.toggle	values.custom2	Custom 2
-options.abilities.premeditation.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.premeditation.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.premeditation.toggle	values.defensives	Defensives
 options.abilities.premeditation.toggle	values.interrupts	Interrupts
 options.abilities.premeditation.toggle	values.minor_cooldowns	Minor CDs
@@ -8432,7 +8432,7 @@ options.abilities.preparation.toggle	name	Require Toggle
 options.abilities.preparation.toggle	values.cooldowns	Cooldowns
 options.abilities.preparation.toggle	values.custom1	Custom 1
 options.abilities.preparation.toggle	values.custom2	Custom 2
-options.abilities.preparation.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.preparation.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.preparation.toggle	values.defensives	Defensives
 options.abilities.preparation.toggle	values.interrupts	Interrupts
 options.abilities.preparation.toggle	values.minor_cooldowns	Minor CDs
@@ -8465,7 +8465,7 @@ options.abilities.presence_of_mind.toggle	name	Require Toggle
 options.abilities.presence_of_mind.toggle	values.cooldowns	Cooldowns
 options.abilities.presence_of_mind.toggle	values.custom1	Custom 1
 options.abilities.presence_of_mind.toggle	values.custom2	Custom 2
-options.abilities.presence_of_mind.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.presence_of_mind.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.presence_of_mind.toggle	values.defensives	Defensives
 options.abilities.presence_of_mind.toggle	values.interrupts	Interrupts
 options.abilities.presence_of_mind.toggle	values.minor_cooldowns	Minor CDs
@@ -8729,7 +8729,7 @@ options.abilities.rage_of_the_farseer.toggle	name	Require Toggle
 options.abilities.rage_of_the_farseer.toggle	values.cooldowns	Cooldowns
 options.abilities.rage_of_the_farseer.toggle	values.custom1	Custom 1
 options.abilities.rage_of_the_farseer.toggle	values.custom2	Custom 2
-options.abilities.rage_of_the_farseer.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.rage_of_the_farseer.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.rage_of_the_farseer.toggle	values.defensives	Defensives
 options.abilities.rage_of_the_farseer.toggle	values.interrupts	Interrupts
 options.abilities.rage_of_the_farseer.toggle	values.minor_cooldowns	Minor CDs
@@ -8828,7 +8828,7 @@ options.abilities.rapid_fire.toggle	name	Require Toggle
 options.abilities.rapid_fire.toggle	values.cooldowns	Cooldowns
 options.abilities.rapid_fire.toggle	values.custom1	Custom 1
 options.abilities.rapid_fire.toggle	values.custom2	Custom 2
-options.abilities.rapid_fire.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.rapid_fire.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.rapid_fire.toggle	values.defensives	Defensives
 options.abilities.rapid_fire.toggle	values.interrupts	Interrupts
 options.abilities.rapid_fire.toggle	values.minor_cooldowns	Minor CDs
@@ -8993,7 +8993,7 @@ options.abilities.recklessness.toggle	name	Require Toggle
 options.abilities.recklessness.toggle	values.cooldowns	Cooldowns
 options.abilities.recklessness.toggle	values.custom1	Custom 1
 options.abilities.recklessness.toggle	values.custom2	Custom 2
-options.abilities.recklessness.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.recklessness.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.recklessness.toggle	values.defensives	Defensives
 options.abilities.recklessness.toggle	values.interrupts	Interrupts
 options.abilities.recklessness.toggle	values.minor_cooldowns	Minor CDs
@@ -9290,7 +9290,7 @@ options.abilities.retaliation.toggle	name	Require Toggle
 options.abilities.retaliation.toggle	values.cooldowns	Cooldowns
 options.abilities.retaliation.toggle	values.custom1	Custom 1
 options.abilities.retaliation.toggle	values.custom2	Custom 2
-options.abilities.retaliation.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.retaliation.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.retaliation.toggle	values.defensives	Defensives
 options.abilities.retaliation.toggle	values.interrupts	Interrupts
 options.abilities.retaliation.toggle	values.minor_cooldowns	Minor CDs
@@ -10511,7 +10511,7 @@ options.abilities.shield_bash.toggle	name	Require Toggle
 options.abilities.shield_bash.toggle	values.cooldowns	Cooldowns
 options.abilities.shield_bash.toggle	values.custom1	Custom 1
 options.abilities.shield_bash.toggle	values.custom2	Custom 2
-options.abilities.shield_bash.toggle	values.default	Default |cffffd100(interrupts)|r
+options.abilities.shield_bash.toggle	values.default	Default |cffffd100(Interrupts)|r
 options.abilities.shield_bash.toggle	values.defensives	Defensives
 options.abilities.shield_bash.toggle	values.interrupts	Interrupts
 options.abilities.shield_bash.toggle	values.minor_cooldowns	Minor CDs
@@ -10610,7 +10610,7 @@ options.abilities.shield_wall.toggle	name	Require Toggle
 options.abilities.shield_wall.toggle	values.cooldowns	Cooldowns
 options.abilities.shield_wall.toggle	values.custom1	Custom 1
 options.abilities.shield_wall.toggle	values.custom2	Custom 2
-options.abilities.shield_wall.toggle	values.default	Default |cffffd100(defensives)|r
+options.abilities.shield_wall.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.shield_wall.toggle	values.defensives	Defensives
 options.abilities.shield_wall.toggle	values.interrupts	Interrupts
 options.abilities.shield_wall.toggle	values.minor_cooldowns	Minor CDs
@@ -11659,7 +11659,7 @@ options.abilities.sweeping_strikes.toggle	name	Require Toggle
 options.abilities.sweeping_strikes.toggle	values.cooldowns	Cooldowns
 options.abilities.sweeping_strikes.toggle	values.custom1	Custom 1
 options.abilities.sweeping_strikes.toggle	values.custom2	Custom 2
-options.abilities.sweeping_strikes.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.sweeping_strikes.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.sweeping_strikes.toggle	values.defensives	Defensives
 options.abilities.sweeping_strikes.toggle	values.interrupts	Interrupts
 options.abilities.sweeping_strikes.toggle	values.minor_cooldowns	Minor CDs
@@ -11824,7 +11824,7 @@ options.abilities.templars_bulwark.toggle	name	Require Toggle
 options.abilities.templars_bulwark.toggle	values.cooldowns	Cooldowns
 options.abilities.templars_bulwark.toggle	values.custom1	Custom 1
 options.abilities.templars_bulwark.toggle	values.custom2	Custom 2
-options.abilities.templars_bulwark.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.templars_bulwark.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.templars_bulwark.toggle	values.defensives	Defensives
 options.abilities.templars_bulwark.toggle	values.interrupts	Interrupts
 options.abilities.templars_bulwark.toggle	values.minor_cooldowns	Minor CDs
@@ -12253,7 +12253,7 @@ options.abilities.vanish.toggle	name	Require Toggle
 options.abilities.vanish.toggle	values.cooldowns	Cooldowns
 options.abilities.vanish.toggle	values.custom1	Custom 1
 options.abilities.vanish.toggle	values.custom2	Custom 2
-options.abilities.vanish.toggle	values.default	Default |cffffd100(cooldowns)|r
+options.abilities.vanish.toggle	values.default	Default |cffffd100(Cooldowns)|r
 options.abilities.vanish.toggle	values.defensives	Defensives
 options.abilities.vanish.toggle	values.interrupts	Interrupts
 options.abilities.vanish.toggle	values.minor_cooldowns	Minor CDs
@@ -18299,7 +18299,7 @@ options.items.deadly_poison.toggle	name	Require Toggle
 options.items.deadly_poison.toggle	values.cooldowns	Cooldowns
 options.items.deadly_poison.toggle	values.custom1	Custom 1
 options.items.deadly_poison.toggle	values.custom2	Custom 2
-options.items.deadly_poison.toggle	values.default	Default |cffffd100(potions)|r
+options.items.deadly_poison.toggle	values.default	Default |cffffd100(Potions)|r
 options.items.deadly_poison.toggle	values.defensives	Defensives
 options.items.deadly_poison.toggle	values.interrupts	Interrupts
 options.items.deadly_poison.toggle	values.minor_cooldowns	Minor CDs
@@ -18323,7 +18323,7 @@ options.items.demonic_rune.toggle	name	Require Toggle
 options.items.demonic_rune.toggle	values.cooldowns	Cooldowns
 options.items.demonic_rune.toggle	values.custom1	Custom 1
 options.items.demonic_rune.toggle	values.custom2	Custom 2
-options.items.demonic_rune.toggle	values.default	Default |cffffd100(potions)|r
+options.items.demonic_rune.toggle	values.default	Default |cffffd100(Potions)|r
 options.items.demonic_rune.toggle	values.defensives	Defensives
 options.items.demonic_rune.toggle	values.interrupts	Interrupts
 options.items.demonic_rune.toggle	values.minor_cooldowns	Minor CDs
@@ -18357,7 +18357,7 @@ options.items.healthstone.toggle	name	Require Toggle
 options.items.healthstone.toggle	values.cooldowns	Cooldowns
 options.items.healthstone.toggle	values.custom1	Custom 1
 options.items.healthstone.toggle	values.custom2	Custom 2
-options.items.healthstone.toggle	values.default	Default |cffffd100(defensives)|r
+options.items.healthstone.toggle	values.default	Default |cffffd100(Defensives)|r
 options.items.healthstone.toggle	values.defensives	Defensives
 options.items.healthstone.toggle	values.interrupts	Interrupts
 options.items.healthstone.toggle	values.minor_cooldowns	Minor CDs
@@ -18381,7 +18381,7 @@ options.items.instant_poison.toggle	name	Require Toggle
 options.items.instant_poison.toggle	values.cooldowns	Cooldowns
 options.items.instant_poison.toggle	values.custom1	Custom 1
 options.items.instant_poison.toggle	values.custom2	Custom 2
-options.items.instant_poison.toggle	values.default	Default |cffffd100(potions)|r
+options.items.instant_poison.toggle	values.default	Default |cffffd100(Potions)|r
 options.items.instant_poison.toggle	values.defensives	Defensives
 options.items.instant_poison.toggle	values.interrupts	Interrupts
 options.items.instant_poison.toggle	values.minor_cooldowns	Minor CDs
@@ -18405,7 +18405,7 @@ options.items.major_mana_potion.toggle	name	Require Toggle
 options.items.major_mana_potion.toggle	values.cooldowns	Cooldowns
 options.items.major_mana_potion.toggle	values.custom1	Custom 1
 options.items.major_mana_potion.toggle	values.custom2	Custom 2
-options.items.major_mana_potion.toggle	values.default	Default |cffffd100(potions)|r
+options.items.major_mana_potion.toggle	values.default	Default |cffffd100(Potions)|r
 options.items.major_mana_potion.toggle	values.defensives	Defensives
 options.items.major_mana_potion.toggle	values.interrupts	Interrupts
 options.items.major_mana_potion.toggle	values.minor_cooldowns	Minor CDs
@@ -18429,7 +18429,7 @@ options.items.mana_gem.toggle	name	Require Toggle
 options.items.mana_gem.toggle	values.cooldowns	Cooldowns
 options.items.mana_gem.toggle	values.custom1	Custom 1
 options.items.mana_gem.toggle	values.custom2	Custom 2
-options.items.mana_gem.toggle	values.default	Default |cffffd100(potions)|r
+options.items.mana_gem.toggle	values.default	Default |cffffd100(Potions)|r
 options.items.mana_gem.toggle	values.defensives	Defensives
 options.items.mana_gem.toggle	values.interrupts	Interrupts
 options.items.mana_gem.toggle	values.minor_cooldowns	Minor CDs
@@ -18453,7 +18453,7 @@ options.items.potion.toggle	name	Require Toggle
 options.items.potion.toggle	values.cooldowns	Cooldowns
 options.items.potion.toggle	values.custom1	Custom 1
 options.items.potion.toggle	values.custom2	Custom 2
-options.items.potion.toggle	values.default	Default |cffffd100(potions)|r
+options.items.potion.toggle	values.default	Default |cffffd100(Potions)|r
 options.items.potion.toggle	values.defensives	Defensives
 options.items.potion.toggle	values.interrupts	Interrupts
 options.items.potion.toggle	values.minor_cooldowns	Minor CDs
@@ -18477,7 +18477,7 @@ options.items.robe_of_the_archmage.toggle	name	Require Toggle
 options.items.robe_of_the_archmage.toggle	values.cooldowns	Cooldowns
 options.items.robe_of_the_archmage.toggle	values.custom1	Custom 1
 options.items.robe_of_the_archmage.toggle	values.custom2	Custom 2
-options.items.robe_of_the_archmage.toggle	values.default	Default |cffffd100(potions)|r
+options.items.robe_of_the_archmage.toggle	values.default	Default |cffffd100(Potions)|r
 options.items.robe_of_the_archmage.toggle	values.defensives	Defensives
 options.items.robe_of_the_archmage.toggle	values.interrupts	Interrupts
 options.items.robe_of_the_archmage.toggle	values.minor_cooldowns	Minor CDs
@@ -18527,7 +18527,7 @@ options.items.thistle_tea.toggle	name	Require Toggle
 options.items.thistle_tea.toggle	values.cooldowns	Cooldowns
 options.items.thistle_tea.toggle	values.custom1	Custom 1
 options.items.thistle_tea.toggle	values.custom2	Custom 2
-options.items.thistle_tea.toggle	values.default	Default |cffffd100(potions)|r
+options.items.thistle_tea.toggle	values.default	Default |cffffd100(Potions)|r
 options.items.thistle_tea.toggle	values.defensives	Defensives
 options.items.thistle_tea.toggle	values.interrupts	Interrupts
 options.items.thistle_tea.toggle	values.minor_cooldowns	Minor CDs
@@ -18730,11 +18730,13 @@ options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.touch_o
 options.packs.affliction.Affliction (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.affliction.Affliction (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.affliction.Affliction (wowsims.com).lists.caption	name	Caption
+options.packs.affliction.Affliction (wowsims.com).lists.condHeader	name	Condition
 options.packs.affliction.Affliction (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.affliction.Affliction (wowsims.com).lists.criteria	name	Conditions
 options.packs.affliction.Affliction (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.affliction.Affliction (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.affliction.Affliction (wowsims.com).lists.description	name	Description
+options.packs.affliction.Affliction (wowsims.com).lists.displayHeader	name	Display
 options.packs.affliction.Affliction (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.affliction.Affliction (wowsims.com).lists.enabled	name	Enabled
 options.packs.affliction.Affliction (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -19049,11 +19051,13 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.touch_of_f
 options.packs.affliction.SM Ruin (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.affliction.SM Ruin (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.affliction.SM Ruin (wowsims.com).lists.caption	name	Caption
+options.packs.affliction.SM Ruin (wowsims.com).lists.condHeader	name	Condition
 options.packs.affliction.SM Ruin (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.affliction.SM Ruin (wowsims.com).lists.criteria	name	Conditions
 options.packs.affliction.SM Ruin (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.affliction.SM Ruin (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.affliction.SM Ruin (wowsims.com).lists.description	name	Description
+options.packs.affliction.SM Ruin (wowsims.com).lists.displayHeader	name	Display
 options.packs.affliction.SM Ruin (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.affliction.SM Ruin (wowsims.com).lists.enabled	name	Enabled
 options.packs.affliction.SM Ruin (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -19395,11 +19399,13 @@ options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.presence_of_min
 options.packs.arcane.Arcane (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.arcane.Arcane (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.arcane.Arcane (wowsims.com).lists.caption	name	Caption
+options.packs.arcane.Arcane (wowsims.com).lists.condHeader	name	Condition
 options.packs.arcane.Arcane (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.arcane.Arcane (wowsims.com).lists.criteria	name	Conditions
 options.packs.arcane.Arcane (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.arcane.Arcane (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.arcane.Arcane (wowsims.com).lists.description	name	Description
+options.packs.arcane.Arcane (wowsims.com).lists.displayHeader	name	Display
 options.packs.arcane.Arcane (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.arcane.Arcane (wowsims.com).lists.enabled	name	Enabled
 options.packs.arcane.Arcane (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -19774,11 +19780,13 @@ options.packs.arms.Arms (wowsims.com).lists.buff_name	values.thunder_clap	|T1360
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.victorious	|T136000:0|t Spell 402975
 options.packs.arms.Arms (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.arms.Arms (wowsims.com).lists.caption	name	Caption
+options.packs.arms.Arms (wowsims.com).lists.condHeader	name	Condition
 options.packs.arms.Arms (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.arms.Arms (wowsims.com).lists.criteria	name	Conditions
 options.packs.arms.Arms (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.arms.Arms (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.arms.Arms (wowsims.com).lists.description	name	Description
+options.packs.arms.Arms (wowsims.com).lists.displayHeader	name	Display
 options.packs.arms.Arms (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.arms.Arms (wowsims.com).lists.enabled	name	Enabled
 options.packs.arms.Arms (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -20134,11 +20142,13 @@ options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.s
 options.packs.assassination.Assassination (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
 options.packs.assassination.Assassination (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.assassination.Assassination (wowsims.com).lists.caption	name	Caption
+options.packs.assassination.Assassination (wowsims.com).lists.condHeader	name	Condition
 options.packs.assassination.Assassination (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.assassination.Assassination (wowsims.com).lists.criteria	name	Conditions
 options.packs.assassination.Assassination (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.assassination.Assassination (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.assassination.Assassination (wowsims.com).lists.description	name	Description
+options.packs.assassination.Assassination (wowsims.com).lists.displayHeader	name	Display
 options.packs.assassination.Assassination (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.assassination.Assassination (wowsims.com).lists.enabled	name	Enabled
 options.packs.assassination.Assassination (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -20523,11 +20533,13 @@ options.packs.balance.Balance (wowsims.com).lists.buff_name	values.travel_form	|
 options.packs.balance.Balance (wowsims.com).lists.buff_name	values.wolfshead_helm	|T136000:0|t Spell 17768
 options.packs.balance.Balance (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.balance.Balance (wowsims.com).lists.caption	name	Caption
+options.packs.balance.Balance (wowsims.com).lists.condHeader	name	Condition
 options.packs.balance.Balance (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.balance.Balance (wowsims.com).lists.criteria	name	Conditions
 options.packs.balance.Balance (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.balance.Balance (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.balance.Balance (wowsims.com).lists.description	name	Description
+options.packs.balance.Balance (wowsims.com).lists.displayHeader	name	Display
 options.packs.balance.Balance (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.balance.Balance (wowsims.com).lists.enabled	name	Enabled
 options.packs.balance.Balance (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -20890,11 +20902,13 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	v
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.caption	name	Caption
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.condHeader	name	Condition
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.criteria	name	Conditions
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.description	name	Description
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.displayHeader	name	Display
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.enabled	name	Enabled
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -21237,11 +21251,13 @@ options.packs.combat.Combat (wowsims.com).lists.buff_name	values.slice_and_dice	
 options.packs.combat.Combat (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
 options.packs.combat.Combat (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.combat.Combat (wowsims.com).lists.caption	name	Caption
+options.packs.combat.Combat (wowsims.com).lists.condHeader	name	Condition
 options.packs.combat.Combat (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.combat.Combat (wowsims.com).lists.criteria	name	Conditions
 options.packs.combat.Combat (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.combat.Combat (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.combat.Combat (wowsims.com).lists.description	name	Description
+options.packs.combat.Combat (wowsims.com).lists.displayHeader	name	Display
 options.packs.combat.Combat (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.combat.Combat (wowsims.com).lists.enabled	name	Enabled
 options.packs.combat.Combat (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -21611,11 +21627,13 @@ options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.touch_o
 options.packs.demonology.Demonology (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.demonology.Demonology (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.demonology.Demonology (wowsims.com).lists.caption	name	Caption
+options.packs.demonology.Demonology (wowsims.com).lists.condHeader	name	Condition
 options.packs.demonology.Demonology (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.demonology.Demonology (wowsims.com).lists.criteria	name	Conditions
 options.packs.demonology.Demonology (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.demonology.Demonology (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.demonology.Demonology (wowsims.com).lists.description	name	Description
+options.packs.demonology.Demonology (wowsims.com).lists.displayHeader	name	Display
 options.packs.demonology.Demonology (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.demonology.Demonology (wowsims.com).lists.enabled	name	Enabled
 options.packs.demonology.Demonology (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -21930,11 +21948,13 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.touch
 options.packs.demonology.Shadow Brand (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.demonology.Shadow Brand (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.caption	name	Caption
+options.packs.demonology.Shadow Brand (wowsims.com).lists.condHeader	name	Condition
 options.packs.demonology.Shadow Brand (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.criteria	name	Conditions
 options.packs.demonology.Shadow Brand (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.demonology.Shadow Brand (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.description	name	Description
+options.packs.demonology.Shadow Brand (wowsims.com).lists.displayHeader	name	Display
 options.packs.demonology.Shadow Brand (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.enabled	name	Enabled
 options.packs.demonology.Shadow Brand (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -22322,11 +22342,13 @@ options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.touch
 options.packs.destruction.Destruction (wowsims.com).lists.buff_name	values.wrack	|T136000:0|t Spell 1316697
 options.packs.destruction.Destruction (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.destruction.Destruction (wowsims.com).lists.caption	name	Caption
+options.packs.destruction.Destruction (wowsims.com).lists.condHeader	name	Condition
 options.packs.destruction.Destruction (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.destruction.Destruction (wowsims.com).lists.criteria	name	Conditions
 options.packs.destruction.Destruction (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.destruction.Destruction (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.destruction.Destruction (wowsims.com).lists.description	name	Description
+options.packs.destruction.Destruction (wowsims.com).lists.displayHeader	name	Display
 options.packs.destruction.Destruction (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.destruction.Destruction (wowsims.com).lists.enabled	name	Enabled
 options.packs.destruction.Destruction (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -22694,11 +22716,13 @@ options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.vampiric_emb
 options.packs.discipline.Smite (wowsims.com).lists.buff_name	values.weakened_soul	|T136000:0|t Spell 6788
 options.packs.discipline.Smite (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.discipline.Smite (wowsims.com).lists.caption	name	Caption
+options.packs.discipline.Smite (wowsims.com).lists.condHeader	name	Condition
 options.packs.discipline.Smite (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.discipline.Smite (wowsims.com).lists.criteria	name	Conditions
 options.packs.discipline.Smite (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.discipline.Smite (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.discipline.Smite (wowsims.com).lists.description	name	Description
+options.packs.discipline.Smite (wowsims.com).lists.displayHeader	name	Display
 options.packs.discipline.Smite (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.discipline.Smite (wowsims.com).lists.enabled	name	Enabled
 options.packs.discipline.Smite (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -23048,11 +23072,13 @@ options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.stormstri
 options.packs.elemental.Elemental (wowsims.com).lists.buff_name	values.water_shield	|T136000:0|t Spell 408510
 options.packs.elemental.Elemental (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.elemental.Elemental (wowsims.com).lists.caption	name	Caption
+options.packs.elemental.Elemental (wowsims.com).lists.condHeader	name	Condition
 options.packs.elemental.Elemental (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.elemental.Elemental (wowsims.com).lists.criteria	name	Conditions
 options.packs.elemental.Elemental (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.elemental.Elemental (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.elemental.Elemental (wowsims.com).lists.description	name	Description
+options.packs.elemental.Elemental (wowsims.com).lists.displayHeader	name	Display
 options.packs.elemental.Elemental (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.elemental.Elemental (wowsims.com).lists.enabled	name	Enabled
 options.packs.elemental.Elemental (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -23402,11 +23428,13 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.storm
 options.packs.enhancement.Enhancement (wowsims.com).lists.buff_name	values.water_shield	|T136000:0|t Spell 408510
 options.packs.enhancement.Enhancement (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.enhancement.Enhancement (wowsims.com).lists.caption	name	Caption
+options.packs.enhancement.Enhancement (wowsims.com).lists.condHeader	name	Condition
 options.packs.enhancement.Enhancement (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.enhancement.Enhancement (wowsims.com).lists.criteria	name	Conditions
 options.packs.enhancement.Enhancement (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.enhancement.Enhancement (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.enhancement.Enhancement (wowsims.com).lists.description	name	Description
+options.packs.enhancement.Enhancement (wowsims.com).lists.displayHeader	name	Display
 options.packs.enhancement.Enhancement (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.enhancement.Enhancement (wowsims.com).lists.enabled	name	Enabled
 options.packs.enhancement.Enhancement (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -23802,11 +23830,13 @@ options.packs.feral.Feral (wowsims.com).lists.buff_name	values.travel_form	|T136
 options.packs.feral.Feral (wowsims.com).lists.buff_name	values.wolfshead_helm	|T136000:0|t Spell 17768
 options.packs.feral.Feral (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.feral.Feral (wowsims.com).lists.caption	name	Caption
+options.packs.feral.Feral (wowsims.com).lists.condHeader	name	Condition
 options.packs.feral.Feral (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.feral.Feral (wowsims.com).lists.criteria	name	Conditions
 options.packs.feral.Feral (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.feral.Feral (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.feral.Feral (wowsims.com).lists.description	name	Description
+options.packs.feral.Feral (wowsims.com).lists.displayHeader	name	Display
 options.packs.feral.Feral (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.feral.Feral (wowsims.com).lists.enabled	name	Enabled
 options.packs.feral.Feral (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -24153,11 +24183,13 @@ options.packs.fire.Fire (wowsims.com).lists.buff_name	values.presence_of_mind	|T
 options.packs.fire.Fire (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.fire.Fire (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.fire.Fire (wowsims.com).lists.caption	name	Caption
+options.packs.fire.Fire (wowsims.com).lists.condHeader	name	Condition
 options.packs.fire.Fire (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.fire.Fire (wowsims.com).lists.criteria	name	Conditions
 options.packs.fire.Fire (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.fire.Fire (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.fire.Fire (wowsims.com).lists.description	name	Description
+options.packs.fire.Fire (wowsims.com).lists.displayHeader	name	Display
 options.packs.fire.Fire (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.fire.Fire (wowsims.com).lists.enabled	name	Enabled
 options.packs.fire.Fire (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -24430,11 +24462,13 @@ options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.presence_of_mi
 options.packs.fire.Frostfire (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.fire.Frostfire (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.fire.Frostfire (wowsims.com).lists.caption	name	Caption
+options.packs.fire.Frostfire (wowsims.com).lists.condHeader	name	Condition
 options.packs.fire.Frostfire (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.fire.Frostfire (wowsims.com).lists.criteria	name	Conditions
 options.packs.fire.Frostfire (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.fire.Frostfire (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.fire.Frostfire (wowsims.com).lists.description	name	Description
+options.packs.fire.Frostfire (wowsims.com).lists.displayHeader	name	Display
 options.packs.fire.Frostfire (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.fire.Frostfire (wowsims.com).lists.enabled	name	Enabled
 options.packs.fire.Frostfire (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -24770,11 +24804,13 @@ options.packs.frost.Frost (wowsims.com).lists.buff_name	values.presence_of_mind	
 options.packs.frost.Frost (wowsims.com).lists.buff_name	values.winters_chill	|T136000:0|t Spell 12579
 options.packs.frost.Frost (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.frost.Frost (wowsims.com).lists.caption	name	Caption
+options.packs.frost.Frost (wowsims.com).lists.condHeader	name	Condition
 options.packs.frost.Frost (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.frost.Frost (wowsims.com).lists.criteria	name	Conditions
 options.packs.frost.Frost (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.frost.Frost (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.frost.Frost (wowsims.com).lists.description	name	Description
+options.packs.frost.Frost (wowsims.com).lists.displayHeader	name	Display
 options.packs.frost.Frost (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.frost.Frost (wowsims.com).lists.enabled	name	Enabled
 options.packs.frost.Frost (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -25143,11 +25179,13 @@ options.packs.fury.Fury (wowsims.com).lists.buff_name	values.thunder_clap	|T1360
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.victorious	|T136000:0|t Spell 402975
 options.packs.fury.Fury (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.fury.Fury (wowsims.com).lists.caption	name	Caption
+options.packs.fury.Fury (wowsims.com).lists.condHeader	name	Condition
 options.packs.fury.Fury (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.fury.Fury (wowsims.com).lists.criteria	name	Conditions
 options.packs.fury.Fury (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.fury.Fury (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.fury.Fury (wowsims.com).lists.description	name	Description
+options.packs.fury.Fury (wowsims.com).lists.displayHeader	name	Display
 options.packs.fury.Fury (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.fury.Fury (wowsims.com).lists.enabled	name	Enabled
 options.packs.fury.Fury (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -25549,11 +25587,13 @@ options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.travel_form
 options.packs.guardian.Guardian (wowsims.com).lists.buff_name	values.wolfshead_helm	|T136000:0|t Spell 17768
 options.packs.guardian.Guardian (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.guardian.Guardian (wowsims.com).lists.caption	name	Caption
+options.packs.guardian.Guardian (wowsims.com).lists.condHeader	name	Condition
 options.packs.guardian.Guardian (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.guardian.Guardian (wowsims.com).lists.criteria	name	Conditions
 options.packs.guardian.Guardian (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.guardian.Guardian (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.guardian.Guardian (wowsims.com).lists.description	name	Description
+options.packs.guardian.Guardian (wowsims.com).lists.displayHeader	name	Display
 options.packs.guardian.Guardian (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.guardian.Guardian (wowsims.com).lists.enabled	name	Enabled
 options.packs.guardian.Guardian (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -25928,11 +25968,13 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	val
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.caption	name	Caption
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.condHeader	name	Condition
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.criteria	name	Conditions
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.description	name	Description
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.displayHeader	name	Display
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.enabled	name	Enabled
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -26446,11 +26488,13 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.vindica
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.voice_of_truth	|T136000:0|t Spell 1310897
 options.packs.protection.Protection (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.protection.Protection (wowsims.com).lists.caption	name	Caption
+options.packs.protection.Protection (wowsims.com).lists.condHeader	name	Condition
 options.packs.protection.Protection (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.protection.Protection (wowsims.com).lists.criteria	name	Conditions
 options.packs.protection.Protection (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.protection.Protection (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.protection.Protection (wowsims.com).lists.description	name	Description
+options.packs.protection.Protection (wowsims.com).lists.displayHeader	name	Display
 options.packs.protection.Protection (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.protection.Protection (wowsims.com).lists.enabled	name	Enabled
 options.packs.protection.Protection (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -26818,11 +26862,13 @@ options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.vindic
 options.packs.retribution.Holy Shock (wowsims.com).lists.buff_name	values.voice_of_truth	|T136000:0|t Spell 1310897
 options.packs.retribution.Holy Shock (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.retribution.Holy Shock (wowsims.com).lists.caption	name	Caption
+options.packs.retribution.Holy Shock (wowsims.com).lists.condHeader	name	Condition
 options.packs.retribution.Holy Shock (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.retribution.Holy Shock (wowsims.com).lists.criteria	name	Conditions
 options.packs.retribution.Holy Shock (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.retribution.Holy Shock (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.retribution.Holy Shock (wowsims.com).lists.description	name	Description
+options.packs.retribution.Holy Shock (wowsims.com).lists.displayHeader	name	Display
 options.packs.retribution.Holy Shock (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.retribution.Holy Shock (wowsims.com).lists.enabled	name	Enabled
 options.packs.retribution.Holy Shock (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -27119,11 +27165,13 @@ options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.vindi
 options.packs.retribution.Retribution (wowsims.com).lists.buff_name	values.voice_of_truth	|T136000:0|t Spell 1310897
 options.packs.retribution.Retribution (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.retribution.Retribution (wowsims.com).lists.caption	name	Caption
+options.packs.retribution.Retribution (wowsims.com).lists.condHeader	name	Condition
 options.packs.retribution.Retribution (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.retribution.Retribution (wowsims.com).lists.criteria	name	Conditions
 options.packs.retribution.Retribution (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.retribution.Retribution (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.retribution.Retribution (wowsims.com).lists.description	name	Description
+options.packs.retribution.Retribution (wowsims.com).lists.displayHeader	name	Display
 options.packs.retribution.Retribution (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.retribution.Retribution (wowsims.com).lists.enabled	name	Enabled
 options.packs.retribution.Retribution (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -27496,11 +27544,13 @@ options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.vampiric_embrac
 options.packs.shadow.Shadow (wowsims.com).lists.buff_name	values.weakened_soul	|T136000:0|t Spell 6788
 options.packs.shadow.Shadow (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.shadow.Shadow (wowsims.com).lists.caption	name	Caption
+options.packs.shadow.Shadow (wowsims.com).lists.condHeader	name	Condition
 options.packs.shadow.Shadow (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.shadow.Shadow (wowsims.com).lists.criteria	name	Conditions
 options.packs.shadow.Shadow (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.shadow.Shadow (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.shadow.Shadow (wowsims.com).lists.description	name	Description
+options.packs.shadow.Shadow (wowsims.com).lists.displayHeader	name	Display
 options.packs.shadow.Shadow (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.shadow.Shadow (wowsims.com).lists.enabled	name	Enabled
 options.packs.shadow.Shadow (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -27896,11 +27946,13 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.slice_and_d
 options.packs.subtlety.Subtlety (wowsims.com).lists.buff_name	values.venom	|T136000:0|t Spell 1310703
 options.packs.subtlety.Subtlety (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.subtlety.Subtlety (wowsims.com).lists.caption	name	Caption
+options.packs.subtlety.Subtlety (wowsims.com).lists.condHeader	name	Condition
 options.packs.subtlety.Subtlety (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.subtlety.Subtlety (wowsims.com).lists.criteria	name	Conditions
 options.packs.subtlety.Subtlety (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.subtlety.Subtlety (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.subtlety.Subtlety (wowsims.com).lists.description	name	Description
+options.packs.subtlety.Subtlety (wowsims.com).lists.displayHeader	name	Display
 options.packs.subtlety.Subtlety (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.subtlety.Subtlety (wowsims.com).lists.enabled	name	Enabled
 options.packs.subtlety.Subtlety (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -28285,11 +28337,13 @@ options.packs.survival.Survival (wowsims.com).lists.buff_name	values.serpent_sti
 options.packs.survival.Survival (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.survival.Survival (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.survival.Survival (wowsims.com).lists.caption	name	Caption
+options.packs.survival.Survival (wowsims.com).lists.condHeader	name	Condition
 options.packs.survival.Survival (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.survival.Survival (wowsims.com).lists.criteria	name	Conditions
 options.packs.survival.Survival (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.survival.Survival (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.survival.Survival (wowsims.com).lists.description	name	Description
+options.packs.survival.Survival (wowsims.com).lists.displayHeader	name	Display
 options.packs.survival.Survival (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.survival.Survival (wowsims.com).lists.enabled	name	Enabled
 options.packs.survival.Survival (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -28595,11 +28649,13 @@ options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.serpe
 options.packs.survival.Survival Melee (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.survival.Survival Melee (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.survival.Survival Melee (wowsims.com).lists.caption	name	Caption
+options.packs.survival.Survival Melee (wowsims.com).lists.condHeader	name	Condition
 options.packs.survival.Survival Melee (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.survival.Survival Melee (wowsims.com).lists.criteria	name	Conditions
 options.packs.survival.Survival Melee (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.survival.Survival Melee (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.survival.Survival Melee (wowsims.com).lists.description	name	Description
+options.packs.survival.Survival Melee (wowsims.com).lists.displayHeader	name	Display
 options.packs.survival.Survival Melee (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.survival.Survival Melee (wowsims.com).lists.enabled	name	Enabled
 options.packs.survival.Survival Melee (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -28899,11 +28955,13 @@ options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.serp
 options.packs.survival.Survival Turret (wowsims.com).lists.buff_name	values.strider_kick	|T136000:0|t Spell 1317257
 options.packs.survival.Survival Turret (wowsims.com).lists.caption	desc	Captions are |cFFFF0000very|r short descriptions that can appear on the icon of a recommended ability.\n\nThis can be useful for understanding why an ability was recommended at a particular time.\n\nRequires Captions to be enabled on each display.
 options.packs.survival.Survival Turret (wowsims.com).lists.caption	name	Caption
+options.packs.survival.Survival Turret (wowsims.com).lists.condHeader	name	Condition
 options.packs.survival.Survival Turret (wowsims.com).lists.criteria	desc	Specify Conditions that must be met for this action to be recommended or used in generating recommendations.
 options.packs.survival.Survival Turret (wowsims.com).lists.criteria	name	Conditions
 options.packs.survival.Survival Turret (wowsims.com).lists.delListBtn	desc	Delete this Action List
 options.packs.survival.Survival Turret (wowsims.com).lists.description	desc	This allows you to provide text that explains this entry, which will show when you Pause and mouseover the ability to see why this entry was recommended.
 options.packs.survival.Survival Turret (wowsims.com).lists.description	name	Description
+options.packs.survival.Survival Turret (wowsims.com).lists.displayHeader	name	Display
 options.packs.survival.Survival Turret (wowsims.com).lists.enabled	desc	If disabled, this entry will not be shown even if its criteria are met.
 options.packs.survival.Survival Turret (wowsims.com).lists.enabled	name	Enabled
 options.packs.survival.Survival Turret (wowsims.com).lists.icon	desc	A texture file ID or path to show on the recommendation in place of the ability's icon while the Icon Condition (if any) holds. A path is resolved when the list loads; a bare file ID is not checked.
@@ -29112,7 +29170,7 @@ options.snapshots.SnapshotInstructions	name	|cFF00CCFFClick the textbox above an
 options.snapshots.issueReporting_snapshot	name	What is a snapshot?
 options.snapshots.issueReporting_snapshot.issueReporting_snapshot_what	name	Snapshots are logs of the addon's decision-making process for a set of recommendations.  If you have questions about -- or disagree with -- the addon's recommendations, reviewing a snapshot can help identify what factors led to the specific recommendations that you saw.\n\nSnapshots only capture a specific point in time, and explain the current recommendation as well as all future recommendations based on icons shown. So if you show 3 icons in the addon, the snapshot will explain the current recommendation and the next 2.\n\nYou can also freeze the addon's recommendations using the |cffffd100Pause|r binding ( |cffffd100ALT-SHIFT-P|r ).  Doing so will freeze the addon's recommendations, allowing you to mouseover the display and see which conditions were met to display those recommendations.  Press Pause again to unfreeze the addon.\n\n
 options.snapshots.issueReporting_snapshot_how	name	How do I get one?
-options.snapshots.issueReporting_snapshot_how.issueReporting_snapshot_how_info	name	|cFFFFD100When should I do it|r\nYou should generate the snapshot when the issue is actively happening. If you look at the recommendations and think "this seems wrong", that's when you should do it. Most of the time, issues can be recreated at training dummies.\n\nFor example, if the issue usually happens 20 seconds into your rotation, then an out-of-combat prepull snapshot isn't going to help the Dev or other community members diagnose and fix the issue.\n\n|cFFFFD100How do I do it|r\nYou can generate a snapshot one of 2 ways:\n• Pressing the snapshot keybind: |cffffd100ALT-SHIFT-[|r\n• Pressing the pause keybind: |cffffd100ALT-SHIFT-P|r\n\n|cFFFFD100Okay I made one, where is it?|r\nThe snapshot can be retrieved by picking it from dropdown list near the top of this window, then copying it from the textbox that appears. Be sure to press |cFFFFD100Ctrl + A|r before copying it so that you get the entire thing. It should be very, very long.
+options.snapshots.issueReporting_snapshot_how.issueReporting_snapshot_how_info	name	|cFFFFD100When should I do it|r\nYou should generate the snapshot when the issue is actively happening. If you look at the recommendations and think "this seems wrong", that's when you should do it. Most of the time, issues can be recreated on an enemy in the open world.\n\nFor example, if the issue usually happens 20 seconds into your rotation, then an out-of-combat prepull snapshot isn't going to help the Dev or other community members diagnose and fix the issue.\n\n|cFFFFD100How do I do it|r\nYou can generate a snapshot one of 2 ways:\n• Pressing the snapshot keybind: |cffffd100ALT-SHIFT-[|r\n• Pressing the pause keybind: |cffffd100ALT-SHIFT-P|r\n\n|cFFFFD100Okay I made one, where is it?|r\nThe snapshot can be retrieved by picking it from dropdown list near the top of this window, then copying it from the textbox that appears. Be sure to press |cFFFFD100Ctrl + A|r before copying it so that you get the entire thing. It should be very, very long.
 options.snapshots.issueReporting_snapshot_next	name	How to Submit
 options.snapshots.issueReporting_snapshot_next.issueReporting_snapshot_next_info	name	With the Snapshot Data copied to your clipboard, navigate to Pastebin.
 options.snapshots.issueReporting_snapshot_next.issueReporting_snapshot_next_info_2	name	Pastebin

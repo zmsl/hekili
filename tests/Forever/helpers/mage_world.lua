@@ -445,7 +445,9 @@ local function spell(key, extra)
                 drop(W, e, X, "presence_of_mind")
             end
             unstack(W, e, X, "fingers_of_frost") -- spent at the cast, before this cast's own grant
-            local hit = W.hit(e, e.target, AMOUNT[key], FIRE[key] and 4 or 64)
+            -- the class file's declared school; one declaring none: the fire set's 4, else arcane
+            local school = H.Hekili.SCHOOL[H.Hekili.Class.abilities[key].school]
+            local hit = W.hit(e, e.target, AMOUNT[key], school or (FIRE[key] and 4 or 64))
             local landed, crit = hit.act == "WOUND", hit.flag == "CRITICAL"
             local fof = CHILL[key] and talentRank(H, T.fingers_of_frost) or 0
             if landed and fof > 0 and W.rng.chance(0.15) then -- the charges set to the rank's (1 / 2), refreshed
@@ -792,6 +794,11 @@ local function content(name)
         }
         if m.channel then
             p.channel = m.channel(H, ids, up)
+        end
+        if p.cast > 0 then -- a cast bar pays at its landing with the world's auras then (owner, L1383); checked at `cost`
+            p.price = function(W, e)
+                return costOf(key, ids, H, onEntity(e, X))
+            end
         end
         -- Evocation clipped at 99% mana (the oracle's true belief: its channel and its mana)
         local I = H.ns.VirtualStateInternal

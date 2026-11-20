@@ -295,10 +295,18 @@ local function schedule(i, a, app, wide)
 end
 
 -- A new application of a on g, confirmed by a row (the direct hit, or an alone schedule's first tick), closes its older
--- TICKS ticket as refreshed (unpaid rows not lost; decision 37): a recast that is avoided leaves the old one open.
+-- TICKS ticket as refreshed (unpaid rows not lost; decision 37): a recast that is avoided leaves the old one open. A
+-- newer one stays (L1442: an older schedule may pay its first tick late, past unseen ones).
 local function refresh(a, g, t, except)
     for j = 1, CAP do
-        if j ~= except and state[j] >= OPEN and kind[j] == X.TICKS and ab[j] == a and guid[j] == g then
+        if
+            j ~= except
+            and state[j] >= OPEN
+            and kind[j] == X.TICKS
+            and ab[j] == a
+            and guid[j] == g
+            and at[j] <= at[except]
+        then
             close(j, t, "refreshed")
         end
     end
@@ -469,11 +477,12 @@ end
 
 --- (spec §3.4 steps 2-4, owner ruling 2026-10-22; at most 4 passes (pass 4: Overdue, attribution-recovery decision 46) x CAP 32 tickets per row) The candidate for a row at t on `g` at pass `p`: among the open
 --- tickets on `g` that accept the row and whose band at p holds t, those whose learned amount band accepts it first
---- (K.Accepts' second answer), then those with no band or an unlearned one; within each group the least expected
---- closure. Also how many matched. Allocates nothing.
+--- (K.Accepts' second answer), then those with no band or an unlearned one; within each group a secret row's tick
+--- past its schedule's next owed one last (L1442: it only makes the row ambiguous, T.Divergent; the cast's own row is
+--- paid as before), then the least expected closure. Also how many matched. Allocates nothing.
 function T.Pick(t, g, p, act, flag, amount, sch, isAvoid)
     local K = I.Kinds
-    local best, bestE, bestBanded, n, refused = 0, math.huge, false, 0, false
+    local best, bestE, bestBanded, bestFar, n, refused = 0, math.huge, false, true, 0, false
     for i = 1, CAP do
         local k = kind[i]
         -- pass 4: K.Band is nil for MELEE, TICKS and CHANNEL (Kinds.lua K.Band), so they never match there
@@ -481,11 +490,15 @@ function T.Pick(t, g, p, act, flag, amount, sch, isAvoid)
             local ok, banded = K.Accepts(i, act, flag, amount, sch, isAvoid)
             refused = refused or (not ok and banded == true)
             if ok then
-                local lo, h, e = K.Band(i, p, t, isAvoid, act, sch)
+                local lo, h, e = K.Band(i, p, t, isAvoid, act, sch, amount == nil)
                 if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
                     n, banded = n + 1, banded == true
-                    if (banded and not bestBanded) or (banded == bestBanded and e < bestE) then
-                        best, bestE, bestBanded = i, e, banded
+                    local far = amount == nil and k == X.TICKS and K.TickN(i, t, true) > done[i] + 1
+                    if
+                        (banded and not bestBanded)
+                        or (banded == bestBanded and (bestFar and not far or far == bestFar and e < bestE))
+                    then
+                        best, bestE, bestBanded, bestFar = i, e, banded, far
                     end
                 end
             end
@@ -508,7 +521,7 @@ function T.Divergent(p, t, pass, act, flag, amount, sch, isAvoid)
     local tickP, same = kind[p] == X.TICKS or kind[p] == X.CHANNEL, false
     for i = 1, CAP do
         if state[i] >= OPEN and guid[i] == guid[p] and K.Accepts(i, act, flag, amount, sch, isAvoid) then
-            local lo, h = K.Band(i, pass, t, isAvoid, act, sch)
+            local lo, h = K.Band(i, pass, t, isAvoid, act, sch, amount == nil)
             if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
                 if isAvoid and at[i] >= T.latestT then
                     return true, false
@@ -565,7 +578,10 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
     -- an Overdue payment (pass 4) teaches neither the lag nor the band (attribution-recovery spec §1.1): its row is
     -- past the narrow band, so it is final at once (§2.1) and never teaches
     teachFrom(i, t, isAvoid, amount, flag, clean and pass ~= 4)
-    done[i], owed[i] = done[i] + 1, owed[i] - 1
+    local d0 = done[i]
+    -- (L1442) a tick pays its own index (K.TickN; past unseen ones for a secret row), done + owed kept
+    local n = (k == X.TICKS and not isAvoid) and I.Kinds.TickN(i, t, amount == nil) or d0 + 1
+    done[i], owed[i] = n, owed[i] - (n - d0)
     if owed[i] < 0 then
         T.overpaid = T.overpaid + 1 -- never: a ticket is paid at most `owed` times (the sweep asserts it)
     end
@@ -573,7 +589,7 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         if amount then -- nil: a secret crit's; the last known amount stays the band
             T.tickAmt[i] = flag == "CRITICAL" and amount / 2 or amount
         end
-        if done[i] == 1 then -- the first tick confirms the application
+        if d0 == 0 then -- the first tick confirms the application
             refresh(a, guid[i], t, i)
         end
     end

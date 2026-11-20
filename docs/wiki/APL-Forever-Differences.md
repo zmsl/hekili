@@ -15,7 +15,7 @@ The tables list the differences a priority author meets. The importer also rewri
 | `<resource>.current`, `.pct`, `.deficit` | The simulated amount | The amount the game reports | An estimate while the game hides the resource |
 | `<resource>.lo`, `.hi`, `.pct_lo` | Not available | Not available | The low and high ends of the estimate ([Resources](APL-Expression-Reference#resources)) |
 | `fight_remains`, `target.time_to_die` | From the simulated fight | Worked out from target health | Always 3600 seconds, meaning unknown |
-| `target.time_to_pct_<N>` | From the simulated fight | Worked out from target health | Always 2520 seconds, meaning unknown |
+| `target.time_to_pct_<N>` | From the simulated fight | Worked out from target health | Always 3600 seconds, meaning unknown |
 | `target.health.pct` and the other target health values | The simulated health | The health the game reports | 100 until an ability usable only at low target health narrows it; always 100 on a specialization without one. A warning in **Warnings** when the priority loads. |
 | `health.pct` | The simulated health | The health the game reports | The reported value out of combat; 100 in combat, where the game hides it. A warning in **Warnings** when the priority loads. |
 | `cooldown.<key>.remains` | Simulated | The time the game reports | Estimated from the last cast; `cooldown.<key>.ready` is read from the game |

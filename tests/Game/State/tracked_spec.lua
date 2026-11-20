@@ -231,6 +231,20 @@ describe("the tracked set", function()
         assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
     end)
 
+    it(
+        "forwards each hand's swing `width` (L1456 i), the off hand's as the paying hand's when it pays alone",
+        function()
+            local model = h.Class.resources.rage.state.regenModel
+            model.mainhand.width = 0.5
+            model.offhand = { swing = "offhand", value = 4, width = 0.25 }
+            ns.BuildTracked()
+            assert.are.same({ 0.5, 0.25 }, { I.res.swingWidth[1], I.res.swingOffWidth[1] })
+            model.mainhand = nil
+            ns.BuildTracked()
+            assert.are.same({ 2, 0.25, 0 }, { I.res.swing[1], I.res.swingWidth[1], I.res.swingOffWidth[1] })
+        end
+    )
+
     it("forwards the paying entry's `taken`, bound to the `now` context, and no other entry's", function()
         local model = h.Class.resources.rage.state.regenModel
         local function taken()

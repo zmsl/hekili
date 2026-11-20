@@ -136,17 +136,14 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Guardian (wowsims.com)",
             content("druid_guardian", W.Guardian, "Guardian (wowsims.com)", 60),
             "druid_guardian",
-            -- 0 -> 0.63 (0.632 of 117 decisions on-GCD; R6, truncated): no rage from hits yet (CN7): the kit has no `taken`, so
-            -- the belief sees only the bear's own rage (0.923 with the archived rule: named gap in the recipe header). Old pin: 0.782 (61/78)
-            -- 0.63 -> 0.57 (0.574, 66/115) re-pin e5a9cd2a2d -> e4ef929e54 (controller ruling L1319: the 2026-11-07 CN7
-            -- waiver extends to the new pin): the re-pinned adaptive list spends 15 rage every GCD (Lacerate to 5 stacks,
-            -- then Lacerate as the filler under Primal Bite), and ~83% of the log's rage comes from hits taken (1779.7 of
-            -- ~2150), which the belief cannot see (CN7): all 49 misses believe 0-12 rage at a truth of 25-90
-            -- (repin-druid-09-5). replay-fncd-09 / replay-flips-09 move no Guardian row
-            -- re-pin e4ef929e54 -> ab0f00e4fc (wowsims #1087: no Swipe, no groups): 0.574 (66/115) unchanged, the log's
-            -- casts identical in time (damage lines only); the timing fixture's 29.50 Lacerate never row predicts 8.951
-            -- (was 9.000)
-            0.57,
+            -- 0 -> 0.63 (0.632 of 117 decisions on-GCD; R6, truncated) -> 0.57 (0.574, 66/115) -> 0.98 (0.983, 113/115): the
+            -- misses were a replay-world gap, not CN7: wowsims's log opens in Dire Bear Form (9634, Bear Form's rank 2) and the
+            -- replay mapped only the rank-1 form ID, so the world never entered Bear Form and every rage ability answered
+            -- "not usable", which pins no rage (inv-replay-drops). Every rank of a form now maps. The 2 left are the 0.2 s early
+            -- exit (Core.lua:974): 121.90 primal_bite (Faerie Fire fades 0.05 s later) and 156.30 lacerate (Demoralizing Roar
+            -- fades 0.15 s later). Live-like arm: 0.983 too. CN7 (rage from hits taken) stays a gap for Maul's off-GCD
+            -- `rage - cost >= 15`, not for the on-GCD score
+            0.98,
             -- once the replay ends a cooldown at its log timestamp (the ready-time ruling)
             -- Maul's untagged Casting lines are wowsims's queue at each swing (Cost = 0); its Tag 1 line is the hit,
             -- when the game's cast succeeds

@@ -393,7 +393,9 @@ M.READY = {
     -- { 1.76, 55 } -> { 2.50, 50 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log; CN7 waiver extended, L1319): real 50 (all
     -- late), median 2.500: the re-pinned list spends 15 rage every GCD and the belief cannot see the rage from hits
     -- taken (~83% of the log's), so Lacerate / Primal Bite show late or never (49 never rows; repin-druid-09-5)
-    druid_guardian = { 2.50, 50 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
+    -- { 2.50, 50 } -> { 0.00, 0 } (replay-form-ranks): the replay now enters Bear Form from wowsims's rank-2 log aura (9634), so
+    -- the usability ladder pins rage and the 50 late rows are in grain; the 2 misses are never rows (0.2 s early exit)
+    druid_guardian = { 0.00, 0 }, -- was 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     -- re-pin 8b-2 (controller ruling, round 3): move-reached weave strikes show at the decision to walk (the Auto Shot that
     -- opens the weave window); wowsims logs the cast at arrival; the offset is the walk time, which Hekili does not model
     -- (owner rule: no movement in Hekili or the belief) and which is the lead a player needs to start walking. Every new
@@ -678,7 +680,11 @@ M.READY = {
     -- belief 4.7-17.2 under the log's rage at wowsims's cast (the old rows' class): Bloodthirst 26.40 (1.45), 98.30
     -- (0.13), 105.10 (0.64), Sunder Armor 44.00 (0.99), 46.40 (0.17), Execute 168.82 (1.70); GCD edges 0.07-0.17:
     -- Reckless Swings 112.30, Sunder Armor 129.80, Death Wish 151.27
-    warrior_fury = { 0.17, 9 },
+    -- -> { 0.64, 9 } (warrior-swing-width, L1456 i, 81a216585: the sim's forecast swing floor steps value - width, no
+    -- Unbridled Wrath proc): the same 9 rows; Sunder Armor 44.00 (0.99 -> 1.22) and 46.40 (0.17 -> 0.92) now wait for
+    -- the next main-hand swing (45.21 / 47.31) instead of a proc the floor cannot promise; A/B with only that floor
+    -- line reverted reproduces the old fixture
+    warrior_fury = { 0.64, 9 },
     -- { 0.38, 11 } -> { 0.37, 3 } re-pin e2842f0a78 (lane 14, R6; after 5049ede22's GCD fix): 98 decisions, 3 real, all
     -- early, class aura: Shield Slam 49.84 (0.24), Sunder Armor 71.77 / 143.44 (0.37 / 0.44): wowsims queues Shield Block
     -- (`Queueing up 2565 to cast at`) and casts the on-GCD ability at that instant, after ours shows it ready

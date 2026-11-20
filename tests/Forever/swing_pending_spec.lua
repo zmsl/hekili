@@ -240,4 +240,54 @@ describe("the off hand's opener anchor once its first swing row lands (review R3
         assert.is_true(math.abs(t[1] - (s + 2 * H.ns.VirtualStateInternal.Log.ORACLE_MIN)) < 1e-6, tostring(t[1] - s))
         assert.is_true(math.abs(t[2] - (s + speed)) < 1e-3, ("%.3f vs %.3f"):format(t[2] - s, speed))
     end)
+
+    -- L1456 (i), fix round 1: a swing entry's `width` (a proc the belief cannot see) keeps the forecast's floor stream
+    -- off it as the belief's own floor is: each forecast swing, the pending one included, adds value - width to the
+    -- floor, value + width to the top and the value to the estimate.
+    it("steps a forecast swing's floor by value - width and its top by value + width", function()
+        local model = st.rage.regenModel.mainhand
+        model.width = 0.5
+        local p, speed = st.now - 0.05, 2.6
+        st.swings.mh_actual, st.swings.mh_speed, st.mainhand_speed = p, speed, speed
+        st.swings.mh_pending = p
+        st.rage.actual, st.rage.actual_lo, st.rage.actual_hi = 0, 0, 0
+        st:ForecastSwingbasedResources()
+        model.width = nil
+        local seen = 0
+        for i = 2, st.rage.fcount do
+            local f, prev = st.rage.forecast[i], st.rage.forecast[i - 1]
+            if f.e == "mainhand" and f.v < 100 then
+                local value = f.v - prev.v
+                assert.is_true(value > 1, tostring(value))
+                assert.is_true(math.abs(f.l - prev.l - (value - 0.5)) < 1e-9, ("lo step %.3f"):format(f.l - prev.l))
+                assert.is_true(math.abs(f.h - prev.h - (value + 0.5)) < 1e-9, ("hi step %.3f"):format(f.h - prev.h))
+                seen = seen + 1
+            end
+        end
+        assert.is_true(seen >= 2, tostring(seen)) -- the pending swing and the one after it
+    end)
+
+    -- review M2: a negative gain (a decay) with a width keeps falling: the floor takes gain - width, the top gain + width
+    it("steps a decay with a width by gain - width on its floor, never stopping it", function()
+        local model = st.rage.regenModel.mainhand
+        local value = model.value
+        model.width, model.value = 0.5, -3
+        local p, speed = st.now - 0.05, 2.6
+        st.swings.mh_actual, st.swings.mh_speed, st.mainhand_speed = p, speed, speed
+        st.swings.mh_pending = p
+        st.rage.actual, st.rage.actual_lo, st.rage.actual_hi = 50, 50, 50
+        st:ForecastSwingbasedResources()
+        model.width, model.value = nil, value
+        local seen = 0
+        for i = 2, st.rage.fcount do
+            local f, prev = st.rage.forecast[i], st.rage.forecast[i - 1]
+            if f.e == "mainhand" and f.l > 0 then
+                assert.is_true(math.abs(f.l - prev.l + 3.5) < 1e-9, ("lo step %.3f"):format(f.l - prev.l))
+                assert.is_true(math.abs(f.h - prev.h + 2.5) < 1e-9, ("hi step %.3f"):format(f.h - prev.h))
+                assert.is_true(f.l <= f.v, ("lo %.3f over est %.3f"):format(f.l, f.v))
+                seen = seen + 1
+            end
+        end
+        assert.is_true(seen >= 2, tostring(seen))
+    end)
 end)

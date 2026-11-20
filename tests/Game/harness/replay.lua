@@ -470,6 +470,9 @@ function M.new(text, H, o)
     end
     for i, id in ipairs(o.forms or {}) do
         form[id] = i
+        for _, r in ipairs(rankIDs[keyOf[id]] or {}) do -- every rank of the form ability (a log may open with a higher rank)
+            form[r] = form[r] or i
+        end
     end
     local hidden, procs, totems = o.hidden or {}, o.procs or {}, o.totems or {}
     -- the event's ability key, or nil (unmapped, or a proc)

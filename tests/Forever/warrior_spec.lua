@@ -759,6 +759,13 @@ describe("Forever Warrior", function()
         near(1.73 * 2.5 * 1.3, lw.run(models.offhand.crit, w.state))
         w.state.talent.dual_wield_specialization.rank = 0
         near(1.73 * 2.5, lw.run(models.offhand.crit, w.state))
+        -- Unbridled Wrath is a roll the belief cannot see: each hand's `width` is its expected rage, so the floor of a
+        -- swing counts no proc (L1456 i, no optimistic proc modelling)
+        near(0.595, lw.run(models.mainhand.width, w.state))
+        near(0.595, lw.run(models.offhand.width, w.state))
+        w.state.talent.unbridled_wrath.rank = 0
+        near(0, lw.run(models.mainhand.width, w.state))
+        near(0, lw.run(models.offhand.width, w.state))
         assert.are.same({ "offhand", "offhand_speed" }, { models.offhand.swing, models.offhand.interval })
     end)
 

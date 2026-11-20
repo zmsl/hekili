@@ -151,6 +151,12 @@ class Codes(unittest.TestCase):
         self.assertEqual(locales.code_problems("%s has %d", "%s 有 %d"), [])
         self.assertTrue(locales.code_problems("%s has %d", "%1$s 有 %1$d"))
 
+    def test_edge_whitespace_must_match_the_key(self):
+        self.assertEqual(locales.code_problems(" x ", " 好 "), [])
+        self.assertTrue(locales.code_problems("x ", "好"))
+        self.assertTrue(locales.code_problems("x", " 好"))
+        self.assertTrue(locales.code_problems(" x", "好 "))
+
 
 class Sinks(unittest.TestCase):
     def hits(self, src):

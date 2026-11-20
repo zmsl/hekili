@@ -95,6 +95,29 @@ describe("the Shaman loop worlds", function()
         assert.are.equal(220, C.resolve("lightning_bolt", H).cost)
     end)
 
+    -- The game takes a cast's cost when it completes, with the auras up then (owner, L1383): a Lightning Bolt pressed
+    -- with Clearcasting up (free at the press) that lands after Clearcasting ends pays its full cost.
+    it("Elemental: charges a cast bar's cost at its landing, with the auras up then", function()
+        local scenarios = require("Game.harness.scenarios")
+        local C = sw.Elemental
+        local H = headless.new({ character = C.character() })
+        local W = scenarios.world(setmetatable({ fsr = C.WORLD.fsr }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1
+        W.applyAura(us, H.Hekili.Class.auras.clearcasting.id, 1, 1, 1) -- off at 2, the 2 s cast lands at 3
+        local p = C.resolve("lightning_bolt", H, us)
+        assert.are.same({ 0, 2 }, { p.cost, p.cast })
+        assert.is_true(W.press(us, "lightning_bolt", p))
+        W.run(4)
+        local paid
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "cast" and ev.src == us and ev.spell == p.spell then
+                paid = { ev.t, ev.cost }
+            end
+        end
+        assert.are.same({ 3, 220 * 0.9 }, paid)
+    end)
+
     -- Elemental's world without a pack (its pack's gates below): the build boots on its spec, every ability the
     -- character knows is mapped, the casts priced on the true state.
     it("Elemental: boots on its spec, and maps every ability the character knows", function()
