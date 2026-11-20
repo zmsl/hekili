@@ -97,6 +97,9 @@ end
 M.BYTES_EVERY = 8
 
 M.TICK = 0.2 -- 5 Hz, the in-game combat rate (D1); o.hz = 10 the option
+-- A poll at t owns the world's events due up to t + TIE: a float sum (a swing chain's 170.0000000000002) lands on its
+-- poll, paid before that poll's press and fed at it (L1281 a); under replay.EPS, a log line's place in its timestamp
+M.TIE = 1e-9
 M.REACT = 0.05 -- a first icon whose wait is at most this is shown as ready: pressed
 
 --- Ready while short (the owner's rule, dim never promote): an icon pressed as ready with the truth before the press
@@ -157,10 +160,10 @@ end
 -- a cooldown's start, an aura's expiry, a totem's start and our cast bar (ms) move to the instance's clock.
 local function feed(H, obs, t, base, sink)
     local s = obs.s
-    local first, last = obs.step(t)
+    local first, last = obs.step(t + M.TIE) -- the poll's tie, as step runs the world (M.TIE)
     local ctl = H.ctl
     for i = first, last do
-        ctl.now = base + s.t[i]
+        ctl.now = base + math.min(s.t[i], t) -- a tied event at the poll: the instance's clock never steps back
         local ev = s.ev[i]
         if ev:byte(1) == 64 then -- "@"
             local a1, a2, a3, a4 = s.a1[i], s.a2[i], s.a3[i], s.a4[i]
@@ -580,7 +583,8 @@ function M.run(L, seed, o, drivers)
         end
     end
     local function step(tc) -- the world to `tc`, every instance fed and cycled
-        W.run(tc)
+        W.run(tc + M.TIE)
+        W.t = tc
         if ledger or hold then -- the events the ledger and the hold read
             for _, key in ipairs(flicker.EVENTS) do
                 pollEv[key] = false

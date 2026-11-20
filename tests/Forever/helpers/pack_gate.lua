@@ -76,7 +76,11 @@ M.FLICKER = {
     -- above (one held tick per swing, 0.12-0.20 s; each alone on a fresh boot reads 27 / 8 before and after ab8ad0acc);
     -- seed 6 +1 more: the gap-as-09 / avoid-refund-09 merges (field off reads the same) re-times it from 126 s (a
     -- Rend wait 2.79 s, truth 11.0 against its 10)
-    ["Arms"] = { flicker = 0.08, retracted = 0.1, readyShort = 1, heldReady = 316 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 flicker
+    -- 0.04 / 0.04 / 0.06, retracted 0, readyShort 0 / 0 / 0, heldReady 322 / 238 / 285): readyShort 1 -> 0, heldReady 316 ->
+    -- 322 (seeds 1-20; fights 11 15 -> 16, 13 14 -> 19). First divergence seed 2 t 117.20: a mob swing at
+    -- 117.2000000000000x is paid at that poll, not the next; the fights after re-time
+    ["Arms"] = { flicker = 0.08, retracted = 0.1, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
@@ -177,7 +181,10 @@ M.FLICKER = {
     -- the belief ran ahead of truth; truth now pays it and the belief's floor counts strikes only (strikeNow's gain
     -- spread = the amount; a white swing's floor still carries the expected Unbridled Wrath, L1456 i), so truth covers a cost before our floor (lo-truth at cost -0.9
     -- -> -1.6 / -2.1 / -2.2, est-truth +0.3 / -0.3 / -0.2): true waits of the floor
-    ["Fury L24"] = { flicker = 0.36, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 617 }, -- flicker 0.35 / 0.26 / 0.23, retracted 0 / 0 / 0 (ab0f, rolled)
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 heldReady
+    -- 484 / 550 / 618, flicker 0.35 max, readyShort 0): heldReady 617 -> 618. First divergence seed 50 t 64.80: our rage
+    -- gain at 64.8000000000000x is the poll's; fight 50 holds one tick more (48 -> 49)
+    ["Fury L24"] = { flicker = 0.36, flickerK = 0.6, retracted = 0.2, readyShort = 0, heldReady = 618 }, -- flicker 0.35 / 0.26 / 0.23, retracted 0 / 0 / 0 (ab0f, rolled)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -226,7 +233,16 @@ M.FLICKER = {
     -- paid no Unbridled Wrath while the kit credited it (est-truth at cost +0.8), so the belief ran ahead of truth and
     -- hid held ticks; truth now pays it (est-truth +0.3 / +0.5 / +0.4) and the belief's floor counts strikes only
     -- (strikeNow's gain spread = the amount; a white swing's floor still carries the expected Unbridled Wrath, L1456 i): true waits of the floor
-    ["Warrior Protection"] = { flicker = 0.13, retracted = 0.1, readyShort = 0, heldReady = 402 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 flicker
+    -- 0.15 / 0.12 / 0.02, retracted 0, readyShort 0 / 0 / 0, heldReady 392 / 295 / 337): flicker 0.13 -> 0.16 (the measured
+    -- worst rounded up), heldReady 402 -> 392. First divergence seed 2 t 129.60: a swing at 129.6000000000000x is paid
+    -- and fed at that poll (lo 2.62 -> 2.75); fights 16-18 re-time: two new one-poll flips at near-ties, seed 17 t 119.00
+    -- (shield_block > sunder_armor > shield_block, Shield Block pressed the poll after) and seed 18 t 61.20 (heroic_strike
+    -- > shield_slam > heroic_strike on a swing's credit), the classes this row already names. readyShort stays 0. The
+    -- seed 59 tie above no longer reproduces on v0.10.0 (seeds 41-60 read readyShort 0 before this change too). The
+    -- e4ef929e54 paragraph's numbers do not reproduce (L1376): integ-09-measure 9bf1a0a81 read flicker 0.07 / 0.13 /
+    -- 0.07, heldReady 349 / 270 / 320, the ab0f lane's base b7c26392f the same
+    ["Warrior Protection"] = { flicker = 0.16, retracted = 0.1, readyShort = 0, heldReady = 392 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -268,7 +284,9 @@ M.FLICKER = {
     -- 0.00 (oracle 0.00 / 0.02 / 0.04), retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 309 / 336 / 314, agreement
     -- .981 / .989 / .982): heldReady 326 -> 336 (the worst set). Cause: #1087's flat Feral list; A/B on one tree (the tip
     -- with the e4ef Feral .simc + make packs), seeds 21-40: old list 321, new list 336
-    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 336 }, -- 0.56 / 0.89 / 0.56, 0
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 heldReady
+    -- 307 / 325 / 314): heldReady 336 -> 325 (the fights re-timed by the tie)
+    ["Feral"] = { flicker = 0.03, retracted = 0, heldReady = 325 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
@@ -342,7 +360,9 @@ M.FLICKER = {
     -- list as a whole (its diff: Enrage under Lacerate's cost, no 5-stack Lacerate refresh line; the old Swipe line
     -- needs 2+ enemies, so it cannot act in the one-mob loop); A/B on one tree (the tip with the e4ef Guardian .simc +
     -- make packs), seeds 1-20: old list 423 (flicker 0.26), new list 450 (0.29). Flicker row unchanged (worst 0.29)
-    ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 450 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 flicker
+    -- 0.29 / 0.25 / 0.26, heldReady 447 / 390 / 410): heldReady 450 -> 447 (the fights re-timed by the tie)
+    ["Guardian"] = { flicker = 0.35, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
@@ -366,7 +386,10 @@ M.FLICKER = {
     -- seeds 21-40 without the flip / the flip alone / the tip 139 / 160 / 160, 14 of 20 fights +1..+4 (4 at -1..-2): every held tick on both
     -- sides is the cost-lag class (energy.lo under the cost, truth at it, wait ~0.1 s); held Sinister Strike 113 -> 142, Eviscerate
     -- 13 -> 6: finishing at 5 points takes one more builder a cycle, so more Sinister Strike cost crossings
-    ["Combat"] = { flicker = 0.01, retracted = 0, heldReady = 160 }, -- 0.15 / 0 / 0.02, 0
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 heldReady
+    -- 164 / 160 / 157, flicker 0): heldReady 160 -> 164. First divergence seed 1 t 8.60: an energy tick at
+    -- 8.6000000000000x is the poll's; fights 12 (10 -> 9) and 20 (0 -> 10) re-time
+    ["Combat"] = { flicker = 0.01, retracted = 0, heldReady = 164 }, -- 0.15 / 0 / 0.02, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 382 / 364 / 363):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
@@ -480,7 +503,11 @@ M.FLICKER = {
     -- secret pool's lower bound a few mana under the truth at the crossing); Survival Turret 41-60, 263 of 279 the same
     -- edge (arcane_shot 258, hunters_mark 5), 16 rapid_fire at truth 60+ over the cost, 12 of them 3 s+ late: the unpinned
     -- fight-opening floor (repin-hunter-09-3, below)
-    ["Beast Mastery Turret"] = { flicker = 0, retracted = 0, heldReady = 249 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 flicker
+    -- 0 / 0 / 0.0166, heldReady 234 / 235 / 249): flicker 0 -> 0.02, one flip in the set. First divergence seed 41
+    -- t 156.00: our Auto Shot (75) and its hit at 156.0000000000000x, now at that poll; seed 53, re-timed, shows
+    -- summon_hawk > aimed_shot > summon_hawk at 26.20 (aimed_shot 4.15 vs Summon Hawk 4.60 s out, a near-tie)
+    ["Beast Mastery Turret"] = { flicker = 0.02, retracted = 0, heldReady = 249 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
     -- Marksmanship Turret, 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60
     -- heldReady 132 / 115 / 108, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 118 -> 132
     -- (the worst set). Cause harness: ladder-usable-085 cc02f47e5's between-fight rest window (fights start at the true
@@ -492,7 +519,11 @@ M.FLICKER = {
     -- flicker 0, retracted 0, readyShort 0, agreement .998 / .999 / .995). Traced per tick (seeds 1-20): the near-cost
     -- edge, arcane_shot 199 at mana 166-169 against its 166.32 (our est a few mana under truth, the oracle's wait 0),
     -- hunters_mark 2; the smaller pool sits at the edge more often: the worst set
-    ["Marksmanship Turret"] = { flicker = 0, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 flicker
+    -- 0 / 0 / 0.0166, heldReady 211 / 218 / 211): flicker 0 -> 0.02, one flip in the set. First divergence seed 41
+    -- t 179.40: our Auto Shot (75) and its hit at 179.4000000000002, now at that poll; seed 43, re-timed, shows arcane_shot >
+    -- rapid_fire > arcane_shot at 182.80, the poll after an Arcane Shot press
+    ["Marksmanship Turret"] = { flicker = 0.02, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     -- heldReady 117 -> 236 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
     -- spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 210 / 236 / 186, flicker 0, retracted 0, readyShort
@@ -502,14 +533,19 @@ M.FLICKER = {
     -- lo 352.2, (100 - (lo - 310)) / 12.40 = 4.67 s; the oracle's exact 513.3 covers both; central, repin-hunter-09-3);
     -- 1 is untraced (fight 15 at t 8.80, 3.23 s at truth 101; plausibly the same unpinned floor, not shown); 2 are near-cost edge
     -- ticks (0.09 s, 0.07 s): the worst set
-    ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 279 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 heldReady
+    -- 224 / 260 / 248): heldReady 279 -> 260 (the fights re-timed by the tie)
+    ["Survival Turret"] = { flicker = 0, retracted = 0, heldReady = 260 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
     -- heldReady 183 -> 361 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3270 mana, 12.40 mp5 + 16.75 spirit (was 5000 and spirit 15.88, no mp5); seeds 1-20 / 21-40 /
     -- 41-60 heldReady 346 / 342 / 361, flicker 0 (oracle 0.13 / 0 / 0.02), retracted 0, readyShort 0, agreement .992 /
     -- .995 / .996). Traced per tick (seeds 1-20): the near-cost edge, wing_clip 301 at mana 80-83 against its 80,
     -- mongoose_bite 37, hunters_mark 8 (cooldowns and Hunter's Mark equal in ours, the oracle and the world): the worst
     -- set
-    ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 290 }, -- heldReady 166 / 183 / 177; after L667 173 / 169 / 174
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 heldReady
+    -- 272 / 295 / 290): heldReady 290 -> 295. First divergence seed 22 t 110.00: a swing at 110.0000000000000x is
+    -- the poll's; fights 26-40 re-time (per fight -2 to +5)
+    ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 295 }, -- heldReady 166 / 183 / 177; after L667 173 / 169 / 174
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
     -- wowsims's logged regen (Ret 8.25/s casting) runs the world at an empty mana pool; the oracle's flicker rose too; our
     -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling
@@ -570,7 +606,11 @@ M.FLICKER = {
     -- and world), the only later change Protection runs (no Twist of Light: Unsealed Wrath's cooldown never runs)
     -- Re-measured after the review fixes (Protection keeps its own 16.5 / 0 seed with the Holy Shock seed gated on
     -- Retribution; mana-09 e2d7b1187 merged): 186 / 177 / 198, flicker 0, retracted 0, readyShort 0: unchanged
-    ["Protection"] = { flicker = 0, retracted = 0, heldReady = 198 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 heldReady
+    -- 200 / 177 / 198, flicker 0): heldReady 198 -> 200. First divergence: seed 5's last mob swing and the fight's kill
+    -- event at 174.0000000000000x now fall at the 174.00 poll, so the fight ends a poll earlier (its in-combat ticks ran
+    -- on to 175.2 before) and fight 6 starts on another pool (33.1 -> 16.6); fights 7-20 re-time
+    ["Protection"] = { flicker = 0, retracted = 0, heldReady = 200 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0.08), retracted 0, readyShort 0 / 0 / 0, heldReady 65 / 70 / 94, agreement .998 / .999 / .997): flicker 0.01 (the
     -- measured worst + 0.01: the line rounds to two decimals), heldReady 94 (the worst set)
@@ -655,7 +695,10 @@ M.FLICKER = {
     -- readyShort 1 -> 0 (re-pin batch, L1267): harness-press-price-09 prices the press with the world's current auras
     -- (loop.lua passes the world's us to content.resolve), so seed 44's last-tick Lightning Bolt reads its 5 Maelstrom
     -- Weapon stacks; A/B seeds 41-60 readyShort 1 -> 0, every other cell identical
-    ["Enhancement"] = { flicker = 0.01, retracted = 0, heldReady = 166, readyShort = 0 },
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 heldReady
+    -- 153 / 166 / 169, flicker 0, readyShort 0): heldReady 166 -> 169. First divergence seed 45 t 129.60: the mob's
+    -- parried swing and a cooldown reset of ours at 129.6000000000000x are the poll's; fights 46-60 re-time (per fight -5 to +5)
+    ["Enhancement"] = { flicker = 0.01, retracted = 0, heldReady = 169, readyShort = 0 },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
@@ -681,7 +724,11 @@ M.FLICKER = {
     -- both arms. By t 51 the old seed band's lo sat under truth and hid it; the read puts lo = est, the first decision
     -- difference is t 51.6 (arcane_blast wait 1.30 vs 5.27, oracle 4.55; Evocation pressed at 53.0 vs 54.6) and fights 2-20 run
     -- on other trajectories (per seed -2 to +3). The held ticks are the cost crossing one poll late in both arms
-    ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 109 }, -- 0 / 0 / 0, 0
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, and a cast bar pays at its landing, cdde1c984; seeds 1-20 / 21-40 / 41-60
+    -- flicker 0 / 0 / 0, retracted 0, readyShort 0, heldReady 93 / 104 / 97): heldReady 109 -> 104. The landing price
+    -- alone moves it (f3ad60903 reads 109 / 97 / 102): the Wrath of seeds 1-20 fight 1 pressed under Arcane Power at
+    -- 18.6 now pays 395 at its landing, so the belief's est no longer runs 118.5 over truth (the L1375 trace)
+    ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 104 }, -- 0 / 0 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one
     -- tick an episode, lo 141-150 against the truth's 150-152 (gap BQ)
@@ -758,7 +805,12 @@ M.FLICKER = {
     -- 0 / 0 / 0, heldReady 0 / 1 / 0, agreement .948 / .947 / .959): heldReady 0 -> 1, traced: seeds 21-40, one tick at
     -- 183.0 s, power_infusion shown 0.07 s out (past the 0.05 s react window) while the oracle shows it ready; the truth
     -- covers its 248 cost by 2.8 mana: a one-poll near-cost crossing (the belief's own mana at that tick not read)
-    ["Smite"] = { flicker = 0.02, retracted = 0, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
+    -- harness-timing (L1281 a / L1376 B, L1383; cause harness: a poll owns the world's events due within a float step of it, f3ad60903; seeds 1-20 / 21-40 / 41-60 flicker
+    -- 0 / 0 / 0, retracted 0 / 0.0333 / 0, heldReady 0 / 1 / 0): retracted 0 -> 0.04 (the measured worst rounded up).
+    -- First divergence seed 22 t 34.40: our Holy Fire's cast bar ending at 34.4000000000000x (its success, 229.5
+    -- mana, its hit and an aura) is the poll's; the
+    -- re-timed set retracts one ready (held, ready-short and flip counts per fight unchanged)
+    ["Smite"] = { flicker = 0.02, retracted = 0.04, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's

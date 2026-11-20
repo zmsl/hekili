@@ -793,6 +793,11 @@ local function content(name)
         if m.channel then
             p.channel = m.channel(H, ids, up)
         end
+        if p.cast > 0 then -- a cast bar pays at its landing with the world's auras then (owner, L1383); checked at `cost`
+            p.price = function(W, e)
+                return costOf(key, ids, H, onEntity(e, X))
+            end
+        end
         -- Evocation clipped at 99% mana (the oracle's true belief: its channel and its mana)
         local I = H.ns.VirtualStateInternal
         p.clip = I.channel and I.castAb == I.ab.bySpell[12051] and VS.Power(MANA, H.ctl.now).est >= 0.99 * MAX

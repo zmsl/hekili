@@ -575,6 +575,14 @@ local function content(name)
             refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
             outcomes = M.OUTCOMES[key], -- nil: the special melee tables
         }
+        if cast > 0 then -- a cast bar pays at its landing with the world's auras then (owner, L1383); checked at `cost`
+            local sf = S.talent.shamanistic_focus.rank > 0
+            p.price = function(_, w)
+                local stacks = w.auras[X.aura.maelstrom_weapon.id]
+                local free = w.auras[X.aura.clearcasting.id] ~= nil
+                return costOf(key, rank, free, stacks and stacks.stacks or 0, sf, X.convection)
+            end
+        end
         p.requires = function(W, e)
             if m.requires then
                 return m.requires(W, e, X)

@@ -64,4 +64,29 @@ describe("the loop's truth instance", function()
         assert.are.same({}, run.refused)
         assert.are.equal(0, run.readyShort)
     end)
+
+    -- a world event one float step after a poll (a swing chain's sum: 170.0000000000002 for the poll at 170, L1281 a)
+    -- is that poll's: the world pays it before the poll's press and the instances are fed it at that poll (the plain
+    -- oracle's power self-check would see a world paid ahead of its feed)
+    it("runs and feeds an event due one float step after a poll at that poll", function()
+        local at, fired, seen = nil, false, nil
+        local run = loop.run(L, 1, {
+            duration = 15,
+            on = function(r, _, t)
+                if not at and t >= 5 then
+                    local nxt = (math.floor(t / loop.TICK + 0.5) + 1) * loop.TICK -- the next poll, as the loop indexes it
+                    at = nxt + nxt * 2 ^ -52
+                    assert(at > nxt and at - nxt < 1e-12)
+                    r.W.at(at, function(W)
+                        fired = true
+                        W.gain(r.us, 10)
+                    end)
+                elseif at and seen == nil and t > at - 1e-6 then
+                    seen = fired -- this poll's press came after the world ran it
+                end
+            end,
+        }, { { H = L.us }, { H = L.oracle, plain = true } })
+        assert.is_true(seen)
+        assert.are.same({}, run.selfCheck)
+    end)
 end)
