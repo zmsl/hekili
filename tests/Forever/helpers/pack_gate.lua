@@ -726,7 +726,10 @@ M.FLICKER = {
     -- 117 / 110, agreement .995 / .997 / .998): heldReady 112 -> 117
     -- re-pin e5a9cd2a2d -> e4ef929e54 (lane mage 0.9, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0,
     -- readyShort 0, heldReady 116 / 117 / 110, agreement .995 / .997 / .999): floors kept (heldReady at the floor)
-    ["Frost"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 117 },
+    -- crowd-harness lane 2026-11-20 (0.10.1, L1507), cause harness: the world's frost spells' rows carry school 16 (inv
+    -- crowd-drops F1) (seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, readyShort 0, heldReady 116 / 110 /
+    -- 110, agreement .995 / .999 / .999): heldReady 117 -> 116
+    ["Frost"] = { flicker = 0.01, retracted = 0, readyShort = 0, heldReady = 116 },
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 396 / 398 / 399):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- Priest re-pin lane (pin e5a9cd2a2dfc, CN8 merged, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, readyShort 0, heldReady 395 / 395 / 397):
