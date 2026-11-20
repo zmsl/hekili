@@ -685,7 +685,7 @@ M.READY = {
     -- the next main-hand swing (45.21 / 47.31) instead of a proc the floor cannot promise; A/B with only that floor
     -- line reverted reproduces the old fixture
     -- -> { 0.64, 10 } (lo-truth-gate fix (a), L1504/L1538/L1560, ruling L1568): the re-recorded timing fixture moves the
-    -- belief lower in all 8 changed rows (Whirlwind 53.15, Bloodthirst 98.30, Sunder Armor 124.96, Rend 136.96,
+    -- belief lower in all 7 changed rows (Whirlwind 53.15, Bloodthirst 98.30, Sunder Armor 124.96, Rend 136.96,
     -- Overpower 139.36, Execute 161.30, and the Whirlwind 101.30 gcd row); the one new late row, Whirlwind 101.30 (0.68 s
     -- late), is an honest floor on the tip (rung lo = est = 25.000 vs truth 29.898 after the 100.334 main-hand credit is
     -- fully netted against the 100.00 rung); the base side was not traced (base tree removed after the bite test)
