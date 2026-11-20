@@ -190,6 +190,7 @@ local methods = {
                 v.resource = v.resource or resource
                 -- the sim runs a regen entry's `value` under `state`; the belief, the same function in its own context
                 if type( v.value ) == "function" then setfenv( v.value, state ) end
+                if type( v.width ) == "function" then setfenv( v.width, state ) end -- a swing's proc part (L1456 i)
                 self.resourceAuras[ v.resource ] = self.resourceAuras[ v.resource ] or {}
 
                 if v.aura then
