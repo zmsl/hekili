@@ -335,7 +335,10 @@ describe("rows with a secret amount (kind-only routing)", function()
         ctl.now = 10
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
         local i = ticket(X.TICKS)
-        assert.are.same({ 1, 1, 1 }, { I.Kinds.TickN(i, 12), I.Kinds.TickN(i, 16), I.Kinds.TickN(i, 18) })
+        assert.are.same(
+            { 1, 1, 1 },
+            { I.Kinds.TickN(i, 12, true), I.Kinds.TickN(i, 16, true), I.Kinds.TickN(i, 18, true) }
+        )
     end)
 
     -- A projectile's own schedule (composed at its success, widened by the flight until its direct row) is no rival

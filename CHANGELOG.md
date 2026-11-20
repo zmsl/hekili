@@ -7,7 +7,7 @@
 ### Changed
 
 ### Fixed
-- A critical tick from one of your damage-over-time spells late in its duration is no longer taken for a critical hit of the spell you just cast, so effects that come from your critical hits, such as Master of Elements' mana refund, are no longer counted when they did not happen.
+- In more cases, a critical tick late in one of your damage-over-time spells is no longer taken for a critical hit of the spell you just cast, so effects of your critical hits, such as Master of Elements' mana refund, are counted less often when they did not happen. A real critical hit that lands at the same moment as such a tick no longer counts either, so the next spell can show as ready a moment late.
 
 ### Known issues
 
