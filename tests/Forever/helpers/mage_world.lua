@@ -445,7 +445,9 @@ local function spell(key, extra)
                 drop(W, e, X, "presence_of_mind")
             end
             unstack(W, e, X, "fingers_of_frost") -- spent at the cast, before this cast's own grant
-            local hit = W.hit(e, e.target, AMOUNT[key], FIRE[key] and 4 or 64)
+            -- the class file's declared school; one declaring none: the fire set's 4, else arcane
+            local school = H.Hekili.SCHOOL[H.Hekili.Class.abilities[key].school]
+            local hit = W.hit(e, e.target, AMOUNT[key], school or (FIRE[key] and 4 or 64))
             local landed, crit = hit.act == "WOUND", hit.flag == "CRITICAL"
             local fof = CHILL[key] and talentRank(H, T.fingers_of_frost) or 0
             if landed and fof > 0 and W.rng.chance(0.15) then -- the charges set to the rank's (1 / 2), refreshed
