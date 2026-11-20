@@ -254,9 +254,14 @@ local usable, ansT, shortCost, shortT, shortGain, shortCast, shortEst = {}, {}, 
 -- Per hand (1 main, 2 off): the swing-paid slot's estimate and floor at its latest PLAYER_SWING, that swing's time,
 -- the lowest top a short answer set from ORACLE_MIN after it (math.huge: none) and the slot's spend count then (I.Missed).
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
--- Per hand: the slot's R.liftCE/L/H at that swing plus what its own steps covered since (a reaction's gain covers only
--- the rest: I.ResourceShift).
-local swCE, swCL, swCH = { 0, 0 }, { 0, 0 }, { 0, 0 }
+-- Per hand, its latest SWN swings (a ring at (hand - 1) x SWN + 1..SWN, keyed by the swing's time: an off-hand row
+-- settles after that hand's next swing): the slot's R.liftCE/L/H at that swing plus what its own steps covered since (a
+-- reaction's gain covers only the rest: I.ResourceShift).
+local SWN = 3
+local snT, snCE, snCL, snCH, snI = {}, {}, {}, {}, { 0, 0 }
+for j = 1, 2 * SWN do
+    snT[j], snCE[j], snCL[j], snCH[j] = -1, 0, 0, 0
+end
 -- Per hand: the latest usability answer's time that set a rung above its slot's floor and could show that hand's gain
 local heardT = { 0, 0 }
 -- By ability index: its ladder precondition (C9): false for `ladder = false` (its short answers are no rungs), its
@@ -1126,12 +1131,22 @@ local function cover(d, pool, since)
     return d - u, u
 end
 
+-- Hand h's swing at `at`: its ring entry (snT), 0 when it is not among the hand's latest SWN.
+local function snap(h, at)
+    for j = (h - 1) * SWN + 1, h * SWN do
+        if abs(snT[j] - at) < 1e-6 then
+            return j
+        end
+    end
+    return 0
+end
+
 -- Hand h's swing at `at` covered part of slot r's lift (pE, pL, pH: the lift before) with its own step: its reaction's
 -- gain covers only what is left of what the rungs since that swing lifted (I.ResourceShift). Allocates nothing.
 local function ownCover(r, h, at, pE, pL, pH)
-    if abs(at - swT[h]) < 1e-6 then
-        swCE[h], swCL[h] = swCE[h] + pE - R.liftE[r], swCL[h] + pL - R.liftL[r]
-        swCH[h] = swCH[h] + pH - R.liftH[r]
+    local j = snap(h, at)
+    if j > 0 then
+        snCE[j], snCL[j], snCH[j] = snCE[j] + pE - R.liftE[r], snCL[j] + pL - R.liftL[r], snCH[j] + pH - R.liftH[r]
     end
 end
 
@@ -1604,7 +1619,9 @@ I.On(Obs.Swing, function(o, t)
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
                 swE[hand], swL[hand], swT[hand], swTop[hand], swSp[hand] =
                     R.est0[r], R.lo0[r], o.t, math.huge, R.spends[r]
-                swCE[hand], swCL[hand], swCH[hand] = R.liftCE[r], R.liftCL[r], R.liftCH[r]
+                snI[hand] = snI[hand] % SWN + 1
+                local j = (hand - 1) * SWN + snI[hand]
+                snT[j], snCE[j], snCL[j], snCH[j] = o.t, R.liftCE[r], R.liftCL[r], R.liftCH[r]
                 break
             end
         end
@@ -1964,25 +1981,22 @@ end)
 
 --- Our own cast changed slot r by `delta` at t (spec §5.3): the interval moves by the same amount, written as a
 --- `modelled` sample. `late` (a swing's reaction, folded at its row after t: the swing's hand, 1 or 2): a gain of
---- that hand's swing at t first covers the slot's rung lift (owe) up to what the rungs since that swing lifted, less
---- what its own steps covered (ownCover), within I.LIFT_WINDOW: the rung already showed the pool with it (L1504). Never
---- a lift an earlier swing owes (L1525 ruling (a)). Allocates nothing.
+--- that hand's swing at t (one of its latest SWN: an off-hand row may settle after that hand's next swing) first covers
+--- the slot's rung lift (owe) up to what the rungs since that swing lifted, less what its own steps covered (ownCover),
+--- within I.LIFT_WINDOW: the rung already showed the pool with it (L1504). Never a lift an earlier swing owes (L1525
+--- ruling (a)). Allocates nothing.
 function I.ResourceShift(r, delta, t, event, late)
     local max = R.max[r]
     local de, dl, dh = delta, delta, delta
-    if
-        (late == 1 or late == 2)
-        and delta > 0
-        and abs(swT[late] - t) < 1e-6
-        and I.clock - R.liftT[r] <= I.LIFT_WINDOW
-    then
+    local j = (late == 1 or late == 2) and delta > 0 and snap(late, t) or 0
+    if j > 0 and I.clock - R.liftT[r] <= I.LIFT_WINDOW then
         local u
-        de, u = cover(delta, R.liftE[r], R.liftCE[r] - swCE[late])
-        R.liftE[r], swCE[late] = R.liftE[r] - u, swCE[late] + u
-        dl, u = cover(delta, R.liftL[r], R.liftCL[r] - swCL[late])
-        R.liftL[r], swCL[late] = R.liftL[r] - u, swCL[late] + u
-        dh, u = cover(delta, R.liftH[r], R.liftCH[r] - swCH[late])
-        R.liftH[r], swCH[late] = R.liftH[r] - u, swCH[late] + u
+        de, u = cover(delta, R.liftE[r], R.liftCE[r] - snCE[j])
+        R.liftE[r], snCE[j] = R.liftE[r] - u, snCE[j] + u
+        dl, u = cover(delta, R.liftL[r], R.liftCL[r] - snCL[j])
+        R.liftL[r], snCL[j] = R.liftL[r] - u, snCL[j] + u
+        dh, u = cover(delta, R.liftH[r], R.liftCH[r] - snCH[j])
+        R.liftH[r], snCH[j] = R.liftH[r] - u, snCH[j] + u
     end
     R.est0[r] = clamp(R.est0[r] + de, max)
     local lo = R.lo0[r]

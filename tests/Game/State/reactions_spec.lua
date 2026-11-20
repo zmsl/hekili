@@ -319,21 +319,27 @@ describe("reactions", function()
                 R.liftCE[1], R.liftCL[1], R.liftCH[1] = R.liftCE[1] + v, R.liftCL[1] + v, R.liftCH[1] + v
                 R.liftT[1] = t
             end
-            -- from b: a rung `before` (0: none) at b + 9.95, the main-hand swing at b + 10, a rung `after` at b + 10.2,
-            -- the swing's landed credit (or none: closed with no row, c = -1) and its row at b + 10.47
-            local function land(b, before, after, credited)
+            -- from b: a rung `before` (0: none) at b + 9.95, hand h's swing at b + 10 (main by default), a rung `after`
+            -- at b + 10.2, with `again` the same hand's next swing at b + 10.4 (its row is still out), the swing's
+            -- landed credit (or none: closed with no row, c = -1) and its row at b + 10.47
+            local function land(b, before, after, credited, h, again)
+                h = h or 1
                 R.est0[1], R.lo0[1], R.hi0[1] = 20, 20, 20
                 R.liftE[1], R.liftL[1], R.liftH[1] = 0, 0, 0
                 if before > 0 then
                     rung(b + 9.95, before)
                 end
-                S.Direct(Obs.Swing, b + 10, 1, 0, 4)
+                S.Direct(Obs.Swing, b + 10, h, 0, 4)
                 VS.Drain(b + 10.01)
                 rung(b + 10.2, after)
-                if credited then
-                    S.Direct(Obs.Swing, b + 10, 1, 1, 1)
+                if again then
+                    S.Direct(Obs.Swing, b + 10.4, h, 0, 4)
+                    VS.Drain(b + 10.41)
                 end
-                S.Direct(Obs.SwingSettled, b + 10.47, 1, b + 10, credited and K.WOUND or -1)
+                if credited then
+                    S.Direct(Obs.Swing, b + 10, h, 1, 1)
+                end
+                S.Direct(Obs.SwingSettled, b + 10.47, h, b + 10, credited and K.WOUND or -1)
                 VS.Drain(b + 10.48)
                 return { R.est0[1], R.lo0[1], R.hi0[1] }
             end
@@ -341,6 +347,9 @@ describe("reactions", function()
             assert.are.same({ 20, 20, 20 }, land(20, 0, 30, false)) -- no row (live): the lift since it is its own
             assert.are.same({ 23, 23, 23 }, land(40, 30, 2, false)) -- 30 came before it (another swing's): 2 only
             assert.are.same({ 25, 25, 25 }, land(60, 30, 0, false)) -- no rung after it: in full
+            -- an off-hand row settles after that hand's next swing: the lift since the settled swing is still its own
+            R.swingOff[1] = 1
+            assert.are.same({ 20, 20, 20 }, land(80, 0, 30, false, 2, true))
             assert.are.equal(0, I.nowErrors)
         end)
 
