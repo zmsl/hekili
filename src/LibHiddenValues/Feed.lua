@@ -249,11 +249,9 @@ function lib.stats(t0)
     end
 end
 
--- bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (none yet: 0),
--- bars made.
+-- bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (none yet: 0).
 function lib:GetStats()
-    local made = #lib.barFrame
-    return made - #lib.free, lib.usAvg, lib.usPeak, lib.pushRate, lib.fireRate, lib.desyncs, 0, made
+    return #lib.barFrame - #lib.free, lib.usAvg, lib.usPeak, lib.pushRate, lib.fireRate, lib.desyncs, 0
 end
 
 -- One row per source with a handle, in creation order: { kind =, unit =, power =, handles =, bars =, active = }

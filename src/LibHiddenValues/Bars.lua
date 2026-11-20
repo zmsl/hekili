@@ -19,6 +19,11 @@ local EPS = 0.0005 -- a guard point this far below each step (curve x scale 0-1)
 local CAP = 256 -- bars are never destroyed (frames cannot be): a hard ceiling on the pool
 lib.HOLD, lib.LOW, lib.POOL = HOLD, LOW, 32
 
+-- Bars made (frames are never destroyed) and the cap.
+function lib:GetPool()
+    return #lib.barFrame, CAP
+end
+
 lib.barFrame = lib.barFrame or {}
 lib.barClip = lib.barClip or {}
 lib.barSrc = lib.barSrc or {} -- the source a bar serves (lib.ST: the self-test), nil when free

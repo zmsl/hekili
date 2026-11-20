@@ -79,7 +79,8 @@ the reference consumer (`/lhvp`).
 | `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, then the unproven ones); `state` and `reason` as `IsAvailable` |
 | `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable) |
 | `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change |
-| `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, barsMade`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now), bars made |
+| `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now) |
+| `LHV:GetPool()` | `made, cap`: bars made (32 at login; frames are never destroyed) and the cap (256) |
 | `LHV:GetSources()` | a fresh array, one `{ kind =, unit =, power =, handles =, bars =, active = }` per source with a watch, in creation order (`power` nil for health; `active`: fed every frame) |
 | `LHV:SelfTest(fn)` | nothing; runs the self-test (or joins the run going) and calls `fn(pass, lines)` when it ends: `pass` a boolean, `lines` an array of strings under 255 characters, the last one `selftest PASS ...` or `selftest FAIL ...`. Called at once (inside `SelfTest`) when it cannot run: the client lacks the API, switched off, or no free bar (the earlier verdict then stands). Before login it waits for the login run. `lines` is shared: read it, do not change it |
 | `LHV:GetSelfTest()` | `verdict, lines, running`: the last completed run's verdict (`true`/`false`; nil before the first, and after `SetEnabled(true)` until a run ends), its lines (the array `fn` got; nil before the first) and whether a run is going |

@@ -18,8 +18,8 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
   are one-line dispatchers through `lib`. Nothing but the event frame is built before `PLAYER_LOGIN`; a copy loaded
   after login (load on demand, or a newer minor) realises at once, keeps the frames and re-primes every source.
 - `Watch`, the handle (`Get`, `State`, `Domain`, `Exact`, `Latency`, `SetPaused`, `SetSink`, `Release`), `IsAvailable`,
-  `OnCapability`, `SelfTest`, `GetSelfTest`, `GetStats`, `GetSources`, `GetKinds`, `SetEnabled`, `ReleaseAll`,
-  `GetVersion`, the quality codes.
+  `OnCapability`, `SelfTest`, `GetSelfTest`, `GetStats`, `GetPool`, `GetSources`, `GetKinds`, `SetEnabled`,
+  `ReleaseAll`, `GetVersion`, the quality codes.
 - Sources by canonical key (kind, unit, power type, predicted); one bar per edge per source, reference counted; each
   handle a view cut by its own edges; a new edge primes only its own bar.
 - The pool (32 made at login, cap 256, growth in combat under pcall), one Step curve per edge (guard point 0.0005
@@ -51,7 +51,7 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 | Root frame | parented and anchored to `UIParent` (bottom left), alpha 0 | the run's measured shape; a parentless root is unprobed (owner question 11) |
 | `OnSizeChanged` | `SetScript` on our own child frame | the design forbids `HookScript` (a hook cannot be removed); the probe used `HookScript`, so the self-test proves `SetScript` in game |
 | SavedVariables | none | nothing needs to persist yet: no cached verdict, `SetEnabled(false)` is per session |
-| Diagnostics (owner 2026-11-20) | no `/lhv` command, no print, no copy box: getters only (`GetKinds`, `GetSources`, `GetSelfTest`, `GetStats`' 8th value bars made); the consumer (LHVProbe `/lhvp`) prints | a library is a pure API surface; output, commands and UI belong to the addon that wants them. Recovery after a failed self-test is `SelfTest(fn)` (`SetEnabled(true)` alone changes nothing when already on) |
+| Diagnostics (owner 2026-11-20) | no `/lhv` command, no print, no copy box: getters only (`GetKinds`, `GetSources`, `GetSelfTest`, `GetPool`; `GetStats` unchanged); the consumer (LHVProbe `/lhvp`) prints | a library is a pure API surface; output, commands and UI belong to the addon that wants them. Recovery after a failed self-test is `SelfTest(fn)` (`SetEnabled(true)` alone changes nothing when already on) |
 
 ## Not built (later stages)
 

@@ -9,6 +9,10 @@ local function lohi(h)
     return { lo, hi }
 end
 local ROOT = "src/LibHiddenValues/"
+local BASE = {} -- the globals before any test of this file (busted insulates each file)
+for k in pairs(_G) do
+    BASE[k] = true
+end
 
 describe("LibHiddenValues standalone", function()
     local Fake, W, lib
@@ -104,6 +108,11 @@ describe("LibHiddenValues standalone", function()
 
     it("is a pure API: no slash command, no chat output, no global but LibStub, over a whole session", function()
         Fake.restore()
+        for k in pairs(_G) do -- what earlier tests' copies left behind must not hide this one's
+            if not BASE[k] then
+                rawset(_G, k, nil)
+            end
+        end
         local before = {}
         Fake = loadfile(FAKE)({
             before = function()
@@ -123,6 +132,7 @@ describe("LibHiddenValues standalone", function()
         Fake.tick(3)
         assert.are.same({ 20, 50 }, lohi(h))
         lib:GetStats()
+        lib:GetPool()
         lib:GetSources()
         lib:GetKinds()
         lib:GetSelfTest()
@@ -173,6 +183,7 @@ describe("LibHiddenValues standalone", function()
     it("answers every diagnostic fact through getters", function()
         W.unit.target = { health = 0.6 }
         assert.are.same({ nil, nil, false }, { lib:GetSelfTest() })
+        assert.are.same({ 0, 256 }, { lib:GetPool() }) -- nothing is built before login
         local kinds = lib:GetKinds()
         assert.are.equal(12, #kinds)
         assert.are.same({ kind = "health", state = "pending" }, kinds[1])
@@ -199,8 +210,8 @@ describe("LibHiddenValues standalone", function()
             { kind = "health", unit = "target", handles = 2, bars = 2, active = true },
             { kind = "power", unit = "player", power = Enum.PowerType.Mana, handles = 1, bars = 1, active = true },
         }, lib:GetSources())
-        local made = select(8, lib:GetStats())
-        assert.are.equal(#lib.barFrame, made)
+        assert.are.same({ #lib.barFrame, 256 }, { lib:GetPool() })
+        assert.is_true(#lib.barFrame >= 32)
         assert.are.equal(3, (lib:GetStats()))
         lib:SelfTest()
         assert.is_true(select(3, lib:GetSelfTest()))
