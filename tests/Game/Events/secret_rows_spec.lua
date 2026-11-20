@@ -60,13 +60,13 @@ describe("rows with a secret amount (kind-only routing)", function()
         end
     end
 
-    it("pays a cast its own DODGE by kind: Obs.Avoided and SPELL_MISSED, no background", function()
+    it("pays a cast its own MISS by kind: Obs.Avoided and SPELL_MISSED, no background", function()
         ctl.now = 10
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
         ctl.now = 10.01
-        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+        ctl.Fire("UNIT_COMBAT", "target", "MISS", "", S, 1) -- a spell's own avoid (a dodge is a weapon's: L1507)
         assert.are.same({ 1, 1, 0 }, { T.paid[X.FRAME], count(VS.Obs.Avoided), L.background })
-        assert.are.same({ "SPELL_MISSED", fs.SPENDER_F, "DODGE" }, { got[#got][2], got[#got][12], got[#got][15] })
+        assert.are.same({ "SPELL_MISSED", fs.SPENDER_F, "MISS" }, { got[#got][2], got[#got][12], got[#got][15] })
     end)
 
     -- live, a landed instant's own wound is unseen (a plain wound's amount is secret), so its ticket stays open through
@@ -76,12 +76,12 @@ describe("rows with a secret amount (kind-only routing)", function()
         ctl.now = 10
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
         ctl.now = 10.2 -- past the frame, inside the landing window
-        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+        ctl.Fire("UNIT_COMBAT", "target", "MISS", "", S, 1)
         assert.are.same({ 0, 0 }, { T.paid[X.FRAME], count(VS.Obs.Avoided) })
         ctl.now = 20
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_F)
         ctl.now = 20.2
-        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+        ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
         assert.are.same({ 1, 1 }, { T.paid[X.FRAME], count(VS.Obs.Avoided) })
     end)
 

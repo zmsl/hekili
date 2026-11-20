@@ -299,11 +299,13 @@ M.NOTES = {
     K10 = "K10: melee recall does not hold under a session lag (spec §6.2's check; party 0.36, busy 0.18 against K1's"
         .. " 0.83 / 0.70). The session's landing median from [0.4, 1.0] s drives it (without it 0.86 / 0.73); the"
         .. " first-swing lag costs party 0.06; jitter, pushback and PLAYER_ENTER_COMBAT cost nothing. Measured, not"
-        .. " a target (Task 13 finding; the melee scoring is probe U15's).",
+        .. " a target (Task 13 finding; the melee scoring is probe U15's)."
+        .. " 2026-11-20 (L1507): a foreign dodge or parry no longer pays our spell's ticket, so busy's false credit and recall improve (K13 35.1 -> 27.0 / 0.64 -> 0.72) while a few spell tickets it used to close now close lost (busy lostDiff K13 4 -> 6, K13p1 4 -> 5, K17 3 -> 4) and K10 busy's net wash is 0.45 (was 0.0).",
     K13 = "K13: phase 0 solo's 17.8 divergent pairs per 100 own is the synthetic worst case (a twin in our very ms on"
         .. " every press), not an in-game rate; spec §4's union-belief trigger (> 1 per 100 paid) needs an in-game"
         .. " rate: probe U16, a party capture with a same-school caster on our target. Party and busy are floors (crowd"
-        .. " cost dominates the per-pair cost).",
+        .. " cost dominates the per-pair cost)."
+        .. " 2026-11-20 (L1507): a foreign dodge or parry no longer pays our spell's ticket, so busy's false credit and recall improve (K13 35.1 -> 27.0 / 0.64 -> 0.72) while a few spell tickets it used to close now close lost (busy lostDiff K13 4 -> 6, K13p1 4 -> 5, K17 3 -> 4) and K10 busy's net wash is 0.45 (was 0.0).",
     K14p = "K14p: owner finding. The spec has our pet's rows stay foreign; our swing tickets take 8.8 / 6.6 / 3.2 per"
         .. " 100 of them (solo / party / busy) through the melee scoring, which cannot tell a pet's white hit on our"
         .. " target from ours (probe U15's family). Floored by the first clean run, not a target.",

@@ -1860,6 +1860,7 @@ describe("auras", function()
                     ab.now = ab.funcs and ab.funcs.now
                 end
                 start(def)
+                I.ab.weapon[I.ab.bySpell[fs.SPENDER_C]] = true -- a melee special: its own dodge or parry (L1507)
                 ctl.now = 11
                 ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
                 ctl.ViewerAura(ti, "target") -- it landed and lights
@@ -1883,6 +1884,7 @@ describe("auras", function()
                     ab.now = ab.funcs and ab.funcs.now
                 end
                 start(def)
+                I.ab.weapon[I.ab.bySpell[fs.SPENDER_C]] = true -- a melee special: its own dodge or parry (L1507)
                 ctl.now = 11
                 ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
                 ctl.ViewerAura(ti, "target")

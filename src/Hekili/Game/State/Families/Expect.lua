@@ -120,7 +120,7 @@ function X.Weapon(obj, s, SCHOOL)
     if obj.onNextSwing then
         return true
     end
-    return s == SCHOOL.physical or obj.refundOnAvoid ~= nil or obj.refundNowOnAvoid == true
+    return (s ~= nil and s == SCHOOL.physical) or obj.refundOnAvoid ~= nil or obj.refundNowOnAvoid == true
 end
 
 I.OnBuild(function(def)

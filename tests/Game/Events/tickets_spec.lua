@@ -192,6 +192,7 @@ describe("the ticket pool", function()
     end)
 
     it("an avoid two casts could own, one the latest, is divergent: paid to the older, no row", function()
+        I.ab.weapon[I.ab.bySpell[fs.SPENDER_C]] = true -- a melee special: its own dodge or parry (L1507)
         ctl.now = 10
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
         ctl.now = 10.1
@@ -412,9 +413,10 @@ describe("the ticket pool", function()
         assert.are.equal(1, T.foreign)
     end)
 
-    it('pays a "debuff" ticket a MISS, DODGE or PARRY, never a WOUND; it closes expired, never lost', function()
+    it('pays a weapon "debuff" ticket a MISS, DODGE or PARRY, never a WOUND; it closes expired, never lost', function()
         local h = fs.new(9, false, false, true)
         h.Class.abilities.spender_c.expects = "debuff"
+        h.Class.abilities.spender_c.refundOnAvoid = true -- a weapon's (a sunder): a dodge or parry can refuse it (L1507)
         I.Build(fs.def(h), 1)
         for n, act in ipairs({ "MISS", "DODGE", "PARRY" }) do
             ctl.now = 10 * n
@@ -754,6 +756,7 @@ describe("the ticket pool", function()
             end)
 
             it("allocates nothing on the held avoid nor on the tied cast's wound (the hot row path)", function()
+                I.ab.weapon[I.ab.bySpell[fs.SPENDER_C]] = true -- a melee special: its own dodge or parry (L1507)
                 I.Sources.Stage = stage -- the spy allocates
                 cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
                 ctl.now = 5
@@ -787,6 +790,7 @@ describe("the ticket pool", function()
         -- gap AS, the tie's wound (ledger L80, Rend): the cast's own-frame dodge went to the swing in flight by the
         -- MELEE tie; the swing's own wound 6 ms later falls in the cast's frame too, and the cast's open ticket took it
         it("gives the swing its own wound in the tied cast's frame, and the dodge back to the cast (L80)", function()
+            I.ab.weapon[I.ab.bySpell[fs.SPENDER_C]] = true -- a melee special: its own dodge or parry (L1507)
             ctl.now = 150
             ctl.damage = { 25, 35, 10, 12 } -- 30 is the main hand's (exact)
             ctl.Fire("PLAYER_REGEN_ENABLED")
@@ -807,6 +811,7 @@ describe("the ticket pool", function()
         -- gap AS (ledger L629, Feral Rake): the same tie, the swing's own wound outside its core band (lag 0.674) and
         -- past the cast's frame; the cast's open ticket took it, so the cast was believed landed with no refund
         it("gives the swing its own wound past the tied cast's frame outside its core band (L629)", function()
+            I.ab.weapon[I.ab.bySpell[fs.SPENDER_C]] = true -- a melee special: its own dodge or parry (L1507)
             ctl.now = 150
             ctl.damage = { 25, 35, 10, 12 }
             ctl.Fire("PLAYER_REGEN_ENABLED")

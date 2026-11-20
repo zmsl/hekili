@@ -13,11 +13,11 @@ return {
         party = { recall = 1.00, melee = 0.81, melee2 = 0.96, rageErr = 17.4, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.00, wash = 1.4, unrecovered = 2.1 },
         busy = { recall = 1.00, melee = 0.69, melee2 = 0.85, rageErr = 19.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.00, wash = 0.5, unrecovered = 9.1 },
     },
-    -- K10: melee recall does not hold under a session lag (spec §6.2's check; party 0.36, busy 0.18 against K1's 0.83 / 0.70). The session's landing median from [0.4, 1.0] s drives it (without it 0.86 / 0.73); the first-swing lag costs party 0.06; jitter, pushback and PLAYER_ENTER_COMBAT cost nothing. Measured, not a target (Task 13 finding; the melee scoring is probe U15's).
+    -- K10: melee recall does not hold under a session lag (spec §6.2's check; party 0.36, busy 0.18 against K1's 0.83 / 0.70). The session's landing median from [0.4, 1.0] s drives it (without it 0.86 / 0.73); the first-swing lag costs party 0.06; jitter, pushback and PLAYER_ENTER_COMBAT cost nothing. Measured, not a target (Task 13 finding; the melee scoring is probe U15's). 2026-11-20 (L1507): a foreign dodge or parry no longer pays our spell's ticket, so busy's false credit and recall improve (K13 35.1 -> 27.0 / 0.64 -> 0.72) while a few spell tickets it used to close now close lost (busy lostDiff K13 4 -> 6, K13p1 4 -> 5, K17 3 -> 4) and K10 busy's net wash is 0.45 (was 0.0).
     K10 = {
         solo = { recall = 0.95, melee = 0.96, melee2 = 0.96, rageErr = 15.1, staged = 0.88, false100 = 4.5, leak100 = 1.6, lostDiff = 3, residual = 0, postClear = 1.00, recovered = 0.00, wash = 2.7, unrecovered = 1.5 },
         party = { recall = 0.92, melee = 0.38, melee2 = 0.95, rageErr = 24.2, staged = 0.86, false100 = 7.7, leak100 = 1.4, lostDiff = 1, residual = 0, postClear = 1.00, recovered = 0.13, wash = 1.8, unrecovered = 5.7 },
-        busy = { recall = 0.69, melee = 0.17, melee2 = 0.84, rageErr = 29.5, staged = 0.72, false100 = 29.4, leak100 = 2.1, lostDiff = 5, residual = 0, postClear = 1.00, recovered = 0.16, wash = 0.0, unrecovered = 11.9 },
+        busy = { recall = 0.69, melee = 0.17, melee2 = 0.84, rageErr = 29.5, staged = 0.72, false100 = 29.4, leak100 = 2.1, lostDiff = 5, residual = 0, postClear = 1.00, recovered = 0.16, wash = 0.5, unrecovered = 11.9 },
     },
     K11 = {
         party = { recall = 0.89, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.86, false100 = 11.2, leak100 = 4.7, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.66, wash = 0.0, unrecovered = 1.6 },
@@ -33,16 +33,16 @@ return {
         party = { recall = 0.97, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 1.00, wash = 0.0, unrecovered = 0.0 },
         busy = { recall = 0.97, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 1.00, wash = 0.0, unrecovered = 0.0 },
     },
-    -- K13: phase 0 solo's 17.8 divergent pairs per 100 own is the synthetic worst case (a twin in our very ms on every press), not an in-game rate; spec §4's union-belief trigger (> 1 per 100 paid) needs an in-game rate: probe U16, a party capture with a same-school caster on our target. Party and busy are floors (crowd cost dominates the per-pair cost).
+    -- K13: phase 0 solo's 17.8 divergent pairs per 100 own is the synthetic worst case (a twin in our very ms on every press), not an in-game rate; spec §4's union-belief trigger (> 1 per 100 paid) needs an in-game rate: probe U16, a party capture with a same-school caster on our target. Party and busy are floors (crowd cost dominates the per-pair cost). 2026-11-20 (L1507): a foreign dodge or parry no longer pays our spell's ticket, so busy's false credit and recall improve (K13 35.1 -> 27.0 / 0.64 -> 0.72) while a few spell tickets it used to close now close lost (busy lostDiff K13 4 -> 6, K13p1 4 -> 5, K17 3 -> 4) and K10 busy's net wash is 0.45 (was 0.0).
     K13 = {
         solo = { recall = 0.82, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.49, false100 = 17.8, leak100 = 26.5, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.47, wash = 0.0, unrecovered = 8.7 },
         party = { recall = 0.83, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.53, false100 = 16.9, leak100 = 6.3, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.41, wash = 0.0, unrecovered = 8.0 },
-        busy = { recall = 0.64, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.42, false100 = 35.1, leak100 = 4.3, lostDiff = 4, residual = 0, postClear = 1.00, recovered = 0.53, wash = 0.0, unrecovered = 14.4 },
+        busy = { recall = 0.64, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.42, false100 = 35.1, leak100 = 4.3, lostDiff = 6, residual = 0, postClear = 1.00, recovered = 0.53, wash = 0.0, unrecovered = 14.4 },
     },
     K13p1 = {
         solo = { recall = 1.00, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 1.00, wash = 0.0, unrecovered = 0.0 },
         party = { recall = 0.97, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.95, false100 = 2.6, leak100 = 0.9, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.46, wash = 0.0, unrecovered = 0.2 },
-        busy = { recall = 0.72, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.71, false100 = 26.5, leak100 = 3.1, lostDiff = 4, residual = 0, postClear = 1.00, recovered = 0.52, wash = 0.0, unrecovered = 9.9 },
+        busy = { recall = 0.72, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.71, false100 = 26.5, leak100 = 3.1, lostDiff = 5, residual = 0, postClear = 1.00, recovered = 0.52, wash = 0.0, unrecovered = 9.9 },
     },
     K13p5 = {
         solo = { recall = 1.00, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 1.00, wash = 0.0, unrecovered = 0.0 },
@@ -73,7 +73,7 @@ return {
     K17 = {
         solo = { recall = 1.00, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 1.00, wash = 0.0, unrecovered = 0.0 },
         party = { recall = 0.96, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.89, false100 = 4.0, leak100 = 2.2, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.66, wash = 0.0, unrecovered = 0.5 },
-        busy = { recall = 0.76, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.80, false100 = 22.5, leak100 = 3.1, lostDiff = 3, residual = 0, postClear = 1.00, recovered = 0.50, wash = 0.0, unrecovered = 7.5 },
+        busy = { recall = 0.76, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.80, false100 = 22.5, leak100 = 3.1, lostDiff = 4, residual = 0, postClear = 1.00, recovered = 0.50, wash = 0.0, unrecovered = 7.5 },
     },
     K18 = {
         solo = { recall = 1.00, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 1.00, wash = 0.0, unrecovered = 0.0 },

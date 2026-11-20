@@ -113,6 +113,7 @@ describe("reactions", function()
     describe('who = "target", our casts', function()
         it("a DODGE paid final to our cast's ticket runs the dodge reaction at the row", function()
             build({ reaction("dodged", "target", "dodge"), reaction("missed", "target", "miss") })
+            I.ab.weapon[I.ab.bySpell[fs.SPENDER_C]] = true -- a melee special: its own dodge or parry (L1507)
             ctl.now = 5
             ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
             ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
@@ -667,6 +668,7 @@ describe("reactions", function()
 
     it("allocates nothing across 1000 Drains firing a target-side reaction each (our cast dodged)", function()
         build({ reaction("dodged", "target", "dodge") })
+        I.ab.weapon[I.ab.bySpell[fs.SPENDER_C]] = true -- a melee special: its own dodge or parry (L1507)
         local t = 5
         local bytes = alloc.bytes(function()
             t = t + 2

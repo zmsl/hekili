@@ -393,6 +393,7 @@ describe("the synthesized combat log", function()
         end)
 
         it("pairs our ability with the target's parry: SPELL_MISSED with the miss type in slot 15", function()
+            ns.VirtualStateInternal.ab.weapon[ns.VirtualStateInternal.ab.bySpell[fs.SPENDER_C]] = true -- a melee special: its own dodge or parry (L1507)
             ctl.now = 50
             ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", fs.SPENDER_C)
             ctl.now = 50.02
