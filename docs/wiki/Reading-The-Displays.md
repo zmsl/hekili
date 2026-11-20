@@ -24,11 +24,14 @@ Each recommendation is worked out by simulating the next few seconds of the figh
 
 The Classic style is the original Hekili's look: a row of icons. The first icon is the largest; the queued icons follow it. The **Primary** display shows three icons by default.
 
-<!-- TODO-SCREENSHOT: the Primary display in the Classic style with each element numbered -->
+![The Primary display in the Classic style, three elements numbered: 1 the first icon, 2 a queued icon, 3 the keybind text](images/Reading-The-Displays-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; in game, in combat on an open-world enemy -->
+
+In the picture, **1** is the first icon, the ability to press now, and **2** is a queued icon after it. The other parts below appear when they apply.
 
 Each part of an icon has a meaning:
 
-- **Keybind text**, top right by default: the key bound to that ability on the action bars. With a gamepad, the controller button picture shows there instead.
+- **3, Keybind text**, top right by default: the key bound to that ability on the action bars. With a gamepad, the controller button picture shows there instead.
 - **Target count**, bottom right of the first icon: the number of enemies counted, shown only when there is more than one ([How targets are counted](How-Targets-Are-Counted)).
 - **Cooldown spiral**: the time until the ability can be used. When the ability should wait even after it is ready, the spiral can run on until the moment to press it (**Extend Spiral**).
 - **Delay indicator**: when the ability should be pressed a little later, a coloured icon or a countdown can show the wait (**Indicator**, on the **Delays** tab).

@@ -36,7 +36,8 @@ To use the glow instead of the icons, keep the display enabled and set its trans
 
 Enter combat with an enemy targeted. The button that casts the first recommendation glows gold, and the button of the second glows blue.
 
-<!-- TODO-SCREENSHOT: an action bar with a gold and a blue glow -->
+![An action bar button with the gold glow of the first recommendation](images/Action-Bar-Glow-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; in game, in combat on an open-world enemy -->
 
 ## See also
 

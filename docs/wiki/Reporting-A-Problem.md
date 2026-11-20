@@ -24,7 +24,8 @@ A snapshot records how Hekili Forever chose the recommendations on screen at tha
 
 With **Take Screenshot** checked, Hekili Forever also takes a game screenshot when you take a snapshot. A screenshot of the displays at that moment helps too.
 
-<!-- TODO-SCREENSHOT: the Snapshots tab with a snapshot selected -->
+![The Snapshots tab with snapshot 1 selected: its data line is shown in the Snapshot Data box, ready to copy with Ctrl+A and Ctrl+C](images/Reporting-A-Problem-1.png)
+<!-- Hekili Forever 0.11.0; Druid Feral; options, Snapshots (Troubleshooting) -->
 
 ## Capture Lua errors
 
