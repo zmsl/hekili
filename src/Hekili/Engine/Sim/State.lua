@@ -1518,7 +1518,7 @@ do
                     local v = max( 0, min( r.max, val + bonus ) )
                     v = max( 0, min( r.max, v + gain ) )
                     local l = max( 0, min( r.max, vlo + bonus ) )
-                    l = max( 0, min( r.max, l + ( w > 0 and max( 0, gain - w ) or gain ) ) ) -- a decay's gain is < 0
+                    l = max( 0, min( r.max, l + ( gain >= 0 and max( 0, gain - w ) or gain - w ) ) ) -- a decay keeps falling
                     local h = max( 0, min( r.max, vhi + bonus ) )
                     h = max( 0, min( r.max, h + gain + w ) )
                     local idx
