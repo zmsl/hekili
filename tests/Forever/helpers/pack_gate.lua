@@ -812,7 +812,8 @@ M.FLICKER = {
     -- 0 / 0 / 0, retracted 0 / 0.0333 / 0, heldReady 0 / 1 / 0): retracted 0 -> 0.04 (the measured worst rounded up).
     -- First divergence seed 22 t 34.40: our Holy Fire's cast bar ending at 34.4000000000000x (its success, 229.5
     -- mana, its hit and an aura) is the poll's; the
-    -- re-timed set retracts one ready (held, ready-short and flip counts per fight unchanged)
+    -- re-timed set retracts one ready (held, ready-short and flip counts per fight unchanged); the retracted tick itself
+    -- (seeds 21-40) is untraced
     ["Smite"] = { flicker = 0.02, retracted = 0.04, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
