@@ -116,12 +116,15 @@ M.FLICKER = {
     -- swing width (wave 0.10.1, L1456 i: a white swing's floor counts no Unbridled Wrath, the hands pass its expected rage as their value's `width`;
     -- R6, seeds 1-20 / 21-40 / 41-60, base 314a87b86 -> 680e8a723: flicker 0.18 / 0.30 / 0.26 -> 0.18 / 0.30 / 0.22, retracted 0.07 / 0.04 / 0 same,
     -- readyShort 2 / 6 / 5 -> 5 / 7 / 6, heldReady 226 / 197 / 229 -> 221 / 224 / 237, dps .976 / 1.028 / 1.017 -> .978 / 1.030 / 1.008):
-    -- heldReady 229 -> 237, the floor now waits for a proc it cannot see (at-cost lo-truth -1.4 / -1.4 / -1.4 -> -1.3 / -1.4 / -1.4).
-    -- readyShort 6 -> 7, traced (every poll of seeds 1-20, base vs tip): all 13 base presses recur; the 5 new ticks are an off-hand
-    -- swing kept pending one or more polls longer, so the sim's forecast of its rage shows Bloodthirst ready (the forecast class
-    -- above). A short answer ends a pending swing only within the floor + its low step, now the step without the proc; in the
-    -- traced episode (seed set 1, Bloodthirst at 30, truth 23.61) the floor stood at 25.06, ABOVE truth, at the same polls on base
-    -- and tip (pre-existing, L1456 iv class): with the narrower step the short answer no longer ends the swing, base's ended it
+    -- heldReady 229 -> 237 (per set -5 / +27 / +8): the accepted kind (the floor waits for a proc it cannot see), not separated
+    -- from the fights' re-timing (at-cost lo-truth -1.4 / -1.4 / -1.4 -> -1.3 / -1.4 / -1.4: L60's floor rides the rungs).
+    -- readyShort 6 -> 7, traced (every poll of seeds 1-20 and 21-40, base vs tip): all 13 base presses recur; each new tick is an
+    -- off-hand swing kept pending a poll or more longer, so the sim's forecast of its whole rage (the proc included) shows
+    -- Bloodthirst (30) ready (the forecast class above). A short answer ends a pending swing only within the floor + the pending
+    -- low steps, which now leave the proc out. Seeds 1-20 (3 ticks, truth 23.61): the floor stood at 25.06, ABOVE truth, at
+    -- the same polls on base and tip (pre-existing); seeds 21-40 (1 tick, t 32.80, truth 29.73 with both swings landed): the
+    -- main hand's credit after a rung at 25 nets to 0 on tip (base +1.22, the proc's part), so the floor stays 25.00 and the
+    -- off hand stays pending; the forecast then adds its whole step over a rung that already holds part of it
     ["Fury L60"] = { flicker = 0.31, flickerK = 0.6, retracted = 0.21, readyShort = 7, heldReady = 237 }, -- flicker 0.18 / 0.30 / 0.22, retracted 0.07 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
