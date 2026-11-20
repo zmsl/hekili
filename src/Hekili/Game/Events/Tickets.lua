@@ -477,11 +477,12 @@ end
 
 --- (spec §3.4 steps 2-4, owner ruling 2026-10-22; at most 4 passes (pass 4: Overdue, attribution-recovery decision 46) x CAP 32 tickets per row) The candidate for a row at t on `g` at pass `p`: among the open
 --- tickets on `g` that accept the row and whose band at p holds t, those whose learned amount band accepts it first
---- (K.Accepts' second answer), then those with no band or an unlearned one; within each group the least expected
---- closure. Also how many matched. Allocates nothing.
+--- (K.Accepts' second answer), then those with no band or an unlearned one; within each group a secret row's tick
+--- past its schedule's next owed one last (L1442: it only makes the row ambiguous, T.Divergent; the cast's own row is
+--- paid as before), then the least expected closure. Also how many matched. Allocates nothing.
 function T.Pick(t, g, p, act, flag, amount, sch, isAvoid)
     local K = I.Kinds
-    local best, bestE, bestBanded, n, refused = 0, math.huge, false, 0, false
+    local best, bestE, bestBanded, bestFar, n, refused = 0, math.huge, false, true, 0, false
     for i = 1, CAP do
         local k = kind[i]
         -- pass 4: K.Band is nil for MELEE, TICKS and CHANNEL (Kinds.lua K.Band), so they never match there
@@ -492,8 +493,12 @@ function T.Pick(t, g, p, act, flag, amount, sch, isAvoid)
                 local lo, h, e = K.Band(i, p, t, isAvoid, act, sch, amount == nil)
                 if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
                     n, banded = n + 1, banded == true
-                    if (banded and not bestBanded) or (banded == bestBanded and e < bestE) then
-                        best, bestE, bestBanded = i, e, banded
+                    local far = amount == nil and k == X.TICKS and K.TickN(i, t, true) > done[i] + 1
+                    if
+                        (banded and not bestBanded)
+                        or (banded == bestBanded and (bestFar and not far or far == bestFar and e < bestE))
+                    then
+                        best, bestE, bestBanded, bestFar = i, e, banded, far
                     end
                 end
             end

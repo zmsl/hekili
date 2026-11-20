@@ -280,14 +280,14 @@ describe("rows with a secret amount (kind-only routing)", function()
         assert.are.same({ 1, 0 }, { T.done[i], T.bandRejected })
     end)
 
-    -- An older schedule's first paid tick confirms its application over older ones only: a recast's newer schedule (its
-    -- direct row secret, so nothing refreshed the old one) stays open though the old one took a row in its phase.
-    it("closes no newer schedule of the ability when an older one pays its first tick", function()
+    -- A recast (its direct row secret, so nothing refreshed the old schedule) at the old one's first tick: a crit in
+    -- that instant may be the old tick (it pays it: done 1), and that first paid tick confirms the old application over
+    -- older ones only, so the newer schedule stays open.
+    local function recast()
         ctl.now = 10
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
         local old = ticket(X.TICKS)
-        ctl.now = 13 -- the recast on the old schedule's first tick (its rows secret)
-        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
+        ctl.now = 13
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
         ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", S, 64)
         local new
@@ -296,9 +296,35 @@ describe("rows with a secret amount (kind-only routing)", function()
                 new = j
             end
         end
-        ctl.now = 16 -- both schedules' tick, a crit: the older one takes it (the least expected closure, first slot)
+        return old, new
+    end
+
+    it("closes no newer schedule of the ability when an older one pays its first tick", function()
+        local old, new = recast()
         ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
-        assert.are.same({ 2, true }, { T.done[old], T.state[new] >= T.OPEN })
+        assert.are.same({ 1, true }, { T.done[old], T.state[new] >= T.OPEN })
+    end)
+
+    -- A secret row's tick past its schedule's next owed one ranks last (T.Pick): it makes the row ambiguous but takes
+    -- it from no other candidate. The newer schedule's tick, in phase with the old schedule's slot 2, is the newer one's.
+    it("gives an old schedule's later slot no row another candidate holds: the newer schedule's tick", function()
+        local old, new = recast()
+        ctl.now = 16
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        assert.are.same({ 0, 1 }, { T.done[old], T.done[new] })
+    end)
+
+    -- (detect sweep K19, secret arm) A recast on the old schedule's last slot: the crit in that instant goes to the
+    -- recast's direct ticket, as before (the old tick only makes it ambiguous: divergent counted).
+    it("pays a recast's direct crit to its cast, not the old schedule's later slot in the same instant", function()
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        local old = ticket(X.TICKS)
+        ctl.now = 22 -- the old schedule's slot 4 (13, 16, 19 secret, unseen)
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
+        local paid = T.paid[X.FRAME]
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", S, 64)
+        assert.are.same({ 0, 1 }, { T.done[old], T.paid[X.FRAME] - paid })
     end)
 
     -- While a flight's schedule has no anchor (its direct row unseen, wide > 0) its band stays on its next owed tick:

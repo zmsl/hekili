@@ -142,7 +142,10 @@ function M.boot(o)
             end
         end
         if T.kind[i] == TICKS and T.period[i] > 0 then -- the slot the row's time names vs the one paid
-            local shift = math.abs(math.floor((t - T.anchor[i]) / T.period[i] + 0.5) - (T.done[i] + 1))
+            -- the one paid: T.Pay's own (L1442: a secret wound's slot follows elapsed time, K.TickN; else done + 1)
+            local s = c.stream
+            local paid = (k > 0 and s.a2[k] == "WOUND") and c.I.Kinds.TickN(i, t, s.secretAmount) or T.done[i] + 1
+            local shift = math.abs(math.floor((t - T.anchor[i]) / T.period[i] + 0.5) - paid)
             if shift > c.tickShift then
                 c.tickShift = shift
             end
