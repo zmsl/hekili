@@ -93,6 +93,7 @@ local flight = 0 -- the running cast's travel (s): its target aura writes start 
 -- True while a reaction runs: it is folded after its outcome's time T (a swing's row comes ~0.47 s after the swing, an
 -- avoid at its window's close), so its aura reads answer as of T (I.AuraAsOf), not the belief's latest.
 local asOf = false
+local reactHand = false -- while a swing's reaction runs: its hand (1 main, 2 off; I.ResourceShift)
 
 -- The latest cast's undo (Obs.Avoided): its ability, time and target (the swap serial), the cost it paid, and the target
 -- auras its `now` wrote, each as it was before (expiry 0: down), at most UNDO of them. Preallocated.
@@ -361,7 +362,7 @@ local function shift(n, resource, spread)
     if n > 0 and type(spread) == "number" and spread > 0 then
         I.ResourceGainSpread(r, n, spread, T, CAST)
     else
-        I.ResourceShift(r, n, T, CAST, asOf) -- a reaction's gain may already sit under a rung's lift (L1504)
+        I.ResourceShift(r, n, T, CAST, asOf and reactHand) -- its swing may owe a rung's lift (L1504)
     end
     if n > 0 then
         I.Log.Energize(A.qid[curA] or 0, n, I.res.type[r], I.res.max[r], T) -- a reaction's: no ability (curA 0)
@@ -830,7 +831,7 @@ local function fire(w, o, t, hand)
     if not l or l.n == 0 then
         return
     end
-    journal, asOf = false, true
+    journal, asOf, reactHand = false, true, hand or false
     for k = 1, l.n do
         local hk = l.hand[k]
         if hk == 0 or hk == hand then
@@ -838,7 +839,7 @@ local function fire(w, o, t, hand)
             I.reactionsRun = I.reactionsRun + 1
         end
     end
-    journal, asOf = true, false
+    journal, asOf, reactHand = true, false, false
 end
 
 -- Ability a's travel to the target (s): the believed distance (the range bracket's middle, Families/Enemies.lua) over

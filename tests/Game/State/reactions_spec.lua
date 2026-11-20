@@ -302,23 +302,45 @@ describe("reactions", function()
         end)
 
         -- L1504: a rung (a usable yes) after the swing already showed the pool with the swing's whole rage in it, its
-        -- reaction's gain too; the gain, folded at the row, first covers that lift as the swing's own step does
-        it("a gain dated at or before a rung's lift covers the lift first; one after the rung adds in full", function()
+        -- reaction's gain too; the gain, folded at the row, first covers the rest of the lift its own swing still owes
+        -- (rungs since that swing, less what its own step covered), never a lift an earlier swing owes (L1525 (a))
+        it("a gain covers only the lift its own swing still owes; any other adds in full", function()
             local r = reaction("landed", "target", "land")
             r.now = function()
                 gain(5, "rage")
             end
             build({ r })
             local S, Obs, K, R = I.Sources, VS.Obs, I.HitKind, I.res
-            local function landAt(swingT, foldT)
-                R.est0[1], R.lo0[1], R.hi0[1] = 20, 20, 20
-                R.liftE[1], R.liftL[1], R.liftH[1], R.liftT[1] = 8, 8, 8, 10.2 -- a rung at 10.2 lifted 12 -> 20
-                S.Direct(Obs.SwingSettled, foldT, 1, swingT, K.WOUND)
-                VS.Drain(foldT + 0.01)
-                return { R.est0[1], R.lo0[1], R.hi0[1], R.liftL[1] }
+            local function rung(t, v) -- a rung at t lifted every bound by v (owe's bookkeeping: none for 0)
+                if v == 0 then
+                    return
+                end
+                R.liftE[1], R.liftL[1], R.liftH[1] = R.liftE[1] + v, R.liftL[1] + v, R.liftH[1] + v
+                R.liftCE[1], R.liftCL[1], R.liftCH[1] = R.liftCE[1] + v, R.liftCL[1] + v, R.liftCH[1] + v
+                R.liftT[1] = t
             end
-            assert.are.same({ 20, 20, 20, 3 }, landAt(10, 10.47)) -- the swing at 10, before the rung: netted
-            assert.are.same({ 25, 25, 25, 8 }, landAt(10.3, 10.77)) -- after the rung: the pool had not got it
+            -- from b: a rung `before` (0: none) at b + 9.95, the main-hand swing at b + 10, a rung `after` at b + 10.2,
+            -- the swing's landed credit (or none: closed with no row, c = -1) and its row at b + 10.47
+            local function land(b, before, after, credited)
+                R.est0[1], R.lo0[1], R.hi0[1] = 20, 20, 20
+                R.liftE[1], R.liftL[1], R.liftH[1] = 0, 0, 0
+                if before > 0 then
+                    rung(b + 9.95, before)
+                end
+                S.Direct(Obs.Swing, b + 10, 1, 0, 4)
+                VS.Drain(b + 10.01)
+                rung(b + 10.2, after)
+                if credited then
+                    S.Direct(Obs.Swing, b + 10, 1, 1, 1)
+                end
+                S.Direct(Obs.SwingSettled, b + 10.47, 1, b + 10, credited and K.WOUND or -1)
+                VS.Drain(b + 10.48)
+                return { R.est0[1], R.lo0[1], R.hi0[1] }
+            end
+            assert.are.same({ 20, 20, 20 }, land(0, 0, 30, true)) -- its step took 30's part, its gain the rest
+            assert.are.same({ 20, 20, 20 }, land(20, 0, 30, false)) -- no row (live): the lift since it is its own
+            assert.are.same({ 23, 23, 23 }, land(40, 30, 2, false)) -- 30 came before it (another swing's): 2 only
+            assert.are.same({ 25, 25, 25 }, land(60, 30, 0, false)) -- no rung after it: in full
             assert.are.equal(0, I.nowErrors)
         end)
 
