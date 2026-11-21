@@ -36,11 +36,20 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
   Fix round 2 (owner's choice A, with the re-review's confirm rule): every ring decode other than `s.qv` is held
   (`s.pend`) until the next frame's decode gives the same value; one that moves is held again (re-review R1: a held
   jump, 1300 to 1248, then +2 across 1250 with its cell bars late, read 1200 when the held frame's decode was taken
-  unchecked). Confirmed means exactly: two consecutive decodes of the source give the same quantum. With a push's
-  firings within two frames the rest of a half-landed change lands before the next decode, so it is never confirmed.
-  Holds and bad frames count in `s.run`; more than `SETTLE + 1` frames without a call is a desync. `suspect()`,
-  `DRIFT` and round 1's after-bad-frame hold are gone (subsumed). Scope: ring sources only (max over 100); a `step`
-  source and precision at a max of 100 or less (Gray, e.g. energy) are not held and keep the partial read (84 for 85).
+  unchecked). Confirmed means exactly: two consecutive decodes of the source give the same value. With a push's
+  firings within two frames the rest of a half-landed change lands before the next decode, so it is not confirmed;
+  the exception is a later change whose firings rebuild the same half state bar for bar (a reversal across a cell on
+  adjacent frames, 1249 -> 1250 -> 1249 with the first push's cell bars and the second's ring bars late: the late
+  cell firings cancel the reversal's own, and 1200 is confirmed; for mana it needs a spend and a regen tick to undo
+  each other bar for bar, so it is rare and the fake runs never produced it; `precision_spec` pins it). Holds and bad
+  frames count in `s.run`; more than `SETTLE + 1` frames without a call is a desync. `suspect()`, `DRIFT` and round
+  1's after-bad-frame hold are gone (subsumed). Fix round 3: the first decode after a prime is held too (re-review 2
+  I-R2a: a +2 across 1250 on a prime's last push, its cell bars late, read 1200; `lib.reprime` and a mode change
+  clear `s.qv`, and the hold no longer skips a source that is not `ok` yet), and Gray sources are held by the same
+  rule (owner: "it's consistency"): `grayDecode` returns its 1% cell, `s.qv` is the confirmed cell or quantum in both
+  modes (`s.n` is gone), so a `step` watch or precision at a max of 100 or less no longer reads a split jump's half
+  state (100 -> 85 with Gray bit 0 and the parity late read 84). `t` of a call on a held source is the change's last
+  firing, up to two frames back (it fell to the call frame once the hold added a frame).
 - L1645 energy 35, 36, 35, 36 (exact, max 100, position): no decode path. A one-point change toggles a Gray bit and
   the parity bar, and either alone fails the parity check (a hold); four alternating reads need Gray bit 2 to toggle
   three times, which a spend and up to 7 points of regen cannot give (both checked exhaustively in `position_spec`).
@@ -50,30 +59,38 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
   refused); only the handles that need the refused curves are `suspended` (precision; step without a position set).
 - Residual rates (fake, 6 seeds x 150 s per row, max 2479, regen +2/+3 every 5-7 frames, a spend every 1-4 s, lag 1
   plus jitter; Park-Miller seeds). Desyncs / sink calls with a value the client did not hold in the last 20 frames:
-  | regime | late | c01cbbdc4 | fix round 1 | fix round 2 |
-  |---|---|---|---|---|
-  | drained (spend 100-399 from 1200) | 1-2 | 0 / - | 0 / 414 | 0 / 0 |
-  | balanced (spend 30-94) | 1-2 | 0 / - | 0 / 404 | 0 / 0 |
-  | sweep (spend 60-259 from the max, refilled each minute) | 1-2 | 0 / - | 0 / 404 | 0 / 0 |
-  | drained | 1-3 | 1003 / - | 1038 / 372 | 1040 / 65 |
-  | balanced | 1-3 | 1017 / - | 1081 / 358 | 1084 / 63 |
-  | sweep | 1-3 | 939 / - | 984 / 350 | 958 / 85 |
+  | regime | late | c01cbbdc4 | fix round 1 | fix round 2 | fix round 3 |
+  |---|---|---|---|---|---|
+  | drained (spend 100-399 from 1200) | 1-2 | 0 / - | 0 / 414 | 0 / 0 | 0 / 0 |
+  | balanced (spend 30-94) | 1-2 | 0 / - | 0 / 404 | 0 / 0 | 0 / 0 |
+  | sweep (spend 60-259 from the max, refilled each minute) | 1-2 | 0 / - | 0 / 404 | 0 / 0 | 0 / 0 |
+  | drained | 1-3 | 1003 / - | 1038 / 372 | 1040 / 65 | 1040 / 53 |
+  | balanced | 1-3 | 1017 / - | 1081 / 358 | 1084 / 63 | 1084 / 56 |
+  | sweep | 1-3 | 939 / - | 984 / 350 | 958 / 85 | 961 / 65 |
   (c01cbbdc4 was measured with another metric: 1 / 1 / 4 calls outside the last 9 frames' range at 1-2 late.) Round
   1's ~400 per row are mostly values partway through a regen change; round 2 removes them. The 1-3 rows' residual is
-  a half-landed state whose rest came two frames later, confirmed by the next decode. Splits (a decode that moved
+  a half-landed state whose rest came two frames later, confirmed by the next decode; round 3's drop is the first
+  value after a prime (held now). Splits (a decode that moved
   during a hold, or a run of bad frames) stay meaningful: 0 at lag 0, ~8500 per row at 1-2 late (~8000 in round 1).
   The longest run of frames with `h:Exact()` behind the client's value is 11-14 at 1-2 late and 36-43 at 1-3 late; it
   is not latency: with changes every 5-7 frames the reading trails a moving value, and each value reported is at most
   the firing delay plus `SETTLE + 3` frames old.
-- Extending the hold to Gray sources (not done: owner call). Fake, energy max 100, regen +1 every 5-7 frames, a
-  spend of 20-59 every 1-4 s, 6 seeds x 150 s, a precision watch; now vs a prototype holding every Gray change for
-  confirmation: values never held 0 / 0 at lag 0, 101 / 0 at 1-2 late (~7 a minute removed), 110 / 17 at 1-3 late;
-  frames with `h:Exact()` behind the client 9306 / 18479 at lag 0 (one more frame per change, ~16 ms), 25309 / 34259
-  at 1-2 late; calls 9324 / 9080 at 1-2 late; longest run behind 9 / 11 (1-2 late), 10 / 24 (1-3 late); desyncs
-  unchanged (0 at 1-2, ~1635 at 1-3). The same rule would apply to `step` watches.
+- The hold on Gray sources (fix round 3), its cost. Fake, energy max 100, regen +1 every 5-7 frames, a spend of 20-59
+  every 1-4 s, 6 seeds x 150 s, a precision watch; before / held:
+  | late | values never held | frames `h:Exact()` behind | calls | longest run behind | desyncs |
+  |---|---|---|---|---|---|
+  | 0 | 0 / 0 | 9306 / 18479 | 9306 / 9173 | 2 / 4 | 0 / 0 |
+  | 1-2 | 101 / 0 | 25309 / 34259 | 9324 / 9080 | 9 / 11 | 0 / 0 |
+  | 1-3 | 110 / 15 | 38232 / 44441 | 9111 / 8572 | 10 / 24 | 1635 / 1644 |
+  One more frame per change (~16 ms); ~7 partial reads a minute at 1-2 late removed. At lag 0, 133 changes on
+  adjacent frames (a regen tick beside a spend) are held again (splits) and called once. A value that changes on every
+  frame is never confirmed: a `step` watch on a target losing 1% a frame (dead in under ~1.7 s at 60 fps) made 98
+  calls before and now one unknown call and 7 desyncs over 99 frames, its source's edge watch priming at the end; at
+  1% every 2 frames it makes 98 calls, the shown cell one behind; the ring had the same property for mana changing
+  every frame.
 - Read-only leftovers (L1649): `.luacheckrc` drops the unused `C_EncodingUtil`, `UnitClass`, `GetSpecialization`,
   `C_SpecializationInfo`; the in-game plan's minor statements read "or later".
-- Fix rounds 1 and 2 (review and re-review of the fix lane): I2 `Kinds/Aura.lua` stamps `s.litAt` only when the item
+- Fix rounds 1 to 3 (review and re-reviews of the fix lane): I2 `Kinds/Aura.lua` stamps `s.litAt` only when the item
   lit for the watch's own unit: an item lit on the player or on a secret unit no longer ends a target source's swap
   doubt (it read a false 0 once the player's aura fell). I3 `h:Latency()` of a position or precision handle is
   `SETTLE + 3` frames (was 3), counted from the frame a change's first firing arrives: that frame, at most `SETTLE + 1`
@@ -84,8 +101,8 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
 - Known, not changed here: in edges mode `lib.decode` still counts a contradiction between edge bars as a desync at
   once (a jump over two edges whose firings split the wrong way re-primes, no hold). With the doubt on every target
   watch, a mob without the aura reads unknown until a target UNIT_AURA (about 2 s in the Essential run). Owner calls:
-  every precision change pays a frame (choice A); Gray sources are not held (cost above); `h:Latency()` is 7 frames for
-  position and precision handles.
+  every position and precision change pays a frame (choice A, Gray included in round 3: cost above); `h:Latency()` is
+  7 frames for position and precision handles, counted from the change's first firing or a prime's last push.
 
 ## Built in lane C1: Cooldown Manager gaps G1-G4, truths, the position set beside the ring, minor 5
 

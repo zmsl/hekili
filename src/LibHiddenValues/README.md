@@ -26,9 +26,9 @@ end)
 
 - The value is in `lo <= value < hi` (percent 0-100; `hi` is inclusive at 100). `dir` is `1` up, `-1` down, `0` for
   the first band after unknown. `t` is `GetTime()` of the frame in which the change was seen (for a handle on several
-  edges, and for any handle's first band after a prime, the frame before the call; for an unknown call, the frame of
-  the call); `q` is the quality (`LHV.BAND` = 2,
-  `LHV.UNKNOWN` = 0).
+  edges, the frame before the call; on a `step` or `precision` source, the frame of the change's last firing, or of a
+  prime's last push, two frames before the call; for an unknown call, the frame of the call); `q` is the quality
+  (`LHV.BAND` = 2, `LHV.UNKNOWN` = 0).
 - At most one call per handle per frame. A handle on one edge is called in the frame of the change; on several edges,
   one frame later, with the net band (a jump over three edges is one call); on a `step` or `precision` source every
   change waits for the next frame's decode to agree (confirmation, below), so two frames later, three when its firings
