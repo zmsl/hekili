@@ -30,7 +30,8 @@ end)
   the call); `q` is the quality (`LHV.BAND` = 2,
   `LHV.UNKNOWN` = 0).
 - At most one call per handle per frame. A handle on one edge is called in the frame of the change; on several edges,
-  one frame later, with the net band (a jump over three edges is one call).
+  one frame later, with the net band (a jump over three edges is one call); on a `step` or `precision` source up to
+  two frames later (a split holds the decode a frame). `h:Latency()` gives the worst case in seconds.
 - `h:Get()` returns `lo, hi, t, q` without a callback; `h:State()` returns `state, reason` (`"live"` means a band is
   known: `Get()` has it); `h:SetPaused(true)` stops
   feeding while your frame is hidden; `h:Release()` and `LHV:ReleaseAll("MyAddon")` drop watches.
@@ -51,14 +52,16 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
 - `edges`: thresholds in percent, (0.05, 100].
 - `step`: position. Any step is granted as 1: the band is the 1% cell (`lo`, `lo + 1`), `h:Domain()` returns step 1.
   Beside `edges` the band is cut by both (an edge on the 1% grid costs no bar). The source runs 8 bars (a Gray code
-  and a parity bar) while any watch on it asks for a step. A jump of any size is one call, one frame later.
+  and a parity bar) while any watch on it asks for a step. A jump of any size is one call, one frame later (two when
+  one change's firings split over two frames).
 - `points` (player power): whole-number thresholds in the value's own units, e.g. `{ 40, 60 }` energy. A handle with
   `points` (even `{}`) answers in points: `lo`, `hi` and `h:Domain()` (0 to the player's plain max) are in points.
   The cut is `points / max`; it moves with the max (`UNIT_MAXPOWER`: the handle goes unknown while it primes again).
-  Identical points share a bar; a point on the 1% grid of a `step` source costs none. Caps (`GetPool`): 8 points
-  that need a bar per source and 64 in total, checked when you ask; over either the whole request is refused
-  (`edge-limit`), nothing granted. `h:SetPoints(list)` swaps a handle's points in one step: `true`, or `nil, code`
-  with the old set kept. While the max was never read as a plain number the handle is `unavailable, max-unknown`.
+  Identical points share a bar; a point on the 1% grid of a `step` source costs no bar. Caps (`GetPool`): 8 distinct
+  points per source and 64 in total, each counted as if it needed a bar (a point answered without one while a `step`
+  or `precision` watch is there needs one when that watch goes), checked when you ask; over either the whole request
+  is refused (`edge-limit`), nothing granted. `h:SetPoints(list)` swaps a handle's points in one step: `true`, or
+  `nil, code` with the old set kept. While the max was never read as a plain number the handle is `unavailable, max-unknown`.
 - `precision = "point"` (player power): the exact value. `h:Exact()` returns `value, step` (value nil while unknown):
   step 1 up to a max of 3175, above it the step grows until every curve fits the client's 256-point limit (6400
   mana: step 3). `q` is `LHV.EXACT` (3) at step 1. It costs 57 bars at most (50 + a cell code + parity); while any

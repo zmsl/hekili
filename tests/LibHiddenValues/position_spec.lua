@@ -138,10 +138,20 @@ describe("LibHiddenValues position", function()
         Fake.login()
         untilLive(h)
         Fake.set("stagger", 2) -- every 2nd firing arrives one frame late: one change's firings land in two frames
+        local worst = 0
         for v = 38, 60 do
             W.unit.target.health = v / 100
-            Fake.tick(3)
+            local f = 0
+            repeat
+                f = f + 1
+                Fake.tick(1)
+            until h:Get() == v or f == 10
+            worst = math.max(worst, f)
         end
+        Fake.tick(3)
+        assert.is_true(worst * lib.frameSec <= h:Latency() + 1e-9, "frames " .. worst) -- the held frame counted
+        local e = lib:Watch("B", { kind = "health", unit = "target", edges = { 50 } }) -- decoded after the cell too
+        assert.are.equal(h:Latency(), e:Latency())
         for i = 1, #calls do
             local c = calls[i]
             assert.are.equal(c[1] + 1, c[2], i)
