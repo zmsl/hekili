@@ -375,7 +375,7 @@ describe("LibTimeToDie tracking", function()
         end
         assert.are.equal(lhv:GetMessage("unproven"), ttd:GetMessage("unproven")) -- LibHiddenValues' reasons
         assert.is_nil(ttd:GetMessage("live", "deDE"))
-        assert.are.same({ "LibTimeToDie-1.0", 1 }, { ttd:GetVersion() })
+        assert.are.same({ "LibTimeToDie-1.0", 2 }, { ttd:GetVersion() })
     end)
 
     it("a token LibHiddenValues has not proven reads unavailable with its reason", function()

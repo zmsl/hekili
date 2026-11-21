@@ -1,4 +1,4 @@
-# LibTimeToDie: in-game test plan (version 1)
+# LibTimeToDie: in-game test plan (version 1, minor 2)
 
 For the owner, one session on the live client, about 20 minutes. The library prints nothing and has no command of its
 own: every step runs through a probe (a small TTDProbe, or LHVProbe extended; the commands below say `/ttdp`) that
@@ -49,13 +49,13 @@ of the first `est` under 1 s, or else the time the target was lost, as the death
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Log in, `/ttdp` (again after a second if target says `pending`) | `LibTimeToDie-1.0` minor 1; `target` and `player` `ready`; `focus` `unavailable (unproven)`; the LibHiddenValues minor running is at least the one needed |
+| 1 | Log in, `/ttdp` (again after a second if target says `pending`) | `LibTimeToDie-1.0` minor 2; `target` and `player` `ready`; `focus` `unavailable (unproven)`; the LibHiddenValues minor running is at least the one needed |
 | 1a | With the CVar forced (setup 3): target a hostile mob, `/ttdp hostile` out of combat, then again in combat with it; target a friendly player or NPC, `/ttdp hostile` in combat | report `secret` or `plain` for both reads each time (the library treats a secret UnitCanAttack as hostile and a secret UnitExists as present; plain is expected); plain values: UnitCanAttack `true` for the mob, `false` for the friendly unit; UnitExists `true`. Also `/ttdp hostile` with no target, in combat: UnitExists `false` (or secret) |
 | 2 | Target a mob at full health, `/ttdp track target` | sink lines: `priming`, then `unknown` (at full, nothing to estimate yet) within a few frames |
-| 3 | Fight it to death with `/ttdp poll` on | `live` from about the first percent lost (reason `seed`, then `fit` after about 3%), est falling smoothly with the clock between sink calls (the poll lines), few sink calls; at the death `gone`. Report the summary |
+| 3 | Fight it to death with `/ttdp poll` on | `live` from the first crossings (reason `seed` while the anchor holds, then `fit` after about 3%; a first hit in the frame of combat start gives `unknown` until 2% has fallen, never a 0.16 s estimate), `lo`/`hi` wide early (up to 3x either way of `est`) and narrowing as the fight goes, est falling smoothly with the clock between sink calls (the poll lines), few sink calls; at the death `gone`. Report the summary, including the share with `lo <= truth <= hi` (about 85% expected) |
 | 4 | Three more kills of mobs of different sizes (one elite if at hand) | report each summary |
 | 5 | Mid-fight, target another mob that is already damaged; then clear the target | `priming` for a few frames, then `live` with reason `prior` (the last rate carried) before it loses a percent; with no target `gone` |
-| 6 | Target a mob at full, wait 20 s, then pull | the first `live` estimate is in the range of the fight's length, not minutes (combat start re-anchors) |
+| 6 | Target a mob at full, wait 20 s, then pull | the first `live` estimate is in the range of the fight's length, not minutes (combat start re-anchors), its range wide; no first estimate under about 1 s on a mob with many seconds to live |
 | 7 | With the target stream `live`: change the UI scale (Options) | the TTD state stays `live` (no `priming` line), crossings continue (LibHiddenValues re-primes its bars underneath) |
 | 8 | Stop attacking a damaged mob for 6 s or more (or let it heal: a mob that regenerates, a healer in the pack) | stall: reason `stalled`, est roughly holds (it may step by a second or two); heal of 3% or more: reason `prior`, then `fit` again |
 | 9 | `/ttdp track player`, take damage and heal (or fall damage) | the player stream answers as the target's does; `/ttdp streams` shows two rows |

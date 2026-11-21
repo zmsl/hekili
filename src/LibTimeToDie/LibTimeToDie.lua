@@ -9,7 +9,7 @@
 -- Upgrades: the newest minor on the client runs; Estimator.lua returns unless this copy won LibStub (lib.loading).
 -- State lives on lib as plain data; scripts are one-line dispatchers through lib. The addon name and the private table
 -- from `...` are never used (an embedded copy would receive its host's).
-local MAJOR, MINOR = "LibTimeToDie-1.0", 1
+local MAJOR, MINOR = "LibTimeToDie-1.0", 2
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then
     return

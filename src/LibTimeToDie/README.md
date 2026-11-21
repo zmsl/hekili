@@ -180,11 +180,21 @@ swap, heal or stall, a stall that holds the countdown, a change detector that re
 and a deadband on the published death time so the countdown is smooth. `lo` and `hi` come from a fast and a slow
 half-life (3 s and 12 s), or 0.5x to 3x of `est` while the answer rests on little data; when the fit hits its clamp
 (0.2x to 5x the cumulative slope) the range also covers the unclamped fit, so a clamped answer does not look certain.
-The range was not calibrated against the truth in the lab.
+The range also covers the stream's own crossing noise (`rangeZ` 1.15, capped at 3x either way of `est`): few lumps
+seen or few percent left make it wide. Calibrated in the lab, `[lo, hi]` held the truth on about 85% of the polls of
+five real solo fights (70-75% on lumpy and recorded synthetic fights; less where the rate steps, as at a Bloodlust or
+an execute phase). Short fights get wide ranges (up to 3x either way): that is the honest answer, not a defect; about
+one poll in ten sits at the cap.
 
 A stale anchor (`staleAnchor`, 12 s here; the lab's default is 8): at a stream's first 1% crossing, a first band
 older than 12 s is dropped and the stream starts at that crossing, so a mob targeted at full and left idle (before
 the pull, or out of combat) does not stretch the first estimates to minutes.
+
+The same-frame pull rule (`newAnchor`, 0.1 s): a first crossing less than 0.1 s after the anchor (the first hit landed
+in the frame combat started, so the anchor's slope would be one hit over no time) does not seed. The stream starts at
+that crossing and answers from the next 2% of fall (or a carried slope): until then the state is `live` with reason
+`prior` if a rate is carried, else `unknown`. It adds no state and no reason; the state and reason values are the
+same as before.
 
 ## Later (version 2)
 
