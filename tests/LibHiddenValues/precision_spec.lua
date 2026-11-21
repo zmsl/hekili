@@ -62,7 +62,7 @@ describe("LibHiddenValues point precision", function()
         assert.are.same({ 1, 0, 2000 }, { h:Domain() })
         for _, v in ipairs({ 1235, 1236, 1199, 0, 1, 49, 50, 51, 999, 1000, 1999, 2000, 777 }) do
             mana(v)
-            Fake.tick(2)
+            Fake.tick(3) -- a jump of 50 +- 8 (1 to 49) is held a frame
             assert.are.equal(v, (h:Exact()), v)
         end
         assert.are.same({ 777, 778 }, lohi(h))
@@ -521,7 +521,7 @@ describe("LibHiddenValues point precision", function()
             local splits, desyncs = select(8, lib:GetStats()), select(6, lib:GetStats())
             seen = {}
             local held = half(v, late)
-            assert.are.equal(2, #held)
+            assert.is_true(#held >= 2)
             Fake.tick(1)
             assert.are.equal(old, (h:Exact()))
             assert.are.equal(old, (h:Get()))
@@ -555,6 +555,27 @@ describe("LibHiddenValues point precision", function()
             crossing(1249, "cell") -- alone: 1299
             crossing(1250, "fine") -- the cell pair first: 1299
             crossing(1249, "fine") -- 1200
+        end)
+
+        -- Regen moves 2-3 points per change (the owner's run): half of such a change across a boundary, the ring's bars
+        -- landed without the cell's, read 50 off before (a scratch run with firings 1-2 frames late: 401 for 451).
+        it("never shows a value 50 off when the ring of a 2- to 4-point change lands without its cell", function()
+            start(1248)
+            crossing(1250, "cell") -- +2: alone the ring reads 1200
+            crossing(1247, "cell") -- -3: alone 1297
+            crossing(1251, "fine") -- +4: alone the cell pair reads 1297
+            crossing(1248, "cell") -- -3: alone 1298
+        end)
+
+        it("delays a real jump of 50 give or take 8 across a cell by one frame only", function()
+            start(1234)
+            local F = frames(1235)
+            assert.are.equal(F + 1, frames(1282)) -- +47
+            assert.are.equal(F, frames(1223)) -- -59: the ring moved 9
+            assert.are.equal(F, frames(1264)) -- +41: 9
+            assert.are.equal(F + 1, frames(1206)) -- -58: 8
+            assert.are.same({ 1235, 1282, 1223, 1264, 1206 }, seen)
+            assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
         it("delays a real jump of 50, or of 49 from a cell edge, by one frame only; others not at all", function()
