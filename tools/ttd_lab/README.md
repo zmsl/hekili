@@ -93,7 +93,8 @@ are kept in base-rate units, so a carried slope outlives a hint's end):
 
 ```lua
 e:Hint("rate", 1.3, startT, endT)      -- a known damage multiplier over a time window (lust); endT nil: open ended
-e:Hint("rate", nil)                    -- clear it
+e:Hint("rate", 1.3, startT, tEnd)      -- it ended early: re-issue with the same startT and the real end
+e:Hint("rate", nil)                    -- clear: only for a hint that was wrong (it un-warps every crossing it covered)
 e:Hint("execute", factor, pct)         -- a pack's execute range: below pct the damage runs factor times faster
 e:Hint("execute", 1, 20)               -- the threshold only: the factor is learned (execLearn), starting at 1
 local x = e:ExecuteFactor()            -- the factor in use, with the current stream's measurement folded in
