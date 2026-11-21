@@ -208,8 +208,25 @@ describe("LibHiddenValues standalone", function()
         assert.truthy(lines[#lines]:find("selftest PASS", 1, true))
         assert.are.same({ kind = "health", state = "ready" }, lib:GetKinds()[1])
         assert.are.same({
-            { kind = "health", unit = "target", predicted = true, handles = 2, bars = 2, active = true },
-            { kind = "power", unit = "player", power = 0, predicted = true, handles = 1, bars = 1, active = true },
+            {
+                kind = "health",
+                unit = "target",
+                predicted = true,
+                handles = 2,
+                bars = 2,
+                mode = "edges",
+                active = true,
+            },
+            {
+                kind = "power",
+                unit = "player",
+                power = 0,
+                predicted = true,
+                handles = 1,
+                bars = 1,
+                mode = "edges",
+                active = true,
+            },
         }, lib:GetSources())
         assert.are.same({ #lib.barFrame, 256 }, { lib:GetPool() })
         assert.is_true(#lib.barFrame >= 32)

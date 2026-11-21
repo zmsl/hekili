@@ -191,7 +191,6 @@ describe("LibHiddenValues contract", function()
             { kind = "health", unit = "focus", edges = { 20 } },
             { kind = "power", unit = "player", power = Enum.PowerType.Focus, edges = { 20 } },
             { kind = "power", unit = "player", power = Enum.PowerType.Energy, points = true, edges = { 20 } },
-            { kind = "health", unit = "target", step = 1 },
         }
         for i, spec in ipairs(specs) do
             local h = assert(lib:Watch("A", spec, sink), i)
@@ -201,13 +200,15 @@ describe("LibHiddenValues contract", function()
         assert.are.same({}, calls)
     end)
 
-    it("grants edges and drops a step it cannot serve yet", function()
+    it("grants a step beside edges as the 1% step (any step asked: 1)", function()
         W.unit.target = { health = 0.3 }
         local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 20 }, step = 1 }, sink)
+        local five = lib:Watch("A", { kind = "health", unit = "target", step = 5 }, sink)
         Fake.login()
         untilLive(h)
-        assert.are.same({ nil, 0, 100 }, { h:Domain() })
-        assert.are.same({ 20, 100 }, lohi(h))
+        assert.are.same({ 1, 0, 100 }, { h:Domain() })
+        assert.are.same({ 1, 0, 100 }, { five:Domain() })
+        assert.are.same({ 30, 31 }, lohi(h))
     end)
 
     it("pulls without a sink, swaps sinks, and stops after Release", function()

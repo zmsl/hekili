@@ -160,7 +160,7 @@ function lib:SelfTest(fn)
     local st = { frame = 0, bars = {}, changes = {}, fires = {}, last = {}, lastCh = {}, maxLag = 0 }
     st.primeIn, st.primeLate = 0, 0
     for k = 1, #EDGES + 1 do
-        local i = lib.allocBar(lib.ST, EDGES[k] or EDGES[1])
+        local i = lib.allocBar(lib.ST, lib.curveFor(EDGES[k] or EDGES[1]))
         if not i then
             for j = 1, #st.bars do
                 lib.freeBar(st.bars[j])

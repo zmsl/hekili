@@ -245,7 +245,8 @@ function lib.attach(h)
     local key = h.kind .. "|" .. h.unit .. "|" .. tostring(h.power) .. "|" .. tostring(h.predicted)
     local s = lib.srcByKey[key]
     if not s then
-        s = { kind = h.kind, unit = h.unit, power = h.power, predicted = h.predicted, bar = {}, ref = {}, handles = {} }
+        s = { kind = h.kind, unit = h.unit, power = h.power, predicted = h.predicted, handles = {} }
+        s.bar, s.ref, s.core, s.pbar, s.pref, s.bad = {}, {}, {}, {}, {}, 0
         lib.srcByKey[key] = s
         lib.sources[#lib.sources + 1] = s
     end
@@ -297,15 +298,10 @@ function lib.stateOf(h)
     if s.gone then
         return "gone"
     end
-    local prime, priming = lib.barPrime, false
-    for k = 1, #h.edges do
-        local i = s.bar[h.edges[k]]
-        if not i then
-            return "suspended" -- the bar cap was reached
-        end
-        priming = priming or prime[i] > 0
+    if not lib.served(s, h) then
+        return "suspended" -- the bar cap was reached
     end
-    return priming and "priming" or "live"
+    return lib.priming(s, h) and "priming" or "live"
 end
 
 local H = lib.H
@@ -324,9 +320,9 @@ function H:State()
     return state, reason
 end
 
--- step, min, max granted. Position (step) is a later stage: only the edges are served, so the step is nil.
+-- step, min, max granted: a step of any size is granted as 1 (the 1% cell), nil for edges only.
 function H:Domain()
-    return nil, 0, 100
+    return self.step, 0, 100
 end
 
 -- The plain value when the client gives it right now: not read in this stage.
@@ -334,10 +330,10 @@ function H:Exact()
     return nil
 end
 
--- Worst-case seconds from a change to its callback: a one-edge handle is called in the frame of the push, a handle on
--- several edges one frame later.
+-- Worst-case seconds from a change to its callback: a one-edge handle on an edges-only source is called in the frame of
+-- the push, any other handle (several edges, a position) one frame later.
 function H:Latency()
-    return lib.frameSec * ((self.edges and #self.edges == 1) and 1 or 2)
+    return lib.frameSec * ((self.single and not (self.src and self.src.mode)) and 1 or 2)
 end
 
 function H:SetSink(fn)

@@ -104,6 +104,7 @@ function lib.realise()
     lib.winStart = GetTime()
     for i = 1, #lib.sources do
         local s = lib.sources[i]
+        s.core, s.pbar, s.pref, s.bad = s.core or {}, s.pbar or {}, s.pref or {}, s.bad or 0 -- an older minor's source
         s.active = false
         lib.sync(s)
     end
@@ -166,33 +167,45 @@ function lib.event(event, unit)
     end
 end
 
--- Pushes every bar of a fed source once: a priming bar its low level, then the live read (the first one clears its
--- state; the last settling one ends the prime). The read's result is used once, behind issecretvalue: it is never
--- compared, kept or passed on.
+-- Pushes one bar of a fed source: a priming bar its low level, then the live read (the first one clears its state;
+-- the last settling one ends the prime). The read's result is used once, behind issecretvalue: it is never compared,
+-- kept or passed on.
+local function push(s, i, read)
+    local prime = lib.barPrime
+    local p = prime[i]
+    if p > lib.SETTLE + 1 then
+        lib.barFrame[i]:SetValue(lib.LOW)
+        prime[i] = p - 1
+    else
+        if p == lib.SETTLE + 1 then
+            lib.barState[i] = false
+        end
+        if p > 0 then
+            prime[i] = p - 1
+        end
+        if p == 1 then
+            s.dirty, s.seen, s.seenFrame = true, GetTime(), lib.frameNo
+        end
+        local x = read(s, lib.barCurve[i])
+        if issecretvalue(x) or x ~= nil then
+            lib.barFrame[i]:SetValue(x)
+        end
+    end
+    lib.nPush = lib.nPush + 1
+end
+
+-- Pushes every bar of a fed source once: its core set (position), its edge bars, its point bars.
 function lib.feed(s)
     local read = lib.kinds[s.kind].read
-    local prime, frames, curves, LOW, LIVE = lib.barPrime, lib.barFrame, lib.curves, lib.LOW, lib.SETTLE + 1
-    for e, i in pairs(s.bar) do
-        local p = prime[i]
-        if p > LIVE then
-            frames[i]:SetValue(LOW)
-            prime[i] = p - 1
-        else
-            if p == LIVE then
-                lib.barState[i] = false
-            end
-            if p > 0 then
-                prime[i] = p - 1
-            end
-            if p == 1 then
-                s.dirty, s.seen, s.seenFrame = true, GetTime(), lib.frameNo
-            end
-            local x = read(s, curves[e])
-            if issecretvalue(x) or x ~= nil then
-                frames[i]:SetValue(x)
-            end
-        end
-        lib.nPush = lib.nPush + 1
+    local core = s.core
+    for k = 1, #core do
+        push(s, core[k], read)
+    end
+    for _, i in pairs(s.bar) do
+        push(s, i, read)
+    end
+    for _, i in pairs(s.pbar) do
+        push(s, i, read)
     end
 end
 
@@ -209,10 +222,12 @@ function lib.drive(elapsed)
         local s = srcs[k]
         if s.dirty then
             s.dirty = false
-            local hs = s.handles
-            for j = #hs, 1, -1 do
-                if hs[j] then
-                    lib.decode(hs[j])
+            if lib.decodeSource(s) then
+                local hs = s.handles
+                for j = #hs, 1, -1 do
+                    if hs[j] then
+                        lib.decode(hs[j])
+                    end
                 end
             end
         end
@@ -257,9 +272,10 @@ function lib.stats(t0)
     end
 end
 
--- bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (none yet: 0).
+-- bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (none yet: 0),
+-- splits (a position decode held one frame).
 function lib:GetStats()
-    return #lib.barFrame - #lib.free, lib.usAvg, lib.usPeak, lib.pushRate, lib.fireRate, lib.desyncs, 0
+    return #lib.barFrame - #lib.free, lib.usAvg, lib.usPeak, lib.pushRate, lib.fireRate, lib.desyncs, 0, lib.splits
 end
 
 -- One row per source with a handle, in creation order: { kind =, unit =, power =, predicted =, handles =, bars =,
@@ -269,8 +285,11 @@ function lib:GetSources()
     for i = 1, #lib.sources do
         local s = lib.sources[i]
         if #s.handles > 0 then
-            local n = 0
+            local n = #s.core
             for _ in pairs(s.bar) do
+                n = n + 1
+            end
+            for _ in pairs(s.pbar) do
                 n = n + 1
             end
             out[#out + 1] = {
@@ -280,6 +299,7 @@ function lib:GetSources()
                 predicted = s.predicted,
                 handles = #s.handles,
                 bars = n,
+                mode = s.mode or "edges",
                 active = s.active and true or false,
             }
         end

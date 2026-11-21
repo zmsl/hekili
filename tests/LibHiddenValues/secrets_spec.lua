@@ -132,7 +132,7 @@ describe("LibHiddenValues secrets and efficiency", function()
 
     it("keeps statistics finite with no elapsed time", function()
         local stats = { lib:GetStats() }
-        assert.are.equal(7, #stats)
+        assert.are.equal(8, #stats)
         for i, x in ipairs(stats) do
             assert.is_true(finite(x), i)
         end

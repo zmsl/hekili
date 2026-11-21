@@ -53,12 +53,9 @@ local function validate(spec, h)
         end
     end
     h.unit, h.edges, h.power, h.predicted = unit, out, spec.power, spec.predicted ~= false
-    if
-        not lib.kinds[h.kind].units[unit]
-        or #out == 0 -- a step alone: position is a later stage
-        or spec.points
-        or (h.kind == "power" and not PROVEN_POWER[spec.power])
-    then
+    h.step = step and 1 or nil -- any step is granted as the 1% cell (Domain says so)
+    h.single = #out == 1 and not step -- rests on one bar: called from its firing
+    if not lib.kinds[h.kind].units[unit] or spec.points or (h.kind == "power" and not PROVEN_POWER[spec.power]) then
         h.unproven = "unproven"
     end
 end

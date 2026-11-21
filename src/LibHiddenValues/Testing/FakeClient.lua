@@ -10,12 +10,14 @@
 --   Fake.tick(2)
 --   Fake.restore()                           -- puts back every global this file set
 --
--- Surface: Fake.world (W.unit[token] = { health, power = { [Enum.PowerType] = fraction }, powerType, dead };
--- W.secret: reads return secrets, true by default, as under the map lockdown; W.combat does the same; W.secretBool:
--- UnitIsDead returns a secret), Fake.tick(n), Fake.event(name, ...), Fake.advance(seconds), Fake.set(knob, value),
+-- Surface: Fake.world (W.unit[token] = { health, power = { [Enum.PowerType] = fraction }, max = { [Enum.PowerType]
+-- = points }, powerType, dead }; W.secret: reads return secrets, true by default, as under the map lockdown; W.combat
+-- does the same; W.secretBool: UnitIsDead returns a secret; W.maxSecret: UnitPowerMax returns a secret and
+-- C_Secrets.ShouldUnitPowerMaxBeSecret says so; W.locale: GetLocale, "enUS" by default), Fake.tick(n), Fake.event(name, ...), Fake.advance(seconds), Fake.set(knob, value),
 -- Fake.login(), Fake.restore(), Fake.printed (every print call: the library makes none). Knobs: "closed" (bars fed a
 -- secret stop firing: the leak is closed), "lag" n (firings arrive n frames late), "secretlag" n (a fill set from a
--- secret fires n frames later still), "drop" n (every nth firing is lost), "snap" "left"|"right"|"nearest" (how a
+-- secret fires n frames later still), "drop" n (every nth firing is lost), "stagger" n (every nth
+-- firing queued arrives one frame later than the rest: one change's firings split over two frames), "snap" "left"|"right"|"nearest" (how a
 -- Step curve picks its point), "maxpoints" n (curve size limit), "refuse" name (that global function raises).
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
 --
@@ -30,9 +32,19 @@ local here = debug.getinfo(1, "S").source:match("^@(.*[/\\])") or "./"
 local root = here .. "../"
 
 local Fake = { frames = {}, errors = {}, printed = {} }
-local W = { unit = { player = { health = 1.0, power = { [0] = 1.0, [3] = 1.0 }, powerType = 0 } }, secret = true }
+local W = {
+    unit = {
+        player = {
+            health = 1.0,
+            power = { [0] = 1.0, [3] = 1.0 },
+            max = { [0] = 2000, [1] = 100, [3] = 100 },
+            powerType = 0,
+        },
+    },
+    secret = true,
+}
 Fake.world = W
-local K = { lag = 0, secretlag = 0, drop = 0, snap = "left", maxpoints = 1000 }
+local K = { lag = 0, secretlag = 0, drop = 0, stagger = 0, snap = "left", maxpoints = 1000 }
 local clock, tickNo, loggedIn, fireCount = 1000, 0, false, 0
 local saved, installed = {}, {}
 
@@ -155,10 +167,11 @@ local function through(x, curve)
 end
 
 -- Frames: a StatusBar's fill change queues the OnSizeChanged of each frame anchored to its fill texture.
-local qClip, qDue, qN = {}, {}, 0
+local qClip, qDue, qN, qCount = {}, {}, 0, 0
 local function queue(clip, extra)
-    qN = qN + 1
-    qClip[qN], qDue[qN] = clip, tickNo + K.lag + (extra or 0)
+    qN, qCount = qN + 1, qCount + 1
+    local late = (K.stagger > 0 and qCount % K.stagger == 0) and 1 or 0
+    qClip[qN], qDue[qN] = clip, tickNo + K.lag + (extra or 0) + late
 end
 local Frame = {}
 Frame.__index = Frame
@@ -296,6 +309,9 @@ install("print", function(...)
     end
     Fake.printed[#Fake.printed + 1] = table.concat(t, " ")
 end)
+install("GetLocale", function()
+    return W.locale or "enUS"
+end)
 install("SlashCmdList", {})
 install("UIParent", CreateFrame("Frame"))
 install("LibStub", nil) -- each fake client gets its own LibStub and library
@@ -313,6 +329,19 @@ install("UnitPowerPercent", function(unit, pt, unmodified, curve)
     end
     return through(u.power and u.power[pt or u.powerType] or 0, curve)
 end)
+install("UnitPowerMax", function(unit, pt)
+    local u = W.unit[unit]
+    local m = u and u.max and u.max[pt or u.powerType] or 0
+    if W.maxSecret then
+        return secret(m)
+    end
+    return m
+end)
+install("C_Secrets", {
+    ShouldUnitPowerMaxBeSecret = function()
+        return W.maxSecret and true or false
+    end,
+})
 install("UnitPowerType", function(unit)
     local u = W.unit[unit]
     return u and u.powerType or 0
