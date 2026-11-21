@@ -78,8 +78,8 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   source; the probe runs saw no change split over two frames. A max of 100 or less is the same as `step` (8 bars,
   exact). It is outside the point caps but inside the 256-bar pool,
   with every edge and point on the source counted (the step can grow with the max) and the 8 position bars when a
-  `step` watch is there: over it, `pool-limit`. A `step` watch joining a precision source is admitted the same way
-  (counted, or refused with `pool-limit`), as a points or precision watch is.
+  `step` watch is there: over it, `pool-limit`. Any `step` watch is admitted the same way (counted, or refused with
+  `pool-limit`), as a points or precision watch is; one joining a precision source counts the 8 position bars.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
 other kind, token or option (focus or another power type, `points` or `precision` on health, the `focus` token, ...)
