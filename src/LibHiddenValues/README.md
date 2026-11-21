@@ -248,7 +248,8 @@ store; never by the id alone (the client gives a new layout the largest id + 1, 
 deleting ours takes our id). A layout that fails any of the three is the player's: it reads `drift, deleted`, and
 neither restore nor manage ever changes it (manage adds a new layout of ours instead). After an update, our content
 from before it also counts as ours until a check passes (the client may write the layouts it loaded back over the
-update). A manage that finds none of ours saves the store as it is then as the original.
+update); the check that passes adopts the content it found (an update the client undid reads `managed, update`). A
+manage that finds none of ours saves the store as it is then as the original.
 
 Restore, decided per case: nothing else changed in the store since the manage (structurally) writes the saved
 original back byte for byte; the player changed something (edited, added or deleted another layout) removes only our
@@ -259,8 +260,9 @@ already gone from the store leaves nothing pending either). Restore after the re
 so the Cooldown Manager reads the player's layout again; the saved original stays in your store until the next load
 shows our layout gone (else `player, restore-failed`). Restore refuses `cdm-unreadable` and changes nothing when the
 store cannot be read or decoded, or is of another save version; the one exception is the exact string a failed write
-of the library left, which gets the saved original back raw. A manage that needs no reload (the store already is what
-this session loaded) is checked in the same session.
+of the library left: restore then starts from the readable store that write replaced (kept in your store, the
+player's edits with it), or the saved original raw when none was kept. A manage that needs no reload (the store
+already is what this session loaded) is checked in the same session.
 
 Not covered: a store lost from your SavedVariables while our layout exists (the layout stays; the player deletes it
 in the Cooldown Manager's settings, and a new manage adds another); a store saved by minor 4 before the layout's name

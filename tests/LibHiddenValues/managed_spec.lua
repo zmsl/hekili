@@ -750,4 +750,48 @@ describe("LibHiddenValues managed Cooldown Manager layout (Mode B)", function()
         assert.is_true(lib:RestoreCooldownManager("A", store))
         assert.are.equal(orig, W.cdm.store)
     end)
+
+    it("adopts the layout a check passed on when the client undid an update, and restores it later", function()
+        boot()
+        managedAfterReload()
+        local v1 = W.cdm.store
+        W.cdm.unlearned = { [26] = true, [25] = true } -- the new aura is not learned: the check does not count it
+        local function watch()
+            lib:Watch("A", { kind = "aura", unit = "player", spell = 6004, what = "up" })
+        end
+        watch()
+        Fake.tick(2)
+        assert.are.same({ "managed", "update" }, mode())
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        W.cdm.store = v1 -- the client writes its loaded layouts back before the reload
+        Fake.onReload = function()
+            consumer()
+            watch()
+        end
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "managed", "update" }, mode()) -- passed on v1: ours, the update still owed
+        Fake.cdmLayout()
+        Fake.tick(2)
+        assert.are.same({ "managed", "update" }, mode()) -- not drift deleted at the next read
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store)
+    end)
+
+    it("keeps the player's edits when a restore write and its put-back both failed", function()
+        boot()
+        managedAfterReload()
+        local t = layouts()
+        t[3][121][2][1] = { 7, 8, 9 } -- the player edits a layout of another class
+        W.cdm.store = Fake.encodeLayouts(t)
+        W.cdm.badWrite = true
+        assert.are.same({ nil, "cdm-write-failed" }, { lib:RestoreCooldownManager("A", store) })
+        W.cdm.badWrite = false
+        assert.is_nil(layouts()) -- our failed write's leftover
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        local r = layouts()
+        assert.are.same({ 7, 8, 9 }, r[3][121][2][1]) -- the edit kept, not the original from before the manage
+        assert.is_nil(r[3][TAG][3])
+        assert.are.equal(1, r[2][TAG])
+    end)
 end)

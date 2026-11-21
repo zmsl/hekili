@@ -13,7 +13,7 @@
 --
 -- The library keeps no SavedVariables: the consumer's table (its SavedVariablesPerCharacter) holds the saved original
 -- and the state across reloads; the consumer hands it over at every load (SetCooldownManagerStore). Its fields are
--- the library's (orig, tag, id, name, lay, prev, bars, pending, state, bad): persist the table, never edit it.
+-- the library's (orig, tag, id, name, lay, prev, bars, pending, state, bad, keep): persist the table, never edit it.
 --
 -- Our layout is recognised by its id, our name AND the content we wrote (name, lay), never by the id alone: the client
 -- gives a new layout the largest id + 1, so a layout the player makes after deleting ours takes our id. After an
@@ -243,7 +243,7 @@ local function write(st, new, what)
     if not ok or fetch() ~= new then
         return false
     end
-    st.bad = nil
+    st.bad, st.keep = nil, nil
     if new == mb.atLoad then
         lib.mbPending, st.pending = nil, nil
     else
@@ -255,7 +255,7 @@ end
 
 local function forget(st)
     st.orig, st.tag, st.id, st.name, st.lay, st.bars = nil, nil, nil, nil, nil, nil
-    st.prev, st.pending, st.state, st.bad = nil, nil, nil, nil
+    st.prev, st.pending, st.state, st.bad, st.keep = nil, nil, nil, nil, nil
 end
 
 -- Our layout in t, or nil: the id we wrote, under our name, holding exactly what we wrote. A layout the player made
@@ -357,10 +357,12 @@ local function learned()
     return out
 end
 
--- After the reload: our layout is the active one and every learned entry of ours is a tracked bar item.
+-- After the reload: our layout is the active one and every learned entry of ours is a tracked bar item. Returns the
+-- layout it passed on (the update's content, or the one before it when the client wrote that back), else false.
 local function check(st)
     local t = decode(fetch())
-    if not (t and mine(t, st) and t[2] and t[2][st.tag] == st.id) then
+    local found = t and mine(t, st)
+    if not (found and t[2] and t[2][st.tag] == st.id) then
         return false
     end
     local known = learned()
@@ -370,7 +372,7 @@ local function check(st)
             return false
         end
     end
-    return true
+    return found
 end
 
 -- Managed or drift, from the store (decoded only when its string changed) and the Cooldown Manager's state.
@@ -430,8 +432,9 @@ function mb.update()
             end
         end
     elseif st.pending == "manage" then -- written by an earlier load (or by this one with no reload needed): the check
-        if check(st) then
-            st.pending, st.state, st.prev = nil, "managed", nil
+        local found = check(st)
+        if found then -- what the client kept is ours from now on (an update it undid is still owed: update)
+            st.lay, st.pending, st.state, st.prev = copy(found), nil, "managed", nil
         elseif (mb.spent or 0) < CHECK then -- seconds out of combat, counted by the driver
             mb.checking = true
             return set("pending", "checking")
@@ -559,13 +562,13 @@ function lib:ManageCooldownManager(owner, store)
         return nil, E.CDM_API
     end
     if not ours then -- none of ours in the store: a new start, the store as it is now is the original
-        store.orig, store.tag = s, tag -- saved before the write
+        store.orig, store.tag, store.prev = s, tag, nil -- saved before the write
     end
     if not write(store, new, "manage") then
         pcall(C_CooldownViewer.SetLayoutData, s)
         local now = fetch()
         if now ~= s then
-            store.bad = now -- what our failed write left: Restore may write the original over it, over nothing else
+            store.bad, store.keep = now, s -- what our failed write left, and the readable store before it
         elseif not ours then
             forget(store) -- put back: nothing to restore
         end
@@ -609,7 +612,8 @@ function lib:RestoreCooldownManager(owner, store)
     if not t and s ~= store.bad then
         return nil, E.CDM_UNREADABLE
     end
-    local out = copy(t or o) -- our own failed write's leftover: the saved original goes back raw
+    local kept = not t and store.keep and decode(store.keep) -- over our failed write's leftover: what was there before
+    local out = copy(t or kept or o) -- else the saved original goes back raw
     local tag, id = store.tag, store.id
     if mine(out, store) then
         local ls = out[3][tag]
@@ -627,9 +631,9 @@ function lib:RestoreCooldownManager(owner, store)
         end
     end
     local new
-    if not t or same(out, o) then
+    if (not t and not kept) or same(out, o) then
         new = store.orig
-    elseif not same(out, t) then
+    elseif kept or not same(out, t) then
         local ok, enc = pcall(encode, out)
         if not (ok and type(enc) == "string" and same(decode(enc), out)) then
             return nil, E.CDM_API
@@ -646,6 +650,9 @@ function lib:RestoreCooldownManager(owner, store)
             local now = fetch()
             if now ~= s then
                 store.bad = now
+                if t then
+                    store.keep = s -- the player's edits: the next Restore starts from them, not the original
+                end
             end
             return nil, E.CDM_WRITE
         end
