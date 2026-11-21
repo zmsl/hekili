@@ -169,16 +169,121 @@ check("no division by zero: crossings in the same instant, zero-length streams",
     assert(finite(est) and finite(lo) and finite(hi))
 end)
 
+-- A mob first seen full at 0: n1 crossings at b1 seconds per percent, then n2 at b2.
+local function stepped(e, b1, n1, b2, n2)
+    e:Band(0, 99, 100)
+    local t, p = 0, 100
+    for k = 1, n1 + n2 do
+        t, p = t + (k <= n1 and b1 or b2), p - 1
+        e:Band(t, p - 1, p)
+    end
+    return t, p
+end
+
+check("the default detector follows a speed-up within a few crossings", function()
+    local e = E.New()
+    local t, p = stepped(e, 0.5, 40, 0.25, 6) -- x2 at 60%
+    local est = e:Get(t)
+    assert(math.abs(est - p * 0.25) < 0.5, est .. " vs " .. p * 0.25)
+    local off = E.New({ detect = 0 })
+    stepped(off, 0.5, 40, 0.25, 6)
+    assert(off:Get(t) > p * 0.25 * 1.2) -- the time-weighted fit alone still lags
+end)
+
+check("a rate hint bends the projection ahead of the data; the carried slope stays in base units", function()
+    local e = E.New()
+    local t = steady(e, 0, 100, 0.5, 30) -- at 70%: 35 s at the base rate
+    e:Hint("rate", 2, t, t + 10)
+    local est = e:Get(t) -- 10 s at x2 burns 40%, then 30% at the base rate: 25 s
+    assert(math.abs(est - 25) < 0.3, est)
+    for k = 1, 8 do -- the hinted rate shows up: 0.25 s per percent
+        e:Band(t + 0.25 * k, 69 - k, 70 - k)
+    end
+    e:Get(t + 2)
+    e:Restart() -- a swap inside the hint's window
+    local now = t + 2.6
+    e:Band(now - 0.1, 59, 60)
+    est = e:Get(now)
+    local inHint = t + 10 - now -- 2 x inHint base seconds burnt at x2, the rest of 59.5 x 0.5 at the base rate
+    assert(math.abs(est - (inHint + 59.5 * 0.5 - 2 * inHint)) < 0.3, est)
+end)
+
+check("the detector drops a rate hint the data contradicts", function()
+    local e = E.New()
+    local t = steady(e, 0, 100, 0.5, 30)
+    e:Hint("rate", 2, t, t + 40) -- a phantom: the damage does not change
+    for k = 1, 12 do
+        e:Band(t + 0.5 * k, 69 - k, 70 - k)
+    end
+    assert(e.hf == 1, "hint kept")
+    local est = e:Get(t + 6)
+    assert(math.abs(est - 58 * 0.5) < 0.1 * 58 * 0.5, est)
+end)
+
+check("a declared execute bends the projection from its threshold crossing, or ahead (the default)", function()
+    local cross = E.New({ detect = 0, execAhead = false })
+    cross:Hint("execute", 2, 20)
+    local t = steady(cross, 0, 100, 0.5, 70) -- at 30%
+    assert(math.abs(cross:Get(t) - 15) < 0.3) -- not yet: 30% at the base rate
+    local ahead = E.New({ detect = 0 })
+    ahead:Hint("execute", 2, 20)
+    steady(ahead, 0, 100, 0.5, 70)
+    local est = ahead:Get(t) -- 10% at the base rate, 20% at x2
+    assert(math.abs(est - 10) < 0.3, est)
+    t = steady(cross, 0, 100, 0.5, 80) -- on to 20% (a fresh stream, same rate)
+    for k = 1, 3 do
+        cross:Band(t + 0.25 * k, 19 - k, 20 - k)
+    end
+    est = cross:Get(t + 0.75)
+    assert(math.abs(est - 17 * 0.25) < 0.3, est)
+end)
+
+check("by default a declared execute learns its factor from the streams that cross it", function()
+    local e = E.New({ detect = 0 })
+    e:Hint("execute", 1, 20) -- the threshold only
+    local t = steady(e, 0, 100, 0.5, 80) -- at 20%
+    for k = 1, 10 do -- twice as fast below it
+        e:Band(t + 0.25 * k, 19 - k, 20 - k)
+    end
+    assert(math.abs(e:ExecuteFactor() - 1.5) < 0.05, e:ExecuteFactor()) -- halfway from 1 toward 2
+    e:Restart()
+    assert(math.abs(e.xf - 1.5) < 0.05)
+    t = steady(e, 100, 100, 0.5, 70) -- the next mob, at 30%
+    local est = e:Get(t) -- 10% at the base rate, 20% at x1.5
+    assert(math.abs(est - (5 + 20 * 0.5 / 1.5)) < 0.3, est)
+end)
+
+check("bad hints clear instead of raising", function()
+    local e = E.New()
+    for _, h in ipairs({ { 0, 1, 2 }, { -1, 1, 2 }, { 2, 5, 3 }, { nil, 1, 2 }, { 2, nil, 3 } }) do
+        e:Hint("rate", 2, 0, 10)
+        e:Hint("rate", h[1], h[2], h[3])
+        assert(e.hf == 1)
+    end
+    for _, h in ipairs({ { 2, nil }, { 2, 0 }, { -1, 20 }, { nil, 20 } }) do
+        e:Hint("execute", 2, 20)
+        e:Hint("execute", h[1], h[2])
+        assert(e.xp == 0)
+    end
+    e:Hint("nonsense", 2, 20)
+end)
+
 check("random streams never return a non-finite or negative estimate", function()
     local rng = require("rng").new(7)
-    for _ = 1, 200 do
-        local e = E.New({ priorEmpty = rng:next() < 0.5 })
+    for i = 1, 300 do
+        local e = E.New({ priorEmpty = rng:next() < 0.5, execAhead = rng:next() < 0.5, detect = i % 3 * 2.5 })
         local t, lo = 0, 99 - math.floor(rng:uni(0, 60))
+        if rng:next() < 0.5 then
+            e:Hint("execute", rng:uni(0.5, 3), rng:uni(1, 40))
+        end
         e:Band(t, lo, lo + 1)
         for _ = 1, 150 do
             t = t + rng:uni(0, 2)
             local r = rng:next()
-            if r < 0.05 then
+            if r < 0.03 then
+                local s = t + rng:uni(-5, 5)
+                e:Hint("rate", rng:uni(0.3, 3), s, rng:next() < 0.3 and nil or s + rng:uni(0, 40))
+            elseif r < 0.05 then
                 e:Restart()
                 lo = math.floor(rng:uni(1, 99))
             elseif r < 0.15 then
@@ -194,16 +299,21 @@ check("random streams never return a non-finite or negative estimate", function(
     end
 end)
 
-check("no allocation in the steady state", function()
+check("no allocation in the steady state, with hints and the detector firing", function()
     local e = E.New()
+    e:Hint("execute", 1, 20)
     local t = steady(e, 0, 100, 0.5, 10)
+    e:Get(t)
     collectgarbage("collect")
     collectgarbage("stop")
     local before = collectgarbage("count")
     local p = 90
     for k = 1, 5000 do
         t = t + 0.05
-        if k % 10 == 0 then
+        if k == 2000 then
+            e:Hint("rate", 1.3, t, t + 40)
+        end
+        if k % (k % 1000 < 500 and 10 or 4) == 0 then -- the rate steps up and down: the detector cuts
             p = p - 1
             if p < 2 then
                 e:Restart()

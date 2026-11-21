@@ -10,11 +10,15 @@ lua5.1 tools/ttd_lab/run.lua main                  # baselines, winner, ablation
 lua5.1 tools/ttd_lab/run.lua sweep --round 5       # one-at-a-time parameter sweep around round 5's base (~70 s)
 lua5.1 tools/ttd_lab/run.lua holdout [--set C]    # the same lineup on held-out seed set B, or C (~30 s)
 lua5.1 tools/ttd_lab/run.lua all > out.md          # all of it (~7 min); --scale 0.2 for a quick look
+lua5.1 tools/ttd_lab/run.lua run2 [--set B]        # run 2: the lust and execute classes, per-class tables (~2 min)
+lua5.1 tools/ttd_lab/run.lua tune [--list grid3]   # run 2 lineup (or a grid) on old and new classes, one row each (~4 min)
 ```
 
 `results/` holds the committed tables (`main.md`, `sweep-round1.md` ... `sweep-round5.md`, `holdout.md` (set B,
-used to confirm near-ties while choosing), `holdout-c.md` (set C, run once on the final lineup)).
-Every table is deterministic (own Park-Miller generator, fixed seeds).
+used to confirm near-ties while choosing), `holdout-c.md` (set C, run once on the final lineup); run 2: `run2.md`
+(set A), `run2-b.md` and `run2-c.md` (sets B and C), `run2-tune-a.md` and `run2-tune-b.md` (both class sets),
+`run2-grid*.md` (detector and learning grids)). Every table is deterministic (own Park-Miller generator, fixed seeds).
+"Run 1 winner (pinned)" is the estimator as Run 1 left it (`PREV` in `run.lua`); its rows match Run 1's tables.
 
 ## Observation model (`observe.lua`)
 
@@ -36,6 +40,13 @@ speed-up; `burst` a 2-3.5x opener; `dot` damage ramping from 25% over 6-14 s; `e
 immunity; `damaged` the player targets the mob only when the group has it at 30-90%; `real` the 30 checked-in wowsims
 logs (`tests/Forever/wowsims/*.log`, one player's real damage on Target 1), the mob dying at 20, 60 and 180 s.
 
+Run 2 classes (`S.RUN2`, `run.lua run2`; 50 fights each, 40 for bosses; every multiplier applies to all damage):
+`lust pull boss|elite|pack` x1.3 for 40 s from the pull; `lust mid boss|elite` the same when the first mob reaches
+30-60%; `lust end` an 80-150 s elite whose lust ends at 40 s with the mob at about 35-65%; `ex20|ex35 x1.3|1.6|2.0|2.5`
+an execute at exactly 20% or 35% (the eight classes are the same fights; only threshold and multiplier differ);
+`ex+lust elite|boss` an execute at 20-35% x1.6-2.5 with the lust started 0-15% above it; `solo` (no group, about 1.3
+hits/s) and `raid` (15-19 members, about 25 hits/s) elites, plain and `ex+lust`.
+
 ## Algorithms
 
 Baselines (`baselines.lua`, written from their descriptions in the research note, no third-party code): TimeToDie's
@@ -53,7 +64,9 @@ Per algorithm and class, every poll while the target lives: unknown share; abs e
 polls every main-lineup algorithm answered ("common", no selection bias); decisions `ttd < 4, 8, 15` and
 `fight_remains < 20` (the true end of the fight is the last mob's death; only the target has an estimate) with
 unknown read as very long (the consumer's fallback), wrong-side share and excess flips per minute (flips within a
-stream beyond the truth's own); first-answer delay per stream. Overall = mean over classes.
+stream beyond the truth's own); first-answer delay per stream. Overall = mean over classes. Run 2 adds, outside the
+score, the relative error and wrong side on "post-change" polls: those within 10 s after a lust start or end, an
+opener's end, or the target crossing its execute threshold.
 
 Score (lower is better) = weighted mean of each term over its median in the main lineup: unknown 1, rel median 0.5,
 rel p90 0.5, wrong side 1, excess flips 1. Robustness: 2000 draws with each weight times 2^U(-1, 1).
@@ -72,6 +85,25 @@ No allocation after `New`, no game API, every divisor guarded. `Band` takes a kn
 unknown (lo == nil), call `Restart`. If the target is acquired before combat, call `Restart` at combat start so the
 full-health anchor is not stale. A carried slope is dropped when its last answer is more than `priorAge` (10 s)
 older than the next stream's first band, so a new pull does not inherit the last pull's slope.
+
+Rate changes (run 2). On by default, with no caller input: a change detector (a two-sided CUSUM of each crossing's
+lateness against the fit, standardised by the stream's own running variance; `detect = 6`, `detectK = 0.25`). When
+it fires, the fit restarts at the crossing where the change began. Optional hints (they survive `Restart`; slopes
+are kept in base-rate units, so a carried slope outlives a hint's end):
+
+```lua
+e:Hint("rate", 1.3, startT, endT)      -- a known damage multiplier over a time window (lust); endT nil: open ended
+e:Hint("rate", nil)                    -- clear it
+e:Hint("execute", factor, pct)         -- a pack's execute range: below pct the damage runs factor times faster
+e:Hint("execute", 1, 20)               -- the threshold only: the factor is learned (execLearn), starting at 1
+local x = e:ExecuteFactor()            -- the factor in use, with the current stream's measurement folded in
+```
+
+A rate hint warps time (the fit sees one base rate; the projection runs faster inside the window). An execute
+declaration warps percent: by default (`execAhead`) the projection already expects the speed-up below the threshold;
+each stream that falls 5% below it measures slope above / slope below and moves the factor halfway there at the next
+`Restart` (`execLearn = 0.5`). The detector drops a hint the data contradicts from its start (the change point within
+max(2 s, 2 mean gaps) of the hint's start or the threshold crossing). The estimator keeps one rate hint at a time.
 
 ## Not covered
 

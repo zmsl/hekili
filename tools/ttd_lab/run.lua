@@ -23,7 +23,6 @@ do
         end
         i = i + 1
     end
-    holdSet = holdSet or (mode == "holdout" and "B" or "A")
 end
 
 -- Fights per class (seed set A tunes, set B holds out; the real traces are the same logs, observed with other seeds).
@@ -53,25 +52,32 @@ for i, c in ipairs(S.RUN2) do
 end
 
 -- Run 1's winner, pinned: the "before" of run 2 (the estimator's defaults moved on).
-local PREV = { detect = 0, execAhead = false }
+local PREV = { detect = 0, execAhead = false, execLearn = 0 }
 
 -- `hints` (run 2): rate = "perfect" (the lust as it starts, its true end), "late" (the caller sees it 0.5-1 s late:
 -- startT and endT are the call time and call time + 40 s), "wrong" (no real lust is passed; a phantom x1.3 for 40 s
 -- 5 s after the fight's first unit); exec = "perfect" (the fight's true threshold and multiplier), "fixed" (the
 -- true threshold, x1.6 whatever the group does), "always" (20% x2 declared on every fight, execute or not), "learn"
 -- (the true threshold, the factor learned: it starts at 1 and each fight starts from the factor the previous fight
--- of its class ended with, as a session would; needs `execLearn`), "learn20" (the same with 20% on every fight).
+-- of its class ended with, as a session would; needs `execLearn`), "learn20" (the same with 20% on every fight),
+-- "learnAll" (20% on every fight, one session across every class in run order). Sessions start empty per runSet.
 local function est(params, hints)
     local p = { spread = false }
     for k, v in pairs(params or {}) do
         p[k] = v
     end
     hints = hints or {}
-    local session = {} -- class -> the learned execute factor
+    local key = {} -- this algorithm's sessions in a run: obs.session[key][class or "all"] = the learned factor
     return function(obs)
         local e = E.New(p)
         local x = obs and obs.execute
-        local learnPct = hints.exec == "learn" and x and x.pct or hints.exec == "learn20" and 20
+        local learnPct = hints.exec == "learn" and x and x.pct
+            or (hints.exec == "learn20" or hints.exec == "learnAll") and 20
+        local session, slot
+        if learnPct then
+            session = obs.session[key] or {}
+            obs.session[key], slot = session, hints.exec == "learnAll" and "all" or obs.class
+        end
         if hints.exec == "perfect" and x then
             e:Hint("execute", x.mult, x.pct)
         elseif hints.exec == "fixed" and x then
@@ -79,7 +85,7 @@ local function est(params, hints)
         elseif hints.exec == "always" then
             e:Hint("execute", 2, 20)
         elseif learnPct then
-            e:Hint("execute", session[obs.class] or 1, learnPct)
+            e:Hint("execute", session[slot] or 1, learnPct)
         end
         local pendAt, pendMult, firstT, phantom = nil, nil, nil, false
         local function due(now)
@@ -89,6 +95,7 @@ local function est(params, hints)
             end
         end
         return {
+            e = e,
             restart = function(_, t)
                 due(t)
                 firstT = firstT or t
@@ -105,7 +112,7 @@ local function est(params, hints)
                     e:Hint("rate", 1.3, now, now + 40)
                 end
                 if learnPct then
-                    session[obs.class] = e:ExecuteFactor()
+                    session[slot] = e:ExecuteFactor()
                 end
                 return (e:Get(now))
             end,
@@ -132,7 +139,8 @@ end
 
 -- The research note's recommendation as written (section 4), where it differs from the estimator's defaults (the
 -- lab's winner).
-local RESEARCH = with(PREV, { censor = 1, anchorBelow = false, priorEmpty = false, holdStall = false, shrink = 2, window = 18 })
+local RESEARCH =
+    with(PREV, { censor = 1, anchorBelow = false, priorEmpty = false, holdStall = false, shrink = 2, window = 18 })
 
 local function base(cls, params)
     return function()
@@ -280,7 +288,7 @@ local function runSet(set, algos, classes)
             main[#main + 1] = a
         end
     end
-    local stats = {}
+    local stats, sessions = {}, {} -- sessions: per algorithm, the learned execute factors (est() "learn" hints)
     for _, c in ipairs(classes) do
         stats[c] = {}
         for a = 1, #algos do
@@ -289,7 +297,7 @@ local function runSet(set, algos, classes)
     end
     local function one(class, fight, oseed)
         local obs = O.build(fight, oseed)
-        obs.class = class
+        obs.class, obs.session = class, sessions
         local answers = {}
         for a, spec in ipairs(algos) do
             answers[a] = O.run(obs, spec[2](obs), {})
@@ -544,9 +552,22 @@ function modes.test()
     dofile("tools/ttd_lab/estimator_test.lua")
 end
 
+-- Run 2's default and its hints on the run 1 classes (main and holdout tables).
+local RUN2_ON_OLD = {
+    { "Run 2 default (estimator defaults)", est() },
+    { "Run 2 default + rate hint (perfect)", est({}, { rate = "perfect" }) },
+    { "Run 2 default + rate hint (wrong, phantom)", est({}, { rate = "wrong" }) },
+    { "Run 2 default + execute learned (true threshold)", est({}, { exec = "learn" }) },
+    { "Run 2 default + execute learned, 20% always (one session)", est({}, { exec = "learnAll" }) },
+    {
+        "Run 2 default + rate hint + execute learned 20% (one session)",
+        est({}, { rate = "perfect", exec = "learnAll" }),
+    },
+}
+
 local function extras()
     local extra = {}
-    for _, list in ipairs({ ABLATION, CANDIDATES }) do
+    for _, list in ipairs({ ABLATION, CANDIDATES, RUN2_ON_OLD }) do
         for _, spec in ipairs(list) do
             extra[#extra + 1] = spec
         end
@@ -594,6 +615,7 @@ function modes.sweep()
 end
 
 modes.holdout = function()
+    holdSet = holdSet or "B"
     print("## Held-out seeds (set " .. holdSet .. ")\n")
     header()
     local res = runSet(holdSet, lineup(extras()))
@@ -606,7 +628,7 @@ end
 local function p1(change, hints)
     return est(with(PREV, change or {}), hints)
 end
--- Detector tuning grids (`tune --list grid1|grid2`; results/run2-grid*.md).
+-- Tuning grids (`tune --list grid1|grid2|grid3|learn`; results/run2-grid*.md): detector, half-life, learning.
 local GRIDS = { grid1 = {}, grid2 = {} }
 do
     local g = GRIDS.grid1
@@ -630,6 +652,15 @@ do
         end
     end
     g[#g + 1] = { "No detector, H=10", p1({ halfLife = 10 }) }
+    GRIDS.grid3 = {} -- full scale: the detector lets the fit forget more slowly
+    g = GRIDS.grid3
+    for _, d in ipairs({ { 5, 0.25 }, { 6, 0.25 }, { 4, 0.5 } }) do
+        for _, hl in ipairs({ 6, 8, 10, 15 }) do
+            local name = "Detector h=" .. d[1] .. " k=" .. d[2] .. " H=" .. hl
+            g[#g + 1] = { name, p1({ detect = d[1], detectK = d[2], halfLife = hl }) }
+        end
+    end
+    g[#g + 1] = { "No detector, H=15", p1({ halfLife = 15 }) }
     GRIDS.learn = {}
     g = GRIDS.learn
     for _, w in ipairs({ 0.3, 0.5, 0.8 }) do
@@ -640,29 +671,27 @@ do
         end
     end
 end
--- The run 2 lineup: the detector alone (the new default candidate), then each hint on top of it, then hints without
--- the detector (no hint is ever dropped there) for the risk.
-local DET = { detect = 5, detectK = 0.25 }
-local function d1(change, hints)
-    return p1(with(DET, change or {}), hints)
-end
+-- The run 2 lineup: the default (the detector, h=6 k=0.25), each hint on top of it ("Det +": the defaults; a fixed
+-- declaration has learning off, "from the crossing" has execAhead off), then hints without the detector (no hint is
+-- ever dropped there) for the risk.
+local NOLEARN = { execLearn = 0 }
 local RUN2 = {
-    { "Detector h=5 k=0.25", d1() },
-    { "Detector h=5 k=0.25, H=10", d1({ halfLife = 10 }) },
-    { "Detector h=4 k=0.5", p1({ detect = 4 }) },
-    { "Det + rate hint, perfect", d1({}, { rate = "perfect" }) },
-    { "Det + rate hint, late 0.5-1 s", d1({}, { rate = "late" }) },
-    { "Det + rate hint, wrong (phantom)", d1({}, { rate = "wrong" }) },
-    { "Det + execute from the crossing, perfect", d1({}, { exec = "perfect" }) },
-    { "Det + execute from the crossing, x1.6", d1({}, { exec = "fixed" }) },
-    { "Det + execute from the crossing, 20% x2 always", d1({}, { exec = "always" }) },
-    { "Det + execute ahead, perfect", d1({ execAhead = true }, { exec = "perfect" }) },
-    { "Det + execute ahead, x1.6", d1({ execAhead = true }, { exec = "fixed" }) },
-    { "Det + execute ahead, 20% x2 always", d1({ execAhead = true }, { exec = "always" }) },
-    { "Det + execute ahead, learned", d1({ execAhead = true, execLearn = 0.5 }, { exec = "learn" }) },
-    { "Det + execute ahead, learned, 20% always", d1({ execAhead = true, execLearn = 0.5 }, { exec = "learn20" }) },
-    { "Det + execute from the crossing, learned", d1({ execLearn = 0.5 }, { exec = "learn" }) },
-    { "Det + all hints perfect (ceiling)", d1({ execAhead = true }, { rate = "perfect", exec = "perfect" }) },
+    { "Run 2 default (estimator defaults)", est() },
+    { "Run 2 default, H=15 (quieter option)", est({ halfLife = 15 }) },
+    { "Det + rate hint, perfect", est({}, { rate = "perfect" }) },
+    { "Det + rate hint, late 0.5-1 s", est({}, { rate = "late" }) },
+    { "Det + rate hint, wrong (phantom)", est({}, { rate = "wrong" }) },
+    { "Det + execute from the crossing, perfect", est({ execAhead = false, execLearn = 0 }, { exec = "perfect" }) },
+    { "Det + execute from the crossing, x1.6", est({ execAhead = false, execLearn = 0 }, { exec = "fixed" }) },
+    { "Det + execute ahead, perfect", est(NOLEARN, { exec = "perfect" }) },
+    { "Det + execute ahead, x1.6", est(NOLEARN, { exec = "fixed" }) },
+    { "Det + execute ahead, 20% x2 always", est(NOLEARN, { exec = "always" }) },
+    { "Det + execute learned (true threshold, class session)", est({}, { exec = "learn" }) },
+    { "Det + execute learned, 20% always (class session)", est({}, { exec = "learn20" }) },
+    { "Det + execute learned, 20% always (one session)", est({}, { exec = "learnAll" }) },
+    { "Det + execute from the crossing, learned", est({ execAhead = false }, { exec = "learn" }) },
+    { "Det + rate hint + execute learned 20% (one session)", est({}, { rate = "perfect", exec = "learnAll" }) },
+    { "Det + all hints perfect (ceiling)", est(NOLEARN, { rate = "perfect", exec = "perfect" }) },
     { "Rate hint, perfect (no detector)", p1({}, { rate = "perfect" }) },
     { "Rate hint, wrong (no detector)", p1({}, { rate = "wrong" }) },
     { "Execute ahead, perfect (no detector)", p1({ execAhead = true }, { exec = "perfect" }) },
@@ -735,16 +764,103 @@ local function both(set, extra, title)
     return old, new, order
 end
 
+-- How often the detector drops a hint that was right: perfect rate hints and perfect execute declarations (the
+-- default estimator), per class: fights with each, drops with both, with the rate hint only, with the execute only.
+function modes.drops()
+    holdSet = holdSet or "A"
+    print("## Hints dropped under perfect hints (seed set " .. holdSet .. ")\n")
+    print("| class | fights | with a lust | with an execute | drops, both hints | rate hint only | execute only |")
+    print("|---|---|---|---|---|---|---|")
+    local makes = {
+        est({}, { rate = "perfect", exec = "perfect" }),
+        est({}, { rate = "perfect" }),
+        est({}, { exec = "perfect" }),
+    }
+    for _, list in ipairs({ S.CLASSES, S.RUN2 }) do
+        for _, c in ipairs(list) do
+            if c ~= "real" then
+                local n = math.max(1, math.floor(COUNTS[c] * scale + 0.5))
+                local rates, execs, drops = 0, 0, { 0, 0, 0 }
+                for i = 1, n do
+                    local seed = SEED_BASE[holdSet] + i * 7919 + (SEED_OFF[c] or #c) * 104729
+                    local fight = S.build(c, seed)
+                    local obs = O.build(fight, seed + 1)
+                    obs.class, obs.session = c, {}
+                    for m, make in ipairs(makes) do
+                        local algo = make(obs)
+                        O.run(obs, algo, {})
+                        drops[m] = drops[m] + algo.e.drops
+                    end
+                    rates, execs = rates + (fight.lust and 1 or 0), execs + (fight.execute and 1 or 0)
+                end
+                print(
+                    string.format(
+                        "| %s | %d | %d | %d | %d | %d | %d |",
+                        c,
+                        n,
+                        rates,
+                        execs,
+                        drops[1],
+                        drops[2],
+                        drops[3]
+                    )
+                )
+            end
+        end
+    end
+end
+
 function modes.tune()
+    holdSet = holdSet or "A"
     print("## Run 2 candidates on both class sets (seed set " .. holdSet .. ")\n")
     header()
     both(holdSet, GRIDS[tuneList] or RUN2, "Old and new classes")
 end
 
+-- Classes as rows, a few algorithms as columns: rel median / post-change rel median / wrong side.
+local HEADLINE = {
+    "Midpoints (TimeToDie default)",
+    "Run 1 winner (pinned)",
+    "Run 2 default (estimator defaults)",
+    "Det + rate hint + execute learned 20% (one session)",
+    "Det + all hints perfect (ceiling)",
+}
+local function headline(res)
+    local idx = {}
+    for i, name in ipairs(HEADLINE) do
+        for a, spec in ipairs(res.algos) do
+            if spec[1] == name then
+                idx[i] = a
+            end
+        end
+    end
+    print("\n### Per class: rel median / rel median 10 s after a change / wrong side\n")
+    print("| class | " .. table.concat(HEADLINE, " | ") .. " |")
+    print("|---" .. string.rep("|---", #HEADLINE) .. "|")
+    local function row(label, r)
+        local cells = { label }
+        for i = 1, #HEADLINE do
+            local x = r(idx[i])
+            cells[#cells + 1] = f(x.relMed) .. " / " .. f(x.relXMed) .. " / " .. pct(x.wrongMean)
+        end
+        print("| " .. table.concat(cells, " | ") .. " |")
+    end
+    for _, c in ipairs(res.classes) do
+        row(c, function(a)
+            return res.class[c][a]
+        end)
+    end
+    row("**mean**", function(a)
+        return res.overall[a]
+    end)
+end
+
 function modes.run2()
+    holdSet = holdSet or "A"
     print("## Run 2: execute and lust classes (seed set " .. holdSet .. ")\n")
     header()
     local res = runSet(holdSet, lineup(RUN2), S.RUN2)
+    headline(res)
     local order = report(res, "Ranking on the run 2 classes (class means)")
     detail(res, order)
     run2Tables(res, order)

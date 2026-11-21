@@ -6,10 +6,11 @@
 -- anchor (the first band: 100% for a mob first seen full, the band's middle otherwise); a slope carries over a swap,
 -- heal or stall for 8 s; a stall (no crossing for max(4 s, 5 x the mean gap)) holds the countdown; the published death
 -- time moves only past a deadband, so the countdown is smooth. Defaults: the TTD lab's winner (tools/ttd_lab/README.md).
--- Rate changes (TTD lab run 2): a change detector (two-sided CUSUM of the crossings against the fit) cuts the fit at
--- the change; optional caller hints: Hint("rate", factor, startT, endT) for a known damage multiplier over a time
--- window (time is warped so the fit sees one base rate) and Hint("execute", factor, pct) for a speed-up below a
--- health percent (percent is warped). Slopes are kept in base-rate units, so a carried slope survives a hint's end.
+-- Rate changes (TTD lab run 2): a change detector (two-sided CUSUM of the crossings against the fit, on by default)
+-- restarts the fit at the change; optional caller hints: Hint("rate", factor, startT, endT) for a known damage
+-- multiplier over a time window (time is warped so the fit sees one base rate) and Hint("execute", factor, pct) for
+-- a speed-up below a health percent (percent is warped; by default the factor is learned from the streams that cross
+-- it). Slopes are kept in base-rate units, so a carried slope survives a hint's end.
 local max, min, abs, sqrt = math.max, math.min, math.abs, math.sqrt
 
 local E = {}
@@ -52,16 +53,17 @@ E.DEFAULTS = {
     -- The change detector: each crossing's lateness in percent (time taken / slope - percent crossed), standardised by
     -- its own running variance, feeds a two-sided CUSUM; past `detect` the fit restarts at the crossing where that
     -- side last sat at zero, and a hint the change contradicts is dropped. 0 turns it off.
-    detect = 0,
-    detectK = 0.5, -- allowance per crossing (standard units)
+    detect = 6,
+    detectK = 0.25, -- allowance per crossing (standard units)
     detectMin = 4, -- crossings after a (re)start that only learn the variance
     detectClip = 3, -- one crossing moves a side by at most this many standard units
     detectAlpha = 0.1, -- the variance's running weight
-    execAhead = false,
-    execLearn = 0, -- weight of each stream's measured execute speed-up in the declared factor (0: the factor stays)
+    -- A declared execute (Hint "execute"); without one these do nothing.
+    execAhead = true, -- the projection bends at the threshold before the band reaches it (false: from the crossing)
+    execLearn = 0.5, -- weight of each stream's measured speed-up in the declared factor (0: the factor stays)
     learnSpan = 5, -- percent below the threshold a stream must fall before it measures
     learnLo = 0.5, -- a measured speed-up is clamped to [learnLo, learnHi]
-    learnHi = 4, -- a declared execute bends the projection before the band reaches it (else from the crossing)
+    learnHi = 4,
 }
 
 function E.New(params)
@@ -80,6 +82,7 @@ function E.New(params)
     -- state fields are false, never nil, when empty: a nil field re-set after a collection can rehash the table
     self.bPrev, self.lastAt = false, false
     self.hf, self.hs, self.he = 1, 0, NEVER -- rate hint: factor over [hs, he)
+    self.drops = 0 -- hints dropped because the data contradicted them (a diagnostic)
     self.xf, self.xp = 1, 0 -- execute declaration: factor below xp percent
     self:Restart()
     return self
@@ -104,7 +107,7 @@ function E:Restart()
     if self.xCand and self.execLearn > 0 then -- the last stream measured its speed-up below the threshold
         self.xf = self.xf + self.execLearn * (self.xCand - self.xf)
     end
-    self.xOn, self.xOff, self.xA, self.xT0, self.xP0, self.xCand = false, false, false, 0, 0, false
+    self.xOn, self.xOff, self.xA, self.xT0, self.xP0, self.xCand = false, false, false, -NEVER, 0, false
 end
 
 --- A caller hint. "rate": damage on this stream runs `factor` times its base rate from startT to endT (nil: open
@@ -233,17 +236,22 @@ local function fit(self, now, h)
     return b, sw
 end
 
--- A detected change: the fit restarts at (t0, p0), a crossing already kept; a hint the change contradicts goes.
+-- A detected change: the fit restarts at (t0, p0), a crossing already kept. A hint goes when the change contradicts
+-- it from its start: the change point lies within max(2 s, 2 mean gaps) of the hint's start (rate) or of the
+-- threshold crossing (execute). A later change (an opener ending under a lust) leaves it.
 local function cut(self, t, t0, p0, slower)
+    local tol = self.n > 1 and 2 * (self.tLast - self.rt[at(self, 1)]) / (self.n - 1) or 0
+    tol = max(2, tol)
     while self.n > 0 and self.rt[at(self, 1)] < t0 do
         self.n = self.n - 1
     end
     self.t0, self.p0, self.anchored, self.carryFrom = t0, p0, true, false
-    if self.hf ~= 1 and t >= self.hs and t < self.he and (self.hf > 1) == slower then
-        self.hf = 1
+    local hf = self.hf
+    if hf ~= 1 and t >= self.hs and t < self.he and (hf > 1) == slower and abs(t0 - self.hs) <= tol then
+        self.hf, self.drops = 1, self.drops + 1
     end
-    if slower and self.xOn and self.xf > 1 then
-        self.xOff = true
+    if slower and self.xOn and self.xf > 1 and abs(t0 - self.xT0) <= tol then
+        self.xOff, self.drops = true, self.drops + 1
     end
     self.gUp, self.gDn, self.dCnt = 0, 0, 0
     self.upT, self.upP, self.dnT, self.dnP = t0, p0, t0, p0
