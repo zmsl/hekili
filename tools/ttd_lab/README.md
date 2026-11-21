@@ -105,6 +105,15 @@ each stream that falls 5% below it measures slope above / slope below and moves 
 `Restart` (`execLearn = 0.5`). The detector drops a hint the data contradicts from its start (the change point within
 max(2 s, 2 mean gaps) of the hint's start or the threshold crossing). The estimator keeps one rate hint at a time.
 
+## Run 2 results (execute and lust)
+
+Scores on the run 2 classes, sets A / B / C (lower is better; `run2*.md`): Midpoints 0.960 / 0.972 / 0.962, Run 1
+winner 0.923 / 0.913 / 0.921, the default (detector) 0.916 / 0.903 / 0.913, plus a lust hint and an execute declared
+at 20% on every fight with the factor learned 0.757 / 0.751 / 0.758, every hint perfect (the ceiling) 0.657 / 0.666 /
+0.667. On the run 1 classes the default scores 0.843 / 0.835 / 0.838 against Run 1's 0.852 / 0.844 / 0.846, at
++0.1-0.7% flips. An execute declared with a fixed wrong factor is dangerous (20% x2 on every fight: 1.121 on the run 1
+classes); learned, it is not (0.824). Details, per-fix value and concerns: the run 2 section of the lab report.
+
 ## Not covered
 
 The headless loop's class worlds (`tests/Forever/helpers/*_world.lua`, `tests/Game/harness/world.lua`) record the
