@@ -117,20 +117,21 @@ describe("LibHiddenValues contract", function()
             "totem",
             "loc",
             "bool",
-            "aura",
             "threat",
             "absorb",
             "meter",
         }) do
             assert.are.same({ false, "unavailable", "unproven" }, av(k), k)
         end
+        assert.are.same({ true, "ready" }, av("aura"))
+        assert.are.same({ false, "unavailable", "unproven" }, av("aura", "focus"))
         assert.are.same({ false, "unavailable", "unknown-kind" }, av("bogus"))
     end)
 
     it("returns handles for unproven kinds, tokens, power types and options", function()
         Fake.login()
         local specs = {
-            { kind = "aura", unit = "target", spell = 1079, what = "left", edges = { 3 } },
+            { kind = "aura", unit = "focus", spell = 1079, what = "left", edges = { 3 } },
             { kind = "cooldown", spell = 1766 },
             { kind = "health", unit = "focus", edges = { 20 } },
             { kind = "power", unit = "player", power = Enum.PowerType.Rage, edges = { 20 } },

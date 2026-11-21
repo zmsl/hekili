@@ -38,3 +38,25 @@ The expectations below are facts (a band, a direction, a state, a count); LHVPro
 | 14 | `/lhvp copy`, Ctrl+A, Ctrl+C, paste back | |
 
 Also report any Lua error that names LibHiddenValues or LHVProbe, and set the CVar back to "0".
+
+## Stage CDM-1: auras from the Cooldown Manager
+
+LHVProbe needs an aura command first (not built yet): `/lhvp watch aura <player|target> <spellID> <up|stacks|left>
+[edges...] [max N]` calling `Watch` with `{ kind = "aura", ... }`, a line per sink call (band, dir, q) and per
+`OnCapability` call (with the handle's spell when the 4th argument is set), `/lhvp aura <unit> <spellID> <what>` printing
+`IsAvailable("aura", spec)`, and `/lhvp cdm` printing `GetAuraSources()` (each row, then off, read, texts, values,
+refused, reads). A class with a stacking aura and a timed debuff helps (a Druid: Lacerate stacks and Rake or Moonfire).
+
+| # | Do | Expect |
+|---|---|---|
+| A1 | Cooldown Settings: put a stacking aura (Lacerate) in Tracked Bars, a buff in Tracked Buffs (icons), leave a third aura out. `/lhvp aura` for each with `up`, `stacks`, `left` | bar: all `ready`; icon: `up` and `stacks` `ready`, `left` `unavailable (cdm-icon-only)`; the third `cdm-not-tracked` (or `not-in-cdm` if no entry names it) |
+| A2 | `/lhvp watch aura target <Lacerate> stacks max 5`, `/lhvp watch aura target <Lacerate> left 3 6`, `/lhvp watch aura target <Lacerate> up`; fight a mob, stack it to 5, let it fall off | up 0 then 1; stacks 1-2 .. 5-5 one line per cast (dir 1); left 6-inf, then 3-6 and 0-3 (dir -1) near 6 s and 3 s left, back up on each refresh; at the expiry stacks and left unknown, up 0 |
+| A3 | Swap targets mid-fight (a mob without the debuff, then back) | unknown (stacks, left) and up 0 on the other mob; the old values again within a frame or two on swap-back, with no `priming` line |
+| A4 | `/lhvp cdm` in and after combat | texts and values rising, refused 0; report `read` and the placement of each row |
+| A5 | Cooldown Settings: move the aura from Tracked Bars to Tracked Buffs, then remove it, then put it back (out of combat) | `OnCapability` lines per handle: `left` to `cdm-icon-only`, all to `cdm-not-tracked`, then `ready` again |
+| A6 | Options: switch the Cooldown Manager off, then on | `aura unavailable (cdm-off)` (kind and each handle), every aura watch unknown; on again: `ready`, bands back after the next application |
+| A7 | Edit Mode open with a watch live; then Alt+Z | unknown while open / hidden (state `gone`), values back after |
+| A8 | A fight with several auras up at once (a full aura refresh in combat: a resurrect, an aura-heavy pull), then `/lhvp cdm` | the watches keep following; report any watch stuck `gone` in combat and whether it recovered after combat |
+| A9 | `/reload` in combat, then the watches again | `pending` until combat ends, then `ready` |
+
+Report the ms between a cast and its stack line (the probes saw 15-50 ms), and any Lua error naming LibHiddenValues.

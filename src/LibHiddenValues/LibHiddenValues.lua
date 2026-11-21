@@ -18,8 +18,9 @@ lib.loading, lib.oldMinor = true, oldMinor
 -- Quality codes (the major's contract).
 lib.UNKNOWN, lib.COARSE, lib.BAND, lib.EXACT = 0, 1, 2, 3
 
--- Every kind name of the major's contract; only those with a file in Kinds/ are built (lib.kinds). The aura kind stays
--- unproven for good: the client's aura container only takes widgets owned by its forbidden aura button.
+-- Every kind name of the major's contract; only those with a file in Kinds/ are built (lib.kinds). The aura kind reads
+-- the client's Cooldown Manager (Cdm.lua): the client's aura container only takes widgets owned by its forbidden aura
+-- button.
 lib.KINDS =
     { "health", "power", "cooldown", "charges", "cast", "totem", "loc", "bool", "aura", "threat", "absorb", "meter" }
 lib.KNOWN = {}
@@ -82,6 +83,10 @@ function lib.capOf(kind)
     if lib.errored[kind] then
         return "unavailable", "error"
     end
+    local why = k.why and k.why()
+    if why then
+        return "unavailable", why
+    end
     if lib.stVerdict == false then
         return "unavailable", "selftest"
     end
@@ -91,10 +96,18 @@ function lib.capOf(kind)
     return "ready"
 end
 
+-- unit: a unit token, or a whole spec (the aura kind answers for its spell and what: placement reasons).
 function lib:IsAvailable(kind, unit)
     local state, reason = lib.capOf(kind)
+    local spec
+    if type(unit) == "table" then
+        spec, unit = unit, unit.unit
+    end
     if state ~= "unavailable" and unit ~= nil and not lib.kinds[kind].units[unit] then
         return false, "unavailable", "unproven"
+    end
+    if state == "ready" and spec and lib.kinds[kind].status then
+        state, reason = lib.kinds[kind].status(spec)
     end
     return state == "ready", state, reason
 end
@@ -190,10 +203,11 @@ end
 
 -- Joins the handle to the source of its canonical key (created on first use) and references its edges.
 function lib.attach(h)
-    local key = h.kind .. "|" .. h.unit .. "|" .. tostring(h.power) .. "|" .. tostring(h.predicted)
+    local key = h.key or (h.kind .. "|" .. h.unit .. "|" .. tostring(h.power) .. "|" .. tostring(h.predicted))
     local s = lib.srcByKey[key]
     if not s then
         s = { kind = h.kind, unit = h.unit, power = h.power, predicted = h.predicted, bar = {}, ref = {}, handles = {} }
+        s.spell, s.what = h.spell, h.what
         lib.srcByKey[key] = s
         lib.sources[#lib.sources + 1] = s
     end
@@ -239,6 +253,9 @@ function lib.stateOf(h)
         return state, reason
     end
     local s = h.src
+    if s.cap then -- the source's own answer (the aura kind: its Cooldown Manager placement)
+        return s.cap, s.why
+    end
     if h.paused then
         return "paused"
     end
@@ -266,9 +283,10 @@ function H:State()
     return lib.stateOf(self)
 end
 
--- step, min, max granted. Position (step) is a later stage: only the edges are served, so the step is nil.
+-- step, min, max granted. Position (step) is a later stage: only the edges are served, so the step is nil. The top is
+-- 100 for percents; for an aura, 1 (up), max (stacks; math.huge without one) or math.huge (seconds).
 function H:Domain()
-    return nil, 0, 100
+    return nil, 0, self.top or 100
 end
 
 -- The plain value when the client gives it right now: not read in this stage.
@@ -277,9 +295,9 @@ function H:Exact()
 end
 
 -- Worst-case seconds from a change to its callback: a one-edge handle is called in the frame of the push, a handle on
--- several edges one frame later.
+-- several edges one frame later; an aura handle one frame later always (plus the Cooldown Manager's own delay).
 function H:Latency()
-    return lib.frameSec * ((self.edges and #self.edges == 1) and 1 or 2)
+    return lib.frameSec * ((self.kind ~= "aura" and self.edges and #self.edges == 1) and 1 or 2)
 end
 
 function H:SetSink(fn)

@@ -189,7 +189,8 @@ describe("LibHiddenValues standalone", function()
         assert.are.equal(12, #kinds)
         assert.are.same({ kind = "health", state = "pending" }, kinds[1])
         assert.are.same({ kind = "power", state = "pending" }, kinds[2])
-        assert.are.same({ kind = "aura", state = "unavailable", reason = "unproven" }, kinds[9])
+        assert.are.same({ kind = "aura", state = "pending" }, kinds[9])
+        assert.are.same({ kind = "cooldown", state = "unavailable", reason = "unproven" }, kinds[3])
         local seen = {}
         for i, row in ipairs(kinds) do
             assert.is_nil(seen[row.kind], i)
