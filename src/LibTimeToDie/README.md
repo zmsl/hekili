@@ -177,8 +177,13 @@ time to die, flicker counted): an exponentially time-weighted least-squares fit 
 crossings (half-life 6 s, 30 s window), the cumulative slope while there is too little spread, a carried slope over a
 swap, heal or stall, a stall that holds the countdown, a change detector that restarts the fit when the rate steps,
 and a deadband on the published death time so the countdown is smooth. `lo` and `hi` come from a fast and a slow
-half-life (3 s and 12 s), or 0.5x to 3x of `est` while the answer rests on little data. The range was not calibrated
-against the truth in the lab.
+half-life (3 s and 12 s), or 0.5x to 3x of `est` while the answer rests on little data; when the fit hits its clamp
+(0.2x to 5x the cumulative slope) the range also covers the unclamped fit, so a clamped answer does not look certain.
+The range was not calibrated against the truth in the lab.
+
+A stale anchor (`staleAnchor`, 12 s here; the lab's default is 8): at a stream's first 1% crossing, a first band
+older than 12 s is dropped and the stream starts at that crossing, so a mob targeted at full and left idle (before
+the pull, or out of combat) does not stretch the first estimates to minutes.
 
 ## Later (version 2)
 

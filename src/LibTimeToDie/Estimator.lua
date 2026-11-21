@@ -1,7 +1,8 @@
--- Estimator.lua: the estimator of one health stream, lifted as is from the TTD lab (branch ttd-lab b00ce4af2,
+-- Estimator.lua: the estimator of one health stream, lifted as is from the TTD lab (branch ttd-lab 0c13985c4,
 -- tools/ttd_lab/estimator.lua; the paths its comments name are on that branch). Only this header and the footer are
 -- the library's: the lines between the two markers are the lab's file byte for byte, its last line (return E) moved
--- into the footer. Loaded alone (no LibStub: the busted specs) it returns the module.
+-- into the footer, which also sets the library's one default that differs from the lab's (staleAnchor). Loaded alone
+-- (no LibStub: the busted specs) it returns the module.
 local lib = LibStub and LibStub("LibTimeToDie-1.0", true)
 if lib and not lib.loading then
     return
@@ -12,7 +13,8 @@ end
 -- Band on every band callback, and asks Get(now) -> est, lo, hi, state; est nil means unknown.
 -- Fit: seconds per percent `b` from an exponentially time-weighted least squares of time on percent over the recent
 -- crossings (half-life 6 s, 30 s window); with too little spread for a fit, the stream's cumulative slope from an
--- anchor (the first band: 100% for a mob first seen full, the band's middle otherwise); a slope carries over a swap,
+-- anchor (the first band: 100% for a mob first seen full, the band's middle otherwise; dropped when the first crossing
+-- comes more than 8 s after it, an idle target); a slope carries over a swap,
 -- heal or stall for 8 s; a stall (no crossing for max(4 s, 5 x the mean gap)) holds the countdown; the published death
 -- time moves only past a deadband, so the countdown is smooth. Defaults: the TTD lab's winner (tools/ttd_lab/README.md).
 -- Rate changes (TTD lab run 2): a change detector (two-sided CUSUM of the crossings against the fit, on by default)
@@ -73,6 +75,10 @@ E.DEFAULTS = {
     learnSpan = 5, -- percent below the threshold a stream must fall before it measures
     learnLo = 0.5, -- a measured speed-up is clamped to [learnLo, learnHi]
     learnHi = 4,
+    -- TTD lab run 3 (LibTimeToDie review I-3): a first-band anchor (full or below) older than this at the stream's
+    -- first crossing is dropped (the stream then starts at that crossing, like an unanchored one); 0 turns it off.
+    staleAnchor = 8,
+    clampRange = true, -- lo/hi also cover the estimate of an unclamped fit when the clamp moved it
 }
 
 function E.New(params)
@@ -320,6 +326,10 @@ function E:Band(t, lo, hi)
             carry(self, t)
         end
         if self.n == 0 and not self.t0 then
+            if self.anchored and self.staleAnchor > 0 and t - self.tAnchor > self.staleAnchor then
+                -- it sat in its first band too long (idle, nobody hitting it): the first band's time says nothing
+                self.fresh, self.anchored = false, false
+            end
             if self.fresh then
                 self.t0, self.p0 = self.tAnchor, 100
             elseif self.anchored then
@@ -350,8 +360,10 @@ function E:Band(t, lo, hi)
     end
 end
 
--- The slope `b` at `now` for half-life h and the state it came from, or nil.
+-- The slope `b` at `now` for half-life h, the state it came from and, when the clamp moved the fit, the unclamped
+-- slope; or nil.
 local function slope(self, now, h)
+    local raw = false
     local carried = self.prior and self.bPrev and self.carryFrom and now - self.carryFrom < self.priorTime
     local n = self.n
     if n == 0 then
@@ -369,8 +381,11 @@ local function slope(self, now, h)
         bfit, w = fit(self, now, h)
         if bfit and bcum then
             b = (w * bfit + self.shrink * bcum) / (w + self.shrink)
-            b = min(max(b, self.clampLo * bcum), self.clampHi * bcum)
-            state = "fit"
+            local c = min(max(b, self.clampLo * bcum), self.clampHi * bcum)
+            if c ~= b then
+                raw = b
+            end
+            b, state = c, "fit"
         elseif bcum then
             b, w, state = bcum, self.seedWeight, "seed"
         else
@@ -387,7 +402,7 @@ local function slope(self, now, h)
     elseif not b then
         return nil
     end
-    return b, state
+    return b, state, raw
 end
 
 -- The death time for slope b (warped seconds per warped percent), censored by the quiet time since the last crossing.
@@ -406,12 +421,21 @@ local function death(self, now, b)
     return T
 end
 
+-- Widens [lo, hi] by the estimate an unclamped slope gives (clampRange), so a clamped fit does not look certain.
+local function widen(self, now, raw, lowest, lo, hi)
+    if raw and self.clampRange then
+        local e = max(death(self, now, raw) - now, lowest)
+        return min(lo, e), max(hi, e)
+    end
+    return lo, hi
+end
+
 --- est, lo, hi (seconds from now) and the state ("fit", "seed", "prior", "stalled", "unknown").
 function E:Get(now)
     if not self.known then
         return nil, nil, nil, "unknown"
     end
-    local b, state = slope(self, now, self.halfLife)
+    local b, state, raw = slope(self, now, self.halfLife)
     if not b then
         return nil, nil, nil, "unknown"
     end
@@ -438,14 +462,22 @@ function E:Get(now)
     if state ~= "fit" and state ~= "stalled" then -- little data: a wide band
         return est, est * 0.5, est * 3, state
     end
-    local bf = slope(self, now, self.fastHalfLife) or b
-    local bs = slope(self, now, self.slowHalfLife) or b
-    local ef = max(death(self, now, bf) - now, lowest)
-    local es = max(death(self, now, bs) - now, lowest)
-    return est, min(est, ef, es), max(est, ef, es), state
+    local bf, _, rf = slope(self, now, self.fastHalfLife)
+    local bs, _, rs = slope(self, now, self.slowHalfLife)
+    local ef = max(death(self, now, bf or b) - now, lowest)
+    local es = max(death(self, now, bs or b) - now, lowest)
+    local lo, hi = min(est, ef, es), max(est, ef, es)
+    lo, hi = widen(self, now, raw, lowest, lo, hi)
+    lo, hi = widen(self, now, rf, lowest, lo, hi)
+    lo, hi = widen(self, now, rs, lowest, lo, hi)
+    return est, lo, hi, state
 end
 
 -- lifted body ends
+-- The library's defaults are the lab's except staleAnchor = 12 (owner 2026-11-21; the lab's default is 8, the value
+-- the lifted header names): at a stream's first crossing, an anchor (its first band) older than 12 s is dropped and
+-- the stream starts at that crossing, so a mob targeted at full and left idle does not stretch the first estimates.
+E.DEFAULTS.staleAnchor = 12
 if lib then
     lib.Estimator = E
     lib.loading = nil -- the last file of the TOC
