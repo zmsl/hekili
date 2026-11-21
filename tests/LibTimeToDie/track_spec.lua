@@ -265,11 +265,42 @@ describe("LibTimeToDie tracking", function()
         lhv.Watch = function()
             return nil, "pool-limit"
         end
-        Fake.advance(0.2)
+        Fake.advance(1.1) -- the next try: lib.RETRY (1 s) after the last
         assert.are.same({ "unavailable", "pool-limit" }, { h:State() })
         lhv.Watch = watch
-        Fake.advance(0.2)
-        assert.are.equal("priming", (h:State()))
+        Fake.advance(1.1) -- the next try: lib.RETRY (1 s) after the last
+        local state = h:State()
+        assert.is_true(state == "priming" or state == "unknown", state) -- attached (the driver may have primed it)
+    end)
+
+    it("a refused stream read every frame retries once a second and allocates nothing per frame", function()
+        local saved = LibStub.libs[LHV_MAJOR]
+        rawset(LibStub.libs, LHV_MAJOR, nil)
+        local h = ttd:Track("A", "target")
+        rawset(LibStub.libs, LHV_MAJOR, saved)
+        local calls = 0
+        lhv.Watch = function()
+            calls = calls + 1
+            local handle = {} -- as LibHiddenValues does: the handle is built before the refusal
+            return handle and nil, "pool-limit"
+        end
+        for _ = 1, 120 do
+            Fake.tick(1)
+            h:Get()
+        end
+        collectgarbage("collect")
+        collectgarbage("stop")
+        local before = collectgarbage("count")
+        calls = 0
+        for _ = 1, 300 do -- 5 s
+            Fake.tick(1)
+            h:Get()
+        end
+        local grew = collectgarbage("count") - before
+        collectgarbage("restart")
+        assert.are.equal("pool-limit", select(5, h:Get()))
+        assert.is_true(calls >= 4 and calls <= 6, tostring(calls))
+        assert.is_true(grew < 1, grew .. " KB")
     end)
 
     it("an older LibHiddenValues than the one required reads unavailable, lhv-old", function()
@@ -280,7 +311,7 @@ describe("LibTimeToDie tracking", function()
         assert.are.same({ false, "unavailable", "lhv-old" }, { ttd:IsAvailable("target") })
         assert.is_string(ttd:GetMessage("lhv-old"))
         rawset(LibStub.minors, LHV_MAJOR, minor)
-        Fake.tick(1)
+        Fake.advance(1.1) -- the next try: lib.RETRY (1 s) after the last
         assert.are.equal("priming", (h:State()))
     end)
 
@@ -362,7 +393,7 @@ describe("LibTimeToDie tracking", function()
         assert.are.same({ "unavailable", "lhv-missing" }, { h:State() })
         assert.are.same({ false, "unavailable", "lhv-missing" }, { ttd:IsAvailable("target") })
         rawset(LibStub.libs, LHV_MAJOR, saved)
-        Fake.tick(1) -- the next read attaches
+        Fake.advance(1.1) -- the next try (lib.RETRY after the last) attaches
         assert.are.equal("priming", (h:State()))
         Fake.tick(12)
         assert.are.equal("unknown", (h:State()))

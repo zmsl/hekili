@@ -143,6 +143,13 @@ function lib.hostile(token)
     return (issecretvalue and issecretvalue(v)) or v == true
 end
 
+-- Whether the unit is there. A secret answer counts as there (as LibHiddenValues' lib.present); the value is never
+-- tested as a boolean (a boolean test on a secret raises on this client).
+function lib.present(token)
+    local v = UnitExists(token)
+    return (issecretvalue and issecretvalue(v)) or v == true
+end
+
 local function pushRate(s, o)
     local owner = o.owner
     local f = s.hostile and lib.rateF[owner]
@@ -160,8 +167,10 @@ local function pushBelow(s, o)
 end
 
 -- Opens the LibHiddenValues watch of a stream: nil, or a code it refused with. Without the library (or with one older
--- than LHV_MIN) the stream reads unavailable (lhv-missing, lhv-old) and tries again on reads and every RETRY seconds.
+-- than LHV_MIN), or refused, the stream reads unavailable (lhv-missing, lhv-old, the code) and tries again at most every
+-- RETRY seconds, on a read or the driver's (a refused Watch allocates: never every frame).
 local function attach(s)
+    s.retryAt = GetTime() + lib.RETRY
     local lhv, minor = LibStub(LHV_MAJOR, true)
     if not lhv then
         s.why = "lhv-missing"
@@ -204,7 +213,7 @@ function lib.touch(s)
 end
 
 local function open(token)
-    local s = { token = token, tracks = {}, sinks = 0, owners = {}, byOwner = {}, at = false, due = false }
+    local s = { token = token, tracks = {}, sinks = 0, owners = {}, byOwner = {}, at = false, due = false, retryAt = 0 }
     s.state, s.why, s.hostile = "priming", nil, lib.hostile(token)
     local code = attach(s)
     if code then
@@ -290,7 +299,7 @@ function lib.evaluate(s, now)
         return
     end
     s.at = now
-    if not s.lh then
+    if not s.lh and now >= s.retryAt then
         attach(s)
     end
     local lh, state, why, ls, lr = s.lh, nil, nil, nil, nil
@@ -416,7 +425,7 @@ function lib.event(event)
             for i = 1, #owners do
                 owners[i].e:Restart()
             end
-            if UnitExists("target") then
+            if lib.present("target") then
                 local hostile = lib.hostile("target")
                 if hostile ~= s.hostile then
                     s.hostile = hostile

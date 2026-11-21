@@ -22,7 +22,7 @@ All through `local TTD = LibStub("LibTimeToDie-1.0", true)`; the owner string is
 | Command | Calls | Prints |
 |---|---|---|
 | `/ttdp` | `TTD:GetVersion()`; `TTD:IsAvailable(token)` for `target`, `player`, `focus`; `TTD.LHV_MIN` and `select(2, LibStub("LibHiddenValues-1.0", true))` | major, minor; `ok, state, reason` per token; the minor needed and the one running |
-| `/ttdp hostile` | `local v = UnitCanAttack("player", "target")`; `issecretvalue(v)`; `v` only when not secret | `secret` or `plain` and the value; `InCombatLockdown()`; the CVar `addonMapRestrictionsForced` |
+| `/ttdp hostile` | `local v = UnitCanAttack("player", "target")` and `local x = UnitExists("target")`; `issecretvalue` of each; a value only when not secret | for each read: `secret` or `plain` and the value; `InCombatLockdown()`; the CVar `addonMapRestrictionsForced` |
 | `/ttdp track2` | `TTD:Track("TTDProbe2", "target", sink2)`: a second owner that never hints (sink2 logs like the sink, tagged `2`) | the same sink lines, tagged |
 | `/ttdp track <token>` | `TTD:Track("TTDProbe", token, sink)` (keep the handle per token; on `nil, code` print `TTD:GetMessage(code)`) | one line per sink call: `GetTime()`, token, `est`, `lo`, `hi`, `state`, and `h:State()`'s reason |
 | (inside the sink) | append `{ t = GetTime(), est, lo, hi, state, reason }` to a log per token; on a change to `gone` take `t` as the death time | at `gone`: the summary below |
@@ -50,7 +50,7 @@ of the first `est` under 1 s, or else the time the target was lost, as the death
 | # | Do | Expect |
 |---|---|---|
 | 1 | Log in, `/ttdp` (again after a second if target says `pending`) | `LibTimeToDie-1.0` minor 1; `target` and `player` `ready`; `focus` `unavailable (unproven)`; the LibHiddenValues minor running is at least the one needed |
-| 1a | With the CVar forced (setup 3): target a hostile mob, `/ttdp hostile` out of combat, then again in combat with it; target a friendly player or NPC, `/ttdp hostile` in combat | report `secret` or `plain` each time (the library treats a secret as hostile; plain is expected); plain values: `true` for the mob, `false` for the friendly unit |
+| 1a | With the CVar forced (setup 3): target a hostile mob, `/ttdp hostile` out of combat, then again in combat with it; target a friendly player or NPC, `/ttdp hostile` in combat | report `secret` or `plain` for both reads each time (the library treats a secret UnitCanAttack as hostile and a secret UnitExists as present; plain is expected); plain values: UnitCanAttack `true` for the mob, `false` for the friendly unit; UnitExists `true`. Also `/ttdp hostile` with no target, in combat: UnitExists `false` (or secret) |
 | 2 | Target a mob at full health, `/ttdp track target` | sink lines: `priming`, then `unknown` (at full, nothing to estimate yet) within a few frames |
 | 3 | Fight it to death with `/ttdp poll` on | `live` from about the first percent lost (reason `seed`, then `fit` after about 3%), est falling smoothly with the clock between sink calls (the poll lines), few sink calls; at the death `gone`. Report the summary |
 | 4 | Three more kills of mobs of different sizes (one elite if at hand) | report each summary |

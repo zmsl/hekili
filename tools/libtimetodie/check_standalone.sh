@@ -12,11 +12,12 @@ hits=$(grep -rniI --exclude=LICENSE "$host" src/LibTimeToDie tests/LibTimeToDie 
 hits=$(grep -rnI -e "LibTimeToDie" -e "TimeToDie-1" src/[Hh]ek* src/LibHiddenValues tests/LibHiddenValues 2>/dev/null)
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
 [ $fail -eq 0 ] && echo "ok: LibTimeToDie names no host, and neither the host nor LibHiddenValues names it"
-# The release folder (LibHiddenValues bundled) builds and loads through its own TOC.
+# The release folder (LibHiddenValues bundled) builds and loads through its own TOC: from the working tree (the
+# package script's test mode), so the check sees what is about to be committed.
 tmp=$(mktemp -d)
 lua=.lua/bin/lua
 [ -x "$lua" ] || lua=lua5.1
-if bash tools/libtimetodie/package.sh "$tmp" >/dev/null; then
+if bash tools/libtimetodie/package.sh --worktree "$tmp" >/dev/null; then
     "$lua" tools/libtimetodie/load_package.lua "$tmp/LibTimeToDie" || fail=1
 else
     fail=1

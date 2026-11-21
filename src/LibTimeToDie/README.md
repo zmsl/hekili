@@ -24,7 +24,8 @@ LibHiddenValues and the bundled one never both run. LibTimeToDie needs LibHidden
 
 Releases are built with `tools/libtimetodie/package.sh` (the folder and `LibTimeToDie-<version>.zip` in
 `.release/libtimetodie/`; the repository keeps one LibHiddenValues source). Two copies of one LibHiddenValues minor
-must be byte-identical (LibStub keeps whichever loads first): bundle committed sources only, and LibHiddenValues bumps
+must be byte-identical (LibStub keeps whichever loads first): the script packages HEAD (`git archive`; uncommitted
+changes are left out, with a note; `--worktree` is its test mode, never a release), and LibHiddenValues bumps
 its minor on every change.
 
 ## Quick start
@@ -87,7 +88,7 @@ reads `unavailable, unproven` until LibHiddenValues proves it; write against it 
 - Every stream is read every 0.1 s while it exists (the estimator's deadband and its carried rate come from these
   reads), and in the frame after a new band. A stream LibHiddenValues reports unavailable is read again only on a
   band, your read, a hint or a LibHiddenValues capability change; one with no watch (`lhv-missing`, `lhv-old`, a
-  refusal) tries to open it on your reads and once a second.
+  refusal) tries to open it at most once a second, on your read or the driver's.
 
 ## Hints
 
