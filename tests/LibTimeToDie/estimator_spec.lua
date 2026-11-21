@@ -386,3 +386,21 @@ describe("LibTimeToDie estimator (the TTD lab's checks)", function()
         assert(grown < 1, grown .. " KB")
     end)
 end)
+
+-- The library's own default (Estimator.lua's footer, not a lab check): staleAnchor 12 (owner; the lab's 8).
+describe("LibTimeToDie estimator (the library's defaults)", function()
+    it("drops an anchor older than 12 s at the first crossing, keeps a younger one", function()
+        local E = loadEstimator()
+        assert.are.equal(12, E.DEFAULTS.staleAnchor)
+        local function afterIdle(idle) -- idle at full, then one crossing; the truth is about 49 s
+            local e = E.New()
+            e:Band(0, 99, 100)
+            e:Band(idle, 98, 99)
+            return e:Get(idle + 0.01)
+        end
+        local kept = afterIdle(10) -- the anchor stands: the slope since it is 10 s per percent
+        assert.is_true(kept ~= nil and kept > 200, tostring(kept))
+        local dropped = afterIdle(14)
+        assert.is_true(dropped == nil or dropped < 100, tostring(dropped))
+    end)
+end)

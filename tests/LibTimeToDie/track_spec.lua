@@ -230,6 +230,18 @@ describe("LibTimeToDie tracking", function()
         assert.are.equal("live", (a:State()))
     end)
 
+    it("an owner joining a paused watch does not start from the band it held before the pause", function()
+        local a = ttd:Track("A", "target")
+        Fake.tick(12)
+        fall(99, 80, 0.5)
+        a:SetPaused(true)
+        Fake.tick(1)
+        fall(79, 60, 0.5) -- unseen: the watch is paused
+        ttd:Track("B", "target") -- the watch resumes and primes the current band
+        Fake.tick(12)
+        assert.are.equal(0, row("target", "B").crossings) -- no 20% "crossing" from the stale band
+    end)
+
     it("a stream LibHiddenValues reports unavailable does not keep the driver running", function()
         local h = ttd:Track("A", "focus")
         Fake.tick(3)
