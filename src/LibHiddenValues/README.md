@@ -246,8 +246,9 @@ and an error in the aura kind give them back. Each viewer's alpha is read again 
 Our layout is recognised by its id, its name (your `owner`) and the exact content the library wrote, all kept in your
 store; never by the id alone (the client gives a new layout the largest id + 1, so a layout the player makes after
 deleting ours takes our id). A layout that fails any of the three is the player's: it reads `drift, deleted`, and
-neither restore nor manage ever changes it (manage adds a new layout of ours instead). A manage that finds none of
-ours saves the store as it is then as the original.
+neither restore nor manage ever changes it (manage adds a new layout of ours instead). After an update, our content
+from before it also counts as ours until a check passes (the client may write the layouts it loaded back over the
+update). A manage that finds none of ours saves the store as it is then as the original.
 
 Restore, decided per case: nothing else changed in the store since the manage (structurally) writes the saved
 original back byte for byte; the player changed something (edited, added or deleted another layout) removes only our

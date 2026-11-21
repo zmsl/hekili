@@ -722,4 +722,32 @@ describe("LibHiddenValues managed Cooldown Manager layout (Mode B)", function()
         assert.is_true(lib:RestoreCooldownManager("A", store))
         assert.are.same({ 0.7, 0.7, 0.7, 0.7 }, alphas())
     end)
+
+    -- An update written, then the client writes its loaded layouts (ours as before the update) back over it.
+    local function updateUndone()
+        managedAfterReload()
+        local v1 = W.cdm.store
+        lib:Watch("A", { kind = "aura", unit = "player", spell = 6004, what = "stacks", max = 3 })
+        Fake.tick(2)
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        assert.are.same({ true, "manage" }, { lib:IsReloadPending() })
+        W.cdm.store = v1
+    end
+
+    it("still knows its layout as it was before an update the client undid, and restores it", function()
+        boot()
+        updateUndone()
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store)
+    end)
+
+    it("still knows its layout after a reload when the client undid an update, and restores it", function()
+        boot()
+        updateUndone()
+        _G.ReloadUI()
+        Fake.advance(21)
+        assert.are.same({ "player", "check-failed" }, mode())
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store)
+    end)
 end)

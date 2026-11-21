@@ -13,10 +13,11 @@
 --
 -- The library keeps no SavedVariables: the consumer's table (its SavedVariablesPerCharacter) holds the saved original
 -- and the state across reloads; the consumer hands it over at every load (SetCooldownManagerStore). Its fields are
--- the library's (orig, tag, id, name, lay, bars, pending, state, bad): persist the table, never edit it.
+-- the library's (orig, tag, id, name, lay, prev, bars, pending, state, bad): persist the table, never edit it.
 --
 -- Our layout is recognised by its id, our name AND the content we wrote (name, lay), never by the id alone: the client
--- gives a new layout the largest id + 1, so a layout the player makes after deleting ours takes our id.
+-- gives a new layout the largest id + 1, so a layout the player makes after deleting ours takes our id. After an
+-- update, the content before it (prev) counts too until a check passes: the client may write that one back.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return
@@ -254,14 +255,14 @@ end
 
 local function forget(st)
     st.orig, st.tag, st.id, st.name, st.lay, st.bars = nil, nil, nil, nil, nil, nil
-    st.pending, st.state, st.bad = nil, nil, nil
+    st.prev, st.pending, st.state, st.bad = nil, nil, nil, nil
 end
 
 -- Our layout in t, or nil: the id we wrote, under our name, holding exactly what we wrote. A layout the player made
 -- that took our id (or ours after the player edited it) is theirs: never hidden, rewritten or removed.
 local function mine(t, st)
     local lay = st.id and t[3] and t[3][st.tag] and t[3][st.tag][st.id]
-    if lay and t[4] and t[4][st.id] == st.name and same(lay, st.lay) then
+    if lay and t[4] and t[4][st.id] == st.name and (same(lay, st.lay) or same(lay, st.prev)) then
         return lay
     end
 end
@@ -430,7 +431,7 @@ function mb.update()
         end
     elseif st.pending == "manage" then -- written by an earlier load (or by this one with no reload needed): the check
         if check(st) then
-            st.pending, st.state = nil, "managed"
+            st.pending, st.state, st.prev = nil, "managed", nil
         elseif (mb.spent or 0) < CHECK then -- seconds out of combat, counted by the driver
             mb.checking = true
             return set("pending", "checking")
@@ -569,6 +570,9 @@ function lib:ManageCooldownManager(owner, store)
             forget(store) -- put back: nothing to restore
         end
         return nil, E.CDM_WRITE
+    end
+    if ours and store.prev == nil then
+        store.prev = ours -- an update: the content the client loaded stays ours until a check passes
     end
     store.id, store.name, store.lay, store.bars, store.state = id, owner, lay, bars, nil
     rearm(store)
