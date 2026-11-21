@@ -609,4 +609,98 @@ describe("LibHiddenValues point precision", function()
             end
         end)
     end)
+
+    -- The owner's run (2026-11-21, max 2479 and 2239, ~10 changes/s): 4 desyncs in 2.5 min and 429 splits. Two changes
+    -- on adjacent frames, each split over two frames, leave the bars invalid two frames in a row while firings are
+    -- still landing; a lost firing leaves them invalid on a frame with no new firing.
+    describe("under regen whose firings land over two frames", function()
+        local h, seen
+
+        local function start(v)
+            mana(v)
+            h = watch({ precision = "point" })
+            Fake.login()
+            untilLive(h)
+            Fake.tick(2)
+            seen = {}
+            h:SetSink(function(_, lo)
+                seen[#seen + 1] = lo or "nil"
+            end)
+        end
+
+        it("holds through two changes on adjacent frames, each split over two frames: no desync", function()
+            start(1234)
+            Fake.set("stagger", 2) -- each +1 fires a fine pair: one of the two a frame late
+            for v = 1235, 1243, 2 do -- +1, +1 on the next frame, then 4 frames without a change
+                mana(v)
+                Fake.tick(1)
+                mana(v + 1)
+                Fake.tick(5)
+            end
+            assert.are.equal(0, select(6, lib:GetStats()))
+            assert.are.equal(1244, (h:Exact()))
+            for k = 1, #seen do
+                assert.is_true(type(seen[k]) == "number" and seen[k] >= 1234 and seen[k] <= 1244, tostring(seen[k]))
+            end
+        end)
+
+        it("still catches a lost firing while the value changes every frame", function()
+            start(1234)
+            mana(1235)
+            Fake.tick(1)
+            lib.fire(h.src.core[3]) -- a stray firing on a fine bar (as a lost one): no ring state from here on
+            local at
+            for f = 1, 12 do
+                mana(1235 + f)
+                Fake.tick(1)
+                at = at or (select(6, lib:GetStats()) > 0 and f) or nil
+            end
+            assert.is_true(at ~= nil and at <= lib.SETTLE + 1, tostring(at)) -- every frame fired: the cap catches it
+            for k = 1, #seen do
+                assert.is_true(seen[k] == "nil" or seen[k] >= 1234 and seen[k] <= 1247, tostring(seen[k]))
+            end
+        end)
+
+        -- A minute of regen (+2 or +3 every 5 to 7 frames) and a spend every 1 to 4 s, each firing 1 or 2 frames late
+        -- (lag 1, jitter 1: harsher than the run, where about 28% of the changes split).
+        it("keeps exact mana through a minute of regen with every firing 1-2 frames late: no desync", function()
+            W.unit.player.max[0] = 2479
+            start(1000)
+            Fake.set("lag", 1)
+            Fake.set("jitter", 1)
+            local m, r, nextRegen, nextSpend, hist = 1000, 12345, 6, 120, {}
+            local function rnd(n)
+                r = (r * 1103515245 + 12345) % 2147483648
+                return math.floor(r / 65536) % n
+            end
+            local far = {}
+            h:SetSink(function(_, lo)
+                local a, b = math.huge, -math.huge -- the client's values over the last 8 frames
+                for k = math.max(1, #hist - 8), #hist do
+                    a, b = math.min(a, hist[k]), math.max(b, hist[k])
+                end
+                if lo and (lo < a or lo > b) then
+                    far[#far + 1] = lo .. " (client " .. a .. "-" .. b .. ")"
+                end
+            end)
+            for _ = 1, 3600 do
+                nextRegen, nextSpend = nextRegen - 1, nextSpend - 1
+                if nextRegen <= 0 then
+                    m, nextRegen = math.min(2479, m + 2 + rnd(2)), 5 + rnd(3)
+                end
+                if nextSpend <= 0 then
+                    m, nextSpend = math.max(0, m - 100 - rnd(300)), 60 + rnd(180)
+                end
+                mana(m)
+                hist[#hist + 1] = m
+                Fake.tick(1)
+            end
+            Fake.set("jitter", 0)
+            Fake.tick(6)
+            assert.are.equal(0, select(6, lib:GetStats()))
+            assert.is_true(select(8, lib:GetStats()) > 100) -- splits: held frames, counted
+            assert.are.equal(m, (h:Exact()))
+            assert.are.same({}, far)
+        end)
+    end)
 end)

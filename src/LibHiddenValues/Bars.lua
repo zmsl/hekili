@@ -688,7 +688,7 @@ function lib.fire(i)
     end
     lib.barState[i] = not lib.barState[i]
     lib.nFire = lib.nFire + 1
-    s.dirty, s.seen, s.seenFrame = true, GetTime(), lib.frameNo
+    s.dirty, s.seen, s.seenFrame, s.firedAt = true, GetTime(), lib.frameNo, lib.frameNo
     if s.mode then
         return
     end
@@ -833,8 +833,10 @@ local function suspect(q0, q)
 end
 
 -- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (a split, or
--- a suspect ring decode: s.qv keeps the last accepted value); two bad frames in a row are a desync and the source
--- primes again.
+-- a suspect ring decode: s.qv keeps the last accepted value). A desync (the source primes again) is a bad frame after
+-- a bad one with no firing in between, or SETTLE bad frames in a row: a lost firing leaves the bars invalid once the
+-- firings stop, while two changes on adjacent frames, each split over two frames, are invalid two frames in a row
+-- with firings still landing (the owner's run of 2026-11-21: 4 desyncs in 2.5 min at ~10 changes/s).
 function lib.decodeSource(s)
     local mode = s.mode
     if not mode then
@@ -853,7 +855,7 @@ function lib.decodeSource(s)
     end
     if bad then
         s.bad = s.bad + 1
-        if s.bad >= 2 then
+        if s.bad >= SETTLE or (s.bad >= 2 and (s.firedAt or -1) < lib.frameNo - 1) then
             lib.desyncs = lib.desyncs + 1
             lib.reprime(s)
             return true
