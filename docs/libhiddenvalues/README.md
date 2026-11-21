@@ -31,8 +31,10 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
   firing trailing a frame, as LHVProbe saw for a prime's live push, is the hypothesis). FakeClient: `jitter`, `seed`.
 - L1645 ring aliases: with regen at 2-3 points per change, the ring's bars of a change across a cell boundary could
   land apart from the cell's: a valid state 50 off outside the I3 set (a fake run read 401 for 451). `suspect()` holds
-  any decode whose cell moved one more or one less than the ring's own move says, the ring moved at most `DRIFT` (8)
-  quanta; a real jump of 42-58 quanta pays one frame (as 49 and 50 did), within `h:Latency()`.
+  any ring decode whose cell moved other than the ring's own move says, so every real jump of 25 quanta or more pays
+  one frame (fix round 1 widened it from 42-58 quanta: a spend whose Gray cell bits land in part reads another cell,
+  516 for 116 and 1417 for 1467 in fake runs); the first valid ring decode after bad frames is held too (`s.qv` is
+  stale then: 1246 +1 +1 +2 read 1200; review I1).
 - L1645 energy 35, 36, 35, 36 (exact, max 100, position): no decode path. A one-point change toggles a Gray bit and
   the parity bar, and either alone fails the parity check (a hold); four alternating reads need Gray bit 2 to toggle
   three times, which a spend and up to 7 points of regen cannot give (both checked exhaustively in `position_spec`).
@@ -40,19 +42,38 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
 - L1627 (2) `Bars.lua` `lib.sync`, `served`: a refused ring curve no longer suspends the whole source. The source falls
   back to the position set when a step watch is there, else to edges only (also when the percent Gray set itself is
   refused); only the handles that need the refused curves are `suspended` (precision; step without a position set).
-- Residual rates (fake, 150 s, max 2479, regen +2/+3 every 5-7 frames, a spend every 1-4 s, each firing 1-2 frames
-  late, harsher than the run's ~1 change in 4 split): 0 desyncs (17 before), 0 reads 50 off (1 before), ~1340 splits,
-  4% of sink calls a value between the old and the new one for a frame. With firings 1-3 frames late: ~165 desyncs
-  (596 before), up to 2 reads 50 off (after a bad frame the first valid decode is taken unchecked: review 985f8a3e1).
+- Residual rates (fake, 6 seeds x 150 s, max 2479, regen +2/+3 every 5-7 frames, a spend every 1-4 s, lag 1 plus
+  jitter: each firing 1-2 frames late, harsher than the run's ~1 change in 4 split; Park-Miller seeds). Desyncs /
+  sink calls outside the client's values of the last 9 frames / of those, 40 or more off that range:
+  | regime | late | c01cbbdc4 | fix round 1 |
+  |---|---|---|---|
+  | drained (spend 100-399 from 1200) | 1-2 | 0 / 1 / 1 | 0 / 0 / 0 |
+  | balanced (spend 30-94) | 1-2 | 0 / 1 / 0 | 0 / 1 / 0 |
+  | sweep (spend 60-259 from the max, refilled each minute) | 1-2 | 0 / 4 / 1 | 0 / 1 / 0 |
+  | drained | 1-3 | 1003 / 9 / 6 | 1038 / 2 / 1 |
+  | balanced | 1-3 | 1017 / 13 / 13 | 1081 / 3 / 3 |
+  | sweep | 1-3 | 939 / 5 / 5 | 984 / 2 / 2 |
+  The 1-2 rows' remaining reads outside the range decode as a spend whose cell bars all landed a frame after its ring
+  bars, the ring moved fewer than 25 quanta: a valid small change from the old value (272 for 122 after 269, 150
+  off; the "40 or more off the range" column measures from the nearest recent value, so it misses it). The cost:
+  about 8000 splits per 15 min (as before), the longest a reading stayed behind the client's value 11-14 frames at
+  1-2 late (9-10 before) and 30-44 at 1-3 late (11 before; holds now count toward `SETTLE`); desyncs at 1-3 late rose
+  3-6%.
 - Read-only leftovers (L1649): `.luacheckrc` drops the unused `C_EncodingUtil`, `UnitClass`, `GetSpecialization`,
   `C_SpecializationInfo`; the in-game plan's minor statements read "or later".
+- Fix round 1 (review of the fix lane): I2 `Kinds/Aura.lua` stamps `s.litAt` only when the item lit for the watch's
+  own unit: an item lit on the player or on a secret unit no longer ends a target source's swap doubt (it read a false
+  0 once the player's aura fell). I3 `h:Latency()` of a position or precision handle is `SETTLE + 2` frames (was 3),
+  counted from the frame a change's first firing arrives: a bad frame after a hold counts the hold in `s.bad`, so at
+  most `SETTLE` decodes go without a call, then the value or (a desync) unknown; measured 6 by two chains in
+  `precision_spec`. M1: the minute-of-regen spec sweeps from the max to 36 (it sat below 100 for 3124 of its 3600
+  frames). M2: FakeClient's `jitter` draws from Park-Miller (`seed` 1 to 2^31 - 2; the old LCG lost bits past 2^53).
 - Known, not changed here: in edges mode `lib.decode` still counts a contradiction between edge bars as a desync at
-  once (a jump over two edges whose firings split the wrong way re-primes, no hold). `s.litAt` is stamped before the
-  unit check, so an item lit on the player or a secret unit ends a target source's swap doubt (C1's mechanism). With
-  the doubt on every target watch, a mob without the aura reads unknown until a target UNIT_AURA (about 2 s in the
-  Essential run). Owner calls: `DRIFT` 8 (a real jump of 42-58 quanta pays a frame); a hold of up to `SETTLE - 1`
-  frames while firings keep landing; `h:Latency()` (unchanged numbers) now says it is the worst case when a change's
-  firings land within two frames.
+  once (a jump over two edges whose firings split the wrong way re-primes, no hold). With the doubt on every target
+  watch, a mob without the aura reads unknown until a target UNIT_AURA (about 2 s in the Essential run). Owner calls:
+  every jump of 25 quanta or more and every first valid decode after bad frames pays a frame; the residual above (a
+  jump's cell bars all late, its ring moved under 25) is not caught; `h:Latency()` is 6 frames for position and
+  precision handles.
 
 ## Built in lane C1: Cooldown Manager gaps G1-G4, truths, the position set beside the ring, minor 5
 
@@ -80,7 +101,8 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
 - Fix round 1 (review of 2026-11-21, owner rule "truths, not assumptions"): `Kinds/Aura.lua` counts target swaps
   (`cdm.swapNo`) and holds `cdm.doubt` from PLAYER_TARGET_CHANGED to the next target UNIT_AURA (registered for the
   target only, `Cdm.lua`); meanwhile a target watch's silent Essential or Utility item (since minor 7 every
-  target watch's item) reads unknown unless that source saw it lit since the swap (`s.litAt`; a source made after the swap is in doubt too). The viewers'
+  target watch's item) reads unknown unless that source saw it lit on the target since the swap (`s.litAt`, stamped only for the watch's
+  own unit since minor 7's fix round; a source made after the swap is in doubt too). The viewers'
   RefreshData hook does not clear it: it may run at the swap itself. The client refreshes such an item on a target
   change only while it holds a target aura (no range check), so after A, B, A it can stay silent on A. `cdm.facts`
   keeps the client's `hasAura` and `selfAura` as given (rows of `GetAuraEntries`; nothing filters on them).

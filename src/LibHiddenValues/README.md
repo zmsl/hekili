@@ -30,9 +30,12 @@ end)
   the call); `q` is the quality (`LHV.BAND` = 2,
   `LHV.UNKNOWN` = 0).
 - At most one call per handle per frame. A handle on one edge is called in the frame of the change; on several edges,
-  one frame later, with the net band (a jump over three edges is one call); on a `step` or `precision` source up to
-  two frames later (a split holds the decode a frame; while a change's firings are still landing, longer).
-  `h:Latency()` gives the worst case in seconds when a change's firings land within two frames.
+  one frame later, with the net band (a jump over three edges is one call); on a `step` source up to two frames later
+  (a split holds the decode a frame), on a `precision` source up to three (the first valid decode after a split is held
+  one more, as is any jump of about half a cell or more); while changes' firings keep landing, up to five frames later
+  on either: at most four frames hold, then the handle is called with the value or, after a desync, unknown.
+  `h:Latency()` gives that worst case in seconds (six frames, counted from the frame the change's first firing
+  arrives: the client's own delay before it is not counted).
 - `h:Get()` returns `lo, hi, t, q` without a callback; `h:State()` returns `state, reason` (`"live"` means a band is
   known: `Get()` has it); `h:SetPaused(true)` stops
   feeding while your frame is hidden; `h:Release()` and `LHV:ReleaseAll("MyAddon")` drop watches.
@@ -73,11 +76,16 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   agree with the exact value), and a cell that does not meet the exact value is held a frame, then primes again, as any
   disagreement. A `step` watch joining or leaving such a source primes it again (about 9 frames unknown). At step 1 the
   exact value already gives the cell: no extra bars run (admission still counts them: the max can grow past 3175). A
-  change of up to 8 steps across a cell boundary (every 50 steps) is never read 50 off when its firings land within two
-  frames: the library holds one frame when the cell's bars and the others land apart (a real jump of 42 to 58 steps pays
-  that frame too). A change of several steps whose firings land in two frames can read for that one frame as a value
-  between the old and the new one; a larger jump as another value, as on a `step` source. The owner's run (2026-11-21,
-  mana regenerating 2-3 points at a time) saw about one change in four split over two frames. Should the client refuse a
+  decode whose cell moved other than the 50 fine bars' own move says (a jump of about half a cell, 25 steps, or more)
+  is held one frame, and so is the first valid decode after invalid ones (the last value read is stale then). Half of a
+  change whose cell bars and fine bars land apart is a valid state whole cells off; with the two halves at most one
+  frame apart it is not read, with one exception: a jump whose cell bars all land after its fine bars, those having
+  moved fewer than 25 steps, reads for that frame as a small change from the old value (a fake run read 272 for 122,
+  150 off). Every real jump of 25 steps or more pays the held frame. The frame after a hold takes any valid decode: a
+  half landing two or more frames after the other, or a new change's half landing in the held frame, can still read
+  wrong for that frame. A change of several steps whose firings land in two frames can read for that one frame as a
+  value between the old and the new one. The owner's run (2026-11-21, mana regenerating 2-3 points at a time) saw about
+  one change in four split over two frames. Should the client refuse a
   ring curve at a max, the precision watch is `suspended` there and the source's other watches keep their bars (a `step`
   watch reads the 8 position bars). A max of 100 or less is the same as `step` (8 bars, exact). It is outside the point
   caps but inside the 256-bar pool, with every edge and point on the source counted (the step can grow with the max) and
@@ -148,11 +156,12 @@ The library reports what the Cooldown Manager shows: anything the item cannot te
 and no seconds, the lowest band: `0` to the lowest edge) means the item holds no aura of yours now: the item's reading,
 not proof that the aura is absent. Measured limits: the Cooldown Manager shows only auras the player cast, and on the
 player only helpful ones (F10), so a partner's debuff reads 0; and an item stayed silent a whole fight while its aura
-was up (F12, Mark of the Wild). After a target change every target watch whose item has not lit since is unknown
-(`gone`) until it lights or the client sends the new target's auras (a target `UNIT_AURA`): the client shows a new
-target's auras only once their update arrives (a Tracked Buffs icon stayed dark 0.4-0.6 s on a mob that had the aura),
-and an Essential or Utility item looks at the new target only when it held a target aura. Stacks and seconds watches are
-unknown with it; a cleared target stays unknown until a target `UNIT_AURA`. A handle is unknown (`lo == nil`, `gone`)
+was up (F12, Mark of the Wild). After a target change every target watch whose item has not lit on the target since
+is unknown (`gone`) until it does (lit on the player or on a secret unit does not count) or the client sends the new
+target's auras (a target `UNIT_AURA`): the client shows a new target's auras only once their update arrives (a Tracked
+Buffs icon stayed dark 0.4-0.6 s on a mob that had the aura), and an Essential or Utility item looks at the new target
+only when it held a target aura. Stacks and seconds watches are unknown with it; a cleared target stays unknown until a
+target `UNIT_AURA`. A handle is unknown (`lo == nil`, `gone`)
 while no item shows it, while its viewer is hidden or in Edit Mode (or either reads secret), and while its item holds
 the aura on a unit the client keeps secret, names no unit, or names the other unit (a player watch whose entry shows the
 target's aura is unknown, not 0: a watch on each unit of one entry reads unknown on one of them while the aura is up on
