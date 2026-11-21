@@ -699,6 +699,43 @@ describe("LibHiddenValues aura kind", function()
         end
     )
 
+    -- Review I2: the item lit on the player (plain or secret unit) said nothing of the new target, yet ended the doubt;
+    -- once the player's aura fell the dark item read a false 0 on a mob with the aura.
+    for _, secretUnit in ipairs({ false, true }) do
+        it(
+            "keeps a target watch unknown after a swap while its item shows the player's aura"
+                .. (secretUnit and ", the unit secret" or ""),
+            function()
+                boot()
+                W.cdm.lateSwap = 30
+                W.cdm.secretUnit = secretUnit
+                local up = watch({ unit = "target", spell = 5002, what = "up" })
+                Fake.login()
+                W.combat = true
+                Fake.tick(20)
+                W.aura.target = { [5002] = { stacks = 1, duration = 600, expires = GetTime() + 600 } }
+                Fake.setAura("player", 5002, 1, 600)
+                Fake.tick(3)
+                calls = {}
+                Fake.event("PLAYER_TARGET_CHANGED")
+                Fake.tick(5)
+                Fake.setAura("player", 5002, nil) -- the player's aura ends before the target's arrive
+                Fake.tick(10)
+                assert.is_nil(band(up)[1])
+                Fake.tick(20)
+                for k = 1, #calls do
+                    assert.are_not.equal(0, calls[k].lo, k)
+                end
+                if secretUnit then
+                    assert.is_nil(band(up)[1]) -- lit on a unit the client keeps secret: unknown
+                else
+                    assert.are.same({ 1, 1 }, band(up))
+                end
+                assert.are.same({}, Fake.errors)
+            end
+        )
+    end
+
     it("follows a target swap without priming", function()
         boot()
         W.aura.target = { [5002] = { stacks = 3, duration = 30, expires = GetTime() + 30 } }

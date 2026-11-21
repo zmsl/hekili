@@ -264,10 +264,11 @@ local function feed(s)
             local a = rawget(item, "auraInstanceID")
             up = issecretvalue(a) or a ~= nil -- a secret: only tested, never compared
             if up then
-                s.litAt = cdm.swapNo
                 local u = rawget(item, "auraDataUnit")
                 if issecretvalue(u) or u ~= s.unit then
                     up = nil -- held on a secret, no or another unit: the item says nothing of this one (unknown)
+                else
+                    s.litAt = cdm.swapNo -- lit for this unit: only that ends the swap doubt (review I2)
                 end
             elseif cdm.doubt and s.unit == "target" and s.litAt ~= cdm.swapNo then
                 -- a silent item right after a target change says nothing of the new target: the client shows its
