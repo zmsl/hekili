@@ -839,6 +839,37 @@ describe("LibHiddenValues point precision", function()
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
+        -- Documented residual (re-review 2 M-R2b): a reversal across a cell on adjacent frames, 1249 -> 1250 -> 1249, the
+        -- first push's cell bars a frame late and the second's ring bars a frame late. The first push's late cell
+        -- firings cancel the second's cell firings, so the half state (the ring at 1250, the cell still 24: 1200)
+        -- repeats on two decodes and is confirmed. It needs two changes to undo each other bar for bar (for mana a
+        -- spend and a regen tick); the fake runs never produced it. Should this start failing, update the README.
+        it("confirms a half state rebuilt bar for bar by a reversal on the next frame: 1200 (documented)", function()
+            start(1249)
+            local l1 = move(1250, "cell") -- its cell bars land a frame late
+            local s, st = h.src, lib.barState
+            local before = {}
+            for k = 1, #s.core do
+                before[k] = st[s.core[k]]
+            end
+            mana(1249)
+            Fake.tick(1) -- decode: 1200 held; the reversal's firings land
+            local l2 = {}
+            for k = 1, lib.RING_N do -- its ring bars a frame late
+                local i = s.core[k]
+                if st[i] ~= before[k] then
+                    st[i] = not st[i]
+                    l2[#l2 + 1] = i
+                end
+            end
+            fire(l1) -- they cancel the reversal's cell firings
+            Fake.tick(1) -- decode: 1200 again, confirmed
+            fire(l2)
+            Fake.tick(3)
+            assert.are.same({ 1200, 1249 }, seen)
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end)
+
         -- Re-review 2 I-R2a: a change half-landed as a prime ends (+2 across 1250 on the prime's last push, its cell bars
         -- a frame late) read 1200 as the first decode after the prime and was taken unconfirmed. The first decode after a
         -- prime is held like any change; the first value still comes within h:Latency() of the prime's last push.

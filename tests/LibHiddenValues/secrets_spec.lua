@@ -102,7 +102,8 @@ describe("LibHiddenValues secrets and efficiency", function()
         lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, step = 1 }, sink) -- Gray beside
         lib:Watch("C", { kind = "power", unit = "player", power = 3, step = 1, points = { 40, 41 } }, sink)
         Fake.login()
-        local function frame(i)
+        local function frame(i) -- each value holds 2 frames: a position or precision change is called once the next
+            i = math.floor(i / 2) -- decode agrees (fix round 3); one changing every frame is never confirmed
             W.unit.target.health = (i % 37) / 36
             W.unit.player.power[0] = (i % 11) / 10
             W.unit.player.power[3] = (i % 13) / 12

@@ -729,7 +729,7 @@ local function grayCell(st, core, off)
     return n
 end
 
--- The position set's cell from its bars; an error word when the code, the parity or an edge bar disagrees.
+-- The position set's cell from its bars (nil, n); an error word when the code, the parity or an edge bar disagrees.
 local function grayDecode(s)
     local st = lib.barState
     local n, bad = grayCell(st, s.core, 0)
@@ -762,7 +762,7 @@ local function grayDecode(s)
             end
         end
     end
-    s.n = n
+    return nil, n
 end
 
 -- The ring's quantum from its bars; an error word when the ring state, the cell code, its parity or the range is off.
@@ -835,15 +835,18 @@ local function ringDecode(s)
 end
 
 -- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (s.qv keeps
--- the last accepted value). A ring decode other than s.qv is held until confirmed: the next frame's decode gives the
--- same value (owner, fix round 2); a prime clears s.qv, so its first decode is held too (re-review 2 I-R2a). Half of a change whose bars land over two frames is a valid state the client never
--- held (a 2-3 point regen change across a cell read 50 off; a spend whose cell bits landed in part read another cell,
--- 516 for 116; a spend whose cell bars all came late read as a small change, 272 for 122); when a push's firings land
+-- the last accepted value: the ring's quantum, or the Gray 1% cell). A decode other than s.qv is held until confirmed:
+-- the next frame's decode gives the same value (owner, fix round 2 for the ring, fix round 3 for Gray: "it's
+-- consistency"); a prime clears s.qv, so its first decode is held too (re-review 2 I-R2a). Half of a change whose bars
+-- land over two frames is a valid state the client never held (a 2-3 point regen change across a cell read 50 off; a
+-- spend whose cell bits landed in part read another cell, 516 for 116; a spend whose cell bars all came late read as a
+-- small change, 272 for 122; a Gray jump 100 -> 85 with bit 0 and the parity late read 84); when a push's firings land
 -- within two frames, the next frame's decode holds the rest of them, so a half-landed state does not repeat. A desync
 -- (the source primes again) is a bad frame after a bad one with no firing in between, SETTLE bad frames in a row, or
 -- more than SETTLE + 1 frames without a call (bad frames and holds; h:Latency()): a lost firing leaves the bars invalid
 -- once the firings stop, while two changes on adjacent frames, each split over two frames, are invalid two frames in a
--- row with firings still landing (the owner's run of 2026-11-21: 4 desyncs in 2.5 min at ~10 changes/s).
+-- row with firings still landing (the owner's run of 2026-11-21: 4 desyncs in 2.5 min at ~10 changes/s). A value that
+-- changes on every frame is never confirmed: the source desyncs every SETTLE + 2 frames until it slows.
 function lib.decodeSource(s)
     local mode = s.mode
     if not mode then
@@ -856,9 +859,9 @@ function lib.decodeSource(s)
     end
     local bad, q
     if mode == "gray" then
-        bad = grayDecode(s)
+        bad, q = grayDecode(s) -- q: the 1% cell
     else
-        bad, q = ringDecode(s)
+        bad, q = ringDecode(s) -- q: the ring's quantum
     end
     local run = (s.run or 0) + 1 -- frames without a call, this one counted (an older minor's source has no s.run)
     if bad then
@@ -899,7 +902,7 @@ end
 -- contradict each other (edges mode: a firing was lost).
 local function band(h)
     local s, st = h.src, lib.barState
-    local n = s.mode == "gray" and s.n or nil
+    local n = s.mode == "gray" and s.qv or nil
     local M, pts = s.max, h.pts
     local A, B -- point precision: the value is in A..B (whole points)
     if s.mode == "ring" then
@@ -989,7 +992,7 @@ end
 -- The exact value in points and its step for a point-precision handle, nil when the source does not know it.
 function lib.exact(h)
     local s = h.src
-    if not (s and s.ok and h.prec) then
+    if not (s and s.ok and s.qv and h.prec) then -- no s.qv: a gray source from an older minor (s.n then)
         return nil
     end
     if s.mode == "ring" then
@@ -998,7 +1001,7 @@ function lib.exact(h)
     end
     local M = s.max
     if s.mode == "gray" and M and M <= 100 then
-        return math.floor((s.n * M + 99) / 100), 1
+        return math.floor((s.qv * M + 99) / 100), 1
     end
 end
 

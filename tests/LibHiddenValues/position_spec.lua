@@ -47,7 +47,9 @@ describe("LibHiddenValues position", function()
         Fake.restore()
     end)
 
-    it("gives the 1% cell from 8 bars, any jump in one call one frame later", function()
+    -- Fix round 3: every change waits for the next frame's decode to agree (the confirm hold), so a jump is called two
+    -- frames after its push (it was one).
+    it("gives the 1% cell from 8 bars, any jump in one call two frames later", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 }, sink)
         Fake.login()
         untilLive(h)
@@ -56,16 +58,18 @@ describe("LibHiddenValues position", function()
         assert.are.equal(8, srcBars("health"))
         for _, v in ipairs({ 0.38, 0.375, 0.91, 0.05, 0, 1, 0.999, 0.5 }) do
             W.unit.target.health = v
-            Fake.tick(2)
+            Fake.tick(3)
             local n = math.floor(v * 100 + 1e-9)
             assert.are.same({ n, math.min(n + 1, 100) }, lohi(h), v)
         end
         W.unit.target.health = 0.62
-        Fake.tick(2)
+        Fake.tick(3)
         calls = {}
         W.unit.target.health = 0.13
         Fake.tick(1)
         assert.are.same({}, calls) -- decoded at the start of the next frame
+        Fake.tick(1)
+        assert.are.same({}, calls) -- held: the next frame's decode must agree
         Fake.tick(1)
         assert.are.same({ { 13, 14, -1 } }, calls)
         assert.are.equal(0, select(6, lib:GetStats()))
@@ -78,7 +82,7 @@ describe("LibHiddenValues position", function()
         untilLive(h)
         assert.are.same({ 55, 56 }, lohi(h))
         W.unit.player.power[0] = 0.2
-        Fake.tick(2)
+        Fake.tick(3) -- the push, the held decode, the confirming decode (fix round 3)
         assert.are.same({ { 20, 21, -1 } }, calls)
     end)
 
@@ -92,16 +96,16 @@ describe("LibHiddenValues position", function()
         assert.are.same({ 37, 38 }, lohi(h))
         assert.are.same({ 20, 50 }, lohi(e))
         W.unit.target.health = 0.336
-        Fake.tick(2)
+        Fake.tick(3) -- each change: the push, a held decode, the confirming one (fix round 3)
         assert.are.same({ 33.5, 34 }, lohi(h))
         W.unit.target.health = 0.334
-        Fake.tick(2)
+        Fake.tick(3)
         assert.are.same({ 33, 33.5 }, lohi(h))
         W.unit.target.health = 0.6
-        Fake.tick(2)
+        Fake.tick(3)
         assert.are.same({ 50, 100 }, lohi(e))
         W.unit.target.health = 0.19
-        Fake.tick(2)
+        Fake.tick(3)
         assert.are.same({ 0, 20 }, lohi(e))
         assert.are.same({ 19, 20 }, lohi(h))
     end)
@@ -197,6 +201,60 @@ describe("LibHiddenValues position", function()
         assert.are.same({ 38, 39 }, lohi(h))
     end)
 
+    -- Owner (fix round 3, "hold them too, it's consistency"): a jump 100 -> 85 whose Gray bit 0 and parity bars land a
+    -- frame late is a valid cell for that frame, 84, a value the client never held. Every Gray change is held until the
+    -- next frame's decode agrees, as the ring's: step watches and precision at a max of 100 or less alike; the first
+    -- decode after a prime too (the jump on the prime's last push). The call comes within h:Latency() of the push.
+    for _, case in ipairs({
+        { "a step watch on health", { kind = "health", unit = "target", step = 1 } },
+        { "exact energy (max 100)", { kind = "power", unit = "player", power = 3, precision = "point" } },
+    }) do
+        for _, prime in ipairs({ false, true }) do
+            local name = case[1] .. (prime and ", on a prime's last push" or "")
+            it("never reports a split jump's half state, 84 for 85: " .. name, function()
+                W.unit.target.health, W.unit.player.power[3] = 1, 1
+                local h = lib:Watch("A", case[2], sink)
+                Fake.login()
+                untilLive(h)
+                Fake.tick(2)
+                calls = {}
+                local s, st = h.src, lib.barState
+                local want = { { 85, 86, -1 } }
+                if prime then
+                    lib.reprime(s)
+                    for _ = 1, 40 do
+                        if lib.barPrime[s.core[1]] == 1 then
+                            break
+                        end
+                        Fake.tick(1)
+                    end
+                    assert.are.equal(1, lib.barPrime[s.core[1]])
+                    want = { { nil, nil, 0 }, { 85, 86, 0 } }
+                end
+                W.unit.target.health, W.unit.player.power[3] = 0.85, 0.85
+                Fake.tick(1) -- the push
+                local late = { s.core[1], s.core[8] } -- Gray bit 0 and the parity bar
+                for k = 1, 2 do
+                    st[late[k]] = not st[late[k]]
+                end
+                Fake.tick(1) -- decode: cell 84, valid, held
+                for k = 1, 2 do
+                    lib.fire(late[k])
+                end
+                local frames = 2
+                while h:Get() ~= 85 and frames < 12 do
+                    Fake.tick(1)
+                    frames = frames + 1
+                end
+                assert.are.equal(4, frames) -- the push, 84 held, 85 held, 85 confirmed
+                assert.is_true(frames * lib.frameSec <= h:Latency() + 1e-9, "frames " .. frames)
+                Fake.tick(2)
+                assert.are.same(want, calls)
+                assert.are.equal(0, select(6, lib:GetStats()))
+            end)
+        end
+    end
+
     -- L1645: exact energy (max 100, position) read 35, 36, 35, 36 over 4 frames after a spend in the owner's run.
     it(
         "holds a one-point change with either of its two bars late, every point both ways: never another value",
@@ -207,7 +265,8 @@ describe("LibHiddenValues position", function()
             untilLive(h)
             Fake.tick(1)
             local s, st = h.src, lib.barState
-            -- Moves the energy to v with the k-th of the change's bars not arrived yet: one frame holds, then v.
+            -- Moves the energy to v with the k-th of the change's bars not arrived yet: one frame holds (invalid), the
+            -- late firing's frame holds (confirm hold, fix round 3), then v.
             local function half(v, k)
                 local old, before = h:Exact(), {}
                 for j = 1, #s.core do
@@ -229,6 +288,8 @@ describe("LibHiddenValues position", function()
                 assert.are.equal(old, (h:Exact()), v)
                 assert.are.same({}, calls)
                 lib.fire(i)
+                Fake.tick(1)
+                assert.are.equal(old, (h:Exact()), v)
                 Fake.tick(1)
                 assert.are.equal(v, (h:Exact()), v)
             end

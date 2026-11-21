@@ -455,13 +455,14 @@ end
 -- the push, a handle on several edges one frame later, any handle on a position or precision source in SETTLE + 3
 -- frames counted from the frame the change's first firing arrives (the push's own when the client fires at once; after
 -- a prime, the prime's last push: its first decode is held too, measured 4 with a change half-landed on it): that
--- frame, at most SETTLE + 1 decodes without a call while firings land (bad frames, and the holds of a precision source,
--- whose every change waits for the next decode to agree; the desync rule caps them), then a call with the value or,
--- after a desync, unknown (measured 7 in the fake by a chain of split changes, and the first change's firings all late
--- stay within it: precision_spec). A precision change with every firing in one frame is called 2 frames after it. An
--- aura handle (the Cooldown Manager's own delay aside): `up` one frame later; stacks once the bar settled (SETTLE frames after the client's first push, plus
--- one); seconds refreshed as they fall through an edge prime the bar again first (HOLD + SETTLE, plus the fall's frame,
--- the push and a secret firing a frame late). Measured in the fake (aura_timing_spec): 2, 4 and 10 (11 a frame late).
+-- frame, at most SETTLE + 1 decodes without a call while firings land (bad frames, and the holds: every change of a
+-- position or precision source waits for the next decode to agree; the desync rule caps them), then a call with the
+-- value or, after a desync, unknown (measured 7 in the fake by a chain of split changes, and the first change's firings
+-- all late stay within it: precision_spec; a Gray split chain measured 4: position_spec). A change with every firing in
+-- one frame is called 2 frames after it. An aura handle (the Cooldown Manager's own delay aside): `up` one frame later;
+-- stacks once the bar settled (SETTLE frames after the client's first push, plus one); seconds refreshed as they fall
+-- through an edge prime the bar again first (HOLD + SETTLE, plus the fall's frame, the push and a secret firing a frame
+-- late). Measured in the fake (aura_timing_spec): 2, 4 and 10 (11 a frame late).
 function H:Latency()
     local mode = self.src and self.src.mode
     local n = mode and lib.SETTLE + 3 or self.single and 1 or 2
