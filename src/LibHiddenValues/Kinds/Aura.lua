@@ -5,8 +5,10 @@
 -- The bars: a hook's secret cannot go through a curve, so each edge has a raw bar ranged just below it, fed the
 -- client's value as it is (AuraBandProbe 0.2.0/0.2.1: per-stack bars, a 2.9-3.0 s bar). Stacks are whole numbers on a
 -- bar (e - 1, e): never inside, a clean two-level toggle. Seconds fall through a bar (e - W, e) and may land inside it
--- for a frame or two: each of those frames fires, so a firing on the frame after the bar's last one means "below the
--- edge" rather than a flip (the run rule). Edge 1 of stacks is presence itself and has no bar.
+-- for a frame: that frame fires and so does the next, which a toggle cannot tell from a fall followed at once by a
+-- refresh back above the edge. So a seconds bar firing on the frame after its last firing primes again (the run
+-- rule; the seconds come every frame, so it answers within HOLD + 2 frames) and its handles keep their band
+-- meanwhile. Edge 1 of stacks is presence itself and has no bar.
 -- Priming: a new bar holds low HOLD frames (pushes in between are dropped) and starts below its edge. Its state is
 -- right from then on, but it says something only once the client has pushed into it (lib.barFed), and again after
 -- each time the aura was absent: seconds come every frame while the aura is up; stacks only when the client rewrites
@@ -28,6 +30,7 @@ local WHAT = { up = true, stacks = true, left = true }
 local RELAYOUT = { UI_SCALE_CHANGED = true, DISPLAY_SIZE_CHANGED = true, LOADING_SCREEN_DISABLED = true }
 lib.barLast = lib.barLast or {} -- the frame of a seconds bar's last counted firing
 lib.barFed = lib.barFed or {} -- the client pushed into the bar since its priming and since the aura was last absent
+lib.barSoft = lib.barSoft or {} -- a seconds bar priming again after a run: its handles keep their band until it is fed
 
 local function sortMerge(list)
     table.sort(list)
@@ -131,17 +134,20 @@ lib.kinds.aura = {
     end,
 }
 
--- Tells each owner of the source's handles that its answer changed: fn("aura", state, reason, h).
-function lib.auraTell(s)
+-- Tells each owner of the source's handles that its answer changed: fn("aura", state, reason, h). quiet: only note
+-- the answer (the first one, given inside Watch: the consumer reads h:State() after it).
+function lib.auraTell(s, quiet)
     local state, reason = lib.capOf("aura")
     if state == "ready" and s.cap then
         state, reason = s.cap, s.why
     end
-    local key = state .. ":" .. (reason or "")
-    if key == s.capKey then
+    if state == s.capState and reason == s.capWhy then
         return
     end
-    s.capKey = key
+    s.capState, s.capWhy = state, reason
+    if quiet then
+        return
+    end
     local hs = s.handles
     for j = #hs, 1, -1 do
         local h = hs[j]
@@ -192,7 +198,7 @@ local function sync(s)
                 local i = alloc(s)
                 if i then
                     lib.barFrame[i]:SetMinMaxValues(e - (s.what == "left" and W or 1), e)
-                    lib.barLast[i], lib.barFed[i] = nil, false
+                    lib.barLast[i], lib.barFed[i], lib.barSoft[i] = nil, false, nil
                 end
                 s.bar[e] = i
             end
@@ -204,7 +210,7 @@ local function sync(s)
         end
     end
     s.active = ready and #s.handles > 0
-    if s.capKey then
+    if s.capState then
         lib.auraTell(s)
     end
     s.dirty = true
@@ -214,7 +220,7 @@ end
 -- Every bar of an active aura source holds low again, then waits for the next push.
 local function reprime(s)
     for _, i in pairs(s.bar) do
-        lib.barPrime[i], lib.barFed[i] = lib.HOLD + 1, false
+        lib.barPrime[i], lib.barFed[i], lib.barSoft[i] = lib.HOLD + 1, false, nil
     end
     s.dirty = true
     lib.wake()
@@ -256,7 +262,7 @@ local function feed(s)
             lib.barState[i], prime[i], s.dirty = false, 0, true
         end
         if not up then
-            fed[i] = false
+            fed[i], lib.barSoft[i] = false, nil
         end
     end
 end
@@ -267,11 +273,12 @@ local function fire(s, i)
         return
     end
     local f = lib.frameNo
-    if s.what == "left" and lib.barLast[i] == f - 1 then
-        lib.barState[i] = false
-    else
-        lib.barState[i] = not lib.barState[i]
+    if s.what == "left" and lib.barLast[i] == f - 1 then -- a run: prime this bar again, its handles hold their band
+        lib.barPrime[i], lib.barFed[i], lib.barSoft[i], lib.barLast[i] = lib.HOLD + 1, false, true, nil
+        s.dirty = true
+        return
     end
+    lib.barState[i] = not lib.barState[i]
     lib.barLast[i] = f
     lib.nFire = lib.nFire + 1
     s.dirty, s.seen, s.seenFrame = true, GetTime(), f
@@ -281,7 +288,16 @@ end
 local function decode(h)
     local lo, hi
     local s = h.src
-    if lib.stateOf(h) == "live" then
+    local state = lib.stateOf(h)
+    if s.up and (state == "live" or state == "priming") then
+        local soft = lib.barSoft
+        for k = 1, #h.edges do
+            if soft[s.bar[h.edges[k]]] then
+                return -- a seconds bar priming again after a run: the band stands
+            end
+        end
+    end
+    if state == "live" then
         if h.what == "up" then
             lo = s.up and 1 or 0
             hi = lo

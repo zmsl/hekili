@@ -47,8 +47,9 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
   "left", edges, max }`; reasons `cdm-off`, `not-in-cdm`, `cdm-not-tracked`, `cdm-icon-only`; `IsAvailable(kind,
   spec)`, per-handle `OnCapability` calls, `GetAuraSources()`.
 - Bars: each edge is a raw bar ranged just below it (stacks `(e - 1, e)`, seconds `(e - 0.01, e)`) fed the hook's
-  value as it is; a firing is a toggle, except that a seconds bar firing on the frame after its last firing means
-  "below" (the run rule: a falling timer may land inside the bar for a frame). Presence needs no bar.
+  value as it is; a firing is a toggle, except that a seconds bar firing on the frame after its last firing primes
+  again while its handles keep their band (the run rule: a falling timer may land inside the bar for a frame, which a
+  toggle cannot tell from a fall followed at once by a refresh). Presence needs no bar.
 - Re-reads: an acquire hook, `COOLDOWN_VIEWER_DATA_LOADED`, `COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED`,
   `COOLDOWN_VIEWER_TABLE_HOTFIXED`, `PLAYER_REGEN_ENABLED`, `PLAYER_LEVEL_CHANGED`, `CVAR_UPDATE`
   (`cooldownViewerEnabled`), and any frame in which a watched item no longer shows its cooldownID.
@@ -62,6 +63,8 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 |---|---|---|
 | A curve for hook values | none: raw narrow-range bars | a secret from a hook cannot go through a curve from addon code; the probes' per-stack and 2.9-3.0 s bars are what was proven |
 | Seconds bar width | 0.01 s | the narrower, the rarer a landing inside; the run rule covers the landings that happen |
+| Two firings of a seconds bar on consecutive frames | that bar primes again (HOLD + 2 frames, the seconds come every frame); its handles keep their band meanwhile | forcing "below" would stick wrong after a fall followed at once by a refresh (review); a flip is wrong for a landing inside |
+| The first capability answer of a new watch | noted, not called | it is given inside `Watch`; the consumer reads `h:State()` after it |
 | `up` | the item's `auraInstanceID` secret or not nil, polled every frame, no bar | the proven presence read; it is plain to test |
 | Stacks and seconds while absent | unknown | the brief's contract; `up` carries absence |
 | `stacks` edge 1 | presence, no bar | the count text is `""` for one stack or none |

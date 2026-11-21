@@ -100,7 +100,8 @@ while its item cannot be read: its viewer hidden (Edit Mode "Hidden", or the who
 combat after the client re-laid the items out, an item whose identity the client keeps secret (until combat ends).
 
 A stacks watch started while its aura is already up stays unknown until the client next writes the count (an
-application, a refresh, a target swap). A paused aura handle only reports unknown; its bars keep following the
+application, a refresh, a target swap). A refresh within a frame of a seconds edge can be told up to about 6 frames
+late (the band before it stands meanwhile). `OnCapability` is not called from inside `Watch`: read `h:State()` there. A paused aura handle only reports unknown; its bars keep following the
 client.
 
 ## Testing your addon

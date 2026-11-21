@@ -306,7 +306,7 @@ function cdm.place()
         if s.moved then
             s.moved = nil
             lib.sync(s)
-            lib.auraTell(s)
+            lib.auraTell(s, not s.capState) -- the first answer is noted, not called (it comes inside Watch)
         end
     end
 end
@@ -351,7 +351,7 @@ function lib.cdmPush(s, v)
             local f = frames[i]
             if pcall(f.SetValue, f, v) then
                 if not fed[i] then
-                    fed[i], s.dirty = true, true -- its band can be told now, also when the push changed nothing
+                    fed[i], lib.barSoft[i], s.dirty = true, nil, true -- its band can be told now, also unchanged
                 end
             else
                 cdm.nRefused = cdm.nRefused + 1

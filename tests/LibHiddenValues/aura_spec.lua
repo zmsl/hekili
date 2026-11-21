@@ -247,6 +247,49 @@ describe("LibHiddenValues aura kind", function()
         boot()
     end)
 
+    it("ends above the edge after a refresh on any frame around a fall through it", function()
+        -- a clean fall at one frame and a jump back at the next fire like a fall that lands inside the bar
+        for k = 0, 4 do
+            for d = -3, 3 do
+                boot()
+                local h = watch({ spell = 5001, what = "left", edges = { 3 } })
+                Fake.login()
+                W.combat = true
+                Fake.tick(8)
+                Fake.setAura("player", 5001, 1, 9 + k / 5 / 60)
+                Fake.tick(360 + d)
+                Fake.setAura("player", 5001, 1, 9)
+                Fake.tick(10)
+                local tag = k .. "/" .. d
+                assert.are.same({ 3, math.huge }, band(h), tag)
+                Fake.advance(6.5)
+                assert.are.same({ 0, 3 }, band(h), tag)
+                assert.are.same({}, Fake.errors)
+                assert.are.same({}, Fake.touched)
+                Fake.restore()
+            end
+        end
+        boot()
+    end)
+
+    it("does not call the capability callback inside Watch", function()
+        boot()
+        local told = {}
+        lib:OnCapability("A", function(kind, state, reason, x)
+            told[#told + 1] = { kind, state, reason, x }
+        end)
+        Fake.login()
+        Fake.tick(2)
+        told = {}
+        local h = watch({ spell = 5001, what = "up" })
+        local n = watch({ spell = 9999, what = "up" })
+        assert.are.same({}, told)
+        assert.are.equal("live", (h:State()))
+        assert.are.same({ "unavailable", "not-in-cdm" }, { n:State() })
+        Fake.tick(3)
+        assert.are.same({}, told)
+    end)
+
     it("follows a reshuffle of the pooled frames in combat: plain, secret cooldownID, both secret", function()
         boot()
         Fake.setAura("player", 5001, 2)
@@ -462,6 +505,8 @@ describe("LibHiddenValues aura kind", function()
         lib:Watch("A", { kind = "aura", unit = "player", spell = 5001, what = "stacks", edges = { 2 } }, count)
         lib:Watch("A", { kind = "aura", unit = "player", spell = 5001, what = "left", edges = { 1, 3 } }, count)
         lib:Watch("A", { kind = "aura", unit = "player", spell = 5001, what = "up" }, count)
+        lib:Watch("A", { kind = "aura", unit = "target", spell = 5003, what = "stacks", edges = { 2 } }, count)
+        W.unit.target = { health = 0.5 }
         Fake.login()
         -- a refresh every 200 frames (before the 4 s expiry: the fake allocates when it drops an aura), stacks 3 and
         -- 1 in turn: the seconds fall through 3 and 1 each time
@@ -469,6 +514,7 @@ describe("LibHiddenValues aura kind", function()
             if i % 200 == 1 then
                 Fake.setAura("player", 5001, 1 + (i % 400 == 1 and 2 or 0), 4)
             end
+            Fake.event("UNIT_HEALTH", "target") -- re-syncs every target source
             Fake.tick(1)
         end
         for i = 1, 600 do
