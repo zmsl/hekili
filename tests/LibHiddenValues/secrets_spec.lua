@@ -94,10 +94,16 @@ describe("LibHiddenValues secrets and efficiency", function()
         lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50, 80 } }, sink)
         lib:Watch("A", { kind = "health", unit = "target", edges = { 50 } }, sink)
         lib:Watch("B", { kind = "power", unit = "player", power = Enum.PowerType.Mana, edges = { 30 } }, sink)
+        -- stage 3: position, points (on and off the grid), point precision
+        lib:Watch("C", { kind = "health", unit = "target", step = 1, edges = { 33.5 } }, sink)
+        lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, precision = "point" }, sink)
+        lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, points = { 777 } }, sink)
+        lib:Watch("C", { kind = "power", unit = "player", power = 3, step = 1, points = { 40, 41 } }, sink)
         Fake.login()
         local function frame(i)
             W.unit.target.health = (i % 37) / 36
             W.unit.player.power[0] = (i % 11) / 10
+            W.unit.player.power[3] = (i % 13) / 12
             Fake.tick(1)
         end
         for i = 1, 200 do

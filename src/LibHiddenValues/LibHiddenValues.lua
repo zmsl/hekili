@@ -101,6 +101,16 @@ lib.errored = lib.errored or {}
 lib.stWaiters = lib.stWaiters or {}
 lib.H = lib.H or {}
 lib.handleMeta = lib.handleMeta or { __index = lib.H }
+lib.NOPOINTS = lib.NOPOINTS or {} -- shared and never written: the points of a handle that has none
+-- An older minor's handles and sources (a newer copy loaded over it) get this minor's fields.
+for i = 1, #lib.reg do
+    local h = lib.reg[i]
+    h.points = h.points or lib.NOPOINTS
+end
+for i = 1, #lib.sources do
+    local s = lib.sources[i]
+    s.core, s.pbar, s.pref, s.bad = s.core or {}, s.pbar or {}, s.pref or {}, s.bad or 0
+end
 lib.apiMissing = not (
     C_CurveUtil
     and C_CurveUtil.CreateCurve
@@ -242,6 +252,7 @@ function lib:Watch(owner, spec, sink)
     else
         h.unproven = "unproven"
     end
+    h.points = h.points or lib.NOPOINTS -- a kind without points (and an unproven handle) has none
     if not h.unproven and (#h.points > 0 or h.prec) then
         local err = lib.admit(h)
         if err then
@@ -381,6 +392,7 @@ function H:SetPoints(points)
         refPoints(s, list, 1)
     end
     self.points = list
+    self.single = #self.edges + #list == 1 and not self.step and not self.prec -- rests on one bar or not, anew
     if s then
         lib.sync(s)
     end

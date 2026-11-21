@@ -147,6 +147,20 @@ describe("LibHiddenValues points", function()
         untilLive(h)
         assert.are.same({ 350, 450 }, lohi(h))
         assert.are.equal(2, srcBars())
+        -- one point grew to two: a jump over both is one call one frame later, never a half-decoded band
+        local calls = {}
+        h:SetSink(function(_, lo, hi)
+            calls[#calls + 1] = { lo, hi }
+        end)
+        mana(300)
+        Fake.tick(2)
+        calls = {}
+        mana(500)
+        Fake.tick(2)
+        mana(300)
+        Fake.tick(2)
+        assert.are.same({ { 450, 2000 }, { 0, 350 } }, calls)
+        assert.are.equal(0, select(6, lib:GetStats()))
         local pct = lib:Watch("A", { kind = "power", unit = "player", power = MANA, edges = { 20 } })
         assert.are.same({ nil, lib.ERR.POINTS_INVALID }, { pct:SetPoints({ 300 }) }) -- a percent handle stays percent
     end)
