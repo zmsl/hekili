@@ -129,6 +129,31 @@ describe("LibHiddenValues points", function()
         assert.are.equal(lib.ERR.POOL_LIMIT, err)
     end)
 
+    it("counts the caps as edges mode would: points free under position or precision still count", function()
+        local prec = watch({ precision = "point" })
+        Fake.login()
+        untilLive(prec)
+        local function five(k)
+            local pts = {}
+            for j = 1, 5 do
+                pts[j] = 100 * (5 * k + j) + 1 -- off the 1% grid
+            end
+            return pts
+        end
+        assert.truthy(watch({ points = five(1) })) -- no bar while precision answers it, but 5 against the cap
+        local h, err = watch({ points = five(2) })
+        assert.is_nil(h)
+        assert.are.equal(lib.ERR.EDGE_LIMIT, err)
+        local step = watch({ step = 1 })
+        h, err = watch({ points = { 300, 400, 500, 600 } }) -- on the grid: free under position, still counted
+        assert.is_nil(h)
+        assert.are.equal(lib.ERR.EDGE_LIMIT, err)
+        prec:Release()
+        step:Release()
+        Fake.tick(1)
+        assert.are.equal(5, select(3, lib:GetPool()))
+    end)
+
     it("swaps a handle's points in one step and keeps the old set on a refusal", function()
         local h = watch({ points = { 300 } })
         Fake.login()

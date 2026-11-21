@@ -106,6 +106,22 @@ describe("LibHiddenValues standalone", function()
         assert.are.equal("live", (h:State()))
     end)
 
+    it("feeds the bars an older minor made through their curves after an upgrade (minor 2 kept no barCurve)", function()
+        W.unit.target = { health = 0.6 }
+        local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 50 } })
+        Fake.login()
+        Fake.tick(20)
+        lib.barCurve = nil -- minor 2's state: its bars read lib.curves[e]
+        Fake.loadLibrary(4)
+        Fake.tick(20)
+        for _, v in ipairs({ 0.65, 0.7, 0.75, 0.3, 0.35, 0.55 }) do
+            W.unit.target.health = v
+            Fake.tick(3)
+            assert.are.same(v >= 0.5 and { 50, 100 } or { 0, 50 }, lohi(h), v)
+        end
+        assert.are.equal(0, select(6, lib:GetStats()))
+    end)
+
     it("is a pure API: no slash command, no chat output, no global but LibStub, over a whole session", function()
         Fake.restore()
         for k in pairs(_G) do -- what earlier tests' copies left behind must not hide this one's

@@ -152,6 +152,27 @@ describe("LibHiddenValues position", function()
         assert.are.equal(0, select(6, lib:GetStats()))
     end)
 
+    it("primes a bar added to a live position source without a desync (a new edge, a point, a new max)", function()
+        W.unit.target.health = 0.8
+        local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 }, sink)
+        Fake.login()
+        untilLive(h)
+        local e = lib:Watch("B", { kind = "health", unit = "target", edges = { 35.5 } }) -- off the 1% grid: a bar
+        Fake.tick(20)
+        assert.are.equal("live", (e:State()))
+        assert.are.same({ 35.5, 100 }, lohi(e))
+        assert.are.equal(0, select(6, lib:GetStats()))
+        assert.are.same({}, calls) -- the step handle was never unknown
+        W.unit.player.power[0] = 0.9
+        local p = lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = { 301 } }, sink)
+        untilLive(p)
+        W.unit.player.max[0] = 2100 -- the point bar is placed again (and primes) on a live position source
+        Fake.event("UNIT_MAXPOWER", "player")
+        Fake.tick(20)
+        assert.are.equal("live", (p:State()))
+        assert.are.equal(0, select(6, lib:GetStats()))
+    end)
+
     it("re-primes after a desync (two bad frames) and comes back right", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 }, sink)
         Fake.login()

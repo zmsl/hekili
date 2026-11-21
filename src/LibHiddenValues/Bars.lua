@@ -60,6 +60,8 @@ do
     end
 end
 lib.RING_N, lib.RK = N, RK
+-- The largest ring: 127 steps of N/2 quanta (3175) is 64 cells, 6 cell bits, plus the parity bar.
+lib.RING_MAXBARS = N + 6 + 1
 lib.rings = lib.rings or {} -- per plain max: { g, mq, ncell, NB, curves } or false (refused)
 
 -- Gray code tables over 0..127, built without a bit library.
@@ -133,6 +135,17 @@ function lib.curveFor(e)
         lib.curves[e] = c
     end
     return c
+end
+
+-- An older minor's edge bars (minor 2 kept no per-bar curve: it fed lib.curves[e]) get their curve; aura bars have
+-- none.
+for k = 1, #lib.sources do
+    local s = lib.sources[k]
+    if s.kind ~= "aura" then
+        for e, i in pairs(s.bar) do
+            lib.barCurve[i] = lib.barCurve[i] or lib.curveFor(e)
+        end
+    end
 end
 
 -- The Step curve of a point threshold p at the plain max M: 1 below p, 2 at or above. The step sits half a point below
@@ -406,8 +419,9 @@ function lib.maxOf(unit, power, last)
     return m
 end
 
--- Bars a set of handles needs on a source, and how many of them are point bars (a cold path: admission). add joins
--- the set; swapH counts with swapList as its points.
+-- Bars a set of handles needs on a source, how many of them are point bars, and its distinct points (what the caps
+-- count: as edges mode would place them, so a mode that answers some points without bars cannot later lift the source
+-- over the caps when it ends). A cold path: admission. add joins the set; swapH counts with swapList as its points.
 function lib.need(s, add, swapH, swapList)
     local M = s.kind == "power" and lib.maxOf(s.unit, s.power, s.max) or nil
     local step, prec, edges, points = false, false, {}, {}
@@ -428,10 +442,12 @@ function lib.need(s, add, swapH, swapList)
         take(add)
     end
     local mode = lib.modeFor(step, prec, M)
-    local bars, pb = mode == "gray" and 8 or 0, 0
+    local bars, pb, all = mode == "gray" and 8 or 0, 0, 0
     if mode == "ring" then
         local r = lib.ringFor(M)
         bars = r and #r.curves or 0
+    elseif prec and not M then -- no plain max yet (before login): the largest ring
+        bars = lib.RING_MAXBARS
     end
     for e in pairs(edges) do
         if needEdge(mode, e) then
@@ -439,11 +455,12 @@ function lib.need(s, add, swapH, swapList)
         end
     end
     for p in pairs(points) do
+        all = all + 1
         if needPoint(mode, M, p) then
             pb = pb + 1
         end
     end
-    return bars + pb, pb
+    return bars + pb, pb, all
 end
 
 -- nil when the handle (with newPoints, when given, as its points) fits the caps, else the error code: EDGE_LIMIT over
@@ -451,11 +468,11 @@ end
 function lib.admit(h, newPoints)
     local s = lib.srcByKey[lib.keyOf(h)]
     local cur = s or { kind = h.kind, unit = h.unit, power = h.power, handles = {} }
-    local bars, pb
+    local bars, pb, _
     if newPoints then
-        bars, pb = lib.need(cur, nil, h, newPoints)
+        bars, _, pb = lib.need(cur, nil, h, newPoints)
     else
-        bars, pb = lib.need(cur, h)
+        bars, _, pb = lib.need(cur, h)
     end
     if pb > lib.POINTS_PER_SOURCE then
         return lib.ERR.EDGE_LIMIT
@@ -463,7 +480,7 @@ function lib.admit(h, newPoints)
     for k = 1, #lib.sources do
         local o = lib.sources[k]
         if o ~= s then
-            local b, p = lib.need(o)
+            local b, _, p = lib.need(o)
             bars, pb = bars + b, pb + p
         end
     end
@@ -619,24 +636,29 @@ local function grayDecode(s)
     if st[core[NGRAY + 1]] ~= (n % 2 == 1) then
         return "parity"
     end
+    local prime = lib.barPrime -- a bar still priming says nothing yet (its own handles read "priming")
     for e, i in pairs(s.bar) do
-        if st[i] then
-            if n + 1 <= e then
+        if prime[i] == 0 then
+            if st[i] then
+                if n + 1 <= e then
+                    return "edge"
+                end
+            elseif n >= e then
                 return "edge"
             end
-        elseif n >= e then
-            return "edge"
         end
     end
     local M = s.max
     if M then
         for p, i in pairs(s.pbar) do -- at or above p: the cell must reach p; below: it must start under p
-            if st[i] then
-                if (n + 1) * M <= p * 100 then
+            if prime[i] == 0 then
+                if st[i] then
+                    if (n + 1) * M <= p * 100 then
+                        return "edge"
+                    end
+                elseif n * M >= p * 100 then
                     return "edge"
                 end
-            elseif n * M >= p * 100 then
-                return "edge"
             end
         end
     end

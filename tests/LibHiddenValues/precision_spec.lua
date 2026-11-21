@@ -171,4 +171,16 @@ describe("LibHiddenValues point precision", function()
         assert.is_nil(x)
         assert.are.equal(lib.ERR.POOL_LIMIT, err)
     end)
+
+    it("counts the largest ring for a precision watch while no plain max is known (before login)", function()
+        W.maxSecret = true
+        local edges = {}
+        for k = 1, 210 do
+            edges[k] = k / 3
+        end
+        assert.truthy(lib:Watch("A", { kind = "health", unit = "target", edges = edges }))
+        local x, err = watch({ precision = "point" }) -- 210 + 57 is over 256 (8 would pass)
+        assert.is_nil(x)
+        assert.are.equal(lib.ERR.POOL_LIMIT, err)
+    end)
 end)
