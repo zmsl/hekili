@@ -258,6 +258,7 @@ describe("LibHiddenValues edges", function()
             Fake.login()
             untilLive(h)
             assert.are.same({ 50, 100 }, lohi(h))
+            Fake.tick(1) -- a frame without a call: the stray firing's call is not held back
             local clip = lib.barClip[h.src.bar[50]]
             clip:GetScript("OnSizeChanged")(clip) -- a re-layout fires the clip with no fill change
             assert.are.same({ 0, 50 }, lohi(h)) -- inverted

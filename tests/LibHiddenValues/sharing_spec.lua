@@ -101,7 +101,7 @@ describe("LibHiddenValues sharing", function()
         local a = lib:Watch("A", { kind = "health", unit = "target", edges = { 20 } }, sinkFor("a"))
         settle()
         local b = lib:Watch("B", { kind = "health", unit = "target", edges = { 20, 50 } }, sinkFor("b"))
-        for _ = 1, 8 do
+        for _ = 1, 10 do
             Fake.tick(1)
             assert.are.equal("live", (a:State()))
         end

@@ -103,6 +103,22 @@ describe("LibHiddenValues capability", function()
         assert.is_nil(lib.drv:GetScript("OnUpdate"))
     end)
 
+    for _, case in ipairs({ { 4, true, "1, after it 0: ok" }, { 5, false, "0, after it 1: FAIL" } }) do
+        it(
+            "checks a prime's firing lands in its settle window (secret firings " .. case[1] .. " frames late)",
+            function()
+                boot()
+                Fake.set("secretlag", case[1])
+                local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 20 } }, sink)
+                assert.are.equal(case[2], Fake.login())
+                local _, lines = lib:GetSelfTest()
+                local want = "selftest prime: firings in the settle window " .. case[3]
+                assert.is_truthy(table.concat(lines, "\n"):find(want, 1, true), table.concat(lines, "\n"))
+                assert.are.equal(case[2] and "priming" or "unavailable", (h:State())) -- pending until the verdict
+            end
+        )
+    end
+
     it("turns a kind off for the session when its read raises, reporting the error once", function()
         boot()
         local hp = lib:Watch("A", { kind = "health", unit = "target", edges = { 50 } }, sink)

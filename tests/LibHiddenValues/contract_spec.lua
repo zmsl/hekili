@@ -17,6 +17,7 @@ describe("LibHiddenValues contract", function()
     local function untilLive(h)
         for _ = 1, 20 do
             if h:State() == "live" then
+                Fake.tick(1) -- the first band: the prime's end is decoded at the start of the next frame
                 return
             end
             Fake.tick(1)

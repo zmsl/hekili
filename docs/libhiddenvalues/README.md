@@ -23,9 +23,12 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 - Sources by canonical key (kind, unit, power type, predicted); one bar per edge per source, reference counted; each
   handle a view cut by its own edges; a new edge primes only its own bar.
 - The pool (32 made at login, cap 256, growth in combat under pcall), one Step curve per edge (guard point 0.0005
-  below the step on the fixed 0-1 x scale), bars ranged 0-2 under one root at alpha 0, priming held 4 frames.
+  below the step on the fixed 0-1 x scale), bars ranged 0-2 under one root at alpha 0, priming held 4 frames, then
+  settled 4 (fed live, firings counted, the handle still unknown: its first band is the real one, dir 0, once).
 - The plain self-test at login (three bars, ten values, about 45 frames): firings must equal changes, within 3
-  frames, and every curve output must follow the convention. Kinds are `pending` until it passes.
+  frames, and every curve output must follow the convention; a fourth bar, primed as a source's bar is (held low,
+  then a read through a curve that is 2 everywhere), must fire once inside the settle window and never after (the
+  `selftest prime:` line). Kinds are `pending` until it passes.
 - Capability reasons `api`, `selftest`, `error`, `off`, `unproven`, `unknown-kind`.
 - A pure API: no slash command, no chat output, no frame of its own that shows. Every diagnostic fact is a getter
   (the consumer README's Diagnostics table); LHVProbe, outside this repository, is the reference consumer (`/lhvp`).
@@ -45,7 +48,8 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 | Death | plain `UnitIsDead` true: health handles go `gone`; a secret answer keeps the bands | the `dead` boolean bar is stage 6 |
 | Inconsistent edges (above a higher edge, below a lower one) | counted as a desync; the source re-primes | the shadow check that would correct it is stage 2 |
 | Re-layouts | every fed source re-primes on `UI_SCALE_CHANGED`, `DISPLAY_SIZE_CHANGED`, `LOADING_SCREEN_DISABLED` (each registered under `pcall`: the client raises on an unknown event) | a re-layout may fire a clip whose fill did not change, which inverts a one-edge handle (review I3); this corrects a stray firing before the event or within the 4 hold frames after it, not a later one |
-| Sink `t` | `GetTime()` of the frame the change was seen: the firing, or the live push that ends priming, when that was this frame or the last; else the call's frame | design 2.3 (review M3) |
+| Priming settle (LHVProbe 2026-11-20) | after the 4 hold frames the live push is followed by 4 settle frames: firings toggle the bars, the handle stays unknown, the next frame decodes once | the in-game log showed every prime's live-push firing arriving one frame after the decode that followed it: the lowest band with dir 0, then the real band with dir 1 a frame later. 4 = the self-test's plain lag limit (3) plus the frame a secret push added; BandProbe v1 counted 4 frames after the push (`IN window 4`). Owner call: a shorter window primes faster but must stay at or above the self-test's lag limit |
+| Sink `t` | `GetTime()` of the frame the change was seen: the firing, or the last settle frame that ends priming, when that was this frame or the last; else the call's frame | design 2.3 (review M3) |
 | Bar cap | a handle missing a bar is `suspended` and does not keep its source fed; its partial bars stay allocated | the governor (stage 4) owns the cap (review M1) |
 | Self-test with a full pool | reports `selftest not run: no free bar`, the earlier verdict stands | a full pool says nothing about the mechanism (review M2) |
 | Root frame | parented and anchored to `UIParent` (bottom left), alpha 0 | the run's measured shape; a parentless root is unprobed (owner question 11) |

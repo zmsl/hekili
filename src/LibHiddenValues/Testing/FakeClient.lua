@@ -14,9 +14,9 @@
 -- W.secret: reads return secrets, true by default, as under the map lockdown; W.combat does the same; W.secretBool:
 -- UnitIsDead returns a secret), Fake.tick(n), Fake.event(name, ...), Fake.advance(seconds), Fake.set(knob, value),
 -- Fake.login(), Fake.restore(), Fake.printed (every print call: the library makes none). Knobs: "closed" (bars fed a
--- secret stop firing: the leak is closed), "lag" n (firings arrive n frames late), "drop" n (every nth firing is
--- lost), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit), "refuse"
--- name (that global function raises).
+-- secret stop firing: the leak is closed), "lag" n (firings arrive n frames late), "secretlag" n (a fill set from a
+-- secret fires n frames later still), "drop" n (every nth firing is lost), "snap" "left"|"right"|"nearest" (how a
+-- Step curve picks its point), "maxpoints" n (curve size limit), "refuse" name (that global function raises).
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
 --
 -- Fidelity limits: no taint model; a secret is a table, so only arithmetic, ordering, concatenation, tostring, length,
@@ -30,7 +30,7 @@ local root = here .. "../"
 local Fake = { frames = {}, errors = {}, printed = {} }
 local W = { unit = { player = { health = 1.0, power = { [0] = 1.0, [3] = 1.0 }, powerType = 0 } }, secret = true }
 Fake.world = W
-local K = { lag = 0, drop = 0, snap = "left", maxpoints = 1000 }
+local K = { lag = 0, secretlag = 0, drop = 0, snap = "left", maxpoints = 1000 }
 local clock, tickNo, loggedIn, fireCount = 1000, 0, false, 0
 local saved, installed = {}, {}
 
@@ -154,9 +154,9 @@ end
 
 -- Frames: a StatusBar's fill change queues the OnSizeChanged of each frame anchored to its fill texture.
 local qClip, qDue, qN = {}, {}, 0
-local function queue(clip)
+local function queue(clip, extra)
     qN = qN + 1
-    qClip[qN], qDue[qN] = clip, tickNo + K.lag
+    qClip[qN], qDue[qN] = clip, tickNo + K.lag + (extra or 0)
 end
 local Frame = {}
 Frame.__index = Frame
@@ -247,7 +247,7 @@ function Frame:SetValue(v)
         self.fr = fr
         if not (s and K.closed) then
             for i = 1, #self.deps do
-                queue(self.deps[i])
+                queue(self.deps[i], s and K.secretlag or 0)
             end
         end
     end
