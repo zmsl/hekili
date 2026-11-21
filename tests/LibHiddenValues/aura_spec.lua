@@ -636,6 +636,69 @@ describe("LibHiddenValues aura kind", function()
         end
     )
 
+    it(
+        "reads every target watch unknown after a target change until its item lights or the target's auras arrive",
+        function()
+            boot()
+            W.cdm.lateSwap = 30 -- the new target's auras arrive half a second after the swap (owner run 2026-11-21)
+            local function debuffed()
+                return {
+                    [5001] = { stacks = 1, duration = 20, expires = GetTime() + 20 },
+                    [5002] = { stacks = 3, duration = 600, expires = GetTime() + 600 },
+                }
+            end
+            W.aura.target = debuffed()
+            local seen = {}
+            local function log(name)
+                return function(_, lo)
+                    seen[#seen + 1] = name .. "=" .. tostring(lo)
+                end
+            end
+            local function aura(spec, name)
+                spec.kind, spec.unit = "aura", "target"
+                return assert(lib:Watch("A", spec, log(name)))
+            end
+            local up = aura({ spell = 5002, what = "up" }, "up") -- a Tracked Buffs icon
+            local st = aura({ spell = 5002, what = "stacks", max = 5 }, "stacks") -- the same icon
+            local left = aura({ spell = 5001, what = "left", edges = { 10 } }, "left") -- a Tracked Bar
+            Fake.login()
+            W.combat = true
+            Fake.tick(8) -- past the new bars' hold
+            Fake.event("UNIT_AURA", "target") -- the count is written again: the stacks watch's first push
+            Fake.tick(12)
+            assert.are.same({ 1, 1 }, band(up))
+            assert.are.same({ 3, 4 }, band(st))
+            assert.are.same({ 10, math.huge }, band(left))
+            -- mob B carries both auras: the items go dark until B's auras arrive; never a false 0 meanwhile
+            seen = {}
+            W.aura.target = debuffed()
+            Fake.event("PLAYER_TARGET_CHANGED")
+            Fake.tick(10)
+            assert.are.equal("gone", (up:State()))
+            assert.are.equal("gone", (st:State()))
+            assert.are.equal("gone", (left:State()))
+            Fake.tick(30)
+            for k = 1, #seen do
+                assert.is_nil(seen[k]:match("=0$"), seen[k])
+            end
+            assert.are.same({ 1, 1 }, band(up))
+            assert.are.same({ 3, 4 }, band(st))
+            assert.are.same({ 10, math.huge }, band(left))
+            -- mob C carries neither: unknown until C's (empty) auras arrive, then the lowest bands
+            W.aura.target = {}
+            Fake.event("PLAYER_TARGET_CHANGED")
+            Fake.tick(10)
+            assert.is_nil(band(up)[1])
+            assert.is_nil(band(st)[1])
+            assert.is_nil(band(left)[1])
+            Fake.tick(30)
+            assert.are.same({ 0, 0 }, band(up))
+            assert.are.same({ 0, 1 }, band(st)) -- absent: below the lowest cut
+            assert.are.same({ 0, 10 }, band(left))
+            assert.are.same({}, Fake.errors)
+        end
+    )
+
     it("follows a target swap without priming", function()
         boot()
         W.aura.target = { [5002] = { stacks = 3, duration = 30, expires = GetTime() + 30 } }
@@ -651,6 +714,7 @@ describe("LibHiddenValues aura kind", function()
         local first = W.aura.target
         W.aura.target = {}
         Fake.event("PLAYER_TARGET_CHANGED")
+        Fake.event("UNIT_AURA", "target") -- the new target's auras arrive: its silent item is that target's reading
         Fake.tick(2)
         assert.are.same({ 0, 2 }, band(h)) -- absent: no stacks
         assert.are.equal("live", (h:State()))

@@ -18,7 +18,8 @@
 -- library makes none). Knobs: "closed" (bars fed a secret stop firing: the leak is closed), "lag" n (firings arrive n
 -- frames late), "secretlag" n (a fill set from a secret fires n frames later still), "drop" n (every nth firing is
 -- lost), "stagger" n (every nth firing queued arrives one frame later than the rest: one change's firings split over
--- two frames), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit),
+-- two frames), "jitter" n (each firing 0 to n frames later still, drawn per firing from a generator seeded by "seed":
+-- repeatable), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit),
 -- "refuse" name (that global function raises). The Cooldown Manager (the aura kind's source): W.cdm, W.aura,
 -- Fake.setAura, Fake.cdmLayout, Fake.cdmEnable, Fake.viewers, Fake.touched, Fake.hooks; see the comment above its
 -- viewers. W.cdm.unlearned ({ [cooldownID] = true }: no item, left out of the learned set); W.classID (11 by
@@ -52,7 +53,7 @@ local W = {
 W.cdm = { enabled = true, available = true, catalogue = {}, bar = {}, icon = {}, essential = {}, utility = {} }
 W.aura = { player = {}, target = {} }
 Fake.world = W
-local K = { lag = 0, secretlag = 0, drop = 0, stagger = 0, snap = "left", maxpoints = 1000 }
+local K = { lag = 0, secretlag = 0, drop = 0, stagger = 0, jitter = 0, seed = 1, snap = "left", maxpoints = 1000 }
 local clock, tickNo, loggedIn, fireCount = 1000, 0, false, 0
 local saved, installed = {}, {}
 
@@ -182,6 +183,10 @@ local qClip, qDue, qN, qCount = {}, {}, 0, 0
 local function queue(clip, extra)
     qN, qCount = qN + 1, qCount + 1
     local late = (K.stagger > 0 and qCount % K.stagger == 0) and 1 or 0
+    if K.jitter > 0 then -- each firing 0..jitter frames later still, drawn from a seeded generator (repeatable)
+        K.seed = (K.seed * 1103515245 + 12345) % 2147483648
+        late = late + math.floor(K.seed / 65536) % (K.jitter + 1)
+    end
     qClip[qN], qDue[qN] = clip, tickNo + K.lag + (extra or 0) + late
 end
 local Frame = {}
@@ -391,7 +396,10 @@ end)
 -- cooldownID / a layout pass its layoutIndex secret), secretUnit (an item's auraDataUnit is secret while reads are;
 -- unprobed), noUnit (a held item names no unit), shuffle (a layout pass hands the frames out in another order),
 -- quietSwap (on PLAYER_TARGET_CHANGED an Essential or Utility item refreshes only while it holds a target aura, as the
--- client's do without a range check: one gone silent stays silent on the next target until a target UNIT_AURA) }.
+-- client's do without a range check: one gone silent stays silent on the next target until a target UNIT_AURA),
+-- lateSwap n (after PLAYER_TARGET_CHANGED every viewer sees no aura on the new target for n frames, then its auras
+-- arrive with a target UNIT_AURA: the owner's run of 2026-11-21 saw a Tracked Buffs icon dark ~0.4-0.6 s after a swap
+-- onto a mob with the aura) }.
 -- W.aura[unit][spellID] = { stacks =, expires = GetTime() at its end, duration = } on "player" and "target": the
 -- player's own auras (Fake.setAura). The viewers lay out at login and on Fake.cdmLayout(), refresh their items on
 -- UNIT_AURA and PLAYER_TARGET_CHANGED, push a tracked bar's SetMinMaxValues(0, duration) and SetValue(seconds left)
@@ -512,6 +520,7 @@ end)
 
 local UNITS = { "player", "target" }
 local nextAuraId = 0
+local targetLate = 0 -- frames until a swapped-to target's auras arrive (W.cdm.lateSwap)
 local function findAura(cd)
     local info = W.cdm.catalogue[cd]
     if not info then
@@ -519,7 +528,7 @@ local function findAura(cd)
     end
     for u = 1, 2 do
         local auras = W.aura[UNITS[u]]
-        if auras then
+        if auras and not (u == 2 and targetLate > 0) then
             local a = auras[info.spellID] or auras[info.overrideSpellID or 0] or auras[info.overrideTooltipSpellID or 0]
             local links = info.linkedSpellIDs
             for j = 1, links and #links or 0 do
@@ -780,6 +789,12 @@ function Fake.tick(n)
         end
         clock = clock + 1 / 60
         tickNo = tickNo + 1
+        if targetLate > 0 then
+            targetLate = targetLate - 1
+            if targetLate == 0 then -- the new target's auras arrive: the viewers refresh on its UNIT_AURA
+                Fake.event("UNIT_AURA", "target")
+            end
+        end
         local frames = Fake.frames
         for i = 1, #frames do
             local f = frames[i]
@@ -820,6 +835,8 @@ end
 function Fake.event(name, ...)
     if name == "PLAYER_LOGIN" then
         loggedIn = true
+    elseif name == "PLAYER_TARGET_CHANGED" and W.cdm.lateSwap then
+        targetLate = W.cdm.lateSwap
     end
     local frames = Fake.frames
     for i = 1, #frames do

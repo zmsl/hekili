@@ -34,7 +34,6 @@ local W = 0.01 -- seconds: a seconds bar's range below its edge
 local RESCAN = 30 -- frames between the feed's own item searches (the hooks announce every change they see)
 local WHAT = { up = true, stacks = true, left = true }
 local RELAYOUT = { UI_SCALE_CHANGED = true, DISPLAY_SIZE_CHANGED = true, LOADING_SCREEN_DISABLED = true }
-local AURAV = 2 -- viewer index of the last aura viewer (Cdm.lua): above it Essential and Utility
 -- Target swaps (cdm.swapNo counts them) and whether a target UNIT_AURA came since the last one (cdm.doubt false).
 cdm.swapNo = cdm.swapNo or 0
 lib.barLast = lib.barLast or {} -- the frame of a seconds bar's last counted firing
@@ -270,10 +269,12 @@ local function feed(s)
                 if issecretvalue(u) or u ~= s.unit then
                     up = nil -- held on a secret, no or another unit: the item says nothing of this one (unknown)
                 end
-            elseif cdm.doubt and s.unit == "target" and s.litAt ~= cdm.swapNo and cdm.viewerOf[item] > AURAV then
-                -- an Essential or Utility item refreshes on a target change only while it holds a target aura: one
-                -- silent before may not have looked at the new target (unknown until this source sees it lit since
-                -- the swap or a target UNIT_AURA comes; a source made after the swap is in doubt too)
+            elseif cdm.doubt and s.unit == "target" and s.litAt ~= cdm.swapNo then
+                -- a silent item right after a target change says nothing of the new target: the client shows its
+                -- auras only once their update arrives (a Tracked Buffs icon stayed dark 0.4-0.6 s on a mob with the
+                -- aura, owner 2026-11-21), and an Essential or Utility item refreshes on a swap only while it holds a
+                -- target aura. Unknown until this source sees it lit since the swap or a target UNIT_AURA comes (a
+                -- source made after the swap is in doubt too); stacks and seconds with it (up nil)
                 up = nil
             end
         end

@@ -141,20 +141,22 @@ LHV:Watch("MyAddon", { kind = "aura", unit = "player", cooldown = 1234, what = "
 | `max` | `stacks` only: the top of the domain; alone it means every count from 1 to `max`: exact from 2 up, `[0, 2)` while up with no count shown. `max = 1` tells nothing beyond `up` (`[0, 1]` up or absent alike) |
 
 The library reports what the Cooldown Manager shows: anything the item cannot tell is unknown. `up` 0 (with no stacks
-and no seconds, the lowest band: `0` to the lowest edge) means the item holds no aura of yours now: the item's
-reading, not proof that the aura is absent. Measured limits: the Cooldown Manager shows only auras the player cast,
-and on the player only helpful ones (F10), so a partner's debuff reads 0; and an item stayed silent a whole fight
-while its aura was up (F12, Mark of the Wild). After a target change a target watch on an Essential or Utility item
-that has not lit is unknown until it lights or the target's auras change: such an item looks at the new target only
-when it held a target aura. A handle is unknown (`lo == nil`, `gone`) while no item shows it, while its viewer is
-hidden or in Edit Mode (or either reads secret), and while its item holds the aura on a unit the client keeps secret,
-names no unit, or names the other unit (a player watch whose entry shows the target's aura is unknown, not 0: a
-watch on each unit of one entry reads unknown on one of them while the aura is up on the other); before its first
-band it is `priming`. `"live"` always comes with a band. The client shows no count at 0 or 1 stack (a non-stacking
-aura shows none): an aura that is up with no count reads 0 to the lowest stacks edge above 1 (`[0, 2)` with `max`,
-`[0, 3)` with edges `{ 3 }`: no bar at 2), never 1; stacks edge 1 is told only by the item holding none. `left` is the
-tracked bar's value: an aura with no duration has a bar at 0 and reads the lowest band while it is up, which looks
-like "about to expire": watch `up` for such auras.
+and no seconds, the lowest band: `0` to the lowest edge) means the item holds no aura of yours now: the item's reading,
+not proof that the aura is absent. Measured limits: the Cooldown Manager shows only auras the player cast, and on the
+player only helpful ones (F10), so a partner's debuff reads 0; and an item stayed silent a whole fight while its aura
+was up (F12, Mark of the Wild). After a target change every target watch whose item has not lit since is unknown
+(`gone`) until it lights or the client sends the new target's auras (a target `UNIT_AURA`): the client shows a new
+target's auras only once their update arrives (a Tracked Buffs icon stayed dark 0.4-0.6 s on a mob that had the aura),
+and an Essential or Utility item looks at the new target only when it held a target aura. Stacks and seconds watches are
+unknown with it; a cleared target stays unknown until a target `UNIT_AURA`. A handle is unknown (`lo == nil`, `gone`)
+while no item shows it, while its viewer is hidden or in Edit Mode (or either reads secret), and while its item holds
+the aura on a unit the client keeps secret, names no unit, or names the other unit (a player watch whose entry shows the
+target's aura is unknown, not 0: a watch on each unit of one entry reads unknown on one of them while the aura is up on
+the other); before its first band it is `priming`. `"live"` always comes with a band. The client shows no count at 0 or
+1 stack (a non-stacking aura shows none): an aura that is up with no count reads 0 to the lowest stacks edge above 1
+(`[0, 2)` with `max`, `[0, 3)` with edges `{ 3 }`: no bar at 2), never 1; stacks edge 1 is told only by the item holding
+none. `left` is the tracked bar's value: an aura with no duration has a bar at 0 and reads the lowest band while it is
+up, which looks like "about to expire": watch `up` for such auras.
 `h:Domain()` returns `nil, 0, top`: 1 for `up`, `max` (or `math.huge`) for stacks, `math.huge` for seconds.
 `h:Latency()` is the worst case from the Cooldown Manager's update to the call (its own delay is not counted): `up`
 2 frames; `stacks` `LHV.SETTLE + 1` (5); `left` `LHV.HOLD + LHV.SETTLE + 3` (11: a refresh as the seconds fall
