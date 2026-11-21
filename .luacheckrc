@@ -197,7 +197,7 @@ files["tests/LibHiddenValues/"] = {
 -- LibTimeToDie (a standalone library in src/LibTimeToDie): time to die from LibHiddenValues' health bands.
 files["src/LibTimeToDie/"] = {
     not_globals = { "print" }, -- a pure API: no chat output
-    read_globals = { "CreateFrame", "GetTime", "GetLocale" },
+    read_globals = { "CreateFrame", "GetTime", "GetLocale", "geterrorhandler" },
 }
 files["tests/LibTimeToDie/"] = {
     std = "+busted",
