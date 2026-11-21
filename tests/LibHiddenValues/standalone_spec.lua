@@ -74,16 +74,16 @@ describe("LibHiddenValues standalone", function()
         local watch = lib.Watch
         Fake.loadLibrary(0)
         assert.are.equal(watch, lib.Watch)
-        assert.are.same({ "LibHiddenValues-1.0", 1 }, { lib:GetVersion() })
+        assert.are.same({ "LibHiddenValues-1.0", 2 }, { lib:GetVersion() })
     end)
 
     it("lets a newer minor before login inherit the registry", function()
         W.unit.target = { health = 0.6 }
         local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 50 } })
         local watch = lib.Watch
-        Fake.loadLibrary(2)
+        Fake.loadLibrary(3)
         assert.are_not.equal(watch, lib.Watch)
-        assert.are.same({ "LibHiddenValues-1.0", 2 }, { lib:GetVersion() })
+        assert.are.same({ "LibHiddenValues-1.0", 3 }, { lib:GetVersion() })
         Fake.login()
         Fake.tick(10)
         assert.are.equal("live", (h:State()))
@@ -99,7 +99,7 @@ describe("LibHiddenValues standalone", function()
         Fake.login()
         Fake.tick(10)
         local n = #Fake.frames
-        Fake.loadLibrary(2)
+        Fake.loadLibrary(3)
         Fake.tick(10)
         assert.are.equal(n, #Fake.frames)
         assert.are.same({ 50, "nil", 50 }, calls)
@@ -147,7 +147,7 @@ describe("LibHiddenValues standalone", function()
         Fake.tick(60)
         assert.are.same({ false, "unavailable", "selftest" }, { lib:IsAvailable("health") })
         lib:ReleaseAll("A")
-        Fake.loadLibrary(2) -- a newer minor after login
+        Fake.loadLibrary(3) -- a newer minor after login
         Fake.tick(10)
         assert.are.same({}, Fake.printed)
         assert.are.same({}, _G.SlashCmdList)

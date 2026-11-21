@@ -212,7 +212,7 @@ describe("LibHiddenValues edges", function()
         W.unit.player.power = { [0] = 0.9, [1] = 0.0, [3] = 0.1 }
         local h, err = lib:Watch("A", { kind = "power", unit = "player", edges = { 50 } })
         assert.is_nil(h)
-        assert.are.equal("bad-spec: power required (an Enum.PowerType number)", err)
+        assert.are.equal(lib.ERR.POWER_REQUIRED, err)
         local mana = lib:Watch("A", { kind = "power", unit = "player", power = Enum.PowerType.Mana, edges = { 50 } })
         local energy =
             lib:Watch("A", { kind = "power", unit = "player", power = Enum.PowerType.Energy, edges = { 50 } })

@@ -235,6 +235,8 @@ function lib.drive(elapsed)
     lib.stats(t0)
     if not busy then
         lib.drv:SetScript("OnUpdate", nil)
+        -- nothing fed: the cost per frame is 0 (the averages would otherwise freeze at the last fed frame's)
+        lib.usAvg, lib.usPeak, lib.winPeak, lib.pushRate, lib.fireRate = 0, 0, 0, 0, 0
     end
 end
 

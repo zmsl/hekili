@@ -11,33 +11,37 @@ end
 local GUARD = 0.05 -- percent: the curve's guard distance; an edge needs room for its guard point above 0
 local PROVEN_POWER = { [0] = true, [1] = true, [3] = true } -- Enum.PowerType Mana, Rage and Energy
 
--- Reads and checks the spec into the handle; returns an error text for bad-spec.
+-- Reads and checks the spec into the handle; returns an error code (lib.ERR) when the spec is refused.
 local function validate(spec, h)
+    local E = lib.ERR
     local unit, edges, step = spec.unit, spec.edges, spec.step
     if type(unit) ~= "string" or not unit:match("^%a%w*$") then
-        return "unit must be a unit token"
+        return E.UNIT_INVALID
     end
     if edges ~= nil and type(edges) ~= "table" then
-        return "edges must be a list of percents"
+        return E.EDGES_INVALID
     end
     if step ~= nil and (type(step) ~= "number" or not (step > 0)) then
-        return "step must be a positive number"
+        return E.STEP_INVALID
     end
     if (edges == nil or #edges == 0) and step == nil then
-        return "edges or step required"
+        return E.EDGES_REQUIRED
     end
     if spec.power ~= nil and type(spec.power) ~= "number" then
-        return "power must be an Enum.PowerType number"
+        return E.POWER_INVALID
     end
     if h.kind == "power" and spec.power == nil then
         -- required: a default (the displayed power) would let a form change swap what the handle measures
-        return "power required (an Enum.PowerType number)"
+        return E.POWER_REQUIRED
     end
     local list = {}
     for i = 1, edges and #edges or 0 do
         local e = edges[i]
-        if type(e) ~= "number" or not (e > GUARD and e <= 100) then
-            return "edges must be numbers in (0.05, 100]"
+        if type(e) ~= "number" then
+            return E.EDGES_INVALID
+        end
+        if not (e > GUARD and e <= 100) then
+            return E.EDGES_OUT_OF_RANGE
         end
         list[i] = e
     end

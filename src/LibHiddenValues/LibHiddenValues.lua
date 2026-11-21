@@ -8,7 +8,7 @@
 -- (lib.loading). All state lives on lib, as plain data; scripts are one-line dispatchers through lib, so a newer minor
 -- replaces behaviour by replacing functions. Nothing is built before PLAYER_LOGIN. The addon name and the private
 -- table from `...` are never used (an embedded copy would receive its host's).
-local MAJOR, MINOR = "LibHiddenValues-1.0", 1
+local MAJOR, MINOR = "LibHiddenValues-1.0", 2
 local lib, oldMinor = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then
     return
@@ -17,6 +17,61 @@ lib.loading, lib.oldMinor = true, oldMinor
 
 -- Quality codes (the major's contract).
 lib.UNKNOWN, lib.COARSE, lib.BAND, lib.EXACT = 0, 1, 2, 3
+
+-- Error codes: Watch and every call that refuses input return nil, code. Codes are plain strings, never English
+-- text; lib:GetMessage(code) gives the words.
+lib.ERR = {
+    OWNER_INVALID = "owner-invalid",
+    SPEC_INVALID = "spec-invalid",
+    SINK_INVALID = "sink-invalid",
+    KIND_INVALID = "kind-invalid",
+    UNIT_INVALID = "unit-invalid",
+    EDGES_INVALID = "edges-invalid",
+    EDGES_OUT_OF_RANGE = "edges-out-of-range",
+    EDGES_REQUIRED = "edges-required",
+    STEP_INVALID = "step-invalid",
+    POWER_REQUIRED = "power-required",
+    POWER_INVALID = "power-invalid",
+}
+
+-- Messages for error codes, handle states and capability reasons, per locale; enUS only for now.
+lib.MESSAGES = {
+    enUS = {
+        ["owner-invalid"] = "The owner must be a string (your addon's name).",
+        ["spec-invalid"] = "The spec must be a table.",
+        ["sink-invalid"] = "The sink must be a function or nil.",
+        ["kind-invalid"] = "Unknown kind.",
+        ["unit-invalid"] = "The unit must be a unit token.",
+        ["edges-invalid"] = "The edges must be a list of numbers.",
+        ["edges-out-of-range"] = "Every edge must be above 0.05 and at most 100 (percent).",
+        ["edges-required"] = "The spec needs edges, a step, points or a precision.",
+        ["step-invalid"] = "The step must be a positive number.",
+        ["power-required"] = "A power watch needs its power type (an Enum.PowerType number).",
+        ["power-invalid"] = "The power type must be an Enum.PowerType number.",
+        live = "Live: a band is known.",
+        priming = "Priming: the band is not known yet.",
+        pending = "Pending: the self-test has not passed yet.",
+        gone = "Gone: the unit is not there or is dead.",
+        paused = "Paused by its owner.",
+        suspended = "Suspended: no bar was free for it.",
+        unavailable = "Unavailable.",
+        released = "Released.",
+        ready = "Ready.",
+        api = "The client lacks an API this needs.",
+        selftest = "The self-test failed.",
+        error = "Switched off after an error.",
+        off = "Switched off for this session.",
+        unproven = "Not proven on this client yet.",
+        ["unknown-kind"] = "Unknown kind.",
+    },
+}
+
+-- The message for an error code, a state or a reason in locale (default: the client's), nil when the library has no
+-- text for that locale or code yet: map the code yourself then.
+function lib:GetMessage(code, locale)
+    local t = lib.MESSAGES[locale or (GetLocale and GetLocale()) or "enUS"]
+    return t and code ~= nil and t[code] or nil
+end
 
 -- Every kind name of the major's contract; only those with a file in Kinds/ are built (lib.kinds). The aura kind stays
 -- unproven for good: the client's aura container only takes widgets owned by its forbidden aura button.
@@ -153,30 +208,27 @@ end
 
 -- Watch -------------------------------------------------------------------------------------------------------------
 
-local function badSpec(msg)
-    return nil, "bad-spec: " .. msg
-end
-
 function lib:Watch(owner, spec, sink)
+    local E = lib.ERR
     if type(owner) ~= "string" then
-        return badSpec("owner must be a string")
+        return nil, E.OWNER_INVALID
     end
     if type(spec) ~= "table" then
-        return badSpec("spec must be a table")
+        return nil, E.SPEC_INVALID
     end
     if sink ~= nil and type(sink) ~= "function" then
-        return badSpec("sink must be a function or nil")
+        return nil, E.SINK_INVALID
     end
     local kind = spec.kind
     if not lib.KNOWN[kind] then
-        return badSpec("unknown kind " .. tostring(kind))
+        return nil, E.KIND_INVALID
     end
     local h = setmetatable({ owner = owner, kind = kind, sink = sink, q = lib.UNKNOWN }, lib.handleMeta)
     local k = lib.kinds[kind]
     if k then
         local err = k.validate(spec, h)
         if err then
-            return badSpec(err)
+            return nil, err
         end
     else
         h.unproven = "unproven"

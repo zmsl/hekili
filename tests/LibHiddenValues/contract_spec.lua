@@ -36,33 +36,88 @@ describe("LibHiddenValues contract", function()
         Fake.restore()
     end)
 
-    it("rejects bad specs with nil, 'bad-spec: ...'", function()
+    it("rejects bad specs with nil and an error code from lib.ERR", function()
+        local E = lib.ERR
         local bad = {
-            { 1, { kind = "health", unit = "target", edges = { 20 } } },
-            { "A", nil },
-            { "A", { kind = "nope", unit = "target", edges = { 20 } } },
-            { "A", { unit = "target", edges = { 20 } } },
-            { "A", { kind = "health", edges = { 20 } } },
-            { "A", { kind = "health", unit = "Creature-0-1-2-3-4", edges = { 20 } } },
-            { "A", { kind = "health", unit = "target" } },
-            { "A", { kind = "health", unit = "target", edges = { 0 } } },
-            { "A", { kind = "health", unit = "target", edges = { 0.05 } } },
-            { "A", { kind = "health", unit = "target", edges = { 101 } } },
-            { "A", { kind = "health", unit = "target", edges = { "20" } } },
-            { "A", { kind = "health", unit = "target", edges = 20 } },
-            { "A", { kind = "health", unit = "target", step = 0 } },
-            { "A", { kind = "power", unit = "player", power = "energy", edges = { 20 } } },
-            { "A", { kind = "power", unit = "player", edges = { 20 } } },
-            { "A", { kind = "health", unit = "target", power = "energy", edges = { 20 } } },
+            { 1, { kind = "health", unit = "target", edges = { 20 } }, E.OWNER_INVALID },
+            { "A", nil, E.SPEC_INVALID },
+            { "A", { kind = "nope", unit = "target", edges = { 20 } }, E.KIND_INVALID },
+            { "A", { unit = "target", edges = { 20 } }, E.KIND_INVALID },
+            { "A", { kind = "health", edges = { 20 } }, E.UNIT_INVALID },
+            { "A", { kind = "health", unit = "Creature-0-1-2-3-4", edges = { 20 } }, E.UNIT_INVALID },
+            { "A", { kind = "health", unit = "target" }, E.EDGES_REQUIRED },
+            { "A", { kind = "health", unit = "target", edges = {} }, E.EDGES_REQUIRED },
+            { "A", { kind = "health", unit = "target", edges = { 0 } }, E.EDGES_OUT_OF_RANGE },
+            { "A", { kind = "health", unit = "target", edges = { 0.05 } }, E.EDGES_OUT_OF_RANGE },
+            { "A", { kind = "health", unit = "target", edges = { 101 } }, E.EDGES_OUT_OF_RANGE },
+            { "A", { kind = "health", unit = "target", edges = { "20" } }, E.EDGES_INVALID },
+            { "A", { kind = "health", unit = "target", edges = 20 }, E.EDGES_INVALID },
+            { "A", { kind = "health", unit = "target", step = 0 }, E.STEP_INVALID },
+            { "A", { kind = "health", unit = "target", step = "1" }, E.STEP_INVALID },
+            { "A", { kind = "power", unit = "player", power = "energy", edges = { 20 } }, E.POWER_INVALID },
+            { "A", { kind = "power", unit = "player", edges = { 20 } }, E.POWER_REQUIRED },
+            { "A", { kind = "health", unit = "target", power = "energy", edges = { 20 } }, E.POWER_INVALID },
         }
         for i, b in ipairs(bad) do
             local h, err = lib:Watch(b[1], b[2], sink)
             assert.is_nil(h, i)
-            assert.is_truthy(err:match("^bad%-spec: "), i)
+            assert.is_string(b[3], i)
+            assert.are.equal(b[3], err, i)
         end
         local h, err = lib:Watch("A", { kind = "health", unit = "target", edges = { 20 } }, "notafunction")
         assert.is_nil(h)
-        assert.is_truthy(err:match("^bad%-spec: "))
+        assert.are.equal(E.SINK_INVALID, err)
+    end)
+
+    it("names its error codes as plain strings", function()
+        local want = {
+            OWNER_INVALID = "owner-invalid",
+            SPEC_INVALID = "spec-invalid",
+            SINK_INVALID = "sink-invalid",
+            KIND_INVALID = "kind-invalid",
+            UNIT_INVALID = "unit-invalid",
+            EDGES_INVALID = "edges-invalid",
+            EDGES_OUT_OF_RANGE = "edges-out-of-range",
+            EDGES_REQUIRED = "edges-required",
+            STEP_INVALID = "step-invalid",
+            POWER_REQUIRED = "power-required",
+            POWER_INVALID = "power-invalid",
+        }
+        for k, v in pairs(want) do
+            assert.are.equal(v, lib.ERR[k], k)
+        end
+    end)
+
+    it("looks up messages for codes, states and reasons in enUS only", function()
+        for _, code in pairs(lib.ERR) do
+            assert.is_string(lib:GetMessage(code), code)
+            assert.is_string(lib:GetMessage(code, "enUS"), code)
+            assert.is_nil(lib:GetMessage(code, "deDE"), code)
+        end
+        for _, s in ipairs({ "live", "priming", "pending", "gone", "paused", "suspended", "unavailable", "released" }) do
+            assert.is_string(lib:GetMessage(s), s)
+        end
+        for _, r in ipairs({ "ready", "api", "selftest", "error", "off", "unproven", "unknown-kind" }) do
+            assert.is_string(lib:GetMessage(r), r)
+        end
+        assert.is_nil(lib:GetMessage("no-such-code"))
+        assert.is_nil(lib:GetMessage(nil))
+        _G.GetLocale = function()
+            return "frFR"
+        end
+        assert.is_nil(lib:GetMessage(lib.ERR.UNIT_INVALID)) -- the default locale is the client's
+    end)
+
+    it("reports 0 us per frame once nothing is fed (the self-test's frames count while it runs)", function()
+        W.unit.target = { health = 0.6 }
+        Fake.login()
+        local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 50 } })
+        Fake.tick(20)
+        h:Release()
+        Fake.tick(3)
+        local bars, us, peak, push = lib:GetStats()
+        assert.are.same({ 0, 0, 0 }, { bars, us, peak })
+        assert.are.equal(0, push)
     end)
 
     it("builds nothing before PLAYER_LOGIN and never calls a sink inside Watch", function()
@@ -230,6 +285,6 @@ describe("LibHiddenValues contract", function()
     it("reports its version", function()
         local major, minor = lib:GetVersion()
         assert.are.equal("LibHiddenValues-1.0", major)
-        assert.are.equal(1, minor)
+        assert.are.equal(2, minor)
     end)
 end)
