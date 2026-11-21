@@ -410,6 +410,21 @@ describe("LibTimeToDie tracking", function()
         assert.is_true(math.abs(est - 95.5 * 0.5) < 0.15 * 95.5 * 0.5, tostring(est))
     end)
 
+    it("a first crossing within 0.1 s of the combat-start anchor does not seed", function()
+        local h = ttd:Track("A", "target")
+        Fake.tick(12)
+        Fake.event("PLAYER_REGEN_DISABLED")
+        Fake.advance(0.02)
+        to(88) -- a 12% opener chunk one frame after the anchor
+        Fake.advance(0.02)
+        assert.are.equal("unknown", (h:State())) -- the anchor's slope would be one hit over no time
+        assert.is_nil((h:Get()))
+        fall(86, 85, 0.5) -- two crossings later it answers from them, not from the opener's interval
+        local est, _, _, state = h:Get()
+        assert.are.equal("live", state)
+        assert.is_true(est > 8, tostring(est)) -- 2.6 s with the anchor kept
+    end)
+
     it("allocates nothing per steady frame, two owners on one target, with a sink and a Get every frame", function()
         local n = 0
         local h = ttd:Track("A", "target", function()
