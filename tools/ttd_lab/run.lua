@@ -985,6 +985,27 @@ for _, w in ipairs({ 0.1, 0.15, 0.25, 0.35, 0.5, 0.7 }) do
         { "c. all lines, prior x2, learned w=" .. w, est3(p, { mode = "all", prior = { m = 2 } }), short = "c " .. w }
 end
 
+-- `run3 --list run4`: the main strategies under the library's estimator (staleAnchor 12, run 4 rules off) and under
+-- the run 4 defaults (newAnchor 0.1, rangeZ 1.15: ranges are not scored here, spread is off), LHV band contract.
+local RUN3_RUN4 = {}
+do
+    local LIB3 = { staleAnchor = 12, newAnchor = 0, rangeZ = 0 }
+    local NEW3 = { staleAnchor = 12, newAnchor = 0.1, rangeZ = 1.15 }
+    local rows = {
+        { "a. no execute hint", "a", {}, { mode = "none" } },
+        { "b. own line, learned", "b own", {}, { mode = "own" } },
+        { "b. all lines, learned", "b all", {}, { mode = "all" } },
+        { "b. all lines, learned w=0.25", "b all .25", W25, { mode = "all" } },
+        { "c. all lines, prior x2, learned", "c all", {}, { mode = "all", prior = { m = 2 } } },
+        { "d. all lines, prior x2, fixed", "d", FIX, { mode = "all", prior = { m = 2 } } },
+        { "b. all lines, one factor across groups", "b across", {}, { mode = "all", across = true } },
+    }
+    for _, r in ipairs(rows) do
+        RUN3_RUN4[#RUN3_RUN4 + 1] = { r[1] .. " (library)", est3(with(LIB3, r[3]), r[4]), short = r[2] .. " lib" }
+        RUN3_RUN4[#RUN3_RUN4 + 1] = { r[1] .. " (run 4)", est3(with(NEW3, r[3]), r[4]), short = r[2] .. " new" }
+    end
+end
+
 local LENGTHS = { "trash", "elite", "boss" }
 local SESSIONS = 16 -- per composition and seed set (x 10 pulls)
 -- First against later pulls of a session: the first and last trash and elite pulls.
@@ -1247,7 +1268,9 @@ function modes.run3()
     holdSet = holdSet or "A"
     print("## Run 3: partial-group execute (seed set " .. holdSet .. ")\n")
     header()
-    local res = runSet3(holdSet, lineup(tuneList == "learn" and RUN3_LEARN or RUN3))
+    O.lhv = tuneList == "run4"
+    local list = tuneList == "learn" and RUN3_LEARN or tuneList == "run4" and RUN3_RUN4 or RUN3
+    local res = runSet3(holdSet, lineup(list))
     local order, _, refs = report(res, "Ranking on the run 3 buckets (composition x length, class means)")
     detail(res, order)
     run3Tables(res, refs)

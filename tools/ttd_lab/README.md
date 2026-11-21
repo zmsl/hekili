@@ -17,6 +17,7 @@ lua5.1 tools/ttd_lab/run.lua run3 --list learn     # run 3: execute learning wei
 lua5.1 tools/ttd_lab/run.lua run3old [--set B]     # run 3 strategies on the run 1 and run 2 classes (~2 min)
 lua5.1 tools/ttd_lab/run.lua idle [--set B]        # idle targets: stale anchors, clamped ranges (~7 min)
 lua5.1 tools/ttd_lab/run.lua run4 [--set B]        # run 4: real traces, lumpy/opener set, ranges (~12 min)
+lua5.1 tools/ttd_lab/run.lua run3 --list run4 [--set B]  # run 3 groups: library vs run 4 defaults (~5 min)
 ```
 
 `results/` holds the committed tables (`main.md`, `sweep-round1.md` ... `sweep-round5.md`, `holdout.md` (set B,
