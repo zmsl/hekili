@@ -1,4 +1,4 @@
-# LibHiddenValues stages 0-1: in-game test plan
+# LibHiddenValues: in-game test plan (stages 0-1, stage 3)
 
 For the owner, one session on the live client. About 15 minutes. The library prints nothing and has no command of its
 own: every test runs through LHVProbe, its reference consumer, which calls the public API and prints what it gets.
@@ -38,3 +38,26 @@ The expectations below are facts (a band, a direction, a state, a count); LHVPro
 | 14 | `/lhvp copy`, Ctrl+A, Ctrl+C, paste back | |
 
 Also report any Lua error that names LibHiddenValues or LHVProbe, and set the CVar back to "0".
+
+## Stage 3: error codes, position, points, point precision
+
+About 15 minutes, a Druid (or any mana user; the energy and rage steps need a Druid). Setup as above (LHVProbe 0.3.0;
+a `/reload` is enough when only files changed, a full restart if a folder is new), the map lockdown CVar forced first
+and reset at the end. Start in caster form, out of combat; `/lhvp watch off` between the groups.
+
+| # | Do | Expect (PASS) |
+|---|---|---|
+| S1 | `/lhvp` | minor 2; health and power `ready` |
+| S2 | `/lhvp watch power player 30` (no type word) and `/lhvp watch power player precision exact mana` | each refused with the library's English message (`A power watch needs its power type ...`, `The precision must be "point" or nil.`), not a code |
+| S3 | `/lhvp watch health player step 1`, `/lhvp watch power player step 1 mana` | each a 1% band (e.g. `61-62`), dir 0 first; `/lhvp stats`: one source line per watch, `mode gray`, 8 bars each |
+| S4 | Spend mana in steps (casts), take a hit, heal, out of combat and then in a fight | the mana and health bands follow every 1% change, a big spend is one line; `/lhvp stats`: desyncs 0 (splits may be above 0: a held frame, never a wrong band) |
+| S5 | `/lhvp watch power player points 300 500 mana` (pick points under your mana max) | the band in mana points (`300-500`, `500-<max>`, `0-300`); spend across 500 and 300 and regen back: a line at each crossing, at the point (check against the mana shown on your frame) |
+| S6 | Still with the step 1 mana watch of S3 live: `/lhvp stats` | `point bars` counts only points off the 1% grid of your max (a point that is a whole percent of the max costs none) |
+| S7 | `/lhvp watch power player precision point mana` | the panel shows `exact <mana>/1` (step 2 or 3 above 3175 mana) matching your mana frame to the point; `/lhvp stats`: the mana source `mode ring`, 57 bars at most, the S3 and S5 watches still right (answered from the exact value) |
+| S8 | With S7 live: spend, regenerate (one-point ticks), in combat for a minute | exact follows every point; desyncs 0; report the µs per frame (`/lhvp stats`) |
+| S9 | Change your max mana (a buff, a talent, or gear with intellect), or shapeshift and back | after `UNIT_MAXPOWER` the points and precision watches go unknown briefly, then right for the new max |
+| S10 | `/lhvp watch off`; bear form: `/lhvp watch power player precision point rage`; cat form: `... precision point energy` | rage and energy (max 100): `mode gray`, 8 bars, exact to the point |
+| S11 | `/lhvp watch off`, `/lhvp stats` | 0 bars, 0 pushes/s and 0.0 µs per frame (the averages fall to 0 when nothing is fed) |
+| S12 | `/lhvp copy`, paste back | |
+
+Report the µs per frame of S3, S7 and S8, every desync, and any wrong band (with the mana or health your frame showed).

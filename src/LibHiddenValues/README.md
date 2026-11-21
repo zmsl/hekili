@@ -42,15 +42,57 @@ end)
 
 | Kind | Spec | Proven on |
 |---|---|---|
-| `health` | `unit`, `edges`, `predicted` (default true) | `player`, `target` |
-| `power` | `unit`, `edges`, `power` (`Enum.PowerType`, required) | `player`: mana, energy, rage (rage: proven by the BandProbe2 warm-up, the library's own run owed) |
+| `health` | `unit`, `edges`, `step`, `predicted` (default true) | `player`, `target` |
+| `power` | `unit`, `power` (`Enum.PowerType`, required), `edges`, `step`, `points`, `precision` | `player`: mana, energy, rage (rage: proven by the BandProbe2 warm-up, the library's own run owed) |
+
+A spec needs at least one of `edges`, `step`, `points` or `precision`.
+
+- `edges`: thresholds in percent, (0.05, 100].
+- `step`: position. Any step is granted as 1: the band is the 1% cell (`lo`, `lo + 1`), `h:Domain()` returns step 1.
+  Beside `edges` the band is cut by both (an edge on the 1% grid costs no bar). The source runs 8 bars (a Gray code
+  and a parity bar) while any watch on it asks for a step. A jump of any size is one call, one frame later.
+- `points` (player power): whole-number thresholds in the value's own units, e.g. `{ 40, 60 }` energy. A handle with
+  `points` (even `{}`) answers in points: `lo`, `hi` and `h:Domain()` (0 to the player's plain max) are in points.
+  The cut is `points / max`; it moves with the max (`UNIT_MAXPOWER`: the handle goes unknown while it primes again).
+  Identical points share a bar; a point on the 1% grid of a `step` source costs none. Caps (`GetPool`): 8 points
+  that need a bar per source and 64 in total, checked when you ask; over either the whole request is refused
+  (`edge-limit`), nothing granted. `h:SetPoints(list)` swaps a handle's points in one step: `true`, or `nil, code`
+  with the old set kept. While the max was never read as a plain number the handle is `unavailable, max-unknown`.
+- `precision = "point"` (player power): the exact value. `h:Exact()` returns `value, step` (value nil while unknown):
+  step 1 up to a max of 3175, above it the step grows until every curve fits the client's 256-point limit (6400
+  mana: step 3). `q` is `LHV.EXACT` (3) at step 1. It costs 57 bars at most (50 + a cell code + parity); while any
+  watch on the source asks for it, that source's other bars are released and every other watch on it is answered
+  from the exact value. A max of 100 or less is the same as `step` (8 bars, exact). It is outside the point caps
+  but inside the 256-bar pool: over it, `pool-limit`.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
-other kind, token or option (a `step` without `edges`, `points`, focus or another power type, the `focus` token, ...)
+other kind, token or option (focus or another power type, `points` or `precision` on health, the `focus` token, ...)
 returns a handle whose state is `"unavailable", "unproven"`: write against it now, it comes alive when its stage
-ships. A `step` beside `edges` is
-ignored for now: the edges are served and `h:Domain()` returns a nil step. Bad input (a missing `power` too) returns
-`nil, "bad-spec: ..."`.
+ships.
+
+## Error codes
+
+`Watch` and `h:SetPoints` refuse bad input with `nil, code`; codes are plain strings in `LHV.ERR`. Map them yourself,
+or show `LHV:GetMessage(code)`: the text in the client's locale (or the one you pass), `nil` for a locale the library
+has no text for yet (enUS only for now). `GetMessage` also knows every state and reason.
+
+| Constant | Code | When |
+|---|---|---|
+| `OWNER_INVALID` | `owner-invalid` | owner not a string |
+| `SPEC_INVALID` | `spec-invalid` | spec not a table |
+| `SINK_INVALID` | `sink-invalid` | sink neither a function nor nil |
+| `KIND_INVALID` | `kind-invalid` | no kind, or not one of the major's |
+| `UNIT_INVALID` | `unit-invalid` | unit missing or not a token |
+| `EDGES_INVALID` | `edges-invalid` | edges not a list of numbers |
+| `EDGES_OUT_OF_RANGE` | `edges-out-of-range` | an edge outside (0.05, 100] |
+| `EDGES_REQUIRED` | `edges-required` | none of edges, step, points, precision |
+| `STEP_INVALID` | `step-invalid` | step not a positive number |
+| `POWER_REQUIRED` | `power-required` | a power watch without `power` |
+| `POWER_INVALID` | `power-invalid` | `power` not a number |
+| `POINTS_INVALID` | `points-invalid` | points not a list of whole numbers >= 1; `SetPoints` on a percent handle |
+| `EDGE_LIMIT` | `edge-limit` | over the point caps |
+| `POOL_LIMIT` | `pool-limit` | points or precision over the 256-bar pool |
+| `PRECISION_INVALID` | `precision-invalid` | precision other than `"point"` |
 
 ## Testing your addon
 
@@ -67,8 +109,8 @@ Fake.tick(1)
 Fake.restore()
 ```
 
-Its header lists the world fields, the fault knobs (`closed`, `lag`, `secretlag`, `drop`, `snap`, `maxpoints`,
-`refuse`) and what it does not model.
+Its header lists the world fields (`max` per power type for `points` and `precision`), the fault knobs (`closed`,
+`lag`, `secretlag`, `drop`, `stagger`, `snap`, `maxpoints`, `refuse`) and what it does not model.
 
 ## Diagnostics
 
@@ -78,13 +120,13 @@ the reference consumer (`/lhvp`).
 
 | Call | Returns |
 |---|---|
-| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 1`) |
+| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 2`) |
 | `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, then the unproven ones); `state` and `reason` as `IsAvailable` |
 | `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable) |
 | `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change |
-| `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now) |
-| `LHV:GetPool()` | `made, cap`: bars made (32 at login; frames are never destroyed) and the cap (256) |
-| `LHV:GetSources()` | a fresh array, one `{ kind =, unit =, power =, predicted =, handles =, bars =, active = }` per source with a watch, in creation order (`kind`, `unit`, `power`, `predicted` are the source's key: watches differing in any of them do not share bars; `power` nil for health; `active`: fed every frame) |
+| `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, splits`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now), splits (a position decode held one frame). The frame times cover the library's whole frame, the self-test's frames included while it runs; with nothing fed the driver stops and every rate and time reads 0 |
+| `LHV:GetPool()` | `made, cap, pointBars, pointCap, pointCapPerSource`: bars made (32 at login; frames are never destroyed), the cap (256), point bars in use, and the point caps (64, 8) |
+| `LHV:GetSources()` | a fresh array, one `{ kind =, unit =, power =, predicted =, handles =, bars =, mode =, max =, active = }` per source with a watch, in creation order (`kind`, `unit`, `power`, `predicted` are the source's key: watches differing in any of them do not share bars; `power` nil for health; `mode` `"edges"`, `"gray"` (position) or `"ring"` (point precision); `max` the plain max a power source cuts points with; `active`: fed every frame) |
 | `LHV:SelfTest(fn)` | nothing; runs the self-test (or joins the run going) and calls `fn(pass, lines)` when it ends: `pass` a boolean, `lines` an array of strings under 255 characters, the last one `selftest PASS ...` or `selftest FAIL ...`. Called at once (inside `SelfTest`) when it cannot run: the client lacks the API, switched off, or no free bar (an earlier verdict then stands; with none it is a FAIL). Before login it waits for the login run. The capability has already changed when `fn` runs: `IsAvailable` and the handles' `State()` show the new verdict. `lines` is shared: read it, do not change it |
 | `LHV:GetSelfTest()` | `verdict, lines, running`: the last completed run's verdict (`true`/`false`) and its lines (the array `fn` got), both nil before the first run and again after `SetEnabled(true)` until the new run ends; and whether a run is going |
 | `LHV:SetEnabled(on)` | nothing. `false`: every kind `unavailable, off` for this session. `true` after `false`: pending until a fresh self-test passes (it starts one). Already on, it changes nothing: after a failed self-test, `LHV:SelfTest(fn)` runs it again and the kinds come back when it passes |
