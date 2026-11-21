@@ -1,6 +1,6 @@
 -- Time to die for one health stream seen as 1% bands (the band lo..hi, hi = lo + 1, the top cell 99-100 holding full
 -- health). Pure Lua 5.1: no game API, no units, no allocation after New. The caller feeds Restart on a unit change,
--- Band on every band callback, and asks Get(now [, ownDps]) -> est, lo, hi, state; est nil means unknown.
+-- Band on every band callback, and asks Get(now) -> est, lo, hi, state; est nil means unknown.
 -- Fit: seconds per percent `b` from an exponentially time-weighted least squares of time on percent over the recent
 -- crossings (half-life 6 s, 30 s window); with too little spread for a fit, the stream's cumulative slope from an
 -- anchor (the first band: 100% for a mob first seen full, the band's middle otherwise); a slope carries over a swap,
@@ -18,7 +18,7 @@ E.DEFAULTS = {
     shrink = 0, -- K: pseudo-weight of the cumulative slope (the fit's weight is its summed weights)
     clampLo = 0.2, -- the blended slope stays within [clampLo, clampHi] x the cumulative slope
     clampHi = 5,
-    minSpan = 2, -- percent the crossings must span before the fit answers on a mob first seen below full
+    minSpan = 2, -- percent the crossings must span before an unanchored stream (after a heal or stall) answers
     fitSpan = 3, -- percent and ...
     fitTime = 1.5, -- ... seconds the weighted window must span to fit at all (else the cumulative slope)
     anchorFull = true, -- a mob first seen full: a pseudo point (first band time, 100) starts the stream

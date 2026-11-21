@@ -500,6 +500,13 @@ function modes.main()
     perClass(res, order, "flipSum", "Excess flips per minute (sum of 4 decisions)", f)
     perClass(res, order, "delayMed", "First answer median s", f)
     robustness(res, refs)
+    local sub = { algos = {}, overall = {} }
+    for a, spec in ipairs(res.algos) do
+        if spec.main then
+            sub.algos[#sub.algos + 1], sub.overall[#sub.overall + 1] = spec, res.overall[a]
+        end
+    end
+    robustness(sub, refs, ", main lineup only")
 end
 
 function modes.sweep()
