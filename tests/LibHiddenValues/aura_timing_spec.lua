@@ -74,7 +74,7 @@ describe("LibHiddenValues aura timing", function()
         Fake.setAura("player", 5001, 1, 9) -- one stack: the client hides the count
         Fake.tick(10)
         assert.are.same({}, known(s)) -- still below 2
-        assert.are.same({ { 1, 2, 1 } }, known(exact))
+        assert.are.same({ { 0, 2, 1 } }, known(exact)) -- no count shown: 0 or 1, never 1 itself
         assert.are.same({ { 6, math.huge, 1 } }, known(l))
         calls = {}
         Fake.setAura("player", 5001, 3, 9)

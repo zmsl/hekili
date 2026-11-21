@@ -1,6 +1,8 @@
 -- Kinds/Aura.lua: auras on the player or the target, read from the client's Cooldown Manager (Cdm.lua finds the items
 -- and forwards their values). what = "up": presence (lo == hi, 1 up, 0 not); "stacks": the stack count; "left": the
--- seconds left. An absent aura is a known value: no stacks, no seconds (the lowest band); "up" reads 0.
+-- seconds left. An absent aura is a known value: no stacks, no seconds (the lowest band); "up" reads 0. The library
+-- reports what the items show, never a guess (owner 2026-11-21): an aura up with no count text is 0 or 1 stacks (the
+-- client shows none for either), so it reads 0 to the lowest stacks edge with a bar; a unit it cannot tell is unknown.
 --
 -- The bars: a hook's secret cannot go through a curve, so each edge has a raw bar ranged just below it, fed the
 -- client's value as it is (AuraBandProbe 0.2.0/0.2.1: per-stack bars, a 2.9-3.0 s bar). Stacks are whole numbers on a
@@ -8,8 +10,8 @@
 -- for a frame: that frame fires and so does the next, which a toggle cannot tell from a fall followed at once by a
 -- refresh back above the edge. So a seconds bar firing on the frame after its last firing primes again (the run
 -- rule; the seconds come every frame, so it answers within HOLD + SETTLE + 2 frames, one more when a secret firing
--- trails its push: h:Latency()) and its handles keep their band meanwhile. Edge 1 of stacks is presence itself and has
--- no bar.
+-- trails its push: h:Latency()) and its handles keep their band meanwhile. Edge 1 of stacks has no bar: the count
+-- text cannot tell 1 from 0, so it is told only by an absent aura (below it).
 -- Priming: a new bar holds low HOLD frames (pushes in between are dropped) and starts below its edge. Its state is
 -- right from then on, but it says something only SETTLE frames after the client first pushed into it (lib.barFedAt:
 -- a firing can trail its push), and again after each time the aura was absent: seconds come every frame while the
@@ -340,17 +342,17 @@ local function decode(h)
                 local st, cut = lib.barState, h.cut
                 local below = false
                 lo, hi = 0, h.top
-                for k = 1, #cut do
+                for k = 1, #cut do -- a cut with no bar (stacks 1) says nothing: the client shows no count at 0 or 1
                     local e = cut[k]
                     local i = s.bar[e]
-                    if (i and st[i]) or (not i and e <= 1) then
+                    if i and st[i] then
                         if below then -- at or above an edge but below a lower one: a firing was lost
                             lib.desyncs = lib.desyncs + 1
                             reprime(s)
                             return
                         end
                         lo = e
-                    elseif not below then
+                    elseif i and not below then
                         below, hi = true, e
                     end
                 end
