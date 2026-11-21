@@ -353,4 +353,126 @@ describe("LibHiddenValues point precision", function()
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
     end)
+
+    -- Review I3 (decision: lhv-stage3-fable-decisions.md): a one-step change across a cell boundary (every 50 quanta)
+    -- toggles 2 fine bars, a cell bit and the parity bar; half of them alone is a valid state 50 quanta off. The
+    -- stagger knob cannot split one change that way: the bar states are set by hand, as the review's R5 did.
+    describe("a change across a ring cell boundary", function()
+        local h, seen
+
+        local function start(v)
+            mana(v)
+            h = watch({ precision = "point" })
+            Fake.login()
+            untilLive(h)
+            Fake.tick(2)
+            seen = {}
+            h:SetSink(function(_, lo)
+                seen[#seen + 1] = lo or "nil"
+            end)
+        end
+
+        -- Moves the mana to v with one half of the change's core firings (late: "fine", the ring's bars, or "cell",
+        -- the cell code and parity) not arrived yet; returns those bars.
+        local function half(v, late)
+            local s, st = h.src, lib.barState
+            local before = {}
+            for k = 1, #s.core do
+                before[k] = st[s.core[k]]
+            end
+            mana(v)
+            Fake.tick(1)
+            local held = {}
+            for k = 1, #s.core do
+                local i = s.core[k]
+                if st[i] ~= before[k] and (k <= lib.RING_N) == (late == "fine") then
+                    st[i] = not st[i]
+                    held[#held + 1] = i
+                end
+            end
+            return held
+        end
+
+        -- A half-landed move to v: one frame holds the old value (the sink not called), then v; one split, no desync.
+        local function crossing(v, late)
+            local old, g = h:Exact()
+            local splits, desyncs = select(8, lib:GetStats()), select(6, lib:GetStats())
+            seen = {}
+            local held = half(v, late)
+            assert.are.equal(2, #held)
+            Fake.tick(1)
+            assert.are.equal(old, (h:Exact()))
+            assert.are.equal(old, (h:Get()))
+            assert.are.same({}, seen)
+            assert.are.equal(0, h.src.bad) -- a hold is not a bad frame
+            for k = 1, #held do
+                lib.fire(held[k])
+            end
+            Fake.tick(1)
+            assert.are.equal(v - v % g, (h:Exact()))
+            assert.are.same({ v - v % g }, seen)
+            assert.are.equal(splits + 1, select(8, lib:GetStats()))
+            assert.are.equal(desyncs, select(6, lib:GetStats()))
+        end
+
+        -- Frames from setting the mana to v until Exact() reads it, with no firing but the client's own.
+        local function frames(v)
+            mana(v)
+            for n = 1, 10 do
+                Fake.tick(1)
+                if h:Exact() == v then
+                    return n
+                end
+            end
+            error("never " .. v)
+        end
+
+        it("never shows a value 50 off when half of a one-step change has landed, in either order", function()
+            start(1249)
+            crossing(1250, "cell") -- the fine pair first: alone it reads 1200
+            crossing(1249, "cell") -- alone: 1299
+            crossing(1250, "fine") -- the cell pair first: 1299
+            crossing(1249, "fine") -- 1200
+        end)
+
+        it("delays a real jump of 50, or of 49 from a cell edge, by one frame only; others not at all", function()
+            start(1234)
+            local splits = select(8, lib:GetStats())
+            local F = frames(1235)
+            assert.are.equal(F, frames(1236)) -- +1 away from a boundary
+            assert.are.equal(F + 1, frames(1286)) -- +50
+            assert.are.equal(F, frames(1249))
+            assert.are.equal(F, frames(1250)) -- +1 across a boundary, every bar in one frame
+            assert.are.equal(F, frames(1249))
+            assert.are.equal(F + 1, frames(1200)) -- -49 from position 49
+            assert.are.equal(F, frames(1300)) -- +100
+            assert.are.equal(F, frames(1600)) -- +300
+            assert.are.same({ 1235, 1236, 1286, 1249, 1250, 1249, 1200, 1300, 1600 }, seen)
+            assert.are.equal(splits, select(8, lib:GetStats()))
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end)
+
+        it("holds in quanta at a step above 1 (max 6400, step 3)", function()
+            W.unit.player.max[0] = 6400
+            start(3749) -- quantum 1249: 3747
+            assert.are.equal(3747, (h:Exact()))
+            crossing(3750, "cell") -- alone the fine pair reads quantum 1200: 3600
+            crossing(3749, "fine") -- alone the cell pair reads quantum 1200 too
+        end)
+
+        it("still counts a hold then two invalid frames as one desync", function()
+            start(1249)
+            half(1250, "cell")
+            Fake.tick(1) -- held
+            lib.fire(h.src.core[2]) -- a stray firing on one more fine bar: no ring state at all
+            Fake.tick(2)
+            assert.are.equal(1, select(6, lib:GetStats()))
+            untilLive(h)
+            Fake.tick(1)
+            assert.are.equal(1250, (h:Exact()))
+            for k = 1, #seen do
+                assert.is_true(seen[k] == "nil" or seen[k] == 1250, tostring(seen[k]))
+            end
+        end)
+    end)
 end)

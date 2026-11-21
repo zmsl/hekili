@@ -68,9 +68,12 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   watch on the source asks for it, that source's other bars are released and every other watch on it is answered
   from the exact value. At a step above 1 (a max over 3175) a point that is not a multiple of the step, and an edge
   whose cut is not, keeps its own bar, so points and edges stay exact to the point; `h:Exact()` is to the step. A
-  `step` watch's band can then span two 1% cells where the step straddles a cell boundary. A max of 100 or less is
-  the same as `step` (8 bars, exact). It is outside the point caps but inside the 256-bar pool, with every
-  edge and point on the source counted (the step can grow with the max): over it, `pool-limit`.
+  `step` watch's band can then span two 1% cells where the step straddles a cell boundary. A one-step change is
+  never misread: at a cell boundary (every 50 steps) the library holds one frame when only half of the change's bars
+  have landed. A larger jump whose firings land in two frames can read as another value for that one frame, as on a
+  `step` source; the probe runs saw no change split over two frames. A max of 100 or less is the same as `step` (8
+  bars, exact). It is outside the point caps but inside the 256-bar pool, with every edge and point on the source
+  counted (the step can grow with the max): over it, `pool-limit`.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
 other kind, token or option (focus or another power type, `points` or `precision` on health, the `focus` token, ...)

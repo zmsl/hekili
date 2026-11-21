@@ -272,7 +272,7 @@ function lib.reprime(s)
     for _, i in pairs(s.pbar) do
         prime[i] = P
     end
-    s.bad, s.ok = 0, false
+    s.bad, s.ok, s.pend = 0, false, nil
     s.dirty = true
     lib.wake()
 end
@@ -583,7 +583,7 @@ function lib.sync(s)
     local g = ring and ring.g
     if mode ~= s.mode or ring ~= s.ring then -- a new mode, or the ring of a new max
         freeCore(s)
-        s.mode, s.ring, s.bad, s.ok = mode, ring, 0, false
+        s.mode, s.ring, s.bad, s.ok, s.pend = mode, ring, 0, false, nil
     end
     local want = false
     if ready then
@@ -763,11 +763,20 @@ local function ringDecode(s)
             end
         end
     end
-    s.qv = q
+    return nil, q
 end
 
--- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (a split);
--- two bad frames in a row are a desync and the source primes again.
+-- A valid ring decode that may be half of a one-step change across a cell boundary (review I3): the cell moved with
+-- the position kept, or the position wrapped 49 <-> 0 with the cell kept. Half of such a change alone is a valid state
+-- N quanta off; a real move of exactly that size pays one frame.
+local function suspect(q0, q)
+    local d, p0 = q - q0, q0 % N
+    return d == N or d == -N or (d == 1 - N and p0 == N - 1) or (d == N - 1 and p0 == 0)
+end
+
+-- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (a split, or
+-- a suspect ring decode: s.qv keeps the last accepted value); two bad frames in a row are a desync and the source
+-- primes again.
 function lib.decodeSource(s)
     local mode = s.mode
     if not mode then
@@ -778,11 +787,11 @@ function lib.decodeSource(s)
         s.ok = false
         return true
     end
-    local bad
+    local bad, q
     if mode == "gray" then
         bad = grayDecode(s)
     else
-        bad = ringDecode(s)
+        bad, q = ringDecode(s)
     end
     if bad then
         s.bad = s.bad + 1
@@ -793,6 +802,19 @@ function lib.decodeSource(s)
         end
         s.dirty = true -- decode again next frame
         return false
+    end
+    if q then
+        local pend = s.pend
+        if pend then -- the frame after a hold takes any valid decode: a split when it is not the held one
+            s.pend = nil
+            if q ~= pend and s.bad == 0 then
+                lib.splits = lib.splits + 1
+            end
+        elseif s.ok and suspect(s.qv, q) then
+            s.pend, s.dirty = q, true -- not a bad frame; decode again next frame with no new firing
+            return false
+        end
+        s.qv = q
     end
     if s.bad > 0 then
         lib.splits = lib.splits + 1
