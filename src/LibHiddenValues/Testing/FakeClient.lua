@@ -19,8 +19,8 @@
 -- frames late), "secretlag" n (a fill set from a secret fires n frames later still), "drop" n (every nth firing is
 -- lost), "stagger" n (every nth firing queued arrives one frame later than the rest: one change's firings split over
 -- two frames), "jitter" n (each firing 0 to n frames later still, drawn per firing from a generator seeded by "seed",
--- 1 to 2^31 - 2: repeatable), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit),
--- "refuse" name (that global function raises). The Cooldown Manager (the aura kind's source): W.cdm, W.aura,
+-- 1 to 2^31 - 2: repeatable), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n
+-- (curve size limit), "refuse" name (that global function raises). The Cooldown Manager (the aura kind's source): W.cdm, W.aura,
 -- Fake.setAura, Fake.cdmLayout, Fake.cdmEnable, Fake.viewers, Fake.touched, Fake.hooks; see the comment above its
 -- viewers. W.cdm.unlearned ({ [cooldownID] = true }: no item, left out of the learned set); W.classID (11 by
 -- default; the spec is 1).
@@ -872,6 +872,12 @@ function Fake.set(knob, value)
             error(value .. " refused")
         end)
     elseif K[knob] ~= nil or knob == "closed" then
+        if knob == "seed" then -- Park-Miller stays at 0 (no jitter) and needs a whole seed below 2^31 - 1
+            assert(
+                type(value) == "number" and value >= 1 and value <= 2147483646 and value % 1 == 0,
+                "seed 1 to 2^31 - 2"
+            )
+        end
         K[knob] = value
     else
         error("unknown knob " .. tostring(knob))

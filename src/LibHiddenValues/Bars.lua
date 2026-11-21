@@ -278,7 +278,7 @@ function lib.reprime(s)
     for _, i in pairs(s.pbar) do
         prime[i] = P
     end
-    s.bad, s.ok, s.pend = 0, false, nil
+    s.bad, s.ok, s.pend, s.run = 0, false, nil, 0
     s.dirty = true
     lib.wake()
 end
@@ -632,7 +632,7 @@ function lib.sync(s)
     local gray = ring and g > 1 and step and lib.grayFor(M) or nil
     if mode ~= s.mode or ring ~= s.ring or gray ~= s.gray then -- a new mode, the ring of a new max, the set beside
         freeCore(s) -- the whole core primes again: shortcut, a step joining or leaving re-primes the ring too
-        s.mode, s.ring, s.gray, s.bad, s.ok, s.pend = mode, ring, gray, 0, false, nil
+        s.mode, s.ring, s.gray, s.bad, s.ok, s.pend, s.run = mode, ring, gray, 0, false, nil, 0
     end
     local want = false
     if ready then
@@ -834,22 +834,16 @@ local function ringDecode(s)
     return nil, q
 end
 
--- A valid ring decode whose cell moved other than the ring's own move dp (-HALF..HALF-1) says: half of a change whose
--- cell bars and ring bars land apart is a valid state a whole number of cells off (a 2-3 point regen change across a
--- cell boundary read 50 off; a spend whose Gray cell bits landed in part read another cell: 516 for 116, 1417 for
--- 1467, fake runs with each firing 1-2 frames late). Any real move of more than about half a cell pays one frame.
-local function suspect(q0, q)
-    return q - q0 ~= (q - q0 + HALF) % N - HALF
-end
-
--- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (a split; a
--- suspect ring decode; the first valid ring decode after bad frames, which may be half of a change across a cell too
--- far from the stale s.qv to look suspect, review I1). s.qv keeps the last accepted value; the frame after a hold takes
--- any valid decode. A desync (the source primes again) is a bad frame after a bad one with no firing in between, or
--- SETTLE frames in a row without a call (bad frames, a hold before one counted; h:Latency()): a lost firing leaves the
--- bars invalid once the firings stop, while two changes on adjacent frames, each split over two frames, are invalid
--- two frames in a row with firings still landing (the owner's run of 2026-11-21: 4 desyncs in 2.5 min at ~10
--- changes/s).
+-- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (s.qv keeps
+-- the last accepted value). A ring decode other than s.qv is held until confirmed: the next frame's decode gives the
+-- same value (owner, fix round 2). Half of a change whose bars land over two frames is a valid state the client never
+-- held (a 2-3 point regen change across a cell read 50 off; a spend whose cell bits landed in part read another cell,
+-- 516 for 116; a spend whose cell bars all came late read as a small change, 272 for 122); when a push's firings land
+-- within two frames, the next frame's decode holds the rest of them, so a half-landed state does not repeat. A desync
+-- (the source primes again) is a bad frame after a bad one with no firing in between, SETTLE bad frames in a row, or
+-- more than SETTLE + 1 frames without a call (bad frames and holds; h:Latency()): a lost firing leaves the bars invalid
+-- once the firings stop, while two changes on adjacent frames, each split over two frames, are invalid two frames in a
+-- row with firings still landing (the owner's run of 2026-11-21: 4 desyncs in 2.5 min at ~10 changes/s).
 function lib.decodeSource(s)
     local mode = s.mode
     if not mode then
@@ -866,9 +860,10 @@ function lib.decodeSource(s)
     else
         bad, q = ringDecode(s)
     end
+    local run = (s.run or 0) + 1 -- frames without a call, this one counted (an older minor's source has no s.run)
     if bad then
-        s.bad, s.pend = s.bad + (s.pend and 2 or 1), nil -- a hold before counts: SETTLE caps the frames without a call
-        if s.bad >= SETTLE or (s.bad >= 2 and (s.firedAt or -1) < lib.frameNo - 1) then
+        s.bad, s.pend, s.run = s.bad + 1, nil, run
+        if s.bad >= SETTLE or run > SETTLE + 1 or (s.bad >= 2 and (s.firedAt or -1) < lib.frameNo - 1) then
             lib.desyncs = lib.desyncs + 1
             lib.reprime(s)
             return true
@@ -876,24 +871,26 @@ function lib.decodeSource(s)
         s.dirty = true -- decode again next frame
         return false
     end
-    if q then
-        local pend = s.pend
-        if pend then -- the frame after a hold takes any valid decode: a split when it is not the held one
-            s.pend = nil
-            if q ~= pend and s.bad == 0 then
-                lib.splits = lib.splits + 1
-            end
-        elseif s.ok and (s.bad > 0 or suspect(s.qv, q)) then -- after bad frames s.qv is stale: hold (review I1)
-            s.pend, s.dirty = q, true -- not a bad frame; decode again next frame with no new firing
-            return false
+    if q and s.ok and q ~= s.qv and q ~= s.pend then -- a change, not confirmed yet
+        if run > SETTLE + 1 then
+            lib.desyncs = lib.desyncs + 1
+            lib.reprime(s)
+            return true
         end
-        s.qv = q
+        if s.pend or s.bad > 0 then -- the decode moved while firings landed
+            lib.splits = lib.splits + 1
+        end
+        s.pend, s.bad, s.run, s.dirty = q, 0, run, true -- decode again next frame, with or without a new firing
+        return false
+    end
+    if q then
+        s.qv, s.pend = q, nil
     end
     if s.bad > 0 then
         lib.splits = lib.splits + 1
         s.bad = 0
     end
-    s.ok = true
+    s.ok, s.run = true, 0
     return true
 end
 

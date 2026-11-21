@@ -60,12 +60,10 @@ describe("LibHiddenValues point precision", function()
         assert.are.same({ 1234, 1235 }, lohi(h))
         assert.are.equal(lib.EXACT, select(4, h:Get()))
         assert.are.same({ 1, 0, 2000 }, { h:Domain() })
-        local prev = 1234
         for _, v in ipairs({ 1235, 1236, 1199, 0, 1, 49, 50, 51, 999, 1000, 1999, 2000, 777 }) do
             mana(v)
-            Fake.tick(math.abs(v - prev) >= 25 and 3 or 2) -- a jump of half a cell or more is held a frame
+            Fake.tick(3) -- every change is held until the next frame's decode agrees
             assert.are.equal(v, (h:Exact()), v)
-            prev = v
         end
         assert.are.same({ 777, 778 }, lohi(h))
         mana(2000)
@@ -87,7 +85,7 @@ describe("LibHiddenValues point precision", function()
         untilLive(h)
         untilLive(e)
         mana(670) -- 33.5% of 2000
-        Fake.tick(3) -- a jump of half a cell or more is held a frame
+        Fake.tick(3) -- every change is held until the next frame's decode agrees
         assert.are.same({ 33.5, 100 }, lohi(e))
         assert.are.same({ 301, 2000 }, lohi(p))
         assert.are.same({ 33, 34 }, lohi(s))
@@ -390,9 +388,7 @@ describe("LibHiddenValues point precision", function()
             assert.are.same({ 61, 62 }, lohi(s)) -- held
             lib.fire(i)
             Fake.tick(1)
-            assert.are.same({ 61, 62 }, lohi(s)) -- the first valid decode after a bad frame is held too (review I1)
-            Fake.tick(1)
-            assert.are.same({ 62, 63 }, lohi(s))
+            assert.are.same({ 62, 63 }, lohi(s)) -- the ring's quantum did not change: nothing to confirm
             assert.are.equal(splits + 1, select(8, lib:GetStats()))
             assert.are.equal(0, select(6, lib:GetStats()))
             -- a Gray cell that is not the ring's two frames running: a desync, the source primes again
@@ -584,6 +580,8 @@ describe("LibHiddenValues point precision", function()
                 lib.fire(held[k])
             end
             Fake.tick(1)
+            assert.are.same({}, seen) -- the decode moved to v: held until the next frame agrees
+            Fake.tick(1)
             assert.are.equal(v - v % g, (h:Exact()))
             assert.are.same({ v - v % g }, seen)
             assert.are.equal(splits + 1, select(8, lib:GetStats()))
@@ -620,29 +618,30 @@ describe("LibHiddenValues point precision", function()
             crossing(1248, "cell") -- -3: alone 1298
         end)
 
-        it("delays a real jump of half a cell or more by one frame only", function()
+        it("holds every change one frame until the next decode agrees: jumps of any size alike", function()
             start(1234)
             local F = frames(1235)
-            assert.are.equal(F + 1, frames(1282)) -- +47
-            assert.are.equal(F + 1, frames(1223)) -- -59: the ring moved 9
-            assert.are.equal(F + 1, frames(1264)) -- +41: 9
-            assert.are.equal(F + 1, frames(1206)) -- -58: 8
+            assert.are.equal(3, F) -- the push's frame, the decode held, the next decode agrees
+            assert.are.equal(F, frames(1282)) -- +47
+            assert.are.equal(F, frames(1223)) -- -59
+            assert.are.equal(F, frames(1264)) -- +41
+            assert.are.equal(F, frames(1206)) -- -58
             assert.are.same({ 1235, 1282, 1223, 1264, 1206 }, seen)
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
-        it("delays real jumps of 37 to 300 by one frame only; small ones not at all", function()
+        it("reads +1, +50, -37, +1 across a boundary, -49, +100 and +300 in the same frames, no split", function()
             start(1234)
             local splits = select(8, lib:GetStats())
             local F = frames(1235)
             assert.are.equal(F, frames(1236)) -- +1 away from a boundary
-            assert.are.equal(F + 1, frames(1286)) -- +50
-            assert.are.equal(F + 1, frames(1249)) -- -37
+            assert.are.equal(F, frames(1286)) -- +50
+            assert.are.equal(F, frames(1249)) -- -37
             assert.are.equal(F, frames(1250)) -- +1 across a boundary, every bar in one frame
             assert.are.equal(F, frames(1249))
-            assert.are.equal(F + 1, frames(1200)) -- -49 from position 49
-            assert.are.equal(F + 1, frames(1300)) -- +100: another cell's half alone is valid too
-            assert.are.equal(F + 1, frames(1600)) -- +300
+            assert.are.equal(F, frames(1200)) -- -49 from position 49
+            assert.are.equal(F, frames(1300)) -- +100
+            assert.are.equal(F, frames(1600)) -- +300
             assert.are.same({ 1235, 1236, 1286, 1249, 1250, 1249, 1200, 1300, 1600 }, seen)
             assert.are.equal(splits, select(8, lib:GetStats()))
             assert.are.equal(0, select(6, lib:GetStats()))
@@ -766,14 +765,15 @@ describe("LibHiddenValues point precision", function()
         -- Changes on adjacent frames, each with a bar a frame late (the last, onto 1250, its cell bars), so the decode
         -- is bad while firings land. Review I1: the first valid decode after bad frames read 1200, 50 off, the client
         -- never held it (s.qv is stale then: from 1241 the ring moved 9, from 1400 a spend, neither looked suspect).
-        -- Review I3: the first call came on frame 5 while h:Latency() said 3; the measured frames are listed.
+        -- Review I3: the first call came on frame 5 while h:Latency() said 3; the measured frames are listed (fix round
+        -- 2: every change waits for the next decode to agree).
         for _, case in ipairs({
-            { 4, 1247, 1248, 1250 },
-            { 5, 1246, 1247, 1248, 1250 },
-            { 5, 1241, 1244, 1247, 1250 },
-            { 4, 1400, 1248, 1250 },
+            { 5, 1247, 1248, 1250 },
+            { 6, 1246, 1247, 1248, 1250 },
+            { 6, 1241, 1244, 1247, 1250 },
+            { 5, 1400, 1248, 1250 },
             { 6, 1236, 1237, 1238, 1239 },
-            { 6, 1246, 1247, 1248, 1249, 1250 },
+            { 7, 1246, 1247, 1248, 1249, 1250 },
         }) do
             local chain = { unpack(case, 2) }
             it("reports only values the client held, within h:Latency(): " .. table.concat(chain, ", "), function()
@@ -803,10 +803,13 @@ describe("LibHiddenValues point precision", function()
         end
 
         -- A spend whose cell bars land apart with the ring complete and no bad frame: a valid cell code of another
-        -- cell (fake runs with firings 1-2 frames late read 516 for 116 and 1417 for 1467). Held a frame.
+        -- cell (fake runs with firings 1-2 frames late read 516 for 116 and 1417 for 1467), or, all cell bars late and
+        -- the ring moved under half a cell, a small change from the old value (272 for 122). Every change is held
+        -- until the next frame's decode agrees.
         for _, case in ipairs({
             { 417, 116, { [3] = true, [4] = true } }, -- cell 8 to 2: only Gray bits 0 and 1 landed reads cell 10
             { 1617, 1467, { [1] = true, [7] = true } }, -- cell 32 to 29: bit 0 and the parity late read cell 28
+            { 269, 122, "cell" }, -- cell 5 to 2, the ring 19 to 22: alone it reads 272, three above 269
         }) do
             it("never reports another cell when a spend's cell bars land apart: " .. case[2], function()
                 start(case[1])
@@ -820,6 +823,21 @@ describe("LibHiddenValues point precision", function()
                 assert.are.equal(0, select(6, lib:GetStats()))
             end)
         end
+
+        -- Re-review R1: a held jump, then a change across a cell whose cell bars land a frame late. The held frame's
+        -- decode (1200: the ring at 1250, the cell still 24) was taken unchecked; it is held again until it repeats.
+        it("never reports the decode of a held frame unless it repeats: 1300 to 1248, then +2 across 1250", function()
+            start(1300)
+            mana(1248)
+            Fake.tick(1) -- the jump lands whole
+            local l = move(1250, "cell") -- decode: 1248 held; +2 lands, its cell bars late
+            Fake.tick(1) -- the held frame's decode: 1200
+            fire(l)
+            Fake.tick(3)
+            assert.are.equal(1250, (h:Exact()))
+            onlyHeld({ 1300, 1248, 1250 })
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end)
 
         -- h:Latency() counts from the frame a change's first firing arrives: here every firing of the first change is a
         -- frame late.
@@ -869,6 +887,9 @@ describe("LibHiddenValues point precision", function()
         it("keeps exact mana through a minute of regen with every firing 1-2 frames late: no desync", function()
             W.unit.player.max[0] = 2479
             start(2479)
+            assert.has_error(function() -- re-review M5: seed 0 would pin the generator (no jitter)
+                Fake.set("seed", 0)
+            end)
             Fake.set("lag", 1)
             Fake.set("jitter", 1)
             local m, r, nextRegen, nextSpend, hist, low = 2479, 12345, 6, 120, {}, 2479
