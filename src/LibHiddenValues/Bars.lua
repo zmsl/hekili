@@ -154,6 +154,7 @@ end
 function lib.pointCurve(p, M)
     local byMax = lib.ptCurves[M]
     if not byMax then
+        lib.trim(lib.ptCurves)
         byMax = {}
         lib.ptCurves[M] = byMax
     end
@@ -173,13 +174,14 @@ function lib.pointCurve(p, M)
 end
 
 -- A two-level Step curve over the integers 0..top: LOW + bit(n), the step into n at xOf(n), a guard point eps below
--- it. Raises when the client refuses a point (callers use pcall). A cold path: build time only.
-function lib.levelCurve(bit, top, xOf, eps)
+-- it. Only n = first, first + stride, ... are read (default every n): the caller vouches that bit is constant between
+-- them. Raises when the client refuses a point (callers use pcall). A cold path: build time only.
+function lib.levelCurve(bit, top, xOf, eps, first, stride)
     local c = C_CurveUtil.CreateCurve()
     c:SetType(Enum.LuaCurveType.Step)
     local prev = bit(0)
     c:AddPoint(0, LOW + prev)
-    for n = 1, top do
+    for n = first or 1, top, stride or 1 do
         local b = bit(n)
         if b ~= prev then
             local x = xOf(n)
@@ -351,12 +353,35 @@ function lib.modeOf(s)
     return lib.modeFor(step, prec, s.max)
 end
 
+-- Keeps a per-max cache under 4 entries before one is added: drops the maxes no source cuts with now (a max that comes
+-- back, a buff toggled, rebuilds only once it fell out).
+local function trim(cache)
+    local n = 0
+    for _ in pairs(cache) do
+        n = n + 1
+    end
+    if n < 4 then
+        return
+    end
+    for M in pairs(cache) do
+        local used = false
+        for k = 1, #lib.sources do
+            used = used or lib.sources[k].max == M
+        end
+        if not used then
+            cache[M] = nil
+        end
+    end
+end
+lib.trim = trim
+
 -- The ring for the max M: the point step g grows until every curve fits lib.MAXPTS points (a fine bar steps every N/2
--- quanta; a guarded step costs 2 points). false when the client refused a curve.
-function lib.ringFor(M)
-    local r = lib.rings[M]
-    if r ~= nil then
-        return r
+-- quanta; a guarded step costs 2 points). false when the client refused a curve. Each curve reads only the quanta
+-- where its bar can change (fine bar j: q = j mod N/2; cell bits and parity: multiples of N), about 25 times less
+-- work than every quantum; full (a test's reference, not cached) reads every quantum.
+function lib.ringFor(M, full)
+    if not full and lib.rings[M] ~= nil then
+        return lib.rings[M]
     end
     local g, mq, ncell
     g = 1
@@ -378,23 +403,28 @@ function lib.ringFor(M)
         local function xOf(q) -- half a point below the quantum's first point, as for a point bar
             return (q * g - 0.5) / M
         end
+        local cellFirst, cellStride = full and 1 or N, full and 1 or N
         for j = 0, N - 1 do
+            local first = full and 1 or (j % HALF == 0 and HALF or j % HALF)
             t[j + 1] = lib.levelCurve(function(q)
                 return RS[q % N][j]
-            end, mq, xOf, eps)
+            end, mq, xOf, eps, first, full and 1 or HALF)
         end
         for k = 0, NB - 1 do
             t[N + k + 1] = lib.levelCurve(function(q)
                 return math.floor(GRAY[math.floor(q / N)] / POW2[k]) % 2
-            end, mq, xOf, eps)
+            end, mq, xOf, eps, cellFirst, cellStride)
         end
         t[N + NB + 1] = lib.levelCurve(function(q)
             return math.floor(q / N) % 2
-        end, mq, xOf, eps)
+        end, mq, xOf, eps, cellFirst, cellStride)
         return t
     end)
-    r = ok and { g = g, mq = mq, ncell = ncell, NB = NB, curves = curves } or false
-    lib.rings[M] = r
+    local r = ok and { g = g, mq = mq, ncell = ncell, NB = NB, curves = curves } or false
+    if not full then
+        trim(lib.rings)
+        lib.rings[M] = r
+    end
     return r
 end
 

@@ -101,6 +101,41 @@ describe("LibHiddenValues point precision", function()
         assert.are.same({ 0, 301 }, lohi(p))
     end)
 
+    it("keeps at most 4 maxes of ring and point curves, the ones in use always", function()
+        local h = watch({ precision = "point" })
+        local p = watch({ edges = { 33.5 }, points = { 301 } })
+        Fake.login()
+        untilLive(h)
+        local function count(t)
+            local n = 0
+            for _ in pairs(t) do
+                n = n + 1
+            end
+            return n
+        end
+        for _, M in ipairs({ 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2000 }) do
+            W.unit.player.max[0] = M
+            Fake.event("UNIT_MAXPOWER", "player")
+            untilLive(h)
+            assert.is_true(count(lib.rings) <= 4, "rings " .. M)
+            assert.is_true(count(lib.ptCurves) <= 4, "point curves " .. M)
+            assert.truthy(lib.rings[M])
+        end
+        h:Release()
+        untilLive(p)
+        assert.truthy(lib.ptCurves[2000][301])
+    end)
+
+    it("builds the ring's curves from their change points only: the same curves as a full scan", function()
+        for _, M in ipairs({ 2000, 3175, 3176, 6400, 20000 }) do
+            local fast, full = lib.ringFor(M), lib.ringFor(M, true)
+            assert.are.equal(#full.curves, #fast.curves)
+            for k = 1, #full.curves do
+                assert.are.same(full.curves[k].pts, fast.curves[k].pts, M .. " curve " .. k)
+            end
+        end
+    end)
+
     it("grows the point step until every curve fits 256 points", function()
         W.unit.player.max[0] = 6400
         mana(4000)
