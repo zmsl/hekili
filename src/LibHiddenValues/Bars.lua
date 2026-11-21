@@ -31,6 +31,9 @@ local NGRAY = 7 -- Gray bits of the 1% cell (101 values)
 lib.HOLD, lib.SETTLE, lib.LOW, lib.POOL, lib.CAP = HOLD, SETTLE, LOW, 32, CAP
 -- Points per Step curve the client accepts (BandProbe2 0.3.0: 256 accepted, 512 refused); a guarded step costs 2.
 lib.MAXPTS = 256
+-- Point thresholds that need a bar: at most per source and in total (owner L1613; tunable after a perf run).
+lib.POINTS_PER_SOURCE, lib.POINTS_TOTAL = 8, 64
+local MINSP = 0.00001 -- the smallest step spacing proven on the 0-1 scale (BandProbe2 0.3.0 D2)
 
 -- Gray code tables over 0..127, built without a bit library.
 local POW2 = { [0] = 1 }
@@ -54,9 +57,15 @@ for n = 0, 127 do
 end
 lib.POW2, lib.GRAY, lib.GINV = POW2, GRAY, GINV
 
--- Bars made (frames are never destroyed) and the cap.
+-- Bars made (frames are never destroyed), the cap, point bars in use, and the two point caps (total, per source).
 function lib:GetPool()
-    return #lib.barFrame, CAP
+    local used = 0
+    for k = 1, #lib.sources do
+        for _ in pairs(lib.sources[k].pbar) do
+            used = used + 1
+        end
+    end
+    return #lib.barFrame, CAP, used, lib.POINTS_TOTAL, lib.POINTS_PER_SOURCE
 end
 
 lib.barFrame = lib.barFrame or {}
@@ -69,6 +78,7 @@ lib.barCurve = lib.barCurve or {} -- the curve a bar is fed through
 lib.barPrime = lib.barPrime or {}
 lib.free = lib.free or {}
 lib.curves = lib.curves or {} -- one per edge, shared by every source
+lib.ptCurves = lib.ptCurves or {} -- [max][point]
 lib.ST = lib.ST or {}
 lib.desyncs = lib.desyncs or 0
 lib.splits = lib.splits or 0
@@ -94,6 +104,30 @@ function lib.curveFor(e)
         c:AddPoint(e / 100 - EPS, LOW)
         c:AddPoint(e / 100, 2)
         lib.curves[e] = c
+    end
+    return c
+end
+
+-- The Step curve of a point threshold p at the plain max M: 1 below p, 2 at or above. The step sits half a point below
+-- p (a last-bit error in the client's percent cannot move a whole point across it), its guard a quarter point lower
+-- (BandProbe2 0.3.0's construction). One per (M, p), shared.
+function lib.pointCurve(p, M)
+    local byMax = lib.ptCurves[M]
+    if not byMax then
+        byMax = {}
+        lib.ptCurves[M] = byMax
+    end
+    local c = byMax[p]
+    if not c then
+        local x, eps = (p - 0.5) / M, math.max(0.25 / M, MINSP)
+        c = C_CurveUtil.CreateCurve()
+        c:SetType(Enum.LuaCurveType.Step)
+        c:AddPoint(0, LOW)
+        if x - eps > 0 then
+            c:AddPoint(x - eps, LOW)
+        end
+        c:AddPoint(x, 2)
+        byMax[p] = c
     end
     return c
 end
@@ -201,19 +235,33 @@ function lib.reprime(s)
     lib.wake()
 end
 
--- Whether a percent edge needs a bar of its own in the source's mode (position covers the 1% grid).
-local function needEdge(s, e)
-    return not (s.mode == "gray" and e % 1 == 0)
+-- Whether a percent edge needs a bar of its own in a mode (position covers the 1% grid).
+local function needEdge(mode, e)
+    return mode == nil or (mode == "gray" and e % 1 ~= 0)
+end
+
+-- Whether a point threshold needs a bar of its own in a mode at the max M (position covers p when p / M is on the 1%
+-- grid: p * 100 a multiple of M, plain integers).
+local function needPoint(mode, M, p)
+    return mode == nil or (mode == "gray" and not (M and (p * 100) % M == 0))
 end
 
 -- Every bar the handle rests on is there (false: the cap was reached, the handle is suspended).
 local function served(s, h)
-    if s.mode and not s.core[1] then
+    local mode = s.mode
+    if mode and not s.core[1] then
         return false
     end
     for k = 1, #h.edges do
         local e = h.edges[k]
-        if not s.bar[e] and needEdge(s, e) then
+        if not s.bar[e] and needEdge(mode, e) then
+            return false
+        end
+    end
+    local pts = h.points
+    for k = 1, #pts do
+        local p = pts[k]
+        if not s.pbar[p] and needPoint(mode, s.max, p) then
             return false
         end
     end
@@ -233,17 +281,112 @@ function lib.priming(s, h)
             return true
         end
     end
+    local pts = h.points
+    for k = 1, #pts do
+        local i = s.pbar[pts[k]]
+        if i and prime[i] > 0 then
+            return true
+        end
+    end
     return false
 end
 
--- The mode the source's handles ask for: "gray" while any asks for a step, else nil (edges only).
+-- The mode a set of handles asks for: "gray" while any asks for a step, else nil (edges only).
+function lib.modeFor(step)
+    return step and "gray" or nil
+end
+
 function lib.modeOf(s)
+    local step = false
     for j = 1, #s.handles do
-        if s.handles[j].step then
-            return "gray"
+        step = step or s.handles[j].step ~= nil
+    end
+    return lib.modeFor(step)
+end
+
+-- The player's plain max of the source's power type: a secret one (or a say-so that it is secret) keeps the last
+-- plain value; 0 or none is nil (never a divisor).
+function lib.maxOf(unit, power, last)
+    if power == nil then
+        return nil
+    end
+    local should = C_Secrets and C_Secrets.ShouldUnitPowerMaxBeSecret
+    if should then
+        local sec = should(unit, power)
+        if issecretvalue(sec) or sec then
+            return last
         end
     end
-    return nil
+    local m = UnitPowerMax and UnitPowerMax(unit, power)
+    if issecretvalue(m) or type(m) ~= "number" or not (m > 0) then
+        return last
+    end
+    return m
+end
+
+-- Bars a set of handles needs on a source, and how many of them are point bars (a cold path: admission). add joins
+-- the set; swapH counts with swapList as its points.
+function lib.need(s, add, swapH, swapList)
+    local M = s.kind == "power" and lib.maxOf(s.unit, s.power, s.max) or nil
+    local step, edges, points = false, {}, {}
+    local function take(h)
+        step = step or h.step ~= nil
+        for k = 1, #h.edges do
+            edges[h.edges[k]] = true
+        end
+        local pl = h == swapH and swapList or h.points
+        for k = 1, #pl do
+            points[pl[k]] = true
+        end
+    end
+    for j = 1, #s.handles do
+        take(s.handles[j])
+    end
+    if add then
+        take(add)
+    end
+    local mode = lib.modeFor(step)
+    local bars, pb = mode == "gray" and 8 or 0, 0
+    for e in pairs(edges) do
+        if needEdge(mode, e) then
+            bars = bars + 1
+        end
+    end
+    for p in pairs(points) do
+        if needPoint(mode, M, p) then
+            pb = pb + 1
+        end
+    end
+    return bars + pb, pb
+end
+
+-- nil when the handle (with newPoints, when given, as its points) fits the caps, else the error code: EDGE_LIMIT over
+-- the point caps, POOL_LIMIT over the pool. Nothing is granted here.
+function lib.admit(h, newPoints)
+    local s = lib.srcByKey[lib.keyOf(h)]
+    local cur = s or { kind = h.kind, unit = h.unit, power = h.power, handles = {} }
+    local bars, pb
+    if newPoints then
+        bars, pb = lib.need(cur, nil, h, newPoints)
+    else
+        bars, pb = lib.need(cur, h)
+    end
+    if pb > lib.POINTS_PER_SOURCE then
+        return lib.ERR.EDGE_LIMIT
+    end
+    for k = 1, #lib.sources do
+        local o = lib.sources[k]
+        if o ~= s then
+            local b, p = lib.need(o)
+            bars, pb = bars + b, pb + p
+        end
+    end
+    if pb > lib.POINTS_TOTAL then
+        return lib.ERR.EDGE_LIMIT
+    end
+    if bars > CAP then
+        return lib.ERR.POOL_LIMIT
+    end
 end
 
 local function freeCore(s)
@@ -275,6 +418,17 @@ end
 -- neither paused nor suspended and its unit is there.
 function lib.sync(s)
     local ready = lib.realised and lib.capOf(s.kind) == "ready"
+    if ready and s.kind == "power" then
+        s.max = lib.maxOf(s.unit, s.power, s.max)
+    end
+    local M = s.max
+    if s.pM ~= M then -- the cuts move: every point bar is placed again (and primes)
+        for p, i in pairs(s.pbar) do
+            lib.freeBar(i)
+            s.pbar[p] = nil
+        end
+        s.pM = M
+    end
     local mode = ready and lib.modeOf(s) or nil
     if mode ~= s.mode then
         freeCore(s)
@@ -287,8 +441,15 @@ function lib.sync(s)
             allocCore(s)
         end
         for e, n in pairs(s.ref) do
-            if n > 0 and not s.bar[e] and needEdge(s, e) then
+            if n > 0 and not s.bar[e] and needEdge(mode, e) then
                 s.bar[e] = lib.allocBar(s, lib.curveFor(e))
+            end
+        end
+        if M then
+            for p, n in pairs(s.pref) do
+                if n > 0 and not s.pbar[p] and needPoint(mode, M, p) then
+                    s.pbar[p] = lib.allocBar(s, lib.pointCurve(p, M))
+                end
             end
         end
         if not s.gone then
@@ -302,9 +463,15 @@ function lib.sync(s)
         end
     end
     for e, i in pairs(s.bar) do
-        if not ready or s.ref[e] == 0 or not needEdge(s, e) then
+        if not ready or s.ref[e] == 0 or not needEdge(mode, e) then
             lib.freeBar(i)
             s.bar[e] = nil
+        end
+    end
+    for p, i in pairs(s.pbar) do
+        if not ready or s.pref[p] == 0 or not needPoint(mode, M, p) then
+            lib.freeBar(i)
+            s.pbar[p] = nil
         end
     end
     if want and not s.active then
@@ -338,7 +505,7 @@ function lib.fire(i)
     local hs = s.handles
     for j = #hs, 1, -1 do
         local h = hs[j]
-        if h and h.single and s.bar[h.edges[1]] == i then
+        if h and h.single and (s.bar[h.edges[1]] == i or s.pbar[h.points[1]] == i) then
             lib.decode(h)
         end
     end
@@ -367,6 +534,18 @@ local function grayDecode(s)
             end
         elseif n >= e then
             return "edge"
+        end
+    end
+    local M = s.max
+    if M then
+        for p, i in pairs(s.pbar) do -- at or above p: the cell must reach p; below: it must start under p
+            if st[i] then
+                if (n + 1) * M <= p * 100 then
+                    return "edge"
+                end
+            elseif n * M >= p * 100 then
+                return "edge"
+            end
         end
     end
     s.n = n
@@ -402,14 +581,21 @@ function lib.decodeSource(s)
     return true
 end
 
--- The handle's band (percent) from the source: the cell for a step handle, then its own edges, each from its bar or
--- the cell. false when the bars contradict each other (edges mode: a firing was lost).
+-- The handle's band from the source, in percent, or in points for a points handle (h.pts; the max is known then):
+-- the cell for a step handle, then its own edges and points, each from its bar or the cell. false when the bars
+-- contradict each other (edges mode: a firing was lost).
 local function band(h)
     local s, st = h.src, lib.barState
     local n = s.mode == "gray" and s.n or nil
-    local lo, hi = 0, 100
+    local M, pts = s.max, h.pts
+    local top = pts and M or 100
+    local lo, hi = 0, top
     if h.step and n then
-        lo, hi = n, n < 100 and n + 1 or 100
+        if pts then
+            lo, hi = n * M / 100, n < 100 and (n + 1) * M / 100 or M
+        else
+            lo, hi = n, n < 100 and n + 1 or 100
+        end
     end
     local edges = h.edges
     for k = 1, #edges do
@@ -420,15 +606,37 @@ local function band(h)
         elseif n then
             up = n >= e
         end
+        local c = pts and e * M / 100 or e
         if up then
-            if e > lo then
-                lo = e
+            if c > lo then
+                lo = c
             end
-        elseif up == false and e < hi then
-            hi = e
+        elseif up == false and c < hi then
+            hi = c
         end
     end
-    if lo > hi or (lo == hi and hi < 100) then
+    local pl = h.points
+    for k = 1, #pl do
+        local p = pl[k]
+        local i, up = s.pbar[p], nil
+        if i then
+            up = st[i]
+        elseif n then
+            if n * M >= p * 100 then
+                up = true
+            elseif (n + 1) * M <= p * 100 or p > M then
+                up = false
+            end
+        end
+        if up then
+            if p > lo then
+                lo = p
+            end
+        elseif up == false and p < hi then
+            hi = p
+        end
+    end
+    if lo > hi or (lo == hi and hi < top) then
         return false
     end
     return lo, hi

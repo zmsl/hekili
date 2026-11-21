@@ -32,6 +32,9 @@ lib.ERR = {
     STEP_INVALID = "step-invalid",
     POWER_REQUIRED = "power-required",
     POWER_INVALID = "power-invalid",
+    POINTS_INVALID = "points-invalid",
+    EDGE_LIMIT = "edge-limit",
+    POOL_LIMIT = "pool-limit",
 }
 
 -- Messages for error codes, handle states and capability reasons, per locale; enUS only for now.
@@ -48,6 +51,10 @@ lib.MESSAGES = {
         ["step-invalid"] = "The step must be a positive number.",
         ["power-required"] = "A power watch needs its power type (an Enum.PowerType number).",
         ["power-invalid"] = "The power type must be an Enum.PowerType number.",
+        ["points-invalid"] = "The points must be a list of whole numbers of 1 or more, on a points handle.",
+        ["edge-limit"] = "Too many point thresholds: over the cap per value or in total (nothing was granted).",
+        ["pool-limit"] = "Not enough bars left in the pool (nothing was granted).",
+        ["max-unknown"] = "The maximum is not known (never read as a plain number).",
         live = "Live: a band is known.",
         priming = "Priming: the band is not known yet.",
         pending = "Pending: the self-test has not passed yet.",
@@ -233,6 +240,12 @@ function lib:Watch(owner, spec, sink)
     else
         h.unproven = "unproven"
     end
+    if not h.unproven and #h.points > 0 then
+        local err = lib.admit(h)
+        if err then
+            return nil, err
+        end
+    end
     lib.reg[#lib.reg + 1] = h
     if not h.unproven then
         lib.attach(h)
@@ -240,9 +253,21 @@ function lib:Watch(owner, spec, sink)
     return h
 end
 
--- Joins the handle to the source of its canonical key (created on first use) and references its edges.
+function lib.keyOf(h)
+    return h.kind .. "|" .. h.unit .. "|" .. tostring(h.power) .. "|" .. tostring(h.predicted)
+end
+
+-- References (or with d = -1 drops) a handle's points on its source.
+local function refPoints(s, pts, d)
+    for i = 1, #pts do
+        local p = pts[i]
+        s.pref[p] = (s.pref[p] or 0) + d
+    end
+end
+
+-- Joins the handle to the source of its canonical key (created on first use) and references its edges and points.
 function lib.attach(h)
-    local key = h.kind .. "|" .. h.unit .. "|" .. tostring(h.power) .. "|" .. tostring(h.predicted)
+    local key = lib.keyOf(h)
     local s = lib.srcByKey[key]
     if not s then
         s = { kind = h.kind, unit = h.unit, power = h.power, predicted = h.predicted, handles = {} }
@@ -254,6 +279,7 @@ function lib.attach(h)
         local e = h.edges[i]
         s.ref[e] = (s.ref[e] or 0) + 1
     end
+    refPoints(s, h.points, 1)
     s.handles[#s.handles + 1] = h
     h.src = s
     lib.sync(s)
@@ -292,6 +318,9 @@ function lib.stateOf(h)
         return state, reason
     end
     local s = h.src
+    if h.pts and not s.max then
+        return "unavailable", "max-unknown"
+    end
     if h.paused then
         return "paused"
     end
@@ -320,9 +349,36 @@ function H:State()
     return state, reason
 end
 
--- step, min, max granted: a step of any size is granted as 1 (the 1% cell), nil for edges only.
+-- step, min, max granted: a step of any size is granted as 1 (the 1% cell), nil for edges only. A points handle
+-- answers in points: 0 to the plain max (nil while unknown), its step the 1% cell in points.
 function H:Domain()
+    if self.pts then
+        local M = self.src and self.src.max
+        return self.step and M and M / 100 or nil, 0, M
+    end
     return self.step, 0, 100
+end
+
+-- Swaps the handle's point thresholds in one step: true, or nil, code (the old set stays).
+function H:SetPoints(points)
+    local list = not self.released and self.pts and lib.pointList(points)
+    if not list then
+        return nil, lib.ERR.POINTS_INVALID
+    end
+    local s = self.src
+    if s then
+        local err = lib.admit(self, list)
+        if err then
+            return nil, err
+        end
+        refPoints(s, self.points, -1)
+        refPoints(s, list, 1)
+    end
+    self.points = list
+    if s then
+        lib.sync(s)
+    end
+    return true
 end
 
 -- The plain value when the client gives it right now: not read in this stage.
@@ -364,6 +420,7 @@ function H:Release()
             local e = self.edges[i]
             s.ref[e] = s.ref[e] - 1
         end
+        refPoints(s, self.points, -1)
         remove(s.handles, self)
         lib.sync(s)
     end

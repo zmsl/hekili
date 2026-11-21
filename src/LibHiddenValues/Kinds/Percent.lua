@@ -24,7 +24,11 @@ local function validate(spec, h)
     if step ~= nil and (type(step) ~= "number" or not (step > 0)) then
         return E.STEP_INVALID
     end
-    if (edges == nil or #edges == 0) and step == nil then
+    local pts = spec.points
+    if pts ~= nil and type(pts) ~= "table" then
+        return E.POINTS_INVALID
+    end
+    if (edges == nil or #edges == 0) and step == nil and (pts == nil or #pts == 0) then
         return E.EDGES_REQUIRED
     end
     if spec.power ~= nil and type(spec.power) ~= "number" then
@@ -54,10 +58,39 @@ local function validate(spec, h)
     end
     h.unit, h.edges, h.power, h.predicted = unit, out, spec.power, spec.predicted ~= false
     h.step = step and 1 or nil -- any step is granted as the 1% cell (Domain says so)
-    h.single = #out == 1 and not step -- rests on one bar: called from its firing
-    if not lib.kinds[h.kind].units[unit] or spec.points or (h.kind == "power" and not PROVEN_POWER[spec.power]) then
+    h.points = pts and lib.pointList(pts) or {}
+    if pts and not lib.pointList(pts) then
+        return E.POINTS_INVALID
+    end
+    h.pts = pts ~= nil -- a points handle answers in points
+    h.single = #out + #h.points == 1 and not step -- rests on one bar: called from its firing
+    if
+        not lib.kinds[h.kind].units[unit]
+        or (pts and h.kind ~= "power") -- points: player power only (its max is plain)
+        or (h.kind == "power" and not PROVEN_POWER[spec.power])
+    then
         h.unproven = "unproven"
     end
+end
+
+-- A sorted list of distinct whole points >= 1, or nil when any entry is not one.
+function lib.pointList(pts)
+    if type(pts) ~= "table" then
+        return nil
+    end
+    local list, seen = {}, {}
+    for i = 1, #pts do
+        local p = pts[i]
+        if type(p) ~= "number" or not (p >= 1 and p < math.huge) or p % 1 ~= 0 then
+            return nil
+        end
+        if not seen[p] then
+            seen[p] = true
+            list[#list + 1] = p
+        end
+    end
+    table.sort(list)
+    return list
 end
 
 lib.kinds.health = {

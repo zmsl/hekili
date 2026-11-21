@@ -98,6 +98,7 @@ function lib.realise()
     evf:RegisterEvent("PLAYER_ALIVE")
     evf:RegisterEvent("PLAYER_UNGHOST")
     evf:RegisterUnitEvent("UNIT_HEALTH", "player", "target")
+    evf:RegisterUnitEvent("UNIT_MAXPOWER", "player") -- the plain max moves the point cuts
     for ev in pairs(RELAYOUT) do
         pcall(evf.RegisterEvent, evf, ev) -- the client raises on an event it does not have
     end
@@ -153,7 +154,7 @@ function lib.event(event, unit)
                 end
             end
         end
-    elseif event == "UNIT_HEALTH" then
+    elseif event == "UNIT_HEALTH" or event == "UNIT_MAXPOWER" then
         syncUnit(unit)
     elseif RELAYOUT[event] then
         local srcs = lib.sources
@@ -300,6 +301,7 @@ function lib:GetSources()
                 handles = #s.handles,
                 bars = n,
                 mode = s.mode or "edges",
+                max = s.max,
                 active = s.active and true or false,
             }
         end

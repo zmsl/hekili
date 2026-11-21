@@ -190,7 +190,7 @@ describe("LibHiddenValues contract", function()
             { kind = "cooldown", spell = 1766 },
             { kind = "health", unit = "focus", edges = { 20 } },
             { kind = "power", unit = "player", power = Enum.PowerType.Focus, edges = { 20 } },
-            { kind = "power", unit = "player", power = Enum.PowerType.Energy, points = true, edges = { 20 } },
+            { kind = "health", unit = "player", points = { 300 } },
         }
         for i, spec in ipairs(specs) do
             local h = assert(lib:Watch("A", spec, sink), i)

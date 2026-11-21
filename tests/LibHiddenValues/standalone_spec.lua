@@ -184,7 +184,7 @@ describe("LibHiddenValues standalone", function()
     it("answers every diagnostic fact through getters", function()
         W.unit.target = { health = 0.6 }
         assert.are.same({ nil, nil, false }, { lib:GetSelfTest() })
-        assert.are.same({ 0, 256 }, { lib:GetPool() }) -- nothing is built before login
+        assert.are.same({ 0, 256, 0, 64, 8 }, { lib:GetPool() }) -- nothing is built before login
         local kinds = lib:GetKinds()
         assert.are.equal(12, #kinds)
         assert.are.same({ kind = "health", state = "pending" }, kinds[1])
@@ -225,10 +225,11 @@ describe("LibHiddenValues standalone", function()
                 handles = 1,
                 bars = 1,
                 mode = "edges",
+                max = 2000,
                 active = true,
             },
         }, lib:GetSources())
-        assert.are.same({ #lib.barFrame, 256 }, { lib:GetPool() })
+        assert.are.same({ #lib.barFrame, 256, 0, 64, 8 }, { lib:GetPool() })
         assert.is_true(#lib.barFrame >= 32)
         assert.are.equal(3, (lib:GetStats()))
         lib:SelfTest()
