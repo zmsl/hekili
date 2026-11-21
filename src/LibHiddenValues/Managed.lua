@@ -250,6 +250,13 @@ local function forget(st)
     st.orig, st.tag, st.id, st.bars, st.pending, st.state = nil, nil, nil, nil, nil, nil
 end
 
+-- A manage that needs no reload (the store is what this load read) and is not managed yet: check it in this load.
+local function rearm(st)
+    if not lib.mbPending and st.state ~= "managed" then
+        st.pending, st.state, mb.untilT = "manage", nil, nil
+    end
+end
+
 -- The viewers ---------------------------------------------------------------------------------------------------------
 
 -- Alpha 0 on the four viewers (each one's alpha read first and given back after); never Hide (that stops the data).
@@ -278,10 +285,11 @@ local function hide(on)
     end
 end
 
--- Hidden only while managed (the check passed this load) and the aura kind runs; an update written over a managed
--- layout keeps it hidden until the reload (the loaded layout is still ours).
+-- Hidden only while managed (the check passed this load) and the aura kind is ready (not off, errored, failed its
+-- self-test or pending it); an update written over a managed layout keeps it hidden until the reload (the loaded
+-- layout is still ours).
 local function apply()
-    local on = not lib.disabled and not lib.errored.aura
+    local on = lib.capOf("aura") == "ready"
     if mb.mode == "pending" then
         on = on and lib.mbPending == "manage" and mb.alpha ~= nil
     else
@@ -381,14 +389,14 @@ function mb.update()
     end
     local fight = InCombatLockdown()
     mb.checking = nil
-    if st.pending == "manage" then -- written by an earlier load: the check
+    if st.pending == "manage" then -- written by an earlier load (or by this one with no reload needed): the check
         if fight then
             mb.checking = true
             return set("pending", "checking")
         end
         mb.untilT = mb.untilT or GetTime() + CHECK
         if check(st) then
-            st.pending, st.state, mb.passed = nil, "managed", true
+            st.pending, st.state = nil, "managed"
         elseif GetTime() < mb.untilT then
             mb.checking = true
             return set("pending", "checking")
@@ -508,6 +516,7 @@ function lib:ManageCooldownManager(owner, store)
     lib.mbOwner, lib.mbStore = owner, store
     if same(out, t) then -- ours, active, every aura on a bar already
         store.bars = bars
+        rearm(store)
         settle()
         return true
     end
@@ -521,15 +530,13 @@ function lib:ManageCooldownManager(owner, store)
     end
     if not write(store, new, "manage") then
         pcall(C_CooldownViewer.SetLayoutData, s)
-        if first then
+        if first and fetch() == s then -- put back: nothing to restore (else the original stays saved)
             forget(store)
         end
         return nil, E.CDM_WRITE
     end
     store.id, store.bars = id, bars
-    if not store.pending and mb.passed then
-        store.state = "managed" -- written back to what this load checked: no reload
-    end
+    rearm(store)
     settle()
     return true
 end
@@ -555,10 +562,10 @@ function lib:RestoreCooldownManager(owner, store)
     local s = fetch()
     local t = s and decode(s)
     local o = decode(store.orig)
-    if not (t and o) then
+    if not o then
         return nil, E.CDM_UNREADABLE
     end
-    local out = copy(t)
+    local out = copy(t or o) -- the store unreadable: the saved original goes back raw (nothing there to keep)
     local tag, id = store.tag, store.id
     local ls = out[3] and out[3][tag]
     if id and ls and ls[id] then
@@ -578,7 +585,7 @@ function lib:RestoreCooldownManager(owner, store)
         out[2][tag] = a
     end
     local new
-    if same(out, o) then
+    if not t or same(out, o) then
         new = store.orig
     elseif not same(out, t) then
         local ok, enc = pcall(encode, out)
@@ -589,11 +596,12 @@ function lib:RestoreCooldownManager(owner, store)
     end
     lib.mbOwner, lib.mbStore = owner, store
     if new and not write(store, new, "restore") then
-        pcall(C_CooldownViewer.SetLayoutData, s)
+        if s then
+            pcall(C_CooldownViewer.SetLayoutData, s)
+        end
         return nil, E.CDM_WRITE
     end
     forget(store)
-    mb.passed = nil
     settle()
     return true
 end

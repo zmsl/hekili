@@ -245,7 +245,8 @@ original back byte for byte; the player changed something (edited, added or dele
 layout and makes the layout that was active before ours active again (if the player switched away from ours, their
 choice stays; if that layout is gone, the default). Before the reload of a manage, restore is an undo: the store is
 back to what the client loaded, so no reload is pending. Restore after the reload needs one (`pending, reload`) so the
-Cooldown Manager reads the player's layout again.
+Cooldown Manager reads the player's layout again. A store the library cannot decode gets the saved original back raw.
+A manage that needs no reload (the store already is what this session loaded) is checked in the same session.
 
 Not covered: a store lost from your SavedVariables while our layout exists (the layout stays; the player deletes it
 in the Cooldown Manager's settings, and a new manage adds another); another addon writing the layout store.

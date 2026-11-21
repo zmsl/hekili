@@ -3,8 +3,9 @@
 -- on a tracked bar), the consumer reloads, the library checks the result and hides the four viewers (alpha 0) while it
 -- holds; RestoreCooldownManager puts the player's layouts back (byte-exact when nothing else changed). Covered: manage,
 -- pending, reload, managed with bars; restore byte-exact; undo before the reload; drift; 5 of 5; combat; the API
--- missing; a write that does not stick; a check that fails; the player's edits kept by restore; an update after a new
--- aura watch; another owner; the alpha the player had.
+-- missing; a write that does not stick (the original kept unless put back); a check that fails; a manage that needs no
+-- reload checks in the same load; the player's edits kept by restore; an update after a new aura watch; another owner;
+-- the alpha the player had.
 local FAKE = "src/LibHiddenValues/Testing/FakeClient.lua"
 local TAG = 111 -- class 11, spec 1
 
@@ -291,11 +292,66 @@ describe("LibHiddenValues managed Cooldown Manager layout (Mode B)", function()
         W.cdm.badWrite = true
         assert.are.same({ nil, "cdm-write-failed" }, { lib:ManageCooldownManager("A", store) })
         W.cdm.badWrite = false
-        assert.are.equal(orig .. "x", W.cdm.store) -- the fake keeps the bad bytes for the put-back too
-        W.cdm.store = orig
-        assert.is_nil(next(store))
+        assert.are.equal(orig .. "x", W.cdm.store) -- the put-back did not stick either
+        assert.are.equal(orig, store.orig) -- so the saved original is kept
         assert.are.same({ false }, { lib:IsReloadPending() })
         assert.are.same({ "player" }, mode())
+        -- restore: the store cannot be read, the saved original goes back raw
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store)
+        assert.is_nil(next(store))
+    end)
+
+    it("forgets the saved original when a failed write was put back", function()
+        boot()
+        W.cdm.badWrite = true
+        local set = _G.C_CooldownViewer.SetLayoutData
+        _G.C_CooldownViewer.SetLayoutData = function(data) -- only our layout fails to stick
+            W.cdm.badWrite = data ~= orig
+            set(data)
+        end
+        assert.are.same({ nil, "cdm-write-failed" }, { lib:ManageCooldownManager("A", store) })
+        _G.C_CooldownViewer.SetLayoutData = set
+        W.cdm.badWrite = false
+        assert.are.equal(orig, W.cdm.store)
+        assert.is_nil(next(store))
+    end)
+
+    it("becomes managed when a manage again needs no reload (restore, then manage, in one session)", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.is_true(lib:ManageCooldownManager("A", store)) -- the same bytes as this load: no reload
+        assert.are.same({ false }, { lib:IsReloadPending() })
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+        assert.are.same({ 0, 0, 0, 0 }, alphas())
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+    end)
+
+    it("checks again when a manage follows a failed check whose cause went away", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        Fake.onReload = function()
+            consumer()
+            W.cdm.enabled = false -- the Cooldown Manager is off at the reload
+        end
+        _G.ReloadUI()
+        Fake.advance(21)
+        assert.are.same({ "player", "check-failed" }, mode())
+        Fake.cdmEnable(true)
+        Fake.tick(2)
+        assert.are.same({ "player", "check-failed" }, mode())
+        local n = W.cdm.writes
+        assert.is_true(lib:ManageCooldownManager("A", store)) -- ours is still active: nothing to write
+        assert.are.equal(n, W.cdm.writes)
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+        assert.are.same({ 0, 0, 0, 0 }, alphas())
     end)
 
     it("gives up when the layout did not take after the reload, and restore still works", function()

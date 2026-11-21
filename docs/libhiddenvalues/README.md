@@ -33,7 +33,7 @@ from a click, alpha 0 holding with data flowing; ledger L1591, L1596, L1608); th
   `GetSpecialization`, the Essential and Utility viewers, `GetAlpha`, the learned filter of
   `GetCooldownViewerCategorySet`, placement derived from the stored active layout at login, and the reload
   (`ReloadUI`, `Fake.reload`).
-- Suite: `tests/LibHiddenValues/managed_spec.lua` (15 tests).
+- Suite: `tests/LibHiddenValues/managed_spec.lua` (18 tests).
 
 | Question | Taken | Why |
 |---|---|---|
