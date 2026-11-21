@@ -253,7 +253,9 @@ local function feed(s)
             up = issecretvalue(a) or a ~= nil -- a secret: only tested, never compared
             if up then
                 local u = rawget(item, "auraDataUnit")
-                if not issecretvalue(u) and u ~= nil and u ~= s.unit then
+                if issecretvalue(u) then
+                    up = nil -- shown on a unit the client keeps secret: unknown (gone), never this unit
+                elseif u ~= nil and u ~= s.unit then
                     up = false -- shown, but on the other unit
                 end
             end

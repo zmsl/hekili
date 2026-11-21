@@ -392,7 +392,8 @@ end)
 -- with an item pool. W.cdm = { enabled (the cooldownViewerEnabled CVar), available, catalogue = { [cooldownID] = {
 -- spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = {}, category = 0-8 } }, bar = { cooldownID,
 -- ... }, icon = { ... } (what the player placed, in order), secretId, secretIdx (in combat a refresh writes an item's
--- cooldownID / a layout pass its layoutIndex secret), shuffle (a layout pass hands the frames out in another order) }.
+-- cooldownID / a layout pass its layoutIndex secret), secretUnit (an item's auraDataUnit is secret while reads are;
+-- unprobed), shuffle (a layout pass hands the frames out in another order) }.
 -- W.aura[unit][spellID] = { stacks =, expires = GetTime() at its end, duration = } on "player" and "target": the
 -- player's own auras (Fake.setAura). The viewers lay out at login and on Fake.cdmLayout(), refresh their items on
 -- UNIT_AURA and PLAYER_TARGET_CHANGED, push a tracked bar's SetMinMaxValues(0, duration) and SetValue(seconds left)
@@ -636,7 +637,7 @@ local function refreshItem(item)
             a.id = nextAuraId
         end
         item.auraInstanceID = hidden() and secret(a.id) or a.id
-        item.auraDataUnit = unit
+        item.auraDataUnit = (hidden() and W.cdm.secretUnit) and secret(unit) or unit
     else
         item.auraInstanceID, item.auraDataUnit = nil, nil
     end

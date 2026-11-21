@@ -439,6 +439,31 @@ describe("LibHiddenValues aura kind", function()
         assert.are.same({ 2, 4 }, band(h))
     end)
 
+    it("reads a watch unknown while its item's unit is secret, never as this unit", function()
+        boot()
+        W.cdm.secretUnit = true
+        Fake.setAura("target", 5002, 1)
+        local mine = watch({ unit = "player", spell = 5002, what = "up" })
+        local theirs = watch({ unit = "target", spell = 5002, what = "up" })
+        Fake.login()
+        W.combat = true
+        Fake.tick(2)
+        assert.are.same({ "gone", nil }, { mine:State() })
+        assert.are.same({ "gone", nil }, { theirs:State() })
+        assert.is_nil(band(mine)[1])
+        assert.is_nil(band(theirs)[1])
+        Fake.setAura("target", 5002, nil) -- absent: a known value, no unit to read
+        Fake.tick(2)
+        assert.are.same({ 0, 0 }, band(mine))
+        assert.are.same({ 0, 0 }, band(theirs))
+        W.cdm.secretUnit = false
+        Fake.setAura("target", 5002, 1)
+        Fake.tick(2)
+        assert.are.same({ 0, 0 }, band(mine))
+        assert.are.same({ 1, 1 }, band(theirs))
+        assert.are.same({}, Fake.errors)
+    end)
+
     it("turns off with the Cooldown Manager mid-session and comes back", function()
         boot()
         local h = watch({ spell = 5001, what = "stacks", edges = { 2 } })
