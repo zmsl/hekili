@@ -41,10 +41,10 @@ end)
 | Kind | Spec | Proven on |
 |---|---|---|
 | `health` | `unit`, `edges`, `predicted` (default true) | `player`, `target` |
-| `power` | `unit`, `edges`, `power` (`Enum.PowerType`, required) | `player`: mana, energy |
+| `power` | `unit`, `edges`, `power` (`Enum.PowerType`, required) | `player`: mana, energy, rage (rage: proven by the BandProbe2 warm-up, the library's own run owed) |
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
-other kind, token or option (a `step` without `edges`, `points`, rage, `focus`, ...) returns a handle whose state is
+other kind, token or option (a `step` without `edges`, `points`, focus or another power type, the `focus` token, ...) returns a handle whose state is
 `"unavailable", "unproven"`: write against it now, it comes alive when its stage ships. A `step` beside `edges` is
 ignored for now: the edges are served and `h:Domain()` returns a nil step. Bad input (a missing `power` too) returns
 `nil, "bad-spec: ..."`.

@@ -134,7 +134,7 @@ describe("LibHiddenValues contract", function()
             { kind = "aura", unit = "target", spell = 1079, what = "left", edges = { 3 } },
             { kind = "cooldown", spell = 1766 },
             { kind = "health", unit = "focus", edges = { 20 } },
-            { kind = "power", unit = "player", power = Enum.PowerType.Rage, edges = { 20 } },
+            { kind = "power", unit = "player", power = Enum.PowerType.Focus, edges = { 20 } },
             { kind = "power", unit = "player", power = Enum.PowerType.Energy, points = true, edges = { 20 } },
             { kind = "health", unit = "target", step = 1 },
         }

@@ -41,7 +41,8 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 | `unit` | required for both kinds | the design gives no default |
 | Edges | numbers in (0.05, 100]; duplicates and edges closer than 0.05 merge into the lower | an edge needs room for its guard point above 0 |
 | `step` | with edges: the edges are granted and `Domain()` returns `nil, 0, 100`; alone: `unavailable, unproven` | position is stage 3 (the design's own coarsening rule: report the granted domain) |
-| `points = true`, rage, other tokens | handle `unavailable, unproven` | unproven in the run |
+| `points = true`, power types other than mana, rage and energy, other tokens | handle `unavailable, unproven` | unproven in the run |
+| Rage (controller for the owner, 2026-11-20) | `ready` on `player` like mana and energy, the same `UnitPowerPercent` read | proven by the BandProbe2 warm-up (bear form, in combat under the lockdown: Gray 7 bits + parity and the 20-bar bank, 0 disagreements, desync 0); the library's own in-game run is owed. Rage sits at 0 out of combat: below the lowest edge it primes to the known lowest band |
 | Aura | a known kind, permanently `unavailable, unproven` | the aura container closed the route (design addendum) |
 | Sink timing (owner question 9) | mixed, as recommended: one-edge handles from the firing, several edges one frame later | the design's recommendation; `h:Latency()` says which |
 | Views (owner question 5) | per-handle views only | the design's recommendation |
@@ -63,7 +64,7 @@ Shadow verification and the `silent` detector, plain-read calibration and `q = E
 warm-up found health and power secret even out of combat, so there may be no plain truth to calibrate against);
 position (Gray code and parity, stage 3: the encoding is internal to `Bars.lua`'s decode, so it joins without an API
 change); event-driven, throttled and near-threshold feeding and the governor (stage 4; `GetStats` returns level 0);
-rage (5); booleans, groups, other tokens (6); timers (7); threat, absorbs, meter (9); the `restricted` reason for PvP
+booleans, groups, other tokens (6); timers (7); threat, absorbs, meter (9); the `restricted` reason for PvP
 matches (an error there turns the kind off as `error` instead); the cached self-test verdict; the 5 s release grace.
 
 ## Checks

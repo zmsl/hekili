@@ -232,6 +232,31 @@ describe("LibHiddenValues edges", function()
         assert.are.same({ 50, 100 }, lohi(mana))
     end)
 
+    it("bands rage on the player: at 0 a known lowest band first, then both ways; focus stays unproven", function()
+        W.unit.player.power[Enum.PowerType.Rage] = 0
+        local h = lib:Watch("A", { kind = "power", unit = "player", power = Enum.PowerType.Rage, edges = { 30 } }, sink)
+        local focus = lib:Watch("A", { kind = "power", unit = "player", power = Enum.PowerType.Focus, edges = { 30 } })
+        assert.are.same({ "unavailable", "unproven" }, { focus:State() })
+        Fake.login()
+        Fake.tick(10)
+        assert.are.equal("live", (h:State()))
+        local known = {}
+        for k = 1, #calls do
+            if calls[k].lo ~= nil then
+                known[#known + 1] = band(calls[k])
+            end
+        end
+        assert.are.same({ { 0, 30, 0 } }, known)
+        calls = {}
+        W.unit.player.power[Enum.PowerType.Rage] = 0.45
+        Fake.tick(1)
+        assert.are.same({ { 30, 100, 1 } }, { band(calls[1]) })
+        W.unit.player.power[Enum.PowerType.Rage] = 0.1 -- decay out of combat
+        Fake.tick(1)
+        assert.are.same({ 0, 30, -1 }, band(calls[2]))
+        assert.are.same({ "unavailable", "unproven" }, { focus:State() })
+    end)
+
     it("stamps a several-edge call with the time of the frame the change was seen, a joining one with now", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50 } }, sink)
         Fake.login()
