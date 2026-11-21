@@ -125,42 +125,47 @@ Fights (`S.RUN3`, `S.group`, `run.lua run3`): a session is one fixed 5-player gr
 0.7-1.3, a tank at 0.4-0.7 whose damage never speeds up) doing 10 pulls (`S.PULLS`: 6 trash packs of 2-4 mobs with
 cleave and swaps, 3 elites, 1 boss). 14 compositions: 0, 1, 2 or 4 executing DPS of 4, the player executing or not,
 lines 20%, 35% or a mix, one dominant DPS (2.5-3.5x) or not, and solo. Each executor has its own x1.5-2.5 below its
-own line, so the group factor below a line is 1 + sum of executing shares x (mult - 1): 1.07-1.6 with 1-2
-executors, 1.7-2 with 4. Stats per composition x length (42 buckets), 16 sessions per composition and set.
+own line, so the group factor below a line is 1 + sum of executing shares x (mult - 1): 1.07-1.75 with one
+executor, 1.1-1.6 with two, 1.25-2 with four. Stats per composition x length (42 buckets), 16 sessions per
+composition and set; each session draws its pull seeds from its own generator.
 
 Strategies (`est3` in `run.lua`; every one on the estimator's defaults, the factor carried pull to pull within a
 session): a. no hint; b. the threshold only, factor learned from 1: the player's own line, or every line in the group
 (classes known, tank excluded; the estimator has one execute slot, so the highest line); c. a composition prior: the
 factor starts at 1 + executing DPS x (m - 1) x share (assumed m = 2, share = 1 / DPS count), then learns; wrong
 priors (share 1/8 each: too low; m = 3: too high); d. the same priors fixed (`execLearn = 0`), and x2 whatever the
-group; a ceiling (the true group factor below the top line, fixed).
+group; a reference (the true group factor below the top line, fixed: a ceiling for single lines, not for mixes).
 
 Scores on sets A / B, the other columns set A (lower is better; `run3.md`, `run3-b.md`):
 
 | strategy | run 3 score | rel med | post-crossing rel med | wrong ttd<8 | flips/min |
 |---|---|---|---|---|---|
-| a. no hint (default) | 0.842 / 0.834 | 0.18 | 0.27 | 6.1% | 14.07 |
-| b. own line, learned | 0.752 / 0.742 | 0.12 | 0.16 | 5.2% | 14.04 |
-| b. all lines, learned | 0.730 / 0.720 | 0.11 | 0.15 | 5.1% | 14.09 |
-| b. all lines, learned w=0.25 (`execLearn = 0.25`) | 0.715 / 0.707 | 0.10 | 0.13 | 5.0% | 14.00 |
-| b. all lines, learned, one factor across groups | 0.726 / 0.714 | 0.11 | 0.15 | 5.2% | 14.07 |
-| c. all lines, prior x2 equal share, learned | 0.722 / 0.712 | 0.11 | 0.14 | 5.1% | 14.05 |
-| c. prior too low (share 1/8), learned | 0.723 / 0.713 | 0.11 | 0.15 | 5.1% | 14.06 |
-| c. prior too high (x3), learned | 0.730 / 0.718 | 0.11 | 0.15 | 5.3% | 14.10 |
-| d. prior x2 equal share, fixed | 0.704 / 0.691 | 0.10 | 0.13 | 4.9% | 14.13 |
-| d. prior too low (share 1/8), fixed | 0.726 / 0.724 | 0.11 | 0.16 | 4.9% | 13.95 |
-| d. prior too high (x3), fixed | 0.811 / 0.786 | 0.16 | 0.24 | 6.5% | 14.54 |
-| d. x2 whatever the group, fixed | 0.821 / 0.795 | 0.16 | 0.24 | 6.7% | 14.69 |
-| ceiling | 0.691 / 0.678 | 0.09 | 0.11 | 4.7% | 13.97 |
+| a. no hint (default) | 0.834 / 0.829 | 0.18 | 0.27 | 6.1% | 14.04 |
+| b. own line, learned | 0.745 / 0.741 | 0.12 | 0.16 | 5.2% | 14.00 |
+| b. all lines, learned | 0.724 / 0.715 | 0.11 | 0.15 | 5.0% | 14.05 |
+| b. all lines, learned w=0.25 (`execLearn = 0.25`) | 0.712 / 0.702 | 0.11 | 0.14 | 4.9% | 14.06 |
+| b. all lines, learned, one factor across groups | 0.717 / 0.711 | 0.11 | 0.15 | 5.0% | 14.01 |
+| c. all lines, prior x2 equal share, learned | 0.716 / 0.706 | 0.11 | 0.14 | 4.9% | 14.04 |
+| c. prior too low (share 1/8), learned | 0.718 / 0.710 | 0.11 | 0.14 | 5.0% | 14.03 |
+| c. prior too high (x3), learned | 0.721 / 0.714 | 0.11 | 0.15 | 5.1% | 14.05 |
+| d. prior x2 equal share, fixed | 0.694 / 0.686 | 0.10 | 0.12 | 4.7% | 13.96 |
+| d. prior too low (share 1/8), fixed | 0.721 / 0.717 | 0.11 | 0.16 | 4.9% | 13.96 |
+| d. prior too high (x3), fixed | 0.796 / 0.783 | 0.16 | 0.24 | 6.2% | 14.33 |
+| d. x2 whatever the group, fixed | 0.805 / 0.791 | 0.16 | 0.23 | 6.3% | 14.51 |
+| reference: true factor at the top line | 0.683 / 0.676 | 0.09 | 0.12 | 4.5% | 13.95 |
 
-The right prior's fixed row is near the ceiling only because its assumptions (m = 2, equal shares) are the lab
-generator's means. A fixed factor that is too low is cheap in groups but not solo (solo 35: 1.132 vs 0.958 learned);
-one that is too high loses to no hint where one DPS executes (g1 20 me: 0.718 vs 0.677). On the run 1 and run 2
-classes (`run3old`: the player believed a 20% executor, members unknown, each fight a new group, so a prior is never
-corrected; most of those fights have no execute), threshold-only learning is harmless (old score 0.845-0.847 vs
-0.843) and every prior above 1 costs (too low 0.871, x2 equal share 0.971-0.973, x3 1.079; set A).
-Learning weight (`run3 --list learn`): threshold-only best at `execLearn` 0.15-0.35 (0.25: 0.715 / 0.707 vs 0.730 /
-0.720 at the default 0.5); the default stays 0.5 (Run 2's classes gain 0.004-0.008 at 0.25, old-class flips +0.8-1%).
+The gain follows the group factor. One executing DPS of four (five compositions, factor about 1.15-1.3): score
+0.725 / 0.687 with no hint, 0.701 / 0.660 learned at 0.5, 0.685 / 0.644 at 0.25, 0.663 / 0.638 with the right fixed
+composition factor, 0.732 / 0.706 with the x3 one; wrong side ttd<8 5.0% -> 4.9% learned, 4.4% fixed right. Two or
+more executors, or solo: ttd<8 5.5-9.3% -> 4.2-7.2% learned. The right prior's fixed row is near the reference only
+because its assumptions (m = 2, equal shares) are the lab generator's means. A fixed factor that is too low is cheap
+in groups but not solo (solo 35: 1.128 vs 0.965 learned); one that is too high loses to no hint where one DPS
+executes (g1 20 me: 0.682 vs 0.657). On the run 1 and run 2 classes (`run3old`: the player believed a 20% executor,
+members unknown, each fight a new group, so a prior is never corrected; most of those fights have no execute),
+threshold-only learning is harmless (old score 0.845-0.847 vs 0.843) and every prior above 1 costs (too low 0.871,
+x2 equal share 0.971-0.973, x3 1.079; set A). Learning weight (`run3 --list learn`): threshold-only best at
+`execLearn` 0.15-0.25 (0.25: 0.712 / 0.702 vs 0.724 / 0.715 at the default 0.5; 0.1 is best with one executor but
+slow with four); the default stays 0.5 (Run 2's classes gain 0.004-0.008 at 0.25, old-class flips +0.8-1%).
 
 ## Not covered
 

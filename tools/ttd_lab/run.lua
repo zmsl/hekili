@@ -1,6 +1,7 @@
 -- tools/ttd_lab/run.lua: the TTD lab. From the repo root: lua5.1 tools/ttd_lab/run.lua
--- [main|sweep|holdout|run2|tune|test|all] [--scale x] [--round n] (sweep round, default the last) [--set A|B|C] (seed
--- set: holdout defaults to B, run2 and tune to A). Prints markdown tables (tools/ttd_lab/README.md explains them).
+-- [main|sweep|holdout|run2|tune|drops|run3|run3old|test|all] [--scale x] [--round n] (sweep round, default the last)
+-- [--set A|B|C] (seed set: holdout defaults to B, the others to A) [--list name] (tune grids; run3: learn). Prints
+-- markdown tables (tools/ttd_lab/README.md explains them).
 package.path = "tools/ttd_lab/?.lua;" .. package.path
 
 local S, O, Real = require("scenarios"), require("observe"), require("real")
@@ -1026,8 +1027,12 @@ local function runSet3(set, algos)
             local group = S.group(comp, sseed)
             factors[comp.name][s] = group
             local session = {}
+            -- pull seeds from their own generator: nearby seeds share a first draw (pack size, elite length) with
+            -- each other and with the group's first rate; the first draw here tracks it too, so it is burnt
+            local srng = require("rng").new(sseed + 17)
+            srng:next()
             for pi, len in ipairs(S.PULLS) do
-                local seed = sseed + pi * 131
+                local seed = srng:int(1, 2147483000)
                 local obs = O.build(S.build(len, seed, group), seed + 1)
                 obs.class, obs.session, obs.across = comp.name, session, across
                 local answers, made = {}, {}
@@ -1280,5 +1285,5 @@ function modes.all()
 end
 
 local t0 = os.clock()
-assert(modes[mode], "mode: main|sweep|holdout|test|all")()
+assert(modes[mode], "mode: main|sweep|holdout|run2|tune|drops|run3|run3old|test|all")()
 io.stderr:write(string.format("ttd lab %s done in %.1f s\n", mode, os.clock() - t0))
