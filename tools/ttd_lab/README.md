@@ -16,6 +16,7 @@ lua5.1 tools/ttd_lab/run.lua run3 [--set B]        # run 3: partial-group execut
 lua5.1 tools/ttd_lab/run.lua run3 --list learn     # run 3: execute learning weight grid (~3.5 min)
 lua5.1 tools/ttd_lab/run.lua run3old [--set B]     # run 3 strategies on the run 1 and run 2 classes (~2 min)
 lua5.1 tools/ttd_lab/run.lua idle [--set B]        # idle targets: stale anchors, clamped ranges (~7 min)
+lua5.1 tools/ttd_lab/run.lua run4 [--set B]        # run 4: real traces, lumpy/opener set, ranges (~12 min)
 ```
 
 `results/` holds the committed tables (`main.md`, `sweep-round1.md` ... `sweep-round5.md`, `holdout.md` (set B,
@@ -192,6 +193,32 @@ both (B); run 2 classes, run 3 tables and flips unchanged. Ranges are uncalibrat
 `staleAnchor = 0`, so their committed tables still reproduce. Learning weight (`run3 --list learn`): threshold-only best at
 `execLearn` 0.15-0.25 (0.25: 0.712 / 0.702 vs 0.724 / 0.715 at the default 0.5; 0.1 is best with one executor but
 slow with four); the default stays 0.5 (Run 2's classes gain 0.004-0.008 at 0.25, old-class flips +0.8-1%).
+
+## Run 4: real traces (`run.lua run4 [--set B]`, `results/run4.md`, `run4-b.md`)
+
+`trace.lua` replays TTDProbe traces (`traces/2026-11-21a.txt`: the owner's first 5 in-game kills, solo, open world,
+forced lockdown) as LibTimeToDie feeds its estimator: one estimator for the whole file on one clock, `Restart` on a
+target change or a gone stream, `Band` per band with its own time, the combat-start re-anchor of a stream with no
+crossing, reads every 0.1 s and one frame after each event. 56 of the 65 logged sink lines reproduce within 0.05 s
+(the rest: a deadband phase on one fight). Scores per read from combat (or the dying mob's first band) to its death:
+rel error, truth in [lo, hi], wrong side of 5 and 8 s, unknown, flips, "under 1/4" (truth > 3 s, est < truth / 4)
+and "read dead" (truth > 1 s, est < 0.5 s).
+
+`S.LUMPY` (`lumpy solo|instant|pair`): the traces' lump mix (72% small steps, 16% medium, 12% 10-15% chunks), the
+target at full before combat, the first damage 0-4 s after combat start (`instant`: the same frame), an opener
+burst, 6-40 s fights. Under run 4 every synthetic set uses LibHiddenValues' own band contract (`O.lhv`: full is the
+band 100..100, so the first damage is seen) and the library's combat re-anchor; runs 1-3 keep their observation and
+reproduce byte for byte.
+
+Two new defaults: `newAnchor = 0.1` (a first crossing less than 0.1 s after the anchor drops it: the first hit
+landed with the anchor, so the anchor's slope would be one hit over no time; the stream answers from the next 2% of
+crossings) and `rangeZ = 1.15` with `rangeMax = 3` (lo/hi also cover est x exp(-+1.15 u), u^2 = dVar x (1 / span +
+1 / left), at most 3x either way). Library -> new defaults, sets A / B: lumpy score 1.062 / 1.056 -> 1.024 / 1.015,
+old 0.837 / 0.835 -> 0.835 / 0.831, run 2 0.908 / 0.884 -> 0.897 / 0.877, idle 0.676 / 0.678 -> 0.672 / 0.662 (unknown
++0-1 point, fewer flips and wrong sides on every set; real fights unchanged: no same-frame pull among them). Truth in
+[lo, hi]: real 19.5% -> 85.2% (median hi:lo 1.11 -> 3.17), lumpy 13% -> 71%, old 17% -> 74%, run 2 14% -> 58%, idle 26%
+-> 94%. Tested and not kept (tables at 5175e0d15, `results/run4-candidates*.md`): the anchor at the first damage, a
+minimum seed time, an overdue hold, a lump-weighted fit, longer half-lives, ranges from the fit's own residuals.
 
 ## Not covered
 

@@ -64,7 +64,7 @@ local PREV = { detect = 0, execAhead = false, execLearn = 0 }
 -- "learnAll" (20% on every fight, one session across every class in run order). Sessions start empty per runSet.
 local function est(params, hints)
     -- run 1 and 2 rows: the anchor rule as they had it (no stale drop), and no run 4 rule
-    local p = { spread = false, staleAnchor = 0, newAnchor = 0, holdOverdue = false, rangeZ = 0 }
+    local p = { spread = false, staleAnchor = 0, newAnchor = 0, rangeZ = 0 }
     for k, v in pairs(params or {}) do
         p[k] = v
     end
@@ -884,7 +884,7 @@ end
 -- when the group changes). For the runner: algo.line (declared or false), algo.sess and algo.key (where the factor
 -- is kept), algo.measured (streams that measured a speed-up).
 local function est3(params, hints)
-    local p = { spread = false, newAnchor = 0, holdOverdue = false, rangeZ = 0 } -- run 3 as it ran (no run 4 rule)
+    local p = { spread = false, newAnchor = 0, rangeZ = 0 } -- run 3 as it ran (no run 4 rule)
     for k, v in pairs(params or {}) do
         p[k] = v
     end
@@ -1303,7 +1303,7 @@ local function ranges(set, params, classes)
             for i = 1, math.max(1, math.floor(COUNTS[c] * scale + 0.5)) do
                 local seed = SEED_BASE[set] + i * 7919 + (SEED_OFF[c] or #c) * 104729
                 local obs = O.build(S.build(c, seed), seed + 1)
-                local e = E.New(with({ newAnchor = 0, holdOverdue = false, rangeZ = 0 }, params)) -- run 3 as it ran
+                local e = E.New(with({ newAnchor = 0, rangeZ = 0 }, params)) -- run 3 as it ran
                 local P = obs.polls
                 for k = 1, #obs.k do
                     local kind, t = obs.k[k], obs.t[k]
@@ -1412,7 +1412,7 @@ for i, c in ipairs(S.LUMPY) do
 end
 local T4 = require("trace")
 T4.FILE = "tools/ttd_lab/traces/2026-11-21a.txt" -- central-needs/ttd-ingame-traces-2026-11-21a.txt
-local LIB = { staleAnchor = 12, newAnchor = 0, holdOverdue = false, rangeZ = 0 } -- the library (forever 3c62b18be)
+local LIB = { staleAnchor = 12, newAnchor = 0, rangeZ = 0 } -- the library (forever 3c62b18be)
 
 -- The library's feeding of one estimator; ranges against the truth go to `cov` (per class: n, inside, ratios).
 local function est4(params, cov)
@@ -1466,52 +1466,22 @@ local function est4(params, cov)
     end
 end
 
--- Candidates (each on top of the library's estimator). `--list` picks another list.
+-- The rows (each on top of the library's estimator). The rejected candidates (hitAnchor, seedTime, holdOverdue,
+-- lumpWeight, rangeOwn) and their tables are at commit 5175e0d15 (results/run4-candidates*.md).
 local RUN4 = {
     { "Library (lab defaults, staleAnchor 12)", {} },
     { "newAnchor 0.05", { newAnchor = 0.05 } },
     { "newAnchor 0.1", { newAnchor = 0.1 } },
     { "newAnchor 0.15", { newAnchor = 0.15 } },
     { "newAnchor 0.25", { newAnchor = 0.25 } },
-    { "seedTime 0.5", { seedTime = 0.5 } },
-    { "seedTime 1.5", { seedTime = 1.5 } },
-    { "hitAnchor", { hitAnchor = true } },
-    { "hitAnchor + newAnchor 0.25", { hitAnchor = true, newAnchor = 0.25 } },
-    { "hitAnchor + seedTime 1.5", { hitAnchor = true, seedTime = 1.5 } },
-    { "holdOverdue", { holdOverdue = true } },
     { "halfLife 10", { halfLife = 10 } },
     { "halfLife 15", { halfLife = 15 } },
     { "rangeZ 1", { rangeZ = 1 } },
     { "rangeZ 1.15", { rangeZ = 1.15 } },
     { "rangeZ 1.3", { rangeZ = 1.3 } },
-    { "newAnchor 0.1 + rangeZ 1.15", { newAnchor = 0.1, rangeZ = 1.15 } },
-    { "newAnchor 0.1 + holdOverdue + rangeZ 1.15", { newAnchor = 0.1, holdOverdue = true, rangeZ = 1.15 } },
+    { "Run 4 defaults (newAnchor 0.1, rangeZ 1.15)", { newAnchor = 0.1, rangeZ = 1.15 } },
 }
-local RUN4_LISTS = {
-    range = {
-        { "newAnchor 0.1", { newAnchor = 0.1 } },
-        { "newAnchor 0.1 + rangeZ 1.15", { newAnchor = 0.1, rangeZ = 1.15 } },
-        { "newAnchor 0.1 + rangeZ 1.15, rangeMax 2", { newAnchor = 0.1, rangeZ = 1.15, rangeMax = 2 } },
-        { "newAnchor 0.1 + rangeZ 1, rangeOwn", { newAnchor = 0.1, rangeZ = 1, rangeOwn = true } },
-        { "newAnchor 0.1 + rangeZ 1.3, rangeOwn", { newAnchor = 0.1, rangeZ = 1.3, rangeOwn = true } },
-    },
-    final = {
-        { "Library (lab defaults, staleAnchor 12)", {} },
-        { "newAnchor 0.1", { newAnchor = 0.1 } },
-        { "holdOverdue", { holdOverdue = true } },
-        { "rangeZ 1", { rangeZ = 1 } },
-        { "rangeZ 1.15", { rangeZ = 1.15 } },
-        { "rangeZ 1.3", { rangeZ = 1.3 } },
-        { "Recommended: newAnchor 0.1 + rangeZ 1.15", { newAnchor = 0.1, rangeZ = 1.15 } },
-        { "Recommended + holdOverdue", { newAnchor = 0.1, rangeZ = 1.15, holdOverdue = true } },
-    },
-    lump = {
-        { "Library (lab defaults, staleAnchor 12)", {} },
-        { "lumpWeight", { lumpWeight = true } },
-        { "lumpWeight + newAnchor 0.1", { lumpWeight = true, newAnchor = 0.1 } },
-        { "lumpWeight + halfLife 10", { lumpWeight = true, halfLife = 10 } },
-    },
-}
+assert(E.DEFAULTS.newAnchor == 0.1 and E.DEFAULTS.rangeZ == 1.15, "the run 4 defaults row is the estimator's defaults")
 local RUN4_SETS = {
     { "lumpy", S.LUMPY },
     { "old", S.CLASSES },
@@ -1547,9 +1517,6 @@ end
 
 function modes.run4()
     holdSet = holdSet or "A"
-    if tuneList then
-        RUN4 = assert(RUN4_LISTS[tuneList], "run4 --list: final|lump|range")
-    end
     O.lhv = true
     print("## Run 4: real traces, lumpy damage, opener timing (seed set " .. holdSet .. ", LHV band contract)\n")
     header()
@@ -1680,7 +1647,7 @@ function modes.run4()
                 )
             end
         end
-        if set[1] == "lumpy" or tuneList == "final" then
+        do
             local order = {}
             for a = #MAIN + 1, #res.algos do
                 order[#order + 1] = a
@@ -1688,9 +1655,7 @@ function modes.run4()
             perClass(res, order, "relMed", set[1] .. ": rel median", f)
             perClass(res, order, "wrongMean", set[1] .. ": wrong side", pct)
             perClass(res, order, "unknown", set[1] .. ": unknown", pct)
-            if tuneList == "final" then
-                perClass(res, order, "flipSum", set[1] .. ": excess flips/min", f)
-            end
+            perClass(res, order, "flipSum", set[1] .. ": excess flips/min", f)
         end
     end
 end

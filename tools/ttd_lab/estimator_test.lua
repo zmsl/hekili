@@ -296,6 +296,41 @@ check("by default a clamped fit's range covers the unclamped fit", function()
     assert(lo < 50, "lo " .. tostring(lo)) -- the truth is about 47 s
 end)
 
+-- TTD lab run 4 (real traces): a pull whose first hit lands in the frame of combat start (LibTimeToDie anchors the
+-- stream there), then 2% every 0.5 s: about 21 s to live after the first chunk.
+check("by default a first hit at the anchor does not read the mob as about to die", function()
+    local e = E.New()
+    e:Band(10, 100, 100) -- combat start: the library's re-anchor at full (LibHiddenValues' own full band)
+    e:Band(10.02, 87, 88) -- a 12% opener chunk one frame later
+    local c = 0
+    for k = 1, 10 do -- reads 0.3 s .. 3 s later; a crossing of 2% every 0.5 s from 10.52
+        local now = 10.02 + 0.3 * k
+        while 10.52 + 0.5 * c <= now do
+            e:Band(10.52 + 0.5 * c, 85 - 2 * c, 86 - 2 * c)
+            c = c + 1
+        end
+        local est = e:Get(now)
+        local truth = 21.5 - 0.3 * k
+        assert(est == nil or est > 0.25 * truth, k .. ": est " .. tostring(est) .. " vs about " .. truth)
+    end
+end)
+
+-- Lumpy damage as the owner's first in-game traces show it: 1, 1, 2 and 10% steps every 0.6 s (14% per 2.4 s).
+check("by default the range of a lumpy stream is wide enough to hold its truth", function()
+    local e = E.New()
+    e:Band(0, 100, 100)
+    local steps, p, t, k = { 1, 1, 2, 10 }, 100, 0, 0
+    while p > 30 do
+        k, t = k + 1, t + 0.6
+        p = p - steps[(k - 1) % 4 + 1]
+        e:Band(t, p - 1, p)
+    end
+    local est, lo, hi = e:Get(t + 0.01)
+    local truth = p / 14 * 2.4 -- at the mean rate
+    assert(lo <= truth and truth <= hi, string.format("truth %.2f outside [%.2f, %.2f], est %.2f", truth, lo, hi, est))
+    assert(hi / lo > 1.5, string.format("hi:lo %.2f", hi / lo))
+end)
+
 -- A first chunk one frame after the anchor, then 1% per 0.8 s: the noise the range learns from the first crossings
 -- can be huge (the anchor's slope is one hit over no time); the range stays bounded.
 check("the noise range stays within rangeMax of the estimate after a wild first crossing", function()
@@ -322,11 +357,7 @@ check("random streams never return a non-finite or negative estimate", function(
             staleAnchor = i % 4 * 3,
             clampRange = i % 2 == 0,
             newAnchor = i % 3 * 0.1,
-            holdOverdue = i % 2 == 1,
             rangeZ = i % 4 * 0.5,
-            lumpWeight = i % 5 == 0,
-            hitAnchor = i % 6 == 0,
-            seedTime = i % 7 * 0.3,
         })
         local t, lo = 0, 99 - math.floor(rng:uni(0, 60))
         if i % 6 == 0 then
@@ -359,7 +390,7 @@ check("random streams never return a non-finite or negative estimate", function(
 end)
 
 check("no allocation in the steady state, with hints and the detector firing", function()
-    local e = E.New({ holdOverdue = true, lumpWeight = true, hitAnchor = true })
+    local e = E.New()
     e:Hint("execute", 1, 20)
     local t = steady(e, 0, 100, 0.5, 10)
     e:Get(t)
