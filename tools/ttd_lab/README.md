@@ -183,8 +183,9 @@ percent: 1979, 1004, 678 s against a truth of 48), and the fit, clamped to 0.2 x
 
 Set A / B (`idle.md`): idle classes' rel p90 1.71 / 1.62 -> 0.21 / 0.20, rel median in the first 10 s of damage 0.73
 / 0.71 -> 0.10 / 0.10, wrong side 2.9% -> 2.6%, unknown 25.9% -> 26.9% (the idle itself is unknown for everyone),
-excess flips 0.85 / 0.90 -> 1.66 / 1.52 per minute (the estimate now reaches the decision range instead of sitting at
-thousands of seconds), score 0.693 / 0.691 -> 0.718 / 0.673 (the flip term). Run 1 classes 0.843 -> 0.844 (A), 0.835
+excess flips 0.85 / 0.90 -> 1.66 / 1.52 per minute (not traced per class; 12 s is quieter but misses short idles),
+score 0.693 / 0.691 -> 0.718 / 0.673 (the flip term). `clampRange` has no measured effect under `staleAnchor = 8`;
+it rests on the review's synthetic case. Run 1 classes 0.843 -> 0.844 (A), 0.835
 both (B); run 2 classes, run 3 tables and flips unchanged. Ranges are uncalibrated in general (truth inside lo/hi on
 18% of old-class polls, median hi:lo 1.04); `clampRange` alone lifts idle coverage in the first 10 s of damage from
 19% to 26%, `staleAnchor` removes most clamped cases (31%). The Run 1 and run 2 rows of `run.lua` (`est`) pin
