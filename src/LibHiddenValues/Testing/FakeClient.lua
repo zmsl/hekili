@@ -395,7 +395,9 @@ end)
 -- bar = { cooldownID, ... }, icon, essential, utility = { ... } (what the player placed, in order), secretId, secretIdx
 -- (in combat a refresh writes an item's
 -- cooldownID / a layout pass its layoutIndex secret), secretUnit (an item's auraDataUnit is secret while reads are;
--- unprobed), noUnit (a held item names no unit), shuffle (a layout pass hands the frames out in another order) }.
+-- unprobed), noUnit (a held item names no unit), shuffle (a layout pass hands the frames out in another order),
+-- quietSwap (on PLAYER_TARGET_CHANGED an Essential or Utility item refreshes only while it holds a target aura, as the
+-- client's do without a range check: one gone silent stays silent on the next target until a target UNIT_AURA) }.
 -- W.aura[unit][spellID] = { stacks =, expires = GetTime() at its end, duration = } on "player" and "target": the
 -- player's own auras (Fake.setAura). The viewers lay out at login and on Fake.cdmLayout(), refresh their items on
 -- UNIT_AURA and PLAYER_TARGET_CHANGED, push a tracked bar's SetMinMaxValues(0, duration) and SetValue(seconds left)
@@ -643,6 +645,7 @@ local function refreshItem(item)
     else
         item.auraInstanceID, item.auraDataUnit = nil, nil
     end
+    item.on = a and unit or nil
     local n = a and a.stacks or 0
     local fs = item.Icon and item.Icon.Applications or item.Applications and item.Applications.Applications
     if fs and hidden() then
@@ -697,7 +700,7 @@ local function layout(v) -- RefreshLayout: release every item, acquire max(#ids,
     for _, item in ipairs(rel) do
         pool.active[item] = nil
         item.cooldownID, item.layoutIndex, item.idx, item.cd = nil, nil, nil, nil
-        item.auraInstanceID, item.auraDataUnit, item.aura = nil, nil, nil
+        item.auraInstanceID, item.auraDataUnit, item.aura, item.on = nil, nil, nil, nil
         item:Hide()
         pool.inactive[#pool.inactive + 1] = item
     end
@@ -800,7 +803,19 @@ local function viewerEvent(v, event)
         if v.shown then
             layout(v)
         end
-    elseif v:IsVisible() then
+    elseif not v:IsVisible() then
+        return
+    elseif
+        event == "PLAYER_TARGET_CHANGED"
+        and W.cdm.quietSwap
+        and (v.which == "essential" or v.which == "utility")
+    then
+        for item in pairs(v.itemFramePool.active) do
+            if item.on == "target" then
+                refreshItem(item)
+            end
+        end
+    else
         refresh(v)
     end
 end

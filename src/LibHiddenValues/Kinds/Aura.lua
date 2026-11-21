@@ -33,6 +33,7 @@ local W = 0.01 -- seconds: a seconds bar's range below its edge
 local RESCAN = 30 -- frames between the feed's own item searches (the hooks announce every change they see)
 local WHAT = { up = true, stacks = true, left = true }
 local RELAYOUT = { UI_SCALE_CHANGED = true, DISPLAY_SIZE_CHANGED = true, LOADING_SCREEN_DISABLED = true }
+local AURAV = 2 -- viewer index of the last aura viewer (Cdm.lua): above it Essential and Utility
 lib.barLast = lib.barLast or {} -- the frame of a seconds bar's last counted firing
 lib.barFedAt = lib.barFedAt or {} -- the frame of the client's first push since the bar's priming or the last absence
 lib.barSoft = lib.barSoft or {} -- settling after an absence or a run (not a prime): its handles keep their band
@@ -261,10 +262,15 @@ local function feed(s)
             local a = rawget(item, "auraInstanceID")
             up = issecretvalue(a) or a ~= nil -- a secret: only tested, never compared
             if up then
+                s.swapped = nil
                 local u = rawget(item, "auraDataUnit")
                 if issecretvalue(u) or u ~= s.unit then
                     up = nil -- held on a secret, no or another unit: the item says nothing of this one (unknown)
                 end
+            elseif s.swapped and cdm.viewerOf[item] > AURAV then
+                -- an Essential or Utility item refreshes on a target change only while it holds a target aura: one
+                -- silent before may not have looked at the new target (unknown until it lights or a target UNIT_AURA)
+                up = nil
             end
         end
     end
@@ -429,6 +435,20 @@ function lib.event(event, ...)
     if cdm.EVENTS[event] then
         return lib.cdmEvent(event, ...)
     end
+    if event == "PLAYER_TARGET_CHANGED" or event == "UNIT_AURA" then -- UNIT_AURA: registered for the target only
+        local swapped = event == "PLAYER_TARGET_CHANGED" or nil
+        local srcs = lib.sources
+        for i = 1, #srcs do
+            local s = srcs[i]
+            if s.kind == "aura" and s.unit == "target" then
+                s.swapped, s.dirty = swapped, true
+            end
+        end
+        lib.wake()
+        if event == "UNIT_AURA" then
+            return
+        end
+    end
     if RELAYOUT[event] then
         local srcs = lib.sources
         for i = 1, #srcs do
@@ -499,7 +519,8 @@ end
 
 -- Every Cooldown Manager entry naming spell (as its spell, override, tooltip override or a linked spell), in catalogue
 -- order, with the client's plain facts: { cooldownID =, spellID =, overrideSpellID =, overrideTooltipSpellID =,
--- linkedSpellIDs = { ... }, category = its default category, placement = PLACE[viewer] showing it now or nil }; then
+-- linkedSpellIDs = { ... }, hasAura =, selfAura = (booleans as the client gives them, nil when not plain), category =
+-- its default category, placement = PLACE[viewer] showing it now or nil }; then
 -- whether the catalogue was read (out of combat). A consumer picks one and watches it with cooldown = cooldownID. A
 -- fresh array: a cold path.
 function lib:GetAuraEntries(spell)
@@ -519,6 +540,8 @@ function lib:GetAuraEntries(spell)
             overrideSpellID = f.overrideSpellID,
             overrideTooltipSpellID = f.overrideTooltipSpellID,
             linkedSpellIDs = links,
+            hasAura = f.hasAura,
+            selfAura = f.selfAura,
             category = cdm.catOf and cdm.catOf[id],
             placement = k and PLACE[k],
         }

@@ -203,9 +203,15 @@ end
 -- The catalogue: every cooldownID the Cooldown Manager can show, by each spell it names (its spell, override,
 -- tooltip override and linked spells), and each one's default category (the set it is in: these reads give the
 -- defaults, never the active layout's placement; Mode B needs them). Out of combat only (in-combat secrecy of these
--- reads is unprobed). Each entry's plain spell facts are kept for GetAuraEntries (a secret or odd one is left out).
+-- reads is unprobed). Each entry's plain spell facts and its hasAura and selfAura flags are kept for GetAuraEntries as
+-- the client gives them (a secret or odd one is left out; nothing is filtered on them).
 local function plain(v)
     return not issecretvalue(v) and type(v) == "number" and v or nil
+end
+local function flag(v)
+    if not issecretvalue(v) and type(v) == "boolean" then
+        return v
+    end
 end
 function cdm.catalogue()
     local CV = C_CooldownViewer
@@ -224,6 +230,8 @@ function cdm.catalogue()
                             overrideSpellID = plain(info.overrideSpellID),
                             overrideTooltipSpellID = plain(info.overrideTooltipSpellID),
                             linkedSpellIDs = {},
+                            hasAura = flag(info.hasAura),
+                            selfAura = flag(info.selfAura),
                         }
                         facts[id] = f
                         note(cds, id, info.spellID)
@@ -456,6 +464,7 @@ if lib.evf then
     for ev in pairs(cdm.EVENTS) do
         pcall(lib.evf.RegisterEvent, lib.evf, ev)
     end
+    pcall(lib.evf.RegisterUnitEvent, lib.evf, "UNIT_AURA", "target") -- ends a target swap's doubt (Kinds/Aura.lua)
 end
 
 function lib.cdmEvent(event, arg)

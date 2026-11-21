@@ -36,8 +36,14 @@ Manager gaps before a consumer's switch, below). Its in-game check: [in-game-tes
   ("cross": a bad frame, as a split; two in a row a desync). A step joining or leaving re-allocates the whole core.
   `lib.need` counts the 8 bars whenever a step and precision share a source (at step 1 too: the step can grow with
   the max); a `step` watch is now admitted (pool-limit) like points and precision.
+- Fix round 1 (review of 2026-11-21, owner rule "truths, not assumptions"): `Kinds/Aura.lua` marks every target aura
+  source `swapped` on PLAYER_TARGET_CHANGED; a silent Essential or Utility item then reads unknown until it is seen
+  held or a target UNIT_AURA arrives (registered for the target only, `Cdm.lua`). The viewers' RefreshData hook does
+  not clear it: it may run at the swap itself. The client refreshes such an item on a target change only while it
+  holds a target aura (no range check), so after A, B, A it can stay silent on A. `cdm.facts` keeps the client's
+  `hasAura` and `selfAura` as given (rows of `GetAuraEntries`; nothing filters on them).
 - `Testing/FakeClient.lua`: Essential and Utility viewers with item pools (`W.cdm.essential`, `W.cdm.utility`,
-  placed from the store at login too), `W.cdm.secretUnit`, `W.cdm.noUnit`, `Fake.secret`.
+  placed from the store at login too), `W.cdm.secretUnit`, `W.cdm.noUnit`, `W.cdm.quietSwap`, `Fake.secret`.
 - Probe facts owed: is `auraDataUnit` ever secret in combat (aura viewers, Essential, Utility)? Is an item's
   `cooldownID` ever secret in combat (its watches then read unknown)? Does an Essential item show its
   aura in combat as it does out of combat?
@@ -167,7 +173,7 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 | Two firings of a seconds bar on consecutive frames | that bar primes again (HOLD + SETTLE + 2 frames, the seconds come every frame; one more when a secret firing trails its push: `h:Latency()`); its handles keep their band meanwhile | forcing "below" would stick wrong after a fall followed at once by a refresh (review); a flip is wrong for a landing inside |
 | The first capability answer of a new watch | noted, not called | it is given inside `Watch`; the consumer reads `h:State()` after it |
 | `up` | the item's `auraInstanceID` secret or not nil, polled every frame, no bar | the proven presence read; it is plain to test |
-| Stacks and seconds while absent | the lowest band (0 stacks, 0 seconds), live | controller decision (review I1): an absent aura is a known value; `"live"` never comes without a band |
+| Stacks and seconds while absent | the lowest band (0 stacks, 0 seconds), live | controller decision (review I1): the item holding no aura of yours is a known reading (not proof of absence: F10 only the player's own auras, helpful ones on the player; F12 an item silent a whole fight with its aura up); `"live"` never comes without a band |
 | An aura up with no count | [0, lowest stacks bar edge): `[0, 2)` with `max`, `[0, 3)` with edges `{ 3 }` (lane C1; was 1 stack) | the client hides the count at 0 and 1 stack; the library reports what it sees (owner rule 2026-11-21) |
 | Linked, override and tooltip spells | they answer for the entry: whatever aura of it the client shows | the catalogue maps them to the cooldownID; the shown aura's spell is not read (review M2) |
 | `left` on an aura with no duration | the lowest band while up | the client pushes 0 seconds for it (review M3) |

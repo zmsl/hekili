@@ -225,7 +225,8 @@ describe("LibHiddenValues aura kind", function()
             for id, e in pairs(CATALOGUE) do
                 c[id] = e
             end
-            c[19] = { spellID = 5001, overrideSpellID = 5101, category = 0 }
+            c[19] = { spellID = 5001, overrideSpellID = 5101, category = 0, hasAura = false, selfAura = true }
+            c[11] = { spellID = 5001, category = 3, hasAura = true, selfAura = false }
             W.cdm.catalogue, W.cdm.essential = c, { 19 }
         end)
         local rows, read = lib:GetAuraEntries(5001)
@@ -241,10 +242,20 @@ describe("LibHiddenValues aura kind", function()
                 spellID = 5001,
                 overrideSpellID = 5101,
                 linkedSpellIDs = {},
+                hasAura = false, -- the client's facts as given: the library does not filter on them
+                selfAura = true,
                 category = 0,
                 placement = "essential",
             },
-            { cooldownID = 11, spellID = 5001, linkedSpellIDs = {}, category = 3, placement = "bar" },
+            {
+                cooldownID = 11,
+                spellID = 5001,
+                linkedSpellIDs = {},
+                hasAura = true,
+                selfAura = false,
+                category = 3,
+                placement = "bar",
+            },
         }, rows)
         assert.are.same({ rows[1] }, (lib:GetAuraEntries(5101)))
         assert.are.same({
@@ -584,6 +595,43 @@ describe("LibHiddenValues aura kind", function()
         Fake.event("PLAYER_REGEN_ENABLED")
     end)
 
+    it(
+        "reads an Essential target watch unknown after a target change until the item lights or the target's auras change",
+        function()
+            boot()
+            W.cdm.essential, W.cdm.quietSwap = { 14 }, true
+            local A = { [5004] = { stacks = 1, duration = 600, expires = GetTime() + 600 } }
+            W.aura.target = A
+            local up = watch({ unit = "target", cooldown = 14, what = "up" })
+            Fake.login()
+            Fake.tick(10)
+            assert.are.same({ 1, 1 }, band(up))
+            -- mob B: the lit item refreshes and goes silent; the library cannot tell that from an item that did not refresh
+            W.aura.target = {}
+            Fake.event("PLAYER_TARGET_CHANGED")
+            Fake.tick(3)
+            assert.are.equal("gone", (up:State()))
+            Fake.event("UNIT_AURA", "target") -- B's auras change: the item refreshed, silence is B's
+            Fake.tick(3)
+            assert.are.same({ 0, 0 }, band(up))
+            -- back to mob A, still debuffed: the silent item is not refreshed by the swap, so silence says nothing
+            W.aura.target = A
+            Fake.event("PLAYER_TARGET_CHANGED")
+            Fake.tick(3)
+            assert.are.equal("gone", (up:State()))
+            assert.is_nil(band(up)[1])
+            Fake.setAura("target", 5004, 1, 600) -- A's auras change: the item lights
+            Fake.tick(3)
+            assert.are.same({ 1, 1 }, band(up))
+            -- mob C, debuffed too: the lit item refreshes on the swap and lights again, read at once
+            W.aura.target = { [5004] = { stacks = 1, duration = 600, expires = GetTime() + 600 } }
+            Fake.event("PLAYER_TARGET_CHANGED")
+            Fake.tick(3)
+            assert.are.same({ 1, 1 }, band(up))
+            assert.are.same({}, Fake.errors)
+        end
+    )
+
     it("follows a target swap without priming", function()
         boot()
         W.aura.target = { [5002] = { stacks = 3, duration = 30, expires = GetTime() + 30 } }
@@ -813,7 +861,7 @@ describe("LibHiddenValues aura kind", function()
         lib:Watch("A", { kind = "aura", unit = "player", spell = 5001, what = "left", edges = { 1, 3 } }, count)
         lib:Watch("A", { kind = "aura", unit = "player", spell = 5001, what = "up" }, count)
         lib:Watch("A", { kind = "aura", unit = "target", spell = 5003, what = "stacks", edges = { 2 } }, count)
-        lib:Watch("A", { kind = "aura", unit = "player", cooldown = 14, what = "up" }, count) -- an Essential item
+        assert(lib:Watch("A", { kind = "aura", unit = "player", cooldown = 14, what = "up" }, count)) -- an Essential item
         W.cdm.essential = { 14 }
         Fake.setAura("player", 5004, 1, 600)
         W.unit.target = { health = 0.5 }

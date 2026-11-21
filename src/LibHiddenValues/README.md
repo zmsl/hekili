@@ -143,21 +143,25 @@ LHV:Watch("MyAddon", { kind = "aura", unit = "player", cooldown = 1234, what = "
 | Field | Meaning |
 |---|---|
 | `unit` | `"player"` or `"target"` (the only units the Cooldown Manager reads; another token is `unavailable, unproven`) |
-| `spell` | the aura's spell ID, a convenience: the library picks the entry, which is an assumption. Of the entries naming the spell (as their spell, override, tooltip override or a linked spell) that an item shows now, the one on the highest viewer (Tracked Bar, Tracked Buff icon, Essential, Utility); on one viewer, the first in catalogue order (category 0 to 8, then the client's order). The watch answers for that entry: whatever aura of it the client shows (a sibling linked aura reads as this one) |
+| `spell` | the aura's spell ID, a convenience: the library's own rule picks the entry, an assumption about which one you mean. To choose yourself, list the entries with `LHV:GetAuraEntries(spell)` and watch one with `cooldown =`. The rule: of the entries naming the spell (as their spell, override, tooltip override or a linked spell) that an item shows now, the one on the highest viewer (Tracked Bar, Tracked Buff icon, Essential, Utility); on one viewer, the first in catalogue order (category 0 to 8, then the client's order). The watch answers for that entry: whatever aura of it the client shows (a sibling linked aura reads as this one) |
 | `cooldown` | instead of `spell` (exactly one of the two): a Cooldown Manager cooldownID. The watch follows that entry only, wherever it is placed; the reasons are the same. `LHV:GetAuraEntries(spell)` lists the entries with the client's facts so you choose |
 | `what` | `"up"`: presence, `lo == hi`, 1 up and 0 not. `"stacks"`: the stack count. `"left"`: seconds left |
 | `edges` | `stacks`: whole numbers from 1 (1 has no bar: told only by the aura being absent, see below); `left`: seconds above 0.01 (required) |
 | `max` | `stacks` only: the top of the domain; alone it means every count from 1 to `max`: exact from 2 up, `[0, 2)` while up with no count shown. `max = 1` tells nothing beyond `up` (`[0, 1]` up or absent alike) |
 
-The library reports what the Cooldown Manager shows, never a guess: anything it cannot tell is unknown. An absent
-aura (the item shows it not up) is a known value: no stacks and no seconds, the lowest band (`0` to the lowest edge),
-`up` 0. A handle is unknown (`lo == nil`, `gone`) while no item shows it, while its viewer is hidden or in Edit Mode
-(or either reads secret), and while its item holds the aura on a unit the client keeps secret, names no unit, or
-names the other unit (a player watch whose entry shows the target's aura is unknown, not 0: a watch on each unit
-of one entry reads unknown on one of them while the aura is up on the other); before its first band it is
-`priming`. `"live"` always comes with a band. The client shows no count at 0 or 1 stack (a non-stacking aura shows
-none): an aura that is up with no count reads 0 to the lowest stacks edge above 1 (`[0, 2)` with `max`, `[0, 3)`
-with edges `{ 3 }`: no bar at 2), never 1; stacks edge 1 is told only by the aura being absent. `left` is the
+The library reports what the Cooldown Manager shows: anything the item cannot tell is unknown. `up` 0 (with no stacks
+and no seconds, the lowest band: `0` to the lowest edge) means the item holds no aura of yours now: the item's
+reading, not proof that the aura is absent. Measured limits: the Cooldown Manager shows only auras the player cast,
+and on the player only helpful ones (F10), so a partner's debuff reads 0; and an item stayed silent a whole fight
+while its aura was up (F12, Mark of the Wild). After a target change a target watch on an Essential or Utility item
+that has not lit is unknown until it lights or the target's auras change: such an item looks at the new target only
+when it held a target aura. A handle is unknown (`lo == nil`, `gone`) while no item shows it, while its viewer is
+hidden or in Edit Mode (or either reads secret), and while its item holds the aura on a unit the client keeps secret,
+names no unit, or names the other unit (a player watch whose entry shows the target's aura is unknown, not 0: a
+watch on each unit of one entry reads unknown on one of them while the aura is up on the other); before its first
+band it is `priming`. `"live"` always comes with a band. The client shows no count at 0 or 1 stack (a non-stacking
+aura shows none): an aura that is up with no count reads 0 to the lowest stacks edge above 1 (`[0, 2)` with `max`,
+`[0, 3)` with edges `{ 3 }`: no bar at 2), never 1; stacks edge 1 is told only by the item holding none. `left` is the
 tracked bar's value: an aura with no duration has a bar at 0 and reads the lowest band while it is up, which looks
 like "about to expire": watch `up` for such auras.
 `h:Domain()` returns `nil, 0, top`: 1 for `up`, `max` (or `math.huge`) for stacks, `math.huge` for seconds.
@@ -330,7 +334,7 @@ the reference consumer (`/lhvp`).
 | `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change, and `fn("aura", state, reason, h)` for each of the owner's aura handles whose answer changed; `fn("cdm", mode, reason)` when the managed-layout mode changes |
 | `LHV:GetCooldownManagerMode()`, `LHV:IsReloadPending()` | the managed layout's mode and reason; a pending reload and what for (the managed layout, above) |
 | `LHV:GetAuraSources()` | a fresh array, one `{ unit =, spell =, cooldown =, what =, handles =, bars =, active =, cooldownID =, placement =, state =, reason =, up = }` per aura source with a watch (`cooldown` the entry a watch by entry names, else nil; `cooldownID` the entry read now; `placement` `"bar"`, `"icon"`, `"essential"`, `"utility"` or nil; `up` true, false or nil for unknown); then `off, read, texts, values, refused, reads`: the Cooldown Manager is off, its catalogue was read, count texts and bar values forwarded, values a bar refused, item reads |
-| `LHV:GetAuraEntries(spell)` | a fresh array, one `{ cooldownID =, spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = { ... }, category =, placement = }` per Cooldown Manager entry naming the spell (as its spell, override, tooltip override or a linked spell), in catalogue order: the client's plain facts from its out-of-combat read (`category` the default one; `placement` as in `GetAuraSources`, nil when no item shows it); then `read` (the catalogue was read). Choose one and watch it with `cooldown =` |
+| `LHV:GetAuraEntries(spell)` | a fresh array, one `{ cooldownID =, spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = { ... }, hasAura =, selfAura =, category =, placement = }` per Cooldown Manager entry naming the spell (as its spell, override, tooltip override or a linked spell), in catalogue order: the client's plain facts from its out-of-combat read (`hasAura` and `selfAura` the client's booleans as given, nil when not plain; the library does not filter on them; `category` the default one; `placement` as in `GetAuraSources`, nil when no item shows it); then `read` (the catalogue was read). Choose one and watch it with `cooldown =` |
 | `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, splits`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now), splits (a position decode held one frame). The frame times cover the library's whole frame, the self-test's frames included while it runs; with nothing fed the driver stops and every rate and time reads 0 |
 | `LHV:GetPool()` | `made, cap, pointBars, pointCap, pointCapPerSource`: bars made (32 at login; frames are never destroyed), the cap (256), point bars in use, and the point caps (64, 8) |
 | `LHV:GetSources()` | a fresh array, one `{ kind =, unit =, power =, predicted =, handles =, bars =, mode =, max =, active = }` per source with a watch, in creation order (`kind`, `unit`, `power`, `predicted` are the source's key: watches differing in any of them do not share bars; `power` nil for health; `mode` `"edges"`, `"gray"` (position) or `"ring"` (point precision); `max` the plain max a power source cuts points with; `active`: fed every frame) |
