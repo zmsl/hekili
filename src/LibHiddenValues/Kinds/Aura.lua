@@ -45,30 +45,34 @@ local function sortMerge(list)
     return out
 end
 
--- Reads and checks the spec into the handle; returns an error text for bad-spec.
+-- Reads and checks the spec into the handle; returns an error code (lib.ERR) when it is bad.
 local function validate(spec, h)
+    local E = lib.ERR
     local unit, spell, what, edges, max = spec.unit, spec.spell, spec.what, spec.edges, spec.max
     if type(unit) ~= "string" or not unit:match("^%a%w*$") then
-        return "unit must be a unit token"
+        return E.UNIT_INVALID
     end
     if type(spell) ~= "number" or not (spell > 0) or spell % 1 ~= 0 then
-        return "spell must be a spell ID"
+        return E.SPELL_INVALID
     end
     if not WHAT[what] then
-        return 'what must be "up", "stacks" or "left"'
+        return E.WHAT_INVALID
     end
     if edges ~= nil and type(edges) ~= "table" then
-        return "edges must be a list"
+        return E.EDGES_INVALID
     end
     if max ~= nil and (type(max) ~= "number" or not (max >= 1) or max % 1 ~= 0) then
-        return "max must be a whole number of stacks, 1 or more"
+        return E.MAX_INVALID
     end
     local cut = {}
     if what == "stacks" then
         for i = 1, edges and #edges or 0 do
             local e = edges[i]
-            if type(e) ~= "number" or not (e >= 1) or e % 1 ~= 0 or (max and e > max) then
-                return "stacks edges must be whole numbers from 1 to max"
+            if type(e) ~= "number" or e % 1 ~= 0 then
+                return E.EDGES_INVALID
+            end
+            if not (e >= 1) or (max and e > max) then
+                return E.EDGES_OUT_OF_RANGE
             end
             cut[i] = e
         end
@@ -78,18 +82,21 @@ local function validate(spec, h)
             end
         end
         if #cut == 0 then
-            return "edges or max required"
+            return E.EDGES_REQUIRED
         end
     elseif what == "left" then
         for i = 1, edges and #edges or 0 do
             local e = edges[i]
-            if type(e) ~= "number" or not (e > W) then
-                return "seconds edges must be numbers above " .. W
+            if type(e) ~= "number" then
+                return E.EDGES_INVALID
+            end
+            if not (e > W) then
+                return E.EDGES_OUT_OF_RANGE
             end
             cut[i] = e
         end
         if #cut == 0 then
-            return "edges required"
+            return E.EDGES_REQUIRED
         end
     end
     cut = sortMerge(cut)

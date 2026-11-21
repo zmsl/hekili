@@ -82,6 +82,9 @@ describe("LibHiddenValues contract", function()
             STEP_INVALID = "step-invalid",
             POWER_REQUIRED = "power-required",
             POWER_INVALID = "power-invalid",
+            SPELL_INVALID = "spell-invalid",
+            WHAT_INVALID = "what-invalid",
+            MAX_INVALID = "max-invalid",
         }
         for k, v in pairs(want) do
             assert.are.equal(v, lib.ERR[k], k)
@@ -97,7 +100,10 @@ describe("LibHiddenValues contract", function()
         for _, s in ipairs({ "live", "priming", "pending", "gone", "paused", "suspended", "unavailable", "released" }) do
             assert.is_string(lib:GetMessage(s), s)
         end
-        for _, r in ipairs({ "ready", "api", "selftest", "error", "off", "unproven", "unknown-kind" }) do
+        for _, r in ipairs({ "ready", "api", "selftest", "error", "off", "unproven", "unknown-kind", "bad-spec" }) do
+            assert.is_string(lib:GetMessage(r), r)
+        end
+        for _, r in ipairs({ "cdm-off", "not-in-cdm", "cdm-not-tracked", "cdm-icon-only" }) do -- the aura kind's
             assert.is_string(lib:GetMessage(r), r)
         end
         assert.is_nil(lib:GetMessage("no-such-code"))

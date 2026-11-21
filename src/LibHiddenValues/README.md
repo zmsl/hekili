@@ -84,9 +84,9 @@ has no text for yet (enUS only for now). `GetMessage` also knows every state and
 | `SINK_INVALID` | `sink-invalid` | sink neither a function nor nil |
 | `KIND_INVALID` | `kind-invalid` | no kind, or not one of the major's |
 | `UNIT_INVALID` | `unit-invalid` | unit missing or not a token |
-| `EDGES_INVALID` | `edges-invalid` | edges not a list of numbers |
-| `EDGES_OUT_OF_RANGE` | `edges-out-of-range` | an edge outside (0.05, 100] |
-| `EDGES_REQUIRED` | `edges-required` | none of edges, step, points, precision |
+| `EDGES_INVALID` | `edges-invalid` | edges not a list of numbers (aura stacks: of whole numbers) |
+| `EDGES_OUT_OF_RANGE` | `edges-out-of-range` | an edge outside (0.05, 100]; aura stacks outside 1 to `max`, aura seconds 0.01 or less |
+| `EDGES_REQUIRED` | `edges-required` | none of edges, step, points, precision; aura stacks without edges or `max`, aura seconds without edges |
 | `STEP_INVALID` | `step-invalid` | step not a positive number |
 | `POWER_REQUIRED` | `power-required` | a power watch without `power` |
 | `POWER_INVALID` | `power-invalid` | `power` not a number |
@@ -94,6 +94,9 @@ has no text for yet (enUS only for now). `GetMessage` also knows every state and
 | `EDGE_LIMIT` | `edge-limit` | over the point caps |
 | `POOL_LIMIT` | `pool-limit` | points or precision over the 256-bar pool |
 | `PRECISION_INVALID` | `precision-invalid` | precision other than `"point"` |
+| `SPELL_INVALID` | `spell-invalid` | aura: spell not a whole number above 0 |
+| `WHAT_INVALID` | `what-invalid` | aura: what not `"up"`, `"stacks"` or `"left"` |
+| `MAX_INVALID` | `max-invalid` | aura: max not a whole number of 1 or more |
 
 ## Auras (from the Cooldown Manager)
 
@@ -140,6 +143,7 @@ yet; also after a reload in combat, until combat ends) or `unavailable` with one
 | `not-in-cdm` | no Cooldown Manager entry names this spell | nothing: the client cannot track it there |
 | `cdm-not-tracked` | an entry names it, but no tracked buff icon or bar shows it | place it in Tracked Buffs, or Tracked Bars for its timer |
 | `cdm-icon-only` | `what = "left"` on an aura shown as an icon | move it to Tracked Bars |
+| `bad-spec` | (`IsAvailable` only) a spec `Watch` would refuse; `Watch` returns its error code | nothing: fix the spec |
 
 The library only reports: telling the player is your addon's choice. `LHV:OnCapability(owner, fn)` calls
 `fn("aura", state, reason)` when the kind changes (`cdm-off`) and `fn("aura", state, reason, h)` for each of your aura

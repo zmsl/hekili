@@ -36,6 +36,9 @@ lib.ERR = {
     EDGE_LIMIT = "edge-limit",
     POOL_LIMIT = "pool-limit",
     PRECISION_INVALID = "precision-invalid",
+    SPELL_INVALID = "spell-invalid",
+    WHAT_INVALID = "what-invalid",
+    MAX_INVALID = "max-invalid",
 }
 
 -- Messages for error codes, handle states and capability reasons, per locale; enUS only for now.
@@ -46,9 +49,11 @@ lib.MESSAGES = {
         ["sink-invalid"] = "The sink must be a function or nil.",
         ["kind-invalid"] = "Unknown kind.",
         ["unit-invalid"] = "The unit must be a unit token.",
-        ["edges-invalid"] = "The edges must be a list of numbers.",
-        ["edges-out-of-range"] = "Every edge must be above 0.05 and at most 100 (percent).",
-        ["edges-required"] = "The spec needs edges, a step, points or a precision.",
+        ["edges-invalid"] = "The edges must be a list of numbers (whole numbers for aura stacks).",
+        ["edges-out-of-range"] = "An edge is out of range: percent above 0.05 and at most 100; aura stacks from 1 "
+            .. "to max; aura seconds above 0.01.",
+        ["edges-required"] = "The spec needs edges, a step, points or a precision (aura stacks: edges or max; "
+            .. "aura seconds: edges).",
         ["step-invalid"] = "The step must be a positive number.",
         ["power-required"] = "A power watch needs its power type (an Enum.PowerType number).",
         ["power-invalid"] = "The power type must be an Enum.PowerType number.",
@@ -56,11 +61,14 @@ lib.MESSAGES = {
         ["edge-limit"] = "Too many point thresholds: over the cap per value or in total (nothing was granted).",
         ["pool-limit"] = "Not enough bars left in the pool (nothing was granted).",
         ["precision-invalid"] = 'The precision must be "point" or nil.',
+        ["spell-invalid"] = "The spell must be a spell ID (a whole number above 0).",
+        ["what-invalid"] = 'The aura\'s what must be "up", "stacks" or "left".',
+        ["max-invalid"] = "The max must be a whole number of stacks, 1 or more.",
         ["max-unknown"] = "The maximum is not known (never read as a plain number).",
         live = "Live: a band is known.",
         priming = "Priming: the band is not known yet.",
         pending = "Pending: the self-test has not passed yet.",
-        gone = "Gone: the unit is not there or is dead.",
+        gone = "Gone: the unit is not there or is dead (an aura: its Cooldown Manager item cannot be read).",
         paused = "Paused by its owner.",
         suspended = "Suspended: no bar was free for it.",
         unavailable = "Unavailable.",
@@ -72,6 +80,11 @@ lib.MESSAGES = {
         off = "Switched off for this session.",
         unproven = "Not proven on this client yet.",
         ["unknown-kind"] = "Unknown kind.",
+        ["bad-spec"] = "The spec is not valid (Watch returns its error code).",
+        ["cdm-off"] = "The Cooldown Manager is off or missing: switch it on in Options.",
+        ["not-in-cdm"] = "No Cooldown Manager entry names this spell.",
+        ["cdm-not-tracked"] = "Not shown in the Cooldown Manager: place it in Tracked Buffs, or Tracked Bars.",
+        ["cdm-icon-only"] = "Shown as an icon, which has no timer: move it to Tracked Bars.",
     },
 }
 
