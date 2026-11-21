@@ -144,8 +144,8 @@ LHV:Watch("MyAddon", { kind = "aura", unit = "player", cooldown = 1234, what = "
 | `spell` | the aura's spell ID, a convenience: the library picks the entry, which is an assumption. Of the entries naming the spell (as their spell, override, tooltip override or a linked spell) that an item shows now, the one on the highest viewer (Tracked Bar, Tracked Buff icon, Essential, Utility); on one viewer, the first in catalogue order (category 0 to 8, then the client's order). The watch answers for that entry: whatever aura of it the client shows (a sibling linked aura reads as this one) |
 | `cooldown` | instead of `spell` (exactly one of the two): a Cooldown Manager cooldownID. The watch follows that entry only, wherever it is placed; the reasons are the same. `LHV:GetAuraEntries(spell)` lists the entries with the client's facts so you choose |
 | `what` | `"up"`: presence, `lo == hi`, 1 up and 0 not. `"stacks"`: the stack count. `"left"`: seconds left |
-| `edges` | `stacks`: whole numbers from 1 (1 is presence itself); `left`: seconds above 0.01 (required) |
-| `max` | `stacks` only: the top of the domain; alone it means every count from 1 to `max` (an exact count) |
+| `edges` | `stacks`: whole numbers from 1 (1 has no bar: told only by the aura being absent, see below); `left`: seconds above 0.01 (required) |
+| `max` | `stacks` only: the top of the domain; alone it means every count from 1 to `max`: exact from 2 up, `[0, 2)` while up with no count shown. `max = 1` tells nothing beyond `up` (`[0, 1]` up or absent alike) |
 
 The library reports what the Cooldown Manager shows, never a guess: anything it cannot tell is unknown. An absent
 aura (the item shows it not up) is a known value: no stacks and no seconds, the lowest band (`0` to the lowest edge),
@@ -185,7 +185,7 @@ yet; also after a reload in combat, until combat ends) or `unavailable` with one
 |---|---|---|
 | `cdm-off` | the Cooldown Manager is switched off (Options), the client says it is not available, or its viewers are missing | switch it on |
 | `not-in-cdm` | no Cooldown Manager entry names this spell (or has this cooldownID) | nothing: the client cannot track it there |
-| `cdm-not-tracked` | an entry names it, but no tracked buff icon or bar shows it | place it in Tracked Buffs, or Tracked Bars for its timer |
+| `cdm-not-tracked` | an entry names it (or the entry exists), but no item of the four viewers shows it | place it in Tracked Buffs, or Tracked Bars for its timer |
 | `cdm-icon-only` | `what = "left"` on an aura shown as an icon | move it to Tracked Bars |
 | `cdm-cooldown-only` | `stacks` or `left` on an aura shown only by an Essential or Utility item | place its aura entry in Tracked Buffs or Tracked Bars |
 | `bad-spec` | (`IsAvailable` only) a spec `Watch` would refuse; `Watch` returns its error code | nothing: fix the spec |

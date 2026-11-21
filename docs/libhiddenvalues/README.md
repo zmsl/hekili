@@ -34,7 +34,8 @@ Manager gaps before a consumer's switch, below). Its in-game check: [in-game-tes
   (`lib.grayFor(M)`, cached and trimmed as the rings): the percent-scale set misreads 3967 of 6400 as 62% when the
   client snaps right or to the nearest point. The ring decode cross-checks the cell against the quantum's points
   ("cross": a bad frame, as a split; two in a row a desync). A step joining or leaving re-allocates the whole core.
-  `lib.need` counts the 8 bars; a `step` watch is now admitted (pool-limit) like points and precision.
+  `lib.need` counts the 8 bars whenever a step and precision share a source (at step 1 too: the step can grow with
+  the max); a `step` watch is now admitted (pool-limit) like points and precision.
 - `Testing/FakeClient.lua`: Essential and Utility viewers with item pools (`W.cdm.essential`, `W.cdm.utility`,
   placed from the store at login too), `W.cdm.secretUnit`, `W.cdm.noUnit`, `Fake.secret`.
 - Probe facts owed: is `auraDataUnit` ever secret in combat (aura viewers, Essential, Utility)? Is an item's
@@ -108,9 +109,9 @@ from a click, alpha 0 holding with data flowing; ledger L1591, L1596, L1608); th
 
 - LibStub major `LibHiddenValues-1.0`, minor 5 (2: the aura kind; 3: stage 3; 4: CDM-2; 5: C1). Eight files after
   LibStub; the first calls `NewLibrary` and sets `lib.loading`, the others return unless it is set, the last
-  (`SelfTest.lua`) clears it. All state on `lib`; scripts are one-line dispatchers through `lib`. Nothing but the event frame is built before
-  `PLAYER_LOGIN`; a copy loaded after login (load on demand, or a newer minor) realises at once, keeps the frames and
-  re-primes every source.
+  (`SelfTest.lua`) clears it. All state on `lib`; scripts are one-line dispatchers through `lib`. Nothing but the
+  event frame is built before `PLAYER_LOGIN`; a copy loaded after login (load on demand, or a newer minor) realises
+  at once, keeps the frames and re-primes every source.
 - `Watch`, the handle (`Get`, `State`, `Domain`, `Exact`, `Latency`, `SetPaused`, `SetSink`, `SetPoints`, `Release`),
   `IsAvailable`, `OnCapability`, `SelfTest`, `GetSelfTest`, `GetStats`, `GetPool`, `GetSources`, `GetAuraSources`,
   `GetKinds`, `SetEnabled`, `GetMessage`, `ERR`,

@@ -219,6 +219,20 @@ describe("LibHiddenValues point precision", function()
         assert.are.equal(lib.ERR.POOL_LIMIT, err)
     end)
 
+    it("counts the position set beside a ring at step 1 too: the max can grow past 3175 later", function()
+        W.unit.player.max[0] = 3000
+        local edges = {}
+        for k = 1, 192 do
+            edges[k] = k / 3
+        end
+        assert.truthy(lib:Watch("A", { kind = "health", unit = "target", edges = edges }))
+        Fake.login()
+        assert.truthy(watch({ precision = "point" })) -- 192 + 57 fits
+        local x, err = watch({ step = 1 }) -- no extra bar at step 1 now, but 8 at 6400: counted
+        assert.is_nil(x)
+        assert.are.equal(lib.ERR.POOL_LIMIT, err)
+    end)
+
     it("counts every edge and point toward the pool when precision is asked (the step can grow later)", function()
         local edges = {}
         for k = 1, 195 do

@@ -516,7 +516,7 @@ function lib.need(s, add, swapH, swapList)
     if mode == "ring" then
         local r = lib.ringFor(M)
         bars, g = r and #r.curves or 0, r and r.g
-        if step and g and g > 1 then -- the position set beside the ring
+        if step then -- the position set beside the ring: counted at step 1 too (the step can grow with the max)
             bars = bars + NGRAY + 1
         end
     elseif prec and not M then -- no plain max yet (before login): the largest ring, and the position set beside it
