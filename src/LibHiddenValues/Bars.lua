@@ -838,7 +838,7 @@ end
 -- the cell moved one more or one less than the ring's own move dp (-HALF..HALF-1) says, with the ring moved at most
 -- DRIFT quanta. Half of such a change alone (the cell's bars landed without the ring's, or the ring's without the
 -- cell's) is a valid state N quanta off; regen moves 2-3 points per change (the owner's run of 2026-11-21), and two
--- changes can be in flight. A real move of N +- DRIFT quanta across a cell pays one frame.
+-- changes can be in flight. Any real move of N +- DRIFT quanta (42-58, wherever it starts) pays one frame.
 local DRIFT = 8
 local function suspect(q0, q)
     local dp = (q - q0 + HALF) % N - HALF
@@ -846,11 +846,14 @@ local function suspect(q0, q)
     return (off == N or off == -N) and dp <= DRIFT and dp >= -DRIFT
 end
 
--- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (a split, or
--- a suspect ring decode: s.qv keeps the last accepted value). A desync (the source primes again) is a bad frame after
--- a bad one with no firing in between, or SETTLE bad frames in a row: a lost firing leaves the bars invalid once the
--- firings stop, while two changes on adjacent frames, each split over two frames, are invalid two frames in a row
--- with firings still landing (the owner's run of 2026-11-21: 4 desyncs in 2.5 min at ~10 changes/s).
+-- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (a split; a
+-- suspect ring decode; the first valid ring decode after bad frames, which may be half of a change across a cell too
+-- far from the stale s.qv to look suspect, review I1). s.qv keeps the last accepted value; the frame after a hold takes
+-- any valid decode. A desync (the source primes again) is a bad frame after a bad one with no firing in between, or
+-- SETTLE frames in a row without a call (bad frames, a hold before one counted; h:Latency()): a lost firing leaves the
+-- bars invalid once the firings stop, while two changes on adjacent frames, each split over two frames, are invalid
+-- two frames in a row with firings still landing (the owner's run of 2026-11-21: 4 desyncs in 2.5 min at ~10
+-- changes/s).
 function lib.decodeSource(s)
     local mode = s.mode
     if not mode then
@@ -868,7 +871,7 @@ function lib.decodeSource(s)
         bad, q = ringDecode(s)
     end
     if bad then
-        s.bad = s.bad + 1
+        s.bad, s.pend = s.bad + (s.pend and 2 or 1), nil -- a hold before counts: SETTLE caps the frames without a call
         if s.bad >= SETTLE or (s.bad >= 2 and (s.firedAt or -1) < lib.frameNo - 1) then
             lib.desyncs = lib.desyncs + 1
             lib.reprime(s)
@@ -884,7 +887,7 @@ function lib.decodeSource(s)
             if q ~= pend and s.bad == 0 then
                 lib.splits = lib.splits + 1
             end
-        elseif s.ok and s.bad == 0 and suspect(s.qv, q) then -- after a bad frame the decode already waited its frame
+        elseif s.ok and (s.bad > 0 or suspect(s.qv, q)) then -- after bad frames s.qv is stale: hold (review I1)
             s.pend, s.dirty = q, true -- not a bad frame; decode again next frame with no new firing
             return false
         end

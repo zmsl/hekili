@@ -388,6 +388,8 @@ describe("LibHiddenValues point precision", function()
             assert.are.same({ 61, 62 }, lohi(s)) -- held
             lib.fire(i)
             Fake.tick(1)
+            assert.are.same({ 61, 62 }, lohi(s)) -- the first valid decode after a bad frame is held too (review I1)
+            Fake.tick(1)
             assert.are.same({ 62, 63 }, lohi(s))
             assert.are.equal(splits + 1, select(8, lib:GetStats()))
             assert.are.equal(0, select(6, lib:GetStats()))
@@ -514,6 +516,8 @@ describe("LibHiddenValues point precision", function()
             assert.are.same({ 0, 4000 }, lohi(p))
             assert.are.same({ 3996, 3999 }, lohi(h))
             lib.fire(i) -- the late firing
+            Fake.tick(1)
+            assert.are.same({ 0, 4000 }, lohi(p)) -- the first valid decode after a bad frame is held too (review I1)
             Fake.tick(1)
             assert.are.same({ 4002, 6400 }, lohi(p))
             assert.are.same({ 4005, 4008 }, lohi(h))
@@ -712,6 +716,85 @@ describe("LibHiddenValues point precision", function()
             end
         end)
 
+        -- Moves the mana to v with part of the change's core firings not arrived yet ("one": its first changed ring
+        -- bar; "cell": its cell code and parity bars); returns those bars, for the caller to fire a frame later.
+        local function move(v, late)
+            local s, st = h.src, lib.barState
+            local before = {}
+            for k = 1, #s.core do
+                before[k] = st[s.core[k]]
+            end
+            mana(v)
+            Fake.tick(1)
+            local out = {}
+            for k = 1, #s.core do
+                local i = s.core[k]
+                local ring = k <= lib.RING_N
+                if st[i] ~= before[k] and ring == (late == "one") and not (late == "one" and #out > 0) then
+                    st[i] = not st[i]
+                    out[#out + 1] = i
+                end
+            end
+            return out
+        end
+
+        local function fire(bars)
+            for k = 1, #bars do
+                lib.fire(bars[k])
+            end
+        end
+
+        -- Every value the sink was given was one the client held (review I1: a bad run ending on a half-landed change
+        -- across a cell read 1200, 50 off, when its first valid decode was taken unchecked).
+        local function onlyHeld(list)
+            local ok = {}
+            for k = 1, #list do
+                ok[list[k]] = true
+            end
+            for k = 1, #seen do
+                assert.is_true(seen[k] == "nil" or ok[seen[k]] == true, tostring(seen[k]))
+            end
+        end
+
+        -- Changes on adjacent frames, each with a bar a frame late (the last, onto 1250, its cell bars), so the decode
+        -- is bad while firings land. Review I1: the first valid decode after bad frames read 1200, 50 off, the client
+        -- never held it (s.qv is stale then: from 1241 the ring moved 9, from 1400 a spend, neither looked suspect).
+        -- Review I3: the first call came on frame 5 while h:Latency() said 3; the measured frames are listed.
+        for _, case in ipairs({
+            { 4, 1247, 1248, 1250 },
+            { 5, 1246, 1247, 1248, 1250 },
+            { 5, 1241, 1244, 1247, 1250 },
+            { 4, 1400, 1248, 1250 },
+            { 6, 1236, 1237, 1238, 1239 },
+            { 6, 1246, 1247, 1248, 1249, 1250 },
+        }) do
+            local chain = { unpack(case, 2) }
+            it("reports only values the client held, within h:Latency(): " .. table.concat(chain, ", "), function()
+                start(chain[1])
+                local frames, late = 0, nil -- frames from the first change to the first call
+                for k = 2, #chain do
+                    local l = move(chain[k], chain[k] == 1250 and "cell" or "one")
+                    frames = frames + 1
+                    if late then
+                        fire(late)
+                    end
+                    late = l
+                end
+                while #seen == 0 and frames < 12 do
+                    Fake.tick(1)
+                    frames = frames + 1
+                    fire(late)
+                    late = {}
+                end
+                assert.are.equal(case[1], frames)
+                assert.is_true(frames * lib.frameSec <= h:Latency() + 1e-9, "frames " .. frames)
+                Fake.tick(2)
+                onlyHeld(chain)
+                assert.are.equal(chain[#chain], seen[#seen])
+                assert.are.equal(0, select(6, lib:GetStats()))
+            end)
+        end
+
         it("still catches a lost firing while the value changes every frame", function()
             start(1234)
             mana(1235)
@@ -729,16 +812,18 @@ describe("LibHiddenValues point precision", function()
             end
         end)
 
-        -- A minute of regen (+2 or +3 every 5 to 7 frames) and a spend every 1 to 4 s, each firing 1 or 2 frames late
-        -- (lag 1, jitter 1: harsher than the run, where about 28% of the changes split).
+        -- A minute of regen (+2 or +3 every 5 to 7 frames) and a spend of 60-259 every 1 to 4 s from the max, each
+        -- firing 1 or 2 frames late (lag 1, jitter 1: harsher than the run, where about 28% of the changes split). The
+        -- spends outrun the regen by about 40 mana/s: the minute sweeps the range from the max down to 36 (70 frames
+        -- below 100); review M1: the old model sat below 100 mana for 3124 of its 3600 frames.
         it("keeps exact mana through a minute of regen with every firing 1-2 frames late: no desync", function()
             W.unit.player.max[0] = 2479
-            start(1000)
+            start(2479)
             Fake.set("lag", 1)
             Fake.set("jitter", 1)
-            local m, r, nextRegen, nextSpend, hist = 1000, 12345, 6, 120, {}
-            local function rnd(n)
-                r = (r * 1103515245 + 12345) % 2147483648
+            local m, r, nextRegen, nextSpend, hist, low = 2479, 12345, 6, 120, {}, 2479
+            local function rnd(n) -- Park-Miller: exact in doubles
+                r = r * 16807 % 2147483647
                 return math.floor(r / 65536) % n
             end
             local far = {}
@@ -757,12 +842,14 @@ describe("LibHiddenValues point precision", function()
                     m, nextRegen = math.min(2479, m + 2 + rnd(2)), 5 + rnd(3)
                 end
                 if nextSpend <= 0 then
-                    m, nextSpend = math.max(0, m - 100 - rnd(300)), 60 + rnd(180)
+                    m, nextSpend = math.max(0, m - 60 - rnd(200)), 60 + rnd(180)
                 end
                 mana(m)
                 hist[#hist + 1] = m
+                low = math.min(low, m)
                 Fake.tick(1)
             end
+            assert.are.equal(36, low) -- the sweep reached the bottom
             Fake.set("jitter", 0)
             Fake.tick(6)
             assert.are.equal(0, select(6, lib:GetStats()))

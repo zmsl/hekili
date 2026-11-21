@@ -452,14 +452,16 @@ function H:Exact()
 end
 
 -- Worst-case seconds from a change to its callback: a one-edge handle on an edges-only source is called in the frame of
--- the push, a handle on several edges one frame later, any handle on a position or precision source one more (a split
--- holds the decode a frame). An aura handle (the Cooldown Manager's own delay aside): `up` one frame later; stacks once
--- the bar settled (SETTLE frames after the client's first push, plus one); seconds refreshed as they fall through an
--- edge prime the bar again first (HOLD + SETTLE, plus the fall's frame, the push and a secret firing a frame late).
--- Measured in the fake (aura_timing_spec): 2, 4 and 10 (11 a frame late).
+-- the push, a handle on several edges one frame later, any handle on a position or precision source in SETTLE + 2
+-- frames: the push's frame, at most SETTLE decodes without a call while firings land (bad frames and holds; the
+-- desync rule caps them), then a call with the value or, after a desync, unknown (measured in the fake by a chain of
+-- split changes ending on a held jump: precision_spec). An aura handle (the Cooldown Manager's own delay aside): `up`
+-- one frame later; stacks once the bar settled (SETTLE frames after the client's first push, plus one); seconds
+-- refreshed as they fall through an edge prime the bar again first (HOLD + SETTLE, plus the fall's frame, the push and
+-- a secret firing a frame late). Measured in the fake (aura_timing_spec): 2, 4 and 10 (11 a frame late).
 function H:Latency()
     local mode = self.src and self.src.mode
-    local n = mode and 3 or self.single and 1 or 2
+    local n = mode and lib.SETTLE + 2 or self.single and 1 or 2
     if self.kind == "aura" then
         n = self.what == "up" and 2 or self.what == "stacks" and lib.SETTLE + 1 or lib.HOLD + lib.SETTLE + 3
     end

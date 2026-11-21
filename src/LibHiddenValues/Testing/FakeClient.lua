@@ -18,8 +18,8 @@
 -- library makes none). Knobs: "closed" (bars fed a secret stop firing: the leak is closed), "lag" n (firings arrive n
 -- frames late), "secretlag" n (a fill set from a secret fires n frames later still), "drop" n (every nth firing is
 -- lost), "stagger" n (every nth firing queued arrives one frame later than the rest: one change's firings split over
--- two frames), "jitter" n (each firing 0 to n frames later still, drawn per firing from a generator seeded by "seed":
--- repeatable), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit),
+-- two frames), "jitter" n (each firing 0 to n frames later still, drawn per firing from a generator seeded by "seed",
+-- 1 to 2^31 - 2: repeatable), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit),
 -- "refuse" name (that global function raises). The Cooldown Manager (the aura kind's source): W.cdm, W.aura,
 -- Fake.setAura, Fake.cdmLayout, Fake.cdmEnable, Fake.viewers, Fake.touched, Fake.hooks; see the comment above its
 -- viewers. W.cdm.unlearned ({ [cooldownID] = true }: no item, left out of the learned set); W.classID (11 by
@@ -183,8 +183,8 @@ local qClip, qDue, qN, qCount = {}, {}, 0, 0
 local function queue(clip, extra)
     qN, qCount = qN + 1, qCount + 1
     local late = (K.stagger > 0 and qCount % K.stagger == 0) and 1 or 0
-    if K.jitter > 0 then -- each firing 0..jitter frames later still, drawn from a seeded generator (repeatable)
-        K.seed = (K.seed * 1103515245 + 12345) % 2147483648
+    if K.jitter > 0 then -- each firing 0..jitter frames later still: Park-Miller, exact in doubles (product < 2^46)
+        K.seed = K.seed * 16807 % 2147483647
         late = late + math.floor(K.seed / 65536) % (K.jitter + 1)
     end
     qClip[qN], qDue[qN] = clip, tickNo + K.lag + (extra or 0) + late
