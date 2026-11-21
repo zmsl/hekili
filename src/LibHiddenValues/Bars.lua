@@ -302,11 +302,15 @@ local function needPoint(mode, M, p, g)
     return mode == nil or (mode == "gray" and not (M and (p * 100) % M == 0))
 end
 
--- Every bar the handle rests on is there (false: the cap was reached, the handle is suspended).
+-- Every bar the handle rests on is there (false: the cap was reached or the client refused the curves its mode needs,
+-- the handle is suspended).
 local function served(s, h)
     local mode, M = s.mode, s.max
     if mode and not s.core[1] then
         return false
+    end
+    if (h.prec and mode ~= ((M and M > 100) and "ring" or "gray")) or (h.step and not mode) then
+        return false -- lib.sync fell back to a mode without its curves
     end
     local g = s.ring and s.ring.g
     for k = 1, #h.edges do
@@ -617,6 +621,12 @@ function lib.sync(s)
         mode, step = lib.modeOf(s)
     end
     local ring = mode == "ring" and lib.ringFor(M) or nil
+    if mode == "ring" and not ring then -- the client refused a ring curve at this max: no point precision here; the
+        mode = step and "gray" or nil -- other watches keep their bars, a precision handle is suspended (served)
+    end
+    if mode == "gray" and not lib.grayCurves() then -- refused too: edges only, a step handle is suspended
+        mode = nil
+    end
     local g = ring and ring.g
     -- a step beside a ring of step above 1 keeps the position set (owner L1624); at step 1 the ring gives one cell
     local gray = ring and g > 1 and step and lib.grayFor(M) or nil

@@ -74,7 +74,7 @@ lib.MESSAGES = {
         pending = "Pending: the self-test has not passed yet.",
         gone = "Gone: the unit is not there or is dead (an aura: its Cooldown Manager item cannot be read).",
         paused = "Paused by its owner.",
-        suspended = "Suspended: no bar was free for it.",
+        suspended = "Suspended: no bar was free for it, or the client refused the curves it needs.",
         unavailable = "Unavailable.",
         released = "Released.",
         ready = "Ready.",
@@ -384,7 +384,7 @@ function lib.stateOf(h)
         return "gone"
     end
     if not lib.served(s, h) then
-        return "suspended" -- the bar cap was reached
+        return "suspended" -- the bar cap was reached, or the client refused its curves
     end
     return lib.priming(s, h) and "priming" or "live"
 end

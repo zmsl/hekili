@@ -167,6 +167,48 @@ describe("LibHiddenValues point precision", function()
         assert.are.equal(lib.EXACT, select(4, h:Get()))
     end)
 
+    it(
+        "keeps the other watches' bars when the client refuses the ring's curves: precision alone is suspended",
+        function()
+            Fake.set("maxpoints", 150) -- a ring curve at 6400 needs ~170 points, the percent parity curve 201
+            W.unit.player.max[0] = 6400
+            mana(3000)
+            local prec = watch({ precision = "point" })
+            local other = watch({ points = { 1000 }, edges = { 25 } }) -- 25% is 1600 points
+            local step = watch({ step = 1 })
+            Fake.login()
+            untilLive(other)
+            Fake.tick(1)
+            assert.are.same({ 1600, 6400 }, lohi(other))
+            assert.are.equal("suspended", (prec:State()))
+            assert.is_nil((prec:Exact()))
+            assert.are.equal("suspended", (step:State())) -- no curve set gives it a cell either
+            assert.are.equal("edges", lib:GetSources()[1].mode)
+            mana(1200)
+            Fake.tick(2)
+            assert.are.same({ 1000, 1600 }, lohi(other))
+            prec:Release()
+            step:Release()
+            Fake.tick(2)
+            assert.are.same({ 1000, 1600 }, lohi(other)) -- its bars were never moved
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end
+    )
+
+    it("falls back to the 1% position when only the ring is refused and a step watch is there", function()
+        W.unit.player.max[0] = 6400
+        mana(3000)
+        local prec = watch({ precision = "point" })
+        local step = watch({ step = 1 })
+        lib.rings[6400] = false -- as when the client refused a ring curve at this max
+        Fake.login()
+        untilLive(step)
+        Fake.tick(1)
+        assert.are.same({ 46, 47 }, lohi(step)) -- 3000 of 6400: 46.9%
+        assert.are.equal("suspended", (prec:State()))
+        assert.are.equal("gray", lib:GetSources()[1].mode)
+    end)
+
     it("catches a lost fine firing: never a wrong value, primes again", function()
         local h = watch({ precision = "point" })
         Fake.login()
