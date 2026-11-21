@@ -168,13 +168,13 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 | The first capability answer of a new watch | noted, not called | it is given inside `Watch`; the consumer reads `h:State()` after it |
 | `up` | the item's `auraInstanceID` secret or not nil, polled every frame, no bar | the proven presence read; it is plain to test |
 | Stacks and seconds while absent | the lowest band (0 stacks, 0 seconds), live | controller decision (review I1): an absent aura is a known value; `"live"` never comes without a band |
-| An aura up with no count | 1 stack | the client hides the count at one stack |
+| An aura up with no count | [0, lowest stacks bar edge): `[0, 2)` with `max`, `[0, 3)` with edges `{ 3 }` (lane C1; was 1 stack) | the client hides the count at 0 and 1 stack; the library reports what it sees (owner rule 2026-11-21) |
 | Linked, override and tooltip spells | they answer for the entry: whatever aura of it the client shows | the catalogue maps them to the cooldownID; the shown aura's spell is not read (review M2) |
 | `left` on an aura with no duration | the lowest band while up | the client pushes 0 seconds for it (review M3) |
-| `stacks` edge 1 | presence, no bar | the count text is `""` for one stack or none |
+| `stacks` edge 1 | no bar: told only by the aura being absent | the count text is `""` for one stack or none |
 | A count of `""` or plain digits | `tonumber(text) or 0` | out of combat the client passes a string |
 | Identity | the item's `cooldownID` read at each use; secret: its `layoutIndex` in the order last read plain; both secret: the item is `gone` | frames reshuffle in combat; the in-combat secrecy of these fields is unprobed |
-| A shown aura on the other unit | not up for this watch | the item scans player then target; `auraDataUnit` says which (a secret one counts as this unit) |
+| A shown aura on the other unit | unknown (`gone`) for this watch (lane C1; was not up): a watch on each unit of one entry reads unknown on one while the aura is up on the other; a secret or absent unit is unknown too | the item scans player then target; whether a target aura can outrank a player one is unsettled, so 0 would be a guess |
 | Priming | a new bar holds low 4 frames, then counts; it is read `SETTLE` (4) frames after the client's first push (and again after each absence); after a prime the handle is unknown until then, after an absence or a run the band stands | a secret is never kept, so nothing can be re-fed; stacks come only when the count is rewritten; a firing can trail its push (review I2, as the percent prime settle) |
 | `IsAvailable(kind, spec)` | answers from the last read and asks for a new one next frame | it must not call capability callbacks (review M5) |
 | Errors | an errored aura kind's hooks return at once | a body raising every frame would re-sync every kind per call (review M1) |
@@ -185,7 +185,7 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 | Edit Mode "Hidden" or "In Combat" visibility | no reason of its own (`gone` while hidden) | the brief's reason list; `cdm-hidden` is left for a later stage |
 | Catalogue in combat | not read: `pending` until combat ends | in-combat secrecy of the catalogue reads is unprobed |
 | `SetMinMaxValues` hook | not built | seconds edges need only `SetValue`; the percent route through a secret max is closed (AuraBandProbe 0.2.1) |
-| Essential and Utility items | `cdm-not-tracked` | they give presence of a linked aura only (clean-room doc P2.3); Mode A serves the two aura viewers |
+| Essential and Utility items | `up` read (lane C1 G1); `stacks` and `left` `unavailable, cdm-cooldown-only` | they give presence of a linked aura only (clean-room doc P2.3); Mode A serves the two aura viewers |
 | Errors | an error in a hook, an event or a read turns the aura kind off (`error`); the other kinds carry on | the design's per-kind rule |
 
 ## Choices taken where the design left one open
@@ -199,7 +199,7 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 | Error codes (stage 3, L1616) | the brief's list plus `owner-invalid`, `spec-invalid`, `sink-invalid`, `kind-invalid` for the other refusals | every refusal gets a code; the API doc was not reachable from the lane |
 | Points units (stage 3) | a handle with `points` (or point precision) answers in points, every other in percent; `SetPoints` on a percent handle is `points-invalid` | a handle never changes units; Hekili's APL thresholds are points |
 | Point caps (stage 3, L1613) | 8 / 64 distinct points, each counted as edges mode would place it (with a bar), checked at the request; so a mode ending (a step or precision listener leaving) stays within them; a new max allocates without re-checking (the pool can still refuse: `suspended`) | admission control, never revocation; review I5 |
-| `pool-limit` | for points and point-precision requests only; plain percent edges over the pool stay `suspended` (stage 1 rule) | the brief scopes it to those requests |
+| `pool-limit` | for points, point-precision and (since lane C1) step requests; plain percent edges over the pool stay `suspended` (stage 1 rule) | the brief scopes it to those requests; a step joining a full precision source suspended the whole source |
 | Curve size (stage 3) | at most 256 points per curve (BandProbe2 D1: 256 accepted, 512 refused), so 127 guarded steps; the ring's point step grows past a max of 3175 | the brief's "256 steps" would build 513-point curves |
 | Mode changes (stage 3) | a step or point listener joining or leaving frees and allocates at once: the source's other handles go unknown for one prime (about 10 frames) when their bars move | shortcut: keep the old bars until the new set is live if this blinds consumers in practice |
 | Position split/desync (stage 3) | design 3.3: one bad decode holds the last band (`splits`), two in a row re-prime (`desyncs`) | as designed; the COARSE fallback is not built |

@@ -71,13 +71,15 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   `step` watch beside it still reads one 1% cell: while one is there the source also runs the 8 position bars (cut on
   whole points, so they agree with the exact value), and a cell that does not meet the exact value is held a frame,
   then primes again, as any disagreement. A `step` watch joining or leaving such a source primes it again (about 9
-  frames unknown). At step 1 the exact value already gives the cell: no extra bars. A one-step change is
-  never misread when its firings land within two frames: at a cell boundary (every 50 steps) the library holds one
-  frame when only half of the change's bars have landed. A larger jump whose firings land in two frames can read as
-  another value for that one frame, as on a `step` source; the probe runs saw no change split over two frames. A max
-  of 100 or less is the same as `step` (8 bars, exact). It is outside the point caps but inside the 256-bar pool,
+  frames unknown). At step 1 the exact value already gives the cell: no extra bars run (admission still counts
+  them: the max can grow past 3175). A one-step change is never misread when its firings land within two frames:
+  at a cell boundary (every 50 steps) the library holds one frame when only half of the change's bars have landed.
+  A larger jump whose firings land in two frames can read as another value for that one frame, as on a `step`
+  source; the probe runs saw no change split over two frames. A max of 100 or less is the same as `step` (8 bars,
+  exact). It is outside the point caps but inside the 256-bar pool,
   with every edge and point on the source counted (the step can grow with the max) and the 8 position bars when a
-  `step` watch is there: over it, `pool-limit`. A `step` watch is checked against the pool too.
+  `step` watch is there: over it, `pool-limit`. A `step` watch joining a precision source is admitted the same way
+  (counted, or refused with `pool-limit`), as a points or precision watch is.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
 other kind, token or option (focus or another power type, `points` or `precision` on health, the `focus` token, ...)
@@ -151,12 +153,13 @@ The library reports what the Cooldown Manager shows, never a guess: anything it 
 aura (the item shows it not up) is a known value: no stacks and no seconds, the lowest band (`0` to the lowest edge),
 `up` 0. A handle is unknown (`lo == nil`, `gone`) while no item shows it, while its viewer is hidden or in Edit Mode
 (or either reads secret), and while its item holds the aura on a unit the client keeps secret, names no unit, or
-names the other unit (a player watch whose entry shows the target's aura is unknown, not 0); before its first band it
-is `priming`. `"live"` always comes with a band. The client shows no count at 0 or 1 stack (a non-stacking aura
-shows none): an aura that is up with no count reads 0 to the lowest stacks edge above 1 (`[0, 2)` with `max`),
-never 1; stacks edge 1 is told only by the aura being absent. `left` is the tracked bar's value: an aura with no
-duration has a bar at 0 and reads the lowest band while it is up, which looks like "about to expire": watch `up` for
-such auras.
+names the other unit (a player watch whose entry shows the target's aura is unknown, not 0: a watch on each unit
+of one entry reads unknown on one of them while the aura is up on the other); before its first band it is
+`priming`. `"live"` always comes with a band. The client shows no count at 0 or 1 stack (a non-stacking aura shows
+none): an aura that is up with no count reads 0 to the lowest stacks edge above 1 (`[0, 2)` with `max`, `[0, 3)`
+with edges `{ 3 }`: no bar at 2), never 1; stacks edge 1 is told only by the aura being absent. `left` is the
+tracked bar's value: an aura with no duration has a bar at 0 and reads the lowest band while it is up, which looks
+like "about to expire": watch `up` for such auras.
 `h:Domain()` returns `nil, 0, top`: 1 for `up`, `max` (or `math.huge`) for stacks, `math.huge` for seconds.
 `h:Latency()` is the worst case from the Cooldown Manager's update to the call (its own delay is not counted): `up`
 2 frames; `stacks` `LHV.SETTLE + 1` (5); `left` `LHV.HOLD + LHV.SETTLE + 3` (11: a refresh as the seconds fall
