@@ -120,6 +120,7 @@ lib.NOPOINTS = lib.NOPOINTS or {} -- shared and never written: the points of a h
 for i = 1, #lib.reg do
     local h = lib.reg[i]
     h.points = h.points or lib.NOPOINTS
+    h.barless = h.barless or (h.kind == "aura" and h.what == "up") or nil
 end
 for i = 1, #lib.sources do
     local s = lib.sources[i]
@@ -152,8 +153,9 @@ end
 
 -- Capability ------------------------------------------------------------------------------------------------------
 
--- state "ready" | "pending" | "unavailable", reason (nil when not unavailable).
-function lib.capOf(kind)
+-- state "ready" | "pending" | "unavailable", reason (nil when not unavailable). barless: a watch that rests on no bar
+-- (an aura's presence): the bar self-test, pending or failed, does not gate it; every other reason does.
+function lib.capOf(kind, barless)
     if not lib.KNOWN[kind] then
         return "unavailable", "unknown-kind"
     end
@@ -174,6 +176,9 @@ function lib.capOf(kind)
     if why then
         return "unavailable", why
     end
+    if barless then
+        return "ready"
+    end
     if lib.stVerdict == false then
         return "unavailable", "selftest"
     end
@@ -185,11 +190,12 @@ end
 
 -- unit: a unit token, or a whole spec (the aura kind answers for its spell and what: placement reasons).
 function lib:IsAvailable(kind, unit)
-    local state, reason = lib.capOf(kind)
     local spec
     if type(unit) == "table" then
         spec, unit = unit, unit.unit
     end
+    local k = lib.kinds[kind]
+    local state, reason = lib.capOf(kind, spec and k and k.barless and k.barless(spec))
     if state ~= "unavailable" and unit ~= nil and not lib.kinds[kind].units[unit] then
         return false, "unavailable", "unproven"
     end
@@ -353,7 +359,7 @@ function lib.stateOf(h)
     if h.unproven then
         return "unavailable", h.unproven
     end
-    local state, reason = lib.capOf(h.kind)
+    local state, reason = lib.capOf(h.kind, h.barless)
     if state ~= "ready" then
         return state, reason
     end

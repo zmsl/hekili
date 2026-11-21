@@ -108,6 +108,7 @@ local function validate(spec, h)
         end
     end
     h.unit, h.spell, h.what, h.cut, h.edges = unit, spell, what, cut, bars
+    h.barless = what == "up" or nil -- presence uses no bar: the bar self-test does not gate it (lib.capOf)
     h.top = what == "up" and 1 or (what == "stacks" and max) or math.huge
     h.key = "aura|" .. unit .. "|" .. spell .. "|" .. what
     if not lib.kinds.aura.units[unit] then
@@ -135,6 +136,9 @@ lib.kinds.aura = {
     units = { player = true, target = true }, -- the Cooldown Manager reads these two only
     validate = validate,
     status = status,
+    barless = function(spec)
+        return spec.what == "up"
+    end,
     why = function()
         return cdm.off and "cdm-off" or nil
     end,
@@ -143,7 +147,7 @@ lib.kinds.aura = {
 -- Tells each owner of the source's handles that its answer changed: fn("aura", state, reason, h). quiet: only note
 -- the answer (the first one, given inside Watch: the consumer reads h:State() after it).
 function lib.auraTell(s, quiet)
-    local state, reason = lib.capOf("aura")
+    local state, reason = lib.capOf("aura", s.what == "up")
     if state == "ready" and s.cap then
         state, reason = s.cap, s.why
     end
@@ -197,7 +201,7 @@ local function sync(s)
             cdm.place()
         end
     end
-    local ready = lib.realised and lib.capOf("aura") == "ready" and not s.cap and s.cd ~= nil
+    local ready = lib.realised and lib.capOf("aura", s.what == "up") == "ready" and not s.cap and s.cd ~= nil
     if ready then
         for e, n in pairs(s.ref) do
             if n > 0 and not s.bar[e] then
@@ -454,7 +458,7 @@ function lib:GetAuraSources()
             for _ in pairs(s.bar) do
                 bars = bars + 1
             end
-            local state, reason = lib.capOf("aura")
+            local state, reason = lib.capOf("aura", s.what == "up")
             if state == "ready" and s.cap then
                 state, reason = s.cap, s.why
             end
