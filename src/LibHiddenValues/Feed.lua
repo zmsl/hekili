@@ -166,20 +166,26 @@ function lib.event(event, unit)
     end
 end
 
--- Pushes every bar of a fed source once: a priming bar its low level, then the live read. The read's result is used
--- once, behind issecretvalue: it is never compared, kept or passed on.
+-- Pushes every bar of a fed source once: a priming bar its low level, then the live read (the first one clears its
+-- state; the last settling one ends the prime). The read's result is used once, behind issecretvalue: it is never
+-- compared, kept or passed on.
 function lib.feed(s)
     local read = lib.kinds[s.kind].read
-    local prime, frames, curves, LOW = lib.barPrime, lib.barFrame, lib.curves, lib.LOW
+    local prime, frames, curves, LOW, LIVE = lib.barPrime, lib.barFrame, lib.curves, lib.LOW, lib.SETTLE + 1
     for e, i in pairs(s.bar) do
         local p = prime[i]
-        if p > 1 then
+        if p > LIVE then
             frames[i]:SetValue(LOW)
             prime[i] = p - 1
         else
+            if p == LIVE then
+                lib.barState[i] = false
+            end
+            if p > 0 then
+                prime[i] = p - 1
+            end
             if p == 1 then
-                lib.barState[i], prime[i], s.dirty = false, 0, true
-                s.seen, s.seenFrame = GetTime(), lib.frameNo
+                s.dirty, s.seen, s.seenFrame = true, GetTime(), lib.frameNo
             end
             local x = read(s, curves[e])
             if issecretvalue(x) or x ~= nil then

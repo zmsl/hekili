@@ -4,8 +4,10 @@
 -- 2 (at or above it); pushed into a StatusBar ranged 0-2 it fills half or all of it; a frame anchored to the fill
 -- texture gets OnSizeChanged when the fill changes, after the frame's scripts. That firing is plain. Its arguments
 -- are secret and never read: each bar keeps one plain boolean the firing flips (a toggle), so a bar needs a known
--- start: priming holds it at the plain low level for HOLD frames, clears the boolean, then feeds the live value
--- (it fires if and only if the value is at or above the edge).
+-- start: priming holds it at the plain low level for HOLD frames, clears the boolean, then feeds the live value (it
+-- fires if and only if the value is at or above the edge) and counts its firings for SETTLE more frames before the
+-- handle goes live: a secret push's firing can trail it by a frame (LHVProbe 2026-11-20), and a decode before it
+-- arrived reported the lowest band, then the real one with dir 1.
 -- The encoding stays internal: a handle reads its band through decode, so a position encoding can join the edges
 -- without changing the surface.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
@@ -13,11 +15,14 @@ if not (lib and lib.loading) then
     return
 end
 
-local HOLD = 4 -- frames at the low level before the live value (the run saw every firing in its own frame)
+local HOLD = 4 -- frames at the low level before the live value (the run saw every plain push fire in its own frame)
+-- frames the live push's firing may trail it: the self-test's limit for plain pushes (3), plus the frame a secret one
+-- was seen to add (BandProbe v1 counted 4 frames after the push: "IN window 4")
+local SETTLE = 4
 local LOW = 1 -- the curve's "below" output; "at or above" is 2
 local EPS = 0.0005 -- a guard point this far below each step (curve x scale 0-1), whichever way the client snaps
 local CAP = 256 -- bars are never destroyed (frames cannot be): a hard ceiling on the pool
-lib.HOLD, lib.LOW, lib.POOL = HOLD, LOW, 32
+lib.HOLD, lib.SETTLE, lib.LOW, lib.POOL = HOLD, SETTLE, LOW, 32
 
 -- Bars made (frames are never destroyed) and the cap.
 function lib:GetPool()
@@ -28,7 +33,9 @@ lib.barFrame = lib.barFrame or {}
 lib.barClip = lib.barClip or {}
 lib.barSrc = lib.barSrc or {} -- the source a bar serves (lib.ST: the self-test), nil when free
 lib.barState = lib.barState or {} -- plain: the value is at or above the bar's edge
-lib.barPrime = lib.barPrime or {} -- frames of priming left: > 1 hold low, 1 feed live next, 0 live
+-- frames of priming left: > SETTLE + 1 hold low, SETTLE + 1 feed live next, 1..SETTLE settling (fed live, firings
+-- counted), 0 live
+lib.barPrime = lib.barPrime or {}
 lib.free = lib.free or {}
 lib.curves = lib.curves or {} -- one per edge, shared by every source
 lib.ST = lib.ST or {}
@@ -94,7 +101,7 @@ function lib.allocBar(owner, e)
     local i = free[#free]
     free[#free] = nil
     lib.curveFor(e)
-    lib.barSrc[i], lib.barState[i], lib.barPrime[i] = owner, false, HOLD + 1
+    lib.barSrc[i], lib.barState[i], lib.barPrime[i] = owner, false, HOLD + SETTLE + 1
     return i
 end
 
@@ -106,7 +113,7 @@ end
 -- Every bar of the source primes; its handles go unknown until they are live again.
 function lib.reprime(s)
     for _, i in pairs(s.bar) do
-        lib.barPrime[i] = HOLD + 1
+        lib.barPrime[i] = HOLD + SETTLE + 1
     end
     s.dirty = true
     lib.wake()
@@ -159,8 +166,9 @@ function lib.sync(s)
     lib.wake()
 end
 
--- A bar's anchored child fired: its fill changed. Ignored while the bar primes. A handle on this bar alone is called
--- now (the frame of the push); handles on several bars are decoded at the start of the next frame.
+-- A bar's anchored child fired: its fill changed. Ignored while the bar holds low; counted while it settles (a
+-- settling handle is not called: it is still priming). Once live, a handle on this bar alone is called now (the frame
+-- of the firing); handles on several bars are decoded at the start of the next frame.
 function lib.fire(i)
     local s = lib.barSrc[i]
     if s == nil then
@@ -169,7 +177,7 @@ function lib.fire(i)
     if s == lib.ST then
         return lib.stFire(i)
     end
-    if lib.barPrime[i] > 0 then
+    if lib.barPrime[i] > SETTLE then
         return
     end
     lib.barState[i] = not lib.barState[i]

@@ -279,8 +279,14 @@ function H:Get()
     return self.lo, self.hi, self.t, self.q
 end
 
+-- "live" means a band is known: bars live but the first band not yet decoded (next frame) still read "priming".
+-- Not in lib.stateOf: decode needs the bar-level "live" to compute that first band.
 function H:State()
-    return lib.stateOf(self)
+    local state, reason = lib.stateOf(self)
+    if state == "live" and self.lo == nil then
+        return "priming"
+    end
+    return state, reason
 end
 
 -- step, min, max granted. Position (step) is a later stage: only the edges are served, so the step is nil. The top is

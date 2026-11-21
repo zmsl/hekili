@@ -17,6 +17,7 @@ describe("LibHiddenValues contract", function()
     local function untilLive(h)
         for _ = 1, 20 do
             if h:State() == "live" then
+                Fake.tick(1) -- the first band: the prime's end is decoded at the start of the next frame
                 return
             end
             Fake.tick(1)
@@ -134,7 +135,7 @@ describe("LibHiddenValues contract", function()
             { kind = "aura", unit = "focus", spell = 1079, what = "left", edges = { 3 } },
             { kind = "cooldown", spell = 1766 },
             { kind = "health", unit = "focus", edges = { 20 } },
-            { kind = "power", unit = "player", power = Enum.PowerType.Rage, edges = { 20 } },
+            { kind = "power", unit = "player", power = Enum.PowerType.Focus, edges = { 20 } },
             { kind = "power", unit = "player", power = Enum.PowerType.Energy, points = true, edges = { 20 } },
             { kind = "health", unit = "target", step = 1 },
         }

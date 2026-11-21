@@ -14,18 +14,21 @@
 -- W.secret: reads return secrets, true by default, as under the map lockdown; W.combat does the same; W.secretBool:
 -- UnitIsDead returns a secret), Fake.tick(n), Fake.event(name, ...), Fake.advance(seconds), Fake.set(knob, value),
 -- Fake.login(), Fake.restore(), Fake.printed (every print call: the library makes none). Knobs: "closed" (bars fed a
--- secret stop firing: the leak is closed), "lag" n (firings arrive n frames late), "drop" n (every nth firing is
--- lost), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit), "refuse"
--- name (that global function raises). The Cooldown Manager (the aura kind's source): W.cdm, W.aura, Fake.setAura,
--- Fake.cdmLayout, Fake.cdmEnable, Fake.viewers, Fake.touched, Fake.hooks; see the comment above its viewers.
+-- secret stop firing: the leak is closed), "lag" n (firings arrive n frames late), "secretlag" n (a fill set from a
+-- secret fires n frames later still), "drop" n (every nth firing is lost), "snap" "left"|"right"|"nearest" (how a
+-- Step curve picks its point), "maxpoints" n (curve size limit), "refuse" name (that global function raises). The
+-- Cooldown Manager (the aura kind's source): W.cdm, W.aura, Fake.setAura, Fake.cdmLayout, Fake.cdmEnable,
+-- Fake.viewers, Fake.touched, Fake.hooks; see the comment above its viewers.
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
 --
 -- Fidelity limits: no taint model; a secret is a table, so only arithmetic, ordering, concatenation, tostring, length,
 -- indexing and calls on it raise (equality, truthiness and use as a table key do not); a firing runs after every
--- OnUpdate of its frame (the measured "lag 0"); 60 frames per second; debugprofilestop is os.clock; a frame's first
--- layout fires its OnSizeChanged once; the Cooldown Manager is a sketch of the client's (its fields, hooks and event
--- fan-out as the probes and the client's code show them, not its layout rules). It tests a consumer's logic against
--- the library's contract, not the game.
+-- OnUpdate of its frame (the self-test's measured "lag 0"), a secret one too by default, though in game a prime's
+-- secret live push fired a frame later (LHVProbe 2026-11-20; steady-state secret timing unmeasured): "secretlag" 1
+-- models that; 60 frames per second; debugprofilestop is os.clock; a frame's first layout fires its OnSizeChanged
+-- once; the Cooldown Manager is a sketch of the client's (its fields, hooks and event fan-out as the probes and the
+-- client's code show them, not its layout rules). It tests a consumer's logic against the library's contract, not the
+-- game.
 local opts = ... or {}
 local here = debug.getinfo(1, "S").source:match("^@(.*[/\\])") or "./"
 local root = here .. "../"
@@ -35,7 +38,7 @@ local W = { unit = { player = { health = 1.0, power = { [0] = 1.0, [3] = 1.0 }, 
 W.cdm = { enabled = true, available = true, catalogue = {}, bar = {}, icon = {} }
 W.aura = { player = {}, target = {} }
 Fake.world = W
-local K = { lag = 0, drop = 0, snap = "left", maxpoints = 1000 }
+local K = { lag = 0, secretlag = 0, drop = 0, snap = "left", maxpoints = 1000 }
 local clock, tickNo, loggedIn, fireCount = 1000, 0, false, 0
 local saved, installed = {}, {}
 
@@ -159,9 +162,9 @@ end
 
 -- Frames: a StatusBar's fill change queues the OnSizeChanged of each frame anchored to its fill texture.
 local qClip, qDue, qN = {}, {}, 0
-local function queue(clip)
+local function queue(clip, extra)
     qN = qN + 1
-    qClip[qN], qDue[qN] = clip, tickNo + K.lag
+    qClip[qN], qDue[qN] = clip, tickNo + K.lag + (extra or 0)
 end
 local Frame = {}
 Frame.__index = Frame
@@ -258,7 +261,7 @@ function Frame:SetValue(v)
         self.fr = fr
         if not (s and K.closed) then
             for i = 1, #self.deps do
-                queue(self.deps[i])
+                queue(self.deps[i], s and K.secretlag or 0)
             end
         end
     end
