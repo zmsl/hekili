@@ -186,7 +186,7 @@ files["src/LibHiddenValues/"] = {
     read_globals = {
         "CreateFrame", "C_CurveUtil", "UnitHealthPercent", "UnitPowerPercent", "UnitExists", "UnitIsDead", "GetTime",
         "IsLoggedIn", "GetLocale", "UnitPowerMax", "C_Secrets", "C_CooldownViewer", "C_CVar", "hooksecurefunc",
-        "InCombatLockdown",
+        "InCombatLockdown", "C_EncodingUtil", "UnitClass", "GetSpecialization", "C_SpecializationInfo",
     },
 }
 files["tests/LibHiddenValues/"] = {

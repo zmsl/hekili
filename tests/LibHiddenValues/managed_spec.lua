@@ -1,0 +1,435 @@
+-- tests/LibHiddenValues/managed_spec.lua: Mode B, the managed Cooldown Manager layout. The consumer hands the library
+-- its persisted table; ManageCooldownManager adds one layout (a copy of the active one with every watched aura's entry
+-- on a tracked bar), the consumer reloads, the library checks the result and hides the four viewers (alpha 0) while it
+-- holds; RestoreCooldownManager puts the player's layouts back (byte-exact when nothing else changed). Covered: manage,
+-- pending, reload, managed with bars; restore byte-exact; undo before the reload; drift; 5 of 5; combat; the API
+-- missing; a write that does not stick; a check that fails; the player's edits kept by restore; an update after a new
+-- aura watch; another owner; the alpha the player had.
+local FAKE = "src/LibHiddenValues/Testing/FakeClient.lua"
+local TAG = 111 -- class 11, spec 1
+
+-- 21 is spell 6001's cooldown (Essential), 22 its aura (a tracked buff icon); 23 a tracked bar by default; 24 an icon
+-- the player's layout "Mine" places as a bar; 25 an icon nobody watches at first; 26 an aura not learned yet.
+local function catalogue()
+    return {
+        [21] = { spellID = 6001, category = 0 },
+        [22] = { spellID = 6001, category = 2 },
+        [23] = { spellID = 6002, category = 3 },
+        [24] = { spellID = 6003, category = 2 },
+        [25] = { spellID = 6004, category = 2 },
+        [26] = { spellID = 6005, category = 2 },
+    }
+end
+
+local function playerLayouts()
+    return {
+        [1] = 5,
+        [2] = { [TAG] = 1, [121] = 2 },
+        [3] = {
+            [TAG] = { [1] = { [1] = { 21, 22, 23, 24 }, [2] = { [3] = { 24 } } } },
+            [121] = { [2] = { [1] = { 7 } } },
+        },
+        [4] = { [1] = "Mine", [2] = "Other" },
+    }
+end
+
+local VIEWERS =
+    { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
+
+describe("LibHiddenValues managed Cooldown Manager layout (Mode B)", function()
+    local Fake, W, lib, store, told, h, orig
+
+    -- The consumer's files: hand over the store, watch, listen. Runs at boot and again at every reload.
+    local function consumer()
+        lib = LibStub("LibHiddenValues-1.0")
+        assert.is_true(lib:SetCooldownManagerStore("A", store))
+        h = {
+            left = assert(
+                lib:Watch("A", { kind = "aura", unit = "player", spell = 6001, what = "left", edges = { 3 } })
+            ),
+            up = assert(lib:Watch("A", { kind = "aura", unit = "player", spell = 6002, what = "up" })),
+            late = assert(lib:Watch("A", { kind = "aura", unit = "player", spell = 6005, what = "up" })),
+        }
+        lib:OnCapability("A", function(kind, state, reason)
+            if kind == "cdm" then
+                told[#told + 1] = state .. ":" .. tostring(reason)
+            end
+        end)
+    end
+
+    local function boot(layouts)
+        Fake = dofile(FAKE)
+        W = Fake.world
+        W.cdm.catalogue = catalogue()
+        W.cdm.unlearned = { [26] = true }
+        if layouts ~= false then
+            W.cdm.store = Fake.encodeLayouts(layouts or playerLayouts())
+        end
+        orig = W.cdm.store
+        W.cdm.opacity = 0.5 -- the player's Edit Mode opacity (a reload applies it again)
+        for _, name in ipairs(VIEWERS) do
+            _G[name]:SetAlpha(0.5)
+        end
+        Fake.touched = {}
+        store, told = {}, {}
+        consumer()
+        Fake.onReload = consumer
+        assert.is_true(Fake.login())
+        Fake.tick(2)
+    end
+
+    local function mode()
+        return { lib:GetCooldownManagerMode() }
+    end
+
+    local function alphas()
+        local out = {}
+        for i, name in ipairs(VIEWERS) do
+            out[i] = _G[name]:GetAlpha()
+        end
+        return out
+    end
+
+    local function layouts()
+        return Fake.decodeLayouts(W.cdm.store)
+    end
+
+    local function band(x)
+        local lo, hi = x:Get()
+        return { lo, hi }
+    end
+
+    after_each(function()
+        assert.are.same({}, Fake.errors)
+        Fake.restore()
+    end)
+
+    it("manages: one new layout, the watched auras' entries on bars, a reload, then managed and hidden", function()
+        boot()
+        assert.are.same({ "player" }, mode())
+        assert.are.same({ "unavailable", "cdm-icon-only" }, { h.left:State() })
+        assert.are.same({ false }, { lib:IsReloadPending() })
+
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        assert.are.same({ true, "manage" }, { lib:IsReloadPending() })
+        assert.are.same({ "pending", "reload" }, mode())
+        local t = layouts()
+        assert.are.equal(3, t[2][TAG]) -- a new id: the largest + 1, active for the tag
+        assert.are.equal(2, t[2][121]) -- another tag's active layout untouched
+        assert.are.equal("A", t[4][3])
+        -- a copy of "Mine" with 22 (the aura entry, never 21: the cooldown) and 26 (not learned yet) moved to bars
+        assert.are.same({ [1] = { 21, 22, 23, 24 }, [2] = { [3] = { 24, 22, 26 } } }, t[3][TAG][3])
+        local before = playerLayouts()
+        assert.are.same(before[3][TAG][1], t[3][TAG][1])
+        assert.are.same(before[3][121], t[3][121])
+        assert.are.same(before[4][1], t[4][1])
+        assert.are.equal(orig, store.orig) -- the original saved before the write
+        Fake.tick(2)
+        assert.are.same({ "pending:reload" }, told)
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas()) -- nothing hidden before the reload
+        assert.are.same({}, Fake.touched)
+
+        told = {}
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ false }, { lib:IsReloadPending() })
+        assert.are.same({ "managed" }, mode())
+        assert.are.same({ "managed:nil" }, told)
+        assert.are.same({ 0, 0, 0, 0 }, alphas())
+        assert.are.same({ 22, 23, 24 }, W.cdm.bar) -- 26 is not learned: no item
+        local spec = { kind = "aura", unit = "player", spell = 6001, what = "left", edges = { 3 } }
+        assert.are.same({ true, "ready" }, { lib:IsAvailable("aura", spec) })
+        Fake.setAura("player", 6001, 1, 10)
+        Fake.tick(12)
+        assert.are.same({ 3, math.huge }, band(h.left))
+        assert.are.equal("live", (h.left:State()))
+        assert.are.same({ 0, 0 }, band(h.up)) -- placed on a bar by default, not up: a known 0
+    end)
+
+    it("restores byte-exact after the reload, gives the alpha back, and the next load is the player's", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+        told = {}
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store) -- byte for byte
+        assert.are.same({ true, "restore" }, { lib:IsReloadPending() })
+        assert.are.same({ "pending", "reload" }, mode())
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas()) -- given back at once
+        assert.is_nil(next(store)) -- the saved state is gone
+        Fake.tick(2)
+        assert.are.same({ "pending:reload" }, told)
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "player" }, mode())
+        assert.are.same({ false }, { lib:IsReloadPending() })
+        assert.are.same({ 23, 24 }, W.cdm.bar)
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas())
+        assert.are.equal("cdm-icon-only", select(2, h.left:State()))
+    end)
+
+    it("undoes a manage before the reload with no reload needed", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store)
+        assert.are.same({ false }, { lib:IsReloadPending() })
+        assert.are.same({ "player" }, mode())
+        assert.is_nil(next(store))
+        Fake.tick(2)
+        assert.are.same({}, told) -- never left "player" as far as the callbacks know
+    end)
+
+    it("works from an empty store (no layout saved yet) and restores it to empty", function()
+        boot(false)
+        assert.are.equal("", W.cdm.store)
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        local t = layouts()
+        assert.are.equal(1, t[2][TAG])
+        assert.are.same({ [2] = { [3] = { 22, 26 } } }, t[3][TAG][1])
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal("", W.cdm.store)
+    end)
+
+    it("reports drift when the player switches to another layout, and manages again to switch back", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        told = {}
+        -- the player picks "Mine" in the Cooldown Manager's settings: the client saves the store and lays out again
+        local t = layouts()
+        t[2][TAG] = 1
+        W.cdm.store = Fake.encodeLayouts(t)
+        W.cdm.bar = { 23, 24 }
+        Fake.cdmLayout()
+        Fake.tick(2)
+        assert.are.same({ "drift", "switched" }, mode())
+        assert.are.same({ "drift:switched" }, told)
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas()) -- the player's layout shows: never fought
+        assert.is_true(lib:ManageCooldownManager("A", store)) -- "use the managed layout": ours again, same id
+        t = layouts()
+        assert.are.equal(3, t[2][TAG])
+        assert.are.same({ [1] = { 21, 22, 23, 24 }, [2] = { [3] = { 24, 22, 26 } } }, t[3][TAG][3])
+        assert.are.same({ true, "manage" }, { lib:IsReloadPending() })
+    end)
+
+    it("reports drift when the player deletes the managed layout or turns the Cooldown Manager off", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        Fake.cdmEnable(false)
+        Fake.tick(2)
+        assert.are.same({ "drift", "cdm-off" }, mode())
+        Fake.cdmEnable(true)
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+        local t = layouts()
+        t[3][TAG][3], t[4][3], t[2][TAG] = nil, nil, 1
+        W.cdm.store = Fake.encodeLayouts(t)
+        Fake.cdmLayout()
+        Fake.tick(2)
+        assert.are.same({ "drift", "deleted" }, mode())
+        -- restore: nothing of ours is left and the store is the original again (the same bytes as the client
+        -- holds): the saved state goes, no write, no reload
+        local n = W.cdm.writes
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store)
+        assert.are.equal(n + 1, W.cdm.writes) -- the original bytes, written over equal bytes
+        assert.are.same({ false }, { lib:IsReloadPending() })
+        assert.are.same({ "player" }, mode())
+        assert.is_nil(next(store))
+    end)
+
+    it("refuses with 5 of 5 layouts, in combat, without the API, when off, and for another owner", function()
+        local five = playerLayouts()
+        five[3][131] = { [3] = {}, [4] = {} }
+        five[3][141] = { [5] = {} }
+        boot(five)
+        assert.are.same({ nil, "cdm-slots-full" }, { lib:ManageCooldownManager("A", store) })
+        assert.are.equal(orig, W.cdm.store)
+        assert.is_nil(next(store))
+        W.cdm.store = Fake.encodeLayouts(playerLayouts())
+        W.combat = true
+        assert.are.same({ nil, "cdm-combat" }, { lib:ManageCooldownManager("A", store) })
+        W.combat = false
+        local EU = _G.C_EncodingUtil
+        _G.C_EncodingUtil = nil
+        assert.are.same({ nil, "cdm-api" }, { lib:ManageCooldownManager("A", store) })
+        _G.C_EncodingUtil = EU
+        W.cdm.store = "2|zz"
+        assert.are.same({ nil, "cdm-unreadable" }, { lib:ManageCooldownManager("A", store) })
+        W.cdm.store = Fake.encodeLayouts(playerLayouts())
+        assert.are.same({ nil, "store-invalid" }, { lib:ManageCooldownManager("A", "x") })
+        assert.are.same({ nil, "cdm-not-managed" }, { lib:RestoreCooldownManager("A", store) })
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        assert.are.same({ nil, "cdm-owner" }, { lib:ManageCooldownManager("B", {}) })
+        assert.are.same({ nil, "cdm-owner" }, { lib:SetCooldownManagerStore("B", {}) })
+        W.combat = true
+        assert.are.same({ nil, "cdm-combat" }, { lib:RestoreCooldownManager("A", store) })
+        W.combat = false
+        Fake.cdmEnable(false)
+        Fake.tick(2)
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.same({ nil, "cdm-off" }, { lib:ManageCooldownManager("A", store) })
+        for _, code in ipairs({ "cdm-slots-full", "cdm-combat", "cdm-api", "cdm-unreadable", "store-invalid" }) do
+            assert.is_string(lib:GetMessage(code), code)
+        end
+        for _, code in ipairs({ "cdm-owner", "cdm-not-managed", "cdm-write-failed", "check-failed", "switched" }) do
+            assert.is_string(lib:GetMessage(code), code)
+        end
+    end)
+
+    it("puts the layouts back when a write does not read back as written", function()
+        boot()
+        W.cdm.badWrite = true
+        assert.are.same({ nil, "cdm-write-failed" }, { lib:ManageCooldownManager("A", store) })
+        W.cdm.badWrite = false
+        assert.are.equal(orig .. "x", W.cdm.store) -- the fake keeps the bad bytes for the put-back too
+        W.cdm.store = orig
+        assert.is_nil(next(store))
+        assert.are.same({ false }, { lib:IsReloadPending() })
+        assert.are.same({ "player" }, mode())
+    end)
+
+    it("gives up when the layout did not take after the reload, and restore still works", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        local written = W.cdm.store
+        W.cdm.store = orig -- the client threw our layout away at the reload
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "pending", "checking" }, mode())
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas())
+        Fake.advance(21)
+        assert.are.same({ "player", "check-failed" }, mode())
+        assert.is_nil(lib.mb.checking) -- the check ended: the driver may stop
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas())
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store)
+        assert.are_not.equal(written, W.cdm.store)
+    end)
+
+    it("keeps the player's edits made while managed: only the managed layout goes", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        local t = layouts()
+        t[3][121][2][1] = { 7, 8 } -- the player edits a layout of another class
+        t[3][TAG][4] = { [2] = { [2] = { 23 } } } -- and adds one
+        t[4][4] = "New"
+        W.cdm.store = Fake.encodeLayouts(t)
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        local r = layouts()
+        assert.are.same({ 7, 8 }, r[3][121][2][1])
+        assert.are.same({ [2] = { [2] = { 23 } } }, r[3][TAG][4])
+        assert.are.equal("New", r[4][4])
+        assert.is_nil(r[3][TAG][3]) -- ours gone
+        assert.is_nil(r[4][3])
+        assert.are.equal(1, r[2][TAG]) -- the layout active before ours is active again
+        assert.are.same(playerLayouts()[3][TAG][1], r[3][TAG][1])
+        assert.are.same({ true, "restore" }, { lib:IsReloadPending() })
+    end)
+
+    it("keeps the player's choice when they switched away and edited before restoring", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        local t = layouts()
+        t[3][TAG][4], t[4][4], t[2][TAG] = { [2] = {} }, "New", 4
+        W.cdm.store = Fake.encodeLayouts(t)
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        local r = layouts()
+        assert.are.equal(4, r[2][TAG])
+        assert.is_nil(r[3][TAG][3])
+    end)
+
+    it("asks for an update when a new aura is watched, and rewrites only its own layout", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+        told = {}
+        local extra = assert(lib:Watch("A", { kind = "aura", unit = "player", spell = 6004, what = "stacks", max = 3 }))
+        Fake.tick(2)
+        assert.are.same({ "managed", "update" }, mode())
+        assert.are.same({ "managed:update" }, told)
+        assert.are.same({ 0, 0, 0, 0 }, alphas())
+        local before = layouts()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        local t = layouts()
+        assert.are.same({ 24, 22, 26, 25 }, t[3][TAG][3][2][3])
+        before[3][TAG][3] = nil
+        t[3][TAG][3] = nil
+        assert.are.same(before, t) -- nothing else changed
+        assert.are.same({ "pending", "reload" }, mode())
+        assert.are.same({ 0, 0, 0, 0 }, alphas()) -- the loaded layout is still ours: hidden until the reload
+        local orig0 = store.orig
+        Fake.onReload = function()
+            consumer()
+            lib:Watch("A", { kind = "aura", unit = "player", spell = 6004, what = "stacks", max = 3 })
+        end
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+        assert.are.same({ 22, 23, 24, 25 }, W.cdm.bar)
+        assert.are.equal(orig0, store.orig) -- the first original is kept
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store)
+        assert.is_true(extra ~= nil)
+    end)
+
+    it("writes nothing when managing again changes nothing", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        local n = W.cdm.writes
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        assert.are.equal(n, W.cdm.writes)
+        assert.are.same({ false }, { lib:IsReloadPending() })
+        assert.are.same({ "managed" }, mode())
+    end)
+
+    it("gives the viewers back when the library is switched off, and hides them again when on", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        lib:SetEnabled(false)
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas())
+        lib:SetEnabled(true)
+        Fake.tick(60)
+        assert.are.same({ 0, 0, 0, 0 }, alphas())
+    end)
+
+    it("waits out combat after a reload before it checks, and touches only the viewers' alpha", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        Fake.touched = {}
+        Fake.onReload = function()
+            consumer()
+            W.combat = true -- a reload in combat: the library loads before the fight ends
+        end
+        Fake.reload()
+        Fake.advance(30)
+        assert.are.same({ "pending", "checking" }, mode())
+        W.combat = false
+        Fake.event("PLAYER_REGEN_ENABLED")
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+        for _, m in ipairs(Fake.touched) do
+            assert.are.equal("SetAlpha", m)
+        end
+        assert.are.equal(4, #Fake.touched)
+    end)
+end)

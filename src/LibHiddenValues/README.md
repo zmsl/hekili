@@ -201,7 +201,7 @@ the reference consumer (`/lhvp`).
 
 | Call | Returns |
 |---|---|
-| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 3`) |
+| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 4`) |
 | `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, `cooldown` ... `aura` ... `meter`: the major's twelve); `state` and `reason` as `IsAvailable` |
 | `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable). `unit` may be a whole spec: the aura kind then answers for its placement |
 | `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change, and `fn("aura", state, reason, h)` for each of the owner's aura handles whose answer changed |

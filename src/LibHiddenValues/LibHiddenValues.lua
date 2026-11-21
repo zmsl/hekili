@@ -8,7 +8,7 @@
 -- (lib.loading). All state lives on lib, as plain data; scripts are one-line dispatchers through lib, so a newer minor
 -- replaces behaviour by replacing functions. Nothing is built before PLAYER_LOGIN. The addon name and the private
 -- table from `...` are never used (an embedded copy would receive its host's).
-local MAJOR, MINOR = "LibHiddenValues-1.0", 3
+local MAJOR, MINOR = "LibHiddenValues-1.0", 4
 local lib, oldMinor = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then
     return

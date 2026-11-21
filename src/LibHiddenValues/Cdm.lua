@@ -202,16 +202,19 @@ local function note(cds, id, spell)
 end
 
 -- The catalogue: every cooldownID the Cooldown Manager can show, by each spell it names (its spell, override,
--- tooltip override and linked spells). Out of combat only (in-combat secrecy of these reads is unprobed).
+-- tooltip override and linked spells), and each one's default category (the set it is in: these reads give the
+-- defaults, never the active layout's placement; Mode B needs them). Out of combat only (in-combat secrecy of these
+-- reads is unprobed).
 function cdm.catalogue()
     local CV = C_CooldownViewer
-    local cds = {}
+    local cds, catOf = {}, {}
     for cat = 0, CATS do
         local ok, set = pcall(CV.GetCooldownViewerCategorySet, cat, true)
         if ok and not issecretvalue(set) and type(set) == "table" then
             for n = 1, #set do
                 local id = set[n]
                 if not issecretvalue(id) and id ~= nil then
+                    catOf[id] = catOf[id] or cat
                     local okI, info = pcall(CV.GetCooldownViewerCooldownInfo, id)
                     if okI and not issecretvalue(info) and type(info) == "table" then
                         note(cds, id, info.spellID)
@@ -228,7 +231,7 @@ function cdm.catalogue()
             end
         end
     end
-    cdm.cds, cdm.cataloged = cds, true
+    cdm.cds, cdm.catOf, cdm.cataloged = cds, catOf, true
 end
 
 -- cdm-off: the cooldownViewerEnabled CVar is 0, the client says the viewer is not available, or neither viewer

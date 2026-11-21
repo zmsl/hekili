@@ -12,4 +12,5 @@ Feed.lua
 Kinds\Percent.lua
 Cdm.lua
 Kinds\Aura.lua
+Managed.lua
 SelfTest.lua

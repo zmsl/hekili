@@ -212,6 +212,9 @@ end
 function Frame:SetAlpha(a)
     self.alpha = a
 end
+function Frame:GetAlpha()
+    return self.alpha or 1
+end
 function Frame:Show()
     self.shown = true
 end
@@ -296,7 +299,12 @@ end
 
 -- Globals
 local PT = { Mana = 0, Rage = 1, Focus = 2, Energy = 3 }
-install("Enum", { LuaCurveType = { Linear = 0, Step = 1 }, PowerType = PT })
+install("Enum", {
+    LuaCurveType = { Linear = 0, Step = 1 },
+    PowerType = PT,
+    CooldownViewerCategory = { Essential = 0, Utility = 1, TrackedBuff = 2, TrackedBar = 3 },
+    CompressionMethod = { Deflate = 1 },
+})
 install("issecretvalue", isSecret)
 install("C_CurveUtil", {
     CreateCurve = function()
@@ -467,10 +475,10 @@ install("C_CooldownViewer", {
     IsCooldownViewerAvailable = function()
         return W.cdm.available and true or false
     end,
-    GetCooldownViewerCategorySet = function(cat)
+    GetCooldownViewerCategorySet = function(cat, allowUnlearned)
         local out = {}
         for id, info in pairs(W.cdm.catalogue) do
-            if info.category == cat then
+            if info.category == cat and (allowUnlearned or not (W.cdm.unlearned and W.cdm.unlearned[id])) then
                 out[#out + 1] = id
             end
         end
@@ -488,7 +496,101 @@ install("C_CooldownViewer", {
         end
         return c
     end,
+    GetLayoutData = function()
+        return W.cdm.store
+    end,
+    SetLayoutData = function(data)
+        if W.cdm.badWrite then -- the client keeps something else than what was written
+            data = data .. "x"
+        end
+        W.cdm.writes = (W.cdm.writes or 0) + 1
+        W.cdm.store = data
+    end,
 })
+
+-- C_EncodingUtil: a deterministic stand-in for CBOR (sorted Lua source), Deflate (reversed, tagged) and Base64 (hex).
+-- Each decoder returns nil for input its encoder did not make.
+local function ser(v)
+    local t = type(v)
+    if t == "number" then
+        return string.format("%.17g", v)
+    elseif t == "string" then
+        return string.format("%q", v)
+    elseif t == "boolean" then
+        return tostring(v)
+    end
+    local keys = {}
+    for k in pairs(v) do
+        keys[#keys + 1] = k
+    end
+    table.sort(keys, function(a, b)
+        if type(a) ~= type(b) then
+            return type(a) < type(b)
+        end
+        return a < b
+    end)
+    local out = {}
+    for i = 1, #keys do
+        out[i] = "[" .. ser(keys[i]) .. "]=" .. ser(v[keys[i]])
+    end
+    return "{" .. table.concat(out, ",") .. "}"
+end
+install("C_EncodingUtil", {
+    SerializeCBOR = function(t)
+        return "CBOR" .. ser(t)
+    end,
+    DeserializeCBOR = function(s)
+        if type(s) ~= "string" or s:sub(1, 4) ~= "CBOR" then
+            return nil
+        end
+        local fn = loadstring("return " .. s:sub(5))
+        return fn and setfenv(fn, {})()
+    end,
+    CompressString = function(s, method)
+        assert(method == 1, "deflate expected")
+        return "D" .. s:reverse()
+    end,
+    DecompressString = function(s, method)
+        assert(method == 1, "deflate expected")
+        if type(s) ~= "string" or s:sub(1, 1) ~= "D" then
+            return nil
+        end
+        return s:sub(2):reverse()
+    end,
+    EncodeBase64 = function(s)
+        return (s:gsub(".", function(c)
+            return string.format("%02x", c:byte())
+        end))
+    end,
+    DecodeBase64 = function(s)
+        if type(s) ~= "string" or s:find("[^0-9a-f]") or #s % 2 == 1 then
+            return nil
+        end
+        return (s:gsub("..", function(h)
+            return string.char(tonumber(h, 16))
+        end))
+    end,
+})
+install("UnitClass", function()
+    return "Class", "CLASS", W.classID or 11
+end)
+install("GetSpecialization", function()
+    return 1 -- Forever: one spec per class
+end)
+
+-- The layout store as the client keeps it: "1|" .. base64(deflate(cbor(t))), "" when the player never saved one.
+function Fake.encodeLayouts(t)
+    local E = _G.C_EncodingUtil
+    return "1|" .. E.EncodeBase64(E.CompressString(E.SerializeCBOR(t), 1))
+end
+function Fake.decodeLayouts(s)
+    if s == nil or s == "" then
+        return nil
+    end
+    local E = _G.C_EncodingUtil
+    return E.DeserializeCBOR(E.DecompressString(E.DecodeBase64(s:sub(3)), 1))
+end
+W.cdm.store = ""
 
 local UNITS = { "player", "target" }
 local nextAuraId = 0
@@ -638,8 +740,45 @@ local function tickBars(v)
         end
     end
 end
+-- Placement from the stored layouts (what the client loads at login): the active layout of the player's tag, its
+-- category overrides over each entry's default category; unlearned entries show no item. Only when a store was saved.
+local function derive()
+    local t = Fake.decodeLayouts(W.cdm.store)
+    if not t then
+        return
+    end
+    local C = _G.Enum.CooldownViewerCategory
+    local tag = (W.classID or 11) * 10 + 1
+    local act = t[2] and t[2][tag]
+    local lay = act and act ~= 0 and t[3] and t[3][tag] and t[3][tag][act]
+    local over = {}
+    for cat, list in pairs(lay and lay[2] or {}) do
+        for _, cd in ipairs(list) do
+            over[cd] = cat
+        end
+    end
+    local bar, icon = {}, {}
+    local ids = {}
+    for cd in pairs(W.cdm.catalogue) do
+        ids[#ids + 1] = cd
+    end
+    table.sort(ids)
+    for _, cd in ipairs(ids) do
+        local cat = over[cd] or W.cdm.catalogue[cd].category
+        if not (W.cdm.unlearned and W.cdm.unlearned[cd]) then
+            if cat == C.TrackedBar then
+                bar[#bar + 1] = cd
+            elseif cat == C.TrackedBuff then
+                icon[#icon + 1] = cd
+            end
+        end
+    end
+    W.cdm.bar, W.cdm.icon = bar, icon
+end
+
 local function viewerEvent(v, event)
     if event == "PLAYER_LOGIN" then
+        derive()
         v.shown = W.cdm.enabled and true or false
         if v.shown then
             layout(v)
@@ -648,34 +787,49 @@ local function viewerEvent(v, event)
         refresh(v)
     end
 end
-for _, which in ipairs({ "bar", "icon" }) do
-    local v = bframe(_G.UIParent)
-    v.which, v.made = which, 0
-    v.itemFramePool = {
-        active = {},
-        inactive = {},
-        EnumerateActive = function(pool)
-            return pairs(pool.active)
-        end,
-    }
-    v.OnAcquireItemFrame = function() end
-    v.RefreshData = function(self) -- the viewer's own: a layout pass or a data change; aura events refresh the items
-        refresh(self)
+-- The four viewers (built again by a reload): tracked bars and tracked buff icons with their item pools; Essential and
+-- Utility (cooldowns: no items modelled, only their alpha).
+local function makeViewers()
+    for k = #viewers, 1, -1 do
+        viewers[k] = nil
     end
-    v.events = { PLAYER_LOGIN = true, UNIT_AURA = true, PLAYER_TARGET_CHANGED = true }
-    v.scripts.OnEvent = function(self, event)
-        local was = inBlizz
-        inBlizz = true
-        viewerEvent(self, event)
-        inBlizz = was
+    for _, which in ipairs({ "bar", "icon" }) do
+        local v = bframe(_G.UIParent)
+        v.which, v.made = which, 0
+        v.itemFramePool = {
+            active = {},
+            inactive = {},
+            EnumerateActive = function(pool)
+                return pairs(pool.active)
+            end,
+        }
+        v.OnAcquireItemFrame = function() end
+        v.RefreshData = function(self) -- the viewer's own: a layout pass or a data change (aura events refresh items)
+            refresh(self)
+        end
+        v.events = { PLAYER_LOGIN = true, UNIT_AURA = true, PLAYER_TARGET_CHANGED = true }
+        v.scripts.OnEvent = function(self, event)
+            local was = inBlizz
+            inBlizz = true
+            viewerEvent(self, event)
+            inBlizz = was
+        end
+        v.scripts.OnUpdate = function(self)
+            blizz(tickBars, self)
+        end
+        install(which == "bar" and "BuffBarCooldownViewer" or "BuffIconCooldownViewer", v)
+        Fake.frames[#Fake.frames + 1] = v
+        viewers[#viewers + 1] = v
     end
-    v.scripts.OnUpdate = function(self)
-        blizz(tickBars, self)
+    install("EssentialCooldownViewer", bframe(_G.UIParent))
+    install("UtilityCooldownViewer", bframe(_G.UIParent))
+    if W.cdm.opacity then -- Edit Mode's opacity, applied as the viewers load
+        for _, name in ipairs({ "Essential", "Utility", "BuffIcon", "BuffBar" }) do
+            _G[name .. "CooldownViewer"].alpha = W.cdm.opacity
+        end
     end
-    install(which == "bar" and "BuffBarCooldownViewer" or "BuffIconCooldownViewer", v)
-    Fake.frames[#Fake.frames + 1] = v
-    viewers[#viewers + 1] = v
 end
+makeViewers()
 Fake.viewers = viewers
 
 -- A layout pass on both viewers (the player changed the layout, a full aura update, a show).
@@ -799,6 +953,34 @@ function Fake.login()
     end
     return lib and lib.stVerdict
 end
+
+-- A UI reload (the consumer's ReloadUI from a click): every frame, the viewers and the library are built again and
+-- login runs; only the world (W, the layout store among it), the clock and the knobs survive. Fake.onReload(Fake), when
+-- set, runs after the library loaded and before login: the consumer's files loading again (hand it the store it
+-- persisted). Returns the self-test verdict, as Fake.login.
+function Fake.reload()
+    if W.combat then
+        error("the fake does not reload in combat")
+    end
+    loggedIn = false
+    for i = 1, qN do
+        qClip[i] = nil
+    end
+    qN = 0
+    Fake.frames = {}
+    install("UIParent", CreateFrame("Frame"))
+    makeViewers()
+    install("LibStub", nil)
+    Fake.loadLibrary()
+    if Fake.onReload then
+        Fake.onReload(Fake)
+    end
+    return Fake.login()
+end
+install("ReloadUI", function()
+    Fake.reloads = (Fake.reloads or 0) + 1
+    Fake.reload()
+end)
 
 function Fake.set(knob, value)
     if knob == "refuse" then
