@@ -46,6 +46,13 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
   (596 before), up to 2 reads 50 off (after a bad frame the first valid decode is taken unchecked: review 985f8a3e1).
 - Read-only leftovers (L1649): `.luacheckrc` drops the unused `C_EncodingUtil`, `UnitClass`, `GetSpecialization`,
   `C_SpecializationInfo`; the in-game plan's minor statements read "or later".
+- Known, not changed here: in edges mode `lib.decode` still counts a contradiction between edge bars as a desync at
+  once (a jump over two edges whose firings split the wrong way re-primes, no hold). `s.litAt` is stamped before the
+  unit check, so an item lit on the player or a secret unit ends a target source's swap doubt (C1's mechanism). With
+  the doubt on every target watch, a mob without the aura reads unknown until a target UNIT_AURA (about 2 s in the
+  Essential run). Owner calls: `DRIFT` 8 (a real jump of 42-58 quanta pays a frame); a hold of up to `SETTLE - 1`
+  frames while firings keep landing; `h:Latency()` (unchanged numbers) now says it is the worst case when a change's
+  firings land within two frames.
 
 ## Built in lane C1: Cooldown Manager gaps G1-G4, truths, the position set beside the ring, minor 5
 

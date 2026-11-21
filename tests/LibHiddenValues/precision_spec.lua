@@ -62,7 +62,7 @@ describe("LibHiddenValues point precision", function()
         assert.are.same({ 1, 0, 2000 }, { h:Domain() })
         for _, v in ipairs({ 1235, 1236, 1199, 0, 1, 49, 50, 51, 999, 1000, 1999, 2000, 777 }) do
             mana(v)
-            Fake.tick(3) -- a jump of 50 +- 8 (1 to 49) is held a frame
+            Fake.tick(v == 49 and 3 or 2) -- a jump of 50 +- 8 (1 to 49) is held a frame
             assert.are.equal(v, (h:Exact()), v)
         end
         assert.are.same({ 777, 778 }, lohi(h))
@@ -182,6 +182,11 @@ describe("LibHiddenValues point precision", function()
             assert.are.same({ 1600, 6400 }, lohi(other))
             assert.are.equal("suspended", (prec:State()))
             assert.is_nil((prec:Exact()))
+            assert.is_nil((prec:Get()))
+            assert.are.same({ 1, 0, 6400 }, { prec:Domain() }) -- the handle's calls all answer: none raises
+            assert.is_true(prec:Latency() > 0)
+            assert.is_true(prec:SetPoints({ 500 }))
+            assert.are.equal("suspended", (prec:State()))
             assert.are.equal("suspended", (step:State())) -- no curve set gives it a cell either
             assert.are.equal("edges", lib:GetSources()[1].mode)
             mana(1200)
