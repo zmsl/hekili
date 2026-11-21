@@ -102,8 +102,9 @@ describe("LibHiddenValues secrets and efficiency", function()
         lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, step = 1 }, sink) -- Gray beside
         lib:Watch("C", { kind = "power", unit = "player", power = 3, step = 1, points = { 40, 41 } }, sink)
         Fake.login()
+        local per = 2
         local function frame(i) -- each value holds 2 frames: a position or precision change is called once the next
-            i = math.floor(i / 2) -- decode agrees (fix round 3); one changing every frame is never confirmed
+            i = math.floor(i / per) -- decode agrees (fix round 3); one changing every frame is never confirmed
             W.unit.target.health = (i % 37) / 36
             W.unit.player.power[0] = (i % 11) / 10
             W.unit.player.power[3] = (i % 13) / 12
@@ -123,6 +124,21 @@ describe("LibHiddenValues secrets and efficiency", function()
         collectgarbage("restart")
         assert.is_true(n > 200, n)
         assert.is_true(grew < 0.5, grew .. " KB")
+        -- every frame a new value: never confirmed, so the sources hold, desync and prime again in a loop
+        per = 1
+        for i = 1, 200 do
+            frame(i)
+        end
+        assert.is_true(select(6, lib:GetStats()) > 0) -- the loop ran
+        collectgarbage("collect")
+        collectgarbage("stop")
+        b = collectgarbage("count")
+        for i = 1, 1000 do
+            frame(i)
+        end
+        grew = collectgarbage("count") - b
+        collectgarbage("restart")
+        assert.is_true(grew < 0.5, "hold/desync/prime loop: " .. grew .. " KB")
     end)
 
     it("unsets the driver when nothing needs it", function()

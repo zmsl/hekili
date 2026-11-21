@@ -816,9 +816,11 @@ describe("LibHiddenValues point precision", function()
                 local l = move(case[2], case[3])
                 assert.is_true(#l > 0)
                 Fake.tick(1) -- valid: the ring complete, a cell code half landed
+                local landed = GetTime()
                 fire(l)
                 Fake.tick(2)
                 assert.are.equal(case[2], (h:Exact()))
+                assert.are.equal(landed, select(3, h:Get())) -- t: the frame its last firing landed
                 onlyHeld({ case[1], case[2] })
                 assert.are.equal(0, select(6, lib:GetStats()))
             end)

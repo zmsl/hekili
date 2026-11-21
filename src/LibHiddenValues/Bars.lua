@@ -846,7 +846,8 @@ end
 -- more than SETTLE + 1 frames without a call (bad frames and holds; h:Latency()): a lost firing leaves the bars invalid
 -- once the firings stop, while two changes on adjacent frames, each split over two frames, are invalid two frames in a
 -- row with firings still landing (the owner's run of 2026-11-21: 4 desyncs in 2.5 min at ~10 changes/s). A value that
--- changes on every frame is never confirmed: the source desyncs every SETTLE + 2 frames until it slows.
+-- changes on every frame is never confirmed: the source holds SETTLE + 1 frames, primes again and repeats until it
+-- slows (with firings 1-2 frames late, a change every two frames already desyncs at times).
 function lib.decodeSource(s)
     local mode = s.mode
     if not mode then

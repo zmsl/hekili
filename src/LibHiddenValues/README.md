@@ -92,8 +92,11 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   rebuilds the same half state and confirms it (for mana a spend and a regen tick undoing each other across a cell,
   1249 -> 1250 -> 1249 read 1200: rare, never seen in the fake runs; pinned in `precision_spec`); firings later than
   two frames can still confirm a half-landed state (in 15 minutes with firings 1-3 frames late: about 55-65 calls on
-  mana, 15 on energy). A value that changes on every frame is never confirmed: the source desyncs every six frames and
-  reads unknown until the changes slow (a target losing 1% a frame, dead in under about 1.7 s at 60 fps). The owner's
+  mana, 15 on energy). A value that changes on every frame is never confirmed: the source holds six frames, primes
+  again and repeats, reading unknown until the changes slow (a `step` watch on a target losing 1% a frame, dead in
+  under about 1.7 s at 60 fps). With each firing 1-2 frames late a cell every two frames already loses about half its
+  calls to desyncs (fake: 50 calls for 99 cells, 3 desyncs; a target dead in about 3.3 s at 60 fps, 6.6 s at 30); a
+  cell every three frames is clean. The owner's
   run (2026-11-21, mana regenerating 2-3 points at a time) saw about one change in four split over two frames.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every

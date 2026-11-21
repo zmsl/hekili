@@ -84,10 +84,18 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
   | 1-3 | 110 / 15 | 38232 / 44441 | 9111 / 8572 | 10 / 24 | 1635 / 1644 |
   One more frame per change (~16 ms); ~7 partial reads a minute at 1-2 late removed. At lag 0, 133 changes on
   adjacent frames (a regen tick beside a spend) are held again (splits) and called once. A value that changes on every
-  frame is never confirmed: a `step` watch on a target losing 1% a frame (dead in under ~1.7 s at 60 fps) made 98
-  calls before and now one unknown call and 7 desyncs over 99 frames, its source's edge watch priming at the end; at
-  1% every 2 frames it makes 98 calls, the shown cell one behind; the ring had the same property for mana changing
-  every frame.
+  frame is never confirmed (six frames held, a prime, repeating); the ring had the same property for mana. Fake, a
+  `step` watch and an edges watch on a target falling 99% to 1%, one cell every N frames; calls (unknown) / desyncs,
+  before / held:
+  | N | lag 0 | 1-2 frames late | 1-3 frames late |
+  |---|---|---|---|
+  | 1 (dead in ~1.7 s at 60 fps) | 98 (0) / 0; 1 (1) / 7 | 52 (1) / 1; 7 (3) / 6 | 30 (4) / 5; 3 (2) / 7 |
+  | 2 (~3.3 s; 6.6 s at 30 fps) | 99 (0) / 0; 98 (0) / 0 | 98 (0) / 0; 50 (3) / 3 | 40 (11) / 14; 19 (7) / 15 |
+  | 3 (~5 s) | 99 (0) / 0; 99 (0) / 0 | 98 (0) / 0; 98 (0) / 0 | 70 (16) / 16; 48 (14) / 16 |
+  | 4 | 99 (0) / 0; 99 (0) / 0 | 99 (0) / 0; 98 (0) / 0 | 78 (21) / 21; 78 (21) / 21 |
+  | 6 | 99 (0) / 0; 99 (0) / 0 | 99 (0) / 0; 99 (0) / 0 | 98 (22) / 22; 98 (22) / 22 |
+  The cost falls on fast kills: a cell every two frames with firings 1-2 frames late loses half its calls, which is
+  where LibTimeToDie reads a dying target. The hold, desync and prime loop allocates nothing (`secrets_spec`).
 - Read-only leftovers (L1649): `.luacheckrc` drops the unused `C_EncodingUtil`, `UnitClass`, `GetSpecialization`,
   `C_SpecializationInfo`; the in-game plan's minor statements read "or later".
 - Fix rounds 1 to 3 (review and re-reviews of the fix lane): I2 `Kinds/Aura.lua` stamps `s.litAt` only when the item
