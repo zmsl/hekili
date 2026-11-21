@@ -35,6 +35,33 @@ lib.MAXPTS = 256
 lib.POINTS_PER_SOURCE, lib.POINTS_TOTAL = 8, 64
 local MINSP = 0.00001 -- the smallest step spacing proven on the 0-1 scale (BandProbe2 0.3.0 D2)
 
+-- Point precision (BandProbe2 0.3.0's mana arm, C50): the value in quanta q (g points each) is cell c = q div N on a
+-- Gray code (cell bits + a parity bar) and ring position q mod N on N fine bars, where boundary q toggles bars q mod N
+-- and (q + N/2) mod N. Any two ring states differ in >= 2 bars, so one lost or extra firing is never read as another
+-- value: it decodes as no state at all.
+local N, HALF = 50, 25
+local RS, RK = {}, {} -- ring state per position (bar j: RS[p][j]), position per state key
+do
+    local s = {}
+    for j = 0, N - 1 do
+        s[j] = 0
+    end
+    for p = 0, N - 1 do
+        if p > 0 then
+            local a, c = p % N, (p + HALF) % N
+            s[a], s[c] = 1 - s[a], 1 - s[c]
+        end
+        local row, key = {}, 0
+        for j = 0, N - 1 do
+            row[j] = s[j]
+            key = key + s[j] * 2 ^ j
+        end
+        RS[p], RK[key] = row, p
+    end
+end
+lib.RING_N, lib.RK = N, RK
+lib.rings = lib.rings or {} -- per plain max: { g, mq, ncell, NB, curves } or false (refused)
+
 -- Gray code tables over 0..127, built without a bit library.
 local POW2 = { [0] = 1 }
 for k = 1, 60 do
@@ -292,16 +319,70 @@ function lib.priming(s, h)
 end
 
 -- The mode a set of handles asks for: "gray" while any asks for a step, else nil (edges only).
-function lib.modeFor(step)
-    return step and "gray" or nil
+-- The mode a set of handles asks for at the max M: "ring" while any asks for point precision and the max is over 100,
+-- "gray" while any asks for a step (or point precision at a max of 100 or less: the 1% cell is one point then), else
+-- nil (edges only).
+function lib.modeFor(step, prec, M)
+    if prec and M and M > 100 then
+        return "ring"
+    end
+    return (step or prec) and "gray" or nil
 end
 
 function lib.modeOf(s)
-    local step = false
+    local step, prec = false, false
     for j = 1, #s.handles do
-        step = step or s.handles[j].step ~= nil
+        local h = s.handles[j]
+        step, prec = step or h.step ~= nil, prec or h.prec == true
     end
-    return lib.modeFor(step)
+    return lib.modeFor(step, prec, s.max)
+end
+
+-- The ring for the max M: the point step g grows until every curve fits lib.MAXPTS points (a fine bar steps every N/2
+-- quanta; a guarded step costs 2 points). false when the client refused a curve.
+function lib.ringFor(M)
+    local r = lib.rings[M]
+    if r ~= nil then
+        return r
+    end
+    local g, mq, ncell
+    g = 1
+    while true do
+        mq = math.floor(M / g)
+        ncell = math.floor(mq / N) + 1
+        local steps = math.max(math.ceil(mq / HALF), ncell - 1)
+        if 1 + 2 * steps <= lib.MAXPTS then
+            break
+        end
+        g = g + 1
+    end
+    local NB = 1
+    while POW2[NB] < ncell do
+        NB = NB + 1
+    end
+    local ok, curves = pcall(function()
+        local t, eps = {}, math.max(0.25 / M, MINSP)
+        local function xOf(q) -- half a point below the quantum's first point, as for a point bar
+            return (q * g - 0.5) / M
+        end
+        for j = 0, N - 1 do
+            t[j + 1] = lib.levelCurve(function(q)
+                return RS[q % N][j]
+            end, mq, xOf, eps)
+        end
+        for k = 0, NB - 1 do
+            t[N + k + 1] = lib.levelCurve(function(q)
+                return math.floor(GRAY[math.floor(q / N)] / POW2[k]) % 2
+            end, mq, xOf, eps)
+        end
+        t[N + NB + 1] = lib.levelCurve(function(q)
+            return math.floor(q / N) % 2
+        end, mq, xOf, eps)
+        return t
+    end)
+    r = ok and { g = g, mq = mq, ncell = ncell, NB = NB, curves = curves } or false
+    lib.rings[M] = r
+    return r
 end
 
 -- The player's plain max of the source's power type: a secret one (or a say-so that it is secret) keeps the last
@@ -328,9 +409,9 @@ end
 -- the set; swapH counts with swapList as its points.
 function lib.need(s, add, swapH, swapList)
     local M = s.kind == "power" and lib.maxOf(s.unit, s.power, s.max) or nil
-    local step, edges, points = false, {}, {}
+    local step, prec, edges, points = false, false, {}, {}
     local function take(h)
-        step = step or h.step ~= nil
+        step, prec = step or h.step ~= nil, prec or h.prec == true
         for k = 1, #h.edges do
             edges[h.edges[k]] = true
         end
@@ -345,8 +426,12 @@ function lib.need(s, add, swapH, swapList)
     if add then
         take(add)
     end
-    local mode = lib.modeFor(step)
+    local mode = lib.modeFor(step, prec, M)
     local bars, pb = mode == "gray" and 8 or 0, 0
+    if mode == "ring" then
+        local r = lib.ringFor(M)
+        bars = r and #r.curves or 0
+    end
     for e in pairs(edges) do
         if needEdge(mode, e) then
             bars = bars + 1
@@ -398,7 +483,12 @@ end
 
 -- The core set of the mode (all or nothing): false when a bar or a curve could not be had.
 local function allocCore(s)
-    local curves = lib.grayCurves()
+    local curves
+    if s.mode == "ring" then
+        curves = s.ring and s.ring.curves
+    else
+        curves = lib.grayCurves()
+    end
     if not curves then
         return false
     end
@@ -430,9 +520,10 @@ function lib.sync(s)
         s.pM = M
     end
     local mode = ready and lib.modeOf(s) or nil
-    if mode ~= s.mode then
+    local ring = mode == "ring" and lib.ringFor(M) or nil
+    if mode ~= s.mode or ring ~= s.ring then -- a new mode, or the ring of a new max
         freeCore(s)
-        s.mode, s.bad, s.ok = mode, 0, false
+        s.mode, s.ring, s.bad, s.ok = mode, ring, 0, false
     end
     local want = false
     if ready then
@@ -551,6 +642,39 @@ local function grayDecode(s)
     s.n = n
 end
 
+-- The ring's quantum from its bars; an error word when the ring state, the cell code, its parity or the range is off.
+local function ringDecode(s)
+    local r, st, core = s.ring, lib.barState, s.core
+    local key = 0
+    for j = 1, N do
+        if st[core[j]] then
+            key = key + POW2[j - 1]
+        end
+    end
+    local p = RK[key]
+    if not p then
+        return "ring"
+    end
+    local NB, code = r.NB, 0
+    for k = 1, NB do
+        if st[core[N + k]] then
+            code = code + POW2[k - 1]
+        end
+    end
+    local c = GINV[code]
+    if c == nil or c >= r.ncell then
+        return "code"
+    end
+    if st[core[N + NB + 1]] ~= (c % 2 == 1) then
+        return "parity"
+    end
+    local q = c * N + p
+    if q > r.mq then
+        return "range"
+    end
+    s.qv = q
+end
+
 -- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (a split);
 -- two bad frames in a row are a desync and the source primes again.
 function lib.decodeSource(s)
@@ -563,7 +687,13 @@ function lib.decodeSource(s)
         s.ok = false
         return true
     end
-    if grayDecode(s) then
+    local bad
+    if mode == "gray" then
+        bad = grayDecode(s)
+    else
+        bad = ringDecode(s)
+    end
+    if bad then
         s.bad = s.bad + 1
         if s.bad >= 2 then
             lib.desyncs = lib.desyncs + 1
@@ -588,13 +718,30 @@ local function band(h)
     local s, st = h.src, lib.barState
     local n = s.mode == "gray" and s.n or nil
     local M, pts = s.max, h.pts
+    local A, B -- point precision: the value is in A..B (whole points)
+    if s.mode == "ring" then
+        local g = s.ring.g
+        A = s.qv * g
+        B = math.min(A + g - 1, M)
+    end
     local top = pts and M or 100
     local lo, hi = 0, top
-    if h.step and n then
+    if h.prec and (n or A) then
+        if A then
+            lo, hi = A, B < M and B + 1 or M
+        else -- a max of 100 or less: the cell holds one whole point
+            lo = math.floor((n * M + 99) / 100)
+            hi = lo < M and lo + 1 or M
+        end
+    elseif h.step and (n or A) then
+        local n1, n2 = n, n
+        if A then -- the 1% cells the exact value spans
+            n1, n2 = math.floor(100 * A / M), math.floor(100 * B / M)
+        end
         if pts then
-            lo, hi = n * M / 100, n < 100 and (n + 1) * M / 100 or M
+            lo, hi = n1 * M / 100, n2 < 100 and (n2 + 1) * M / 100 or M
         else
-            lo, hi = n, n < 100 and n + 1 or 100
+            lo, hi = n1, n2 < 100 and n2 + 1 or 100
         end
     end
     local edges = h.edges
@@ -605,6 +752,12 @@ local function band(h)
             up = st[i]
         elseif n then
             up = n >= e
+        elseif A then
+            if 100 * A >= e * M then
+                up = true
+            elseif 100 * B < e * M then
+                up = false
+            end
         end
         local c = pts and e * M / 100 or e
         if up then
@@ -627,6 +780,12 @@ local function band(h)
             elseif (n + 1) * M <= p * 100 or p > M then
                 up = false
             end
+        elseif A then
+            if A >= p then
+                up = true
+            elseif B < p then
+                up = false
+            end
         end
         if up then
             if p > lo then
@@ -640,6 +799,22 @@ local function band(h)
         return false
     end
     return lo, hi
+end
+
+-- The exact value in points and its step for a point-precision handle, nil when the source does not know it.
+function lib.exact(h)
+    local s = h.src
+    if not (s and s.ok and h.prec) then
+        return nil
+    end
+    if s.mode == "ring" then
+        local g = s.ring.g
+        return s.qv * g, g
+    end
+    local M = s.max
+    if s.mode == "gray" and M and M <= 100 then
+        return math.floor((s.n * M + 99) / 100), 1
+    end
 end
 
 -- The handle's band and its sink when the band changed; at most one call per handle per frame (a second change in
@@ -669,6 +844,9 @@ function lib.decode(h)
     local sf = h.src and h.src.seenFrame
     local t = (lo and sf and sf >= frame - 1) and h.src.seen or GetTime()
     local q = lo and lib.BAND or lib.UNKNOWN
+    if lo and h.prec and select(2, lib.exact(h)) == 1 then
+        q = lib.EXACT
+    end
     h.lo, h.hi, h.t, h.q, h.stamp = lo, hi, t, q, frame
     local fn = h.sink
     if fn then

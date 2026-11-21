@@ -28,7 +28,11 @@ local function validate(spec, h)
     if pts ~= nil and type(pts) ~= "table" then
         return E.POINTS_INVALID
     end
-    if (edges == nil or #edges == 0) and step == nil and (pts == nil or #pts == 0) then
+    local prec = spec.precision
+    if prec ~= nil and prec ~= "point" then
+        return E.PRECISION_INVALID
+    end
+    if (edges == nil or #edges == 0) and step == nil and (pts == nil or #pts == 0) and prec == nil then
         return E.EDGES_REQUIRED
     end
     if spec.power ~= nil and type(spec.power) ~= "number" then
@@ -62,11 +66,12 @@ local function validate(spec, h)
     if pts and not lib.pointList(pts) then
         return E.POINTS_INVALID
     end
-    h.pts = pts ~= nil -- a points handle answers in points
-    h.single = #out + #h.points == 1 and not step -- rests on one bar: called from its firing
+    h.prec = prec == "point" or nil
+    h.pts = pts ~= nil or h.prec == true -- a points (or point-precision) handle answers in points
+    h.single = #out + #h.points == 1 and not step and not prec -- rests on one bar: called from its firing
     if
         not lib.kinds[h.kind].units[unit]
-        or (pts and h.kind ~= "power") -- points: player power only (its max is plain)
+        or ((pts or prec) and h.kind ~= "power") -- points and precision: player power only (its max is plain)
         or (h.kind == "power" and not PROVEN_POWER[spec.power])
     then
         h.unproven = "unproven"

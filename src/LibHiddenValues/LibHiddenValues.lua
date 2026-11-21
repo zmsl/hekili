@@ -35,6 +35,7 @@ lib.ERR = {
     POINTS_INVALID = "points-invalid",
     EDGE_LIMIT = "edge-limit",
     POOL_LIMIT = "pool-limit",
+    PRECISION_INVALID = "precision-invalid",
 }
 
 -- Messages for error codes, handle states and capability reasons, per locale; enUS only for now.
@@ -54,6 +55,7 @@ lib.MESSAGES = {
         ["points-invalid"] = "The points must be a list of whole numbers of 1 or more, on a points handle.",
         ["edge-limit"] = "Too many point thresholds: over the cap per value or in total (nothing was granted).",
         ["pool-limit"] = "Not enough bars left in the pool (nothing was granted).",
+        ["precision-invalid"] = 'The precision must be "point" or nil.',
         ["max-unknown"] = "The maximum is not known (never read as a plain number).",
         live = "Live: a band is known.",
         priming = "Priming: the band is not known yet.",
@@ -240,7 +242,7 @@ function lib:Watch(owner, spec, sink)
     else
         h.unproven = "unproven"
     end
-    if not h.unproven and #h.points > 0 then
+    if not h.unproven and (#h.points > 0 or h.prec) then
         local err = lib.admit(h)
         if err then
             return nil, err
@@ -353,7 +355,11 @@ end
 -- answers in points: 0 to the plain max (nil while unknown), its step the 1% cell in points.
 function H:Domain()
     if self.pts then
-        local M = self.src and self.src.max
+        local s = self.src
+        local M = s and s.max
+        if self.prec then
+            return s and s.mode == "ring" and s.ring and s.ring.g or 1, 0, M
+        end
         return self.step and M and M / 100 or nil, 0, M
     end
     return self.step, 0, 100
@@ -383,7 +389,10 @@ end
 
 -- The plain value when the client gives it right now: not read in this stage.
 function H:Exact()
-    return nil
+    if self.lo == nil then
+        return nil
+    end
+    return lib.exact(self)
 end
 
 -- Worst-case seconds from a change to its callback: a one-edge handle on an edges-only source is called in the frame of
