@@ -29,12 +29,18 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
   is now a bad decode after a bad one with no counted firing in between (`s.firedAt`, stamped in `lib.fire`), or
   `SETTLE` bad decodes in a row. Why the client splits one push's firings over frames is not known (a secret push's
   firing trailing a frame, as LHVProbe saw for a prime's live push, is the hypothesis). FakeClient: `jitter`, `seed`.
-- L1645 ring aliases: with regen at 2-3 points per change, the ring's bars of a change across a cell boundary could
-  land apart from the cell's: a valid state 50 off outside the I3 set (a fake run read 401 for 451). `suspect()` holds
-  any ring decode whose cell moved other than the ring's own move says, so every real jump of 25 quanta or more pays
-  one frame (fix round 1 widened it from 42-58 quanta: a spend whose Gray cell bits land in part reads another cell,
-  516 for 116 and 1417 for 1467 in fake runs); the first valid ring decode after bad frames is held too (`s.qv` is
-  stale then: 1246 +1 +1 +2 read 1200; review I1).
+- L1645 ring aliases (`Bars.lua` `lib.decodeSource`): half of a change whose firings land over two frames is a valid
+  ring state the client never held: 50 off for a 2-3 point regen change across a cell (401 for 451), another cell for
+  a spend whose Gray cell bits landed in part (516 for 116), a small change from the old value for a spend whose cell
+  bars all came late (272 for 122), a value partway through a change of several points (about 4% of calls before).
+  Fix round 2 (owner's choice A, with the re-review's confirm rule): every ring decode other than `s.qv` is held
+  (`s.pend`) until the next frame's decode gives the same value; one that moves is held again (re-review R1: a held
+  jump, 1300 to 1248, then +2 across 1250 with its cell bars late, read 1200 when the held frame's decode was taken
+  unchecked). Confirmed means exactly: two consecutive decodes of the source give the same quantum. With a push's
+  firings within two frames the rest of a half-landed change lands before the next decode, so it is never confirmed.
+  Holds and bad frames count in `s.run`; more than `SETTLE + 1` frames without a call is a desync. `suspect()`,
+  `DRIFT` and round 1's after-bad-frame hold are gone (subsumed). Scope: ring sources only (max over 100); a `step`
+  source and precision at a max of 100 or less (Gray, e.g. energy) are not held and keep the partial read (84 for 85).
 - L1645 energy 35, 36, 35, 36 (exact, max 100, position): no decode path. A one-point change toggles a Gray bit and
   the parity bar, and either alone fails the parity check (a hold); four alternating reads need Gray bit 2 to toggle
   three times, which a spend and up to 7 points of regen cannot give (both checked exhaustively in `position_spec`).
@@ -42,38 +48,44 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
 - L1627 (2) `Bars.lua` `lib.sync`, `served`: a refused ring curve no longer suspends the whole source. The source falls
   back to the position set when a step watch is there, else to edges only (also when the percent Gray set itself is
   refused); only the handles that need the refused curves are `suspended` (precision; step without a position set).
-- Residual rates (fake, 6 seeds x 150 s, max 2479, regen +2/+3 every 5-7 frames, a spend every 1-4 s, lag 1 plus
-  jitter: each firing 1-2 frames late, harsher than the run's ~1 change in 4 split; Park-Miller seeds). Desyncs /
-  sink calls outside the client's values of the last 9 frames / of those, 40 or more off that range:
-  | regime | late | c01cbbdc4 | fix round 1 |
-  |---|---|---|---|
-  | drained (spend 100-399 from 1200) | 1-2 | 0 / 1 / 1 | 0 / 0 / 0 |
-  | balanced (spend 30-94) | 1-2 | 0 / 1 / 0 | 0 / 1 / 0 |
-  | sweep (spend 60-259 from the max, refilled each minute) | 1-2 | 0 / 4 / 1 | 0 / 1 / 0 |
-  | drained | 1-3 | 1003 / 9 / 6 | 1038 / 2 / 1 |
-  | balanced | 1-3 | 1017 / 13 / 13 | 1081 / 3 / 3 |
-  | sweep | 1-3 | 939 / 5 / 5 | 984 / 2 / 2 |
-  The 1-2 rows' remaining reads outside the range decode as a spend whose cell bars all landed a frame after its ring
-  bars, the ring moved fewer than 25 quanta: a valid small change from the old value (272 for 122 after 269, 150
-  off; the "40 or more off the range" column measures from the nearest recent value, so it misses it). The cost:
-  about 8000 splits per 15 min (as before), the longest a reading stayed behind the client's value 11-14 frames at
-  1-2 late (9-10 before) and 30-44 at 1-3 late (11 before; holds now count toward `SETTLE`); desyncs at 1-3 late rose
-  3-6%.
+- Residual rates (fake, 6 seeds x 150 s per row, max 2479, regen +2/+3 every 5-7 frames, a spend every 1-4 s, lag 1
+  plus jitter; Park-Miller seeds). Desyncs / sink calls with a value the client did not hold in the last 20 frames:
+  | regime | late | c01cbbdc4 | fix round 1 | fix round 2 |
+  |---|---|---|---|---|
+  | drained (spend 100-399 from 1200) | 1-2 | 0 / - | 0 / 414 | 0 / 0 |
+  | balanced (spend 30-94) | 1-2 | 0 / - | 0 / 404 | 0 / 0 |
+  | sweep (spend 60-259 from the max, refilled each minute) | 1-2 | 0 / - | 0 / 404 | 0 / 0 |
+  | drained | 1-3 | 1003 / - | 1038 / 372 | 1040 / 65 |
+  | balanced | 1-3 | 1017 / - | 1081 / 358 | 1084 / 63 |
+  | sweep | 1-3 | 939 / - | 984 / 350 | 958 / 85 |
+  (c01cbbdc4 was measured with another metric: 1 / 1 / 4 calls outside the last 9 frames' range at 1-2 late.) Round
+  1's ~400 per row are mostly values partway through a regen change; round 2 removes them. The 1-3 rows' residual is
+  a half-landed state whose rest came two frames later, confirmed by the next decode. Splits (a decode that moved
+  during a hold, or a run of bad frames) stay meaningful: 0 at lag 0, ~8500 per row at 1-2 late (~8000 in round 1).
+  The longest run of frames with `h:Exact()` behind the client's value is 11-14 at 1-2 late and 36-43 at 1-3 late; it
+  is not latency: with changes every 5-7 frames the reading trails a moving value, and each value reported is at most
+  the firing delay plus `SETTLE + 3` frames old.
+- Extending the hold to Gray sources (not done: owner call). Fake, energy max 100, regen +1 every 5-7 frames, a
+  spend of 20-59 every 1-4 s, 6 seeds x 150 s, a precision watch; now vs a prototype holding every Gray change for
+  confirmation: values never held 0 / 0 at lag 0, 101 / 0 at 1-2 late (~7 a minute removed), 110 / 17 at 1-3 late;
+  frames with `h:Exact()` behind the client 9306 / 18479 at lag 0 (one more frame per change, ~16 ms), 25309 / 34259
+  at 1-2 late; calls 9324 / 9080 at 1-2 late; longest run behind 9 / 11 (1-2 late), 10 / 24 (1-3 late); desyncs
+  unchanged (0 at 1-2, ~1635 at 1-3). The same rule would apply to `step` watches.
 - Read-only leftovers (L1649): `.luacheckrc` drops the unused `C_EncodingUtil`, `UnitClass`, `GetSpecialization`,
   `C_SpecializationInfo`; the in-game plan's minor statements read "or later".
-- Fix round 1 (review of the fix lane): I2 `Kinds/Aura.lua` stamps `s.litAt` only when the item lit for the watch's
-  own unit: an item lit on the player or on a secret unit no longer ends a target source's swap doubt (it read a false
-  0 once the player's aura fell). I3 `h:Latency()` of a position or precision handle is `SETTLE + 2` frames (was 3),
-  counted from the frame a change's first firing arrives: a bad frame after a hold counts the hold in `s.bad`, so at
-  most `SETTLE` decodes go without a call, then the value or (a desync) unknown; measured 6 by two chains in
+- Fix rounds 1 and 2 (review and re-review of the fix lane): I2 `Kinds/Aura.lua` stamps `s.litAt` only when the item
+  lit for the watch's own unit: an item lit on the player or on a secret unit no longer ends a target source's swap
+  doubt (it read a false 0 once the player's aura fell). I3 `h:Latency()` of a position or precision handle is
+  `SETTLE + 3` frames (was 3), counted from the frame a change's first firing arrives: that frame, at most `SETTLE + 1`
+  decodes without a call (`s.run`), then the value or (a desync) unknown; measured 7 by a chain of split changes in
   `precision_spec`. M1: the minute-of-regen spec sweeps from the max to 36 (it sat below 100 for 3124 of its 3600
-  frames). M2: FakeClient's `jitter` draws from Park-Miller (`seed` 1 to 2^31 - 2; the old LCG lost bits past 2^53).
+  frames). M2/M5: FakeClient's `jitter` draws from Park-Miller; `Fake.set("seed", n)` asserts 1 to 2^31 - 2 (0 would
+  pin it: no jitter).
 - Known, not changed here: in edges mode `lib.decode` still counts a contradiction between edge bars as a desync at
   once (a jump over two edges whose firings split the wrong way re-primes, no hold). With the doubt on every target
   watch, a mob without the aura reads unknown until a target UNIT_AURA (about 2 s in the Essential run). Owner calls:
-  every jump of 25 quanta or more and every first valid decode after bad frames pays a frame; the residual above (a
-  jump's cell bars all late, its ring moved under 25) is not caught; `h:Latency()` is 6 frames for position and
-  precision handles.
+  every precision change pays a frame (choice A); Gray sources are not held (cost above); `h:Latency()` is 7 frames for
+  position and precision handles.
 
 ## Built in lane C1: Cooldown Manager gaps G1-G4, truths, the position set beside the ring, minor 5
 

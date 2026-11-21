@@ -31,11 +31,11 @@ end)
   `LHV.UNKNOWN` = 0).
 - At most one call per handle per frame. A handle on one edge is called in the frame of the change; on several edges,
   one frame later, with the net band (a jump over three edges is one call); on a `step` source up to two frames later
-  (a split holds the decode a frame), on a `precision` source up to three (the first valid decode after a split is held
-  one more, as is any jump of about half a cell or more); while changes' firings keep landing, up to five frames later
-  on either: at most four frames hold, then the handle is called with the value or, after a desync, unknown.
-  `h:Latency()` gives that worst case in seconds (six frames, counted from the frame the change's first firing
-  arrives: the client's own delay before it is not counted).
+  (a split holds the decode a frame); on a `precision` source over a max of 100 every change waits for the next frame's
+  decode to agree, so two frames later, three when its firings split. While changes' firings keep landing, up to six
+  frames later on either: at most five frames hold, then the handle is called with the value or, after a desync,
+  unknown. `h:Latency()` gives that worst case in seconds (seven frames, counted from the frame the change's first
+  firing arrives: the client's own delay before it is not counted).
 - `h:Get()` returns `lo, hi, t, q` without a callback; `h:State()` returns `state, reason` (`"live"` means a band is
   known: `Get()` has it); `h:SetPaused(true)` stops
   feeding while your frame is hidden; `h:Release()` and `LHV:ReleaseAll("MyAddon")` drop watches.
@@ -57,7 +57,8 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
 - `step`: position. Any step is granted as 1: the band is the 1% cell (`lo`, `lo + 1`), `h:Domain()` returns step 1.
   Beside `edges` the band is cut by both (an edge on the 1% grid costs no bar). The source runs 8 bars (a Gray code
   and a parity bar) while any watch on it asks for a step. A jump of any size is one call, one frame later (two when
-  one change's firings split over two frames).
+  one change's firings split over two frames). A step source is not held for confirmation: a jump of several cells
+  whose firings split can read as another cell for one frame.
 - `points` (player power): whole-number thresholds in the value's own units, e.g. `{ 40, 60 }` energy. A handle with
   `points` (even `{}`) answers in points: `lo`, `hi` and `h:Domain()` (0 to the player's plain max) are in points.
   The cut is `points / max`; it moves with the max (`UNIT_MAXPOWER`: the handle goes unknown while it primes again).
@@ -75,20 +76,19 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   still reads one 1% cell: while one is there the source also runs the 8 position bars (cut on whole points, so they
   agree with the exact value), and a cell that does not meet the exact value is held a frame, then primes again, as any
   disagreement. A `step` watch joining or leaving such a source primes it again (about 9 frames unknown). At step 1 the
-  exact value already gives the cell: no extra bars run (admission still counts them: the max can grow past 3175). A
-  decode whose cell moved other than the 50 fine bars' own move says (a jump of about half a cell, 25 steps, or more)
-  is held one frame, and so is the first valid decode after invalid ones (the last value read is stale then). Half of a
-  change whose cell bars and fine bars land apart is a valid state whole cells off; with the two halves at most one
-  frame apart it is not read, with one exception: a jump whose cell bars all land after its fine bars, those having
-  moved fewer than 25 steps, reads for that frame as a small change from the old value (a fake run read 272 for 122,
-  150 off). Every real jump of 25 steps or more pays the held frame. The frame after a hold takes any valid decode: a
-  half landing two or more frames after the other, or a new change's half landing in the held frame, can still read
-  wrong for that frame. A change of several steps whose firings land in two frames can read for that one frame as a
-  value between the old and the new one. The owner's run (2026-11-21, mana regenerating 2-3 points at a time) saw about
-  one change in four split over two frames. Should the client refuse a
-  ring curve at a max, the precision watch is `suspended` there and the source's other watches keep their bars (a `step`
-  watch reads the 8 position bars). A max of 100 or less is the same as `step` (8 bars, exact). It is outside the point
-  caps but inside the 256-bar pool, with every edge and point on the source counted (the step can grow with the max) and
+  exact value already gives the cell: no extra bars run (admission still counts them: the max can grow past 3175).
+  Every change of the exact value is held until the next frame's decode gives the same value (one frame, about 16 ms
+  at 60 fps). Half of a change whose firings land over two frames is a valid state the client never held (whole cells
+  off, or a value partway through a change of several steps); with every push's firings landing within two frames, the
+  rest of them lands before the next decode, so such a state is never confirmed: no value the client did not hold is
+  reported (fake runs with each firing 1-2 frames late: none in 45 minutes of regen and spending; a coincidence that
+  needs a later change's landed half to rebuild the same state bar for bar was not seen). Firings later than that can
+  still confirm a half-landed state (about 70 calls in 15 minutes in the fake with firings 1-3 frames late). The owner's
+  run (2026-11-21, mana regenerating 2-3 points at a time) saw about one change in four split over two frames. Should
+  the client refuse a ring curve at a max, the precision watch is `suspended` there and the source's other watches keep
+  their bars (a `step` watch reads the 8 position bars). A max of 100 or less is the same as `step` (8 bars, exact) and
+  is not held for confirmation: as on a `step` source, a jump whose firings split can read as another value for one
+  frame (84 for 85). It is outside the point caps but inside the 256-bar pool, with every edge and point on the source counted (the step can grow with the max) and
   the 8 position bars when a `step` watch is there: over it, `pool-limit`. Any `step` watch is admitted the same way
   (counted, or refused with `pool-limit`), as a points or precision watch is; one joining a precision source counts the
   8 position bars.
