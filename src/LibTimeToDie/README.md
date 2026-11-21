@@ -14,7 +14,8 @@ LibTimeToDie calls LibHiddenValues through LibStub; you call only LibTimeToDie.
 
 - Embedded: copy both folders into your addon and include `LibHiddenValues.xml`, then `LibTimeToDie.xml`, from your
   `embeds.xml`.
-- Standalone: install both; list `## OptionalDeps: LibTimeToDie, LibHiddenValues` in your TOC.
+- Standalone: install both; list `## OptionalDeps: LibTimeToDie` in your TOC (LibTimeToDie's own TOC loads
+  LibHiddenValues first).
 
 Without LibHiddenValues every handle reads `unavailable, lhv-missing` and comes alive when it is there.
 
@@ -50,7 +51,7 @@ h:Release()                 -- or TTD:ReleaseAll("MyAddon"): every track and hin
 | `live` | number | an estimate; `reason` says from what: `fit` (the recent fall), `seed` (the fall since the unit was first seen: little data), `prior` (the rate carried over from before a change of unit, a heal or a stall), `stalled` (the health stopped falling: the death time moves later with the clock) |
 | `priming` | nil | the health is not read yet (a new watch, a new target; `reason` `pending` while LibHiddenValues' self-test runs) |
 | `unknown` | nil | the health is read but has not fallen enough to estimate (a mob at full, a pull with no carried rate) |
-| `gone` | nil | no unit, or it is plainly dead |
+| `gone` | nil | no unit, or it is plainly dead. A death the client keeps secret (under the dungeon restrictions it may) is not `gone`: the band reaches 0-1% and `est` stays near 0 until the target changes or clears |
 | `unavailable` | nil | `reason`: `lhv-missing`, or LibHiddenValues' reason passed through (`unproven` for a token it does not read yet, `selftest`, `api`, `off`, `error`, `suspended`) |
 | `paused` | nil | your `SetPaused(true)`, or every track of the token paused |
 | `released` | nil | after `Release` |
@@ -102,7 +103,8 @@ TTD:HintBelow("MyAddon", nil)     -- clears yours
 
 Several owners: the rate hints in force at the latest start multiply, up to the first of their ends; thresholds act as
 one at the highest percent with the product of the factors given. A part a stream learned (a threshold's factor) or
-dropped (a contradicted rate hint) is pushed again only when the combined hint changes.
+dropped (a contradicted rate hint) is pushed again only when the combined hint changes. What a stream learned lives
+with it: when the last track of a token is released, the next track of it starts from the hints as given.
 
 ## Error codes
 

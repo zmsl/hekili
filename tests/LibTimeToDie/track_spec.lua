@@ -48,7 +48,9 @@ describe("LibTimeToDie tracking", function()
     end)
 
     after_each(function()
+        local errors = Fake.errors -- what reached the client's error handler (a sink's error, the driver's, an event's)
         Fake.restore()
+        assert.are.same({}, errors)
     end)
 
     it("primes, reads unknown at full before the first crossing, then converges on the true time", function()
@@ -122,6 +124,24 @@ describe("LibTimeToDie tracking", function()
         assert.are.equal("live", (h:State())) -- the carried rate answers at once
     end)
 
+    it("a death the client keeps secret is not gone: the band reaches 0-1 and the estimate stays near 0", function()
+        local h = ttd:Track("A", "target")
+        Fake.tick(12)
+        fall(99, 80, 0.5)
+        W.secretBool = true -- UnitIsDead returns a secret, as it may under the dungeon restrictions
+        W.unit.target.health = 0
+        W.unit.target.dead = true
+        Fake.event("UNIT_HEALTH", "target")
+        Fake.advance(2)
+        local est, _, _, state = h:Get()
+        assert.are.equal("live", state)
+        assert.is_true(est < 1, tostring(est))
+        W.unit.target = nil
+        Fake.event("PLAYER_TARGET_CHANGED")
+        Fake.tick(2)
+        assert.are.equal("gone", (h:State())) -- the target cleared: gone
+    end)
+
     it("a heal restarts the fit and keeps answering; a stall holds the countdown", function()
         local h = ttd:Track("A", "target")
         Fake.tick(12)
@@ -187,14 +207,9 @@ describe("LibTimeToDie tracking", function()
     end)
 
     it("calls the sink only when the published estimate or the state changes, at most once per frame", function()
-        local calls, frames = {}, {}
-        local h
-        h = ttd:Track("A", "target", function(hh, est, lo, hi, state)
-            assert.are.equal(h, hh)
-            local now = GetTime()
-            assert.is_nil(frames[now])
-            frames[now] = true
-            calls[#calls + 1] = { est = est, lo = lo, hi = hi, state = state }
+        local calls = {}
+        local h = ttd:Track("A", "target", function(hh, est, lo, hi, state)
+            calls[#calls + 1] = { h = hh, t = GetTime(), est = est, lo = lo, hi = hi, state = state }
         end)
         Fake.tick(12)
         assert.are.equal("priming", calls[1].state)
@@ -217,6 +232,10 @@ describe("LibTimeToDie tracking", function()
         h:SetPaused(false)
         Fake.tick(30)
         assert.are.equal(m, #calls)
+        for i = 1, #calls do -- the sink runs under pcall: its own asserts would not fail the test
+            assert.are.equal(h, calls[i].h)
+            assert.is_true(i == 1 or calls[i].t > calls[i - 1].t, "two calls in one frame")
+        end
     end)
 
     it("refuses bad input with codes, and every code, state and reason has a message", function()

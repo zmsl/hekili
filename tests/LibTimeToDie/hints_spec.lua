@@ -41,7 +41,9 @@ describe("LibTimeToDie hints", function()
     end)
 
     after_each(function()
+        local errors = Fake.errors -- what reached the client's error handler (a sink's error, the driver's, an event's)
         Fake.restore()
+        assert.are.same({}, errors)
     end)
 
     it("refuses bad hints with codes; a nil factor or 1 clears a rate hint, a nil percent a threshold", function()
