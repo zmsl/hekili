@@ -439,9 +439,16 @@ function H:Exact()
 end
 
 -- Worst-case seconds from a change to its callback: a one-edge handle on an edges-only source is called in the frame of
--- the push, any other handle (several edges, a position) one frame later.
+-- the push, any other handle (several edges, a position) one frame later. An aura handle (the Cooldown Manager's own
+-- delay aside): `up` one frame later; stacks once the bar settled (SETTLE frames after the client's first push, plus
+-- one); seconds refreshed as they fall through an edge prime the bar again first (HOLD + SETTLE, plus the fall's frame,
+-- the push and a secret firing a frame late). Measured in the fake (aura_timing_spec): 2, 4 and 10 (11 a frame late).
 function H:Latency()
-    return lib.frameSec * ((self.single and not (self.src and self.src.mode)) and 1 or 2)
+    local n = (self.single and not (self.src and self.src.mode)) and 1 or 2
+    if self.kind == "aura" then
+        n = self.what == "up" and 2 or self.what == "stacks" and lib.SETTLE + 1 or lib.HOLD + lib.SETTLE + 3
+    end
+    return lib.frameSec * n
 end
 
 function H:SetSink(fn)

@@ -7,8 +7,9 @@
 -- bar (e - 1, e): never inside, a clean two-level toggle. Seconds fall through a bar (e - W, e) and may land inside it
 -- for a frame: that frame fires and so does the next, which a toggle cannot tell from a fall followed at once by a
 -- refresh back above the edge. So a seconds bar firing on the frame after its last firing primes again (the run
--- rule; the seconds come every frame, so it answers within HOLD + SETTLE + 2 frames) and its handles keep their band
--- meanwhile. Edge 1 of stacks is presence itself and has no bar.
+-- rule; the seconds come every frame, so it answers within HOLD + SETTLE + 2 frames, one more when a secret firing
+-- trails its push: h:Latency()) and its handles keep their band meanwhile. Edge 1 of stacks is presence itself and has
+-- no bar.
 -- Priming: a new bar holds low HOLD frames (pushes in between are dropped) and starts below its edge. Its state is
 -- right from then on, but it says something only SETTLE frames after the client first pushed into it (lib.barFedAt:
 -- a firing can trail its push), and again after each time the aura was absent: seconds come every frame while the

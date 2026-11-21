@@ -167,6 +167,63 @@ describe("LibHiddenValues aura timing", function()
                 assert.are.same({ { 2, math.huge, 0 } }, known(s))
             end)
 
+            -- Frames from now until the last call of h within 30 frames (0: none).
+            local function lastCall(h)
+                local last = 0
+                for f = 1, 30 do
+                    local n = #calls
+                    Fake.tick(1)
+                    for k = n + 1, #calls do
+                        if calls[k].h == h then
+                            last = f
+                        end
+                    end
+                end
+                return last
+            end
+
+            it("calls within h:Latency() of the change (the Cooldown Manager's own delay aside)", function()
+                boot()
+                local up = watch({ spell = 5001, what = "up" })
+                local st = watch({ spell = 5001, what = "stacks", edges = { 2 } })
+                settle()
+                local frame = lib.frameSec
+                Fake.setAura("player", 5001, 3, 30) -- the first band after an application
+                local nUp, nSt = 0, 0
+                for f = 1, 30 do
+                    Fake.tick(1)
+                    nUp = (nUp == 0 and up:Get() == 1) and f or nUp
+                    nSt = (nSt == 0 and st:Get() == 2) and f or nSt
+                end
+                assert.is_true(nUp > 0 and nUp * frame <= up:Latency() + 1e-9, "up: " .. nUp)
+                assert.is_true(nSt > 0 and nSt * frame <= st:Latency() + 1e-9, "stacks: " .. nSt)
+                -- a refresh around a seconds edge: the worst over where the fall lands and when the refresh comes
+                local worst, lat = 0, nil
+                for start = 1, 12 do
+                    for wait = 0, 3 do
+                        Fake.restore()
+                        boot()
+                        local l = watch({ spell = 5001, what = "left", edges = { 3 } })
+                        settle()
+                        lat = l:Latency()
+                        Fake.setAura("player", 5001, 1, 3 + start * 0.0029 + 2 / 60)
+                        Fake.tick(2)
+                        while select(2, l:Get()) ~= 3 and #calls < 50 do -- until the fall is told
+                            Fake.tick(1)
+                        end
+                        Fake.tick(wait)
+                        calls = {}
+                        Fake.setAura("player", 5001, 1, 30)
+                        local n = lastCall(l)
+                        assert.are.same({ 3, math.huge }, band(l))
+                        worst = math.max(worst, n)
+                    end
+                end
+                assert.is_true(worst > lib.SETTLE + 2, "the run path was taken: " .. worst)
+                assert.is_true(worst * frame <= lat + 1e-9, "left: " .. worst)
+                assert.is_true(lat < 1)
+            end)
+
             it("says live only with a band", function()
                 boot()
                 local hs = {

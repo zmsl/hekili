@@ -123,8 +123,12 @@ handle is unknown (`lo == nil`) only while no item shows it (`gone`) or before i
 always comes with a band. The client hides the count at one stack: an aura that is up with no count reads 1. `left`
 on an aura with no duration reads the lowest band while it is up (the client pushes 0 seconds for it), which looks
 like "about to expire": watch `up` for such auras.
-`h:Domain()` returns `nil, 0, top`: 1 for `up`, `max` (or `math.huge`) for stacks, `math.huge` for seconds. An aura
-handle is called one frame after the change (`h:Latency()`).
+`h:Domain()` returns `nil, 0, top`: 1 for `up`, `max` (or `math.huge`) for stacks, `math.huge` for seconds.
+`h:Latency()` is the worst case from the Cooldown Manager's update to the call (its own delay is not counted): `up`
+2 frames; `stacks` `LHV.SETTLE + 1` (5); `left` `LHV.HOLD + LHV.SETTLE + 3` (11: a refresh as the seconds fall
+through an edge; a plain fall through an edge is told within 2). When an aura comes back, `up` reads 1 at once while
+`stacks` and `left` keep the absent band for about `LHV.SETTLE` frames: read each handle on its own, or allow
+`h:Latency()` after `up` flips before combining them (a fresh application would otherwise read as about to expire).
 
 What each placement gives (the player chooses it in the Cooldown Manager's settings):
 
@@ -155,7 +159,7 @@ A bar is read 4 frames (`LHV.SETTLE`) after the client's first push into it, so 
 with dir 0. A stacks watch started while its aura is already up stays `priming` until the client next writes the
 count (an application, a refresh, a target swap); after a re-layout (UI scale, a loading screen) an aura handle is
 unknown until its bars settle again. When an aura comes back the band before it stands while the count settles. A
-refresh within a frame of a seconds edge can be told up to about 10 frames late (the band before it stands
+refresh within a frame of a seconds edge can be told up to 11 frames late (`h:Latency()`; the band before it stands
 meanwhile). `OnCapability` is not called from inside `Watch` or `IsAvailable`: read `h:State()` there (an answer
 `IsAvailable` gives may be a frame old; the callbacks follow on the next frame). A paused aura handle only reports
 unknown; its bars keep following the client.
