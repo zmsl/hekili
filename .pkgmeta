@@ -30,6 +30,7 @@ ignore:
     - CHANGELOG.md
     - src/Hekili_Shared/README.md
     - src/LibHiddenValues
+    - src/LibTimeToDie
     - tests
     - tools
     - docs

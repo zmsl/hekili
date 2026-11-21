@@ -8,6 +8,7 @@ codes = true
 exclude_files = {
     "src/Hekili/Libs/",
     "src/LibHiddenValues/Libs/",
+    "src/LibTimeToDie/Libs/",
     ".claude/",
     ".lua/",
     ".release/",
@@ -192,4 +193,15 @@ files["src/LibHiddenValues/"] = {
 files["tests/LibHiddenValues/"] = {
     std = "+busted",
     read_globals = { "LibStub", "Enum", "GetTime" },
+}
+-- LibTimeToDie (a standalone library in src/LibTimeToDie): time to die from LibHiddenValues' health bands.
+files["src/LibTimeToDie/"] = {
+    not_globals = { "print" }, -- a pure API: no chat output
+    read_globals = {
+        "CreateFrame", "GetTime", "GetLocale", "geterrorhandler", "UnitCanAttack", "UnitExists", "issecretvalue",
+    },
+}
+files["tests/LibTimeToDie/"] = {
+    std = "+busted",
+    read_globals = { "LibStub", "GetTime" },
 }

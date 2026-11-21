@@ -1,0 +1,11 @@
+## Interface: 16001
+## Title: LibTimeToDie
+## Notes: Time to die for unit health, from LibHiddenValues' bands. A library for other addons.
+## Author: zmsl
+## Version: 0.1.0
+## X-License: MIT
+## OptionalDeps: LibHiddenValues
+
+Libs\LibStub\LibStub.lua
+LibTimeToDie.lua
+Estimator.lua
