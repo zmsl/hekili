@@ -111,9 +111,9 @@ has no text for yet (enUS only for now). `GetMessage` also knows every state and
 | `CDM_COMBAT` | `cdm-combat` | managed layout: called in combat |
 | `CDM_SLOTS` | `cdm-slots-full` | managing: the store holds 5 layouts already |
 | `CDM_API` | `cdm-api` | managed layout: the client lacks the layout or encoding API (or its encoder failed the self-check) |
-| `CDM_UNREADABLE` | `cdm-unreadable` | managed layout: the saved layouts or the player's class cannot be read |
-| `CDM_WRITE` | `cdm-write-failed` | managed layout: the write did not read back as written (what was there is written back) |
-| `CDM_OWNER` | `cdm-owner` | managed layout: another addon's store holds the managed layout |
+| `CDM_UNREADABLE` | `cdm-unreadable` | managed layout: the saved layouts cannot be read or decoded, are of a save version other than 5, or the player's class cannot be read; nothing is changed |
+| `CDM_WRITE` | `cdm-write-failed` | managed layout: the write did not read back as written (the library tried to write back what was there; the saved original is kept) |
+| `CDM_OWNER` | `cdm-owner` | managed layout: another addon's store holds the managed layout (or a restore of it not yet verified by a load) |
 | `CDM_NOT_MANAGED` | `cdm-not-managed` | restoring: the store holds nothing to restore |
 | `CDM_OFF` | `cdm-off` | managing: the Cooldown Manager is off |
 
@@ -197,7 +197,8 @@ it changes the player's Cooldown Manager.
 
 The library has no SavedVariables. Your addon keeps a table in its `SavedVariablesPerCharacter` and hands it over:
 the saved original layouts and the state across reloads live there. Its fields are the library's: persist it, never
-edit it.
+edit it. Hand over the same persisted table at every load, never a fresh one: a table your SavedVariables do not keep
+loses the saved original.
 
 ```lua
 -- At every load, once your SavedVariables exist (ADDON_LOADED or PLAYER_LOGIN):
@@ -226,30 +227,45 @@ LHV:RestoreCooldownManager("MyAddon", MyAddonCharDB.cdm)
 | Mode | Reason | Meaning |
 |---|---|---|
 | `player` | nil | the player's own layout: Mode A, nothing hidden |
-| `player` | `check-failed` | after the reload the client did not take the layout (not active, or a learned aura without its bar item) within 20 s out of combat; nothing hidden. Offer the restore |
+| `player` | `check-failed` | after the reload the client did not take the layout (not active, or a learned aura without its bar item) within 20 s out of combat (time in combat does not count); nothing hidden. Offer the restore |
+| `player` | `restore-failed` | after a restore and its reload our layout is back (the client wrote its layouts over the restore); nothing hidden, the saved original is kept. Offer the restore again |
 | `pending` | `reload` | a write of this session waits for the reload |
-| `pending` | `checking` | after the reload, the check runs (in combat it waits for the end of combat) |
+| `pending` | `checking` | after the reload, the check runs; also a load in combat while managed, until combat ends (nothing hidden meanwhile) |
 | `managed` | nil | our layout is active and checked: the viewers are hidden |
 | `managed` | `update` | as above, but a watched aura has no bar in it yet: offer an update (`ManageCooldownManager`, a reload) |
 | `drift` | `switched` | the player made another layout active: the library reads it as in Mode A, never switches back by itself |
-| `drift` | `deleted` | the player deleted our layout |
+| `drift` | `deleted` | our layout is gone: deleted, edited by the player (it is theirs now), or a layout of the player took its id |
 | `drift` | `cdm-off` | the Cooldown Manager is off |
 
 `OnCapability` callbacks hear each mode change as `fn("cdm", mode, reason)` (`"cdm"` is not a kind: `IsAvailable`
 knows nothing of it), on the frame after the call that caused it, never from inside an API call. The viewers are
 hidden only in `managed`; a `pending` update over a managed layout stays hidden until its reload; `SetEnabled(false)`
-and an error in the aura kind give them back.
+and an error in the aura kind give them back. Each viewer's alpha is read again at every pass while hidden: one not at
+0 (Edit Mode applied the player's opacity again) is noted and set to 0, and restore gives back the latest.
+
+Our layout is recognised by its id, its name (your `owner`) and the exact content the library wrote, all kept in your
+store; never by the id alone (the client gives a new layout the largest id + 1, so a layout the player makes after
+deleting ours takes our id). A layout that fails any of the three is the player's: it reads `drift, deleted`, and
+neither restore nor manage ever changes it (manage adds a new layout of ours instead). A manage that finds none of
+ours saves the store as it is then as the original.
 
 Restore, decided per case: nothing else changed in the store since the manage (structurally) writes the saved
 original back byte for byte; the player changed something (edited, added or deleted another layout) removes only our
 layout and makes the layout that was active before ours active again (if the player switched away from ours, their
-choice stays; if that layout is gone, the default). Before the reload of a manage, restore is an undo: the store is
-back to what the client loaded, so no reload is pending. Restore after the reload needs one (`pending, reload`) so the
-Cooldown Manager reads the player's layout again. A store the library cannot decode gets the saved original back raw.
-A manage that needs no reload (the store already is what this session loaded) is checked in the same session.
+choice stays; if that layout is gone, the default). Equal bytes are not written again. Before the reload of a manage,
+restore is an undo: the store is back to what the client loaded, so no reload is pending (a manage whose write is
+already gone from the store leaves nothing pending either). Restore after the reload needs one (`pending, reload`)
+so the Cooldown Manager reads the player's layout again; the saved original stays in your store until the next load
+shows our layout gone (else `player, restore-failed`). Restore refuses `cdm-unreadable` and changes nothing when the
+store cannot be read or decoded, or is of another save version; the one exception is the exact string a failed write
+of the library left, which gets the saved original back raw. A manage that needs no reload (the store already is what
+this session loaded) is checked in the same session.
 
 Not covered: a store lost from your SavedVariables while our layout exists (the layout stays; the player deletes it
-in the Cooldown Manager's settings, and a new manage adds another); another addon writing the layout store.
+in the Cooldown Manager's settings, and a new manage adds another); a store saved by minor 4 before the layout's name
+and content were kept (it reads `drift, deleted`; the player deletes that layout by hand); another addon writing the
+layout store. Unproven in game: that the client keeps our layout's content unchanged when it saves the store again (a
+layout switch in Cooldown Settings); if it does not, our layout reads `deleted` and a manage adds a second one.
 
 ## Testing your addon
 

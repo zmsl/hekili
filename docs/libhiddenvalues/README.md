@@ -33,7 +33,7 @@ from a click, alpha 0 holding with data flowing; ledger L1591, L1596, L1608); th
   `GetSpecialization`, the Essential and Utility viewers, `GetAlpha`, the learned filter of
   `GetCooldownViewerCategorySet`, placement derived from the stored active layout at login, and the reload
   (`ReloadUI`, `Fake.reload`).
-- Suite: `tests/LibHiddenValues/managed_spec.lua` (18 tests).
+- Suite: `tests/LibHiddenValues/managed_spec.lua` (30 tests).
 
 | Question | Taken | Why |
 |---|---|---|
@@ -44,10 +44,15 @@ from a click, alpha 0 holding with data flowing; ledger L1591, L1596, L1608); th
 | Base of the layout | ours when it exists (an update or a re-activation), else a copy of the active one (the default: an empty layout) | brief: "rewrites only our layout" |
 | Nothing to change | `true`, no write, no reload | a manage of an up-to-date, active layout is idempotent |
 | Pending | `write` notes the store string before the first write of a session; a write that brings it back clears the pending state | the canvas' undo (no reload) and the brief's "restore marks a reload pending" both hold |
-| The check after the reload | our id active in the store and every learned entry of ours a bar item (`cdm.placeOf == 1`); polled on each read and every 30 frames; passed at once, failed after 20 s out of combat (`player, check-failed`); in combat it waits | the probe checked after 6 s; generous for slow loads, quick when it passes |
+| The check after the reload | our id active in the store and every learned entry of ours a bar item (`cdm.placeOf == 1`); polled on each read and every 30 frames; passed at once, failed after 20 s out of combat (the driver counts `elapsed` out of combat only: `player, check-failed`); in combat it waits | the probe checked after 6 s; generous for slow loads, quick when it passes |
+| Our layout | id + name (`store.name`) + the exact content written (`store.lay`); any mismatch is the player's (`deleted`), never changed by restore or manage | the client reuses ids: a layout made after ours was deleted takes our id (review B1) |
 | Drift | from the store (decoded only when its string changed) on each read out of combat: our layout missing `deleted`, not active `switched`; `cdm-off` | never fights the player; shortcut: the item pool is not compared (a store not saved yet by the client shows drift late) |
-| Restore | structural: our layout removed, the active id put back when ours was active, compared with the decoded original: equal writes the original bytes, else the edited table | ledger: bytes hold across one reload only; never destroys the player's edits |
-| Alpha | each viewer's own alpha read before 0 (the owner's Edit Mode opacity is 0.5) and given back; no re-apply | L1608: 0 resets; Hide() stops the data |
+| Restore | structural: our layout removed, the active id put back when ours was active, compared with the decoded original: equal writes the original bytes, else the edited table; equal bytes not written; unreadable, undecodable or another save version refused (`cdm-unreadable`) unless it is the exact leftover of our own failed write (`store.bad`) | ledger: bytes hold across one reload only; never destroys the player's edits, never writes over what it cannot read |
+| After a restore | the saved original kept (`state = "restoring"`) until the next load shows our id free of our name; else `player, restore-failed` and restore again | the probe's `RB.verifyRestore`: a client save between the write and the reload could undo it |
+| The original | saved by a manage that finds none of ours in the store (a new start); an update keeps it | a restore after re-managing over a new layout of the player puts back what was active just before |
+| Save version | 5 only (manage, restore, check, drift) | another version may give `[2]`/`[3]` other meanings |
+| Alpha | each viewer's own alpha read before 0 (the owner's Edit Mode opacity is 0.5) and given back; read again at every pass while hidden (one not at 0 is noted and set to 0 again) | L1608: 0 resets; Hide() stops the data; Edit Mode's order against our pass is unproven |
+| In combat at a load | a store with no answer yet this load (pending check, restore to verify, managed not read) reads `pending, checking`, viewers shown | the store is never read in combat |
 | Callbacks | `fn("cdm", mode, reason)` on the frame after the change, never inside an API call | as `OnCapability` is never called inside `Watch` |
 | Two consumers | one store holds the managed layout; another owner gets `cdm-owner` until it is restored | one layout per character |
 | A lost store (SavedVariables wiped) | not adopted by name; a new manage adds another layout | a player's own layout could carry the same name |

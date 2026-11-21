@@ -114,7 +114,7 @@ LHVProbe needs, for this section (the controller extends it; every call is the l
 | B2 | `/lhvp manage` | `true`; `/lhvp mode`: `pending reload`, reload pending `manage`, alphas unchanged; the Reload button shows; one line `cdm pending reload` |
 | B3 | Click the Reload button; after the load repeat the B1 watches, then `/lhvp mode` | no ADDON_ACTION_BLOCKED, no Lua error; `cdm managed` within a few seconds (`pending checking` before it is fine); all four alphas 0 and the Cooldown Manager invisible; the Omen watch `ready` with a band; Cooldown Settings lists a layout "LHVProbe", active, Omen of Clarity under Tracked Bars, Lacerate's cooldown entry not moved |
 | B4 | A fight: Omen procs, stack Lacerate; open and close Edit Mode; a loading screen if handy | Omen `left` bands fall and refresh, Lacerate stacks follow; the viewers stay invisible (alphas 0) through all of it |
-| B5 | Cooldown Settings: make your own layout active again; `/lhvp mode` | `cdm drift switched`; alphas back to your opacity, your layout shows (the library does not switch back) |
+| B5 | Cooldown Settings: make your own layout active again; `/lhvp mode` | `cdm drift switched`; alphas back to your opacity, your layout shows (the library does not switch back). `drift deleted` here is a FAIL that matters: the client rewrote our layout when it saved (the library knows its layout by its exact content); report it and the hash, and say whether B6 then lists two "LHVProbe" layouts |
 | B6 | `/lhvp manage`, Reload button | `pending reload`, after the load `cdm managed` again, the same "LHVProbe" layout (no second one) |
 | B7 | `/lhvp watch aura player <another buff shown as an icon> left 3`; `/lhvp mode` | `cdm managed update`; then `/lhvp manage`, Reload: managed, that buff a tracked bar too, your other layouts unchanged in Cooldown Settings |
 | B8 | In combat: `/lhvp manage` and `/lhvp restore` | each refused `cdm-combat` with its message |
@@ -123,6 +123,21 @@ LHVProbe needs, for this section (the controller extends it; every call is the l
 | B11 | `/lhvp manage`, Reload, then `/lhvp restore`, Reload, `/lhvp mode` | managed, then `player`; hash equal to the one before this manage (byte-exact restore) |
 | B12 | Only if you are willing: add layouts until 5, then `/lhvp manage` | refused `cdm-slots-full`, hash unchanged; delete the extra layouts after |
 | B13 | `/lhvp copy`, paste back; set the CVar back to "0" | |
+
+More steps (numbered after B13 so LHVProbe 0.4.0's B1-B13 stay as they are): run B14-B20 after B12 and before B13.
+Start each from `managed` (`/lhvp manage`, Reload) unless the step says otherwise; repeat the B1 watches after
+every reload. The store lines `/lhvp mode` prints may now also show `name`, `lay`, `bad`, and `state` `restoring` or
+`unrestored`.
+
+| # | Do | Expect (PASS) |
+|---|---|---|
+| B14 | Cooldown Settings: delete "LHVProbe"; `/lhvp mode`. Then create a layout, name it "Mine2", keep it active; `/lhvp mode`. Then `/lhvp restore`; then `/lhvp manage` and at once `/lhvp restore` | `drift deleted` both times (never `managed`), alphas your opacity, "Mine2" shows. The first restore `true` and nothing changes ("Mine2" kept, active, same contents). The manage adds a new "LHVProbe" and leaves "Mine2" as it was; after the last restore the hash equals the one before that manage |
+| B15 | Restore first if managed. Cooldown Settings: make the default layout active (or use a character that never saved a layout: layout string length 0). `/lhvp mode`, note the hash; `/lhvp manage`, Reload; `/lhvp restore`, Reload; `/lhvp mode` | `managed` after the first load, Omen of Clarity a tracked bar, the rest in its default places; after the second load `player`, and the hash (or length 0) equal to the start |
+| B16 | `/lhvp manage`, then log out to the character list and back in (not the Reload button); `/lhvp mode`. Then `/lhvp restore`, log out and in again; `/lhvp mode` | `managed` after the first login; after the second `player` with no reason, store empty, hash equal to the one before the manage. Report any `restore-failed` or `check-failed` |
+| B17 | `/lhvp manage` (reload pending), open Cooldown Settings, move one icon in a layout that is not "LHVProbe", close; `/lhvp mode`; Reload; `/lhvp mode` after 25 s. Then `/lhvp restore` (pending), the same edit back, Reload, `/lhvp mode` | report the hash before and after each edit and each mode. Safe outcomes: `managed`, or `player check-failed` (the client wrote over our pending write); after the restore `player`, or `player restore-failed` (then `/lhvp restore`, Reload: `player`). A Lua error or a lost layout is a FAIL |
+| B18 | From a Reload into `managed`: `/lhvp mode` at once; open Edit Mode, `/lhvp mode`; close it, `/lhvp mode`; change the Cooldown Manager's opacity in Edit Mode, close, `/lhvp mode`; then `/lhvp restore` | all four alphas 0 each time (an alpha not 0 that stays is a FAIL: say on which viewer and for how long); after the restore the alphas are your latest opacity |
+| B19 | A second character of the same class, LHVProbe on: `/lhvp mode` before anything; open Cooldown Settings | report the hash (equal to the first character's: the layouts are per account), the mode (`player`, its own store empty) and whether "LHVProbe" is listed or active there. Do not manage on it |
+| B20 | `managed`; pull a mob, `/reload` in combat; `/lhvp mode` in combat; after combat `/lhvp mode` | in combat `pending checking`, alphas your opacity, no Lua error; after combat `cdm managed`, alphas 0 |
 
 Report every `cdm` line, the hashes, any Lua error naming LibHiddenValues or LHVProbe, and anything in BugSack after
 B3 (a forbidden-table or taint error there would mean the raw write tainted the viewers).

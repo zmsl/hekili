@@ -13,7 +13,10 @@
 --
 -- The library keeps no SavedVariables: the consumer's table (its SavedVariablesPerCharacter) holds the saved original
 -- and the state across reloads; the consumer hands it over at every load (SetCooldownManagerStore). Its fields are
--- the library's (orig, tag, id, bars, pending, state): persist the table, never edit it.
+-- the library's (orig, tag, id, name, lay, bars, pending, state, bad): persist the table, never edit it.
+--
+-- Our layout is recognised by its id, our name AND the content we wrote (name, lay), never by the id alone: the client
+-- gives a new layout the largest id + 1, so a layout the player makes after deleting ours takes our id.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return
@@ -48,7 +51,7 @@ M["cdm-combat"] = "Out of combat only: the Cooldown Manager's layouts are not ch
 M["cdm-slots-full"] = "No free layout slot (5 of 5 used): delete one in the Cooldown Manager's settings."
 M["cdm-api"] = "The client lacks the layout or encoding API this needs."
 M["cdm-unreadable"] = "The Cooldown Manager's saved layouts cannot be read."
-M["cdm-write-failed"] = "The layout write did not read back as written; the layouts were put back."
+M["cdm-write-failed"] = "The layout write did not read back as written. The library tried to put back what was there."
 M["cdm-owner"] = "Another addon manages the Cooldown Manager."
 M["cdm-not-managed"] = "Nothing to restore: the Cooldown Manager is not managed."
 M.player = "The player's own Cooldown Manager layout, read only."
@@ -58,6 +61,7 @@ M.drift =
 M.reload = "A reload is needed to finish."
 M.checking = "Checking the layout after the reload."
 M["check-failed"] = "The layout did not take after the reload: the player's own layout is in use."
+M["restore-failed"] = "The restore did not take: the library's layout came back after the reload. Restore again."
 M.switched = "Another layout is active."
 M.deleted = "The library's layout was deleted."
 M.update = "A watched aura has no bar yet: manage again to update the layout (a reload)."
@@ -137,7 +141,7 @@ local function decode(s)
         return nil
     end
     local ok, t = pcall(inflate, s:sub(d + 1))
-    if ok and type(t) == "table" and type(t[1]) == "number" then
+    if ok and type(t) == "table" and t[1] == 5 then -- another save version may mean other things: never rewritten
         return t
     end
 end
@@ -228,15 +232,17 @@ local function want(lay, moves, bars)
 end
 
 -- Writes new raw; true when it reads back equal. The store as the client loaded it is noted before the first write of
--- the session: a write that brings it back needs no reload (an undo before the reload).
+-- the session: a write that brings it back needs no reload (an undo before the reload). The leftover of our own failed
+-- write (st.bad) is never taken for what the client loaded.
 local function write(st, new, what)
-    if not lib.mbPending then
+    if not lib.mbPending and not st.bad then
         mb.atLoad = fetch()
     end
     local ok = pcall(C_CooldownViewer.SetLayoutData, new)
     if not ok or fetch() ~= new then
         return false
     end
+    st.bad = nil
     if new == mb.atLoad then
         lib.mbPending, st.pending = nil, nil
     else
@@ -247,34 +253,50 @@ local function write(st, new, what)
 end
 
 local function forget(st)
-    st.orig, st.tag, st.id, st.bars, st.pending, st.state = nil, nil, nil, nil, nil, nil
+    st.orig, st.tag, st.id, st.name, st.lay, st.bars = nil, nil, nil, nil, nil, nil
+    st.pending, st.state, st.bad = nil, nil, nil
+end
+
+-- Our layout in t, or nil: the id we wrote, under our name, holding exactly what we wrote. A layout the player made
+-- that took our id (or ours after the player edited it) is theirs: never hidden, rewritten or removed.
+local function mine(t, st)
+    local lay = st.id and t[3] and t[3][st.tag] and t[3][st.tag][st.id]
+    if lay and t[4] and t[4][st.id] == st.name and same(lay, st.lay) then
+        return lay
+    end
 end
 
 -- A manage that needs no reload (the store is what this load read) and is not managed yet: check it in this load.
 local function rearm(st)
     if not lib.mbPending and st.state ~= "managed" then
-        st.pending, st.state, mb.untilT = "manage", nil, nil
+        st.pending, st.state, mb.spent = "manage", nil, nil
     end
 end
 
 -- The viewers ---------------------------------------------------------------------------------------------------------
 
 -- Alpha 0 on the four viewers (each one's alpha read first and given back after); never Hide (that stops the data).
+-- Read again at every pass: a viewer not at 0 (Edit Mode applied the player's opacity again) has its new alpha noted
+-- and goes back to 0.
 local function hide(on)
-    if on and not mb.alpha then
-        mb.alpha = {}
+    if on then
+        local saved = mb.alpha or {}
+        mb.alpha = saved
         for i = 1, #VIEWERS do
-            local v = _G[VIEWERS[i]]
+            local name = VIEWERS[i]
+            local v = _G[name]
             if type(v) == "table" and v.GetAlpha and v.SetAlpha then
                 local ok, a = pcall(v.GetAlpha, v)
                 if not ok or issecretvalue(a) or type(a) ~= "number" then
-                    a = 1
+                    a = nil
                 end
-                mb.alpha[VIEWERS[i]] = a
-                pcall(v.SetAlpha, v, 0)
+                if (a ~= nil and a ~= 0) or saved[name] == nil then
+                    saved[name] = a or saved[name] or 1
+                    pcall(v.SetAlpha, v, 0)
+                end
             end
         end
-    elseif not on and mb.alpha then
+    elseif mb.alpha then
         for name, a in pairs(mb.alpha) do
             local v = _G[name]
             if v then
@@ -337,8 +359,7 @@ end
 -- After the reload: our layout is the active one and every learned entry of ours is a tracked bar item.
 local function check(st)
     local t = decode(fetch())
-    local ls = t and t[3] and t[3][st.tag]
-    if not (ls and ls[st.id] and t[2] and t[2][st.tag] == st.id) then
+    if not (t and mine(t, st) and t[2] and t[2][st.tag] == st.id) then
         return false
     end
     local known = learned()
@@ -364,21 +385,22 @@ local function drift(st)
     if not t then
         return mb.mode, mb.why -- unreadable now: the last answer stands
     end
-    local mine = t[3] and t[3][st.tag] and t[3][st.tag][st.id]
-    if not mine then
-        return "drift", "deleted"
+    local ours = mine(t, st)
+    if not ours then
+        return "drift", "deleted" -- or a layout of the player took our id: theirs
     end
     if not (t[2] and t[2][st.tag] == st.id) then
         return "drift", "switched"
     end
-    if want(mine) > 0 then
+    if want(ours) > 0 then
         return "managed", "update"
     end
     return "managed"
 end
 
 -- The mode from the store and this load's writes. Out of combat only for anything that reads the store; in combat the
--- last answer stands (a check waits for the end of combat).
+-- last answer of this load stands, and what has none yet (a check, a restore to verify, a managed store not read since
+-- the load) reads pending, checking until the end of combat.
 function mb.update()
     local st = lib.mbStore
     if not st then
@@ -389,15 +411,27 @@ function mb.update()
     end
     local fight = InCombatLockdown()
     mb.checking = nil
-    if st.pending == "manage" then -- written by an earlier load (or by this one with no reload needed): the check
-        if fight then
+    if fight then
+        if st.pending == "manage" or st.state == "restoring" or (st.state == "managed" and not mb.read) then
             mb.checking = true
             return set("pending", "checking")
+        elseif st.state == "managed" then
+            return
         end
-        mb.untilT = mb.untilT or GetTime() + CHECK
+    elseif st.state == "restoring" then -- a restore before this load: forgotten once our layout is gone
+        local t = decode(fetch())
+        if t then
+            local ls = t[3] and t[3][st.tag]
+            if st.id and ls and ls[st.id] and t[4] and t[4][st.id] == st.name then
+                st.state = "unrestored" -- ours came back (the client wrote its layouts over the restore): retry
+            else
+                forget(st)
+            end
+        end
+    elseif st.pending == "manage" then -- written by an earlier load (or by this one with no reload needed): the check
         if check(st) then
             st.pending, st.state = nil, "managed"
-        elseif GetTime() < mb.untilT then
+        elseif (mb.spent or 0) < CHECK then -- seconds out of combat, counted by the driver
             mb.checking = true
             return set("pending", "checking")
         else
@@ -405,12 +439,11 @@ function mb.update()
         end
     end
     if st.state == "managed" then
-        if fight then
-            return
-        end
+        mb.read = true
         return set(drift(st))
     end
-    return set("player", st.state == "failed" and "check-failed" or nil)
+    local why = st.state == "failed" and "check-failed" or st.state == "unrestored" and "restore-failed" or nil
+    return set("player", why)
 end
 
 -- The answer an API call leaves: noted at once, told to the callbacks on the next frame.
@@ -472,14 +505,14 @@ function lib:ManageCooldownManager(owner, store)
     local s = fetch()
     local t = s and decode(s)
     local tag = tagOf()
-    if not (t and t[1] >= 4 and tag) then
+    if not (t and tag) then
         return nil, E.CDM_UNREADABLE
     end
     cdm.catalogue()
     local ls = t[3] and t[3][tag]
-    local id = store.tag == tag and store.id
-    local base = id and ls and ls[id]
-    if not base then
+    local ours = store.tag == tag and mine(t, store) or nil
+    local id, base = store.id, ours
+    if not ours then
         local n, top = count(t)
         if n >= MAXL then
             return nil, E.CDM_SLOTS
@@ -524,18 +557,20 @@ function lib:ManageCooldownManager(owner, store)
     if not (ok and type(new) == "string" and same(decode(new), out)) then
         return nil, E.CDM_API
     end
-    local first = store.orig == nil
-    if first then
+    if not ours then -- none of ours in the store: a new start, the store as it is now is the original
         store.orig, store.tag = s, tag -- saved before the write
     end
     if not write(store, new, "manage") then
         pcall(C_CooldownViewer.SetLayoutData, s)
-        if first and fetch() == s then -- put back: nothing to restore (else the original stays saved)
-            forget(store)
+        local now = fetch()
+        if now ~= s then
+            store.bad = now -- what our failed write left: Restore may write the original over it, over nothing else
+        elseif not ours then
+            forget(store) -- put back: nothing to restore
         end
         return nil, E.CDM_WRITE
     end
-    store.id, store.bars = id, bars
+    store.id, store.name, store.lay, store.bars, store.state = id, owner, lay, bars, nil
     rearm(store)
     settle()
     return true
@@ -544,7 +579,9 @@ end
 -- Removes the library's layout. Nothing else changed since: the saved original is written back byte for byte. The
 -- player changed something (another layout edited, added or deleted): only our layout goes and the layout active
 -- before it comes back (when the player switched away from ours, their choice stays). Before the reload of a manage
--- this is an undo (no reload). true | nil, code.
+-- this is an undo (no reload). Layouts it cannot read or decode are never written over (cdm-unreadable), except the
+-- leftover of our own failed write. The saved original stays until the next load shows the restore took.
+-- true | nil, code.
 function lib:RestoreCooldownManager(owner, store)
     local err = claim(owner, store)
     if err then
@@ -560,29 +597,30 @@ function lib:RestoreCooldownManager(owner, store)
         return nil, E.CDM_API
     end
     local s = fetch()
-    local t = s and decode(s)
     local o = decode(store.orig)
-    if not o then
+    if s == nil or not o then
         return nil, E.CDM_UNREADABLE
     end
-    local out = copy(t or o) -- the store unreadable: the saved original goes back raw (nothing there to keep)
+    local t = decode(s)
+    if not t and s ~= store.bad then
+        return nil, E.CDM_UNREADABLE
+    end
+    local out = copy(t or o) -- our own failed write's leftover: the saved original goes back raw
     local tag, id = store.tag, store.id
-    local ls = out[3] and out[3][tag]
-    if id and ls and ls[id] then
+    if mine(out, store) then
+        local ls = out[3][tag]
         ls[id] = nil
         if next(ls) == nil then
             out[3][tag] = nil
         end
-        if out[4] then
-            out[4][id] = nil
+        out[4][id] = nil
+        if out[2] and out[2][tag] == id then
+            local a = o[2] and o[2][tag]
+            if a and a ~= 0 and not (out[3][tag] and out[3][tag][a]) then
+                a = nil -- the layout active before is gone: the default
+            end
+            out[2][tag] = a
         end
-    end
-    if id and out[2] and out[2][tag] == id then
-        local a = o[2] and o[2][tag]
-        if a and a ~= 0 and not (out[3] and out[3][tag] and out[3][tag][a]) then
-            a = nil -- the layout active before is gone: the default
-        end
-        out[2][tag] = a
     end
     local new
     if not t or same(out, o) then
@@ -594,14 +632,27 @@ function lib:RestoreCooldownManager(owner, store)
         end
         new = enc
     end
-    lib.mbOwner, lib.mbStore = owner, store
-    if new and not write(store, new, "restore") then
-        if s then
-            pcall(C_CooldownViewer.SetLayoutData, s)
-        end
-        return nil, E.CDM_WRITE
+    if new == s then
+        new = nil -- equal bytes: no write
     end
-    forget(store)
+    lib.mbOwner, lib.mbStore = owner, store
+    if new then
+        if not write(store, new, "restore") then
+            pcall(C_CooldownViewer.SetLayoutData, s)
+            local now = fetch()
+            if now ~= s then
+                store.bad = now
+            end
+            return nil, E.CDM_WRITE
+        end
+    elseif lib.mbPending == "manage" then
+        lib.mbPending = nil -- the manage this load wrote is gone already: nothing waits for a reload
+    end
+    if lib.mbPending == "restore" then
+        store.state, store.pending, store.bars = "restoring", nil, nil -- checked at the next load
+    else
+        forget(store)
+    end
     settle()
     return true
 end
@@ -612,7 +663,7 @@ function lib:IsReloadPending()
 end
 
 -- "player" | "managed" | "drift" | "pending", reason (managed: nil or "update"; drift: "switched", "deleted",
--- "cdm-off"; pending: "reload" or "checking"; player: nil or "check-failed").
+-- "cdm-off"; pending: "reload" or "checking"; player: nil, "check-failed" or "restore-failed").
 function lib:GetCooldownManagerMode()
     return mb.mode, mb.why
 end
@@ -633,6 +684,9 @@ local baseDrive = lib.drive
 function lib.drive(elapsed)
     baseDrive(elapsed)
     if mb.checking then
+        if type(elapsed) == "number" and elapsed > 0 and not InCombatLockdown() then
+            mb.spent = (mb.spent or 0) + elapsed -- the check's window pauses in combat
+        end
         if lib.frameNo % RECHECK == 0 then
             cdm.dirty = true
         end

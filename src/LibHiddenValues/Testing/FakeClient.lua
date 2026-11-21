@@ -23,10 +23,11 @@
 -- Fake.setAura, Fake.cdmLayout, Fake.cdmEnable, Fake.viewers, Fake.touched, Fake.hooks; see the comment above its
 -- viewers. Mode B (the managed layout): W.cdm.store (the layout store string, "" by default; set, it decides the
 -- placement at login), W.cdm.writes (SetLayoutData calls), W.cdm.badWrite (a write keeps other bytes), W.cdm.opacity
--- (the viewers' Edit Mode alpha at a load), W.cdm.unlearned ({ [cooldownID] = true }: no item, left out of the
--- learned set), W.classID (11 by default; the spec is 1), Fake.encodeLayouts(t), Fake.decodeLayouts(s), and the
--- reload (ReloadUI(), Fake.reload(), Fake.onReload: see the comment above Fake.reload). The encoders are stand-ins
--- (sorted Lua text, reversed, hex), not CBOR, Deflate or Base64.
+-- (the viewers' Edit Mode alpha at a load), W.cdm.secretStore (GetLayoutData returns a secret), W.cdm.salt (a
+-- number: the encoder is not canonical, each call's bytes differ), W.cdm.unlearned ({ [cooldownID] = true }: no
+-- item, left out of the learned set), W.classID (11 by default; the spec is 1), Fake.encodeLayouts(t),
+-- Fake.decodeLayouts(s), and the reload (ReloadUI(), Fake.reload(), Fake.onReload: see the comment above
+-- Fake.reload). The encoders are stand-ins (sorted Lua text, reversed, hex), not CBOR, Deflate or Base64.
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
 --
 -- Fidelity limits: no taint model; a secret is a table, so only arithmetic, ordering, concatenation, tostring, length,
@@ -502,7 +503,7 @@ install("C_CooldownViewer", {
         return c
     end,
     GetLayoutData = function()
-        return W.cdm.store
+        return W.cdm.secretStore and secret(W.cdm.store) or W.cdm.store
     end,
     SetLayoutData = function(data)
         if W.cdm.badWrite then -- the client keeps something else than what was written
@@ -542,6 +543,10 @@ local function ser(v)
 end
 install("C_EncodingUtil", {
     SerializeCBOR = function(t)
+        if W.cdm.salt then -- not canonical: each call's bytes differ (a Lua comment the decoder ignores)
+            W.cdm.salt = W.cdm.salt + 1
+            return "CBOR" .. ser(t) .. "--" .. W.cdm.salt
+        end
         return "CBOR" .. ser(t)
     end,
     DeserializeCBOR = function(s)

@@ -159,12 +159,14 @@ describe("LibHiddenValues managed Cooldown Manager layout (Mode B)", function()
         assert.are.same({ true, "restore" }, { lib:IsReloadPending() })
         assert.are.same({ "pending", "reload" }, mode())
         assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas()) -- given back at once
-        assert.is_nil(next(store)) -- the saved state is gone
+        assert.are.equal("restoring", store.state) -- the saved original stays until the next load shows it took
+        assert.are.equal(orig, store.orig)
         Fake.tick(2)
         assert.are.same({ "pending:reload" }, told)
         _G.ReloadUI()
         Fake.tick(2)
         assert.are.same({ "player" }, mode())
+        assert.is_nil(next(store)) -- the restore took: the saved state is gone
         assert.are.same({ false }, { lib:IsReloadPending() })
         assert.are.same({ 23, 24 }, W.cdm.bar)
         assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas())
@@ -242,7 +244,7 @@ describe("LibHiddenValues managed Cooldown Manager layout (Mode B)", function()
         local n = W.cdm.writes
         assert.is_true(lib:RestoreCooldownManager("A", store))
         assert.are.equal(orig, W.cdm.store)
-        assert.are.equal(n + 1, W.cdm.writes) -- the original bytes, written over equal bytes
+        assert.are.equal(n, W.cdm.writes) -- equal bytes are not written again
         assert.are.same({ false }, { lib:IsReloadPending() })
         assert.are.same({ "player" }, mode())
         assert.is_nil(next(store))
@@ -487,5 +489,237 @@ describe("LibHiddenValues managed Cooldown Manager layout (Mode B)", function()
             assert.are.equal("SetAlpha", m)
         end
         assert.are.equal(4, #Fake.touched)
+    end)
+
+    -- The layouts with a layout of the player's own at id 3 (the id ours had), active.
+    local function theirsAt3()
+        local t = layouts()
+        t[3][TAG][3], t[4][3], t[2][TAG] = { [1] = { 23 }, [2] = { [2] = { 23 } } }, "Player New", 3
+        W.cdm.store = Fake.encodeLayouts(t)
+        Fake.cdmLayout()
+        Fake.tick(2)
+        return W.cdm.store
+    end
+
+    local function managedAfterReload()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+    end
+
+    it("never takes a layout of the player that reuses our id for ours (deleted, then a new one)", function()
+        boot()
+        managedAfterReload()
+        local t = layouts()
+        t[3][TAG][3], t[4][3], t[2][TAG] = nil, nil, 1 -- the player deletes ours
+        W.cdm.store = Fake.encodeLayouts(t)
+        Fake.cdmLayout()
+        Fake.tick(2)
+        assert.are.same({ "drift", "deleted" }, mode())
+        local theirs = theirsAt3() -- and makes a new layout: the client gives it id 3
+        assert.are.same({ "drift", "deleted" }, mode())
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas()) -- their layout shows
+        assert.is_true(lib:ManageCooldownManager("A", store)) -- "use the managed layout": a new one, theirs untouched
+        local r = layouts()
+        assert.are.same(Fake.decodeLayouts(theirs)[3][TAG][3], r[3][TAG][3])
+        assert.are.equal("Player New", r[4][3])
+        assert.are.equal("A", r[4][4])
+        assert.are.equal(4, r[2][TAG])
+        assert.is_true(lib:RestoreCooldownManager("A", store)) -- an undo: theirs back, byte for byte
+        assert.are.equal(theirs, W.cdm.store)
+        assert.are.same({ false }, { lib:IsReloadPending() })
+    end)
+
+    it("never touches a layout of the player that took our id while its store was stale", function()
+        boot()
+        managedAfterReload()
+        local stale = {}
+        for k, v in pairs(store) do
+            stale[k] = v
+        end
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.is_nil(next(store))
+        local theirs = theirsAt3()
+        for k, v in pairs(stale) do -- the consumer's SavedVariables from before the restore (a crash)
+            store[k] = v
+        end
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "drift", "deleted" }, mode())
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas())
+        local n = W.cdm.writes
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(n, W.cdm.writes)
+        assert.are.equal(theirs, W.cdm.store)
+        assert.are.same({ "player" }, mode())
+    end)
+
+    it("never takes the player's layout for ours after a failed check", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        W.cdm.store = orig -- the client threw our layout away at the reload
+        _G.ReloadUI()
+        Fake.advance(21)
+        assert.are.same({ "player", "check-failed" }, mode())
+        local theirs = theirsAt3()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        local r = layouts()
+        assert.are.equal("Player New", r[4][3])
+        assert.are.same(Fake.decodeLayouts(theirs)[3][TAG][3], r[3][TAG][3])
+        assert.are.equal(4, r[2][TAG])
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(theirs, W.cdm.store)
+    end)
+
+    it("refuses to restore when the layouts cannot be read, and changes nothing", function()
+        boot()
+        managedAfterReload()
+        local t = layouts()
+        t[3][121][2][1] = { 7, 8, 9 } -- the player edits a layout of another class
+        local edited = Fake.encodeLayouts(t)
+        W.cdm.store = edited
+        local CV = _G.C_CooldownViewer
+        local get = CV.GetLayoutData
+        local n = W.cdm.writes
+        for _, how in ipairs({ "error", "nil", "secret" }) do
+            CV.GetLayoutData = function()
+                if how == "error" then
+                    error("restricted")
+                elseif how == "secret" then
+                    W.cdm.secretStore = true
+                    return get()
+                end
+            end
+            assert.are.same({ nil, "cdm-unreadable" }, { lib:RestoreCooldownManager("A", store) }, how)
+            W.cdm.secretStore = nil
+        end
+        CV.GetLayoutData = get
+        assert.are.equal(edited, W.cdm.store)
+        assert.are.equal(n, W.cdm.writes)
+        assert.are.equal(orig, store.orig)
+        assert.are.same({ "managed" }, mode())
+        assert.is_nil(lib:GetMessage("cdm-write-failed"):find("were put back", 1, true))
+    end)
+
+    it("refuses to restore over layouts it cannot decode, or of another save version", function()
+        boot()
+        managedAfterReload()
+        local t = layouts()
+        t[1] = 6
+        for _, s in ipairs({ "2|zz", "1|zz", Fake.encodeLayouts(t) }) do
+            W.cdm.store = s
+            assert.are.same({ nil, "cdm-unreadable" }, { lib:RestoreCooldownManager("A", store) }, s)
+            assert.are.equal(s, W.cdm.store)
+            assert.are.equal(orig, store.orig)
+        end
+    end)
+
+    it("refuses to manage layouts of a save version other than 5", function()
+        local l = playerLayouts()
+        l[1] = 6
+        boot(l)
+        assert.are.same({ nil, "cdm-unreadable" }, { lib:ManageCooldownManager("A", store) })
+        assert.are.equal(orig, W.cdm.store)
+        assert.is_nil(next(store))
+    end)
+
+    it("keeps the saved original until the next load shows the restore took, and retries", function()
+        boot()
+        managedAfterReload()
+        local managed = W.cdm.store
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.is_true(lib:RestoreCooldownManager("A", store)) -- twice: still one reload pending
+        assert.are.same({ true, "restore" }, { lib:IsReloadPending() })
+        assert.are.equal(orig, W.cdm.store)
+        W.cdm.store = managed -- the client wrote its loaded layouts back over the restore before the reload
+        told = {}
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "player", "restore-failed" }, mode())
+        assert.are.same({ "player:restore-failed" }, told)
+        assert.is_string(lib:GetMessage("restore-failed"))
+        assert.are.equal(orig, store.orig)
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas())
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store)
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "player" }, mode())
+        assert.is_nil(next(store))
+    end)
+
+    it("reads pending, checking during a reload in combat while managed", function()
+        boot()
+        managedAfterReload()
+        Fake.onReload = function()
+            consumer()
+            W.combat = true
+        end
+        Fake.reload()
+        Fake.advance(5)
+        assert.are.same({ "pending", "checking" }, mode())
+        assert.are.same({ 0.5, 0.5, 0.5, 0.5 }, alphas())
+        W.combat = false
+        Fake.event("PLAYER_REGEN_ENABLED")
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+        assert.are.same({ 0, 0, 0, 0 }, alphas())
+    end)
+
+    it("restores the saved bytes, not a re-encode, when the client's encoder is not canonical", function()
+        boot()
+        W.cdm.salt = 0
+        managedAfterReload()
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(orig, W.cdm.store) -- a re-encode would carry a salt
+        assert.is_true(lib:ManageCooldownManager("A", store)) -- other bytes than this load's: a reload
+        assert.are.same({ true, "manage" }, { lib:IsReloadPending() })
+        _G.ReloadUI()
+        Fake.tick(2)
+        assert.are.same({ "managed" }, mode())
+    end)
+
+    it("clears the pending reload when a restore finds nothing to write", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        W.cdm.store = orig -- the client wrote its loaded layouts back over ours before the reload
+        local n = W.cdm.writes
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.equal(n, W.cdm.writes)
+        assert.are.same({ false }, { lib:IsReloadPending() })
+        assert.are.same({ "player" }, mode())
+        assert.is_nil(next(store))
+    end)
+
+    it("pauses the check's 20 s in combat", function()
+        boot()
+        assert.is_true(lib:ManageCooldownManager("A", store))
+        W.cdm.store = orig -- the layout does not take
+        _G.ReloadUI()
+        Fake.advance(5)
+        W.combat = true
+        Fake.advance(30)
+        W.combat = false
+        Fake.event("PLAYER_REGEN_ENABLED")
+        Fake.advance(10)
+        assert.are.same({ "pending", "checking" }, mode())
+        Fake.advance(10)
+        assert.are.same({ "player", "check-failed" }, mode())
+    end)
+
+    it("hides the viewers again after Edit Mode applies its opacity, and gives the latest back", function()
+        boot()
+        managedAfterReload()
+        for _, name in ipairs(VIEWERS) do
+            _G[name]:SetAlpha(0.7) -- Edit Mode applies the player's opacity after the check
+        end
+        Fake.cdmLayout()
+        Fake.tick(2)
+        assert.are.same({ 0, 0, 0, 0 }, alphas())
+        assert.is_true(lib:RestoreCooldownManager("A", store))
+        assert.are.same({ 0.7, 0.7, 0.7, 0.7 }, alphas())
     end)
 end)
