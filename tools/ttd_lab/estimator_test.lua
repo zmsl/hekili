@@ -268,10 +268,44 @@ check("bad hints clear instead of raising", function()
     e:Hint("nonsense", 2, 20)
 end)
 
+-- LibTimeToDie review I-3: a target idle at full for `idle` s, then 0.5 s per percent (truth about (99 - k) / 2 s).
+local function idleThenFall(e, idle, steps)
+    e:Band(0, 99, 100)
+    local t
+    for k = 1, steps do
+        t = idle + 0.5 * (k - 1)
+        e:Band(t, 99 - k, 100 - k)
+    end
+    return t
+end
+
+check("by default a first band held long before the first crossing does not set the slope", function()
+    for k = 1, 6 do -- the same stream, read after k crossings
+        local e = E.New()
+        local t = idleThenFall(e, 20, k)
+        local est, truth = e:Get(t + 0.01), (99 - k) * 0.5
+        assert(est == nil or math.abs(est - truth) < 0.3 * truth, k .. ": " .. tostring(est) .. " vs " .. truth)
+    end
+end)
+
+check("by default a clamped fit's range covers the unclamped fit", function()
+    local e = E.New({ staleAnchor = 0 }) -- keep the stale anchor: the fit clamps to 0.2 x its cumulative slope
+    local t = idleThenFall(e, 20, 5)
+    local est, lo, _, state = e:Get(t + 0.01)
+    assert(state == "fit" and est > 70, tostring(est) .. " " .. tostring(state))
+    assert(lo < 50, "lo " .. tostring(lo)) -- the truth is about 47 s
+end)
+
 check("random streams never return a non-finite or negative estimate", function()
     local rng = require("rng").new(7)
     for i = 1, 300 do
-        local e = E.New({ priorEmpty = rng:next() < 0.5, execAhead = rng:next() < 0.5, detect = i % 3 * 2.5 })
+        local e = E.New({
+            priorEmpty = rng:next() < 0.5,
+            execAhead = rng:next() < 0.5,
+            detect = i % 3 * 2.5,
+            staleAnchor = i % 4 * 3,
+            clampRange = i % 2 == 0,
+        })
         local t, lo = 0, 99 - math.floor(rng:uni(0, 60))
         if rng:next() < 0.5 then
             e:Hint("execute", rng:uni(0.5, 3), rng:uni(1, 40))

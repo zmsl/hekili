@@ -1,5 +1,5 @@
 -- tools/ttd_lab/run.lua: the TTD lab. From the repo root: lua5.1 tools/ttd_lab/run.lua
--- [main|sweep|holdout|run2|tune|drops|run3|run3old|test|all] [--scale x] [--round n] (sweep round, default the last)
+-- [main|sweep|holdout|run2|tune|drops|run3|run3old|idle|test|all] [--scale x] [--round n] (sweep round, default the last)
 -- [--set A|B|C] (seed set: holdout defaults to B, the others to A) [--list name] (tune grids; run3: learn). Prints
 -- markdown tables (tools/ttd_lab/README.md explains them).
 package.path = "tools/ttd_lab/?.lua;" .. package.path
@@ -63,7 +63,7 @@ local PREV = { detect = 0, execAhead = false, execLearn = 0 }
 -- of its class ended with, as a session would; needs `execLearn`), "learn20" (the same with 20% on every fight),
 -- "learnAll" (20% on every fight, one session across every class in run order). Sessions start empty per runSet.
 local function est(params, hints)
-    local p = { spread = false }
+    local p = { spread = false, staleAnchor = 0 } -- run 1 and 2 rows: the anchor rule as they had it (no stale drop)
     for k, v in pairs(params or {}) do
         p[k] = v
     end
@@ -1274,6 +1274,132 @@ function modes.run3old()
     both(holdSet, RUN3_OLD, "Old and new classes")
 end
 
+-- LibTimeToDie review I-3 (`run.lua idle`): a target idle at full before the first hit (scenarios.lua S.IDLE), the
+-- stale-anchor rule (staleAnchor) and honest ranges under a clamped fit (clampRange).
+for i, c in ipairs(S.IDLE) do
+    COUNTS[c] = c:find("boss") and 30 or 50
+    SEED_OFF[c] = 200 + i
+end
+local IDLE_PARAMS = {
+    { "Run 2 default (staleAnchor 0, clampRange off)", { staleAnchor = 0, clampRange = false } },
+    { "staleAnchor 3", { staleAnchor = 3, clampRange = false } },
+    { "staleAnchor 5", { staleAnchor = 5, clampRange = false } },
+    { "staleAnchor 8", { staleAnchor = 8, clampRange = false } },
+    { "staleAnchor 12", { staleAnchor = 12, clampRange = false } },
+    { "clampRange", { staleAnchor = 0, clampRange = true } },
+    { "staleAnchor 5 + clampRange", { staleAnchor = 5, clampRange = true } },
+    { "Run 3 default (staleAnchor 8 + clampRange)", { staleAnchor = 8, clampRange = true } },
+}
+assert(E.DEFAULTS.staleAnchor == 8 and E.DEFAULTS.clampRange, "the Run 3 default row is the estimator's defaults")
+local IDLE_SETS = { { "old", S.CLASSES }, { "run 2", S.RUN2 }, { "idle", S.IDLE } }
+
+-- lo/hi against the truth (spread on): share of answered polls with the truth inside, share with a zero-width range
+-- (hi - lo under 0.1 s while the truth is outside), median hi / lo; overall and in the 10 s after a change.
+local function ranges(set, params, classes)
+    local r = { n = 0, cover = 0, zero = 0, xn = 0, xcover = 0, widths = {} }
+    for _, c in ipairs(classes) do
+        if c ~= "real" then
+            for i = 1, math.max(1, math.floor(COUNTS[c] * scale + 0.5)) do
+                local seed = SEED_BASE[set] + i * 7919 + (SEED_OFF[c] or #c) * 104729
+                local obs = O.build(S.build(c, seed), seed + 1)
+                local e = E.New(params)
+                local P = obs.polls
+                for k = 1, #obs.k do
+                    local kind, t = obs.k[k], obs.t[k]
+                    if kind == O.BAND then
+                        e:Band(t, obs.a[k], obs.b[k])
+                    elseif kind == O.RESTART then
+                        e:Restart()
+                    elseif kind == O.POLL then
+                        local est, lo, hi = e:Get(t)
+                        if est then
+                            local p, tru = obs.b[k], P.tru[obs.b[k]]
+                            local inside = lo <= tru and tru <= hi
+                            r.n, r.cover = r.n + 1, r.cover + (inside and 1 or 0)
+                            r.zero = r.zero + ((hi - lo < 0.1 and not inside) and 1 or 0)
+                            r.widths[#r.widths + 1] = hi / math.max(lo, 1e-3)
+                            if P.post[p] then
+                                r.xn, r.xcover = r.xn + 1, r.xcover + (inside and 1 or 0)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    table.sort(r.widths)
+    return r
+end
+
+function modes.idle()
+    holdSet = holdSet or "A"
+    print(
+        "## LibTimeToDie review I-3: a target idle at full, stale anchors, clamped ranges (seed set "
+            .. holdSet
+            .. ")\n"
+    )
+    header()
+    local list = {}
+    for _, x in ipairs(IDLE_PARAMS) do
+        list[#list + 1] = { x[1], est(x[2]) }
+    end
+    local res, scores = {}, {}
+    for s, cs in ipairs(IDLE_SETS) do
+        res[s] = runSet(holdSet, lineup(list), cs[2])
+        scores[s] = scoreAll(res[s], mainSummaries(res[s]))
+    end
+    print("\n### Scores (each class set against its own main-lineup medians)\n")
+    print(
+        "| algorithm | old score | old flips | run 2 score | idle score | idle unknown | idle rel med/p90 | idle first 10 s of damage rel med/p90 | idle wrong | idle flips |"
+    )
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    for a, spec in ipairs(res[1].algos) do
+        local o, i = res[1].overall[a], res[3].overall[a]
+        print(
+            string.format(
+                "| %s | %s | %s | %s | %s | %s | %s / %s | %s / %s | %s | %s |",
+                spec[1],
+                f(scores[1][a], 3),
+                f(o.flipSum),
+                f(scores[2][a], 3),
+                f(scores[3][a], 3),
+                pct(i.unknown),
+                f(i.relMed),
+                f(i.relP90),
+                f(i.relXMed),
+                f(i.relXP90),
+                pct(i.wrongMean),
+                f(i.flipSum)
+            )
+        )
+    end
+    local order = {}
+    for a = 1, #res[3].algos do
+        order[a] = a
+    end
+    perClass(res[3], order, "relXMed", "Idle classes: rel median, first 10 s of damage,", f)
+    perClass(res[3], order, "relMed", "Idle classes: rel median", f)
+    print(
+        "\n### Ranges (spread on): truth inside [lo, hi] / zero-width misses / median hi:lo / inside, 10 s after a change\n"
+    )
+    print("| params | " .. table.concat({ "old", "run 2", "idle" }, " | ") .. " |")
+    print("|---|---|---|---|")
+    for _, x in ipairs(IDLE_PARAMS) do
+        local cells = {}
+        for s, cs in ipairs(IDLE_SETS) do
+            local r = ranges(holdSet, x[2], cs[2])
+            cells[s] = string.format(
+                "%s / %s / %s / %s",
+                pct(r.cover / math.max(1, r.n)),
+                pct(r.zero / math.max(1, r.n)),
+                f(r.widths[math.ceil(#r.widths / 2)]),
+                pct(r.xcover / math.max(1, r.xn))
+            )
+        end
+        print("| " .. x[1] .. " | " .. table.concat(cells, " | ") .. " |")
+    end
+end
+
 function modes.all()
     modes.test()
     modes.main()
@@ -1285,5 +1411,5 @@ function modes.all()
 end
 
 local t0 = os.clock()
-assert(modes[mode], "mode: main|sweep|holdout|run2|tune|drops|run3|run3old|test|all")()
+assert(modes[mode], "mode: main|sweep|holdout|run2|tune|drops|run3|run3old|idle|test|all")()
 io.stderr:write(string.format("ttd lab %s done in %.1f s\n", mode, os.clock() - t0))

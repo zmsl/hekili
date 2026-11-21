@@ -175,10 +175,32 @@ local function run2(class, rng, sp)
     return sp
 end
 
+-- Run 3, LibTimeToDie review I-3 (`run.lua idle`): the player targets a full mob that nobody hits for 5-30 s, then the
+-- fight starts. In combat the stream runs through the idle; out of combat the caller restarts it when combat starts
+-- (a second target event on the same mob at the first hit).
+S.IDLE = { "idle trash", "idle elite", "idle boss", "idle solo elite", "idle ooc elite", "idle ooc boss" }
+
+local function idle(class, rng, sp)
+    sp.idle, sp.ooc = rng:uni(5, 30), class:find("ooc") and true or false
+    if class:find("trash") then
+        sp.dur = rng:uni(8, 20)
+    elseif class:find("boss") then
+        sp.dur, sp.members = rng:uni(180, 360), 4
+    else
+        sp.dur = rng:uni(30, 60)
+    end
+    if class:find("solo") then
+        sp.members = 0
+    end
+    return sp
+end
+
 --- The per-class fight spec. `dur`: seconds one mob lives under the whole group's single-target damage.
 local function spec(class, rng)
     local sp = { mobs = 1, members = rng:int(0, 4), cleave = 0, swaps = 0 }
-    if class:find(" ") or class == "solo" or class == "raid" then
+    if class:find("^idle") then
+        return idle(class, rng, sp)
+    elseif class:find(" ") or class == "solo" or class == "raid" then
         return run2(class, rng, sp)
     elseif class == "trash" then
         sp.dur = rng:uni(8, 20)
@@ -295,7 +317,7 @@ function S.build(class, seed, group)
     end
     local nextHit = {}
     for i = 1, #rates do
-        nextHit[i] = rng:uni(0, 1)
+        nextHit[i] = rng:uni(0, 1) + (sp.idle or 0)
     end
     local swapAt = {}
     for _ = 1, sp.swaps do
@@ -309,12 +331,16 @@ function S.build(class, seed, group)
         plan[#plan + 1] = { t = t, mob = mob }
     end
     local dt, t = 0.02, 0
-    local horizon = sp.dur * sp.mobs * 4 + 60
+    local horizon = sp.dur * sp.mobs * 4 + 60 + (sp.idle or 0)
     while t < horizon and firstAlive(mobs) do
         if not ptarget and not reacquireAt and #plan == 0 then
             if not sp.targetAt or pct(mobs[1]) <= sp.targetAt then
                 target(1, t)
             end
+        end
+        if sp.ooc and ptarget and t >= sp.idle then -- combat starts: the caller restarts the stream
+            sp.ooc = false
+            target(ptarget, t)
         end
         if ptarget and mobs[ptarget].death then
             ptarget, reacquireAt = nil, t + rng:uni(0.2, 0.8)
@@ -393,6 +419,9 @@ function S.build(class, seed, group)
         endT = math.max(endT, mobs[i].death or horizon)
     end
     local changes = sp.changes
+    if sp.idle then -- the post-change window: the first 10 s of damage
+        changes[#changes + 1] = { t = sp.idle, mob = 0 }
+    end
     if sp.opener then
         changes[#changes + 1] = { t = sp.opener.dur, mob = 0 }
     end

@@ -15,6 +15,7 @@ lua5.1 tools/ttd_lab/run.lua tune [--list grid3]   # run 2 lineup (or a grid) on
 lua5.1 tools/ttd_lab/run.lua run3 [--set B]        # run 3: partial-group execute, strategies a-d (~4 min)
 lua5.1 tools/ttd_lab/run.lua run3 --list learn     # run 3: execute learning weight grid (~3.5 min)
 lua5.1 tools/ttd_lab/run.lua run3old [--set B]     # run 3 strategies on the run 1 and run 2 classes (~2 min)
+lua5.1 tools/ttd_lab/run.lua idle [--set B]        # idle targets: stale anchors, clamped ranges (~7 min)
 ```
 
 `results/` holds the committed tables (`main.md`, `sweep-round1.md` ... `sweep-round5.md`, `holdout.md` (set B,
@@ -88,7 +89,9 @@ local est, lo, hi, state = e:Get(now)   -- est nil: unknown; state fit | seed | 
 No allocation after `New`, no game API, every divisor guarded. `Band` takes a known band only: when the band goes
 unknown (lo == nil), call `Restart`. If the target is acquired before combat, call `Restart` at combat start so the
 full-health anchor is not stale. A carried slope is dropped when its last answer is more than `priorAge` (10 s)
-older than the next stream's first band, so a new pull does not inherit the last pull's slope.
+older than the next stream's first band, so a new pull does not inherit the last pull's slope. A first-band anchor
+older than `staleAnchor` (8 s) at the first crossing is dropped (an idle target in combat), and lo/hi cover an
+unclamped fit (`clampRange`).
 
 Rate changes (run 2). On by default, with no caller input: a change detector (a two-sided CUSUM of each crossing's
 lateness against the fit, standardised by the stream's own running variance; `detect = 6`, `detectK = 0.25`). When
@@ -162,8 +165,30 @@ because its assumptions (m = 2, equal shares) are the lab generator's means. A f
 in groups but not solo (solo 35: 1.128 vs 0.965 learned); one that is too high loses to no hint where one DPS
 executes (g1 20 me: 0.682 vs 0.657). On the run 1 and run 2 classes (`run3old`: the player believed a 20% executor,
 members unknown, each fight a new group, so a prior is never corrected; most of those fights have no execute),
-threshold-only learning is harmless (old score 0.845-0.847 vs 0.843) and every prior above 1 costs (too low 0.871,
-x2 equal share 0.971-0.973, x3 1.079; set A). Learning weight (`run3 --list learn`): threshold-only best at
+threshold-only learning is harmless (old score 0.845-0.847 vs 0.844) and every prior above 1 costs (too low 0.872,
+x2 equal share 0.971-0.974, x3 1.079; set A).
+
+## Idle targets (LibTimeToDie review I-3; `run.lua idle [--set B]`, `results/idle.md`, `idle-b.md`)
+
+`S.IDLE`: the player targets a full mob nobody hits for 5-30 s, then the fight starts (trash, elite, boss, solo
+elite; in combat the stream runs through the idle, out of combat (`ooc`) the caller restarts it at the first hit).
+Before Run 3 the first band's full anchor made the first crossings read 20-40x long (a 20 s idle, then 0.5 s per
+percent: 1979, 1004, 678 s against a truth of 48), and the fit, clamped to 0.2 x that cumulative slope, showed lo = hi
+= est at 103, 83, 70 s (truth 47). Two defaults since Run 3:
+
+- `staleAnchor = 8`: a first-band anchor (full or below) older than 8 s at the first crossing is dropped; the stream
+  starts at that crossing (unknown until 2% of crossings, then right: 48 [24, 145], 47). 3 s costs on slow-start
+  classes (old 0.847, run 2 0.927 vs 0.843 / 0.916); 12 s misses short idles (first 10 s of damage rel p90 0.90).
+- `clampRange = true`: when the clamp moved a fit, lo/hi also cover the unclamped fit's estimate.
+
+Set A / B (`idle.md`): idle classes' rel p90 1.71 / 1.62 -> 0.21 / 0.20, rel median in the first 10 s of damage 0.73
+/ 0.71 -> 0.10 / 0.10, wrong side 2.9% -> 2.6%, unknown 25.9% -> 26.9% (the idle itself is unknown for everyone),
+excess flips 0.85 / 0.90 -> 1.66 / 1.52 per minute (the estimate now reaches the decision range instead of sitting at
+thousands of seconds), score 0.693 / 0.691 -> 0.718 / 0.673 (the flip term). Run 1 classes 0.843 -> 0.844 (A), 0.835
+both (B); run 2 classes, run 3 tables and flips unchanged. Ranges are uncalibrated in general (truth inside lo/hi on
+18% of old-class polls, median hi:lo 1.04); `clampRange` alone lifts idle coverage in the first 10 s of damage from
+19% to 26%, `staleAnchor` removes most clamped cases (31%). The Run 1 and run 2 rows of `run.lua` (`est`) pin
+`staleAnchor = 0`, so their committed tables still reproduce. Learning weight (`run3 --list learn`): threshold-only best at
 `execLearn` 0.15-0.25 (0.25: 0.712 / 0.702 vs 0.724 / 0.715 at the default 0.5; 0.1 is best with one executor but
 slow with four); the default stays 0.5 (Run 2's classes gain 0.004-0.008 at 0.25, old-class flips +0.8-1%).
 
