@@ -14,7 +14,7 @@ check: [in-game-test-plan.md](in-game-test-plan.md).
 
 ## Built in stages 0 and 1
 
-- LibStub major `LibHiddenValues-1.0`, minor 1. Seven files after LibStub; the first calls `NewLibrary` and sets
+- LibStub major `LibHiddenValues-1.0`, minor 2 (2: the aura kind). Seven files after LibStub; the first calls `NewLibrary` and sets
   `lib.loading`, the others return unless it is set, the last (`SelfTest.lua`) clears it. All state on `lib`; scripts
   are one-line dispatchers through `lib`. Nothing but the event frame is built before `PLAYER_LOGIN`; a copy loaded
   after login (load on demand, or a newer minor) realises at once, keeps the frames and re-primes every source.
@@ -44,7 +44,8 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
   `GetCooldownViewerCooldownInfo`, out of combat only: spell, override, tooltip override and linked spells of each
   cooldownID), the active item frames of `BuffBarCooldownViewer` and `BuffIconCooldownViewer`
   (`itemFramePool:EnumerateActive()`, `rawget` of `cooldownID`, `layoutIndex`, `auraInstanceID`, `auraDataUnit`) and
-  three post-hooks (`hooksecurefunc`, each once): the viewers' `OnAcquireItemFrame`, an item's count FontString
+  four post-hooks (`hooksecurefunc`, each once): the viewers' `OnAcquireItemFrame` and `RefreshData` (a data change
+  that keeps the item count acquires no frame and sends no event), an item's count FontString
   `SetText` (stacks) and a tracked bar's StatusBar `SetValue` (seconds left). It never shows, hides, fades, moves,
   re-lays out or refreshes anything, and calls no provider method.
 - `Kinds/Aura.lua` is the kind: spec `{ kind = "aura", unit = "player" | "target", spell, what = "up" | "stacks" |
@@ -56,7 +57,8 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
   toggle cannot tell from a fall followed at once by a refresh). Presence needs no bar.
 - Re-reads: an acquire hook, `COOLDOWN_VIEWER_DATA_LOADED`, `COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED`,
   `COOLDOWN_VIEWER_TABLE_HOTFIXED`, `PLAYER_REGEN_ENABLED`, `PLAYER_LEVEL_CHANGED`, `CVAR_UPDATE`
-  (`cooldownViewerEnabled`), and any frame in which a watched item no longer shows its cooldownID.
+  (`cooldownViewerEnabled`), the viewers' `RefreshData`. Separately, a watched item that no longer shows its
+  cooldownID is searched again (at most every 30 frames) and, when it is gone, asks for a read.
 - The shared machinery is reached by wrapping `lib.sync`, `lib.feed`, `lib.fire`, `lib.decode`, `lib.reprime`,
   `lib.event` and `lib.drive` for aura sources in `Kinds/Aura.lua` (no edit to `Bars.lua`, `Feed.lua`,
   `SelfTest.lua`); the core (`LibHiddenValues.lua`) gained the source key and fields, the per-source answer in
@@ -67,15 +69,20 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 |---|---|---|
 | A curve for hook values | none: raw narrow-range bars | a secret from a hook cannot go through a curve from addon code; the probes' per-stack and 2.9-3.0 s bars are what was proven |
 | Seconds bar width | 0.01 s | the narrower, the rarer a landing inside; the run rule covers the landings that happen |
-| Two firings of a seconds bar on consecutive frames | that bar primes again (HOLD + 2 frames, the seconds come every frame); its handles keep their band meanwhile | forcing "below" would stick wrong after a fall followed at once by a refresh (review); a flip is wrong for a landing inside |
+| Two firings of a seconds bar on consecutive frames | that bar primes again (HOLD + SETTLE + 2 frames, the seconds come every frame); its handles keep their band meanwhile | forcing "below" would stick wrong after a fall followed at once by a refresh (review); a flip is wrong for a landing inside |
 | The first capability answer of a new watch | noted, not called | it is given inside `Watch`; the consumer reads `h:State()` after it |
 | `up` | the item's `auraInstanceID` secret or not nil, polled every frame, no bar | the proven presence read; it is plain to test |
-| Stacks and seconds while absent | unknown | the brief's contract; `up` carries absence |
+| Stacks and seconds while absent | the lowest band (0 stacks, 0 seconds), live | controller decision (review I1): an absent aura is a known value; `"live"` never comes without a band |
+| An aura up with no count | 1 stack | the client hides the count at one stack |
+| Linked, override and tooltip spells | they answer for the entry: whatever aura of it the client shows | the catalogue maps them to the cooldownID; the shown aura's spell is not read (review M2) |
+| `left` on an aura with no duration | the lowest band while up | the client pushes 0 seconds for it (review M3) |
 | `stacks` edge 1 | presence, no bar | the count text is `""` for one stack or none |
 | A count of `""` or plain digits | `tonumber(text) or 0` | out of combat the client passes a string |
 | Identity | the item's `cooldownID` read at each use; secret: its `layoutIndex` in the order last read plain; both secret: the item is `gone` | frames reshuffle in combat; the in-combat secrecy of these fields is unprobed |
 | A shown aura on the other unit | not up for this watch | the item scans player then target; `auraDataUnit` says which (a secret one counts as this unit) |
-| Priming | a new bar holds low 4 frames, then counts; its band waits for the client's next push (and again after each absence) | a secret is never kept, so nothing can be re-fed; stacks come only when the count is rewritten |
+| Priming | a new bar holds low 4 frames, then counts; it is read `SETTLE` (4) frames after the client's first push (and again after each absence); after a prime the handle is unknown until then, after an absence or a run the band stands | a secret is never kept, so nothing can be re-fed; stacks come only when the count is rewritten; a firing can trail its push (review I2, as the percent prime settle) |
+| `IsAvailable(kind, spec)` | answers from the last read and asks for a new one next frame | it must not call capability callbacks (review M5) |
+| Errors | an errored aura kind's hooks return at once | a body raising every frame would re-sync every kind per call (review M1) |
 | Target swap | no priming for aura bars | the bars follow the client's pushes; priming would drop the swap's own push |
 | Re-layout | aura bars prime | a stray firing would invert a toggle |
 | A paused aura handle | reports unknown, its bars stay fed | the pushes are the client's; pausing saves nothing |

@@ -168,16 +168,17 @@ describe("LibHiddenValues aura kind", function()
         assert.are.same({}, Fake.errors)
     end)
 
-    it("bands stacks in combat from the count text, unknown while the aura is absent", function()
+    it("bands stacks in combat from the count text, the lowest band while the aura is absent", function()
         boot()
         local h = watch({ spell = 5001, what = "stacks", edges = { 2, 4 } })
         local exact = watch({ spell = 5001, what = "stacks", max = 5 })
         Fake.login()
         W.combat = true
         Fake.tick(10)
-        assert.is_nil(band(h)[1])
+        assert.are.same({ 0, 2 }, band(h))
+        assert.are.same({ 0, 1 }, band(exact))
         Fake.setAura("player", 5001, 1)
-        Fake.tick(2)
+        Fake.tick(2 + lib.SETTLE) -- the first count after an absence settles; the band before it stands meanwhile
         assert.are.same({ 0, 2 }, band(h))
         assert.are.same({ 1, 2 }, band(exact))
         Fake.setAura("player", 5001, 3)
@@ -194,12 +195,12 @@ describe("LibHiddenValues aura kind", function()
         assert.are.same({ 2, 3 }, band(exact))
         Fake.setAura("player", 5001, nil)
         Fake.tick(2)
-        assert.is_nil(band(h)[1])
-        assert.is_nil(band(exact)[1])
+        assert.are.same({ 0, 2 }, band(h))
+        assert.are.same({ 0, 1 }, band(exact))
         assert.are.same({}, Fake.errors)
     end)
 
-    it("keeps a stacks watch made while the aura is up unknown until the next count", function()
+    it("keeps a stacks watch made while the aura is up priming until the next count", function()
         boot()
         Fake.setAura("player", 5001, 3)
         Fake.login()
@@ -207,10 +208,10 @@ describe("LibHiddenValues aura kind", function()
         Fake.tick(2)
         local h = watch({ spell = 5001, what = "stacks", edges = { 2 } })
         Fake.tick(20)
-        assert.are.equal("live", (h:State()))
+        assert.are.equal("priming", (h:State())) -- no count written since the watch: no band
         assert.is_nil(band(h)[1])
         Fake.setAura("player", 5001, 4)
-        Fake.tick(2)
+        Fake.tick(2 + lib.SETTLE)
         assert.are.equal("live", (h:State()))
         assert.are.same({ 2, math.huge }, band(h))
     end)
@@ -237,7 +238,7 @@ describe("LibHiddenValues aura kind", function()
             Fake.tick(3)
             assert.are.same({ 3, 6, 1 }, last(), k)
             Fake.advance(6)
-            assert.is_nil(band(h)[1], k)
+            assert.are.same({ 0, 3 }, band(h), k) -- expired: no seconds left
             assert.is_nil(W.aura.player[5001])
             assert.are.equal(0, lib.desyncs, k)
             assert.are.same({}, Fake.errors)
@@ -284,6 +285,8 @@ describe("LibHiddenValues aura kind", function()
         local h = watch({ spell = 5001, what = "up" })
         local n = watch({ spell = 9999, what = "up" })
         assert.are.same({}, told)
+        assert.are.equal("priming", (h:State())) -- no band yet: presence is read next frame, decoded the one after
+        Fake.tick(2)
         assert.are.equal("live", (h:State()))
         assert.are.same({ "unavailable", "not-in-cdm" }, { n:State() })
         Fake.tick(3)
@@ -300,7 +303,7 @@ describe("LibHiddenValues aura kind", function()
         W.combat = true
         Fake.tick(8) -- past the new bars' hold
         Fake.setAura("player", 5001, 2)
-        Fake.tick(2)
+        Fake.tick(2 + lib.SETTLE)
         assert.are.same({ 0, 3 }, band(h))
         local before = {}
         for item in pairs(Fake.viewers[1].itemFramePool.active) do
@@ -335,7 +338,7 @@ describe("LibHiddenValues aura kind", function()
         W.combat, W.cdm.secretId, W.cdm.secretIdx = false, false, false
         Fake.event("PLAYER_REGEN_ENABLED")
         Fake.cdmLayout()
-        Fake.tick(2)
+        Fake.tick(2 + lib.SETTLE)
         assert.are.same({ 1, 1 }, band(up))
         assert.are.same({ 0, 3 }, band(h))
         assert.are.same({}, Fake.errors)
@@ -350,23 +353,25 @@ describe("LibHiddenValues aura kind", function()
         W.combat = true
         Fake.tick(8) -- past the new bars' hold
         Fake.event("UNIT_AURA", "target")
-        Fake.tick(2)
+        Fake.tick(2 + lib.SETTLE)
         assert.are.same({ 2, 4 }, band(h))
         assert.are.same({ 0, 0 }, band(mine)) -- shown, but on the target
         local first = W.aura.target
         W.aura.target = {}
         Fake.event("PLAYER_TARGET_CHANGED")
         Fake.tick(2)
-        assert.is_nil(band(h)[1])
-        assert.are.equal("live", (h:State())) -- absent, not gone: the item still shows nothing
+        assert.are.same({ 0, 2 }, band(h)) -- absent: no stacks
+        assert.are.equal("live", (h:State()))
         W.aura.target = first
         Fake.event("PLAYER_TARGET_CHANGED")
         local seen = {}
-        for _ = 1, 2 do
+        for _ = 1, 2 + lib.SETTLE do
             Fake.tick(1)
-            seen[#seen + 1] = h:State()
+            if h:State() ~= "live" then
+                seen[#seen + 1] = h:State()
+            end
         end
-        assert.are.same({ "live", "live" }, seen)
+        assert.are.same({}, seen) -- never priming: the band before the swap stands while the count settles
         assert.are.same({ 2, 4 }, band(h))
     end)
 
@@ -381,7 +386,7 @@ describe("LibHiddenValues aura kind", function()
         W.combat = true
         Fake.tick(8) -- past the new bars' hold
         Fake.setAura("player", 5001, 3)
-        Fake.tick(2)
+        Fake.tick(2 + lib.SETTLE)
         assert.are.same({ 2, math.huge }, band(h))
         told = {}
         Fake.cdmEnable(false)
@@ -399,7 +404,7 @@ describe("LibHiddenValues aura kind", function()
         Fake.tick(10)
         assert.are.same({ true, "ready" }, { lib:IsAvailable("aura") })
         Fake.setAura("player", 5001, 4)
-        Fake.tick(2)
+        Fake.tick(2 + lib.SETTLE)
         assert.are.same({ 2, math.huge }, band(h))
         assert.are.same({}, Fake.errors)
     end)
@@ -428,8 +433,8 @@ describe("LibHiddenValues aura kind", function()
             Fake.cdmLayout()
             Fake.advance(1)
         end
-        -- 2 viewers' acquire, 2 bar items (count + bar), 2 icon items (count)
-        assert.are.equal(2 + 2 * 2 + 2, Fake.hooks)
+        -- 2 viewers (acquire, RefreshData), 2 bar items (count + bar), 2 icon items (count)
+        assert.are.equal(2 * 2 + 2 * 2 + 2, Fake.hooks)
         for _, v in ipairs(Fake.viewers) do
             assert.is_true(v.shown)
             assert.is_nil(v.alpha)
@@ -446,7 +451,7 @@ describe("LibHiddenValues aura kind", function()
         a:Release()
         Fake.tick(1)
         local h = lib:Watch("B", { kind = "health", unit = "target", edges = { 50 } }, sink)
-        Fake.tick(10)
+        Fake.tick(lib.HOLD + lib.SETTLE + 3)
         assert.are.same({ 50, 100 }, band(h))
         W.unit.target.health = 0.4
         Fake.tick(2)
@@ -459,7 +464,7 @@ describe("LibHiddenValues aura kind", function()
         local a = watch({ spell = 5001, what = "up" })
         local h = lib:Watch("B", { kind = "health", unit = "target", edges = { 50 } }, sink)
         Fake.login()
-        Fake.tick(5)
+        Fake.tick(lib.HOLD + lib.SETTLE + 3)
         Fake.set("refuse", "InCombatLockdown")
         Fake.event("COOLDOWN_VIEWER_DATA_LOADED")
         Fake.tick(2)

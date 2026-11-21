@@ -350,7 +350,8 @@ end)
 -- player's own auras (Fake.setAura). The viewers lay out at login and on Fake.cdmLayout(), refresh their items on
 -- UNIT_AURA and PLAYER_TARGET_CHANGED, push a tracked bar's SetMinMaxValues(0, duration) and SetValue(seconds left)
 -- every frame while its aura is up (an expired aura is dropped), and do nothing while hidden (Fake.cdmEnable(false):
--- the CVar off, the viewers hidden, CVAR_UPDATE). The count text gets SetText(a secret number) when reads are secret,
+-- the CVar off, the viewers hidden, CVAR_UPDATE); Fake.cdmData() is a data change that keeps the item counts (only the
+-- viewers' RefreshData runs). The count text gets SetText(a secret number) when reads are secret,
 -- else the client's string ("" for one stack or none). Fake.touched lists every call made on a Cooldown Manager frame
 -- from outside the fake Cooldown Manager (its own calls and the hook bodies' frames excluded); Fake.hooks counts
 -- hooksecurefunc calls.
@@ -566,7 +567,7 @@ local function layout(v) -- RefreshLayout: release every item, acquire max(#ids,
         v:OnAcquireItemFrame(item)
         item:Show()
     end
-    refresh(v)
+    v:RefreshData() -- method-dispatched, as the client does (a hook sees it)
 end
 
 local viewers = {}
@@ -625,6 +626,9 @@ for _, which in ipairs({ "bar", "icon" }) do
         end,
     }
     v.OnAcquireItemFrame = function() end
+    v.RefreshData = function(self) -- the viewer's own: a layout pass or a data change; aura events refresh the items
+        refresh(self)
+    end
     v.events = { PLAYER_LOGIN = true, UNIT_AURA = true, PLAYER_TARGET_CHANGED = true }
     v.scripts.OnEvent = function(self, event)
         local was = inBlizz
@@ -646,6 +650,16 @@ function Fake.cdmLayout()
     for k = 1, #viewers do
         if viewers[k]:IsVisible() then
             blizz(layout, viewers[k])
+        end
+    end
+end
+
+-- A data change that keeps each viewer's item count (a drag reorder, a swap, a change at the 2-item minimum): the
+-- client calls only RefreshData, no frame is acquired and no event is sent.
+function Fake.cdmData()
+    for k = 1, #viewers do
+        if viewers[k]:IsVisible() then
+            blizz(viewers[k].RefreshData, viewers[k])
         end
     end
 end

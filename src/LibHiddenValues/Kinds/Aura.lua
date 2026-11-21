@@ -1,20 +1,21 @@
 -- Kinds/Aura.lua: auras on the player or the target, read from the client's Cooldown Manager (Cdm.lua finds the items
 -- and forwards their values). what = "up": presence (lo == hi, 1 up, 0 not); "stacks": the stack count; "left": the
--- seconds left. Stacks and seconds are unknown while the aura is absent.
+-- seconds left. An absent aura is a known value: no stacks, no seconds (the lowest band); "up" reads 0.
 --
 -- The bars: a hook's secret cannot go through a curve, so each edge has a raw bar ranged just below it, fed the
 -- client's value as it is (AuraBandProbe 0.2.0/0.2.1: per-stack bars, a 2.9-3.0 s bar). Stacks are whole numbers on a
 -- bar (e - 1, e): never inside, a clean two-level toggle. Seconds fall through a bar (e - W, e) and may land inside it
 -- for a frame: that frame fires and so does the next, which a toggle cannot tell from a fall followed at once by a
 -- refresh back above the edge. So a seconds bar firing on the frame after its last firing primes again (the run
--- rule; the seconds come every frame, so it answers within HOLD + 2 frames) and its handles keep their band
+-- rule; the seconds come every frame, so it answers within HOLD + SETTLE + 2 frames) and its handles keep their band
 -- meanwhile. Edge 1 of stacks is presence itself and has no bar.
 -- Priming: a new bar holds low HOLD frames (pushes in between are dropped) and starts below its edge. Its state is
--- right from then on, but it says something only once the client has pushed into it (lib.barFed), and again after
--- each time the aura was absent: seconds come every frame while the aura is up; stacks only when the client rewrites
--- the count (an application, a refresh, a target swap, a layout pass), so a stacks watch made while its aura is up is
--- unknown until then. Hook-fed bars follow every push, so a target swap does not prime them; a re-layout (UI scale, a
--- loading screen) does.
+-- right from then on, but it says something only SETTLE frames after the client first pushed into it (lib.barFedAt:
+-- a firing can trail its push), and again after each time the aura was absent: seconds come every frame while the
+-- aura is up; stacks only when the client rewrites the count (an application, a refresh, a target swap, a layout
+-- pass), so a stacks watch made while its aura is up is unknown ("priming") until then. While a bar settles after an
+-- absence or a run, its handles keep their band; after a prime (a new bar, a re-layout) they are unknown. Hook-fed
+-- bars follow every push, so a target swap does not prime them; a re-layout (UI scale, a loading screen) does.
 --
 -- This file reaches the shared machinery by wrapping lib.sync, lib.feed, lib.fire, lib.decode, lib.reprime, lib.event
 -- and lib.drive for aura sources (every script dispatches through lib, so this is the library's own upgrade path);
@@ -26,11 +27,12 @@ end
 
 local cdm = lib.cdm
 local W = 0.01 -- seconds: a seconds bar's range below its edge
+local RESCAN = 30 -- frames between the feed's own item searches (the hooks announce every change they see)
 local WHAT = { up = true, stacks = true, left = true }
 local RELAYOUT = { UI_SCALE_CHANGED = true, DISPLAY_SIZE_CHANGED = true, LOADING_SCREEN_DISABLED = true }
 lib.barLast = lib.barLast or {} -- the frame of a seconds bar's last counted firing
-lib.barFed = lib.barFed or {} -- the client pushed into the bar since its priming and since the aura was last absent
-lib.barSoft = lib.barSoft or {} -- a seconds bar priming again after a run: its handles keep their band until it is fed
+lib.barFedAt = lib.barFedAt or {} -- the frame of the client's first push since the bar's priming or the last absence
+lib.barSoft = lib.barSoft or {} -- settling after an absence or a run (not a prime): its handles keep their band
 
 local function sortMerge(list)
     table.sort(list)
@@ -114,12 +116,8 @@ local function status(spec)
     if h.unproven then
         return "unavailable", h.unproven
     end
-    if cdm.dirty and lib.realised and not InCombatLockdown() then
-        local ok, err = pcall(cdm.resolve)
-        if not ok then
-            lib.cdmFail(err)
-            return lib.capOf("aura")
-        end
+    if cdm.dirty then
+        lib.wake() -- the next frame reads again (and tells the callbacks); never from inside IsAvailable
     end
     return cdm.statusOf(h.spell, h.what)
 end
@@ -198,7 +196,7 @@ local function sync(s)
                 local i = alloc(s)
                 if i then
                     lib.barFrame[i]:SetMinMaxValues(e - (s.what == "left" and W or 1), e)
-                    lib.barLast[i], lib.barFed[i], lib.barSoft[i] = nil, false, nil
+                    lib.barLast[i], lib.barFedAt[i], lib.barSoft[i] = nil, false, nil
                 end
                 s.bar[e] = i
             end
@@ -220,7 +218,7 @@ end
 -- Every bar of an active aura source holds low again, then waits for the next push.
 local function reprime(s)
     for _, i in pairs(s.bar) do
-        lib.barPrime[i], lib.barFed[i], lib.barSoft[i] = lib.HOLD + 1, false, nil
+        lib.barPrime[i], lib.barFedAt[i], lib.barSoft[i] = lib.HOLD + 1, false, nil
     end
     s.dirty = true
     lib.wake()
@@ -231,9 +229,12 @@ local function feed(s)
     local up
     if not cdm.off then
         local item = cdm.byCd[s.cd]
-        if (item == nil or cdm.idOf(item) ~= s.cd) and cdm.scanFrame ~= lib.frameNo then
-            cdm.scan() -- a reshuffle no acquire announced, or an item lost to secret identity: once a frame
+        if (item == nil or cdm.idOf(item) ~= s.cd) and lib.frameNo - (cdm.scanFrame or -RESCAN) >= RESCAN then
+            cdm.scan() -- a change no hook announced, or an item lost to secret identity: at most every RESCAN frames
             item = cdm.byCd[s.cd]
+            if item == nil then
+                cdm.dirty = true -- not shown any more: answer again (out of combat; in combat the answers stand)
+            end
         end
         if item and cdm.idOf(item) == s.cd and cdm.live(item) then
             local a = rawget(item, "auraInstanceID")
@@ -250,7 +251,7 @@ local function feed(s)
         s.up, s.dirty, s.seen, s.seenFrame = up, true, GetTime(), lib.frameNo
     end
     s.gone = up == nil
-    local prime, frames, fed = lib.barPrime, lib.barFrame, lib.barFed
+    local prime, frames, fedAt, soft, now = lib.barPrime, lib.barFrame, lib.barFedAt, lib.barSoft, lib.frameNo
     for _, i in pairs(s.bar) do
         local p = prime[i]
         if p > 1 then
@@ -262,7 +263,9 @@ local function feed(s)
             lib.barState[i], prime[i], s.dirty = false, 0, true
         end
         if not up then
-            fed[i], lib.barSoft[i] = false, nil
+            fedAt[i], soft[i] = false, true -- absent: a known value; the next push starts from it
+        elseif fedAt[i] and now - fedAt[i] <= lib.SETTLE then
+            s.dirty = true -- settling: decode again until it has settled
         end
     end
 end
@@ -274,7 +277,7 @@ local function fire(s, i)
     end
     local f = lib.frameNo
     if s.what == "left" and lib.barLast[i] == f - 1 then -- a run: prime this bar again, its handles hold their band
-        lib.barPrime[i], lib.barFed[i], lib.barSoft[i], lib.barLast[i] = lib.HOLD + 1, false, true, nil
+        lib.barPrime[i], lib.barFedAt[i], lib.barSoft[i], lib.barLast[i] = lib.HOLD + 1, false, true, nil
         s.dirty = true
         return
     end
@@ -284,43 +287,51 @@ local function fire(s, i)
     s.dirty, s.seen, s.seenFrame = true, GetTime(), f
 end
 
--- The handle's band, then its sink when the band changed (the same rules as lib.decode: one call per frame).
+-- The handle's band, then its sink when the band changed (the same rules as lib.decode: one call per frame). Absent:
+-- the lowest band. Up: the bars' band once each has settled; before that the band stands (settling after an absence
+-- or a run) or is unknown (after a prime).
 local function decode(h)
     local lo, hi
     local s = h.src
     local state = lib.stateOf(h)
-    if s.up and (state == "live" or state == "priming") then
-        local soft = lib.barSoft
-        for k = 1, #h.edges do
-            if soft[s.bar[h.edges[k]]] then
-                return -- a seconds bar priming again after a run: the band stands
-            end
-        end
-    end
-    if state == "live" then
-        if h.what == "up" then
-            lo = s.up and 1 or 0
-            hi = lo
+    if state == "live" or state == "priming" then
+        if s.up == false then
+            lo = 0
+            hi = h.what == "up" and 0 or h.cut[1]
+        elseif s.up and h.what == "up" then
+            lo, hi = 1, 1
         elseif s.up then
-            local st, fed, cut = lib.barState, lib.barFed, h.cut
-            local below = false
-            lo, hi = 0, h.top
-            for k = 1, #cut do
-                local e = cut[k]
-                local i = s.bar[e]
-                if i and not fed[i] then -- not pushed since its priming or the aura's last absence
-                    lo, hi = nil, nil
-                    break
+            local prime, fedAt, soft, now, settle = lib.barPrime, lib.barFedAt, lib.barSoft, lib.frameNo, lib.SETTLE
+            local waiting, hard = false, false
+            for k = 1, #h.edges do
+                local i = s.bar[h.edges[k]]
+                local fa = fedAt[i]
+                if prime[i] > 0 or not fa or now - fa < settle then
+                    waiting = true
+                    hard = hard or not soft[i]
                 end
-                if (i and st[i]) or (not i and e <= 1) then
-                    if below then -- at or above an edge but below a lower one: a firing was lost
-                        lib.desyncs = lib.desyncs + 1
-                        reprime(s)
-                        return
+            end
+            if waiting then
+                if not hard and h.lo ~= nil then
+                    return -- settling after an absence or a run: the band stands
+                end
+            else
+                local st, cut = lib.barState, h.cut
+                local below = false
+                lo, hi = 0, h.top
+                for k = 1, #cut do
+                    local e = cut[k]
+                    local i = s.bar[e]
+                    if (i and st[i]) or (not i and e <= 1) then
+                        if below then -- at or above an edge but below a lower one: a firing was lost
+                            lib.desyncs = lib.desyncs + 1
+                            reprime(s)
+                            return
+                        end
+                        lo = e
+                    elseif not below then
+                        below, hi = true, e
                     end
-                    lo = e
-                elseif not below then
-                    below, hi = true, e
                 end
             end
         end

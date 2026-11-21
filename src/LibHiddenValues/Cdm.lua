@@ -40,8 +40,12 @@ cdm.dirty = true
 cdm.off = cdm.off or false
 
 -- Hook dispatchers: installed once per widget, they call through lib so a newer minor replaces the bodies.
+-- An errored kind's hooks return at once (a body raising every frame would otherwise re-sync every kind per call).
 lib.onCdmText = lib.onCdmText
     or function(fs, text)
+        if lib.errored.aura then
+            return
+        end
         local ok, err = pcall(lib.cdmText, fs, text)
         if not ok then
             lib.cdmFail(err)
@@ -49,6 +53,9 @@ lib.onCdmText = lib.onCdmText
     end
 lib.onCdmValue = lib.onCdmValue
     or function(bar, v)
+        if lib.errored.aura then
+            return
+        end
         local ok, err = pcall(lib.cdmValue, bar, v)
         if not ok then
             lib.cdmFail(err)
@@ -56,10 +63,23 @@ lib.onCdmValue = lib.onCdmValue
     end
 lib.onCdmAcquire = lib.onCdmAcquire
     or function(viewer, item)
+        if lib.errored.aura then
+            return
+        end
         local ok, err = pcall(lib.cdmAcquire, viewer, item)
         if not ok then
             lib.cdmFail(err)
         end
+    end
+-- The viewer's RefreshData: a layout pass, or a data change that keeps the item count (a drag reorder, a swap, a change
+-- at the 2-item minimum: no frame is acquired and no event is sent). It only asks for a read on the next frame.
+lib.onCdmData = lib.onCdmData
+    or function()
+        if lib.errored.aura then
+            return
+        end
+        lib.cdm.dirty = true
+        lib.wake()
     end
 
 -- An error in a hook, an event or the resolve: the aura kind is off for the session (the others carry on).
@@ -83,6 +103,9 @@ function cdm.viewer(k)
         end
         cdm.viewers[k], cdm.vIndex[v] = v, k
         hooksecurefunc(v, "OnAcquireItemFrame", lib.onCdmAcquire)
+        if type(v.RefreshData) == "function" then
+            hooksecurefunc(v, "RefreshData", lib.onCdmData)
+        end
     end
     return v
 end
@@ -341,17 +364,17 @@ function lib.cdmAcquire(viewer, item)
     lib.wake()
 end
 
--- Pushes one value to every started bar of a source (a bar holding low for its priming drops it); a pushed bar now
--- follows the client (lib.barFed). A secret is passed on and never kept; a value a bar refuses (an unexpected shape)
+-- Pushes one value to every started bar of a source (a bar holding low for its priming drops it); the frame of the
+-- first push is stamped (lib.barFedAt): the bar is read SETTLE frames later, when its firing has surely arrived. A secret is passed on and never kept; a value a bar refuses (an unexpected shape)
 -- is counted and dropped.
 function lib.cdmPush(s, v)
-    local prime, frames, fed = lib.barPrime, lib.barFrame, lib.barFed
+    local prime, frames, fedAt = lib.barPrime, lib.barFrame, lib.barFedAt
     for _, i in pairs(s.bar) do
         if prime[i] == 0 then
             local f = frames[i]
             if pcall(f.SetValue, f, v) then
-                if not fed[i] then
-                    fed[i], lib.barSoft[i], s.dirty = true, nil, true -- its band can be told now, also unchanged
+                if not fedAt[i] then
+                    fedAt[i], s.dirty = lib.frameNo, true
                 end
             else
                 cdm.nRefused = cdm.nRefused + 1

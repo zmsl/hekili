@@ -44,7 +44,6 @@ end)
 |---|---|---|
 | `health` | `unit`, `edges`, `predicted` (default true) | `player`, `target` |
 | `power` | `unit`, `edges`, `power` (`Enum.PowerType`, required) | `player`: mana, energy, rage (rage: proven by the BandProbe2 warm-up, the library's own run owed) |
-
 | `aura` | `unit`, `spell`, `what`, `edges`, `max` | `player`, `target`: read from the Cooldown Manager, **not yet run in game** (below) |
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
@@ -69,12 +68,16 @@ LHV:Watch("MyAddon", { kind = "aura", unit = "player", spell = 67890, what = "up
 | Field | Meaning |
 |---|---|
 | `unit` | `"player"` or `"target"` (the only units the Cooldown Manager reads; another token is `unavailable, unproven`) |
-| `spell` | the aura's spell ID; it matches a Cooldown Manager entry by its spell, override, tooltip override or linked spells |
+| `spell` | the aura's spell ID; it matches a Cooldown Manager entry by its spell, override, tooltip override or linked spells, and the watch then answers for that entry: whatever aura of the entry the client shows (a sibling linked aura reads as this one) |
 | `what` | `"up"`: presence, `lo == hi`, 1 up and 0 not. `"stacks"`: the stack count. `"left"`: seconds left |
 | `edges` | `stacks`: whole numbers from 1 (1 is presence itself); `left`: seconds above 0.01 (required) |
 | `max` | `stacks` only: the top of the domain; alone it means every count from 1 to `max` (an exact count) |
 
-Stacks and seconds are unknown (`lo == nil`) while the aura is absent; `up` is unknown only when no item shows it.
+An absent aura is a known value: no stacks and no seconds, the lowest band (`0` to the lowest edge), `up` 0. A
+handle is unknown (`lo == nil`) only while no item shows it (`gone`) or before its first band (`priming`); `"live"`
+always comes with a band. The client hides the count at one stack: an aura that is up with no count reads 1. `left`
+on an aura with no duration reads the lowest band while it is up (the client pushes 0 seconds for it), which looks
+like "about to expire": watch `up` for such auras.
 `h:Domain()` returns `nil, 0, top`: 1 for `up`, `max` (or `math.huge`) for stacks, `math.huge` for seconds. An aura
 handle is called one frame after the change (`h:Latency()`).
 
@@ -102,10 +105,14 @@ handles whose answer changed (the player placed or removed the aura, a layout ch
 while its item cannot be read: its viewer hidden (Edit Mode "Hidden", or the whole UI hidden), Edit Mode open, or, in
 combat after the client re-laid the items out, an item whose identity the client keeps secret (until combat ends).
 
-A stacks watch started while its aura is already up stays unknown until the client next writes the count (an
-application, a refresh, a target swap). A refresh within a frame of a seconds edge can be told up to about 6 frames
-late (the band before it stands meanwhile). `OnCapability` is not called from inside `Watch`: read `h:State()` there. A paused aura handle only reports unknown; its bars keep following the
-client.
+A bar is read 4 frames (`LHV.SETTLE`) after the client's first push into it, so the first band is the true one, once,
+with dir 0. A stacks watch started while its aura is already up stays `priming` until the client next writes the
+count (an application, a refresh, a target swap); after a re-layout (UI scale, a loading screen) an aura handle is
+unknown until its bars settle again. When an aura comes back the band before it stands while the count settles. A
+refresh within a frame of a seconds edge can be told up to about 10 frames late (the band before it stands
+meanwhile). `OnCapability` is not called from inside `Watch` or `IsAvailable`: read `h:State()` there (an answer
+`IsAvailable` gives may be a frame old; the callbacks follow on the next frame). A paused aura handle only reports
+unknown; its bars keep following the client.
 
 ## Testing your addon
 
@@ -134,8 +141,8 @@ the reference consumer (`/lhvp`).
 
 | Call | Returns |
 |---|---|
-| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 1`) |
-| `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, then the unproven ones); `state` and `reason` as `IsAvailable` |
+| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 2`) |
+| `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, `cooldown` ... `aura` ... `meter`: the major's twelve); `state` and `reason` as `IsAvailable` |
 | `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable). `unit` may be a whole spec: the aura kind then answers for its placement |
 | `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change, and `fn("aura", state, reason, h)` for each of the owner's aura handles whose answer changed |
 | `LHV:GetAuraSources()` | a fresh array, one `{ unit =, spell =, what =, handles =, bars =, active =, cooldownID =, placement =, state =, reason =, up = }` per aura source with a watch (`placement` `"bar"`, `"icon"` or nil; `up` true, false or nil for unknown); then `off, read, texts, values, refused, reads`: the Cooldown Manager is off, its catalogue was read, count texts and bar values forwarded, values a bar refused, item reads |
