@@ -229,9 +229,12 @@ end
 function M.mean(list)
     local out = { wrong = {}, flips = {} }
     local keys = {}
-    for k, v in pairs(list[1]) do
-        if type(v) == "number" then
-            keys[#keys + 1] = k
+    local seen = {} -- every summary's keys: a class with no rate change has no relXMed, and may come first
+    for _, r in ipairs(list) do
+        for k, v in pairs(r) do
+            if type(v) == "number" and not seen[k] then
+                seen[k], keys[#keys + 1] = true, k
+            end
         end
     end
     for _, k in ipairs(keys) do

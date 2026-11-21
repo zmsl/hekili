@@ -50,6 +50,96 @@ S.RUN2 = {
 
 local LUST = 1.3
 
+-- Run 3 (partial-group execute; `run.lua run3`): a session is one fixed group (the player, 3 more DPS, a tank) doing
+-- 10 pulls (S.PULLS: packs of trash, elites, a boss). `ex[i]` is DPS i's execute line (1 = the player; false or
+-- missing: none); the tank (rate 0.4-0.7) never speeds up. Each executing DPS has its own multiplier x1.5-2.5 below
+-- its line, so the group's factor is 1 + sum of executing shares x (mult - 1). `dom`: one random DPS does 2.5-3.5x a
+-- normal DPS's damage. `solo`: the player alone.
+S.RUN3 = {
+    { name = "g0", ex = {} },
+    { name = "g1 20 me", ex = { 20 } },
+    { name = "g1 35 me", ex = { 35 } },
+    { name = "g1 35 other", ex = { false, 35 } },
+    { name = "g2 20 me", ex = { 20, 20 } },
+    { name = "g2 mix me", ex = { 20, 35 } },
+    { name = "g2 35 other", ex = { false, 35, 35 } },
+    { name = "g4 20", ex = { 20, 20, 20, 20 } },
+    { name = "g4 mix", ex = { 20, 35, 20, 35 } },
+    { name = "g1 20 me dom", ex = { 20 }, dom = true },
+    { name = "g1 35 other dom", ex = { false, 35 }, dom = true },
+    { name = "g2 mix me dom", ex = { 20, 35 }, dom = true },
+    { name = "solo 20", ex = { 20 }, solo = true },
+    { name = "solo 35", ex = { 35 }, solo = true },
+}
+S.PULLS = { "trash", "elite", "trash", "trash", "elite", "trash", "boss", "trash", "elite", "trash" }
+
+--- One session's group: rates (1 = the player, the tank last), ex[i] = { pct, mult } or false, and what a caller
+--- could know: own (the player's line or false), lines (descending, tank excluded), nDPS, nExec; and the truth:
+--- F[line] = the group's damage factor below that line (every executor whose line is at or above it counted).
+function S.group(comp, seed)
+    local rng = Rng.new(seed)
+    local nDPS = comp.solo and 1 or 4
+    local rates, ex = { 1 }, {}
+    for i = 2, nDPS do
+        rates[i] = rng:uni(0.7, 1.3)
+    end
+    if comp.dom then
+        rates[rng:int(1, nDPS)] = rng:uni(2.5, 3.5)
+    end
+    if not comp.solo then
+        rates[nDPS + 1] = rng:uni(0.4, 0.7) -- the tank
+    end
+    local total, lines, seen, nExec = 0, {}, {}, 0
+    for i = 1, #rates do
+        total = total + rates[i]
+        local line = i <= nDPS and comp.ex[i]
+        ex[i] = line and { pct = line, mult = rng:uni(1.5, 2.5) } or false
+        if line then
+            nExec = nExec + 1
+            if not seen[line] then
+                seen[line], lines[#lines + 1] = true, line
+            end
+        end
+    end
+    table.sort(lines, function(a, b)
+        return a > b
+    end)
+    local F = {}
+    for _, line in ipairs(lines) do
+        local f = 0
+        for i = 1, #rates do
+            f = f + rates[i] * ((ex[i] and ex[i].pct >= line) and ex[i].mult or 1)
+        end
+        F[line] = f / total
+        assert(F[line] > 1 and F[line] <= 2.5 and (not comp.solo or F[line] == ex[1].mult), "group factor")
+    end
+    return {
+        rates = rates,
+        ex = ex,
+        own = ex[1] and ex[1].pct or false,
+        lines = lines,
+        nDPS = nDPS,
+        nExec = nExec,
+        F = F,
+        name = comp.name,
+    }
+end
+
+-- A run 3 pull of one length: trash is a pack (2-4 mobs, cleave, 0-2 deliberate swaps), elite 30-60 s, boss 3-6 min.
+local function spec3(length, rng)
+    local sp = { mobs = 1, members = 0, cleave = 0, swaps = 0 }
+    if length == "trash" then
+        sp.mobs, sp.dur, sp.cleave, sp.swaps = rng:int(2, 4), rng:uni(8, 20), rng:uni(0.3, 0.7), rng:int(0, 2)
+    elseif length == "elite" then
+        sp.dur = rng:uni(30, 60)
+    elseif length == "boss" then
+        sp.dur = rng:uni(180, 360)
+    else
+        error("unknown length " .. tostring(length))
+    end
+    return sp
+end
+
 local function run2(class, rng, sp)
     local ex, x = class:match("^ex(%d+) x([%d.]+)$")
     if ex then
@@ -134,8 +224,8 @@ local function pct(m)
     return 100 * m.hp / m.max
 end
 
---- Applies `amt` to mob `m` at `t` under the spec's per-mob rules; returns the damage done.
-local function apply(sp, m, amt, t)
+--- Applies attacker `who`'s `amt` to mob `m` at `t` under the spec's per-mob rules; returns the damage done.
+local function apply(sp, m, amt, t, who)
     if m.death or t < m.immuneUntil then
         return 0
     end
@@ -143,7 +233,15 @@ local function apply(sp, m, amt, t)
     if sp.dot then -- DoTs ramp up: a quarter of the damage at first, all of it after `dot` seconds
         amt = amt * math.min(1, 0.25 + 0.75 * (t - m.firstHit) / sp.dot)
     end
-    if sp.execute and pct(m) < sp.execute.pct then
+    local x = sp.pexec and sp.pexec[who]
+    if x and pct(m) < x.pct then -- run 3: this attacker's own execute; a change point per line per mob
+        amt = amt * x.mult
+        m.lines = m.lines or {}
+        if not m.lines[x.pct] then
+            m.lines[x.pct] = t
+            sp.changes[#sp.changes + 1] = { t = t, mob = m.index }
+        end
+    elseif sp.execute and pct(m) < sp.execute.pct then
         amt = amt * sp.execute.mult
         if not m.execAt then
             m.execAt = t
@@ -170,11 +268,15 @@ local function firstAlive(mobs, except)
     end
 end
 
-function S.build(class, seed)
+--- A fight of `class`; run 3: `class` is a pull length and `group` the session's group (S.group).
+function S.build(class, seed, group)
     local rng = Rng.new(seed)
-    local sp = spec(class, rng)
+    local sp = group and spec3(class, rng) or spec(class, rng)
     sp.changes = {} -- rate changes { t, mob } (mob 0: every mob), for the post-change metrics
     local rates = { 1 }
+    if group then
+        rates, sp.pexec = group.rates, group.ex
+    end
     for i = 1, sp.members do
         rates[i + 1] = rng:uni(0.6, 1.4)
     end
@@ -261,10 +363,10 @@ function S.build(class, seed)
                 local tgt = i == 1 and ptarget or groupTarget
                 if tgt then
                     local amt = rates[i] * interval * rng:uni(0.7, 1.3) * (rng:next() < 0.25 and 2 or 1) / 1.25 * mult
-                    local done = apply(sp, mobs[tgt], amt, t)
+                    local done = apply(sp, mobs[tgt], amt, t, i)
                     for m = 1, #mobs do
                         if m ~= tgt and sp.cleave > 0 then
-                            done = done + apply(sp, mobs[m], amt * sp.cleave, t)
+                            done = done + apply(sp, mobs[m], amt * sp.cleave, t, i)
                         end
                     end
                     if i == 1 and done > 0 then
@@ -308,6 +410,8 @@ function S.build(class, seed)
         changes = changes,
         lust = lust and lust.t and lust or nil, -- { t, dur, mult } once it started
         execute = sp.execute, -- { pct, mult }
+        members = sp.members,
+        group = group,
     }
 end
 

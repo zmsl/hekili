@@ -521,7 +521,7 @@ local function lineup(extra)
         algos[#algos + 1] = { spec[1], spec[2], main = true }
     end
     for _, spec in ipairs(extra or {}) do
-        algos[#algos + 1] = { spec[1], spec[2], params = spec.params }
+        algos[#algos + 1] = { spec[1], spec[2], params = spec.params, short = spec.short }
     end
     return algos
 end
@@ -864,6 +864,409 @@ function modes.run2()
     local order = report(res, "Ranking on the run 2 classes (class means)")
     detail(res, order)
     run2Tables(res, order)
+end
+
+-- Run 3: partial-group execute (scenarios.lua S.RUN3). What the caller knows of the group: a run 3 fight carries its
+-- session's group (classes known, the tank excluded); elsewhere the player is a 20% executor among members + 1 DPS
+-- whose classes are unknown (no other execute assumed).
+local function belief(obs)
+    return obs.group or { own = 20, lines = { 20 }, nDPS = (obs.members or 0) + 1, nExec = 1 }
+end
+
+-- `hints.mode`: "none"; "own" (the player's own line, only when the player executes); "all" (the highest line in the
+-- group: the estimator keeps one execute slot); "true" (the top line with the true group factor below it).
+-- `hints.prior` { m, share }: the starting factor is 1 + executors counted x (m - 1) x share (share nil: 1 / the DPS
+-- count; "own" counts the player, "all" every executing DPS); `hints.fixed`: start at this factor whatever the group.
+-- The factor then learns (execLearn; 0 keeps it) and carries pull to pull inside a run 3 session (one group);
+-- elsewhere each fight starts over (a new group). `hints.across`: one factor for the whole run (it does not reset
+-- when the group changes). For the runner: algo.line (declared or false), algo.sess and algo.key (where the factor
+-- is kept), algo.measured (streams that measured a speed-up).
+local function est3(params, hints)
+    local p = { spread = false }
+    for k, v in pairs(params or {}) do
+        p[k] = v
+    end
+    local key = {}
+    return function(obs)
+        local e = E.New(p)
+        local g = belief(obs)
+        local line, count = false, 0
+        if hints.mode == "own" then
+            line, count = g.own, 1
+        elseif hints.mode == "all" or hints.mode == "true" then
+            line, count = g.lines[1] or false, g.nExec
+        end
+        local start = 1
+        if hints.prior then
+            start = 1 + count * (hints.prior.m - 1) * (hints.prior.share or 1 / g.nDPS)
+        elseif hints.fixed then
+            start = hints.fixed
+        elseif hints.mode == "true" and line and g.F then
+            start = g.F[line]
+        end
+        local sess = obs.group and (hints.across and obs.across or obs.session)
+        if line then
+            e:Hint("execute", sess and sess[key] or start, line)
+        end
+        local algo = { e = e, line = line, sess = sess, key = key, measured = 0 }
+        local cur = false
+        function algo.restart()
+            cur = false
+            e:Restart()
+        end
+        function algo.band(_, t, lo, hi)
+            e:Band(t, lo, hi)
+        end
+        function algo.get(_, now)
+            if e.xCand and not cur then
+                cur, algo.measured = true, algo.measured + 1
+            end
+            if line and sess then
+                sess[key] = e:ExecuteFactor()
+            end
+            return (e:Get(now))
+        end
+        return algo
+    end
+end
+
+local W25, FIX = { execLearn = 0.25 }, { execLearn = 0 }
+local RUN3 = {
+    { "a. no execute hint (default)", est3({}, { mode = "none" }), short = "a" },
+    { "b. own line, learned", est3({}, { mode = "own" }), short = "b own" },
+    { "b. all group lines (top line), learned", est3({}, { mode = "all" }), short = "b all" },
+    { "b. own line, learned w=0.25", est3(W25, { mode = "own" }), short = "b own .25" },
+    { "b. all lines, learned w=0.25", est3(W25, { mode = "all" }), short = "b all .25" },
+    { "c. all lines, prior x2 equal share, learned", est3({}, { mode = "all", prior = { m = 2 } }), short = "c all" },
+    { "c. own line, prior x2 equal share, learned", est3({}, { mode = "own", prior = { m = 2 } }), short = "c own" },
+    {
+        "c. all lines, prior x2 equal share, learned w=0.25",
+        est3(W25, { mode = "all", prior = { m = 2 } }),
+        short = "c all .25",
+    },
+    {
+        "c. all lines, prior wrong share (1/8 each: too low), learned",
+        est3({}, { mode = "all", prior = { m = 2, share = 0.125 } }),
+        short = "c bad share",
+    },
+    {
+        "c. all lines, prior wrong mult (x3: too high), learned",
+        est3({}, { mode = "all", prior = { m = 3 } }),
+        short = "c bad mult",
+    },
+    { "d. all lines, prior x2 equal share, fixed", est3(FIX, { mode = "all", prior = { m = 2 } }), short = "d" },
+    {
+        "d. all lines, prior wrong share (1/8 each: too low), fixed",
+        est3(FIX, { mode = "all", prior = { m = 2, share = 0.125 } }),
+        short = "d bad share",
+    },
+    {
+        "d. all lines, prior wrong mult (x3: too high), fixed",
+        est3(FIX, { mode = "all", prior = { m = 3 } }),
+        short = "d bad mult",
+    },
+    { "d. all lines, x2 whatever the group, fixed", est3(FIX, { mode = "all", fixed = 2 }), short = "d x2" },
+    {
+        "b. all lines, learned, one factor across groups",
+        est3({}, { mode = "all", across = true }),
+        short = "b all across",
+    },
+    { "ceiling: true group factor at the top line, fixed", est3(FIX, { mode = "true" }), short = "ceiling" },
+}
+
+-- `run3 --list learn`: the learning weight for threshold-only and prior starts.
+local RUN3_LEARN = { RUN3[1] }
+for _, w in ipairs({ 0.1, 0.15, 0.25, 0.35, 0.5, 0.7 }) do
+    local p = { execLearn = w }
+    RUN3_LEARN[#RUN3_LEARN + 1] = { "b. all lines, learned w=" .. w, est3(p, { mode = "all" }), short = "b " .. w }
+    RUN3_LEARN[#RUN3_LEARN + 1] =
+        { "c. all lines, prior x2, learned w=" .. w, est3(p, { mode = "all", prior = { m = 2 } }), short = "c " .. w }
+end
+
+local LENGTHS = { "trash", "elite", "boss" }
+local SESSIONS = 16 -- per composition and seed set (x 10 pulls)
+-- First against later pulls of a session: the first and last trash and elite pulls.
+local PULL_BUCKET = { [1] = "trash, pull 1", [10] = "trash, pull 10", [2] = "elite, pull 2", [9] = "elite, pull 9" }
+local PULL_ORDER = { "trash, pull 1", "trash, pull 10", "elite, pull 2", "elite, pull 9" }
+
+local function runSet3(set, algos)
+    local main = {}
+    for a, spec in ipairs(algos) do
+        if spec.main then
+            main[#main + 1] = a
+        end
+    end
+    local stats, classes = {}, {}
+    local function bucket(name)
+        if not stats[name] then
+            stats[name] = {}
+            for a = 1, #algos do
+                stats[name][a] = M.newStats()
+            end
+        end
+        return stats[name]
+    end
+    for _, comp in ipairs(S.RUN3) do
+        for _, len in ipairs(LENGTHS) do
+            classes[#classes + 1] = comp.name .. " " .. len
+            bucket(classes[#classes])
+        end
+    end
+    local conv, factors, across = {}, {}, {} -- conv[a][pull] = { r = learned / true factors, m = streams measured }
+    for a = 1, #algos do
+        conv[a] = {}
+    end
+    local nSess = math.max(1, math.floor(SESSIONS * scale + 0.5))
+    for _, comp in ipairs(S.RUN3) do
+        factors[comp.name] = {}
+    end
+    for s = 1, nSess do -- sessions round robin over the compositions: the `across` factor meets a new group each time
+        for ci, comp in ipairs(S.RUN3) do
+            local sseed = SEED_BASE[set] + 3000000 + s * 7919 + ci * 104729
+            local group = S.group(comp, sseed)
+            factors[comp.name][s] = group
+            local session = {}
+            for pi, len in ipairs(S.PULLS) do
+                local seed = sseed + pi * 131
+                local obs = O.build(S.build(len, seed, group), seed + 1)
+                obs.class, obs.session, obs.across = comp.name, session, across
+                local answers, made = {}, {}
+                for a, spec in ipairs(algos) do
+                    made[a] = spec[2](obs)
+                    answers[a] = O.run(obs, made[a], {})
+                end
+                M.add(obs, answers, stats[comp.name .. " " .. len], main)
+                if PULL_BUCKET[pi] and group.nExec > 0 then
+                    M.add(obs, answers, bucket((comp.solo and "solo " or "group ") .. PULL_BUCKET[pi]), main)
+                end
+                for a = 1, #algos do
+                    local algo = made[a]
+                    if #group.lines == 1 and algo.line and algo.sess then
+                        local c = conv[a][pi] or { r = {}, m = 0 }
+                        conv[a][pi] = c
+                        c.r[#c.r + 1] = (algo.sess[algo.key] or 1) / group.F[algo.line]
+                        c.m = c.m + algo.measured
+                    end
+                end
+            end
+        end
+    end
+    local res = { algos = algos, class = {}, overall = {}, classes = classes, pull = {}, conv = conv }
+    res.factors, res.nSess = factors, nSess
+    for name, per in pairs(stats) do
+        res.class[name] = {}
+        for a = 1, #algos do
+            res.class[name][a] = M.summary(per[a])
+        end
+    end
+    for a = 1, #algos do
+        local per = {}
+        for _, c in ipairs(classes) do
+            per[#per + 1] = res.class[c][a]
+        end
+        res.overall[a] = M.mean(per)
+    end
+    return res
+end
+
+-- A table with one row per name and one column per run 3 strategy (short labels): cell(summary) of row(name)[a].
+local function grid3(res, title, names, row, cell)
+    local cols = {}
+    for a, spec in ipairs(res.algos) do
+        if spec.short then
+            cols[#cols + 1] = a
+        end
+    end
+    print("\n### " .. title .. "\n")
+    local head = { "| scenario" }
+    for _, a in ipairs(cols) do
+        head[#head + 1] = res.algos[a].short
+    end
+    print(table.concat(head, " | ") .. " |")
+    print("|---" .. string.rep("|---", #cols) .. "|")
+    for _, name in ipairs(names) do
+        local r = row(name)
+        local cells = { "| " .. name }
+        for _, a in ipairs(cols) do
+            cells[#cells + 1] = cell(r[a], a)
+        end
+        print(table.concat(cells, " | ") .. " |")
+    end
+end
+
+local function run3Tables(res, refs)
+    print("\n### Groups (per session: the player's line, the lines present, true group factor below each line)\n")
+    print("| composition | executing DPS | own line | group factor below the top line, mean (min-max) | below 20% |")
+    print("|---|---|---|---|---|")
+    for _, comp in ipairs(S.RUN3) do
+        local top, low, lo, hi = 0, 0, 9, 0
+        local list = res.factors[comp.name]
+        for _, g in ipairs(list) do
+            local ft = g.lines[1] and g.F[g.lines[1]] or 1
+            top, low = top + ft, low + (g.lines[1] and g.F[g.lines[#g.lines]] or 1)
+            lo, hi = math.min(lo, ft), math.max(hi, ft)
+        end
+        local g = list[1]
+        print(
+            string.format(
+                "| %s | %d of %d | %s | %.2f (%.2f-%.2f) | %.2f |",
+                comp.name,
+                g.nExec,
+                g.nDPS,
+                g.own and (g.own .. "%") or "none",
+                top / #list,
+                lo,
+                hi,
+                low / #list
+            )
+        )
+    end
+    local comps = {}
+    for _, comp in ipairs(S.RUN3) do
+        comps[#comps + 1] = comp.name
+    end
+    local mean = {}
+    local function byComp(name)
+        if not mean[name] then
+            local out = {}
+            for a = 1, #res.algos do
+                local per = {}
+                for _, len in ipairs(LENGTHS) do
+                    per[#per + 1] = res.class[name .. " " .. len][a]
+                end
+                out[a] = M.mean(per)
+            end
+            mean[name] = out
+        end
+        return mean[name]
+    end
+    local function byClass(name)
+        return res.class[name]
+    end
+    comps[#comps + 1] = "**mean**"
+    mean["**mean**"] = res.overall
+    grid3(
+        res,
+        "Score per composition (lengths averaged; refs: the main lineup on all run 3 buckets)",
+        comps,
+        byComp,
+        function(r)
+            return f(M.score(r, refs), 3)
+        end
+    )
+    grid3(res, "Relative error median per composition", comps, byComp, function(r)
+        return f(r.relMed)
+    end)
+    grid3(res, "Relative error median, 10 s after a line crossing, per composition", comps, byComp, function(r)
+        return f(r.relXMed)
+    end)
+    grid3(res, "Relative error p90 per composition", comps, byComp, function(r)
+        return f(r.relP90)
+    end)
+    for d, label in ipairs({ "ttd<4", "ttd<8", "ttd<15", "fight_remains<20" }) do
+        grid3(res, "Wrong side " .. label .. " per composition", comps, byComp, function(r)
+            return pct(r.wrong[d])
+        end)
+    end
+    grid3(res, "Excess flips per minute (sum of 4) per composition", comps, byComp, function(r)
+        return f(r.flipSum)
+    end)
+    grid3(res, "Unknown share per composition", comps, byComp, function(r)
+        return pct(r.unknown)
+    end)
+    grid3(
+        res,
+        "Relative error median / 10 s after a crossing, per composition and length",
+        res.classes,
+        byClass,
+        function(r)
+            return f(r.relMed) .. " / " .. f(r.relXMed)
+        end
+    )
+    local pulls = {}
+    for _, who in ipairs({ "group ", "solo " }) do
+        for _, b in ipairs(PULL_ORDER) do
+            pulls[#pulls + 1] = who .. b
+        end
+    end
+    grid3(res, "First against later pulls (groups with an executor; rel med / wrong ttd<8)", pulls, byClass, function(r)
+        return f(r.relMed) .. " / " .. pct(r.wrong[2])
+    end)
+    print("\n### Learning: learned / true group factor after each pull (single-line groups, declared line)\n")
+    print(
+        "Cells: median |ratio - 1| / median ratio / share within 10%; streams measured per session up to that pull.\n"
+    )
+    local cols = {}
+    for a, spec in ipairs(res.algos) do
+        if spec.short and res.conv[a][1] then
+            cols[#cols + 1] = a
+        end
+    end
+    local head = { "| pull" }
+    for _, a in ipairs(cols) do
+        head[#head + 1] = res.algos[a].short
+    end
+    print(table.concat(head, " | ") .. " | streams measured (b all) |")
+    print("|---" .. string.rep("|---", #cols + 1) .. "|")
+    local acc = {}
+    for pi = 1, #S.PULLS do
+        local cells = { "| " .. pi .. " " .. S.PULLS[pi] }
+        local measured
+        for _, a in ipairs(cols) do
+            local c = res.conv[a][pi]
+            local dev, within = {}, 0
+            for i, r in ipairs(c.r) do
+                dev[i] = math.abs(r - 1)
+                within = within + (dev[i] <= 0.1 and 1 or 0)
+            end
+            table.sort(dev)
+            local rs = {}
+            for i, r in ipairs(c.r) do
+                rs[i] = r
+            end
+            table.sort(rs)
+            local mid = math.ceil(#rs / 2)
+            cells[#cells + 1] = f(dev[mid]) .. " / " .. f(rs[mid]) .. " / " .. pct(within / #c.r)
+            if res.algos[a].short == "b all" then
+                acc[a] = (acc[a] or 0) + c.m
+                measured = acc[a] / #c.r
+            end
+        end
+        cells[#cells + 1] = f(measured, 1)
+        print(table.concat(cells, " | ") .. " |")
+    end
+end
+
+function modes.run3()
+    holdSet = holdSet or "A"
+    print("## Run 3: partial-group execute (seed set " .. holdSet .. ")\n")
+    header()
+    local res = runSet3(holdSet, lineup(tuneList == "learn" and RUN3_LEARN or RUN3))
+    local order, _, refs = report(res, "Ranking on the run 3 buckets (composition x length, class means)")
+    detail(res, order)
+    run3Tables(res, refs)
+end
+
+-- Run 3 strategies on the run 1 and run 2 classes (no regression): the player declares 20%, the members' classes
+-- are unknown, every fight is a new group (learning only inside a fight).
+local RUN3_OLD = {
+    RUN3[1],
+    RUN3[2],
+    RUN3[4],
+    RUN3[7],
+    RUN3[9],
+    RUN3[11],
+    RUN3[13],
+    RUN3[14],
+    { "Run 2 recommendation: 20% learned, one session", est({}, { exec = "learnAll" }) },
+    { "Run 2 recommendation, learned w=0.25", est(W25, { exec = "learnAll" }) },
+}
+
+function modes.run3old()
+    holdSet = holdSet or "A"
+    print("## Run 3 strategies on the run 1 and run 2 classes (seed set " .. holdSet .. ")\n")
+    header()
+    both(holdSet, RUN3_OLD, "Old and new classes")
 end
 
 function modes.all()

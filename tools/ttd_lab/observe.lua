@@ -106,7 +106,16 @@ function O.build(fight, seed)
         end
         f = f + rng:uni(0.016, 0.033)
     end
-    return { k = ok, t = ot, a = oa, b = ob, polls = polls, execute = fight.execute }
+    return {
+        k = ok,
+        t = ot,
+        a = oa,
+        b = ob,
+        polls = polls,
+        execute = fight.execute,
+        members = fight.members,
+        group = fight.group,
+    }
 end
 
 --- Feeds ops to an algorithm (restart(t), band(t, lo, hi), get(now, dps) -> est or nil); returns the answers per
