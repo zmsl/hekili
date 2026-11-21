@@ -99,6 +99,7 @@ describe("LibHiddenValues secrets and efficiency", function()
         lib:Watch("C", { kind = "health", unit = "target", step = 1, edges = { 33.5 } }, sink)
         lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, precision = "point" }, sink)
         lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, points = { 777, 778 } }, sink)
+        lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, step = 1 }, sink) -- Gray beside
         lib:Watch("C", { kind = "power", unit = "player", power = 3, step = 1, points = { 40, 41 } }, sink)
         Fake.login()
         local function frame(i)

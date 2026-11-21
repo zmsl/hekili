@@ -291,7 +291,8 @@ function lib:Watch(owner, spec, sink)
         h.unproven = "unproven"
     end
     h.points = h.points or lib.NOPOINTS -- a kind without points (and an unproven handle) has none
-    if not h.unproven and (#h.points > 0 or h.prec) then
+    -- a step is admitted too: beside a ring of step above 1 it adds the position set (8 bars)
+    if not h.unproven and (#h.points > 0 or h.prec or h.step) then
         local err = lib.admit(h)
         if err then
             return nil, err

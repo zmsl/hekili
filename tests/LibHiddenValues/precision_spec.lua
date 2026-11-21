@@ -259,6 +259,114 @@ describe("LibHiddenValues point precision", function()
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
+        -- Owner decision (L1624 question 2): a step watch reads one 1% cell, never the two a quantum can straddle
+        -- (3966-3968 spans 61% and 62%): the Gray set stays beside the ring while a step is asked.
+        for _, snap in ipairs({ "left", "right", "nearest" }) do
+            it("reads a step watch as one 1% cell beside the ring, its 8 bars counted (" .. snap .. ")", function()
+                Fake.set("snap", snap)
+                local s = watch({ step = 1 })
+                local h = watch({ precision = "point" })
+                Fake.login()
+                untilLive(h)
+                untilLive(s)
+                assert.are.equal(57 + 8, bars())
+                for _, v in ipairs({ 3967, 3968, 3966, 3969, 3200, 3199, 6400, 6399, 0, 64, 63, 4000 }) do
+                    mana(v)
+                    Fake.tick(3)
+                    local n = math.floor(100 * v / 6400)
+                    assert.are.same({ n, n < 100 and n + 1 or 100 }, lohi(s), v)
+                    assert.are.equal(v - v % 3, (h:Exact()), v)
+                end
+                assert.are.equal(0, select(6, lib:GetStats()))
+                s:Release() -- no step asked: the Gray set goes
+                untilLive(h)
+                assert.are.equal(57, bars())
+                assert.are.same({ 3999, 3 }, { h:Exact() })
+            end)
+        end
+
+        it("reads one cell when the max moves across 3175 and back; no Gray set at step 1", function()
+            local s = watch({ step = 1 })
+            local h = watch({ precision = "point" })
+            Fake.login()
+            untilLive(h)
+            assert.are.equal(57 + 8, bars())
+            W.unit.player.max[0] = 3000 -- step 1: the ring alone gives one cell
+            mana(1234)
+            Fake.event("UNIT_MAXPOWER", "player")
+            untilLive(h)
+            untilLive(s)
+            assert.are.equal(57, bars())
+            Fake.tick(2)
+            assert.are.same({ 41, 42 }, lohi(s))
+            W.unit.player.max[0] = 6400
+            mana(3967)
+            Fake.event("UNIT_MAXPOWER", "player")
+            untilLive(h)
+            untilLive(s)
+            Fake.tick(2)
+            assert.are.equal(57 + 8, bars())
+            assert.are.same({ 61, 62 }, lohi(s))
+        end)
+
+        it("holds a frame when the Gray set and the ring disagree, then a desync when it lasts", function()
+            mana(3966)
+            local s = watch({ step = 1 })
+            local h = watch({ precision = "point" })
+            Fake.login()
+            untilLive(h)
+            untilLive(s)
+            Fake.tick(2)
+            assert.are.same({ 61, 62 }, lohi(s))
+            local core, splits = s.src.core, select(8, lib:GetStats())
+            local i = core[#core] -- the Gray set's parity bar
+            mana(3968) -- the ring's quantum stays (3966-3968), the cell moves to 62: only the Gray set fires
+            Fake.tick(1)
+            lib.barState[i] = not lib.barState[i] -- the parity firing has not arrived yet
+            Fake.tick(1)
+            assert.are.same({ 61, 62 }, lohi(s)) -- held
+            lib.fire(i)
+            Fake.tick(1)
+            assert.are.same({ 62, 63 }, lohi(s))
+            assert.are.equal(splits + 1, select(8, lib:GetStats()))
+            assert.are.equal(0, select(6, lib:GetStats()))
+            -- a Gray cell that is not the ring's two frames running: a desync, the source primes again
+            for k = 1, 8 do
+                lib.fire(core[57 + k]) -- stray firings: cell 107, no cell at all
+            end
+            Fake.tick(3)
+            assert.are.equal(1, select(6, lib:GetStats()))
+            untilLive(s)
+            Fake.tick(2)
+            assert.are.same({ 62, 63 }, lohi(s))
+        end)
+
+        it("counts the Gray set inside the pool when a step joins a precision source", function()
+            local edges = {}
+            for k = 1, 192 do
+                edges[k] = k / 3
+            end
+            assert.truthy(lib:Watch("A", { kind = "health", unit = "target", edges = edges }))
+            Fake.login()
+            assert.truthy(watch({ precision = "point" })) -- 192 + 57 fits
+            local x, err = watch({ step = 1 }) -- with the Gray set, 257 does not
+            assert.is_nil(x)
+            assert.are.equal(lib.ERR.POOL_LIMIT, err)
+        end)
+
+        it("counts a step's Gray set when a precision watch joins it", function()
+            local edges = {}
+            for k = 1, 192 do
+                edges[k] = k / 3
+            end
+            assert.truthy(lib:Watch("A", { kind = "health", unit = "target", edges = edges }))
+            Fake.login()
+            assert.truthy(watch({ step = 1 }))
+            local x, err = watch({ precision = "point" }) -- 192 + 57 + 8
+            assert.is_nil(x)
+            assert.are.equal(lib.ERR.POOL_LIMIT, err)
+        end)
+
         it("cuts a precision handle's band with its own off-grid point; Exact stays to the step", function()
             local h = watch({ precision = "point", points = { 4000 } })
             Fake.login()
