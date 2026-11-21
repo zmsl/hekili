@@ -26,11 +26,13 @@ end)
 
 - The value is in `lo <= value < hi` (percent 0-100; `hi` is inclusive at 100). `dir` is `1` up, `-1` down, `0` for
   the first band after unknown. `t` is `GetTime()` of the frame in which the change was seen (for a handle on several
-  edges, the frame before the call; for an unknown call, the frame of the call); `q` is the quality (`LHV.BAND` = 2,
+  edges, and for any handle's first band after a prime, the frame before the call; for an unknown call, the frame of
+  the call); `q` is the quality (`LHV.BAND` = 2,
   `LHV.UNKNOWN` = 0).
 - At most one call per handle per frame. A handle on one edge is called in the frame of the change; on several edges,
   one frame later, with the net band (a jump over three edges is one call).
-- `h:Get()` returns `lo, hi, t, q` without a callback; `h:State()` returns `state, reason`; `h:SetPaused(true)` stops
+- `h:Get()` returns `lo, hi, t, q` without a callback; `h:State()` returns `state, reason` (`"live"` means a band is
+  known: `Get()` has it); `h:SetPaused(true)` stops
   feeding while your frame is hidden; `h:Release()` and `LHV:ReleaseAll("MyAddon")` drop watches.
 - `LHV:IsAvailable(kind, unit)` returns `ok, state, reason`; `LHV:OnCapability("MyAddon", fn)` calls
   `fn(kind, state, reason)` when that changes. A kind is `"pending"` for about a second after login (the self-test),
@@ -44,8 +46,9 @@ end)
 | `power` | `unit`, `edges`, `power` (`Enum.PowerType`, required) | `player`: mana, energy, rage (rage: proven by the BandProbe2 warm-up, the library's own run owed) |
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
-other kind, token or option (a `step` without `edges`, `points`, focus or another power type, the `focus` token, ...) returns a handle whose state is
-`"unavailable", "unproven"`: write against it now, it comes alive when its stage ships. A `step` beside `edges` is
+other kind, token or option (a `step` without `edges`, `points`, focus or another power type, the `focus` token, ...)
+returns a handle whose state is `"unavailable", "unproven"`: write against it now, it comes alive when its stage
+ships. A `step` beside `edges` is
 ignored for now: the edges are served and `h:Domain()` returns a nil step. Bad input (a missing `power` too) returns
 `nil, "bad-spec: ..."`.
 
@@ -58,14 +61,14 @@ local Fake = dofile("libs/LibHiddenValues/Testing/FakeClient.lua")
 Fake.world.unit.target = { health = 1.0 }  -- fractions, as the client has them
 dofile("MyAddon.lua")
 Fake.login()                                -- login, then frames until the self-test passed
-Fake.tick(10)                               -- priming
+Fake.tick(12)                               -- priming: 10 frames at least (hold 4, push, settle 4, decode)
 Fake.world.unit.target.health = 0.19
 Fake.tick(1)
 Fake.restore()
 ```
 
-Its header lists the world fields, the fault knobs (`closed`, `lag`, `drop`, `snap`, `maxpoints`, `refuse`) and what
-it does not model.
+Its header lists the world fields, the fault knobs (`closed`, `lag`, `secretlag`, `drop`, `snap`, `maxpoints`,
+`refuse`) and what it does not model.
 
 ## Diagnostics
 

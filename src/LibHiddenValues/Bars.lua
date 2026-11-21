@@ -15,7 +15,7 @@ if not (lib and lib.loading) then
     return
 end
 
-local HOLD = 4 -- frames at the low level before the live value (the run saw every firing in its own frame)
+local HOLD = 4 -- frames at the low level before the live value (the run saw every plain push fire in its own frame)
 -- frames the live push's firing may trail it: the self-test's limit for plain pushes (3), plus the frame a secret one
 -- was seen to add (BandProbe v1 counted 4 frames after the push: "IN window 4")
 local SETTLE = 4
@@ -166,8 +166,9 @@ function lib.sync(s)
     lib.wake()
 end
 
--- A bar's anchored child fired: its fill changed. Ignored while the bar holds low; counted while it settles. A handle on this bar alone is called
--- now (the frame of the push); handles on several bars are decoded at the start of the next frame.
+-- A bar's anchored child fired: its fill changed. Ignored while the bar holds low; counted while it settles (a
+-- settling handle is not called: it is still priming). Once live, a handle on this bar alone is called now (the frame
+-- of the firing); handles on several bars are decoded at the start of the next frame.
 function lib.fire(i)
     local s = lib.barSrc[i]
     if s == nil then

@@ -1,8 +1,8 @@
 -- Kinds/Percent.lua: health and power, in percent 0-100 (the client's reads give 0-1 through the curve; the scale is
 -- fixed and checked by the self-test, never read). Proven (BandProbe run 2026-11-20): health on player and target,
 -- power mana and energy on the player, by the type the spec names (required); rage on the player (BandProbe2 warm-up
--- 2026-11-20, bear form in combat under the lockdown; the library's own run is owed). Anything else is a handle that reports
--- "unavailable", "unproven".
+-- 2026-11-20, bear form in combat under the lockdown; the library's own run is owed). Anything else is a handle that
+-- reports "unavailable", "unproven".
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return

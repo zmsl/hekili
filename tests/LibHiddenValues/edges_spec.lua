@@ -123,7 +123,7 @@ describe("LibHiddenValues edges", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 20 } }, sink)
         Fake.login()
         for _ = 1, 20 do
-            if h:State() == "live" then
+            if lib.stateOf(h) == "live" then -- the bars, not the public state: the first band is not decoded yet
                 break
             end
             Fake.tick(1)

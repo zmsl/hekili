@@ -4,9 +4,10 @@
 -- under whatever snapping the client does). A fourth bar is primed as a source's bar is (held low COUNT_FROM frames,
 -- then fed a read through a curve that is 2 everywhere: the client's own value, secret where reads are) and must fire
 -- once, inside the SETTLE window, never after: a prime's first band is the real one. About 45 frames, invisible. It
--- proves the firing mechanism, the curves and the prime's timing, not the secret path's values (the later shadow
--- check). Until it passes the built kinds are "pending"; while a later run is going the earlier verdict stands. Last
--- file of the list: it ends the load and, after login (a late or upgraded copy), realises at once.
+-- proves the firing mechanism, the curves and the prime's timing (for the push the client gives: a plain login read
+-- proves the plain prime timing; the owner's run 2026-11-20 passed it in game), not the secret path's values (the
+-- later shadow check). Until it passes the built kinds are "pending"; while a later run is going the earlier verdict
+-- stands. Last file of the list: it ends the load and, after login (a late or upgraded copy), realises at once.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return

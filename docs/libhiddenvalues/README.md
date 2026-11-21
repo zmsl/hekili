@@ -28,7 +28,8 @@ frame, the measured mechanism. Its in-game check: [in-game-test-plan.md](in-game
 - The plain self-test at login (three bars, ten values, about 45 frames): firings must equal changes, within 3
   frames, and every curve output must follow the convention; a fourth bar, primed as a source's bar is (held low,
   then a read through a curve that is 2 everywhere), must fire once inside the settle window and never after (the
-  `selftest prime:` line). Kinds are `pending` until it passes.
+  `selftest prime:` line; a plain login read proves the plain prime timing, and the owner's run of 2026-11-20 passed
+  it in game). Kinds are `pending` until it passes.
 - Capability reasons `api`, `selftest`, `error`, `off`, `unproven`, `unknown-kind`.
 - A pure API: no slash command, no chat output, no frame of its own that shows. Every diagnostic fact is a getter
   (the consumer README's Diagnostics table); LHVProbe, outside this repository, is the reference consumer (`/lhvp`).

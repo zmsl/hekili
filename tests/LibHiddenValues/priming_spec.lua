@@ -86,4 +86,48 @@ describe("LibHiddenValues priming", function()
             end)
         end)
     end
+
+    -- "live" means a band is known: State() never says "live" while Get() is nil, checked after every frame.
+    for lag = 0, 1 do
+        describe("with secret firings " .. lag .. " frames late", function()
+            local function neverLiveUnknown(hs, frames)
+                for f = 0, frames do
+                    if f > 0 then
+                        Fake.tick(1)
+                    end
+                    for k = 1, #hs do
+                        local h = hs[k]
+                        assert.is_false(h:State() == "live" and h:Get() == nil, "handle " .. k .. ", frame " .. f)
+                    end
+                end
+                for k = 1, #hs do
+                    assert.are.equal("live", (hs[k]:State()), "handle " .. k)
+                end
+            end
+
+            before_each(function()
+                Fake.login()
+                Fake.set("secretlag", lag)
+            end)
+
+            it("says live only with a band, across a prime of one edge above, one below and several edges", function()
+                W.unit.player.power[0] = 0
+                local above = lib:Watch("A", { kind = "health", unit = "player", edges = { 50 } })
+                local below =
+                    lib:Watch("A", { kind = "power", unit = "player", power = Enum.PowerType.Mana, edges = { 30 } })
+                local several = lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50, 80 } })
+                neverLiveUnknown({ above, below, several }, 20)
+                W.unit.target = { health = 0.9 }
+                Fake.event("PLAYER_TARGET_CHANGED")
+                neverLiveUnknown({ above, below, several }, 20)
+            end)
+
+            it("says live only with a band for a joiner on a shared live source", function()
+                local a = lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50 } })
+                Fake.tick(20)
+                local b = lib:Watch("B", { kind = "health", unit = "target", edges = { 20, 50 } })
+                neverLiveUnknown({ a, b }, 5)
+            end)
+        end)
+    end
 end)
