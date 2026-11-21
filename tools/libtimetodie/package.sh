@@ -23,6 +23,7 @@ if [ $worktree -eq 0 ]; then
     git diff --quiet HEAD -- src/LibHiddenValues src/LibTimeToDie ||
         echo "note: uncommitted changes in src/LibHiddenValues or src/LibTimeToDie are left out (packaging HEAD)" >&2
     tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT # also when a step fails (set -e)
     git archive HEAD src/LibTimeToDie src/LibHiddenValues | tar -x -C "$tmp"
     from=$tmp/src
 fi
@@ -37,9 +38,6 @@ awk -v inc='    <Include file="Libs\\LibHiddenValues\\LibHiddenValues.xml"/>' \
 awk -v inc='Libs\\LibHiddenValues\\LibHiddenValues.xml' \
     '{ print } /^Libs.LibStub.LibStub\.lua/ { print inc }' \
     "$from/LibTimeToDie/LibTimeToDie.toc" >"$dst/LibTimeToDie.toc"
-if [ -n "$tmp" ]; then
-    rm -rf "$tmp"
-fi
 for f in "$dst/LibTimeToDie.xml" "$dst/LibTimeToDie.toc"; do
     [ "$(grep -c 'LibHiddenValues\\LibHiddenValues.xml' "$f")" = 1 ] || { echo "no LibHiddenValues include in $f"; exit 1; }
 done

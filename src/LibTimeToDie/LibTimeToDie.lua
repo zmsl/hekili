@@ -299,7 +299,7 @@ function lib.evaluate(s, now)
         return
     end
     s.at = now
-    if not s.lh and now >= s.retryAt then
+    if not s.lh and now >= (s.retryAt or 0) then
         attach(s)
     end
     local lh, state, why, ls, lr = s.lh, nil, nil, nil, nil
