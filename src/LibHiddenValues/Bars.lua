@@ -1028,9 +1028,11 @@ function lib.decode(h)
     if lo and h.lo then
         dir = (lo > h.lo or hi > h.hi) and 1 or -1
     end
-    -- t: the frame the change was seen (a firing or the end of priming, this frame or the last), else now
-    local sf = h.src and h.src.seenFrame
-    local t = (lo and sf and sf >= frame - 1) and h.src.seen or GetTime()
+    -- t: the frame the change was seen (a firing or the end of priming, this frame or the last; two frames back on a
+    -- position or precision source, whose change is called once the next decode agrees), else now
+    local src = h.src
+    local sf = src and src.seenFrame
+    local t = (lo and sf and sf >= frame - (src.mode and 2 or 1)) and src.seen or GetTime()
     local q = lo and lib.BAND or lib.UNKNOWN
     if lo and h.prec and select(2, lib.exact(h)) == 1 then
         q = lib.EXACT

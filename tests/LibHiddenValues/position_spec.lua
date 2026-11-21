@@ -67,11 +67,13 @@ describe("LibHiddenValues position", function()
         calls = {}
         W.unit.target.health = 0.13
         Fake.tick(1)
+        local pushed = GetTime()
         assert.are.same({}, calls) -- decoded at the start of the next frame
         Fake.tick(1)
         assert.are.same({}, calls) -- held: the next frame's decode must agree
         Fake.tick(1)
         assert.are.same({ { 13, 14, -1 } }, calls)
+        assert.are.equal(pushed, select(3, h:Get())) -- t: the frame the change fired, not the confirming frame's
         assert.are.equal(0, select(6, lib:GetStats()))
     end)
 
