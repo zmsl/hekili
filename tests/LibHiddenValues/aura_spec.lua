@@ -576,7 +576,7 @@ describe("LibHiddenValues aura kind", function()
         Fake.event("UNIT_AURA", "target")
         Fake.tick(2 + lib.SETTLE)
         assert.are.same({ 2, 4 }, band(h))
-        assert.are.same({ 0, 0 }, band(mine)) -- shown, but on the target
+        assert.is_nil(band(mine)[1]) -- shown, but on the target: unknown for the player
         local first = W.aura.target
         W.aura.target = {}
         Fake.event("PLAYER_TARGET_CHANGED")
@@ -616,8 +616,42 @@ describe("LibHiddenValues aura kind", function()
         W.cdm.secretUnit = false
         Fake.setAura("target", 5002, 1)
         Fake.tick(2)
-        assert.are.same({ 0, 0 }, band(mine))
+        assert.is_nil(band(mine)[1]) -- shown on the target: the item says nothing of the player
         assert.are.same({ 1, 1 }, band(theirs))
+        assert.are.same({}, Fake.errors)
+    end)
+
+    it("reads unknown, never a guess: no unit, the other unit, a secret Edit Mode flag or visibility", function()
+        boot()
+        Fake.setAura("player", 5002, 1)
+        Fake.setAura("target", 5002, 1)
+        local mine = watch({ unit = "player", spell = 5002, what = "up" })
+        local theirs = watch({ unit = "target", spell = 5002, what = "up" })
+        Fake.login()
+        W.combat = true
+        Fake.tick(2)
+        assert.are.same({ 1, 1 }, band(mine))
+        assert.are.same({ "gone", nil }, { theirs:State() }) -- the item shows the player's: the target's is unseen
+        W.cdm.noUnit = true
+        Fake.event("UNIT_AURA", "player")
+        Fake.tick(2)
+        assert.are.same({ "gone", nil }, { mine:State() }) -- held, but for no unit named
+        W.cdm.noUnit = false
+        Fake.event("UNIT_AURA", "player")
+        Fake.tick(2)
+        assert.are.same({ 1, 1 }, band(mine))
+        local v = _G.BuffIconCooldownViewer
+        v.isEditing = Fake.secret(false)
+        Fake.tick(2)
+        assert.are.same({ "gone", nil }, { mine:State() })
+        v.isEditing = nil
+        Fake.tick(2)
+        assert.are.same({ 1, 1 }, band(mine))
+        v.IsVisible = function()
+            return Fake.secret(true)
+        end
+        Fake.tick(2)
+        assert.are.same({ "gone", nil }, { mine:State() })
         assert.are.same({}, Fake.errors)
     end)
 

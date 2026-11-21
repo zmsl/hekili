@@ -156,18 +156,18 @@ function cdm.idOf(item)
 end
 
 -- Whether an item's data flows: its viewer is visible (a hidden viewer unregisters its events) and not in Edit Mode
--- (placeholder data; the field name is read from the client's code, unprobed).
+-- (placeholder data; the field name is read from the client's code, unprobed). Either one secret: not known to flow.
 function cdm.live(item)
     local v = cdm.viewers[cdm.viewerOf[item]]
     if not v then
         return false
     end
     local editing = rawget(v, "isEditing")
-    if not issecretvalue(editing) and editing then
+    if issecretvalue(editing) or editing then
         return false
     end
     local vis = v:IsVisible()
-    return issecretvalue(vis) or vis == true
+    return not issecretvalue(vis) and vis == true
 end
 
 -- Reads every active item of the four viewers: hooks new frames, maps cooldownID -> item (any time, in combat too).

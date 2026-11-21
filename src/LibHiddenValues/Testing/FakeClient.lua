@@ -395,7 +395,7 @@ end)
 -- bar = { cooldownID, ... }, icon, essential, utility = { ... } (what the player placed, in order), secretId, secretIdx
 -- (in combat a refresh writes an item's
 -- cooldownID / a layout pass its layoutIndex secret), secretUnit (an item's auraDataUnit is secret while reads are;
--- unprobed), shuffle (a layout pass hands the frames out in another order) }.
+-- unprobed), noUnit (a held item names no unit), shuffle (a layout pass hands the frames out in another order) }.
 -- W.aura[unit][spellID] = { stacks =, expires = GetTime() at its end, duration = } on "player" and "target": the
 -- player's own auras (Fake.setAura). The viewers lay out at login and on Fake.cdmLayout(), refresh their items on
 -- UNIT_AURA and PLAYER_TARGET_CHANGED, push a tracked bar's SetMinMaxValues(0, duration) and SetValue(seconds left)
@@ -639,7 +639,7 @@ local function refreshItem(item)
             a.id = nextAuraId
         end
         item.auraInstanceID = hidden() and secret(a.id) or a.id
-        item.auraDataUnit = (hidden() and W.cdm.secretUnit) and secret(unit) or unit
+        item.auraDataUnit = (hidden() and W.cdm.secretUnit) and secret(unit) or not W.cdm.noUnit and unit or nil
     else
         item.auraInstanceID, item.auraDataUnit = nil, nil
     end
@@ -1001,6 +1001,9 @@ install("ReloadUI", function()
     Fake.reloads = (Fake.reloads or 0) + 1
     Fake.reload()
 end)
+
+-- A secret of v (the fake's own kind), for a test to plant in a field the library reads.
+Fake.secret = secret
 
 function Fake.set(knob, value)
     if knob == "refuse" then
