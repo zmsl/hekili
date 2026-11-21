@@ -452,6 +452,18 @@ describe("LibHiddenValues point precision", function()
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
+        it("keeps a real jump of 50 within h:Latency() when its firings also split", function()
+            start(1234)
+            Fake.set("stagger", 2) -- a jump of 50 fires a cell bit and the parity bar: one of the two a frame late
+            local worst = 0
+            for _, v in ipairs({ 1284, 1234, 1284, 1334 }) do
+                worst = math.max(worst, frames(v))
+            end
+            assert.is_true(worst * lib.frameSec <= h:Latency() + 1e-9, "frames " .. worst)
+            assert.are.same({ 1284, 1234, 1284, 1334 }, seen)
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end)
+
         it("holds in quanta at a step above 1 (max 6400, step 3)", function()
             W.unit.player.max[0] = 6400
             start(3749) -- quantum 1249: 3747

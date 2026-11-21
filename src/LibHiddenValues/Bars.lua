@@ -810,7 +810,7 @@ function lib.decodeSource(s)
             if q ~= pend and s.bad == 0 then
                 lib.splits = lib.splits + 1
             end
-        elseif s.ok and suspect(s.qv, q) then
+        elseif s.ok and s.bad == 0 and suspect(s.qv, q) then -- after a bad frame the decode already waited its frame
             s.pend, s.dirty = q, true -- not a bad frame; decode again next frame with no new firing
             return false
         end
