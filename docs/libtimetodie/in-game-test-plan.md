@@ -39,7 +39,9 @@ All through `local TTD = LibStub("LibTimeToDie-1.0", true)`; the owner string is
 The summary at `gone` (per kill), over the logged sink calls and polls while the mob lived: count of `live` lines;
 the time from the first band to the first `live`; for every `live` line the truth `death - t`, its relative error
 `|est - truth| / truth` (median and 90th percentile), the share with `lo <= truth <= hi`, and the share on the wrong
-side of 5 s (est above 5 and truth below, or the other way); sink calls per minute.
+side of 5 s (est above 5 and truth below, or the other way); sink calls per minute. A death the client keeps secret
+(the forced lockdown may) never reads `gone`: the stream stays `live` with `est` near 0. Then the probe takes the time
+of the first `est` under 1 s, or else the time the target was lost, as the death time, and flags the summary as such.
 
 ## Steps and what to report
 
