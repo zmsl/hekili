@@ -9,13 +9,28 @@ local Rng = require("rng")
 
 local O = {}
 
-local RESTART, BAND, POLL = 1, 2, 3
-O.RESTART, O.BAND, O.POLL = RESTART, BAND, POLL
+local RESTART, BAND, POLL, LUST = 1, 2, 3, 4
+O.RESTART, O.BAND, O.POLL, O.LUST = RESTART, BAND, POLL, LUST
+O.POST = 10 -- seconds after a rate change that count as "post-change" polls
+
+-- Run 2 additions: a LUST op (a = multiplier, b = its end) in the first frame of a lust, for the hint-taking
+-- variants (the others ignore it); per poll `post` (a rate change on this mob or every mob in the last O.POST s);
+-- `execute` ({ pct, mult } or nil) for the execute-declaring variants.
+local function postChange(changes, mob, t)
+    for i = 1, #changes do
+        local c = changes[i]
+        if (c.mob == 0 or c.mob == mob) and c.t <= t and t - c.t < O.POST then
+            return true
+        end
+    end
+    return false
+end
 
 function O.build(fight, seed)
     local rng = Rng.new(seed)
     local ok, ot, oa, ob = {}, {}, {}, {}
-    local polls = { stream = {}, tru = {}, fight = {}, t = {}, start = {}, death = {}, n = 0 }
+    local polls = { stream = {}, tru = {}, fight = {}, t = {}, start = {}, death = {}, post = {}, n = 0 }
+    local changes, lust, lustSent = fight.changes or {}, fight.lust, false
     local function op(k, t, a, b)
         local n = #ok + 1
         ok[n], ot[n], oa[n], ob[n] = k, t, a, b
@@ -39,6 +54,10 @@ function O.build(fight, seed)
     local f, nextPoll = 0, rng:uni(0.1, 0.25)
     while f <= fight.endT + 0.05 do
         frame = frame + 1
+        if lust and not lustSent and f >= lust.t then
+            lustSent = true
+            op(LUST, f, lust.mult, lust.t + lust.dur)
+        end
         while plan[pi] and plan[pi].t <= f do -- a target change: the stream restarts
             mob, startT, stream = plan[pi].mob, f, stream + 1
             prime, trueLo, pendingAt = rng:int(8, 12), nil, nil
@@ -81,12 +100,13 @@ function O.build(fight, seed)
                 polls.death[n] = mobs[mob].death or fight.endT
                 polls.tru[n] = polls.death[n] - f
                 polls.fight[n] = fight.endT - f
+                polls.post[n] = postChange(changes, mob, f)
                 op(POLL, f, math.max(0, ownSum) / 3, n)
             end
         end
         f = f + rng:uni(0.016, 0.033)
     end
-    return { k = ok, t = ot, a = oa, b = ob, polls = polls }
+    return { k = ok, t = ot, a = oa, b = ob, polls = polls, execute = fight.execute }
 end
 
 --- Feeds ops to an algorithm (restart(t), band(t, lo, hi), get(now, dps) -> est or nil); returns the answers per
@@ -105,6 +125,10 @@ function O.run(obs, algo, out)
                 out[b[i]] = math.min(est, 3600)
             else
                 out[b[i]] = false
+            end
+        elseif kind == LUST then
+            if algo.lust then
+                algo:lust(t[i], a[i], b[i])
             end
         else
             algo:restart(t[i])

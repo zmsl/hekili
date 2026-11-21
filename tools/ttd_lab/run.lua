@@ -1,11 +1,12 @@
--- tools/ttd_lab/run.lua: the TTD lab. From the repo root: lua5.1 tools/ttd_lab/run.lua [main|sweep|holdout|test|all]
--- [--scale x] [--round n] (sweep round, default the last) [--set B|C] (holdout seeds, default B). Prints markdown tables (tools/ttd_lab/README.md explains them).
+-- tools/ttd_lab/run.lua: the TTD lab. From the repo root: lua5.1 tools/ttd_lab/run.lua
+-- [main|sweep|holdout|run2|tune|test|all] [--scale x] [--round n] (sweep round, default the last) [--set A|B|C] (seed
+-- set: holdout defaults to B, run2 and tune to A). Prints markdown tables (tools/ttd_lab/README.md explains them).
 package.path = "tools/ttd_lab/?.lua;" .. package.path
 
 local S, O, Real = require("scenarios"), require("observe"), require("real")
 local B, E, M = require("baselines"), require("estimator"), require("metrics")
 
-local mode, scale, sweepRound, holdSet = "main", 1, nil, "B"
+local mode, scale, sweepRound, holdSet, tuneList = "main", 1, nil, nil, nil
 do
     local i = 1
     while arg[i] do
@@ -15,11 +16,14 @@ do
             holdSet, i = arg[i + 1], i + 1
         elseif arg[i] == "--round" then
             sweepRound, i = tonumber(arg[i + 1]), i + 1
+        elseif arg[i] == "--list" then
+            tuneList, i = arg[i + 1], i + 1
         else
             mode = arg[i]
         end
         i = i + 1
     end
+    holdSet = holdSet or (mode == "holdout" and "B" or "A")
 end
 
 -- Fights per class (seed set A tunes, set B holds out; the real traces are the same logs, observed with other seeds).
@@ -39,22 +43,78 @@ local COUNTS = {
 }
 local SEED_BASE = { A = 1000, B = 900000, C = 5000000 }
 
-local function est(params)
+-- Run 2 classes (scenarios.lua S.RUN2): fights per class and a seed offset per class (run 1 offsets the seed by the
+-- class name's length). The eight execute classes share one offset: the same fights, only threshold and multiplier
+-- differ.
+local SEED_OFF = {}
+for i, c in ipairs(S.RUN2) do
+    COUNTS[c] = c:find("boss") and 40 or 50
+    SEED_OFF[c] = c:find("^ex%d") and 100 or 100 + i
+end
+
+-- Run 1's winner, pinned: the "before" of run 2 (the estimator's defaults moved on).
+local PREV = { detect = 0, execAhead = false }
+
+-- `hints` (run 2): rate = "perfect" (the lust as it starts, its true end), "late" (the caller sees it 0.5-1 s late:
+-- startT and endT are the call time and call time + 40 s), "wrong" (no real lust is passed; a phantom x1.3 for 40 s
+-- 5 s after the fight's first unit); exec = "perfect" (the fight's true threshold and multiplier), "fixed" (the
+-- true threshold, x1.6 whatever the group does), "always" (20% x2 declared on every fight, execute or not), "learn"
+-- (the true threshold, the factor learned: it starts at 1 and each fight starts from the factor the previous fight
+-- of its class ended with, as a session would; needs `execLearn`), "learn20" (the same with 20% on every fight).
+local function est(params, hints)
     local p = { spread = false }
     for k, v in pairs(params or {}) do
         p[k] = v
     end
-    return function()
+    hints = hints or {}
+    local session = {} -- class -> the learned execute factor
+    return function(obs)
         local e = E.New(p)
+        local x = obs and obs.execute
+        local learnPct = hints.exec == "learn" and x and x.pct or hints.exec == "learn20" and 20
+        if hints.exec == "perfect" and x then
+            e:Hint("execute", x.mult, x.pct)
+        elseif hints.exec == "fixed" and x then
+            e:Hint("execute", 1.6, x.pct)
+        elseif hints.exec == "always" then
+            e:Hint("execute", 2, 20)
+        elseif learnPct then
+            e:Hint("execute", session[obs.class] or 1, learnPct)
+        end
+        local pendAt, pendMult, firstT, phantom = nil, nil, nil, false
+        local function due(now)
+            if pendAt and now >= pendAt then
+                e:Hint("rate", pendMult, pendAt, pendAt + 40)
+                pendAt = nil
+            end
+        end
         return {
-            restart = function()
+            restart = function(_, t)
+                due(t)
+                firstT = firstT or t
                 e:Restart()
             end,
             band = function(_, t, lo, hi)
+                due(t)
                 e:Band(t, lo, hi)
             end,
             get = function(_, now)
+                due(now)
+                if hints.rate == "wrong" and not phantom and firstT and now >= firstT + 5 then
+                    phantom = true
+                    e:Hint("rate", 1.3, now, now + 40)
+                end
+                if learnPct then
+                    session[obs.class] = e:ExecuteFactor()
+                end
                 return (e:Get(now))
+            end,
+            lust = function(_, t, mult, endT)
+                if hints.rate == "perfect" then
+                    e:Hint("rate", mult, t, endT)
+                elseif hints.rate == "late" then
+                    pendAt, pendMult = t + 0.5 + 0.5 * ((#obs.k * 0.6180339) % 1), mult -- a fixed 0.5-1 s per fight
+                end
             end,
         }
     end
@@ -72,7 +132,7 @@ end
 
 -- The research note's recommendation as written (section 4), where it differs from the estimator's defaults (the
 -- lab's winner).
-local RESEARCH = { censor = 1, anchorBelow = false, priorEmpty = false, holdStall = false, shrink = 2, window = 18 }
+local RESEARCH = with(PREV, { censor = 1, anchorBelow = false, priorEmpty = false, holdStall = false, shrink = 2, window = 18 })
 
 local function base(cls, params)
     return function()
@@ -95,7 +155,7 @@ local MAIN = {
     { "SimC-style cumulative", base(B.Cumulative) },
     { "Ring8 (old plan)", base(B.Ring8) },
     { "Research recommendation (as written)", est(RESEARCH) },
-    { "Winner (estimator defaults)", est() },
+    { "Run 1 winner (pinned)", est(PREV) },
 }
 
 -- Answers 30 s once any band is known: the unknown floor (the prime) for reference.
@@ -118,17 +178,17 @@ local ABLATION = {
     { "Unknown floor (constant once a band is known)", base(Floor) },
     { "Cumulative + deadband", hyst(B.Cumulative) },
     { "HeroLib + deadband", hyst(B.HeroLib) },
-    { "Winner, no deadband", est({ hystAbs = 0 }) },
-    { "Winner + censoring (research rule)", est({ censor = 1 }) },
-    { "Winner, no full anchor", est({ anchorFull = false }) },
-    { "Winner, no below-full anchor", est({ anchorBelow = false }) },
-    { "Winner, no carried prior", est({ prior = false }) },
-    { "Winner, carried prior only after a crossing", est({ priorEmpty = false }) },
-    { "Winner, no stall hold", est({ holdStall = false }) },
-    { "Winner, K=2 (research shrink)", est({ shrink = 2 }) },
-    { "Winner, seedWeight 1 (own anchor mixed with a carried slope)", est({ seedWeight = 1 }) },
-    { "Winner, seedWeight 2", est({ seedWeight = 2 }) },
-    { "Winner, seedWeight 4", est({ seedWeight = 4 }) },
+    { "Winner, no deadband", est(with(PREV, { hystAbs = 0 })) },
+    { "Winner + censoring (research rule)", est(with(PREV, { censor = 1 })) },
+    { "Winner, no full anchor", est(with(PREV, { anchorFull = false })) },
+    { "Winner, no below-full anchor", est(with(PREV, { anchorBelow = false })) },
+    { "Winner, no carried prior", est(with(PREV, { prior = false })) },
+    { "Winner, carried prior only after a crossing", est(with(PREV, { priorEmpty = false })) },
+    { "Winner, no stall hold", est(with(PREV, { holdStall = false })) },
+    { "Winner, K=2 (research shrink)", est(with(PREV, { shrink = 2 })) },
+    { "Winner, seedWeight 1 (own anchor mixed with a carried slope)", est(with(PREV, { seedWeight = 1 })) },
+    { "Winner, seedWeight 2", est(with(PREV, { seedWeight = 2 })) },
+    { "Winner, seedWeight 4", est(with(PREV, { seedWeight = 4 })) },
 }
 
 -- The sweep's leaders (rounds 3-4), run again on the held-out seeds; the last one is the winner.
@@ -159,7 +219,7 @@ local ROUNDS = {
         name = "round 4, base = censor 0, anchorBelow, priorEmpty, K 0",
         base = with(RESEARCH, { censor = 0, anchorBelow = true, priorEmpty = true, shrink = 0 }),
     },
-    { name = "round 5, base = the winner (estimator defaults)", base = {} },
+    { name = "round 5, base = the run 1 winner", base = PREV },
 }
 
 local function sweepList(baseP)
@@ -212,7 +272,8 @@ local function sweepList(baseP)
     return list
 end
 
-local function runSet(set, algos)
+local function runSet(set, algos, classes)
+    classes = classes or S.CLASSES
     local main = {}
     for a, spec in ipairs(algos) do
         if spec.main then
@@ -220,7 +281,7 @@ local function runSet(set, algos)
         end
     end
     local stats = {}
-    for _, c in ipairs(S.CLASSES) do
+    for _, c in ipairs(classes) do
         stats[c] = {}
         for a = 1, #algos do
             stats[c][a] = M.newStats()
@@ -228,22 +289,23 @@ local function runSet(set, algos)
     end
     local function one(class, fight, oseed)
         local obs = O.build(fight, oseed)
+        obs.class = class
         local answers = {}
         for a, spec in ipairs(algos) do
-            answers[a] = O.run(obs, spec[2](), {})
+            answers[a] = O.run(obs, spec[2](obs), {})
         end
         M.add(obs, answers, stats[class], main)
     end
     local base = SEED_BASE[set]
-    for _, c in ipairs(S.CLASSES) do
+    for _, c in ipairs(classes) do
         if c ~= "real" then
             for i = 1, math.max(1, math.floor(COUNTS[c] * scale + 0.5)) do
-                local seed = base + i * 7919 + #c * 104729
+                local seed = base + i * 7919 + (SEED_OFF[c] or #c) * 104729
                 one(c, S.build(c, seed), seed + 1)
             end
         end
     end
-    local logs = Real.logs()
+    local logs = stats.real and Real.logs() or {}
     for li, name in ipairs(logs) do
         if (li - 1) % math.max(1, math.floor(1 / scale + 0.5)) == 0 then
             local ts, as = Real.hits(name)
@@ -252,10 +314,10 @@ local function runSet(set, algos)
             end
         end
     end
-    local result = { algos = algos, class = {}, overall = {} }
+    local result = { algos = algos, class = {}, overall = {}, classes = classes }
     for a = 1, #algos do
         local per = {}
-        for _, c in ipairs(S.CLASSES) do
+        for _, c in ipairs(classes) do
             local r = M.summary(stats[c][a])
             result.class[c] = result.class[c] or {}
             result.class[c][a] = r
@@ -374,7 +436,7 @@ local function perClass(res, order, key, title, fmt)
     print("\n### " .. title .. " per class\n")
     local head = { "| algorithm" }
     local sep = { "|---" }
-    for _, c in ipairs(S.CLASSES) do
+    for _, c in ipairs(res.classes) do
         head[#head + 1] = c
         sep[#sep + 1] = "---"
     end
@@ -382,7 +444,7 @@ local function perClass(res, order, key, title, fmt)
     print(table.concat(sep, "|") .. "|")
     for _, a in ipairs(order) do
         local cells = { "| " .. res.algos[a][1] }
-        for _, c in ipairs(S.CLASSES) do
+        for _, c in ipairs(res.classes) do
             cells[#cells + 1] = fmt(res.class[c][a][key])
         end
         print(table.concat(cells, " | ") .. " |")
@@ -538,6 +600,154 @@ modes.holdout = function()
     local order, _, refs = report(res, "Ranking on set " .. holdSet)
     detail(res, order)
     robustness(res, refs, ", set " .. holdSet)
+end
+
+-- Run 2: candidate fixes for rate changes, scored on the run 1 classes and the run 2 classes (S.RUN2).
+local function p1(change, hints)
+    return est(with(PREV, change or {}), hints)
+end
+-- Detector tuning grids (`tune --list grid1|grid2`; results/run2-grid*.md).
+local GRIDS = { grid1 = {}, grid2 = {} }
+do
+    local g = GRIDS.grid1
+    for _, h in ipairs({ 2, 3, 4, 5 }) do
+        for _, k in ipairs({ 0.25, 0.5, 0.75 }) do
+            g[#g + 1] = { "Detector h=" .. h .. " k=" .. k, p1({ detect = h, detectK = k }) }
+        end
+    end
+    for _, m in ipairs({ 2, 8 }) do
+        g[#g + 1] = { "Detector h=3 k=0.5 min=" .. m, p1({ detect = 3, detectMin = m }) }
+    end
+    g[#g + 1] = { "Detector h=3 k=0.5 clip 2", p1({ detect = 3, detectClip = 2 }) }
+    g[#g + 1] = { "Detector h=3 k=0.5 alpha 0.03", p1({ detect = 3, detectAlpha = 0.03 }) }
+    g = GRIDS.grid2
+    for _, d in ipairs({ { 4, 0.5 }, { 5, 0.25 } }) do
+        local name = "Detector h=" .. d[1] .. " k=" .. d[2]
+        local base = { detect = d[1], detectK = d[2] }
+        g[#g + 1] = { name, p1(base) }
+        for _, hl in ipairs({ 10, 15 }) do
+            g[#g + 1] = { name .. " H=" .. hl, p1(with(base, { halfLife = hl })) }
+        end
+    end
+    g[#g + 1] = { "No detector, H=10", p1({ halfLife = 10 }) }
+    GRIDS.learn = {}
+    g = GRIDS.learn
+    for _, w in ipairs({ 0.3, 0.5, 0.8 }) do
+        for _, s in ipairs({ 3, 5, 8 }) do
+            local change = { detect = 5, detectK = 0.25, execAhead = true, execLearn = w, learnSpan = s }
+            g[#g + 1] = { "Det + ahead, learned w=" .. w .. " span=" .. s, p1(change, { exec = "learn" }) }
+            g[#g + 1] = { "Det + ahead, learned 20% always w=" .. w .. " span=" .. s, p1(change, { exec = "learn20" }) }
+        end
+    end
+end
+-- The run 2 lineup: the detector alone (the new default candidate), then each hint on top of it, then hints without
+-- the detector (no hint is ever dropped there) for the risk.
+local DET = { detect = 5, detectK = 0.25 }
+local function d1(change, hints)
+    return p1(with(DET, change or {}), hints)
+end
+local RUN2 = {
+    { "Detector h=5 k=0.25", d1() },
+    { "Detector h=5 k=0.25, H=10", d1({ halfLife = 10 }) },
+    { "Detector h=4 k=0.5", p1({ detect = 4 }) },
+    { "Det + rate hint, perfect", d1({}, { rate = "perfect" }) },
+    { "Det + rate hint, late 0.5-1 s", d1({}, { rate = "late" }) },
+    { "Det + rate hint, wrong (phantom)", d1({}, { rate = "wrong" }) },
+    { "Det + execute from the crossing, perfect", d1({}, { exec = "perfect" }) },
+    { "Det + execute from the crossing, x1.6", d1({}, { exec = "fixed" }) },
+    { "Det + execute from the crossing, 20% x2 always", d1({}, { exec = "always" }) },
+    { "Det + execute ahead, perfect", d1({ execAhead = true }, { exec = "perfect" }) },
+    { "Det + execute ahead, x1.6", d1({ execAhead = true }, { exec = "fixed" }) },
+    { "Det + execute ahead, 20% x2 always", d1({ execAhead = true }, { exec = "always" }) },
+    { "Det + execute ahead, learned", d1({ execAhead = true, execLearn = 0.5 }, { exec = "learn" }) },
+    { "Det + execute ahead, learned, 20% always", d1({ execAhead = true, execLearn = 0.5 }, { exec = "learn20" }) },
+    { "Det + execute from the crossing, learned", d1({ execLearn = 0.5 }, { exec = "learn" }) },
+    { "Det + all hints perfect (ceiling)", d1({ execAhead = true }, { rate = "perfect", exec = "perfect" }) },
+    { "Rate hint, perfect (no detector)", p1({}, { rate = "perfect" }) },
+    { "Rate hint, wrong (no detector)", p1({}, { rate = "wrong" }) },
+    { "Execute ahead, perfect (no detector)", p1({ execAhead = true }, { exec = "perfect" }) },
+    { "Execute ahead, 20% x2 always (no detector)", p1({ execAhead = true }, { exec = "always" }) },
+}
+
+local function run2Tables(res, order)
+    local list = {
+        { "unknown", "Unknown share", pct },
+        { "relMed", "Relative error median", f },
+        { "relP90", "Relative error p90", f },
+        { "relXMed", "Relative error median, 10 s after a rate change", f },
+        { "relXP90", "Relative error p90, 10 s after a rate change", f },
+        { "wrongX", "Wrong side, 10 s after a rate change (mean of 4)", pct },
+        { "relEMed", "Relative error median, early (first 25%)", f },
+        { "relLMed", "Relative error median, late (last 25%)", f },
+        { "relLP90", "Relative error p90, late (last 25%)", f },
+        { "absMed", "Absolute error median s", f },
+        { "wrongMean", "Wrong side (mean of 4 decisions)", pct },
+        { "flipSum", "Excess flips per minute (sum of 4 decisions)", f },
+        { "delayMed", "First answer median s", f },
+    }
+    for _, x in ipairs(list) do
+        perClass(res, order, x[1], x[2], x[3])
+    end
+end
+
+-- Both class sets, one compact row per algorithm: the old (run 1) score and the new (run 2) score, each against its
+-- own main-lineup medians.
+local function both(set, extra, title)
+    local old = runSet(set, lineup(extra))
+    local new = runSet(set, lineup(extra), S.RUN2)
+    local so = scoreAll(old, mainSummaries(old))
+    local sn = scoreAll(new, mainSummaries(new))
+    local order = {}
+    for a = 1, #old.algos do
+        order[a] = a
+    end
+    table.sort(order, function(x, y)
+        return so[x] + sn[x] < so[y] + sn[y]
+    end)
+    print("\n### " .. title .. "\n")
+    print(
+        "| algorithm | old score | old rel med/p90 | old wrong | old flips | new score | new unknown | new rel med/p90 | new post-change rel med/p90 | new post-change wrong | new wrong | new flips |"
+    )
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for _, a in ipairs(order) do
+        local o, n = old.overall[a], new.overall[a]
+        print(
+            string.format(
+                "| %s | %s | %s / %s | %s | %s | %s | %s | %s / %s | %s / %s | %s | %s | %s |",
+                old.algos[a][1],
+                f(so[a], 3),
+                f(o.relMed),
+                f(o.relP90),
+                pct(o.wrongMean),
+                f(o.flipSum),
+                f(sn[a], 3),
+                pct(n.unknown),
+                f(n.relMed),
+                f(n.relP90),
+                f(n.relXMed),
+                f(n.relXP90),
+                pct(n.wrongX),
+                pct(n.wrongMean),
+                f(n.flipSum)
+            )
+        )
+    end
+    return old, new, order
+end
+
+function modes.tune()
+    print("## Run 2 candidates on both class sets (seed set " .. holdSet .. ")\n")
+    header()
+    both(holdSet, GRIDS[tuneList] or RUN2, "Old and new classes")
+end
+
+function modes.run2()
+    print("## Run 2: execute and lust classes (seed set " .. holdSet .. ")\n")
+    header()
+    local res = runSet(holdSet, lineup(RUN2), S.RUN2)
+    local order = report(res, "Ranking on the run 2 classes (class means)")
+    detail(res, order)
+    run2Tables(res, order)
 end
 
 function modes.all()

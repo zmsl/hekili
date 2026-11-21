@@ -22,10 +22,75 @@ S.CLASSES = {
     "real",
 }
 
+-- Run 2 (execute and lust; `run.lua run2`): lust x1.3 for 40 s at the pull, mid-fight (when the first mob falls to
+-- 30-60%) and its end while the mob lives; execute at 20% or 35% at x1.3-2.5 (the same fights per threshold: only the
+-- multiplier differs); the two together; a solo player and a 16-20 player raid, plain and with both changes.
+S.RUN2 = {
+    "lust pull boss",
+    "lust pull elite",
+    "lust pull pack",
+    "lust mid boss",
+    "lust mid elite",
+    "lust end",
+    "ex20 x1.3",
+    "ex20 x1.6",
+    "ex20 x2.0",
+    "ex20 x2.5",
+    "ex35 x1.3",
+    "ex35 x1.6",
+    "ex35 x2.0",
+    "ex35 x2.5",
+    "ex+lust elite",
+    "ex+lust boss",
+    "solo",
+    "raid",
+    "solo ex+lust",
+    "raid ex+lust",
+}
+
+local LUST = 1.3
+
+local function run2(class, rng, sp)
+    local ex, x = class:match("^ex(%d+) x([%d.]+)$")
+    if ex then
+        sp.dur, sp.execute = rng:uni(20, 60), { pct = tonumber(ex), mult = tonumber(x) }
+        return sp
+    end
+    if class:find("boss") then
+        sp.dur, sp.members = rng:uni(180, 360), 4
+    else
+        sp.dur = rng:uni(30, 60)
+    end
+    if class:find("^solo") then
+        sp.members = 0
+    elseif class:find("^raid") then
+        sp.members = rng:int(15, 19)
+    end
+    if class == "lust pull pack" then
+        sp.mobs, sp.dur, sp.cleave = rng:int(3, 5), rng:uni(8, 20), rng:uni(0.3, 0.7)
+        sp.members, sp.swaps = rng:int(1, 4), rng:int(0, 2)
+    elseif class == "lust end" then -- the mob outlives the lust: the drop at 40 s falls at 35-65% health
+        sp.dur = rng:uni(80, 150)
+    end
+    if class:find("^lust pull") or class == "lust end" then
+        sp.lust = { t = 0, dur = 40, mult = LUST }
+    elseif class:find("^lust mid") then
+        sp.lust = { atPct = rng:uni(30, 60), dur = 40, mult = LUST }
+    elseif class:find("ex%+lust") then -- lust held for the execute: it starts 0-15% above the threshold
+        sp.execute = { pct = rng:uni(20, 35), mult = rng:uni(1.6, 2.5) }
+        sp.lust = { atPct = sp.execute.pct + rng:uni(0, 15), dur = 40, mult = LUST }
+    elseif class ~= "solo" and class ~= "raid" then
+        error("unknown class " .. tostring(class))
+    end
+    return sp
+end
+
 --- The per-class fight spec. `dur`: seconds one mob lives under the whole group's single-target damage.
 local function spec(class, rng)
     local sp = { mobs = 1, members = rng:int(0, 4), cleave = 0, swaps = 0 }
-    if class == "trash" then
+    if class:find(" ") or class == "solo" or class == "raid" then
+        return run2(class, rng, sp)
+    elseif class == "trash" then
         sp.dur = rng:uni(8, 20)
     elseif class == "pack" then
         sp.mobs, sp.dur, sp.cleave = rng:int(3, 5), rng:uni(8, 20), rng:uni(0.3, 0.7)
@@ -80,6 +145,10 @@ local function apply(sp, m, amt, t)
     end
     if sp.execute and pct(m) < sp.execute.pct then
         amt = amt * sp.execute.mult
+        if not m.execAt then
+            m.execAt = t
+            sp.changes[#sp.changes + 1] = { t = t, mob = m.index }
+        end
     end
     m.hp = m.hp - amt
     if m.hp <= 0 then
@@ -104,6 +173,7 @@ end
 function S.build(class, seed)
     local rng = Rng.new(seed)
     local sp = spec(class, rng)
+    sp.changes = {} -- rate changes { t, mob } (mob 0: every mob), for the post-change metrics
     local rates = { 1 }
     for i = 1, sp.members do
         rates[i + 1] = rng:uni(0.6, 1.4)
@@ -115,7 +185,7 @@ function S.build(class, seed)
     local mobs = {}
     for i = 1, sp.mobs do
         local hp = sp.dur * total * (sp.mobs > 1 and rng:uni(0.8, 1.2) or 1) * (i == sp.bigMob and sp.big or 1)
-        mobs[i] = { max = hp, hp = hp, ht = {}, hv = {}, immuneUntil = -1, heals = {} }
+        mobs[i] = { max = hp, hp = hp, ht = {}, hv = {}, immuneUntil = -1, heals = {}, index = i }
         record(mobs[i], 0)
         for _ = 1, sp.heals or 0 do
             mobs[i].heals[#mobs[i].heals + 1] = { t = rng:uni(0.15, 0.85) * sp.dur, amt = rng:uni(1, 5) }
@@ -176,8 +246,12 @@ function S.build(class, seed)
         if sp.opener and t < sp.opener.dur then
             mult = mult * sp.opener.mult
         end
-        if sp.lust and t >= sp.lust.t and t < sp.lust.t + sp.lust.dur then
-            mult = mult * sp.lust.mult
+        local lust = sp.lust
+        if lust and not lust.t and pct(mobs[1]) <= lust.atPct then
+            lust.t = t
+        end
+        if lust and lust.t and t >= lust.t and t < lust.t + lust.dur then
+            mult = mult * lust.mult
         end
         local groupTarget = firstAlive(mobs)
         for i = 1, #rates do
@@ -216,7 +290,25 @@ function S.build(class, seed)
     for i = 1, #mobs do
         endT = math.max(endT, mobs[i].death or horizon)
     end
-    return { class = class, mobs = mobs, plan = plan, own = own, endT = endT }
+    local changes = sp.changes
+    if sp.opener then
+        changes[#changes + 1] = { t = sp.opener.dur, mob = 0 }
+    end
+    local lust = sp.lust
+    if lust and lust.t then
+        changes[#changes + 1] = { t = lust.t, mob = 0 }
+        changes[#changes + 1] = { t = lust.t + lust.dur, mob = 0 }
+    end
+    return {
+        class = class,
+        mobs = mobs,
+        plan = plan,
+        own = own,
+        endT = endT,
+        changes = changes,
+        lust = lust and lust.t and lust or nil, -- { t, dur, mult } once it started
+        execute = sp.execute, -- { pct, mult }
+    }
 end
 
 return S

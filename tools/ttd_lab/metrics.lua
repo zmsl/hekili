@@ -43,10 +43,12 @@ local function hq(h, q)
 end
 M.quantile = hq
 
-local HISTS = { "abs", "rel", "absE", "relE", "absL", "relL", "absC", "relC" }
+-- X: post-change polls (a rate change in the last 10 s, observe.lua `post`); not in the score.
+local HISTS = { "abs", "rel", "absE", "relE", "absL", "relL", "absC", "relC", "relX" }
 
 function M.newStats()
     local s = { polls = 0, unknown = 0, wrong = {}, excess = {}, time = 0, delays = {}, never = 0, streams = 0 }
+    s.xPolls, s.xWrong = 0, 0
     for _, h in ipairs(HISTS) do
         s[h] = { n = 0 }
     end
@@ -117,9 +119,13 @@ function M.add(obs, answers, stats, main)
             end
             prevT[d] = truth
         end
+        local post = P.post and P.post[i]
         for a = 1, na do
             local s, est = stats[a], answers[a][i]
             s.polls = s.polls + 1
+            if post then
+                s.xPolls = s.xPolls + 1
+            end
             if est then
                 if not answered[a] then
                     answered[a] = t - P.start[i]
@@ -139,6 +145,9 @@ function M.add(obs, answers, stats, main)
                     hadd(s.absC, ae)
                     hadd(s.relC, re)
                 end
+                if post then
+                    hadd(s.relX, re)
+                end
             else
                 s.unknown = s.unknown + 1
                 est = nil
@@ -153,6 +162,9 @@ function M.add(obs, answers, stats, main)
                 end
                 if dec ~= truth then
                     s.wrong[d] = s.wrong[d] + 1
+                    if post then
+                        s.xWrong = s.xWrong + 1
+                    end
                 end
                 if pd[d] ~= nil and pd[d] ~= dec then
                     flips[a][d] = flips[a][d] + 1
@@ -193,6 +205,9 @@ function M.summary(s)
         relCMed = hq(s.relC, 0.5),
         relCP90 = hq(s.relC, 0.9),
         absCMed = hq(s.absC, 0.5),
+        relXMed = hq(s.relX, 0.5),
+        relXP90 = hq(s.relX, 0.9),
+        wrongX = s.xPolls > 0 and s.xWrong / (s.xPolls * M.ND) or nil,
         delayMed = sortedQ(s.delays, 0.5),
         delayP90 = sortedQ(s.delays, 0.9),
         never = s.streams > 0 and s.never / s.streams or 0,
