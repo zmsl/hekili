@@ -13,6 +13,8 @@
 -- secret cooldownID falls back to the item's layoutIndex in the order last read plain (inferred, unprobed); both
 -- secret: that item is lost until the layout reads plain again (the end of combat).
 -- Hook bodies and event handlers run under pcall; an error turns the aura kind off for the session (reason "error").
+-- Mode B (Managed.lua, only when a consumer asks) is the one exception: it writes the layout store and sets the
+-- viewers' alpha.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return

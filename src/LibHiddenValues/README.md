@@ -69,11 +69,11 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   from the exact value. At a step above 1 (a max over 3175) a point that is not a multiple of the step, and an edge
   whose cut is not, keeps its own bar, so points and edges stay exact to the point; `h:Exact()` is to the step. A
   `step` watch's band can then span two 1% cells where the step straddles a cell boundary. A one-step change is
-  never misread: at a cell boundary (every 50 steps) the library holds one frame when only half of the change's bars
-  have landed. A larger jump whose firings land in two frames can read as another value for that one frame, as on a
-  `step` source; the probe runs saw no change split over two frames. A max of 100 or less is the same as `step` (8
-  bars, exact). It is outside the point caps but inside the 256-bar pool, with every edge and point on the source
-  counted (the step can grow with the max): over it, `pool-limit`.
+  never misread when its firings land within two frames: at a cell boundary (every 50 steps) the library holds one
+  frame when only half of the change's bars have landed. A larger jump whose firings land in two frames can read as
+  another value for that one frame, as on a `step` source; the probe runs saw no change split over two frames. A max
+  of 100 or less is the same as `step` (8 bars, exact). It is outside the point caps but inside the 256-bar pool,
+  with every edge and point on the source counted (the step can grow with the max): over it, `pool-limit`.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
 other kind, token or option (focus or another power type, `points` or `precision` on health, the `focus` token, ...)
@@ -82,7 +82,8 @@ ships.
 
 ## Error codes
 
-`Watch` and `h:SetPoints` refuse bad input with `nil, code`; codes are plain strings in `LHV.ERR`. Map them yourself,
+`Watch`, `h:SetPoints` and the managed-layout calls (below) refuse with `nil, code`; codes are plain strings in
+`LHV.ERR`. Map them yourself,
 or show `LHV:GetMessage(code)`: the text in the client's locale (or the one you pass), `nil` for a locale the library
 has no text for yet (enUS only for now). `GetMessage` also knows every state and reason.
 
@@ -106,12 +107,22 @@ has no text for yet (enUS only for now). `GetMessage` also knows every state and
 | `SPELL_INVALID` | `spell-invalid` | aura: spell not a whole number above 0 |
 | `WHAT_INVALID` | `what-invalid` | aura: what not `"up"`, `"stacks"` or `"left"` |
 | `MAX_INVALID` | `max-invalid` | aura: max not a whole number of 1 or more |
+| `STORE_INVALID` | `store-invalid` | managed layout: store not a table |
+| `CDM_COMBAT` | `cdm-combat` | managed layout: called in combat |
+| `CDM_SLOTS` | `cdm-slots-full` | managing: the store holds 5 layouts already |
+| `CDM_API` | `cdm-api` | managed layout: the client lacks the layout or encoding API (or its encoder failed the self-check) |
+| `CDM_UNREADABLE` | `cdm-unreadable` | managed layout: the saved layouts or the player's class cannot be read |
+| `CDM_WRITE` | `cdm-write-failed` | managed layout: the write did not read back as written (what was there is written back) |
+| `CDM_OWNER` | `cdm-owner` | managed layout: another addon's store holds the managed layout |
+| `CDM_NOT_MANAGED` | `cdm-not-managed` | restoring: the store holds nothing to restore |
+| `CDM_OFF` | `cdm-off` | managing: the Cooldown Manager is off |
 
 ## Auras (from the Cooldown Manager)
 
 The client hides aura data from addons in combat, but its Cooldown Manager still shows the auras the player placed
-there. The `aura` kind reads those items: it never changes the player's Cooldown Manager (nothing is shown, hidden,
-faded, moved or re-laid out; it only post-hooks the items' own updates), so it can only serve what the player placed.
+there. The `aura` kind reads those items. By default (Mode A) it never changes the player's Cooldown Manager (nothing is
+shown, hidden, faded, moved or re-laid out; it only post-hooks the items' own updates), so it can only serve what the
+player placed. Mode B, the managed layout below, changes it only when your addon asks, with the player's consent.
 
 ```lua
 -- Stacks of a debuff on the target (bands 0-2, 2-4, 4+), and whether a buff of mine is up.
@@ -173,6 +184,72 @@ meanwhile). `OnCapability` is not called from inside `Watch` or `IsAvailable`: r
 `IsAvailable` gives may be a frame old; the callbacks follow on the next frame). A paused aura handle only reports
 unknown; its bars keep following the client.
 
+## The managed layout (Mode B)
+
+Mode A serves only what the player placed, and only a tracked bar gives seconds left. Mode B lets the library put every
+aura your watches need on a tracked bar: it adds one layout of its own to the Cooldown Manager (named after your
+`owner`, so pass your addon's name), a copy of the player's active layout with each watched aura's entry moved to
+Tracked Bars (aura entries only: a spell's cooldown entry stays where it is), and makes it active. A reload finishes
+it. While it is in use, the four Cooldown Manager viewers sit at alpha 0: their data keeps flowing to the library,
+nothing shows and a hidden bar shows no tooltip (each viewer's own alpha is given back on restore). It is one layout
+per character and uses one of the player's 5 layout slots. **Ask the player first** and never call it on your own:
+it changes the player's Cooldown Manager.
+
+The library has no SavedVariables. Your addon keeps a table in its `SavedVariablesPerCharacter` and hands it over:
+the saved original layouts and the state across reloads live there. Its fields are the library's: persist it, never
+edit it.
+
+```lua
+-- At every load, once your SavedVariables exist (ADDON_LOADED or PLAYER_LOGIN):
+MyAddonCharDB.cdm = MyAddonCharDB.cdm or {}
+LHV:SetCooldownManagerStore("MyAddon", MyAddonCharDB.cdm)
+
+-- The player clicked "Let MyAddon manage it" (out of combat):
+local ok, code = LHV:ManageCooldownManager("MyAddon", MyAddonCharDB.cdm)
+if not ok then showError(LHV:GetMessage(code)) end
+-- Show a Reload button while LHV:IsReloadPending() is true. Its OnClick calls ReloadUI() itself: the client blocks a
+-- reload from a timer, and the library never reloads.
+reloadButton:SetScript("OnClick", function() ReloadUI() end)
+
+-- The player clicked "Restore my Cooldown Manager":
+LHV:RestoreCooldownManager("MyAddon", MyAddonCharDB.cdm)
+```
+
+| Call | Returns |
+|---|---|
+| `LHV:SetCooldownManagerStore(owner, store)` | `true` or `nil, code`. Call it at every load; a store a manage left pending is checked after the reload |
+| `LHV:ManageCooldownManager(owner, store)` | `true` or `nil, code`. Out of combat. Writes the layout (a reload pending), or rewrites only its own: a new aura watch needs a bar (`update`), or the player switched away (drift) and wants it back. Nothing changed: `true`, no write, no reload |
+| `LHV:RestoreCooldownManager(owner, store)` | `true` or `nil, code`. Out of combat. Puts the player's layouts back and gives the viewers' alpha back at once |
+| `LHV:IsReloadPending()` | `pending, what`: `true, "manage"` or `true, "restore"` while a write of this session waits for a reload; `false` |
+| `LHV:GetCooldownManagerMode()` | `mode, reason` (below) |
+
+| Mode | Reason | Meaning |
+|---|---|---|
+| `player` | nil | the player's own layout: Mode A, nothing hidden |
+| `player` | `check-failed` | after the reload the client did not take the layout (not active, or a learned aura without its bar item) within 20 s out of combat; nothing hidden. Offer the restore |
+| `pending` | `reload` | a write of this session waits for the reload |
+| `pending` | `checking` | after the reload, the check runs (in combat it waits for the end of combat) |
+| `managed` | nil | our layout is active and checked: the viewers are hidden |
+| `managed` | `update` | as above, but a watched aura has no bar in it yet: offer an update (`ManageCooldownManager`, a reload) |
+| `drift` | `switched` | the player made another layout active: the library reads it as in Mode A, never switches back by itself |
+| `drift` | `deleted` | the player deleted our layout |
+| `drift` | `cdm-off` | the Cooldown Manager is off |
+
+`OnCapability` callbacks hear each mode change as `fn("cdm", mode, reason)` (`"cdm"` is not a kind: `IsAvailable`
+knows nothing of it), on the frame after the call that caused it, never from inside an API call. The viewers are
+hidden only in `managed`; a `pending` update over a managed layout stays hidden until its reload; `SetEnabled(false)`
+and an error in the aura kind give them back.
+
+Restore, decided per case: nothing else changed in the store since the manage (structurally) writes the saved
+original back byte for byte; the player changed something (edited, added or deleted another layout) removes only our
+layout and makes the layout that was active before ours active again (if the player switched away from ours, their
+choice stays; if that layout is gone, the default). Before the reload of a manage, restore is an undo: the store is
+back to what the client loaded, so no reload is pending. Restore after the reload needs one (`pending, reload`) so the
+Cooldown Manager reads the player's layout again.
+
+Not covered: a store lost from your SavedVariables while our layout exists (the layout stays; the player deletes it
+in the Cooldown Manager's settings, and a new manage adds another); another addon writing the layout store.
+
 ## Testing your addon
 
 `Testing/FakeClient.lua` runs the real library on a fake client (stock Lua 5.1, not in the TOC):
@@ -191,7 +268,9 @@ Fake.restore()
 Its header lists the world fields (`max` per power type for `points` and `precision`), the fault knobs (`closed`,
 `lag`, `secretlag`, `drop`, `stagger`, `snap`, `maxpoints`, `refuse`) and what it does not model. It also models the
 Cooldown Manager (`W.cdm`, `W.aura`, `Fake.setAura`, `Fake.cdmLayout`, `Fake.cdmEnable`): see the comment above its
-viewers.
+viewers. For Mode B it models the layout store (`W.cdm.store`, `Fake.encodeLayouts`, `Fake.decodeLayouts`), the
+reload (`ReloadUI()` or `Fake.reload()`: everything is built again, `Fake.onReload(Fake)` loads your addon again before
+login) and the viewers' alpha: see the comment above `Fake.reload`.
 
 ## Diagnostics
 
@@ -204,7 +283,8 @@ the reference consumer (`/lhvp`).
 | `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 4`) |
 | `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, `cooldown` ... `aura` ... `meter`: the major's twelve); `state` and `reason` as `IsAvailable` |
 | `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable). `unit` may be a whole spec: the aura kind then answers for its placement |
-| `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change, and `fn("aura", state, reason, h)` for each of the owner's aura handles whose answer changed |
+| `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change, and `fn("aura", state, reason, h)` for each of the owner's aura handles whose answer changed; `fn("cdm", mode, reason)` when the managed-layout mode changes |
+| `LHV:GetCooldownManagerMode()`, `LHV:IsReloadPending()` | the managed layout's mode and reason; a pending reload and what for (the managed layout, above) |
 | `LHV:GetAuraSources()` | a fresh array, one `{ unit =, spell =, what =, handles =, bars =, active =, cooldownID =, placement =, state =, reason =, up = }` per aura source with a watch (`placement` `"bar"`, `"icon"` or nil; `up` true, false or nil for unknown); then `off, read, texts, values, refused, reads`: the Cooldown Manager is off, its catalogue was read, count texts and bar values forwarded, values a bar refused, item reads |
 | `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, splits`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now), splits (a position decode held one frame). The frame times cover the library's whole frame, the self-test's frames included while it runs; with nothing fed the driver stops and every rate and time reads 0 |
 | `LHV:GetPool()` | `made, cap, pointBars, pointCap, pointCapPerSource`: bars made (32 at login; frames are never destroyed), the cap (256), point bars in use, and the point caps (64, 8) |

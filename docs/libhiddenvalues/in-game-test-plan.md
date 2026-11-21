@@ -1,4 +1,4 @@
-# LibHiddenValues: in-game test plan (stages 0-1, stage 3)
+# LibHiddenValues: in-game test plan (stages 0-1, CDM-1, 3, CDM-2)
 
 For the owner, one session on the live client. About 15 minutes. The library prints nothing and has no command of its
 own: every test runs through LHVProbe, its reference consumer, which calls the public API and prints what it gets.
@@ -20,7 +20,7 @@ The expectations below are facts (a band, a direction, a state, a count); LHVPro
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Log in, type `/lhvp` right away (again after a second if health says `pending`) | version `LibHiddenValues-1.0` minor 3, 32 bars made (when LHVProbe shows `GetPool`), health `ready` and power `ready`, the other kinds `unavailable (unproven)`. Report the verdict the login self-test gave: `ready` or `unavailable (selftest)`. If unavailable: run `/lhvp selftest` and report its lines; a PASS there (the kinds `ready` after it) means the login run was upset by the loading screen, not a broken mechanism |
+| 1 | Log in, type `/lhvp` right away (again after a second if health says `pending`) | version `LibHiddenValues-1.0` minor 4, 32 bars made (when LHVProbe shows `GetPool`), health `ready` and power `ready`, the other kinds `unavailable (unproven)`. Report the verdict the login self-test gave: `ready` or `unavailable (selftest)`. If unavailable: run `/lhvp selftest` and report its lines; a PASS there (the kinds `ready` after it) means the login run was upset by the loading screen, not a broken mechanism |
 | 2 | `/lhvp selftest` | three edge lines (25, 50, 75%) with changes = firings and `ok`, `selftest prime: firings in the settle window 1, after it 0: ok`, then `selftest PASS: curves ok, max lag 0 frames` (these lines are the library's own, passed through unchanged) |
 | 3 | Target a mob at full health, `/lhvp watch health target 20 50 80` | the watch is `priming`, then within a few frames band 80-100, dir 0, q 2, as its first band (no 0-20 line before it) |
 | 4 | `/lhvp watch health player 50` and `/lhvp watch power player 30 mana` (or `energy`: your class's type; the word is required) | a first band for each, dir 0. Without the type word the watch is refused with `A power watch needs its power type (an Enum.PowerType number).`. A Druid: shift forms; each watch keeps its own type (report what an energy watch says in caster form). A rage watch (`/lhvp watch power player 30 rage`, bear form): out of combat at 0 its first band is 0-30, dir 0 (known, not unknown), then crossings as rage builds and decays: the library's first rage run |
@@ -69,7 +69,7 @@ and reset at the end. Start in caster form, out of combat; `/lhvp watch off` bet
 
 | # | Do | Expect (PASS) |
 |---|---|---|
-| S1 | `/lhvp` | minor 3; health and power `ready` |
+| S1 | `/lhvp` | minor 4 (3 before CDM-2); health and power `ready` |
 | S2 | `/lhvp watch power player 30` (no type word), `/lhvp watch power player precision exact mana` and `/lhvp watch aura target <any spell ID> left` (no edges) | each refused with the library's English message (`A power watch needs its power type ...`, `The precision must be "point" or nil.`, `The spec needs edges ... (aura stacks: edges or max; aura seconds: edges).`), not a code |
 | S3 | `/lhvp watch health player step 1`, `/lhvp watch power player step 1 mana` | each a 1% band (e.g. `61-62`), dir 0 first; `/lhvp stats`: one source line per watch, `mode gray`, 8 bars each |
 | S4 | Spend mana in steps (casts), take a hit, heal, out of combat and then in a fight | the mana and health bands follow every 1% change, a big spend is one line; `/lhvp stats`: desyncs 0 (splits may be above 0: a held frame, never a wrong band) |
@@ -84,3 +84,45 @@ and reset at the end. Start in caster form, out of combat; `/lhvp watch off` bet
 | S13 | `/lhvp copy`, paste back | |
 
 Report the µs per frame of S3, S7 and S8, every desync, and any wrong band (with the mana or health your frame showed).
+
+## Stage CDM-2: the managed layout (Mode B)
+
+About 20 minutes, out of combat unless a step says so, a Druid (any class with a buff the Cooldown Manager shows as an
+icon by default works: the Druid's Omen of Clarity). Setup as above, the map lockdown CVar forced first and reset at
+the end. Know your Cooldown Settings first: which layout is active, how many layouts you have (5 is the most).
+
+LHVProbe needs, for this section (the controller extends it; every call is the library's public API):
+
+- `## SavedVariablesPerCharacter: LHVProbeCharDB` and, at every load (`ADDON_LOADED` of LHVProbe),
+  `LHVProbeCharDB.cdm = LHVProbeCharDB.cdm or {}` then `LHV:SetCooldownManagerStore("LHVProbe", LHVProbeCharDB.cdm)`
+  (print a refusal's code and `GetMessage`).
+- Its `OnCapability` function prints `cdm <mode> <reason>` when the first argument is `"cdm"` (logged to the copy box).
+- `/lhvp manage`: `LHV:ManageCooldownManager("LHVProbe", LHVProbeCharDB.cdm)`; print `true`, or the code and
+  `LHV:GetMessage(code)`.
+- `/lhvp restore`: `LHV:RestoreCooldownManager("LHVProbe", LHVProbeCharDB.cdm)`; the same print.
+- `/lhvp mode`: `LHV:GetCooldownManagerMode()` and `LHV:IsReloadPending()`; the alpha of `EssentialCooldownViewer`,
+  `UtilityCooldownViewer`, `BuffIconCooldownViewer`, `BuffBarCooldownViewer` (`GetAlpha`); the length of
+  `C_CooldownViewer.GetLayoutData()` and a hash of it (CDMConfigProbe's: `h = (h * 33 + byte) % 2147483648` from
+  5381); the store's `tag`, `id`, `pending`, `state`, `#bars` and `#orig`.
+- A Reload button of its own, shown while `IsReloadPending()` is true and out of combat; its `OnClick` calls
+  `ReloadUI()` directly (proven: a click works, a timer is blocked).
+- Watches last one session: repeat the `/lhvp watch` lines after each reload.
+
+| # | Do | Expect (PASS) |
+|---|---|---|
+| B1 | `/lhvp mode`; note the hash H0. `/lhvp watch aura player <Omen of Clarity> left 3`; `/lhvp watch aura target <Lacerate> stacks max 5` | mode `player`; reload not pending; alphas your Edit Mode opacity; the Omen watch `unavailable (cdm-icon-only)` |
+| B2 | `/lhvp manage` | `true`; `/lhvp mode`: `pending reload`, reload pending `manage`, alphas unchanged; the Reload button shows; one line `cdm pending reload` |
+| B3 | Click the Reload button; after the load repeat the B1 watches, then `/lhvp mode` | no ADDON_ACTION_BLOCKED, no Lua error; `cdm managed` within a few seconds (`pending checking` before it is fine); all four alphas 0 and the Cooldown Manager invisible; the Omen watch `ready` with a band; Cooldown Settings lists a layout "LHVProbe", active, Omen of Clarity under Tracked Bars, Lacerate's cooldown entry not moved |
+| B4 | A fight: Omen procs, stack Lacerate; open and close Edit Mode; a loading screen if handy | Omen `left` bands fall and refresh, Lacerate stacks follow; the viewers stay invisible (alphas 0) through all of it |
+| B5 | Cooldown Settings: make your own layout active again; `/lhvp mode` | `cdm drift switched`; alphas back to your opacity, your layout shows (the library does not switch back) |
+| B6 | `/lhvp manage`, Reload button | `pending reload`, after the load `cdm managed` again, the same "LHVProbe" layout (no second one) |
+| B7 | `/lhvp watch aura player <another buff shown as an icon> left 3`; `/lhvp mode` | `cdm managed update`; then `/lhvp manage`, Reload: managed, that buff a tracked bar too, your other layouts unchanged in Cooldown Settings |
+| B8 | In combat: `/lhvp manage` and `/lhvp restore` | each refused `cdm-combat` with its message |
+| B9 | Cooldown Settings: add a layout (or edit one that is not "LHVProbe") and keep it; then `/lhvp restore` | `true`; alphas back at once; `pending reload`. After the Reload button: mode `player`; "LHVProbe" gone; your new or edited layout kept; the layout active before B2 active again |
+| B10 | `/lhvp manage`, then at once `/lhvp restore` (no reload between) | `true` both; reload not pending; mode `player`; hash equal to the one before the manage |
+| B11 | `/lhvp manage`, Reload, then `/lhvp restore`, Reload, `/lhvp mode` | managed, then `player`; hash equal to the one before this manage (byte-exact restore) |
+| B12 | Only if you are willing: add layouts until 5, then `/lhvp manage` | refused `cdm-slots-full`, hash unchanged; delete the extra layouts after |
+| B13 | `/lhvp copy`, paste back; set the CVar back to "0" | |
+
+Report every `cdm` line, the hashes, any Lua error naming LibHiddenValues or LHVProbe, and anything in BugSack after
+B3 (a forbidden-table or taint error there would mean the raw write tainted the viewers).

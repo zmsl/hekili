@@ -21,7 +21,12 @@
 -- two frames), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit),
 -- "refuse" name (that global function raises). The Cooldown Manager (the aura kind's source): W.cdm, W.aura,
 -- Fake.setAura, Fake.cdmLayout, Fake.cdmEnable, Fake.viewers, Fake.touched, Fake.hooks; see the comment above its
--- viewers.
+-- viewers. Mode B (the managed layout): W.cdm.store (the layout store string, "" by default; set, it decides the
+-- placement at login), W.cdm.writes (SetLayoutData calls), W.cdm.badWrite (a write keeps other bytes), W.cdm.opacity
+-- (the viewers' Edit Mode alpha at a load), W.cdm.unlearned ({ [cooldownID] = true }: no item, left out of the
+-- learned set), W.classID (11 by default; the spec is 1), Fake.encodeLayouts(t), Fake.decodeLayouts(s), and the
+-- reload (ReloadUI(), Fake.reload(), Fake.onReload: see the comment above Fake.reload). The encoders are stand-ins
+-- (sorted Lua text, reversed, hex), not CBOR, Deflate or Base64.
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
 --
 -- Fidelity limits: no taint model; a secret is a table, so only arithmetic, ordering, concatenation, tostring, length,
