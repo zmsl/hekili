@@ -36,12 +36,13 @@ Manager gaps before a consumer's switch, below). Its in-game check: [in-game-tes
   ("cross": a bad frame, as a split; two in a row a desync). A step joining or leaving re-allocates the whole core.
   `lib.need` counts the 8 bars whenever a step and precision share a source (at step 1 too: the step can grow with
   the max); a `step` watch is now admitted (pool-limit) like points and precision.
-- Fix round 1 (review of 2026-11-21, owner rule "truths, not assumptions"): `Kinds/Aura.lua` marks every target aura
-  source `swapped` on PLAYER_TARGET_CHANGED; a silent Essential or Utility item then reads unknown until it is seen
-  held or a target UNIT_AURA arrives (registered for the target only, `Cdm.lua`). The viewers' RefreshData hook does
-  not clear it: it may run at the swap itself. The client refreshes such an item on a target change only while it
-  holds a target aura (no range check), so after A, B, A it can stay silent on A. `cdm.facts` keeps the client's
-  `hasAura` and `selfAura` as given (rows of `GetAuraEntries`; nothing filters on them).
+- Fix round 1 (review of 2026-11-21, owner rule "truths, not assumptions"): `Kinds/Aura.lua` counts target swaps
+  (`cdm.swapNo`) and holds `cdm.doubt` from PLAYER_TARGET_CHANGED to the next target UNIT_AURA (registered for the
+  target only, `Cdm.lua`); meanwhile a target watch's silent Essential or Utility item reads unknown unless that
+  source saw it lit since the swap (`s.litAt`; a source made after the swap is in doubt too). The viewers'
+  RefreshData hook does not clear it: it may run at the swap itself. The client refreshes such an item on a target
+  change only while it holds a target aura (no range check), so after A, B, A it can stay silent on A. `cdm.facts`
+  keeps the client's `hasAura` and `selfAura` as given (rows of `GetAuraEntries`; nothing filters on them).
 - `Testing/FakeClient.lua`: Essential and Utility viewers with item pools (`W.cdm.essential`, `W.cdm.utility`,
   placed from the store at login too), `W.cdm.secretUnit`, `W.cdm.noUnit`, `W.cdm.quietSwap`, `Fake.secret`.
 - Probe facts owed: is `auraDataUnit` ever secret in combat (aura viewers, Essential, Utility)? Is an item's

@@ -1,8 +1,9 @@
 -- Kinds/Aura.lua: auras on the player or the target, read from the client's Cooldown Manager (Cdm.lua finds the items
 -- and forwards their values). what = "up": presence (lo == hi, 1 up, 0 not); "stacks": the stack count; "left": the
--- seconds left. An absent aura is a known value: no stacks, no seconds (the lowest band); "up" reads 0. The library
--- reports what the items show, never a guess (owner 2026-11-21): an aura up with no count text is 0 or 1 stacks (the
--- client shows none for either), so it reads 0 to the lowest stacks edge with a bar; a unit it cannot tell is unknown.
+-- seconds left. An item holding no aura of yours is a known reading (not proof of absence: the client shows only the
+-- player's own auras): no stacks, no seconds (the lowest band); "up" reads 0. The library reports what the items show
+-- (owner 2026-11-21): an aura up with no count text is 0 or 1 stacks (the client shows none for either), so it reads 0
+-- to the lowest stacks edge with a bar; a unit it cannot tell is unknown.
 --
 -- The bars: a hook's secret cannot go through a curve, so each edge has a raw bar ranged just below it, fed the
 -- client's value as it is (AuraBandProbe 0.2.0/0.2.1: per-stack bars, a 2.9-3.0 s bar). Stacks are whole numbers on a
@@ -34,6 +35,8 @@ local RESCAN = 30 -- frames between the feed's own item searches (the hooks anno
 local WHAT = { up = true, stacks = true, left = true }
 local RELAYOUT = { UI_SCALE_CHANGED = true, DISPLAY_SIZE_CHANGED = true, LOADING_SCREEN_DISABLED = true }
 local AURAV = 2 -- viewer index of the last aura viewer (Cdm.lua): above it Essential and Utility
+-- Target swaps (cdm.swapNo counts them) and whether a target UNIT_AURA came since the last one (cdm.doubt false).
+cdm.swapNo = cdm.swapNo or 0
 lib.barLast = lib.barLast or {} -- the frame of a seconds bar's last counted firing
 lib.barFedAt = lib.barFedAt or {} -- the frame of the client's first push since the bar's priming or the last absence
 lib.barSoft = lib.barSoft or {} -- settling after an absence or a run (not a prime): its handles keep their band
@@ -262,14 +265,15 @@ local function feed(s)
             local a = rawget(item, "auraInstanceID")
             up = issecretvalue(a) or a ~= nil -- a secret: only tested, never compared
             if up then
-                s.swapped = nil
+                s.litAt = cdm.swapNo
                 local u = rawget(item, "auraDataUnit")
                 if issecretvalue(u) or u ~= s.unit then
                     up = nil -- held on a secret, no or another unit: the item says nothing of this one (unknown)
                 end
-            elseif s.swapped and cdm.viewerOf[item] > AURAV then
+            elseif cdm.doubt and s.unit == "target" and s.litAt ~= cdm.swapNo and cdm.viewerOf[item] > AURAV then
                 -- an Essential or Utility item refreshes on a target change only while it holds a target aura: one
-                -- silent before may not have looked at the new target (unknown until it lights or a target UNIT_AURA)
+                -- silent before may not have looked at the new target (unknown until this source sees it lit since
+                -- the swap or a target UNIT_AURA comes; a source made after the swap is in doubt too)
                 up = nil
             end
         end
@@ -436,12 +440,15 @@ function lib.event(event, ...)
         return lib.cdmEvent(event, ...)
     end
     if event == "PLAYER_TARGET_CHANGED" or event == "UNIT_AURA" then -- UNIT_AURA: registered for the target only
-        local swapped = event == "PLAYER_TARGET_CHANGED" or nil
+        cdm.doubt = event == "PLAYER_TARGET_CHANGED"
+        if cdm.doubt then
+            cdm.swapNo = cdm.swapNo + 1
+        end
         local srcs = lib.sources
         for i = 1, #srcs do
             local s = srcs[i]
             if s.kind == "aura" and s.unit == "target" then
-                s.swapped, s.dirty = swapped, true
+                s.dirty = true
             end
         end
         lib.wake()

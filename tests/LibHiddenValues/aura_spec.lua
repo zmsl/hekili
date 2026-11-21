@@ -620,9 +620,13 @@ describe("LibHiddenValues aura kind", function()
             Fake.tick(3)
             assert.are.equal("gone", (up:State()))
             assert.is_nil(band(up)[1])
+            local late = watch({ unit = "target", spell = 5004, what = "up" }) -- a watch started after the swap
+            Fake.tick(3)
+            assert.is_nil(band(late)[1])
             Fake.setAura("target", 5004, 1, 600) -- A's auras change: the item lights
             Fake.tick(3)
             assert.are.same({ 1, 1 }, band(up))
+            assert.are.same({ 1, 1 }, band(late))
             -- mob C, debuffed too: the lit item refreshes on the swap and lights again, read at once
             W.aura.target = { [5004] = { stacks = 1, duration = 600, expires = GetTime() + 600 } }
             Fake.event("PLAYER_TARGET_CHANGED")
