@@ -2,9 +2,10 @@
 -- health). Pure Lua 5.1: no game API, no units, no allocation after New. The caller feeds Restart on a unit change,
 -- Band on every band callback, and asks Get(now [, ownDps]) -> est, lo, hi, state; est nil means unknown.
 -- Fit: seconds per percent `b` from an exponentially time-weighted least squares of time on percent over the recent
--- crossings, shrunk toward the stream's cumulative slope; a mob first seen full anchors a 100% point at its first
--- band; a slope carries over a swap, heal or stall for a few seconds; a long quiet gap raises the slope (censoring);
--- the published death time moves only past a deadband, so the countdown is smooth.
+-- crossings (half-life 6 s, 30 s window); with too little spread for a fit, the stream's cumulative slope from an
+-- anchor (the first band: 100% for a mob first seen full, the band's middle otherwise); a slope carries over a swap,
+-- heal or stall for 8 s; a stall (no crossing for max(4 s, 5 x the mean gap)) holds the countdown; the published death
+-- time moves only past a deadband, so the countdown is smooth. Defaults: the TTD lab's winner (tools/ttd_lab/README.md).
 local max, min, abs = math.max, math.min, math.abs
 
 local E = {}
@@ -12,23 +13,25 @@ E.__index = E
 
 E.DEFAULTS = {
     halfLife = 6, -- seconds: weight 1/2 per halfLife of age
-    window = 18, -- seconds: crossings older than this leave the fit
+    window = 30, -- seconds: crossings older than this leave the fit
     ring = 32, -- crossings kept
-    shrink = 2, -- K: pseudo-weight of the cumulative slope (the fit's weight is its summed weights)
+    shrink = 0, -- K: pseudo-weight of the cumulative slope (the fit's weight is its summed weights)
     clampLo = 0.2, -- the blended slope stays within [clampLo, clampHi] x the cumulative slope
     clampHi = 5,
     minSpan = 2, -- percent the crossings must span before the fit answers on a mob first seen below full
     fitSpan = 3, -- percent and ...
     fitTime = 1.5, -- ... seconds the weighted window must span to fit at all (else the cumulative slope)
     anchorFull = true, -- a mob first seen full: a pseudo point (first band time, 100) starts the stream
+    anchorBelow = true, -- a mob first seen below full: a pseudo point (first band time, the band's middle) starts it
     prior = true, -- carry the last slope over a restart, heal or stall
     priorTime = 8, -- seconds the carried slope is mixed in
     priorWeight = 1,
-    priorEmpty = false, -- answer from the carried slope before the first crossing (mob below full)
+    priorEmpty = true, -- answer from the carried slope before the first crossing (mob below full)
     healReset = 3, -- a rise of this many percent over the lowest crossing restarts the fit
     stallGap = 4, -- a gap over max(stallGap, stallMult x mean gap) is a stall: the fit restarts at the next crossing
     stallMult = 5,
-    censor = 1, -- the slope is at least (time since the last crossing) / censor; 0 turns it off
+    holdStall = true, -- during a stall the death time moves later with the clock (the countdown holds)
+    censor = 0, -- the slope is at least (time since the last crossing) / censor; 0 turns it off
     hystAbs = 1, -- republish the death time when it moves more than max(hystAbs, hystRel x remaining) ...
     hystRel = 0.12,
     hystLate = 3, -- ... or more than hystLateRel x remaining after hystLate seconds; hystAbs = 0 turns it off
@@ -69,7 +72,7 @@ function E:Restart()
     if self.lastB then
         self.bPrev = self.lastB
     end
-    self.known, self.fresh, self.carryFrom, self.resumed = false, false, nil, false
+    self.known, self.fresh, self.anchored, self.carryFrom, self.resumed = false, false, false, nil, false
     self.tAnchor, self.pMin, self.tLast, self.pLast = nil, nil, nil, nil
     self.tPub, self.setAt, self.lastB = nil, nil, nil
 end
@@ -78,7 +81,7 @@ end
 local function carry(self, t)
     self.bPrev = self.lastB or self.bPrev
     self.carryFrom, self.resumed = t, true
-    self.fresh = false
+    self.fresh, self.anchored = false, false
     clear(self)
 end
 
@@ -86,11 +89,21 @@ local function at(self, i) -- the i-th kept crossing, 1 oldest
     return (self.head - self.n + i - 1) % self.ring + 1
 end
 
+-- Seconds since the last crossing beyond the stall threshold, max(stallGap, stallMult x mean gap); 0: no stall.
+local function stalledFor(self, now)
+    if not self.tLast or self.n < 2 then
+        return 0
+    end
+    local mean = (self.tLast - self.rt[at(self, 1)]) / (self.n - 1)
+    return max(0, now - self.tLast - max(self.stallGap, self.stallMult * mean))
+end
+
 --- A band callback: health in [lo, hi) at `t` (hi == 100: the top cell, full health possible).
 function E:Band(t, lo, hi)
     if not self.known then
         self.known, self.tAnchor, self.pMin = true, t, hi
         self.fresh = self.anchorFull and hi >= 100
+        self.anchored = self.fresh or (self.anchorBelow and hi < 100)
         if self.bPrev then
             self.carryFrom = t
         end
@@ -98,16 +111,14 @@ function E:Band(t, lo, hi)
     end
     local pMin = self.pMin
     if hi < pMin then -- a crossing: health just fell below hi
-        local n = self.n
-        if n >= 2 then
-            local gap, mean = t - self.tLast, (self.tLast - self.rt[at(self, 1)]) / (n - 1)
-            if gap > max(self.stallGap, self.stallMult * mean) then
-                carry(self, t)
-            end
+        if stalledFor(self, t) > 0 then
+            carry(self, t)
         end
         if self.n == 0 and not self.t0 then
             if self.fresh then
                 self.t0, self.p0 = self.tAnchor, 100
+            elseif self.anchored then
+                self.t0, self.p0 = self.tAnchor, pMin - 0.5 -- the first band's middle
             else
                 self.t0, self.p0 = t, hi
             end
@@ -170,7 +181,7 @@ local function slope(self, now, h)
         bcum = (self.tLast - self.t0) / (self.p0 - self.pLast)
     end
     local b, w, state
-    if not self.fresh and self.rp[at(self, 1)] - self.pLast < self.minSpan then
+    if not self.anchored and self.rp[at(self, 1)] - self.pLast < self.minSpan then
         b, w, state = nil, 0, "prior"
     else
         local bfit
@@ -207,7 +218,11 @@ local function death(self, now, b)
     if self.censor > 0 then
         b = max(b, (now - tLast) / self.censor)
     end
-    return tLast + (pLast - self.deathPct) * b
+    local T = tLast + (pLast - self.deathPct) * b
+    if self.holdStall then -- a stall stops the countdown
+        T = T + stalledFor(self, now)
+    end
+    return T
 end
 
 --- est, lo, hi (seconds from now) and the state ("fit", "seed", "prior", "stalled", "unknown").
@@ -233,11 +248,8 @@ function E:Get(now)
     end
     local lowest = self.floor * b
     local est = max(pub - now, lowest)
-    if self.tLast and self.n >= 2 then
-        local mean = (self.tLast - self.rt[at(self, 1)]) / (self.n - 1)
-        if now - self.tLast > max(self.stallGap, self.stallMult * mean) then
-            state = "stalled"
-        end
+    if stalledFor(self, now) > 0 then
+        state = "stalled"
     end
     if not self.spread then
         return est, est, est, state

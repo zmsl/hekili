@@ -6,7 +6,21 @@ local Rng = require("rng")
 
 local S = {}
 
-S.CLASSES = { "trash", "pack", "elite", "boss", "burst", "dot", "execute", "stall", "heal", "phase", "damaged", "real" }
+S.CLASSES = {
+    "trash",
+    "pack",
+    "mixed",
+    "elite",
+    "boss",
+    "burst",
+    "dot",
+    "execute",
+    "stall",
+    "heal",
+    "phase",
+    "damaged",
+    "real",
+}
 
 --- The per-class fight spec. `dur`: seconds one mob lives under the whole group's single-target damage.
 local function spec(class, rng)
@@ -16,6 +30,10 @@ local function spec(class, rng)
     elseif class == "pack" then
         sp.mobs, sp.dur, sp.cleave = rng:int(3, 5), rng:uni(8, 20), rng:uni(0.3, 0.7)
         sp.members, sp.swaps = rng:int(1, 4), rng:int(0, 2)
+    elseif class == "mixed" then -- a pack with one big mob (3-5x health): a swap carries a wrong slope
+        sp.mobs, sp.dur, sp.cleave = rng:int(3, 5), rng:uni(8, 20), rng:uni(0.3, 0.7)
+        sp.members, sp.swaps = rng:int(1, 4), rng:int(1, 3)
+        sp.big, sp.bigMob = rng:uni(3, 5), rng:int(1, sp.mobs)
     elseif class == "elite" then
         sp.dur = rng:uni(30, 60)
     elseif class == "boss" then
@@ -96,7 +114,7 @@ function S.build(class, seed)
     end
     local mobs = {}
     for i = 1, sp.mobs do
-        local hp = sp.dur * total * (sp.mobs > 1 and rng:uni(0.8, 1.2) or 1)
+        local hp = sp.dur * total * (sp.mobs > 1 and rng:uni(0.8, 1.2) or 1) * (i == sp.bigMob and sp.big or 1)
         mobs[i] = { max = hp, hp = hp, ht = {}, hv = {}, immuneUntil = -1, heals = {} }
         record(mobs[i], 0)
         for _ = 1, sp.heals or 0 do

@@ -1,16 +1,18 @@
 -- tools/ttd_lab/run.lua: the TTD lab. From the repo root: lua5.1 tools/ttd_lab/run.lua [main|sweep|holdout|test|all]
--- [--scale x]. Prints markdown tables (tools/ttd_lab/README.md explains them).
+-- [--scale x] [--round n] (sweep round, default the last). Prints markdown tables (tools/ttd_lab/README.md explains them).
 package.path = "tools/ttd_lab/?.lua;" .. package.path
 
 local S, O, Real = require("scenarios"), require("observe"), require("real")
 local B, E, M = require("baselines"), require("estimator"), require("metrics")
 
-local mode, scale = "main", 1
+local mode, scale, sweepRound = "main", 1, nil
 do
     local i = 1
     while arg[i] do
         if arg[i] == "--scale" then
             scale, i = tonumber(arg[i + 1]), i + 1
+        elseif arg[i] == "--round" then
+            sweepRound, i = tonumber(arg[i + 1]), i + 1
         else
             mode = arg[i]
         end
@@ -22,6 +24,7 @@ end
 local COUNTS = {
     trash = 80,
     pack = 50,
+    mixed = 50,
     elite = 50,
     boss = 12,
     burst = 60,
@@ -55,6 +58,20 @@ local function est(params)
     end
 end
 
+local function with(...)
+    local p = {}
+    for _, t in ipairs({ ... }) do
+        for k, v in pairs(t) do
+            p[k] = v
+        end
+    end
+    return p
+end
+
+-- The research note's recommendation as written (section 4), where it differs from the estimator's defaults (the
+-- lab's winner).
+local RESEARCH = { censor = 1, anchorBelow = false, priorEmpty = false, holdStall = false, shrink = 2, window = 18 }
+
 local function base(cls, params)
     return function()
         return cls.new(params)
@@ -75,24 +92,87 @@ local MAIN = {
     { "Hekili-retail mean of rates", base(B.Hekili) },
     { "SimC-style cumulative", base(B.Cumulative) },
     { "Ring8 (old plan)", base(B.Ring8) },
-    { "Recommended (research defaults)", est() },
+    { "Research recommendation (as written)", est(RESEARCH) },
+    { "Winner (estimator defaults)", est() },
 }
+
+-- Answers 30 s once any band is known: the unknown floor (the prime) for reference.
+local Floor = {}
+Floor.__index = Floor
+function Floor.new()
+    return setmetatable({}, Floor)
+end
+function Floor:restart()
+    self.known = false
+end
+function Floor:band()
+    self.known = true
+end
+function Floor:get()
+    return self.known and 30 or nil
+end
 
 local ABLATION = {
+    { "Unknown floor (constant once a band is known)", base(Floor) },
     { "Cumulative + deadband", hyst(B.Cumulative) },
     { "HeroLib + deadband", hyst(B.HeroLib) },
-    { "Rec, no deadband", est({ hystAbs = 0 }) },
-    { "Rec, no censoring", est({ censor = 0 }) },
-    { "Rec, no full anchor", est({ anchorFull = false }) },
-    { "Rec, no carried prior", est({ prior = false }) },
+    { "Winner, no deadband", est({ hystAbs = 0 }) },
+    { "Winner + censoring (research rule)", est({ censor = 1 }) },
+    { "Winner, no full anchor", est({ anchorFull = false }) },
+    { "Winner, no below-full anchor", est({ anchorBelow = false }) },
+    { "Winner, no carried prior", est({ prior = false }) },
+    { "Winner, carried prior only after a crossing", est({ priorEmpty = false }) },
+    { "Winner, no stall hold", est({ holdStall = false }) },
+    { "Winner, K=2 (research shrink)", est({ shrink = 2 }) },
 }
 
--- One-at-a-time sweeps around the defaults, plus hybrids.
-local function sweepList()
+-- The sweep's leaders (rounds 3-4), run again on the held-out seeds; the last one is the winner.
+local TUNED = { censor = 0, anchorBelow = true, priorEmpty = true }
+local function tuned(change)
+    return est(with(RESEARCH, TUNED, change or {}))
+end
+local CANDIDATES = {
+    { "Tuned (censor 0, anchorBelow, priorEmpty)", tuned() },
+    { "Tuned + K=0.5", tuned({ shrink = 0.5 }) },
+    { "Tuned + K=0", tuned({ shrink = 0 }) },
+    { "Tuned + deadband 3s/0.3", tuned({ hystAbs = 3, hystRel = 0.3 }) },
+    { "Tuned + K=0.5 + deadband 2s/0.2", tuned({ shrink = 0.5, hystAbs = 2, hystRel = 0.2 }) },
+    { "Tuned + K=0 + window 30", tuned({ shrink = 0, window = 30 }) },
+    { "Tuned + K=0 + deadband 2s/0.2", tuned({ shrink = 0, hystAbs = 2, hystRel = 0.2 }) },
+    { "Tuned + K=0 + window 30 + holdStall", tuned({ shrink = 0, window = 30, holdStall = true }) },
+}
+
+-- One-at-a-time sweeps around a base (round 1: the research defaults; each later round: the previous round's best).
+local ROUNDS = {
+    { name = "round 1, base = research recommendation", base = RESEARCH },
+    { name = "round 2, base = censor 0", base = with(RESEARCH, { censor = 0 }) },
+    {
+        name = "round 3, base = censor 0, anchorBelow, priorEmpty",
+        base = with(RESEARCH, { censor = 0, anchorBelow = true, priorEmpty = true }),
+    },
+    {
+        name = "round 4, base = censor 0, anchorBelow, priorEmpty, K 0",
+        base = with(RESEARCH, { censor = 0, anchorBelow = true, priorEmpty = true, shrink = 0 }),
+    },
+    { name = "round 5, base = the winner (estimator defaults)", base = {} },
+}
+
+local function sweepList(baseP)
     local list = {}
-    local function add(name, p)
+    local function add(name, change)
+        local p = {}
+        for k, v in pairs(baseP) do
+            p[k] = v
+        end
+        for k, v in pairs(change) do
+            p[k] = v
+        end
         list[#list + 1] = { name, est(p), params = p }
     end
+    add("base", {})
+    add("anchorBelow on", { anchorBelow = true })
+    add("holdStall on", { holdStall = true })
+    add("holdStall off", { holdStall = false })
     for _, h in ipairs({ 2, 3, 4, 8, 10, 15 }) do
         add("H=" .. h .. " win=3H", { halfLife = h, window = 3 * h })
     end
@@ -123,6 +203,7 @@ local function sweepList()
     end
     add("floor=0", { floor = 0 })
     add("clamp 0.5-2", { clampLo = 0.5, clampHi = 2 })
+    list[#list + 1] = { "Midpoints + deadband", hyst(B.Midpoints) }
     return list
 end
 
@@ -396,10 +477,20 @@ function modes.test()
     dofile("tools/ttd_lab/estimator_test.lua")
 end
 
+local function extras()
+    local extra = {}
+    for _, list in ipairs({ ABLATION, CANDIDATES }) do
+        for _, spec in ipairs(list) do
+            extra[#extra + 1] = spec
+        end
+    end
+    return extra
+end
+
 function modes.main()
-    print("## Main lineup and ablations (seed set A)\n")
+    print("## Main lineup, ablations and candidates (seed set A)\n")
     header()
-    local res = runSet("A", lineup(ABLATION))
+    local res = runSet("A", lineup(extras()))
     local order, _, refs = report(res, "Ranking, overall (class means)")
     detail(res, order)
     perClass(res, order, "unknown", "Unknown share", pct)
@@ -412,9 +503,10 @@ function modes.main()
 end
 
 function modes.sweep()
-    print("## Parameter sweep (seed set A; one change at a time from the research defaults)\n")
+    local round = ROUNDS[sweepRound or #ROUNDS]
+    print("## Parameter sweep, " .. round.name .. " (seed set A; one change at a time)\n")
     header()
-    local res = runSet("A", lineup(sweepList()))
+    local res = runSet("A", lineup(sweepList(round.base)))
     local order, _, refs = report(res, "Sweep ranking")
     robustness(res, refs, ", sweep")
 end
@@ -422,7 +514,7 @@ end
 modes.holdout = function()
     print("## Held-out seeds (set B)\n")
     header()
-    local res = runSet("B", lineup(ABLATION))
+    local res = runSet("B", lineup(extras()))
     local order, _, refs = report(res, "Ranking on set B")
     detail(res, order)
     robustness(res, refs, ", set B")
@@ -431,7 +523,10 @@ end
 function modes.all()
     modes.test()
     modes.main()
-    modes.sweep()
+    for r = 1, #ROUNDS do
+        sweepRound = r
+        modes.sweep()
+    end
     modes.holdout()
 end
 
