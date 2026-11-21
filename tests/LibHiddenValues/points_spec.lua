@@ -184,6 +184,22 @@ describe("LibHiddenValues points", function()
         assert.are.same({ nil, 0, 1000 }, { h:Domain() })
     end)
 
+    it("reads a raise from the client's secret-max check as secret: the last plain max stays", function()
+        local h = watch({ points = { 300 } })
+        Fake.login()
+        untilLive(h)
+        _G.C_Secrets.ShouldUnitPowerMaxBeSecret = function()
+            error("no such argument list")
+        end
+        W.unit.player.max[0] = 1000
+        Fake.event("UNIT_MAXPOWER", "player")
+        local h2 = watch({ points = { 500 } }) -- Watch does not raise either
+        untilLive(h)
+        untilLive(h2)
+        assert.are.same({ nil, 0, 2000 }, { h:Domain() })
+        assert.are.same({}, Fake.errors)
+    end)
+
     it("is unavailable while no plain max was ever read, and refuses bad points", function()
         W.maxSecret = true
         local h = watch({ points = { 300 } })

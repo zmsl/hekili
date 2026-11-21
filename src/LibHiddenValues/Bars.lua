@@ -386,15 +386,16 @@ function lib.ringFor(M)
 end
 
 -- The player's plain max of the source's power type: a secret one (or a say-so that it is secret) keeps the last
--- plain value; 0 or none is nil (never a divisor).
+-- plain value; 0 or none is nil (never a divisor). The check is (unit, powerType?) -> bool on Forever (API reference);
+-- a raise from it counts as "secret".
 function lib.maxOf(unit, power, last)
     if power == nil then
         return nil
     end
     local should = C_Secrets and C_Secrets.ShouldUnitPowerMaxBeSecret
     if should then
-        local sec = should(unit, power)
-        if issecretvalue(sec) or sec then
+        local ok, sec = pcall(should, unit, power)
+        if not ok or issecretvalue(sec) or sec then
             return last
         end
     end
