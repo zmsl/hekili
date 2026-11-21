@@ -21,8 +21,10 @@
 --
 -- Fidelity limits: no taint model; a secret is a table, so only arithmetic, ordering, concatenation, tostring, length,
 -- indexing and calls on it raise (equality, truthiness and use as a table key do not); a firing runs after every
--- OnUpdate of its frame (the measured "lag 0"); 60 frames per second; debugprofilestop is os.clock; a frame's first
--- layout fires its OnSizeChanged once. It tests a consumer's logic against the library's contract, not the game.
+-- OnUpdate of its frame (the self-test's measured "lag 0"), a secret one too by default, though in game a prime's
+-- secret live push fired a frame later (LHVProbe 2026-11-20; steady-state secret timing unmeasured): "secretlag" 1
+-- models that; 60 frames per second; debugprofilestop is os.clock; a frame's first layout fires its OnSizeChanged
+-- once. It tests a consumer's logic against the library's contract, not the game.
 local opts = ... or {}
 local here = debug.getinfo(1, "S").source:match("^@(.*[/\\])") or "./"
 local root = here .. "../"

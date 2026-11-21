@@ -1,12 +1,12 @@
 -- SelfTest.lua: the plain self-test (runs at login; lib:SelfTest(fn) runs it again). Three pooled bars on the
 -- 25/50/75% curves are pushed plain values, one value every HOLDF frames: every change of a curve's output must fire
 -- once, within MAXLAG frames, and every output must be the curve convention's (1 below the edge, 2 at or above it,
--- under whatever snapping the client does). A fourth bar is primed as a source's bar is (held low HOLD frames, then
--- fed a read through a curve that is 2 everywhere: the client's own value, secret where reads are) and must fire once,
--- inside the SETTLE window, never after: a prime's first band is the real one. About 45 frames, invisible. It proves
--- the firing mechanism, the curves and the prime's timing, not the secret path's values (the later shadow check). Until it passes the built kinds are "pending"; while a later
--- run is going the earlier verdict stands. Last file of the list: it ends the load and, after login (a late or
--- upgraded copy), realises at once.
+-- under whatever snapping the client does). A fourth bar is primed as a source's bar is (held low COUNT_FROM frames,
+-- then fed a read through a curve that is 2 everywhere: the client's own value, secret where reads are) and must fire
+-- once, inside the SETTLE window, never after: a prime's first band is the real one. About 45 frames, invisible. It
+-- proves the firing mechanism, the curves and the prime's timing, not the secret path's values (the later shadow
+-- check). Until it passes the built kinds are "pending"; while a later run is going the earlier verdict stands. Last
+-- file of the list: it ends the load and, after login (a late or upgraded copy), realises at once.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return
@@ -73,7 +73,7 @@ local function step()
     st.frame = st.frame + 1
     local f = st.frame
     local pb = lib.barFrame[st.bars[#EDGES + 1]]
-    if f <= lib.HOLD then
+    if f <= COUNT_FROM then -- held low past the layout's firings, then live at COUNT_FROM + 1
         pb:SetValue(lib.LOW)
     else
         local y = UnitHealthPercent("player", true, lib.stCurve)
@@ -113,9 +113,9 @@ end
 function lib.stFire(i)
     local st = lib.st
     if st and i == st.bars[#EDGES + 1] then
-        if st.frame > lib.HOLD + 1 + lib.SETTLE then -- the live push is frame HOLD + 1
+        if st.frame > COUNT_FROM + 1 + lib.SETTLE then
             st.primeLate = st.primeLate + 1
-        elseif st.frame > lib.HOLD then
+        elseif st.frame > COUNT_FROM then
             st.primeIn = st.primeIn + 1
         end
         return
