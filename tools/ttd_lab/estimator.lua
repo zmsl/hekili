@@ -26,6 +26,8 @@ E.DEFAULTS = {
     prior = true, -- carry the last slope over a restart, heal or stall
     priorTime = 8, -- seconds the carried slope is mixed in
     priorWeight = 1,
+    seedWeight = 0, -- the weight of the stream's own anchor slope against a carried one (0: the carried slope rules)
+    priorAge = 10, -- seconds: a carried slope whose last answer is older than this at the next first band is dropped
     priorEmpty = true, -- answer from the carried slope before the first crossing (mob below full)
     healReset = 3, -- a rise of this many percent over the lowest crossing restarts the fit
     stallGap = 4, -- a gap over max(stallGap, stallMult x mean gap) is a stall: the fit restarts at the next crossing
@@ -104,8 +106,10 @@ function E:Band(t, lo, hi)
         self.known, self.tAnchor, self.pMin = true, t, hi
         self.fresh = self.anchorFull and hi >= 100
         self.anchored = self.fresh or (self.anchorBelow and hi < 100)
-        if self.bPrev then
+        if self.bPrev and self.lastAt and t - self.lastAt <= self.priorAge then
             self.carryFrom = t
+        else -- a new pull, not a swap: the old slope says nothing
+            self.bPrev = nil
         end
         return
     end
@@ -191,7 +195,7 @@ local function slope(self, now, h)
             b = min(max(b, self.clampLo * bcum), self.clampHi * bcum)
             state = "fit"
         elseif bcum then
-            b, w, state = bcum, 0, "seed"
+            b, w, state = bcum, self.seedWeight, "seed"
         else
             b, w, state = bfit, w, "fit"
         end
@@ -234,7 +238,7 @@ function E:Get(now)
     if not b then
         return nil, nil, nil, "unknown"
     end
-    self.lastB = b
+    self.lastB, self.lastAt = b, now
     local T = death(self, now, b)
     local rem = T - now
     local pub = self.tPub

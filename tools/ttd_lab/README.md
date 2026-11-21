@@ -8,11 +8,12 @@ from the repo root.
 lua5.1 tools/ttd_lab/estimator_test.lua            # the estimator's own checks (also: run.lua test)
 lua5.1 tools/ttd_lab/run.lua main                  # baselines, winner, ablations, candidates on seed set A (~30 s)
 lua5.1 tools/ttd_lab/run.lua sweep --round 5       # one-at-a-time parameter sweep around round 5's base (~70 s)
-lua5.1 tools/ttd_lab/run.lua holdout               # the same lineup on held-out seed set B (~30 s)
+lua5.1 tools/ttd_lab/run.lua holdout [--set C]    # the same lineup on held-out seed set B, or C (~30 s)
 lua5.1 tools/ttd_lab/run.lua all > out.md          # all of it (~7 min); --scale 0.2 for a quick look
 ```
 
-`results/` holds the committed tables (`main.md`, `sweep-round1.md` ... `sweep-round5.md`, `holdout.md`).
+`results/` holds the committed tables (`main.md`, `sweep-round1.md` ... `sweep-round5.md`, `holdout.md` (set B,
+used to confirm near-ties while choosing), `holdout-c.md` (set C, run once on the final lineup)).
 Every table is deterministic (own Park-Miller generator, fixed seeds).
 
 ## Observation model (`observe.lua`)
@@ -67,8 +68,10 @@ e:Band(t, lo, hi)                       -- every band callback (lo, hi percent; 
 local est, lo, hi, state = e:Get(now)   -- est nil: unknown; state fit | seed | prior | stalled | unknown
 ```
 
-No allocation after `New`, no game API, every divisor guarded. If the target is acquired before combat, call
-`Restart` at combat start so the full-health anchor is not stale.
+No allocation after `New`, no game API, every divisor guarded. `Band` takes a known band only: when the band goes
+unknown (lo == nil), call `Restart`. If the target is acquired before combat, call `Restart` at combat start so the
+full-health anchor is not stale. A carried slope is dropped when its last answer is more than `priorAge` (10 s)
+older than the next stream's first band, so a new pull does not inherit the last pull's slope.
 
 ## Not covered
 

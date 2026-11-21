@@ -85,7 +85,28 @@ check("the slope carries over a swap: the next mob answers from its first crossi
     assert(state == "prior" and math.abs(est - 69.5 * 0.5) < 0.01, tostring(est))
     e:Band(t + 1.5, 68, 69)
     est = e:Get(t + 1.5)
-    assert(est and math.abs(est - 69 * 0.5) < 3, tostring(est))
+    assert(est and math.abs(est - 69 * 0.5) < 0.5, tostring(est)) -- the carried slope rules for 8 s (seedWeight 0); deadband
+end)
+
+check("with seedWeight 1 a carried slope mixes with the new mob's own anchor slope", function()
+    local e = E.New({ seedWeight = 1 })
+    local t = steady(e, 0, 100, 0.5, 20) -- 0.5 s per percent
+    assert(e:Get(t))
+    e:Restart()
+    e:Band(t + 1, 99, 100) -- a fresh mob
+    e:Band(t + 3, 98, 99) -- its own anchor slope: 2 s per percent
+    local est, _, _, state = e:Get(t + 3)
+    assert(state == "seed", state)
+    assert(math.abs(est - 99 * 1.25) < 0.01, est) -- (0.5 + 2) / 2 seconds per percent
+end)
+
+check("a carried slope older than priorAge is dropped (a new pull)", function()
+    local e = E.New()
+    local t = steady(e, 0, 100, 0.5, 20)
+    assert(e:Get(t))
+    e:Restart()
+    e:Band(t + 15, 69, 70)
+    assert(e:Get(t + 15.1) == nil)
 end)
 
 check("without a carried slope a swap onto a damaged mob stays unknown until it has data", function()

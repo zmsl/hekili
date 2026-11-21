@@ -9,31 +9,34 @@ Score = weighted mean of (term / median of the main lineup's term); weights: unk
 | 1 | Winner, no deadband | 0.837 | 2.2% | 0.16 | 0.47 | 3.5 | 7.0% | 12.14 | 0.86 / 1.38 | 0.2% |
 | 2 | Tuned + K=0 + window 30 + holdStall | 0.844 | 2.2% | 0.17 | 0.49 | 3.6 | 7.2% | 11.68 | 0.86 / 1.38 | 0.2% |
 | 3 | Winner (estimator defaults) | 0.844 | 2.2% | 0.17 | 0.49 | 3.6 | 7.2% | 11.68 | 0.86 / 1.38 | 0.2% |
-| 4 | Winner, no stall hold | 0.847 | 2.2% | 0.17 | 0.49 | 3.7 | 7.2% | 11.76 | 0.86 / 1.38 | 0.2% |
-| 5 | Tuned + K=0 + window 30 | 0.847 | 2.2% | 0.17 | 0.49 | 3.7 | 7.2% | 11.76 | 0.86 / 1.38 | 0.2% |
+| 4 | Tuned + K=0 + window 30 | 0.847 | 2.2% | 0.17 | 0.49 | 3.7 | 7.2% | 11.76 | 0.86 / 1.38 | 0.2% |
+| 5 | Winner, no stall hold | 0.847 | 2.2% | 0.17 | 0.49 | 3.7 | 7.2% | 11.76 | 0.86 / 1.38 | 0.2% |
 | 6 | Tuned + K=0 | 0.854 | 2.2% | 0.17 | 0.50 | 3.7 | 7.3% | 11.88 | 0.86 / 1.38 | 0.2% |
 | 7 | Winner, K=2 (research shrink) | 0.854 | 2.2% | 0.17 | 0.49 | 3.2 | 7.1% | 12.53 | 0.86 / 1.38 | 0.2% |
 | 8 | Tuned + K=0.5 | 0.855 | 2.2% | 0.17 | 0.49 | 3.5 | 7.1% | 12.32 | 0.86 / 1.38 | 0.2% |
 | 9 | Tuned + K=0.5 + deadband 2s/0.2 | 0.857 | 2.2% | 0.18 | 0.51 | 3.6 | 7.4% | 11.65 | 0.86 / 1.38 | 0.2% |
-| 10 | Tuned + K=0 + deadband 2s/0.2 | 0.858 | 2.2% | 0.18 | 0.51 | 3.8 | 7.5% | 11.36 | 0.86 / 1.38 | 0.2% |
-| 11 | Tuned + deadband 3s/0.3 | 0.859 | 2.2% | 0.18 | 0.52 | 3.3 | 7.5% | 11.49 | 0.86 / 1.38 | 0.2% |
-| 12 | Tuned (censor 0, anchorBelow, priorEmpty) | 0.860 | 2.2% | 0.17 | 0.49 | 3.2 | 7.1% | 12.63 | 0.86 / 1.38 | 0.2% |
-| 13 | Winner, carried prior only after a crossing | 0.875 | 2.5% | 0.17 | 0.49 | 3.6 | 7.3% | 11.71 | 0.89 / 1.41 | 0.6% |
-| 14 | Winner, no below-full anchor | 0.890 | 2.8% | 0.17 | 0.49 | 3.6 | 7.3% | 11.43 | 1.01 / 1.70 | 0.2% |
-| 15 | Midpoints (TimeToDie default) | 0.922 | 2.5% | 0.21 | 0.59 | 5.4 | 7.7% | 11.31 | 0.89 / 1.41 | 0.6% |
-| 16 | Winner, no full anchor | 0.943 | 3.8% | 0.17 | 0.47 | 3.5 | 7.2% | 10.89 | 1.72 / 2.61 | 0.3% |
-| 17 | Winner, no carried prior | 0.966 | 3.4% | 0.17 | 0.49 | 3.7 | 7.4% | 12.65 | 0.89 / 1.41 | 0.6% |
-| 18 | LeastSquares (TimeToDie) | 1.030 | 2.5% | 0.25 | 0.89 | 5.9 | 9.1% | 10.12 | 0.89 / 1.41 | 0.6% |
-| 19 | Cumulative + deadband | 1.192 | 6.4% | 0.22 | 0.60 | 5.6 | 8.6% | 8.28 | 1.63 / 2.16 | 2.2% |
-| 20 | SimC-style cumulative | 1.205 | 6.4% | 0.20 | 0.57 | 5.3 | 8.3% | 9.80 | 1.63 / 2.16 | 2.2% |
-| 21 | WeightedLS halving (TimeToDie) | 1.298 | 3.2% | 0.19 | 0.54 | 4.2 | 8.2% | 26.51 | 0.89 / 1.41 | 0.6% |
-| 22 | HeroLib-style OLS 10.4 s | 1.405 | 10.0% | 0.17 | 0.49 | 3.6 | 7.8% | 9.03 | 2.09 / 3.21 | 1.6% |
-| 23 | HeroLib + deadband | 1.425 | 10.0% | 0.18 | 0.52 | 3.6 | 8.0% | 9.10 | 2.09 / 3.21 | 1.6% |
-| 24 | Ring8 (old plan) | 1.448 | 7.1% | 0.18 | 0.48 | 3.8 | 8.3% | 20.66 | 2.09 / 3.21 | 1.6% |
-| 25 | Hekili-retail mean of rates | 1.741 | 6.3% | 0.35 | 0.67 | 6.7 | 16.5% | 18.76 | 2.09 / 3.21 | 1.6% |
-| 26 | Winner + censoring (research rule) | 2.752 | 2.2% | 0.23 | 1.56 | 4.7 | 9.7% | 84.84 | 0.86 / 1.38 | 0.2% |
-| 27 | Research recommendation (as written) | 2.816 | 3.2% | 0.22 | 1.55 | 4.3 | 9.8% | 84.31 | 1.04 / 1.73 | 0.6% |
-| 28 | Unknown floor (constant once a band is known) | 3.692 | 0.7% | 1.41 | 7.86 | 23.6 | 35.0% | 0.00 | 0.30 / 0.41 | 0.2% |
+| 10 | Winner, seedWeight 1 (own anchor mixed with a carried slope) | 0.858 | 2.2% | 0.17 | 0.49 | 3.7 | 7.1% | 12.46 | 0.86 / 1.38 | 0.2% |
+| 11 | Tuned + K=0 + deadband 2s/0.2 | 0.858 | 2.2% | 0.18 | 0.51 | 3.8 | 7.5% | 11.36 | 0.86 / 1.38 | 0.2% |
+| 12 | Tuned + deadband 3s/0.3 | 0.859 | 2.2% | 0.18 | 0.52 | 3.3 | 7.5% | 11.49 | 0.86 / 1.38 | 0.2% |
+| 13 | Tuned (censor 0, anchorBelow, priorEmpty) | 0.860 | 2.2% | 0.17 | 0.49 | 3.2 | 7.1% | 12.63 | 0.86 / 1.38 | 0.2% |
+| 14 | Winner, seedWeight 2 | 0.875 | 2.2% | 0.17 | 0.49 | 3.7 | 7.2% | 13.10 | 0.86 / 1.38 | 0.2% |
+| 15 | Winner, seedWeight 4 | 0.875 | 2.2% | 0.17 | 0.49 | 3.7 | 7.2% | 13.10 | 0.86 / 1.38 | 0.2% |
+| 16 | Winner, carried prior only after a crossing | 0.875 | 2.5% | 0.17 | 0.49 | 3.6 | 7.3% | 11.71 | 0.89 / 1.41 | 0.6% |
+| 17 | Winner, no below-full anchor | 0.890 | 2.8% | 0.17 | 0.49 | 3.6 | 7.3% | 11.43 | 1.01 / 1.70 | 0.2% |
+| 18 | Midpoints (TimeToDie default) | 0.922 | 2.5% | 0.21 | 0.59 | 5.4 | 7.7% | 11.31 | 0.89 / 1.41 | 0.6% |
+| 19 | Winner, no full anchor | 0.943 | 3.8% | 0.17 | 0.47 | 3.5 | 7.2% | 10.89 | 1.72 / 2.61 | 0.3% |
+| 20 | Winner, no carried prior | 0.966 | 3.4% | 0.17 | 0.49 | 3.7 | 7.4% | 12.65 | 0.89 / 1.41 | 0.6% |
+| 21 | LeastSquares (TimeToDie) | 1.030 | 2.5% | 0.25 | 0.89 | 5.9 | 9.1% | 10.12 | 0.89 / 1.41 | 0.6% |
+| 22 | Cumulative + deadband | 1.192 | 6.4% | 0.22 | 0.60 | 5.6 | 8.6% | 8.28 | 1.63 / 2.16 | 2.2% |
+| 23 | SimC-style cumulative | 1.205 | 6.4% | 0.20 | 0.57 | 5.3 | 8.3% | 9.80 | 1.63 / 2.16 | 2.2% |
+| 24 | WeightedLS halving (TimeToDie) | 1.298 | 3.2% | 0.19 | 0.54 | 4.2 | 8.2% | 26.51 | 0.89 / 1.41 | 0.6% |
+| 25 | HeroLib-style OLS 10.4 s | 1.405 | 10.0% | 0.17 | 0.49 | 3.6 | 7.8% | 9.03 | 2.09 / 3.21 | 1.6% |
+| 26 | HeroLib + deadband | 1.425 | 10.0% | 0.18 | 0.52 | 3.6 | 8.0% | 9.10 | 2.09 / 3.21 | 1.6% |
+| 27 | Ring8 (old plan) | 1.448 | 7.1% | 0.18 | 0.48 | 3.8 | 8.3% | 20.66 | 2.09 / 3.21 | 1.6% |
+| 28 | Hekili-retail mean of rates | 1.741 | 6.3% | 0.35 | 0.67 | 6.7 | 16.5% | 18.76 | 2.09 / 3.21 | 1.6% |
+| 29 | Winner + censoring (research rule) | 2.752 | 2.2% | 0.23 | 1.56 | 4.7 | 9.7% | 84.84 | 0.86 / 1.38 | 0.2% |
+| 30 | Research recommendation (as written) | 2.816 | 3.2% | 0.22 | 1.55 | 4.3 | 9.8% | 84.31 | 1.04 / 1.73 | 0.6% |
+| 31 | Unknown floor (constant once a band is known) | 3.692 | 0.7% | 1.41 | 7.86 | 23.6 | 35.0% | 0.00 | 0.30 / 0.41 | 0.2% |
 
 ### Overall detail (class means)
 
@@ -42,15 +45,18 @@ Score = weighted mean of (term / median of the main lineup's term); weights: unk
 | Winner, no deadband | 0.27 | 0.62 | 0.16 | 0.39 | 13.4 | 0.9 | 0.15 | 0.42 | 3.2 |
 | Tuned + K=0 + window 30 + holdStall | 0.27 | 0.63 | 0.18 | 0.44 | 13.7 | 1.0 | 0.17 | 0.45 | 3.2 |
 | Winner (estimator defaults) | 0.27 | 0.63 | 0.18 | 0.44 | 13.7 | 1.0 | 0.17 | 0.45 | 3.2 |
-| Winner, no stall hold | 0.27 | 0.63 | 0.18 | 0.44 | 13.7 | 1.0 | 0.17 | 0.45 | 3.3 |
 | Tuned + K=0 + window 30 | 0.27 | 0.63 | 0.18 | 0.44 | 13.7 | 1.0 | 0.17 | 0.45 | 3.3 |
+| Winner, no stall hold | 0.27 | 0.63 | 0.18 | 0.44 | 13.7 | 1.0 | 0.17 | 0.45 | 3.3 |
 | Tuned + K=0 | 0.27 | 0.63 | 0.18 | 0.44 | 13.4 | 1.0 | 0.17 | 0.45 | 3.4 |
 | Winner, K=2 (research shrink) | 0.28 | 0.62 | 0.18 | 0.43 | 13.9 | 1.0 | 0.16 | 0.44 | 3.0 |
 | Tuned + K=0.5 | 0.27 | 0.61 | 0.18 | 0.43 | 13.4 | 1.0 | 0.17 | 0.45 | 3.2 |
 | Tuned + K=0.5 + deadband 2s/0.2 | 0.28 | 0.63 | 0.19 | 0.47 | 13.5 | 1.0 | 0.17 | 0.47 | 3.2 |
+| Winner, seedWeight 1 (own anchor mixed with a carried slope) | 0.27 | 0.62 | 0.18 | 0.44 | 13.7 | 1.0 | 0.17 | 0.45 | 3.3 |
 | Tuned + K=0 + deadband 2s/0.2 | 0.27 | 0.65 | 0.20 | 0.47 | 13.8 | 1.1 | 0.18 | 0.47 | 3.4 |
 | Tuned + deadband 3s/0.3 | 0.28 | 0.64 | 0.20 | 0.47 | 13.8 | 1.1 | 0.17 | 0.48 | 3.0 |
 | Tuned (censor 0, anchorBelow, priorEmpty) | 0.27 | 0.61 | 0.18 | 0.43 | 13.4 | 1.0 | 0.16 | 0.45 | 2.9 |
+| Winner, seedWeight 2 | 0.27 | 0.63 | 0.18 | 0.44 | 13.7 | 1.0 | 0.17 | 0.45 | 3.3 |
+| Winner, seedWeight 4 | 0.27 | 0.63 | 0.18 | 0.44 | 13.7 | 1.0 | 0.17 | 0.45 | 3.3 |
 | Winner, carried prior only after a crossing | 0.27 | 0.63 | 0.18 | 0.44 | 13.7 | 1.0 | 0.17 | 0.45 | 3.2 |
 | Winner, no below-full anchor | 0.27 | 0.61 | 0.18 | 0.44 | 13.6 | 1.0 | 0.17 | 0.45 | 3.3 |
 | Midpoints (TimeToDie default) | 0.29 | 0.63 | 0.22 | 0.46 | 14.8 | 1.4 | 0.20 | 0.53 | 5.2 |
@@ -75,15 +81,18 @@ Score = weighted mean of (term / median of the main lineup's term); weights: unk
 | Winner, no deadband | 3.6% / 2.47 | 6.2% / 3.53 | 7.6% / 3.29 | 10.8% / 2.84 |
 | Tuned + K=0 + window 30 + holdStall | 3.8% / 2.47 | 6.4% / 3.44 | 7.7% / 3.08 | 10.9% / 2.69 |
 | Winner (estimator defaults) | 3.8% / 2.47 | 6.4% / 3.44 | 7.7% / 3.08 | 10.9% / 2.69 |
-| Winner, no stall hold | 3.9% / 2.50 | 6.4% / 3.47 | 7.7% / 3.09 | 11.0% / 2.69 |
 | Tuned + K=0 + window 30 | 3.9% / 2.50 | 6.4% / 3.47 | 7.7% / 3.09 | 11.0% / 2.69 |
+| Winner, no stall hold | 3.9% / 2.50 | 6.4% / 3.47 | 7.7% / 3.09 | 11.0% / 2.69 |
 | Tuned + K=0 | 3.9% / 2.51 | 6.5% / 3.47 | 7.8% / 3.15 | 11.0% / 2.74 |
 | Winner, K=2 (research shrink) | 3.9% / 2.71 | 6.3% / 3.73 | 7.4% / 3.24 | 10.7% / 2.85 |
 | Tuned + K=0.5 | 3.9% / 2.62 | 6.4% / 3.63 | 7.6% / 3.25 | 10.7% / 2.83 |
 | Tuned + K=0.5 + deadband 2s/0.2 | 4.3% / 2.48 | 6.7% / 3.35 | 7.6% / 3.06 | 10.9% / 2.76 |
+| Winner, seedWeight 1 (own anchor mixed with a carried slope) | 3.8% / 2.70 | 6.4% / 3.71 | 7.5% / 3.25 | 10.7% / 2.81 |
 | Tuned + K=0 + deadband 2s/0.2 | 4.3% / 2.40 | 6.8% / 3.25 | 7.9% / 3.02 | 11.2% / 2.70 |
 | Tuned + deadband 3s/0.3 | 4.5% / 2.52 | 6.8% / 3.37 | 7.7% / 2.91 | 10.8% / 2.69 |
 | Tuned (censor 0, anchorBelow, priorEmpty) | 3.9% / 2.76 | 6.4% / 3.76 | 7.5% / 3.27 | 10.7% / 2.85 |
+| Winner, seedWeight 2 | 4.0% / 2.91 | 6.5% / 3.89 | 7.5% / 3.33 | 10.7% / 2.97 |
+| Winner, seedWeight 4 | 4.0% / 2.91 | 6.5% / 3.89 | 7.5% / 3.33 | 10.7% / 2.97 |
 | Winner, carried prior only after a crossing | 3.9% / 2.48 | 6.6% / 3.44 | 7.9% / 3.09 | 11.0% / 2.70 |
 | Winner, no below-full anchor | 3.8% / 2.47 | 6.3% / 3.32 | 7.8% / 3.02 | 11.1% / 2.63 |
 | Midpoints (TimeToDie default) | 4.1% / 2.63 | 6.9% / 3.18 | 8.3% / 2.90 | 11.6% / 2.59 |
@@ -106,14 +115,14 @@ Score = weighted mean of (term / median of the main lineup's term); weights: unk
 | algorithm | mean rank | ranked 1st | in top 5 |
 |---|---|---|---|
 | Winner, no deadband | 1.25 | 90.6% | 98.2% |
-| Tuned + K=0 + window 30 + holdStall | 2.25 | 9.3% | 100.0% |
-| Winner (estimator defaults) | 2.64 | 0.0% | 100.0% |
-| Tuned + K=0 + window 30 | 4.50 | 0.0% | 91.2% |
-| Winner, no stall hold | 4.81 | 0.0% | 93.2% |
-| Tuned + K=0 | 7.55 | 0.0% | 0.0% |
+| Tuned + K=0 + window 30 + holdStall | 2.29 | 9.3% | 100.0% |
+| Winner (estimator defaults) | 2.61 | 0.0% | 100.0% |
+| Tuned + K=0 + window 30 | 4.48 | 0.0% | 96.0% |
+| Winner, no stall hold | 4.83 | 0.0% | 88.4% |
 | Winner, K=2 (research shrink) | 7.75 | 0.0% | 13.7% |
+| Tuned + K=0 | 7.82 | 0.0% | 0.0% |
 | Tuned + K=0.5 | 8.07 | 0.0% | 1.7% |
-| Tuned + K=0.5 + deadband 2s/0.2 | 9.23 | 0.0% | 0.0% |
-| Tuned + K=0 + deadband 2s/0.2 | 9.55 | 0.1% | 1.8% |
-| Tuned + deadband 3s/0.3 | 10.36 | 0.0% | 0.1% |
-| Tuned (censor 0, anchorBelow, priorEmpty) | 10.54 | 0.0% | 0.0% |
+| Tuned + K=0.5 + deadband 2s/0.2 | 9.84 | 0.0% | 0.0% |
+| Winner, seedWeight 1 (own anchor mixed with a carried slope) | 10.30 | 0.0% | 0.0% |
+| Tuned + K=0 + deadband 2s/0.2 | 10.40 | 0.1% | 1.8% |
+| Tuned + deadband 3s/0.3 | 11.23 | 0.0% | 0.1% |

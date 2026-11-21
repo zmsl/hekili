@@ -1,16 +1,18 @@
 -- tools/ttd_lab/run.lua: the TTD lab. From the repo root: lua5.1 tools/ttd_lab/run.lua [main|sweep|holdout|test|all]
--- [--scale x] [--round n] (sweep round, default the last). Prints markdown tables (tools/ttd_lab/README.md explains them).
+-- [--scale x] [--round n] (sweep round, default the last) [--set B|C] (holdout seeds, default B). Prints markdown tables (tools/ttd_lab/README.md explains them).
 package.path = "tools/ttd_lab/?.lua;" .. package.path
 
 local S, O, Real = require("scenarios"), require("observe"), require("real")
 local B, E, M = require("baselines"), require("estimator"), require("metrics")
 
-local mode, scale, sweepRound = "main", 1, nil
+local mode, scale, sweepRound, holdSet = "main", 1, nil, "B"
 do
     local i = 1
     while arg[i] do
         if arg[i] == "--scale" then
             scale, i = tonumber(arg[i + 1]), i + 1
+        elseif arg[i] == "--set" then
+            holdSet, i = arg[i + 1], i + 1
         elseif arg[i] == "--round" then
             sweepRound, i = tonumber(arg[i + 1]), i + 1
         else
@@ -35,7 +37,7 @@ local COUNTS = {
     phase = 25,
     damaged = 50,
 }
-local SEED_BASE = { A = 1000, B = 900000 }
+local SEED_BASE = { A = 1000, B = 900000, C = 5000000 }
 
 local function est(params)
     local p = { spread = false }
@@ -124,6 +126,9 @@ local ABLATION = {
     { "Winner, carried prior only after a crossing", est({ priorEmpty = false }) },
     { "Winner, no stall hold", est({ holdStall = false }) },
     { "Winner, K=2 (research shrink)", est({ shrink = 2 }) },
+    { "Winner, seedWeight 1 (own anchor mixed with a carried slope)", est({ seedWeight = 1 }) },
+    { "Winner, seedWeight 2", est({ seedWeight = 2 }) },
+    { "Winner, seedWeight 4", est({ seedWeight = 4 }) },
 }
 
 -- The sweep's leaders (rounds 3-4), run again on the held-out seeds; the last one is the winner.
@@ -496,6 +501,14 @@ function modes.main()
     perClass(res, order, "unknown", "Unknown share", pct)
     perClass(res, order, "relMed", "Relative error median", f)
     perClass(res, order, "relP90", "Relative error p90", f)
+    perClass(res, order, "relEMed", "Relative error median, early (first 25%)", f)
+    perClass(res, order, "relEP90", "Relative error p90, early (first 25%)", f)
+    perClass(res, order, "relLMed", "Relative error median, late (last 25%)", f)
+    perClass(res, order, "relLP90", "Relative error p90, late (last 25%)", f)
+    perClass(res, order, "absMed", "Absolute error median s", f)
+    perClass(res, order, "absP90", "Absolute error p90 s", f)
+    perClass(res, order, "absEMed", "Absolute error median s, early", f)
+    perClass(res, order, "absLMed", "Absolute error median s, late", f)
     perClass(res, order, "wrongMean", "Wrong side (mean of 4 decisions)", pct)
     perClass(res, order, "flipSum", "Excess flips per minute (sum of 4 decisions)", f)
     perClass(res, order, "delayMed", "First answer median s", f)
@@ -519,12 +532,12 @@ function modes.sweep()
 end
 
 modes.holdout = function()
-    print("## Held-out seeds (set B)\n")
+    print("## Held-out seeds (set " .. holdSet .. ")\n")
     header()
-    local res = runSet("B", lineup(extras()))
-    local order, _, refs = report(res, "Ranking on set B")
+    local res = runSet(holdSet, lineup(extras()))
+    local order, _, refs = report(res, "Ranking on set " .. holdSet)
     detail(res, order)
-    robustness(res, refs, ", set B")
+    robustness(res, refs, ", set " .. holdSet)
 end
 
 function modes.all()
