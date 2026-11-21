@@ -454,10 +454,11 @@ end
 
 -- Diagnostics -----------------------------------------------------------------------------------------------------
 
--- One row per aura source with a handle, in creation order: { unit =, spell =, what =, handles =, bars =, active =,
--- cooldownID =, placement = "bar" | "icon" | nil, state =, reason =, up = true | false | nil }; then the Cooldown
--- Manager's own facts: off (cdm-off), read (the catalogue was read), text and value pushes forwarded, values refused,
--- layout reads. A fresh array: a cold path.
+-- One row per aura source with a handle, in creation order: { unit =, spell =, cooldown =, what =, handles =, bars =,
+-- active =, cooldownID =, placement = PLACE[viewer] or nil, state =, reason =, up = true | false | nil }; then the
+-- Cooldown Manager's own facts: off (cdm-off), read (the catalogue was read), text and value pushes forwarded, values
+-- refused, layout reads. A fresh array: a cold path.
+local PLACE = { "bar", "icon", "essential", "utility" }
 function lib:GetAuraSources()
     local out = {}
     for n = 1, #lib.sources do
@@ -480,7 +481,7 @@ function lib:GetAuraSources()
                 active = s.active and true or false,
                 cooldown = s.cdw,
                 cooldownID = s.cd,
-                placement = s.place == 1 and "bar" or s.place == 2 and "icon" or nil,
+                placement = s.place and PLACE[s.place],
                 state = state,
                 reason = reason,
                 up = s.up,

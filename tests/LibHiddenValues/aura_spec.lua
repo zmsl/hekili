@@ -219,6 +219,57 @@ describe("LibHiddenValues aura kind", function()
         assert.are.same({}, Fake.errors)
     end)
 
+    it("reads up from Essential and Utility items; stacks and left need an aura viewer", function()
+        boot(function()
+            local c = {}
+            for id, e in pairs(CATALOGUE) do
+                c[id] = e
+            end
+            c[18] = { spellID = 5008, category = 1 } -- a Utility cooldown naming its aura
+            c[19] = { spellID = 5001, category = 0 } -- an Essential entry naming 5001, also on a bar (11)
+            W.cdm.catalogue, W.cdm.essential, W.cdm.utility = c, { 14, 19 }, { 18 }
+        end)
+        local ess = watch({ spell = 5004, what = "up" })
+        local essStacks = watch({ spell = 5004, what = "stacks", max = 3 })
+        local uti = watch({ unit = "target", spell = 5008, what = "up" })
+        local byId = watch({ cooldown = 14, what = "up" })
+        local both = watch({ spell = 5001, what = "up" })
+        Fake.login()
+        W.combat = true
+        Fake.tick(2)
+        assert.are.same({ true, "ready" }, av({ spell = 5004, what = "up" }))
+        local only = { false, "unavailable", "cdm-cooldown-only" }
+        assert.are.same(only, av({ spell = 5004, what = "stacks", max = 3 }))
+        assert.are.same(only, av({ spell = 5004, what = "left", edges = { 3 } }))
+        assert.are.same(only, av({ cooldown = 18, what = "left", edges = { 3 } }))
+        assert.are.same({ "unavailable", "cdm-cooldown-only" }, { essStacks:State() })
+        assert.is_string(lib:GetMessage("cdm-cooldown-only"))
+        assert.are.same({ 0, 0 }, band(ess))
+        assert.are.same({ 0, 0 }, band(uti))
+        Fake.setAura("player", 5004, 1)
+        Fake.setAura("target", 5008, 1)
+        Fake.setAura("player", 5001, 1)
+        Fake.tick(2)
+        assert.are.same({ 1, 1 }, band(ess))
+        assert.are.same({ 1, 1 }, band(byId))
+        assert.are.same({ 1, 1 }, band(uti))
+        assert.are.same({ 1, 1 }, band(both))
+        local rows = lib:GetAuraSources()
+        assert.are.same({ 14, "essential" }, { rows[1].cooldownID, rows[1].placement })
+        assert.are.same({ 18, "utility" }, { rows[3].cooldownID, rows[3].placement })
+        assert.are.same({ 11, "bar" }, { rows[5].cooldownID, rows[5].placement }) -- an aura viewer's entry first
+        -- a hidden Essential viewer: its watches are unknown, the others carry on
+        _G.EssentialCooldownViewer.shown = false
+        Fake.tick(2)
+        assert.are.same({ "gone", nil }, { ess:State() })
+        assert.are.same({ 1, 1 }, band(uti))
+        _G.EssentialCooldownViewer.shown = true
+        Fake.setAura("player", 5004, nil)
+        Fake.tick(2)
+        assert.are.same({ 0, 0 }, band(ess))
+        assert.are.same({}, Fake.errors)
+    end)
+
     it("reports presence: 0 absent, 1 up, unknown when no item shows it", function()
         boot()
         local h = watch({ spell = 5001, what = "up" })
@@ -576,6 +627,8 @@ describe("LibHiddenValues aura kind", function()
 
     it("hooks each widget once and touches nothing of the Cooldown Manager's", function()
         boot()
+        W.cdm.essential = { 14 }
+        watch({ spell = 5004, what = "up" })
         watch({ spell = 5001, what = "stacks", edges = { 2 } })
         watch({ spell = 5001, what = "left", edges = { 3 } })
         watch({ spell = 5002, what = "up" })
@@ -586,8 +639,9 @@ describe("LibHiddenValues aura kind", function()
             Fake.cdmLayout()
             Fake.advance(1)
         end
-        -- 2 viewers (acquire, RefreshData), 2 bar items (count + bar), 2 icon items (count)
-        assert.are.equal(2 * 2 + 2 * 2 + 2, Fake.hooks)
+        -- 4 viewers (acquire, RefreshData), 2 bar items (count + bar), 2 icon items (count); Essential and Utility
+        -- items none (presence is a field read)
+        assert.are.equal(4 * 2 + 2 * 2 + 2, Fake.hooks)
         for _, v in ipairs(Fake.viewers) do
             assert.is_true(v.shown)
             assert.is_nil(v.alpha)
@@ -664,6 +718,9 @@ describe("LibHiddenValues aura kind", function()
         lib:Watch("A", { kind = "aura", unit = "player", spell = 5001, what = "left", edges = { 1, 3 } }, count)
         lib:Watch("A", { kind = "aura", unit = "player", spell = 5001, what = "up" }, count)
         lib:Watch("A", { kind = "aura", unit = "target", spell = 5003, what = "stacks", edges = { 2 } }, count)
+        lib:Watch("A", { kind = "aura", unit = "player", cooldown = 14, what = "up" }, count) -- an Essential item
+        W.cdm.essential = { 14 }
+        Fake.setAura("player", 5004, 1, 600)
         W.unit.target = { health = 0.5 }
         Fake.login()
         -- a refresh every 200 frames (before the 4 s expiry: the fake allocates when it drops an aura), stacks 3 and

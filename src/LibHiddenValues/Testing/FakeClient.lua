@@ -54,7 +54,7 @@ local W = {
     },
     secret = true,
 }
-W.cdm = { enabled = true, available = true, catalogue = {}, bar = {}, icon = {} }
+W.cdm = { enabled = true, available = true, catalogue = {}, bar = {}, icon = {}, essential = {}, utility = {} }
 W.aura = { player = {}, target = {} }
 Fake.world = W
 local K = { lag = 0, secretlag = 0, drop = 0, stagger = 0, snap = "left", maxpoints = 1000 }
@@ -388,10 +388,12 @@ install("UnitIsDead", function(unit)
     return d
 end)
 
--- The Cooldown Manager: BuffBarCooldownViewer (tracked bars) and BuffIconCooldownViewer (tracked buff icons), each
--- with an item pool. W.cdm = { enabled (the cooldownViewerEnabled CVar), available, catalogue = { [cooldownID] = {
--- spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = {}, category = 0-8 } }, bar = { cooldownID,
--- ... }, icon = { ... } (what the player placed, in order), secretId, secretIdx (in combat a refresh writes an item's
+-- The Cooldown Manager: BuffBarCooldownViewer (tracked bars), BuffIconCooldownViewer (tracked buff icons),
+-- EssentialCooldownViewer and UtilityCooldownViewer (cooldowns: an item shows its linked aura's presence, no count or
+-- bar is modelled), each with an item pool. W.cdm = { enabled (the cooldownViewerEnabled CVar), available, catalogue =
+-- { [cooldownID] = { spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = {}, category = 0-8 } },
+-- bar = { cooldownID, ... }, icon, essential, utility = { ... } (what the player placed, in order), secretId, secretIdx
+-- (in combat a refresh writes an item's
 -- cooldownID / a layout pass its layoutIndex secret), secretUnit (an item's auraDataUnit is secret while reads are;
 -- unprobed), shuffle (a layout pass hands the frames out in another order) }.
 -- W.aura[unit][spellID] = { stacks =, expires = GetTime() at its end, duration = } on "player" and "target": the
@@ -642,10 +644,10 @@ local function refreshItem(item)
         item.auraInstanceID, item.auraDataUnit = nil, nil
     end
     local n = a and a.stacks or 0
-    local fs = item.Icon and item.Icon.Applications or item.Applications.Applications
-    if hidden() then
+    local fs = item.Icon and item.Icon.Applications or item.Applications and item.Applications.Applications
+    if fs and hidden() then
         fs:SetText(secret(n))
-    else
+    elseif fs then
         fs:SetText(n > 1 and tostring(n) or "")
     end
     if item.Bar and not a then
@@ -676,7 +678,7 @@ local function newItem(v)
         item.Icon = bframe(item)
         item.Icon.Applications = bframe(item.Icon, "FontString")
         item.Bar = bframe(item, "StatusBar")
-    else
+    elseif v.which == "icon" then
         item.Applications = bframe(item)
         item.Applications.Applications = bframe(item.Applications, "FontString")
     end
@@ -768,23 +770,27 @@ local function derive()
             over[cd] = cat
         end
     end
-    local bar, icon = {}, {}
+    local placed = { bar = {}, icon = {}, essential = {}, utility = {} }
+    local list = {
+        [C.TrackedBar] = placed.bar,
+        [C.TrackedBuff] = placed.icon,
+        [C.Essential] = placed.essential,
+        [C.Utility] = placed.utility,
+    }
     local ids = {}
     for cd in pairs(W.cdm.catalogue) do
         ids[#ids + 1] = cd
     end
     table.sort(ids)
     for _, cd in ipairs(ids) do
-        local cat = over[cd] or W.cdm.catalogue[cd].category
-        if not (W.cdm.unlearned and W.cdm.unlearned[cd]) then
-            if cat == C.TrackedBar then
-                bar[#bar + 1] = cd
-            elseif cat == C.TrackedBuff then
-                icon[#icon + 1] = cd
-            end
+        local l = list[over[cd] or W.cdm.catalogue[cd].category]
+        if l and not (W.cdm.unlearned and W.cdm.unlearned[cd]) then
+            l[#l + 1] = cd
         end
     end
-    W.cdm.bar, W.cdm.icon = bar, icon
+    for which, l in pairs(placed) do
+        W.cdm[which] = l
+    end
 end
 
 local function viewerEvent(v, event)
@@ -798,13 +804,18 @@ local function viewerEvent(v, event)
         refresh(v)
     end
 end
--- The four viewers (built again by a reload): tracked bars and tracked buff icons with their item pools; Essential and
--- Utility (cooldowns: no items modelled, only their alpha).
+-- The four viewers (built again by a reload), each with its item pool, in Fake.viewers in this order.
+local VIEWER_NAMES = {
+    bar = "BuffBarCooldownViewer",
+    icon = "BuffIconCooldownViewer",
+    essential = "EssentialCooldownViewer",
+    utility = "UtilityCooldownViewer",
+}
 local function makeViewers()
     for k = #viewers, 1, -1 do
         viewers[k] = nil
     end
-    for _, which in ipairs({ "bar", "icon" }) do
+    for _, which in ipairs({ "bar", "icon", "essential", "utility" }) do
         local v = bframe(_G.UIParent)
         v.which, v.made = which, 0
         v.itemFramePool = {
@@ -828,12 +839,10 @@ local function makeViewers()
         v.scripts.OnUpdate = function(self)
             blizz(tickBars, self)
         end
-        install(which == "bar" and "BuffBarCooldownViewer" or "BuffIconCooldownViewer", v)
+        install(VIEWER_NAMES[which], v)
         Fake.frames[#Fake.frames + 1] = v
         viewers[#viewers + 1] = v
     end
-    install("EssentialCooldownViewer", bframe(_G.UIParent))
-    install("UtilityCooldownViewer", bframe(_G.UIParent))
     if W.cdm.opacity then -- Edit Mode's opacity, applied as the viewers load
         for _, name in ipairs({ "Essential", "Utility", "BuffIcon", "BuffBar" }) do
             _G[name .. "CooldownViewer"].alpha = W.cdm.opacity
@@ -843,7 +852,7 @@ end
 makeViewers()
 Fake.viewers = viewers
 
--- A layout pass on both viewers (the player changed the layout, a full aura update, a show).
+-- A layout pass on every viewer (the player changed the layout, a full aura update, a show).
 function Fake.cdmLayout()
     for k = 1, #viewers do
         if viewers[k]:IsVisible() then

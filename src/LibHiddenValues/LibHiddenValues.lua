@@ -89,6 +89,8 @@ lib.MESSAGES = {
         ["not-in-cdm"] = "No Cooldown Manager entry names this spell (or has this cooldownID).",
         ["cdm-not-tracked"] = "Not shown in the Cooldown Manager: place it in Tracked Buffs, or Tracked Bars.",
         ["cdm-icon-only"] = "Shown as an icon, which has no timer: move it to Tracked Bars.",
+        ["cdm-cooldown-only"] = "Shown only as a cooldown (Essential or Utility), which has no stack count or "
+            .. "timer: place the aura in Tracked Buffs or Tracked Bars.",
     },
 }
 

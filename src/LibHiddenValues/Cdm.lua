@@ -7,7 +7,9 @@
 --   - an item's count FontString SetText: the stack count (a plain string out of combat, "" for one stack or none; a
 --     secret number in combat; AuraBandProbe 0.2.0/0.2.1 on tracked bars, icons share the code);
 --   - a tracked bar's StatusBar SetValue: the seconds left, every frame while the aura is up (secret in combat).
--- Presence is the item's auraInstanceID: nil when the aura is absent, set (secret in combat) when up (proven).
+-- Presence is the item's auraInstanceID: nil when the aura is absent, set (secret in combat) when up (proven). The
+-- Essential and Utility viewers' items (cooldowns) bind their linked aura the same way: they give presence only, so
+-- only their viewers are hooked, never their items' widgets.
 -- Identity: the catalogue (every cooldownID of categories 0-8 and the spells it names) is read out of combat only;
 -- an item's cooldownID is read when it is used, so a reshuffle of the pooled frames (in combat too) is followed. A
 -- secret cooldownID falls back to the item's layoutIndex in the order last read plain (inferred, unprobed); both
@@ -20,8 +22,11 @@ if not (lib and lib.loading) then
     return
 end
 
--- 1 the Tracked Bars viewer, 2 the Tracked Buffs icons: a lower index outranks a higher one.
-local VIEWERS = { "BuffBarCooldownViewer", "BuffIconCooldownViewer" }
+-- 1 the Tracked Bars viewer, 2 the Tracked Buffs icons (the aura viewers, AURAV), 3 Essential, 4 Utility (presence
+-- only): a lower index outranks a higher one.
+local VIEWERS =
+    { "BuffBarCooldownViewer", "BuffIconCooldownViewer", "EssentialCooldownViewer", "UtilityCooldownViewer" }
+local AURAV = 2
 local CATS = 8 -- Enum.CooldownViewerCategory: Essential 0 ... EquipSlotTracked 8
 
 local cdm = lib.cdm or {}
@@ -31,7 +36,10 @@ cdm.vIndex = cdm.vIndex or {} -- viewer frame -> index
 cdm.viewerOf = cdm.viewerOf or {} -- item frame -> its viewer's index (pool frames never change viewer)
 cdm.itemOf = cdm.itemOf or {} -- a hooked FontString or StatusBar -> its item frame
 cdm.hooked = cdm.hooked or {} -- item frame -> true once its widgets are hooked
-cdm.order = cdm.order or { {}, {} } -- index -> layoutIndex -> cooldownID, as last read plain
+cdm.order = cdm.order or {} -- index -> layoutIndex -> cooldownID, as last read plain
+for k = 1, #VIEWERS do -- an older minor read two viewers
+    cdm.order[k] = cdm.order[k] or {}
+end
 cdm.byCd = cdm.byCd or {} -- cooldownID -> the item frame showing it now
 cdm.placeOf = cdm.placeOf or {} -- cooldownID -> the index of the viewer showing it
 cdm.cds = cdm.cds or {} -- spellID -> { cooldownID, ... }: the catalogue, read out of combat
@@ -112,12 +120,15 @@ function cdm.viewer(k)
     return v
 end
 
--- Hooks an item frame's count text and (a tracked bar) its bar, once.
+-- Hooks an item frame's count text and (a tracked bar) its bar, once; an Essential or Utility item's none.
 function cdm.hook(item, k)
     if cdm.hooked[item] then
         return
     end
     cdm.hooked[item], cdm.viewerOf[item] = true, k
+    if k > AURAV then
+        return
+    end
     local fs = child(item, "Applications", "Applications") or child(item, "Icon", "Applications")
     if fs then
         cdm.itemOf[fs] = item
@@ -159,7 +170,7 @@ function cdm.live(item)
     return issecretvalue(vis) or vis == true
 end
 
--- Reads every active item of both viewers: hooks new frames, maps cooldownID -> item (any time, in combat too).
+-- Reads every active item of the four viewers: hooks new frames, maps cooldownID -> item (any time, in combat too).
 function cdm.scan()
     cdm.nScan, cdm.scanFrame = cdm.nScan + 1, lib.frameNo
     local byCd, placeOf = cdm.byCd, cdm.placeOf
@@ -236,8 +247,8 @@ function cdm.catalogue()
     cdm.cds, cdm.catOf, cdm.cataloged = cds, catOf, true
 end
 
--- cdm-off: the cooldownViewerEnabled CVar is 0, the client says the viewer is not available, or neither viewer
--- exists. A secret or failed answer counts as on. A change re-syncs every kind (Kinds/Aura.lua reads cdm.off).
+-- cdm-off: the cooldownViewerEnabled CVar is 0, the client says the viewer is not available, or no viewer exists.
+-- A secret or failed answer counts as on. A change re-syncs every kind (Kinds/Aura.lua reads cdm.off).
 function cdm.checkOff()
     local off = false
     if C_CVar and C_CVar.GetCVarBool then
@@ -248,7 +259,7 @@ function cdm.checkOff()
     if ok and not issecretvalue(avail) and avail == false then
         off = true
     end
-    if not (cdm.viewer(1) or cdm.viewer(2)) then
+    if not (cdm.viewer(1) or cdm.viewer(2) or cdm.viewer(3) or cdm.viewer(4)) then
         off = true
     end
     if off ~= cdm.off then
@@ -284,6 +295,9 @@ function cdm.statusOf(spell, what, cdw)
         if not cd then
             return "unavailable", l and "cdm-not-tracked" or "not-in-cdm"
         end
+    end
+    if what ~= "up" and k > AURAV then
+        return "unavailable", "cdm-cooldown-only", cd, k
     end
     if what == "left" and k == 2 then
         return "unavailable", "cdm-icon-only", cd, k
