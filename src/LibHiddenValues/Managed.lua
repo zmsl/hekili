@@ -192,7 +192,8 @@ local function placed(lay, cd)
 end
 
 -- For every watched aura, its entry that is (bars) or must become (moves) a tracked bar in layout lay: aura entries
--- only (never an Essential or Utility entry: that one is the spell's cooldown). Returns how many must move.
+-- only (never an Essential or Utility entry: that one is the spell's cooldown). A watch by entry has only its own.
+-- Returns how many must move.
 local function want(lay, moves, bars)
     local C = Enum.CooldownViewerCategory
     local BAR, ESS, UTI = C.TrackedBar, C.Essential, C.Utility
@@ -200,7 +201,7 @@ local function want(lay, moves, bars)
     local srcs = lib.sources
     for k = 1, #srcs do
         local s = srcs[k]
-        local l = s.kind == "aura" and #s.handles > 0 and cdm.cds[s.spell]
+        local l = s.kind == "aura" and #s.handles > 0 and (s.cdw and { s.cdw } or cdm.cds[s.spell])
         if l then
             local pick, has
             for j = 1, #l do

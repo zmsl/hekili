@@ -49,11 +49,18 @@ end
 -- Reads and checks the spec into the handle; returns an error code (lib.ERR) when it is bad.
 local function validate(spec, h)
     local E = lib.ERR
-    local unit, spell, what, edges, max = spec.unit, spec.spell, spec.what, spec.edges, spec.max
+    local unit, spell, cdw, what, edges, max = spec.unit, spec.spell, spec.cooldown, spec.what, spec.edges, spec.max
     if type(unit) ~= "string" or not unit:match("^%a%w*$") then
         return E.UNIT_INVALID
     end
-    if type(spell) ~= "number" or not (spell > 0) or spell % 1 ~= 0 then
+    if (spell == nil) == (cdw == nil) then
+        return E.SPELL_OR_COOLDOWN
+    end
+    if cdw ~= nil then
+        if type(cdw) ~= "number" or not (cdw > 0) or cdw % 1 ~= 0 then
+            return E.COOLDOWN_INVALID
+        end
+    elseif type(spell) ~= "number" or not (spell > 0) or spell % 1 ~= 0 then
         return E.SPELL_INVALID
     end
     if not WHAT[what] then
@@ -107,10 +114,10 @@ local function validate(spec, h)
             bars[#bars + 1] = cut[i]
         end
     end
-    h.unit, h.spell, h.what, h.cut, h.edges = unit, spell, what, cut, bars
+    h.unit, h.spell, h.cdw, h.what, h.cut, h.edges = unit, spell, cdw, what, cut, bars
     h.barless = what == "up" or nil -- presence uses no bar: the bar self-test does not gate it (lib.capOf)
     h.top = what == "up" and 1 or (what == "stacks" and max) or math.huge
-    h.key = "aura|" .. unit .. "|" .. spell .. "|" .. what
+    h.key = "aura|" .. unit .. "|" .. (cdw and "cd" .. cdw or spell) .. "|" .. what
     if not lib.kinds.aura.units[unit] then
         h.unproven = "unproven"
     end
@@ -128,7 +135,7 @@ local function status(spec)
     if cdm.dirty then
         lib.wake() -- the next frame reads again (and tells the callbacks); never from inside IsAvailable
     end
-    return cdm.statusOf(h.spell, h.what)
+    return cdm.statusOf(h.spell, h.what, h.cdw)
 end
 
 lib.kinds.aura = {
@@ -471,6 +478,7 @@ function lib:GetAuraSources()
                 handles = #s.handles,
                 bars = bars,
                 active = s.active and true or false,
+                cooldown = s.cdw,
                 cooldownID = s.cd,
                 placement = s.place == 1 and "bar" or s.place == 2 and "icon" or nil,
                 state = state,

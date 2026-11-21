@@ -257,21 +257,33 @@ function cdm.checkOff()
     end
 end
 
--- The capability of an aura watch (spell, what) from the last reads: state, reason, cooldownID, viewer index.
-function cdm.statusOf(spell, what)
+-- The capability of an aura watch (spell, what; or the one entry cdw) from the last reads: state, reason, cooldownID,
+-- viewer index. By spell the library picks the entry (the best placed); by entry it follows that one only.
+function cdm.statusOf(spell, what, cdw)
     if not cdm.cataloged then
         return "pending"
     end
-    local l = cdm.cds[spell]
     local cd, k
-    for j = 1, l and #l or 0 do
-        local p = cdm.placeOf[l[j]]
-        if p and (not k or p < k) then
-            cd, k = l[j], p
+    if cdw then
+        if not (cdm.catOf and cdm.catOf[cdw]) then
+            return "unavailable", "not-in-cdm"
         end
-    end
-    if not cd then
-        return "unavailable", l and "cdm-not-tracked" or "not-in-cdm"
+        k = cdm.placeOf[cdw]
+        if not k then
+            return "unavailable", "cdm-not-tracked"
+        end
+        cd = cdw
+    else
+        local l = cdm.cds[spell]
+        for j = 1, l and #l or 0 do
+            local p = cdm.placeOf[l[j]]
+            if p and (not k or p < k) then
+                cd, k = l[j], p
+            end
+        end
+        if not cd then
+            return "unavailable", l and "cdm-not-tracked" or "not-in-cdm"
+        end
     end
     if what == "left" and k == 2 then
         return "unavailable", "cdm-icon-only", cd, k
@@ -304,7 +316,7 @@ function cdm.place()
     for n = 1, #srcs do
         local s = srcs[n]
         if s.kind == "aura" then
-            local state, why, cd, k = cdm.statusOf(s.spell, s.what)
+            local state, why, cd, k = cdm.statusOf(s.spell, s.what, s.cdw)
             if state == "ready" then
                 state = nil
             end

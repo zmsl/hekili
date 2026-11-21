@@ -136,6 +136,13 @@ describe("LibHiddenValues aura kind", function()
         assert.are.equal(E.UNIT_INVALID, bad({ unit = 7, spell = 5001, what = "up" }))
         assert.are.equal(E.WHAT_INVALID, bad({ unit = "player", spell = 5001 }))
         assert.are.equal(E.SPELL_INVALID, bad({ unit = "player", spell = "x", what = "up" }))
+        assert.are.equal(E.SPELL_OR_COOLDOWN, bad({ unit = "player", what = "up" }))
+        assert.are.equal(E.SPELL_OR_COOLDOWN, bad({ unit = "player", spell = 5001, cooldown = 11, what = "up" }))
+        assert.are.equal(E.COOLDOWN_INVALID, bad({ unit = "player", cooldown = 1.5, what = "up" }))
+        assert.are.equal(E.COOLDOWN_INVALID, bad({ unit = "player", cooldown = "11", what = "up" }))
+        assert.are.equal(E.COOLDOWN_INVALID, bad({ unit = "player", cooldown = 0, what = "up" }))
+        assert.is_string(lib:GetMessage(E.SPELL_OR_COOLDOWN))
+        assert.is_string(lib:GetMessage(E.COOLDOWN_INVALID))
         assert.are.equal(E.EDGES_INVALID, bad({ unit = "player", spell = 5001, what = "up", edges = 3 }))
         assert.are.equal(E.MAX_INVALID, bad({ unit = "player", spell = 5001, what = "stacks", max = 0 }))
         assert.are.equal(E.EDGES_REQUIRED, bad({ unit = "player", spell = 5001, what = "stacks" }))
@@ -153,6 +160,63 @@ describe("LibHiddenValues aura kind", function()
         local l = watch({ spell = 5001, what = "left", edges = { 6, 3, 3 } })
         assert.are.same({ 3, 6 }, l.edges)
         assert.are.equal(math.huge, select(3, l:Domain()))
+    end)
+
+    it("watches one entry by its cooldownID: no entry choice, each reason for that entry", function()
+        boot(function()
+            local c = {}
+            for id, e in pairs(CATALOGUE) do
+                c[id] = e
+            end
+            c[17] = { spellID = 5001, category = 2 } -- a second entry naming 5001, an icon
+            W.cdm.catalogue, W.cdm.icon = c, { 12, 13, 17 }
+        end)
+        assert.are.same({ false, "pending" }, av({ cooldown = 17, what = "up" }))
+        local bySpell = watch({ spell = 5001, what = "left", edges = { 3 } })
+        local left = watch({ cooldown = 17, what = "left", edges = { 3 } })
+        local up = watch({ cooldown = 17, what = "up" })
+        local stacks = watch({ cooldown = 17, what = "stacks", max = 3 })
+        local unplaced = watch({ cooldown = 16, what = "up" })
+        local nowhere = watch({ cooldown = 99, what = "up" })
+        local same = watch({ cooldown = 11, what = "up" }) -- cooldownID 11 and spell 11 are two sources
+        local spell11 = watch({ spell = 11, what = "up" })
+        Fake.login()
+        Fake.tick(2 + lib.SETTLE + lib.HOLD)
+        assert.are.same({ true, "ready" }, av({ spell = 5001, what = "left", edges = { 3 } }))
+        assert.are.same({ false, "unavailable", "cdm-icon-only" }, av({ cooldown = 17, what = "left", edges = { 3 } }))
+        assert.are.same({ true, "ready" }, av({ cooldown = 17, what = "up" }))
+        assert.are.same({ false, "unavailable", "cdm-not-tracked" }, av({ cooldown = 16, what = "up" }))
+        assert.are.same({ false, "unavailable", "not-in-cdm" }, av({ cooldown = 99, what = "up" }))
+        assert.are.equal("live", (bySpell:State()))
+        assert.are.same({ "unavailable", "cdm-icon-only" }, { left:State() })
+        assert.are.same({ "unavailable", "cdm-not-tracked" }, { unplaced:State() })
+        assert.are.same({ "unavailable", "not-in-cdm" }, { nowhere:State() })
+        assert.are.same({ "unavailable", "not-in-cdm" }, { spell11:State() })
+        assert.are.equal("live", (same:State()))
+        assert.are.same({ 0, 0 }, band(up))
+        Fake.setAura("player", 5001, 2)
+        Fake.tick(2 + lib.SETTLE)
+        assert.are.same({ 1, 1 }, band(up))
+        assert.are.same({ 2, 3 }, band(stacks))
+        local rows = lib:GetAuraSources()
+        assert.are.same(
+            { nil, 17, 17, "icon", "cdm-icon-only" },
+            { rows[2].spell, rows[2].cooldown, rows[2].cooldownID, rows[2].placement, rows[2].reason }
+        )
+        assert.are.same(
+            { 5001, nil, 11, "bar" },
+            { rows[1].spell, rows[1].cooldown, rows[1].cooldownID, rows[1].placement }
+        )
+        assert.are.same({ 16, nil }, { rows[5].cooldown, rows[5].cooldownID })
+        assert.are.equal(8, #rows)
+        -- entry 17 leaves the layout: its watches go, though entry 11 still shows the aura
+        W.cdm.icon = { 12, 13 }
+        Fake.cdmLayout()
+        Fake.tick(2)
+        assert.are.same({ "unavailable", "cdm-not-tracked" }, { up:State() })
+        assert.is_nil(band(up)[1])
+        assert.are.same({ 1, 1 }, band(same))
+        assert.are.same({}, Fake.errors)
     end)
 
     it("reports presence: 0 absent, 1 up, unknown when no item shows it", function()

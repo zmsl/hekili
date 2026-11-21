@@ -37,6 +37,8 @@ lib.ERR = {
     POOL_LIMIT = "pool-limit",
     PRECISION_INVALID = "precision-invalid",
     SPELL_INVALID = "spell-invalid",
+    SPELL_OR_COOLDOWN = "spell-or-cooldown",
+    COOLDOWN_INVALID = "cooldown-invalid",
     WHAT_INVALID = "what-invalid",
     MAX_INVALID = "max-invalid",
 }
@@ -62,6 +64,8 @@ lib.MESSAGES = {
         ["pool-limit"] = "Not enough bars left in the pool (nothing was granted).",
         ["precision-invalid"] = 'The precision must be "point" or nil.',
         ["spell-invalid"] = "The spell must be a spell ID (a whole number above 0).",
+        ["spell-or-cooldown"] = "An aura watch names exactly one of spell or cooldown.",
+        ["cooldown-invalid"] = "The cooldown must be a Cooldown Manager cooldownID (a whole number above 0).",
         ["what-invalid"] = 'The aura\'s what must be "up", "stacks" or "left".',
         ["max-invalid"] = "The max must be a whole number of stacks, 1 or more.",
         ["max-unknown"] = "The maximum is not known (never read as a plain number).",
@@ -82,7 +86,7 @@ lib.MESSAGES = {
         ["unknown-kind"] = "Unknown kind.",
         ["bad-spec"] = "The spec is not valid (Watch returns its error code).",
         ["cdm-off"] = "The Cooldown Manager is off or missing: switch it on in Options.",
-        ["not-in-cdm"] = "No Cooldown Manager entry names this spell.",
+        ["not-in-cdm"] = "No Cooldown Manager entry names this spell (or has this cooldownID).",
         ["cdm-not-tracked"] = "Not shown in the Cooldown Manager: place it in Tracked Buffs, or Tracked Bars.",
         ["cdm-icon-only"] = "Shown as an icon, which has no timer: move it to Tracked Bars.",
     },
@@ -317,7 +321,7 @@ function lib.attach(h)
     if not s then
         s = { kind = h.kind, unit = h.unit, power = h.power, predicted = h.predicted, handles = {} }
         s.bar, s.ref, s.core, s.pbar, s.pref, s.bad = {}, {}, {}, {}, {}, 0
-        s.spell, s.what = h.spell, h.what
+        s.spell, s.what, s.cdw = h.spell, h.what, h.cdw
         lib.srcByKey[key] = s
         lib.sources[#lib.sources + 1] = s
     end
