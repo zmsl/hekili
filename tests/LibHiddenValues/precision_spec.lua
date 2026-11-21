@@ -60,14 +60,16 @@ describe("LibHiddenValues point precision", function()
         assert.are.same({ 1234, 1235 }, lohi(h))
         assert.are.equal(lib.EXACT, select(4, h:Get()))
         assert.are.same({ 1, 0, 2000 }, { h:Domain() })
+        local prev = 1234
         for _, v in ipairs({ 1235, 1236, 1199, 0, 1, 49, 50, 51, 999, 1000, 1999, 2000, 777 }) do
             mana(v)
-            Fake.tick(v == 49 and 3 or 2) -- a jump of 50 +- 8 (1 to 49) is held a frame
+            Fake.tick(math.abs(v - prev) >= 25 and 3 or 2) -- a jump of half a cell or more is held a frame
             assert.are.equal(v, (h:Exact()), v)
+            prev = v
         end
         assert.are.same({ 777, 778 }, lohi(h))
         mana(2000)
-        Fake.tick(2)
+        Fake.tick(3)
         assert.are.same({ 2000, 2000 }, lohi(h))
         assert.are.equal(0, select(6, lib:GetStats()))
     end)
@@ -85,13 +87,13 @@ describe("LibHiddenValues point precision", function()
         untilLive(h)
         untilLive(e)
         mana(670) -- 33.5% of 2000
-        Fake.tick(2)
+        Fake.tick(3) -- a jump of half a cell or more is held a frame
         assert.are.same({ 33.5, 100 }, lohi(e))
         assert.are.same({ 301, 2000 }, lohi(p))
         assert.are.same({ 33, 34 }, lohi(s))
         assert.are.same({ 670, 671 }, lohi(h))
         mana(300)
-        Fake.tick(2)
+        Fake.tick(3)
         assert.are.same({ 0, 301 }, lohi(p))
         assert.are.same({ 15, 16 }, lohi(s))
         h:Release()
@@ -618,29 +620,29 @@ describe("LibHiddenValues point precision", function()
             crossing(1248, "cell") -- -3: alone 1298
         end)
 
-        it("delays a real jump of 50 give or take 8 across a cell by one frame only", function()
+        it("delays a real jump of half a cell or more by one frame only", function()
             start(1234)
             local F = frames(1235)
             assert.are.equal(F + 1, frames(1282)) -- +47
-            assert.are.equal(F, frames(1223)) -- -59: the ring moved 9
-            assert.are.equal(F, frames(1264)) -- +41: 9
+            assert.are.equal(F + 1, frames(1223)) -- -59: the ring moved 9
+            assert.are.equal(F + 1, frames(1264)) -- +41: 9
             assert.are.equal(F + 1, frames(1206)) -- -58: 8
             assert.are.same({ 1235, 1282, 1223, 1264, 1206 }, seen)
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
-        it("delays a real jump of 50, or of 49 from a cell edge, by one frame only; others not at all", function()
+        it("delays real jumps of 37 to 300 by one frame only; small ones not at all", function()
             start(1234)
             local splits = select(8, lib:GetStats())
             local F = frames(1235)
             assert.are.equal(F, frames(1236)) -- +1 away from a boundary
             assert.are.equal(F + 1, frames(1286)) -- +50
-            assert.are.equal(F, frames(1249))
+            assert.are.equal(F + 1, frames(1249)) -- -37
             assert.are.equal(F, frames(1250)) -- +1 across a boundary, every bar in one frame
             assert.are.equal(F, frames(1249))
             assert.are.equal(F + 1, frames(1200)) -- -49 from position 49
-            assert.are.equal(F, frames(1300)) -- +100
-            assert.are.equal(F, frames(1600)) -- +300
+            assert.are.equal(F + 1, frames(1300)) -- +100: another cell's half alone is valid too
+            assert.are.equal(F + 1, frames(1600)) -- +300
             assert.are.same({ 1235, 1236, 1286, 1249, 1250, 1249, 1200, 1300, 1600 }, seen)
             assert.are.equal(splits, select(8, lib:GetStats()))
             assert.are.equal(0, select(6, lib:GetStats()))
@@ -717,7 +719,8 @@ describe("LibHiddenValues point precision", function()
         end)
 
         -- Moves the mana to v with part of the change's core firings not arrived yet ("one": its first changed ring
-        -- bar; "cell": its cell code and parity bars); returns those bars, for the caller to fire a frame later.
+        -- bar; "cell": its cell code and parity bars; "all"; a set of cell code bits, 1 = bit 0, NB + 1 the parity);
+        -- returns those bars, for the caller to fire a frame later.
         local function move(v, late)
             local s, st = h.src, lib.barState
             local before = {}
@@ -730,7 +733,11 @@ describe("LibHiddenValues point precision", function()
             for k = 1, #s.core do
                 local i = s.core[k]
                 local ring = k <= lib.RING_N
-                if st[i] ~= before[k] and ring == (late == "one") and not (late == "one" and #out > 0) then
+                local hold = late == "all" or ring == (late == "one") and not (late == "one" and #out > 0)
+                if type(late) == "table" then
+                    hold = late[k - lib.RING_N] == true -- the listed cell code bits (1 = bit 0); NB + 1 the parity
+                end
+                if st[i] ~= before[k] and hold then
                     st[i] = not st[i]
                     out[#out + 1] = i
                 end
@@ -794,6 +801,49 @@ describe("LibHiddenValues point precision", function()
                 assert.are.equal(0, select(6, lib:GetStats()))
             end)
         end
+
+        -- A spend whose cell bars land apart with the ring complete and no bad frame: a valid cell code of another
+        -- cell (fake runs with firings 1-2 frames late read 516 for 116 and 1417 for 1467). Held a frame.
+        for _, case in ipairs({
+            { 417, 116, { [3] = true, [4] = true } }, -- cell 8 to 2: only Gray bits 0 and 1 landed reads cell 10
+            { 1617, 1467, { [1] = true, [7] = true } }, -- cell 32 to 29: bit 0 and the parity late read cell 28
+        }) do
+            it("never reports another cell when a spend's cell bars land apart: " .. case[2], function()
+                start(case[1])
+                local l = move(case[2], case[3])
+                assert.is_true(#l > 0)
+                Fake.tick(1) -- valid: the ring complete, a cell code half landed
+                fire(l)
+                Fake.tick(2)
+                assert.are.equal(case[2], (h:Exact()))
+                onlyHeld({ case[1], case[2] })
+                assert.are.equal(0, select(6, lib:GetStats()))
+            end)
+        end
+
+        -- h:Latency() counts from the frame a change's first firing arrives: here every firing of the first change is a
+        -- frame late.
+        it("calls within h:Latency() of a change's first firing when that change's firings all arrive late", function()
+            start(1236)
+            local late = move(1237, "all")
+            local frames = 0 -- frames from the first firing
+            for v = 1238, 1240 do
+                local l = move(v, "one")
+                frames = frames + 1
+                fire(late)
+                late = l
+            end
+            while #seen == 0 and frames < 12 do
+                Fake.tick(1)
+                frames = frames + 1
+                fire(late)
+                late = {}
+            end
+            assert.is_true(frames * lib.frameSec <= h:Latency() + 1e-9, "frames " .. frames)
+            Fake.tick(2)
+            onlyHeld({ 1236, 1237, 1238, 1239, 1240 })
+            assert.are.equal(1240, seen[#seen])
+        end)
 
         it("still catches a lost firing while the value changes every frame", function()
             start(1234)

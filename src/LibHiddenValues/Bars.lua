@@ -834,16 +834,12 @@ local function ringDecode(s)
     return nil, q
 end
 
--- A valid ring decode that may be half of a small change across a cell boundary (review I3, widened by the fix lane):
--- the cell moved one more or one less than the ring's own move dp (-HALF..HALF-1) says, with the ring moved at most
--- DRIFT quanta. Half of such a change alone (the cell's bars landed without the ring's, or the ring's without the
--- cell's) is a valid state N quanta off; regen moves 2-3 points per change (the owner's run of 2026-11-21), and two
--- changes can be in flight. Any real move of N +- DRIFT quanta (42-58, wherever it starts) pays one frame.
-local DRIFT = 8
+-- A valid ring decode whose cell moved other than the ring's own move dp (-HALF..HALF-1) says: half of a change whose
+-- cell bars and ring bars land apart is a valid state a whole number of cells off (a 2-3 point regen change across a
+-- cell boundary read 50 off; a spend whose Gray cell bits landed in part read another cell: 516 for 116, 1417 for
+-- 1467, fake runs with each firing 1-2 frames late). Any real move of more than about half a cell pays one frame.
 local function suspect(q0, q)
-    local dp = (q - q0 + HALF) % N - HALF
-    local off = q - q0 - dp
-    return (off == N or off == -N) and dp <= DRIFT and dp >= -DRIFT
+    return q - q0 ~= (q - q0 + HALF) % N - HALF
 end
 
 -- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (a split; a
