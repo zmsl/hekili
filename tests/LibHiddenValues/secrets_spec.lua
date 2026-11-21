@@ -94,10 +94,11 @@ describe("LibHiddenValues secrets and efficiency", function()
         lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50, 80 } }, sink)
         lib:Watch("A", { kind = "health", unit = "target", edges = { 50 } }, sink)
         lib:Watch("B", { kind = "power", unit = "player", power = Enum.PowerType.Mana, edges = { 30 } }, sink)
-        -- stage 3: position, points (on and off the grid), point precision
+        -- stage 3: position, points (on and off the grid), point precision at step 3 with a kept point bar (778)
+        W.unit.player.max[0] = 6400
         lib:Watch("C", { kind = "health", unit = "target", step = 1, edges = { 33.5 } }, sink)
         lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, precision = "point" }, sink)
-        lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, points = { 777 } }, sink)
+        lib:Watch("C", { kind = "power", unit = "player", power = Enum.PowerType.Mana, points = { 777, 778 } }, sink)
         lib:Watch("C", { kind = "power", unit = "player", power = 3, step = 1, points = { 40, 41 } }, sink)
         Fake.login()
         local function frame(i)
@@ -109,6 +110,7 @@ describe("LibHiddenValues secrets and efficiency", function()
         for i = 1, 200 do
             frame(i)
         end
+        assert.are.equal(1, select(3, lib:GetPool())) -- 778's kept bar
         collectgarbage("collect")
         collectgarbage("stop")
         local b = collectgarbage("count")

@@ -66,8 +66,11 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   step 1 up to a max of 3175, above it the step grows until every curve fits the client's 256-point limit (6400
   mana: step 3). `q` is `LHV.EXACT` (3) at step 1. It costs 57 bars at most (50 + a cell code + parity); while any
   watch on the source asks for it, that source's other bars are released and every other watch on it is answered
-  from the exact value. A max of 100 or less is the same as `step` (8 bars, exact). It is outside the point caps
-  but inside the 256-bar pool: over it, `pool-limit`.
+  from the exact value. At a step above 1 (a max over 3175) a point that is not a multiple of the step, and an edge
+  whose cut is not, keeps its own bar, so points and edges stay exact to the point; `h:Exact()` is to the step. A
+  `step` watch's band can then span two 1% cells where the step straddles a cell boundary. A max of 100 or less is
+  the same as `step` (8 bars, exact). It is outside the point caps but inside the 256-bar pool, with every
+  edge and point on the source counted (the step can grow with the max): over it, `pool-limit`.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
 other kind, token or option (focus or another power type, `points` or `precision` on health, the `focus` token, ...)

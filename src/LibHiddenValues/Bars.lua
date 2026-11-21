@@ -277,33 +277,42 @@ function lib.reprime(s)
     lib.wake()
 end
 
--- Whether a percent edge needs a bar of its own in a mode (position covers the 1% grid).
-local function needEdge(mode, e)
+-- Whether a percent edge needs a bar of its own in a mode at the max M with the ring's point step g (position covers
+-- the 1% grid; the ring covers every cut at step 1 and a cut on its quantum grid above it: a cut inside the value's
+-- quantum keeps its bar, review I2; a cut that is not a whole multiple of the step is kept too, the safe side).
+local function needEdge(mode, e, M, g)
+    if mode == "ring" then
+        return g ~= nil and g > 1 and (e * M) % (100 * g) ~= 0
+    end
     return mode == nil or (mode == "gray" and e % 1 ~= 0)
 end
 
 -- Whether a point threshold needs a bar of its own in a mode at the max M (position covers p when p / M is on the 1%
--- grid: p * 100 a multiple of M, plain integers).
-local function needPoint(mode, M, p)
+-- grid: p * 100 a multiple of M, plain integers; the ring covers p at step 1 and on its quantum grid, as for edges).
+local function needPoint(mode, M, p, g)
+    if mode == "ring" then
+        return g ~= nil and g > 1 and p % g ~= 0
+    end
     return mode == nil or (mode == "gray" and not (M and (p * 100) % M == 0))
 end
 
 -- Every bar the handle rests on is there (false: the cap was reached, the handle is suspended).
 local function served(s, h)
-    local mode = s.mode
+    local mode, M = s.mode, s.max
     if mode and not s.core[1] then
         return false
     end
+    local g = s.ring and s.ring.g
     for k = 1, #h.edges do
         local e = h.edges[k]
-        if not s.bar[e] and needEdge(mode, e) then
+        if not s.bar[e] and needEdge(mode, e, M, g) then
             return false
         end
     end
     local pts = h.points
     for k = 1, #pts do
         local p = pts[k]
-        if not s.pbar[p] and needPoint(mode, s.max, p) then
+        if not s.pbar[p] and needPoint(mode, M, p, g) then
             return false
         end
     end
@@ -451,7 +460,9 @@ end
 
 -- Bars a set of handles needs on a source, how many of them are point bars, and its distinct points (what the caps
 -- count: as edges mode would place them, so a mode that answers some points without bars cannot later lift the source
--- over the caps when it ends). A cold path: admission. add joins the set; swapH counts with swapList as its points.
+-- over the caps when it ends). While precision is asked every edge and point counts toward the pool (the step can grow
+-- with the max after admission, and a threshold then needs its bar). A cold path: admission. add joins the set; swapH
+-- counts with swapList as its points.
 function lib.need(s, add, swapH, swapList)
     local M = s.kind == "power" and lib.maxOf(s.unit, s.power, s.max) or nil
     local step, prec, edges, points = false, false, {}, {}
@@ -472,21 +483,21 @@ function lib.need(s, add, swapH, swapList)
         take(add)
     end
     local mode = lib.modeFor(step, prec, M)
-    local bars, pb, all = mode == "gray" and 8 or 0, 0, 0
+    local bars, pb, all, g = mode == "gray" and 8 or 0, 0, 0, nil
     if mode == "ring" then
         local r = lib.ringFor(M)
-        bars = r and #r.curves or 0
+        bars, g = r and #r.curves or 0, r and r.g
     elseif prec and not M then -- no plain max yet (before login): the largest ring
         bars = lib.RING_MAXBARS
     end
     for e in pairs(edges) do
-        if needEdge(mode, e) then
+        if prec or needEdge(mode, e, M, g) then
             bars = bars + 1
         end
     end
     for p in pairs(points) do
         all = all + 1
-        if needPoint(mode, M, p) then
+        if prec or needPoint(mode, M, p, g) then
             pb = pb + 1
         end
     end
@@ -569,6 +580,7 @@ function lib.sync(s)
     end
     local mode = ready and lib.modeOf(s) or nil
     local ring = mode == "ring" and lib.ringFor(M) or nil
+    local g = ring and ring.g
     if mode ~= s.mode or ring ~= s.ring then -- a new mode, or the ring of a new max
         freeCore(s)
         s.mode, s.ring, s.bad, s.ok = mode, ring, 0, false
@@ -580,13 +592,13 @@ function lib.sync(s)
             allocCore(s)
         end
         for e, n in pairs(s.ref) do
-            if n > 0 and not s.bar[e] and needEdge(mode, e) then
+            if n > 0 and not s.bar[e] and needEdge(mode, e, M, g) then
                 s.bar[e] = lib.allocBar(s, lib.curveFor(e))
             end
         end
         if M then
             for p, n in pairs(s.pref) do
-                if n > 0 and not s.pbar[p] and needPoint(mode, M, p) then
+                if n > 0 and not s.pbar[p] and needPoint(mode, M, p, g) then
                     s.pbar[p] = lib.allocBar(s, lib.pointCurve(p, M))
                 end
             end
@@ -602,13 +614,13 @@ function lib.sync(s)
         end
     end
     for e, i in pairs(s.bar) do
-        if not ready or s.ref[e] == 0 or not needEdge(mode, e) then
+        if not ready or s.ref[e] == 0 or not needEdge(mode, e, M, g) then
             lib.freeBar(i)
             s.bar[e] = nil
         end
     end
     for p, i in pairs(s.pbar) do
-        if not ready or s.pref[p] == 0 or not needPoint(mode, M, p) then
+        if not ready or s.pref[p] == 0 or not needPoint(mode, M, p, g) then
             lib.freeBar(i)
             s.pbar[p] = nil
         end
@@ -724,6 +736,32 @@ local function ringDecode(s)
     local q = c * N + p
     if q > r.mq then
         return "range"
+    end
+    -- the kept bars (step above 1, review I2) against the quantum's points A..B; a bar still priming says nothing
+    local g, M, prime = r.g, s.max, lib.barPrime
+    local A = q * g
+    local B = math.min(A + g - 1, M)
+    for e, i in pairs(s.bar) do
+        if prime[i] == 0 then
+            if st[i] then
+                if 100 * B < e * M then
+                    return "edge"
+                end
+            elseif 100 * A >= e * M then
+                return "edge"
+            end
+        end
+    end
+    for pt, i in pairs(s.pbar) do
+        if prime[i] == 0 then
+            if st[i] then
+                if B < pt then
+                    return "edge"
+                end
+            elseif A >= pt then
+                return "edge"
+            end
+        end
     end
     s.qv = q
 end

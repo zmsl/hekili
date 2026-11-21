@@ -218,4 +218,139 @@ describe("LibHiddenValues point precision", function()
         assert.is_nil(x)
         assert.are.equal(lib.ERR.POOL_LIMIT, err)
     end)
+
+    it("counts every edge and point toward the pool when precision is asked (the step can grow later)", function()
+        local edges = {}
+        for k = 1, 195 do
+            edges[k] = k / 3
+        end
+        assert.truthy(lib:Watch("A", { kind = "health", unit = "target", edges = edges }))
+        Fake.login()
+        assert.truthy(watch({ edges = { 20, 30, 40, 50, 60 } })) -- at max 2000 (step 1) answered with no bar
+        local x, err = watch({ precision = "point" }) -- 195 + 57 fits; with the 5 edges counted, 257 does not
+        assert.is_nil(x)
+        assert.are.equal(lib.ERR.POOL_LIMIT, err)
+    end)
+
+    -- Review I2 (decision: lhv-stage3-fable-decisions.md): at a point step above 1 a threshold off the quantum grid
+    -- falls inside the value's quantum; it keeps its own bar so it stays exact to the point.
+    describe("at a point step above 1 (max 6400, step 3)", function()
+        before_each(function()
+            W.unit.player.max[0] = 6400
+            mana(3000)
+        end)
+
+        it("answers a point off the quantum grid exactly beside a precision watch", function()
+            local p = watch({ points = { 4000 } })
+            local h = watch({ precision = "point" })
+            Fake.login()
+            untilLive(h)
+            untilLive(p)
+            for _, v in ipairs({ 3998, 3999 }) do
+                mana(v)
+                Fake.tick(3)
+                assert.are.same({ 0, 4000 }, lohi(p), v)
+            end
+            for _, v in ipairs({ 4000, 4001, 4002 }) do
+                mana(v)
+                Fake.tick(3)
+                assert.are.same({ 4000, 6400 }, lohi(p), v)
+            end
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end)
+
+        it("cuts a precision handle's band with its own off-grid point; Exact stays to the step", function()
+            local h = watch({ precision = "point", points = { 4000 } })
+            Fake.login()
+            untilLive(h)
+            mana(3999)
+            Fake.tick(3)
+            assert.are.same({ 3999, 4000 }, lohi(h))
+            assert.are.same({ 3999, 3 }, { h:Exact() })
+            mana(4000)
+            Fake.tick(3)
+            assert.are.same({ 4000, 4002 }, lohi(h))
+            assert.are.same({ 3999, 3 }, { h:Exact() })
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end)
+
+        it("answers a percent edge whose cut is off the quantum grid", function()
+            local e = watch({ edges = { 62.5 } }) -- cut 4000
+            local h = watch({ precision = "point" })
+            Fake.login()
+            untilLive(h)
+            untilLive(e)
+            for _, v in ipairs({ 3999, 4000, 4001 }) do
+                mana(v)
+                Fake.tick(3)
+                assert.are.same(v < 4000 and { 0, 62.5 } or { 62.5, 100 }, lohi(e), v)
+            end
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end)
+
+        it("counts the kept bars and moves them with the max across 3175", function()
+            local p = watch({ points = { 500, 300 } }) -- 500 is off the grid of 3, 300 on it
+            local h = watch({ precision = "point" })
+            Fake.login()
+            untilLive(h)
+            untilLive(p)
+            assert.are.equal(57 + 1, bars())
+            assert.truthy(watch({ points = { 501 } })) -- on the grid: no bar
+            Fake.tick(1)
+            assert.are.equal(57 + 1, bars())
+            assert.are.equal(1, select(3, lib:GetPool()))
+            W.unit.player.max[0] = 2239 -- step 1: no bar kept
+            mana(400)
+            Fake.event("UNIT_MAXPOWER", "player")
+            untilLive(h)
+            untilLive(p)
+            assert.are.equal(57, bars())
+            assert.are.equal(0, select(3, lib:GetPool()))
+            Fake.tick(2)
+            assert.are.same({ 300, 500 }, lohi(p))
+            W.unit.player.max[0] = 6400
+            mana(499)
+            Fake.event("UNIT_MAXPOWER", "player")
+            Fake.tick(1)
+            assert.are_not.equal("live", (p:State()))
+            untilLive(h)
+            untilLive(p)
+            assert.are.equal(57 + 1, bars())
+            Fake.tick(2)
+            assert.are.same({ 300, 500 }, lohi(p))
+            mana(500)
+            Fake.tick(3)
+            assert.are.same({ 500, 6400 }, lohi(p))
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end)
+
+        it("holds a frame when a kept bar lands after the ring: a split, never a wrong band", function()
+            mana(3998)
+            local p = watch({ points = { 4000, 4002 } }) -- 4000 keeps a bar, 4002 is on the grid
+            local h = watch({ precision = "point", points = { 4000 } })
+            Fake.login()
+            untilLive(h)
+            untilLive(p)
+            Fake.tick(2)
+            local seen = {}
+            p:SetSink(function(_, lo, hi)
+                seen[#seen + 1] = { lo, hi }
+            end)
+            local i = p.src.pbar[4000]
+            local splits = select(8, lib:GetStats())
+            mana(4005)
+            Fake.tick(1) -- every bar fired in this frame
+            lib.barState[i] = not lib.barState[i] -- but the kept bar's firing has not arrived yet
+            Fake.tick(1) -- the ring says 4005, the bar below 4000: hold
+            assert.are.same({ 0, 4000 }, lohi(p))
+            assert.are.same({ 3996, 3999 }, lohi(h))
+            lib.fire(i) -- the late firing
+            Fake.tick(1)
+            assert.are.same({ 4002, 6400 }, lohi(p))
+            assert.are.same({ 4005, 4008 }, lohi(h))
+            assert.are.same({ { 4002, 6400 } }, seen)
+            assert.are.equal(splits + 1, select(8, lib:GetStats()))
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end)
+    end)
 end)
