@@ -90,7 +90,7 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 |---|---|---|
 | A curve for hook values | none: raw narrow-range bars | a secret from a hook cannot go through a curve from addon code; the probes' per-stack and 2.9-3.0 s bars are what was proven |
 | Seconds bar width | 0.01 s | the narrower, the rarer a landing inside; the run rule covers the landings that happen |
-| Two firings of a seconds bar on consecutive frames | that bar primes again (HOLD + SETTLE + 2 frames, the seconds come every frame); its handles keep their band meanwhile | forcing "below" would stick wrong after a fall followed at once by a refresh (review); a flip is wrong for a landing inside |
+| Two firings of a seconds bar on consecutive frames | that bar primes again (HOLD + SETTLE + 2 frames, the seconds come every frame; one more when a secret firing trails its push: `h:Latency()`); its handles keep their band meanwhile | forcing "below" would stick wrong after a fall followed at once by a refresh (review); a flip is wrong for a landing inside |
 | The first capability answer of a new watch | noted, not called | it is given inside `Watch`; the consumer reads `h:State()` after it |
 | `up` | the item's `auraInstanceID` secret or not nil, polled every frame, no bar | the proven presence read; it is plain to test |
 | Stacks and seconds while absent | the lowest band (0 stacks, 0 seconds), live | controller decision (review I1): an absent aura is a known value; `"live"` never comes without a band |

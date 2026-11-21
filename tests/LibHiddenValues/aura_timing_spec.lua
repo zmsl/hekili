@@ -208,9 +208,13 @@ describe("LibHiddenValues aura timing", function()
                         lat = l:Latency()
                         Fake.setAura("player", 5001, 1, 3 + start * 0.0029 + 2 / 60)
                         Fake.tick(2)
-                        while select(2, l:Get()) ~= 3 and #calls < 50 do -- until the fall is told
+                        for _ = 1, 60 do -- until the fall is told
+                            if select(2, l:Get()) == 3 then
+                                break
+                            end
                             Fake.tick(1)
                         end
+                        assert.are.equal(3, select(2, l:Get()))
                         Fake.tick(wait)
                         calls = {}
                         Fake.setAura("player", 5001, 1, 30)
