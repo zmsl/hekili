@@ -219,6 +219,44 @@ describe("LibHiddenValues aura kind", function()
         assert.are.same({}, Fake.errors)
     end)
 
+    it("lists every entry naming a spell with the client's facts, for the consumer to choose", function()
+        boot(function()
+            local c = {}
+            for id, e in pairs(CATALOGUE) do
+                c[id] = e
+            end
+            c[19] = { spellID = 5001, overrideSpellID = 5101, category = 0 }
+            W.cdm.catalogue, W.cdm.essential = c, { 19 }
+        end)
+        local rows, read = lib:GetAuraEntries(5001)
+        assert.are.same({}, rows)
+        assert.is_false(read)
+        Fake.login()
+        Fake.tick(2)
+        rows, read = lib:GetAuraEntries(5001)
+        assert.is_true(read)
+        assert.are.same({
+            {
+                cooldownID = 19,
+                spellID = 5001,
+                overrideSpellID = 5101,
+                linkedSpellIDs = {},
+                category = 0,
+                placement = "essential",
+            },
+            { cooldownID = 11, spellID = 5001, linkedSpellIDs = {}, category = 3, placement = "bar" },
+        }, rows)
+        assert.are.same({ rows[1] }, (lib:GetAuraEntries(5101)))
+        assert.are.same({
+            { cooldownID = 13, spellID = 5003, linkedSpellIDs = { 5013 }, category = 2, placement = "icon" },
+        }, (lib:GetAuraEntries(5013)))
+        assert.are.same({
+            { cooldownID = 16, spellID = 5006, linkedSpellIDs = {}, category = 3 },
+        }, (lib:GetAuraEntries(5006)))
+        assert.are.same({}, (lib:GetAuraEntries(9999)))
+        assert.are.same({}, (lib:GetAuraEntries("x")))
+    end)
+
     it("reads up from Essential and Utility items; stacks and left need an aura viewer", function()
         boot(function()
             local c = {}

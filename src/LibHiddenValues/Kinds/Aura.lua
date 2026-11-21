@@ -498,3 +498,32 @@ function lib:GetAuraSources()
         cdm.nRefused,
         cdm.nScan
 end
+
+-- Every Cooldown Manager entry naming spell (as its spell, override, tooltip override or a linked spell), in catalogue
+-- order, with the client's plain facts: { cooldownID =, spellID =, overrideSpellID =, overrideTooltipSpellID =,
+-- linkedSpellIDs = { ... }, category = its default category, placement = PLACE[viewer] showing it now or nil }; then
+-- whether the catalogue was read (out of combat). A consumer picks one and watches it with cooldown = cooldownID. A
+-- fresh array: a cold path.
+function lib:GetAuraEntries(spell)
+    local out = {}
+    local l = cdm.cataloged and cdm.cds[spell]
+    for j = 1, l and #l or 0 do
+        local id = l[j]
+        local f = cdm.facts and cdm.facts[id] or {}
+        local links = {}
+        for k = 1, f.linkedSpellIDs and #f.linkedSpellIDs or 0 do
+            links[k] = f.linkedSpellIDs[k]
+        end
+        local k = cdm.placeOf[id]
+        out[j] = {
+            cooldownID = id,
+            spellID = f.spellID,
+            overrideSpellID = f.overrideSpellID,
+            overrideTooltipSpellID = f.overrideTooltipSpellID,
+            linkedSpellIDs = links,
+            category = cdm.catOf and cdm.catOf[id],
+            placement = k and PLACE[k],
+        }
+    end
+    return out, cdm.cataloged and true or false
+end
