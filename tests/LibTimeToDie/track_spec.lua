@@ -20,9 +20,10 @@ describe("LibTimeToDie tracking", function()
         end
     end
 
-    local function row(token)
+    local function row(token, owner)
+        owner = owner or "A"
         for _, r in ipairs(ttd:GetStreams()) do
-            if r.token == token then
+            if r.token == token and r.owner == owner then
                 return r
             end
         end
@@ -167,9 +168,12 @@ describe("LibTimeToDie tracking", function()
         local a = ttd:Track("A", "target")
         local b = ttd:Track("B", "target")
         local p = ttd:Track("A", "player")
+        local a2 = ttd:Track("A", "target") -- a second track of A on the target shares A's estimate
         Fake.tick(12)
         assert.are.equal(2, lhvSources()) -- target and player
         assert.are.equal(2, row("target").tracks)
+        assert.are.equal(1, row("target", "B").tracks)
+        a2:Release()
         for _, r in ipairs(lhv:GetSources()) do
             assert.are.equal(1, r.handles) -- one watch per token
         end
@@ -192,9 +196,80 @@ describe("LibTimeToDie tracking", function()
         assert.are.equal(2, lhvSources())
         b:Release()
         assert.are.equal(1, lhvSources()) -- the last track freed the watch
-        assert.is_nil(row("target"))
+        assert.is_nil(row("target", "B"))
         p:Release()
         assert.are.equal(0, lhvSources())
+        assert.is_nil(next(ttd.byLhv)) -- no released watch is kept
+        Fake.tick(1)
+        assert.is_nil(ttd.frame:GetScript("OnUpdate")) -- the driver stops with the last stream
+        ttd:Track("A", "target")
+        assert.is_not_nil(ttd.frame:GetScript("OnUpdate")) -- and starts with the next
+    end)
+
+    it("releasing the only unpaused track of a shared token pauses the watch", function()
+        local a = ttd:Track("A", "target")
+        local b = ttd:Track("B", "target")
+        Fake.tick(12)
+        a:SetPaused(true)
+        Fake.tick(1)
+        assert.is_true(lhv.sources[1].active)
+        b:Release()
+        Fake.tick(1)
+        assert.is_false(lhv.sources[1].active)
+    end)
+
+    it("an owner tracking a unit already watched starts from the current band", function()
+        local a = ttd:Track("A", "target")
+        Fake.tick(12)
+        fall(99, 80, 0.5)
+        local b = ttd:Track("B", "target")
+        assert.are.equal("unknown", (b:State())) -- not priming: the watch has the band
+        fall(79, 77, 0.5)
+        assert.are.equal(3, row("target", "B").crossings) -- the first crossing counts
+        assert.are.equal(23, row("target").crossings)
+        assert.are.equal("live", (a:State()))
+    end)
+
+    it("a stream LibHiddenValues reports unavailable does not keep the driver running", function()
+        local h = ttd:Track("A", "focus")
+        Fake.tick(3)
+        assert.are.same({ "unavailable", "unproven" }, { h:State() })
+        Fake.tick(1)
+        assert.is_nil(ttd.frame:GetScript("OnUpdate"))
+        lhv:SetEnabled(false) -- a capability change wakes it for a fresh look
+        assert.is_not_nil(ttd.frame:GetScript("OnUpdate"))
+        Fake.tick(2)
+        assert.are.equal("unavailable", (h:State())) -- read again; LibHiddenValues names the unproven unit first
+        assert.is_nil(ttd.frame:GetScript("OnUpdate"))
+    end)
+
+    it("a stream that started without LibHiddenValues and then was refused tries again", function()
+        local saved = LibStub.libs[LHV_MAJOR]
+        rawset(LibStub.libs, LHV_MAJOR, nil)
+        local h = ttd:Track("A", "target")
+        assert.are.same({ "unavailable", "lhv-missing" }, { h:State() })
+        rawset(LibStub.libs, LHV_MAJOR, saved)
+        local watch = lhv.Watch
+        lhv.Watch = function()
+            return nil, "pool-limit"
+        end
+        Fake.advance(0.2)
+        assert.are.same({ "unavailable", "pool-limit" }, { h:State() })
+        lhv.Watch = watch
+        Fake.advance(0.2)
+        assert.are.equal("priming", (h:State()))
+    end)
+
+    it("an older LibHiddenValues than the one required reads unavailable, lhv-old", function()
+        local minor = LibStub.minors[LHV_MAJOR]
+        rawset(LibStub.minors, LHV_MAJOR, ttd.LHV_MIN - 1)
+        local h = ttd:Track("A", "target")
+        assert.are.same({ "unavailable", "lhv-old" }, { h:State() })
+        assert.are.same({ false, "unavailable", "lhv-old" }, { ttd:IsAvailable("target") })
+        assert.is_string(ttd:GetMessage("lhv-old"))
+        rawset(LibStub.minors, LHV_MAJOR, minor)
+        Fake.tick(1)
+        assert.are.equal("priming", (h:State()))
     end)
 
     it("ReleaseAll drops one owner's tracks only", function()
@@ -203,7 +278,8 @@ describe("LibTimeToDie tracking", function()
         ttd:ReleaseAll("A")
         assert.are.equal("released", (a:State()))
         assert.are_not.equal("released", (b:State()))
-        assert.are.equal(1, row("target").tracks)
+        assert.is_nil(row("target"))
+        assert.are.equal(1, row("target", "B").tracks)
     end)
 
     it("calls the sink only when the published estimate or the state changes, at most once per frame", function()
@@ -248,7 +324,7 @@ describe("LibTimeToDie tracking", function()
             assert.is_string(ttd:GetMessage(code), code)
         end
         local words = { "live", "priming", "gone", "unknown", "unavailable", "paused", "released" }
-        for _, w in ipairs({ "lhv-missing", "fit", "seed", "prior", "stalled", "pending", "suspended" }) do
+        for _, w in ipairs({ "lhv-missing", "lhv-old", "fit", "seed", "prior", "stalled", "pending", "suspended" }) do
             words[#words + 1] = w
         end
         for _, w in ipairs(words) do
@@ -291,11 +367,15 @@ describe("LibTimeToDie tracking", function()
         assert.is_true(math.abs(est - 95.5 * 0.5) < 0.15 * 95.5 * 0.5, tostring(est))
     end)
 
-    it("allocates nothing per steady frame, with a sink and a Get every frame", function()
+    it("allocates nothing per steady frame, two owners on one target, with a sink and a Get every frame", function()
         local n = 0
         local h = ttd:Track("A", "target", function()
             n = n + 1
         end)
+        ttd:Track("B", "target", function()
+            n = n + 1
+        end)
+        ttd:HintBelow("B", 20)
         Fake.tick(12)
         local p = 99
         local function frame(i)

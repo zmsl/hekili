@@ -10,14 +10,22 @@ MIT licence (see `LICENSE`). LibStub keeps one running copy (the newest minor).
 
 ## Install
 
-LibTimeToDie calls LibHiddenValues through LibStub; you call only LibTimeToDie.
+LibTimeToDie calls LibHiddenValues through LibStub; you call only LibTimeToDie. The release zip carries
+LibHiddenValues inside it (`Libs/LibHiddenValues`, loaded by `LibTimeToDie.xml` and the TOC before the library's own
+files), so you depend on LibTimeToDie alone:
 
-- Embedded: copy both folders into your addon and include `LibHiddenValues.xml`, then `LibTimeToDie.xml`, from your
-  `embeds.xml`.
-- Standalone: install both; list `## OptionalDeps: LibTimeToDie` in your TOC (LibTimeToDie's own TOC loads
-  LibHiddenValues first).
+- Embedded: copy the `LibTimeToDie` folder into your addon and include `LibTimeToDie.xml` from your `embeds.xml`.
+- Standalone: install it; list `## OptionalDeps: LibTimeToDie` in your TOC.
 
-Without LibHiddenValues every handle reads `unavailable, lhv-missing` and comes alive when it is there.
+LibStub runs the newest copy of each library on the client, wherever it was loaded from, so another addon's
+LibHiddenValues and the bundled one never both run. LibTimeToDie needs LibHiddenValues minor 5 or newer
+(`TTD.LHV_MIN`). Without LibHiddenValues every handle reads `unavailable, lhv-missing`, with an older one
+`unavailable, lhv-old`; both come alive once a suitable one is loaded.
+
+Releases are built with `tools/libtimetodie/package.sh` (the folder and `LibTimeToDie-<version>.zip` in
+`.release/libtimetodie/`; the repository keeps one LibHiddenValues source). Two copies of one LibHiddenValues minor
+must be byte-identical (LibStub keeps whichever loads first): bundle committed sources only, and LibHiddenValues bumps
+its minor on every change.
 
 ## Quick start
 
@@ -38,7 +46,8 @@ h:Release()                 -- or TTD:ReleaseAll("MyAddon"): every track and hin
 ```
 
 - `est`, `lo`, `hi` are seconds from now (nil unless `state` is `"live"`); `lo <= est <= hi`. The death time
-  `GetTime() + est` stays put between the sink's calls; the seconds count down by themselves.
+  `GetTime() + est` stays put between the sink's calls while it is ahead; `est` never goes below a quarter of the
+  seconds one percent takes at the current rate, so near the end a read stops short of 0 without a sink call.
 - The sink is called only when the published estimate (the estimator's deadband decides) or the state changes, at
   most once per frame, never from inside a call of yours. A new sink hears the current answer on the next frame.
 - `h:State()` returns `state, reason`; `h:SetSink(fn)` swaps the sink (`true`, or `nil, code`); `h:SetPaused(true)`
@@ -52,7 +61,7 @@ h:Release()                 -- or TTD:ReleaseAll("MyAddon"): every track and hin
 | `priming` | nil | the health is not read yet (a new watch, a new target; `reason` `pending` while LibHiddenValues' self-test runs) |
 | `unknown` | nil | the health is read but has not fallen enough to estimate (a mob at full, a pull with no carried rate) |
 | `gone` | nil | no unit, or it is plainly dead. A death the client keeps secret (under the dungeon restrictions it may) is not `gone`: the band reaches 0-1% and `est` stays near 0 until the target changes or clears |
-| `unavailable` | nil | `reason`: `lhv-missing`, or LibHiddenValues' reason passed through (`unproven` for a token it does not read yet, `selftest`, `api`, `off`, `error`, `suspended`) |
+| `unavailable` | nil | `reason`: `lhv-missing`, `lhv-old`, a code LibHiddenValues refused the watch with, or LibHiddenValues' reason passed through (`unproven` for a token it does not read yet, `selftest`, `api`, `off`, `error`, `suspended`) |
 | `paused` | nil | your `SetPaused(true)`, or every track of the token paused |
 | `released` | nil | after `Release` |
 
@@ -67,19 +76,28 @@ reads `unavailable, unproven` until LibHiddenValues proves it; write against it 
 
 - One health watch per token (1% bands), shared by every track of it (and by any other addon's LibHiddenValues watch
   of the same unit), opened by the first track and freed with the last. Paused while every track of it is.
+- One estimate per owner and token: every owner's estimator gets the same crossings; your tracks of a token share
+  yours. An owner that starts tracking a unit already watched starts from its current band (the earlier crossings
+  are not replayed).
 - A target change starts a fresh stream: the last mob's rate carries over for a few seconds (the estimator's rule), so
   the new target usually answers from its first band (`prior`).
 - A re-prime of the same unit (a UI scale change, a loading screen) keeps the history and keeps answering.
 - `gone` clears the stream and keeps your handle: the next unit starts fresh.
 - Combat start re-anchors a stream with no 1% crossing yet (a mob targeted at full long before the pull).
 - Every stream is read every 0.1 s while it exists (the estimator's deadband and its carried rate come from these
-  reads), and in the frame after a new band.
+  reads), and in the frame after a new band. A stream LibHiddenValues reports unavailable is read again only on a
+  band, your read, a hint or a LibHiddenValues capability change; one with no watch (`lhv-missing`, `lhv-old`, a
+  refusal) tries to open it on your reads and once a second.
 
 ## Hints
 
-Numbers only: the library knows no spell, aura or class. Hints apply to every stream (`player` included), are kept per
-owner (a new call replaces your last one of that kind; `ReleaseAll` clears yours), and several owners' hints multiply.
-The estimator drops a hint the data clearly contradicts. Times are `GetTime()` seconds.
+Numbers only: the library knows no spell, aura or class. Your hints are yours alone: they bend only your own
+estimates, and another addon's hints never reach yours (each owner's estimate depends on the shared health crossings
+and its own hints only). A new call replaces your last one of that kind; `ReleaseAll` clears yours. Hints describe
+damage dealt, so they apply to hostile units only: never to `player`, never to a friendly target. The target's
+hostility is read with `UnitCanAttack` at each target change (an answer the client keeps secret counts as hostile; a
+moment with no target changes nothing); other tokens are read once, when the stream opens. The estimator drops a hint
+the data clearly contradicts. Times are `GetTime()` seconds.
 
 ```lua
 -- Bloodlust/Heroism: the group's damage runs 1.3 times faster for 40 s.
@@ -101,10 +119,12 @@ TTD:HintBelow("MyAddon", nil)     -- clears yours
 | `TTD:HintRate(owner, factor, startTime, endTime?)` | `true`, or `nil, code`. `factor` > 0; `endTime` nil: open-ended |
 | `TTD:HintBelow(owner, pct, factor?)` | `true`, or `nil, code`. `pct` in (0, 100]; `factor` nil: learned |
 
-Several owners: the rate hints in force at the latest start multiply, up to the first of their ends; thresholds act as
-one at the highest percent with the product of the factors given. A part a stream learned (a threshold's factor) or
-dropped (a contradicted rate hint) is pushed again only when the combined hint changes. What a stream learned lives
-with it: when the last track of a token is released, the next track of it starts from the hints as given.
+One rate hint and one threshold per owner: a second rate call before the first window ends replaces it (also for the
+crossings it covered), so combine overlapping windows yourself (one window at the product). A call that repeats your
+hint changes nothing, so what your estimate learned (a threshold's factor) or dropped (a contradicted rate hint) is
+kept; a new hint is pushed afresh. A friendly target in between keeps a learned threshold factor; going back to a
+hostile one pushes your rate hint again (even one the estimator had dropped). What your estimate learned lives with
+it: when your last track of a token is released, your next track of it starts from the hints as given.
 
 ## Error codes
 
@@ -130,14 +150,15 @@ The library prints nothing, registers no slash command and shows no frame. Its o
 |---|---|
 | `TTD:GetVersion()` | `"LibTimeToDie-1.0", 1` |
 | `TTD:IsAvailable(token)` | `ok, state, reason` |
-| `TTD:GetStreams()` | a fresh array (call it from a command, not every frame), one row per tracked token: `token`, `tracks`, `sinks`, `state`, `reason`, `est`, `lo`, `hi`, `crossings` (kept for the fit, at most 32), `drops` (hints the data contradicted), `rateFactor` (1: none), `rateStart`, `rateEnd` (nil: open), `executePct` (nil: none), `executeFactor` (with the stream's own measurement folded in) |
+| `TTD:GetStreams()` | a fresh array (call it from a command, not every frame), one row per tracked token and owner: `token`, `owner`, `tracks` and `sinks` (that owner's), `state`, `reason`, `est`, `lo`, `hi`, `crossings` (kept for the fit, at most 32), `drops` (hints the data contradicted), `rateFactor` (1: none), `rateStart`, `rateEnd` (nil: open), `executePct` (nil: none), `executeFactor` (with the stream's own measurement folded in) |
 
 ## Testing your addon
 
-`Testing/FakeClient.lua` runs both libraries on LibHiddenValues' fake client (stock Lua 5.1, not in the TOC):
+`Testing/FakeClient.lua` runs both libraries on LibHiddenValues' fake client (stock Lua 5.1, not in the TOC), with a
+`UnitCanAttack` (`unit.friendly = true` for a friendly unit; `Fake.world.secretAttack = true` for a secret answer):
 
 ```lua
-local Fake = dofile("libs/LibTimeToDie/Testing/FakeClient.lua") -- finds libs/LibHiddenValues beside it
+local Fake = dofile("libs/LibTimeToDie/Testing/FakeClient.lua") -- finds the bundled Libs/LibHiddenValues
 Fake.world.unit.target = { health = 1.0 }
 dofile("MyAddon.lua")
 Fake.login()
@@ -164,4 +185,4 @@ against the truth in the lab.
 - Nameplate and boss tokens, once LibHiddenValues marks them proven.
 - Lazy coarse tracking of past targets through their nameplates (a background estimate per recent target).
 - The target adopting a watched nameplate's stream when you target that mob (no restart).
-- Hints per unit (today they apply to every stream).
+- Hints per unit (today an owner's hints apply to all its hostile units).

@@ -21,7 +21,9 @@ All through `local TTD = LibStub("LibTimeToDie-1.0", true)`; the owner string is
 
 | Command | Calls | Prints |
 |---|---|---|
-| `/ttdp` | `TTD:GetVersion()`; `TTD:IsAvailable(token)` for `target`, `player`, `focus` | major, minor; `ok, state, reason` per token |
+| `/ttdp` | `TTD:GetVersion()`; `TTD:IsAvailable(token)` for `target`, `player`, `focus`; `TTD.LHV_MIN` and `select(2, LibStub("LibHiddenValues-1.0", true))` | major, minor; `ok, state, reason` per token; the minor needed and the one running |
+| `/ttdp hostile` | `local v = UnitCanAttack("player", "target")`; `issecretvalue(v)`; `v` only when not secret | `secret` or `plain` and the value; `InCombatLockdown()`; the CVar `addonMapRestrictionsForced` |
+| `/ttdp track2` | `TTD:Track("TTDProbe2", "target", sink2)`: a second owner that never hints (sink2 logs like the sink, tagged `2`) | the same sink lines, tagged |
 | `/ttdp track <token>` | `TTD:Track("TTDProbe", token, sink)` (keep the handle per token; on `nil, code` print `TTD:GetMessage(code)`) | one line per sink call: `GetTime()`, token, `est`, `lo`, `hi`, `state`, and `h:State()`'s reason |
 | (inside the sink) | append `{ t = GetTime(), est, lo, hi, state, reason }` to a log per token; on a change to `gone` take `t` as the death time | at `gone`: the summary below |
 | `/ttdp get` | `h:Get()` for every handle | `est, lo, hi, state, reason` each, `TTD:GetMessage(state)` and `TTD:GetMessage(reason)` |
@@ -47,7 +49,8 @@ of the first `est` under 1 s, or else the time the target was lost, as the death
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Log in, `/ttdp` (again after a second if target says `pending`) | `LibTimeToDie-1.0` minor 1; `target` and `player` `ready`; `focus` `unavailable (unproven)` |
+| 1 | Log in, `/ttdp` (again after a second if target says `pending`) | `LibTimeToDie-1.0` minor 1; `target` and `player` `ready`; `focus` `unavailable (unproven)`; the LibHiddenValues minor running is at least the one needed |
+| 1a | With the CVar forced (setup 3): target a hostile mob, `/ttdp hostile` out of combat, then again in combat with it; target a friendly player or NPC, `/ttdp hostile` in combat | report `secret` or `plain` each time (the library treats a secret as hostile; plain is expected); plain values: `true` for the mob, `false` for the friendly unit |
 | 2 | Target a mob at full health, `/ttdp track target` | sink lines: `priming`, then `unknown` (at full, nothing to estimate yet) within a few frames |
 | 3 | Fight it to death with `/ttdp poll` on | `live` from about the first percent lost (reason `seed`, then `fit` after about 3%), est falling smoothly with the clock between sink calls (the poll lines), few sink calls; at the death `gone`. Report the summary |
 | 4 | Three more kills of mobs of different sizes (one elite if at hand) | report each summary |
@@ -56,12 +59,14 @@ of the first `est` under 1 s, or else the time the target was lost, as the death
 | 7 | With the target stream `live`: change the UI scale (Options) | the TTD state stays `live` (no `priming` line), crossings continue (LibHiddenValues re-primes its bars underneath) |
 | 8 | Stop attacking a damaged mob for 6 s or more (or let it heal: a mob that regenerates, a healer in the pack) | stall: reason `stalled`, est roughly holds (it may step by a second or two); heal of 3% or more: reason `prior`, then `fit` again |
 | 9 | `/ttdp track player`, take damage and heal (or fall damage) | the player stream answers as the target's does; `/ttdp streams` shows two rows |
-| 10 | When a Bloodlust/Heroism is cast in a group (or as a test with none): `/ttdp lust` at the cast, `/ttdp lustend` when it ends early | the target's est drops at once on `lust`; `/ttdp streams` shows `rateFactor 1.3`, `rateStart`, `rateEnd`; after `lustend`, `rateEnd` is the end. With no real lust the estimator may drop it (`drops 1`, `rateFactor 1`): report it |
-| 11 | `/ttdp below 20` and fight two or three mobs to death | `executePct 20`; after a mob falls 5% below 20, `executeFactor` moves away from 1 (learned) |
+| 10 | When a Bloodlust/Heroism is cast in a group (or as a test with none): `/ttdp track2`, then `/ttdp lust` at the cast, `/ttdp lustend` when it ends early | the target's est drops at once on `lust` for `TTDProbe` only: the `TTDProbe2` lines do not move; `/ttdp streams` shows `rateFactor 1.3`, `rateStart`, `rateEnd` on the `TTDProbe` target row, `rateFactor 1` on the `TTDProbe2` row and on the player row; after `lustend`, `rateEnd` is the end. With no real lust the estimator may drop it (`drops 1`, `rateFactor 1`): report it |
+| 10a | With the hints of step 10 or 11 set, target a friendly unit (a party member, a friendly NPC), `/ttdp streams`; then a hostile mob again | friendly: the `TTDProbe` target row has `rateFactor 1` and no `executePct`; back on a mob: the hints are back (`executeFactor` as learned before) |
+| 11 | `/ttdp below 20` and fight two or three mobs to death | `executePct 20` on the `TTDProbe` target row only; after a mob falls 5% below 20, `executeFactor` moves away from 1 (learned) |
 | 12 | `/ttdp pause`, wait, `/ttdp resume` | `paused`; LibHiddenValues' target health source not fed (`/ttdp stats` or LHVProbe's sources line); after resume `priming` for LibHiddenValues and the TTD state back to `live` or `unknown` |
 | 13 | `/ttdp stats` during a fight | report LibHiddenValues' µs (8 bars for a 1% watch) and the driver's µs per frame |
 | 14 | `/ttdp release` | no rows; LibHiddenValues' health sources for player and target gone (0 handles) |
 | 15 | A dungeon if at hand: steps 3 and 5 on a pack and a boss | as in the open world; report whether the death shows as `gone` |
+| 15a | Optional, the release form: build `tools/libtimetodie/package.sh`, put its `LibTimeToDie` folder in place of the link, untick **LibHiddenValues**, restart the client, `/ttdp`, then steps 2-3 | as with both addons: LibHiddenValues runs from the bundled copy (its minor shows), no Lua error |
 | 16 | `/ttdp copy`, paste back | |
 
 Also report any Lua error that names LibTimeToDie, LibHiddenValues or the probe, and set the CVar back to "0".
