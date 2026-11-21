@@ -41,7 +41,7 @@ Also report any Lua error that names LibHiddenValues or LHVProbe, and set the CV
 
 ## Stage CDM-1: auras from the Cooldown Manager
 
-LHVProbe needs an aura command first (not built yet): `/lhvp watch aura <player|target> <spellID> <up|stacks|left>
+LHVProbe 0.2.0 or later has the aura commands: `/lhvp watch aura <player|target> <spellID> <up|stacks|left>
 [edges...] [max N]` calling `Watch` with `{ kind = "aura", ... }`, a line per sink call (band, dir, q) and per
 `OnCapability` call (with the handle's spell when the 4th argument is set), `/lhvp aura <unit> <spellID> <what>` printing
 `IsAvailable("aura", spec)`, and `/lhvp cdm` printing `GetAuraSources()` (each row, then off, read, texts, values,
@@ -70,7 +70,7 @@ and reset at the end. Start in caster form, out of combat; `/lhvp watch off` bet
 | # | Do | Expect (PASS) |
 |---|---|---|
 | S1 | `/lhvp` | minor 3; health and power `ready` |
-| S2 | `/lhvp watch power player 30` (no type word) and `/lhvp watch power player precision exact mana` | each refused with the library's English message (`A power watch needs its power type ...`, `The precision must be "point" or nil.`), not a code |
+| S2 | `/lhvp watch power player 30` (no type word), `/lhvp watch power player precision exact mana` and `/lhvp watch aura target <any spell ID> left` (no edges) | each refused with the library's English message (`A power watch needs its power type ...`, `The precision must be "point" or nil.`, `The spec needs edges ... (aura stacks: edges or max; aura seconds: edges).`), not a code |
 | S3 | `/lhvp watch health player step 1`, `/lhvp watch power player step 1 mana` | each a 1% band (e.g. `61-62`), dir 0 first; `/lhvp stats`: one source line per watch, `mode gray`, 8 bars each |
 | S4 | Spend mana in steps (casts), take a hit, heal, out of combat and then in a fight | the mana and health bands follow every 1% change, a big spend is one line; `/lhvp stats`: desyncs 0 (splits may be above 0: a held frame, never a wrong band) |
 | S5 | `/lhvp watch power player points 300 500 mana` (pick points under your mana max) | the band in mana points (`300-500`, `500-<max>`, `0-300`); spend across 500 and 300 and regen back: a line at each crossing, at the point (check against the mana shown on your frame) |
@@ -80,6 +80,7 @@ and reset at the end. Start in caster form, out of combat; `/lhvp watch off` bet
 | S9 | Change your max mana (a buff, a talent, or gear with intellect), or shapeshift and back | after `UNIT_MAXPOWER` the points and precision watches go unknown briefly, then right for the new max |
 | S10 | `/lhvp watch off`; bear form: `/lhvp watch power player precision point rage`; cat form: `... precision point energy` | rage and energy (max 100): `mode gray`, 8 bars, exact to the point |
 | S11 | `/lhvp watch off`, `/lhvp stats` | 0 bars, 0 pushes/s and 0.0 µs per frame (the averages fall to 0 when nothing is fed) |
-| S12 | `/lhvp copy`, paste back | |
+| S12 | `/lhvp watch off`, then A1 to A3 of the aura section again on this minor | as there (the aura kind runs on the stage 3 core now) |
+| S13 | `/lhvp copy`, paste back | |
 
 Report the µs per frame of S3, S7 and S8, every desync, and any wrong band (with the mana or health your frame showed).

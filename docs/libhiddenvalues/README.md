@@ -26,6 +26,10 @@ codes, position, exact points, point precision). Its in-game check: [in-game-tes
   curve). Every other watch on that source is answered from the exact value.
 - `GetStats` zeroes its times and rates when the driver stops (nothing fed) and returns `splits` 8th; `GetPool`
   returns the point caps; `GetSources` rows carry `mode` and `max`.
+- With the aura kind (merged at minor 3): its refusals are `LHV.ERR` codes too (`spell-invalid`, `what-invalid`,
+  `max-invalid` added; the edges codes cover stacks and seconds); `IsAvailable("aura", spec)` keeps the reason
+  `bad-spec`; `h:Latency()` of an aura handle is its measured worst case (up 2 frames, stacks `SETTLE + 1`, left
+  `HOLD + SETTLE + 3`); the secret-max check runs under `pcall` (a raise counts as secret).
 
 ## Built in stages 0 and 1
 
