@@ -278,7 +278,7 @@ function lib.reprime(s)
     for _, i in pairs(s.pbar) do
         prime[i] = P
     end
-    s.bad, s.ok, s.pend, s.run = 0, false, nil, 0
+    s.bad, s.ok, s.qv, s.pend, s.run = 0, false, nil, nil, 0 -- no s.qv: the first decode after the prime is held too
     s.dirty = true
     lib.wake()
 end
@@ -632,7 +632,7 @@ function lib.sync(s)
     local gray = ring and g > 1 and step and lib.grayFor(M) or nil
     if mode ~= s.mode or ring ~= s.ring or gray ~= s.gray then -- a new mode, the ring of a new max, the set beside
         freeCore(s) -- the whole core primes again: shortcut, a step joining or leaving re-primes the ring too
-        s.mode, s.ring, s.gray, s.bad, s.ok, s.pend, s.run = mode, ring, gray, 0, false, nil, 0
+        s.mode, s.ring, s.gray, s.bad, s.ok, s.qv, s.pend, s.run = mode, ring, gray, 0, false, nil, nil, 0
     end
     local want = false
     if ready then
@@ -836,7 +836,7 @@ end
 
 -- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (s.qv keeps
 -- the last accepted value). A ring decode other than s.qv is held until confirmed: the next frame's decode gives the
--- same value (owner, fix round 2). Half of a change whose bars land over two frames is a valid state the client never
+-- same value (owner, fix round 2); a prime clears s.qv, so its first decode is held too (re-review 2 I-R2a). Half of a change whose bars land over two frames is a valid state the client never
 -- held (a 2-3 point regen change across a cell read 50 off; a spend whose cell bits landed in part read another cell,
 -- 516 for 116; a spend whose cell bars all came late read as a small change, 272 for 122); when a push's firings land
 -- within two frames, the next frame's decode holds the rest of them, so a half-landed state does not repeat. A desync
@@ -871,7 +871,7 @@ function lib.decodeSource(s)
         s.dirty = true -- decode again next frame
         return false
     end
-    if q and s.ok and q ~= s.qv and q ~= s.pend then -- a change, not confirmed yet
+    if q and q ~= s.qv and q ~= s.pend then -- a change (or the first decode after a prime), not confirmed yet
         if run > SETTLE + 1 then
             lib.desyncs = lib.desyncs + 1
             lib.reprime(s)

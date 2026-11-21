@@ -453,7 +453,8 @@ end
 
 -- Worst-case seconds from a change to its callback: a one-edge handle on an edges-only source is called in the frame of
 -- the push, a handle on several edges one frame later, any handle on a position or precision source in SETTLE + 3
--- frames counted from the frame the change's first firing arrives (the push's own when the client fires at once): that
+-- frames counted from the frame the change's first firing arrives (the push's own when the client fires at once; after
+-- a prime, the prime's last push: its first decode is held too, measured 4 with a change half-landed on it): that
 -- frame, at most SETTLE + 1 decodes without a call while firings land (bad frames, and the holds of a precision source,
 -- whose every change waits for the next decode to agree; the desync rule caps them), then a call with the value or,
 -- after a desync, unknown (measured 7 in the fake by a chain of split changes, and the first change's firings all late

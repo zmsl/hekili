@@ -839,6 +839,54 @@ describe("LibHiddenValues point precision", function()
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
+        -- Re-review 2 I-R2a: a change half-landed as a prime ends (+2 across 1250 on the prime's last push, its cell bars
+        -- a frame late) read 1200 as the first decode after the prime and was taken unconfirmed. The first decode after a
+        -- prime is held like any change; the first value still comes within h:Latency() of the prime's last push.
+        for _, case in ipairs({
+            {
+                "a re-prime",
+                function()
+                    lib.reprime(h.src)
+                end,
+            },
+            {
+                "a max change",
+                function()
+                    W.unit.player.max[0] = 2480
+                    mana(1248)
+                    Fake.event("UNIT_MAXPOWER", "player")
+                end,
+            },
+        }) do
+            it("never reports a half-landed change as the first value after " .. case[1], function()
+                W.unit.player.max[0] = 2479
+                start(1248)
+                case[2]()
+                local n = 0
+                while lib.barPrime[h.src.core[1]] ~= 1 and n < 40 do
+                    Fake.tick(1)
+                    n = n + 1
+                end
+                assert.are.equal(1, lib.barPrime[h.src.core[1]])
+                local l = move(1250, "cell") -- the prime's last push: +2 across the cell, its cell bars late
+                assert.is_true(#l > 0)
+                local frames = 1 -- frames from the prime's last push to the first value
+                Fake.tick(1)
+                frames = frames + 1
+                fire(l)
+                while type(seen[#seen]) ~= "number" and frames < 12 do
+                    Fake.tick(1)
+                    frames = frames + 1
+                end
+                assert.are.equal(4, frames) -- that push, 1200 held, 1250 held, 1250 confirmed
+                assert.is_true(frames * lib.frameSec <= h:Latency() + 1e-9, "frames " .. frames)
+                Fake.tick(2)
+                onlyHeld({ 1248, 1250 })
+                assert.are.equal(1250, (h:Exact()))
+                assert.are.equal(0, select(6, lib:GetStats()))
+            end)
+        end
+
         -- h:Latency() counts from the frame a change's first firing arrives: here every firing of the first change is a
         -- frame late.
         it("calls within h:Latency() of a change's first firing when that change's firings all arrive late", function()
