@@ -196,4 +196,84 @@ describe("LibHiddenValues position", function()
         untilLive(h)
         assert.are.same({ 38, 39 }, lohi(h))
     end)
+
+    -- L1645: exact energy (max 100, position) read 35, 36, 35, 36 over 4 frames after a spend in the owner's run.
+    it(
+        "holds a one-point change with either of its two bars late, every point both ways: never another value",
+        function()
+            W.unit.player.power[3] = 0
+            local h = lib:Watch("A", { kind = "power", unit = "player", power = 3, precision = "point" }, sink)
+            Fake.login()
+            untilLive(h)
+            Fake.tick(1)
+            local s, st = h.src, lib.barState
+            -- Moves the energy to v with the k-th of the change's bars not arrived yet: one frame holds, then v.
+            local function half(v, k)
+                local old, before = h:Exact(), {}
+                for j = 1, #s.core do
+                    before[j] = st[s.core[j]]
+                end
+                W.unit.player.power[3] = v / 100
+                Fake.tick(1)
+                local changed = {}
+                for j = 1, #s.core do
+                    if st[s.core[j]] ~= before[j] then
+                        changed[#changed + 1] = s.core[j]
+                    end
+                end
+                assert.are.equal(2, #changed) -- a Gray bit and the parity bar
+                local i = changed[k]
+                st[i] = not st[i]
+                calls = {}
+                Fake.tick(1)
+                assert.are.equal(old, (h:Exact()), v)
+                assert.are.same({}, calls)
+                lib.fire(i)
+                Fake.tick(1)
+                assert.are.equal(v, (h:Exact()), v)
+            end
+            for n = 0, 99 do
+                half(n + 1, 1)
+                half(n, 1)
+                half(n + 1, 2)
+                half(n, 2)
+                half(n + 1, 1)
+            end
+            assert.are.equal(0, select(6, lib:GetStats()))
+        end
+    )
+
+    it("needs the client to cross 36 three times to read 35, 36, 35, 36: a split spend and regen cannot", function()
+        -- Reads A, B, A, B: each bar that tells A from B toggles between each two reads, three times after the first. A
+        -- bar toggles once per change of its level (a firing lost or made up is a desync, not a read). After a spend
+        -- v0 -> v1 and regen to at most v1 + 7 (the reads' 4 frames and 3 frames of lag, a point a frame: energy
+        -- regenerates about one point in 6 frames), a bar toggles at most once for the spend plus once per change of
+        -- its level from v1 up.
+        local function level(n, bar) -- bars 0-6: the Gray bits; 7: parity
+            if bar == 7 then
+                return n % 2
+            end
+            return math.floor(lib.GRAY[n] / lib.POW2[bar]) % 2
+        end
+        local tell = {}
+        for bar = 0, 7 do
+            if level(35, bar) ~= level(36, bar) then
+                tell[#tell + 1] = bar
+            end
+        end
+        assert.are.same({ 2, 7 }, tell)
+        local most = 0
+        for v0 = 0, 100 do
+            for v1 = 0, v0 do
+                local f = level(v0, 2) ~= level(v1, 2) and 1 or 0
+                for n = v1 + 1, math.min(100, v1 + 7) do
+                    if level(n, 2) ~= level(n - 1, 2) then
+                        f = f + 1
+                    end
+                end
+                most = math.max(most, f)
+            end
+        end
+        assert.are.equal(2, most) -- three toggles of Gray bit 2 need three level changes: the client went back over 36
+    end)
 end)
