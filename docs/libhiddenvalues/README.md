@@ -10,8 +10,42 @@ ignores the folder (`.pkgmeta`).
 The design it follows is the standalone band library design of 2026-11-20 (working name Tidemark, renamed
 LibHiddenValues), sections 1 to 7. Built: stages 0 and 1 (the skeleton and named health and power edges pushed every
 frame, the measured mechanism), stage CDM-1 (the aura kind read from the Cooldown Manager, below), stage 3 (error
-codes, position, exact points, point precision) and lane C1 (the Cooldown
-Manager gaps before a consumer's switch, below). Its in-game check: [in-game-test-plan.md](in-game-test-plan.md).
+codes, position, exact points, point precision), lane C1 (the Cooldown Manager gaps before a consumer's switch,
+below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-game check:
+[in-game-test-plan.md](in-game-test-plan.md).
+
+## Built in the fix lane: the owner's in-game findings of 2026-11-21, minor 7
+
+**Unproven in the library**: no in-game run yet ([in-game-test-plan.md](in-game-test-plan.md), "Fix lane").
+
+- L1650 `Kinds/Aura.lua`: the C1 swap doubt covers every target watch, not only an Essential or Utility item's. The
+  owner's run read a Tracked Buffs icon watch as a false 0 for 0.4-0.6 s after a swap onto a mob with the aura (the
+  client shows a new target's auras once their update arrives). `up`, `stacks` and `left` target watches read unknown
+  after PLAYER_TARGET_CHANGED until the source sees its item lit or a target UNIT_AURA comes. A cleared target stays
+  unknown until a target UNIT_AURA. FakeClient: `W.cdm.lateSwap`.
+- L1645 ring desyncs (`Bars.lua` `lib.decodeSource`): two invalid decodes in a row counted as a lost firing, but two
+  changes on adjacent frames, each split over two frames, are invalid two frames in a row while firings still land
+  (every desync of a fake run with each firing 1-2 frames late had its last two changes 2 and 3 frames back). A desync
+  is now a bad decode after a bad one with no counted firing in between (`s.firedAt`, stamped in `lib.fire`), or
+  `SETTLE` bad decodes in a row. Why the client splits one push's firings over frames is not known (a secret push's
+  firing trailing a frame, as LHVProbe saw for a prime's live push, is the hypothesis). FakeClient: `jitter`, `seed`.
+- L1645 ring aliases: with regen at 2-3 points per change, the ring's bars of a change across a cell boundary could
+  land apart from the cell's: a valid state 50 off outside the I3 set (a fake run read 401 for 451). `suspect()` holds
+  any decode whose cell moved one more or one less than the ring's own move says, the ring moved at most `DRIFT` (8)
+  quanta; a real jump of 42-58 quanta pays one frame (as 49 and 50 did), within `h:Latency()`.
+- L1645 energy 35, 36, 35, 36 (exact, max 100, position): no decode path. A one-point change toggles a Gray bit and
+  the parity bar, and either alone fails the parity check (a hold); four alternating reads need Gray bit 2 to toggle
+  three times, which a spend and up to 7 points of regen cannot give (both checked exhaustively in `position_spec`).
+  The client's value went back over 36 (or a bar fired with no fill change); which is unproven in game.
+- L1627 (2) `Bars.lua` `lib.sync`, `served`: a refused ring curve no longer suspends the whole source. The source falls
+  back to the position set when a step watch is there, else to edges only (also when the percent Gray set itself is
+  refused); only the handles that need the refused curves are `suspended` (precision; step without a position set).
+- Residual rates (fake, 150 s, max 2479, regen +2/+3 every 5-7 frames, a spend every 1-4 s, each firing 1-2 frames
+  late, harsher than the run's ~1 change in 4 split): 0 desyncs (17 before), 0 reads 50 off (1 before), ~1340 splits,
+  4% of sink calls a value between the old and the new one for a frame. With firings 1-3 frames late: ~165 desyncs
+  (596 before), up to 2 reads 50 off (after a bad frame the first valid decode is taken unchecked: review 985f8a3e1).
+- Read-only leftovers (L1649): `.luacheckrc` drops the unused `C_EncodingUtil`, `UnitClass`, `GetSpecialization`,
+  `C_SpecializationInfo`; the in-game plan's minor statements read "or later".
 
 ## Built in lane C1: Cooldown Manager gaps G1-G4, truths, the position set beside the ring, minor 5
 
@@ -33,17 +67,18 @@ Manager gaps before a consumer's switch, below). Its in-game check: [in-game-tes
   above 1 while a step is asked, after the ring's bars in `s.core`. Its curves are cut on whole points per max
   (`lib.grayFor(M)`, cached and trimmed as the rings): the percent-scale set misreads 3967 of 6400 as 62% when the
   client snaps right or to the nearest point. The ring decode cross-checks the cell against the quantum's points
-  ("cross": a bad frame, as a split; two in a row a desync). A step joining or leaving re-allocates the whole core.
+  ("cross": a bad frame, as a split; a desync by the rule of `lib.decodeSource`). A step joining or leaving re-allocates the whole core.
   `lib.need` counts the 8 bars whenever a step and precision share a source (at step 1 too: the step can grow with
   the max); a `step` watch is now admitted (pool-limit) like points and precision.
 - Fix round 1 (review of 2026-11-21, owner rule "truths, not assumptions"): `Kinds/Aura.lua` counts target swaps
   (`cdm.swapNo`) and holds `cdm.doubt` from PLAYER_TARGET_CHANGED to the next target UNIT_AURA (registered for the
-  target only, `Cdm.lua`); meanwhile a target watch's silent Essential or Utility item reads unknown unless that
-  source saw it lit since the swap (`s.litAt`; a source made after the swap is in doubt too). The viewers'
+  target only, `Cdm.lua`); meanwhile a target watch's silent Essential or Utility item (since minor 7 every
+  target watch's item) reads unknown unless that source saw it lit since the swap (`s.litAt`; a source made after the swap is in doubt too). The viewers'
   RefreshData hook does not clear it: it may run at the swap itself. The client refreshes such an item on a target
   change only while it holds a target aura (no range check), so after A, B, A it can stay silent on A. `cdm.facts`
   keeps the client's `hasAura` and `selfAura` as given (rows of `GetAuraEntries`; nothing filters on them).
-- `Testing/FakeClient.lua`: Essential and Utility viewers with item pools (`W.cdm.essential`, `W.cdm.utility`), `W.cdm.secretUnit`, `W.cdm.noUnit`, `W.cdm.quietSwap`, `Fake.secret`.
+- `Testing/FakeClient.lua`: Essential and Utility viewers with item pools (`W.cdm.essential`, `W.cdm.utility`),
+  `W.cdm.secretUnit`, `W.cdm.noUnit`, `W.cdm.quietSwap`, `Fake.secret`.
 - Probe facts owed: is `auraDataUnit` ever secret in combat (aura viewers, Essential, Utility)? Is an item's
   `cooldownID` ever secret in combat (its watches then read unknown)? Does an Essential item show its
   aura in combat as it does out of combat?
@@ -74,8 +109,9 @@ The reviewed code is in git history (forever 9d03be787, d8118f21b) and moves int
 
 ## Built in stages 0 and 1
 
-- LibStub major `LibHiddenValues-1.0`, minor 6 (2: the aura kind; 3: stage 3; 4: CDM-2; 5: C1; 6: Mode B removed). Seven files after
-  LibStub; the first calls `NewLibrary` and sets `lib.loading`, the others return unless it is set, the last
+- LibStub major `LibHiddenValues-1.0`, minor 7 (2: the aura kind; 3: stage 3; 4: CDM-2; 5: C1; 6: Mode B removed;
+  7: the fix lane). Seven files after LibStub (`LibHiddenValues.lua`, `Bars.lua`, `Feed.lua`, `Kinds/Percent.lua`,
+  `Cdm.lua`, `Kinds/Aura.lua`, `SelfTest.lua`); the first calls `NewLibrary` and sets `lib.loading`, the others return unless it is set, the last
   (`SelfTest.lua`) clears it. All state on `lib`; scripts are one-line dispatchers through `lib`. Nothing but the
   event frame is built before `PLAYER_LOGIN`; a copy loaded after login (load on demand, or a newer minor) realises
   at once, keeps the frames and re-primes every source.
@@ -169,7 +205,7 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 | `pool-limit` | for points, point-precision and (since lane C1) step requests; plain percent edges over the pool stay `suspended` (stage 1 rule) | the brief scopes it to those requests; a step joining a full precision source suspended the whole source |
 | Curve size (stage 3) | at most 256 points per curve (BandProbe2 D1: 256 accepted, 512 refused), so 127 guarded steps; the ring's point step grows past a max of 3175 | the brief's "256 steps" would build 513-point curves |
 | Mode changes (stage 3) | a step or point listener joining or leaving frees and allocates at once: the source's other handles go unknown for one prime (about 10 frames) when their bars move | shortcut: keep the old bars until the new set is live if this blinds consumers in practice |
-| Position split/desync (stage 3) | design 3.3: one bad decode holds the last band (`splits`), two in a row re-prime (`desyncs`) | as designed; the COARSE fallback is not built |
+| Position split/desync (stage 3; fix lane) | design 3.3: one bad decode holds the last band (`splits`); a bad decode after a bad one with no firing between, or `SETTLE` in a row, re-primes (`desyncs`) | design 3.3 had two in a row; a change still landing is not a lost firing (owner run 2026-11-21); the COARSE fallback is not built |
 | `points` or `precision` on health, power types other than mana, rage and energy, other tokens | handle `unavailable, unproven` | unproven in the run |
 | Rage (controller for the owner, 2026-11-20) | `ready` on `player` like mana and energy, the same `UnitPowerPercent` read | proven by the BandProbe2 warm-up (bear form, in combat under the lockdown: Gray 7 bits + parity and the 20-bar bank, 0 disagreements, desync 0); the library's own in-game run is owed. Rage sits at 0 out of combat: below the lowest edge it primes to the known lowest band |
 | Aura | read from the Cooldown Manager (stage CDM-1, above); the aura container route stays closed | design addenda L1576, L1577, L1582 |

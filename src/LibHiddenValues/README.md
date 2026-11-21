@@ -31,7 +31,8 @@ end)
   `LHV.UNKNOWN` = 0).
 - At most one call per handle per frame. A handle on one edge is called in the frame of the change; on several edges,
   one frame later, with the net band (a jump over three edges is one call); on a `step` or `precision` source up to
-  two frames later (a split holds the decode a frame). `h:Latency()` gives the worst case in seconds.
+  two frames later (a split holds the decode a frame; while a change's firings are still landing, longer).
+  `h:Latency()` gives the worst case in seconds when a change's firings land within two frames.
 - `h:Get()` returns `lo, hi, t, q` without a callback; `h:State()` returns `state, reason` (`"live"` means a band is
   known: `Get()` has it); `h:SetPaused(true)` stops
   feeding while your frame is hidden; `h:Release()` and `LHV:ReleaseAll("MyAddon")` drop watches.
@@ -63,23 +64,26 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   is refused (`edge-limit`), nothing granted. `h:SetPoints(list)` swaps a handle's points in one step: `true`, or
   `nil, code` with the old set kept. While the max was never read as a plain number the handle is `unavailable, max-unknown`.
 - `precision = "point"` (player power): the exact value. `h:Exact()` returns `value, step` (value nil while unknown):
-  step 1 up to a max of 3175, above it the step grows until every curve fits the client's 256-point limit (6400
-  mana: step 3). `q` is `LHV.EXACT` (3) at step 1. It costs 57 bars at most (50 + a cell code + parity); while any
-  watch on the source asks for it, that source's other bars are released and every other watch on it is answered
-  from the exact value. At a step above 1 (a max over 3175) a point that is not a multiple of the step, and an edge
-  whose cut is not, keeps its own bar, so points and edges stay exact to the point; `h:Exact()` is to the step. A
-  `step` watch beside it still reads one 1% cell: while one is there the source also runs the 8 position bars (cut on
-  whole points, so they agree with the exact value), and a cell that does not meet the exact value is held a frame,
-  then primes again, as any disagreement. A `step` watch joining or leaving such a source primes it again (about 9
-  frames unknown). At step 1 the exact value already gives the cell: no extra bars run (admission still counts
-  them: the max can grow past 3175). A one-step change is never misread when its firings land within two frames:
-  at a cell boundary (every 50 steps) the library holds one frame when only half of the change's bars have landed.
-  A larger jump whose firings land in two frames can read as another value for that one frame, as on a `step`
-  source; the probe runs saw no change split over two frames. A max of 100 or less is the same as `step` (8 bars,
-  exact). It is outside the point caps but inside the 256-bar pool,
-  with every edge and point on the source counted (the step can grow with the max) and the 8 position bars when a
-  `step` watch is there: over it, `pool-limit`. Any `step` watch is admitted the same way (counted, or refused with
-  `pool-limit`), as a points or precision watch is; one joining a precision source counts the 8 position bars.
+  step 1 up to a max of 3175, above it the step grows until every curve fits the client's 256-point limit (6400 mana:
+  step 3). `q` is `LHV.EXACT` (3) at step 1. It costs 57 bars at most (50 + a cell code + parity); while any watch on
+  the source asks for it, that source's other bars are released and every other watch on it is answered from the exact
+  value. At a step above 1 (a max over 3175) a point that is not a multiple of the step, and an edge whose cut is not,
+  keeps its own bar, so points and edges stay exact to the point; `h:Exact()` is to the step. A `step` watch beside it
+  still reads one 1% cell: while one is there the source also runs the 8 position bars (cut on whole points, so they
+  agree with the exact value), and a cell that does not meet the exact value is held a frame, then primes again, as any
+  disagreement. A `step` watch joining or leaving such a source primes it again (about 9 frames unknown). At step 1 the
+  exact value already gives the cell: no extra bars run (admission still counts them: the max can grow past 3175). A
+  change of up to 8 steps across a cell boundary (every 50 steps) is never read 50 off when its firings land within two
+  frames: the library holds one frame when the cell's bars and the others land apart (a real jump of 42 to 58 steps pays
+  that frame too). A change of several steps whose firings land in two frames can read for that one frame as a value
+  between the old and the new one; a larger jump as another value, as on a `step` source. The owner's run (2026-11-21,
+  mana regenerating 2-3 points at a time) saw about one change in four split over two frames. Should the client refuse a
+  ring curve at a max, the precision watch is `suspended` there and the source's other watches keep their bars (a `step`
+  watch reads the 8 position bars). A max of 100 or less is the same as `step` (8 bars, exact). It is outside the point
+  caps but inside the 256-bar pool, with every edge and point on the source counted (the step can grow with the max) and
+  the 8 position bars when a `step` watch is there: over it, `pool-limit`. Any `step` watch is admitted the same way
+  (counted, or refused with `pool-limit`), as a points or precision watch is; one joining a precision source counts the
+  8 position bars.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
 other kind, token or option (focus or another power type, `points` or `precision` on health, the `focus` token, ...)
@@ -221,9 +225,9 @@ Fake.restore()
 ```
 
 Its header lists the world fields (`max` per power type for `points` and `precision`), the fault knobs (`closed`,
-`lag`, `secretlag`, `drop`, `stagger`, `snap`, `maxpoints`, `refuse`) and what it does not model. It also models the
-Cooldown Manager (`W.cdm`, `W.aura`, `Fake.setAura`, `Fake.cdmLayout`, `Fake.cdmEnable`): see the comment above its
-viewers.
+`lag`, `secretlag`, `drop`, `stagger`, `jitter`, `seed`, `snap`, `maxpoints`, `refuse`) and what it does not model. It
+also models the Cooldown Manager (`W.cdm`, `W.aura`, `Fake.setAura`, `Fake.cdmLayout`, `Fake.cdmEnable`; a target's
+auras arriving late after a swap: `W.cdm.lateSwap`): see the comment above its viewers.
 
 ## Diagnostics
 
@@ -233,13 +237,13 @@ the reference consumer (`/lhvp`).
 
 | Call | Returns |
 |---|---|
-| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 6`) |
+| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 7`) |
 | `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, `cooldown` ... `aura` ... `meter`: the major's twelve); `state` and `reason` as `IsAvailable` |
 | `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable). `unit` may be a whole spec: the aura kind then answers for its placement |
 | `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change, and `fn("aura", state, reason, h)` for each of the owner's aura handles whose answer changed |
 | `LHV:GetAuraSources()` | a fresh array, one `{ unit =, spell =, cooldown =, what =, handles =, bars =, active =, cooldownID =, placement =, state =, reason =, up = }` per aura source with a watch (`cooldown` the entry a watch by entry names, else nil; `cooldownID` the entry read now; `placement` `"bar"`, `"icon"`, `"essential"`, `"utility"` or nil; `up` true, false or nil for unknown); then `off, read, texts, values, refused, reads`: the Cooldown Manager is off, its catalogue was read, count texts and bar values forwarded, values a bar refused, item reads |
 | `LHV:GetAuraEntries(spell)` | a fresh array, one `{ cooldownID =, spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = { ... }, hasAura =, selfAura =, category =, placement = }` per Cooldown Manager entry naming the spell (as its spell, override, tooltip override or a linked spell), in catalogue order: the client's plain facts from its out-of-combat read (`hasAura` and `selfAura` the client's booleans as given, nil when not plain; the library does not filter on them; `category` the default one; `placement` as in `GetAuraSources`, nil when no item shows it); then `read` (the catalogue was read). Choose one and watch it with `cooldown =` |
-| `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, splits`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now), splits (a position decode held one frame). The frame times cover the library's whole frame, the self-test's frames included while it runs; with nothing fed the driver stops and every rate and time reads 0 |
+| `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, splits`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs (a position decode still invalid on a frame with no new firing after an invalid one, or 4 in a row: the source primes again), governor level (0 for now), splits (a position decode held one frame). The frame times cover the library's whole frame, the self-test's frames included while it runs; with nothing fed the driver stops and every rate and time reads 0 |
 | `LHV:GetPool()` | `made, cap, pointBars, pointCap, pointCapPerSource`: bars made (32 at login; frames are never destroyed), the cap (256), point bars in use, and the point caps (64, 8) |
 | `LHV:GetSources()` | a fresh array, one `{ kind =, unit =, power =, predicted =, handles =, bars =, mode =, max =, active = }` per source with a watch, in creation order (`kind`, `unit`, `power`, `predicted` are the source's key: watches differing in any of them do not share bars; `power` nil for health; `mode` `"edges"`, `"gray"` (position) or `"ring"` (point precision); `max` the plain max a power source cuts points with; `active`: fed every frame) |
 | `LHV:SelfTest(fn)` | nothing; runs the self-test (or joins the run going) and calls `fn(pass, lines)` when it ends: `pass` a boolean, `lines` an array of strings under 255 characters, the last one `selftest PASS ...` or `selftest FAIL ...`. Called at once (inside `SelfTest`) when it cannot run: the client lacks the API, switched off, or no free bar (an earlier verdict then stands; with none it is a FAIL). Before login it waits for the login run. The capability has already changed when `fn` runs: `IsAvailable` and the handles' `State()` show the new verdict. `lines` is shared: read it, do not change it |

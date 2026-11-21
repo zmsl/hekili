@@ -1,4 +1,4 @@
-# LibHiddenValues: in-game test plan (stages 0-1, CDM-1, 3, lane C1)
+# LibHiddenValues: in-game test plan (stages 0-1, CDM-1, 3, lane C1, the fix lane)
 
 For the owner, one session on the live client. About 15 minutes. The library prints nothing and has no command of its
 own: every test runs through LHVProbe, its reference consumer, which calls the public API and prints what it gets.
@@ -20,7 +20,7 @@ The expectations below are facts (a band, a direction, a state, a count); LHVPro
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Log in, type `/lhvp` right away (again after a second if health says `pending`) | version `LibHiddenValues-1.0` minor 5, 32 bars made (when LHVProbe shows `GetPool`), health `ready` and power `ready`, the other kinds `unavailable (unproven)`. Report the verdict the login self-test gave: `ready` or `unavailable (selftest)`. If unavailable: run `/lhvp selftest` and report its lines; a PASS there (the kinds `ready` after it) means the login run was upset by the loading screen, not a broken mechanism |
+| 1 | Log in, type `/lhvp` right away (again after a second if health says `pending`) | version `LibHiddenValues-1.0` minor 7 or later, 32 bars made (when LHVProbe shows `GetPool`), health `ready` and power `ready`, the other kinds `unavailable (unproven)`. Report the verdict the login self-test gave: `ready` or `unavailable (selftest)`. If unavailable: run `/lhvp selftest` and report its lines; a PASS there (the kinds `ready` after it) means the login run was upset by the loading screen, not a broken mechanism |
 | 2 | `/lhvp selftest` | three edge lines (25, 50, 75%) with changes = firings and `ok`, `selftest prime: firings in the settle window 1, after it 0: ok`, then `selftest PASS: curves ok, max lag 0 frames` (these lines are the library's own, passed through unchanged) |
 | 3 | Target a mob at full health, `/lhvp watch health target 20 50 80` | the watch is `priming`, then within a few frames band 80-100, dir 0, q 2, as its first band (no 0-20 line before it) |
 | 4 | `/lhvp watch health player 50` and `/lhvp watch power player 30 mana` (or `energy`: your class's type; the word is required) | a first band for each, dir 0. Without the type word the watch is refused with `A power watch needs its power type (an Enum.PowerType number).`. A Druid: shift forms; each watch keeps its own type (report what an energy watch says in caster form). A rage watch (`/lhvp watch power player 30 rage`, bear form): out of combat at 0 its first band is 0-30, dir 0 (known, not unknown), then crossings as rage builds and decays: the library's first rage run |
@@ -51,7 +51,7 @@ refused, reads). A class with a stacking aura and a timed debuff helps (a Druid:
 |---|---|---|
 | A1 | Cooldown Settings: put a stacking aura (Lacerate) in Tracked Bars, a buff in Tracked Buffs (icons), leave a third aura out. `/lhvp aura` for each with `up`, `stacks`, `left` | bar: all `ready`; icon: `up` and `stacks` `ready`, `left` `unavailable (cdm-icon-only)`; the third `cdm-not-tracked` (or `not-in-cdm` if no entry names it) |
 | A2 | `/lhvp watch aura target <Lacerate> stacks max 5`, `/lhvp watch aura target <Lacerate> left 3 6`, `/lhvp watch aura target <Lacerate> up`; fight a mob, stack it to 5, let it fall off | up 0 then 1; stacks 0-2 at 1 (no count shown: 0 or 1), then 2-3 .. 5-5 one line per cast (dir 1); left 6-inf, then 3-6 and 0-3 (dir -1) near 6 s and 3 s left, back up on each refresh; at the expiry stacks 0-1 and left 0-3 (dir -1), up 0 |
-| A3 | Swap targets mid-fight (a mob without the debuff, then back) | stacks and left the lowest band and up 0 on the other mob; the old values again within a frame or two on swap-back, with no `priming` line |
+| A3 | Swap targets mid-fight (a mob without the debuff, then back) | minor 7 or later: unknown (`gone`) right after each swap; on the other mob stacks and left the lowest band and up 0 once its auras arrive; on swap-back the old values once the bar lights, with no `priming` line and no 0 or lowest band before them (minor 6 and before: the lowest band at once) |
 | A4 | `/lhvp cdm` in and after combat | texts and values rising, refused 0; report `read` and the placement of each row |
 | A5 | Cooldown Settings: move the aura from Tracked Bars to Tracked Buffs, then remove it, then put it back (out of combat) | `OnCapability` lines per handle: `left` to `cdm-icon-only`, all to `cdm-not-tracked`, then `ready` again |
 | A6 | Options: switch the Cooldown Manager off, then on | `aura unavailable (cdm-off)` (kind and each handle), every aura watch unknown; on again: `ready`, bands back after the next application |
@@ -69,7 +69,7 @@ and reset at the end. Start in caster form, out of combat; `/lhvp watch off` bet
 
 | # | Do | Expect (PASS) |
 |---|---|---|
-| S1 | `/lhvp` | minor 6 (5 before the Mode B removal); health and power `ready` |
+| S1 | `/lhvp` | minor 3 or later; health and power `ready` |
 | S2 | `/lhvp watch power player 30` (no type word), `/lhvp watch power player precision exact mana` and `/lhvp watch aura target <any spell ID> left` (no edges) | each refused with the library's English message (`A power watch needs its power type ...`, `The precision must be "point" or nil.`, `The spec needs edges ... (aura stacks: edges or max; aura seconds: edges).`), not a code |
 | S3 | `/lhvp watch health player step 1`, `/lhvp watch power player step 1 mana` | each a 1% band (e.g. `61-62`), dir 0 first; `/lhvp stats`: one source line per watch, `mode gray`, 8 bars each |
 | S4 | Spend mana in steps (casts), take a hit, heal, out of combat and then in a fight | the mana and health bands follow every 1% change, a big spend is one line; `/lhvp stats`: desyncs 0 (splits may be above 0: a held frame, never a wrong band) |
@@ -87,7 +87,7 @@ Report the µs per frame of S3, S7 and S8, every desync, and any wrong band (wit
 
 Stage CDM-2 (the managed layout, Mode B) is gone: it moved to Hekili's integration lane C5.
 
-## Lane C1: up from all four viewers, watch by entry, truths, the position set beside the ring (minor 5)
+## Lane C1: up from all four viewers, watch by entry, truths, the position set beside the ring (minor 5 or later)
 
 Map lockdown on as in Setup. LHVProbe needs these before the run (each calls
 the public API only; the existing aura commands stay as they are):
@@ -104,7 +104,7 @@ the public API only; the existing aura commands stay as they are):
 
 | # | Do | Expect (PASS) |
 |---|---|---|
-| E1 | `/lhvp` | minor 5 |
+| E1 | `/lhvp` | minor 5 or later |
 | E2 | Cooldown Settings: an ability whose debuff its Essential icon shows (a Druid: Faerie Fire, Demoralizing Roar); its aura not in Tracked Buffs or Bars. `/lhvp entries <its spellID>` | one row per entry naming the spell, the Essential one with `placement essential` and `category 0` |
 | E3 | `/lhvp aura target <spellID> up`, `... stacks max 3`, `... left 3` | `up` `ready`; `stacks` and `left` `unavailable (cdm-cooldown-only)` |
 | E4 | `/lhvp watch aura target cooldown <the Essential cooldownID> up`; fight a mob, cast it, let it fall off; also in combat | up 0, then 1 when applied (within a frame or two of the icon showing it), 0 when it ends; report any `gone` in combat |
@@ -118,3 +118,17 @@ the public API only; the existing aura commands stay as they are):
 | E12 | Facts (I4): `/lhvp entries <spellID>` for an ability with an Essential entry that shows no aura (`hasAura` false) and one that does (`hasAura` true; Demoralizing Roar). `/lhvp watch aura target cooldown <the hasAura false ID> up`, cast it on a mob | report both rows' `hasAura` and `selfAura`; whether the `hasAura` false item ever reads 1 (its icon ever showing an aura) |
 | E13 | Catalogue re-reads (M2): out of combat, one Essential watch on (E4), `/lhvp cdm`, note `reads=`; cast abilities on Essential and Utility for one minute; `/lhvp cdm` again. Repeat on minor 4 (the lane-CDM-2 LHVProbe with its library) | report both `reads=` deltas per minute. Many more on minor 5 than minor 4: the Essential/Utility RefreshData hook re-reads the catalogue per cooldown event (the fix would read it only on catalogue events) |
 | E14 | `/lhvp copy`, paste back; set the CVar back to "0" | |
+
+## Fix lane: the owner's findings of 2026-11-21 (minor 7)
+
+About 10 minutes, a Druid. Map lockdown on as in Setup (LHVProbe 0.6.0 or later; a `/reload` is enough: no new
+file). `/lhvp watch off` between the groups.
+
+| # | Do | Expect (PASS) |
+|---|---|---|
+| F1 | `/lhvp` | minor 7 |
+| F2 | Faerie Fire (or another debuff of yours) in Tracked Buffs (an icon), a Tracked Bar debuff too if you have one. `/lhvp watch aura target cooldown <the icon's cooldownID> up` (and `... <the bar's> left 3`). Debuff mob A, target mob B (no debuff), then A again, several times | after every swap the watch reads unknown (`?`, `gone`) first; on A then 1 (the bar: its seconds band), never 0 (or 0-3) between the swap and the 1; on B 0 once its auras arrive (the run saw ~2 s on the Essential watch). Report the line times of each swap |
+| F3 | With the F2 watch live, clear the target (Escape), wait 5 s, target A again | unknown while no target (it may stay unknown until a target's auras arrive), then as in F2 |
+| F4 | `/lhvp watch off`, `/lhvp watch power player precision point mana`; `/lhvp stats` (note desyncs and splits); one minute regenerating out of combat, then one minute in a fight casting; `/lhvp stats` again | desyncs unchanged (0 new: the run before this lane saw 4 in 2.5 min); splits rising is fine (a held frame, never a wrong value). Report both deltas and the µs per frame. Report, with both lines copied, any exact line 50 off the line before and after it (one frame apart) |
+| F5 | Cat form: `/lhvp watch power player precision point energy`; spend and regenerate for a minute | report any exact energy that goes back and forth over 4 frames (35, 36, 35, 36) with the energy your frame showed: the library cannot produce that from a split, so it is the client's value |
+| F6 | `/lhvp copy`, paste back; set the CVar back to "0" | |
