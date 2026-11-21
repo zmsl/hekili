@@ -12,7 +12,7 @@
 -- multiplier over a time window (time is warped so the fit sees one base rate) and Hint("execute", factor, pct) for
 -- a speed-up below a health percent (percent is warped; by default the factor is learned from the streams that cross
 -- it). Slopes are kept in base-rate units, so a carried slope survives a hint's end.
-local max, min, abs, sqrt = math.max, math.min, math.abs, math.sqrt
+local max, min, abs, sqrt, exp = math.max, math.min, math.abs, math.sqrt, math.exp
 
 local E = {}
 E.__index = E
@@ -69,6 +69,20 @@ E.DEFAULTS = {
     -- first crossing is dropped (the stream then starts at that crossing, like an unanchored one); 0 turns it off.
     staleAnchor = 8,
     clampRange = true, -- lo/hi also cover the estimate of an unclamped fit when the clamp moved it
+    -- TTD lab run 4 (real traces). A mob first seen at full: its anchor moves to the first damage (the first band
+    -- below full; LibHiddenValues reports full as its own band, lo 100), so the time before the first hit (approach,
+    -- travel, an idle target) is not read as damage time.
+    hitAnchor = false,
+    seedTime = 0, -- seconds the last crossing must lie after the anchor before the anchor's slope (seed) answers
+    newAnchor = 0, -- seconds: a first crossing sooner than this after the anchor drops it (0 off)
+    lumpWeight = false, -- the fit counts every percent a crossing skipped (a lump), all crossed at its time
+    holdOverdue = false, -- a projected death already passed while the mob lives: project again from now, band middle
+    -- lo/hi also cover est x exp(-+ rangeZ x u), u^2 = dVar x (1 / span + 1 / left): the stream's own crossing noise
+    -- (dVar, the detector's lateness variance per percent; 1 before it learns) over the percent the fit has seen
+    -- (span, the half-life-weighted fall) and the percent left; 0 turns it off.
+    rangeZ = 0,
+    rangeMax = 3, -- ... at most this factor either way (dVar learns from the first crossings' noisy slopes)
+    rangeOwn = false, -- u from the fit window's own lateness against the slope in use, not the detector's dVar
 }
 
 function E.New(params)
@@ -80,9 +94,9 @@ function E.New(params)
         assert(E.DEFAULTS[k] ~= nil, "unknown parameter " .. tostring(k))
         self[k] = v
     end
-    self.rt, self.rp = {}, {}
+    self.rt, self.rp, self.rd = {}, {}, {}
     for i = 1, self.ring do
-        self.rt[i], self.rp[i] = 0, 0
+        self.rt[i], self.rp[i], self.rd[i] = 0, 0, 1
     end
     -- state fields are false, never nil, when empty: a nil field re-set after a collection can rehash the table
     self.bPrev, self.lastAt = false, false
@@ -107,6 +121,7 @@ function E:Restart()
         self.bPrev = self.lastB
     end
     self.known, self.fresh, self.anchored, self.carryFrom, self.resumed = false, false, false, false, false
+    self.hit = false -- hitAnchor: the first damage was seen (the anchor sits there)
     self.tAnchor, self.pMin, self.tLast, self.pLast = false, false, false, false
     self.tPub, self.setAt, self.lastB = false, false, false
     if self.xCand and self.execLearn > 0 then -- the last stream measured its speed-up below the threshold
@@ -220,9 +235,15 @@ local function fit(self, now, h)
         if age <= self.window then
             local p = self.rp[j]
             local w = 0.5 ^ (age / h)
+            local d, v = 1, 0
+            if self.lumpWeight then -- every percent the crossing skipped was crossed at t: d points, hi .. hi + d - 1
+                d = self.rd[j]
+                p, v = p + (d - 1) / 2, (d * d - 1) / 12
+            end
             local dp, dt = work(self, p) - wRef, tau(self, t) - tRef
+            w = w * d
             sw, sp, st = sw + w, sp + w * dp, st + w * dt
-            spp, spt = spp + w * dp * dp, spt + w * dp * dt
+            spp, spt = spp + w * (dp * dp + v), spt + w * dp * dt
             pHi, pLo, tHi, tLo = max(pHi, p), min(pLo, p), max(tHi, t), min(tLo, t)
         end
     end
@@ -308,9 +329,16 @@ function E:Band(t, lo, hi)
         else -- a new pull, not a swap: the old slope says nothing
             self.bPrev = false
         end
+        self.hit = lo < 100 -- seen below full: no first damage to wait for
         return
     end
     local pMin = self.pMin
+    if self.hitAnchor and not self.hit and lo < 100 then
+        self.hit = true
+        if self.fresh and self.n == 0 and not self.t0 then -- the first damage: health was full until now
+            self.tAnchor = t
+        end
+    end
     if hi < pMin then -- a crossing: health just fell below hi
         if stalledFor(self, t) > 0 then
             carry(self, t)
@@ -318,6 +346,10 @@ function E:Band(t, lo, hi)
         if self.n == 0 and not self.t0 then
             if self.anchored and self.staleAnchor > 0 and t - self.tAnchor > self.staleAnchor then
                 -- it sat in its first band too long (idle, nobody hitting it): the first band's time says nothing
+                self.fresh, self.anchored = false, false
+            elseif self.anchored and t - self.tAnchor < self.newAnchor then
+                -- the first hit landed at the anchor (a pull in the same frame as combat start): the anchor's slope
+                -- would be one hit over no time, so the stream starts at this crossing, after that first hit
                 self.fresh, self.anchored = false, false
             end
             if self.fresh then
@@ -341,7 +373,7 @@ function E:Band(t, lo, hi)
         end
         detect(self, t, hi)
         self.head = self.head % self.ring + 1
-        self.rt[self.head], self.rp[self.head] = t, hi
+        self.rt[self.head], self.rp[self.head], self.rd[self.head] = t, hi, pMin - hi
         self.n = min(self.n + 1, self.ring)
         self.pMin, self.tLast, self.pLast = hi, t, hi
     elseif hi - pMin >= self.healReset then -- a heal: start over from here
@@ -376,8 +408,10 @@ local function slope(self, now, h)
                 raw = b
             end
             b, state = c, "fit"
-        elseif bcum then
+        elseif bcum and self.tLast - self.t0 >= self.seedTime then
             b, w, state = bcum, self.seedWeight, "seed"
+        elseif bcum then -- the anchor's slope spans too little time to say anything yet
+            b, w, state = nil, 0, "prior"
         else
             b, w, state = bfit, w, "fit"
         end
@@ -408,7 +442,40 @@ local function death(self, now, b)
     if self.holdStall then -- a stall stops the countdown
         T = T + stalledFor(self, now)
     end
+    if self.holdOverdue and T < now then
+        -- it lives past its projected death, so the slope is refuted: at least the one that has it still alive now
+        -- (all that was left at the last crossing spread over the time since), projected from now at the band's middle
+        local left = work(self, pLast) - work(self, self.deathPct)
+        b = max(b, (tau(self, now) - tau(self, tLast)) / max(0.5, left))
+        T = untau(self, tau(self, now) + max(0, work(self, self.pMin - 0.5) - work(self, self.deathPct)) * b)
+    end
     return T
+end
+
+-- rangeZ's relative spread u of the death time: u^2 = dVar x (1 / span + 1 / left), span the half-life-weighted
+-- percent the kept crossings fell (each crossing's fall from the one before, or from the anchor), left the percent
+-- to the death. Both at least 1 (a band).
+local function noise(self, now, b)
+    local span, prev, pt = 0, self.t0 and work(self, self.p0) or false, false
+    local own, se, sd = self.rangeOwn, 0, 0
+    for i = 1, self.n do
+        local j = at(self, i)
+        local wp, t = work(self, self.rp[j]), self.rt[j]
+        local age = now - t
+        if prev and age <= self.window then
+            local w = 0.5 ^ (age / self.halfLife)
+            local d = prev - wp
+            span = span + w * d
+            if own and pt then -- crossing to crossing (not from the anchor): its lateness in percent against b
+                local e = (tau(self, t) - tau(self, pt)) / b - d
+                se, sd = se + w * e * e, sd + w * d
+            end
+        end
+        prev, pt = wp, t
+    end
+    local v = own and (se + 1) / (sd + 1) or self.dVar -- rangeOwn: one percent of unit noise as the prior
+    local left = work(self, self.pLast) - work(self, self.deathPct)
+    return sqrt(v * (1 / max(1, span) + 1 / max(1, left)))
 end
 
 -- Widens [lo, hi] by the estimate an unclamped slope gives (clampRange), so a clamped fit does not look certain.
@@ -438,6 +505,7 @@ function E:Get(now)
         or self.hystAbs <= 0
         or abs(T - pub) > max(self.hystAbs, self.hystRel * rem)
         or (now - self.setAt >= self.hystLate and abs(T - pub) > self.hystLateRel * rem)
+        or (self.holdOverdue and pub <= now)
     then
         self.tPub, self.setAt, pub = T, now, T
     end
@@ -460,6 +528,10 @@ function E:Get(now)
     lo, hi = widen(self, now, raw, lowest, lo, hi)
     lo, hi = widen(self, now, rf, lowest, lo, hi)
     lo, hi = widen(self, now, rs, lowest, lo, hi)
+    if self.rangeZ > 0 then
+        local k = min(self.rangeMax, exp(self.rangeZ * noise(self, now, b)))
+        lo, hi = min(lo, est / k), max(hi, est * k)
+    end
     return est, lo, hi, state
 end
 

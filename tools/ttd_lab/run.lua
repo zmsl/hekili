@@ -1,5 +1,5 @@
 -- tools/ttd_lab/run.lua: the TTD lab. From the repo root: lua5.1 tools/ttd_lab/run.lua
--- [main|sweep|holdout|run2|tune|drops|run3|run3old|idle|test|all] [--scale x] [--round n] (sweep round, default the last)
+-- [main|sweep|holdout|run2|tune|drops|run3|run3old|idle|run4|test|all] [--scale x] [--round n] (sweep round, default the last)
 -- [--set A|B|C] (seed set: holdout defaults to B, the others to A) [--list name] (tune grids; run3: learn). Prints
 -- markdown tables (tools/ttd_lab/README.md explains them).
 package.path = "tools/ttd_lab/?.lua;" .. package.path
@@ -63,7 +63,8 @@ local PREV = { detect = 0, execAhead = false, execLearn = 0 }
 -- of its class ended with, as a session would; needs `execLearn`), "learn20" (the same with 20% on every fight),
 -- "learnAll" (20% on every fight, one session across every class in run order). Sessions start empty per runSet.
 local function est(params, hints)
-    local p = { spread = false, staleAnchor = 0 } -- run 1 and 2 rows: the anchor rule as they had it (no stale drop)
+    -- run 1 and 2 rows: the anchor rule as they had it (no stale drop), and no run 4 rule
+    local p = { spread = false, staleAnchor = 0, newAnchor = 0, holdOverdue = false, rangeZ = 0 }
     for k, v in pairs(params or {}) do
         p[k] = v
     end
@@ -883,7 +884,7 @@ end
 -- when the group changes). For the runner: algo.line (declared or false), algo.sess and algo.key (where the factor
 -- is kept), algo.measured (streams that measured a speed-up).
 local function est3(params, hints)
-    local p = { spread = false }
+    local p = { spread = false, newAnchor = 0, holdOverdue = false, rangeZ = 0 } -- run 3 as it ran (no run 4 rule)
     for k, v in pairs(params or {}) do
         p[k] = v
     end
@@ -1302,7 +1303,7 @@ local function ranges(set, params, classes)
             for i = 1, math.max(1, math.floor(COUNTS[c] * scale + 0.5)) do
                 local seed = SEED_BASE[set] + i * 7919 + (SEED_OFF[c] or #c) * 104729
                 local obs = O.build(S.build(c, seed), seed + 1)
-                local e = E.New(params)
+                local e = E.New(with({ newAnchor = 0, holdOverdue = false, rangeZ = 0 }, params)) -- run 3 as it ran
                 local P = obs.polls
                 for k = 1, #obs.k do
                     local kind, t = obs.k[k], obs.t[k]
@@ -1400,6 +1401,300 @@ function modes.idle()
     end
 end
 
+-- Run 4 (real traces, `run.lua run4`): the owner's in-game fights replayed as LibTimeToDie feeds them (trace.lua),
+-- the lumpy/opener classes (scenarios.lua S.LUMPY) and the runs 1-3 classes, all under LibHiddenValues' own band
+-- contract (observe.lua O.lhv: full is its own band, so the first damage is seen) with the library's combat-start
+-- re-anchor. Candidates are scored on every set against the library's estimator (the lab's defaults with
+-- staleAnchor = 12), spread on (ranges).
+for i, c in ipairs(S.LUMPY) do
+    COUNTS[c] = 60
+    SEED_OFF[c] = 300 + i
+end
+local T4 = require("trace")
+T4.FILE = "tools/ttd_lab/traces/2026-11-21a.txt" -- central-needs/ttd-ingame-traces-2026-11-21a.txt
+local LIB = { staleAnchor = 12, newAnchor = 0, holdOverdue = false, rangeZ = 0 } -- the library (forever 3c62b18be)
+
+-- The library's feeding of one estimator; ranges against the truth go to `cov` (per class: n, inside, ratios).
+local function est4(params, cov)
+    local p = with(LIB, params or {})
+    return function(obs)
+        local e = E.New(p)
+        local lastLo, lastHi = nil, nil
+        local c = cov and obs and cov[obs.class]
+        if cov and obs and not c then
+            c = { n = 0, inside = 0, ratio = {}, under = 0, dead = 0, late = 0 }
+            cov[obs.class] = c
+        end
+        return {
+            e = e,
+            restart = function()
+                e:Restart()
+                lastLo, lastHi = nil, nil
+            end,
+            band = function(_, t, lo, hi)
+                e:Band(t, lo, hi)
+                lastLo, lastHi = lo, hi
+            end,
+            combat = function(_, t)
+                if e.known and e.n == 0 and not e.t0 then
+                    e:Restart()
+                    if lastLo then
+                        e:Band(t, lastLo, lastHi)
+                    end
+                end
+            end,
+            get = function(_, now, _, pi)
+                local est, lo, hi = e:Get(now)
+                if est and c then
+                    local tru = obs.polls.tru[pi]
+                    c.n = c.n + 1
+                    if lo <= tru and tru <= hi then
+                        c.inside = c.inside + 1
+                    end
+                    c.ratio[#c.ratio + 1] = hi / math.max(lo, 1e-3)
+                    if tru > 3 and est < 0.25 * tru then -- a live mob read as about to die
+                        c.under = c.under + 1
+                    end
+                    if tru > 1 then -- read as dead (under 0.5 s) while it lives more than a second
+                        c.late = c.late + 1
+                        c.dead = c.dead + (est < 0.5 and 1 or 0)
+                    end
+                end
+                return est
+            end,
+        }
+    end
+end
+
+-- Candidates (each on top of the library's estimator). `--list` picks another list.
+local RUN4 = {
+    { "Library (lab defaults, staleAnchor 12)", {} },
+    { "newAnchor 0.05", { newAnchor = 0.05 } },
+    { "newAnchor 0.1", { newAnchor = 0.1 } },
+    { "newAnchor 0.15", { newAnchor = 0.15 } },
+    { "newAnchor 0.25", { newAnchor = 0.25 } },
+    { "seedTime 0.5", { seedTime = 0.5 } },
+    { "seedTime 1.5", { seedTime = 1.5 } },
+    { "hitAnchor", { hitAnchor = true } },
+    { "hitAnchor + newAnchor 0.25", { hitAnchor = true, newAnchor = 0.25 } },
+    { "hitAnchor + seedTime 1.5", { hitAnchor = true, seedTime = 1.5 } },
+    { "holdOverdue", { holdOverdue = true } },
+    { "halfLife 10", { halfLife = 10 } },
+    { "halfLife 15", { halfLife = 15 } },
+    { "rangeZ 1", { rangeZ = 1 } },
+    { "rangeZ 1.15", { rangeZ = 1.15 } },
+    { "rangeZ 1.3", { rangeZ = 1.3 } },
+    { "newAnchor 0.1 + rangeZ 1.15", { newAnchor = 0.1, rangeZ = 1.15 } },
+    { "newAnchor 0.1 + holdOverdue + rangeZ 1.15", { newAnchor = 0.1, holdOverdue = true, rangeZ = 1.15 } },
+}
+local RUN4_LISTS = {
+    range = {
+        { "newAnchor 0.1", { newAnchor = 0.1 } },
+        { "newAnchor 0.1 + rangeZ 1.15", { newAnchor = 0.1, rangeZ = 1.15 } },
+        { "newAnchor 0.1 + rangeZ 1.15, rangeMax 2", { newAnchor = 0.1, rangeZ = 1.15, rangeMax = 2 } },
+        { "newAnchor 0.1 + rangeZ 1, rangeOwn", { newAnchor = 0.1, rangeZ = 1, rangeOwn = true } },
+        { "newAnchor 0.1 + rangeZ 1.3, rangeOwn", { newAnchor = 0.1, rangeZ = 1.3, rangeOwn = true } },
+    },
+    final = {
+        { "Library (lab defaults, staleAnchor 12)", {} },
+        { "newAnchor 0.1", { newAnchor = 0.1 } },
+        { "holdOverdue", { holdOverdue = true } },
+        { "rangeZ 1", { rangeZ = 1 } },
+        { "rangeZ 1.15", { rangeZ = 1.15 } },
+        { "rangeZ 1.3", { rangeZ = 1.3 } },
+        { "Recommended: newAnchor 0.1 + rangeZ 1.15", { newAnchor = 0.1, rangeZ = 1.15 } },
+        { "Recommended + holdOverdue", { newAnchor = 0.1, rangeZ = 1.15, holdOverdue = true } },
+    },
+    lump = {
+        { "Library (lab defaults, staleAnchor 12)", {} },
+        { "lumpWeight", { lumpWeight = true } },
+        { "lumpWeight + newAnchor 0.1", { lumpWeight = true, newAnchor = 0.1 } },
+        { "lumpWeight + halfLife 10", { lumpWeight = true, halfLife = 10 } },
+    },
+}
+local RUN4_SETS = {
+    { "lumpy", S.LUMPY },
+    { "old", S.CLASSES },
+    { "run 2", S.RUN2 },
+    { "idle", S.IDLE },
+}
+
+local function coverOf(cov, classes)
+    local n, inside, ratio, under, dead, late = 0, 0, {}, 0, 0, 0
+    for _, c in ipairs(classes) do
+        local x = cov[c]
+        if x then
+            n, inside, under = n + x.n, inside + x.inside, under + x.under
+            dead, late = dead + x.dead, late + x.late
+            for _, r in ipairs(x.ratio) do
+                ratio[#ratio + 1] = r
+            end
+        end
+    end
+    table.sort(ratio)
+    local med, p90 = ratio[math.max(1, math.ceil(#ratio / 2))], ratio[math.max(1, math.ceil(#ratio * 0.9))]
+    return n > 0 and inside / n or nil, med, n > 0 and under / n or nil, p90, late > 0 and dead / late or nil
+end
+
+-- The real traces: pooled and per fight.
+local function realRow(params)
+    local S4 = T4.parse(T4.FILE)
+    local reads = T4.replay(S4, function()
+        return E.New(with(LIB, params))
+    end)
+    return T4.score(S4, reads)
+end
+
+function modes.run4()
+    holdSet = holdSet or "A"
+    if tuneList then
+        RUN4 = assert(RUN4_LISTS[tuneList], "run4 --list: final|lump|range")
+    end
+    O.lhv = true
+    print("## Run 4: real traces, lumpy damage, opener timing (seed set " .. holdSet .. ", LHV band contract)\n")
+    header()
+    do -- the replay against the probe's own log: the library's sink lines and the probe's per-fight summaries
+        local S4 = T4.parse(T4.FILE)
+        local _, sinks = T4.replay(S4, function()
+            return E.New(LIB)
+        end)
+        local m, n, worst, misses = T4.oracle(S4, sinks)
+        print(
+            string.format(
+                "\nReplay oracle: %d of %d logged sink lines reproduced within 0.05 (worst %s).",
+                m,
+                n,
+                f(worst)
+            )
+        )
+        for _, x in ipairs(misses) do
+            print("- miss: " .. x)
+        end
+        local logged = {}
+        for _, x in ipairs(S4.ev) do
+            if x.kind == T4.LINE and x.a then
+                logged[#logged + 1] = { t = x.t, est = x.a }
+            end
+        end
+        local a, b = T4.probe(S4, logged), T4.probe(S4, sinks)
+        print(
+            "\n| fight | logged lines: n, rel med / p90 (/ true), wrong 5 s | replayed sink lines: same, truth in [lo, hi] |"
+        )
+        print("|---|---|---|")
+        for _, F in ipairs(S4.fights) do
+            local x, y = a[F.n], b[F.n]
+            if x then
+                print(
+                    string.format(
+                        "| F%d | %d, %s / %s, %s | %d, %s / %s, %s, %s |",
+                        F.n,
+                        x.n,
+                        f(x.med, 3),
+                        f(x.p90, 3),
+                        pct(x.wrong5),
+                        y.n,
+                        f(y.med, 3),
+                        f(y.p90, 3),
+                        pct(y.wrong5),
+                        pct(y.inside)
+                    )
+                )
+            end
+        end
+    end
+    print(
+        "\n### Real traces (owner, 2026-11-21a: 5 kills, one melee spec solo; reads every 0.1 s, scored from combat or the first band to the death)\n"
+    )
+    print(
+        "| candidate | rel med / p90 | probe rel med / p90 | truth in [lo, hi] | hi:lo med / p90 | wrong 5 s | wrong 8 s | unknown | excess flips/min | under 1/4 | read dead | rel med per fight F1 F2 F3 F4 F6 | in [lo, hi] per fight |"
+    )
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for _, x in ipairs(RUN4) do
+        local sc = realRow(x[2])
+        local s, per, perC = sc[0], {}, {}
+        for i = 1, #sc do
+            per[i], perC[i] = f(sc[i].relMed), string.format("%.0f", 100 * sc[i].cover)
+        end
+        print(
+            string.format(
+                "| %s | %s / %s | %s / %s | %s | %s / %s | %s | %s | %s | %s | %s | %s | %s | %s |",
+                x[1],
+                f(s.relMed),
+                f(s.relP90),
+                f(s.relPMed),
+                f(s.relPP90),
+                pct(s.cover),
+                f(s.ratioMed),
+                f(s.ratioP90),
+                pct(s.wrong5),
+                pct(s.wrong8),
+                pct(s.unknown),
+                f(s.flipsMin, 1),
+                pct(s.underShare),
+                pct(s.deadShare),
+                table.concat(per, " "),
+                table.concat(perC, " ")
+            )
+        )
+    end
+    local cov, list = {}, {}
+    for i, x in ipairs(RUN4) do
+        cov[i] = {}
+        list[#list + 1] = { x[1], est4(x[2], cov[i]) }
+    end
+    for _, set in ipairs(RUN4_SETS) do
+        for i = 1, #RUN4 do
+            for k in pairs(cov[i]) do
+                cov[i][k] = nil
+            end
+        end
+        local res = runSet(holdSet, lineup(list), set[2])
+        local scores = scoreAll(res, mainSummaries(res))
+        print("\n### Set: " .. set[1] .. " (" .. #set[2] .. " classes; score against the main lineup's medians)\n")
+        print(
+            "| candidate | score | unknown | rel med / p90 | wrong (mean of 4) | excess flips/min | first answer med s | truth in [lo, hi] | hi:lo med / p90 | under 1/4 | read dead |"
+        )
+        print("|---|---|---|---|---|---|---|---|---|---|---|")
+        for a, spec in ipairs(res.algos) do
+            if not spec.main then
+                local i = a - #MAIN
+                local r = res.overall[a]
+                local cover, ratio, under, ratio90, dead = coverOf(cov[i], set[2])
+                print(
+                    string.format(
+                        "| %s | %s | %s | %s / %s | %s | %s | %s | %s | %s / %s | %s | %s |",
+                        spec[1],
+                        f(scores[a], 3),
+                        pct(r.unknown),
+                        f(r.relMed),
+                        f(r.relP90),
+                        pct(r.wrongMean),
+                        f(r.flipSum),
+                        f(r.delayMed),
+                        pct(cover),
+                        f(ratio),
+                        f(ratio90),
+                        pct(under),
+                        pct(dead)
+                    )
+                )
+            end
+        end
+        if set[1] == "lumpy" or tuneList == "final" then
+            local order = {}
+            for a = #MAIN + 1, #res.algos do
+                order[#order + 1] = a
+            end
+            perClass(res, order, "relMed", set[1] .. ": rel median", f)
+            perClass(res, order, "wrongMean", set[1] .. ": wrong side", pct)
+            perClass(res, order, "unknown", set[1] .. ": unknown", pct)
+            if tuneList == "final" then
+                perClass(res, order, "flipSum", set[1] .. ": excess flips/min", f)
+            end
+        end
+    end
+end
+
 function modes.all()
     modes.test()
     modes.main()
@@ -1411,5 +1706,5 @@ function modes.all()
 end
 
 local t0 = os.clock()
-assert(modes[mode], "mode: main|sweep|holdout|run2|tune|drops|run3|run3old|idle|test|all")()
+assert(modes[mode], "mode: main|sweep|holdout|run2|tune|drops|run3|run3old|idle|run4|test|all")()
 io.stderr:write(string.format("ttd lab %s done in %.1f s\n", mode, os.clock() - t0))

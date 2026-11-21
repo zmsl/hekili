@@ -296,6 +296,22 @@ check("by default a clamped fit's range covers the unclamped fit", function()
     assert(lo < 50, "lo " .. tostring(lo)) -- the truth is about 47 s
 end)
 
+-- A first chunk one frame after the anchor, then 1% per 0.8 s: the noise the range learns from the first crossings
+-- can be huge (the anchor's slope is one hit over no time); the range stays bounded.
+check("the noise range stays within rangeMax of the estimate after a wild first crossing", function()
+    local e = E.New({ rangeZ = 1.15, newAnchor = 0 })
+    e:Band(0, 100, 100)
+    e:Band(0.02, 87, 88)
+    local t, p = 0.02, 88
+    for _ = 1, 12 do
+        t, p = t + 0.8, p - 1
+        e:Band(t, p - 1, p)
+    end
+    local est, lo, hi, state = e:Get(t + 0.01)
+    assert(state == "fit", state)
+    assert(lo >= est / 3.01 and hi <= est * 3.01, string.format("est %.2f [%.2f, %.2f]", est, lo, hi))
+end)
+
 check("random streams never return a non-finite or negative estimate", function()
     local rng = require("rng").new(7)
     for i = 1, 300 do
@@ -305,8 +321,17 @@ check("random streams never return a non-finite or negative estimate", function(
             detect = i % 3 * 2.5,
             staleAnchor = i % 4 * 3,
             clampRange = i % 2 == 0,
+            newAnchor = i % 3 * 0.1,
+            holdOverdue = i % 2 == 1,
+            rangeZ = i % 4 * 0.5,
+            lumpWeight = i % 5 == 0,
+            hitAnchor = i % 6 == 0,
+            seedTime = i % 7 * 0.3,
         })
         local t, lo = 0, 99 - math.floor(rng:uni(0, 60))
+        if i % 6 == 0 then
+            e:Band(t, 100, 100) -- LibHiddenValues' own full band first
+        end
         if rng:next() < 0.5 then
             e:Hint("execute", rng:uni(0.5, 3), rng:uni(1, 40))
         end
@@ -334,7 +359,7 @@ check("random streams never return a non-finite or negative estimate", function(
 end)
 
 check("no allocation in the steady state, with hints and the detector firing", function()
-    local e = E.New()
+    local e = E.New({ holdOverdue = true, lumpWeight = true, hitAnchor = true })
     e:Hint("execute", 1, 20)
     local t = steady(e, 0, 100, 0.5, 10)
     e:Get(t)

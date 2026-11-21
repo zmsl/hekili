@@ -1,0 +1,272 @@
+# Owner in-game run, 2026-11-21, TTDProbe 0.2.0, forever 3c62b18be (LibTimeToDie minor 1, LHV minor 6),
+# addonMapRestrictionsForced=1, one melee spec, open world. Format: docs in central-needs/ttdprobe-020-report.md.
+# p=<band low> hi=<band high> (1% bands); ttd lines are the TTD sink calls; "gone" = TTD gone.
+# Death: the p=0 band time when present, else the gone time (gone arrives with the next target change).
+# Per-fight summaries the probe printed: F1 median 0.365 p90 1.012 inside 18% wrong-side-5s 6%; F2 0.302/0.724/25%/8%;
+# F3 0.241/0.774/21%/7%; F4 0.295/0.541/17%/8%; F6 0.279/0.786/11%/22%.
+FIGHT 1 start=342009.98 events=55 bands=31 targets=2 end=gone
+t=0.00 target 1
+t=0.00 ttd=nil lo=nil hi=nil state=priming reason=nil
+t=0.20 p=100 hi=100
+t=0.23 ttd=nil lo=nil hi=nil state=unknown reason=nil
+t=1.57 combat 1
+t=5.04 p=99 hi=100
+t=5.20 p=92 hi=93
+t=5.22 ttd=48.22 lo=24.11 hi=144.65 state=live reason=seed
+t=5.31 p=90 hi=91
+t=5.33 ttd=37.81 lo=18.90 hi=113.42 state=live reason=seed
+t=6.21 p=85 hi=86
+t=6.23 ttd=28.49 lo=14.25 hi=85.47 state=live reason=seed
+t=6.31 p=81 hi=82
+t=6.32 ttd=21.58 lo=10.79 hi=64.75 state=live reason=seed
+t=7.16 p=78 hi=79
+t=7.18 ttd=10.54 lo=10.50 hi=10.61 state=live reason=fit
+t=7.56 p=77 hi=78
+t=7.58 ttd=11.65 lo=11.59 hi=11.79 state=live reason=fit
+t=8.31 p=76 hi=77
+t=8.33 ttd=13.49 lo=13.33 hi=13.83 state=live reason=fit
+t=8.82 p=75 hi=76
+t=8.83 ttd=15.07 lo=14.83 hi=15.59 state=live reason=fit
+t=9.33 p=72 hi=73
+t=9.87 p=71 hi=72
+t=9.90 ttd=16.36 lo=16.07 hi=16.95 state=live reason=fit
+t=10.13 p=70 hi=71
+t=10.27 p=67 hi=68
+t=11.32 p=65 hi=66
+t=11.47 p=59 hi=60
+t=12.33 p=56 hi=57
+t=12.35 ttd=12.29 lo=12.06 hi=12.36 state=live reason=fit
+t=12.50 p=41 hi=42
+t=12.52 ttd=6.87 lo=6.31 hi=7.13 state=live reason=fit
+t=13.29 p=39 hi=40
+t=14.33 p=37 hi=38
+t=15.51 p=32 hi=33
+t=15.52 ttd=5.13 lo=4.93 hi=5.24 state=live reason=fit
+t=15.95 p=31 hi=32
+t=16.30 p=28 hi=29
+t=16.63 p=27 hi=28
+t=18.37 p=25 hi=26
+t=18.39 ttd=4.30 lo=4.26 hi=4.43 state=live reason=fit
+t=19.34 p=22 hi=23
+t=20.17 p=21 hi=22
+t=20.20 ttd=4.12 lo=4.01 hi=4.41 state=live reason=fit
+t=20.28 p=9 hi=10
+t=20.30 ttd=1.83 lo=1.80 hi=1.89 state=live reason=fit
+t=21.46 p=8 hi=9
+t=21.48 ttd=1.68 lo=1.65 hi=1.73 state=live reason=fit
+t=22.30 p=7 hi=8
+t=23.34 p=5 hi=6
+t=23.36 ttd=1.19 lo=1.15 hi=1.25 state=live reason=fit
+t=24.12 target 2
+t=24.12 ttd=nil lo=nil hi=nil state=gone reason=nil
+t=24.12 gone
+FIGHT 2 start=342034.36 events=46 bands=25 targets=4 end=gone
+t=0.00 combat 0
+t=0.24 target 3
+t=0.50 target 4
+t=5.72 target 5
+t=5.72 ttd=nil lo=nil hi=nil state=priming reason=nil
+t=5.94 p=100 hi=100
+t=5.96 ttd=20.03 lo=10.01 hi=60.08 state=live reason=prior
+t=6.44 combat 1
+t=6.44 ttd=20.03 lo=10.01 hi=60.08 state=live reason=prior
+t=8.54 p=94 hi=95
+t=9.52 p=87 hi=88
+t=9.54 ttd=17.70 lo=8.85 hi=53.09 state=live reason=seed
+t=10.14 p=86 hi=87
+t=11.48 p=76 hi=77
+t=11.50 ttd=12.56 lo=12.49 hi=12.59 state=live reason=fit
+t=12.55 p=67 hi=68
+t=12.56 ttd=10.00 lo=9.88 hi=10.06 state=live reason=fit
+t=13.39 p=66 hi=67
+t=13.41 ttd=10.73 lo=10.73 hi=10.76 state=live reason=fit
+t=14.47 p=61 hi=62
+t=15.55 p=59 hi=60
+t=15.56 ttd=11.35 lo=11.18 hi=11.71 state=live reason=fit
+t=16.50 p=57 hi=58
+t=16.52 ttd=11.94 lo=11.69 hi=12.51 state=live reason=fit
+t=17.13 p=50 hi=51
+t=17.43 p=43 hi=44
+t=17.45 ttd=8.40 lo=8.27 hi=8.40 state=live reason=fit
+t=17.53 p=40 hi=41
+t=18.27 p=36 hi=37
+t=18.29 ttd=6.36 lo=6.06 hi=6.47 state=live reason=fit
+t=18.52 p=34 hi=35
+t=19.05 p=31 hi=32
+t=19.48 p=28 hi=29
+t=20.38 p=27 hi=28
+t=20.52 p=25 hi=26
+t=21.07 p=22 hi=23
+t=21.26 p=19 hi=20
+t=21.50 p=16 hi=17
+t=21.52 ttd=2.77 lo=2.69 hi=2.80 state=live reason=fit
+t=22.08 p=3 hi=4
+t=22.10 ttd=0.59 lo=0.55 hi=0.61 state=live reason=fit
+t=22.54 p=1 hi=2
+t=23.04 p=0 hi=1
+t=23.13 target 6
+t=23.13 ttd=nil lo=nil hi=nil state=gone reason=nil
+t=23.13 gone
+FIGHT 3 start=342057.89 events=63 bands=40 targets=4 end=gone
+t=0.00 target 7
+t=0.28 target 8
+t=0.78 combat 0
+t=6.25 target 9
+t=6.25 ttd=nil lo=nil hi=nil state=priming reason=nil
+t=6.44 p=100 hi=100
+t=6.45 ttd=14.46 lo=7.23 hi=43.39 state=live reason=prior
+t=7.32 combat 1
+t=7.32 ttd=14.46 lo=7.23 hi=43.39 state=live reason=prior
+t=9.14 p=98 hi=99
+t=9.16 ttd=14.37 lo=7.19 hi=43.11 state=live reason=seed
+t=9.38 p=97 hi=98
+t=10.08 p=96 hi=97
+t=10.20 p=95 hi=96
+t=11.09 p=94 hi=95
+t=11.11 ttd=45.35 lo=45.12 hi=45.81 state=live reason=fit
+t=11.49 p=93 hi=94
+t=11.71 p=88 hi=89
+t=11.72 ttd=23.51 lo=22.62 hi=23.95 state=live reason=fit
+t=12.19 p=87 hi=88
+t=12.77 p=82 hi=83
+t=12.78 ttd=17.59 lo=16.97 hi=17.91 state=live reason=fit
+t=12.86 p=81 hi=82
+t=14.14 p=80 hi=81
+t=14.61 p=75 hi=76
+t=15.11 p=73 hi=74
+t=15.86 p=72 hi=73
+t=15.88 ttd=16.47 lo=16.47 hi=16.48 state=live reason=fit
+t=16.12 p=71 hi=72
+t=16.22 p=70 hi=71
+t=17.21 p=69 hi=70
+t=17.56 p=68 hi=69
+t=17.59 ttd=17.27 lo=17.11 hi=17.64 state=live reason=fit
+t=18.19 p=67 hi=68
+t=18.65 p=62 hi=63
+t=19.21 p=58 hi=59
+t=20.23 p=56 hi=57
+t=21.23 p=53 hi=54
+t=22.24 p=51 hi=52
+t=22.25 ttd=13.81 lo=13.67 hi=14.08 state=live reason=fit
+t=23.64 p=40 hi=41
+t=23.65 ttd=10.49 lo=10.32 hi=10.51 state=live reason=fit
+t=24.23 p=38 hi=39
+t=25.25 p=35 hi=36
+t=25.92 p=34 hi=35
+t=26.20 p=33 hi=34
+t=26.66 ttd=8.20 lo=8.14 hi=8.21 state=live reason=fit
+t=26.66 p=32 hi=33
+t=26.96 p=19 hi=20
+t=26.99 ttd=4.81 lo=4.56 hi=4.89 state=live reason=fit
+t=27.25 p=17 hi=18
+t=28.29 p=15 hi=16
+t=29.26 p=13 hi=14
+t=30.01 ttd=2.38 lo=2.15 hi=2.47 state=live reason=fit
+t=30.24 p=11 hi=12
+t=30.88 p=6 hi=7
+t=31.19 p=4 hi=5
+t=32.24 p=1 hi=2
+t=33.02 ttd=0.06 lo=0.06 hi=0.06 state=live reason=fit
+t=33.16 p=0 hi=1
+t=33.26 target 10
+t=33.26 ttd=nil lo=nil hi=nil state=gone reason=nil
+t=33.26 gone
+FIGHT 4 start=342091.59 events=53 bands=31 targets=4 end=gone
+t=0.00 target 11
+t=0.28 target 12
+t=0.63 combat 0
+t=9.38 target 13
+t=9.38 ttd=nil lo=nil hi=nil state=priming reason=nil
+t=9.56 p=100 hi=100
+t=9.58 ttd=nil lo=nil hi=nil state=unknown reason=nil
+t=10.96 combat 1
+t=13.74 p=88 hi=89
+t=13.75 ttd=22.45 lo=11.22 hi=67.34 state=live reason=seed
+t=13.96 p=86 hi=87
+t=15.75 p=81 hi=82
+t=15.78 ttd=24.89 lo=24.80 hi=25.05 state=live reason=fit
+t=16.90 p=79 hi=80
+t=16.91 ttd=28.59 lo=28.40 hi=28.97 state=live reason=fit
+t=17.98 p=77 hi=78
+t=18.82 p=72 hi=73
+t=19.92 ttd=24.05 lo=23.60 hi=24.22 state=live reason=fit
+t=20.92 p=70 hi=71
+t=20.93 ttd=27.82 lo=27.55 hi=28.40 state=live reason=fit
+t=21.69 p=65 hi=66
+t=22.01 p=63 hi=64
+t=22.02 ttd=22.30 lo=21.77 hi=22.50 state=live reason=fit
+t=24.01 p=61 hi=62
+t=24.96 p=59 hi=60
+t=24.98 ttd=23.04 lo=22.86 hi=23.49 state=live reason=fit
+t=25.15 p=46 hi=47
+t=25.16 ttd=13.77 lo=12.15 hi=14.40 state=live reason=fit
+t=26.03 p=44 hi=45
+t=26.98 p=42 hi=43
+t=27.09 p=41 hi=42
+t=28.00 p=40 hi=41
+t=28.32 p=39 hi=40
+t=28.96 p=36 hi=37
+t=29.23 p=26 hi=27
+t=29.24 ttd=6.54 lo=5.85 hi=6.87 state=live reason=fit
+t=29.70 p=25 hi=26
+t=30.01 p=24 hi=25
+t=30.99 p=22 hi=23
+t=31.97 p=20 hi=21
+t=32.32 ttd=4.43 lo=4.05 hi=4.65 state=live reason=fit
+t=32.97 p=18 hi=19
+t=33.20 p=13 hi=14
+t=33.97 p=11 hi=12
+t=35.05 p=9 hi=10
+t=35.39 ttd=2.00 lo=1.96 hi=2.06 state=live reason=fit
+t=37.06 p=7 hi=8
+t=37.08 ttd=1.95 lo=1.95 hi=2.02 state=live reason=fit
+t=38.03 p=5 hi=6
+t=38.48 p=0 hi=1
+t=38.98 target 14
+t=38.98 ttd=nil lo=nil hi=nil state=gone reason=nil
+t=38.98 gone
+FIGHT 5 start=342130.82 events=9 bands=4 targets=2 end=swap
+t=0.00 target 15
+t=0.00 ttd=nil lo=nil hi=nil state=priming reason=nil
+t=0.18 p=98 hi=99
+t=0.20 ttd=25.68 lo=12.84 hi=77.05 state=live reason=prior
+t=1.87 p=96 hi=97
+t=2.15 p=93 hi=94
+t=2.64 p=92 hi=93
+t=2.69 target 16
+t=2.69 ttd=nil lo=nil hi=nil state=priming reason=nil
+FIGHT 6 start=342133.64 events=34 bands=22 targets=1 end=gone
+t=0.00 p=89 hi=90
+t=0.02 ttd=23.34 lo=11.67 hi=70.01 state=live reason=prior
+t=0.94 p=87 hi=88
+t=1.59 p=76 hi=77
+t=1.94 p=74 hi=75
+t=2.93 p=72 hi=73
+t=2.95 ttd=8.09 lo=7.96 hi=8.37 state=live reason=fit
+t=3.30 p=60 hi=61
+t=3.33 ttd=5.58 lo=5.53 hi=5.60 state=live reason=fit
+t=5.02 p=58 hi=59
+t=5.03 ttd=7.61 lo=7.47 hi=7.88 state=live reason=fit
+t=5.25 p=43 hi=44
+t=5.27 ttd=4.69 lo=4.61 hi=4.71 state=live reason=fit
+t=6.04 p=39 hi=40
+t=7.04 p=37 hi=38
+t=7.05 ttd=4.38 lo=4.37 hi=4.39 state=live reason=fit
+t=7.33 p=32 hi=33
+t=7.97 p=28 hi=29
+t=9.02 p=26 hi=27
+t=9.04 ttd=3.43 lo=3.39 hi=3.50 state=live reason=fit
+t=9.58 p=21 hi=22
+t=9.98 p=20 hi=21
+t=10.32 p=19 hi=20
+t=11.04 p=17 hi=18
+t=11.06 ttd=2.60 lo=2.54 hi=2.71 state=live reason=fit
+t=11.48 p=6 hi=7
+t=11.50 ttd=0.98 lo=0.97 hi=1.01 state=live reason=fit
+t=11.62 p=5 hi=6
+t=12.08 p=4 hi=5
+t=12.87 p=3 hi=4
+t=13.01 p=0 hi=1
+t=13.09 target 17
+t=13.09 ttd=nil lo=nil hi=nil state=gone reason=nil
+t=13.09 gone

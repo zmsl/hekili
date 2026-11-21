@@ -195,10 +195,43 @@ local function idle(class, rng, sp)
     return sp
 end
 
+-- Run 4 (real traces; `run.lua run4`): lumpy solo damage as the owner's first in-game traces show it (band falls: 72% 1-3%,
+-- 16% 4-7%, 12% 9-15%; a band change every 0.64 s at the median), opener timing (the target at full, combat start
+-- 0.3-2 s later, the first damage 0-4 s after that; `instant`: in the same frame as combat start), an opener burst
+-- x1-2.5 for 2-4 s from the first damage, fights of 6-40 s. `pair`: two mobs, the second takes 10-30% cleave, the
+-- player swaps to it at the first one's death.
+S.LUMPY = { "lumpy solo", "lumpy instant", "lumpy pair" }
+
+-- One lump factor (mean 1): small steps, medium hits and big chunks in the traces' proportions.
+local function lump(rng)
+    local u, x = rng:next(), nil
+    if u < 0.72 then
+        x = rng:uni(0.25, 0.95)
+    elseif u < 0.88 then
+        x = rng:uni(1.2, 2.2)
+    else
+        x = rng:uni(2.8, 4.6)
+    end
+    return x / 1.148
+end
+
+local function lumpy(class, rng, sp)
+    sp.members, sp.dur, sp.lumpy = 0, rng:uni(6, 40), true
+    sp.combat = rng:uni(0.3, 2)
+    sp.firstHit = sp.combat + (class == "lumpy instant" and 0 or rng:uni(0, 4))
+    sp.opener = { mult = rng:uni(1, 2.5), dur = sp.firstHit + rng:uni(2, 4) }
+    if class == "lumpy pair" then
+        sp.mobs, sp.cleave = 2, rng:uni(0.1, 0.3)
+    end
+    return sp
+end
+
 --- The per-class fight spec. `dur`: seconds one mob lives under the whole group's single-target damage.
 local function spec(class, rng)
     local sp = { mobs = 1, members = rng:int(0, 4), cleave = 0, swaps = 0 }
-    if class:find("^idle") then
+    if class:find("^lumpy") then
+        return lumpy(class, rng, sp)
+    elseif class:find("^idle") then
         return idle(class, rng, sp)
     elseif class:find(" ") or class == "solo" or class == "raid" then
         return run2(class, rng, sp)
@@ -317,7 +350,7 @@ function S.build(class, seed, group)
     end
     local nextHit = {}
     for i = 1, #rates do
-        nextHit[i] = rng:uni(0, 1) + (sp.idle or 0)
+        nextHit[i] = sp.firstHit or rng:uni(0, 1) + (sp.idle or 0)
     end
     local swapAt = {}
     for _ = 1, sp.swaps do
@@ -384,11 +417,16 @@ function S.build(class, seed, group)
         local groupTarget = firstAlive(mobs)
         for i = 1, #rates do
             if t >= nextHit[i] then
-                local interval = rng:uni(0.3, 1.2)
+                local interval = sp.lumpy and rng:uni(0.4, 1) or rng:uni(0.3, 1.2)
                 nextHit[i] = t + interval
                 local tgt = i == 1 and ptarget or groupTarget
                 if tgt then
-                    local amt = rates[i] * interval * rng:uni(0.7, 1.3) * (rng:next() < 0.25 and 2 or 1) / 1.25 * mult
+                    local amt
+                    if sp.lumpy then -- the traces' lump mix, mean rate x interval
+                        amt = rates[i] * interval * lump(rng) * mult
+                    else
+                        amt = rates[i] * interval * rng:uni(0.7, 1.3) * (rng:next() < 0.25 and 2 or 1) / 1.25 * mult
+                    end
                     local done = apply(sp, mobs[tgt], amt, t, i)
                     for m = 1, #mobs do
                         if m ~= tgt and sp.cleave > 0 then
@@ -441,6 +479,7 @@ function S.build(class, seed, group)
         execute = sp.execute, -- { pct, mult }
         members = sp.members,
         group = group,
+        combat = sp.combat, -- run 4: combat start (the library re-anchors a stream with no crossing yet)
     }
 end
 
