@@ -196,8 +196,8 @@ yet; also after a reload in combat, until combat ends) or `unavailable` with one
 The library only reports: telling the player is your addon's choice. `LHV:OnCapability(owner, fn)` calls
 `fn("aura", state, reason)` when the kind changes (`cdm-off`) and `fn("aura", state, reason, h)` for each of your aura
 handles whose answer changed (the player placed or removed the aura, a layout change). A handle is `gone` (unknown)
-while its item cannot be read: its viewer hidden (Edit Mode "Hidden", or the whole UI hidden), Edit Mode open, or, in
-combat after the client re-laid the items out, an item whose identity the client keeps secret (until combat ends).
+while its item cannot be read: its viewer hidden (Edit Mode "Hidden", or the whole UI hidden), Edit Mode open, or an
+item whose `cooldownID` the client keeps secret (which entry it shows is not known; until it reads plain again).
 
 A bar is read 4 frames (`LHV.SETTLE`) after the client's first push into it, so the first band is the true one, once,
 with dir 0. A stacks watch started while its aura is already up stays `priming` until the client next writes the

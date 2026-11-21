@@ -542,14 +542,16 @@ describe("LibHiddenValues aura kind", function()
         Fake.setAura("player", 5001, 3)
         Fake.tick(2)
         assert.are.same({ 3, math.huge }, band(h))
-        -- the cooldownID reads secret: the layoutIndex read plain before maps it
+        -- the cooldownID reads secret: which entry the item shows is not known, so the watches are unknown (the
+        -- layoutIndex read plain before is not trusted: the layout can change in combat)
         W.cdm.secretId = true
         Fake.cdmLayout()
         Fake.setAura("player", 5001, 2)
         Fake.tick(2)
-        assert.are.same({ 0, 3 }, band(h))
-        assert.are.same({ 1, 1 }, band(up))
-        -- both secret: the item is lost until the layout reads plain again
+        assert.are.equal("gone", (h:State()))
+        assert.is_nil(band(h)[1])
+        assert.is_nil(band(up)[1])
+        -- both secret: the same
         W.cdm.secretIdx = true
         Fake.cdmLayout()
         Fake.tick(2)
@@ -563,6 +565,23 @@ describe("LibHiddenValues aura kind", function()
         assert.are.same({ 1, 1 }, band(up))
         assert.are.same({ 0, 3 }, band(h))
         assert.are.same({}, Fake.errors)
+    end)
+
+    it("never reads another entry's values for a secret cooldownID after an in-combat layout change", function()
+        boot()
+        local up = watch({ spell = 5001, what = "up" })
+        Fake.login()
+        Fake.tick(10)
+        assert.are.same({ 0, 0 }, band(up))
+        W.combat, W.cdm.secretId = true, true
+        Fake.setAura("player", 5005, 1, 600)
+        W.cdm.bar = { 15 } -- 11 removed in combat: 15 now sits at the layoutIndex 11 had
+        Fake.cdmLayout()
+        Fake.tick(10)
+        assert.are.equal("gone", (up:State()))
+        assert.is_nil(band(up)[1])
+        W.combat, W.cdm.secretId = false, false
+        Fake.event("PLAYER_REGEN_ENABLED")
     end)
 
     it("follows a target swap without priming", function()

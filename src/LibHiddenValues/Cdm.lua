@@ -12,8 +12,8 @@
 -- only their viewers are hooked, never their items' widgets.
 -- Identity: the catalogue (every cooldownID of categories 0-8 and the spells it names) is read out of combat only;
 -- an item's cooldownID is read when it is used, so a reshuffle of the pooled frames (in combat too) is followed. A
--- secret cooldownID falls back to the item's layoutIndex in the order last read plain (inferred, unprobed); both
--- secret: that item is lost until the layout reads plain again (the end of combat).
+-- secret cooldownID makes that item unknown (its watches `gone`) until it reads plain again: the layout can change in
+-- combat, so an index read plain before could name another entry.
 -- Hook bodies and event handlers run under pcall; an error turns the aura kind off for the session (reason "error").
 -- Mode B (Managed.lua, only when a consumer asks) is the one exception: it writes the layout store and sets the
 -- viewers' alpha.
@@ -36,10 +36,6 @@ cdm.vIndex = cdm.vIndex or {} -- viewer frame -> index
 cdm.viewerOf = cdm.viewerOf or {} -- item frame -> its viewer's index (pool frames never change viewer)
 cdm.itemOf = cdm.itemOf or {} -- a hooked FontString or StatusBar -> its item frame
 cdm.hooked = cdm.hooked or {} -- item frame -> true once its widgets are hooked
-cdm.order = cdm.order or {} -- index -> layoutIndex -> cooldownID, as last read plain
-for k = 1, #VIEWERS do -- an older minor read two viewers
-    cdm.order[k] = cdm.order[k] or {}
-end
 cdm.byCd = cdm.byCd or {} -- cooldownID -> the item frame showing it now
 cdm.placeOf = cdm.placeOf or {} -- cooldownID -> the index of the viewer showing it
 cdm.cds = cdm.cds or {} -- spellID -> { cooldownID, ... }: the catalogue, read out of combat
@@ -141,18 +137,12 @@ function cdm.hook(item, k)
     end
 end
 
--- The cooldownID an item shows now (plain), or nil.
+-- The cooldownID an item shows now (plain), or nil (none, or secret: unknown).
 function cdm.idOf(item)
     local id = rawget(item, "cooldownID")
     if not issecretvalue(id) then
         return id
     end
-    local idx = rawget(item, "layoutIndex")
-    if issecretvalue(idx) or idx == nil then
-        return nil
-    end
-    local k = cdm.viewerOf[item]
-    return k and cdm.order[k][idx]
 end
 
 -- Whether an item's data flows: its viewer is visible (a hidden viewer unregisters its events) and not in Edit Mode
@@ -182,13 +172,9 @@ function cdm.scan()
         local v = cdm.viewer(k)
         local pool = v and rawget(v, "itemFramePool")
         if pool then
-            local order = cdm.order[k]
             for item in pool:EnumerateActive() do
                 cdm.hook(item, k)
-                local id, idx = rawget(item, "cooldownID"), rawget(item, "layoutIndex")
-                if not issecretvalue(id) and not issecretvalue(idx) and id ~= nil and idx ~= nil then
-                    order[idx] = id
-                end
+                local id = rawget(item, "cooldownID")
                 local cd = cdm.idOf(item)
                 if cd ~= nil and byCd[cd] == nil then
                     byCd[cd], placeOf[cd] = item, k

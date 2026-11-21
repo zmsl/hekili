@@ -39,7 +39,7 @@ Manager gaps before a consumer's switch, below). Its in-game check: [in-game-tes
 - `Testing/FakeClient.lua`: Essential and Utility viewers with item pools (`W.cdm.essential`, `W.cdm.utility`,
   placed from the store at login too), `W.cdm.secretUnit`, `W.cdm.noUnit`, `Fake.secret`.
 - Probe facts owed: is `auraDataUnit` ever secret in combat (aura viewers, Essential, Utility)? Is an item's
-  `cooldownID` ever secret in combat (the `layoutIndex` fallback is an inference)? Does an Essential item show its
+  `cooldownID` ever secret in combat (its watches then read unknown)? Does an Essential item show its
   aura in combat as it does out of combat?
 
 ## Built in stage CDM-2: the managed Cooldown Manager layout (Mode B), minor 4
@@ -138,7 +138,7 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 - `Cdm.lua` reads the client's Cooldown Manager: the catalogue (`C_CooldownViewer.GetCooldownViewerCategorySet(0-8)` and
   `GetCooldownViewerCooldownInfo`, out of combat only: spell, override, tooltip override and linked spells of each
   cooldownID), the active item frames of `BuffBarCooldownViewer` and `BuffIconCooldownViewer`
-  (`itemFramePool:EnumerateActive()`, `rawget` of `cooldownID`, `layoutIndex`, `auraInstanceID`, `auraDataUnit`) and
+  (`itemFramePool:EnumerateActive()`, `rawget` of `cooldownID`, `auraInstanceID`, `auraDataUnit`) and
   four post-hooks (`hooksecurefunc`, each once): the viewers' `OnAcquireItemFrame` and `RefreshData` (a data change
   that keeps the item count acquires no frame and sends no event), an item's count FontString
   `SetText` (stacks) and a tracked bar's StatusBar `SetValue` (seconds left). It never shows, hides, fades, moves,
@@ -173,7 +173,7 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 | `left` on an aura with no duration | the lowest band while up | the client pushes 0 seconds for it (review M3) |
 | `stacks` edge 1 | no bar: told only by the aura being absent | the count text is `""` for one stack or none |
 | A count of `""` or plain digits | `tonumber(text) or 0` | out of combat the client passes a string |
-| Identity | the item's `cooldownID` read at each use; secret: its `layoutIndex` in the order last read plain; both secret: the item is `gone` | frames reshuffle in combat; the in-combat secrecy of these fields is unprobed |
+| Identity | the item's `cooldownID` read at each use; secret: the item is unknown (its watches `gone`) and its pushes are dropped (lane C1 fix round 1; was the item's `layoutIndex` in the order last read plain) | frames reshuffle and the layout can be edited in combat (F13), so an index read before could name another entry; Hekili's leaf also requires a plain ID; the in-combat secrecy of the ID is unprobed |
 | A shown aura on the other unit | unknown (`gone`) for this watch (lane C1; was not up): a watch on each unit of one entry reads unknown on one while the aura is up on the other; a secret or absent unit is unknown too | the item scans player then target; whether a target aura can outrank a player one is unsettled, so 0 would be a guess |
 | Priming | a new bar holds low 4 frames, then counts; it is read `SETTLE` (4) frames after the client's first push (and again after each absence); after a prime the handle is unknown until then, after an absence or a run the band stands | a secret is never kept, so nothing can be re-fed; stacks come only when the count is rewritten; a firing can trail its push (review I2, as the percent prime settle) |
 | `IsAvailable(kind, spec)` | answers from the last read and asks for a new one next frame | it must not call capability callbacks (review M5) |
