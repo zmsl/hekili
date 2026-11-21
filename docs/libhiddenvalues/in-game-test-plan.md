@@ -20,7 +20,7 @@ The expectations below are facts (a band, a direction, a state, a count); LHVPro
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Log in, type `/lhvp` right away (again after a second if health says `pending`) | version `LibHiddenValues-1.0` minor 1, 32 bars made (when LHVProbe shows `GetPool`), health `ready` and power `ready`, the other kinds `unavailable (unproven)`. Report the verdict the login self-test gave: `ready` or `unavailable (selftest)`. If unavailable: run `/lhvp selftest` and report its lines; a PASS there (the kinds `ready` after it) means the login run was upset by the loading screen, not a broken mechanism |
+| 1 | Log in, type `/lhvp` right away (again after a second if health says `pending`) | version `LibHiddenValues-1.0` minor 2, 32 bars made (when LHVProbe shows `GetPool`), health `ready` and power `ready`, the other kinds `unavailable (unproven)`. Report the verdict the login self-test gave: `ready` or `unavailable (selftest)`. If unavailable: run `/lhvp selftest` and report its lines; a PASS there (the kinds `ready` after it) means the login run was upset by the loading screen, not a broken mechanism |
 | 2 | `/lhvp selftest` | three edge lines (25, 50, 75%) with changes = firings and `ok`, `selftest prime: firings in the settle window 1, after it 0: ok`, then `selftest PASS: curves ok, max lag 0 frames` (these lines are the library's own, passed through unchanged) |
 | 3 | Target a mob at full health, `/lhvp watch health target 20 50 80` | the watch is `priming`, then within a few frames band 80-100, dir 0, q 2, as its first band (no 0-20 line before it) |
 | 4 | `/lhvp watch health player 50` and `/lhvp watch power player 30 mana` (or `energy`: your class's type; the word is required) | a first band for each, dir 0. Without the type word the watch is refused with `bad-spec: power required ...`. A Druid: shift forms; each watch keeps its own type (report what an energy watch says in caster form). A rage watch (`/lhvp watch power player 30 rage`, bear form): out of combat at 0 its first band is 0-30, dir 0 (known, not unknown), then crossings as rage builds and decays: the library's first rage run |
@@ -39,6 +39,28 @@ The expectations below are facts (a band, a direction, a state, a count); LHVPro
 
 Also report any Lua error that names LibHiddenValues or LHVProbe, and set the CVar back to "0".
 
+## Stage CDM-1: auras from the Cooldown Manager
+
+LHVProbe needs an aura command first (not built yet): `/lhvp watch aura <player|target> <spellID> <up|stacks|left>
+[edges...] [max N]` calling `Watch` with `{ kind = "aura", ... }`, a line per sink call (band, dir, q) and per
+`OnCapability` call (with the handle's spell when the 4th argument is set), `/lhvp aura <unit> <spellID> <what>` printing
+`IsAvailable("aura", spec)`, and `/lhvp cdm` printing `GetAuraSources()` (each row, then off, read, texts, values,
+refused, reads). A class with a stacking aura and a timed debuff helps (a Druid: Lacerate stacks and Rake or Moonfire).
+
+| # | Do | Expect |
+|---|---|---|
+| A1 | Cooldown Settings: put a stacking aura (Lacerate) in Tracked Bars, a buff in Tracked Buffs (icons), leave a third aura out. `/lhvp aura` for each with `up`, `stacks`, `left` | bar: all `ready`; icon: `up` and `stacks` `ready`, `left` `unavailable (cdm-icon-only)`; the third `cdm-not-tracked` (or `not-in-cdm` if no entry names it) |
+| A2 | `/lhvp watch aura target <Lacerate> stacks max 5`, `/lhvp watch aura target <Lacerate> left 3 6`, `/lhvp watch aura target <Lacerate> up`; fight a mob, stack it to 5, let it fall off | up 0 then 1; stacks 1-2 .. 5-5 one line per cast (dir 1); left 6-inf, then 3-6 and 0-3 (dir -1) near 6 s and 3 s left, back up on each refresh; at the expiry stacks 0-1 and left 0-3 (dir -1), up 0 |
+| A3 | Swap targets mid-fight (a mob without the debuff, then back) | stacks and left the lowest band and up 0 on the other mob; the old values again within a frame or two on swap-back, with no `priming` line |
+| A4 | `/lhvp cdm` in and after combat | texts and values rising, refused 0; report `read` and the placement of each row |
+| A5 | Cooldown Settings: move the aura from Tracked Bars to Tracked Buffs, then remove it, then put it back (out of combat) | `OnCapability` lines per handle: `left` to `cdm-icon-only`, all to `cdm-not-tracked`, then `ready` again |
+| A6 | Options: switch the Cooldown Manager off, then on | `aura unavailable (cdm-off)` (kind and each handle), every aura watch unknown; on again: `ready`, bands back after the next application |
+| A7 | Edit Mode open with a watch live; then Alt+Z | unknown while open / hidden (state `gone`), values back after |
+| A8 | A fight with several auras up at once (a full aura refresh in combat: a resurrect, an aura-heavy pull), then `/lhvp cdm` | the watches keep following; report any watch stuck `gone` in combat and whether it recovered after combat |
+| A9 | `/reload` in combat, then the watches again | `pending` until combat ends, then `ready` |
+
+Report the ms between a cast and its stack line (the probes saw 15-50 ms), and any Lua error naming LibHiddenValues.
+
 ## Stage 3: error codes, position, points, point precision
 
 About 15 minutes, a Druid (or any mana user; the energy and rage steps need a Druid). Setup as above (LHVProbe 0.3.0;
@@ -47,7 +69,7 @@ and reset at the end. Start in caster form, out of combat; `/lhvp watch off` bet
 
 | # | Do | Expect (PASS) |
 |---|---|---|
-| S1 | `/lhvp` | minor 2; health and power `ready` |
+| S1 | `/lhvp` | minor 3; health and power `ready` |
 | S2 | `/lhvp watch power player 30` (no type word) and `/lhvp watch power player precision exact mana` | each refused with the library's English message (`A power watch needs its power type ...`, `The precision must be "point" or nil.`), not a code |
 | S3 | `/lhvp watch health player step 1`, `/lhvp watch power player step 1 mana` | each a 1% band (e.g. `61-62`), dir 0 first; `/lhvp stats`: one source line per watch, `mode gray`, 8 bars each |
 | S4 | Spend mana in steps (casts), take a hit, heal, out of combat and then in a fight | the mana and health bands follow every 1% change, a big spend is one line; `/lhvp stats`: desyncs 0 (splits may be above 0: a held frame, never a wrong band) |

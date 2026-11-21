@@ -8,7 +8,7 @@
 -- (lib.loading). All state lives on lib, as plain data; scripts are one-line dispatchers through lib, so a newer minor
 -- replaces behaviour by replacing functions. Nothing is built before PLAYER_LOGIN. The addon name and the private
 -- table from `...` are never used (an embedded copy would receive its host's).
-local MAJOR, MINOR = "LibHiddenValues-1.0", 2
+local MAJOR, MINOR = "LibHiddenValues-1.0", 3
 local lib, oldMinor = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then
     return
@@ -82,8 +82,9 @@ function lib:GetMessage(code, locale)
     return t and code ~= nil and t[code] or nil
 end
 
--- Every kind name of the major's contract; only those with a file in Kinds/ are built (lib.kinds). The aura kind stays
--- unproven for good: the client's aura container only takes widgets owned by its forbidden aura button.
+-- Every kind name of the major's contract; only those with a file in Kinds/ are built (lib.kinds). The aura kind reads
+-- the client's Cooldown Manager (Cdm.lua): the client's aura container only takes widgets owned by its forbidden aura
+-- button.
 lib.KINDS =
     { "health", "power", "cooldown", "charges", "cast", "totem", "loc", "bool", "aura", "threat", "absorb", "meter" }
 lib.KNOWN = {}
@@ -156,6 +157,10 @@ function lib.capOf(kind)
     if lib.errored[kind] then
         return "unavailable", "error"
     end
+    local why = k.why and k.why()
+    if why then
+        return "unavailable", why
+    end
     if lib.stVerdict == false then
         return "unavailable", "selftest"
     end
@@ -165,10 +170,18 @@ function lib.capOf(kind)
     return "ready"
 end
 
+-- unit: a unit token, or a whole spec (the aura kind answers for its spell and what: placement reasons).
 function lib:IsAvailable(kind, unit)
     local state, reason = lib.capOf(kind)
+    local spec
+    if type(unit) == "table" then
+        spec, unit = unit, unit.unit
+    end
     if state ~= "unavailable" and unit ~= nil and not lib.kinds[kind].units[unit] then
         return false, "unavailable", "unproven"
+    end
+    if state == "ready" and spec and lib.kinds[kind].status then
+        state, reason = lib.kinds[kind].status(spec)
     end
     return state == "ready", state, reason
 end
@@ -267,7 +280,7 @@ function lib:Watch(owner, spec, sink)
 end
 
 function lib.keyOf(h)
-    return h.kind .. "|" .. h.unit .. "|" .. tostring(h.power) .. "|" .. tostring(h.predicted)
+    return h.key or h.kind .. "|" .. h.unit .. "|" .. tostring(h.power) .. "|" .. tostring(h.predicted)
 end
 
 -- References (or with d = -1 drops) a handle's points on its source.
@@ -285,6 +298,7 @@ function lib.attach(h)
     if not s then
         s = { kind = h.kind, unit = h.unit, power = h.power, predicted = h.predicted, handles = {} }
         s.bar, s.ref, s.core, s.pbar, s.pref, s.bad = {}, {}, {}, {}, {}, 0
+        s.spell, s.what = h.spell, h.what
         lib.srcByKey[key] = s
         lib.sources[#lib.sources + 1] = s
     end
@@ -331,6 +345,9 @@ function lib.stateOf(h)
         return state, reason
     end
     local s = h.src
+    if s.cap then -- the source's own answer (the aura kind: its Cooldown Manager placement)
+        return s.cap, s.why
+    end
     if h.pts and not s.max then
         return "unavailable", "max-unknown"
     end
@@ -363,7 +380,8 @@ function H:State()
 end
 
 -- step, min, max granted: a step of any size is granted as 1 (the 1% cell), nil for edges only. A points handle
--- answers in points: 0 to the plain max (nil while unknown), its step the 1% cell in points.
+-- answers in points: 0 to the plain max (nil while unknown), its step the 1% cell in points. The top is 100 for
+-- percents; for an aura, 1 (up), max (stacks; math.huge without one) or math.huge (seconds).
 function H:Domain()
     if self.pts then
         local s = self.src
@@ -373,7 +391,7 @@ function H:Domain()
         end
         return self.step and M and M / 100 or nil, 0, M
     end
-    return self.step, 0, 100
+    return self.step, 0, self.top or 100
 end
 
 -- Swaps the handle's point thresholds in one step: true, or nil, code (the old set stays).

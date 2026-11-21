@@ -185,7 +185,8 @@ files["src/LibHiddenValues/"] = {
     not_globals = { "print" }, -- a pure API: no chat output (owner 2026-11-20)
     read_globals = {
         "CreateFrame", "C_CurveUtil", "UnitHealthPercent", "UnitPowerPercent", "UnitExists", "UnitIsDead", "GetTime",
-        "IsLoggedIn", "GetLocale", "UnitPowerMax", "C_Secrets",
+        "IsLoggedIn", "GetLocale", "UnitPowerMax", "C_Secrets", "C_CooldownViewer", "C_CVar", "hooksecurefunc",
+        "InCombatLockdown",
     },
 }
 files["tests/LibHiddenValues/"] = {

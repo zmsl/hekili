@@ -9,8 +9,8 @@ ignores the folder (`.pkgmeta`).
 
 The design it follows is the standalone band library design of 2026-11-20 (working name Tidemark, renamed
 LibHiddenValues), sections 1 to 7. Built: stages 0 and 1 (the skeleton and named health and power edges pushed every
-frame, the measured mechanism) and stage 3 (error codes, position, exact points, point precision). Its in-game check:
-[in-game-test-plan.md](in-game-test-plan.md).
+frame, the measured mechanism), stage CDM-1 (the aura kind read from the Cooldown Manager, below) and stage 3 (error
+codes, position, exact points, point precision). Its in-game check: [in-game-test-plan.md](in-game-test-plan.md).
 
 ## Built in stage 3
 
@@ -29,13 +29,14 @@ frame, the measured mechanism) and stage 3 (error codes, position, exact points,
 
 ## Built in stages 0 and 1
 
-- LibStub major `LibHiddenValues-1.0`, minor 2 (stage 3). Five files after LibStub; the first calls `NewLibrary`
-  and sets `lib.loading`, the others return unless it is set, the last (`SelfTest.lua`) clears it. All state on `lib`;
-  scripts are one-line dispatchers through `lib`. Nothing but the event frame is built before `PLAYER_LOGIN`; a copy
-  loaded after login (load on demand, or a newer minor) realises at once, keeps the frames and re-primes every source.
+- LibStub major `LibHiddenValues-1.0`, minor 3 (2: the aura kind; 3: stage 3). Seven files after LibStub; the first
+  calls `NewLibrary` and sets `lib.loading`, the others return unless it is set, the last (`SelfTest.lua`) clears it.
+  All state on `lib`; scripts are one-line dispatchers through `lib`. Nothing but the event frame is built before
+  `PLAYER_LOGIN`; a copy loaded after login (load on demand, or a newer minor) realises at once, keeps the frames and
+  re-primes every source.
 - `Watch`, the handle (`Get`, `State`, `Domain`, `Exact`, `Latency`, `SetPaused`, `SetSink`, `SetPoints`, `Release`),
-  `IsAvailable`, `OnCapability`, `SelfTest`, `GetSelfTest`, `GetStats`, `GetPool`, `GetSources`, `GetKinds`,
-  `SetEnabled`, `GetMessage`, `ERR`,
+  `IsAvailable`, `OnCapability`, `SelfTest`, `GetSelfTest`, `GetStats`, `GetPool`, `GetSources`, `GetAuraSources`,
+  `GetKinds`, `SetEnabled`, `GetMessage`, `ERR`,
   `ReleaseAll`, `GetVersion`, the quality codes.
 - Sources by canonical key (kind, unit, power type, predicted); one bar per edge per source, reference counted; each
   handle a view cut by its own edges; a new edge primes only its own bar.
@@ -50,6 +51,64 @@ frame, the measured mechanism) and stage 3 (error codes, position, exact points,
 - Capability reasons `api`, `selftest`, `error`, `off`, `unproven`, `unknown-kind`.
 - A pure API: no slash command, no chat output, no frame of its own that shows. Every diagnostic fact is a getter
   (the consumer README's Diagnostics table); LHVProbe, outside this repository, is the reference consumer (`/lhvp`).
+
+## Built in stage CDM-1: the aura kind from the Cooldown Manager (Mode A, read-only)
+
+**Unproven in the library.** The probes (AuraBandProbe 0.2.0 and 0.2.1, CDMConfigProbe 0.2.0) proved the mechanisms;
+this code has not run in game. Until an in-game run passes, treat every aura answer as unverified.
+
+- `Cdm.lua` reads the client's Cooldown Manager: the catalogue (`C_CooldownViewer.GetCooldownViewerCategorySet(0-8)` and
+  `GetCooldownViewerCooldownInfo`, out of combat only: spell, override, tooltip override and linked spells of each
+  cooldownID), the active item frames of `BuffBarCooldownViewer` and `BuffIconCooldownViewer`
+  (`itemFramePool:EnumerateActive()`, `rawget` of `cooldownID`, `layoutIndex`, `auraInstanceID`, `auraDataUnit`) and
+  four post-hooks (`hooksecurefunc`, each once): the viewers' `OnAcquireItemFrame` and `RefreshData` (a data change
+  that keeps the item count acquires no frame and sends no event), an item's count FontString
+  `SetText` (stacks) and a tracked bar's StatusBar `SetValue` (seconds left). It never shows, hides, fades, moves,
+  re-lays out or refreshes anything, and calls no provider method.
+- `Kinds/Aura.lua` is the kind: spec `{ kind = "aura", unit = "player" | "target", spell, what = "up" | "stacks" |
+  "left", edges, max }`; reasons `cdm-off`, `not-in-cdm`, `cdm-not-tracked`, `cdm-icon-only`; `IsAvailable(kind,
+  spec)`, per-handle `OnCapability` calls, `GetAuraSources()`.
+- Bars: each edge is a raw bar ranged just below it (stacks `(e - 1, e)`, seconds `(e - 0.01, e)`) fed the hook's
+  value as it is; a firing is a toggle, except that a seconds bar firing on the frame after its last firing primes
+  again while its handles keep their band (the run rule: a falling timer may land inside the bar for a frame, which a
+  toggle cannot tell from a fall followed at once by a refresh). Presence needs no bar.
+- Re-reads: an acquire hook, `COOLDOWN_VIEWER_DATA_LOADED`, `COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED`,
+  `COOLDOWN_VIEWER_TABLE_HOTFIXED`, `PLAYER_REGEN_ENABLED`, `PLAYER_LEVEL_CHANGED`, `CVAR_UPDATE`
+  (`cooldownViewerEnabled`), the viewers' `RefreshData`. Separately, a watched item that no longer shows its
+  cooldownID is searched again (at most every 30 frames) and, when it is gone, asks for a read.
+- The shared machinery is reached by wrapping `lib.sync`, `lib.feed`, `lib.fire`, `lib.decode`, `lib.reprime`,
+  `lib.event` and `lib.drive` for aura sources in `Kinds/Aura.lua` (no edit to `Bars.lua`, `Feed.lua`,
+  `SelfTest.lua`); the core (`LibHiddenValues.lua`) gained the source key and fields, the per-source answer in
+  `stateOf`, the kind's `why` in `capOf`, a spec argument to `IsAvailable`, and the aura top in `Domain()` and
+  `Latency()`.
+
+| Question | Taken | Why |
+|---|---|---|
+| A curve for hook values | none: raw narrow-range bars | a secret from a hook cannot go through a curve from addon code; the probes' per-stack and 2.9-3.0 s bars are what was proven |
+| Seconds bar width | 0.01 s | the narrower, the rarer a landing inside; the run rule covers the landings that happen |
+| Two firings of a seconds bar on consecutive frames | that bar primes again (HOLD + SETTLE + 2 frames, the seconds come every frame); its handles keep their band meanwhile | forcing "below" would stick wrong after a fall followed at once by a refresh (review); a flip is wrong for a landing inside |
+| The first capability answer of a new watch | noted, not called | it is given inside `Watch`; the consumer reads `h:State()` after it |
+| `up` | the item's `auraInstanceID` secret or not nil, polled every frame, no bar | the proven presence read; it is plain to test |
+| Stacks and seconds while absent | the lowest band (0 stacks, 0 seconds), live | controller decision (review I1): an absent aura is a known value; `"live"` never comes without a band |
+| An aura up with no count | 1 stack | the client hides the count at one stack |
+| Linked, override and tooltip spells | they answer for the entry: whatever aura of it the client shows | the catalogue maps them to the cooldownID; the shown aura's spell is not read (review M2) |
+| `left` on an aura with no duration | the lowest band while up | the client pushes 0 seconds for it (review M3) |
+| `stacks` edge 1 | presence, no bar | the count text is `""` for one stack or none |
+| A count of `""` or plain digits | `tonumber(text) or 0` | out of combat the client passes a string |
+| Identity | the item's `cooldownID` read at each use; secret: its `layoutIndex` in the order last read plain; both secret: the item is `gone` | frames reshuffle in combat; the in-combat secrecy of these fields is unprobed |
+| A shown aura on the other unit | not up for this watch | the item scans player then target; `auraDataUnit` says which (a secret one counts as this unit) |
+| Priming | a new bar holds low 4 frames, then counts; it is read `SETTLE` (4) frames after the client's first push (and again after each absence); after a prime the handle is unknown until then, after an absence or a run the band stands | a secret is never kept, so nothing can be re-fed; stacks come only when the count is rewritten; a firing can trail its push (review I2, as the percent prime settle) |
+| `IsAvailable(kind, spec)` | answers from the last read and asks for a new one next frame | it must not call capability callbacks (review M5) |
+| Errors | an errored aura kind's hooks return at once | a body raising every frame would re-sync every kind per call (review M1) |
+| Target swap | no priming for aura bars | the bars follow the client's pushes; priming would drop the swap's own push |
+| Re-layout | aura bars prime | a stray firing would invert a toggle |
+| A paused aura handle | reports unknown, its bars stay fed | the pushes are the client's; pausing saves nothing |
+| A hidden viewer, Edit Mode | the handle is `gone` | a hidden viewer stops its events; Edit Mode shows placeholder data (`isEditing`, read from the client's code, unprobed) |
+| Edit Mode "Hidden" or "In Combat" visibility | no reason of its own (`gone` while hidden) | the brief's reason list; `cdm-hidden` is left for a later stage |
+| Catalogue in combat | not read: `pending` until combat ends | in-combat secrecy of the catalogue reads is unprobed |
+| `SetMinMaxValues` hook | not built | seconds edges need only `SetValue`; the percent route through a secret max is closed (AuraBandProbe 0.2.1) |
+| Essential and Utility items | `cdm-not-tracked` | they give presence of a linked aura only (clean-room doc P2.3); Mode A serves the two aura viewers |
+| Errors | an error in a hook, an event or a read turns the aura kind off (`error`); the other kinds carry on | the design's per-kind rule |
 
 ## Choices taken where the design left one open
 
@@ -68,7 +127,7 @@ frame, the measured mechanism) and stage 3 (error codes, position, exact points,
 | Position split/desync (stage 3) | design 3.3: one bad decode holds the last band (`splits`), two in a row re-prime (`desyncs`) | as designed; the COARSE fallback is not built |
 | `points` or `precision` on health, power types other than mana, rage and energy, other tokens | handle `unavailable, unproven` | unproven in the run |
 | Rage (controller for the owner, 2026-11-20) | `ready` on `player` like mana and energy, the same `UnitPowerPercent` read | proven by the BandProbe2 warm-up (bear form, in combat under the lockdown: Gray 7 bits + parity and the 20-bar bank, 0 disagreements, desync 0); the library's own in-game run is owed. Rage sits at 0 out of combat: below the lowest edge it primes to the known lowest band |
-| Aura | a known kind, permanently `unavailable, unproven` | the aura container closed the route (design addendum) |
+| Aura | read from the Cooldown Manager (stage CDM-1, above); the aura container route stays closed | design addenda L1576, L1577, L1582 |
 | Sink timing (owner question 9) | mixed, as recommended: one-edge handles from the firing, several edges one frame later | the design's recommendation; `h:Latency()` says which |
 | Views (owner question 5) | per-handle views only | the design's recommendation |
 | Death | plain `UnitIsDead` true: health handles go `gone`; a secret answer keeps the bands | the `dead` boolean bar is stage 6 |
@@ -88,8 +147,9 @@ frame, the measured mechanism) and stage 3 (error codes, position, exact points,
 Shadow verification and the `silent` detector, plain-read calibration and `q = EXACT` (stage 2; the BandProbe2
 warm-up found health and power secret even out of combat, so there may be no plain truth to calibrate against);
 event-driven, throttled and near-threshold feeding and the governor (stage 4; `GetStats` returns level 0);
-booleans, groups, other tokens (6); timers (7); threat, absorbs, meter (9); the `restricted` reason for PvP
-matches (an error there turns the kind off as `error` instead); the cached self-test verdict; the 5 s release grace.
+the Cooldown Manager's Mode B (managed layout, CDM-2), aura sound and private-copy tiers, upgrade hints,
+`cdm-hidden` and `cdm-combat-only`, icon timers; booleans, groups, other tokens (6); timers (7); threat, absorbs,
+meter (9); the `restricted` reason for PvP matches (an error there turns the kind off as `error` instead); the cached self-test verdict; the 5 s release grace.
 
 ## Checks
 

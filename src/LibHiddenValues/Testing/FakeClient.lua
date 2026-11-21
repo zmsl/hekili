@@ -10,15 +10,18 @@
 --   Fake.tick(2)
 --   Fake.restore()                           -- puts back every global this file set
 --
--- Surface: Fake.world (W.unit[token] = { health, power = { [Enum.PowerType] = fraction }, max = { [Enum.PowerType]
--- = points }, powerType, dead }; W.secret: reads return secrets, true by default, as under the map lockdown; W.combat
+-- Surface: Fake.world (W.unit[token] = { health, power = { [Enum.PowerType] = fraction }, max = { [Enum.PowerType] =
+-- points }, powerType, dead }; W.secret: reads return secrets, true by default, as under the map lockdown; W.combat
 -- does the same; W.secretBool: UnitIsDead returns a secret; W.maxSecret: UnitPowerMax returns a secret and
--- C_Secrets.ShouldUnitPowerMaxBeSecret says so; W.locale: GetLocale, "enUS" by default), Fake.tick(n), Fake.event(name, ...), Fake.advance(seconds), Fake.set(knob, value),
--- Fake.login(), Fake.restore(), Fake.printed (every print call: the library makes none). Knobs: "closed" (bars fed a
--- secret stop firing: the leak is closed), "lag" n (firings arrive n frames late), "secretlag" n (a fill set from a
--- secret fires n frames later still), "drop" n (every nth firing is lost), "stagger" n (every nth
--- firing queued arrives one frame later than the rest: one change's firings split over two frames), "snap" "left"|"right"|"nearest" (how a
--- Step curve picks its point), "maxpoints" n (curve size limit), "refuse" name (that global function raises).
+-- C_Secrets.ShouldUnitPowerMaxBeSecret says so; W.locale: GetLocale, "enUS" by default), Fake.tick(n), Fake.event(name,
+-- ...), Fake.advance(seconds), Fake.set(knob, value), Fake.login(), Fake.restore(), Fake.printed (every print call: the
+-- library makes none). Knobs: "closed" (bars fed a secret stop firing: the leak is closed), "lag" n (firings arrive n
+-- frames late), "secretlag" n (a fill set from a secret fires n frames later still), "drop" n (every nth firing is
+-- lost), "stagger" n (every nth firing queued arrives one frame later than the rest: one change's firings split over
+-- two frames), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit),
+-- "refuse" name (that global function raises). The Cooldown Manager (the aura kind's source): W.cdm, W.aura,
+-- Fake.setAura, Fake.cdmLayout, Fake.cdmEnable, Fake.viewers, Fake.touched, Fake.hooks; see the comment above its
+-- viewers.
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
 --
 -- Fidelity limits: no taint model; a secret is a table, so only arithmetic, ordering, concatenation, tostring, length,
@@ -26,7 +29,9 @@
 -- OnUpdate of its frame (the self-test's measured "lag 0"), a secret one too by default, though in game a prime's
 -- secret live push fired a frame later (LHVProbe 2026-11-20; steady-state secret timing unmeasured): "secretlag" 1
 -- models that; 60 frames per second; debugprofilestop is os.clock; a frame's first layout fires its OnSizeChanged
--- once. It tests a consumer's logic against the library's contract, not the game.
+-- once; the Cooldown Manager is a sketch of the client's (its fields, hooks and event fan-out as the probes and the
+-- client's code show them, not its layout rules). It tests a consumer's logic against the library's contract, not the
+-- game.
 local opts = ... or {}
 local here = debug.getinfo(1, "S").source:match("^@(.*[/\\])") or "./"
 local root = here .. "../"
@@ -43,6 +48,8 @@ local W = {
     },
     secret = true,
 }
+W.cdm = { enabled = true, available = true, catalogue = {}, bar = {}, icon = {} }
+W.aura = { player = {}, target = {} }
 Fake.world = W
 local K = { lag = 0, secretlag = 0, drop = 0, stagger = 0, snap = "left", maxpoints = 1000 }
 local clock, tickNo, loggedIn, fireCount = 1000, 0, false, 0
@@ -214,6 +221,12 @@ end
 function Frame:IsShown()
     return self.shown
 end
+function Frame:SetShown(on)
+    self.shown = on and true or false
+end
+function Frame:IsVisible()
+    return self.shown and (self.parent == nil or self.parent:IsVisible())
+end
 function Frame:SetText(s)
     self.text = s
 end
@@ -360,6 +373,357 @@ install("UnitIsDead", function(unit)
     end
     return d
 end)
+
+-- The Cooldown Manager: BuffBarCooldownViewer (tracked bars) and BuffIconCooldownViewer (tracked buff icons), each
+-- with an item pool. W.cdm = { enabled (the cooldownViewerEnabled CVar), available, catalogue = { [cooldownID] = {
+-- spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = {}, category = 0-8 } }, bar = { cooldownID,
+-- ... }, icon = { ... } (what the player placed, in order), secretId, secretIdx (in combat a refresh writes an item's
+-- cooldownID / a layout pass its layoutIndex secret), shuffle (a layout pass hands the frames out in another order) }.
+-- W.aura[unit][spellID] = { stacks =, expires = GetTime() at its end, duration = } on "player" and "target": the
+-- player's own auras (Fake.setAura). The viewers lay out at login and on Fake.cdmLayout(), refresh their items on
+-- UNIT_AURA and PLAYER_TARGET_CHANGED, push a tracked bar's SetMinMaxValues(0, duration) and SetValue(seconds left)
+-- every frame while its aura is up (an expired aura is dropped), and do nothing while hidden (Fake.cdmEnable(false):
+-- the CVar off, the viewers hidden, CVAR_UPDATE); Fake.cdmData() is a data change that keeps the item counts (only the
+-- viewers' RefreshData runs). The count text gets SetText(a secret number) when reads are secret,
+-- else the client's string ("" for one stack or none). Fake.touched lists every call made on a Cooldown Manager frame
+-- from outside the fake Cooldown Manager (its own calls and the hook bodies' frames excluded); Fake.hooks counts
+-- hooksecurefunc calls.
+local inBlizz = false
+Fake.touched, Fake.hooks = {}, 0
+local BFrame = setmetatable({}, { __index = Frame })
+BFrame.__index = BFrame
+for _, m in ipairs({
+    "Show",
+    "Hide",
+    "SetShown",
+    "SetAlpha",
+    "SetPoint",
+    "ClearAllPoints",
+    "SetSize",
+    "SetWidth",
+    "SetHeight",
+    "SetParent",
+    "SetScale",
+    "SetValue",
+    "SetMinMaxValues",
+    "SetText",
+    "EnableMouse",
+    "SetMouseMotionEnabled",
+    "SetScript",
+    "SetFrameStrata",
+    "RegisterEvent",
+    "UnregisterEvent",
+}) do
+    local base = Frame[m] or noop
+    BFrame[m] = function(self, ...)
+        if not inBlizz then
+            Fake.touched[#Fake.touched + 1] = m
+        end
+        return base(self, ...)
+    end
+end
+local function bframe(parent, kind)
+    return setmetatable({
+        kind = kind or "Frame",
+        scripts = {},
+        events = {},
+        deps = {},
+        min = 0,
+        max = 1,
+        shown = true,
+        parent = parent,
+    }, BFrame)
+end
+
+install("hooksecurefunc", function(t, k, fn)
+    if type(t) == "string" then
+        t, k, fn = _G, t, k
+    end
+    local orig = t[k]
+    if type(orig) ~= "function" then
+        error("hooksecurefunc: " .. tostring(k) .. " is not a function")
+    end
+    Fake.hooks = Fake.hooks + 1
+    rawset(t, k, function(...)
+        local a, b = orig(...)
+        local was = inBlizz
+        inBlizz = false
+        fn(...)
+        inBlizz = was
+        return a, b
+    end)
+end)
+install("InCombatLockdown", function()
+    return W.combat and true or false
+end)
+install("C_CVar", {
+    GetCVarBool = function(name)
+        if name == "cooldownViewerEnabled" then
+            return W.cdm.enabled and true or false
+        end
+    end,
+})
+install("C_CooldownViewer", {
+    IsCooldownViewerAvailable = function()
+        return W.cdm.available and true or false
+    end,
+    GetCooldownViewerCategorySet = function(cat)
+        local out = {}
+        for id, info in pairs(W.cdm.catalogue) do
+            if info.category == cat then
+                out[#out + 1] = id
+            end
+        end
+        table.sort(out)
+        return out
+    end,
+    GetCooldownViewerCooldownInfo = function(id)
+        local info = W.cdm.catalogue[id]
+        if not info then
+            return nil
+        end
+        local c = { cooldownID = id }
+        for k, v in pairs(info) do
+            c[k] = v
+        end
+        return c
+    end,
+})
+
+local UNITS = { "player", "target" }
+local nextAuraId = 0
+local function findAura(cd)
+    local info = W.cdm.catalogue[cd]
+    if not info then
+        return nil
+    end
+    for u = 1, 2 do
+        local auras = W.aura[UNITS[u]]
+        if auras then
+            local a = auras[info.spellID] or auras[info.overrideSpellID or 0] or auras[info.overrideTooltipSpellID or 0]
+            local links = info.linkedSpellIDs
+            for j = 1, links and #links or 0 do
+                a = a or auras[links[j]]
+            end
+            if a then
+                return a, UNITS[u]
+            end
+        end
+    end
+end
+
+local function refreshItem(item)
+    local a, unit
+    if item.cd then
+        a, unit = findAura(item.cd)
+    end
+    item.aura = a
+    if a then
+        if not a.id then
+            nextAuraId = nextAuraId + 1
+            a.id = nextAuraId
+        end
+        item.auraInstanceID = hidden() and secret(a.id) or a.id
+        item.auraDataUnit = unit
+    else
+        item.auraInstanceID, item.auraDataUnit = nil, nil
+    end
+    local n = a and a.stacks or 0
+    local fs = item.Icon and item.Icon.Applications or item.Applications.Applications
+    if hidden() then
+        fs:SetText(secret(n))
+    else
+        fs:SetText(n > 1 and tostring(n) or "")
+    end
+    if item.Bar and not a then
+        item.Bar:SetMinMaxValues(0, 0)
+        item.Bar:SetValue(0)
+    end
+end
+
+local function refresh(v) -- RefreshData
+    local ids = W.cdm[v.which]
+    for item in pairs(v.itemFramePool.active) do
+        local cd = ids[item.idx]
+        item.cd = cd
+        if cd == nil then
+            item.cooldownID = nil
+        else
+            item.cooldownID = (W.combat and W.cdm.secretId) and secret(cd) or cd
+        end
+        refreshItem(item)
+    end
+end
+
+local function newItem(v)
+    local item = bframe(v)
+    v.made = v.made + 1
+    item.slot = v.made
+    if v.which == "bar" then
+        item.Icon = bframe(item)
+        item.Icon.Applications = bframe(item.Icon, "FontString")
+        item.Bar = bframe(item, "StatusBar")
+    else
+        item.Applications = bframe(item)
+        item.Applications.Applications = bframe(item.Applications, "FontString")
+    end
+    return item
+end
+
+local function layout(v) -- RefreshLayout: release every item, acquire max(#ids, 2) again, then RefreshData
+    local pool = v.itemFramePool
+    local rel = {}
+    for item in pairs(pool.active) do
+        rel[#rel + 1] = item
+    end
+    table.sort(rel, function(a, b) -- the last released is acquired first: unshuffled, each frame keeps its index
+        return a.slot > b.slot
+    end)
+    for _, item in ipairs(rel) do
+        pool.active[item] = nil
+        item.cooldownID, item.layoutIndex, item.idx, item.cd = nil, nil, nil, nil
+        item.auraInstanceID, item.auraDataUnit, item.aura = nil, nil, nil
+        item:Hide()
+        pool.inactive[#pool.inactive + 1] = item
+    end
+    if W.cdm.shuffle then
+        local inactive, n = pool.inactive, #pool.inactive
+        for i = 1, math.floor(n / 2) do
+            inactive[i], inactive[n + 1 - i] = inactive[n + 1 - i], inactive[i]
+        end
+    end
+    for i = 1, math.max(#W.cdm[v.which], 2) do
+        local item = table.remove(pool.inactive) or newItem(v)
+        pool.active[item] = true
+        item.idx = i
+        item.layoutIndex = (W.combat and W.cdm.secretIdx) and secret(i) or i
+        v:OnAcquireItemFrame(item)
+        item:Show()
+    end
+    v:RefreshData() -- method-dispatched, as the client does (a hook sees it)
+end
+
+local viewers = {}
+local function blizz(fn, v)
+    local was = inBlizz
+    inBlizz = true
+    fn(v)
+    inBlizz = was
+end
+local function tickBars(v)
+    if not v:IsVisible() then
+        return
+    end
+    local now = clock
+    for item in pairs(v.itemFramePool.active) do
+        local a = item.aura
+        if a and item.Bar then
+            local left = a.expires - now
+            if left <= 0 then
+                for u = 1, 2 do
+                    local auras = W.aura[UNITS[u]]
+                    for spell, x in pairs(auras) do
+                        if x == a then
+                            auras[spell] = nil
+                        end
+                    end
+                end
+                for k = 1, #viewers do
+                    refresh(viewers[k])
+                end
+            else
+                item.Bar:SetMinMaxValues(0, a.duration)
+                item.Bar:SetValue(hidden() and secret(left) or left)
+            end
+        end
+    end
+end
+local function viewerEvent(v, event)
+    if event == "PLAYER_LOGIN" then
+        v.shown = W.cdm.enabled and true or false
+        if v.shown then
+            layout(v)
+        end
+    elseif v:IsVisible() then
+        refresh(v)
+    end
+end
+for _, which in ipairs({ "bar", "icon" }) do
+    local v = bframe(_G.UIParent)
+    v.which, v.made = which, 0
+    v.itemFramePool = {
+        active = {},
+        inactive = {},
+        EnumerateActive = function(pool)
+            return pairs(pool.active)
+        end,
+    }
+    v.OnAcquireItemFrame = function() end
+    v.RefreshData = function(self) -- the viewer's own: a layout pass or a data change; aura events refresh the items
+        refresh(self)
+    end
+    v.events = { PLAYER_LOGIN = true, UNIT_AURA = true, PLAYER_TARGET_CHANGED = true }
+    v.scripts.OnEvent = function(self, event)
+        local was = inBlizz
+        inBlizz = true
+        viewerEvent(self, event)
+        inBlizz = was
+    end
+    v.scripts.OnUpdate = function(self)
+        blizz(tickBars, self)
+    end
+    install(which == "bar" and "BuffBarCooldownViewer" or "BuffIconCooldownViewer", v)
+    Fake.frames[#Fake.frames + 1] = v
+    viewers[#viewers + 1] = v
+end
+Fake.viewers = viewers
+
+-- A layout pass on both viewers (the player changed the layout, a full aura update, a show).
+function Fake.cdmLayout()
+    for k = 1, #viewers do
+        if viewers[k]:IsVisible() then
+            blizz(layout, viewers[k])
+        end
+    end
+end
+
+-- A data change that keeps each viewer's item count (a drag reorder, a swap, a change at the 2-item minimum): the
+-- client calls only RefreshData, no frame is acquired and no event is sent.
+function Fake.cdmData()
+    for k = 1, #viewers do
+        if viewers[k]:IsVisible() then
+            blizz(viewers[k].RefreshData, viewers[k])
+        end
+    end
+end
+
+-- Sets (stacks a number) or removes (stacks nil) an aura on unit and sends UNIT_AURA.
+function Fake.setAura(unit, spell, stacks, seconds)
+    local auras = W.aura[unit]
+    if stacks == nil then
+        auras[spell] = nil
+    else
+        local a = auras[spell] or {}
+        a.stacks, a.duration = stacks, seconds or 30
+        a.expires = clock + (seconds or 30)
+        auras[spell] = a
+    end
+    Fake.event("UNIT_AURA", unit)
+end
+
+-- The cooldownViewerEnabled CVar: the viewers show or hide (shown again: a layout pass), then CVAR_UPDATE.
+function Fake.cdmEnable(on)
+    W.cdm.enabled = on
+    for k = 1, #viewers do
+        local v = viewers[k]
+        local was = v.shown
+        v.shown = on and true or false
+        if on and not was then
+            blizz(layout, v)
+        end
+    end
+    Fake.event("CVAR_UPDATE", "cooldownViewerEnabled", on and "1" or "0")
+end
 
 -- Driver
 local sW, sH = secret(20), secret(2)

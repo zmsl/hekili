@@ -1,7 +1,7 @@
 # LibHiddenValues-1.0
 
-Threshold events for unit health and power on World of Warcraft Forever (Interface 16001), where the client hides
-those values from addons. Your addon says which thresholds it cares about; the library tells it, as plain numbers,
+Threshold events for unit health and power, and for auras the client's Cooldown Manager shows, on World of Warcraft
+Forever (Interface 16001), where the client hides those values from addons. Your addon says which thresholds it cares about; the library tells it, as plain numbers,
 which band the value is in and when it crosses one. Your code never touches a hidden value.
 
 MIT licence (see `LICENSE`). Works installed on its own or embedded in your addon; LibStub keeps one running copy (the
@@ -44,6 +44,7 @@ end)
 |---|---|---|
 | `health` | `unit`, `edges`, `step`, `predicted` (default true) | `player`, `target` |
 | `power` | `unit`, `power` (`Enum.PowerType`, required), `edges`, `step`, `points`, `precision` | `player`: mana, energy, rage (rage: proven by the BandProbe2 warm-up, the library's own run owed) |
+| `aura` | `unit`, `spell`, `what`, `edges`, `max` | `player`, `target`: read from the Cooldown Manager, **not yet run in game** (below) |
 
 A spec needs at least one of `edges`, `step`, `points` or `precision`.
 
@@ -94,6 +95,67 @@ has no text for yet (enUS only for now). `GetMessage` also knows every state and
 | `POOL_LIMIT` | `pool-limit` | points or precision over the 256-bar pool |
 | `PRECISION_INVALID` | `precision-invalid` | precision other than `"point"` |
 
+## Auras (from the Cooldown Manager)
+
+The client hides aura data from addons in combat, but its Cooldown Manager still shows the auras the player placed
+there. The `aura` kind reads those items: it never changes the player's Cooldown Manager (nothing is shown, hidden,
+faded, moved or re-laid out; it only post-hooks the items' own updates), so it can only serve what the player placed.
+
+```lua
+-- Stacks of a debuff on the target (bands 0-2, 2-4, 4+), and whether a buff of mine is up.
+LHV:Watch("MyAddon", { kind = "aura", unit = "target", spell = 12345, what = "stacks", edges = { 2, 4 } }, sink)
+LHV:Watch("MyAddon", { kind = "aura", unit = "player", spell = 67890, what = "up" }, sink)
+```
+
+| Field | Meaning |
+|---|---|
+| `unit` | `"player"` or `"target"` (the only units the Cooldown Manager reads; another token is `unavailable, unproven`) |
+| `spell` | the aura's spell ID; it matches a Cooldown Manager entry by its spell, override, tooltip override or linked spells, and the watch then answers for that entry: whatever aura of the entry the client shows (a sibling linked aura reads as this one) |
+| `what` | `"up"`: presence, `lo == hi`, 1 up and 0 not. `"stacks"`: the stack count. `"left"`: seconds left |
+| `edges` | `stacks`: whole numbers from 1 (1 is presence itself); `left`: seconds above 0.01 (required) |
+| `max` | `stacks` only: the top of the domain; alone it means every count from 1 to `max` (an exact count) |
+
+An absent aura is a known value: no stacks and no seconds, the lowest band (`0` to the lowest edge), `up` 0. A
+handle is unknown (`lo == nil`) only while no item shows it (`gone`) or before its first band (`priming`); `"live"`
+always comes with a band. The client hides the count at one stack: an aura that is up with no count reads 1. `left`
+on an aura with no duration reads the lowest band while it is up (the client pushes 0 seconds for it), which looks
+like "about to expire": watch `up` for such auras.
+`h:Domain()` returns `nil, 0, top`: 1 for `up`, `max` (or `math.huge`) for stacks, `math.huge` for seconds. An aura
+handle is called one frame after the change (`h:Latency()`).
+
+What each placement gives (the player chooses it in the Cooldown Manager's settings):
+
+| Placement | `up` | `stacks` | `left` |
+|---|---|---|---|
+| Tracked Bar | yes | yes | yes |
+| Tracked Buff icon | yes | yes | no: `unavailable, cdm-icon-only` |
+| Essential or Utility, a hidden category, or nowhere | no | no | no |
+
+`LHV:IsAvailable("aura", spec)` (the whole spec, without a watch) and `h:State()` answer `ready`, `pending` (not read
+yet; also after a reload in combat, until combat ends) or `unavailable` with one of these reasons:
+
+| Reason | Meaning | What the player can do |
+|---|---|---|
+| `cdm-off` | the Cooldown Manager is switched off (Options), the client says it is not available, or its viewers are missing | switch it on |
+| `not-in-cdm` | no Cooldown Manager entry names this spell | nothing: the client cannot track it there |
+| `cdm-not-tracked` | an entry names it, but no tracked buff icon or bar shows it | place it in Tracked Buffs, or Tracked Bars for its timer |
+| `cdm-icon-only` | `what = "left"` on an aura shown as an icon | move it to Tracked Bars |
+
+The library only reports: telling the player is your addon's choice. `LHV:OnCapability(owner, fn)` calls
+`fn("aura", state, reason)` when the kind changes (`cdm-off`) and `fn("aura", state, reason, h)` for each of your aura
+handles whose answer changed (the player placed or removed the aura, a layout change). A handle is `gone` (unknown)
+while its item cannot be read: its viewer hidden (Edit Mode "Hidden", or the whole UI hidden), Edit Mode open, or, in
+combat after the client re-laid the items out, an item whose identity the client keeps secret (until combat ends).
+
+A bar is read 4 frames (`LHV.SETTLE`) after the client's first push into it, so the first band is the true one, once,
+with dir 0. A stacks watch started while its aura is already up stays `priming` until the client next writes the
+count (an application, a refresh, a target swap); after a re-layout (UI scale, a loading screen) an aura handle is
+unknown until its bars settle again. When an aura comes back the band before it stands while the count settles. A
+refresh within a frame of a seconds edge can be told up to about 10 frames late (the band before it stands
+meanwhile). `OnCapability` is not called from inside `Watch` or `IsAvailable`: read `h:State()` there (an answer
+`IsAvailable` gives may be a frame old; the callbacks follow on the next frame). A paused aura handle only reports
+unknown; its bars keep following the client.
+
 ## Testing your addon
 
 `Testing/FakeClient.lua` runs the real library on a fake client (stock Lua 5.1, not in the TOC):
@@ -110,7 +172,9 @@ Fake.restore()
 ```
 
 Its header lists the world fields (`max` per power type for `points` and `precision`), the fault knobs (`closed`,
-`lag`, `secretlag`, `drop`, `stagger`, `snap`, `maxpoints`, `refuse`) and what it does not model.
+`lag`, `secretlag`, `drop`, `stagger`, `snap`, `maxpoints`, `refuse`) and what it does not model. It also models the
+Cooldown Manager (`W.cdm`, `W.aura`, `Fake.setAura`, `Fake.cdmLayout`, `Fake.cdmEnable`): see the comment above its
+viewers.
 
 ## Diagnostics
 
@@ -120,10 +184,11 @@ the reference consumer (`/lhvp`).
 
 | Call | Returns |
 |---|---|
-| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 2`) |
-| `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, then the unproven ones); `state` and `reason` as `IsAvailable` |
-| `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable) |
-| `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change |
+| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 3`) |
+| `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, `cooldown` ... `aura` ... `meter`: the major's twelve); `state` and `reason` as `IsAvailable` |
+| `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable). `unit` may be a whole spec: the aura kind then answers for its placement |
+| `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change, and `fn("aura", state, reason, h)` for each of the owner's aura handles whose answer changed |
+| `LHV:GetAuraSources()` | a fresh array, one `{ unit =, spell =, what =, handles =, bars =, active =, cooldownID =, placement =, state =, reason =, up = }` per aura source with a watch (`placement` `"bar"`, `"icon"` or nil; `up` true, false or nil for unknown); then `off, read, texts, values, refused, reads`: the Cooldown Manager is off, its catalogue was read, count texts and bar values forwarded, values a bar refused, item reads |
 | `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, splits`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now), splits (a position decode held one frame). The frame times cover the library's whole frame, the self-test's frames included while it runs; with nothing fed the driver stops and every rate and time reads 0 |
 | `LHV:GetPool()` | `made, cap, pointBars, pointCap, pointCapPerSource`: bars made (32 at login; frames are never destroyed), the cap (256), point bars in use, and the point caps (64, 8) |
 | `LHV:GetSources()` | a fresh array, one `{ kind =, unit =, power =, predicted =, handles =, bars =, mode =, max =, active = }` per source with a watch, in creation order (`kind`, `unit`, `power`, `predicted` are the source's key: watches differing in any of them do not share bars; `power` nil for health; `mode` `"edges"`, `"gray"` (position) or `"ring"` (point precision); `max` the plain max a power source cuts points with; `active`: fed every frame) |
@@ -131,7 +196,7 @@ the reference consumer (`/lhvp`).
 | `LHV:GetSelfTest()` | `verdict, lines, running`: the last completed run's verdict (`true`/`false`) and its lines (the array `fn` got), both nil before the first run and again after `SetEnabled(true)` until the new run ends; and whether a run is going |
 | `LHV:SetEnabled(on)` | nothing. `false`: every kind `unavailable, off` for this session. `true` after `false`: pending until a fresh self-test passes (it starts one). Already on, it changes nothing: after a failed self-test, `LHV:SelfTest(fn)` runs it again and the kinds come back when it passes |
 
-`GetKinds`, `GetSources` and `GetSelfTest` build or hand out tables: call them from a command, not every frame.
+`GetKinds`, `GetSources`, `GetAuraSources` and `GetSelfTest` build or hand out tables: call them from a command, not every frame.
 
 ## Credits
 
