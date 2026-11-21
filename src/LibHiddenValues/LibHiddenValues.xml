@@ -6,6 +6,5 @@
     <Script file="Kinds\Percent.lua"/>
     <Script file="Cdm.lua"/>
     <Script file="Kinds\Aura.lua"/>
-    <Script file="Managed.lua"/>
     <Script file="SelfTest.lua"/>
 </Ui>

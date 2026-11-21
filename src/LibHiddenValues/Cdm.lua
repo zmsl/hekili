@@ -1,4 +1,4 @@
--- Cdm.lua: the Cooldown Manager reader behind the aura kind (Mode A: read-only). The client shows the player's chosen
+-- Cdm.lua: the Cooldown Manager reader behind the aura kind (read-only). The client shows the player's chosen
 -- auras on its Cooldown Manager; this file finds the items that show a watched aura and forwards what the client
 -- writes into them to the aura kind's bars (Kinds/Aura.lua). It never shows, hides, fades, moves or refreshes
 -- anything of the Cooldown Manager's and never calls its provider: it reads fields with rawget, enumerates the item
@@ -15,8 +15,6 @@
 -- secret cooldownID makes that item unknown (its watches `gone`) until it reads plain again: the layout can change in
 -- combat, so an index read plain before could name another entry.
 -- Hook bodies and event handlers run under pcall; an error turns the aura kind off for the session (reason "error").
--- Mode B (Managed.lua, only when a consumer asks) is the one exception: it writes the layout store and sets the
--- viewers' alpha.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return
@@ -202,7 +200,7 @@ end
 
 -- The catalogue: every cooldownID the Cooldown Manager can show, by each spell it names (its spell, override,
 -- tooltip override and linked spells), and each one's default category (the set it is in: these reads give the
--- defaults, never the active layout's placement; Mode B needs them). Out of combat only (in-combat secrecy of these
+-- defaults, never the active layout's placement). Out of combat only (in-combat secrecy of these
 -- reads is unprobed). Each entry's plain spell facts and its hasAura and selfAura flags are kept for GetAuraEntries as
 -- the client gives them (a secret or odd one is left out; nothing is filtered on them).
 local function plain(v)
