@@ -10,7 +10,7 @@ ignores the folder (`.pkgmeta`).
 The design it follows is the standalone band library design of 2026-11-20 (working name Tidemark, renamed
 LibHiddenValues), sections 1 to 7. Built: stages 0 and 1 (the skeleton and named health and power edges pushed every
 frame, the measured mechanism), stage CDM-1 (the aura kind read from the Cooldown Manager, below), stage 3 (error
-codes, position, exact points, point precision), stage CDM-2 (the managed layout, Mode B) and lane C1 (the Cooldown
+codes, position, exact points, point precision) and lane C1 (the Cooldown
 Manager gaps before a consumer's switch, below). Its in-game check: [in-game-test-plan.md](in-game-test-plan.md).
 
 ## Built in lane C1: Cooldown Manager gaps G1-G4, truths, the position set beside the ring, minor 5
@@ -22,7 +22,7 @@ Manager gaps before a consumer's switch, below). Its in-game check: [in-game-tes
   get the same post-hooks (`OnAcquireItemFrame`, `RefreshData`); their items' widgets are never hooked. `stacks` and
   `left` there: `unavailable, cdm-cooldown-only`. Placement names `essential`, `utility`.
 - G2 `Kinds/Aura.lua`: `cooldown = <cooldownID>` instead of `spell` (`spell-or-cooldown`, `cooldown-invalid`); its
-  own source key; `cdm.statusOf(spell, what, cdw)` follows that entry only. Mode B moves an entry watch's own entry.
+  own source key; `cdm.statusOf(spell, what, cdw)` follows that entry only.
 - G3 and the owner's rule (2026-11-21: the library outputs truths, consumers make assumptions): a held item on a
   secret, absent or other unit, and a secret `isEditing` or `IsVisible`, read unknown. An aura up with no count text
   reads [0, lowest stacks bar edge), never 1. `LHV:GetAuraEntries(spell)`: every entry naming a spell with the
@@ -43,55 +43,15 @@ Manager gaps before a consumer's switch, below). Its in-game check: [in-game-tes
   RefreshData hook does not clear it: it may run at the swap itself. The client refreshes such an item on a target
   change only while it holds a target aura (no range check), so after A, B, A it can stay silent on A. `cdm.facts`
   keeps the client's `hasAura` and `selfAura` as given (rows of `GetAuraEntries`; nothing filters on them).
-- `Testing/FakeClient.lua`: Essential and Utility viewers with item pools (`W.cdm.essential`, `W.cdm.utility`,
-  placed from the store at login too), `W.cdm.secretUnit`, `W.cdm.noUnit`, `W.cdm.quietSwap`, `Fake.secret`.
+- `Testing/FakeClient.lua`: Essential and Utility viewers with item pools (`W.cdm.essential`, `W.cdm.utility`), `W.cdm.secretUnit`, `W.cdm.noUnit`, `W.cdm.quietSwap`, `Fake.secret`.
 - Probe facts owed: is `auraDataUnit` ever secret in combat (aura viewers, Essential, Utility)? Is an item's
   `cooldownID` ever secret in combat (its watches then read unknown)? Does an Essential item show its
   aura in combat as it does out of combat?
 
-## Built in stage CDM-2: the managed Cooldown Manager layout (Mode B), minor 4
+## The managed layout (Mode B) is not in the library
 
-**Unproven in the library.** CDMConfigProbe proved each mechanism (route B write + reload, restore byte-exact, reload
-from a click, alpha 0 holding with data flowing; ledger L1591, L1596, L1608); this code has not run in game.
-
-- `Managed.lua` (after `Kinds/Aura.lua`): `SetCooldownManagerStore`, `ManageCooldownManager`,
-  `RestoreCooldownManager`, `IsReloadPending`, `GetCooldownManagerMode`; nine `LHV.ERR` codes (`store-invalid`,
-  `cdm-combat`, `cdm-slots-full`, `cdm-api`, `cdm-unreadable`, `cdm-write-failed`, `cdm-owner`, `cdm-not-managed`,
-  `cdm-off`) with enUS messages, and messages for the modes and their reasons.
-- The store format and build are ported from CDMConfigProbe `Arms.lua` (`RB.decode`, `RB.encode`, `RB.build`, the
-  aura-entries-only `pickCooldown` fix, the probe's roundtrip self-check before a write, the save-version and empty
-  string guards). Never called: the settings provider, layout manager or serializer.
-- `Cdm.lua`: the catalogue also keeps each cooldownID's default category (`cdm.catOf`, the set it was found in).
-- Wraps (the library's upgrade path, as `Kinds/Aura.lua`): `cdm.resolve` (each read of the Cooldown Manager answers
-  the mode again), `lib.drive` (keeps the driver running while the post-reload check waits), `lib.capChanged` (the
-  kill switch and an errored aura kind give the alpha back).
-- `Testing/FakeClient.lua`: the store (`GetLayoutData`, `SetLayoutData`), `C_EncodingUtil` stand-ins, `UnitClass`,
-  `GetSpecialization`, the Essential and Utility viewers, `GetAlpha`, the learned filter of
-  `GetCooldownViewerCategorySet`, placement derived from the stored active layout at login, and the reload
-  (`ReloadUI`, `Fake.reload`).
-- Suite: `tests/LibHiddenValues/managed_spec.lua` (34 tests).
-
-| Question | Taken | Why |
-|---|---|---|
-| How the library gets the store after the reload | a new call, `SetCooldownManagerStore(owner, store)`, at every load | the library is pure (no SavedVariables); `IsReloadPending()` and `GetCooldownManagerMode()` take no store (brief) |
-| Layout name | the `owner` string | the canvas names it after the addon; the library must not name its host |
-| Which auras | every aura source with a handle, of every owner; per spell its entry already a bar, else its first aura entry in catalogue order (Tracked Buff before the hidden categories); Essential and Utility entries never | brief, the probe's pickCooldown fix |
-| Unlearned aura entries | moved too (ready when learned); the check counts only learned ones (`GetCooldownViewerCategorySet(cat, false)`) | the client builds no item for an unlearned entry; a check on all would always fail for talent auras |
-| Base of the layout | ours when it exists (an update or a re-activation), else a copy of the active one (the default: an empty layout) | brief: "rewrites only our layout" |
-| Nothing to change | `true`, no write, no reload | a manage of an up-to-date, active layout is idempotent |
-| Pending | `write` notes the store string before the first write of a session; a write that brings it back clears the pending state | the canvas' undo (no reload) and the brief's "restore marks a reload pending" both hold |
-| The check after the reload | our id active in the store and every learned entry of ours a bar item (`cdm.placeOf == 1`); polled on each read and every 30 frames; passed at once, failed after 20 s out of combat (the driver counts `elapsed` out of combat only: `player, check-failed`); in combat it waits | the probe checked after 6 s; generous for slow loads, quick when it passes |
-| Our layout | id + name (`store.name`) + the exact content written (`store.lay`, or after an update the content before it, `store.prev`, until a check passes, which adopts what it found); any mismatch is the player's (`deleted`), never changed by restore or manage | the client reuses ids: a layout made after ours was deleted takes our id (review B1) |
-| Drift | from the store (decoded only when its string changed) on each read out of combat: our layout missing `deleted`, not active `switched`; `cdm-off` | never fights the player; shortcut: the item pool is not compared (a store not saved yet by the client shows drift late) |
-| Restore | structural: our layout removed, the active id put back when ours was active, compared with the decoded original: equal writes the original bytes, else the edited table; equal bytes not written; unreadable, undecodable or another save version refused (`cdm-unreadable`) unless it is the exact leftover of our own failed write (`store.bad`): then from the readable store it replaced (`store.keep`), else the original raw | ledger: bytes hold across one reload only; never destroys the player's edits, never writes over what it cannot read |
-| After a restore | the saved original kept (`state = "restoring"`) until the next load shows our id free of our name; else `player, restore-failed` and restore again | the probe's `RB.verifyRestore`: a client save between the write and the reload could undo it |
-| The original | saved by a manage that finds none of ours in the store (a new start); an update keeps it | a restore after re-managing over a new layout of the player puts back what was active just before |
-| Save version | 5 only (manage, restore, check, drift) | another version may give `[2]`/`[3]` other meanings |
-| Alpha | each viewer's own alpha read before 0 (the owner's Edit Mode opacity is 0.5) and given back; read again at every pass while hidden (one not at 0 is noted and set to 0 again) | L1608: 0 resets; Hide() stops the data; Edit Mode's order against our pass is unproven |
-| In combat at a load | a store with no answer yet this load (pending check, restore to verify, managed not read) reads `pending, checking`, viewers shown | the store is never read in combat |
-| Callbacks | `fn("cdm", mode, reason)` on the frame after the change, never inside an API call | as `OnCapability` is never called inside `Watch` |
-| Two consumers | one store holds the managed layout; another owner gets `cdm-owner` until it is restored | one layout per character |
-| A lost store (SavedVariables wiped) | not adopted by name; a new manage adds another layout | a player's own layout could carry the same name |
+Minor 6 removed it: the library only reads and writes no game state (no layout store, no viewer alpha, no reload).
+The reviewed code is in git history (forever 9d03be787, d8118f21b) and moves into Hekili's integration lane C5.
 
 ## Built in stage 3
 
@@ -114,7 +74,7 @@ from a click, alpha 0 holding with data flowing; ledger L1591, L1596, L1608); th
 
 ## Built in stages 0 and 1
 
-- LibStub major `LibHiddenValues-1.0`, minor 5 (2: the aura kind; 3: stage 3; 4: CDM-2; 5: C1). Eight files after
+- LibStub major `LibHiddenValues-1.0`, minor 6 (2: the aura kind; 3: stage 3; 4: CDM-2; 5: C1; 6: Mode B removed). Seven files after
   LibStub; the first calls `NewLibrary` and sets `lib.loading`, the others return unless it is set, the last
   (`SelfTest.lua`) clears it. All state on `lib`; scripts are one-line dispatchers through `lib`. Nothing but the
   event frame is built before `PLAYER_LOGIN`; a copy loaded after login (load on demand, or a newer minor) realises
@@ -137,7 +97,7 @@ from a click, alpha 0 holding with data flowing; ledger L1591, L1596, L1608); th
 - A pure API: no slash command, no chat output, no frame of its own that shows. Every diagnostic fact is a getter
   (the consumer README's Diagnostics table); LHVProbe, outside this repository, is the reference consumer (`/lhvp`).
 
-## Built in stage CDM-1: the aura kind from the Cooldown Manager (Mode A, read-only)
+## Built in stage CDM-1: the aura kind from the Cooldown Manager (read-only)
 
 **Unproven in the library.** The probes (AuraBandProbe 0.2.0 and 0.2.1, CDMConfigProbe 0.2.0) proved the mechanisms;
 this code has not run in game. Until an in-game run passes, treat every aura answer as unverified.
@@ -192,7 +152,7 @@ this code has not run in game. Until an in-game run passes, treat every aura ans
 | Edit Mode "Hidden" or "In Combat" visibility | no reason of its own (`gone` while hidden) | the brief's reason list; `cdm-hidden` is left for a later stage |
 | Catalogue in combat | not read: `pending` until combat ends | in-combat secrecy of the catalogue reads is unprobed |
 | `SetMinMaxValues` hook | not built | seconds edges need only `SetValue`; the percent route through a secret max is closed (AuraBandProbe 0.2.1) |
-| Essential and Utility items | `up` read (lane C1 G1); `stacks` and `left` `unavailable, cdm-cooldown-only` | they give presence of a linked aura only (clean-room doc P2.3); Mode A serves the two aura viewers |
+| Essential and Utility items | `up` read (lane C1 G1); `stacks` and `left` `unavailable, cdm-cooldown-only` | they give presence of a linked aura only (clean-room doc P2.3); the two aura viewers serve more |
 | Errors | an error in a hook, an event or a read turns the aura kind off (`error`); the other kinds carry on | the design's per-kind rule |
 
 ## Choices taken where the design left one open

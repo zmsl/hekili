@@ -21,13 +21,8 @@
 -- two frames), "snap" "left"|"right"|"nearest" (how a Step curve picks its point), "maxpoints" n (curve size limit),
 -- "refuse" name (that global function raises). The Cooldown Manager (the aura kind's source): W.cdm, W.aura,
 -- Fake.setAura, Fake.cdmLayout, Fake.cdmEnable, Fake.viewers, Fake.touched, Fake.hooks; see the comment above its
--- viewers. Mode B (the managed layout): W.cdm.store (the layout store string, "" by default; set, it decides the
--- placement at login), W.cdm.writes (SetLayoutData calls), W.cdm.badWrite (a write keeps other bytes), W.cdm.opacity
--- (the viewers' Edit Mode alpha at a load), W.cdm.secretStore (GetLayoutData returns a secret), W.cdm.salt (a
--- number: the encoder is not canonical, each call's bytes differ), W.cdm.unlearned ({ [cooldownID] = true }: no
--- item, left out of the learned set), W.classID (11 by default; the spec is 1), Fake.encodeLayouts(t),
--- Fake.decodeLayouts(s), and the reload (ReloadUI(), Fake.reload(), Fake.onReload: see the comment above
--- Fake.reload). The encoders are stand-ins (sorted Lua text, reversed, hex), not CBOR, Deflate or Base64.
+-- viewers. W.cdm.unlearned ({ [cooldownID] = true }: no item, left out of the learned set); W.classID (11 by
+-- default; the spec is 1).
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
 --
 -- Fidelity limits: no taint model; a secret is a table, so only arithmetic, ordering, concatenation, tostring, length,
@@ -309,7 +304,6 @@ install("Enum", {
     LuaCurveType = { Linear = 0, Step = 1 },
     PowerType = PT,
     CooldownViewerCategory = { Essential = 0, Utility = 1, TrackedBuff = 2, TrackedBar = 3 },
-    CompressionMethod = { Deflate = 1 },
 })
 install("issecretvalue", isSecret)
 install("C_CurveUtil", {
@@ -507,105 +501,14 @@ install("C_CooldownViewer", {
         end
         return c
     end,
-    GetLayoutData = function()
-        return W.cdm.secretStore and secret(W.cdm.store) or W.cdm.store
-    end,
-    SetLayoutData = function(data)
-        if W.cdm.badWrite then -- the client keeps something else than what was written
-            data = data .. "x"
-        end
-        W.cdm.writes = (W.cdm.writes or 0) + 1
-        W.cdm.store = data
-    end,
 })
 
--- C_EncodingUtil: a deterministic stand-in for CBOR (sorted Lua source), Deflate (reversed, tagged) and Base64 (hex).
--- Each decoder returns nil for input its encoder did not make.
-local function ser(v)
-    local t = type(v)
-    if t == "number" then
-        return string.format("%.17g", v)
-    elseif t == "string" then
-        return string.format("%q", v)
-    elseif t == "boolean" then
-        return tostring(v)
-    end
-    local keys = {}
-    for k in pairs(v) do
-        keys[#keys + 1] = k
-    end
-    table.sort(keys, function(a, b)
-        if type(a) ~= type(b) then
-            return type(a) < type(b)
-        end
-        return a < b
-    end)
-    local out = {}
-    for i = 1, #keys do
-        out[i] = "[" .. ser(keys[i]) .. "]=" .. ser(v[keys[i]])
-    end
-    return "{" .. table.concat(out, ",") .. "}"
-end
-install("C_EncodingUtil", {
-    SerializeCBOR = function(t)
-        if W.cdm.salt then -- not canonical: each call's bytes differ (a Lua comment the decoder ignores)
-            W.cdm.salt = W.cdm.salt + 1
-            return "CBOR" .. ser(t) .. "--" .. W.cdm.salt
-        end
-        return "CBOR" .. ser(t)
-    end,
-    DeserializeCBOR = function(s)
-        if type(s) ~= "string" or s:sub(1, 4) ~= "CBOR" then
-            return nil
-        end
-        local fn = loadstring("return " .. s:sub(5))
-        return fn and setfenv(fn, {})()
-    end,
-    CompressString = function(s, method)
-        assert(method == 1, "deflate expected")
-        return "D" .. s:reverse()
-    end,
-    DecompressString = function(s, method)
-        assert(method == 1, "deflate expected")
-        if type(s) ~= "string" or s:sub(1, 1) ~= "D" then
-            return nil
-        end
-        return s:sub(2):reverse()
-    end,
-    EncodeBase64 = function(s)
-        return (s:gsub(".", function(c)
-            return string.format("%02x", c:byte())
-        end))
-    end,
-    DecodeBase64 = function(s)
-        if type(s) ~= "string" or s:find("[^0-9a-f]") or #s % 2 == 1 then
-            return nil
-        end
-        return (s:gsub("..", function(h)
-            return string.char(tonumber(h, 16))
-        end))
-    end,
-})
 install("UnitClass", function()
     return "Class", "CLASS", W.classID or 11
 end)
 install("GetSpecialization", function()
     return 1 -- Forever: one spec per class
 end)
-
--- The layout store as the client keeps it: "1|" .. base64(deflate(cbor(t))), "" when the player never saved one.
-function Fake.encodeLayouts(t)
-    local E = _G.C_EncodingUtil
-    return "1|" .. E.EncodeBase64(E.CompressString(E.SerializeCBOR(t), 1))
-end
-function Fake.decodeLayouts(s)
-    if s == nil or s == "" then
-        return nil
-    end
-    local E = _G.C_EncodingUtil
-    return E.DeserializeCBOR(E.DecompressString(E.DecodeBase64(s:sub(3)), 1))
-end
-W.cdm.store = ""
 
 local UNITS = { "player", "target" }
 local nextAuraId = 0
@@ -756,49 +659,8 @@ local function tickBars(v)
         end
     end
 end
--- Placement from the stored layouts (what the client loads at login): the active layout of the player's tag, its
--- category overrides over each entry's default category; unlearned entries show no item. Only when a store was saved.
-local function derive()
-    local t = Fake.decodeLayouts(W.cdm.store)
-    if not t then
-        return
-    end
-    local C = _G.Enum.CooldownViewerCategory
-    local tag = (W.classID or 11) * 10 + 1
-    local act = t[2] and t[2][tag]
-    local lay = act and act ~= 0 and t[3] and t[3][tag] and t[3][tag][act]
-    local over = {}
-    for cat, list in pairs(lay and lay[2] or {}) do
-        for _, cd in ipairs(list) do
-            over[cd] = cat
-        end
-    end
-    local placed = { bar = {}, icon = {}, essential = {}, utility = {} }
-    local list = {
-        [C.TrackedBar] = placed.bar,
-        [C.TrackedBuff] = placed.icon,
-        [C.Essential] = placed.essential,
-        [C.Utility] = placed.utility,
-    }
-    local ids = {}
-    for cd in pairs(W.cdm.catalogue) do
-        ids[#ids + 1] = cd
-    end
-    table.sort(ids)
-    for _, cd in ipairs(ids) do
-        local l = list[over[cd] or W.cdm.catalogue[cd].category]
-        if l and not (W.cdm.unlearned and W.cdm.unlearned[cd]) then
-            l[#l + 1] = cd
-        end
-    end
-    for which, l in pairs(placed) do
-        W.cdm[which] = l
-    end
-end
-
 local function viewerEvent(v, event)
     if event == "PLAYER_LOGIN" then
-        derive()
         v.shown = W.cdm.enabled and true or false
         if v.shown then
             layout(v)
@@ -857,11 +719,6 @@ local function makeViewers()
         install(VIEWER_NAMES[which], v)
         Fake.frames[#Fake.frames + 1] = v
         viewers[#viewers + 1] = v
-    end
-    if W.cdm.opacity then -- Edit Mode's opacity, applied as the viewers load
-        for _, name in ipairs({ "Essential", "Utility", "BuffIcon", "BuffBar" }) do
-            _G[name .. "CooldownViewer"].alpha = W.cdm.opacity
-        end
     end
 end
 makeViewers()
@@ -988,34 +845,6 @@ function Fake.login()
     end
     return lib and lib.stVerdict
 end
-
--- A UI reload (the consumer's ReloadUI from a click): every frame, the viewers and the library are built again and
--- login runs; only the world (W, the layout store among it), the clock and the knobs survive. Fake.onReload(Fake), when
--- set, runs after the library loaded and before login: the consumer's files loading again (hand it the store it
--- persisted). Returns the self-test verdict, as Fake.login.
-function Fake.reload()
-    if W.combat then
-        error("the fake does not reload in combat")
-    end
-    loggedIn = false
-    for i = 1, qN do
-        qClip[i] = nil
-    end
-    qN = 0
-    Fake.frames = {}
-    install("UIParent", CreateFrame("Frame"))
-    makeViewers()
-    install("LibStub", nil)
-    Fake.loadLibrary()
-    if Fake.onReload then
-        Fake.onReload(Fake)
-    end
-    return Fake.login()
-end
-install("ReloadUI", function()
-    Fake.reloads = (Fake.reloads or 0) + 1
-    Fake.reload()
-end)
 
 -- A secret of v (the fake's own kind), for a test to plant in a field the library reads.
 Fake.secret = secret
