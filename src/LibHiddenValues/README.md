@@ -37,7 +37,7 @@ end)
   feeding while your frame is hidden; `h:Release()` and `LHV:ReleaseAll("MyAddon")` drop watches.
 - `LHV:IsAvailable(kind, unit)` returns `ok, state, reason`; `LHV:OnCapability("MyAddon", fn)` calls
   `fn(kind, state, reason)` when that changes. A kind is `"pending"` for about a second after login (the self-test),
-  then `"ready"`.
+  then `"ready"`. An aura `up` watch uses no bar: the self-test, pending or failed, never holds it (below).
 
 ## What works now
 
@@ -45,7 +45,7 @@ end)
 |---|---|---|
 | `health` | `unit`, `edges`, `step`, `predicted` (default true) | `player`, `target` |
 | `power` | `unit`, `power` (`Enum.PowerType`, required), `edges`, `step`, `points`, `precision` | `player`: mana, energy, rage (rage: proven by the BandProbe2 warm-up, the library's own run owed) |
-| `aura` | `unit`, `spell`, `what`, `edges`, `max` | `player`, `target`: read from the Cooldown Manager, **not yet run in game** (below) |
+| `aura` | `unit`, `spell` or `cooldown`, `what`, `edges`, `max` | `player`, `target`: read from the Cooldown Manager, **not yet run in game** (below) |
 
 A spec needs at least one of `edges`, `step`, `points` or `precision`.
 
@@ -68,12 +68,16 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   watch on the source asks for it, that source's other bars are released and every other watch on it is answered
   from the exact value. At a step above 1 (a max over 3175) a point that is not a multiple of the step, and an edge
   whose cut is not, keeps its own bar, so points and edges stay exact to the point; `h:Exact()` is to the step. A
-  `step` watch's band can then span two 1% cells where the step straddles a cell boundary. A one-step change is
+  `step` watch beside it still reads one 1% cell: while one is there the source also runs the 8 position bars (cut on
+  whole points, so they agree with the exact value), and a cell that does not meet the exact value is held a frame,
+  then primes again, as any disagreement. A `step` watch joining or leaving such a source primes it again (about 9
+  frames unknown). At step 1 the exact value already gives the cell: no extra bars. A one-step change is
   never misread when its firings land within two frames: at a cell boundary (every 50 steps) the library holds one
   frame when only half of the change's bars have landed. A larger jump whose firings land in two frames can read as
   another value for that one frame, as on a `step` source; the probe runs saw no change split over two frames. A max
   of 100 or less is the same as `step` (8 bars, exact). It is outside the point caps but inside the 256-bar pool,
-  with every edge and point on the source counted (the step can grow with the max): over it, `pool-limit`.
+  with every edge and point on the source counted (the step can grow with the max) and the 8 position bars when a
+  `step` watch is there: over it, `pool-limit`. A `step` watch is checked against the pool too.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
 other kind, token or option (focus or another power type, `points` or `precision` on health, the `focus` token, ...)
@@ -102,9 +106,11 @@ has no text for yet (enUS only for now). `GetMessage` also knows every state and
 | `POWER_INVALID` | `power-invalid` | `power` not a number |
 | `POINTS_INVALID` | `points-invalid` | points not a list of whole numbers >= 1; `SetPoints` on a percent handle |
 | `EDGE_LIMIT` | `edge-limit` | over the point caps |
-| `POOL_LIMIT` | `pool-limit` | points or precision over the 256-bar pool |
+| `POOL_LIMIT` | `pool-limit` | points, precision or step over the 256-bar pool |
 | `PRECISION_INVALID` | `precision-invalid` | precision other than `"point"` |
 | `SPELL_INVALID` | `spell-invalid` | aura: spell not a whole number above 0 |
+| `SPELL_OR_COOLDOWN` | `spell-or-cooldown` | aura: both `spell` and `cooldown`, or neither |
+| `COOLDOWN_INVALID` | `cooldown-invalid` | aura: cooldown not a whole number above 0 |
 | `WHAT_INVALID` | `what-invalid` | aura: what not `"up"`, `"stacks"` or `"left"` |
 | `MAX_INVALID` | `max-invalid` | aura: max not a whole number of 1 or more |
 | `STORE_INVALID` | `store-invalid` | managed layout: store not a table |
@@ -128,21 +134,29 @@ player placed. Mode B, the managed layout below, changes it only when your addon
 -- Stacks of a debuff on the target (bands 0-2, 2-4, 4+), and whether a buff of mine is up.
 LHV:Watch("MyAddon", { kind = "aura", unit = "target", spell = 12345, what = "stacks", edges = { 2, 4 } }, sink)
 LHV:Watch("MyAddon", { kind = "aura", unit = "player", spell = 67890, what = "up" }, sink)
+-- The same, on the one Cooldown Manager entry you chose (LHV:GetAuraEntries lists them).
+LHV:Watch("MyAddon", { kind = "aura", unit = "player", cooldown = 1234, what = "up" }, sink)
 ```
 
 | Field | Meaning |
 |---|---|
 | `unit` | `"player"` or `"target"` (the only units the Cooldown Manager reads; another token is `unavailable, unproven`) |
-| `spell` | the aura's spell ID; it matches a Cooldown Manager entry by its spell, override, tooltip override or linked spells, and the watch then answers for that entry: whatever aura of the entry the client shows (a sibling linked aura reads as this one) |
+| `spell` | the aura's spell ID, a convenience: the library picks the entry, which is an assumption. Of the entries naming the spell (as their spell, override, tooltip override or a linked spell) that an item shows now, the one on the highest viewer (Tracked Bar, Tracked Buff icon, Essential, Utility); on one viewer, the first in catalogue order (category 0 to 8, then the client's order). The watch answers for that entry: whatever aura of it the client shows (a sibling linked aura reads as this one) |
+| `cooldown` | instead of `spell` (exactly one of the two): a Cooldown Manager cooldownID. The watch follows that entry only, wherever it is placed; the reasons are the same. `LHV:GetAuraEntries(spell)` lists the entries with the client's facts so you choose |
 | `what` | `"up"`: presence, `lo == hi`, 1 up and 0 not. `"stacks"`: the stack count. `"left"`: seconds left |
 | `edges` | `stacks`: whole numbers from 1 (1 is presence itself); `left`: seconds above 0.01 (required) |
 | `max` | `stacks` only: the top of the domain; alone it means every count from 1 to `max` (an exact count) |
 
-An absent aura is a known value: no stacks and no seconds, the lowest band (`0` to the lowest edge), `up` 0. A
-handle is unknown (`lo == nil`) only while no item shows it (`gone`) or before its first band (`priming`); `"live"`
-always comes with a band. The client hides the count at one stack: an aura that is up with no count reads 1. `left`
-on an aura with no duration reads the lowest band while it is up (the client pushes 0 seconds for it), which looks
-like "about to expire": watch `up` for such auras.
+The library reports what the Cooldown Manager shows, never a guess: anything it cannot tell is unknown. An absent
+aura (the item shows it not up) is a known value: no stacks and no seconds, the lowest band (`0` to the lowest edge),
+`up` 0. A handle is unknown (`lo == nil`, `gone`) while no item shows it, while its viewer is hidden or in Edit Mode
+(or either reads secret), and while its item holds the aura on a unit the client keeps secret, names no unit, or
+names the other unit (a player watch whose entry shows the target's aura is unknown, not 0); before its first band it
+is `priming`. `"live"` always comes with a band. The client shows no count at 0 or 1 stack (a non-stacking aura
+shows none): an aura that is up with no count reads 0 to the lowest stacks edge above 1 (`[0, 2)` with `max`),
+never 1; stacks edge 1 is told only by the aura being absent. `left` is the tracked bar's value: an aura with no
+duration has a bar at 0 and reads the lowest band while it is up, which looks like "about to expire": watch `up` for
+such auras.
 `h:Domain()` returns `nil, 0, top`: 1 for `up`, `max` (or `math.huge`) for stacks, `math.huge` for seconds.
 `h:Latency()` is the worst case from the Cooldown Manager's update to the call (its own delay is not counted): `up`
 2 frames; `stacks` `LHV.SETTLE + 1` (5); `left` `LHV.HOLD + LHV.SETTLE + 3` (11: a refresh as the seconds fall
@@ -156,7 +170,13 @@ What each placement gives (the player chooses it in the Cooldown Manager's setti
 |---|---|---|---|
 | Tracked Bar | yes | yes | yes |
 | Tracked Buff icon | yes | yes | no: `unavailable, cdm-icon-only` |
-| Essential or Utility, a hidden category, or nowhere | no | no | no |
+| Essential or Utility (a cooldown whose aura it binds) | yes | no: `unavailable, cdm-cooldown-only` | no: the same |
+| a hidden category, or nowhere | no | no | no |
+
+`up` uses no bar, so the bar self-test does not gate it: an `up` watch is `ready` while the self-test is pending or
+has failed (`selftest`), and goes unavailable only for `api`, `off`, `error` or `cdm-off`. `stacks` and `left` wait
+for the self-test like every bar. The kind's own answer (`IsAvailable("aura")`, `GetKinds`, `fn("aura", state,
+reason)`) describes the bars; ask with the whole spec, or read `h:State()`, for an `up` watch.
 
 `LHV:IsAvailable("aura", spec)` (the whole spec, without a watch) and `h:State()` answer `ready`, `pending` (not read
 yet; also after a reload in combat, until combat ends) or `unavailable` with one of these reasons:
@@ -164,9 +184,10 @@ yet; also after a reload in combat, until combat ends) or `unavailable` with one
 | Reason | Meaning | What the player can do |
 |---|---|---|
 | `cdm-off` | the Cooldown Manager is switched off (Options), the client says it is not available, or its viewers are missing | switch it on |
-| `not-in-cdm` | no Cooldown Manager entry names this spell | nothing: the client cannot track it there |
+| `not-in-cdm` | no Cooldown Manager entry names this spell (or has this cooldownID) | nothing: the client cannot track it there |
 | `cdm-not-tracked` | an entry names it, but no tracked buff icon or bar shows it | place it in Tracked Buffs, or Tracked Bars for its timer |
 | `cdm-icon-only` | `what = "left"` on an aura shown as an icon | move it to Tracked Bars |
+| `cdm-cooldown-only` | `stacks` or `left` on an aura shown only by an Essential or Utility item | place its aura entry in Tracked Buffs or Tracked Bars |
 | `bad-spec` | (`IsAvailable` only) a spec `Watch` would refuse; `Watch` returns its error code | nothing: fix the spec |
 
 The library only reports: telling the player is your addon's choice. `LHV:OnCapability(owner, fn)` calls
@@ -305,7 +326,8 @@ the reference consumer (`/lhvp`).
 | `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable). `unit` may be a whole spec: the aura kind then answers for its placement |
 | `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change, and `fn("aura", state, reason, h)` for each of the owner's aura handles whose answer changed; `fn("cdm", mode, reason)` when the managed-layout mode changes |
 | `LHV:GetCooldownManagerMode()`, `LHV:IsReloadPending()` | the managed layout's mode and reason; a pending reload and what for (the managed layout, above) |
-| `LHV:GetAuraSources()` | a fresh array, one `{ unit =, spell =, what =, handles =, bars =, active =, cooldownID =, placement =, state =, reason =, up = }` per aura source with a watch (`placement` `"bar"`, `"icon"` or nil; `up` true, false or nil for unknown); then `off, read, texts, values, refused, reads`: the Cooldown Manager is off, its catalogue was read, count texts and bar values forwarded, values a bar refused, item reads |
+| `LHV:GetAuraSources()` | a fresh array, one `{ unit =, spell =, cooldown =, what =, handles =, bars =, active =, cooldownID =, placement =, state =, reason =, up = }` per aura source with a watch (`cooldown` the entry a watch by entry names, else nil; `cooldownID` the entry read now; `placement` `"bar"`, `"icon"`, `"essential"`, `"utility"` or nil; `up` true, false or nil for unknown); then `off, read, texts, values, refused, reads`: the Cooldown Manager is off, its catalogue was read, count texts and bar values forwarded, values a bar refused, item reads |
+| `LHV:GetAuraEntries(spell)` | a fresh array, one `{ cooldownID =, spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = { ... }, category =, placement = }` per Cooldown Manager entry naming the spell (as its spell, override, tooltip override or a linked spell), in catalogue order: the client's plain facts from its out-of-combat read (`category` the default one; `placement` as in `GetAuraSources`, nil when no item shows it); then `read` (the catalogue was read). Choose one and watch it with `cooldown =` |
 | `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, splits`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs, governor level (0 for now), splits (a position decode held one frame). The frame times cover the library's whole frame, the self-test's frames included while it runs; with nothing fed the driver stops and every rate and time reads 0 |
 | `LHV:GetPool()` | `made, cap, pointBars, pointCap, pointCapPerSource`: bars made (32 at login; frames are never destroyed), the cap (256), point bars in use, and the point caps (64, 8) |
 | `LHV:GetSources()` | a fresh array, one `{ kind =, unit =, power =, predicted =, handles =, bars =, mode =, max =, active = }` per source with a watch, in creation order (`kind`, `unit`, `power`, `predicted` are the source's key: watches differing in any of them do not share bars; `power` nil for health; `mode` `"edges"`, `"gray"` (position) or `"ring"` (point precision); `max` the plain max a power source cuts points with; `active`: fed every frame) |

@@ -10,8 +10,36 @@ ignores the folder (`.pkgmeta`).
 The design it follows is the standalone band library design of 2026-11-20 (working name Tidemark, renamed
 LibHiddenValues), sections 1 to 7. Built: stages 0 and 1 (the skeleton and named health and power edges pushed every
 frame, the measured mechanism), stage CDM-1 (the aura kind read from the Cooldown Manager, below), stage 3 (error
-codes, position, exact points, point precision) and stage CDM-2 (the managed layout, Mode B). Its in-game check:
-[in-game-test-plan.md](in-game-test-plan.md).
+codes, position, exact points, point precision), stage CDM-2 (the managed layout, Mode B) and lane C1 (the Cooldown
+Manager gaps before a consumer's switch, below). Its in-game check: [in-game-test-plan.md](in-game-test-plan.md).
+
+## Built in lane C1: Cooldown Manager gaps G1-G4, truths, the position set beside the ring, minor 5
+
+**Unproven in the library**: no in-game run yet ([in-game-test-plan.md](in-game-test-plan.md), "Lane C1").
+
+- G1 `Cdm.lua`: four viewers, index 1 bar, 2 icon, 3 Essential, 4 Utility (lower outranks). Essential and Utility
+  items bind their linked aura as the aura viewers' do (`auraInstanceID`, `auraDataUnit`): `up` only. Their viewers
+  get the same post-hooks (`OnAcquireItemFrame`, `RefreshData`); their items' widgets are never hooked. `stacks` and
+  `left` there: `unavailable, cdm-cooldown-only`. Placement names `essential`, `utility`.
+- G2 `Kinds/Aura.lua`: `cooldown = <cooldownID>` instead of `spell` (`spell-or-cooldown`, `cooldown-invalid`); its
+  own source key; `cdm.statusOf(spell, what, cdw)` follows that entry only. Mode B moves an entry watch's own entry.
+- G3 and the owner's rule (2026-11-21: the library outputs truths, consumers make assumptions): a held item on a
+  secret, absent or other unit, and a secret `isEditing` or `IsVisible`, read unknown. An aura up with no count text
+  reads [0, lowest stacks bar edge), never 1. `LHV:GetAuraEntries(spell)`: every entry naming a spell with the
+  client's plain facts (the catalogue keeps them: `cdm.facts`), so a consumer chooses the entry itself.
+- G4 `LibHiddenValues.lua`: `lib.capOf(kind, barless)`; an aura `up` handle (`h.barless`) skips the self-test's
+  verdict, pending or failed; the kind's `barless(spec)` answers `IsAvailable` with a spec.
+- Owner decision L1624 (2): `Bars.lua` keeps the position set (7 Gray bits + parity) beside a ring of point step
+  above 1 while a step is asked, after the ring's bars in `s.core`. Its curves are cut on whole points per max
+  (`lib.grayFor(M)`, cached and trimmed as the rings): the percent-scale set misreads 3967 of 6400 as 62% when the
+  client snaps right or to the nearest point. The ring decode cross-checks the cell against the quantum's points
+  ("cross": a bad frame, as a split; two in a row a desync). A step joining or leaving re-allocates the whole core.
+  `lib.need` counts the 8 bars; a `step` watch is now admitted (pool-limit) like points and precision.
+- `Testing/FakeClient.lua`: Essential and Utility viewers with item pools (`W.cdm.essential`, `W.cdm.utility`,
+  placed from the store at login too), `W.cdm.secretUnit`, `W.cdm.noUnit`, `Fake.secret`.
+- Probe facts owed: is `auraDataUnit` ever secret in combat (aura viewers, Essential, Utility)? Is an item's
+  `cooldownID` ever secret in combat (the `layoutIndex` fallback is an inference)? Does an Essential item show its
+  aura in combat as it does out of combat?
 
 ## Built in stage CDM-2: the managed Cooldown Manager layout (Mode B), minor 4
 
@@ -78,9 +106,9 @@ from a click, alpha 0 holding with data flowing; ledger L1591, L1596, L1608); th
 
 ## Built in stages 0 and 1
 
-- LibStub major `LibHiddenValues-1.0`, minor 4 (2: the aura kind; 3: stage 3; 4: CDM-2). Eight files after LibStub; the
-  first calls `NewLibrary` and sets `lib.loading`, the others return unless it is set, the last (`SelfTest.lua`) clears
-  it. All state on `lib`; scripts are one-line dispatchers through `lib`. Nothing but the event frame is built before
+- LibStub major `LibHiddenValues-1.0`, minor 5 (2: the aura kind; 3: stage 3; 4: CDM-2; 5: C1). Eight files after
+  LibStub; the first calls `NewLibrary` and sets `lib.loading`, the others return unless it is set, the last
+  (`SelfTest.lua`) clears it. All state on `lib`; scripts are one-line dispatchers through `lib`. Nothing but the event frame is built before
   `PLAYER_LOGIN`; a copy loaded after login (load on demand, or a newer minor) realises at once, keeps the frames and
   re-primes every source.
 - `Watch`, the handle (`Get`, `State`, `Domain`, `Exact`, `Latency`, `SetPaused`, `SetSink`, `SetPoints`, `Release`),
