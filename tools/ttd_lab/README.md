@@ -200,7 +200,7 @@ slow with four); the default stays 0.5 (Run 2's classes gain 0.004-0.008 at 0.25
 forced lockdown) as LibTimeToDie feeds its estimator: one estimator for the whole file on one clock, `Restart` on a
 target change or a gone stream, `Band` per band with its own time, the combat-start re-anchor of a stream with no
 crossing, reads every 0.1 s and one frame after each event. 56 of the 65 logged sink lines reproduce within 0.05 s
-(the rest: a deadband phase on one fight). Scores per read from combat (or the dying mob's first band) to its death:
+(8 on one fight from a deadband republish 0.02 s apart, one off by 0.06 s). Scores per read from combat (or the dying mob's first band) to its death:
 rel error, truth in [lo, hi], wrong side of 5 and 8 s, unknown, flips, "under 1/4" (truth > 3 s, est < truth / 4)
 and "read dead" (truth > 1 s, est < 0.5 s).
 
@@ -219,6 +219,8 @@ old 0.837 / 0.835 -> 0.835 / 0.831, run 2 0.908 / 0.884 -> 0.897 / 0.877, idle 0
 [lo, hi]: real 19.5% -> 85.2% (median hi:lo 1.11 -> 3.17), lumpy 13% -> 71%, old 17% -> 74%, run 2 14% -> 58%, idle 26%
 -> 94%. Tested and not kept (tables at 5175e0d15, `results/run4-candidates*.md`): the anchor at the first damage, a
 minimum seed time, an overdue hold, a lump-weighted fit, longer half-lives, ranges from the fit's own residuals.
+`newAnchor` catches a first crossing within 0.1 s of the anchor; a same-frame pull whose big hit lands 0.15 s or more
+after a small first loss still seeds short. Run 3's group sessions were not scored under the new defaults.
 
 ## Not covered
 
