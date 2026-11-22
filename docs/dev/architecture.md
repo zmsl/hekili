@@ -667,11 +667,13 @@ cast), and a gain the band already rose by within `I.BAND_MARGIN` holds nothing 
 may lead the cast). A hit on us is no such event (owner L1723, which narrows L1673): its rage shows at the damage and a
 melee row trails that by 0.39-0.57 s, so while a band is live the row, and a reaction's gain at it, moves nothing and
 holds nothing (the taken rate's bin still counts a plain amount's), and rage per hit is not learned. Regen is measured
-between two true crossings (the low end rose to the last top) with no known change between, the step scale from a band
-change covering exactly one landed swing (L1673): never with an event within `I.BAND_MARGIN` after a stamp at either
-end, nor with a wound row on us up to `I.TAKEN_ROW_LAG` (0.6 s) past it. A power that reads plain in combat releases its
-watch when combat ends; where the library has no max the watch is a percent one, a point wider each side, logged only once the belief
-read that max plain. With no live band everything below runs as without the library.
+between two true crossings (the low end rose to the last top) with no known change between (so never from percent
+bands, widened at both ends, nor from regen that passes more than a cell between two stamps, as 10 a second polled less
+often than every point; the flip pins that measured it are off while a band is live), the step scale from a band change
+covering exactly one landed swing (L1673): never with an event within `I.BAND_MARGIN` after a stamp at either end, nor
+with a wound row on us up to `I.TAKEN_ROW_LAG` (0.6 s) past it. A power that reads plain in combat releases its watch
+when combat ends; where the library has no max the watch is a percent one, a point wider each side, logged only once the
+belief read that max plain. With no live band everything below runs as without the library.
 
 **Player health.** The client hides the player's own health in combat (`UnitHealth`/`UnitHealthMax("player")` secret;
 owner L1461; the headless fake client answers so): `health.pct`, `health.current`, `health.deficit` read the plain

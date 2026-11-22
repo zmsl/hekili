@@ -9,6 +9,7 @@
 ### Changed
 
 - Rogue and Feral/Guardian Druid: the recommendation refreshes the moment a combo point is gained or spent, so the finisher shows without waiting for the next poll.
+- Energy, rage and mana: where the game allows it, Hekili now reads the 1% step the amount is in and corrects its estimate with it, which also counts rage from hits you take. When the game says an ability is usable or not, that still wins.
 
 ### Fixed
 
