@@ -309,6 +309,13 @@ describe("the active priority's bands", function()
         assert.is_true(node.hidden())
     end)
 
+    it('a priority name with no pack (the options\' "(none)") sends nothing and creates no pack', function()
+        H.Hekili.Scripts:ApplyBands("(none)")
+        assert.are.same({}, VSI.def.bandPoints)
+        assert.is_nil(H.Hekili.Scripts:BandWarning("(none)"))
+        assert.is_nil(rawget(H.Hekili.DB.profile.packs, "(none)"))
+    end)
+
     it("follows the active priority: a change of priority sends the new one's, another's edit sends nothing", function()
         install(PACK, "actions+=/berserker_stance,if=rage>=40")
         local hk = H.Hekili

@@ -1967,7 +1967,7 @@ end
 --- is a 1% cell edge), only the keys of the pack's spec's resources. Cold path: the options and ApplyBands.
 function scripts:PackBands( pack )
     local out, seen = {}, {}
-    local pData = pack and Hekili.Engine.settings.packs[ pack ]
+    local pData = pack and rawget( Hekili.Engine.settings.packs, pack ) -- no wildcard default: "(none)" is no pack
     local specData = pData and pData.spec and class.specs[ pData.spec ]
     local res = specData and specData.resources
     if not res then return out end
