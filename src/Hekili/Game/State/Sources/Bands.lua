@@ -10,7 +10,7 @@
 -- I.bandUsedLo/Hi (what it applied: the harness's containment check). A counter (I.bandDisagree, design 2.3) counts the
 -- settles at which the belief's own value lies more than one cell (1%: 0.01 of health, max / 100 points of power)
 -- outside a live band, with no effect on any output (for the target: a usable answer that contradicts the band, which
--- wins and clips it, L1675). Pauses: every watch after 2 s with no drain (the
+-- wins and clips it for its drain, L1675). Pauses: every watch after 2 s with no drain (the
 -- event facade's frame update, I.BandsIdle), a power whose type is neither the displayed power nor mana. Kill switch:
 -- def.providers.bands false releases every watch, out of combat (in combat at PLAYER_REGEN_ENABLED, decision 89).
 -- Self-test: one retry out of combat 5 s after the first PLAYER_ENTERING_WORLD.

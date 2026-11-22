@@ -16,7 +16,8 @@ ns.VirtualStateInternal = I
 
 --- Observation kinds (spec §2): TDF's Enum.Obs, same integers. The kinds Phase 1 does not log keep their integers.
 VS.Obs = {
-    Usable = 1, -- a: ability index; b: 1 usable / 0 not; c: 1 not usable for lack of its resource
+    Usable = 1, -- a: ability index; b: 1 usable / 0 not; c: 1 not usable for lack of its resource, else 0 from the poll
+    -- and below 0 from an event: -1 - the target swap serial when staged (test c == 1, never c ~= 0)
     CastStart = 2, -- a: ability index; b: the cast's end
     CastSuccess = 3, -- a: ability index; b: its cost priced when heard; c: the cast ID's place in its IDs (0 unpriced)
     CastStop = 4, -- a: ability index (failed or interrupted)
@@ -27,7 +28,7 @@ VS.Obs = {
     CombatStart = 9,
     CombatEnd = 10,
     Group = 11, -- reserved
-    TargetGone = 12,
+    TargetGone = 12, -- a: a memory slot; 0 the current target died with no identity (Sources/Target.lua poll 4)
     Known = 13, -- reserved
     Queued = 14, -- a: ability index; b: 1 queued for the next swing / 0 not
     Swing = 15, -- a: hand (1 main, 2 off, 3 ranged); b: duration or speed; c: 4 swung (PLAYER_SWING), 1 landed

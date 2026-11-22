@@ -326,8 +326,7 @@ describe("target health", function()
             "applies a live band: its interval, its middle, an anchor, observed; M kept; no memory slot needed",
             function()
                 anchor() -- M 1000 on slot 1
-                band(11, 0.63, 0.64)
-                obs(Obs.Usable, 11, GATED, 0, 0) -- healed above the gate: the gate's bound no longer caps it (L1675)
+                band(11, 0.63, 0.64) -- healed: the flip's bound was of its own drain, it caps no later band (L1675)
                 I.Fold(11)
                 local h = VS.Health("target", 11)
                 within(0.635, h.est)
@@ -371,18 +370,18 @@ describe("target health", function()
             I.Settle(10)
             h = VS.Health("target", 10)
             assert.are.same({ 0.2, 0.2, 0.2, 1 }, { h.lo, h.hi, h.est, I.bandDisagree[-1] })
-            band(11, 0.25, 0.26) -- the band re-asserted alone: the usable bound still holds
+            band(11, 0.25, 0.26) -- the next drain's band, no answer in it: the bound was of the last one
             I.Fold(11)
             I.Settle(11)
             h = VS.Health("target", 11)
-            assert.are.same({ 0.2, 0.2, 0.2, 2 }, { h.lo, h.hi, h.est, I.bandDisagree[-1] })
+            assert.are.same({ 0.25, 0.26, 1 }, { h.lo, h.hi, I.bandDisagree[-1] })
+            within(0.255, h.est)
             band(12, 0.15, 0.16)
             obs(Obs.Usable, 12, GATED, 0, 0) -- a guarded NOT (above 0.2) against 0.15-0.16: clipped up to it
             I.Fold(12)
             I.Settle(12)
             h = VS.Health("target", 12)
-            local top = 0.2 + I.EPS
-            assert.are.same({ top, top, top, 3 }, { h.lo, h.hi, h.est, I.bandDisagree[-1] })
+            assert.are.same({ 0.2, 0.2, 0.2, 2 }, { h.lo, h.hi, h.est, I.bandDisagree[-1] })
         end)
 
         it("a flip pins the gate against a lagging band and teaches M; the next band narrows under it", function()
@@ -438,7 +437,296 @@ describe("target health", function()
             band(2, 0, 0.01)
             I.Fold(2)
             local h = VS.Health("target", 2)
-            assert.are.same({ I.TARGET_HEALTH_FLOOR, 0, 0.01 }, { h.est, h.lo, h.hi })
+            assert.are.same({ I.TARGET_HEALTH_FLOOR, 0, I.TARGET_HEALTH_FLOOR }, { h.est, h.lo, h.hi }) -- never outside it
+        end)
+
+        local function reads(t, est, lo, hi)
+            local h = VS.Health("target", t)
+            within(est, h.est)
+            within(lo, h.lo)
+            within(hi, h.hi)
+            return h
+        end
+        -- One drain: the band, the gated ability's answer (none: it read secret), the fold.
+        local function drain(t, lo, hi, ok, short)
+            band(t, lo, hi)
+            if ok ~= nil then
+                obs(Obs.Usable, t, GATED, ok, short or 0)
+            end
+            I.Fold(t)
+        end
+
+        describe("a usable bound lives for its drain (fix round 1, review B1)", function()
+            before_each(function()
+                obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
+            end)
+
+            it("a lower bound goes with a short answer, a NOT the aura explains, or no answer (probe A)", function()
+                drain(3, 0.25, 0.26, 0)
+                reads(3, 0.255, 0.25, 0.26)
+                drain(4, 0.15, 0.16, 0, 1) -- short
+                reads(4, 0.155, 0.15, 0.16)
+                drain(5, 0.25, 0.26, 0)
+                drain(6, 0.1, 0.11) -- no answer at all
+                reads(6, 0.105, 0.1, 0.11)
+                drain(7, 0.25, 0.26, 0)
+                obs(Obs.Read, 8, 1, 3600, ReadOf.Aura + I.AURA_STACK)
+                drain(8, 0.05, 0.06, 0) -- the stance: no bound
+                reads(8, 0.055, 0.05, 0.06)
+            end)
+
+            it("an upper bound goes with the next band: a heal shows (probe B)", function()
+                drain(3, 0.15, 0.16, 1)
+                drain(4, 0.6, 0.61, 0, 1) -- short
+                reads(4, 0.605, 0.6, 0.61)
+                drain(5, 0.15, 0.16, 1)
+                drain(6, 0.9, 0.91) -- no answer
+                reads(6, 0.905, 0.9, 0.91)
+            end)
+
+            it("an answer from before the first band does not outlast it (probe B2)", function()
+                obs(Obs.Usable, 3, GATED, 1, 0)
+                I.Fold(3)
+                drain(90, 0.7, 0.71, 0, 1)
+                reads(90, 0.705, 0.7, 0.71)
+            end)
+
+            it(
+                "through the poll: short under the gate follows the band, a current answer still wins (probe M)",
+                function()
+                    local function poll(t, health, power)
+                        local low = health <= 0.2
+                        ctl.usable[SMITE] = { low and power >= 15, low and power < 15 }
+                        obs(Obs.Read, t, 1, power, ReadOf.Resource)
+                        local cell = math.floor(health * 100) / 100
+                        band(t, cell, cell + 0.01)
+                        S.RunPolls(t)
+                        I.Fold(t)
+                    end
+                    poll(20, 0.215, 50) -- NOT
+                    reads(20, 0.215, 0.21, 0.22)
+                    poll(21, 0.184, 0) -- short
+                    reads(21, 0.185, 0.18, 0.19)
+                    poll(25, 0.105, 0)
+                    reads(25, 0.105, 0.1, 0.11)
+                    poll(50, 0.004, 0)
+                    reads(50, 0.02, 0, 0.02)
+                    ctl.usable[SMITE] = { true, false } -- usable against a band that lags over the gate
+                    band(51, 0.25, 0.26)
+                    S.RunPolls(51)
+                    I.Fold(51)
+                    reads(51, 0.2, 0.2, 0.2)
+                end
+            )
+
+            it("a NOT yields only a side it contradicts: the gate, not a cell over it (probe C)", function()
+                drain(3, 0.2, 0.21, 0)
+                reads(3, 0.205, 0.2, 0.21)
+            end)
+
+            it("a usable after a NOT of the same drain voids its bound", function()
+                band(3, 0.15, 0.16)
+                obs(Obs.Usable, 3, GATED, 0, 0)
+                obs(Obs.Usable, 3, GATED, 1, 0)
+                I.Fold(3)
+                reads(3, 0.155, 0.15, 0.16)
+            end)
+
+            it("a flip clips by the usable side alone, and still teaches M (probe D)", function()
+                obs(Obs.TargetDamage, 2.5, 0, 800)
+                drain(3, 0.25, 0.26, 0)
+                drain(4, 0.05, 0.06, 1) -- the flip, the band agreeing
+                reads(4, 0.055, 0.05, 0.06)
+                within(1000, I.th.M, 1e-6)
+            end)
+
+            it("the unknown keeps a bound newer than the last band, as with no band (probes E, E2)", function()
+                drain(3, 0.15, 0.16, 1)
+                drain(4, nil, nil, 0, 1) -- the band unknown, short
+                assert.are.equal("pinned", reads(4, 0.2, 0, 0.2).basis)
+                drain(5, 0.15, 0.16, 1)
+                drain(6) -- the band unknown, no answer
+                reads(6, 0.2, 0, 0.2)
+                drain(7, 0.25, 0.26, 0)
+                drain(8) -- the same for a NOT
+                reads(8, 1, 0.2, 1)
+            end)
+
+            it("the unknown with no bound newer than the last band: [0, 1]", function()
+                drain(3, 0.15, 0.16, 1)
+                drain(4, 0.15, 0.16, 0, 1) -- that bound was drain 3's
+                drain(5)
+                assert.are.equal("default", reads(5, 1, 0, 1).basis)
+            end)
+
+            it("a swap, a combat end and a rebuild clear the bound (review M3)", function()
+                local function bound(t)
+                    drain(t, 0.15, 0.16, 1)
+                    assert.are.equal(0.2, I.th.uHi)
+                end
+                local function none()
+                    assert.are.same({ 0, 1 }, { I.th.uLo, I.th.uHi })
+                end
+                bound(3)
+                obs(Obs.TargetSwap, 4, 2, 1, 1)
+                I.Fold(4)
+                none()
+                drain(5, 0.25, 0.26, 0) -- a lower one
+                assert.are.equal(0.2, I.th.uLo)
+                obs(Obs.CombatEnd, 6)
+                I.Fold(6)
+                none()
+                bound(7)
+                I.Build(def(), 8)
+                none()
+            end)
+        end)
+
+        -- (fix round 1, review B2) An answer staged by an event before a swap folds after it: it is the old target's.
+        -- Real events, all in one frame (one GetTime): the stamps are equal.
+        describe("a swap (probe O)", function()
+            local t
+            before_each(function()
+                VS.Start(api)
+                t = ctl.now + 1
+                ctl.now = t
+                obs(Obs.Read, t, 1, 50, ReadOf.Resource)
+            end)
+            local function answer(ok, short)
+                ctl.usable[SMITE] = { ok, short }
+                ctl.Fire("SPELL_UPDATE_USABLE")
+            end
+            local function swapTo(guid)
+                ctl.guid.target = guid
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+            end
+            local function frame(ok, short) -- the same frame's drain: the stage, then poll 2's answer
+                ctl.usable[SMITE] = { ok, short }
+                S.Flush()
+                S.RunPolls(t)
+                I.Fold(t)
+            end
+
+            it("with no band, a usable from before it never binds the new target", function()
+                answer(true, false)
+                swapTo("Creature-2")
+                frame(false, true) -- short
+                assert.are.equal("default", reads(t, 1, 0, 1).basis)
+            end)
+
+            it("nor when the poll reads secret (no answer of the new target at all)", function()
+                answer(true, false)
+                swapTo("Creature-2")
+                frame(fake.SECRET, fake.SECRET)
+                reads(t, 1, 0, 1)
+            end)
+
+            it("nor a NOT: no bound, no flip on the new target", function()
+                answer(false, false)
+                swapTo("Creature-2")
+                frame(false, true)
+                reads(t, 1, 0, 1)
+                assert.are.equal(-1, I.th.prev[GATED]) -- nothing said
+            end)
+
+            it("with a band, full through the prime, then the new target's band", function()
+                band(t, 0.15, 0.16)
+                I.Fold(t)
+                answer(true, false)
+                swapTo("Creature-2")
+                band(t)
+                frame(false, true)
+                reads(t, 1, 0, 1)
+                band(t + 0.2, 0.7, 0.71)
+                I.Fold(t + 0.2)
+                reads(t + 0.2, 0.705, 0.7, 0.71)
+            end)
+
+            it("two swaps in one frame: the first one's target answers nothing for the second", function()
+                swapTo("Creature-2")
+                answer(true, false)
+                swapTo("Creature-3")
+                frame(false, true)
+                reads(t, 1, 0, 1)
+            end)
+
+            it("poll 2's re-ask in the swap's own drain is the new target's answer", function()
+                answer(false, true)
+                swapTo("Creature-2")
+                frame(true, false)
+                reads(t, 0.2, 0, 0.2)
+            end)
+
+            it("an event's answer after the swap, in its frame, is the new target's", function()
+                swapTo("Creature-2")
+                answer(true, false)
+                frame(fake.SECRET, fake.SECRET)
+                reads(t, 0.2, 0, 0.2)
+            end)
+        end)
+
+        -- (fix round 1, review I6, design 2.3) The map restriction: the GUID secret, so no registry slot, with a plate (a
+        -- memory slot) or without; poll 4's plain death read still ends the target.
+        describe("a death under the map restriction (probe J)", function()
+            for _, plate in ipairs({ false, true }) do
+                it(("wins over the corpse's band, %s a plate"):format(plate and "with" or "without"), function()
+                    local gone = {}
+                    I.On(Obs.TargetGone, function(o)
+                        gone[#gone + 1] = o.a
+                    end)
+                    VS.Start(api)
+                    local t = ctl.now + 1
+                    ctl.now = t
+                    ctl.guid.target = fake.SECRET
+                    if plate then
+                        ctl.guid.nameplate1 = fake.SECRET
+                        ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+                        ctl.unitIs.target = "nameplate1"
+                    end
+                    ctl.Fire("PLAYER_TARGET_CHANGED")
+                    band(t, 0.05, 0.06)
+                    S.RunPolls(t)
+                    I.Fold(t)
+                    reads(t, 0.055, 0.05, 0.06)
+                    assert.are.equal(plate, I.targetSlot > 0)
+                    assert.are.equal(0, I.Units.Uid(1)) -- no identity either way
+                    local before = #gone
+                    ctl.dead.target = true
+                    for i = 1, 3 do
+                        band(t + i, 0, 0.01) -- the library keeps the lowest band on a corpse
+                        S.RunPolls(t + i)
+                        I.Fold(t + i)
+                        assert.are.equal("observed", reads(t + i, 0, 0, 0).basis)
+                    end
+                    assert.are.same({ 0 }, { unpack(gone, before + 1) }) -- once, naming no slot
+                    assert.is_true(I.th.dead)
+                    ctl.dead.target, ctl.unitIs.target = nil, nil
+                    ctl.now = t + 4
+                    ctl.Fire("PLAYER_TARGET_CHANGED") -- the next target
+                    band(t + 4.2, 0.5, 0.51)
+                    I.Fold(t + 4.2)
+                    reads(t + 4.2, 0.505, 0.5, 0.51)
+                end)
+            end
+
+            it("a secret death read and no target at all say nothing", function()
+                VS.Start(api)
+                local t = ctl.now + 1
+                ctl.now = t
+                ctl.guid.target = fake.SECRET
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+                ctl.dead.target = fake.SECRET
+                band(t, 0.05, 0.06)
+                S.RunPolls(t)
+                I.Fold(t)
+                reads(t, 0.055, 0.05, 0.06)
+                ctl.guid.target = nil
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+                ctl.dead.target = true -- a stale answer about nobody
+                S.RunPolls(t + 1)
+                I.Fold(t + 1)
+                assert.is_false(I.th.dead)
+            end)
         end)
 
         it("a combat end's restart is healed by the next drain's band", function()
@@ -447,6 +735,25 @@ describe("target health", function()
             band(3, 0.4, 0.41) -- the poll re-asserts after the staged event
             I.Fold(3)
             within(0.405, VS.Health("target", 3).est)
+        end)
+
+        it("allocates nothing over a swap, its answers and a bound's unknown", function()
+            local alloc = require("Game.State.helpers.alloc")
+            obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
+            I.Fold(2)
+            local t = 20
+            local function cycle()
+                t = t + 0.1
+                obs(Obs.TargetSwap, t, 1, 0, 1)
+                obs(Obs.Usable, t, GATED, 1, -9) -- an event's, from before the swap
+                band(t, 0.19, 0.2)
+                obs(Obs.Usable, t, GATED, 1, 0)
+                I.Fold(t)
+                band(t)
+                I.Fold(t)
+            end
+            cycle()
+            assert.are.equal(0, alloc.bytes(cycle, 1000))
         end)
 
         it("allocates nothing applying and dropping bands", function()

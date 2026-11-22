@@ -205,14 +205,18 @@ end
 S.On("NAME_PLATE_UNIT_ADDED", nil, plateEdge)
 S.On("NAME_PLATE_UNIT_REMOVED", nil, plateEdge)
 
--- Poll 4: the target's plain death goes to the registry, which tells every listener once (OnGone DEAD, below).
+-- Poll 4: the target's plain death goes to the registry, which tells every listener once (OnGone DEAD, below). A
+-- secret target has no registry slot, with or without a plate: its death is logged as slot 0, the current target's
+-- (Families/Auras.lua ignores it: no slot to forget).
 S.Poll(4, function(api, t)
-    if I.curSlot == 0 then
-        return
-    end
     local d = Plain(api, api.UnitIsDead("target")) == true
     if d and not dead then
-        I.Units.Dead(I.Units.Uid(1), t)
+        local u = I.Units.Uid(1)
+        if u > 0 then
+            I.Units.Dead(u, t)
+        elseif I.Units.Secret(api, 1) then
+            Direct(Obs.TargetGone, t, 0)
+        end
     end
     dead = d
 end)
