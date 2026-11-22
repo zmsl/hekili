@@ -1,7 +1,7 @@
 -- tests/Forever/apl_warnings_spec.lua: ns.AplSecretToken (Task 9b; Engine/Sim/AplWarnings.lua, the core's own
 -- load-time scan since border batch 3), the scan behind Hekili:LoadScript's "Forever: ... is secret" warnings for
--- conditions that read target health (spec §6.5, §7.4) or the player's (hidden in combat, owner L1462); time to die
--- answers "unknown" (Targets.lua's FOREVER): unwarned.
+-- conditions that read the player's health (hidden in combat, owner L1462); target health reads the hidden-value band
+-- (LibHiddenValues lane B2, FABLE-FOR-OWNER 7) and time to die answers "unknown" (Targets.lua's FOREVER): unwarned.
 local alloc = require("Game.State.helpers.alloc")
 
 describe("APL secret-token scan", function()
@@ -13,14 +13,20 @@ describe("APL secret-token scan", function()
         scan = ns.AplSecretToken
     end)
 
-    it("finds target health", function()
-        assert.are.same({
-            "target.health.pct",
-            "target health is secret",
-            "reads 100 until a health-gated ability pins it, always on a spec without one",
-        }, { scan("target.health.pct<20") })
-        assert.are.equal("target.health.pct", scan("!buff.spender_c.up&target.health.pct<=20"))
-        assert.are.equal("target.health_percent", scan("target.health_percent>80"))
+    it("leaves target health unwarned: the band reads it (lane B2, FABLE-FOR-OWNER 7)", function()
+        for _, hp in ipairs({
+            "target.health.pct<20",
+            "!buff.spender_c.up&target.health.pct<=20",
+            "target.health.percent<20",
+            "target.health.current<5",
+            "target.health.actual<5",
+            "target.health_pct<20",
+            "target.health_percent>80",
+            "target.health_current<5",
+            "min:target.health.pct",
+        }) do
+            assert.is_nil(scan(hp), hp)
+        end
     end)
 
     it("finds the player's health, hidden in combat", function()
@@ -32,7 +38,7 @@ describe("APL secret-token scan", function()
         for _, hp in ipairs({ "health.current<5000", "health.deficit>5000", "health.percent>50", "health.actual<9" }) do
             assert.are.equal(hp:match("^[%a.]+"), scan("buff.spender_c.up&" .. hp), hp)
         end
-        assert.are.equal("target.health.pct", scan("target.health.pct<20&health.pct<50")) -- target rows first
+        assert.are.equal("health.pct", scan("target.health.pct<20&health.pct<50")) -- the target's is not ours
     end)
 
     it("finds a bare `health`, not health.max or a longer name", function()
@@ -44,7 +50,7 @@ describe("APL secret-token scan", function()
     end)
 
     it("finds a token in a target_if expression", function()
-        assert.are.equal("target.health.pct", scan("min:target.health.pct"))
+        assert.are.equal("health.pct", scan("min:health.pct"))
     end)
 
     it("ignores everything else", function()
@@ -67,7 +73,7 @@ describe("APL secret-token scan", function()
     end)
 
     it("allocates nothing on a hit or a miss", function()
-        local hit, miss = "buff.spender_c.up&target.health.pct<20", "buff.spender_c.up&rage>=30&pet.health.pct<50"
+        local hit, miss = "buff.spender_c.up&health.pct<20", "buff.spender_c.up&rage>=30&pet.health.pct<50"
         assert.are.equal(
             0,
             alloc.bytes(function()

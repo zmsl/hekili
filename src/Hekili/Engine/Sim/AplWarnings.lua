@@ -1,9 +1,8 @@
 -- Engine/Sim/AplWarnings.lua
--- Target health is secret on Forever (spec §6.5, §7.4): it reads 100 until a health-gated ability pins it
--- (Game/State/Families/TargetHealth.lua), always on a spec without one. An action-list condition that reads it is
--- dead or misled. So is one reading the player's own health (`health.pct`, ...; owner L1462): the client hides it in
--- combat, where it reads full (Families/Player.lua), so a low-health check never passes there. Not warned: time to
--- die, which answers "unknown" (Targets.lua's FOREVER, 3600 s: the fight never ends soon), as a priority written for
+-- An action-list condition reading the player's own health (`health.pct`, ...; owner L1462) is dead or misled: the
+-- client hides it in combat, where it reads full (Families/Player.lua), so a low-health check never passes there. Not
+-- warned: target health, read from the hidden-value band (Game/State/Families/TargetHealth.lua, LibHiddenValues lane
+-- B2; with no band it falls back to the health gates, unwarned: FABLE-FOR-OWNER 7), and time to die, which answers "unknown" (Targets.lua's FOREVER, 3600 s: the fight never ends soon), as a priority written for
 -- a long fight expects. ns.AplSecretToken finds such a token in a condition string; Hekili:LoadScript (Scripts.lua)
 -- writes one warning per entry from it. A load-time text scan of the core's (border batch 3, E20): pure Lua, no
 -- belief state, no client read, no allocation.
@@ -11,22 +10,12 @@
 local _, ns = ...
 local find, byte = string.find, string.byte
 
-local TARGET_HP = "target health is secret"
-local ALWAYS_100 = "reads 100 until a health-gated ability pins it, always on a spec without one"
 local OWN_HP = "your health is hidden in combat"
 local NEVER = "your health reads full in combat, so a low-health check never passes there"
 
--- { token, subject, what it reads }: the names Hekili's state resolves through target health (State.lua: mt_target's
--- health_*; mt_target_health), then the player's (state.health). Qualified
--- tokens come first; a token ending in "_" is a prefix (a number follows).
+-- { token, subject, what it reads }: the names Hekili's state resolves through the player's health (state.health).
+-- Qualified tokens come first; a token ending in "_" is a prefix (a number follows).
 local ROWS = {
-    { "target.health.pct", TARGET_HP, ALWAYS_100 },
-    { "target.health.percent", TARGET_HP, ALWAYS_100 },
-    { "target.health.current", TARGET_HP, ALWAYS_100 },
-    { "target.health.actual", TARGET_HP, ALWAYS_100 },
-    { "target.health_pct", TARGET_HP, ALWAYS_100 },
-    { "target.health_percent", TARGET_HP, ALWAYS_100 },
-    { "target.health_current", TARGET_HP, ALWAYS_100 },
     { "health.pct", OWN_HP, NEVER },
     { "health.percent", OWN_HP, NEVER },
     { "health.current", OWN_HP, NEVER },

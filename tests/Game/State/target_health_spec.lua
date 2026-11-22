@@ -288,6 +288,159 @@ describe("target health", function()
         assert.are.equal(0, I.th.M)
     end)
 
+    -- LibHiddenValues lane B2 (integration design 2.3, 2.6): the target's band, Obs.Band channel -1 in fractions, as
+    -- Sources/Bands.lua's poll logs it (its I.bandT/Lo/Hi/Live first, then the observation; lo nil: the unknown).
+    describe("from the hidden-value band (lane B2)", function()
+        local function band(t, lo, hi)
+            if lo then
+                I.bandT[-1], I.bandLo[-1], I.bandHi[-1], I.bandLive[-1] = t, lo, hi, true
+                obs(Obs.Band, t, -1, lo, hi)
+            else
+                I.bandLive[-1] = false
+                obs(Obs.Band, t, -1, 1, 0)
+            end
+        end
+
+        it("counts bandDisagree only for a value more than one cell outside a live band (L1666 h)", function()
+            obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
+            band(9, 0.21, 0.22)
+            obs(Obs.Usable, 9, GATED, 1, 0) -- usable: at or below 0.2, one cell under the band
+            I.Fold(9)
+            I.Settle(9)
+            assert.are.equal(0, I.bandDisagree[-1])
+            band(10, 0.25, 0.26)
+            obs(Obs.Usable, 10, GATED, 1, 0) -- 0.2: more than a cell under it
+            I.Fold(10)
+            I.Settle(10)
+            assert.are.equal(1, I.bandDisagree[-1])
+            -- a power band in points, one cell = max / 100 (rage: 1 point)
+            I.bandT[1], I.bandLo[1], I.bandHi[1], I.bandLive[1] = 10, 51, 52, true
+            I.Settle(10)
+            assert.are.equal(0, I.bandDisagree[1]) -- 50 against 51-52: one cell
+            I.bandLo[1], I.bandHi[1] = 52, 53
+            I.Settle(10)
+            assert.are.equal(1, I.bandDisagree[1])
+        end)
+
+        it(
+            "applies a live band: its interval, its middle, an anchor, observed; M kept; no memory slot needed",
+            function()
+                anchor() -- M 1000 on slot 1
+                band(11, 0.63, 0.64)
+                I.Fold(11)
+                local h = VS.Health("target", 11)
+                within(0.635, h.est)
+                assert.are.same({ 0.63, 0.64, "observed", true }, { h.lo, h.hi, h.basis, I.th.anchored })
+                within(1000, I.th.M, 1e-6)
+                assert.are.same({ 1, 0.63, 0.64 }, { I.bandUsed[-1], I.bandUsedLo[-1], I.bandUsedHi[-1] })
+                obs(Obs.TargetSwap, 12, 0, 0, 1) -- no memory slot (the map lockdown: no plate answers)
+                band(12.2, 0.4, 0.41)
+                I.Fold(12.2)
+                within(0.405, VS.Health("target", 12.2).est)
+            end
+        )
+
+        it("a swap starts over at full, nothing low while the library primes, then the new band", function()
+            band(2, 0.63, 0.64)
+            I.Fold(2)
+            obs(Obs.TargetSwap, 3, 2, 1, 1) -- a new target, never held before
+            band(3) -- the library primes: one unknown
+            I.Fold(3)
+            local h = VS.Health("target", 3)
+            assert.are.same({ 1, 0, 1, "default", true }, { h.est, h.lo, h.hi, h.basis, I.th.anchored })
+            I.Fold(3.1) -- priming: nothing logged
+            assert.are.equal(1, VS.Health("target", 3.1).est)
+            band(3.2, 0.19, 0.2)
+            I.Fold(3.2)
+            within(0.195, VS.Health("target", 3.2).est)
+        end)
+
+        it(
+            "narrows nothing inside it; a usable answer that contradicts it stands that drain, the next re-applies",
+            function()
+                obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
+                band(9, 0.15, 0.16)
+                obs(Obs.Usable, 9, GATED, 1, 0) -- at or below 0.2: agrees
+                I.Fold(9)
+                I.Settle(9)
+                within(0.155, VS.Health("target", 9).est)
+                band(10, 0.25, 0.26)
+                obs(Obs.Usable, 10, GATED, 1, 0) -- the client's own gate says at or below 0.2 (FABLE-FOR-OWNER 18)
+                I.Fold(10)
+                I.Settle(10)
+                local h = VS.Health("target", 10)
+                assert.are.same({ 0.2, 0.2 }, { h.est, h.hi })
+                assert.are.equal(1, I.bandDisagree[-1])
+                band(11, 0.25, 0.26)
+                I.Fold(11)
+                within(0.255, VS.Health("target", 11).est)
+            end
+        )
+
+        it("death wins: a corpse's band is ignored until the next swap", function()
+            band(2, 0.05, 0.06)
+            I.Fold(2)
+            obs(Obs.TargetGone, 3, 1)
+            band(3, 0, 0.01) -- the library keeps the lowest band on a corpse (dungeon restrictions)
+            I.Fold(3)
+            local h = VS.Health("target", 3)
+            assert.are.same({ 0, 0, 0, "observed", 1 }, { h.est, h.lo, h.hi, h.basis, I.bandUsed[-1] })
+            obs(Obs.TargetSwap, 4, 2, 1, 1)
+            band(4.2, 0.5, 0.51)
+            I.Fold(4.2)
+            within(0.505, VS.Health("target", 4.2).est)
+        end)
+
+        it("the unknown drops the band: [0, 1] and the gates' bounds stand; M and the damage kept", function()
+            anchor() -- M 1000, 800 damage
+            band(11, 0.15, 0.16)
+            I.Fold(11)
+            band(12)
+            obs(Obs.Usable, 12, GATED, 1, 0) -- the gate's bound, as poll 2 re-asserts it
+            I.Fold(12)
+            local h = VS.Health("target", 12)
+            assert.are.same({ 0.2, 0, 0.2, "pinned" }, { h.est, h.lo, h.hi, h.basis })
+            assert.are.same({ 800 }, { I.th.dmg })
+            within(1000, I.th.M, 1e-6)
+            band(13) -- a second unknown with no band held: nothing
+            I.Fold(13)
+            assert.are.equal("pinned", VS.Health("target", 13).basis)
+        end)
+
+        it("a live target never reads under the floor (Targets.lua's UnitHealth > 1 scan)", function()
+            band(2, 0, 0.01)
+            I.Fold(2)
+            local h = VS.Health("target", 2)
+            assert.are.same({ I.TARGET_HEALTH_FLOOR, 0, 0.01 }, { h.est, h.lo, h.hi })
+        end)
+
+        it("a combat end's restart is healed by the next drain's band", function()
+            band(2, 0.4, 0.41)
+            obs(Obs.CombatEnd, 3)
+            band(3, 0.4, 0.41) -- the poll re-asserts after the staged event
+            I.Fold(3)
+            within(0.405, VS.Health("target", 3).est)
+        end)
+
+        it("allocates nothing applying and dropping bands", function()
+            local alloc = require("Game.State.helpers.alloc")
+            local t = 20
+            band(t, 0.33, 0.34)
+            band(t)
+            I.Fold(t)
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 0.1
+                    band(t, 0.33, 0.34)
+                    I.Fold(t)
+                    band(t)
+                    I.Fold(t)
+                end, 1000)
+            )
+        end)
+    end)
+
     -- aura audit C8: a `now` reads whether its cast was instant (no start seen) and the target's health interval as
     -- percent bounds, `known` only once something bounded it (a fresh target's [0, 100] is unknown, never 100).
     describe("in the `now` context (aura audit C8)", function()

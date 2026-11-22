@@ -227,6 +227,41 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.is_true(I.bandLive[-1])
     end)
 
+    -- Lane B2 (design 2.6): the target health family reads the band; a swap to a low target reads full through the
+    -- library's prime (no low reading on a swap), then the new band's middle.
+    it("a swap to a low target: the family reads full through the prime, then the new band (lane B2)", function()
+        boot()
+        live()
+        assert.are.near(0.635, VS.Health("target", ctl.now).est, 1e-9)
+        W.unit.target = { health = 0.195 }
+        ctl.guid.target = "Creature-2"
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        Fake.event("PLAYER_TARGET_CHANGED")
+        local reads = {}
+        for i = 1, 13 do
+            frames(1)
+            reads[i] = ("%.3f"):format(VS.Health("target", ctl.now).est)
+        end
+        assert.are.equal(("1.000 "):rep(10) .. ("0.195 "):rep(3), table.concat(reads, " ") .. " ")
+    end)
+
+    -- L1666 f, decided in lane B2: a rebuild in combat (a pack switch, a /reload) releases the watches and makes none
+    -- until combat ends (decision 89: no path change mid-fight); the families run today's code meanwhile.
+    it(
+        "a rebuild in combat: no band for the rest of the fight, the watches back at the first drain out of it",
+        function()
+            boot()
+            live()
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            I.Build(def, sync())
+            assert.are.equal(("|"):rep(12), frames(13, -1))
+            assert.are.equal(1, VS.Health("target", ctl.now).est)
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            frames(13)
+            assert.are.equal("0.63 0.64", frames(1, -1))
+        end
+    )
+
     it(
         "bandOff: in combat nothing changes; at PLAYER_REGEN_ENABLED one unknown per live channel, the watches released",
         function()

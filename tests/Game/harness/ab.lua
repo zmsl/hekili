@@ -179,8 +179,8 @@ M.ARMS["cycle-follow-off"] = {
 }
 -- The hidden-value bands (LibHiddenValues integration design 5.4; lane B1, record-only): the driver's belief watches
 -- through fake_lhv.lua (loop.lua; the observer's `bands` firings), the plain oracle shadow stays without; `bandDrop`
--- s after the pull the capability is lost (fake_lhv SetAvailable "unavailable", "error"). Until a family reads the
--- bands (lanes B2-B4) every output equals the default arm's.
+-- s after the pull the capability is lost (fake_lhv SetAvailable "unavailable", "error"; kept for the session, as the
+-- real library keeps it). The target health family reads its band (lane B2); player health and power wait (B3-B4).
 M.ARMS.bands = { outcomes = "default", presence = "router", viewer = false, bands = true }
 M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandDrop = 20 }
 M.VERDICT = {

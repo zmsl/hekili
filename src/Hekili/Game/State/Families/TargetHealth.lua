@@ -11,6 +11,10 @@
 -- UnitHealth and UnitHealthMax are secret on the target and on nameplates, out of combat too (the 2026-10-22
 -- captures, probe U5), so M stays learned, never read. A kill ends the slot at its death (TargetGone from the unit
 -- registry's death events, Sources/Target.lua).
+-- LibHiddenValues (integration design 2.3, 2.6; lane B2): while the library's band on the target is live
+-- (Sources/Bands.lua, Obs.Band channel -1, re-asserted every drain) it is a fact about now and sets the interval and the
+-- estimate; the gates' answers fold after it and narrow inside it. With no band (priming after a swap, the capability
+-- off or lost) everything above runs unchanged.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -27,7 +31,7 @@ local UNKNOWN, ABOVE, BELOW = -1, 0, 1
 -- and the damage taken at its last guarded NOT. The current target: its memory slot (0 none), dead, attackable
 -- (TargetSwap c), fresh (TargetSwap b: never held before, so full at the swap), anchored (the health is known from a
 -- full start or a pin since the last restart), the health interval, the WOUND damage since the swap, M (the damage per
--- full health; 0 unknown).
+-- full health; 0 unknown), and whether a band was applied since the last restart (what an unknown drops).
 local H = {
     n = 0,
     ab = {},
@@ -47,6 +51,7 @@ local H = {
     hi0 = 1,
     dmg = 0,
     M = 0,
+    band = false,
 }
 I.th = H
 local rec
@@ -64,16 +69,22 @@ local function auraIndex(def, key)
     return -1
 end
 
--- Back to the default: 1.0 in [0, 1], no damage seen, no answer standing, no anchor; only the default sample counts
--- (basis "default"). Allocates nothing.
-local function restart(t)
-    H.est0, H.lo0, H.hi0, H.dmg, H.anchored = 1, 0, 1, 0, false
-    for k = 1, H.n do
-        H.prev[k] = UNKNOWN
-    end
+-- The interval back to the default: 1.0 in [0, 1], no anchor, no band; only the default sample counts (basis
+-- "default"). Allocates nothing.
+local function default(t)
+    H.est0, H.lo0, H.hi0, H.anchored, H.band = 1, 0, 1, false, false
     local last = rec.last
     last.observed.t, last.pinned.t, last.modelled.t = 0, 0, 0
     I.Sample(rec, "default", 1, t, 0)
+end
+
+-- Back to the default, no damage seen, no answer standing. Allocates nothing.
+local function restart(t)
+    H.dmg = 0
+    for k = 1, H.n do
+        H.prev[k] = UNKNOWN
+    end
+    default(t)
 end
 
 I.OnBuild(function(def, now)
@@ -226,6 +237,32 @@ I.On(Obs.TargetGone, function(o, t)
     end
 end)
 
+-- (lane B2, design 2.6) The library's band on the target, a fraction [lo, hi) (b > c: unknown). A live band sets the
+-- interval and the estimate, its middle (a live target's never under the floor: the enemy scan's UnitHealth > 1, as a
+-- WOUND's), an anchor and an observed sample; M is left alone. No H.slot test: under the map lockdown a target can have
+-- no plate slot, and a live band is the target. Ignored while dead: TargetGone wins (under the dungeon restrictions the
+-- library keeps the lowest band on a corpse, its README). A usable answer that contradicts the band folds after it and
+-- stands for that drain (FABLE-FOR-OWNER 18; Sources/Bands.lua's settle counts it); the next drain's band re-applies.
+-- The unknown drops a band applied since the last restart: [0, 1], the gates' bounds re-applying at poll 2 (a swap's
+-- unknown finds the restart's state and leaves it). The family records what it applied (I.bandUsed, the harness's
+-- containment check). Allocates nothing.
+I.On(Obs.Band, function(o, t)
+    if o.a ~= -1 or H.dead then
+        return
+    end
+    if o.b > o.c then
+        if H.band then
+            default(t)
+        end
+        return
+    end
+    local mid, floor = (o.b + o.c) / 2, I.TARGET_HEALTH_FLOOR
+    H.lo0, H.hi0, H.est0 = o.b, o.c, mid > floor and mid or floor
+    H.anchored, H.band = true, true
+    I.bandUsed[-1], I.bandUsedLo[-1], I.bandUsedHi[-1] = I.bandUsed[-1] + 1, o.b, o.c
+    I.Sample(rec, "observed", H.est0, t, Obs.Band)
+end)
+
 -- Combat end: an evade heals, so a live target starts over full: an anchor, though M is no longer learnable.
 I.On(Obs.CombatEnd, function(o, t)
     if not H.dead then
@@ -246,7 +283,7 @@ end
 I.OnSnapshot(function(out, now)
     I.TargetHealth(now)
     out[#out + 1] = string.format(
-        "target health slot=%d gates=%d M=%.0f dmg=%.0f fresh=%s anchored=%s attackable=%s dead=%s",
+        "target health slot=%d gates=%d M=%.0f dmg=%.0f fresh=%s anchored=%s attackable=%s dead=%s band=%s",
         H.slot,
         H.n,
         H.M,
@@ -254,6 +291,7 @@ I.OnSnapshot(function(out, now)
         tostring(H.fresh),
         tostring(H.anchored),
         tostring(H.attackable),
-        tostring(H.dead)
+        tostring(H.dead),
+        tostring(H.band)
     )
 end)
