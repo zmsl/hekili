@@ -117,3 +117,220 @@ describe("the band contract: LibHiddenValues on its FakeClient beside fake_api",
         end
     )
 end)
+
+-- Lane B1 (integration design 2.1-2.3, 5.1-5.3): the band source, Game/State/Sources/Bands.lua, on the real library.
+-- The belief on fake_api (the shape above), its def: the fake spec's rage slot (1) and a mana slot (2); the channels
+-- -1 target health, 0 player health, r a resource slot. Every Obs.Band the fold reaches is recorded as "ch lo hi"
+-- (health in fractions 0-1, power in points; "ch -" unknown) by a spec-side applier: no family reads the kind yet.
+describe("the band source on the real library (Game/State/Sources/Bands.lua)", function()
+    local alloc = require("Game.State.helpers.alloc")
+    local Fake, W, api, ctl, libTime, LHV, VS, I, def, seen
+    local FRAME = 1 / 60
+    local MANA = 2 -- the def's mana slot
+
+    local function sync()
+        ctl.now = libTime()
+        return ctl.now
+    end
+
+    -- the belief built and started on fake_api (record = false: no spec-side applier, for the allocation case)
+    local function boot(record)
+        local saved = {}
+        for k, v in pairs({ CreateFrame = api.CreateFrame, issecretvalue = api.issecretvalue, GetTime = api.GetTime }) do
+            saved[k] = rawget(_G, k) or false
+            _G[k] = v
+        end
+        local ns = load.module()
+        for k, v in pairs(saved) do
+            _G[k] = v or nil
+        end
+        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        def = fs.def(fs.new(9))
+        def.resources[MANA] = { key = "mana", type = 0, token = "MANA", max = 1000 }
+        def.providers = { bands = true }
+        seen = {}
+        if record ~= false then
+            I.On(assert(VS.Obs.Band), function(o)
+                seen[#seen + 1] = o.b > o.c and (o.a .. " -") or (o.a .. " " .. o.b .. " " .. o.c)
+            end)
+        end
+        VS.Start(api)
+        I.Build(def, sync())
+    end
+
+    -- n frames, a drain after each; the observations of channel `ch` (nil: every channel) per drain ("" none), "|"
+    local function frames(n, ch)
+        local row = {}
+        for i = 1, n do
+            Fake.tick(1)
+            local from = #seen + 1
+            VS.Drain(sync())
+            local got = {}
+            for j = from, #seen do
+                local c, rest = seen[j]:match("^(%-?%d+) (.*)$")
+                if ch == nil then
+                    got[#got + 1] = seen[j]
+                elseif tonumber(c) == ch then
+                    got[#got + 1] = rest
+                end
+            end
+            row[i] = table.concat(got, ",")
+        end
+        return table.concat(row, "|")
+    end
+
+    local function live()
+        assert.is_true(Fake.login())
+        frames(14)
+    end
+
+    before_each(function()
+        Fake = dofile(FAKE)
+        W = Fake.world
+        W.unit.target = { health = 0.637 }
+        W.unit.player.health = 0.805
+        W.unit.player.power[0], W.unit.player.max[0] = 0.45, 1000
+        W.unit.player.power[1] = 0.3
+        libTime = rawget(_G, "GetTime")
+        api, ctl = fake.new()
+        ctl.LibStub = LibStub
+        LHV = LibStub(MAJOR)
+    end)
+
+    after_each(function()
+        Fake.restore()
+    end)
+
+    it("primes: nothing before the first band, then the true band every drain, no false lowest band; Q8", function()
+        boot()
+        frames(3)
+        assert.are.same({}, seen) -- pending before login
+        assert.is_true(Fake.login())
+        local row = frames(14, -1)
+        local lead, bands = row:match("^(|*)(.*)$")
+        assert.is_true(#lead >= 1, row) -- unknown at first: nothing logged
+        assert.are.equal(("|0.63 0.64"):rep(14 - #lead):sub(2), bands)
+        assert.are.equal("0.8 0.81", frames(1, 0))
+        -- Q8 (design 6.3): { step = 1, points = {} } answers the 1% grid in points
+        assert.are.equal("450 460", frames(1, MANA))
+        assert.are.equal("", frames(1, 1)) -- rage: paused while the client shows mana
+    end)
+
+    it("a target change: one unknown, nothing while it primes, then the new band stamped at the prime's end", function()
+        boot()
+        live()
+        W.unit.target = { health = 0.195 }
+        Fake.event("PLAYER_TARGET_CHANGED")
+        local t0 = libTime()
+        assert.are.equal("-||||||||||0.19 0.2|0.19 0.2|0.19 0.2", frames(13, -1))
+        assert.are.near(t0 + 9 * FRAME, I.bandT[-1], 1e-9)
+        assert.is_true(I.bandLive[-1])
+    end)
+
+    it(
+        "bandOff: in combat nothing changes; at PLAYER_REGEN_ENABLED one unknown per live channel, the watches released",
+        function()
+            boot()
+            live()
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            def.providers.bands = false
+            assert.are.equal("0.63 0.64", frames(1, -1))
+            assert.is_true(#LHV:GetSources() > 0)
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            assert.are.equal("0 -,-1 -,2 -|", frames(2)) -- def.units order: player, target
+            assert.are.same({}, LHV:GetSources())
+            def.providers.bands = true
+            frames(13)
+            assert.are.equal("0.63 0.64", frames(1, -1))
+        end
+    )
+
+    -- Design 2.1's two-cell case (L1624: another addon's point precision at a max over 3175) no longer arises at
+    -- minor 7: a step watch beside a ring keeps the 8 position bars (README, `precision`), shown first on the real
+    -- library; a band wider than a cell is then planted on the belief's own live handle, State still the library's.
+    it("a band wider than one cell passes through as [lo, hi) untouched", function()
+        W.unit.player.power[0], W.unit.player.max[0] = 3967 / 6400, 6400
+        assert(LHV:Watch("Other", { kind = "power", unit = "player", power = 0, precision = "point" }))
+        local twin = assert(LHV:Watch("Twin", { kind = "power", unit = "player", power = 0, step = 1, points = {} }))
+        boot()
+        live()
+        local lo, hi, t = twin:Get()
+        assert.are.equal(6400 / 100, hi - lo) -- one cell beside the ring
+        assert.are.equal(lo .. " " .. hi, frames(1, MANA))
+        local mine
+        for _, h in ipairs(LHV.reg) do
+            mine = (h.owner == "HekiliBelief" and h.power == 0) and h or mine
+        end
+        function mine.Get() -- shadows the handle's method: two cells, the L1624 shape
+            return lo, hi + 6400 / 100, t, LHV.BAND
+        end
+        assert.are.equal(lo .. " " .. hi + 6400 / 100, frames(1, MANA))
+    end)
+
+    it("a max change: the band in points follows the new max at once (no point bars to place again)", function()
+        boot()
+        live()
+        W.unit.player.max[0] = 1200
+        Fake.event("UNIT_MAXPOWER", "player")
+        assert.are.equal(("|540 552"):rep(3):sub(2), frames(3, MANA))
+    end)
+
+    it("LHV:SetEnabled(false): one unknown per channel, reason off; back on, the bands return", function()
+        boot()
+        live()
+        LHV:SetEnabled(false)
+        assert.are.equal("0 -,-1 -,2 -|", frames(2))
+        assert.is_truthy(VS.Snapshot():find("state=unavailable reason=off", 1, true))
+        LHV:SetEnabled(true)
+        frames(140)
+        assert.are.equal("0.63 0.64", frames(1, -1))
+    end)
+
+    it("a failed self-test: no watch, no band; one retry out of combat 5 s after the first world entry", function()
+        Fake.set("closed", true)
+        assert.is_false(Fake.login())
+        boot()
+        ctl.Fire("PLAYER_ENTERING_WORLD")
+        assert.are.equal("", (frames(4 * 60):gsub("|", "")))
+        assert.are.same({}, LHV:GetSources()) -- the capability was unavailable: no watch made
+        assert.is_false((LHV:GetSelfTest()))
+        Fake.set("closed", false)
+        frames(61) -- past 5 s: the retry runs
+        frames(140)
+        assert.is_true((LHV:GetSelfTest()))
+        assert.are.equal("0.63 0.64", frames(1, -1))
+    end)
+
+    it("a power neither shown nor mana is paused; shown, it primes and returns", function()
+        boot()
+        live()
+        assert.are.equal("", frames(1, 1)) -- rage while the client shows mana
+        ctl.powerType[1], ctl.powerType[2] = 1, "RAGE"
+        ctl.Fire("UNIT_DISPLAYPOWER", "player")
+        local row = frames(14, 1)
+        assert.is_truthy(row:match("30 31$"), row)
+    end)
+
+    it("idle: 2 s with no drain pauses every watch; the next drain resumes them", function()
+        boot()
+        live()
+        for _ = 1, 130 do
+            Fake.tick(1)
+            ctl.Tick(sync()) -- the frame update, no drain
+        end
+        assert.is_truthy(VS.Snapshot():find("state=paused", 1, true))
+        assert.are.equal("-", frames(1, -1))
+        frames(11)
+        assert.are.equal("0.63 0.64", frames(1, -1))
+    end)
+
+    it("allocates nothing over 1000 drains with every band live", function()
+        boot(false)
+        live()
+        local bytes = alloc.bytes(function()
+            VS.Drain(sync())
+            assert(I.bandLive[-1] and I.bandLive[0] and I.bandLive[MANA])
+        end, 1000)
+        assert.are.equal(0, bytes)
+    end)
+end)

@@ -8,8 +8,8 @@ cd "$(dirname "$0")/../.."
 host="heki""li"
 Host="Heki""li"
 # The host files that may name it (full paths): the embed and the TOC's OptionalDeps (the host embeds it, integration
-# design 5.5). A later lane whose file names it adds that file here.
-allow="^src/$Host/(embeds\.xml|$Host\.toc):"
+# design 5.5), and the belief's band source (lane B1). A later lane whose file names it adds that file here.
+allow="^src/$Host/(embeds\.xml|$Host\.toc|Game/State/Sources/Bands\.lua):"
 fail=0
 hits=$(grep -rniI --exclude=LICENSE "$host" src/LibHiddenValues tests/LibHiddenValues tools/libhiddenvalues)
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
