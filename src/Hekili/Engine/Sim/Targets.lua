@@ -1264,7 +1264,8 @@ do
     -- Read out of combat only (UnitClass and roles on group tokens probed plain out of combat, L1658): at the spec's
     -- activation (login, a talent change; Activation.lua) and GROUP_ROSTER_UPDATE, in combat at its end, and when the
     -- library is first found. A rate window: HintRate on the player's own successful cast of an ability declaring
-    -- `ttdRate = { factor = f, duration = s }` (L1654: own casts are plain; others' are not detectable).
+    -- `ttdRate = { factor = f, duration = s }` (L1654: own casts are plain; others' are not detectable). The cast and
+    -- the combat's end come from Events.lua's own handlers (CLEU_HANDLER, PLAYER_REGEN_ENABLED; owner 2026-11-22).
     local UnitClass, UnitGroupRolesAssigned = Facade.UnitClass, Facade.UnitGroupRolesAssigned
     local classLines = {} -- [class token] = pct (shared content)
     local partyTokens, raidTokens = {}, {}
@@ -1337,22 +1338,22 @@ do
         sendHints()
     end
 
-    RegisterEvent( "GROUP_ROSTER_UPDATE", ns.TtdHintsChanged )
-    RegisterEvent( "PLAYER_REGEN_ENABLED", function()
-        if hintsDirty then sendHints() end
-    end )
+    RegisterEvent( "GROUP_ROSTER_UPDATE", ns.TtdHintsChanged ) -- its own registration: core has no handler of it
 
-    ns.RegisterUnitEvent( "UNIT_SPELLCAST_SUCCEEDED", "player", nil, function( event, unit, _, spellID )
-        if unit ~= "player" then return end
-        local a = class.abilities[ spellID ]
-        local r = a and rawget( a, "ttdRate" )
+    -- Events.lua's PLAYER_REGEN_ENABLED handler.
+    function ns.TtdCombatEnded()
+        if hintsDirty then sendHints() end
+    end
+
+    -- Events.lua's CLEU_HANDLER, SPELL_CAST_SUCCESS: our row, its ability already resolved.
+    function ns.TtdCastSuccess( ability, time )
+        local r = rawget( ability, "ttdRate" )
         if type( r ) ~= "table" then return end
         ttdLib = ttdLib or LibStub( TTD_MAJOR, true )
         if not ttdLib then return end
-        local now = GetTime()
-        rateFactor, rateStart, rateEnd = r.factor, now, now + r.duration
+        rateFactor, rateStart, rateEnd = r.factor, time, time + r.duration
         ttdLib:HintRate( TTD_OWNER, rateFactor, rateStart, rateEnd )
-    end )
+    end
 
     -- The snapshot's time-to-die line (English only; Hekili:GetTTDInfo). Allocates.
     local function ttdLine()

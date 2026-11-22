@@ -360,7 +360,9 @@ highest execute line present goes to `HintBelow` (threshold only), out of combat
 known and an ability field `ttdBelow = { pct = n, talent = key }` while that talent has a rank; a pack declaring
 either replaces its class's default. Each group member (tanks out) adds its class's default from shared content,
 `shared:RegisterTtdLines({ [class token] = pct })` (`Hekili_Shared/Shared/TimeToDie.lua`). An ability field
-`ttdRate = { factor = f, duration = s }` sends `HintRate(f, now, now + s)` on the player's own successful cast.
+`ttdRate = { factor = f, duration = s }` sends `HintRate(f, now, now + s)` from `CLEU_HANDLER`'s `SPELL_CAST_SUCCESS`
+branch (our row; only a tracked ability's cast has one). The combat's end comes from the core's existing
+`PLAYER_REGEN_ENABLED` handler; `GROUP_ROSTER_UPDATE` is the one registration of its own (core has no other handler).
 
 **Pets.** `RegisterPets` names the pets (`{ id, spell, duration, cap }`; a `cap` makes a counted guardian). Both
 layers have the verbs `summonPet(key, duration)` and `dismissPet(key)`: the sim's (`Engine/Sim/State.lua`, Hekili's)

@@ -3,11 +3,14 @@
 -- own from its pack (abilities with `healthGate` while known, `ttdBelow` lines while their talent has a rank; these
 -- replace the shared default for the player's class), and each group member's class default from shared content
 -- (Shared:RegisterTtdLines), tanks out. Sent out of combat at login/spec change and GROUP_ROSTER_UPDATE (in combat:
--- at PLAYER_REGEN_ENABLED). HintRate("Hekili", factor, now, now + duration) on the player's own successful cast of an
--- ability declaring `ttdRate`. The library is a double in the instance's LibStub.
+-- at PLAYER_REGEN_ENABLED). HintRate("Hekili", factor, now, now + duration) from the combat-log handler's
+-- SPELL_CAST_SUCCESS branch (our row, the ability resolved there) for an ability declaring `ttdRate`. Core's existing
+-- handlers are extended, never doubled (owner 2026-11-22: "please do not construct new things when hekili had already
+-- previously been designed with cleu in mind"). The library is a double in the instance's LibStub.
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 local mw = require("Forever.helpers.mage_world")
+local lw = require("Forever.helpers.warlock_world")
 
 local MAJOR = "LibTimeToDie-1.0"
 
@@ -51,6 +54,24 @@ local function below(lib)
             return x[3] or false
         end
     end
+end
+
+-- One SPELL_CAST_SUCCESS row through the real log, as Game/Events/CombatLog.lua delivers it to CLEU_HANDLER.
+local function castRow(H, src, spell)
+    local L = H.ns.VirtualStateInternal.Log
+    local r = L.Emit("SPELL_CAST_SUCCESS", 16, H.ctl.now, false, "damage", "observed", src, 0, "", L.HOSTILE_FLAGS)
+    r[12], r[13], r[14] = spell, "", 1
+    L.Deliver()
+end
+
+local function rates(lib)
+    local out = {}
+    for _, x in ipairs(lib.hints) do
+        if x[1] == "rate" then
+            out[#out + 1] = x
+        end
+    end
+    return out
 end
 
 local function member(H, token, class, role)
@@ -133,17 +154,49 @@ describe("time-to-die hints (lane B8)", function()
         assert.are.equal(20, below(lib))
     end)
 
-    it("the player's own successful cast of a ttdRate ability: a rate window from now", function()
+    it("a shipped pack line is readable as registered: the talent's 35 while it has a rank", function()
+        local H, lib = new(lw.Demonology)
+        local st = H.Hekili.State
+        st.talent.decimation.rank = 2
+        H.Fire("GROUP_ROSTER_UPDATE")
+        assert.are.equal(35, below(lib))
+        st.talent.decimation.rank = 0
+        H.Fire("GROUP_ROSTER_UPDATE")
+        assert.is_false(below(lib))
+    end)
+
+    it("our SPELL_CAST_SUCCESS row of a ttdRate ability: a rate window from now; another's row: none", function()
         local H, lib = new(ww)
-        local a = H.Hekili.Class.abilities.battle_shout
-        rawset(a, "ttdRate", { factor = 1.3, duration = 40 })
+        local A = H.Hekili.Class.abilities
+        rawset(A.battle_shout, "ttdRate", { factor = 1.3, duration = 40 })
+        H.ctl.combat = true
+        castRow(H, "Player-9", A.battle_shout.id)
+        castRow(H, H.ctl.guid.player, A.hamstring.id)
+        assert.are.same({}, rates(lib))
+        castRow(H, H.ctl.guid.player, A.battle_shout.id)
         local now = H.ctl.now
-        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-ttd", a.id)
-        local x = lib.hints[#lib.hints]
-        assert.are.same({ "rate", "Hekili", 1.3, now, now + 40 }, x)
-        local n = #lib.hints
-        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-ttd2", H.Hekili.Class.abilities.hamstring.id)
-        assert.are.equal(n, #lib.hints) -- another ability: no window
-        rawset(a, "ttdRate", nil)
+        assert.are.same({ { "rate", "Hekili", 1.3, now, now + 40 } }, rates(lib))
+        rawset(A.battle_shout, "ttdRate", nil)
+    end)
+
+    it("our cast event reaches it once, through the belief's cast row", function()
+        local H, lib = new(ww)
+        local A = H.Hekili.Class.abilities
+        rawset(A.battle_shout, "ttdRate", { factor = 1.3, duration = 40 })
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-ttd", A.battle_shout.id)
+        assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
+        assert.are.equal(1, #rates(lib))
+        rawset(A.battle_shout, "ttdRate", nil)
+    end)
+
+    it("time to die registers no event core already handles (the cast, the combat's end)", function()
+        local fh = assert(io.open("src/Hekili/Engine/Sim/Targets.lua"))
+        local src = fh:read("*a")
+        fh:close()
+        local at = src:find("local TTD_MAJOR", 1, true)
+        local block = src:sub((assert(at)))
+        assert.is_nil(block:find('"UNIT_SPELLCAST_SUCCEEDED"', 1, true))
+        assert.is_nil(block:find('"PLAYER_REGEN_ENABLED"', 1, true))
+        assert.is_truthy(block:find('RegisterEvent( "GROUP_ROSTER_UPDATE"', 1, true)) -- core has no handler of it
     end)
 end)
