@@ -574,7 +574,10 @@ function M.new()
         return ctl.actionInRange[unit]
     end
     api.HasOverrideActionBar, api.HasVehicleActionBar, api.SpellIsSelfBuff = no, no, no
-    api.IsMounted, api.IsResting, api.IsInRaid, api.UnitCanAssist = no, no, no, no
+    api.IsMounted, api.IsResting, api.UnitCanAssist = no, no, no
+    function api.IsInRaid() -- `ctl.raid`: the group is a raid (default: not)
+        return ctl.raid == true
+    end
     function api.IsInGroup() -- `ctl.inGroup` (the meter provider reads it at PLAYER_REGEN_DISABLED)
         return ctl.inGroup == true
     end

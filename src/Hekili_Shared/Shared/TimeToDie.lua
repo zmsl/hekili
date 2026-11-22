@@ -7,7 +7,9 @@
 
 local shared = Hekili:NewShared()
 
-shared:RegisterTtdLines({
-    WARRIOR = 20,
-    PALADIN = 20,
-})
+if shared.RegisterTtdLines then -- no content API bump: an older core has no such method
+    shared:RegisterTtdLines({
+        WARRIOR = 20,
+        PALADIN = 20,
+    })
+end

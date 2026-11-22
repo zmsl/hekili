@@ -10,6 +10,7 @@ local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 local mw = require("Forever.helpers.mage_world")
 local lw = require("Forever.helpers.warlock_world")
+local fake = require("Game.State.helpers.fake_api")
 
 local MAJOR = "LibTimeToDie-1.0"
 
@@ -30,12 +31,25 @@ local function double()
     return lib
 end
 
-local function new(C)
-    local H = headless.new({ character = C.character(), pack = C.PACK })
-    assert.are.same({}, H.loadErrors)
-    local lib = double()
-    local stub = rawget(H.env, "LibStub")
+local function install(env, lib)
+    local stub = rawget(env, "LibStub")
     stub.libs[MAJOR], stub.minors[MAJOR] = lib, 2
+end
+
+-- `early`: the library is there before login (as in game), else it is installed after; `character`: not the pack's own.
+local function new(C, early, character)
+    local lib = double()
+    local H = headless.new({
+        character = character or C.character(),
+        pack = C.PACK,
+        beforeLogin = early and function(core)
+            install(getfenv(core.GetTTD), lib)
+        end or nil,
+    })
+    assert.are.same({}, H.loadErrors)
+    if not early then
+        install(H.env, lib)
+    end
     return H, lib
 end
 
@@ -117,6 +131,102 @@ describe("time-to-die hints (lane B8)", function()
         H.ctl.exists.party1, H.ctl.groupMembers = false, 0
         H.Fire("GROUP_ROSTER_UPDATE")
         assert.is_false(below(lib))
+    end)
+
+    it("the highest line of the group, whoever comes first", function()
+        local H, lib = new(mw.Frost)
+        H.Hekili:NewShared():RegisterTtdLines({ ROGUE = 35 })
+        H.ctl.groupMembers = 3
+        member(H, "party1", "ROGUE", "DAMAGER")
+        member(H, "party2", "WARRIOR", "DAMAGER")
+        H.Fire("GROUP_ROSTER_UPDATE")
+        assert.are.equal(35, below(lib))
+    end)
+
+    it("a raid is read by its raid tokens, the last one too", function()
+        local H, lib = new(mw.Frost)
+        H.ctl.raid, H.ctl.groupMembers = true, 40
+        member(H, "raid40", "WARRIOR", "DAMAGER")
+        H.Fire("GROUP_ROSTER_UPDATE")
+        assert.are.equal(20, below(lib))
+    end)
+
+    it("in a raid the player's own token adds no class default over the pack's line", function()
+        local H, lib = new(ww)
+        H.Hekili:NewShared():RegisterTtdLines({ WARRIOR = 50 })
+        H.ctl.raid, H.ctl.groupMembers = true, 1
+        member(H, "raid1", "WARRIOR", "DAMAGER")
+        H.ctl.unitIs.raid1 = "player"
+        H.Fire("GROUP_ROSTER_UPDATE")
+        assert.are.equal(20, below(lib))
+    end)
+
+    it("an ability not known gives no line", function()
+        local c = ww.character()
+        local execute, known = {}, {}
+        for _, id in ipairs(ww.IDS.execute) do
+            execute[id] = true
+        end
+        for _, id in ipairs(c.known) do
+            if not execute[id] then
+                known[#known + 1] = id
+            end
+        end
+        c.known = known
+        local H, lib = new(ww, false, c)
+        H.Fire("GROUP_ROSTER_UPDATE")
+        assert.is_nil(below(lib))
+    end)
+
+    it("a secret role is unknown, never compared: the line counts", function()
+        local H, lib = new(mw.Frost)
+        H.ctl.groupMembers = 2
+        member(H, "party1", "WARRIOR", fake.SECRET)
+        assert.are.equal("nil", type(H.ns.Facade.UnitGroupRolesAssigned("party1"))) -- a secret cannot be printed
+        H.Fire("GROUP_ROSTER_UPDATE")
+        assert.are.equal(20, below(lib))
+    end)
+
+    it("a library found late is sent the line at the first track", function()
+        local H, lib = new(ww)
+        assert.is_nil(below(lib))
+        H.Hekili:GetTTD("target")
+        assert.are.equal(20, below(lib))
+    end)
+
+    it("login sends the line: no roster event, no query", function()
+        local _, lib = new(ww, true)
+        assert.are.equal(20, below(lib))
+    end)
+
+    it("a talent change sends it again at the spec's activation", function()
+        local decimation = lw.Demonology.character()
+        local id = 440870 -- the talent's spell
+        local talents = {}
+        for spell, rank in pairs(decimation.talents) do
+            talents[spell] = rank
+        end
+        talents[id] = 2
+        decimation.talents = talents
+        local H, lib = new(lw.Demonology, true, decimation)
+        assert.are.equal(35, below(lib))
+        for n, spell in pairs(H.ctl.traits.defs) do
+            if spell == id then
+                H.ctl.traits.nodes[n].activeRank = 0
+            end
+        end
+        H.Hekili:SpecializationChanged()
+        assert.is_false(below(lib))
+    end)
+
+    it("shared content loads on a core without RegisterTtdLines", function()
+        local f = assert(loadfile("src/Hekili_Shared/Shared/TimeToDie.lua"))
+        local older = {}
+        function older.NewShared()
+            return {}
+        end
+        setfenv(f, { Hekili = older })
+        assert.has_no.errors(f)
     end)
 
     it("in combat a roster change waits for the combat's end", function()
