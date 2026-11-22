@@ -449,4 +449,31 @@ describe("the tracked set", function()
         VS.Drain(ctl.now)
         assert.are.same({ 1, 1, 1, 1 }, { prof.rows, prof.polls, prof.rowMs, prof.pollMs })
     end)
+
+    -- (LibHiddenValues integration design 3.3, lane B7) the active priority's harvested points ride def as plain
+    -- numbers by power type, each set at a new generation; a rebuild keeps them and moves the generation too
+    it("carries the APL band points by power type at a new generation, and keeps them through a rebuild", function()
+        local def = I.def
+        local gen = def.bandGen or 0
+        ns.SetAplBands({
+            rage = { points = { 40, 61 }, deficit = { 29 }, pct = { 33.5 } },
+            unknown_res = { points = { 5 }, deficit = {}, pct = {} }, -- not a resource of this spec: dropped
+        })
+        assert.are.equal(gen + 1, def.bandGen)
+        assert.are.same({ [fs.RAGE] = { points = { 40, 61 }, deficit = { 29 }, pct = { 33.5 } } }, def.bandPoints)
+        for _, e in pairs(def.bandPoints) do
+            for _, list in pairs(e) do
+                assert.is_nil(getmetatable(list))
+                for _, v in ipairs(list) do
+                    assert.are.equal("number", type(v))
+                end
+            end
+        end
+        ns.BuildTracked()
+        assert.are.equal(gen + 2, def.bandGen)
+        assert.are.same({ 40, 61 }, def.bandPoints[fs.RAGE].points)
+        ns.SetAplBands({})
+        assert.are.equal(gen + 3, def.bandGen)
+        assert.are.same({}, def.bandPoints)
+    end)
 end)

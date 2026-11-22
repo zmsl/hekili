@@ -1032,6 +1032,9 @@ L["The next box and the alternatives."] = "下一个方框及备选。"
 L["The picks on the lane."] = "轨道上的推荐。"
 L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴、标尺和焦点区域。"
 
+-- Hekili/Engine/Sim/Scripts.lua
+-- L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = ""
+
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
 
