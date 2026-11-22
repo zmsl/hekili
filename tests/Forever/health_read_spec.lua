@@ -7,6 +7,7 @@
 local headless = require("Game.harness.headless")
 local fake = require("Game.State.helpers.fake_api")
 local dlw = require("Forever.helpers.druid_loop_world")
+local ww = require("Forever.helpers.warrior_world")
 
 describe("a player health read in a priority", function()
     local H, scriptID, pack, list
@@ -131,6 +132,45 @@ describe("a player health read in a priority, with the hidden-value band (lane B
         lhv:SetAvailable("unavailable", "error") -- the capability lost: today's "unknown", full
         assert.are.same({ false, 100 }, { frames(3) })
         assert.are.same({}, H.errors)
+    end)
+end)
+
+-- Lane B2 (L1675): a NOT under every guard says strictly above the gate, where a priority line reads it too.
+describe("a target health read in a priority, a band under a gate that answers NOT", function()
+    local H, I, Obs, t, gated
+    before_each(function()
+        H = headless.new({ character = ww.character(), pack = ww.PACK })
+        H.ctl.guid.target = "Creature-1"
+        assert.is_true(headless.cycle(H, H.ctl.now + 1))
+        I, Obs, t = H.ns.VirtualStateInternal, H.ns.VirtualState.Obs, H.ctl.now
+        gated = I.th.ab[1]
+    end)
+
+    local function over20(second)
+        if second then
+            I.def.abilities[second].healthGate = 0.35
+            I.Build(I.def, t)
+        end
+        local direct = I.Sources.Direct
+        direct(Obs.Read, t, I.ab.slot[gated], 50, I.ReadOf.Resource)
+        direct(Obs.Band, t, -1, 0.15, 0.16)
+        direct(Obs.Usable, t, gated, 0, 0)
+        if second then
+            direct(Obs.Usable, t, second, 1, 0) -- at or below 35%
+        end
+        I.Fold(t)
+        H.Hekili.State.reset()
+        local pct = H.Hekili.State.target.health.pct
+        assert.are.same({ false, true }, { pct <= 20, pct > 20 }, ("pct %.15f"):format(pct))
+        assert.is_true(pct < 20.001, pct) -- over the gate, no farther
+    end
+
+    it("fails <=20 and passes >20", function()
+        over20()
+    end)
+
+    it("the same with a second ability's answer after it", function()
+        over20(gated == 1 and 2 or 1)
     end)
 end)
 

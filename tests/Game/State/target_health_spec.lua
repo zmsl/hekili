@@ -12,6 +12,7 @@ end
 -- A gated spender (Smite: 15 rage, usable at or below 20%, not while Stance is up) and an ungated one; rage, no regen.
 local SMITE, SLAM, STANCE = 2001, 2002, 3001
 local GATED = 1 -- Smite's ability index
+local OVER = 0.2 + 1e-6 -- a guarded NOT's bound: strictly over the gate
 
 local function def()
     return {
@@ -34,7 +35,10 @@ describe("target health", function()
 
     before_each(function()
         api, ctl = fake.new()
+        local getTime = rawget(_G, "GetTime") -- the facade resolves its clock at load
+        _G.GetTime = api.GetTime
         ns = load.module()
+        _G.GetTime = getTime
         VS, I = ns.VirtualState, ns.VirtualStateInternal
         S, Obs, ReadOf = I.Sources, VS.Obs, I.ReadOf
         ctl.known[SMITE], ctl.known[SLAM] = true, true
@@ -381,7 +385,7 @@ describe("target health", function()
             I.Fold(12)
             I.Settle(12)
             h = VS.Health("target", 12)
-            assert.are.same({ 0.2, 0.2, 0.2, 2 }, { h.lo, h.hi, h.est, I.bandDisagree[-1] })
+            assert.are.same({ OVER, OVER, OVER, 2 }, { h.lo, h.hi, h.est, I.bandDisagree[-1] })
         end)
 
         it("a flip pins the gate against a lagging band and teaches M; the next band narrows under it", function()
@@ -521,7 +525,7 @@ describe("target health", function()
 
             it("a NOT yields only a side it contradicts: the gate, not a cell over it (probe C)", function()
                 drain(3, 0.2, 0.21, 0)
-                reads(3, 0.205, 0.2, 0.21)
+                reads(3, 0.205, OVER, 0.21)
             end)
 
             it("a usable after a NOT of the same drain voids its bound", function()
@@ -549,7 +553,7 @@ describe("target health", function()
                 reads(6, 0.2, 0, 0.2)
                 drain(7, 0.25, 0.26, 0)
                 drain(8) -- the same for a NOT
-                reads(8, 1, 0.2, 1)
+                reads(8, 1, OVER, 1)
             end)
 
             it("the unknown with no bound newer than the last band: [0, 1]", function()
@@ -572,7 +576,7 @@ describe("target health", function()
                 I.Fold(4)
                 none()
                 drain(5, 0.25, 0.26, 0) -- a lower one
-                assert.are.equal(0.2, I.th.uLo)
+                assert.are.equal(OVER, I.th.uLo)
                 obs(Obs.CombatEnd, 6)
                 I.Fold(6)
                 none()
@@ -727,6 +731,77 @@ describe("target health", function()
                 I.Fold(t + 1)
                 assert.is_false(I.th.dead)
             end)
+        end)
+
+        -- (fix round 2, review N2) A death the registry was told before the swap, or before poll 4.
+        describe("a death the registry already holds", function()
+            local READS =
+                ": 0 in the belief and Facade.UnitHealth (core's target.health.pct answers 100 for a dead one)"
+            local t
+            before_each(function()
+                VS.Start(api)
+                t = ctl.now
+            end)
+            local function frame(lo)
+                t = t + 1
+                ctl.now = t
+                band(t, lo, lo + 0.01)
+                S.Flush()
+                S.RunPolls(t)
+                I.Fold(t)
+            end
+            local function target(guid, dead)
+                ctl.guid.target, ctl.dead.target = guid, dead
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+            end
+            local function corpse()
+                frame(0)
+                assert.are.equal("observed", reads(t, 0, 0, 0).basis)
+                assert.are.equal(0, ns.Facade.UnitHealth("target"))
+            end
+
+            it("a tab back to our kill" .. READS, function()
+                ctl.dead.target = true
+                corpse()
+                target("Creature-2")
+                frame(0.5)
+                target("Creature-1", true)
+                corpse()
+            end)
+
+            it("a mob killed while it was not the target, then targeted" .. READS, function()
+                target("Creature-2")
+                ctl.Fire("UNIT_DIED", "Creature-1")
+                frame(0.5)
+                reads(t, 0.505, 0.5, 0.51) -- another mob's death
+                target("Creature-1", true)
+                corpse()
+            end)
+
+            it("a rebuild while targeting a corpse" .. READS, function()
+                ctl.dead.target = true
+                corpse()
+                I.Build(def(), t)
+                corpse()
+            end)
+
+            for _, late in ipairs({ false, true }) do
+                local when = late and "a later drain" or "that drain"
+                it(("an event-first kill logs one TargetGone, poll 4 true in %s"):format(when), function()
+                    local n = 0
+                    I.On(Obs.TargetGone, function()
+                        n = n + 1
+                    end)
+                    ctl.Fire("UNIT_DIED", "Creature-1")
+                    if late then
+                        corpse()
+                    end
+                    ctl.dead.target = true
+                    corpse()
+                    corpse()
+                    assert.are.equal(1, n)
+                end)
+            end
         end)
 
         it("a combat end's restart is healed by the next drain's band", function()
