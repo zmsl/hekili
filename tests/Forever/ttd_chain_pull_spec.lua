@@ -164,6 +164,40 @@ describe("ttd-chain-pull: time to die forgets the last mob at a pull (lane B8, L
         )
     end
 
+    -- Past the library's carry age (10 s) it drops the slope itself, so the track stays and with it the learned execute
+    -- factor. e16716e84's answers 5 s into each of four mobs that die 2.4 times as fast below the hinted 20 percent.
+    for _, gap in ipairs({ 11, 30 }) do
+        it(("pulls %d s apart keep the learned execute factor"):format(gap), function()
+            local w = boot()
+            w.H.ns.TtdHintsChanged()
+            local at5 = {}
+            for mob = 1, 4 do
+                w.target("Creature-" .. mob, 100)
+                w.H.Hekili:GetTTD("target")
+                w.wait(0.5)
+                w.combat(true)
+                local pct, i = 100, 0
+                while pct > 1 do
+                    i = i + 1
+                    pct = pct - (pct > 20 and 0.25 or 0.6)
+                    w.step()
+                    w.health(math.max(pct, 0.5))
+                    local ttd = w.H.Hekili:GetTTD("target")
+                    if i == 50 then
+                        at5[mob] = ("%.0f"):format(ttd)
+                    end
+                end
+                w.none()
+                w.combat(false)
+                w.wait(gap - 2)
+                w.H.Fire("PLAYER_TARGET_CHANGED") -- still none: gone since the kill, not since this
+                w.wait(2)
+            end
+            assert.are.same({ "35", "32", "31", "31" }, at5)
+            assert.are.equal(1, w.tracks)
+        end)
+    end
+
     it("no unit answered nil, not false: forgotten all the same", function()
         local w = boot(true)
         killFirst(w, 6)

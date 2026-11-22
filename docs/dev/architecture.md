@@ -363,8 +363,10 @@ frames) those two keep their last live answer less elapsed, 0.5 s at most from t
 
 The library carries a target's rate to the next one within 10 s. Until its own fix is vendored (L1730),
 `ns.TtdTargetChanged` (core's `PLAYER_TARGET_CHANGED` handler) notes a target that is gone (none, as the client answers
-right after a kill, or a corpse) and at the next living target releases the track and tracks again, unless the GUID
-says it is the same mob (a secret GUID forgets). That drops the carried rate, the keep and the learned execute factor.
+right after a kill, or a corpse) and when the next living target comes within those 10 s (`TTD_CARRY`) releases the
+track and tracks again, unless the GUID says it is the same mob (a secret GUID forgets). That drops the carried rate,
+the keep and the learned execute factor. A later target keeps the track: the library drops the rate itself and the
+factor stays.
 The library's part, so still carried: a direct swap in combat, and a swap from a dying mob to a tough one first seen
 below full.
 

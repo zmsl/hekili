@@ -1362,20 +1362,22 @@ do
     -- shortcut: forget at the pull, remove when LibTimeToDie's own fix is vendored (L1730). Left to the library, which
     -- carries the last mob's rate there: a direct swap in combat, and a swap from a dying mob to a tough one first seen
     -- below full. Events.lua's PLAYER_TARGET_CHANGED handler calls it; the client clears the target at a kill. Once the
-    -- target is gone (none, or a corpse) the next is tracked anew, unless its GUID says it is the same mob.
-    local lastTarget, targetGone
+    -- target is gone (none, or a corpse) a next one within the library's carry age is tracked anew, unless its GUID says
+    -- it is the same mob; a later one keeps the track, and with it the learned execute factor.
+    local TTD_CARRY = 10 -- seconds: the library's priorAge (Estimator.lua, not in its API); goes with the shortcut
+    local lastTarget, goneAt
     function ns.TtdTargetChanged()
         local exists = UnitExists( "target" ) -- false or nil: no unit; a secret counts as one
         if ( not issecretvalue( exists ) and not exists ) or plain( UnitIsDead( "target" ) ) == true then
-            targetGone = true
+            goneAt = goneAt or GetTime()
             return
         end
         local guid = plain( UnitGUID( "target" ) )
-        if targetGone and ttdTrack and ( not guid or guid ~= lastTarget ) then
+        if goneAt and ttdTrack and ( not guid or guid ~= lastTarget ) and GetTime() - goneAt <= TTD_CARRY then
             ttdRelease()
             targetTTD()
         end
-        targetGone, lastTarget = nil, guid
+        goneAt, lastTarget = nil, guid
     end
 
     -- targetTTD's answer when the target is plainly attackable, else nil. The library first, so with none (or
