@@ -125,6 +125,21 @@ describe("the providers, always on (no option)", function()
         end
     )
 
+    -- (LibHiddenValues integration design 5.1, lane B0) the fourth value: bands on unless the debug-only session switch
+    -- Hekili.bandOff is true, independent of cdmOff. Nothing in the belief reads it yet (lane B1's source does).
+    it("Hekili.bandOff = true then ProvidersChanged gives bands false; cdmOff leaves it alone", function()
+        boot(nil)
+        assert.is_true(I.def.providers.bands)
+        H.Hekili.bandOff = true
+        H.Hekili:ProvidersChanged()
+        assert.are.same({ false, true }, { I.def.providers.bands, I.def.providers.viewer })
+        H.Hekili.bandOff = nil
+        H.Hekili.cdmOff = true
+        H.Hekili:ProvidersChanged()
+        assert.are.same({ true, false }, { I.def.providers.bands, I.def.providers.viewer })
+        H.Hekili.cdmOff = nil
+    end)
+
     it("a toggle back before the fight ends cancels the pending swap", function()
         boot(nil)
         I.inCombat = true

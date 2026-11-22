@@ -36,7 +36,7 @@ local def = {
     talents = {},
     units = {},
     pets = {}, -- the guardians: { key, cap, duration, slot } of each pet registered with a `cap` (Families/Pets.lua)
-    providers = {}, -- outcomes, presence, viewer (providersOf)
+    providers = {}, -- outcomes, presence, viewer, bands (providersOf)
     settings = {}, -- the spec's settings as plain values (Families/Now.lua's `settings`; refreshed by Hekili:SettingsChanged)
     windows = {}, -- the rotation windows (RegisterWindow's records; `steps` as ability indexes): Families/Windows.lua
     reactions = {}, -- RegisterReaction's records { key, who, outcome, hand, now }: Families/Now.lua (no ability index)
@@ -219,8 +219,9 @@ end
 
 local function providersOf()
     -- no option for the adaptive providers (cdm-default decision 107): the Outcomes provider is the default one and the
-    -- Cooldown Manager is on unless the debug-only session switch Hekili.cdmOff is true; a saved value is ignored
-    return "default", "router", Hekili.cdmOff ~= true
+    -- Cooldown Manager is on unless the debug-only session switch Hekili.cdmOff is true; a saved value is ignored. The
+    -- hidden-value bands likewise unless Hekili.bandOff is true (bands integration design 5.1; read from lane B1 on)
+    return "default", "router", Hekili.cdmOff ~= true, Hekili.bandOff ~= true
 end
 
 -- (cdm-panel) The Cooldown Manager switch of aura record `rec` (the Cooldown Manager panel, Options.lua): the profile's
@@ -247,7 +248,7 @@ local function buildDef()
         wipe(def[name])
     end
     local pv = def.providers
-    pv.outcomes, pv.presence, pv.viewer = providersOf()
+    pv.outcomes, pv.presence, pv.viewer, pv.bands = providersOf()
     def.school = ns.SCHOOL -- the spell schools by name (Families/Expect.lua compiles an ability's `school` to the mask)
     def.error = ns.Error -- the core's error channel (Sources/Forms.lua warns once per untracked form)
     -- the game constants, defined once in Engine/Sim/Constants.lua (border batch 3 item 4): the five-second rule's
@@ -426,12 +427,12 @@ local function buildDef()
     settingsOf()
 end
 
---- (providers spec §3.4, decision 82; audit E17) The providers' inputs changed (Hekili.cdmOff, the harness's arms): the
---- build's providers follow providersOf; the belief swaps at its next drain (out of combat; at combat end
---- otherwise), keeping its records. Never a rebuild.
+--- (providers spec §3.4, decision 82; audit E17) The providers' inputs changed (Hekili.cdmOff, Hekili.bandOff, the
+--- harness's arms): the build's providers follow providersOf; the belief swaps at its next drain (out of combat; at
+--- combat end otherwise), keeping its records. Never a rebuild.
 function Hekili:ProvidersChanged()
     local pv = def.providers
-    pv.outcomes, pv.presence, pv.viewer = providersOf()
+    pv.outcomes, pv.presence, pv.viewer, pv.bands = providersOf()
 end
 
 --- (cdm-panel) A Cooldown Manager switch changed (the Cooldown Manager panel's setters): each aura record's `cdm`

@@ -237,7 +237,8 @@ function M.new()
     local api = { ctl = ctl }
 
     -- The vendored LibStub and LibRangeCheck-3.0 loaded once, on first ask, into an environment over this client (a
-    -- headless instance has its own, loaded with the TOC, and never asks here).
+    -- headless instance has its own, loaded with the TOC, and never asks here). A library they lack comes from
+    -- `ctl.LibStub` when set: the real LibHiddenValues on its Testing/FakeClient.lua (Forever/bands_contract_spec.lua).
     local libs
     function api.LibStub(name, silent)
         if not libs then
@@ -259,6 +260,9 @@ function M.new()
             end
             libs = env.LibStub
             M.wrapRangeLib(libs("LibRangeCheck-3.0"), ctl)
+        end
+        if ctl.LibStub and not libs(name, true) then
+            return ctl.LibStub(name, silent)
         end
         return libs(name, silent)
     end

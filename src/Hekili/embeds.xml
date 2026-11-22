@@ -1,5 +1,11 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Script file="Libs\LibStub\LibStub.lua"/>
+	<!--@non-debug@
+	<Include file="Libs\LibHiddenValues\LibHiddenValues.xml"/>
+	<Include file="Libs\LibTimeToDie\LibTimeToDie.xml"/>
+	@end-non-debug@-->
+	<!-- Above: opened only by the packager (.pkgmeta moves both libraries into Libs/); in the linked development tree
+	     they are their own addon folders, loaded first through the TOC's OptionalDeps. -->
 	<Include file="Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
 	<Include file="Libs\AceAddon-3.0\AceAddon-3.0.xml"/>
 	<Include file="Libs\AceGUI-3.0\AceGUI-3.0.xml"/>

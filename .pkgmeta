@@ -4,9 +4,13 @@ enable-nolib-creation: no
 
 # The ten addons live in src/; move them to the zip root (src/Hekili replaces the package folder itself, so
 # root files such as the licence do not survive: the copy in src/Hekili/ is the shipped one, beside the wowsims/forever
-# MIT notice that covers the class packs' translated (wowsims.com) priorities).
+# MIT notice that covers the class packs' translated (wowsims.com) priorities). LibHiddenValues and LibTimeToDie ship
+# inside the core as Libs/ (each with its licence, Testing/ ignored below), after the core's move; embeds.xml includes
+# them through a guard only the packager opens, as the linked development tree has no src/Hekili/Libs/Lib* folder.
 move-folders:
     Hekili/src/Hekili: Hekili
+    Hekili/src/LibHiddenValues: Hekili/Libs/LibHiddenValues
+    Hekili/src/LibTimeToDie: Hekili/Libs/LibTimeToDie
     Hekili/src/Hekili_Shared: Hekili_Shared
     Hekili/src/Hekili_Druid: Hekili_Druid
     Hekili/src/Hekili_Warrior: Hekili_Warrior
@@ -29,8 +33,8 @@ ignore:
     - DEVELOPMENT.md
     - CHANGELOG.md
     - src/Hekili_Shared/README.md
-    - src/LibHiddenValues
-    - src/LibTimeToDie
+    - src/LibHiddenValues/Testing
+    - src/LibTimeToDie/Testing
     - tests
     - tools
     - docs
