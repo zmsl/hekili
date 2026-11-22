@@ -53,6 +53,39 @@ describe("the bands arm (record-only) #slow", function()
         end)
     end
 
+    -- The gate's path (loop.tally): three fights on one boot, run A with the oracle shadow, run B, the 30 s gap between
+    -- fights (the idle pause), the fake and its history carried into each new world, a kill's gone, the next prime.
+    it("three fights on one boot: the tally the default's, every fight's bands holding the truth", function()
+        local function tally(arm)
+            local L, lines, check = loop.new(ww), {}, ab.check
+            ab.check = function(ok, label, line)
+                lines[#lines + 1] = label == "bands" and line or nil
+                return true -- record-only: the rows are compared below
+            end
+            local ok, m = pcall(loop.tally, L, 3, { arm = arm })
+            ab.check = check
+            assert(ok, m)
+            return m, lines
+        end
+        local base = tally("default")
+        local m, lines = tally("bands")
+        for _, key in ipairs({ "fights", "both", "agree", "conf", "react", "refused", "attempts", "episodes" }) do
+            assert.are.same(base[key], m[key], key)
+        end
+        for _, key in ipairs({ "readyShort", "heldReady", "loOver", "A", "B", "gap", "selfCheck", "pressedBy" }) do
+            assert.are.same(base[key], m[key], key)
+        end
+        assert.are.equal(3, #lines) -- run A's driver only: never the oracle, never run B
+        for f, line in ipairs(lines) do
+            local checked, held = line:match("checked (%d+) held (%d+)")
+            assert.are.equal(checked, held, line)
+            for _, ch in ipairs({ "-1", "0", "1" }) do
+                local n = tonumber(line:match("[ ,]" .. ch .. ":(%d+)"))
+                assert.is_true((n or 0) > 100, f .. ": " .. line)
+            end
+        end
+    end)
+
     it("bands-drop: the capability lost mid-fight, the rows still the default's, no band logged after it", function()
         local base = fight(ww, "default", 5)
         local run, H = fight(ww, "bands-drop", 5)
