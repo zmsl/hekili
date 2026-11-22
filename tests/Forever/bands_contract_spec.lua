@@ -134,7 +134,7 @@ end)
 -- (health in fractions 0-1, power in points; "ch -" unknown) by a spec-side applier: no family reads the kind yet.
 describe("the band source on the real library (Game/State/Sources/Bands.lua)", function()
     local alloc = require("Game.State.helpers.alloc")
-    local Fake, W, api, ctl, libTime, LHV, VS, I, def, seen
+    local Fake, W, api, ctl, libTime, LHV, VS, I, def, seen, Facade
     local FRAME = 1 / 60
     local MANA = 2 -- the def's mana slot
 
@@ -154,7 +154,7 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         for k, v in pairs(saved) do
             _G[k] = v or nil
         end
-        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        VS, I, Facade = ns.VirtualState, ns.VirtualStateInternal, ns.Facade
         def = fs.def(fs.new(9))
         def.resources[MANA] = { key = "mana", type = 0, token = "MANA", max = 1000 }
         def.providers = { bands = true }
@@ -224,6 +224,27 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         -- Q8 (design 6.3): { step = 1, points = {} } answers the 1% grid in points
         assert.are.equal("450 460", frames(1, MANA))
         assert.are.equal("", frames(1, 1)) -- rage: paused while the client shows mana
+    end)
+
+    -- (ledger L1669) the library's full cell is closed, [100, 100]: in combat (the poll's read secret) the band's middle
+    -- is exactly full, so the core reads our max; 99.6% is the cell [99, 100), the middle 0.995
+    it("our health at full: the zero-width band 1 1, est 1, the core's read the max; at 99.6% est 0.995", function()
+        W.unit.player.health = 1
+        boot()
+        live()
+        ctl.combat = true
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        assert.are.equal("1 1", frames(1, 0))
+        local h = VS.Health("player", ctl.now)
+        assert.are.same({ 1, 1, 1, "observed", VS.Obs.Band }, { h.lo, h.hi, h.est, h.basis, h.last.observed.event })
+        assert.are.equal(ctl.healthMax, VS.HealthMax("player"))
+        assert.are.equal(ctl.healthMax, Facade.UnitHealth("player"))
+        W.unit.player.health = 0.996
+        frames(3)
+        assert.are.equal("0.99 1", frames(1, 0))
+        h = VS.Health("player", ctl.now)
+        assert.are.same({ 0.99, 1, "observed" }, { h.lo, h.hi, h.basis })
+        assert.are.near(0.995, h.est, 1e-12)
     end)
 
     it("a target change: one unknown, nothing while it primes, then the new band stamped at the prime's end", function()

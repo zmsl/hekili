@@ -2,8 +2,9 @@
 -- Target health is secret on Forever (spec §6.5, §7.4): it reads 100 until a health-gated ability pins it
 -- (Game/State/Families/TargetHealth.lua), always on a spec without one. An action-list condition that reads it is
 -- dead or misled. Not warned: the player's own health (`health.pct`, ...), hidden in combat but read there from the
--- hidden-value band (Families/Player.lua, lane B3; FABLE-FOR-OWNER 7 removed its rows), and time to die, which answers "unknown" (Targets.lua's FOREVER, 3600 s: the fight never ends soon), as a priority written for
--- a long fight expects. ns.AplSecretToken finds such a token in a condition string; Hekili:LoadScript (Scripts.lua)
+-- hidden-value band (Families/Player.lua, lane B3; FABLE-FOR-OWNER 7 removed its rows), and time to die, which
+-- answers "unknown" (Targets.lua's FOREVER, 3600 s: the fight never ends soon), as a priority written for a long
+-- fight expects. ns.AplSecretToken finds such a token in a condition string; Hekili:LoadScript (Scripts.lua)
 -- writes one warning per entry from it. A load-time text scan of the core's (border batch 3, E20): pure Lua, no
 -- belief state, no client read, no allocation.
 

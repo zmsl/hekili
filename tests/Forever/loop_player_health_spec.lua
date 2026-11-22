@@ -4,11 +4,11 @@
 -- - the rows, flicker per minute and react p90 side by side: no stock pack reads our own health (the wowsims
 --   translations omit those lines), so they must be equal; a difference fails here and is traced, never re-floored;
 -- - in combat, the core's read of our health (Facade.UnitHealth / UnitHealthMax: what state.health.pct takes at each
---   reset) lies in the truth's 1% cell: every whole-number `health.pct` threshold up to 99 then answers as the truth
---   does (100 is not told apart from 99.x: the library's top cell is [99, 100]).
+--   reset) lies in the truth's 1% cell: every whole-number `health.pct` threshold then answers as the truth does (full
+--   is the library's own closed cell [100, 100], 99.x the cell [99, 100): ledger L1669).
 --   `agree`: the truth's cell now; `lagged`: the cell at the band's stamp (the library reports a change 2 frames after
 --   it fires); `wrong`: neither. The default arm reads full in combat (Families/Player.lua's "unknown"), right only
---   while the truth is in the top cell (`full`: 99 to 100).
+--   while the truth is full (`full`: the cell 100).
 local loop = require("Game.harness.loop")
 local ab = require("Game.harness.ab")
 local ww = require("Forever.helpers.warrior_world")
@@ -25,11 +25,9 @@ local function healed(content)
     return setmetatable({ WORLD = world }, { __index = content })
 end
 
--- The 1% cell of x percent as the library cuts it: the top cell is [99, 100], hi inclusive at 100 (README, `Get`), so
--- full health and 99.5 share a cell and the band's middle reads 99.5 at full.
+-- The 1% cell of x percent as the library cuts it, full its own cell 100 (a band's middle reads 99.5 in [99, 100)).
 local function cellOf(x)
-    local c = math.floor(x + 1e-9)
-    return c >= 100 and 99 or c
+    return math.floor(x + 1e-9)
 end
 
 -- A follow counter over the bands arm's ticks (loop.bandCheck runs after each of run A's driver's cycles).
@@ -45,7 +43,7 @@ local function follower(f)
             end
             local now = cell(H.ctl.now)
             f.n = f.n + 1
-            f.full = f.full + (now == 99 and 1 or 0)
+            f.full = f.full + (now == 100 and 1 or 0)
             f.low = math.min(f.low, now or 100)
             if mine == now then
                 f.agree = f.agree + 1

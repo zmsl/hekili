@@ -24,8 +24,9 @@
 --            frames at least: hold 4, push, settle 4, decode; shared rows "primes: ...", ledger L1664 item 1); a
 --            points handle (one point or more) for 9 frames after its max moves (README, `points`: its point bars are
 --            placed again on UNIT_MAXPOWER);
---   cells:   a step watch is the 1% cell [lo, lo + 1) (hi inclusive at 100), cut further by its edges or points; a
---            points handle answers in points, its cell (max / 100) wide (README, `step`, `points`);
+--   cells:   a step watch is the 1% cell [lo, lo + 1), full its own closed cell [100, 100] (Bars.lua `band`; ledger
+--            L1669), cut further by its edges or points; a points handle answers in points, its cell (max / 100) wide,
+--            [max, max] at full (README, `step`, `points`); the library's 0.05% guard below each edge is not modelled;
 --   caps:    8 distinct points per source and 64 in total, over either the request is refused with edge-limit and
 --            nothing granted (README, `points`; GetPool).
 -- shortcut: every handle times as a step source (Hekili's watches are step = 1, design decision 13): an edges-only
@@ -76,12 +77,6 @@ local PROVEN_POWER = { [0] = true, [1] = true, [3] = true } -- Mana, Rage, Energ
 local GUARD = 0.05
 
 local floor, sort = math.floor, table.sort
-
--- The 1% cell of x percent, the top cell holding 100.
-local function cellOf(x)
-    local cell = floor(x)
-    return cell >= 100 and cell - 1 or cell
-end
 
 -- A sorted list of distinct whole points >= 1, or nil.
 local function pointList(pts)
@@ -180,7 +175,7 @@ function M.new(o)
         for i = 1, #hs do
             local h = hs[i]
             if h.src == s then
-                if h.step and cellOf(x1) ~= cellOf(x2) then
+                if h.step and floor(x1) ~= floor(x2) then
                     return true
                 end
                 local cuts, a, b = h.edges, x1, x2
@@ -476,10 +471,10 @@ function M.new(o)
             end
         end
         if self.step then
-            local cell = cellOf(v * 100 / m) -- hi inclusive at the top
-            local glo, ghi = cell, cell + 1
+            local cell = floor(v * 100 / m)
+            local glo, ghi = cell, cell < 100 and cell + 1 or 100 -- full: the closed cell [100, 100] (ledger L1669)
             if self.points then
-                glo, ghi = cell * m / 100, (cell + 1) * m / 100
+                glo, ghi = glo * m / 100, ghi * m / 100
             end
             lo, hi = lo > glo and lo or glo, hi < ghi and hi or ghi
         end

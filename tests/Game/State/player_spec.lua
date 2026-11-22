@@ -371,6 +371,21 @@ describe("the player's health from the band (lane B3)", function()
         assert.are.equal(0.3, VS.Health("player", 103).est)
     end)
 
+    -- (review M4) the unknown branch through the source: the drain's secret read already reads "unknown", so the pin is
+    -- the band's own: the loss's drain ends on Obs.Band's "unknown"
+    it("in combat the band lost: full, conf 0, the drain's last word the band's unknown", function()
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.combat = true
+        push(340)
+        frames(12)
+        assert.are.same({ 0.34, 0.35, 0.345, "observed", Obs.Band }, read())
+        lhv:SetAvailable("unavailable", "error")
+        frames(1)
+        local h = VS.Health("player", ctl.now)
+        assert.are.same({ 0, 1, 1, "default", 0 }, { h.lo, h.hi, h.est, h.basis, h.conf })
+        assert.are.equal(Obs.Band, h.last.default.event)
+    end)
+
     it("another channel's band leaves the player's health alone", function()
         S.Direct(Obs.Band, 101, -1, 0.2, 0.21)
         S.Direct(Obs.Band, 101, 1, 40, 41)
