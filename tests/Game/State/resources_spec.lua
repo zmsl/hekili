@@ -4318,6 +4318,19 @@ describe("resource bands (lane B4)", function()
             assert.is_true(R.est0[MANA] >= 460 and R.hi0[MANA] >= 465)
         end)
 
+        -- (re-review N3) a roll's floor (amount - spread) is no second step in lo either
+        it("gain-first, a spread gain inside a wide band: never twice in lo", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            band(10.08, MANA, 460, 470, 10.06) -- 457 and a gain of 5 +-1: 462
+            I.Fold(10.11)
+            I.ResourceGainSpread(MANA, 5, 1, 10.11, Obs.CastSuccess)
+            band(10.11, MANA, 460, 470, 10.06)
+            I.Fold(10.11)
+            assert.is_true(R.lo0[MANA] < 462, R.lo0[MANA])
+            assert.is_true(R.est0[MANA] >= 460 and R.hi0[MANA] >= 465)
+        end)
+
         it("a rise smaller than the gain is another's: the gain still steps forward", function()
             at(10)
             band(10, NRG, 5, 6)
@@ -4504,6 +4517,25 @@ describe("resource bands (lane B4)", function()
                 I.Fold(11.7)
                 I.Settle(11.7)
                 assert.are.equal(1, R.scale[RAGE])
+            end)
+        end
+
+        -- (re-review N4) a row of any kind whose `taken` pays was rage up to the lag ago
+        for _, kind in ipairs({ 3, 4, 5 }) do
+            it("a row of kind " .. kind .. " whose taken pays unteaches it, as a wound's", function()
+                swing(14, I.HitKind.WOUND, nil, nil, true)
+                S.Direct(Obs.PlayerHit, 11.55, kind, 30, 20)
+                I.Fold(11.7)
+                I.Settle(11.7)
+                assert.are.equal(1, R.scale[RAGE])
+            end)
+
+            it("a row of kind " .. kind .. " that pays nothing leaves it taught", function()
+                swing(14, I.HitKind.WOUND, nil, nil, true)
+                S.Direct(Obs.PlayerHit, 11.55, kind, 0, 20)
+                I.Fold(11.7)
+                I.Settle(11.7)
+                assert.is_true(math.abs(R.scale[RAGE] - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
             end)
         end
 

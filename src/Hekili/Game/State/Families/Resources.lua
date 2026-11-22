@@ -2071,12 +2071,22 @@ I.On(Obs.CastSuccess, function(o, t, lag)
     owe(r, e, lo, hi, o.t)
 end)
 
+-- A row on us at t may be rage that showed inside a waiting swing's window: that swing teaches nothing.
+local function unteach(t)
+    for h = 1, 2 do
+        if smpR[h] > 0 and t <= smpTo[h] + I.TAKEN_ROW_LAG then
+            smpR[h] = 0
+        end
+    end
+end
+
 -- A hit on the player (kinds 1-6; a heal brings no rage): each slot with a `taken` gains what it returns, the interval
 -- by its half-width (lo never below the estimate's gain minus it), clamped to [0, max]; kept out of the regen
 -- measurement and counted as our own gain (a flip it explains pins exactly, as I.ResourceShift's); one `modelled`
 -- sample at the hit, and the gain into its second's bin. A `taken` that raises is counted as a `now`'s error. While a
 -- band of the slot is live the row moves nothing in the value and holds no band (owner L1723): that rage showed at the
 -- damage, and a melee row trails it by 0.39-0.57 s (docs/research/2026-10-23-damagemeter-api.md). The bin still counts.
+-- A wound row, or one of any kind whose `taken` pays, unteaches a waiting swing (the rage was maybe in its window).
 I.On(Obs.PlayerHit, function(o, t)
     local kind = o.a
     if kind < I.HitKind.WOUND or kind > I.HitKind.MISS then
@@ -2086,11 +2096,7 @@ I.On(Obs.PlayerHit, function(o, t)
         seen(r, o.t, OTHER)
     end
     if kind <= I.HitKind.BLOCKED then -- the damage was up to the row's lag ago: in that swing's window, maybe
-        for h = 1, 2 do
-            if smpR[h] > 0 and o.t <= smpTo[h] + I.TAKEN_ROW_LAG then
-                smpR[h] = 0
-            end
-        end
+        unteach(o.t)
     end
     if kind <= I.HitKind.BLOCKED and o.b < 0 then
         return -- a wound's secret amount (b = -1, Sources/Player.lua): its rage is the estimate path (L128), not built
@@ -2100,6 +2106,7 @@ I.On(Obs.PlayerHit, function(o, t)
         if f then
             local ok, gain, width = I.Guard(f, t, I.HitName[kind], o.b, o.c)
             if ok and type(gain) == "number" and gain > 0 then
+                unteach(o.t) -- a paying block or avoid too (re-review N4)
                 if not R.bandOn[r] then
                     width = type(width) == "number" and width > 0 and width or 0
                     local max = R.max[r]
@@ -2387,6 +2394,7 @@ function I.ResourceShift(r, delta, t, event, late)
         end
     end
     I.Sample(R.power[r], "modelled", R.est0[r], t, event)
+    return shown
 end
 
 --- An avoided cast's refund `d` (> 0) to slot r, dated at that cast's success (the server refunds there, the user
@@ -2494,11 +2502,11 @@ end
 
 --- Our own cast gained `d` (> 0) to slot r by a roll the belief does not see, `spread` either side (L481: a potion's
 --- restore): the estimate takes the average as a cast's change (I.ResourceShift), the floor the roll's low end and the
---- top its high end, each from where it was. Allocates nothing.
+--- top its high end, each from where it was; a gain the band already shows adds nothing to lo. Allocates nothing.
 function I.ResourceGainSpread(r, d, spread, t, event)
     local lo, hi, max = R.lo0[r], R.hi0[r], R.max[r]
-    I.ResourceShift(r, d, t, event)
-    R.lo0[r], R.hi0[r] = clamp(lo + d - spread, max), clamp(hi + d + spread, max)
+    local shown = I.ResourceShift(r, d, t, event)
+    R.lo0[r], R.hi0[r] = shown and lo or clamp(lo + d - spread, max), clamp(hi + d + spread, max)
     norm(r)
 end
 
