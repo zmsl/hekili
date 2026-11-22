@@ -183,6 +183,10 @@ M.ARMS["cycle-follow-off"] = {
 -- real library keeps it). The health families read theirs (lanes B2, B3); power waits (B4).
 M.ARMS.bands = { outcomes = "default", presence = "router", viewer = false, bands = true }
 M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandDrop = 20 }
+-- The time to die (lane B8, design 2.7's jitter rule): the bands arm with the real LibTimeToDie over the fake library
+-- (ttd_rig.lua), so the core's fight_remains and time_to_die answer its live estimate; each fight writes a `ttd` row
+-- (loop.ttdRow: answered polls, error against the kill). Record-only: its flicker is compared with the bands arm's.
+M.ARMS.ttd = { outcomes = "default", presence = "router", viewer = false, bands = true, ttd = true }
 M.VERDICT = {
     "viewer-reshuffle",
     "viewer-nonland",

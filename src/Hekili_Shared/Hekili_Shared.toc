@@ -13,6 +13,7 @@
 Shared\Auras.lua
 Shared\Consumables.lua
 Shared\Items.lua
+Shared\TimeToDie.lua
 Races\Gnome.lua
 Races\NightElf.lua
 Races\Tauren.lua

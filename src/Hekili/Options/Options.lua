@@ -4350,7 +4350,7 @@ found = true end
                                     type = "group",
                                     name = L["Secondary Targets"],
                                     inline = true,
-                                    -- Forever never shows an enemy's time to die, so this filter moves nothing (option D, owner decision 3)
+                                    -- Forever estimates only the target's time to die, so this filter moves nothing (option D, owner decision 3)
                                     hidden = function() return true end,
                                     order = 7,
                                     args = {

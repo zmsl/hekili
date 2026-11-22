@@ -25,8 +25,7 @@ In the tables, "n/a" in the "Write this instead" column means the expression can
 |---|---|---|
 | `mana.pct<30` | `mana.pct_lo<30` | The game hides mana; the low end is the amount certain to be there. |
 | `energy.current>=50` | `energy.lo>=50` | The same for energy and rage |
-| `fight_remains<8` | Remove the test | The time to die is unknown, so the test never passes. |
-| `target.time_to_die>12` | Remove the test | The test always passes. |
+| `time_to_pct_20>5` | `target.time_to_pct_20>5` | Only the current target's time to die is estimated. |
 
 From Affliction (wowsims.com), a line written this way:
 
@@ -56,14 +55,14 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 
 | Expression | Support | On Forever | Write this instead |
 |---|---|---|---|
-| `fight_remains`, `time_to_die` | Fixed | 3600 s, meaning unknown, less the time the forecast looks ahead | Remove the test |
-| `target.time_to_die` | Fixed | 3600 s, meaning unknown | Remove the test |
-| `target.time_to_pct_<N>` | Fixed | 3600 s, meaning unknown, less the time the forecast looks ahead | Remove the test |
-| `time_to_pct_<N>` | Fixed | 3600 s, less the time the forecast looks ahead | Remove the test |
-| `expected_combat_length` | Fixed | 3600 s plus `time` | Remove the test |
+| `fight_remains`, `time_to_die` | Limited | With one enemy, the target's estimated time to die less the time the forecast looks ahead, no lower than 1; 3600 s less that time with several enemies or no estimate | `target.time_to_die` for the target alone |
+| `target.time_to_die` | Estimated | The target's estimated time to die less the time the forecast looks ahead and no lower than 1, at any number of enemies; 3600 s while there is no estimate. On a line checked for a target swap it reads as `fight_remains` does with several enemies | n/a |
+| `target.time_to_pct_<N>` | Estimated | The target's estimated time to die scaled by its health above N percent (0 at or below N), less the time the forecast looks ahead; 3600 s less that time while there is no estimate | n/a |
+| `time_to_pct_<N>` | Fixed | 3600 s, less the time the forecast looks ahead | `target.time_to_pct_<N>` |
+| `expected_combat_length` | Limited | The estimate or 3600 s, chosen as for `fight_remains` but without the look-ahead, plus `time` | n/a |
 
 > [!NOTE]
-> **On Forever:** The game hides target health, so the time until an enemy dies is unknown. A test such as `fight_remains>60` always passes and `fight_remains<8` never does. To act on a part of the fight, `time` (the seconds since combat started) is read.
+> **On Forever:** The time to die is an estimate from the target's health steps, and only the current target has one. 3600 means unknown, so `fight_remains>60` passes and `fight_remains<8` does not while several enemies are counted or there is no estimate. One enemy means one counted enemy ([How targets are counted](How-Targets-Are-Counted)), so an enemy that is not counted, such as one without a nameplate or outside the radius, does not make the time unknown. A different enemy targeted after having no target, or after selecting one that was already dead, starts with no estimate. After other target changes, `fight_remains` keeps its last estimate, counting down, for up to half a second while the new target is read, and the new target's estimate can follow the last target's for several seconds. That includes a change directly from an enemy that died while it was targeted. The first second or two of the target's own estimate, after a pull or any target change, reads as no estimate, because a guess from the first hits can be far too short; after a direct change between living enemies that pause can follow the stretch that follows the last target's estimate. The estimate can be well off early in a fight and near its end; `time` (the seconds since combat started) is read.
 
 ## Health
 
@@ -71,9 +70,10 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 |---|---|---|---|
 | `target.health.pct`, `target.health.current`, `target.health_pct` | Read | In whole-percent steps, no lower than 2 while the target lives; an ability usable only below a target-health threshold corrects a step that disagrees with it. 100 for a moment after a target change. If the game offers no reading, 100 until an ability usable only below a target-health threshold becomes usable, then that threshold, such as 20 | n/a |
 | `health.pct`, `health.current` | Read | The player's health in whole-percent steps: the game hides it, in combat and out, so it is the middle of the game's reported 1% band while one is live. If the game offers no reading, full (100). A plain reading, if the game ever gives one, is used as is | n/a |
-| `group_health`, `at_risk` | Fixed | Every other group member reads as full, because the game hides other players' health, and the player reads as `health.pct` does. `group_health` is the group's average health; `at_risk` counts the members below 70% health, so in combat it reads 0 | n/a |
+| `group_health`, `at_risk` | Fixed | Every other group member reads as full, because the game hides other players' health, and the player reads as `health.pct` does. `group_health` is the group's average health; `at_risk` counts the members below 70% health, so it is 1 while the player is below 70% and 0 otherwise | n/a |
 | `incoming_damage_<N>s`, `incoming_physical_damage_<N>s`, `incoming_magic_damage_<N>s`, `incoming_heal_<N>s` | Fixed | 0, because the game hides the amount of each hit and heal on the player | n/a |
 
+- At an ability's health threshold, write `<=`, such as `target.health.pct<=20`, not `<20`: when the ability's answer corrects a step, or stands in for a missing one, the value can be exactly the threshold.
 - A class pack can name the low-health phase itself; its class file lists such names ([Pack class file anatomy](Pack-Class-File-Anatomy)).
 
 ## Buffs and debuffs

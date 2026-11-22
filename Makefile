@@ -65,13 +65,14 @@ accuracy:
 # The four viewer arms (cdm-default decision 110) differ by the Cooldown Manager layout (scenarios.viewerLayout); the
 # CDM verdict's worlds (verdict spec §5, review M4) follow, each with its verdict-off twin (-novd); the live-auras arms
 # (aura audit C1) hide our own auras in combat, as live, so only the Cooldown Manager shows them; the bands arms
-# (LibHiddenValues lane B1, record-only) watch through the fake library, bands-drop losing it mid-fight.
+# (LibHiddenValues lane B1, record-only) watch through the fake library, bands-drop losing it mid-fight; ttd (lane B8)
+# adds the real LibTimeToDie over it.
 AB_ARMS ?= meter viewer-none viewer-buffs viewer-fixture viewer-mixed \
 	viewer-reshuffle viewer-reshuffle-novd viewer-nonland viewer-nonland-novd \
 	secret-viewer-buffs secret-viewer-buffs-novd secret-viewer-mixed secret-viewer-mixed-novd \
 	viewer-swap viewer-swap-novd viewer-late viewer-late-novd viewer-recast viewer-recast-novd \
 	viewer-swap-dark viewer-swap-dark-novd viewer-rebuild viewer-rebuild-novd live-auras live-auras-none \
-	bands bands-drop
+	bands bands-drop ttd
 gate-ab:
 	rm -rf .ab
 	$(MAKE) gate

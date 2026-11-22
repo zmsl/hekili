@@ -62,6 +62,8 @@ local format = string.format
 --   Also without a bump: Hekili:NewClass's `gcd` (dry-gcd); an older core ignores it and keeps its own class clauses.
 -- 16 (2026-11-18, dry-pack-api): the ability fields `ranks` (with a field's `{ byRank = values }`) and `effect`: an
 -- older core registers such an ability with no id, copy, known, handler or now.
+--   Also without a bump: Shared:RegisterTtdLines (lane B8; Hekili_Shared calls it only where the core has it) and the
+--   ability field `ttdBelow`; an older core sends no such hint and ignores the field.
 local CONTENT_API = 16
 
 local done, notice = false, nil

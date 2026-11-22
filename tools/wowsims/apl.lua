@@ -128,8 +128,9 @@
 --    a span the kit registers, `RegisterWindow`): its comparison on a time since is `window.<w>.up&window.<w>.elapsed
 --    <op> x` (the hunters' "Just shot" from the `weave` window). A `windowVars`, `guard` or `requires` key that names no
 --    variable or APL entry (an action, a group, a move entry; emitted or omitted) is an error (CN12).
---    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation (the
---    replay world answers the log's time to its end: R42, tests/Game/harness/loop.lua). `multipleCdUsages` without a
+--    `remainingTime` is `fight_remains`: on Forever the target's estimated time to die, "unknown" (3600 s) with several
+--    enemies or no estimate: an API-forced deviation (the replay world answers the log's time to its end: R42,
+--    tests/Game/harness/loop.lua). `multipleCdUsages` without a
 --    base spell is wowsims's GetBool on it: `alignCdEnd` `(fight_remains<=D|fight_remains>(CD+(D/2)))`, D the
 --    spell's buff's duration (`buff.<key>.duration`), CD `cooldown.<key>.duration`; without `alignCdEnd` true; with a
 --    base spell unsupported.
@@ -381,7 +382,7 @@ M.VALUES = {
     currentManaRegen = "mana.regen",
     currentComboPoints = "combo_points.current",
     currentTime = "time",
-    remainingTime = "fight_remains", -- API-forced: wowsims knows its fight length; ours answers "unknown" (3600 s)
+    remainingTime = "fight_remains", -- API-forced: wowsims knows its fight length; ours estimates it, or 3600 (unknown)
     gcdTimeToReady = "gcd.remains",
     inputDelay = "0", -- wowsims's modelled reaction; the engine recommends without one
 }

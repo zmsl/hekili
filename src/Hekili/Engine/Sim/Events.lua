@@ -895,6 +895,7 @@ RegisterEvent( "PLAYER_REGEN_ENABLED", function ()
 
     state.combat = 0
     ns.ClearSecretTooltipMemo() -- spell tooltips are plain again: re-read the ones that were secret
+    ns.TtdCombatEnded() -- time-to-die hints held back in combat (Targets.lua)
 
     state.swings.mh_actual = 0
     state.swings.oh_actual = 0
@@ -1382,6 +1383,7 @@ do
         end
 
         state.target.updated = true
+        ns.TtdTargetChanged() -- time to die forgets a target that is gone (Targets.lua)
         Hekili:ForceUpdate( event, true )
     end )
 

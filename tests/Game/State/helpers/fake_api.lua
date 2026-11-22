@@ -209,6 +209,8 @@ function M.new()
         ranged = { 3.1, 30, 40, 0, 0, 1 }, -- UnitRangedDamage("player")
         damage = { 0, 0, 0, 0 }, -- UnitDamage's min and max main, min and max off (the harness's out-of-combat cache)
         classID = 0, -- UnitClass's third return
+        unitClass = {}, -- [unit] = UnitClass's token for a unit other than the player (unset: the player's class)
+        roles = {}, -- [unit] = UnitGroupRolesAssigned (unset: "NONE")
         specID = nil, -- C_SpecializationInfo.GetSpecializationInfo(1)'s ID (nil: no specialization)
         powerType = { 0, "MANA" }, -- UnitPowerType("player")
         role = "DAMAGER",
@@ -572,7 +574,10 @@ function M.new()
         return ctl.actionInRange[unit]
     end
     api.HasOverrideActionBar, api.HasVehicleActionBar, api.SpellIsSelfBuff = no, no, no
-    api.IsMounted, api.IsResting, api.IsInRaid, api.UnitCanAssist = no, no, no, no
+    api.IsMounted, api.IsResting, api.UnitCanAssist = no, no, no
+    function api.IsInRaid() -- `ctl.raid`: the group is a raid (default: not)
+        return ctl.raid == true
+    end
     function api.IsInGroup() -- `ctl.inGroup` (the meter provider reads it at PLAYER_REGEN_DISABLED)
         return ctl.inGroup == true
     end
@@ -614,8 +619,15 @@ function M.new()
             return ctl.class, ctl.class, i
         end
     end
-    function api.UnitClass()
+    function api.UnitClass(u)
+        local c = u and ctl.unitClass[u]
+        if c then
+            return c, c, 0
+        end
         return ctl.class, ctl.class, ctl.classID
+    end
+    function api.UnitGroupRolesAssigned(u)
+        return ctl.roles[u] or "NONE"
     end
     function api.UnitRace() -- ctl.race: the race token (the second return), e.g. the harness character's
         return ctl.race or "Race", ctl.race or "Race", 1

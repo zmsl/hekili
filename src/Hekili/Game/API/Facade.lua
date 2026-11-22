@@ -923,6 +923,7 @@ hybrid("UnitIsUnit", function(a, b)
     end
 end, IDENTITY .. "; true for a token and itself, else nothing")
 hybrid("UnitName", nothing, IDENTITY .. "; nothing")
+hybrid("UnitGroupRolesAssigned", nothing, "plain out of combat under the forced Map restriction (L1658); nothing")
 -- T1 (plate count plan v2 §3): the plate count's phase test (Targets.lua UnitInPhase) on a plate stored while its GUID
 -- was plain; a secret reason (a restriction turned on since) is unknown: nothing, in phase.
 hybrid("UnitPhaseReason", nothing, "plain [W sweep 2026-10-16]; unprobed under the Map restriction; nothing")

@@ -147,7 +147,7 @@ toggle off. `active_dot` is the belief's count (`Facade.DebuffCount`, §1: the t
 slot, by GUID in the open world and by nameplate under the Map restriction); unknown (the target holds no memory slot)
 is saturated, every enemy counted as carrying it, so no swap is suggested; the current target's own debuff floors it
 at 1. A swapped cast's handler runs with `state.cycle` set: its debuffs add to `active_dot` and leave the current
-target's alone. Time to die is never known on Forever, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
+target's alone. No enemy's time to die but the target's is known, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
 off); no pack may declare `min_ttd` or `max_ttd` (`tests/Forever/packs_spec.lua`), and the slider is hidden. Under the
 Map restriction `active_enemies` is 1 until a GUID-free enemy count exists, so no cycle arms in dungeons yet.
 
@@ -350,6 +350,45 @@ type ("target's creature type not in usable_on") and never on `"unknown"`, so a 
 harness sets the type on a world's mob (`entities.new{ creatureType }`, a content `WORLD.creatureType`, a replay's
 request `mobType` through `tests/Forever/helpers/wowsims.lua` `creatureType`), and the client fake answers it
 (`ctl.creature[unit]`, default `"beast"`).
+
+**Time to die** (lane B8, owner L1676). `Engine/Sim/Targets.lua` calls LibTimeToDie directly (owner `"Hekili"`, the
+target by token, tracked on the first query): `Hekili:GetTTD("target")` and `GetTimeToPct("target", p)` (the estimate
+x (h - p) / h, h the facade's target health, 0 at or below p) answer its live estimate at any enemy count.
+`GetGreatestTTD` (`fight_remains`, `longest_ttd`: the longest among the enemies) and `GetLowestTTD` answer it with one
+enemy; with more they are unknown (only the target is tracked). One or several follows the enemy count's change after
+it held one update, read before the token plates' hold of a fall; it is the count `active_enemies` starts from, so
+with plates off or the others outside the radius it is one. While the library primes (a target change, about 10
+frames) those two keep their last live answer less elapsed, 0.5 s at most from that answer; `GetTTD` and
+`GetTimeToPct` never keep it (the last target's time is no fact about this one).
+
+The library carries a target's rate to the next one within 10 s. Until its own fix is vendored (L1730),
+`ns.TtdTargetChanged` (core's `PLAYER_TARGET_CHANGED` handler) notes a target that is gone (none, as the client answers
+right after a kill, or a corpse) and when the next living target comes within those 10 s (`TTD_CARRY`) releases the
+track and tracks again, unless the GUID says it is the same mob (a secret GUID forgets). That drops the carried rate,
+the keep and the learned execute factor. A later target keeps the track: the library drops the rate itself and the
+factor stays. A corpse that stays targeted doesn't renew the 10 s on either side: plainly dead at a target or health
+event, it is gone to the library, which stops answering for it, so the carried rate ages from then.
+The library's part, so still carried: a direct swap in combat, a swap from a dying mob to a tough one first seen
+below full, and a straight swap from a mob that died while targeted with no target event (M1: within 10 s, or at any
+dwell when no health event told the library either) or whose death reads secret (the library keeps answering for it).
+
+A live answer whose reason is `seed` (the stream's first hits over the time since its anchor, live often one hit:
+3.63 s at 72%, then 52 s) is unknown until the library answers from a fit or a prior (owner L1742; shortcut until the
+library's first-guess fix is vendored and replaces it, L1736). It never sets the keep. The cost: the first 1-2 s after
+a pull or a re-target of the same mob read unknown, and on a direct swap the prior answers, then its seed reads
+unknown about 1.6 s, then the fit.
+
+Unknown is 3600: any other state, a seed, a target that is not plainly attackable (a secret answer included), several enemies,
+no library. A refused track is
+asked again at most once a second. `Hekili.bandOff` and disable release the track. Hints, numbers only: the
+highest execute line present goes to `HintBelow` (threshold only), out of combat at the spec's activation,
+`GROUP_ROSTER_UPDATE` and the combat's end. The player's own line comes from its pack: an ability's `healthGate` while
+known and an ability field `ttdBelow = { pct = n, talent = key }` while that talent has a rank; a pack declaring
+either replaces its class's default. Each group member (tanks out; a secret role is no tank) adds its class's default
+from shared content,
+`shared:RegisterTtdLines({ [class token] = pct })` (`Hekili_Shared/Shared/TimeToDie.lua`). The combat's end comes
+from the core's existing `PLAYER_REGEN_ENABLED` handler; `GROUP_ROSTER_UPDATE` is the one registration of its own
+(core has no other handler).
 
 **Pets.** `RegisterPets` names the pets (`{ id, spell, duration, cap }`; a `cap` makes a counted guardian). Both
 layers have the verbs `summonPet(key, duration)` and `dismissPet(key)`: the sim's (`Engine/Sim/State.lua`, Hekili's)
@@ -644,10 +683,12 @@ one (every wowsims list with no prepull actions, and make_pack writes none), `He
 default list from the forecast window `state.delayMax` as it would after an empty precombat pass
 (`tests/Forever/apl_entry_spec.lua`).
 
-**Time to die.** Target health is secret on Forever, so `Engine/Sim/Targets.lua`'s tracker is not fed and every time
-to die (`fight_remains`, `target.time_to_die`, `time_to_pct_N`, `longest_ttd`, ...) answers "unknown": `FOREVER`, 3600 s,
-a fight that never ends soon, a grey (trivial) target's too (wowsims's `remainingTime` has no trivial case), and
-`GetNumTTDsAfter` counts every enemy as after any time. The tracker's 0.5 s ticker is not started. A priority may read them without a load warning (`Engine/Sim/AplWarnings.lua` warns on no
+**Time to die.** Target health is secret on Forever, so `Engine/Sim/Targets.lua`'s GUID tracker is not fed and the
+target's estimate (§3, Time to die) is the only one: `fight_remains`, `longest_ttd`, `target.time_to_die` and
+`target.time_to_pct_N` answer from it as §3 says, or "unknown": `FOREVER`, 3600 s, a fight that never ends soon, a grey
+(trivial) target's too (wowsims's `remainingTime` has no trivial case). What only the tracker could answer stays
+unknown: another unit's time to die, a bare `time_to_pct_N`, and `GetNumTTDsAfter` counts every enemy as after any
+time. The tracker's 0.5 s ticker is not started. A priority may read them without a load warning (`Engine/Sim/AplWarnings.lua` warns on no
 health or time-to-die token); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
 
 **Player health.** The client hides the player's own health (`UnitHealth`/`UnitHealthMax("player")` secret in combat, owner L1461,
@@ -863,10 +904,8 @@ show in two slots when a held slot's icon is the next slot's new icon.
   test this path; see `docs/research/2026-10-17-content-addon-spike.md`);
   icons, minimap and compartment entries, the pack editor, `/hekili snapshot`, combat alpha, a spec swap, the minimap
   position surviving `/reload`, and a third class (neither Warrior nor Druid) seeing the "no Forever pack" notice.
-- **Time to die from the TargetHealth belief** (a follow-up design): once the belief has M (the damage per full
-  health) and a modelled sample, the target's time to die is its health fraction x M / the recent WOUND damage rate
-  (a ring of the last ~10 s of our and the group's damage on it), "unknown" before that; Targets.lua's `FEED` would read
-  that belief instead of the facade's health, and `fight_remains` the longest over tracked enemies.
+- **Time to die of more than the target** (§3, Time to die): track the other enemies once their tokens (plates, boss)
+  can be watched, so `fight_remains` is the longest over several enemies and the target-swap filters have times.
 - **ForeverProbe**: `Hekili.VirtualState` became `Hekili.Virtual.State`; update its calls.
 
 ## 9. Localization

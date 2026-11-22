@@ -405,7 +405,7 @@ function Hekili:SaveDebugSnapshot( dispName )
 
 
             insert( v.log, 1, auraString )
-            insert( v.log, 1, "\n### Targets ###\n\ndetected_targets:  " .. ( Hekili.TargetDebug or "no data" ) )
+            insert( v.log, 1, "\n### Targets ###\n\ndetected_targets:  " .. ( Hekili.TargetDebug or "no data" ) .. "\n" .. self:GetTTDInfo() )
             insert( v.log, 1, self:GenerateProfile() )
 
 

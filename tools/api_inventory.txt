@@ -163,6 +163,7 @@ UnitExists	hybrid
 UnitFactionGroup	passthrough
 UnitGUID	hybrid
 UnitGetTotalAbsorbs	virtual
+UnitGroupRolesAssigned	hybrid
 UnitHasVehicleUI	passthrough
 UnitHealth	virtual
 UnitHealthMax	hybrid

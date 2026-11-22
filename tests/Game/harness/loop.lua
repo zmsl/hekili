@@ -16,8 +16,49 @@ local timing = require("Game.harness.timing")
 local rng = require("Game.harness.rng")
 local edgestats = require("Game.harness.edgestats")
 local fake_lhv = require("Game.harness.fake_lhv")
+local ttd_rig = require("Game.harness.ttd_rig")
 
 local M = {}
+
+-- (ttd arms, lane B8) A fight's time-to-die row: of the in-combat polls, how many answered (not 3600: the library
+-- live), and against the kill's time (killAt, the world's clock; nil: no kill, no error) the absolute error of each
+-- answer in seconds and relative to the truth: median and p90, and the share of them short of the truth (an end-of-fight
+-- line fires early). A record-only line for .ab/ttd.tsv, the pack first (parallel files share the file).
+local UNKNOWN = 60 * 60 -- the core's unknown time to die (Targets.lua FOREVER)
+local function pct(t, q)
+    if #t == 0 then
+        return 0
+    end
+    table.sort(t)
+    return t[math.max(1, math.ceil(q * #t))]
+end
+function M.ttdRow(r, killAt, seed, pack)
+    local err, rel, short = r.err, r.rel, 0
+    for k = 1, r.polls do
+        local est, tc = r[k], r[-k]
+        if est < UNKNOWN then
+            r.live = r.live + 1
+            if killAt and killAt > tc then
+                local truth = killAt - tc
+                err[#err + 1] = math.abs(est - truth)
+                rel[#rel + 1] = math.abs(est - truth) / truth
+                short = short + (est < truth and 1 or 0)
+            end
+        end
+    end
+    return ("%s seed %d polls %d live %d scored %d err med %.2f p90 %.2f rel med %.2f p90 %.2f short %.2f"):format(
+        tostring(pack),
+        seed,
+        r.polls,
+        r.live,
+        #err,
+        pct(err, 0.5),
+        pct(err, 0.9),
+        pct(rel, 0.5),
+        pct(rel, 0.9),
+        #err > 0 and short / #err or 0
+    )
+end
 
 -- (bands arms) The containment check of one drain (LibHiddenValues integration design 5.4, L1666 a): at every fold the
 -- true value (the fake library's pushes, lhv:TruthAt) lies inside the band the family applied. A channel a family reads
@@ -485,6 +526,7 @@ function M.run(L, seed, o, drivers)
             used = {},
             est = { n = 0, within = 0, lagged = 0, floored = 0, off = 0, outside = 0, worst = 0, offs = {} },
         },
+        ttd = { polls = 0, live = 0, err = {}, rel = {} }, -- a ttd arm's fight_remains against the kill (M.ttdRow)
     }
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
@@ -558,6 +600,11 @@ function M.run(L, seed, o, drivers)
         -- the real library keeps it (design 5.2; L1666 d)
         if ctl.lhv and select(3, ctl.lhv:IsAvailable("health", "player")) ~= "error" then
             ctl.lhv:SetAvailable("ready")
+        end
+        -- a ttd arm's driver (lane B8): the real LibTimeToDie over the fake library (ttd_rig.lua), once, so the core's
+        -- time to die (Targets.lua) answers from it
+        if bands and arm.ttd and not ctl.ttdRig then
+            ctl.ttdRig = ttd_rig.install(d.H, ctl.lhv)
         end
         d.H.Hekili.bandOff = not bands
         d.H.Hekili:ProvidersChanged()
@@ -671,6 +718,7 @@ function M.run(L, seed, o, drivers)
             rebuild = layout ~= nil and arm.rebuild and not first or false,
             lhv = bands and ctl.lhv or nil, -- a bands arm's driver: its fake library (M.bandCheck)
             dropAt = bands and arm.bandDrop and wo.pull + arm.bandDrop or nil, -- bands-drop: the capability lost then
+            ttd = bands and arm.ttd and ctl.ttdRig or nil, -- a ttd arm's driver: the library's rig (ttd_rig.poll)
         }
     end
     local errors0 = {}
@@ -721,8 +769,8 @@ function M.run(L, seed, o, drivers)
         end
     end
     -- R42, a replay-world assumption: wowsims knows its fight's length, so a replay answers `fight_remains` (the
-    -- engine's GetGreatestTTD) as the time to the log's end on each instance's clock; loops and live keep the game's
-    -- unknown (3600 s, gap AN). Restored with the trace hooks at the run's end.
+    -- engine's GetGreatestTTD) as the time to the log's end on each instance's clock; loops outside a ttd arm keep
+    -- the unknown (3600 s, gap AN). Restored with the trace hooks at the run's end.
     local ttd = {}
     for i, st in ipairs(R and steps or {}) do
         local hk, ctl, endAt = st.H.Hekili, st.H.ctl, st.base + R.pull + R.duration
@@ -761,6 +809,9 @@ function M.run(L, seed, o, drivers)
                 st.lhv:SetAvailable("unavailable", "error")
                 st.dropAt = nil
             end
+            if st.ttd then -- the library's sinks and driver, outside the cycle's time and its sampled bytes
+                ttd_rig.poll(st.ttd)
+            end
             st.H.Hekili.ActiveDebug = o.trace or false
             local counted = i == 1 and not o.trace -- the traced fight's debug pass is not runtime cost
             -- the seed turns the phase: a fight's first cycle, the most expensive, must not be every fight's first sample
@@ -788,6 +839,12 @@ function M.run(L, seed, o, drivers)
             end
             if st.lhv then -- outside the cycle's time and its sampled bytes
                 M.bandCheck(run, st.H, st.lhv)
+            end
+            if st.ttd and tc >= wo.pull then -- fight_remains as the core answers it this poll (the kill is known later)
+                local r = run.ttd
+                r.polls = r.polls + 1
+                r[r.polls] = st.H.Hekili:GetGreatestTTD()
+                r[-r.polls] = tc
             end
             queue(st.H, st.q, 3, res)
             if st.edge then
@@ -1078,6 +1135,9 @@ function M.run(L, seed, o, drivers)
                         .. (e.offs[1] and (" offs " .. table.concat(e.offs, "; ")) or "")
                 )
             )
+        end
+        if st.ttd then
+            ab.check(true, "ttd", M.ttdRow(run.ttd, W.killAt, seed, content.PACK))
         end
         if traced[i] then
             st.H.Hekili.Debug, st.H.Hekili.SaveDebugSnapshot = traced[i][1], traced[i][2]

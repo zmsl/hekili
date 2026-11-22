@@ -39,7 +39,7 @@ With **Allow Target Swaps** checked, a priority that keeps a debuff on several e
 
 Target swaps need enemy nameplates: **Show Enemy Nameplates** and **Show All Nameplates** on, in the open world too. Hekili Forever remembers the debuffs placed on each enemy that was targeted. An enemy whose nameplate disappears is forgotten, so its debuff may be suggested again. On enemies other than the current target, the time left on a debuff is estimated, not read.
 
-The original Hekili could skip enemies about to die. The game hides target health on Forever, so the time until an enemy dies is unknown, and the **Filter by Time-to-Die** option is hidden.
+The original Hekili could skip enemies about to die. On Forever only the current target's time to die is estimated, so the time until another enemy dies is unknown, and the **Filter by Time-to-Die** option is hidden.
 
 ## Minimum targets for area-of-effect
 

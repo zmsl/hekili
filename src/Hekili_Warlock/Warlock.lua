@@ -996,6 +996,9 @@ spec:RegisterAbilities({
     -- Soul Shard, none under Decimation.
     soul_fire = {
         id = 6353,
+        -- the time-to-die hint's execute line (lane B8): Decimation's damage below 35% (wowsims pin e5a9cd2a2d
+        -- sim/warlock/talents_demonology.go, IsExecutePhase35)
+        ttdBelow = { pct = 35, talent = "decimation" },
         expects = "travel",
         velocity = 24,
         school = "fire",

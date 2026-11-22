@@ -330,6 +330,7 @@ local lastCount = 1
 local lastStationary = 1
 local heldLow = false -- the token count's fall held this update (T1)
 local unheldCount = 1 -- the count before the hold: what target swaps read (integ/dot I1)
+local several, sawSeveral = false, false -- time to die's one or several enemies (B8 I2), and the last update's
 
 
 -- War Mode
@@ -733,6 +734,9 @@ do
         -- T1, the owner's no-jitter rule: with token plates, a fall publishes on the next forced update if it holds
         -- (0.1-0.5 s later); a rise at once. The GUID and damage paths are untouched.
         unheldCount = count
+        -- B8 I2: one or several follows a change that held one update; unheld, so a fall held below waits no second one
+        if ( count > 1 ) == sawSeveral then several = sawSeveral end
+        sawSeveral = count > 1
         if tokenMode and count < lastCount and not heldLow then
             heldLow = true
             count, stationary = lastCount, lastStationary
@@ -1233,13 +1237,180 @@ do
     }
 
     local DEFAULT_TTD = 30
-    -- Forever: target health is secret (the facade answers the TargetHealth belief), so the tracker is not fed and every
-    -- time to die answers this "unknown", far beyond any fight (State.lua's time_to_die treats 3600 as unknown too).
+    -- Forever: the tracker is not fed (FEED, below), so a time to die only it could answer, and the target's while the
+    -- library has none, answers this "unknown", far beyond any fight (State.lua's time_to_die treats 3600 as unknown too).
     local FOREVER = 3600
     local TRIVIAL = 5
     -- Forever: off. Fed the belief's health, it learnt a 0 rate (DEFAULT_TTD) before a pin and junk from the jump at one.
-    -- shortcut: no time-to-die estimate; feed a belief-derived one here when a TargetHealth-based mechanism exists.
+    -- The target's time to die comes from LibTimeToDie instead (below).
     local FEED = false
+
+    -- Forever (lane B8, owner L1676): the target's time to die from LibTimeToDie, called directly, and the execute-line
+    -- hints to it (docs/dev/architecture.md, "Time to die"). A missed LibStub lookup is repeated: the library may load late.
+    local TTD_MAJOR, TTD_OWNER = "LibTimeToDie-1.0", "Hekili"
+    local TTD_RETRY, TTD_HOLD = 1, 0.5 -- seconds: between refused Tracks (each allocates); priming's keep (B8 I1)
+    local ttdLib, ttdTrack -- the library once found; the target's handle
+    local ttdRetryAt = 0 -- no Track before this
+    local heldEst, heldAt -- fight_remains' last live answer, and when
+
+    local function ttdRelease()
+        if ttdTrack then
+            ttdTrack:Release()
+            ttdTrack, heldEst = nil, nil
+        end
+    end
+
+    -- Hints: read out of combat only (UnitClass and roles on group tokens probed plain out of combat, L1658).
+    local UnitClass, UnitGroupRolesAssigned = Facade.UnitClass, Facade.UnitGroupRolesAssigned
+    local classLines = ns.ttdLines -- [class token] = pct (shared content; Engine/Schema/Shared.lua)
+    local hintsDirty = true -- the lines are to be sent at the next chance out of combat
+    local sentBelow -- the line sent (nil: none)
+
+    -- The player's own line from its pack (nil: none active), and whether the pack declares any.
+    local function ownLine()
+        local best, declared = nil, false
+        for key, a in pairs( class.abilities ) do
+            if type( key ) == "string" and type( a ) == "table" then
+                local g, d = rawget( a, "healthGate" ), rawget( a, "ttdBelow" )
+                if type( g ) == "number" then
+                    declared = true
+                    local v = floor( 100 * g + 0.5 )
+                    if state:IsKnown( key ) and ( not best or v > best ) then best = v end
+                end
+                if type( d ) == "table" and type( d.pct ) == "number" then
+                    declared = true
+                    local t = d.talent and rawget( state.talent, d.talent )
+                    if ( not d.talent or t and ( t.rank or 0 ) > 0 ) and ( not best or d.pct > best ) then best = d.pct end
+                end
+            end
+        end
+        return best, declared
+    end
+
+    local function groupLine( best, token )
+        if UnitExists( token ) and UnitIsUnit( token, "player" ) ~= true and UnitGroupRolesAssigned( token ) ~= "TANK" then
+            local _, c = UnitClass( token )
+            local v = c and classLines[ c ]
+            if v and ( not best or v > best ) then return v end
+        end
+        return best
+    end
+
+    local function sendHints()
+        if InCombatLockdown() then return end -- PLAYER_REGEN_ENABLED sends them
+        ttdLib = ttdLib or LibStub( TTD_MAJOR, true )
+        if not ttdLib then return end
+        hintsDirty = false
+        local best, declared = ownLine()
+        if not declared then
+            local _, c = UnitClass( "player" )
+            best = c and classLines[ c ]
+        end
+        if IsInRaid() then
+            for i = 1, 40 do best = groupLine( best, "raid" .. i ) end
+        elseif GetNumGroupMembers() > 0 then
+            for i = 1, 4 do best = groupLine( best, "party" .. i ) end
+        end
+        if best ~= sentBelow then
+            ttdLib:HintBelow( TTD_OWNER, best )
+            sentBelow = best
+        end
+    end
+
+    -- Activation.lua, after the talent ranks are read (login, a spec or talent change).
+    function ns.TtdHintsChanged()
+        hintsDirty = true
+        sendHints()
+    end
+
+    RegisterEvent( "GROUP_ROSTER_UPDATE", ns.TtdHintsChanged ) -- its own registration: core has no handler of it
+
+    -- Events.lua's PLAYER_REGEN_ENABLED handler.
+    function ns.TtdCombatEnded()
+        if hintsDirty then sendHints() end
+    end
+
+    -- The snapshot's time-to-die line (English only; Hekili:GetTTDInfo). Allocates.
+    local function ttdLine()
+        local est, lo, hi, s, why
+        if ttdTrack then est, lo, hi, s, why = ttdTrack:Get() end
+        return format( "time to die: %s %s est %s lo %s hi %s; hints: below %s", s or "not tracked", tostring( why ), tostring( est ), tostring( lo ), tostring( hi ), tostring( sentBelow or "none" ) ) -- l10n: verbatim
+    end
+
+    -- The target's live estimate in seconds or nil, and the library's state. Allocates nothing once tracked or refused.
+    local function targetTTD()
+        if Hekili.bandOff then
+            ttdRelease()
+            return nil
+        end
+        if not ttdTrack then
+            ttdLib = ttdLib or LibStub( TTD_MAJOR, true )
+            if not ttdLib then return nil end
+            local now = GetTime()
+            if now < ttdRetryAt then return nil end
+            ttdTrack = ttdLib:Track( TTD_OWNER, "target" )
+            if not ttdTrack then
+                ttdRetryAt = now + TTD_RETRY
+                return nil
+            end
+            if hintsDirty then sendHints() end
+        end
+        local est, _, _, s, why = ttdTrack:Get()
+        -- shortcut: a seed answer reads unknown, remove when LibTimeToDie's own first-guess fix is vendored (L1736),
+        -- which replaces it. A seed is the stream's first hits over the time since its anchor: after a pull often one
+        -- hit, wildly short (live 3.63 s at 72%, then 52 s). Also the first second or two after a swap or a re-target
+        -- (L1742); a fit or a prior answers.
+        return s == "live" and why ~= "seed" and est or nil, s
+    end
+
+    -- shortcut: forget at the pull, remove when LibTimeToDie's own fix is vendored (L1730). Left to the library, which
+    -- carries the last mob's rate there: a direct swap in combat, a swap from a dying mob to a tough one first seen
+    -- below full, and a straight swap from a mob that died targeted with no target event (M1) or whose death reads
+    -- secret. Events.lua's PLAYER_TARGET_CHANGED handler calls it; the client clears the target at a kill. Once the
+    -- target is gone (none, or a corpse) a next one within the library's carry age is tracked anew, unless its GUID says
+    -- it is the same mob; a later one keeps the track, and with it the learned execute factor. A corpse's dwell needs no
+    -- renewal of that age: plainly dead at the event, it is gone to the library, whose carry ages from then.
+    local TTD_CARRY = 10 -- seconds: the library's priorAge (Estimator.lua, not in its API); goes with the shortcut
+    local lastTarget, goneAt
+    function ns.TtdTargetChanged()
+        local exists = UnitExists( "target" ) -- false or nil: no unit; a secret counts as one
+        if ( not issecretvalue( exists ) and not exists ) or plain( UnitIsDead( "target" ) ) == true then
+            goneAt = goneAt or GetTime()
+            return
+        end
+        local guid = plain( UnitGUID( "target" ) )
+        if goneAt and ttdTrack and ( not guid or guid ~= lastTarget ) and GetTime() - goneAt <= TTD_CARRY then
+            ttdRelease()
+            targetTTD()
+        end
+        goneAt, lastTarget = nil, guid
+    end
+
+    -- targetTTD's answer when the target is plainly attackable, else nil. The library first, so with none (or
+    -- Hekili.bandOff) no client call is made.
+    local function hostileTargetTTD()
+        local est, s = targetTTD()
+        if ( est or s == "priming" ) and plain( UnitExists( "target" ) ) and plain( UnitCanAttack( "player", "target" ) ) then
+            return est, s
+        end
+    end
+
+    -- The longest (and the shortest) time to die among the enemies (owner L1694): the target's with one enemy, unknown
+    -- with several (only the target is tracked; no scan here: that scan calls GetTTD itself). While the library primes
+    -- (a target change, about 10 frames) the last live answer counts down, TTD_HOLD at most, so a held cooldown is not
+    -- released. Never target.time_to_die: the last target's time is no fact about this one.
+    local function onlyEnemyTTD()
+        if several then return nil end
+        local est, s = hostileTargetTTD()
+        if est then
+            heldEst, heldAt = est, GetTime()
+            return est
+        end
+        if s == "priming" and heldEst then
+            local gap = GetTime() - heldAt
+            if gap <= TTD_HOLD then return max( 0, heldEst - gap ) end
+        end
+    end
 
     local function UpdateEnemy(guid, healthPct, unit, time)
         local enemy = db[ guid ]
@@ -1335,6 +1506,10 @@ do
     function Hekili:GetTTD( unit, isGUID )
         if state.target.is_dummy then return 180 end
 
+        if unit == "target" and not isGUID then
+            return hostileTargetTTD() or FOREVER
+        end
+
         -- Forever: unknown for every target, a grey one too, as fight_remains (wowsims's remainingTime has no trivial case)
         local default = FEED and ( isGUID or UnitIsTrivial(unit) and UnitLevel(unit) > -1 ) and TRIVIAL or FOREVER
         local guid = isGUID and unit or UnitExists(unit) and UnitCanAttack("player", unit) and UnitGUID(unit)
@@ -1366,11 +1541,24 @@ do
 
     function Hekili:GetTimeToPct( unit, percent )
         local default = FEED and UnitIsTrivial( unit ) and TRIVIAL or FOREVER
-        local guid = UnitExists( unit ) and UnitCanAttack( "player", unit ) and UnitGUID( unit )
 
         if percent >= 1 then
             percent = percent / 100
         end
+
+        if unit == "target" then
+            -- The library answers the time to 0 only: scaled by the share of the health left above the percent, h the
+            -- facade's target health (the belief's, 0-100), on the estimate's own rate.
+            local est = hostileTargetTTD()
+            if not est then return FOREVER end
+            local hm = UnitHealthMax( "target" )
+            local h = hm > 0 and 100 * UnitHealth( "target" ) / hm or 0
+            local p = 100 * percent
+            if h <= p then return 0 end
+            return est * ( h - p ) / h
+        end
+
+        local guid = UnitExists( unit ) and UnitCanAttack( "player", unit ) and UnitGUID( unit )
 
         if not guid then return default end
 
@@ -1392,6 +1580,8 @@ do
         return ceil( ( healthPct - percent ) / enemy.rate ), enemy.n
     end
 
+    -- Forever: unchanged (no caller; the GUID table is never fed). shortcut: a GUID is secret in dungeons, so no GUID is
+    -- matched to the tracked target; compare with the target's GUID (plain only) if a caller appears.
     function Hekili:GetTimeToPctByGUID( guid, percent )
         if percent >= 1 then
             percent = percent / 100
@@ -1426,7 +1616,10 @@ do
             end
         end
 
-        if not validUnit then return FOREVER end
+        -- Forever: the GUID table is never fed, so fight_remains (longest_ttd) is the only enemy's estimate.
+        -- shortcut: only the target is tracked, so with more than one enemy the longest is unknown (FOREVER); track
+        -- the others when LibTimeToDie proves their tokens (plates, boss: its version 2).
+        if not validUnit then return onlyEnemyTTD() or FOREVER end
 
         return time
     end
@@ -1464,7 +1657,7 @@ do
         end
 
         if not validUnit then
-            return FOREVER
+            return onlyEnemyTTD() or FOREVER -- Forever: the only enemy's estimate, as GetGreatestTTD
         end
 
         return time
@@ -1485,7 +1678,7 @@ do
     Hekili.GetNumTTDsBefore = Hekili.GetNumTTDsWithin
 
     function Hekili:GetNumTTDsAfter( x )
-        if not FEED then return state.active_enemies end -- Forever: every enemy's time to die is unknown, so after x
+        if not FEED then return state.active_enemies end -- Forever: the unfed tracker times no enemy, so all count as after x
 
         local count = 0
         local dummy_override = state.target.is_dummy
@@ -1582,7 +1775,7 @@ do
     end
 
     function Hekili:GetTTDInfo()
-        local output = "targets:"
+        local output = ttdLine() .. "\ntargets:"
         local found = false
 
         if state.target.is_dummy then
@@ -1614,6 +1807,8 @@ do
                 EliminateEnemy( k )
             end
         end
+
+        if all then ttdRelease() end -- Forever: the library's track too (OnDisable); the next query tracks again
     end
 
     local trackedUnits = { "target", "boss1", "boss2", "boss3", "boss4", "boss5", "focus", "arena1", "arena2", "arena3", "arena4", "arena5" }

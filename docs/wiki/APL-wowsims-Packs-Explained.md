@@ -33,7 +33,7 @@ A priority whose name ends in "(wowsims.com)" is the translation of that special
 
 The translation follows wowsims.com as closely as the Forever client allows. Where the client forces a difference, the translator records it. The main ones:
 
-- **Time to die.** wowsims.com knows when the fight ends. On Forever, `fight_remains` reads 3600 seconds, so lines that act near the end of the fight do not fire.
+- **Time to die.** wowsims.com knows when the fight ends. On Forever, `fight_remains` is an estimate of the target's time to die. With several enemies, or while there is no estimate, it reads 3600 seconds, so lines that act near the end of the fight do not fire then.
 - **Distance.** wowsims.com knows the distance in yards. Hekili Forever brackets it with range checks, so a distance test becomes `target.within<N>` or `target.outside<N>`.
 - **Movement.** wowsims.com walks the character. Hekili Forever cannot move the player, so movement terms are dropped, and the **Movement** toggle decides whether an ability out of range is shown ([Why a built-in looks verbose](#why-a-built-in-looks-verbose)).
 
