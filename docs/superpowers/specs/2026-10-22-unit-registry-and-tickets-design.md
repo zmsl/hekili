@@ -262,6 +262,10 @@ What reads the ID:
 - `Facade.DebuffCount` counts the slots. It is nil (unknown) from a target change that no plate answered to the next
   target change or rebuild: the other enemies' debuffs cannot be known then. An adoption does not end that (a count
   there would bring back the line the target change just hid: on, off, on), and a plate's removal does not start it.
+- A cast keeps the slot and its key from its UNIT_SPELLCAST_SENT (ledger L1734). If the target changed before its
+  success folds, the cast's target auras go to that slot's memory, or nowhere once the slot holds another key.
+- `Facade.TargetID()` gives the core the target's ID: nil with no target, 0 for a target read plain. Its one reader is
+  the core's swapped-cast compare (`Engine/Sim/State.lua`, owner's A, L1734).
 
 What never does: `Facade.UnitGUID` (nil), a combat-log row's destination, the damage table, the core's enemy count, a
 registry slot and a ticket's pin. The registry's rows about such a unit stay unresolved (2.3).

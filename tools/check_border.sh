@@ -3,7 +3,8 @@
 # the core, and the core reaches the belief only through ns.VirtualState.Drain, .Build, .SetLog and .WindowOp (the
 # owner's approved calls; WindowOp(key, op, arg) carries the APL windows' operations, windows design v6 §5.6) and the
 # facade, whose Facade.Window is the window read (re-pin decision 11) and Facade.DebuffCount the debuff count (option
-# D, owner decision 2, 2026-11-11: active_dot); no new pattern: ns.Facade is the allowed path. The core copies the
+# D, owner decision 2, 2026-11-11: active_dot), and Facade.TargetID the target's stable ID (L1734, one reader: State.lua's
+# swapped-cast compare, enforced below); no new pattern: ns.Facade is the allowed path. The core copies the
 # windows through Facade.Window at every reset; WindowOp is the only thing it writes back. Comments are stripped before
 # matching (`--` to the line's end; a string holding `--` is cut short, never a miss); the approved calls are blanked
 # before the core-side match.

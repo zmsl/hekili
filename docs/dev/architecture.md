@@ -62,7 +62,11 @@ copy; the core's `state.reset` copies every registered window through it (`Engin
 `ns.Facade.DebuffCount(spellID, now)` -> how many enemies the belief holds the aura up on (the target plus every
 remembered target slot, keyed by GUID in the open world and by stable ID under the Map restriction), or nil when unknown
 (no target, a target no plate answered for at its target change, until the next one even if its plate is added
-meanwhile, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on Forever"). `def` carries plain
+meanwhile, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on Forever"). The third is the
+target's stable ID (ledger L1734, owner's A, 2026-11-22): `ns.Facade.TargetID()` -> an integer while the target's GUID
+is secret, 0 for a target read plain, nil with no target. It is never a GUID or a stand-in for one. Its one reader is
+`Engine/Sim/State.lua`'s swapped-cast compare (`landsElsewhere`, §2), and `tools/check_border.sh` fails any other
+reader, a pack's included. `def` carries plain
 records (batch 4, the owner's
 design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a function the belief runs in its own
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
@@ -148,7 +152,12 @@ toggle off. `active_dot` is the belief's count (`Facade.DebuffCount`, §1: the t
 slot, by GUID in the open world and by nameplate under the Map restriction); unknown (the target holds no memory slot)
 is saturated, every enemy counted as carrying it, so no swap is suggested; the current target's own debuff floors it
 at 1. A swapped cast's handler runs with `state.cycle` set: its debuffs add to `active_dot` and leave the current
-target's alone. Time to die is never known on Forever, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
+target's alone. So does the cast in flight when the target changed after it was sent (ledger L1734). Its event comes
+from the real queue (`e.inflight`), and `landsElsewhere` tells the change by the event's GUID where it has one. Under the
+Map restriction the event has no GUID, so it compares the stable ID (`Facade.TargetID`) pinned when the compare first met
+the cast with the ID now. The belief lands such a cast's target auras on the mob it was sent at: the memory slot pinned
+at UNIT_SPELLCAST_SENT, or nowhere once that mob is forgotten. The queue therefore does not change at the cast's
+success. A target change before the first update after the cast starts pins the new mob (a known limit). Time to die is never known on Forever, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
 off); no pack may declare `min_ttd` or `max_ttd` (`tests/Forever/packs_spec.lua`), and the slider is hidden. Under the
 Map restriction `active_enemies` is 1 until a GUID-free enemy count exists, so no cycle arms in dungeons yet.
 
