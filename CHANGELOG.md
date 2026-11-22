@@ -10,7 +10,7 @@
 
 ### Fixed
 
-- Protection Warrior and Enhancement Shaman: when the attacker is unknown, as in dungeons, avoiding a hit now starts the Revenge window on time (dodge, parry, block) and resets Stormstrike with Improved Stormstrike 2/2 (dodge, parry), without adding to the enemy count.
+- Protection Warrior: when the game hides who attacked you (expected in dungeons), a dodge, parry or block now sets when the Revenge window ends, so Revenge is not recommended past it.
 - Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.
 
 ### Known issues

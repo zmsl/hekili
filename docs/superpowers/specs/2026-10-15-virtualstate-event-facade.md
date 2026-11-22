@@ -288,7 +288,7 @@ Provenance is [V]'s: observed (a plain signal says it happened), inferred (plain
 | Avoided on us | `SWING_MISSED`/`SPELL_MISSED` with `destGUID` = ours | the player's `UNIT_COMBAT` DODGE, PARRY, BLOCK, MISS ([V] C4, M1-M4, D13; O1: 165 firings plain); the attacker is not in the event: attribution names it (decision 6, below), else the source is `""` with the none flags | observed type, inferred or empty source | class hooks (Revenge, §6); tank attacker counting `:1619-1620` |
 | Deaths | `UNIT_DIED`, `PARTY_KILL` | `UNIT_DIED`, `PARTY_KILL`, `PLAYER_TARGET_DIED` with plain GUIDs ([V] C66-C68, D11; O6: 34/23/23 firings) | observed | `ns.eliminateUnit` (`:1403-1419`); Victory Rush window (§6) |
 | Damage we deal | `SWING_DAMAGE`, `SPELL_DAMAGE` on the target (phase B, with our swings and abilities above) and on plates (phase C) | the unit's `UNIT_COMBAT` WOUND paired with the swing or cast it follows (§3) | inferred | enemy counting `:1693-1701` (`ns.updateTarget`) |
-| Damage on us | `SWING_DAMAGE`, `SPELL_DAMAGE` with `destGUID` = ours | the player's `UNIT_COMBAT` WOUND (amount, school) ([V] C2, C4; O1); emitted only when attribution names the source, as above; physical (`schoolMask` 1) as `SWING_DAMAGE`, other schools as `SPELL_DAMAGE` with spellId 0 | observed (source inferred, as above) | `ns.storeDamage` (`:1451-1495`) |
+| Damage on us | `SWING_DAMAGE`, `SPELL_DAMAGE` with `destGUID` = ours | the player's `UNIT_COMBAT` WOUND (amount, school) ([V] C2, C4; O1); a hit on us with no known attacker makes a row with an empty source; physical (`schoolMask` 1) as `SWING_DAMAGE`, other schools as `SPELL_DAMAGE` with spellId 0 | observed (source inferred, as above) | `ns.storeDamage` (`:1451-1495`) |
 | Our casts' auras | `SPELL_AURA_APPLIED`/`_REFRESH`/`_REMOVED` on the target (debuffs) and on us (buffs) | phase B: what our cast's `now` verbs wrote (§12a: `applyBuff`, `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, against the aura's believed expiry before the cast), APPLIED or REFRESH at the cast's time, REMOVED when the cast removed it or at the modelled expiry ([V] C27, D3). Phase D adds travel time and the compensating `SPELL_AURA_REMOVED` when the cast's outcome was DODGE/PARRY/MISS | inferred / modelled | `ns.trackDebuff`, `active_dot` (`:1652-1687`) |
 | Energize | `SPELL_ENERGIZE` on us | phase B: a resource our cast's `now` gained (§12a's `gain`) ([V] C14, D6) | modelled | none in core ([V] §6; outline §1); class hooks |
 
@@ -613,7 +613,7 @@ Headless (busted, `Virtual/State/spec/`, the Phase 1 helpers `fake_api.lua` and 
   the outcome that follows pairs) within the hand's `PAIR_WINDOW_MS`; an unpaired outcome dropped and an unpaired
   swing emitted at its own time once its window closes; an on-next-swing strike takes its swing's outcome; a row
   emitted during a delivery follows it, never nested, counted; a full pool drops the oldest, counted. Hits on us:
-  credited to the one hostile targeting us; none and counted when nobody is known to, or `UnitIsUnit` is secret; two
+  credited to the one hostile targeting us; a hit with no known attacker makes a row with an empty source, counted, when nobody is known to, or `UnitIsUnit` is secret; two
   attackers told apart by their plain swing speeds, a hit off both clocks unattributed; a period learned from the
   gaps. 0 bytes per row.
 - `adapter_spec`: the adapter writes no cast history, queue or swing field (the rows do); our casts' aura rows
