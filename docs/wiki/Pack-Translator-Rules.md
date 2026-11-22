@@ -37,7 +37,7 @@ A rule that changes what a wowsims line does, because the Forever client forces 
 | 20 | Target swaps | A target change to the next target, when X is up here but not on every target, after a cast of X in the same list, gives no line of its own. Instead the cast's lines carry `cycle_targets=1` and are listed under `# Cycle:`. Any other target change is left out with its reason. |
 | 21 | Casts at a second target | A cast aimed at wowsims's second target carries `other_target=1`: it is shown only on another target, with Recommend Target Swaps on, never on the current one. |
 | 22 | Mana under an amount | A test of the player's mana under an absolute amount N becomes a test of both the amount and its share of the mana pool, `mana.lo<N&mana.pct_lo<P`. P comes from the maximum mana in the exported log, rounded up. At the level the log was made for, the share never binds; a smaller pool at a lower level uses the share. |
-| 23 | The player's health | The game hides the player's health in combat, so an entry that reads it (`currentHealthPercent`, `currentHealth`), directly or through a variable, is omitted and listed in the header. |
+| 23 | The player's health | The game hides the player's health, in combat and out, so an entry that reads it (`currentHealthPercent`, `currentHealth`), directly or through a variable, is omitted and listed in the header. |
 
 ## Direct values
 
@@ -59,7 +59,7 @@ Some wowsims values map one to one. A resource the game hides reads its low end 
 | `inputDelay` | `0` |
 
 > [!NOTE]
-> **On Forever:** The game hides target health, so `fight_remains` answers 3600 seconds ("unknown") in game. A wowsims line that tests the fight's remaining time reads a long fight.
+> **On Forever:** The game hides target health, so in game `fight_remains` is an estimate of the target's time to die. With several enemies, or while there is no estimate, it answers 3600 seconds ("unknown"), and a wowsims line that tests the fight's remaining time reads a long fight.
 
 ## One-line reads
 

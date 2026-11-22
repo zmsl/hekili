@@ -662,9 +662,10 @@ beside the number (DEVELOPMENT.md).
 | Destruction (wowsims.com) | 0.95 | 0.00, 0 |
 
 Recorded deviations (each one's reason in the named file):
-- Every pack (API-forced, `tools/wowsims/apl.lua` rules 10, 11, 13): `fight_remains` answers unknown (target health
-  is secret), distance is a bracket from range checks, an off-GCD automatic cooldown shows as soon as it is ready; the
-  sim does not predict avoidance (wowsims rolls it); our own health reads full while secret; mana is a bounded belief
+- Every pack (API-forced, `tools/wowsims/apl.lua` rules 10, 11, 13): `fight_remains` is the target's estimated
+  time to die in game, unknown (3600 s) with several enemies or no estimate (target health is secret), distance is a
+  bracket from range checks, an off-GCD automatic cooldown shows as soon as it is ready; the
+  sim does not predict avoidance (wowsims rolls it); our own health reads the middle of its 1% band while secret, full with no band; mana is a bounded belief
   where the client keeps it secret.
 - Warrior (`tools/wowsims/specs/warrior_*.lua`): Stance Dance and Recklessness keep wowsims's defaults (off); the
   Protection replay's top disagreements are replay limits (the decision instant at a cooldown's end, an exact tie at
@@ -690,8 +691,9 @@ Recorded deviations (each one's reason in the named file):
   harness's one crit rate); the world grants Fingers of Frost at Frostfire Bolt's cast end, wowsims at its hit about
   0.8 s later (the harness has no travel time: a shared limit); `includeReactionTime` on the Fingers of Frost read
   ignored (rule 5).
-- Warlock (`warlock_*.lua`, `Warlock.lua`, `warlock_world.lua`): `fight_remains` reads 3600 s, so the end-of-fight
-  Bane of Agony and Amplify Curse lines never fire and Bane of Doom goes up whenever it is down (API-forced, rule 10;
+- Warlock (`warlock_*.lua`, `Warlock.lua`, `warlock_world.lua`): while `fight_remains` is unknown (3600 s: several
+  enemies, no estimate, the default loops) the end-of-fight Bane of Agony and Amplify Curse lines do not fire and Bane
+  of Doom goes up whenever it is down (API-forced, rule 10;
   wowsims switches in a fight's last minute: most of SM Ruin's, Demonology's, Shadow Brand's and Destruction's replay
   disagreements); the target's Shadow Vulnerability and Demonic Brand charges are unreadable (the brand kept its full
   10 s; Shadow Bolt's `onCrit` models Shadow Vulnerability, but the bolt's outcome lands about 1 s after its success,

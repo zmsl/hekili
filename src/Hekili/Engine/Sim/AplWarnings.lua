@@ -1,10 +1,10 @@
 -- Engine/Sim/AplWarnings.lua
 -- Neither health is warned now (FABLE-FOR-OWNER 7): target health reads the hidden-value band
 -- (Game/State/Families/TargetHealth.lua, lane B2) and the player's own reads it in combat (Families/Player.lua, lane
--- B3); with no band each falls back to its old read, unwarned. Time to die answers "unknown" (Targets.lua's FOREVER,
--- 3600 s: the fight never ends soon), as a priority written for a long fight expects: unwarned. ROWS is empty; the scan
--- stays for a future secret token. ns.AplSecretToken finds such a token in a condition string; Hekili:LoadScript
--- (Scripts.lua) writes one warning per entry from it. A load-time text scan of the core's (border batch 3, E20): pure
+-- B3); with no band each falls back to its old read, unwarned. Time to die is the target's estimate (Targets.lua) or
+-- "unknown" (its FOREVER, 3600 s: the fight never ends soon), as a priority written for a long fight expects: unwarned.
+-- ROWS is empty; the scan stays for a future secret token. ns.AplSecretToken finds such a token in a condition string;
+-- Hekili:LoadScript (Scripts.lua) writes one warning per entry from it. A load-time text scan of the core's (border batch 3, E20): pure
 -- Lua, no belief state, no client read, no allocation.
 
 local _, ns = ...

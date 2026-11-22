@@ -6,7 +6,7 @@
 -- flip on a target never held before (full at the swap): M = the WOUND damage since the swap / (1 - g).
 -- Between answers each WOUND moves the health down by amount / M (floor 0.02 while alive), written as a `modelled`
 -- sample only from an anchor (R5): a target never held before (full), a combat end (an evade heals it full), or a pin.
--- No time to die: the user dropped it (2026-10-16); every one answers "unknown" (Targets.lua's FOREVER), unwarned.
+-- No time to die here: the user dropped it from the belief (2026-10-16); the core estimates the target's (Targets.lua).
 -- Not built until the in-game checkpoint (design §7) answers: a short answer (c = 1) as a health signal (line 4).
 -- UnitHealth and UnitHealthMax are secret on the target and on nameplates, out of combat too (the 2026-10-22
 -- captures, probe U5), so M stays learned, never read. A kill ends the slot at its death (TargetGone from the unit

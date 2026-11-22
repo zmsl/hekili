@@ -92,19 +92,19 @@ return {
     ["fight_remains"] = {
         type = "seconds",
         meaning = "Time until the longest-lived enemy dies",
-        forever = "Always 3600 (unknown)",
+        forever = "With one enemy, the target's estimated time to die; 3600 (unknown) with several or no estimate",
         example = "fight_remains>60",
     },
     ["target.time_to_die"] = {
         type = "seconds",
         meaning = "Time until the target dies",
-        forever = "Always 3600 (unknown)",
+        forever = "An estimate; 3600 (unknown) while there is none",
         example = "target.time_to_die>12",
     },
     ["target.time_to_pct_<N>"] = {
         type = "seconds",
         meaning = "Time until the target falls to N percent health",
-        forever = "Always 3600 (unknown)",
+        forever = "Worked out from the time-to-die estimate and the target's health; 3600 (unknown) while there is none",
         example = "target.time_to_pct_20>5",
     },
 }

@@ -14,8 +14,9 @@ The tables list the differences a priority author meets. The importer also rewri
 |---|---|---|---|
 | `<resource>.current`, `.pct`, `.deficit` | The simulated amount | The amount the game reports | An estimate while the game hides the resource |
 | `<resource>.lo`, `.hi`, `.pct_lo` | Not available | Not available | The low and high ends of the estimate ([Resources](APL-Expression-Reference#resources)) |
-| `fight_remains`, `target.time_to_die` | From the simulated fight | Worked out from target health | Always 3600 seconds, meaning unknown |
-| `target.time_to_pct_<N>` | From the simulated fight | Worked out from target health | Always 3600 seconds, meaning unknown |
+| `fight_remains` | From the simulated fight | Worked out from target health | The target's estimated time to die with one enemy; 3600 seconds (unknown) with several or no estimate |
+| `target.time_to_die` | From the simulated fight | Worked out from target health | An estimate at any number of enemies; 3600 seconds while there is none |
+| `target.time_to_pct_<N>` | From the simulated fight | Worked out from target health | Worked out from the estimate and the target's health steps; 3600 seconds while there is no estimate |
 | `target.health.pct` and the other target health values | The simulated health | The health the game reports | Read in whole-percent steps; 100 for a moment after a target change. If the game offers no reading, 100 until an ability usable only at low target health narrows it |
 | `health.pct` | The simulated health | The health the game reports | Read in whole-percent steps, because the game hides it. If the game offers no reading, 100 |
 | `cooldown.<key>.remains` | Simulated | The time the game reports | Estimated from the last cast; `cooldown.<key>.ready` is read from the game |
@@ -31,7 +32,7 @@ The tables list the differences a priority author meets. The importer also rewri
 | `toggle.essences` | Not available | Its name for the minor cooldowns toggle | Read as `toggle.minor_cooldowns` |
 
 > [!NOTE]
-> **On Forever:** A line that waits for a target to be nearly dead, such as `fight_remains<8`, never fires. A line such as `fight_remains>60` always passes.
+> **On Forever:** With several enemies, or while there is no estimate, the time left in the fight is unknown. A line that waits for the end of the fight, such as `fight_remains<8`, then does not fire, and a line such as `fight_remains>60` passes.
 
 ## Line options
 

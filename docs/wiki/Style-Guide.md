@@ -73,7 +73,7 @@ The two callouts, as written in a page's source:
 
 ```text
 > [!NOTE]
-> **On Forever:** The game hides target health, so every time-to-die value reads 3600 seconds.
+> **On Forever:** The game hides target health, so the target's time to die is an estimate.
 
 > [!WARNING]
 > **Different from retail Hekili:** A priority does not need pool_resource to wait for energy.

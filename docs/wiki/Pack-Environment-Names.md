@@ -63,7 +63,7 @@ The `now` context also has Lua's pure helpers: `math`, `min`, `max`, `floor`, `c
 The simulated `state` holds every value a priority line can read: `cooldown.<key>`, `action.<key>`, `prev_gcd`, `active_enemies`, `time`, `query_time`, `target.creature_type`, the weapon keys such as `main_hand.dagger`, and the rest of the [APL expression reference](APL-Expression-Reference). It also holds the class's state expressions, state functions and state tables, and the game functions the core exposes there. A `handler` or a field function can read all of them; a `now` cannot.
 
 > [!NOTE]
-> **On Forever:** `health.pct` and the time-to-die values exist only in the simulation, and they answer for an unknown value (full health, and 3600 seconds) when the game hides the real one. A `now` reads the target's health only as `target.health` bounds.
+> **On Forever:** `health.pct` and the time-to-die values exist only in the simulation. `health.pct` follows the player's health in whole-percent steps and answers full health only with no reading; the time to die is an estimate, and 3600 seconds while it is unknown. A `now` reads the target's health only as `target.health` bounds.
 
 ### Helpers at file level
 

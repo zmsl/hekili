@@ -7,6 +7,10 @@
 ### Changed
 
 - Rogue and Feral/Guardian Druid: the recommendation refreshes the moment a combo point is gained or spent, so the finisher shows without waiting for the next poll.
+- Custom priorities: `target.health.pct` and the other target health values now follow the target's health in whole-percent steps, instead of reading 100 until an ability that needs a low-health target became usable. They read no lower than 2 while the target is alive, and 100 for a moment after you change target. If the game offers no reading, they work as before.
+- Custom priorities: a line that reads target health no longer adds a "target health is secret" warning when the priority loads.
+- Custom priorities: `health.pct` and the other player health values now follow your health in whole-percent steps, instead of reading 100. A line that reads them no longer adds a warning when the priority loads. If the game offers no reading, they read 100.
+- Priorities now estimate how long your target has left to live. With one enemy, lines that depend on the time left in the fight follow that estimate instead of always seeing a long fight: some cooldowns are held back, and end-of-fight lines can show before a kill. With several enemies, or while there is no estimate, the time left reads 3600 seconds as before; in a custom priority `target.time_to_die` follows the estimate with several enemies too. The estimate can be well off early in a fight and near its end.
 
 ### Fixed
 

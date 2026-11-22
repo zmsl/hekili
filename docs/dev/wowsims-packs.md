@@ -275,8 +275,9 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
    `condition`; an `and`/`or` writes a repeated term once.
 9. `auraIcdIsReady`: `buff.<key>.icd_ready` for an aura declaring `icd`; else unsupported.
 10. `auraShouldRefresh` only for `exclusive` auras; `cancelAura`; `autoSwingTime`; `remainingTime` as
-    `fight_remains` (API-forced: unknown, 3600 s, on Forever; the replay world answers the log's time to its end,
-    R42, a replay-world assumption: loops and live keep the game's unknown); `multipleCdUsages` without a base spell
+    `fight_remains` (API-forced: on Forever the target's estimated time to die, unknown, 3600 s, with several enemies or
+    no estimate; the replay world answers the log's time to its end, R42, a replay-world assumption: loops keep the
+    unknown); `multipleCdUsages` without a base spell
     as wowsims's test on it (`alignCdEnd`: `fight_remains<=D|fight_remains>CD+D/2`, D the spell's buff), else true.
 11. `unitDistance` against a whole number as `target.within<N>`/`outside<N>` (API-forced: a bracket from range
     checks, never yards; unknown never blocks).
@@ -349,7 +350,7 @@ fight's remaining time (sim/core/apl_values_spell.go `GetFloat`, upstream 4b0030
 - the ticks that land before the fight ends: 0 once the cast would land after the end.
 None of these is available to Hekili. The kits model no damage (the drift report's "the kit does not model damage",
 per spec). Damage and attack speed are secret in combat on Forever (probe 2026-10-13). The fight's
-remaining time is unknown in game (`fight_remains` 3600, gap AN). So a translated DPET would be a constant guess
+remaining time is an estimate at best in game (`fight_remains`, 3600 while unknown: gap AN). So a translated DPET would be a constant guess
 dressed as wowsims's value. The entries stay omitted, and a spec that needs their effect keeps a recipe stand-in by
 owner ruling:
 - SM Ruin's DoT lines (R49): cast each DoT when it is down or within its cast time of falling. They keep the DoTs that
@@ -376,8 +377,9 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   (`stance_rage_kept`: the kit's state expression for the rage a swap keeps; Tactical Mastery is a passive no priority
   reads).
 - Druid Balance, Innervate (owner R20a, 2026-11-04): wowsims's `(fight_remains>380&mana<70%)|(mana<40%&fight_remains>30)`
-  keeps only its low-mana branch: the fight's length is unknown in game (gap AN: `fight_remains` reads 3600), so
-  "fight > 380 s" cannot be known and the long-fight branch would fire under 70% mana in every fight.
+  keeps only its low-mana branch: an unknown fight length reads as a long one (gap AN: `fight_remains` reads 3600 with
+  several enemies or no estimate), so "fight > 380 s" cannot be told from unknown and the long-fight branch would fire
+  under 70% mana in every such fight.
   `condition = { innervate = "mana.pct_lo<40&fight_remains>30" }`.
 - Druid Feral, the Ravage opener (owner R69, 2026-11-06): "We should have it cast Ravage if we're prowling up to a mob"
   and "the player can make the decision to not ravage if they can't get behind. We're recommending the optimal

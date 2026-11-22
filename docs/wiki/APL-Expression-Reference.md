@@ -41,7 +41,7 @@ When a comparison asks a resource to reach a value, as in `energy.lo>=60` or `60
 <!-- /GENERATED -->
 
 > [!NOTE]
-> **On Forever:** The game hides target health, so every time-to-die value reads as unknown: 3600 seconds. In the Affliction line above, `fight_remains>60` always passes. A line that needs `fight_remains<8` never fires.
+> **On Forever:** The game hides target health, so the time to die is an estimate, and only for the current target. With several enemies, or while there is no estimate, `fight_remains` reads 3600 seconds, meaning unknown: in the Affliction line above, `fight_remains>60` then passes, and a line that needs `fight_remains<8` does not fire.
 
 ### Edge cases
 
@@ -161,7 +161,7 @@ A talent key the class pack does not know reads as not taken and adds a warning 
 | `target.outside<N>` | boolean | The target is at least N yards away | Estimated, from range checks | `target.outside8` |
 | `target.range<A>to<B>` | boolean | The target is between A and B yards away | Estimated, from range checks | `target.range8to25` |
 | `target.distance` | yards | The middle of the estimated range | Estimated | `target.distance<10` |
-| `target.time_to_die` | seconds | See [Time to die](#time-to-die) | Always 3600 | `target.time_to_die>12` |
+| `target.time_to_die` | seconds | See [Time to die](#time-to-die) | An estimate; 3600 while there is none | `target.time_to_die>12` |
 | `target.is_boss` | boolean | The target is a boss | Read | `target.is_boss` |
 | `target.is_player` | boolean | The target is a player | Read | `!target.is_player` |
 | `target.is_targeting_player` | boolean | The target is targeting the player | Read; false when hidden | `!target.is_targeting_player` |

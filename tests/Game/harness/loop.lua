@@ -769,8 +769,8 @@ function M.run(L, seed, o, drivers)
         end
     end
     -- R42, a replay-world assumption: wowsims knows its fight's length, so a replay answers `fight_remains` (the
-    -- engine's GetGreatestTTD) as the time to the log's end on each instance's clock; loops and live keep the game's
-    -- unknown (3600 s, gap AN). Restored with the trace hooks at the run's end.
+    -- engine's GetGreatestTTD) as the time to the log's end on each instance's clock; loops outside a ttd arm keep
+    -- the unknown (3600 s, gap AN). Restored with the trace hooks at the run's end.
     local ttd = {}
     for i, st in ipairs(R and steps or {}) do
         local hk, ctl, endAt = st.H.Hekili, st.H.ctl, st.base + R.pull + R.duration
