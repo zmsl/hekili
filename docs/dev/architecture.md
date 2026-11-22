@@ -662,7 +662,9 @@ higher of c and the band's top; a short answer at c: lo is the lower of c - EPS 
 exact band counts as readable only in the swing forecast (`predict`, `VS.SwingPending`). An event of ours after the
 band's stamp (a spend or gain, a swing's step, a hit's, a periodic tick) steps forward from it: the band is held until it
 moves or `I.bandShows[r]` has passed (`h:Latency()` plus `I.BAND_MARGIN`, the client's own delay; about 0.17 s at 60
-fps); a refund holds nothing. Regen is measured between two true crossings (the low end rose to the last top) with no
+fps); a refund holds nothing. A spend also holds a newer band whose low end has not fallen (the display may trail the
+cast), and a gain the band already rose by within `I.BAND_MARGIN` holds nothing and excuses no short answer (the display
+may lead the cast). Regen is measured between two true crossings (the low end rose to the last top) with no
 known change between, the step scale from a band change covering exactly one landed swing, and the rage of a hit on us
 per flag class from one covering exactly one hit (L1673); a learned hit steps est and hi, never lo. A power that reads
 plain in combat releases its watch when combat ends; where the library

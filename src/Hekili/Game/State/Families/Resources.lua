@@ -71,7 +71,10 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- own latest change (a spend or gain, I.ResourceShift; a refund is paid at its cast, so it is none), `stepT[r]` the
 -- latest other event we modelled (a swing's step, a hit's, a periodic tick), each at its own time. A band stamped
 -- before one (our own change's frame included) describes an earlier moment: skipped until it moves or until
--- I.bandShows[r] has passed, so what stepped forward from it stands. Calibration from band pins (owner L1673, clean
+-- I.bandShows[r] has passed, so what stepped forward from it stands. A spend holds a newer one too while that cannot
+-- show it (`paidT/Lo[r]`: its time, the band's low end then; a band below that ends it: the display may trail the
+-- cast), and a gain holds none where the band already rose by it (`roseT/By[r]`: the largest rise within
+-- I.BAND_MARGIN, the display may lead the cast). Calibration from band pins (owner L1673, clean
 -- windows only): a band change covers (the last stamp, this stamp]; `winN[r]` counts the events we know of since the
 -- last stamp, `winT/K[r]` are the latest's time and the only one's source (seen). One swing of a hand and nothing
 -- else: that hand's sample, taught to the scale once it settled landed (its crit's extra out). One wound on us with a
@@ -180,6 +183,10 @@ local R = {
     movedT = {},
     shiftT = {},
     stepT = {},
+    paidT = {},
+    paidLo = {},
+    roseT = {},
+    roseBy = {},
     winN = {},
     winT = {},
     winK = {},
@@ -528,6 +535,7 @@ I.OnBuild(function(def, now)
         R.bandAt[r], R.bandDone[r], R.bandLo[r], R.bandHi[r] = -1e9, -1e9, 0, 0
         R.markT[r], R.markV[r], R.movedT[r] = -1, 0, -1e9
         R.shiftT[r], R.stepT[r] = -1e9, -1e9
+        R.paidT[r], R.paidLo[r], R.roseT[r], R.roseBy[r] = -1e9, 0, -1e9, 0
         R.winN[r], R.winT[r], R.winK[r] = 0, 0, OTHER
         for i = (r - 1) * HIT_CLASSES + 1, r * HIT_CLASSES do
             R.hitE[i], R.hitD[i] = 0, 0
@@ -1107,6 +1115,17 @@ local function pin(r, v, width, t, origin, event, mid)
     R.pinA[r], R.pinB[r] = 0, 0
     remeasure(r, was, origin == "pinned" and v + width or -1) -- an exact read leaves no model above it
     I.Sample(R.power[r], origin, R.est0[r], t, event)
+end
+
+-- Whether slot r's live band already showed a gain of d at t (the display ahead of our event): its low end rose by d,
+-- less a cell, within the margin before it. One rise shows one gain. Allocates nothing.
+local function shownGain(r, d, t)
+    local by, since = R.roseBy[r], t - R.roseT[r]
+    if not R.bandOn[r] or since < 0 or since > I.BAND_MARGIN + 1e-6 or by <= 0 or by < d - R.max[r] / 100 then
+        return false
+    end
+    R.roseBy[r] = 0
+    return true
 end
 
 -- The top of a band [lo, hi): a closed cell's is itself.
@@ -1846,10 +1865,11 @@ I.OnSettle(function(now)
 end)
 
 -- Whether the band stamped bt describes a moment before an event of ours that its delay may still hide at t (the hold,
--- owner L1673): our own change at or after the stamp, a modelled step after it. Allocates nothing.
-local function holdsBack(r, bt, t)
+-- owner L1673): our own change at or after the stamp, a modelled step after it; whatever its stamp, one that cannot
+-- show our spend (its low end `lo` has not fallen since). Allocates nothing.
+local function holdsBack(r, lo, bt, t)
     local shows, st, et = I.bandShows[r], R.shiftT[r], R.stepT[r]
-    return bt <= st and t - st < shows or bt < et and t - et < shows
+    return bt <= st and t - st < shows or bt < et and t - et < shows or lo >= R.paidLo[r] and t - R.paidT[r] < shows
 end
 
 -- A live band of a power, re-asserted every drain (Sources/Bands.lua): after this drain's events and plain reads, before
@@ -1866,6 +1886,10 @@ I.On(Obs.Band, function(o, t)
     if not R.bandOn[r] then
         R.winN[r] = 0 -- the first band: no change to learn from
     elseif bt ~= R.bandAt[r] then
+        local rise = lo - R.bandLo[r]
+        if rise > 0 and (rise >= R.roseBy[r] or bt - R.roseT[r] > I.BAND_MARGIN) then
+            R.roseT[r], R.roseBy[r] = bt, rise
+        end
         if R.swing[r] == 0 then
             crossing(r, lo, hi, bt)
         end
@@ -1875,7 +1899,10 @@ I.On(Obs.Band, function(o, t)
     end
     R.bandOn[r], R.banded[r] = true, hi - lo <= 1 + I.EPS
     R.bandAt[r], R.bandLo[r], R.bandHi[r] = bt, lo, hi
-    if not holdsBack(r, bt, t) then
+    if lo < R.paidLo[r] then
+        R.paidT[r] = -1e9 -- it fell: it shows the spend
+    end
+    if not holdsBack(r, lo, bt, t) then
         applyBand(r, lo, hi, bt, t)
     end
 end)
@@ -2335,18 +2362,27 @@ function I.ResourceShift(r, delta, t, event, late)
     norm(r)
     R.hi0[r] = clamp(R.hi0[r] + dh, max)
     R.pinDelta[r] = R.pinDelta[r] + delta
+    local shown = false -- the band already holds this gain: it starts no hold, and no short answer is put down to it
     if delta ~= 0 then
         moved(r, t)
         seen(r, t, OTHER)
-        if event ~= Obs.Avoided and t > R.shiftT[r] then
-            R.shiftT[r] = t
+        if event ~= Obs.Avoided then
+            shown = delta > 0 and shownGain(r, delta, t)
+            if not shown and t > R.shiftT[r] then
+                R.shiftT[r] = t
+            end
+            if delta < 0 and R.bandOn[r] then
+                R.paidT[r], R.paidLo[r] = t, R.bandLo[r]
+            end
         end
     end
     if delta > 0 then
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
         R.pinOwn[r] = true
         if event == Obs.CastSuccess then -- a cast's declared gain, not a refund (I.GAIN_SHOWS)
-            ownGain(r, delta, t)
+            if not shown then
+                ownGain(r, delta, t)
+            end
             R.castGain[r] = R.castGain[r] + delta
         end
     elseif delta < 0 then

@@ -3757,7 +3757,7 @@ end)
 describe("resource bands (lane B4)", function()
     local RAGE, MANA, NRG = 1, 2, 3 -- the slots
     local SHOWS = 1 / 6 -- what the source sets for a watch at 60 fps (I.bandShows)
-    local PUNCH, SPELL, STAB, GUARDED, NUKE = 1, 2, 3, 4, 5 -- costs 20, 460, 40, 40 (its own requirement fails), 100
+    local PUNCH, SPELL, STAB, GUARDED, NUKE, SMASH = 1, 2, 3, 4, 5, 6 -- costs 20, 460, 40, 40 (its own need fails), 100, 60
     local VS, I, R, S, Obs, EPS
 
     before_each(function()
@@ -3782,9 +3782,10 @@ describe("resource bands (lane B4)", function()
                     end,
                 },
                 { key = "nuke", spend = 100 },
+                { key = "smash", spend = 60 },
             },
-            abilityIds = { { 1001 }, { 1002 }, { 1003 }, { 1004 }, { 1005 } },
-            abilitySlot = { RAGE, MANA, NRG, NRG, MANA },
+            abilityIds = { { 1001 }, { 1002 }, { 1003 }, { 1004 }, { 1005 }, { 1006 } },
+            abilitySlot = { RAGE, MANA, NRG, NRG, MANA, NRG },
             resources = {
                 {
                     key = "rage",
@@ -4182,6 +4183,85 @@ describe("resource bands (lane B4)", function()
             I.Fold(9.9)
             I.Settle(10) -- the tick at 10
             held(RAGE, 20, 21, 9.9, 10, 23)
+        end)
+
+        -- (review I3) the bars show the spend late and a regen crossing stamps a newer band first
+        it("spend-late, a newer stamp that cannot show the spend: still held", function()
+            at(10)
+            band(10, NRG, 90, 91)
+            I.Fold(10)
+            I.ResourceShift(NRG, -40, 10.01, Obs.CastSuccess)
+            band(10.07, NRG, 91, 92, 10.02)
+            I.Fold(10.07)
+            assert.is_true(R.lo0[NRG] < 52 and R.est0[NRG] < 52, R.lo0[NRG])
+            band(10.1, NRG, 51, 52, 10.06) -- it shows the spend: at once
+            I.Fold(10.1)
+            is(NRG, 51, 51, 51)
+            band(10.14, NRG, 95, 96, 10.12) -- and the hold is over: a gain since is no held band
+            I.Fold(10.14)
+            is(NRG, 95, 95, 95)
+        end)
+
+        it("a spend that stayed unseen is held for the band's delay at most", function()
+            at(10)
+            band(10, NRG, 90, 91)
+            I.Fold(10)
+            I.ResourceShift(NRG, -40, 10.01, Obs.CastSuccess)
+            band(10.01 + SHOWS + 0.01, NRG, 91, 92, 10.1)
+            I.Fold(10.01 + SHOWS + 0.01)
+            is(NRG, 91, 91, 91)
+        end)
+
+        -- (review I4) the display ahead of the cast event: the band already holds the gain
+        local function gainFirst()
+            at(10)
+            band(10, NRG, 5, 6)
+            band(10.08, NRG, 45, 46, 10.06)
+            band(10.1, NRG, 46, 47, 10.08) -- a regen crossing since
+            I.Fold(10.1)
+            I.ResourceShift(NRG, 40, 10.11, Obs.CastSuccess)
+            band(10.11, NRG, 46, 47, 10.08)
+        end
+
+        it("gain-first: no hold for a gain the band already shows", function()
+            gainFirst()
+            I.Fold(10.11)
+            is(NRG, 46, 46, 46)
+        end)
+
+        it("gain-first: a short answer over that band stands", function()
+            gainFirst()
+            answer(10.11, SMASH, false) -- 60: the double count would have explained it
+            I.Fold(10.11)
+            is(NRG, 46, 46, 46)
+            assert.is_true(R.sinceShort[NRG] < math.huge) -- heard short, never "not"
+        end)
+
+        it("gain-first: a short answer under that band still wins (L1675)", function()
+            gainFirst()
+            answer(10.11, STAB, false) -- 40: inside what the gain would explain
+            I.Fold(10.11)
+            is(NRG, 40 - EPS, 40 - EPS, 40 - EPS)
+        end)
+
+        it("a rise smaller than the gain is another's: the gain still steps forward", function()
+            at(10)
+            band(10, NRG, 5, 6)
+            band(10.08, NRG, 6, 7, 10.06)
+            I.Fold(10.08)
+            I.ResourceShift(NRG, 40, 10.11, Obs.CastSuccess)
+            band(10.11, NRG, 6, 7, 10.06)
+            I.Fold(10.11)
+            assert.is_true(R.est0[NRG] >= 46, R.est0[NRG])
+        end)
+
+        it("one rise explains one gain", function()
+            gainFirst()
+            I.Fold(10.11)
+            I.ResourceShift(NRG, 40, 10.11, Obs.CastSuccess)
+            band(10.12, NRG, 46, 47, 10.08)
+            I.Fold(10.12)
+            assert.is_true(R.est0[NRG] >= 86, R.est0[NRG])
         end)
 
         it("a refund is no change of now (paid at the cast): no hold", function()
