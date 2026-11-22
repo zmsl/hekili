@@ -355,7 +355,7 @@ describe("target health", function()
             within(0.195, VS.Health("target", 3.2).est)
         end)
 
-        it("a usable answer wins: a contradicting band is clipped into its bound and held, counted (L1675)", function()
+        it("a usable answer wins: a contradicting band is clipped for that drain, counted (L1675)", function()
             obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
             band(9, 0.15, 0.16)
             obs(Obs.Usable, 9, GATED, 1, 0) -- at or below 0.2: agrees, the band narrows it
