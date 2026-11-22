@@ -49,13 +49,6 @@ describe("the bands arm #slow", function()
                 for _, key in ipairs(ROWS) do
                     assert.are.same(base[key], health[key], key)
                 end
-                for _, arm in ipairs({ "bands-lead", "bands-lag", "bands-spend-first", "bands-spend-late" }) do
-                    local lead = fight(case[2], arm, 3)
-                    assert.is_true(
-                        lead.loOver <= base.loOver,
-                        ("%s: lo over %d, default %d"):format(arm, lead.loOver, base.loOver)
-                    )
-                end
                 local run, H, lines = fight(case[2], "bands", 3)
                 assert.is_true(run.loOver <= base.loOver, ("lo over %d, default %d"):format(run.loOver, base.loOver))
                 local b = run.bands
@@ -82,6 +75,20 @@ describe("the bands arm #slow", function()
                 )
             end
         )
+
+        -- design 5.4's ratchet in each lead arm, a case apiece so that one over it hides none of the others
+        for _, arm in ipairs({ "bands-lead", "bands-lag", "bands-spend-first", "bands-spend-late" }) do
+            it(
+                case[1] .. ", " .. arm .. ": the floor over the truth on no more polls than the default arm's",
+                function()
+                    local base, lead = fight(case[2], "default", 3), fight(case[2], arm, 3)
+                    assert.is_true(
+                        lead.loOver <= base.loOver,
+                        ("lo over %d, default %d"):format(lead.loOver, base.loOver)
+                    )
+                end
+            )
+        end
     end
 
     -- (review I4) whole fights, through the low-health part where the gate's answers meet the band and the resource runs

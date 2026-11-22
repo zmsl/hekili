@@ -20,7 +20,7 @@
 -- max; a refusal keeps the old set. A refused watch is asked again when combat ends (L1666 c: the caps are shared, so
 -- a refusal can pass). A handle that answers max-unknown (the max never read plain: no points) is replaced by a
 -- percent one for this build, converted at the belief's max and widened a point each side (design 2.4).
--- A power that proves plain in combat (R.readable) releases its watch for this build.
+-- A power that proves plain in combat (R.readable) releases its watch when combat ends, for this build.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -276,7 +276,8 @@ S.Poll(1.6, function(api, t)
     idle = false
     for k = 1, n do
         local h, pt = handle[k], ptype[k]
-        if h and pt and I.res.readable[chan[k]] then -- the plain read is better and free (and wins: no path moves)
+        -- the plain read is better and free; the family ignores the band meanwhile, so the watch waits for combat's end
+        if h and pt and not I.inCombat and I.res.readable[chan[k]] then
             h:Release()
             h, handle[k], refused[k] = false, false, "readable"
             local ch = chan[k]

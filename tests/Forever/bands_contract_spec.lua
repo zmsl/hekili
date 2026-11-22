@@ -534,7 +534,7 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
     end)
 
     -- (lane B4 task 4, design 2.3) a slot that proves plain in combat needs no band: the plain read is better and free
-    it("a power that reads plain in combat releases its watch", function()
+    it("a power that reads plain in combat releases its watch when combat ends (decision 89)", function()
         local function watched()
             for _, h in ipairs(LHV.reg) do
                 if h.owner == "HekiliBelief" and h.power == 0 and not h.released then
@@ -550,10 +550,13 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         ctl.combat = true
         ctl.Fire("PLAYER_REGEN_DISABLED")
         frames(2)
-        assert.is_false(watched())
-        assert.is_false(I.bandLive[MANA])
+        assert.is_true(watched()) -- no watch changes mid-fight
+        assert.is_false(I.res.bandOn[MANA]) -- its band is ignored meanwhile
         ctl.combat = false
         ctl.Fire("PLAYER_REGEN_ENABLED")
+        frames(1)
+        assert.is_false(watched())
+        assert.is_false(I.bandLive[MANA])
         frames(3)
         assert.is_false(watched()) -- for this build
     end)
