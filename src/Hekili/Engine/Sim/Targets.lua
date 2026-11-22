@@ -1387,9 +1387,11 @@ do
         return s == "live" and est or nil
     end
 
-    -- The target's estimate when it is attackable (the existing hostility test), else nil.
+    -- The target's estimate when it is attackable (the existing hostility test), else nil. The library first, so with
+    -- none (or Hekili.bandOff) no client call is made.
     local function hostileTargetTTD()
-        return UnitExists( "target" ) and UnitCanAttack( "player", "target" ) and targetTTD() or nil
+        local est = targetTTD()
+        return est and UnitExists( "target" ) and UnitCanAttack( "player", "target" ) and est or nil
     end
 
     local function UpdateEnemy(guid, healthPct, unit, time)
