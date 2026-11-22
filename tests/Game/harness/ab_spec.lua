@@ -34,6 +34,11 @@ describe("the A/B harness", function()
             ["bands-gain-first"] = { gainFirst = 0.05 },
             ["bands-health"] = { bandPower = false },
         }
+        local mid = { -- (re-review H3) the order arms' extra cycle, inside the delay: no other arm has one
+            ["bands-spend-first"] = 0.04,
+            ["bands-spend-late"] = 0.08,
+            ["bands-gain-first"] = 0.04,
+        }
         for name, knobs in pairs(want) do
             assert.are.same({
                 outcomes = "default",
@@ -41,9 +46,41 @@ describe("the A/B harness", function()
                 viewer = false,
                 bands = true,
                 bandKnobs = knobs,
+                midPoll = mid[name],
             }, ab.ARMS[name])
         end
+        for name, arm in pairs(ab.ARMS) do
+            assert.are.equal(mid[name], arm.midPoll, name)
+        end
         assert.is_nil(ab.ARMS.default.bands)
+    end)
+
+    -- (lane B4 re-review H4) a row no arm asserts: the default arm writes it too
+    it("a recorded row is written in every arm, the default's too, and asserts nothing", function()
+        -- luacheck: ignore 122 (io.open stands in: the default arm's file is every suite's, not this spec's to write)
+        local arm, open = ab.arm, io.open
+        local paths, wrote = {}, {}
+        local fh = {}
+        function fh.write(_, ...)
+            wrote[#wrote + 1] = table.concat({ ... })
+        end
+        function fh.close() end
+        finally(function()
+            ab.arm, io.open = arm, open
+        end)
+        io.open = function(path)
+            paths[#paths + 1] = path
+            return fh
+        end
+        for _, name in ipairs({ "default", "bands" }) do
+            ab.arm = function()
+                return name
+            end
+            ab.record("power", "polls 1")
+        end
+        io.open = open
+        assert.are.same({ ".ab/default.tsv", ".ab/bands.tsv" }, paths)
+        assert.are.same({ "power\tok\tpolls 1\n", "power\tok\tpolls 1\n" }, wrote)
     end)
 
     -- (lane B4 re-review H1) the ruled arm: live's secret amounts and the row's lag, on both instances alike

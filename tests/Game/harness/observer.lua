@@ -120,6 +120,18 @@ function M.gains(truth, i, us)
     return false
 end
 
+--- Whether knobs k put truth row i (a cast or strike of `us`) and what the bars show of it at two times: a spend
+--- (spendFirst, either way) or a gain (gainFirst). The order arms' extra cycle falls between the two (loop.midPolls).
+function M.delays(k, us, truth, i)
+    local ev = truth[i]
+    if ev.src ~= us or (ev.kind ~= "cast" and ev.kind ~= "strike") then
+        return false
+    elseif k.spendFirst ~= 0 and (ev.cost or 0) > 0 then
+        return true
+    end
+    return k.gainFirst > 0 and ev.kind == "cast" and M.gains(truth, i, us)
+end
+
 -- Our spells as the fake spec's (its costs: the usability answers).
 M.SPELLS = {
     STRIKE = fs.SPENDER_B,

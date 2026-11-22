@@ -4,7 +4,9 @@
 -- client's own usability gates), so on the bands-health arm (no power band) every output of a fight still equals the
 -- default arm's on the same seed. The resources read theirs (lane B4): on the bands arms the outputs move, and the
 -- believed floor is above the truth on no more polls than the default arm's (the L1525 ratchet, in each lead arm but
--- bands-lead, which is a measurement: a live band is fact, L1671, so it gates nothing and prints both counts). At every
+-- bands-lead, which is a measurement: a live band is fact, L1671, so it gates nothing and prints both counts). The
+-- order arms (spend-first, spend-late, gain-first) get one extra cycle inside each delay (loop.midPolls), else the 0.2 s
+-- poll hands the belief both sides at once; the fight-free half proves each enters its branch. At every
 -- fold the truth lies inside the band the family applied, or the band lagged it (loop.bandCheck: containment, L1666 a),
 -- on each channel the world has; what the family made of it, clipped, holds the truth too, and its estimate lies
 -- within one band of the truth (`est`).
@@ -267,4 +269,157 @@ describe("the bands arm's containment check", function()
         local o = { band = { 0.6, 0.61 }, est = 0.605, truth = 0.605, used = 1 }
         assert.are.same({ 1, 1, 0, 0, 0, 0, 0, 0 }, check(o))
     end)
+end)
+
+-- (re-review H4) the record-only "power" row, on planted polls
+describe("the power row", function()
+    it("counts the floor over and the top under the truth, the error, the band live and applied", function()
+        local p
+        local VI = { bandLive = { [1] = true }, res = { slotOf = { [1] = 1 }, scale = { 1 }, regE = { 2.5 } } }
+        local function Power()
+            return p
+        end
+        local st = { lhv = {}, H = { ns = { VirtualStateInternal = VI, VirtualState = { Power = Power } } } }
+        local run = { loOver = 0, power = loop.newPower(), bands = loop.newBands() }
+        local function poll(lo, est, hi, applied, replay)
+            p, run.preTruth, run.bands.applied[1] = { lo = lo, est = est, hi = hi }, 50, applied
+            loop.powerPoll(run, st, 1, 10, replay)
+        end
+        poll(40, 50, 60, true)
+        poll(52, 54, 60, false) -- lo over, held
+        VI.res.scale[1] = 1.12
+        poll(40, 42, 44, true) -- hi under
+        poll(51, 52, 60, true, true) -- a replay's: in the row, never in the gate's count
+        assert.are.equal(1, run.loOver)
+        assert.are.equal(
+            "polls 4 lo over 2 hi under 1 abs err 3.500 live 4 applied 3 scale 1.120 (1 moves) regE 2.500"
+                .. " held late 0 shown 0",
+            loop.powerLine(run)
+        )
+        st.lhv, run.power = nil, loop.newPower() -- an arm without bands: the same row
+        poll(51, 51, 51, true)
+        assert.are.equal(
+            "polls 1 lo over 1 hi under 0 abs err 1.000 live 0 applied 0 scale 1.120 (0 moves) regE 2.500"
+                .. " held late 0 shown 0",
+            loop.powerLine(run)
+        )
+    end)
+end)
+
+-- (re-review H3) No fight: a scripted world (one cast and one rise on an empty field), the observer, the fake library
+-- and the belief on the fake spec, cycled as the loop does. At the 0.2 s poll alone a delayed success and its band
+-- reach one drain and neither branch is entered; with the arm's extra cycle each is.
+describe("the order arms' extra cycle", function()
+    local drive = require("Game.harness.drive")
+    local world = require("Game.harness.world")
+    local entities = require("Game.harness.entities")
+    local observer = require("Game.harness.observer")
+    local fake_lhv = require("Game.harness.fake_lhv")
+    local fs = require("Game.State.helpers.fake_spec")
+    local TICK, CAST, EVEN, RAGE = 0.2, 2, 1e-9, fs.RAGE
+    local c
+
+    after_each(function()
+        drive.restore(c)
+    end)
+
+    -- our cast at the poll at 2 (`cost`, or a gain in its frame) and a rise of 2 at `rise`: the branches' counts
+    local function scene(name, cost, gains, rise, phased)
+        c = drive.boot({
+            max = 100,
+            boot = function(b)
+                local hekili = fs.new()
+                local a = hekili.Class.abilities.spender_a
+                a.spend = cost or 0
+                if gains then
+                    a.now = function() -- the plain record's field, as Engine/Schema/Tracked.lua leaves it
+                        gain(20, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+                    end
+                end
+                local def = fs.def(hekili)
+                def.providers = ab.providers("default")
+                def.providers.bands = true
+                b.ctl.lhv = fake_lhv.new({
+                    now = function()
+                        return b.ctl.now
+                    end,
+                    history = true,
+                })
+                b.ctl.LibStub = function()
+                    return b.ctl.lhv
+                end
+                b.ctl.powerType = { RAGE, "RAGE" } -- the power shown: another's watch is paused
+                b.I.Build(def, 0.1)
+                b.VS.Start(b.api)
+            end,
+        })
+        local W = world.new(1)
+        local us = W.add(entities.new({ guid = "Player-1", weapons = entities.weapons(22) }))
+        us.power = 30
+        W.emit({ t = 0, kind = "prepull" })
+        W.at(0.5, function()
+            W.emit({ kind = "pull" })
+        end)
+        W.at(0.6, function()
+            W.emit({ kind = "gain", src = us, rage = 20 })
+        end)
+        local arm = ab.ARMS[name]
+        local knobs = { bands = true }
+        for key, v in pairs(arm.bandKnobs) do
+            knobs[key] = v
+        end
+        local k = setmetatable(knobs, { __index = observer.DEFAULTS })
+        local obs, sink = observer.new(W, k), {}
+        local H = { ctl = c.ctl, ns = c.ns, Fire = c.ctl.Fire }
+        local run = { bands = loop.newBands() }
+        local function step(t)
+            W.run(t + EVEN)
+            W.t = t
+            loop.feed(H, obs, t, 0, sink)
+            c.ctl.now = t
+            c.ctl.Tick(t)
+            fs.fold(c.ns, t) -- drive.lua's drain: the tick flushed, then the polls, the fold and the settle
+            loop.bandCheck(run, H, c.ctl.lhv)
+        end
+        local mid = phased and loop.newMidPolls(arm.midPoll, k, us)
+        for n = 1, 20 do
+            local t = n * TICK
+            if mid then
+                loop.midPolls(mid, W, t, step)
+            end
+            step(t)
+            if n == CAST / TICK then -- pressed after the poll's drain, as the loop's driver does
+                W.emit({ kind = "cast", src = us, spell = fs.SPENDER_A, cost = cost })
+                if gains then
+                    W.emit({ kind = "gain", src = us, rage = 20 })
+                end
+                if rise then
+                    W.at(rise, function()
+                        W.emit({ kind = "regen", src = us, rage = 2 })
+                    end)
+                end
+            end
+        end
+        assert.are.same({}, run.bands.misses)
+        assert.are.equal(0, c.I.nowErrors)
+        return { late = run.bands.late, shown = run.bands.shown }
+    end
+
+    for _, case in ipairs({
+        { "bands-spend-first", "late", cost = 10, rise = 2.07 }, -- a newer stamp after the double count
+        { "bands-spend-late", "late", cost = 10, rise = 2.01 }, -- a newer stamp that cannot show the spend
+        { "bands-gain-first", "shown", gain = true }, -- the band rose by the gain before its success
+    }) do
+        for _, phased in ipairs({ false, true }) do
+            local how = phased and " enters its branch with the extra cycle" or " never does at the 0.2 s poll alone"
+            it(case[1] .. how, function()
+                local n = scene(case[1], case.cost, case.gain, case.rise, phased)[case[2]]
+                if phased then
+                    assert.is_true(n > 0, n)
+                else
+                    assert.are.equal(0, n)
+                end
+            end)
+        end
+    end
 end)

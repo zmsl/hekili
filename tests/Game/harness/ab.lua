@@ -1,5 +1,6 @@
 -- tests/Game/harness/ab.lua (providers spec §4.1, decision 83): the arm (HEKILI_AB) and the floor assertions every gate
--- routes through: the default arm asserts; a provider arm records each cell in .ab/<arm>.tsv and never fails.
+-- routes through: the default arm asserts; a provider arm records each cell in .ab/<arm>.tsv and never fails. A
+-- recorded row (M.record) is judged in no arm and written in each, the default's in .ab/default.tsv.
 local M = {}
 
 M.ARMS = {
@@ -194,6 +195,13 @@ for name, knobs in pairs({
 }) do
     M.ARMS[name] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandKnobs = knobs }
 end
+-- The order arms' phase (re-review H3): presses land on the 0.2 s poll and the belief drains only there, so a delayed
+-- success and its band would reach one drain. One extra cycle `midPoll` s after such a cast (loop.midPolls), inside
+-- its delay: once the band shows what came first (the fake reports a change 2 frames on, 0.033 s), before the rest
+-- shows (the success at 0.05 s; spend-late's spend at 0.083 s). Loops only: a replay's casts fall off the poll's grid.
+M.ARMS["bands-spend-first"].midPoll = 0.04
+M.ARMS["bands-spend-late"].midPoll = 0.08
+M.ARMS["bands-gain-first"].midPoll = 0.04
 -- bands-taken-lag, the ruled arm (L1723): live's secret amounts and the measured lag of the hit row on us
 -- (docs/research/2026-10-23-damagemeter-api.md), in `observe` and not bandKnobs, so the oracle's world is lagged too;
 -- compare it with lagged-secret, the same without bands. `observe` is HEKILI_AB's arm's alone (M.observe).
@@ -243,16 +251,25 @@ function M.observe(k)
     end
 end
 
+local function write(arm, ok, label, line)
+    assert(io.popen("mkdir -p .ab")):close() -- popen: `execute` is a content key (tests/boundary_spec.lua)
+    local fh = assert(io.open(".ab/" .. arm .. ".tsv", "a"))
+    fh:write(label, "\t", ok and "ok" or "MISS", "\t", tostring(line), "\n")
+    fh:close()
+end
+
 function M.check(ok, label, line, arm)
     arm = arm or M.arm()
     if arm == "default" then
         assert(ok, label .. ": " .. tostring(line))
         return
     end
-    assert(io.popen("mkdir -p .ab")):close() -- popen: `execute` is a content key (tests/boundary_spec.lua)
-    local fh = assert(io.open(".ab/" .. arm .. ".tsv", "a"))
-    fh:write(label, "\t", ok and "ok" or "MISS", "\t", tostring(line), "\n")
-    fh:close()
+    write(arm, ok, label, line)
+end
+
+--- A row nothing is judged on (loop.lua's "power"): written in every arm, the default's too (.ab/default.tsv).
+function M.record(label, line)
+    write(M.arm(), true, label, line)
 end
 
 return M

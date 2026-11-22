@@ -25,5 +25,5 @@ for pass in full live; do
         timeout 3000 "$BUSTED" --helper=tools/accuracy/wrap.lua --tags="$tags" "$1" > "$OUT/$0.$(basename "$1" _spec.lua).txt" 2>&1'
 done
 echo "$ARM" > .accuracy/live-arm
-rm -f ".ab/$ARM.tsv" # the arm recorded its floors there; they are not a gate-ab result
+rm -f ".ab/$ARM.tsv" .ab/default.tsv # both passes recorded their rows there; they are not a gate-ab result
 ls "$OUT" | wc -l

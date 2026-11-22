@@ -36,6 +36,9 @@ local M = {}
 -- truth lies within one band of it) + lagged (beyond, the band lagged and the estimate no farther than its middle) +
 -- floored (the truth under the family's live-target floor, the estimate that floor) + off; offs: the first five off or
 -- outside; worst.
+-- On a power also (re-review H3, H4): applied, whether this drain applied it, and the branches the order arms are for:
+-- late, the drains a spend's paid low end alone held the band back (a stamp newer than our change that cannot show the
+-- spend: review I3); shown, the gains the band had risen by before they were heard (review I4: the rise consumed).
 local BAND_EPS, CELL = 1e-9, 0.01
 local LATENCY = fake_lhv.DEFAULTS.latency * fake_lhv.DEFAULTS.frame
 local function away(x, lo, hi) -- how far x lies outside [lo, hi]
@@ -48,6 +51,18 @@ function M.bandCheck(run, H, lhv)
         local used = VI.bandUsed[ch] or 0
         local applied = used > 0 and used ~= (b.used[ch] or 0)
         b.used[ch] = used
+        if ch > 0 then
+            local res = VI.res
+            b.applied[ch] = applied
+            local at, by = res.bandAt[ch], res.roseBy[ch]
+            if on and res.bandOn[ch] and not applied and at > res.shiftT[ch] and at >= res.stepT[ch] then
+                b.late = b.late + 1
+            end
+            if by == 0 and (b.rose[ch] or 0) > 0 then
+                b.shown = b.shown + 1
+            end
+            b.rose[ch] = by
+        end
         local alive = ch < 0 and on and (lhv:TruthAt("health", "target", nil, now) or 0) > 0
         if applied or alive or (on and used == 0) then
             local kind, unit, pt = "health", ch < 0 and "target" or "player", nil
@@ -116,6 +131,107 @@ function M.bandCheck(run, H, lhv)
         end
     end
 end
+--- A run's M.bandCheck counts, empty.
+function M.newBands()
+    return {
+        checked = 0,
+        held = 0,
+        lagged = 0,
+        missed = 0,
+        live = {},
+        misses = {},
+        used = {},
+        applied = {},
+        rose = {},
+        late = 0,
+        shown = 0,
+        est = { n = 0, within = 0, lagged = 0, floored = 0, off = 0, outside = 0, worst = 0, offs = {} },
+    }
+end
+
+--- A run's "power" row, empty (re-review H4: M.powerPoll, M.powerLine).
+function M.newPower()
+    return { n = 0, over = 0, under = 0, err = 0, live = 0, applied = 0, moves = 0, scale = nil, regE = 0 }
+end
+
+--- One in-combat poll of driver `st`'s belief of power `pt` against the truth before this poll's press (run.preTruth):
+--- the floor over it and the top under it (by M.LO_EPS), the error, the band live and applied, the step scale and the
+--- regen. `replay`: a replay's poll, which the gate's run.loOver never counts.
+function M.powerPoll(run, st, pt, now, replay)
+    local VI = st.H.ns.VirtualStateInternal
+    local res = VI and VI.res
+    local r = res and res.slotOf and res.slotOf[pt]
+    if not r then
+        return
+    end
+    local p, v, truth = run.power, st.H.ns.VirtualState.Power(pt, now), run.preTruth
+    p.n, p.err = p.n + 1, p.err + math.abs(v.est - truth)
+    if v.lo > truth + M.LO_EPS then
+        p.over = p.over + 1
+        if not replay then
+            run.loOver = run.loOver + 1
+        end
+    end
+    if v.hi < truth - M.LO_EPS then
+        p.under = p.under + 1
+    end
+    if st.lhv and VI.bandLive[r] then
+        p.live = p.live + 1
+        p.applied = p.applied + (run.bands.applied[r] and 1 or 0)
+    end
+    if p.scale and res.scale[r] ~= p.scale then
+        p.moves = p.moves + 1
+    end
+    p.scale, p.regE = res.scale[r], res.regE[r]
+end
+
+--- The "power" row of a run (written in every arm, ab.record): M.powerPoll's counts, then M.bandCheck's branches.
+function M.powerLine(run)
+    local p, b = run.power, run.bands
+    local line = "polls %d lo over %d hi under %d abs err %.3f live %d applied %d scale %.3f (%d moves) regE %.3f"
+    return (line .. " held late %d shown %d"):format(
+        p.n,
+        p.over,
+        p.under,
+        p.err / math.max(1, p.n),
+        p.live,
+        p.applied,
+        p.scale or 0,
+        p.moves,
+        p.regE,
+        b.late,
+        b.shown
+    )
+end
+
+--- An order arm's extra cycles (ab.lua `midPoll`, re-review H3): `after` s into each delay knobs k make (observer.delays).
+function M.newMidPolls(after, k, us)
+    return { after = after, k = k, us = us, seen = 0, at = {} }
+end
+
+--- Before the poll at T: runs the world up to it event by event, and `step`s every instance at each extra cycle due on
+--- the way. A cast is found when the world makes it, at a press or between two polls (a hard cast's end, a strike's
+--- swing).
+function M.midPolls(mid, W, T, step)
+    local at = mid.at
+    while true do
+        while mid.seen < #W.truth do
+            mid.seen = mid.seen + 1
+            if observer.delays(mid.k, mid.us, W.truth, mid.seen) then
+                at[#at + 1] = W.truth[mid.seen].t + mid.after
+            end
+        end
+        local nextT = W.q[1] and W.q[1].t
+        if nextT and nextT < T and not (at[1] and at[1] < nextT) then
+            W.run(nextT)
+        elseif at[1] and at[1] < T then
+            step(table.remove(at, 1))
+        else
+            return
+        end
+    end
+end
+
 M.VERDICT_ARM = {} -- the verdict arms (ab.VERDICT; a -novd twin by its base name): their layout line adds `wrong`
 for _, name in ipairs(ab.VERDICT) do
     M.VERDICT_ARM[name] = true
@@ -215,7 +331,9 @@ function M.heldReady(q, q2, react, pre)
     return key and q.time[1] > react and not M.unmatched(key, q2, react) and (q2.cost[1] or 0) <= pre or false
 end
 --- The floor above the truth (L1504, the danger mirror of readyShort): run A's believed floor `lo` over the world's
---- power at the same poll, before that poll's press (the frames' truth reads after it), by more than M.LO_EPS.
+--- power at the same poll, before that poll's press (the frames' truth reads after it), by more than M.LO_EPS. A run
+--- of our driver alone counts it too (run.loOver: tests/Forever/loop_bands_spec.lua's ratchets), run B and a replay
+--- never (M.powerPoll).
 M.LO_EPS = 0.05
 M.PULL = 3 -- the world starts this long before the pull, the target selected (precombat presses)
 M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
@@ -475,16 +593,8 @@ function M.run(L, seed, o, drivers)
         readyShort = 0,
         heldReady = 0,
         loOver = 0,
-        bands = { -- a bands arm's M.bandCheck
-            checked = 0,
-            held = 0,
-            lagged = 0,
-            missed = 0,
-            live = {},
-            misses = {},
-            used = {},
-            est = { n = 0, within = 0, lagged = 0, floored = 0, off = 0, outside = 0, worst = 0, offs = {} },
-        },
+        bands = M.newBands(), -- a bands arm's M.bandCheck
+        power = M.newPower(), -- every arm's "power" row (M.powerPoll)
     }
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
@@ -525,6 +635,7 @@ function M.run(L, seed, o, drivers)
                 end
             or nil
     end
+    local mid = nil -- an order arm's extra cycles
     for i, d in ipairs(drivers) do
         local out = d.H.ns.Output -- the steady icons (no player setting): this instance's measurement arm
         out.steady = (steady and not d.plain) and true or false -- the oracle shadow never holds
@@ -634,6 +745,9 @@ function M.run(L, seed, o, drivers)
         end
         if d.plain then
             k.plain, k.usableDelay = true, 0
+        end
+        if i == 1 and bands and arm.midPoll and not R then -- an order arm's driver (M.midPolls)
+            mid = M.newMidPolls(arm.midPoll, k, us)
         end
         if bands and VI then -- M.bandCheck counts from here: the run's first applied band is checked too
             for ch, n in pairs(VI.bandUsed) do
@@ -830,6 +944,9 @@ function M.run(L, seed, o, drivers)
                 tickPolled = false
             end
         end
+        if mid then
+            M.midPolls(mid, W, (polls + 1) * tick, step)
+        end
         polls = polls + 1
         t = polls * tick
         for _, st in ipairs(steps) do
@@ -998,6 +1115,9 @@ function M.run(L, seed, o, drivers)
                 local sq = steps[2] and steps[2].q
                 run.shadowPress[n] = sq and sq.name[1] and sq.time[1] <= (o.react or M.REACT) and sq.name[1] or false
             end
+            if not steps[1].plain then -- our belief's power: run A's, a lone driver's of ours and a replay's
+                M.powerPoll(run, steps[1], L.power.type, steps[1].base + t, R ~= nil)
+            end
             for k = 1, #run.frames do -- the ledger's frame (flicker.frame)
                 local st = steps[k]
                 local f, sq = run.frames[k], st.q
@@ -1011,9 +1131,6 @@ function M.run(L, seed, o, drivers)
                 end
                 local p = VS.Power(L.power.type, now)
                 f.lo[n], f.est[n], f.hi[n], f.truth[n] = p.lo, p.est, p.hi, us.power
-                if k == 1 and not R and p.lo > run.preTruth + M.LO_EPS then
-                    run.loOver = run.loOver + 1
-                end
                 f.pend[n] = VS.SwingPending(1) > 0 or VS.SwingPending(2) > 0
                 f.cd[n], f.gcd[n], f.t[n], f.n = cd, math.max(0, us.gcdUntil - t), t, n
             end
@@ -1081,6 +1198,11 @@ function M.run(L, seed, o, drivers)
                         .. (e.offs[1] and (" offs " .. table.concat(e.offs, "; ")) or "")
                 )
             )
+        end
+        if i == 1 and run.power.n > 0 then -- the record-only "power" row: every arm's, a replay's too (re-review H4)
+            local who = tostring(st.H.ctl.class) .. " " .. tostring(st.H.Hekili.State.spec.key)
+            local row = R and "%s arm %s seed %d replay %s" or "%s arm %s seed %d %s"
+            ab.record("power", row:format(who, armName, seed, M.powerLine(run)))
         end
         if traced[i] then
             st.H.Hekili.Debug, st.H.Hekili.SaveDebugSnapshot = traced[i][1], traced[i][2]
