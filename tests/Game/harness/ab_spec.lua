@@ -32,7 +32,6 @@ describe("the A/B harness", function()
             ["bands-spend-first"] = { spendFirst = 0.05 },
             ["bands-spend-late"] = { spendFirst = -0.05 },
             ["bands-gain-first"] = { gainFirst = 0.05 },
-            ["bands-taken-lag"] = { takenLag = 0.48 },
             ["bands-health"] = { bandPower = false },
         }
         for name, knobs in pairs(want) do
@@ -45,6 +44,19 @@ describe("the A/B harness", function()
             }, ab.ARMS[name])
         end
         assert.is_nil(ab.ARMS.default.bands)
+    end)
+
+    -- (lane B4 re-review H1) the ruled arm: live's secret amounts and the row's lag, on both instances alike
+    it("bands-taken-lag and lagged-secret: one world, secret amounts, they differ by the bands alone", function()
+        local observe = { takenLag = 0.48, secretAmount = true }
+        local twin = { outcomes = "default", presence = "router", viewer = false, observe = observe }
+        assert.are.same(twin, ab.ARMS["lagged-secret"])
+        local banded = { bands = true }
+        for k, v in pairs(twin) do
+            banded[k] = v
+        end
+        assert.are.same(banded, ab.ARMS["bands-taken-lag"])
+        assert.are.same({ takenLag = 0.48 }, ab.ARMS.lagged.observe)
     end)
 
     it("the live-auras arms (aura audit C1): our auras hidden in combat, the CDM's only, never the default", function()

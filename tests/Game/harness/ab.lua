@@ -181,8 +181,7 @@ M.ARMS["cycle-follow-off"] = {
 -- through fake_lhv.lua (loop.lua; the observer's `bands` firings), the plain oracle shadow stays without; `bandDrop`
 -- s after the pull the capability is lost (fake_lhv SetAvailable "unavailable", "error"; kept for the session, as the
 -- real library keeps it). The health families (lanes B2, B3) and the resources (B4) read theirs. The lead arms move
--- what the bars show (observer.lua `bandLead`, `spendFirst`, `gainFirst`, all unmeasured); bands-taken-lag moves the
--- hit row on us behind its rage, as measured (compare it with `lagged`, the same without bands).
+-- what the bars show (observer.lua `bandLead`, `spendFirst`, `gainFirst`, all unmeasured).
 M.ARMS.bands = { outcomes = "default", presence = "router", viewer = false, bands = true }
 M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandDrop = 20 }
 for name, knobs in pairs({
@@ -191,10 +190,21 @@ for name, knobs in pairs({
     ["bands-spend-first"] = { spendFirst = 0.05 }, -- three frames at 60 fps: the client's delay the design allows
     ["bands-spend-late"] = { spendFirst = -0.05 },
     ["bands-gain-first"] = { gainFirst = 0.05 }, -- the display ahead of the cast's success
-    ["bands-taken-lag"] = { takenLag = 0.48 }, -- the measured row lag (docs/research/2026-10-23-damagemeter-api.md)
     ["bands-health"] = { bandPower = false }, -- the health bands alone (no power shown)
 }) do
     M.ARMS[name] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandKnobs = knobs }
+end
+-- bands-taken-lag, the ruled arm (L1723): live's secret amounts and the measured lag of the hit row on us
+-- (docs/research/2026-10-23-damagemeter-api.md), in `observe` and not bandKnobs, so the oracle's world is lagged too;
+-- compare it with lagged-secret, the same without bands. `observe` is HEKILI_AB's arm's alone (M.observe).
+for name, bands in pairs({ ["bands-taken-lag"] = true, ["lagged-secret"] = false }) do
+    M.ARMS[name] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = false,
+        bands = bands or nil,
+        observe = { takenLag = 0.48, secretAmount = true },
+    }
 end
 M.VERDICT = {
     "viewer-reshuffle",
