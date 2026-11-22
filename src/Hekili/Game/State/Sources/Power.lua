@@ -39,7 +39,8 @@ local function usability(api, t, onlyChanged, direct)
                         if direct then
                             Direct(Obs.Usable, t, a, b, c)
                         else
-                            Stage(Obs.Usable, t, a, b, c)
+                            -- it folds after a swap logged since: c carries the swap serial (Families/TargetHealth.lua)
+                            Stage(Obs.Usable, t, a, b, c == 1 and c or -1 - I.targetSwapN)
                         end
                     end
                 end

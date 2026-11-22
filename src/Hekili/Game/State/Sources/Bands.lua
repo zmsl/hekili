@@ -1,16 +1,19 @@
 -- Game/State/Sources/Bands.lua
--- Hidden-value bands (LibHiddenValues integration design 2.1-2.3, 5.1-5.3; lane B1, record-only): the one belief file
+-- Hidden-value bands (LibHiddenValues integration design 2.1-2.3, 5.1-5.3; lane B1): the one belief file
 -- that watches health and power through LibHiddenValues-1.0, reached through the injected client's LibStub
 -- (`api.LibStub`: the game's, a fake in tests). Watches: the target's and the player's health and each tracked power
 -- the library proves (`step = 1`, `points = {}`: the band in points), derived from def.units and def.resources, made
 -- out of combat while the capability is not unavailable (at the build, and at a drain while one is missing). Poll 1.6
 -- re-asserts every live band as Obs.Band at each drain and logs one unknown at the change from live to anything else;
--- I.bandT[channel] keeps the library's stamp. No family reads Obs.Band yet (lanes B2-B4): a shadow counter
--- (I.bandDisagree) counts the settles at which the belief's own value lies outside a live band, with no effect on any
--- output. Pauses: every watch after 2 s with no drain (the event facade's frame update, I.BandsIdle), a power whose type
--- is neither the displayed power nor mana. Kill switch: def.providers.bands false releases every watch, out of combat
--- (in combat at PLAYER_REGEN_ENABLED, decision 89). Self-test: one retry out of combat 5 s after the first
--- PLAYER_ENTERING_WORLD.
+-- I.bandT[channel] keeps the library's stamp. Families/TargetHealth.lua reads the target's (lane B2), Families/Player.lua
+-- the player's (lane B3); power waits for lane B4. A family that applies a band records it in I.bandUsed (a count) and
+-- I.bandUsedLo/Hi (what it applied: the harness's containment check). A counter (I.bandDisagree, design 2.3) counts the
+-- settles at which the belief's own value lies more than one cell (1%: 0.01 of health, max / 100 points of power)
+-- outside a live band, with no effect on any output (for the target: a usable answer that contradicts the band, which
+-- wins and clips it for its drain, L1675). Pauses: every watch after 2 s with no drain (the
+-- event facade's frame update, I.BandsIdle), a power whose type is neither the displayed power nor mana. Kill switch:
+-- def.providers.bands false releases every watch, out of combat (in combat at PLAYER_REGEN_ENABLED, decision 89).
+-- Self-test: one retry out of combat 5 s after the first PLAYER_ENTERING_WORLD.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -24,6 +27,7 @@ local MANA = 0 -- Enum.PowerType.Mana: fed in every form (design 5.3)
 local IDLE = 2 -- seconds with no drain before every watch pauses (design 2.2)
 local RETRY = 5 -- seconds after the first PLAYER_ENTERING_WORLD for the one self-test retry (design 5.2)
 local TARGET, PLAYER = -1, 0 -- the health channels; a resource slot r >= 1 is its power's
+local FUZZ = 1e-9 -- float slack on the one-cell margin
 
 -- By watch k (n of them): its channel, its spec, its handle (false: none), its power type (false: a health watch),
 -- why it is not asked again before the next build (false, a Watch refusal code or "unproven"), and whether it is paused.
@@ -32,6 +36,8 @@ local chan, spec, handle, ptype, refused, paused = {}, {}, {}, {}, {}, {}
 -- By channel: the library's stamp of the last live band, its low and high end (the family's units), whether the last
 -- poll logged a band, and how many settles found the belief's value outside it.
 I.bandT, I.bandLo, I.bandHi, I.bandLive, I.bandDisagree = {}, {}, {}, {}, {}
+-- By channel: how many bands a family applied since the build, and the last one as it applied it.
+I.bandUsed, I.bandUsedLo, I.bandUsedHi = {}, {}, {}
 
 local LHV -- the library, once found
 local on = false -- the watches wanted (def.providers.bands), as applied
@@ -121,6 +127,7 @@ I.OnBuild(function(def, now)
         n = n + 1
         chan[n], spec[n], handle[n], ptype[n], refused[n], paused[n] = ch, s, false, pt, false, false
         I.bandT[ch], I.bandLo[ch], I.bandHi[ch], I.bandLive[ch], I.bandDisagree[ch] = 0, 0, 0, false, 0
+        I.bandUsed[ch], I.bandUsedLo[ch], I.bandUsedHi[ch] = 0, 0, 0
     end
     for _, unit in ipairs(def.units) do
         if unit == "target" or unit == "player" then
@@ -215,20 +222,22 @@ S.On("PLAYER_ENTERING_WORLD", nil, function(api, t)
     pewT = pewT or t
 end)
 
--- The shadow counter (record-only): a live band against the belief's own value after the fold. Allocates nothing.
+-- The disagreement counter: a live band against the belief's own value after the fold, beyond one cell (L1666 h; the
+-- band lags the client by up to two frames, so a value one cell out is the crossing, not a disagreement). Allocates
+-- nothing.
 I.OnSettle(function(now)
     for k = 1, n do
         local ch = chan[k]
         if I.bandLive[ch] then
-            local v
+            local v, cell = nil, 0.01
             if ch == TARGET then
                 v = I.th.est0
             elseif ch == PLAYER then
                 v = VS.Health("player", now).est
             else
-                v = I.res.est0[ch]
+                v, cell = I.res.est0[ch], I.res.max[ch] / 100
             end
-            if v < I.bandLo[ch] or v > I.bandHi[ch] then
+            if v < I.bandLo[ch] - cell - FUZZ or v > I.bandHi[ch] + cell + FUZZ then
                 I.bandDisagree[ch] = I.bandDisagree[ch] + 1
             end
         end

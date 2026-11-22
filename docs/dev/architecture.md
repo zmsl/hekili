@@ -647,8 +647,8 @@ default list from the forecast window `state.delayMax` as it would after an empt
 **Time to die.** Target health is secret on Forever, so `Engine/Sim/Targets.lua`'s tracker is not fed and every time
 to die (`fight_remains`, `target.time_to_die`, `time_to_pct_N`, `longest_ttd`, ...) answers "unknown": `FOREVER`, 3600 s,
 a fight that never ends soon, a grey (trivial) target's too (wowsims's `remainingTime` has no trivial case), and
-`GetNumTTDsAfter` counts every enemy as after any time. The tracker's 0.5 s ticker is not started. A priority may read them without a load warning (`Engine/Sim/AplWarnings.lua` warns only
-on target health); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
+`GetNumTTDsAfter` counts every enemy as after any time. The tracker's 0.5 s ticker is not started. A priority may read them without a load warning (`Engine/Sim/AplWarnings.lua` warns on no
+health or time-to-die token); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
 
 **Player health.** The client hides the player's own health in combat (`UnitHealth`/`UnitHealthMax("player")` secret;
 owner L1461; the headless fake client answers so): `health.pct`, `health.current`, `health.deficit` read the plain

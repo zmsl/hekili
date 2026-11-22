@@ -169,16 +169,16 @@ describe("token-keyed target memory (lane T2m)", function()
             fold(11.1)
             near(25.1, est(11.1), "the live record stands")
             assert.are.equal(0, quiet(11.2), "no flicker on the orphan")
-            if not dies then
-                assert.is_true(VS.Health("target", 11.1).est > 0)
-            end
-            assert.are.same({}, gone) -- no TargetGone for the current slot: it would read as a death
+            assert.are.equal(not dies, VS.Health("target", 11.1).est > 0)
+            -- no TargetGone for the current slot: it would read as a death. Poll 4's death names none (0): the record
+            -- stands (integration design 2.3: death wins in the health family)
+            assert.are.same(dies and { 0 } or {}, gone)
             plate("NAME_PLATE_UNIT_ADDED", 1, 12)
             fold(12.1)
             near(25.1, est(12.1), "still up")
             ctl.dead.target = nil
             tab(2, 13)
-            assert.are.same({ slot }, gone) -- forgotten at the tab away
+            assert.are.same(dies and { 0, slot } or { slot }, gone) -- forgotten at the tab away
             tab(1, 14)
             assert.is_nil(est(14.1), "the orphan was forgotten")
             assert.are.equal(0, quiet(14.1), "no flicker after the release")
