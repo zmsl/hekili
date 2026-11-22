@@ -156,8 +156,9 @@ function M.newPower()
 end
 
 --- One in-combat poll of driver `st`'s belief of power `pt` against the truth before this poll's press (run.preTruth):
---- the floor over it and the top under it (by M.LO_EPS), the error, the band live and applied, the step scale and the
---- regen. `replay`: a replay's poll, which the gate's run.loOver never counts.
+--- the floor over it and the top under its whole points (by M.LO_EPS: the client and an exact band read whole points,
+--- the world keeps fractions), the error, the band live and applied, the step scale and the regen. `replay`: a replay's
+--- poll, which the gate's run.loOver never counts.
 function M.powerPoll(run, st, pt, now, replay)
     local VI = st.H.ns.VirtualStateInternal
     local res = VI and VI.res
@@ -173,7 +174,7 @@ function M.powerPoll(run, st, pt, now, replay)
             run.loOver = run.loOver + 1
         end
     end
-    if v.hi < truth - M.LO_EPS then
+    if v.hi < math.floor(truth) - M.LO_EPS then
         p.under = p.under + 1
     end
     if st.lhv and VI.bandLive[r] then

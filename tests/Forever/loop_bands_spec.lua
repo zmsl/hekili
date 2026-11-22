@@ -17,8 +17,9 @@ local dlw = require("Forever.helpers.druid_loop_world")
 local mw = require("Forever.helpers.mage_world")
 local pw = require("Forever.helpers.paladin_world")
 
--- The outputs the gates read from a run (loop.run's record), and the bands arm's lines.
-local ROWS = { "ours", "pressed", "presses", "pressedBy", "refused", "gap", "readyShort", "heldReady", "loOver", "up" }
+-- The outputs the gates read from a lone driver's run (loop.run's record), and the bands arm's lines. gap, readyShort
+-- and heldReady need the oracle driver (L1733): the three-fight tally below compares them, on Arms.
+local ROWS = { "ours", "pressed", "presses", "pressedBy", "refused", "loOver", "up" }
 
 local function fight(content, arm, seed, plant, duration)
     local L, lines, check = loop.new(content), {}, ab.check
@@ -38,6 +39,7 @@ local function fight(content, arm, seed, plant, duration)
     ab.check = check
     assert(ok, run)
     assert.are.same({ 0, 0 }, { run.errors, run.raises })
+    assert.is_true(run.power.n > 0, "no power poll: each lo-over compare would pass on 0 against 0") -- re-review M1
     return run, L.us, lines
 end
 
@@ -291,6 +293,16 @@ describe("the power row", function()
         poll(40, 42, 44, true) -- hi under
         poll(51, 52, 60, true, true) -- a replay's: in the row, never in the gate's count
         assert.are.equal(1, run.loOver)
+        -- (round 3) the client and an exact band read whole points: the top at them is not under a truth between two
+        local under = run.power.under
+        for _, case in ipairs({ { 50.6, 50, under }, { 51, 50, under + 1 } }) do
+            local power, over = run.power, run.loOver
+            run.power = { n = 0, over = 0, under = under, err = 0, live = 0, applied = 0, moves = 0 }
+            p, run.preTruth = { lo = 49, est = 49, hi = case[2] }, case[1]
+            loop.powerPoll(run, st, 1, 10)
+            assert.are.equal(case[3], run.power.under, case[1])
+            run.power, run.loOver = power, over
+        end
         assert.are.equal(
             "polls 4 lo over 2 hi under 1 abs err 3.500 live 4 applied 3 scale 1.120 (1 moves) regE 2.500"
                 .. " held late 0 shown 0",
