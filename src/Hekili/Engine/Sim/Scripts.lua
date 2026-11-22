@@ -13,6 +13,7 @@ local SpaceOut = ns.SpaceOut
 
 local ceil = math.ceil
 local orderedPairs = ns.orderedPairs
+local L = ns.L
 local roundUp = ns.roundUp
 local safeMax = ns.safeMax
 
@@ -1961,6 +1962,67 @@ function scripts:ApplyWindows( packName )
     end
 end
 
+--- (bands integration design 3.3) Pack `pack`'s harvested thresholds (each script's `Bands`, Hekili:LoadScript)
+--- as { [resource key] = { points, deficit, pct } }: distinct and sorted, a percent only when fractional (a whole one
+--- is a 1% cell edge), only the keys of the pack's spec's resources. Cold path: the options and ApplyBands.
+function scripts:PackBands( pack )
+    local out, seen = {}, {}
+    local pData = pack and rawget( Hekili.Engine.settings.packs, pack ) -- no wildcard default: "(none)" is no pack
+    local specData = pData and pData.spec and class.specs[ pData.spec ]
+    local res = specData and specData.resources
+    if not res then return out end
+    for list, lData in pairs( pData.lists ) do
+        for i in ipairs( lData ) do
+            local script = self.DB[ pack .. ":" .. list .. ":" .. i ]
+            for _, r in ipairs( script and script.Bands or {} ) do
+                local dst = out[ r.key ] and out[ r.key ][ r.kind ]
+                if res[ r.key ] and ( r.kind == "points" or r.kind == "deficit" or ( r.kind == "pct" and r.n % 1 ~= 0 and r.n > 0 and r.n < 100 ) ) then
+                    local id = r.key .. ":" .. r.kind .. ":" .. r.n
+                    if not seen[ id ] then
+                        seen[ id ] = true
+                        if not dst then
+                            out[ r.key ] = out[ r.key ] or { points = {}, deficit = {}, pct = {} }
+                            dst = out[ r.key ][ r.kind ]
+                        end
+                        dst[ #dst + 1 ] = r.n
+                    end
+                end
+            end
+        end
+    end
+    for _, e in pairs( out ) do
+        table.sort( e.points ); table.sort( e.deficit ); table.sort( e.pct )
+    end
+    return out
+end
+
+--- The active priority's thresholds into the belief's def (Tracked.lua ns.SetAplBands: a new generation); a resource
+--- over the cap (ns.AplPointCount, design 3.4) sends none: the library would refuse the whole list. At the end of
+--- LoadScripts, after one entry's load outside a full load, before a Build (Activation.lua) and when the active
+--- priority changes (Core.lua Hekili.Update). `scripts.appliedBands`: the priority last applied.
+function scripts:ApplyBands( pack )
+    local bands = self:PackBands( pack )
+    for key, e in pairs( bands ) do
+        if ns.AplPointCount( e ) > ns.APL_POINT_CAP then bands[ key ] = nil end
+    end
+    self.appliedBands = pack
+    ns.SetAplBands( bands )
+end
+
+--- The priority editor's warning (Options.lua, beside the import warning): one line per resource over the cap, or nil.
+--- `nameOf(key)`: the resource's name to show (the options' client power name), else the key.
+function scripts:BandWarning( pack, nameOf )
+    local text
+    for key, e in orderedPairs( self:PackBands( pack ) ) do
+        local n = ns.AplPointCount( e )
+        if n > ns.APL_POINT_CAP then
+            local line = format( L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."], nameOf and nameOf( key ) or key, n, ns.APL_POINT_CAP )
+            text = text and ( text .. "\n" .. line ) or line
+        end
+    end
+    return text
+end
+
 local reportedWindowErrors = {} -- LoadScripts: the window compile errors already reported this session
 
 local function scriptLoader()
@@ -2169,6 +2231,7 @@ function scripts:LoadScripts()
 
     Hekili.LoadingScripts = false
     scriptsLoaded = true
+    self:ApplyBands( Hekili:GetActivePack() )
 end
 
 
@@ -2357,6 +2420,7 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
         end
         if scripts.Windows[ pack ] then scripts:LoadSequences( pack ) end
         Hekili.LoadingScripts = false
+        if pack == Hekili:GetActivePack() then scripts:ApplyBands( pack ) end
         return
     end
 
@@ -2384,6 +2448,23 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     if token then
         Hekili:Error( "Forever: %s; `%s` in pack `%s` list `%s` entry %d (%s): %s.", subject, token, pack, list, id, data.action or "?", reads )
     end
+
+    -- (bands integration design 3.1) the thresholds the same four texts compare, and a sequence line's
+    -- members' own conditions (their scripts are compiled apart: LoadSequences), for the band library; a switched-off
+    -- entry declares nothing (as MarkPure and CheckWindows read it)
+    local bands, res = {}, specData and specData.resources or {}
+    local harvest = ns.AplThresholds
+    local nb = 0
+    if data.enabled ~= false then
+        nb = harvest( data.criteria, res, bands ) + harvest( data.value, res, bands )
+            + harvest( data.value_else, res, bands ) + harvest( data.target_if, res, bands )
+    end
+    if data.enabled ~= false and type( data.steps ) == "table" then
+        for _, m in ipairs( data.steps ) do
+            if type( m ) == "table" then nb = nb + harvest( m.criteria, res, bands ) end
+        end
+    end
+    script.Bands = nb > 0 and bands or nil
 
     script.action = data.action
     local lua = script.Lua
@@ -2465,6 +2546,7 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     end
 
     scripts.DB[ scriptID ] = script
+    if not Hekili.LoadingScripts and pack == Hekili:GetActivePack() then scripts:ApplyBands( pack ) end
 end
 
 
