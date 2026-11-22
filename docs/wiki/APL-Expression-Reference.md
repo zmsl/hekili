@@ -46,7 +46,7 @@ When a comparison asks a resource to reach a value, as in `energy.lo>=60` or `60
 ### Edge cases
 
 - `<resource>.time_to_<N>` with an N that is not a number reads 3600.
-- `health.pct` reads 100 in combat, where the game hides the player's health; a line that reads it gets a warning in **Warnings** when the priority loads.
+- `health.pct` reads in whole-percent steps in combat, where the game hides the player's health; 100 if the game offers no reading there.
 - The WoW client raises an error on division by zero, unlike standard Lua. A value that can be zero must not be used as a divisor.
 
 ## Buffs and debuffs

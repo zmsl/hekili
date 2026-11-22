@@ -112,6 +112,23 @@ describe("the A/B harness", function()
         assert.is_true(firings > 10, firings)
     end)
 
+    it("the world's `heals` knob heals us from the pull, so our health band rises (lane B3, L1666 b)", function()
+        local s = scenarios.stream({ duration = 30, heals = { 5, 60 }, observe = { bands = true } }, 7)
+        local last, rises, heals = nil, {}, {}
+        for i = 1, s.n do
+            if s.ev[i] == "@lhv" and s.a1[i] == "health" and s.a2[i] == "player" then
+                if last and s.a4[i] > last then
+                    rises[#rises + 1] = s.t[i]
+                end
+                last = s.a4[i]
+            elseif s.ev[i] == "UNIT_COMBAT" and s.a1[i] == "player" and s.a2[i] == "HEAL" then
+                heals[#heals + 1] = s.t[i]
+            end
+        end
+        assert.are.same({ 6, 11, 16, 21, 26 }, heals) -- every 5 s from the pull at 1, before the stop at 31
+        assert.are.same(heals, rises) -- each a rise of our band, and nothing else raises it
+    end)
+
     local function count(s, ev)
         local n = 0
         for i = 1, s.n do

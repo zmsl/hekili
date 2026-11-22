@@ -124,7 +124,8 @@ M.ARCHETYPES = ARCHETYPES
 --- start, W.startPetRegen), canParry (false: we never parry a swing at us, so no parry haste of ours; wowsims's
 --- PseudoStats.CanParry, true only for some classes [true]), mobAvoid (the mobs' avoid table of our hits, entities.new's
 --- `avoid` [its 5/5/5]), crit (our crit rate on an instant hit or strike, W.crit [world.CRIT]) and takenRage (W.takenRage:
---- the swing-paid power a landed wound on us pays [none]).
+--- the swing-paid power a landed wound on us pays [none]), heals ({ every, amount }: a healer of no entity heals us
+--- that often from the pull, before the stop [none]; the bands arms' player health rises, lane B3).
 --- The detection suite's (unit-registry spec §6.2): noMelee (no white swings of ours), spells ({ t, kind }:
 --- behaviours.ours, from the pull, with distance and jitter), switchTo ({ t, mob index }: our target changes), churn
 --- ({ every, gap }: our target's plate leaves and comes back), extraMobs (mobs not on us, each with a plate), swapEvery
@@ -308,6 +309,13 @@ function M.world(o, seed)
                 end
                 us.target = mobs[i]
                 W.emit({ kind = "target", relist = true }) -- the client's "target" auras follow (observer relist)
+            end)
+        end
+    end
+    if o.heals then -- { every, amount }: a group healer's heal on us (UNMEASURED: the shape is the test's; lane B3)
+        for t = pull + o.heals[1], stop - 1e-6, o.heals[1] do
+            W.at(t, function()
+                W.emit({ kind = "spell", dst = us, act = "HEAL", amount = o.heals[2], school = 2 })
             end)
         end
     end

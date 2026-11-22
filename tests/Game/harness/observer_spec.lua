@@ -183,6 +183,47 @@ describe("the observer", function()
         assert.are.equal(4, #got)
     end)
 
+    it("(bands) pushes our health to the library after a heal on us, as after a wound (L1666 b)", function()
+        setup()
+        W.emit({ t = 4, kind = "swing", src = mob, dst = us, hand = 1, act = "WOUND", amount = 300 })
+        W.emit({ t = 6, kind = "spell", src = us, dst = us, act = "HEAL", amount = 120 })
+        W.emit({ t = 7, kind = "spell", src = us, dst = us, act = "HEAL", amount = 500 })
+        local got = {}
+        for _, e in ipairs(events(observer.observe(W, setmetatable({ bands = true }, { __index = observer.DEFAULTS })))) do
+            if e[2] == "@lhv" and e[4] == "player" then
+                got[#got + 1] = table.concat({ e[1], e[3], tostring(e[5]), e[6], e[7] }, " ")
+            end
+        end
+        assert.are.same({ "4 health nil 700 1000", "6 health nil 820 1000", "7 health nil 1000 1000" }, got)
+    end)
+
+    -- (review M3; lane B2 depends on it) the observer reads the world after it ran: a mob's push at a retarget before
+    -- its first wound carries its prepull health (world.lua's snapshot), not its health at the fight's end
+    it("(bands) a retarget to a mob not yet hit pushes its prepull health, then each wound's", function()
+        setup()
+        local mob2 = W.add(entities.new({ guid = "Creature-2", kind = "mob", weapons = { { 10, 14, 2 } } }))
+        W.emit({ t = 1, kind = "prepull" })
+        W.emit({ t = 2, kind = "spell", src = us, dst = mob, act = "WOUND", amount = 300 })
+        us.target = mob2
+        W.emit({ t = 5, kind = "target" })
+        W.emit({ t = 8, kind = "spell", src = us, dst = mob2, act = "WOUND", amount = 400 })
+        assert.are.equal(600, mob2.health) -- the world's end
+        local got = {}
+        for _, e in ipairs(events(observer.observe(W, setmetatable({ bands = true }, { __index = observer.DEFAULTS })))) do
+            if e[2] == "@lhvPrime" or (e[2] == "@lhv" and e[4] == "target") then
+                got[#got + 1] = table.concat({ e[1], e[2], tostring(e[6]) }, " ")
+            end
+        end
+        assert.are.same({
+            "1.1 @lhvPrime nil",
+            "1.1 @lhv 1000",
+            "2 @lhv 700",
+            "5 @lhvPrime nil",
+            "5 @lhv 1000",
+            "8 @lhv 600",
+        }, got)
+    end)
+
     it("fires the on-swing proc as a school-32 wound on the target and a heal on us, same ms", function()
         setup()
         W.emit({ t = 7.002, kind = "proc", src = us, dst = mob, act = "WOUND", amount = 36, school = 32 })
@@ -1318,9 +1359,10 @@ describe("the world", function()
             assert.are.equal(460, us.health)
             assert.are.equal(500, mob.health)
             W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
-            W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
+            local heal = W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
             assert.are.equal(470, mob.health)
             assert.are.equal(500, us.health)
+            assert.are.equal(500, heal.health) -- the heal's snapshot, capped at the max, as a wound's (L1666 b)
         end
     )
 

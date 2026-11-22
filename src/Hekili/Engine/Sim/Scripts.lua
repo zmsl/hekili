@@ -2438,8 +2438,8 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     local cw = entries == pData.lists[ list ] and scripts.Windows[ pack ]
     if cw and cw.errorAt[ list .. ":" .. id ] then script.Error = cw.errorAt[ list .. ":" .. id ] end
 
-    -- Forever: the player's health is hidden in combat (owner L1462); target health (read from the hidden-value band)
-    -- and time to die are unwarned.
+    -- Forever: a condition reading a secret token (AplWarnings.lua's rows; none today) is warned once. Target health
+    -- and the player's own (read from the hidden-value band, lanes B2/B3) and time to die are unwarned.
     local scan = ns.AplSecretToken
     local token, subject, reads = scan( data.criteria )
     if not token then token, subject, reads = scan( data.value ) end

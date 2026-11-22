@@ -10,14 +10,16 @@ local FRAME = 1 / 60
 local PRIMED = 11 * FRAME -- a prime's first live frame (the shared rows "primes: ...")
 local floor = math.floor
 
--- Each world: target health 63.7%, player mana 45% of 1000. `live()` runs until fresh watches are live; `frame(pct)`
--- runs one frame with the target's health at pct% (nil: unchanged); `max(m)` sets the mana max (mana stays 45%), seen
--- on the next frame; `retarget(pct)` swaps to a new target at pct% (the client's PLAYER_TARGET_CHANGED).
+-- Each world: target health 63.7%, player health full, player mana 45% of 1000. `live()` runs until fresh watches are
+-- live; `frame(pct)` runs one frame with the target's health at pct% (nil: unchanged); `hp(pct)` and `mana(pct)` set our
+-- health and mana, seen on the next frame; `max(m)` sets the mana max (mana stays 45%), seen on the next frame; `retarget(pct)` swaps to a new
+-- target at pct% (the client's PLAYER_TARGET_CHANGED).
 local IMPLS = {
     real = function()
         local Fake = dofile(FAKE)
         local W = Fake.world
         W.unit.target = { health = 0.637 }
+        W.unit.player.health = 1
         W.unit.player.power[0], W.unit.player.max[0] = 0.45, 1000
         return LibStub("LibHiddenValues-1.0"),
             {
@@ -30,6 +32,12 @@ local IMPLS = {
                         W.unit.target.health = pct / 100
                     end
                     Fake.tick(1)
+                end,
+                hp = function(pct)
+                    W.unit.player.health = pct / 100
+                end,
+                mana = function(pct)
+                    W.unit.player.power[0] = pct / 100
                 end,
                 max = function(m)
                     W.unit.player.max[0] = m
@@ -44,7 +52,7 @@ local IMPLS = {
             }
     end,
     fake = function()
-        local k, newMax = 0, nil -- the frame number: the clock is 1000 + k frames, never a running sum
+        local k, newMax, newHp, newMana = 0, nil, nil, nil -- k: the frame number: the clock is 1000 + k frames, never a running sum
         local function now()
             return 1000 + k * FRAME
         end
@@ -66,6 +74,20 @@ local IMPLS = {
                         lib:Push("power", "player", 0, 0.45 * newMax, newMax, now())
                         newMax = nil
                     end
+                    if newHp then
+                        lib:Push("health", "player", nil, newHp * 10, 1000, now())
+                        newHp = nil
+                    end
+                    if newMana then
+                        lib:Push("power", "player", 0, newMana * 10, 1000, now())
+                        newMana = nil
+                    end
+                end,
+                hp = function(pct)
+                    newHp = pct
+                end,
+                mana = function(pct)
+                    newMana = pct
                 end,
                 max = function(m)
                     newMax = m
@@ -245,6 +267,46 @@ for _, name in ipairs({ "real", "fake" }) do
             assert.are.near(7 * FRAME, hp:Latency(), 1e-9)
         end)
 
+        -- (ledger L1669) full is its own closed cell [100, 100]; 99.0 up to just under full is [99, 100) (99.95-99.99
+        -- sits in the library's 0.05% guard below the edge and reads either way, by the client's snap: not a row)
+        it("full health is the closed cell [100, 100], 99.6 and 99.0 the cell [99, 100); player and target", function()
+            local tgt = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
+            local me = assert(lib:Watch("A", { kind = "health", unit = "player", step = 1 }))
+            local pts = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = {} }))
+            w.live()
+            local rows = {}
+            for _, pct in ipairs({ 100, 99.6, 100 - 1, 100 }) do -- 100 - 1: a bare 99 is a spell ID to boundary_spec
+                w.hp(pct)
+                w.frame(pct)
+                for _ = 1, 3 do
+                    w.frame()
+                end
+                rows[#rows + 1] = table.concat({ pct, unpack(lohi(tgt)) }, " ")
+                rows[#rows + 1] = table.concat({ pct, unpack(lohi(me)) }, " ")
+            end
+            w.retarget(100) -- a full target after a target change (lane B2's pull)
+            for _ = 1, 12 do
+                w.frame()
+            end
+            rows[#rows + 1] = table.concat({ "retarget", unpack(lohi(tgt)) }, " ")
+            assert.are.same({
+                "100 100 100",
+                "100 100 100",
+                "99.6 99 100",
+                "99.6 99 100",
+                "99 99 100",
+                "99 99 100",
+                "100 100 100",
+                "100 100 100",
+                "retarget 100 100",
+            }, rows)
+            w.mana(100) -- a points handle's full cell: [max, max]
+            for _ = 1, 4 do
+                w.frame()
+            end
+            assert.are.same({ 1000, 1000 }, lohi(pts))
+        end)
+
         it("SetPoints: true, or nil and a code with the old set kept", function()
             local hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
             local pts = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, points = { 400, 600 } }))
@@ -416,12 +478,13 @@ describe("fake_lhv's observer rules", function()
         assert.are.equal("live", (h:State()))
     end)
 
-    it("1% cells are exact for whole values; the top cell holds 100; no unit is gone", function()
+    it("1% cells are exact for whole values; full is its own cell [100, 100]; no unit is gone", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1, edges = { 35 } })
         t = t + PRIMED
         for _, c in ipairs({
             { 29, 100, 29, 30 },
-            { 1000, 1000, 100 - 1, 100 },
+            { 1000, 1000, 100, 100 },
+            { 995, 1000, 100 - 1, 100 },
             { 0, 1000, 0, 1 },
             { 3550, 10000, 35, 36 },
         }) do
