@@ -78,8 +78,9 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- I.BAND_MARGIN, the display may lead the cast). Calibration from band pins (owner L1673, clean
 -- windows only): a band change covers (the last stamp, this stamp]; `winN[r]` counts the events we know of since the
 -- last stamp, `winT/K[r]` are the latest's time and the only one's source (seen). One swing of a hand and nothing
--- else: that hand's sample, taught to the scale once it settled landed (its crit's extra out). Rage per hit on us is
--- not learned (L1723: until a capture shows a band change against the hit row).
+-- else: that hand's sample, taught to the scale once it settled landed (its crit's extra out) and I.TAKEN_ROW_LAG
+-- passed with no wound row on us. Rage per hit on us is not learned (L1723: until a capture shows a band change against
+-- the hit row).
 local R = {
     n = 0,
     type = {},
@@ -368,27 +369,37 @@ end
 
 -- What a window's event was: a swing of hand 1 or 2, or OTHER.
 local OTHER = 0
+-- A melee wound row on us trails its rage by up to this (389-565 ms measured, docs/research/2026-10-23-damagemeter-api.md):
+-- a swing's sample waits it out, and a wound row up to then unteaches it (the rage may be that hit's).
+I.TAKEN_ROW_LAG = 0.6
 -- Per hand, the swing a band change covered alone (shortcut: one a hand, so a swing settling after that hand's next
 -- covered one teaches nothing; widen if a trace shows off-hand samples lost): its slot (0: none), its window, the
--- swing's time, the rise, whether it crit and whether it settled landed (taught at the fold's end).
+-- swing's time, the rise, whether it crit and whether it settled landed (taught at a fold's end past the row's lag).
 local smpR, smpFrom, smpTo, smpAt, smpV = { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }
 local smpCrit, smpLand = { false, false }, { false, false }
 
 -- An event of slot r at t that gives (or may give) it something besides continuous regen: the open window counts it; one
--- dated back into a closed window unteaches that window's sample. Allocates nothing.
+-- dated back into a closed window unteaches that window's sample, and one within I.BAND_MARGIN after the last stamp may
+-- lie on either side of it: that window's sample and the open window both. Allocates nothing.
 local function seen(r, t, what)
     if not R.bandOn[r] or R.swing[r] == 0 then
         return
-    elseif t <= R.bandAt[r] then
+    end
+    local margin = I.BAND_MARGIN + 1e-6
+    local near = t - R.bandAt[r] <= margin
+    if near then
         for h = 1, 2 do
-            if smpR[h] == r and t > smpFrom[h] and t <= smpTo[h] then
+            if smpR[h] == r and t > smpFrom[h] and t <= smpTo[h] + margin then
                 smpR[h] = 0
             end
         end
-        return
+        if t <= R.bandAt[r] then
+            return
+        end
     end
-    R.winN[r] = R.winN[r] + 1
-    if R.winN[r] == 1 or t > R.winT[r] then
+    local n = R.winN[r]
+    R.winN[r] = n + (near and 2 or 1)
+    if n == 0 or t > R.winT[r] then
         R.winT[r], R.winK[r] = t, what
     end
 end
@@ -1802,12 +1813,13 @@ local function applyBand(r, lo, hi, bt, t)
 end
 
 -- Slot r's band moved to the low end lo at bt: what its window (the last stamp, bt] teaches, when one source alone lies
--- in it (owner L1673); an event after the stamp is the next window's. The value itself needs none of this.
--- Allocates nothing.
+-- in it (owner L1673); an event past the margin after the stamp is the next window's. The value itself needs none of
+-- this. Allocates nothing.
 local function closeWindow(r, lo, bt)
     local n, what, e = R.winN[r], R.winK[r], R.winT[r]
     if n > 0 and e > bt + 1e-6 then
-        R.winN[r] = n > 1 and 2 or 1 -- some of several may lie on either side: neither window is clean
+        -- some of several, or one within the margin, may lie on either side: neither window is clean
+        R.winN[r] = (n > 1 or e - bt <= I.BAND_MARGIN + 1e-6) and 2 or 1
         return
     end
     R.winN[r] = 0
@@ -1832,10 +1844,11 @@ I.On(Obs.SwingSettled, function(o)
     end
 end)
 
--- At the fold's end, after its reactions (a gain of theirs dated into the window unteaches it) and its crit.
+-- At a fold's end past the row's lag, after its reactions (a gain of theirs dated into the window unteaches it) and its
+-- crit.
 I.OnSettle(function(now)
     for h = 1, 2 do
-        if smpLand[h] then
+        if smpLand[h] and now > smpTo[h] + I.TAKEN_ROW_LAG then
             smpLand[h] = false
             local r = smpR[h]
             if r > 0 then
@@ -2069,6 +2082,13 @@ I.On(Obs.PlayerHit, function(o, t)
     end
     for r = 1, R.n do
         seen(r, o.t, OTHER)
+    end
+    if kind <= I.HitKind.BLOCKED then -- the damage was up to the row's lag ago: in that swing's window, maybe
+        for h = 1, 2 do
+            if smpR[h] > 0 and o.t <= smpTo[h] + I.TAKEN_ROW_LAG then
+                smpR[h] = 0
+            end
+        end
     end
     if kind <= I.HitKind.BLOCKED and o.b < 0 then
         return -- a wound's secret amount (b = -1, Sources/Player.lua): its rage is the estimate path (L128), not built

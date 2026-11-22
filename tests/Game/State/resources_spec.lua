@@ -4346,7 +4346,7 @@ describe("resource bands (lane B4)", function()
         end)
 
         -- one main-hand swing at 11 whose rage shows at 11.03: `rise` points; settled at its row by `outcome`
-        local function swing(rise, outcome, more, crit)
+        local function swing(rise, outcome, more, crit, waiting)
             S.Direct(Obs.Swing, 11, 1, 0, 4)
             if more then
                 more()
@@ -4366,6 +4366,11 @@ describe("resource bands (lane B4)", function()
             band(11.46, RAGE, 13 + rise, 14 + rise, 11.03)
             I.Fold(11.46)
             I.Settle(11.46)
+            if not waiting then -- past the row's lag (review I5 b)
+                band(11.7, RAGE, 13 + rise, 14 + rise, 11.03)
+                I.Fold(11.7)
+                I.Settle(11.7)
+            end
             return R.scale[RAGE]
         end
 
@@ -4437,7 +4442,7 @@ describe("resource bands (lane B4)", function()
             S.Direct(Obs.SwingSettled, 11.45, 1, 11, I.HitKind.WOUND)
             I.Fold(11.45)
             I.ResourceShift(RAGE, 5, 11, Obs.SwingSettled, 1)
-            I.Settle(11.45)
+            I.Settle(11.7)
             assert.are.equal(1, R.scale[RAGE])
         end)
 
@@ -4445,19 +4450,73 @@ describe("resource bands (lane B4)", function()
             S.Direct(Obs.Swing, 12.95, 1, 0, 4) -- the tick at 13
             band(13.02, RAGE, 27, 28, 13.01)
             S.Direct(Obs.SwingSettled, 13.4, 1, 12.95, I.HitKind.WOUND)
-            I.Fold(13.4)
-            I.Settle(13.4)
+            I.Fold(13.7)
+            I.Settle(13.7)
             assert.are.equal(1, R.scale[RAGE])
         end)
 
-        it("an event after the stamp is the next window's", function()
+        it("an event past the margin after the stamp is the next window's", function()
             S.Direct(Obs.Swing, 11.02, 1, 0, 4)
-            band(11.03, RAGE, 14, 15, 11.01) -- a change before the swing
+            band(11.03, RAGE, 14, 15, 10.95) -- a change before the swing
             band(11.07, RAGE, 28, 29, 11.05) -- its rage
             S.Direct(Obs.SwingSettled, 11.45, 1, 11.02, I.HitKind.WOUND)
-            I.Fold(11.45)
-            I.Settle(11.45)
+            I.Fold(11.7)
+            I.Settle(11.7)
             assert.is_true(math.abs(R.scale[RAGE] - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+        end)
+
+        -- (review I5 b) a hit's rage is in the band up to 0.57 s before its row on us
+        it("a swing's sample waits out the row's lag", function()
+            assert.are.equal(1, swing(14, I.HitKind.WOUND, nil, nil, true))
+        end)
+
+        for _, kind in ipairs({ 1, 2 }) do
+            it("a wound row on us within the lag after the window unteaches it, kind " .. kind, function()
+                swing(14, I.HitKind.WOUND, nil, nil, true)
+                S.Direct(Obs.PlayerHit, 11.55, kind, -1, 20) -- damage at 11, in the window
+                I.Fold(11.7)
+                I.Settle(11.7)
+                assert.are.equal(1, R.scale[RAGE])
+            end)
+        end
+
+        it("a wound row past the lag leaves it taught", function()
+            swing(14, I.HitKind.WOUND, nil, nil, true)
+            S.Direct(Obs.PlayerHit, 11.68, 1, -1, 20)
+            I.Fold(11.7)
+            I.Settle(11.7)
+            assert.is_true(math.abs(R.scale[RAGE] - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+        end)
+
+        -- (review I5 d) an event within the margin after a stamp may lie on either side of it
+        it("an event just after the stamp, heard before the band: neither window is clean", function()
+            S.Direct(Obs.Swing, 11.02, 1, 0, 4)
+            band(11.03, RAGE, 14, 15, 11.01)
+            band(11.07, RAGE, 28, 29, 11.05)
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11.02, I.HitKind.WOUND)
+            I.Fold(11.7)
+            I.Settle(11.7)
+            assert.are.equal(1, R.scale[RAGE])
+        end)
+
+        it("an event just after the stamp, heard after the band: the window it closed is unclean", function()
+            S.Direct(Obs.Swing, 11, 1, 0, 4)
+            band(11.05, RAGE, 27, 28, 11.03)
+            S.Direct(Obs.CastSuccess, 11.07, 1, 0, 0)
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11, I.HitKind.WOUND)
+            I.Fold(11.7)
+            I.Settle(11.7)
+            assert.are.equal(1, R.scale[RAGE])
+        end)
+
+        it("an event just after the stamp, heard after the band: the open window is unclean", function()
+            band(10.99, RAGE, 14, 15, 10.97)
+            S.Direct(Obs.Swing, 11, 1, 0, 4)
+            band(11.05, RAGE, 28, 29, 11.03)
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11, I.HitKind.WOUND)
+            I.Fold(11.7)
+            I.Settle(11.7)
+            assert.are.equal(1, R.scale[RAGE])
         end)
 
         -- (review I5 c, cut; owner L1723) a hit's row is not its moment: rage per hit is not learned
