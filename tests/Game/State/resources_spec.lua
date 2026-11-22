@@ -3751,3 +3751,323 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.equal(L.THETA_MIN, L.theta[1])
     end)
 end)
+
+-- Lane B4 (LibHiddenValues integration design 2.4, both columns, owner L1671; usable answers win, L1675): the family
+-- reads Obs.Band on the resource channels. A band is [lo, hi): its top is hi - EPS (a closed cell, lo == hi, itself).
+describe("resource bands (lane B4)", function()
+    local RAGE, MANA, NRG = 1, 2, 3 -- the slots
+    local PUNCH, SPELL, STAB, GUARDED, NUKE = 1, 2, 3, 4, 5 -- costs 20, 460, 40, 40 (its own requirement fails), 100
+    local VS, I, R, S, Obs, EPS
+
+    before_each(function()
+        local api = fake.new()
+        local ns = load.module()
+        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        S, Obs, R, EPS = I.Sources, VS.Obs, I.res, I.EPS
+        I.Build({
+            school = load.school(),
+            fsr = load.constant("FSR"),
+            gcdSpell = load.constant("GCD_SPELL"),
+            oracleMin = load.constant("ORACLE_MIN"),
+            abilities = {
+                { key = "punch", spend = 20 },
+                { key = "spell", spend = 460 },
+                { key = "stab", spend = 40 },
+                {
+                    key = "guarded",
+                    spend = 40,
+                    usable = function()
+                        return false
+                    end,
+                },
+                { key = "nuke", spend = 100 },
+            },
+            abilityIds = { { 1001 }, { 1002 }, { 1003 }, { 1004 }, { 1005 } },
+            abilitySlot = { RAGE, MANA, NRG, NRG, MANA },
+            resources = {
+                {
+                    key = "rage",
+                    type = fs.RAGE,
+                    token = "RAGE",
+                    max = 100,
+                    swing = 1,
+                    swingValue = 10,
+                    swingCrit = 4,
+                    taken = function(_, amount)
+                        return amount > 0 and amount / 10 or nil
+                    end,
+                    auraRegen = { { value = 1, interval = 3 } },
+                },
+                { key = "mana", type = 0, token = "MANA", max = 1000, rest = true, regen = 10 },
+                { key = "energy", type = 3, token = "ENERGY", max = 100, rest = true, regen = 10 },
+            },
+            auras = {},
+            auraIds = {},
+            talents = {},
+            units = { "player", "target" },
+        }, 1)
+        I.api = api
+    end)
+
+    -- the source's poll: a live band [lo, hi) of slot r stamped bt, re-asserted at t
+    local function band(t, r, lo, hi, bt)
+        I.bandT[r] = bt or t
+        S.Direct(Obs.Band, t, r, lo, hi)
+    end
+    local function unknown(t, r)
+        S.Direct(Obs.Band, t, r, 1, 0)
+    end
+    local function answer(t, a, yes)
+        S.Direct(Obs.Usable, t, a, yes and 1 or 0, yes and 0 or 1)
+    end
+    local function set(r, lo, est, hi)
+        R.lo0[r], R.est0[r], R.hi0[r], R.over[r], R.assume[r] = lo, est, hi, 0, false
+    end
+    local function is(r, lo, est, hi)
+        local got = { R.lo0[r], R.est0[r], R.hi0[r] }
+        for i, want in ipairs({ lo, est, hi }) do
+            assert.is_true(
+                math.abs(got[i] - want) < 1e-6,
+                ("%d: want %s %s %s, got %s %s %s"):format(i, lo, est, hi, got[1], got[2], got[3])
+            )
+        end
+    end
+    local function at(t) -- the clock at t with nothing heard (regen moves the values: set them after it)
+        I.Fold(t)
+        I.Settle(t)
+    end
+
+    describe("the band's columns", function()
+        before_each(function()
+            at(10)
+        end)
+
+        it("a ceiling, a floor and the rest assumption's end; never a cap mark", function()
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 460 - EPS, 460 - EPS)
+            assert.are.same({ false, 0 }, { R.assume[MANA], R.over[MANA] })
+            local p = VS.Power(0, 10)
+            assert.are.same({ 450, "observed", false }, { p.lo, p.basis, p.capped })
+            assert.are.equal(1, I.bandUsed[MANA])
+            assert.are.same({ 450, 460 }, { I.bandUsedLo[MANA], I.bandUsedHi[MANA] })
+        end)
+
+        it("narrower bounds inside the band stand; est is clamped into it", function()
+            set(MANA, 453, 455, 458)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 453, 455, 458)
+            set(MANA, 430, 440, 455)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 450, 455)
+        end)
+
+        it("a disjoint band wins both ends; past a cell it counts a disagreement", function()
+            set(MANA, 480, 485, 490)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 460 - EPS, 460 - EPS)
+            assert.are.equal(1, I.bandDisagree[MANA])
+            set(MANA, 380, 400, 420)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 450, 460 - EPS)
+            assert.are.equal(2, I.bandDisagree[MANA])
+            set(MANA, 463, 464, 465) -- within a cell: the crossing the band has yet to show
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 460 - EPS, 460 - EPS)
+            assert.are.equal(2, I.bandDisagree[MANA])
+        end)
+
+        it("a band of at most a point is an exact read; a wider one or an unknown clears it", function()
+            band(10, NRG, 42, 43)
+            I.Fold(10)
+            is(NRG, 42, 42, 42)
+            assert.is_true(R.banded[NRG])
+            assert.is_false(R.readable[NRG]) -- never ReadOf.Resource's path
+            band(10, NRG, 42, 44)
+            I.Fold(10)
+            assert.is_false(R.banded[NRG])
+            band(10, NRG, 100, 100) -- full: the closed cell
+            I.Fold(10)
+            is(NRG, 100, 100, 100)
+            unknown(10, NRG)
+            I.Fold(10)
+            assert.is_false(R.banded[NRG])
+            is(NRG, 100, 100, 100) -- the bounds folded stay, and age as any
+        end)
+
+        it("this drain's plain read wins", function()
+            S.Direct(Obs.Read, 10, MANA, 702, I.ReadOf.Resource)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 702, 702, 702)
+            assert.are.equal(0, I.bandUsed[MANA])
+        end)
+
+        it("a slot that reads plain in combat ignores its band", function()
+            R.readable[MANA] = true
+            set(MANA, 700, 700, 700)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 700, 700, 700)
+        end)
+    end)
+
+    -- The controller's ruling (it replaces design 2.4's "read wherever R.readable is read"): a band never switches the
+    -- rungs off; while one is live a usable answer is a bound, never a flip pin, and only the side it contradicts yields.
+    describe("usable always wins (L1675)", function()
+        before_each(function()
+            at(10)
+        end)
+
+        it("a short answer under an exact band's floor: the bottom yields", function()
+            band(10, NRG, 42, 43)
+            answer(10, STAB, false)
+            I.Fold(10)
+            is(NRG, 40 - EPS, 40 - EPS, 40 - EPS)
+        end)
+
+        it("a usable answer over the band's top: lo = hi = the cost, never opened to the max", function()
+            band(10, RAGE, 12, 13)
+            answer(10, PUNCH, true)
+            I.Fold(10)
+            is(RAGE, 20, 20, 20)
+            band(10.05, RAGE, 12, 13, 10) -- the bound was about its drain
+            I.Fold(10.05)
+            is(RAGE, 12, 12, 12)
+        end)
+
+        it("agreeing, both narrow", function()
+            band(10, MANA, 450, 470)
+            answer(10, SPELL, true)
+            I.Fold(10)
+            is(MANA, 460, 470 - EPS, 470 - EPS)
+            band(10, MANA, 450, 470)
+            answer(10, SPELL, false)
+            I.Fold(10)
+            assert.are.equal(460 - EPS, R.hi0[MANA])
+        end)
+
+        it("a flip with a band live pins nothing", function()
+            band(10, MANA, 440, 470)
+            answer(10, SPELL, false)
+            band(10.05, MANA, 450, 470)
+            answer(10.05, SPELL, true)
+            I.Fold(10.05)
+            assert.are.equal(460, R.lo0[MANA])
+            assert.is_true(R.hi0[MANA] >= 460 and R.pinT[MANA] == 0)
+        end)
+
+        it("an exact slot's flip is a bound too", function()
+            band(10, NRG, 39, 40)
+            answer(10, STAB, false)
+            band(10.2, NRG, 39, 40, 10)
+            answer(10.2, STAB, true)
+            I.Fold(10.2)
+            is(NRG, 40, 40, 40) -- not the pin [40, 40 + the regen since]
+        end)
+
+        it("the precondition check runs for a banded slot", function()
+            band(10, NRG, 42, 43)
+            answer(10, GUARDED, false) -- short for its own requirement: no rung
+            I.Fold(10)
+            is(NRG, 42, 42, 42)
+        end)
+    end)
+
+    describe("swing-paid", function()
+        it("a banded slot pends no swing (the band shows it)", function()
+            at(9.8)
+            S.Direct(Obs.Swing, 9.9, 1, 0, 4)
+            I.Tickets.OpenSwing(9.9, 1, "", I.Log.PAIR_WINDOW_MS[1] / 1000, 0, false)
+            I.Fold(9.9)
+            assert.are.equal(9.9, VS.SwingPending(1))
+            band(10, RAGE, 12, 13, 9.9)
+            I.Fold(10)
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
+        it("a rise is a lift: the swing in flight does not pay twice (L1504)", function()
+            set(RAGE, 5, 5, 5)
+            S.Direct(Obs.Swing, 9.9, 1, 0, 4)
+            band(10, RAGE, 22, 23, 9.9) -- that swing's rage
+            unknown(10.2, RAGE) -- the band lost before the wound
+            S.Direct(Obs.Swing, 9.9, 1, 1, 1)
+            I.Fold(10.4)
+            is(RAGE, 22, 22, 22)
+        end)
+
+        it("re-asserts after a usable clip do not pile the lift up", function()
+            set(RAGE, 12, 12, 12)
+            band(10, RAGE, 12, 13)
+            answer(10, PUNCH, true)
+            I.Fold(10)
+            assert.are.equal(8, R.liftE[RAGE])
+            for i = 1, 3 do
+                band(10 + i / 20, RAGE, 12, 13, 10)
+                answer(10 + i / 20, PUNCH, true)
+            end
+            I.Fold(10.2)
+            assert.are.same({ 8, 8 }, { R.liftE[RAGE], R.liftL[RAGE] })
+        end)
+    end)
+
+    describe("regen from crossings", function()
+        local function crossings(...)
+            local rows = { ... }
+            for _, x in ipairs(rows) do
+                band(x[1] + 0.05, x[4] or MANA, x[2], x[3], x[1])
+                I.Fold(x[1] + 0.05)
+            end
+            return R.regE[rows[1][4] or MANA]
+        end
+
+        it("two true crossings a pin gap apart measure the rate between their instants", function()
+            local e = crossings({ 9.5, 440, 450 }, { 10, 450, 460 }, { 11.2, 460, 470 })
+            assert.is_true(math.abs(e - (10 + I.ALPHA * (10 / 1.2 - 10))) < 1e-6, e)
+        end)
+
+        it("crossings closer than the gap add up until it", function()
+            local e = crossings({ 9.5, 440, 450 }, { 10, 450, 460 }, { 10.8, 460, 470 }, { 11.6, 470, 480 })
+            assert.is_true(math.abs(e - (10 + I.ALPHA * (20 / 1.6 - 10))) < 1e-6, e)
+        end)
+
+        it("the first band, a widened one, one whose hi alone moved and a jump are none", function()
+            assert.are.equal(10, crossings({ 9.5, 450, 460 }, { 11.2, 460, 470 }))
+            assert.are.equal(10, crossings({ 12.5, 460, 480 }, { 14, 460, 475 }, { 16, 440, 480 }))
+            assert.are.equal(10, crossings({ 17, 480, 490 }, { 18.5, 500, 510 }, { 20, 540, 550 }))
+        end)
+
+        it("an own spend, a gain or a new max between voids the pair", function()
+            crossings({ 9.5, 440, 450 }, { 10, 450, 460 })
+            I.ResourceShift(MANA, -1, 10.1, Obs.CastSuccess)
+            assert.are.equal(10, crossings({ 11.3, 460, 470 }))
+            S.Direct(Obs.Read, 11.4, MANA, 1000 + 1, I.ReadOf.Max)
+            assert.are.equal(10, crossings({ 12.5, 470, 480 }))
+        end)
+
+        it("an exact band's pins measure nothing themselves", function()
+            assert.are.equal(10, crossings({ 10, 40, 41, NRG }, { 12, 45, 46, NRG }, { 14, 58, 59, NRG }))
+        end)
+    end)
+
+    it("allocates nothing over bands, re-asserts and answers", function()
+        local t = 10
+        assert.are.equal(
+            0,
+            alloc.bytes(function()
+                t = t + 0.05
+                local k = math.floor(t) % 2
+                band(t, MANA, 450 + 10 * k, 460 + 10 * k, math.floor(t))
+                band(t, RAGE, 12 + 10 * k, 13 + 10 * k, math.floor(t))
+                answer(t, PUNCH, k == 1)
+                I.Fold(t)
+                I.Settle(t)
+            end, 1000)
+        )
+    end)
+end)
