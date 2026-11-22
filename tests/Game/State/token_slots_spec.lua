@@ -884,6 +884,58 @@ describe("token-keyed target memory (lane T2m)", function()
             end
         end)
 
+        -- No castGUID: SENT and START of a hard cast at mob 1, then `stop` (a failure or an interrupt), a tab to 2.
+        local function stopped(stop)
+            ctl.now = 10.5
+            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", nil, fs.SPENDER_C)
+            ctl.Fire("UNIT_SPELLCAST_START", "player", nil, fs.SPENDER_C)
+            ctl.now = 11
+            ctl.Fire(stop, "player", nil, fs.SPENDER_C)
+            tab(2, 11.2)
+        end
+
+        it(
+            "no castGUID, the hard cast stopped: a later instant one on the new mob lands there (both worlds)",
+            function()
+                for _, w in ipairs(WORLDS) do
+                    for _, stop in ipairs({ "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_FAILED" }) do
+                        start(w, 2, nil, hard)
+                        tab(1, 10)
+                        stopped(stop)
+                        ctl.now = 12
+                        ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", nil, fs.SPENDER_C) -- an instant: no START
+                        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", nil, fs.SPENDER_C)
+                        fold(12.05)
+                        near(27, est(12.1), w .. " " .. stop)
+                        tab(1, 13)
+                        assert.are.equal("down", est(13.1) or "down", w .. " " .. stop)
+                    end
+                end
+            end
+        )
+
+        it(
+            "no castGUID, a refused press of the spell fails mid-cast: the cast keeps its SENT's mob (both worlds)",
+            function()
+                for _, w in ipairs(WORLDS) do
+                    start(w, 2, nil, hard)
+                    tab(1, 10)
+                    ctl.now = 10.5
+                    ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", nil, fs.SPENDER_C)
+                    ctl.Fire("UNIT_SPELLCAST_START", "player", nil, fs.SPENDER_C)
+                    ctl.now = 10.8
+                    ctl.Fire("UNIT_SPELLCAST_FAILED", "player", nil, fs.SPENDER_C) -- its START pin goes; the SENT stands
+                    tab(2, 11)
+                    ctl.now = 12
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", nil, fs.SPENDER_C)
+                    fold(12.05)
+                    assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                    tab(1, 13)
+                    near(27, est(13.1), w)
+                end
+            end
+        )
+
         it("the old mob died before the success: on nobody (open world)", function()
             start("guid", 2, nil, hard)
             tab(1, 10)

@@ -49,6 +49,9 @@ end)
 
 local function stopped(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
+    if a then
+        I.UnpinStart(guid, spellID) -- before the castGUID check: a nil one pairs by spell (Sources/Target.lua)
+    end
     local g = guid
     if not a or g == nil or g ~= castGUID then
         return
