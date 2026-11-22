@@ -250,14 +250,10 @@ describe("player start", function()
             assert.equal("secret", S.status["UNIT_COMBAT player amount"])
         end)
 
-        -- (lane B4, L1673) live, the amount is secret and the flag plain: the hit's kind crosses in the secret's code
-        it("a secret amount keeps its plain flag's class: -1 plain, -2 critical, -3 crushing", function()
+        it("a secret amount is -1 whatever its flag (rage per hit is not learned, owner L1723)", function()
             fire("player", "WOUND", "CRITICAL", fake.SECRET, 1)
             fire("player", "WOUND", "CRUSHING", fake.SECRET, 1)
-            fire("player", "WOUND", "GLANCING", fake.SECRET, 1)
-            fire("player", "WOUND", fake.SECRET, fake.SECRET, 1)
-            fire("player", "WOUND", "CRITICAL", 24, 1)
-            assert.are.same({ { 1, -2, 20 }, { 1, -3, 20 }, { 1, -1, 20 }, { 1, -1, 20 }, { 1, 24, 20 } }, seen)
+            assert.are.same({ { 1, -1, 20 }, { 1, -1, 20 } }, seen)
         end)
 
         it("caches the shield's block value out of combat only", function()

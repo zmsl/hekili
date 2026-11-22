@@ -660,16 +660,17 @@ wins its drain), the band, then the usability answers, which always win (owner L
 bound with no flip pin, and only the side it contradicts yields (a yes at c: hi is the
 higher of c and the band's top; a short answer at c: lo is the lower of c - EPS and the band's low end). An
 exact band counts as readable only in the swing forecast (`predict`, `VS.SwingPending`). An event of ours after the
-band's stamp (a spend or gain, a swing's step, a hit's, a periodic tick) steps forward from it: the band is held until it
+band's stamp (a spend or gain, a swing's step, a periodic tick) steps forward from it: the band is held until it
 moves or `I.bandShows[r]` has passed (`h:Latency()` plus `I.BAND_MARGIN`, the client's own delay; about 0.17 s at 60
 fps); a refund holds nothing. A spend also holds a newer band whose low end has not fallen (the display may trail the
 cast), and a gain the band already rose by within `I.BAND_MARGIN` holds nothing and excuses no short answer (the display
-may lead the cast). Regen is measured between two true crossings (the low end rose to the last top) with no
-known change between, the step scale from a band change covering exactly one landed swing, and the rage of a hit on us
-per flag class from one covering exactly one hit (L1673); a learned hit steps est and hi, never lo. A power that reads
-plain in combat releases its watch when combat ends; where the library
-has no max the watch is a percent one, a point wider each side, logged only once the belief read that max plain. With no live
-band everything below runs as without the library.
+may lead the cast). A hit on us is no such event (owner L1723, which narrows L1673): its rage shows at the damage and a
+melee row trails that by 0.39-0.57 s, so while a band is live the row, and a reaction's gain at it, moves nothing and
+holds nothing (the taken rate's bin still counts a plain amount's), and rage per hit is not learned. Regen is measured
+between two true crossings (the low end rose to the last top) with no known change between, the step scale from a band
+change covering exactly one landed swing (L1673). A power that reads plain in combat releases its watch when combat
+ends; where the library has no max the watch is a percent one, a point wider each side, logged only once the belief
+read that max plain. With no live band everything below runs as without the library.
 
 **Player health.** The client hides the player's own health in combat (`UnitHealth`/`UnitHealthMax("player")` secret;
 owner L1461; the headless fake client answers so): `health.pct`, `health.current`, `health.deficit` read the plain

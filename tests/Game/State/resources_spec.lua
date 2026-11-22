@@ -3803,6 +3803,22 @@ describe("resource bands (lane B4)", function()
                 { key = "mana", type = 0, token = "MANA", max = 1000, rest = true, regen = 10 },
                 { key = "energy", type = 3, token = "ENERGY", max = 100, rest = true, regen = 10 },
             },
+            reactions = {
+                {
+                    who = "player",
+                    outcome = "block",
+                    now = function()
+                        gain(2, "rage")
+                    end,
+                },
+                {
+                    who = "player",
+                    outcome = "crit",
+                    now = function()
+                        gain(5, "rage")
+                    end,
+                },
+            },
             auras = {},
             auraIds = {},
             talents = {},
@@ -4168,12 +4184,43 @@ describe("resource bands (lane B4)", function()
             is(RAGE, 30, 30, 30)
         end)
 
-        it("a hit taken steps forward", function()
+        -- (review I5 a; owner L1723, option A) the rage of a hit on us shows at the damage, its row up to 0.57 s later
+        for _, case in ipairs({
+            { "a plain amount", 1, 80 },
+            { "a secret amount", 1, -1 },
+            { "a block and its reaction's gain", 3, 30 },
+            { "a partly blocked wound and its reaction's gain", 2, 80 },
+            { "a critical wound and its reaction's gain", 1, 80, true },
+            { "an avoid", 4, 30 },
+        }) do
+            it("a hit row on us changes nothing in the value: " .. case[1], function()
+                at(10)
+                S.Direct(Obs.CombatStart, 10) -- the taken rate is a fight's
+                band(10.04, RAGE, 17, 18, 10)
+                S.Direct(Obs.PlayerHit, 10.45, case[2], case[3], 20)
+                if case[4] then
+                    S.Direct(Obs.PlayerCrit, 10.45)
+                end
+                I.Fold(10.45)
+                is(RAGE, 17, 17, 17)
+                local bin = case[3] > 0 and case[3] / 100 or 0
+                assert.are.equal(bin, VS.TakenRate(fs.RAGE, 10.45)) -- the bin stays
+                local used = I.bandUsed[RAGE]
+                band(10.46, RAGE, 17, 18, 10) -- and no hold
+                I.Fold(10.46)
+                assert.are.equal(used + 1, I.bandUsed[RAGE])
+                assert.are.equal(0, I.nowErrors)
+            end)
+        end
+
+        it("no band live: a hit row and its reaction's gain step as today", function()
             at(10)
-            band(10, RAGE, 20, 21)
-            S.Direct(Obs.PlayerHit, 10.05, I.HitKind.WOUND, 80, 20)
+            set(RAGE, 20, 20, 20)
+            S.Direct(Obs.PlayerHit, 10.05, 1, 80, 20)
+            S.Direct(Obs.PlayerCrit, 10.05)
+            S.Direct(Obs.PlayerHit, 10.05, 1, -1, 20) -- a secret amount: none
             I.Fold(10.05)
-            held(RAGE, 20, 21, 10, 10.05, 28)
+            assert.are.equal(20 + 8 + 5, R.est0[RAGE])
         end)
 
         it("a periodic tick steps forward from its own time", function()
@@ -4285,7 +4332,7 @@ describe("resource bands (lane B4)", function()
     end)
 
     -- Calibration from band pins (owner L1673): a band change covers (the last stamp, this stamp]; only a window with
-    -- exactly one source teaches, into the existing scale and taken rate. Live, a hit's amount is secret: its flag alone.
+    -- exactly one source teaches, into the existing scale. A hit on us teaches nothing (owner L1723).
     describe("clean windows", function()
         before_each(function()
             at(6)
@@ -4336,7 +4383,6 @@ describe("resource bands (lane B4)", function()
             end)
             assert.are.equal(1, s)
             is(RAGE, 27, 27, 27)
-            assert.are.equal(0, R.hitE[(RAGE - 1) * 4 + 1])
         end)
 
         for _, case in ipairs({
@@ -4414,43 +4460,20 @@ describe("resource bands (lane B4)", function()
             assert.is_true(math.abs(R.scale[RAGE] - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
         end)
 
-        for k, kind in ipairs({ { 1, -1 }, { 1, -2 }, { 1, -3 }, { 2, -1 } }) do
-            it("one hit alone teaches its flag's rage, class " .. k .. "; the next one steps est and hi", function()
-                S.Direct(Obs.PlayerHit, 11, kind[1], kind[2], 20)
-                band(11.02, RAGE, 20, 21, 11) -- 7 rage
-                I.Fold(11.02)
-                for j = 1, 4 do
-                    assert.are.equal(j == k and 7 or 0, R.hitE[(RAGE - 1) * 4 + j])
-                end
+        -- (review I5 c, cut; owner L1723) a hit's row is not its moment: rage per hit is not learned
+        for _, kind in ipairs({ 1, 2 }) do
+            it("a hit alone in a window teaches nothing, kind " .. kind, function()
+                S.Direct(Obs.PlayerHit, 11, kind, -1, 20)
+                band(11.02, RAGE, 20, 21, 11)
                 band(11.3, RAGE, 20, 21, 11)
-                S.Direct(Obs.PlayerHit, 11.4, kind[1], kind[2], 20)
-                band(11.4, RAGE, 20, 21, 11) -- not shown yet
+                S.Direct(Obs.PlayerHit, 11.4, kind, -1, 20)
+                band(11.4, RAGE, 20, 21, 11)
                 I.Fold(11.4)
-                assert.are.same({ 20, 27 }, { R.lo0[RAGE], R.est0[RAGE] }) -- lo never rests on an estimate
-                assert.is_true(R.hi0[RAGE] >= 27)
-                assert.are.equal(0.7, VS.TakenRate(fs.RAGE, 11.4)) -- the existing taken rate
+                is(RAGE, 20, 20, 20)
+                assert.is_nil(R.hitE)
+                assert.are.equal(0, VS.TakenRate(fs.RAGE, 11.4))
             end)
         end
-
-        it("two hits in one window, or an unlearned class, step nothing", function()
-            S.Direct(Obs.PlayerHit, 11, 1, -1, 20)
-            S.Direct(Obs.PlayerHit, 11.01, 1, -1, 20)
-            band(11.02, RAGE, 20, 21, 11.01)
-            S.Direct(Obs.PlayerHit, 11.4, 1, -1, 20)
-            band(11.4, RAGE, 20, 21, 11.01)
-            I.Fold(11.4)
-            is(RAGE, 20, 20, 20)
-            assert.are.equal(0, VS.TakenRate(fs.RAGE, 11.4))
-        end)
-
-        it("no band, no learned step (the value has nothing to correct it)", function()
-            S.Direct(Obs.PlayerHit, 11, 1, -1, 20)
-            band(11.02, RAGE, 20, 21, 11)
-            unknown(11.3, RAGE)
-            S.Direct(Obs.PlayerHit, 11.4, 1, -1, 20)
-            I.Fold(11.4)
-            is(RAGE, 20, 20, 20)
-        end)
 
         it("allocates nothing", function()
             local t = 20
@@ -4461,7 +4484,7 @@ describe("resource bands (lane B4)", function()
                     S.Direct(Obs.Swing, t, 1, 0, 4)
                     band(t + 0.05, RAGE, 20 + t % 4 * 5, 21 + t % 4 * 5, t + 0.03)
                     S.Direct(Obs.SwingSettled, t + 0.45, 1, t, I.HitKind.WOUND)
-                    S.Direct(Obs.PlayerHit, t + 0.9, 1, -2, 20)
+                    S.Direct(Obs.PlayerHit, t + 0.9, 1, -1, 20)
                     band(t + 0.95, RAGE, 27 + t % 4 * 5, 28 + t % 4 * 5, t + 0.93)
                     I.Fold(t + 0.95)
                     I.Settle(t + 0.95)

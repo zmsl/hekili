@@ -94,6 +94,7 @@ local flight = 0 -- the running cast's travel (s): its target aura writes start 
 -- avoid at its window's close), so its aura reads answer as of T (I.AuraAsOf), not the belief's latest.
 local asOf = false
 local reactHand = false -- while a swing's reaction runs: its hand (1 main, 2 off; I.ResourceShift)
+local onUs = false -- while a reaction to a hit on us runs: a live band holds what it gave (shift)
 
 -- The latest cast's undo (Obs.Avoided): its ability, time and target (the swap serial), the cost it paid, and the target
 -- auras its `now` wrote, each as it was before (expiry 0: down), at most UNDO of them. Preallocated.
@@ -359,10 +360,12 @@ local function shift(n, resource, spread)
     if type(n) ~= "number" or n == 0 then
         return
     end
-    if n > 0 and type(spread) == "number" and spread > 0 then
-        I.ResourceGainSpread(r, n, spread, T, CAST)
-    else
-        I.ResourceShift(r, n, T, CAST, asOf and reactHand) -- its swing may owe a rung's lift (L1504)
+    if not (onUs and I.res.bandOn[r]) then -- a hit's row on us trails what it gave: a live band has it (owner L1723)
+        if n > 0 and type(spread) == "number" and spread > 0 then
+            I.ResourceGainSpread(r, n, spread, T, CAST)
+        else
+            I.ResourceShift(r, n, T, CAST, asOf and reactHand) -- its swing may owe a rung's lift (L1504)
+        end
     end
     if n > 0 then
         I.Log.Energize(A.qid[curA] or 0, n, I.res.type[r], I.res.max[r], T) -- a reaction's: no ability (curA 0)
@@ -831,7 +834,7 @@ local function fire(w, o, t, hand)
     if not l or l.n == 0 then
         return
     end
-    journal, asOf, reactHand = false, true, hand or false
+    journal, asOf, reactHand, onUs = false, true, hand or false, w == WHO.player
     for k = 1, l.n do
         local hk = l.hand[k]
         if hk == 0 or hk == hand then
@@ -839,7 +842,7 @@ local function fire(w, o, t, hand)
             I.reactionsRun = I.reactionsRun + 1
         end
     end
-    journal, asOf, reactHand = true, false, false
+    journal, asOf, reactHand, onUs = true, false, false, false
 end
 
 -- Ability a's travel to the target (s): the believed distance (the range bracket's middle, Families/Enemies.lua) over

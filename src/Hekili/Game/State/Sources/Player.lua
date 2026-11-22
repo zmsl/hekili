@@ -223,8 +223,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
     end
     if kind == HIT.WOUND and type(amount) ~= "number" then
         Note("UNIT_COMBAT player amount", "secret")
-        -- unknown, never guessed; its plain flag's class only (the bands' hit windows, L1673)
-        amount = flag == "CRITICAL" and -2 or flag == "CRUSHING" and -3 or -1
+        amount = -1 -- unknown, never guessed
     end
     if kind == HIT.WOUND and type(flag) == "string" and BLOCKS[flag] then
         kind = HIT.BLOCKED
