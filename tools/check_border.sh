@@ -39,8 +39,9 @@ for f in $core; do
     [ -n "$hits" ] && { echo "$hits"; fail=1; }
 done
 # Facade.TargetID (ledger L1734, the owner's A): the target's stable ID has one reader, Engine/Sim/State.lua's
-# swapped-cast compare: exactly two `Facade.TargetID()` lines (the in-flight cast's pin and the compare), both inside
-# `local function landsElsewhere(` up to its closing `    end`. Any other line naming TargetID there, any other core
+# swapped-cast compare: exactly two lines naming TargetID, both inside `local function landsElsewhere(` up to its
+# closing `    end`, and each exactly one of the two lines below (the in-flight cast's pin, the compare), so the ID never
+# feeds a GUID field. Any other line naming TargetID there, a change to either line, any other core
 # file, a pack (content reads the facade as Hekili.Client; BORDER_PACKS, for the spec, is the root holding the
 # Hekili_* folders) or the stand-in naming it fails.
 packs=$(find "${BORDER_PACKS:-src}" -mindepth 1 -maxdepth 1 -type d -name 'Hekili_*' -exec find {} -name '*.lua' \; | sort)
@@ -50,8 +51,11 @@ for f in $core $packs; do
     if [ "$f" = "$state" ]; then
         read -r lo hi < <(awk '/^    local function landsElsewhere\(/ { lo = NR } lo && !hi && NR > lo && /^    end$/ { hi = NR }
             END { print lo + 0, hi + 0 }' "$f")
-        inside=$(echo "$hits" | awk -F: -v lo="$lo" -v hi="$hi" '$1 > lo && $1 < hi && /Facade\.TargetID\(\)/' | wc -l)
-        [ "$inside" -eq 2 ] && [ "$(echo "$hits" | wc -l)" -eq 2 ] && continue
+        pin='^[0-9]+:[[:space:]]*castPin\.action, castPin\.id, castPin\.cast = e\.action, Facade\.TargetID\(\), rc[[:space:]]*$'
+        cmp='^[0-9]+:[[:space:]]*return castPin\.action == e\.action and castPin\.id ~= nil and castPin\.id ~= Facade\.TargetID\(\)[[:space:]]*$'
+        inside=$(echo "$hits" | awk -F: -v lo="$lo" -v hi="$hi" '$1 > lo && $1 < hi' | grep -E "$pin|$cmp")
+        [ "$(echo "$inside" | grep -cE "$pin")" -eq 1 ] && [ "$(echo "$inside" | grep -cE "$cmp")" -eq 1 ] &&
+            [ "$(echo "$hits" | wc -l)" -eq 2 ] && continue
     fi
     echo "$hits" | sed "s|^|$f:|"
     fail=1

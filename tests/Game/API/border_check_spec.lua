@@ -83,6 +83,20 @@ describe("tools/check_border.sh", function()
             assert.are.equal(1, rc, out)
             assert.is_truthy(out:find("e.target = r.target or Facade.TargetID()", 1, true), out)
         end)
+
+        it("fail when one inside landsElsewhere feeds the GUID field, still two (m1)", function()
+            local text = swap(real, "castPin.id ~= Facade.TargetID()", "castPin.id ~= e.target")
+            text = swap(
+                text,
+                "local g = e.target\n",
+                "e.target = e.target or Facade.TargetID()\n        local g = e.target\n"
+            )
+            local path = copy(text)
+            local rc, out = run(nil, nil, "BORDER_STATE=" .. path)
+            os.remove(path)
+            assert.are.equal(1, rc, out)
+            assert.is_truthy(out:find("e.target = e.target or Facade.TargetID()", 1, true), out)
+        end)
     end)
 
     it("fails a core stand-in path that matches no file", function()
