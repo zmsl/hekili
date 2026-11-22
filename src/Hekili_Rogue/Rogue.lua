@@ -148,6 +148,12 @@ local function sndDuration(cp, rank)
 end
 
 spec:RegisterResource(Enum.PowerType.ComboPoints)
+-- A combo point gained or spent is a plain COMBO_POINTS power event; refresh at once, reading no value.
+spec:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player", nil, function(_, _, powerType)
+    if powerType == "COMBO_POINTS" then
+        Hekili:ForceUpdate(powerType, true)
+    end
+end)
 -- Adrenaline Rush (13750 aura 110 misc 3 base 100): +100% energy regen while it is up, a rate multiplier (C3b).
 -- regen: energy's base rate a second, the belief's from the build until a plain rate read (energy is secret even out
 -- of combat): wowsims/forever's 1 energy every 0.1 s (sim/core/energy.go:48-49).

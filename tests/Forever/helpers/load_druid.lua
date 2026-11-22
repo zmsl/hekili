@@ -155,6 +155,11 @@ function M.load(vs, file, class)
     for _, call in ipairs(reg.RegisterEvent or {}) do
         w.events[call[1]] = call[2]
     end
+    w.unitEvents = {} -- RegisterUnitEvent's handlers by event, in order
+    for _, call in ipairs(reg.RegisterUnitEvent or {}) do
+        w.unitEvents[call[1]] = w.unitEvents[call[1]] or {}
+        table.insert(w.unitEvents[call[1]], call[4])
+    end
     for _, call in ipairs(reg.RegisterHook or {}) do
         w.hooks[call[1]] = call[2]
     end
