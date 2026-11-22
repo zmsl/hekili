@@ -4030,6 +4030,21 @@ describe("resource bands (lane B4)", function()
             assert.are.equal(0, VS.SwingPending(1))
         end)
 
+        -- (round 3) the display trails the swing: until then the band describes the moment before it (L1673)
+        it("an exact band older than the swing pends it while the band's delay may hide it, no longer", function()
+            at(9.8)
+            band(9.8, RAGE, 2, 3, 9.6)
+            S.Direct(Obs.Swing, 9.9, 1, 0, 4)
+            I.Tickets.OpenSwing(9.9, 1, "", I.Log.PAIR_WINDOW_MS[1] / 1000, 0, false)
+            band(9.91, RAGE, 2, 3, 9.6)
+            I.Fold(9.91)
+            assert.are.equal(9.9, VS.SwingPending(1))
+            local past = 9.9 + I.bandShows[RAGE] + 0.01
+            band(past, RAGE, 2, 3, 9.6) -- past the delay: it would have shown that swing's rage
+            I.Fold(past)
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
         -- (review M1) the band lost (priming, a pause, the drop) after it showed the swing
         for _, case in ipairs({ { "at it", 9.9, 0 }, { "before it", 9.7, 9.9 } }) do
             it("the band lost, one stamped " .. case[1] .. ": pending " .. case[3], function()

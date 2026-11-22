@@ -2141,8 +2141,9 @@ end)
 --- only for the hand whose gain it could show (one the other hand's low step alone could not reach; neither: the
 --- earlier swing); one under the floor proves nothing. Also not once its swing ticket closes (credited, or no credit
 --- within its pending window: Events/Tickets.lua's T.SwingPending), after a spend from the slot (its cast's rung holds
---- what the game had), or for a slot read plain or by an exact band, or once one stamped at or after the swing was
---- applied. Allocates nothing.
+--- what the game had), or for a slot read plain, or once an exact band stamped at or after the swing was applied, or
+--- by an exact band past its delay behind the swing (I.bandShows: an older one may not show it yet, owner L1673).
+--- Allocates nothing.
 function VS.SwingPending(hand)
     local p = I.Tickets.SwingPending(hand, I.clock) -- the swing ticket owns it (open, uncredited, in its window)
     -- `not I.built`: no slot pays before a build (the harness's stub world ticks swings unbuilt; ORACLE_MIN arrives in it)
@@ -2152,7 +2153,8 @@ function VS.SwingPending(hand)
     local paid = false
     for r = 1, R.n do
         if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
-            if R.readable[r] or R.banded[r] or R.exactT[r] >= p - 1e-6 or R.spends[r] ~= swSp[hand] then
+            local shows = R.banded[r] and I.clock - p >= I.bandShows[r]
+            if R.readable[r] or shows or R.exactT[r] >= p - 1e-6 or R.spends[r] ~= swSp[hand] then
                 return 0
             end
             paid = true
