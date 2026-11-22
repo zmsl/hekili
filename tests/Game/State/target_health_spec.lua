@@ -381,7 +381,7 @@ describe("target health", function()
             assert.are.same({ 0.25, 0.26, 1 }, { h.lo, h.hi, I.bandDisagree[-1] })
             within(0.255, h.est)
             band(12, 0.15, 0.16)
-            obs(Obs.Usable, 12, GATED, 0, 0) -- a guarded NOT (above 0.2) against 0.15-0.16: clipped up to it
+            obs(Obs.Usable, 12, GATED, 0, 0) -- a guarded NOT (above 0.2) against 0.15-0.16: clipped up to gate + 1e-6
             I.Fold(12)
             I.Settle(12)
             h = VS.Health("target", 12)
@@ -523,7 +523,7 @@ describe("target health", function()
                 end
             )
 
-            it("a NOT yields only a side it contradicts: the gate, not a cell over it (probe C)", function()
+            it("a NOT yields only a side it contradicts: the gate + 1e-6, not a cell over it (probe C)", function()
                 drain(3, 0.2, 0.21, 0)
                 reads(3, 0.205, OVER, 0.21)
             end)

@@ -650,9 +650,9 @@ a fight that never ends soon, a grey (trivial) target's too (wowsims's `remainin
 `GetNumTTDsAfter` counts every enemy as after any time. The tracker's 0.5 s ticker is not started. A priority may read them without a load warning (`Engine/Sim/AplWarnings.lua` warns on no
 health or time-to-die token); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
 
-**Player health.** The client hides the player's own health in combat (`UnitHealth`/`UnitHealthMax("player")` secret;
-owner L1461; the headless fake client answers so): `health.pct`, `health.current`, `health.deficit` read the plain
-value out of combat and, while the answer is secret, the hidden-value library's live 1% band
+**Player health.** The client hides the player's own health (`UnitHealth`/`UnitHealthMax("player")` secret in combat, owner L1461,
+and out of it on live, L1710; the headless fake client still answers plain out of combat): `health.pct`,
+`health.current`, `health.deficit` read the plain value whenever the client answers one and, while the answer is secret, the hidden-value library's live 1% band
 (`Game/State/Sources/Bands.lua`, channel 0): its middle, so a whole-number threshold answers as the true value does
 (`Game/State/Families/Player.lua`; a plain read of the same drain is exact and wins). With no live band (the library
 absent, priming, unavailable, `Hekili.bandOff`) the secret answer reads full, never a stale read from before the pull,

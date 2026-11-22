@@ -45,7 +45,7 @@ An estimate is built in four parts.
 
 A priority line that needs a resource checks the low end of the range. A line that needs 60 energy is shown once Hekili Forever is sure there are at least 60. A recommendation can therefore appear slightly later than the ability becomes usable, but it does not appear while the ability is still unaffordable.
 
-The time until a target dies reads as unknown, which the priorities see as 3600 seconds, so lines that wait on that time do not fire. Lines that test health follow the whole-percent step, for the target and, in combat, for the player. If the game offers no reading of the player's health in combat, Hekili Forever treats it as full, and a defensive line based on low health does not fire.
+The time until a target dies reads as unknown, which the priorities see as 3600 seconds, so lines that wait on that time do not fire. Lines that test health follow the whole-percent step, for the target and for the player. If the game offers no reading of the player's health, Hekili Forever treats it as full, and a defensive line based on low health does not fire.
 
 > [!WARNING]
 > **Different from retail Hekili:** The original Hekili read resources, cooldowns and target health on every update. A custom priority copied from it that tests `target.time_to_die` behaves differently here, and one that tests `health.pct` or `target.health.pct` reads whole-percent steps.
