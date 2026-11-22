@@ -1365,7 +1365,8 @@ do
     -- target is gone (none, or a corpse) the next is tracked anew, unless its GUID says it is the same mob.
     local lastTarget, targetGone
     function ns.TtdTargetChanged()
-        if plain( UnitExists( "target" ) ) == false or plain( UnitIsDead( "target" ) ) == true then
+        local exists = UnitExists( "target" ) -- false or nil: no unit; a secret counts as one
+        if ( not issecretvalue( exists ) and not exists ) or plain( UnitIsDead( "target" ) ) == true then
             targetGone = true
             return
         end

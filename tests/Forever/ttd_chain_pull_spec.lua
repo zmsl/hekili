@@ -10,8 +10,25 @@ local fake = require("Game.State.helpers.fake_api")
 
 local UNKNOWN, TICK = 3600, 0.1
 
-local function boot()
-    local H = headless.new({ character = ww.character(), pack = ww.PACK })
+-- `nilForNone`: UnitExists answers nil for no unit, not false
+local function boot(nilForNone)
+    local new = fake.new
+    if nilForNone then
+        fake.new = function(...) -- before the facade resolves UnitExists
+            local api, ctl = new(...)
+            local exists = api.UnitExists
+            api.UnitExists = function(unit)
+                local e = exists(unit)
+                if e == fake.SECRET or e then
+                    return e
+                end
+            end
+            return api, ctl
+        end
+    end
+    local ok, H = pcall(headless.new, { character = ww.character(), pack = ww.PACK })
+    fake.new = new
+    assert(ok, H)
     assert.are.same({}, H.loadErrors)
     local ctl = H.ctl
     local bands = fake_lhv.new({
@@ -146,6 +163,15 @@ describe("ttd-chain-pull: time to die forgets the last mob at a pull (lane B8, L
             end
         )
     end
+
+    it("no unit answered nil, not false: forgotten all the same", function()
+        local w = boot(true)
+        killFirst(w, 6)
+        w.none()
+        w.wait(1)
+        w.target("Creature-2", 100)
+        tough(w)
+    end)
 
     it("the cleared corpse selected again, then a pull: forgotten", function()
         local w = boot()
