@@ -1,9 +1,9 @@
 -- Engine/Sim/AplWarnings.lua
 -- An action-list condition reading the player's own health (`health.pct`, ...; owner L1462) is dead or misled: the
 -- client hides it in combat, where it reads full (Families/Player.lua), so a low-health check never passes there. Not
--- warned: target health, read from the hidden-value band (Game/State/Families/TargetHealth.lua, LibHiddenValues lane
--- B2; with no band it falls back to the health gates, unwarned: FABLE-FOR-OWNER 7), and time to die, which answers "unknown" (Targets.lua's FOREVER, 3600 s: the fight never ends soon), as a priority written for
--- a long fight expects. ns.AplSecretToken finds such a token in a condition string; Hekili:LoadScript (Scripts.lua)
+-- warned: target health, read from the hidden-value band (Game/State/Families/TargetHealth.lua, hidden-values lane
+-- B2; with no band it falls back to the health gates, unwarned: FABLE-FOR-OWNER 7), and time to die, which answers
+-- "unknown" (Targets.lua's FOREVER, 3600 s: the fight never ends soon), as a priority written for a long fight expects. ns.AplSecretToken finds such a token in a condition string; Hekili:LoadScript (Scripts.lua)
 -- writes one warning per entry from it. A load-time text scan of the core's (border batch 3, E20): pure Lua, no
 -- belief state, no client read, no allocation.
 

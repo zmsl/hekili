@@ -11,7 +11,7 @@
 -- UnitHealth and UnitHealthMax are secret on the target and on nameplates, out of combat too (the 2026-10-22
 -- captures, probe U5), so M stays learned, never read. A kill ends the slot at its death (TargetGone from the unit
 -- registry's death events, Sources/Target.lua).
--- LibHiddenValues (integration design 2.3, 2.6; lane B2): while the library's band on the target is live
+-- The hidden-value library (integration design 2.3, 2.6; lane B2): while the library's band on the target is live
 -- (Sources/Bands.lua, Obs.Band channel -1, re-asserted every drain) it is a fact about now and sets the interval and the
 -- estimate; the gates' answers fold after it and narrow inside it. With no band (priming after a swap, the capability
 -- off or lost) everything above runs unchanged.
