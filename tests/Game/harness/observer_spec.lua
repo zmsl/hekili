@@ -224,6 +224,35 @@ describe("the observer", function()
         }, got)
     end)
 
+    -- (integration design 5.4, lane B4) the unmeasured knobs: the displayed power ahead of or behind the pool by one
+    -- regen tick; the display shows a spend before or after its cast event; off, the stream is today's
+    it("(bands) bandLead moves the shown power a tick, spendFirst a spend against its cast event", function()
+        setup()
+        us.power = 50
+        W.emit({ t = 1, kind = "prepull" })
+        W.emit({ t = 2, kind = "regen", src = us, pt = us.pt, rage = 10 })
+        W.emit({ t = 3, kind = "cast", src = us, spell = "INSTANT", cost = 20 })
+        W.emit({ t = 5, kind = "regen", src = us, pt = us.pt, rage = 10 })
+        local function stream(knobs)
+            knobs.bands = true
+            local o = observer.observe(W, setmetatable(knobs, { __index = observer.DEFAULTS }))
+            local power, done = {}, nil
+            for _, e in ipairs(events(o, 2)) do
+                if e[2] == "@lhv" and e[3] == "power" then
+                    power[#power + 1] = ("%g:%g"):format(e[1], e[6])
+                elseif e[2] == "UNIT_SPELLCAST_SUCCEEDED" and e[3] == "player" then
+                    done = ("%g"):format(e[1])
+                end
+            end
+            return table.concat(power, " ") .. " cast " .. done
+        end
+        assert.are.equal("2:60 3:40 5:50 cast 3", stream({}))
+        assert.are.equal("2:70 3:50 5:60 cast 3", stream({ bandLead = 1 }))
+        assert.are.equal("2:50 3:30 5:40 cast 3", stream({ bandLead = -1 }))
+        assert.are.equal("2:60 3:40 5:50 cast 3.05", stream({ spendFirst = 0.05 }))
+        assert.are.equal("2:60 3:60 3.05:40 5:50 cast 3", stream({ spendFirst = -0.05 }))
+    end)
+
     it("fires the on-swing proc as a school-32 wound on the target and a heal on us, same ms", function()
         setup()
         W.emit({ t = 7.002, kind = "proc", src = us, dst = mob, act = "WOUND", amount = 36, school = 32 })

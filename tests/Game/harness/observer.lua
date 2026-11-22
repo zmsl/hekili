@@ -85,6 +85,13 @@ M.DEFAULTS = {
     -- wound or heal on us (world.lua's snapshot after it), each power at each change, all at the pre-pull. Added events
     -- only, never on the plain oracle.
     bands = false,
+    -- (integration design 5.4, lane B4; both UNMEASURED: study 3.1, whether the bars' displayed power leads what the
+    -- server honours; only with `bands`) `bandLead` +1 / -1: the shown power is the true pool ahead of or behind by its
+    -- latest regen tick (a predicted display, or one a server tick late; at full it shows full). `spendFirst` s: above
+    -- 0 the cast event arrives that long after the bars show its spend (the power update ahead of the cast's success);
+    -- below 0 the bars show a spend that long after its cast event (a display catching up with the cast).
+    bandLead = 0,
+    spendFirst = 0,
 }
 
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
@@ -277,6 +284,9 @@ function M.new(W, k)
     local castOpen, castFrom, castTo = false, 0, 0 -- our hard cast in progress and its bar (DELAYED, pushback)
     -- One player cast event, echoed on targettarget (another castBarID) while our target targets us: every kind of
     -- them (captures b and c: SENT, START, SUCCEEDED, STOP, FAILED, INTERRUPTED, DELAYED).
+    local function castDone(t, ev) -- (k.spendFirst > 0) the success of a cast that pays, after the bars' spend
+        return k.bands and ev.cost and k.spendFirst > 0 and t + k.spendFirst or t
+    end
     local function castEv(t, onUs, name, g, id, a4, a5)
         push(t, name, "player", g, id, a4, a5)
         if onUs then
@@ -350,6 +360,7 @@ function M.new(W, k)
     -- (k.bands) each entity's health as the wounds and heals left it, and the target the hidden-value library reads
     -- from the prepull's snapshot (world.lua): e.health is the world's end, the observer reading a world already run
     local hp, bandTarget, start = {}, nil, {}
+    local tick, late = {}, {} -- (k.bandLead) each power's latest regen tick; (k.spendFirst < 0) spends not shown yet
     for _, ev in ipairs(W.truth) do
         if ev.kind == "prepull" then
             start = ev.hp or start
@@ -563,8 +574,30 @@ function M.new(W, k)
         dseq = dseq + 1
         deltas[#deltas + 1] = { t, form, "form", dseq }
     end
+    -- (k.bands) the power the bars show at t: the pool, moved by the two knobs.
+    local function pushShown(t, pt)
+        local r = pt ~= us.pt and us.res[pt] or nil
+        local v, max = cur[pt], r and r.max or us.powerMax
+        local full = v >= max
+        for _, x in ipairs(late) do
+            if x[2] == pt then
+                v = v + x[3]
+            end
+        end
+        if not full and k.bandLead ~= 0 and tick[pt] then
+            v = v + k.bandLead * tick[pt]
+        end
+        push(t, "@lhv", "power", "player", pt, math.max(0, math.min(max, v)), max)
+    end
+    local function showSpends(t) -- the late spends due by t (in the order they were paid)
+        while late[1] and late[1][1] <= t do
+            local x = table.remove(late, 1)
+            pushShown(x[1], x[2])
+        end
+    end
     local function read(ev)
         local t, kind = ev.t, ev.kind
+        showSpends(t)
         if kind == "prepull" then -- 0.5 s before the pull: the cache, then the target 0.1 s later
             formDelta(t, ev.form)
             if ev.form ~= 0 then -- a fight that starts in a form (the loop's consecutive fights)
@@ -647,13 +680,13 @@ function M.new(W, k)
             -- "queue" event when a suite reads the gap
             sent(t, ev.onUs, g, sid)
             if ev.order == 1 then -- P log 1's order, then the brief's: swing and success either way round
-                castEv(t, ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", g, sid)
+                castEv(castDone(t, ev), ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", g, sid)
                 outcome(t, frame, 1)
                 push(t, "PLAYER_SWING", ev.speed, 0)
             else
                 push(t, "PLAYER_SWING", ev.speed, 0)
                 outcome(t, frame, 1)
-                castEv(t, ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", g, sid)
+                castEv(castDone(t, ev), ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", g, sid)
             end
             outcome(t + 0.001, ev, 1)
             for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
@@ -787,7 +820,7 @@ function M.new(W, k)
             else
                 sent(tc, ev.onUs, guid, id) -- an instant's SENT, the same ms
             end
-            castEv(tc, ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", guid, id, bar)
+            castEv(castDone(tc, ev), ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", guid, id, bar)
             if (ev.cd or 0) > 0 then
                 for _, rid in ipairs(ev.ids or { id }) do
                     cooldown(t, rid, ev.cd)
@@ -893,8 +926,12 @@ function M.new(W, k)
             local pt = ev.resCur and ev.pt or us.pt
             cur[pt] = ev.resCur or ev.power
             if k.bands then
-                local r = pt ~= us.pt and us.res[pt] or nil
-                push(t, "@lhv", "power", "player", pt, cur[pt], r and r.max or us.powerMax)
+                if kind == "regen" then
+                    tick[pt] = ev.rage
+                elseif k.spendFirst < 0 and ev.cost and kind ~= "decay" then
+                    late[#late + 1] = { t - k.spendFirst, pt, ev.cost }
+                end
+                pushShown(t, pt)
             end
             if k.plain and ev.power then -- a secret-free client's power, and its event
                 push(t, "@power", k.powerType, ev.power)
@@ -1010,6 +1047,7 @@ function M.new(W, k)
             cursor = cursor + 1
             read(truth[cursor])
         end
+        showSpends(tEnd)
         if answers then
             table.sort(deltas, byTime)
             local keep = {}

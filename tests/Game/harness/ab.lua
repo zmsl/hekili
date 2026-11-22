@@ -180,9 +180,18 @@ M.ARMS["cycle-follow-off"] = {
 -- The hidden-value bands (LibHiddenValues integration design 5.4; lane B1, record-only): the driver's belief watches
 -- through fake_lhv.lua (loop.lua; the observer's `bands` firings), the plain oracle shadow stays without; `bandDrop`
 -- s after the pull the capability is lost (fake_lhv SetAvailable "unavailable", "error"; kept for the session, as the
--- real library keeps it). The health families read theirs (lanes B2, B3); power waits (B4).
+-- real library keeps it). The health families (lanes B2, B3) and the resources (B4) read theirs. The lead arms move
+-- what the bars show (observer.lua `bandLead`, `spendFirst`, both unmeasured).
 M.ARMS.bands = { outcomes = "default", presence = "router", viewer = false, bands = true }
 M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandDrop = 20 }
+for name, knobs in pairs({
+    ["bands-lead"] = { bandLead = 1 }, -- one regen tick
+    ["bands-lag"] = { bandLead = -1 },
+    ["bands-spend-first"] = { spendFirst = 0.05 }, -- three frames at 60 fps: the client's delay the design allows
+    ["bands-spend-late"] = { spendFirst = -0.05 },
+}) do
+    M.ARMS[name] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandKnobs = knobs }
+end
 M.VERDICT = {
     "viewer-reshuffle",
     "viewer-nonland",

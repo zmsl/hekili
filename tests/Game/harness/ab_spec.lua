@@ -25,6 +25,25 @@ describe("the A/B harness", function()
         assert.is_nil(ab.ARMS.viewer) -- the layout-less arm is viewer-none now
     end)
 
+    it("the band lead arms (integration design 5.4, lane B4): each its knob, bands on, never the default", function()
+        local want = {
+            ["bands-lead"] = { bandLead = 1 },
+            ["bands-lag"] = { bandLead = -1 },
+            ["bands-spend-first"] = { spendFirst = 0.05 },
+            ["bands-spend-late"] = { spendFirst = -0.05 },
+        }
+        for name, knobs in pairs(want) do
+            assert.are.same({
+                outcomes = "default",
+                presence = "router",
+                viewer = false,
+                bands = true,
+                bandKnobs = knobs,
+            }, ab.ARMS[name])
+        end
+        assert.is_nil(ab.ARMS.default.bands)
+    end)
+
     it("the live-auras arms (aura audit C1): our auras hidden in combat, the CDM's only, never the default", function()
         for name, layout in pairs({ ["live-auras"] = "fixture", ["live-auras-none"] = "none" }) do
             local a = ab.ARMS[name]

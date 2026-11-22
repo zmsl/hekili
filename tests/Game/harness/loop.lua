@@ -618,6 +618,9 @@ function M.run(L, seed, o, drivers)
         })
         k.meter, k.viewer = arm.outcomes == "meter", cdm -- the arm's shapes (none in the default arm)
         k.bands = bands
+        for key, v in pairs(bands and arm.bandKnobs or {}) do -- a lead arm's (ab.lua): the run's arm, HEKILI_AB's or its own
+            k[key] = v
+        end
         ab.observe(k) -- and its other knobs (the meter arm's taken lead, as the gates' streams)
         for key, v in pairs(content.OBSERVE or {}) do -- the content's client knobs (other powers' reads, forms)
             k[key] = v
