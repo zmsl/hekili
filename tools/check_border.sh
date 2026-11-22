@@ -24,7 +24,10 @@ done
 # Engine/, UI/, Options/, Integrations/ and Hekili.lua: no VS, ns.VirtualState or VirtualStateInternal but the four
 # calls. An optional second path argument (a file or a tree, for the spec) is scanned with them; one that matches no
 # .lua file fails.
-core="$(find src/Hekili/Engine src/Hekili/UI src/Hekili/Options src/Hekili/Integrations -name '*.lua' | sort) src/Hekili/Hekili.lua"
+# BORDER_STATE (for the spec) is a file scanned in State.lua's place.
+real=src/Hekili/Engine/Sim/State.lua
+state="${BORDER_STATE:-$real}"
+core="$(find src/Hekili/Engine src/Hekili/UI src/Hekili/Options src/Hekili/Integrations -name '*.lua' | sort | sed "s|^$real\$|$state|") src/Hekili/Hekili.lua"
 if [ -n "${2:-}" ]; then
     extra=$(find "$2" -name '*.lua' 2>/dev/null | sort)
     [ -z "$extra" ] && { echo "$2: no .lua file to scan"; fail=1; }
@@ -36,17 +39,21 @@ for f in $core; do
     [ -n "$hits" ] && { echo "$hits"; fail=1; }
 done
 # Facade.TargetID (ledger L1734, the owner's A): the target's stable ID has one reader, Engine/Sim/State.lua's
-# swapped-cast compare (landsElsewhere: the in-flight cast's pin and the compare, two reads). Any other core file, a
-# pack (content reads the facade as Hekili.Client) or the stand-in naming TargetID fails, and so does a third read there.
-packs=$(find src -mindepth 1 -maxdepth 1 -type d -name 'Hekili_*' -exec find {} -name '*.lua' \; | sort)
+# swapped-cast compare: exactly two `Facade.TargetID()` lines (the in-flight cast's pin and the compare), both inside
+# `local function landsElsewhere(` up to its closing `    end`. Any other line naming TargetID there, any other core
+# file, a pack (content reads the facade as Hekili.Client; BORDER_PACKS, for the spec, is the root holding the
+# Hekili_* folders) or the stand-in naming it fails.
+packs=$(find "${BORDER_PACKS:-src}" -mindepth 1 -maxdepth 1 -type d -name 'Hekili_*' -exec find {} -name '*.lua' \; | sort)
 for f in $core $packs; do
-    hits=$(sed -E 's/--.*$//' "$f" | grep -nE '\bTargetID\b' | sed "s|^|$f:|")
+    hits=$(sed -E 's/--.*$//' "$f" | grep -nE '\bTargetID\b')
     [ -z "$hits" ] && continue
-    if [ "$f" = src/Hekili/Engine/Sim/State.lua ] && [ "$(echo "$hits" | grep -c 'Facade\.TargetID()')" -eq 2 ] &&
-        [ "$(echo "$hits" | wc -l)" -eq 2 ]; then
-        continue
+    if [ "$f" = "$state" ]; then
+        read -r lo hi < <(awk '/^    local function landsElsewhere\(/ { lo = NR } lo && !hi && NR > lo && /^    end$/ { hi = NR }
+            END { print lo + 0, hi + 0 }' "$f")
+        inside=$(echo "$hits" | awk -F: -v lo="$lo" -v hi="$hi" '$1 > lo && $1 < hi && /Facade\.TargetID\(\)/' | wc -l)
+        [ "$inside" -eq 2 ] && [ "$(echo "$hits" | wc -l)" -eq 2 ] && continue
     fi
-    echo "$hits"
+    echo "$hits" | sed "s|^|$f:|"
     fail=1
 done
 [ $fail -eq 0 ] && echo "ok: Game/ names nothing of the core; the core names the belief only through Drain, Build, SetLog and WindowOp, and reads windows only through Facade.Window and debuff counts only through Facade.DebuffCount; Facade.TargetID only in Engine/Sim/State.lua's swapped-cast compare"
