@@ -10,7 +10,13 @@
 -- Not built until the in-game checkpoint (design §7) answers: a short answer (c = 1) as a health signal (line 4).
 -- UnitHealth and UnitHealthMax are secret on the target and on nameplates, out of combat too (the 2026-10-22
 -- captures, probe U5), so M stays learned, never read. A kill ends the slot at its death (TargetGone from the unit
--- registry's death events, Sources/Target.lua).
+-- registry's death events, Sources/Target.lua; naming no slot from poll 4's plain death read of a secret target or of
+-- a corpse that died before its swap).
+-- The hidden-value library (integration design 2.3, 2.6; lane B2): while the library's band on the target is live
+-- (Sources/Bands.lua, Obs.Band channel -1, re-asserted every drain) it sets the interval and the estimate. It is a fact
+-- about its stamp and can lag; a gate's answer is a fact about the moment it was given, so it wins over the band of its
+-- drain (L1675): a band end it contradicts yields to it, and the next drain's band starts clean (poll 2 asks again).
+-- With no band (priming after a swap, the capability off or lost) everything above runs unchanged.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -18,6 +24,7 @@ local Obs = VS.Obs
 
 --- A live target's health never reads below this fraction (Targets.lua's UpdateTTDs drops an enemy at or below 1%).
 I.TARGET_HEALTH_FLOOR = 0.02
+local OVER = 1e-6 -- a NOT is strictly over g
 
 -- What a gated ability's last answer said: nothing about health, above its gate (a guarded NOT), at or below it.
 local UNKNOWN, ABOVE, BELOW = -1, 0, 1
@@ -27,7 +34,8 @@ local UNKNOWN, ABOVE, BELOW = -1, 0, 1
 -- and the damage taken at its last guarded NOT. The current target: its memory slot (0 none), dead, attackable
 -- (TargetSwap c), fresh (TargetSwap b: never held before, so full at the swap), anchored (the health is known from a
 -- full start or a pin since the last restart), the health interval, the WOUND damage since the swap, M (the damage per
--- full health; 0 unknown).
+-- full health; 0 unknown), whether a band was applied since the last restart (what an unknown drops) with its ends,
+-- and the usable bound (uLo, uHi: the gates' answers folded since the last live band, L1675; [0, 1] none).
 local H = {
     n = 0,
     ab = {},
@@ -47,6 +55,11 @@ local H = {
     hi0 = 1,
     dmg = 0,
     M = 0,
+    band = false,
+    bLo = 0,
+    bHi = 1,
+    uLo = 0,
+    uHi = 1,
 }
 I.th = H
 local rec
@@ -64,16 +77,22 @@ local function auraIndex(def, key)
     return -1
 end
 
--- Back to the default: 1.0 in [0, 1], no damage seen, no answer standing, no anchor; only the default sample counts
--- (basis "default"). Allocates nothing.
-local function restart(t)
-    H.est0, H.lo0, H.hi0, H.dmg, H.anchored = 1, 0, 1, 0, false
-    for k = 1, H.n do
-        H.prev[k] = UNKNOWN
-    end
+-- The interval back to the default: 1.0 in [0, 1], no anchor, no band; only the default sample counts (basis
+-- "default"). Allocates nothing.
+local function default(t)
+    H.est0, H.lo0, H.hi0, H.anchored, H.band = 1, 0, 1, false, false
     local last = rec.last
     last.observed.t, last.pinned.t, last.modelled.t = 0, 0, 0
     I.Sample(rec, "default", 1, t, 0)
+end
+
+-- Back to the default, no damage seen, no answer standing. Allocates nothing.
+local function restart(t)
+    H.dmg, H.uLo, H.uHi = 0, 0, 1
+    for k = 1, H.n do
+        H.prev[k] = UNKNOWN
+    end
+    default(t)
 end
 
 I.OnBuild(function(def, now)
@@ -100,9 +119,26 @@ I.OnBuild(function(def, now)
     restart(now)
 end)
 
+-- (L1675: a usable answer is a fact about its moment; the band, about its stamp, can lag) The live band [bLo, bHi]
+-- clipped into the usable bound [lo, hi]: each end and the estimate (the band's middle) clamped into it, then a live
+-- target's estimate and high end never under the floor. Where they agree both narrow; where the band lies outside, the
+-- bound stands (Sources/Bands.lua's settle counts it in I.bandDisagree). True when the bound moved the estimate.
+-- Allocates nothing.
+local function clip(lo, hi)
+    local bLo, bHi, floor = H.bLo, H.bHi, I.TARGET_HEALTH_FLOOR
+    local mid = (bLo + bHi) / 2
+    local est = mid < lo and lo or (mid > hi and hi or mid)
+    H.lo0 = bLo < lo and lo or (bLo > hi and hi or bLo)
+    local top = bHi < lo and lo or (bHi > hi and hi or bHi)
+    H.hi0 = top > floor and top or floor
+    H.est0 = est > floor and est or floor
+    return est ~= mid
+end
+
 -- Every guard of design §5 on reading a NOT as "above the gate" (the caller has checked a live target): the ability
--- known, its cost believed affordable, its guard aura as it needs, the target attackable. Range is not part of
--- IsSpellUsable; a gated ability has no cooldown. Allocates nothing.
+-- known, its cost believed affordable, its guard aura as it needs, the target attackable. Range and cooldown are no
+-- guards (a gated ability may have a cooldown), nor are stun, silence or disarm: UNVERIFIED that IsSpellUsable never
+-- answers a plain NOT for one of them (the probe is owed). Allocates nothing.
 local function guarded(k, a, t)
     if I.ab.known[a] == false or not H.attackable then
         return false
@@ -131,21 +167,36 @@ I.On(Obs.Usable, function(o, t, lag)
     if k == 0 or H.slot == 0 or H.dead then
         return
     end
+    -- An event's answer folds after a swap logged since it was staged: the old target's (Sources/Power.lua's c carries
+    -- the swap serial, the stamps can be equal). A short one needs none: it binds nothing and the swap cleared prev.
+    if o.c < 0 and o.c ~= -1 - I.curSwapN then
+        return
+    end
     local g = H.gate[k]
     if o.b == 1 then
         local was = H.prev[k]
         H.prev[k] = BELOW
+        -- the bound: at or below g (a NOT's bound at or above it is void, the newest answer wins)
+        H.uLo, H.uHi = H.uLo >= g and 0 or H.uLo, H.uHi > g and g or H.uHi
         if was == ABOVE and lag <= I.PIN_EXACT then
-            -- A flip: the health crossed g since the last guarded NOT, by at most the damage taken since then.
-            local slack = H.M > 0 and (H.dmg - H.notDmg[k]) / H.M or 0 -- nonzero: M > 0 checked
-            H.lo0, H.hi0 = g - slack > 0 and g - slack or 0, g
-            H.est0 = (H.lo0 + H.hi0) / 2
+            if H.band then
+                clip(H.uLo, H.uHi) -- by the usable side alone: g - slack is an inference, no match for a band
+            else
+                -- A flip: the health crossed g since the last guarded NOT, by at most the damage taken since then.
+                local slack = H.M > 0 and (H.dmg - H.notDmg[k]) / H.M or 0 -- nonzero: M > 0 checked
+                H.lo0, H.hi0 = g - slack > 0 and g - slack or 0, g
+                H.est0 = (H.lo0 + H.hi0) / 2
+            end
             -- M is learned here only: UnitHealthMax is secret on the target and on plates (header), never read.
             if H.fresh and H.dmg > 0 and H.M == 0 then
                 H.M = H.dmg / (1 - g) -- nonzero: g < 1 (checked at the build)
             end
             H.anchored = true
             I.Sample(rec, "pinned", H.est0, t, Obs.Usable)
+        elseif H.band then
+            if clip(H.uLo, H.uHi) then
+                I.Sample(rec, "pinned", H.est0, t, Obs.Usable)
+            end
         else
             if H.hi0 > g then
                 H.hi0 = g
@@ -163,8 +214,15 @@ I.On(Obs.Usable, function(o, t, lag)
         -- the gate; then it joins the usable branch above.
         H.prev[k] = UNKNOWN
     elseif lag <= I.PIN_EXACT and guarded(k, a, t) then
-        local top = g + I.EPS
+        local top = g + I.EPS -- the no-band path's; against a band only the fact, over g, binds
         H.prev[k], H.notDmg[k] = ABOVE, H.dmg
+        H.uLo, H.uHi = H.uLo <= g and g + OVER or H.uLo, H.uHi <= g and 1 or H.uHi -- above g; a bound below it healed
+        if H.band then
+            if clip(H.uLo, H.uHi) then
+                I.Sample(rec, "pinned", H.est0, t, Obs.Usable)
+            end
+            return
+        end
         if H.lo0 < top then
             H.lo0 = top
         end
@@ -212,18 +270,48 @@ I.On(Obs.TargetDamage, function(o, t)
 end)
 
 -- A death (poll 4) or a slot taken for another GUID: the slot forgets M; the current target reads 0, observed, until
--- the next swap.
+-- the next swap. Slot 0: the current target's death, with no identity (the map restriction) or told before its swap.
 I.On(Obs.TargetGone, function(o, t)
     local s = o.a
-    if s <= 0 then
-        return
+    if s > 0 then
+        H.maxBy[s] = 0
     end
-    H.maxBy[s] = 0
-    if s == H.slot then
+    if s == 0 or s == H.slot then
         H.dead, H.M = true, 0
         H.est0, H.lo0, H.hi0 = 0, 0, 0
         I.Sample(rec, "observed", 0, t, Obs.TargetGone)
     end
+end)
+
+-- (lane B2, design 2.6) The library's band on the target, a fraction [lo, hi) (b > c: unknown). A live band sets the
+-- interval and the estimate, its middle (a live target's never under the floor: the enemy scan's UnitHealth > 1, as a
+-- WOUND's), an anchor and an observed sample; M is left alone. No H.slot test: under the map lockdown a target can have
+-- no plate slot, and a live band is the target. Ignored while dead: TargetGone wins (under the dungeon restrictions the
+-- library keeps the lowest band on a corpse, its README). A usable answer wins over the band (L1675, FABLE-FOR-OWNER 18
+-- strengthened) of its own drain: the band clears the bound (poll 1.6 logs it each drain, before poll 2 asks again)
+-- and is clipped (clip above) at each answer that folds after it. The unknown drops a band applied since the last
+-- restart: the bound, newer than that band by construction, else [0, 1] (a swap's unknown finds the restart's state and
+-- leaves it). The family records the band it applied (I.bandUsed, the harness's containment check). Allocates nothing.
+I.On(Obs.Band, function(o, t)
+    if o.a ~= -1 or H.dead then
+        return
+    end
+    if o.b > o.c then
+        if H.band then
+            default(t)
+            H.lo0, H.hi0 = H.uLo, H.uHi
+            if H.uHi < 1 then
+                H.est0, H.anchored = H.uHi, true
+                I.Sample(rec, "pinned", H.est0, t, Obs.Usable)
+            end
+        end
+        return
+    end
+    H.anchored, H.band, H.bLo, H.bHi = true, true, o.b, o.c
+    H.uLo, H.uHi = 0, 1
+    clip(H.uLo, H.uHi)
+    I.bandUsed[-1], I.bandUsedLo[-1], I.bandUsedHi[-1] = I.bandUsed[-1] + 1, o.b, o.c
+    I.Sample(rec, "observed", H.est0, t, Obs.Band)
 end)
 
 -- Combat end: an evade heals, so a live target starts over full: an anchor, though M is no longer learnable.
@@ -246,7 +334,7 @@ end
 I.OnSnapshot(function(out, now)
     I.TargetHealth(now)
     out[#out + 1] = string.format(
-        "target health slot=%d gates=%d M=%.0f dmg=%.0f fresh=%s anchored=%s attackable=%s dead=%s",
+        "target health slot=%d gates=%d M=%.0f dmg=%.0f fresh=%s anchored=%s attackable=%s dead=%s band=%s",
         H.slot,
         H.n,
         H.M,
@@ -254,6 +342,7 @@ I.OnSnapshot(function(out, now)
         tostring(H.fresh),
         tostring(H.anchored),
         tostring(H.attackable),
-        tostring(H.dead)
+        tostring(H.dead),
+        tostring(H.band)
     )
 end)

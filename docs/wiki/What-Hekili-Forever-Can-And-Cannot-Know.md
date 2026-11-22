@@ -11,9 +11,9 @@ The Forever client is a modern game client that hides many combat values from ad
 | What Hekili Forever can and cannot know | |
 |---|---|
 | Applies to | Every class and specialization |
-| Read directly | Combo points, ability usability, cooldown ready or not, shapeshift form, melee swings, nameplates |
+| Read directly | Combo points, ability usability, cooldown ready or not, shapeshift form, melee swings, nameplates, target health in whole-percent steps |
 | Estimated | Energy, rage, mana, cooldown times, buff and debuff times |
-| Not available | Target health, hits landed on a target |
+| Not available | Hits landed on a target |
 
 ## What the game reports
 
@@ -30,7 +30,7 @@ The Forever client is a modern game client that hides many combat values from ad
 | Cooldown remaining time | Estimated | From the cast time and the ability's cooldown. |
 | Buff and debuff times | Estimated | From the cast and the aura's duration. The game's Cooldown Manager can show some of them ([Cooldown Manager](Cooldown-Manager)). |
 | Hits landed on a target | Not available | |
-| Target health | Not available | So the time until a target dies is unknown. |
+| Target health | Read | In whole-percent steps, and no lower than 2% while the target lives; unknown for a moment after a target change. When an ability that is usable only at low target health disagrees with the step, the ability's answer wins. The time until a target dies is still unknown. |
 
 ## How a resource is estimated
 
@@ -45,10 +45,10 @@ An estimate is built in four parts.
 
 A priority line that needs a resource checks the low end of the range. A line that needs 60 energy is shown once Hekili Forever is sure there are at least 60. A recommendation can therefore appear slightly later than the ability becomes usable, but it does not appear while the ability is still unaffordable.
 
-Because target health is hidden, the time until a target dies reads as unknown, which the priorities see as 3600 seconds. Lines that wait for a target to be nearly dead do not fire. When the game hides the player's own health, Hekili Forever treats it as full, so a defensive line based on low health does not fire.
+The time until a target dies reads as unknown, which the priorities see as 3600 seconds, so lines that wait on that time do not fire. Lines that test health follow the whole-percent step, for the target and, in combat, for the player. If the game offers no reading of the player's health in combat, Hekili Forever treats it as full, and a defensive line based on low health does not fire.
 
 > [!WARNING]
-> **Different from retail Hekili:** The original Hekili read resources, cooldowns and target health on every update. A custom priority copied from it that tests `target.time_to_die` or `health.pct` behaves differently here.
+> **Different from retail Hekili:** The original Hekili read resources, cooldowns and target health on every update. A custom priority copied from it that tests `target.time_to_die` behaves differently here, and one that tests `health.pct` or `target.health.pct` reads whole-percent steps.
 
 ## Measurements
 
