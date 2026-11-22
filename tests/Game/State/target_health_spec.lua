@@ -327,6 +327,7 @@ describe("target health", function()
             function()
                 anchor() -- M 1000 on slot 1
                 band(11, 0.63, 0.64)
+                obs(Obs.Usable, 11, GATED, 0, 0) -- healed above the gate: the gate's bound no longer caps it (L1675)
                 I.Fold(11)
                 local h = VS.Health("target", 11)
                 within(0.635, h.est)
@@ -355,32 +356,36 @@ describe("target health", function()
             within(0.195, VS.Health("target", 3.2).est)
         end)
 
-        it("the band wins over a usable answer that contradicts it, counted (L1671/L1672: a band is a read)", function()
+        it("a usable answer wins: a contradicting band is clipped into its bound and held, counted (L1675)", function()
             obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
             band(9, 0.15, 0.16)
-            obs(Obs.Usable, 9, GATED, 1, 0) -- at or below 0.2: agrees, adds nothing
+            obs(Obs.Usable, 9, GATED, 1, 0) -- at or below 0.2: agrees, the band narrows it
             I.Fold(9)
             I.Settle(9)
-            within(0.155, VS.Health("target", 9).est)
-            band(10, 0.25, 0.26)
-            obs(Obs.Usable, 10, GATED, 1, 0) -- the client's own gate says at or below 0.2: the band wins
+            local h = VS.Health("target", 9)
+            within(0.155, h.est)
+            assert.are.same({ 0.15, 0.16, 0 }, { h.lo, h.hi, I.bandDisagree[-1] })
+            band(10, 0.25, 0.26) -- a band from before the drop (its stamp lags) against the client's own gate
+            obs(Obs.Usable, 10, GATED, 1, 0)
             I.Fold(10)
             I.Settle(10)
-            local h = VS.Health("target", 10)
-            within(0.255, h.est)
-            assert.are.same({ 0.25, 0.26, "observed" }, { h.lo, h.hi, h.basis })
-            assert.are.equal(1, I.bandDisagree[-1])
-            band(11, 0.15, 0.16)
-            obs(Obs.Usable, 11, GATED, 0, 0) -- a guarded NOT (above 0.2) against 0.15-0.16: the band wins
+            h = VS.Health("target", 10)
+            assert.are.same({ 0.2, 0.2, 0.2, 1 }, { h.lo, h.hi, h.est, I.bandDisagree[-1] })
+            band(11, 0.25, 0.26) -- the band re-asserted alone: the usable bound still holds
             I.Fold(11)
             I.Settle(11)
             h = VS.Health("target", 11)
-            within(0.155, h.est)
-            assert.are.same({ 0.15, 0.16 }, { h.lo, h.hi })
-            assert.are.equal(2, I.bandDisagree[-1])
+            assert.are.same({ 0.2, 0.2, 0.2, 2 }, { h.lo, h.hi, h.est, I.bandDisagree[-1] })
+            band(12, 0.15, 0.16)
+            obs(Obs.Usable, 12, GATED, 0, 0) -- a guarded NOT (above 0.2) against 0.15-0.16: clipped up to it
+            I.Fold(12)
+            I.Settle(12)
+            h = VS.Health("target", 12)
+            local top = 0.2 + I.EPS
+            assert.are.same({ top, top, top, 3 }, { h.lo, h.hi, h.est, I.bandDisagree[-1] })
         end)
 
-        it("a flip inside the band narrows it; a flip that contradicts it pins nothing and teaches no M", function()
+        it("a flip pins the gate against a lagging band and teaches M; the next band narrows under it", function()
             obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
             obs(Obs.TargetDamage, 3, 0, 800)
             obs(Obs.Usable, 9, GATED, 0, 0) -- guarded NOT: above 0.2
@@ -388,20 +393,15 @@ describe("target health", function()
             band(10, 0.25, 0.26)
             obs(Obs.Usable, 10, GATED, 1, 0) -- a flip at 0.2 against 0.25-0.26
             I.Fold(10)
-            I.Settle(10)
             local h = VS.Health("target", 10)
-            within(0.255, h.est)
-            assert.are.same({ 0.25, 0.26, 0 }, { h.lo, h.hi, I.th.M })
-            obs(Obs.Usable, 11, GATED, 0, 0)
-            band(11, 0.2, 0.21)
-            I.Fold(11)
-            band(12, 0.19, 0.2)
-            obs(Obs.Usable, 12, GATED, 1, 0) -- a flip at 0.2 inside 0.19-0.2: the gate's precision
-            I.Fold(12)
-            h = VS.Health("target", 12)
             assert.are.same({ 0.2, 0.2, 0.2 }, { h.lo, h.hi, h.est })
             within(1000, I.th.M, 1e-6)
-            assert.are.equal(1, I.bandDisagree[-1])
+            band(11, 0.18, 0.19) -- the band catches up
+            obs(Obs.Usable, 11, GATED, 1, 0) -- poll 2 re-asserts: at or below 0.2, no flip
+            I.Fold(11)
+            h = VS.Health("target", 11)
+            within(0.185, h.est)
+            assert.are.same({ 0.18, 0.19 }, { h.lo, h.hi })
         end)
 
         it("death wins: a corpse's band is ignored until the next swap", function()
