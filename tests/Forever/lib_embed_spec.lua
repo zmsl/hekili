@@ -58,7 +58,10 @@ describe("the embedded libraries", function()
     for _, lib in ipairs({ { "LibHiddenValues", "libhiddenvalues" }, { "LibTimeToDie", "libtimetodie" } }) do
         local name, tool = lib[1], lib[2]
         it("tools/" .. tool .. "/check_standalone.sh allows exactly the embed and the TOC, by full path", function()
-            local tmp = assert(sh("mktemp -d")):match("^(%S+)")
+            local tmp = assert(assert(sh("mktemp -d")):match("^(%S+)"))
+            finally(function() -- also when an assert below fails
+                sh("rm -rf " .. tmp)
+            end)
             local copy = table.concat({
                 "mkdir -p " .. tmp .. "/src/Hekili/Libs " .. tmp .. "/tools " .. tmp .. "/tests",
                 "cp -r src/LibHiddenValues src/LibTimeToDie " .. tmp .. "/src",
@@ -82,7 +85,6 @@ describe("the embedded libraries", function()
                 assert.is_truthy(out:find(rogue .. ":1:", 1, true), out)
                 os.remove(tmp .. "/" .. rogue)
             end
-            sh("rm -rf " .. tmp)
         end)
     end
 end)

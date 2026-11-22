@@ -7,7 +7,8 @@
 --   3. the belief is loaded with fake_api's CreateFrame, GetTime and issecretvalue in _G for the load (as
 --      tests/Game/State/providers_spec.lua does), so its event facade binds to fake_api, not to the FakeClient;
 --   4. two clocks (fake_api's ctl.now, the FakeClient's 60 frames a second from 1000): the spec drives Fake.tick and
---      copies the library's GetTime into ctl.now before each drain;
+--      calls `sync()` (ctl.now = the library's GetTime) before every drain and every fake_api timer it lets run, or
+--      the belief runs on a skewed clock;
 --   5. Fake.restore() last, after any _G override of step 3 is put back.
 -- In game the belief's api is the client's _G (Game/Events/EventFacade.lua `client`), so api.LibStub is the global
 -- LibStub that the embed (packaged) or the standalone folder (OptionalDeps, development) loaded the library into.
@@ -33,6 +34,11 @@ describe("the band contract: LibHiddenValues on its FakeClient beside fake_api",
         api, ctl = fake.new()
         ctl.LibStub = LibStub
     end)
+
+    local function sync() -- one clock: the library's
+        ctl.now = libTime()
+        return ctl.now
+    end
 
     after_each(function()
         Fake.restore()
@@ -66,7 +72,7 @@ describe("the band contract: LibHiddenValues on its FakeClient beside fake_api",
         assert.are.equal("pending", (h:State()))
         assert.is_true(Fake.login())
         Fake.tick(12) -- priming: 10 frames at least (the library's README, "Testing your addon")
-        ctl.now = libTime() -- one clock: the library's
+        sync()
         local lo, hi, t, q = h:Get()
         assert.are.same({ 53, 54, LHV.BAND }, { lo, hi, q })
         assert.is_true(t <= ctl.now)
@@ -87,25 +93,27 @@ describe("the band contract: LibHiddenValues on its FakeClient beside fake_api",
             _G[k] = v
         end
         local VS, I = ns.VirtualState, ns.VirtualStateInternal
-        I.Build(fs.def(fs.new(9)), ctl.now)
+        I.Build(fs.def(fs.new(9)), sync())
         VS.Start(api)
         assert.are.equal(api, I.api)
         assert.are.equal(LibStub(MAJOR), I.api.LibStub(MAJOR, true))
         assert.is_true(api.frame.events.PLAYER_REGEN_ENABLED ~= nil) -- the belief's frame is fake_api's
         assert.is_true(Fake.login())
-        ctl.now = libTime()
-        VS.Drain(ctl.now)
+        VS.Drain(sync())
         assert.are.same({}, Fake.errors)
     end)
 
-    it("headless Hekili boots beside it as without it; its belief's LibStub is the client's own", function()
-        local H = headless.new()
-        assert.are.same({}, H.loadErrors)
-        assert.are.same({}, headless.unexpected(H, "load"))
-        assert.are.same({}, headless.unexpected(H, "login"))
-        local I = H.ns.VirtualStateInternal
-        assert.are.equal(H.env, I.api)
-        assert.are.equal(rawget(H.env, "LibStub"), I.api.LibStub)
-        assert.is_nil(I.api.LibStub(MAJOR, true)) -- the guarded embed loads nothing headless
-    end)
+    it(
+        "headless Hekili loads with no errors and no unexpected reads with the FakeClient installed; its belief's LibStub is the client's own",
+        function()
+            local H = headless.new()
+            assert.are.same({}, H.loadErrors)
+            assert.are.same({}, headless.unexpected(H, "load"))
+            assert.are.same({}, headless.unexpected(H, "login"))
+            local I = H.ns.VirtualStateInternal
+            assert.are.equal(H.env, I.api)
+            assert.are.equal(rawget(H.env, "LibStub"), I.api.LibStub)
+            assert.is_nil(I.api.LibStub(MAJOR, true)) -- the guarded embed loads nothing headless
+        end
+    )
 end)

@@ -8,7 +8,9 @@ local alloc = require("Game.State.helpers.alloc")
 local FAKE = "src/LibHiddenValues/Testing/FakeClient.lua"
 local FRAME = 1 / 60
 
--- Each world: target health 63.7%, player mana 450 of 1000. `live()` runs until fresh watches are live.
+-- Each world: target health 63.7%, player mana 45% of 1000. `live()` runs until fresh watches are live; `frame(pct)`
+-- runs one frame with the target's health at pct% (nil: unchanged); `max(m)` sets the mana max (mana stays 45%), seen
+-- on the next frame.
 local IMPLS = {
     real = function()
         local Fake = dofile(FAKE)
@@ -21,27 +23,110 @@ local IMPLS = {
                     Fake.login()
                     Fake.tick(12)
                 end,
+                frame = function(pct)
+                    if pct then
+                        W.unit.target.health = pct / 100
+                    end
+                    Fake.tick(1)
+                end,
+                max = function(m)
+                    W.unit.player.max[0] = m
+                    Fake.event("UNIT_MAXPOWER", "player")
+                end,
                 done = Fake.restore,
             }
     end,
     fake = function()
-        local t = 1000
-        local lib = fake_lhv.new({
-            now = function()
-                return t
-            end,
-        })
-        lib:Push("health", "target", nil, 637, 1000, t)
-        lib:Push("health", "player", nil, 1000, 1000, t)
-        lib:Push("power", "player", 0, 450, 1000, t)
+        local k, newMax = 0, nil -- the frame number: the clock is 1000 + k frames, never a running sum
+        local function now()
+            return 1000 + k * FRAME
+        end
+        local lib = fake_lhv.new({ now = now })
+        lib:Push("health", "target", nil, 637, 1000, now())
+        lib:Push("health", "player", nil, 1000, 1000, now())
+        lib:Push("power", "player", 0, 450, 1000, now())
         return lib,
             {
                 live = function()
-                    t = t + 12 * FRAME
+                    k = k + 12
+                end,
+                frame = function(pct)
+                    k = k + 1
+                    if pct then
+                        lib:Push("health", "target", nil, pct * 10, 1000, now())
+                    end
+                    if newMax then
+                        lib:Push("power", "player", 0, 0.45 * newMax, newMax, now())
+                        newMax = nil
+                    end
+                end,
+                max = function(m)
+                    newMax = m
                 end,
                 done = function() end,
             }
     end,
+}
+
+-- The target's health one frame at a time, pinned on the real library (LibHiddenValues README, "Confirmation"): each
+-- case's row is the step watch's lo after every frame ("-": unknown), the frames of `seq` then `idle` frames unchanged.
+local function down(from, n)
+    local seq = {}
+    for i = 1, n do
+        seq[i] = from - (i - 1)
+    end
+    return seq
+end
+local function alternate(a, b, n)
+    local seq = {}
+    for i = 1, n do
+        seq[i] = i % 2 == 1 and a or b
+    end
+    return seq
+end
+local SEQUENCES = {
+    {
+        "one cell a frame for 5 frames: confirmed 2 frames after the last",
+        down(62.5, 5),
+        3,
+        "63 63 63 63 63 63 58 58",
+    },
+    {
+        "one cell a frame for 6 frames: never confirmed, unknown, primes again",
+        down(62.5, 6),
+        12,
+        "63 63 63 63 63 63 - - - - - - - - - - 57 57",
+    },
+    {
+        "one cell a frame for 7 frames",
+        down(62.5, 7),
+        12,
+        "63 63 63 63 63 63 - - - - - - - - - - 56 56 56",
+    },
+    {
+        "a fall of 30 frames: unknown until it stops",
+        down(62.5, 30),
+        4,
+        "63 63 63 63 63 63 - - - - - - - - - - - - - - - - - - - - - - - - - 33 33 33",
+    },
+    {
+        "alternating with the held cell: the held cell throughout",
+        alternate(62.5, 63.5, 10),
+        3,
+        "63 63 63 63 63 63 63 63 63 63 63 63 63",
+    },
+    {
+        "alternating between two other cells: never confirmed",
+        alternate(62.5, 61.5, 10),
+        12,
+        "63 63 63 63 63 63 - - - - - - - - - - 61 61 61 61 61 61",
+    },
+    {
+        "moving inside the held cell: nothing fires",
+        { 63.6, 63.5, 63.4, 63.3, 63.2, 63.1, 63.05, 63.9 },
+        2,
+        "63 63 63 63 63 63 63 63 63 63",
+    },
 }
 
 local function get(h)
@@ -158,6 +243,41 @@ for _, name in ipairs({ "real", "fake" }) do
             other:Release()
             assert.are.equal("released", (other:State()))
         end)
+
+        for _, case in ipairs(SEQUENCES) do
+            it(case[1], function()
+                local hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
+                w.live()
+                local row = {}
+                local function read()
+                    row[#row + 1] = tostring((hp:Get()) or "-")
+                end
+                for _, pct in ipairs(case[2]) do
+                    w.frame(pct)
+                    read()
+                end
+                for _ = 1, case[3] do
+                    w.frame(nil)
+                    read()
+                end
+                assert.are.equal(case[4], table.concat(row, " "))
+            end)
+        end
+
+        it("a points handle primes again when the max moves; a cell handle on the same source does not", function()
+            local pts = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, points = { 400, 600 } }))
+            local cell = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = {} }))
+            w.live()
+            w.max(1200)
+            local row = {}
+            for _ = 1, 11 do
+                w.frame(nil)
+                local a, b = pts:Get()
+                local c, d = cell:Get()
+                row[#row + 1] = (a and a .. "-" .. b or "-") .. "|" .. c .. "-" .. d
+            end
+            assert.are.equal(string.rep("-|540-552 ", 9) .. "400-600|540-552 400-600|540-552", table.concat(row, " "))
+        end)
     end)
 end
 
@@ -186,18 +306,17 @@ describe("fake_lhv's observer rules", function()
         assert.are.same({ 48, 49, t0, lib.BAND }, { h:Get() })
     end)
 
-    it("firings landing every frame are reported at most 7 frames after the first, with the latest value", function()
+    it("a read after a long gap applies the desync, the prime's decode and the report in order", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 })
         lib:Push("health", "target", nil, 900, 1000, t)
-        t = t + 10 * FRAME
-        local t0 = t
-        for i = 0, 6 do
-            t = t0 + i * FRAME
-            lib:Push("health", "target", nil, 890 - 10 * i, 1000, t)
-            assert.are.same({ 90, 91 }, lohi(h), i)
+        local t0 = t + 10 * FRAME
+        for i = 1, 6 do -- the shared block's 6-frame case, read only at its frames 16 and 17
+            lib:Push("health", "target", nil, 895 - 10 * i, 1000, t0 + i * FRAME)
         end
-        t = t0 + 7 * FRAME
-        assert.are.same({ 83, 84 }, lohi(h))
+        t = t0 + 16 * FRAME
+        assert.are.same({ "priming", nil }, { h:State(), (h:Get()) })
+        t = t0 + 17 * FRAME
+        assert.are.same({ 83, 84, t0 + 6 * FRAME, lib.BAND }, { h:Get() })
     end)
 
     it("primes 10 frames after a watch, a resume and a unit change, then answers the current value", function()
@@ -282,12 +401,17 @@ describe("fake_lhv's observer rules", function()
         local h = lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = { 40 } })
         lib:Push("power", "player", 0, 45, 100, t)
         t = t + 10 * FRAME
+        local live = 0
         local bytes = alloc.bytes(function(i)
             t = t + FRAME
-            lib:Push("power", "player", 0, 40 + i % 7, 100, t)
-            h:Get()
-            h:State()
+            if i % 3 == 0 then -- a change every 3 frames: each confirmed, so Get answers bands, not unknown
+                lib:Push("power", "player", 0, 40 + i % 7, 100, t)
+            end
+            if h:State() == "live" and h:Get() then
+                live = live + 1
+            end
         end, 1000)
         assert.are.equal(0, bytes)
+        assert.are.equal(1201, live) -- every call: the warm-up's 200, the absorbing 1 and the measured 1000
     end)
 end)
