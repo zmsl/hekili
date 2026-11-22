@@ -112,8 +112,9 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
 ## Checks
 
 `make bootstrap` once (Lua 5.1 + busted/luacheck/luacov into `.lua/`; StyLua and LuaLS from `mise.toml`), then
-`make check` before every commit. A new worktree has no `.lua/`: copy or symlink `.lua/` from another worktree, or
-run `make bootstrap`. One spec: `.lua/bin/busted tests/Game/State/resources_spec.lua`.
+the fast checks on a lane and `make gate` on the integration branch (DEVELOPMENT.md, Review and merge). A new
+worktree has no `.lua/`: copy or symlink `.lua/` from another worktree, or run `make bootstrap`. One spec:
+`.lua/bin/busted tests/Game/State/resources_spec.lua`.
 StyLua formats only our files (`.styluaignore` lists upstream Hekili, which keeps
 its own style). If `fmt-check` still fails after `make fmt`, run `make fmt` again: StyLua 2.5.2 takes two passes on a
 call whose argument is a long single-line table.

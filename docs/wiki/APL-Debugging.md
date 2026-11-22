@@ -39,13 +39,12 @@ An ability that needs a toggle that is off, such as **Major Cooldowns** for a co
    - a condition that fails to compile, with the list and entry number;
    - an unknown talent or an action the specialization does not have;
    - a variable that is read but never set;
-   - "target health is secret", for a line that reads target health ([APL Forever differences](APL-Forever-Differences)).
 3. If the priority came from the importer, open its **Source** tab and read the **Import Log**. It lists every conversion the importer made and every line it switched off.
 
 ## Common causes
 
 - **The line waits for the target to die.** `fight_remains`, `target.time_to_die` and `target.time_to_pct_<N>` always read 3600 on Forever, so `fight_remains<8` never passes.
-- **The line reads target health.** It reads 100 unless an ability usable only at low target health has narrowed it, so a test such as `target.health.pct<20` never passes.
+- **The line reads target health.** It reads in whole-percent steps, no lower than 2 while the target lives (`target.health.pct<2` never passes), and 100 for a moment after a target change. If the game offers no reading, it reads 100 unless an ability usable only at low target health has narrowed it, so a test such as `target.health.pct<20` never passes.
 - **The line tests a range that is not known yet.** While Hekili Forever cannot bracket the distance, `target.withinN` and `target.outsideN` are both true. Add `action.<key>.in_range` when the line must wait for range.
 - **A line above it always wins.** The walk keeps the line that is ready soonest. Move the line up, or narrow the condition of the line above.
 - **A `precombat` line in combat.** Lines of `precombat`, and of the lists it calls, are skipped once combat starts.

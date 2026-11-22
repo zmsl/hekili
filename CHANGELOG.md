@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Rogue and Feral/Guardian Druid: the recommendation refreshes the moment a combo point is gained or spent, so the finisher shows without waiting for the next poll.
+
 ### Fixed
 
 - Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.

@@ -205,16 +205,21 @@ end
 S.On("NAME_PLATE_UNIT_ADDED", nil, plateEdge)
 S.On("NAME_PLATE_UNIT_REMOVED", nil, plateEdge)
 
--- Poll 4: the target's plain death goes to the registry, which tells every listener once (OnGone DEAD, below).
+-- Poll 4: the target's plain death goes to the registry, which tells every listener once (OnGone DEAD, below). A
+-- death it tells no more (a corpse: it died before this swap or build) or cannot (a secret target has no registry
+-- slot, with or without a plate) is logged as slot 0, the current target's (Families/Auras.lua ignores it: no slot to
+-- forget). `dead` holds until the next swap: one log a death, whichever tell came first.
 S.Poll(4, function(api, t)
-    if I.curSlot == 0 then
-        return
+    if not dead and Plain(api, api.UnitIsDead("target")) == true then
+        local u = I.Units.Uid(1)
+        if u > 0 then
+            I.Units.Dead(u, t) -- its first death logs the slot and sets the latch (died, below)
+        end
+        if not dead and (u > 0 or I.Units.Secret(api, 1)) then
+            Direct(Obs.TargetGone, t, 0) -- a death told before this swap, or no identity
+        end
+        dead = true
     end
-    local d = Plain(api, api.UnitIsDead("target")) == true
-    if d and not dead then
-        I.Units.Dead(I.Units.Uid(1), t)
-    end
-    dead = d
 end)
 
 -- Poll 14: each tracked ability's plain range answer (action.<key>.in_range) while the target holds a memory slot,
@@ -268,6 +273,9 @@ local function died(uid, g, why, t)
     for s = 1, I.TARGET_CAP do
         if guid[s] == g then
             Direct(Obs.TargetGone, t, s)
+            if s == I.targetSlot then
+                dead = true
+            end
             return
         end
     end

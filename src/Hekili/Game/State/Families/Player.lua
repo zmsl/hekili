@@ -24,8 +24,8 @@ I.On(Obs.Moving, function(o)
     I.moving = o.b == 1
 end)
 
--- Health (player: plain reads, the band in combat; target: Families/TargetHealth.lua; others: the default 1.0), spell
--- haste, time to die.
+-- Health (player: a plain read when the client gives one, else the band; target: Families/TargetHealth.lua; others:
+-- the default 1.0), spell haste, time to die.
 local health, otherHealth, spellHaste, ttd
 I.healthMax = 0
 
@@ -182,7 +182,8 @@ end)
 
 -- (hidden-value integration design 2.3, 2.5; lane B3) The library's band on our health (Sources/Bands.lua, channel
 -- 0, fractions 0-1; poll 1.6 folds after poll 1.5's read and the drain's staged events): lo, hi and the middle,
--- observed; unknown (b > c) is a secret read's "unknown". A plain read of this drain is exact and wins either way.
+-- observed; unknown (b > c) is a secret read's "unknown". A plain read of this drain is exact and wins either way. An
+-- applied band is recorded in I.bandUsed/Lo/Hi (Sources/Bands.lua: the harness's containment check).
 I.On(Obs.Band, function(o, t)
     local s = health.last.observed
     if o.a ~= 0 or s.t == t and s.event == Obs.Read then
@@ -191,6 +192,7 @@ I.On(Obs.Band, function(o, t)
         healthUnknown(t, Obs.Band)
     else
         health.lo, health.hi, health.est = o.b, o.c, (o.b + o.c) / 2
+        I.bandUsed[0], I.bandUsedLo[0], I.bandUsedHi[0] = I.bandUsed[0] + 1, o.b, o.c
         I.Sample(health, "observed", health.est, t, Obs.Band)
     end
 end)
