@@ -149,7 +149,7 @@ The library prints nothing, registers no slash command and shows no frame. Its o
 
 | Call | Returns |
 |---|---|
-| `TTD:GetVersion()` | `"LibTimeToDie-1.0", 1` |
+| `TTD:GetVersion()` | `"LibTimeToDie-1.0", 2` |
 | `TTD:IsAvailable(token)` | `ok, state, reason` |
 | `TTD:GetStreams()` | a fresh array (call it from a command, not every frame), one row per tracked token and owner: `token`, `owner`, `tracks` and `sinks` (that owner's), `state`, `reason`, `est`, `lo`, `hi`, `crossings` (kept for the fit, at most 32), `drops` (hints the data contradicted), `rateFactor` (1: none), `rateStart`, `rateEnd` (nil: open), `executePct` (nil: none), `executeFactor` (with the stream's own measurement folded in) |
 
@@ -180,11 +180,24 @@ swap, heal or stall, a stall that holds the countdown, a change detector that re
 and a deadband on the published death time so the countdown is smooth. `lo` and `hi` come from a fast and a slow
 half-life (3 s and 12 s), or 0.5x to 3x of `est` while the answer rests on little data; when the fit hits its clamp
 (0.2x to 5x the cumulative slope) the range also covers the unclamped fit, so a clamped answer does not look certain.
-The range was not calibrated against the truth in the lab.
+The range also covers the stream's own crossing noise (`rangeZ` 1.15): this term is capped at 3x either way of `est`,
+but the fit spreads and the clamp widening can reach further, so an early fit range can be much wider than 3x. The
+seed and prior ranges are 0.5x to 3x. Calibrated in the lab, `[lo, hi]` held the truth on about 85% of the polls of the
+five real solo fights pooled (in-sample; single fights 60-94%, leave-one-fight-out mean 78%), 70-75% on lumpy and
+recorded synthetic fights, less where the rate steps (a Bloodlust, an execute phase). Short fights get wide ranges:
+that is the honest answer, not a defect; about one poll in ten sits at the cap.
 
 A stale anchor (`staleAnchor`, 12 s here; the lab's default is 8): at a stream's first 1% crossing, a first band
 older than 12 s is dropped and the stream starts at that crossing, so a mob targeted at full and left idle (before
 the pull, or out of combat) does not stretch the first estimates to minutes.
+
+The same-frame pull rule (`newAnchor`, 0.1 s): only a first crossing less than 0.1 s after the anchor (the first hit
+landed in the frame combat started, so the anchor's slope would be one hit over no time) does not seed. A first chunk
+0.11-0.16 s after the anchor still seeds, and can give an early estimate far too short (0.72 s, range [0.36, 2.15],
+on a mob with about 21 s to live) until the fit has its crossings. The stream starts at
+that crossing and answers from the next 2% of fall (or a carried slope): until then the state is `live` with reason
+`prior` if a rate is carried, else `unknown`. It adds no state and no reason; the state and reason values are the
+same as before.
 
 ## Later (version 2)
 

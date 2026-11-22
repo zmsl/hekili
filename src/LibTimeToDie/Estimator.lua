@@ -1,4 +1,4 @@
--- Estimator.lua: the estimator of one health stream, lifted as is from the TTD lab (branch ttd-lab 0c13985c4,
+-- Estimator.lua: the estimator of one health stream, lifted as is from the TTD lab (branch ttd-lab f29c14916,
 -- tools/ttd_lab/estimator.lua; the paths its comments name are on that branch). Only this header and the footer are
 -- the library's: the lines between the two markers are the lab's file byte for byte, its last line (return E) moved
 -- into the footer, which also sets the library's one default that differs from the lab's (staleAnchor). Loaded alone
@@ -14,7 +14,8 @@ end
 -- Fit: seconds per percent `b` from an exponentially time-weighted least squares of time on percent over the recent
 -- crossings (half-life 6 s, 30 s window); with too little spread for a fit, the stream's cumulative slope from an
 -- anchor (the first band: 100% for a mob first seen full, the band's middle otherwise; dropped when the first crossing
--- comes more than 8 s after it, an idle target); a slope carries over a swap,
+-- comes more than 8 s after it, an idle target, or less than 0.1 s after it, a first hit at the anchor); a slope
+-- carries over a swap,
 -- heal or stall for 8 s; a stall (no crossing for max(4 s, 5 x the mean gap)) holds the countdown; the published death
 -- time moves only past a deadband, so the countdown is smooth. Defaults: the TTD lab's winner (tools/ttd_lab/README.md).
 -- Rate changes (TTD lab run 2): a change detector (two-sided CUSUM of the crossings against the fit, on by default)
@@ -22,7 +23,10 @@ end
 -- multiplier over a time window (time is warped so the fit sees one base rate) and Hint("execute", factor, pct) for
 -- a speed-up below a health percent (percent is warped; by default the factor is learned from the streams that cross
 -- it). Slopes are kept in base-rate units, so a carried slope survives a hint's end.
-local max, min, abs, sqrt = math.max, math.min, math.abs, math.sqrt
+-- Ranges (TTD lab run 4): lo/hi cover the fast and slow half-life fits and the crossings' own noise (rangeZ: the
+-- detector's lateness variance over the percent seen and the percent left, at most 3x either way), so short and
+-- lumpy fights get wide ranges.
+local max, min, abs, sqrt, exp = math.max, math.min, math.abs, math.sqrt, math.exp
 
 local E = {}
 E.__index = E
@@ -79,6 +83,14 @@ E.DEFAULTS = {
     -- first crossing is dropped (the stream then starts at that crossing, like an unanchored one); 0 turns it off.
     staleAnchor = 8,
     clampRange = true, -- lo/hi also cover the estimate of an unclamped fit when the clamp moved it
+    -- TTD lab run 4 (real traces): a first crossing sooner than this (seconds) after the anchor drops the anchor (the
+    -- first hit landed with it: a pull in the frame of combat start), and the stream starts at that crossing; 0 off.
+    newAnchor = 0.1,
+    -- lo/hi also cover est x exp(-+ rangeZ x u), u^2 = dVar x (1 / span + 1 / left): the stream's own crossing noise
+    -- (dVar, the detector's lateness variance per percent; 1 before it learns) over the percent the fit has seen
+    -- (span, the half-life-weighted fall) and the percent left; 0 turns it off.
+    rangeZ = 1.15,
+    rangeMax = 3, -- ... at most this factor either way (dVar learns from the first crossings' noisy slopes)
 }
 
 function E.New(params)
@@ -329,6 +341,10 @@ function E:Band(t, lo, hi)
             if self.anchored and self.staleAnchor > 0 and t - self.tAnchor > self.staleAnchor then
                 -- it sat in its first band too long (idle, nobody hitting it): the first band's time says nothing
                 self.fresh, self.anchored = false, false
+            elseif self.anchored and t - self.tAnchor < self.newAnchor then
+                -- the first hit landed at the anchor (a pull in the same frame as combat start): the anchor's slope
+                -- would be one hit over no time, so the stream starts at this crossing, after that first hit
+                self.fresh, self.anchored = false, false
             end
             if self.fresh then
                 self.t0, self.p0 = self.tAnchor, 100
@@ -421,6 +437,24 @@ local function death(self, now, b)
     return T
 end
 
+-- rangeZ's relative spread u of the death time: u^2 = dVar x (1 / span + 1 / left), span the half-life-weighted
+-- percent the kept crossings fell (each crossing's fall from the one before, or from the anchor), left the percent
+-- to the death. Both at least 1 (a band).
+local function noise(self, now)
+    local span, prev = 0, self.t0 and work(self, self.p0) or false
+    for i = 1, self.n do
+        local j = at(self, i)
+        local wp = work(self, self.rp[j])
+        local age = now - self.rt[j]
+        if prev and age <= self.window then
+            span = span + 0.5 ^ (age / self.halfLife) * (prev - wp)
+        end
+        prev = wp
+    end
+    local left = work(self, self.pLast) - work(self, self.deathPct)
+    return sqrt(self.dVar * (1 / max(1, span) + 1 / max(1, left)))
+end
+
 -- Widens [lo, hi] by the estimate an unclamped slope gives (clampRange), so a clamped fit does not look certain.
 local function widen(self, now, raw, lowest, lo, hi)
     if raw and self.clampRange then
@@ -470,9 +504,12 @@ function E:Get(now)
     lo, hi = widen(self, now, raw, lowest, lo, hi)
     lo, hi = widen(self, now, rf, lowest, lo, hi)
     lo, hi = widen(self, now, rs, lowest, lo, hi)
+    if self.rangeZ > 0 then
+        local k = min(self.rangeMax, exp(self.rangeZ * noise(self, now)))
+        lo, hi = min(lo, est / k), max(hi, est * k)
+    end
     return est, lo, hi, state
 end
-
 -- lifted body ends
 -- The library's defaults are the lab's except staleAnchor = 12 (owner 2026-11-21; the lab's default is 8, the value
 -- the lifted header names): at a stream's first crossing, an anchor (its first band) older than 12 s is dropped and

@@ -375,7 +375,7 @@ describe("LibTimeToDie tracking", function()
         end
         assert.are.equal(lhv:GetMessage("unproven"), ttd:GetMessage("unproven")) -- LibHiddenValues' reasons
         assert.is_nil(ttd:GetMessage("live", "deDE"))
-        assert.are.same({ "LibTimeToDie-1.0", 1 }, { ttd:GetVersion() })
+        assert.are.same({ "LibTimeToDie-1.0", 2 }, { ttd:GetVersion() })
     end)
 
     it("a token LibHiddenValues has not proven reads unavailable with its reason", function()
@@ -408,6 +408,21 @@ describe("LibTimeToDie tracking", function()
         fall(99, 96, 0.5) -- four crossings: the fit is clamped to 0.2-5x the slope since the anchor
         local est = h:Get()
         assert.is_true(math.abs(est - 95.5 * 0.5) < 0.15 * 95.5 * 0.5, tostring(est))
+    end)
+
+    it("a first crossing within 0.1 s of the combat-start anchor does not seed", function()
+        local h = ttd:Track("A", "target")
+        Fake.tick(12)
+        Fake.event("PLAYER_REGEN_DISABLED")
+        Fake.advance(0.02)
+        to(88) -- a 12% opener chunk one frame after the anchor
+        Fake.advance(0.02)
+        assert.are.equal("unknown", (h:State())) -- the anchor's slope would be one hit over no time
+        assert.is_nil((h:Get()))
+        fall(86, 85, 0.5) -- two crossings later it answers from them, not from the opener's interval
+        local est, _, _, state = h:Get()
+        assert.are.equal("live", state)
+        assert.is_true(est > 8, tostring(est)) -- 2.6 s with the anchor kept
     end)
 
     it("allocates nothing per steady frame, two owners on one target, with a sink and a Get every frame", function()
