@@ -65,8 +65,9 @@ remembered target slot, keyed by GUID in the open world and by stable ID under t
 meanwhile, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on Forever"). The third is the
 target's stable ID (ledger L1734, owner's A, 2026-11-22): `ns.Facade.TargetID()` -> an integer while the target's GUID
 is secret, 0 for a target read plain, nil with no target. It is never a GUID or a stand-in for one. Its one reader is
-`Engine/Sim/State.lua`'s swapped-cast compare (`landsElsewhere`, §2), and `tools/check_border.sh` fails any other
-reader, a pack's included. `def` carries plain
+`Engine/Sim/State.lua`'s swapped-cast compare (`landsElsewhere`, §2). `tools/check_border.sh` passes exactly two
+`Facade.TargetID()` lines, both inside `landsElsewhere`; it fails a read elsewhere in State.lua, a third read, and any
+other core file or pack that names `TargetID`. `def` carries plain
 records (batch 4, the owner's
 design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a function the belief runs in its own
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
@@ -155,10 +156,12 @@ at 1. A swapped cast's handler runs with `state.cycle` set: its debuffs add to `
 target's alone. So does the cast in flight when the target changed after it was sent (ledger L1734). Its event comes
 from the real queue (`e.inflight`), and `landsElsewhere` tells the change by the event's GUID where it has one. Under the
 Map restriction the event has no GUID, so it compares the stable ID (`Facade.TargetID`) pinned when the compare first met
-the cast with the ID now. The belief lands such a cast's target auras on the mob it was sent at: the memory slot pinned
+the cast with the ID now. A pushback (UNIT_SPELLCAST_DELAYED) keeps that pin; a cast of another action, one that starts
+at or after the pinned finish, or one after an update that found the pinned cast gone from the real queue pins anew. The belief lands such a cast's target auras on the mob it was sent at: the memory slot pinned
 at UNIT_SPELLCAST_SENT and kept through the cast's START, or nowhere once that slot is forgotten (the mob died, lost its
 plate or was evicted). The queue therefore does not change at the cast's
-success. A target change before the first update after the cast starts pins the new mob (a known limit). Time to die is never known on Forever, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
+success. A target change before the first update after the cast starts pins the new mob, and a cast of the same spell that
+starts before the pinned finish with no update since the last one ended keeps the last one's pin (known limits). Time to die is never known on Forever, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
 off); no pack may declare `min_ttd` or `max_ttd` (`tests/Forever/packs_spec.lua`), and the slider is hidden. Under the
 Map restriction `active_enemies` is 1 until a GUID-free enemy count exists, so no cycle arms in dungeons yet.
 
