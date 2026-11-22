@@ -438,8 +438,10 @@ describe("a dungeon pull through the token plate count (T1)", function()
                 assert.is_truthy(find(before, "immolate"), names(before))
                 H.ctl.now = t
                 H.ctl.casting = { (t0 + 0.5) * 1000, (t0 + 2.5) * 1000 } -- the bar's start and end move on
+                local rc = A.immolate.realCast
                 H.Fire("UNIT_SPELLCAST_DELAYED", "player", "Cast-I1", A.immolate.id)
                 assert.is_true(math.abs(queuedStart() - (t0 + 0.5)) < 1e-6, "the core re-queued it")
+                assert.are.equal(rc, A.immolate.realCast, "a pushback is no success")
                 for _ = 1, 10 do
                     assert.are.same(before, step(), "after the pushback")
                 end
@@ -517,10 +519,10 @@ describe("a dungeon pull through the token plate count (T1)", function()
             steady(2)
         end)
 
-        it("a known limit: under Map the next Immolate on B, in the success's frame, starting early, is A's", function()
-            -- shortcut: no update saw the last one leave and its start is before the pinned finish, so it reads as
-            -- that cast (the core sim has it on A, the belief on B: one flip at its success)
-            assert.are.same({ false, 2 }, chain(0.05), "the core pinned it as the first one")
+        it("under Map, the next Immolate on B is a new cast starting early in the last one's success frame", function()
+            -- no update saw the last one leave and the start is before the pinned finish: its success tells (L1749)
+            assert.are.same({ true, 2 }, chain(0.05), "the first on A, this one on B")
+            steady(2)
         end)
 
         it("the known limit: under Map a tab before the first update after the cast's start flips once", function()

@@ -6328,11 +6328,11 @@ do
 
     local EVENT_EXPIRE_MARGIN = 0.2
 
-    -- The cast in flight with no GUID (the Map restriction; ledger L1734): its action and finish, and the target's
-    -- stable ID (Facade.TargetID) when the compare first met its CAST_FINISH, so a tab during the cast reads as one.
+    -- The cast in flight with no GUID (the Map restriction; ledger L1734): its action, finish and last success seen
+    -- (the ability's realCast), and the target's stable ID (Facade.TargetID) when the compare first met its
+    -- CAST_FINISH, so a tab during the cast reads as one.
     -- shortcut: a tab before the first update after the cast's start pins the new mob; exact with a pin at the SENT
-    -- (Engine/Sim/Events.lua), a reader the owner has not allowed. Likewise a cast of the same action that starts
-    -- before the pinned finish with no update since the last one ended reads as that cast.
+    -- (Engine/Sim/Events.lua), a reader the owner has not allowed.
     local castPin = { time = -1 }
 
     function state:ResetQueues()
@@ -6397,10 +6397,12 @@ do
         local g = e.target
         if g ~= nil and g ~= "unknown" then return g ~= state.target.unit end
         if e.type == "CAST_FINISH" then
-            -- a new cast (another action, or one starting at or after the pinned finish) pins anew; a pushback
-            -- (UNIT_SPELLCAST_DELAYED: a later start and finish, no target under Map) keeps the pin, moves its finish
-            if castPin.action ~= e.action or e.start >= castPin.time then
-                castPin.action, castPin.id = e.action, Facade.TargetID()
+            -- a new cast (another action, one starting at or after the pinned finish, or the action's success seen
+            -- since the pin) pins anew; a pushback (UNIT_SPELLCAST_DELAYED: a later start and finish, no target under
+            -- Map, no success) keeps the pin, moves its finish
+            local rc = class.abilities[ e.action ].realCast
+            if castPin.action ~= e.action or e.start >= castPin.time or rc ~= castPin.cast then
+                castPin.action, castPin.id, castPin.cast = e.action, Facade.TargetID(), rc
             end
             castPin.time = e.time
         end
