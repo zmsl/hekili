@@ -558,6 +558,24 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.is_false(watched()) -- for this build
     end)
 
+    -- (lane B4 task 5, design 2.4) with no plain max the library answers no points: a percent handle, converted with
+    -- the belief's own max and a point wider on each side
+    it("max-unknown: a percent watch, in points at the belief's max, widened a point", function()
+        W.maxSecret = true
+        ctl.powerMax[0] = 1000
+        boot()
+        live()
+        frames(14)
+        assert.are.equal("449 461", frames(1, MANA))
+        def.bandPoints = { [0] = { points = { 455 }, deficit = {}, pct = {} } }
+        def.bandGen = (def.bandGen or 0) + 1
+        assert.are.equal("449 461", frames(1, MANA)) -- a percent handle takes no points
+        assert.is_truthy(VS.Snapshot():find("points=max-unknown", 1, true))
+        W.unit.player.power[0] = 1
+        frames(4)
+        assert.are.equal("999 1000", frames(1, MANA))
+    end)
+
     it("allocates nothing over 1000 drains with every band live", function()
         boot(false)
         live()

@@ -6,8 +6,9 @@
 -- out of combat while the capability is not unavailable (at the build, and at a drain while one is missing). Poll 1.6
 -- re-asserts every live band as Obs.Band at each drain and logs one unknown at the change from live to anything else;
 -- I.bandT[channel] keeps the library's stamp. Families/TargetHealth.lua reads the target's (lane B2), Families/Player.lua
--- the player's (lane B3), Families/Resources.lua a power's (lane B4). A family that applies a band records it in I.bandUsed (a count) and
--- I.bandUsedLo/Hi (what it applied: the harness's containment check). A counter (I.bandDisagree, design 2.3) counts the
+-- the player's (lane B3), Families/Resources.lua a power's (lane B4). A family that applies a band
+-- records it in I.bandUsed (a count) and I.bandUsedLo/Hi (what it applied: the harness's containment check). A counter
+-- (I.bandDisagree, design 2.3) counts the
 -- settles at which the belief's own value lies more than one cell (1%: 0.01 of health, max / 100 points of power)
 -- outside a live band, with no effect on any output (for the target and a power: a usable answer that contradicts the
 -- band, which wins and clips it for its drain, L1675; a power's family also counts a band that found its bounds a cell
@@ -17,7 +18,9 @@
 -- Self-test: one retry out of combat 5 s after the first PLAYER_ENTERING_WORLD. Points (design 3.3, lane B7): the
 -- active priority's thresholds (def.bandPoints) go to each power handle out of combat, at a new def.bandGen or a new
 -- max; a refusal keeps the old set. A refused watch is asked again when combat ends (L1666 c: the caps are shared, so
--- a refusal can pass). A power that proves plain in combat (R.readable) releases its watch for this build.
+-- a refusal can pass). A handle that answers max-unknown (the max never read plain: no points) is replaced by a
+-- percent one for this build, converted at the belief's max and widened a point each side (design 2.4).
+-- A power that proves plain in combat (R.readable) releases its watch for this build.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -46,6 +49,7 @@ local chan, spec, handle, ptype, refused, paused = {}, {}, {}, {}, {}, {}
 -- By watch k: the points' generation and max last resolved (false: not since the handle was made), the set the handle
 -- holds, and the code that refused the latest one (false: none).
 local pointGen, pointMax, points, pointCode = {}, {}, {}, {}
+local percent = {} -- by watch k: the power's percent handle (max-unknown)
 local want = {} -- the list being resolved (never a def.bandPoints table: those are the stored sources)
 -- By channel: the library's stamp of the last live band, its low and high end (the family's units), whether the last
 -- poll logged a band, and how many settles found the belief's value outside it.
@@ -122,6 +126,21 @@ local function setPoints(k)
     end
     for i = 1, #have > #want and #have or #want do
         have[i] = want[i]
+    end
+end
+
+-- A power watch that cannot answer in points (max-unknown) becomes a percent one (out of combat, once a build).
+local function toPercent()
+    for k = 1, n do
+        local h = handle[k]
+        if h and ptype[k] and not percent[k] then
+            local _, why = h:State()
+            if why == "max-unknown" then
+                h:Release()
+                handle[k], percent[k] = false, true
+                spec[k].points = nil -- this build's own spec
+            end
+        end
     end
 end
 
@@ -203,6 +222,7 @@ I.OnBuild(function(def, now)
     local function add(ch, s, pt)
         n = n + 1
         chan[n], spec[n], handle[n], ptype[n], refused[n], paused[n] = ch, s, false, pt, false, false
+        percent[n] = false
         I.bandT[ch], I.bandLo[ch], I.bandHi[ch], I.bandLive[ch], I.bandDisagree[ch] = 0, 0, 0, false, 0
         I.bandUsed[ch], I.bandUsedLo[ch], I.bandUsedHi[ch] = 0, 0, 0
         if pt then
@@ -242,11 +262,12 @@ S.Poll(1.6, function(api, t)
         return
     end
     if not I.inCombat then
+        toPercent()
         ensure(api)
         if LHV then
             retry(t)
             for k = 1, n do
-                if handle[k] and ptype[k] then
+                if handle[k] and ptype[k] and not percent[k] then
                     setPoints(k)
                 end
             end
@@ -279,6 +300,11 @@ S.Poll(1.6, function(api, t)
                 if pt == false then
                     lo, hi = lo / 100, hi / 100 -- percent to the family's fraction
                 else
+                    if percent[k] then -- in points at the belief's max, a point wider each side
+                        local max = I.res.max[ch]
+                        lo, hi = lo * max / 100 - 1, hi * max / 100 + 1
+                        lo, hi = lo > 0 and lo or 0, hi < max and hi or max
+                    end
                     I.bandShows[ch] = h:Latency() + I.BAND_MARGIN
                 end
                 I.bandT[ch], I.bandLo[ch], I.bandHi[ch], I.bandLive[ch] = bt, lo, hi, true
@@ -372,7 +398,9 @@ I.OnSnapshot(function(out, now)
         local state, reason, held = "none", refused[k] or nil, ""
         if h then
             state, reason = h:State()
-            if ptype[k] and points[k] then
+            if ptype[k] and percent[k] then
+                held = " points=max-unknown"
+            elseif ptype[k] and points[k] then
                 held = " points=" .. (pointCode[k] or tostring(#points[k]))
             end
         end
