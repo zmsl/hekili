@@ -31,7 +31,8 @@ local UNKNOWN, ABOVE, BELOW = -1, 0, 1
 -- and the damage taken at its last guarded NOT. The current target: its memory slot (0 none), dead, attackable
 -- (TargetSwap c), fresh (TargetSwap b: never held before, so full at the swap), anchored (the health is known from a
 -- full start or a pin since the last restart), the health interval, the WOUND damage since the swap, M (the damage per
--- full health; 0 unknown), and whether a band was applied since the last restart (what an unknown drops).
+-- full health; 0 unknown), and whether a band was applied since the last restart (what an unknown drops) with its ends.
+local CELL, FUZZ = 0.01, 1e-9 -- a band's width; float slack on the one-cell margin (Sources/Bands.lua's)
 local H = {
     n = 0,
     ab = {},
@@ -52,6 +53,8 @@ local H = {
     dmg = 0,
     M = 0,
     band = false,
+    bLo = 0,
+    bHi = 1,
 }
 I.th = H
 local rec
@@ -146,10 +149,21 @@ I.On(Obs.Usable, function(o, t, lag)
     if o.b == 1 then
         local was = H.prev[k]
         H.prev[k] = BELOW
+        if H.band and H.bLo > g + FUZZ then -- a live band above the gate: the band wins (L1671/L1672)
+            if H.bLo > g + CELL + FUZZ then
+                I.bandDisagree[-1] = I.bandDisagree[-1] + 1
+            end
+            return
+        end
         if was == ABOVE and lag <= I.PIN_EXACT then
-            -- A flip: the health crossed g since the last guarded NOT, by at most the damage taken since then.
+            -- A flip: the health crossed g since the last guarded NOT, by at most the damage taken since then; inside
+            -- a live band it narrows the band.
             local slack = H.M > 0 and (H.dmg - H.notDmg[k]) / H.M or 0 -- nonzero: M > 0 checked
-            H.lo0, H.hi0 = g - slack > 0 and g - slack or 0, g
+            local lo, hi = g - slack > 0 and g - slack or 0, g
+            if H.band then
+                lo, hi = lo > H.bLo and lo or H.bLo, hi < H.bHi and hi or H.bHi
+            end
+            H.lo0, H.hi0 = lo, hi
             H.est0 = (H.lo0 + H.hi0) / 2
             -- M is learned here only: UnitHealthMax is secret on the target and on plates (header), never read.
             if H.fresh and H.dmg > 0 and H.M == 0 then
@@ -176,6 +190,12 @@ I.On(Obs.Usable, function(o, t, lag)
     elseif lag <= I.PIN_EXACT and guarded(k, a, t) then
         local top = g + I.EPS
         H.prev[k], H.notDmg[k] = ABOVE, H.dmg
+        if H.band and H.bHi < top then -- a live band at or under the gate: the band wins (L1671/L1672)
+            if H.bHi < g - CELL - FUZZ then
+                I.bandDisagree[-1] = I.bandDisagree[-1] + 1
+            end
+            return
+        end
         if H.lo0 < top then
             H.lo0 = top
         end
@@ -241,9 +261,9 @@ end)
 -- interval and the estimate, its middle (a live target's never under the floor: the enemy scan's UnitHealth > 1, as a
 -- WOUND's), an anchor and an observed sample; M is left alone. No H.slot test: under the map lockdown a target can have
 -- no plate slot, and a live band is the target. Ignored while dead: TargetGone wins (under the dungeon restrictions the
--- library keeps the lowest band on a corpse, its README). A usable answer that contradicts the band folds after it and
--- stands for that drain (FABLE-FOR-OWNER 18; Sources/Bands.lua's settle counts it); the next drain's band re-applies.
--- The unknown drops a band applied since the last restart: [0, 1], the gates' bounds re-applying at poll 2 (a swap's
+-- library keeps the lowest band on a corpse, its README). A live band is a read with a 1% width (L1671/L1672, over
+-- FABLE-FOR-OWNER 18): a usable answer folds after it and only narrows inside it (a flip's precision); one that
+-- contradicts it changes nothing and counts in I.bandDisagree beyond one cell (Obs.Usable above). The unknown drops a band applied since the last restart: [0, 1], the gates' bounds re-applying at poll 2 (a swap's
 -- unknown finds the restart's state and leaves it). The family records what it applied (I.bandUsed, the harness's
 -- containment check). Allocates nothing.
 I.On(Obs.Band, function(o, t)
@@ -258,7 +278,7 @@ I.On(Obs.Band, function(o, t)
     end
     local mid, floor = (o.b + o.c) / 2, I.TARGET_HEALTH_FLOOR
     H.lo0, H.hi0, H.est0 = o.b, o.c, mid > floor and mid or floor
-    H.anchored, H.band = true, true
+    H.anchored, H.band, H.bLo, H.bHi = true, true, o.b, o.c
     I.bandUsed[-1], I.bandUsedLo[-1], I.bandUsedHi[-1] = I.bandUsed[-1] + 1, o.b, o.c
     I.Sample(rec, "observed", H.est0, t, Obs.Band)
 end)
