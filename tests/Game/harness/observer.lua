@@ -81,9 +81,9 @@ M.DEFAULTS = {
     -- Cooldown Manager's verdict can close the missed debuff. Never on the plain oracle.
     lostAvoid = false,
     -- (LibHiddenValues lane B1, the bands arms) the hidden-value library's firings for fake_lhv.lua (drive.op `@lhv`):
-    -- the true target health at each wound on it and at each retarget (`@lhvPrime` first), our health at each wound on
-    -- us, each power at each change, all at the pre-pull. Added events only, never on the plain oracle. shortcut: a heal
-    -- carries no health snapshot (world.lua), so heals on us are not pushed; upgrade with a world that heals us.
+    -- the true target health at each wound or heal on it and at each retarget (`@lhvPrime` first), our health at each
+    -- wound or heal on us (world.lua's snapshot after it), each power at each change, all at the pre-pull. Added events
+    -- only, never on the plain oracle.
     bands = false,
 }
 
@@ -347,10 +347,17 @@ function M.new(W, k)
     -- the viewer arms: our auras on each entity (aura -> expires), and the target the items last read (CDM Task 8)
     local mine, viewerTarget, retargetAt = {}, false, -math.huge
     local viewerLast = {} -- (unit .. aura) -> its last @viewer edge's time: the client takes them in order (review I1)
-    -- (k.bands) each entity's health as the wounds left it, and the target the hidden-value library reads
-    local hp, bandTarget = {}, nil
+    -- (k.bands) each entity's health as the wounds and heals left it, and the target the hidden-value library reads
+    -- from the prepull's snapshot (world.lua): e.health is the world's end, the observer reading a world already run
+    local hp, bandTarget, start = {}, nil, {}
+    for _, ev in ipairs(W.truth) do
+        if ev.kind == "prepull" then
+            start = ev.hp or start
+            break
+        end
+    end
     for _, e in ipairs(W.ents) do
-        hp[e] = e.health
+        hp[e] = start[e] or e.health
     end
     local function retarget(t, tgt) -- the client re-reads its target items the frame after a change (CDM-O: f=1)
         if k.bands and tgt ~= bandTarget then -- the library's target watches prime again on the new unit
@@ -873,7 +880,7 @@ function M.new(W, k)
         if k.plain and hv and hv.health and ev.dst == ev.ourTarget then -- a secret-free client's target health
             push(t, "@health", "target", hv.health, ev.dst.healthMax)
         end
-        if k.bands and ev.act == "WOUND" and ev.dst and ev.health then -- the wound's health (world.lua's snapshot)
+        if k.bands and (ev.act == "WOUND" or ev.act == "HEAL") and ev.dst and ev.health then -- world.lua's snapshot
             hp[ev.dst] = ev.health
             if ev.dst == bandTarget then
                 push(t, "@lhv", "health", "target", nil, ev.health, ev.dst.healthMax)

@@ -183,6 +183,20 @@ describe("the observer", function()
         assert.are.equal(4, #got)
     end)
 
+    it("(bands) pushes our health to the library after a heal on us, as after a wound (L1666 b)", function()
+        setup()
+        W.emit({ t = 4, kind = "swing", src = mob, dst = us, hand = 1, act = "WOUND", amount = 300 })
+        W.emit({ t = 6, kind = "spell", src = us, dst = us, act = "HEAL", amount = 120 })
+        W.emit({ t = 7, kind = "spell", src = us, dst = us, act = "HEAL", amount = 500 })
+        local got = {}
+        for _, e in ipairs(events(observer.observe(W, setmetatable({ bands = true }, { __index = observer.DEFAULTS })))) do
+            if e[2] == "@lhv" and e[4] == "player" then
+                got[#got + 1] = table.concat({ e[1], e[3], tostring(e[5]), e[6], e[7] }, " ")
+            end
+        end
+        assert.are.same({ "4 health nil 700 1000", "6 health nil 820 1000", "7 health nil 1000 1000" }, got)
+    end)
+
     it("fires the on-swing proc as a school-32 wound on the target and a heal on us, same ms", function()
         setup()
         W.emit({ t = 7.002, kind = "proc", src = us, dst = mob, act = "WOUND", amount = 36, school = 32 })
@@ -1318,9 +1332,10 @@ describe("the world", function()
             assert.are.equal(460, us.health)
             assert.are.equal(500, mob.health)
             W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
-            W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
+            local heal = W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
             assert.are.equal(470, mob.health)
             assert.are.equal(500, us.health)
+            assert.are.equal(500, heal.health) -- the heal's snapshot, capped at the max, as a wound's (L1666 b)
         end
     )
 

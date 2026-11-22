@@ -104,6 +104,12 @@ function M.new(seed)
                 ev.targets[e] = e.target or false
             end
         end
+        if ev.kind == "prepull" then -- each entity's health then (the observer reads the world after it ran: its end)
+            ev.hp = {}
+            for _, e in ipairs(W.ents) do
+                ev.hp[e] = e.health
+            end
+        end
         if W.castJitter and ev.kind == "cast" and ev.src == me and me then
             ev.jitter = W.jrng.next() * W.castJitter
         end
@@ -144,6 +150,7 @@ function M.new(seed)
             end
         elseif ev.act == "HEAL" and ev.dst then
             ev.dst.health = math.min(ev.dst.healthMax, ev.dst.health + (ev.amount or 0))
+            ev.health = ev.dst.health -- after the heal, capped at the max (a secret-free client's UnitHealth), as a wound's
         end
         -- a landed wound on us from another pays our TRUE rage by W.takenRage (opt-in, a content's own rule), as a gain
         -- after it; the amount before our armor (the world's only armor: our `dr`), crits and crushes already inside it
