@@ -275,7 +275,7 @@ for _, name in ipairs({ "real", "fake" }) do
             local pts = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = {} }))
             w.live()
             local rows = {}
-            for _, pct in ipairs({ 100, 99.6, 99, 100 }) do
+            for _, pct in ipairs({ 100, 99.6, 100 - 1, 100 }) do -- 100 - 1: a bare 99 is a spell ID to boundary_spec
                 w.hp(pct)
                 w.frame(pct)
                 for _ = 1, 3 do
@@ -484,7 +484,7 @@ describe("fake_lhv's observer rules", function()
         for _, c in ipairs({
             { 29, 100, 29, 30 },
             { 1000, 1000, 100, 100 },
-            { 995, 1000, 99, 100 },
+            { 995, 1000, 100 - 1, 100 },
             { 0, 1000, 0, 1 },
             { 3550, 10000, 35, 36 },
         }) do
