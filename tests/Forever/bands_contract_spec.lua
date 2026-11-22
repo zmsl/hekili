@@ -471,6 +471,28 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
             assert.is_truthy(VS.Snapshot():find("points=edge-limit", 1, true))
         end)
 
+        it("refused points are asked again when combat ends (review M4)", function()
+            send({ 455 })
+            frames(14)
+            local h = mine()
+            local set, refuse = h.SetPoints, true
+            function h.SetPoints(...)
+                if refuse then
+                    return nil, "edge-limit"
+                end
+                return set(...)
+            end
+            send({ 457 })
+            frames(2)
+            refuse = false
+            frames(2)
+            assert.are.same({ 455 }, h.points) -- never asked every drain
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            frames(1)
+            assert.are.same({ 457 }, h.points)
+        end)
+
         it("allocates nothing once the points are set", function()
             boot(false)
             send({ 455 })
@@ -577,6 +599,20 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         W.unit.player.power[0] = 1
         frames(4)
         assert.are.equal("999 1000", frames(1, MANA))
+    end)
+
+    -- (review I6) a guessed maximum makes no floor: the fact is the percent
+    it("max-unknown and the belief's max never read plain: no band", function()
+        W.maxSecret = true
+        function api.UnitPowerMax() -- as hidden from the belief as from the library
+            return fake.SECRET
+        end
+        boot()
+        live()
+        frames(14)
+        assert.are.equal("", frames(1, MANA))
+        assert.is_false(I.bandLive[MANA])
+        assert.are.equal(0, I.bandUsed[MANA])
     end)
 
     -- (lane B4) the whole path on the real library: secret power in combat, the family's records from the band, the

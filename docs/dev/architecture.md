@@ -665,7 +665,8 @@ moves or `I.bandShows[r]` has passed (`h:Latency()` plus `I.BAND_MARGIN`, the cl
 fps); a refund holds nothing. Regen is measured between two true crossings (the low end rose to the last top) with no
 known change between, the step scale from a band change covering exactly one landed swing, and the rage of a hit on us
 per flag class from one covering exactly one hit (L1673); a learned hit steps est and hi, never lo. A power that reads
-plain in combat releases its watch when combat ends; with no plain max the watch is a percent one, a point wider each side. With no live
+plain in combat releases its watch when combat ends; where the library
+has no max the watch is a percent one, a point wider each side, logged only once the belief read that max plain. With no live
 band everything below runs as without the library.
 
 **Player health.** The client hides the player's own health in combat (`UnitHealth`/`UnitHealthMax("player")` secret;

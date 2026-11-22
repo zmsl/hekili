@@ -13,6 +13,9 @@ local Plain, Stage, Direct, Note = S.Plain, S.Stage, S.Direct, S.Note
 
 -- By ability index: the last usability answer reported (-1 none, 0 not, 1 usable, 2 short).
 local last = {}
+-- By slot: its maximum answered plain since the build (a read equal to the believed max is none logged, so the family's
+-- maxRead does not say it). A percent band is points only then (Bands.lua).
+I.maxPlain = {}
 
 -- Asks every tracked spender (an ability whose cost is paid from a tracked resource). `onlyChanged`: report only
 -- the answers that changed (the events); `direct`: into the log (the poll) rather than staged. True when any
@@ -54,6 +57,9 @@ I.OnBuild(function(def)
     for a = 1, #def.abilities do
         last[a] = -1
     end
+    for r = 1, #def.resources do
+        I.maxPlain[r] = false
+    end
 end)
 
 local function onUsable(api, t)
@@ -76,11 +82,14 @@ local function readMax(api, t, direct)
     for r = 1, R.n do
         local raw = api.UnitPowerMax("player", R.type[r]) -- secret: Plain next
         local max = Plain(api, raw)
-        if type(max) == "number" and max > 0 and max ~= R.max[r] then
-            if direct then
-                Direct(Obs.Read, t, r, max, ReadOf.Max)
-            else
-                Stage(Obs.Read, t, r, max, ReadOf.Max)
+        if type(max) == "number" and max > 0 then
+            I.maxPlain[r] = true
+            if max ~= R.max[r] then
+                if direct then
+                    Direct(Obs.Read, t, r, max, ReadOf.Max)
+                else
+                    Stage(Obs.Read, t, r, max, ReadOf.Max)
+                end
             end
         end
     end

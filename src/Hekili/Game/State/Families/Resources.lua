@@ -1750,16 +1750,12 @@ end
 
 -- Slot r's live band [lo, hi), stamped bt, onto its records (integration design 2.4, both columns: owner L1671): the
 -- ceiling, the floor and the estimate inside it; one at most a point wide is an exact read of `lo` (a pin that measures
--- nothing); a disjoint one wins both ends (counted past a cell: the crossing it has yet to show is none); it ends the
+-- nothing); a disjoint one wins both ends (no disagreement: it moves a point at every swing); it ends the
 -- rest assumption and never sets a cap mark. A swing-paid slot's rise at a new stamp is a lift (owe, L1504); what a
 -- re-assert takes back down (a usable clip of the last drain) is owed no more. Allocates nothing.
 local function applyBand(r, lo, hi, bt, t)
-    local e, l, h, max = R.est0[r], R.lo0[r], R.hi0[r], R.max[r]
+    local e, l, h = R.est0[r], R.lo0[r], R.hi0[r]
     local top = bandTop(lo, hi)
-    local cell = max / 100
-    if l > hi + cell or h < lo - cell then
-        I.bandDisagree[r] = I.bandDisagree[r] + 1
-    end
     estDebt[r] = 0 -- measured
     R.pinValid[r] = false
     if R.banded[r] then

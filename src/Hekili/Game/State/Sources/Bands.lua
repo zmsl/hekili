@@ -11,15 +11,15 @@
 -- (I.bandDisagree, design 2.3) counts the
 -- settles at which the belief's own value lies more than one cell (1%: 0.01 of health, max / 100 points of power)
 -- outside a live band, with no effect on any output (for the target and a power: a usable answer that contradicts the
--- band, which wins and clips it for its drain, L1675; a power's family also counts a band that found its bounds a cell
--- away). Pauses: every watch after 2 s with no drain (the
+-- band, which wins and clips it for its drain, L1675). Pauses: every watch after 2 s with no drain (the
 -- event facade's frame update, I.BandsIdle), a power whose type is neither the displayed power nor mana. Kill switch:
 -- def.providers.bands false releases every watch, out of combat (in combat at PLAYER_REGEN_ENABLED, decision 89).
 -- Self-test: one retry out of combat 5 s after the first PLAYER_ENTERING_WORLD. Points (design 3.3, lane B7): the
 -- active priority's thresholds (def.bandPoints) go to each power handle out of combat, at a new def.bandGen or a new
--- max; a refusal keeps the old set. A refused watch is asked again when combat ends (L1666 c: the caps are shared, so
--- a refusal can pass). A handle that answers max-unknown (the max never read plain: no points) is replaced by a
--- percent one for this build, converted at the belief's max and widened a point each side (design 2.4).
+-- max; a refusal keeps the old set. A refused watch or set is asked again when combat ends (L1666 c: the caps are
+-- shared, so a refusal can pass). A handle that answers max-unknown (the max never read plain: no points) is replaced by a
+-- percent one for this build, converted at the belief's max and widened a point each side (design 2.4), only once that
+-- max was read plain (I.maxPlain): a guessed one would make a measured floor of a percent, so then it logs no band.
 -- A power that proves plain in combat (R.readable) releases its watch when combat ends, for this build.
 
 local _, ns = ...
@@ -294,7 +294,7 @@ S.Poll(1.6, function(api, t)
             end
             local ch = chan[k]
             local lo, hi, bt
-            if h:State() == "live" then
+            if h:State() == "live" and (not percent[k] or I.maxPlain[ch]) then
                 lo, hi, bt = h:Get()
             end
             if lo then
@@ -344,6 +344,9 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
     for k = 1, n do
         if refused[k] ~= "unproven" and refused[k] ~= "readable" then
             refused[k] = false
+        end
+        if pointCode[k] then
+            pointGen[k] = false
         end
     end
 end)
