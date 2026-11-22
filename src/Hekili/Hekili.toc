@@ -41,6 +41,7 @@ Game\State\Sources\Player.lua
 Game\State\Sources\Spellbook.lua
 Game\State\Sources\Casts.lua
 Game\State\Sources\Power.lua
+Game\State\Sources\Bands.lua
 Game\State\Sources\Swing.lua
 Game\State\Sources\Auras.lua
 Game\State\Sources\Forms.lua

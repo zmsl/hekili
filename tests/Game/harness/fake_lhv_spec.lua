@@ -7,11 +7,12 @@ local alloc = require("Game.State.helpers.alloc")
 
 local FAKE = "src/LibHiddenValues/Testing/FakeClient.lua"
 local FRAME = 1 / 60
+local PRIMED = 11 * FRAME -- a prime's first live frame (the shared rows "primes: ...")
 local floor = math.floor
 
 -- Each world: target health 63.7%, player mana 45% of 1000. `live()` runs until fresh watches are live; `frame(pct)`
 -- runs one frame with the target's health at pct% (nil: unchanged); `max(m)` sets the mana max (mana stays 45%), seen
--- on the next frame.
+-- on the next frame; `retarget(pct)` swaps to a new target at pct% (the client's PLAYER_TARGET_CHANGED).
 local IMPLS = {
     real = function()
         local Fake = dofile(FAKE)
@@ -33,6 +34,10 @@ local IMPLS = {
                 max = function(m)
                     W.unit.player.max[0] = m
                     Fake.event("UNIT_MAXPOWER", "player")
+                end,
+                retarget = function(pct)
+                    W.unit.target = { health = pct / 100 }
+                    Fake.event("PLAYER_TARGET_CHANGED")
                 end,
                 now = rawget(_G, "GetTime"), -- the FakeClient's clock
                 done = Fake.restore,
@@ -64,6 +69,10 @@ local IMPLS = {
                 end,
                 max = function(m)
                     newMax = m
+                end,
+                retarget = function(pct)
+                    lib:Prime("target", now())
+                    lib:Push("health", "target", nil, pct * 10, 1000, now())
                 end,
                 now = now,
                 done = function() end,
@@ -130,6 +139,33 @@ local SEQUENCES = {
         { 63.6, 63.5, 63.4, 63.3, 63.2, 63.1, 63.05, 63.9 },
         2,
         "63 63 63 63 63 63 63 63 63 63",
+    },
+}
+
+-- A prime, pinned on the real library (ledger L1664 item 1, the B0 re-review's retarget probe): a watch made after
+-- login, a resume and a retarget are unknown 10 frames, then the band stamped at the prime's end (2 frames back); a
+-- change during the prime is reported with it, one on the first live frame is held as any change. Each case: how it
+-- primes, the new target's health (a retarget), a move { frame, pct } of the target, the frames read, the row (lo@age
+-- after every frame).
+local PRIMES = {
+    { "a watch made after login", "watch", nil, nil, 13, "- - - - - - - - - - 63@2 63@3 63@4" },
+    { "a resume", "resume", nil, nil, 13, "- - - - - - - - - - 63@2 63@3 63@4" },
+    { "a retarget to a still target", "retarget", 19.5, nil, 16, "- - - - - - - - - - 19@2 19@3 19@4 19@5 19@6 19@7" },
+    {
+        "a retarget, the new target moving during the prime",
+        "retarget",
+        50.5,
+        { 4, 48.5 },
+        13,
+        "- - - - - - - - - - 48@2 48@3 48@4",
+    },
+    {
+        "a retarget, the new target moving on the first live frame",
+        "retarget",
+        50.5,
+        { 11, 48.5 },
+        14,
+        "- - - - - - - - - - 50@2 50@3 48@2 48@3",
     },
 }
 
@@ -229,6 +265,9 @@ for _, name in ipairs({ "real", "fake" }) do
             assert.are.same({ true, "ready" }, { lib:IsAvailable("health", "target") })
             assert.are.same({ false, "unavailable", "unproven" }, { lib:IsAvailable("health", "focus") })
             assert.are.same({ "unavailable", "unproven" }, { focus:State() })
+            assert.are.same({ "LibHiddenValues-1.0", 7 }, { lib:GetVersion() })
+            local verdict, lines, running = lib:GetSelfTest()
+            assert.are.same({ true, "table", false }, { verdict, type(lines), running })
             local stats = { lib:GetStats() }
             assert.are.equal(8, #stats)
             for i = 1, 8 do
@@ -270,6 +309,36 @@ for _, name in ipairs({ "real", "fake" }) do
             end)
         end
 
+        for _, case in ipairs(PRIMES) do
+            it("primes: " .. case[1], function()
+                local how, move = case[2], case[4]
+                local hp
+                if how ~= "watch" then
+                    hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
+                end
+                w.live()
+                if how == "watch" then
+                    hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
+                elseif how == "resume" then
+                    hp:SetPaused(true)
+                    for _ = 1, 5 do
+                        w.frame(nil)
+                    end
+                    hp:SetPaused(false)
+                else
+                    w.retarget(case[3])
+                end
+                local row = {}
+                for i = 1, case[5] do
+                    w.frame(move and move[1] == i and move[2] or nil)
+                    local lo, _, t = hp:Get()
+                    local live = hp:State() == "live" and lo ~= nil
+                    row[i] = live and lo .. "@" .. floor((w.now() - t) / FRAME + 0.5) or "-"
+                end
+                assert.are.equal(case[6], table.concat(row, " "))
+            end)
+        end
+
         it("a points handle primes again when the max moves; a cell handle on the same source does not", function()
             local pts = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, points = { 400, 600 } }))
             local cell = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = {} }))
@@ -302,7 +371,7 @@ describe("fake_lhv's observer rules", function()
     it("a change is reported 2 frames after its last firing, with t that firing's", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 })
         lib:Push("health", "target", nil, 500, 1000, t)
-        t = t + 10 * FRAME
+        t = t + PRIMED
         assert.are.same({ 50, 51 }, lohi(h))
         local t0 = t
         lib:Push("health", "target", nil, 480, 1000, t0)
@@ -315,7 +384,7 @@ describe("fake_lhv's observer rules", function()
     it("a read after a long gap applies the desync, the prime's decode and the report in order", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 })
         lib:Push("health", "target", nil, 900, 1000, t)
-        local t0 = t + 10 * FRAME
+        local t0 = t + PRIMED
         for i = 1, 6 do -- the shared block's 6-frame case, read only at its frames 16 and 17
             lib:Push("health", "target", nil, 895 - 10 * i, 1000, t0 + i * FRAME)
         end
@@ -329,27 +398,27 @@ describe("fake_lhv's observer rules", function()
         local t0 = t
         lib:Push("health", "target", nil, 600, 1000, t0)
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 })
-        t = t0 + 9 * FRAME
-        assert.are.equal("priming", (h:State()))
         t = t0 + 10 * FRAME
-        assert.are.same({ 60, 61 }, lohi(h))
+        assert.are.equal("priming", (h:State()))
+        t = t0 + PRIMED
+        assert.are.same({ 60, 61, t0 + 9 * FRAME, lib.BAND }, { h:Get() }) -- t: the prime's end, 2 frames back
         local t1 = t
         lib:Prime("target", t1)
         lib:Push("health", "target", nil, 300, 1000, t1)
-        t = t1 + 9 * FRAME
-        assert.are.same({ "priming", nil }, { h:State(), (h:Get()) })
         t = t1 + 10 * FRAME
-        assert.are.same({ 30, 31 }, lohi(h))
+        assert.are.same({ "priming", nil }, { h:State(), (h:Get()) })
+        t = t1 + PRIMED
+        assert.are.same({ 30, 31, t1 + 9 * FRAME, lib.BAND }, { h:Get() })
         h:SetPaused(true)
         h:SetPaused(false)
         assert.are.equal("priming", (h:State()))
-        t = t + 10 * FRAME
+        t = t + PRIMED
         assert.are.equal("live", (h:State()))
     end)
 
     it("1% cells are exact for whole values; the top cell holds 100; no unit is gone", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1, edges = { 35 } })
-        t = t + 10 * FRAME
+        t = t + PRIMED
         for _, c in ipairs({
             { 29, 100, 29, 30 },
             { 1000, 1000, 100 - 1, 100 },
@@ -361,7 +430,7 @@ describe("fake_lhv's observer rules", function()
             assert.are.same({ c[3], c[4] }, lohi(h), c[1])
         end
         local e = lib:Watch("A", { kind = "health", unit = "target", edges = { 20, 50 } })
-        t = t + 10 * FRAME
+        t = t + PRIMED
         assert.are.same({ 20, 50 }, lohi(e))
         lib:Push("health", "target", nil, nil, nil, t)
         assert.are.same({ "gone", nil }, { h:State(), (h:Get()) })
@@ -394,10 +463,11 @@ describe("fake_lhv's observer rules", function()
     it("the capability: SetAvailable makes every handle unknown with its reason", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 })
         lib:Push("health", "target", nil, 500, 1000, t)
-        t = t + 10 * FRAME
+        t = t + PRIMED
         lib:SetAvailable("unavailable", "selftest")
         assert.are.same({ "unavailable", "selftest" }, { h:State() })
         assert.are.same({ false, "unavailable", "selftest" }, { lib:IsAvailable("health", "target") })
+        assert.is_false((lib:GetSelfTest()))
         assert.is_nil((h:Get()))
         lib:SetAvailable("ready")
         assert.are.same({ 50, 51 }, lohi(h))
@@ -406,7 +476,7 @@ describe("fake_lhv's observer rules", function()
     it("Get and State allocate nothing", function()
         local h = lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = { 40 } })
         lib:Push("power", "player", 0, 45, 100, t)
-        t = t + 10 * FRAME
+        t = t + PRIMED
         local live = 0
         local bytes = alloc.bytes(function(i)
             t = t + FRAME

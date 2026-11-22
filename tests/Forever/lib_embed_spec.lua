@@ -2,7 +2,8 @@
 -- and LibTimeToDie in its package and lists both as OptionalDeps. In the linked development tree each library is its
 -- own addon folder and src/Hekili/Libs has neither, so the embed lines sit in a packager guard: commented out in the
 -- source (nothing to load, and the headless loader strips comments), opened by the packager's debug filter in the zip
--- (tools/check_package.sh checks the zip). Each library's check_standalone allows exactly the two host files.
+-- (tools/check_package.sh checks the zip). Each library's check_standalone allows exactly its host files: the two
+-- above, and for LibHiddenValues the belief's band source (lane B1).
 local function read(path)
     local f = assert(io.open(path))
     local s = f:read("*a")
@@ -54,20 +55,23 @@ describe("the embedded libraries", function()
         assert.is_nil(meta:find("\n    - src/LibTimeToDie\n", 1, true))
     end)
 
-    -- Each check runs on a copy of what it scans, with the host's two files and one more file of the core's.
+    -- Each check runs on a copy of what it scans, with the host's allowed files and more files of the core's.
+    local SOURCES = "/src/Hekili/Game/State/Sources"
     for _, lib in ipairs({ { "LibHiddenValues", "libhiddenvalues" }, { "LibTimeToDie", "libtimetodie" } }) do
         local name, tool = lib[1], lib[2]
-        it("tools/" .. tool .. "/check_standalone.sh allows exactly the embed and the TOC, by full path", function()
+        it("tools/" .. tool .. "/check_standalone.sh allows exactly its host files, by full path", function()
             local tmp = assert(assert(sh("mktemp -d")):match("^(%S+)"))
             finally(function() -- also when an assert below fails
                 sh("rm -rf " .. tmp)
             end)
             local copy = table.concat({
-                "mkdir -p " .. tmp .. "/src/Hekili/Libs " .. tmp .. "/tools " .. tmp .. "/tests",
+                "mkdir -p " .. tmp .. "/src/Hekili/Libs " .. tmp .. "/tools " .. tmp .. "/tests " .. tmp .. SOURCES,
+                "mkdir -p " .. tmp .. "/src/Hekili/Game/Events",
                 "cp -r src/LibHiddenValues src/LibTimeToDie " .. tmp .. "/src",
                 "cp -r tests/LibHiddenValues tests/LibTimeToDie " .. tmp .. "/tests",
                 "cp -r tools/libhiddenvalues tools/libtimetodie " .. tmp .. "/tools",
                 "cp src/Hekili/embeds.xml src/Hekili/Hekili.toc " .. tmp .. "/src/Hekili",
+                "cp src" .. SOURCES:sub(5) .. "/Bands.lua " .. tmp .. SOURCES, -- the band source names LibHiddenValues
                 'ln -s "$(pwd)/.lua" ' .. tmp .. "/.lua",
             }, " && ")
             local out, rc = sh(copy)
@@ -76,7 +80,11 @@ describe("the embedded libraries", function()
             out, rc = sh(check)
             assert.are.equal(0, rc, out)
             -- the same name in another file of the core, also one whose basename is allowed, fails
-            for _, rogue in ipairs({ "src/Hekili/Rogue.lua", "src/Hekili/Libs/embeds.xml" }) do
+            for _, rogue in ipairs({
+                "src/Hekili/Rogue.lua",
+                "src/Hekili/Libs/embeds.xml",
+                "src/Hekili/Game/Events/Bands.lua",
+            }) do
                 local f = assert(io.open(tmp .. "/" .. rogue, "w"))
                 f:write("-- " .. name .. "\n")
                 f:close()

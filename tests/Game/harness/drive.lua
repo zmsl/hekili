@@ -491,6 +491,14 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         c[key] = bar
         bar[1], bar[2] = a1, a2
         ctl[key] = a1 and bar or nil
+    elseif ev == "@lhv" then -- kind, unit, power, value (nil: no unit), max: a firing of the bands arms' fake library
+        if ctl.lhv then -- (loop.lua; observer.lua `bands`)
+            ctl.lhv:Push(a1, a2, a3, a4, a5, ctl.now)
+        end
+    elseif ev == "@lhvPrime" then -- unit: its watches prime again (a retarget)
+        if ctl.lhv then
+            ctl.lhv:Prime(a1, ctl.now)
+        end
     end
 end
 

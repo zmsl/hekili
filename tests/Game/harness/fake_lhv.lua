@@ -19,9 +19,11 @@
 --            earliest report, if later); still moving 6 frames after that decode, it desyncs again
 --            (README, "Confirmation": "A value that moves one way on every frame is never confirmed");
 --   latency: h:Latency() answers 7 frames (README, h:Latency(): seven frames worst case); not a reporting rule;
---   prime:   unknown for 10 frames after a watch starts, resumes or its unit changes (README, "Testing your addon":
---            priming 10 frames at least: hold 4, push, settle 4, decode); a points handle (one point or more) for 9
---            frames after its max moves (README, `points`: its point bars are placed again on UNIT_MAXPOWER);
+--   prime:   unknown for 10 frames after a watch starts, resumes or its unit changes, live on the 11th, `t` then the
+--            prime's end (2 frames back) unless the value fired since (README, "Testing your addon": priming 10
+--            frames at least: hold 4, push, settle 4, decode; shared rows "primes: ...", ledger L1664 item 1); a
+--            points handle (one point or more) for 9 frames after its max moves (README, `points`: its point bars are
+--            placed again on UNIT_MAXPOWER);
 --   cells:   a step watch is the 1% cell [lo, lo + 1) (hi inclusive at 100), cut further by its edges or points; a
 --            points handle answers in points, its cell (max / 100) wide (README, `step`, `points`);
 --   caps:    8 distinct points per source and 64 in total, over either the request is refused with edge-limit and
@@ -29,10 +31,14 @@
 -- shortcut: every handle times as a step source (Hekili's watches are step = 1, design decision 13): an edges-only
 -- handle's 1-2 frame timing is not modelled, upgrade if a consumer watches edges only. shortcut: lib:Prime ends a
 -- pending change or desync at once with the latest value (the real library primes the whole source again), each
--- handle then priming its 10 frames; upgrade if a consumer reads a source across a retarget. Sinks are kept, never called
+-- handle then priming its 10 frames (a retarget's liveness and `t` are pinned by the shared rows; a desync running
+-- across a retarget is not); upgrade if a consumer's gate turns on that case. Sinks are kept, never called
 -- (the belief polls in Drain, decision 15). A point-precision spec is not read (Hekili never asks for one, decision
 -- 6). No aura kind (unproven here), no bar pool: GetStats counts
--- watches only. The unmeasured knobs (bandLead, spendFirst) come with the lanes that need them.
+-- watches only. GetVersion answers minor 7; GetSelfTest reads the capability (pending nil, a "selftest" loss false,
+-- else true) and SelfTest calls back at once. `o.history`: every push kept per source, lib:TruthAt(kind, unit, power,
+-- t) the last at or before t (the bands arms' containment, loop.bandCheck). The bands-drop arm's capability loss is
+-- lib:SetAvailable; the unmeasured knobs (bandLead, spendFirst) come with the lanes that need them (B4, B6).
 local M = {}
 
 M.DEFAULTS = {
@@ -134,6 +140,12 @@ function M.new(o)
     end
 
     local EPS = R.frame / 1000 -- the deadlines fall on frame boundaries: a rounding ulp must not move one a frame
+
+    -- h primes from t: unknown `prime` frames, live on the next; its first band stamped no earlier than the prime's end.
+    local function prime(h, t)
+        h.primeUntil = t + (R.prime + 1) * R.frame
+        h.tFloor = h.primeUntil - R.hold * R.frame
+    end
 
     -- Applies what happened by t with no firing since the last push, in order: the pending change is reported once it
     -- held `hold` frames (not before `ready`), or the source desyncs `desync` frames after its first firing (the report
@@ -293,7 +305,7 @@ function M.new(o)
                 end
             end
         end
-        h.primeUntil = now() + R.prime * R.frame
+        prime(h, now())
         lib.handles[#lib.handles + 1] = h
         return h
     end
@@ -301,6 +313,12 @@ function M.new(o)
     -- The observer's firing: the true value (plain, its own units; nil: no unit) of a source at t.
     function lib:Push(kind, unit, power, value, max, t)
         local s = source(kind, unit, kind == "power" and power or nil)
+        if o.history then -- the truth the harness checks a band against (lib:TruthAt); allocates
+            local hist = s.hist or { n = 0, t = {}, v = {}, m = {} }
+            s.hist = hist
+            hist.n = hist.n + 1
+            hist.t[hist.n], hist.v[hist.n], hist.m[hist.n] = t, value or false, max
+        end
         settle(s, t)
         if value == nil then
             s.pend, s.v, s.m, s.t, s.gone = false, nil, nil, t, true
@@ -342,7 +360,7 @@ function M.new(o)
         end
         for _, h in ipairs(lib.handles) do
             if h.unit == unit and not h.released then
-                h.primeUntil = t + R.prime * R.frame
+                prime(h, t)
             end
         end
     end
@@ -350,6 +368,40 @@ function M.new(o)
     -- The capability (the bandDrop arm, a failed self-test): "ready", or "pending" / "unavailable" with a reason.
     function lib:SetAvailable(state, reason)
         cap, capWhy = state, reason
+    end
+
+    -- (o.history) The pushed truth of a source at t: the last push at or before t, value and max (nil: none; false:
+    -- no unit).
+    function lib:TruthAt(kind, unit, power, t)
+        local s = lib.sources[kind .. "|" .. unit .. "|" .. tostring(kind == "power" and power or nil)]
+        local hist = s and s.hist
+        for i = hist and hist.n or 0, 1, -1 do
+            if hist.t[i] <= t then
+                return hist.v[i], hist.m[i]
+            end
+        end
+        return nil
+    end
+
+    -- The major and the minor this fake follows (README, Diagnostics).
+    function lib:GetVersion()
+        return "LibHiddenValues-1.0", 7
+    end
+
+    -- The self-test as the capability says it: nil pending, false a failed self-test, else true; never running. No bar
+    -- model to test: SelfTest calls fn at once with that verdict.
+    local LINES = {}
+    function lib:GetSelfTest()
+        if cap == "pending" then
+            return nil, nil, false
+        end
+        return capWhy ~= "selftest", LINES, false
+    end
+
+    function lib:SelfTest(fn)
+        if fn then
+            fn((lib:GetSelfTest()), LINES)
+        end
     end
 
     function lib:IsAvailable(kind, unit)
@@ -394,7 +446,7 @@ function M.new(o)
         if s.gone then
             return "gone"
         end
-        if t < self.primeUntil or s.v == nil then
+        if t + EPS < self.primeUntil or s.v == nil then
             return "priming"
         end
         return "live"
@@ -431,7 +483,11 @@ function M.new(o)
             end
             lo, hi = lo > glo and lo or glo, hi < ghi and hi or ghi
         end
-        return lo, hi, s.t, M.BAND
+        local t = s.t
+        if self.tFloor and self.tFloor > t then -- a band first known at a prime: stamped at its end
+            t = self.tFloor
+        end
+        return lo, hi, t, M.BAND
     end
 
     function H:Latency()
@@ -459,7 +515,7 @@ function M.new(o)
 
     function H:SetPaused(paused)
         if self.paused and not paused then
-            self.primeUntil = now() + R.prime * R.frame -- a resumed watch primes again
+            prime(self, now()) -- a resumed watch primes again
             self.plo, self.phi, self.pt = nil, nil, nil
         elseif paused and not self.paused then
             self.plo, self.phi, self.pt = self:Get()

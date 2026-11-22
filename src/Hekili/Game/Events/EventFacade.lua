@@ -265,7 +265,9 @@ local function onUpdate()
     S.Flush()
     local api = I.api
     if api then
-        I.Log.Tick(api.GetTime()) -- closes pairing windows (deferred rows)
+        local now = api.GetTime()
+        I.Log.Tick(now) -- closes pairing windows (deferred rows)
+        I.BandsIdle(now) -- the band watches pause after 2 s with no drain (Sources/Bands.lua)
     end
     I.Log.Deliver()
 end
