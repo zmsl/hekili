@@ -1,30 +1,22 @@
--- tests/Forever/combo_refresh_spec.lua: the Rogue and Druid packs force a refresh when the player's combo points change
--- (UNIT_POWER_FREQUENT with the "COMBO_POINTS" token), and for no other power token.
-local ld = require("Forever.helpers.load_druid")
+-- tests/Forever/combo_refresh_spec.lua: core's power handler forces one refresh when the player's combo points change
+-- (UNIT_POWER_FREQUENT with the "COMBO_POINTS" token), end to end with a real pack loaded, and none for an energy tick.
+local headless = require("Game.harness.headless")
+local w = require("Forever.helpers.rogue_world")
 
 describe("combo point refresh", function()
-    for _, c in ipairs({
-        { "Rogue", "src/Hekili_Rogue/Rogue.lua", "ROGUE" },
-        { "Druid", "src/Hekili_Druid/Druid.lua", "DRUID" },
-    }) do
-        it(c[1] .. " forces one update for COMBO_POINTS and none for another token", function()
-            local w = ld.load(nil, c[2], c[3])
-            local hs = w.unitEvents.UNIT_POWER_FREQUENT
-            assert.is_table(hs)
-            assert.equals(1, #hs)
-            local forced = {}
-            local saved = rawget(_G, "Hekili")
-            _G.Hekili = {
-                ForceUpdate = function(_, ...)
-                    forced[#forced + 1] = { ... }
-                end,
-            }
-            hs[1]("UNIT_POWER_FREQUENT", "player", "ENERGY")
-            hs[1]("UNIT_POWER_FREQUENT", "player", "COMBO_POINTS")
-            _G.Hekili = saved
-            assert.equals(1, #forced)
-            assert.equals("COMBO_POINTS", forced[1][1])
-            assert.is_true(forced[1][2])
-        end)
-    end
+    it("core forces exactly one update for COMBO_POINTS and none for ENERGY", function()
+        local H = headless.new({ character = w.Combat.character(), pack = w.Combat.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+        local forced = {}
+        H.Hekili.ForceUpdate = function(_, event, super)
+            forced[#forced + 1] = tostring(event) .. ":" .. tostring(super)
+        end
+        H.Fire("UNIT_POWER_FREQUENT", "player", "ENERGY")
+        assert.are.same({}, forced)
+        H.Fire("UNIT_POWER_FREQUENT", "player", "COMBO_POINTS")
+        assert.are.same({ "UNIT_POWER_FREQUENT:true" }, forced) -- the whole list: a pack hook beside core's fails here
+        assert.are.same({}, H.errors)
+    end)
 end)

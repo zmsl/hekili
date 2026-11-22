@@ -1218,6 +1218,7 @@ local spell_names = setmetatable( {}, {
 local lastPower = {}
 
 local function UNIT_POWER_FREQUENT( event, unit, power )
+    if power == "COMBO_POINTS" then return Hekili:ForceUpdate( event, true ) end -- a point gained or spent
 
     if power == "FOCUS" and rawget( state, "focus" ) then
         local now = GetTime()
