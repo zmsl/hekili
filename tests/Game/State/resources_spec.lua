@@ -3756,6 +3756,7 @@ end)
 -- reads Obs.Band on the resource channels. A band is [lo, hi): its top is hi - EPS (a closed cell, lo == hi, itself).
 describe("resource bands (lane B4)", function()
     local RAGE, MANA, NRG = 1, 2, 3 -- the slots
+    local SHOWS = 1 / 6 -- what the source sets for a watch at 60 fps (I.bandShows)
     local PUNCH, SPELL, STAB, GUARDED, NUKE = 1, 2, 3, 4, 5 -- costs 20, 460, 40, 40 (its own requirement fails), 100
     local VS, I, R, S, Obs, EPS
 
@@ -3796,7 +3797,7 @@ describe("resource bands (lane B4)", function()
                     taken = function(_, amount)
                         return amount > 0 and amount / 10 or nil
                     end,
-                    auraRegen = { { value = 1, interval = 3 } },
+                    auraRegen = { { value = 3, interval = 3 } },
                 },
                 { key = "mana", type = 0, token = "MANA", max = 1000, rest = true, regen = 10 },
                 { key = "energy", type = 3, token = "ENERGY", max = 100, rest = true, regen = 10 },
@@ -3811,7 +3812,7 @@ describe("resource bands (lane B4)", function()
 
     -- the source's poll: a live band [lo, hi) of slot r stamped bt, re-asserted at t
     local function band(t, r, lo, hi, bt)
-        I.bandT[r] = bt or t
+        I.bandT[r], I.bandShows[r] = bt or t, SHOWS
         S.Direct(Obs.Band, t, r, lo, hi)
     end
     local function unknown(t, r)
@@ -4052,6 +4053,133 @@ describe("resource bands (lane B4)", function()
 
         it("an exact band's pins measure nothing themselves", function()
             assert.are.equal(10, crossings({ 10, 40, 41, NRG }, { 12, 45, 46, NRG }, { 14, 58, 59, NRG }))
+        end)
+    end)
+
+    -- The hold after our own change, generalised to every event we know of after the stamp (owner L1673): the band
+    -- describes an earlier moment, so what stepped forward from it stands until the band moves or its delay has passed.
+    describe("events after the stamp step forward from it", function()
+        local function held(r, lo, hi, bt, from, want)
+            for _, after in ipairs({ 0, 0.04, 0.08, 0.12, 0.16 }) do -- the same band at every drain
+                band(from + after, r, lo, hi, bt)
+                I.Fold(from + after)
+                assert.is_true(
+                    math.abs(R.est0[r] - want) < 2.5,
+                    ("+%s: want %s, got %s"):format(after, want, R.est0[r])
+                )
+            end
+        end
+
+        it("an own spend: a band older than it is skipped, for the band's delay at most", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.ResourceShift(MANA, -100, 10.05, Obs.CastSuccess)
+            held(MANA, 450, 460, 10, 10.05, 360) -- no flash back over the spend
+            band(10.05 + SHOWS + 0.01, MANA, 450, 460, 10) -- the spend stayed inside the band
+            I.Fold(10.05 + SHOWS + 0.01)
+            assert.are.equal(450, R.lo0[MANA])
+        end)
+
+        it("spend-late: the old band is held; the band that shows the spend applies at once", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.ResourceShift(MANA, -100, 10.05, Obs.CastSuccess)
+            band(10.06, MANA, 450, 460, 10)
+            band(10.1, MANA, 340, 350, 10.09)
+            I.Fold(10.1)
+            is(MANA, 340, 350 - EPS, 350 - EPS)
+        end)
+
+        it("spend-first: counted twice for the band's delay at most, low", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            band(10.02, MANA, 350, 360, 10.01)
+            S.Direct(Obs.CastSuccess, 10.05, NUKE, 100, 0) -- folded with the band that already shows it
+            band(10.05, MANA, 350, 360, 10.01)
+            I.Fold(10.05)
+            assert.is_true(R.lo0[MANA] < 350 and R.est0[MANA] < 350)
+            band(10.05 + SHOWS + 0.01, MANA, 350, 360, 10.01)
+            I.Fold(10.05 + SHOWS + 0.01)
+            assert.are.equal(350, R.lo0[MANA])
+        end)
+
+        it("a band stamped in our change's own frame is held too", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.ResourceShift(MANA, -100, 10.05, Obs.CastSuccess)
+            band(10.08, MANA, 450, 460, 10.05)
+            I.Fold(10.08)
+            assert.is_true(R.est0[MANA] < 400)
+        end)
+
+        it("an own gain steps forward", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.ResourceShift(MANA, 200, 10.05, Obs.CastSuccess)
+            held(MANA, 450, 460, 10, 10.05, 660)
+        end)
+
+        it("a landed swing after the stamp steps forward, est, lo and hi", function()
+            at(9.9)
+            band(10, RAGE, 20, 21)
+            S.Direct(Obs.Swing, 10.05, 1, 0, 4)
+            S.Direct(Obs.Swing, 10.05, 1, 1, 1)
+            I.Fold(10.05)
+            held(RAGE, 20, 21, 10, 10.05, 30)
+            assert.is_true(R.lo0[RAGE] > 20 and R.hi0[RAGE] > 30)
+            band(10.05 + SHOWS + 0.01, RAGE, 20, 21, 10) -- no change shown: it paid none
+            I.Fold(10.05 + SHOWS + 0.01)
+            is(RAGE, 20, 20, 20)
+        end)
+
+        it("a swing at or before the stamp is in the band", function()
+            at(9.9)
+            S.Direct(Obs.Swing, 10, 1, 0, 4)
+            band(10.02, RAGE, 30, 31, 10)
+            S.Direct(Obs.Swing, 10.02, 1, 1, 1)
+            band(10.04, RAGE, 30, 31, 10.02)
+            I.Fold(10.04)
+            is(RAGE, 30, 30, 30)
+        end)
+
+        it("a hit taken steps forward", function()
+            at(10)
+            band(10, RAGE, 20, 21)
+            S.Direct(Obs.PlayerHit, 10.05, I.HitKind.WOUND, 80, 20)
+            I.Fold(10.05)
+            held(RAGE, 20, 21, 10, 10.05, 28)
+        end)
+
+        it("a periodic tick steps forward from its own time", function()
+            at(6)
+            S.Direct(Obs.CombatStart, 7)
+            band(9.9, RAGE, 20, 21)
+            I.Fold(9.9)
+            I.Settle(10) -- the tick at 10
+            held(RAGE, 20, 21, 9.9, 10, 23)
+        end)
+
+        it("a refund is no change of now (paid at the cast): no hold", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.Refund(MANA, 80, 10.05)
+            band(10.05, MANA, 450, 460, 10)
+            I.Fold(10.05)
+            assert.are.equal(460 - EPS, R.est0[MANA])
+        end)
+
+        it("the rest assumption outlives a held band", function()
+            at(10)
+            I.ResourceShift(MANA, -100, 10, Obs.CastSuccess)
+            band(10.02, MANA, 990, 1000, 9.9)
+            I.Fold(10.02)
+            assert.is_true(R.assume[MANA] and R.lo0[MANA] + R.over[MANA] >= 900)
+            assert.are.equal(0, I.bandUsed[MANA])
         end)
     end)
 

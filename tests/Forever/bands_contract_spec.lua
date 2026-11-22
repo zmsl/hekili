@@ -506,6 +506,33 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.are.equal("0.63 0.64", frames(1, -1))
     end)
 
+    -- (lane B4, design 2.4) how long an event of ours outranks the band: the library's worst case from a change's first
+    -- firing (h:Latency(), by the measured frame time) and the client's own delay before that firing (3 frames at 60).
+    it("the hold covers the band's delay, the client's own included", function()
+        boot()
+        live()
+        local h
+        for _, x in ipairs(LHV.reg) do
+            h = (x.owner == "HekiliBelief" and x.power == 0) and x or h
+        end
+        assert.are.equal(h:Latency() + I.BAND_MARGIN, I.bandShows[MANA])
+        assert.is_true(I.BAND_MARGIN >= 3 * FRAME)
+        Fake.set("lag", 3) -- the client's
+        local before, t0, shownT = I.bandLo[MANA], nil, nil
+        for i = 1, 20 do
+            if i <= 5 then -- a change still moving: the library's worst case
+                W.unit.player.power[0] = (450 - 10 * i) / 1000
+            end
+            frames(1)
+            t0 = t0 or ctl.now
+            if I.bandLive[MANA] and I.bandLo[MANA] ~= before then
+                shownT = ctl.now
+                break
+            end
+        end
+        assert.is_true(shownT - t0 <= I.bandShows[MANA] + 1e-9, shownT - t0)
+    end)
+
     it("allocates nothing over 1000 drains with every band live", function()
         boot(false)
         live()

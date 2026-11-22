@@ -26,6 +26,11 @@ local Obs = VS.Obs
 local Plain, Direct = S.Plain, S.Direct
 local ceil = math.ceil
 
+--- The client's own delay before a band's firing, which the library's Latency does not count ("the client's own delay
+--- before it is not counted", its README): three frames at 60 fps (the integration design's bound). A band's whole
+--- delay behind one of our events is I.bandShows[channel] = h:Latency() (seven frames, by the measured frame time, so
+--- it grows as the frame rate falls) + this: about 0.17 s at 60 fps (Families/Resources.lua's hold).
+I.BAND_MARGIN = 0.05
 local MAJOR = "LibHiddenValues-1.0"
 local OWNER = "HekiliBelief" -- the border check keeps the bare addon name out of Game/ (design 2.1)
 local MANA = 0 -- Enum.PowerType.Mana: fed in every form (design 5.3)
@@ -45,6 +50,7 @@ local want = {} -- the list being resolved (never a def.bandPoints table: those 
 -- By channel: the library's stamp of the last live band, its low and high end (the family's units), whether the last
 -- poll logged a band, and how many settles found the belief's value outside it.
 I.bandT, I.bandLo, I.bandHi, I.bandLive, I.bandDisagree = {}, {}, {}, {}, {}
+I.bandShows = {} -- by power channel: the band's delay behind an event of ours (I.BAND_MARGIN)
 -- By channel: how many bands a family applied since the build, and the last one as it applied it.
 I.bandUsed, I.bandUsedLo, I.bandUsedHi = {}, {}, {}
 
@@ -199,6 +205,9 @@ I.OnBuild(function(def, now)
         chan[n], spec[n], handle[n], ptype[n], refused[n], paused[n] = ch, s, false, pt, false, false
         I.bandT[ch], I.bandLo[ch], I.bandHi[ch], I.bandLive[ch], I.bandDisagree[ch] = 0, 0, 0, false, 0
         I.bandUsed[ch], I.bandUsedLo[ch], I.bandUsedHi[ch] = 0, 0, 0
+        if pt then
+            I.bandShows[ch] = I.BAND_MARGIN -- until the handle says
+        end
     end
     for _, unit in ipairs(def.units) do
         if unit == "target" or unit == "player" then
@@ -261,6 +270,8 @@ S.Poll(1.6, function(api, t)
             if lo then
                 if pt == false then
                     lo, hi = lo / 100, hi / 100 -- percent to the family's fraction
+                else
+                    I.bandShows[ch] = h:Latency() + I.BAND_MARGIN
                 end
                 I.bandT[ch], I.bandLo[ch], I.bandHi[ch], I.bandLive[ch] = bt, lo, hi, true
                 Direct(Obs.Band, t, ch, lo, hi)

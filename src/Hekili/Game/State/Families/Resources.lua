@@ -67,7 +67,11 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- must not count twice (predict, VS.SwingPending), never at the rungs. `bandAt/Lo/Hi[r]`: the latest band heard (its
 -- stamp, its ends); `bandDone[r]`: the stamp of the latest one applied (its rise is a lift once); `plainT[r]`: the
 -- latest plain read's time, which wins its drain. `markT/V[r]`: the crossing the next one measures regen from (a time
--- below 0: none); `movedT[r]`: the latest change we know of, which voids it.
+-- below 0: none); `movedT[r]`: the latest change we know of, which voids it. The hold (owner L1673): `shiftT[r]` our
+-- own latest change (a spend or gain, I.ResourceShift; a refund is paid at its cast, so it is none), `stepT[r]` the
+-- latest other event we modelled (a swing's step, a hit's, a periodic tick), each at its own time. A band stamped
+-- before one (our own change's frame included) describes an earlier moment: skipped until it moves or until
+-- I.bandShows[r] has passed, so what stepped forward from it stands.
 local R = {
     n = 0,
     type = {},
@@ -169,6 +173,8 @@ local R = {
     markT = {},
     markV = {},
     movedT = {},
+    shiftT = {},
+    stepT = {},
     pinN = {}, -- the fight's flips at an unchanged cost (the providers audit, I.PinError)
     pinErr = {}, -- and the sum of |estimate before the flip - cost| over them
 }
@@ -338,6 +344,13 @@ local function moved(r, t)
     end
 end
 
+-- A modelled step of slot r at t (a swing, a hit, a tick): a band stamped before it is held. Allocates nothing.
+local function stepped(r, t)
+    if t > R.stepT[r] then
+        R.stepT[r] = t
+    end
+end
+
 -- Slot r's modelled floor (lo0 + over) kept at or under the maximum. Allocates nothing.
 local function norm(r)
     local room = R.max[r] - R.lo0[r]
@@ -474,6 +487,7 @@ I.OnBuild(function(def, now)
         R.bandOn[r], R.banded[r], R.plainT[r] = false, false, -1e9
         R.bandAt[r], R.bandDone[r], R.bandLo[r], R.bandHi[r] = -1e9, -1e9, 0, 0
         R.markT[r], R.markV[r], R.movedT[r] = -1, 0, -1e9
+        R.shiftT[r], R.stepT[r] = -1e9, -1e9
         R.decayDef[r] = d.decay
         R.decay[r] = 0
         R.decayIv[r], R.decayNext[r], R.topNext[r] = 0, 0, 0
@@ -624,7 +638,7 @@ local function lowStep(r, hand, at)
 end
 
 -- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
--- believed expiry. Allocates nothing.
+-- believed expiry; and, when it brings some, its last tick's time. Allocates nothing.
 local function auraGain(g, from, to)
     local j, tid = G.aura[g], G.talent[g]
     if tid > 0 and VS.Talent(tid) == 0 then
@@ -652,7 +666,8 @@ local function auraGain(g, from, to)
     if to <= from then
         return 0
     end
-    return (floor((to - ap) / iv) - floor((from - ap) / iv)) * G.value[g] -- nonzero: interval > 0 (checked at build)
+    local n = floor((to - ap) / iv) -- nonzero: interval > 0 (checked at build)
+    return (n - floor((from - ap) / iv)) * G.value[g], ap + n * iv -- nonzero: the same
 end
 
 -- Slot r's rate at t as multiples of its two learned parts plus a known rate (fa x regE + fb x spE + k): wowsims's
@@ -817,9 +832,10 @@ I.OnAdvance(function(from, to)
         end
     end
     for g = 1, G.n do
-        local v = auraGain(g, from, to)
+        local v, tick = auraGain(g, from, to)
         if v ~= 0 then
             local r = G.slot[g]
+            stepped(r, tick)
             local max = R.max[r]
             R.est0[r] = clamp(R.est0[r] + v, max)
             R.lo0[r] = clamp(R.lo0[r] + v, max)
@@ -1215,6 +1231,7 @@ local function swingStep(r, hand, c, t, owed, at)
         R.est0[r] = clamp(R.est0[r] + de, max)
         R.lo0[r] = clamp(R.lo0[r] + dl, max)
         R.hi0[r] = clamp(R.hi0[r] + dh, max)
+        stepped(r, at)
         I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
     end
 end
@@ -1710,8 +1727,16 @@ local function applyBand(r, lo, hi, bt, t)
     I.bandUsed[r], I.bandUsedLo[r], I.bandUsedHi[r] = I.bandUsed[r] + 1, lo, hi
 end
 
+-- Whether the band stamped bt describes a moment before an event of ours that its delay may still hide at t (the hold,
+-- owner L1673): our own change at or after the stamp, a modelled step after it. Allocates nothing.
+local function holdsBack(r, bt, t)
+    local shows, st, et = I.bandShows[r], R.shiftT[r], R.stepT[r]
+    return bt <= st and t - st < shows or bt < et and t - et < shows
+end
+
 -- A live band of a power, re-asserted every drain (Sources/Bands.lua): after this drain's events and plain reads, before
--- its usability answers, which win (L1675). A slot read plain (in this drain, or in combat) needs none.
+-- its usability answers, which win (L1675). A slot read plain (in this drain, or in combat) needs none. A held one
+-- (holdsBack) is live but not applied: it ends no assumption and moves no bound.
 I.On(Obs.Band, function(o, t)
     local r, lo, hi = o.a, o.b, o.c
     if r < 1 then
@@ -1725,7 +1750,9 @@ I.On(Obs.Band, function(o, t)
     end
     R.bandOn[r], R.banded[r] = true, hi - lo <= 1 + I.EPS
     R.bandAt[r], R.bandLo[r], R.bandHi[r] = bt, lo, hi
-    applyBand(r, lo, hi, bt, t)
+    if not holdsBack(r, bt, t) then
+        applyBand(r, lo, hi, bt, t)
+    end
 end)
 
 -- A landed swing (c = 1: Events/Rows.lua credited the target's wound to our white swing, so never an avoid and never
@@ -1824,6 +1851,7 @@ I.On(Obs.Swing, function(o, t)
                     hitRate[hand] = h
                 end
                 ownCover(r, hand, o.t, pE, pL, pH)
+                stepped(r, o.t)
                 norm(r)
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
                 break
@@ -1909,6 +1937,7 @@ I.On(Obs.PlayerHit, function(o, t)
                 -- the full gain even when capped, as I.ResourceShift does (review minor 3: skipped for both)
                 R.pinDelta[r], R.gain[r], R.pinOwn[r] = R.pinDelta[r] + gain, R.gain[r] + gain, true
                 moved(r, t)
+                stepped(r, o.t)
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
                 local sec = floor(t) -- out of combat too: the pull's own hits count once combat starts
                 local i = sec % I.TAKEN_WINDOW + 1
@@ -2145,6 +2174,9 @@ function I.ResourceShift(r, delta, t, event, late)
     R.pinDelta[r] = R.pinDelta[r] + delta
     if delta ~= 0 then
         moved(r, t)
+        if event ~= Obs.Avoided and t > R.shiftT[r] then
+            R.shiftT[r] = t
+        end
     end
     if delta > 0 then
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
