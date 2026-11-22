@@ -813,10 +813,13 @@ describe("token-keyed target memory (lane T2m)", function()
             end
         end)
 
-        it("plated mob to a plate-less one: the same (both worlds; under Map that target's count is unknown)", function()
-            assert.are.same({ "down", 1, 27 }, run("guid", 1, 5))
-            assert.are.same({ "down", "nil", 27 }, run("token", 1, 5))
-        end)
+        it(
+            "plated mob to a plate-less one: the same (both worlds; under Map that target's count is unknown)",
+            function()
+                assert.are.same({ "down", 1, 27 }, run("guid", 1, 5))
+                assert.are.same({ "down", "nil", 27 }, run("token", 1, 5))
+            end
+        )
 
         it("from a plate-less mob: never on the new one; under Map that mob is forgotten at the tab", function()
             assert.are.same({ "down", 1, 27 }, run("guid", 5, 2))
@@ -846,6 +849,20 @@ describe("token-keyed target memory (lane T2m)", function()
             plate("NAME_PLATE_UNIT_REMOVED", 1, 11.5)
             success(12)
             assert.are.same({ "down", 0 }, { est(12.1) or "down", count(12.1) })
+        end)
+
+        it("Facade.TargetID: the target's ID under Map, 0 for a target read plain, nil with none", function()
+            start("token", 2)
+            tab(1, 10)
+            assert.is_true(I.plateID[1] > 0)
+            assert.are.equal(I.plateID[1], ns.Facade.TargetID())
+            tab(5, 11)
+            assert.is_true(ns.Facade.TargetID() > I.plateID[2], "a plate-less target: a new ID")
+            tab(nil, 12)
+            assert.is_nil(ns.Facade.TargetID())
+            start("guid", 2)
+            tab(1, 10)
+            assert.are.equal(0, ns.Facade.TargetID())
         end)
 
         it("a tab back before the success: on the target, as with no tab (both worlds)", function()

@@ -34,5 +34,19 @@ for f in $core; do
         grep -nE '\bVS\b|ns\.VirtualState|VirtualStateInternal' | sed "s|^|$f:|")
     [ -n "$hits" ] && { echo "$hits"; fail=1; }
 done
-[ $fail -eq 0 ] && echo "ok: Game/ names nothing of the core; the core names the belief only through Drain, Build, SetLog and WindowOp, and reads windows only through Facade.Window and debuff counts only through Facade.DebuffCount"
+# Facade.TargetID (ledger L1734, the owner's A): the target's stable ID has one reader, Engine/Sim/State.lua's
+# swapped-cast compare (landsElsewhere: the in-flight cast's pin and the compare, two reads). Any other core file, a
+# pack (content reads the facade as Hekili.Client) or the stand-in naming TargetID fails, and so does a third read there.
+packs=$(find src -mindepth 1 -maxdepth 1 -type d -name 'Hekili_*' -exec find {} -name '*.lua' \; | sort)
+for f in $core $packs; do
+    hits=$(sed -E 's/--.*$//' "$f" | grep -nE '\bTargetID\b' | sed "s|^|$f:|")
+    [ -z "$hits" ] && continue
+    if [ "$f" = src/Hekili/Engine/Sim/State.lua ] && [ "$(echo "$hits" | grep -c 'Facade\.TargetID()')" -eq 2 ] &&
+        [ "$(echo "$hits" | wc -l)" -eq 2 ]; then
+        continue
+    fi
+    echo "$hits"
+    fail=1
+done
+[ $fail -eq 0 ] && echo "ok: Game/ names nothing of the core; the core names the belief only through Drain, Build, SetLog and WindowOp, and reads windows only through Facade.Window and debuff counts only through Facade.DebuffCount; Facade.TargetID only in Engine/Sim/State.lua's swapped-cast compare"
 exit $fail

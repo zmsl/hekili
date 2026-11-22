@@ -326,4 +326,114 @@ describe("a dungeon pull through the token plate count (T1)", function()
             assert.is_truthy(find(recs, nil, "cycle"), "C back: the swap re-arms at once " .. names(recs))
         end)
     end)
+
+    -- Ledger L1734 (owner's A): a hard Immolate sent at mob A, a tab to B during its cast. The belief lands it on A at
+    -- the success; the core's compare must read the tab during the cast (by GUID in the open world, by the stable ID
+    -- under Map), so B's queue shows Immolate before the success as after it: no flip.
+    describe("a hard cast that lands after a tab (L1734)", function()
+        local H, A, S, t
+        -- World `w` ("A" open, "C" Map), both in combat with the target's walk raising; curse and Doom on plates 2 and 1.
+        local function boot(w)
+            H = mw.new(w, {
+                character = character("src/Hekili_Warlock/Warlock.lua", "WARLOCK", 9, 1490),
+                pack = "Destruction (wowsims.com)",
+            })
+            assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+            if w == "A" then
+                H.ctl.combat = true
+                H.ctl.auraError.target = true
+                H.Fire("PLAYER_REGEN_DISABLED")
+            end
+            A, S = H.Hekili.Class.abilities, H.Hekili.State
+            mw.plate(H, 1)
+            mw.plate(H, 2)
+            t = H.ctl.now
+            local n = 0
+            for _, k in ipairs({ 2, 1 }) do
+                mw.target(H, k)
+                t = t + 0.2
+                assert.is_true(headless.cycle(H, t))
+                for _, key in ipairs({ "curse_of_the_elements", "bane_of_doom" }) do
+                    n = n + 1
+                    t = t + 0.1
+                    H.ctl.now = t
+                    H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-pre" .. n, A[key].id)
+                    t = t + 0.2
+                    assert.is_true(headless.cycle(H, t))
+                end
+            end
+            t = t + 1.5
+            assert.is_true(headless.cycle(H, t))
+        end
+        local function step()
+            t = t + 0.1
+            assert.is_true(headless.cycle(H, t))
+            assert.are.same({}, H.errors)
+            local out, r = H.Hekili.Engine.Output.Primary, {}
+            for i = 1, out.count do
+                r[i] = { out.recs[i].actionName, out.recs[i].indicator or "" }
+            end
+            return r
+        end
+        -- Immolate sent at the target, its cast bar 2 s; one update on it.
+        local function send()
+            H.ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-I1", A.immolate.id)
+            H.ctl.casting = { t * 1000, (t + 2) * 1000 }
+            H.Fire("UNIT_SPELLCAST_START", "player", "Cast-I1", A.immolate.id)
+            step()
+        end
+        local function succeed()
+            H.ctl.now = t
+            H.ctl.casting = nil
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-I1", A.immolate.id)
+        end
+        -- The core's view past the cast's end: Immolate on the target, and on how many.
+        local function atEnd()
+            S.reset("Primary")
+            S.advance(2.1)
+            return { S.debuff.immolate.up, S.active_dot.immolate }
+        end
+
+        for _, w in ipairs({ "A", "C" }) do
+            it(
+                "world " .. w .. ": B's queue shows Immolate from the update after the tab, unchanged at the success",
+                function()
+                    boot(w)
+                    send()
+                    assert.are.same({ true, 1 }, atEnd(), "no tab: it lands on the target")
+                    mw.target(H, 2)
+                    step() -- the tab's own update
+                    local before = step()
+                    assert.is_truthy(find(before, "immolate"), names(before))
+                    assert.are.same({ false, 1 }, atEnd(), "after the tab: on A, counted, not on B")
+                    for _ = 1, 10 do
+                        assert.are.same(before, step(), "during the cast")
+                    end
+                    succeed()
+                    for _ = 1, 6 do
+                        assert.are.same(before, step(), "at and after the success")
+                    end
+                end
+            )
+        end
+
+        it("under Map, a plain target on either side of the tab still reads as a swap", function()
+            boot("C")
+            H.ctl.guid.target, H.ctl.unitIs.target, H.ctl.unitIs.nameplate1 = "Player-1", nil, nil
+            H.Fire("PLAYER_TARGET_CHANGED") -- a target read plain (a party member, say)
+            step()
+            assert.are.equal(0, H.ns.Facade.TargetID())
+            send()
+            mw.target(H, 2)
+            step()
+            assert.are.same({ false, 1 }, atEnd(), "sent at the plain target: its GUID tells the tab")
+            boot("C")
+            send()
+            H.ctl.guid.target, H.ctl.unitIs.target, H.ctl.unitIs.nameplate1 = "Player-1", nil, nil
+            H.Fire("PLAYER_TARGET_CHANGED")
+            step()
+            assert.are.same({ false, 1 }, atEnd(), "sent at plate 1's mob: the ID tells the tab to a plain target")
+        end)
+    end)
 end)

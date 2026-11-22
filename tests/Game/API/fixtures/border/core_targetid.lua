@@ -1,0 +1,3 @@
+-- tools/check_border.sh must fail this core stand-in on line 3: the stable target ID read outside the swapped-cast compare
+local _, ns = ...
+local id = ns.Facade.TargetID()

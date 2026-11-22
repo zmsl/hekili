@@ -27,12 +27,13 @@ describe("tools/check_border.sh", function()
         assert.are.equal(0, rc, out)
         assert.is_truthy(out:match("^ok:[^\n]*Facade%.Window[^\n]*Facade%.DebuffCount"), out) -- the owner's two belief reads
         assert.is_truthy(out:match("^ok:[^\n]*WindowOp"), out)
+        assert.is_truthy(out:match("^ok:[^\n]*Facade%.TargetID[^\n]*State%.lua"), out) -- L1734: its one reader
     end)
 
     it("accepts the core's Drain, Build, SetLog and WindowOp, and nothing else", function()
         local rc, out = run("src/Hekili/Game", FIXTURES .. "core_ok.lua")
         assert.are.equal(0, rc, out)
-        for _, name in ipairs({ "core_near", "core_window" }) do
+        for _, name in ipairs({ "core_near", "core_window", "core_targetid", "pack_targetid" }) do
             rc, out = run("src/Hekili/Game", FIXTURES .. name .. ".lua")
             assert.are.equal(1, rc, out)
             assert.is_truthy(out:find(name .. ".lua:3:", 1, true), out)

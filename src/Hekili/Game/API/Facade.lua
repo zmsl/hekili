@@ -1389,6 +1389,17 @@ function Facade.DebuffCount(spellID, now)
     return VS.Count.WithAura(spellID, now)
 end
 
+--- (ledger L1734, owner's A, 2026-11-22) The target's stable ID (Sources/Target.lua, unit-registry spec §2.8): an
+--- integer while the GUID is secret (the Map restriction), 0 for a target read plain, nil with no target. Never a
+--- GUID and never one's stand-in. Belief-only, like DebuffCount: the core's third belief read, by the swapped-cast
+--- compare alone (Engine/Sim/State.lua HandleEvent, its in-flight cast's pin). Allocates nothing.
+function Facade.TargetID()
+    if I.targetSlot == 0 then
+        return nil
+    end
+    return I.targetID
+end
+
 Facade.Display = {}
 local function display(name, reason)
     local nsName, key = split(name)
