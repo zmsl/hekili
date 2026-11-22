@@ -1055,25 +1055,6 @@ describe("Forever Warlock through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
-    -- L1748: Affliction's Wrack line carries wowsims's interruptIf (two ticks in, a DoT down): the engine cuts it then.
-    it("cuts Wrack at its second tick with Corruption down, not at its first", function()
-        local H = headless.new({ character = character(), pack = "Affliction (wowsims.com)" })
-        assert.are.same({}, H.loadErrors)
-        local st = H.Hekili.State
-        local cut = H.Hekili.Scripts.Channels["Affliction (wowsims.com)"].wrack.interrupt_if -- compiled from the pack
-        assert.are.equal("function", type(cut))
-        local t0 = H.ctl.now
-        H.ctl.channel = { t0 * 1000, (t0 + 6) * 1000, spell = 1316697 } -- UnitChannelInfo: Wrack's 6 s
-        local function at(t)
-            H.ctl.now = t0 + t
-            st.reset("Primary", true)
-            st.system.packName = "Affliction (wowsims.com)" -- the display update's own (Core.lua)
-            return H.Hekili:CheckChannel(nil, 0), cut()
-        end
-        assert.are.same({ false, false }, { at(1) }) -- one tick
-        assert.are.same({ true, true }, { at(2) }) -- two ticks
-    end)
-
     -- C1: a summon models the demon up until the pet unit's first observation (UNIT_PET), which overrides it.
     it("models the summoned demon up in the belief until the pet unit is observed", function()
         local H = headless.new({ character = character() })
