@@ -1376,6 +1376,14 @@ do
         return est and UnitExists( "target" ) and UnitCanAttack( "player", "target" ) and est or nil
     end
 
+    -- The longest (and the shortest) time to die among the enemies (owner 2026-11-22): the target's with one enemy;
+    -- with more only the target is tracked, so unknown, nil. lastCount is the cached count getNumberTargets publishes
+    -- (no scan here: that scan calls GetTTD itself).
+    local function onlyEnemyTTD()
+        if lastCount > 1 then return nil end
+        return hostileTargetTTD()
+    end
+
     local function UpdateEnemy(guid, healthPct, unit, time)
         local enemy = db[ guid ]
         time = time or GetTime()
@@ -1580,10 +1588,10 @@ do
             end
         end
 
-        -- Forever: the GUID table is never fed, so fight_remains (longest_ttd) is the target's estimate.
-        -- shortcut: only the target is tracked, so another enemy outliving it is not seen; add tokens (plates, boss)
-        -- when LibTimeToDie proves them (its version 2).
-        if not validUnit then return hostileTargetTTD() or FOREVER end
+        -- Forever: the GUID table is never fed, so fight_remains (longest_ttd) is the only enemy's estimate.
+        -- shortcut: only the target is tracked, so with more than one enemy the longest is unknown (FOREVER); track
+        -- the others when LibTimeToDie proves their tokens (plates, boss: its version 2).
+        if not validUnit then return onlyEnemyTTD() or FOREVER end
 
         return time
     end
@@ -1621,7 +1629,7 @@ do
         end
 
         if not validUnit then
-            return hostileTargetTTD() or FOREVER -- Forever: the target's estimate, as GetGreatestTTD
+            return onlyEnemyTTD() or FOREVER -- Forever: the only enemy's estimate, as GetGreatestTTD
         end
 
         return time

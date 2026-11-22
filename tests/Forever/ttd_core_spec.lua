@@ -147,3 +147,64 @@ describe("time to die from LibTimeToDie (lane B8)", function()
         assert.are.equal(before, after)
     end)
 end)
+
+-- Upstream's meaning (owner decision 2026-11-22): fight_remains and longest_ttd are the LONGEST time to die among the
+-- enemies. Only the target is tracked, so with more than one enemy the longest (and the shortest) is unknown; the
+-- target's own time_to_die is its estimate at any count. The count is the real one, from plates (caster_range_spec's).
+describe("time to die with more than one enemy (lane B8)", function()
+    local fake = require("Game.State.helpers.fake_api")
+
+    local function boot()
+        local new = fake.new
+        fake.new = function(...) -- both plate CVars on, before the facade resolves GetCVar
+            local api, ctl = new(...)
+            api.GetCVar = function()
+                return "1"
+            end
+            return api, ctl
+        end
+        local ok, H = pcall(headless.new, { character = ww.character(), pack = ww.PACK })
+        fake.new = new
+        assert(ok, H)
+        assert.are.same({}, H.loadErrors)
+        local ctl = H.ctl
+        ctl.exists.target, ctl.inRange.target, ctl.level.target = true, true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert(headless.cycle(H, ctl.now + 0.2))
+        ctl.guid.nameplate1, ctl.exists.nameplate1, ctl.unitIs.nameplate1 = ctl.guid.target, true, "target"
+        ctl.distance.nameplate1, ctl.unitCombat.nameplate1 = 3, true
+        H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+        local lib = double()
+        install(H, lib)
+        lib.h.state, lib.h.est = "live", 5
+        return H
+    end
+
+    local function count(H, n)
+        for i = 2, n do
+            local unit = "nameplate" .. i
+            H.ctl.guid[unit], H.ctl.exists[unit] = "Creature-p" .. i, true
+            H.ctl.distance[unit], H.ctl.unitCombat[unit] = 3, true
+            H.Fire("NAME_PLATE_UNIT_ADDED", unit)
+        end
+        H.ctl.now = H.ctl.now + 0.2 -- past LibRangeCheck's cache
+        return H.ns.getNumberTargets(true)
+    end
+
+    it("one enemy: fight_remains is the target's estimate", function()
+        local H = boot()
+        assert.are.equal(1, count(H, 1))
+        local st = H.Hekili.State
+        st.reset()
+        assert.are.same({ 5, 5, 5 }, { st.fight_remains, st.longest_ttd, st.target.time_to_die })
+    end)
+
+    it("three enemies, the target dying in 5 s: fight_remains 3600, target.time_to_die 5", function()
+        local H = boot()
+        assert.are.equal(3, count(H, 3))
+        local st, hk = H.Hekili.State, H.Hekili
+        st.reset()
+        assert.are.same({ 3, 3600, 5 }, { st.active_enemies, st.fight_remains, st.target.time_to_die })
+        assert.are.same({ 3600, 3600, 5 }, { hk:GetGreatestTTD(), hk:GetLowestTTD(), hk:GetTTD("target") })
+    end)
+end)

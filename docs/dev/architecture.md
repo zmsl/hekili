@@ -352,9 +352,11 @@ request `mobType` through `tests/Forever/helpers/wowsims.lua` `creatureType`), a
 (`ctl.creature[unit]`, default `"beast"`).
 
 **Time to die** (lane B8, owner L1676). `Engine/Sim/Targets.lua` calls LibTimeToDie directly (owner `"Hekili"`, the
-target by token, tracked on the first query): `Hekili:GetTTD("target")`, `GetTimeToPct("target", p)` (the estimate x
-(h - p) / h, h the facade's target health) and `GetGreatestTTD`/`GetLowestTTD` (`fight_remains`) answer its live
-estimate, every other state 3600 (unknown); `Hekili.bandOff` and disable release the track. Hints, numbers only: the
+target by token, tracked on the first query): `Hekili:GetTTD("target")` and `GetTimeToPct("target", p)` (the estimate
+x (h - p) / h, h the facade's target health) answer its live estimate at any enemy count. `GetGreatestTTD`
+(`fight_remains`, `longest_ttd`: the longest among the enemies) and `GetLowestTTD` answer it with one enemy; with
+more they are unknown (only the target is tracked). Unknown is 3600, as is every state but live; `Hekili.bandOff` and
+disable release the track. Hints, numbers only: the
 highest execute line present goes to `HintBelow` (threshold only), out of combat at the spec's activation,
 `GROUP_ROSTER_UPDATE` and the combat's end. The player's own line comes from its pack: an ability's `healthGate` while
 known and an ability field `ttdBelow = { pct = n, talent = key }` while that talent has a rank; a pack declaring
