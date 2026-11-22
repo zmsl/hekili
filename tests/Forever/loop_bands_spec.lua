@@ -3,17 +3,19 @@
 -- family reads its band (lane B2); no priority of these packs reads target health (their low-health lines are the
 -- client's own usability gates), so every output of a fight still equals the default arm's on the same seed. At every
 -- fold the truth lies inside the band the family applied, or the band lagged it (loop.bandCheck: containment, L1666 a),
--- on each channel the world has, and the target's estimate lies within one band of the truth (`est`).
+-- on each channel the world has; what the family made of it, clipped, holds the truth too, and its estimate lies
+-- within one band of the truth (`est`).
 local loop = require("Game.harness.loop")
 local ab = require("Game.harness.ab")
 local ww = require("Forever.helpers.warrior_world")
 local dlw = require("Forever.helpers.druid_loop_world")
 local mw = require("Forever.helpers.mage_world")
+local pw = require("Forever.helpers.paladin_world")
 
 -- The outputs the gates read from a run (loop.run's record), and the bands arm's lines.
 local ROWS = { "ours", "pressed", "presses", "pressedBy", "refused", "gap", "readyShort", "heldReady", "loOver", "up" }
 
-local function fight(content, arm, seed, plant)
+local function fight(content, arm, seed, plant, duration)
     local L, lines, check = loop.new(content), {}, ab.check
     if plant then
         plant(L.us.ns.VirtualStateInternal, L.us.ns.VirtualState.Obs)
@@ -24,7 +26,7 @@ local function fight(content, arm, seed, plant)
             return check(ok, label, line, "default")
         end
     end
-    local ok, run = pcall(loop.run, L, seed, { duration = 30, arm = arm }, { { H = L.us } })
+    local ok, run = pcall(loop.run, L, seed, { duration = duration or 30, arm = arm }, { { H = L.us } })
     ab.check = check
     assert(ok, run)
     assert.are.same({ 0, 0 }, { run.errors, run.raises })
@@ -49,6 +51,7 @@ describe("the bands arm #slow", function()
             local e = b.est -- the target's estimate within one band of the truth wherever its family applied one
             assert.is_true(e.n > 20, tostring(e.n))
             assert.are.same({}, e.offs)
+            assert.are.equal(0, e.off + e.outside)
             assert.are.equal(e.n, e.within + e.lagged + e.floored)
             for _, ch in ipairs(case[3]) do
                 assert.is_true((b.live[ch] or 0) > 20, ch .. " " .. tostring(b.live[ch]))
@@ -64,6 +67,16 @@ describe("the bands arm #slow", function()
                 lines[#lines]:match("^bands seed 3 checked %d+ held %d+ lagged %d+ live .* est %d+ "),
                 lines[#lines]
             )
+        end)
+    end
+
+    -- (review I4) whole fights, through the low-health part where the gate's answers meet the band and the resource runs
+    -- short: what the family made of the band after the clip
+    for _, case in ipairs({ { "Arms", ww, 5 }, { "Retribution", pw.Retribution, 1 } }) do
+        it(case[1] .. " to the kill: the clipped interval holds the truth, no estimate off", function()
+            local b = fight(case[2], "bands", case[3], nil, 180).bands
+            assert.are.same({}, b.est.offs)
+            assert.are.same({ 0, 0, 0 }, { b.missed, b.est.off, b.est.outside })
         end)
     end
 
@@ -108,6 +121,7 @@ describe("the bands arm #slow", function()
         for f, line in ipairs(lines) do
             local checked, held, lagged = line:match("checked (%d+) held (%d+) lagged (%d+)")
             assert.are.equal(tonumber(checked), held + lagged, line)
+            assert.is_truthy(line:match(" off 0 outside 0 "), line)
             for _, ch in ipairs({ "-1", "0", "1" }) do
                 local n = tonumber(line:match("[ ,]" .. ch .. ":(%d+)"))
                 assert.is_true((n or 0) > 100, f .. ": " .. line)
@@ -137,5 +151,74 @@ describe("the bands arm #slow", function()
         for f = 2, 3 do
             assert.is_truthy(lines[f]:match("checked 0 "), lines[f])
         end
+    end)
+end)
+
+-- (review I4, M4) loop.bandCheck on planted drains: the band and what the family made of it are checked apart.
+describe("the bands arm's containment check", function()
+    local LATENCY = 7 / 60 -- the fake library's h:Latency()
+    local NOW = 10
+
+    -- truth now, `was` until `left` seconds ago; the band `age` seconds old as applied; est and iv: the family's
+    local function check(o)
+        local lo, hi = o.band[1], o.band[2]
+        local VI = {
+            TARGET_HEALTH_FLOOR = 0.02,
+            bandLive = { [-1] = true },
+            bandUsed = { [-1] = o.used or 2 },
+            bandUsedLo = { [-1] = lo },
+            bandUsedHi = { [-1] = hi },
+            bandLo = { [-1] = lo },
+            bandHi = { [-1] = hi },
+            bandT = { [-1] = NOW - (o.age or 0) },
+        }
+        local iv = o.iv or o.band
+        local health = { est = o.est, lo = iv[1], hi = iv[2] }
+        local function Health()
+            return health
+        end
+        local H = { ns = { VirtualStateInternal = VI, VirtualState = { Health = Health } }, ctl = { now = NOW } }
+        local lhv = {}
+        function lhv.TruthAt(_, _, _, _, t)
+            return t >= NOW - (o.left or 0) and o.truth or o.was or o.truth, 1
+        end
+        local e = { n = 0, within = 0, lagged = 0, floored = 0, off = 0, outside = 0, worst = 0, offs = {} }
+        local b = { checked = 0, held = 0, lagged = 0, missed = 0, live = {}, misses = {}, used = {}, est = e }
+        b.used[-1] = o.before
+        loop.bandCheck({ bands = b }, H, lhv)
+        return { b.checked, b.held, b.lagged, b.missed, e.lagged, e.floored, e.off, e.outside }
+    end
+
+    it("a frozen band is missed; a still one whose truth left it within the Latency lags", function()
+        local o = { band = { 0.6, 0.61 }, est = 0.605, truth = 0.05, was = 0.605, age = 8, left = 5, before = 1 }
+        assert.are.same({ 1, 0, 0, 1, 0, 0, 1, 1 }, check(o))
+        o.left = LATENCY / 2 -- the same old stamp
+        assert.are.same({ 1, 0, 1, 0, 1, 0, 0, 0 }, check(o))
+    end)
+
+    it("an interval off the truth is seen though its band holds", function()
+        local o = { band = { 0.15, 0.16 }, iv = { 0.9, 1 }, est = 0.155, truth = 0.155, before = 1 }
+        assert.are.same({ 1, 1, 0, 0, 0, 0, 0, 1 }, check(o))
+    end)
+
+    it("a lagging band covers no error larger than its own", function()
+        local o = { band = { 0.11, 0.12 }, est = 0.21, truth = 0.1, was = 0.115, age = 0.1, left = 0.05, before = 1 }
+        o.iv = { 0.21, 0.21 }
+        assert.are.same({ 1, 0, 1, 0, 0, 0, 1, 1 }, check(o))
+        o.band, o.was, o.truth = { 0.25, 0.26 }, 0.255, 0.18
+        o.est, o.iv = 0.2, { 0.2, 0.2 } -- clipped toward the truth
+        assert.are.same({ 1, 0, 1, 0, 1, 0, 0, 0 }, check(o))
+    end)
+
+    it("floored is the floor, nothing else", function()
+        local o = { band = { 0, 0.01 }, iv = { 0.21, 0.21 }, est = 0.21, truth = 0.004, before = 1 }
+        assert.are.same({ 1, 1, 0, 0, 0, 0, 1, 1 }, check(o))
+        o.est, o.iv = 0.02, { 0, 0.02 }
+        assert.are.same({ 1, 1, 0, 0, 0, 1, 0, 0 }, check(o))
+    end)
+
+    it("a run's first applied band is checked", function()
+        local o = { band = { 0.6, 0.61 }, est = 0.605, truth = 0.605, used = 1 }
+        assert.are.same({ 1, 1, 0, 0, 0, 0, 0, 0 }, check(o))
     end)
 end)

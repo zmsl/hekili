@@ -21,24 +21,30 @@ local M = {}
 
 -- (bands arms) The containment check of one drain (LibHiddenValues integration design 5.4, L1666 a): at every fold the
 -- true value (the fake library's pushes, lhv:TruthAt) lies inside the band the family applied. A channel a family reads
--- (Sources/Bands.lua's I.bandUsed rose since the last check) is checked against what it applied (I.bandUsedLo/Hi); a
--- channel no family has read since the build against the band the belief logged (I.bandLo/Hi) while live; a channel a
--- family reads that applied nothing this drain (a corpse's band, ignored) is not checked. run.bands: checked = held
--- (the truth at the fold, the poll's clock, inside) + lagged (outside at the fold, inside at the band's own stamp
--- I.bandT: a step band is reported 2 frames after its last firing, the library's delay; its own row, never held) +
--- missed (neither: a wrong channel, unit, stamp or applied band, or a band logged while not live; the first five in
--- misses); live (checks by channel). est: the target's estimate (VS.Health("target").est, what a `target.health.pct`
--- line reads) at each drain its family applied a band: n = within (one cell, 0.01, of the truth at the fold: every
--- threshold line reads as the truth does unless the truth lies within one band of it) + lagged (beyond, the applied band
--- itself lagged) + floored (the truth under the family's live-target floor) + off (the first five in offs); worst.
+-- (Sources/Bands.lua's I.bandUsed rose since the last check; b.used starts at the run's start) is checked against what
+-- it applied (I.bandUsedLo/Hi); a channel no family has read since the build against the band the belief logged
+-- (I.bandLo/Hi) while live; a channel a family reads that applied nothing this drain (a corpse's band, ignored) is not
+-- checked. run.bands: checked = held (the truth at the fold, the poll's clock, inside) + lagged (outside at the fold,
+-- inside no longer ago than the library's Latency: at that age, or at the band's own stamp I.bandT if newer; the stamp
+-- alone is no age, a still value's is old until it changes) + missed (neither: a wrong channel, unit, stamp or applied
+-- band, a frozen one, or a band logged while not live; the first five in misses); live (checks by channel).
+-- est: what the target's family made of its band (VS.Health("target"), clipped), checked apart from the band at each
+-- drain it applied one. outside: its interval excludes the truth, unless the band lagged and the interval lies no
+-- farther from the truth than that band. Its estimate (what a `target.health.pct` line reads): n = within (one cell,
+-- 0.01, of the truth at the fold: every threshold line reads as the truth does unless the truth lies within one band of
+-- it) + lagged (beyond, the band lagged and the estimate no farther than its middle) + floored (the truth under the
+-- family's live-target floor, the estimate that floor) + off; offs: the first five off or outside; worst.
 local BAND_EPS, CELL = 1e-9, 0.01
+local LATENCY = fake_lhv.DEFAULTS.latency * fake_lhv.DEFAULTS.frame
+local function away(x, lo, hi) -- how far x lies outside [lo, hi]
+    return math.max(lo - x, x - hi, 0)
+end
 function M.bandCheck(run, H, lhv)
     local VI, b = H.ns.VirtualStateInternal, run.bands
     local now = H.ctl.now
     for ch, on in pairs(VI.bandLive) do
         local used = VI.bandUsed[ch] or 0
-        -- a run's first check takes the count as it finds it (a fight after the first starts with the last one's)
-        local applied = used > 0 and used ~= (b.used[ch] or used)
+        local applied = used > 0 and used ~= (b.used[ch] or 0)
         b.used[ch] = used
         if applied or (on and used == 0) then
             local kind, unit, pt = "health", ch < 0 and "target" or "player", nil
@@ -57,11 +63,11 @@ function M.bandCheck(run, H, lhv)
             end
             local truth = value(lhv:TruthAt(kind, unit, pt, now))
             b.checked, b.live[ch] = b.checked + 1, (b.live[ch] or 0) + 1
-            local atFold = inside(truth)
+            local atFold, lagged = inside(truth), false
             if atFold then
                 b.held = b.held + 1
-            elseif inside(value(lhv:TruthAt(kind, unit, pt, VI.bandT[ch]))) then
-                b.lagged = b.lagged + 1
+            elseif inside(value(lhv:TruthAt(kind, unit, pt, math.max(VI.bandT[ch], now - LATENCY)))) then
+                b.lagged, lagged = b.lagged + 1, true
             else
                 b.missed = b.missed + 1
                 if #b.misses < 5 then
@@ -75,20 +81,33 @@ function M.bandCheck(run, H, lhv)
                 end
             end
             if applied and ch < 0 and truth then
-                local e, est = b.est, H.ns.VirtualState.Health("target", now).est
-                local d = math.abs(est - truth)
+                local e, h = b.est, H.ns.VirtualState.Health("target", now)
+                local est, floor = h.est, VI.TARGET_HEALTH_FLOOR
+                local d, out = math.abs(est - truth), away(truth, h.lo, h.hi)
+                local bad = out > BAND_EPS and not (lagged and out <= away(truth, lo, hi) + BAND_EPS)
                 e.n, e.worst = e.n + 1, math.max(e.worst, d)
+                if bad then
+                    e.outside = e.outside + 1
+                end
                 if d <= CELL + BAND_EPS then
                     e.within = e.within + 1
-                elseif not atFold then
+                elseif lagged and d <= math.abs((lo + hi) / 2 - truth) + BAND_EPS then
                     e.lagged = e.lagged + 1
-                elseif truth < VI.TARGET_HEALTH_FLOOR then
+                elseif truth < floor and math.abs(est - floor) <= BAND_EPS then
                     e.floored = e.floored + 1
                 else
-                    e.off = e.off + 1
-                    if #e.offs < 5 then
-                        e.offs[#e.offs + 1] = ("%.3f: est %.4f truth %.4f band %s-%s"):format(now, est, truth, lo, hi)
-                    end
+                    e.off, bad = e.off + 1, true
+                end
+                if bad and #e.offs < 5 then
+                    e.offs[#e.offs + 1] = ("%.3f: est %.4f [%.4f, %.4f] truth %.4f band %s-%s"):format(
+                        now,
+                        est,
+                        h.lo,
+                        h.hi,
+                        truth,
+                        lo,
+                        hi
+                    )
                 end
             end
         end
@@ -461,7 +480,7 @@ function M.run(L, seed, o, drivers)
             live = {},
             misses = {},
             used = {},
-            est = { n = 0, within = 0, lagged = 0, floored = 0, off = 0, worst = 0, offs = {} },
+            est = { n = 0, within = 0, lagged = 0, floored = 0, off = 0, outside = 0, worst = 0, offs = {} },
         },
     }
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
@@ -609,6 +628,11 @@ function M.run(L, seed, o, drivers)
         end
         if d.plain then
             k.plain, k.usableDelay = true, 0
+        end
+        if bands and VI then -- M.bandCheck counts from here: the run's first applied band is checked too
+            for ch, n in pairs(VI.bandUsed) do
+                run.bands.used[ch] = n
+            end
         end
         local base = d.H.ctl.now + M.GAP -- this instance's clock continues from its last fight
         -- the fresh world holds none of our buffs, cooldowns or totems and starts in the content's form: the client says
@@ -1028,7 +1052,7 @@ function M.run(L, seed, o, drivers)
             table.sort(live)
             local e = b.est
             ab.check(
-                b.missed == 0,
+                b.missed == 0 and e.off == 0 and e.outside == 0,
                 "bands",
                 ("seed %d checked %d held %d lagged %d live %s%s%s"):format(
                     seed,
@@ -1037,12 +1061,13 @@ function M.run(L, seed, o, drivers)
                     b.lagged,
                     table.concat(live, ","),
                     e.n > 0
-                            and (" est %d within %d lagged %d floored %d off %d worst %.3f"):format(
+                            and (" est %d within %d lagged %d floored %d off %d outside %d worst %.3f"):format(
                                 e.n,
                                 e.within,
                                 e.lagged,
                                 e.floored,
                                 e.off,
+                                e.outside,
                                 e.worst
                             )
                         or "",
