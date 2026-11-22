@@ -1681,7 +1681,6 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
 
                 elseif subtype == "SPELL_CAST_SUCCESS" then
                     state:RemoveSpellEvent( ability.key, true, "CAST_FINISH" ) -- remove next cast finish.
-                    ns.TtdCastSuccess( ability, time )
 
                     if ability.channeled then
                         local _, _, _, start, finish = UnitChannelInfo( "player" )

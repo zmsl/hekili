@@ -63,8 +63,8 @@ local format = string.format
 -- 16 (2026-11-18, dry-pack-api): the ability fields `ranks` (with a field's `{ byRank = values }`) and `effect`: an
 -- older core registers such an ability with no id, copy, known, handler or now.
 -- 17 (2026-11-22, lane B8): Shared:RegisterTtdLines (each class's default execute line for the time-to-die hints): an
--- older core has no such method, so Hekili_Shared's load would raise. With it, without a bump of their own: the ability
--- fields `ttdBelow` and `ttdRate` (Engine/Sim/Targets.lua); an older core ignores both.
+-- older core has no such method, so Hekili_Shared's load would raise. With it, without a bump of its own: the ability
+-- field `ttdBelow` (Engine/Sim/Targets.lua); an older core ignores it.
 local CONTENT_API = 17
 
 local done, notice = false, nil

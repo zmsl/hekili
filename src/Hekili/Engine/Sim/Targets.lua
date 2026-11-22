@@ -1245,7 +1245,7 @@ do
     -- token: GUIDs are secret in dungeons. Tracked on the first query (the library may load after this file, and the
     -- harness installs it after login, so a miss is looked up again), released by Hekili.bandOff (the bands' hidden
     -- switch) and at disable. Only a live estimate answers; every other state is today's FOREVER. Hints (execute
-    -- lines, a rate window) are Hekili's own: they bend only its estimate (LibTimeToDie README, Hints).
+    -- lines) are Hekili's own: they bend only its estimate (LibTimeToDie README, Hints).
     local TTD_MAJOR, TTD_OWNER = "LibTimeToDie-1.0", "Hekili"
     local ttdLib, ttdTrack -- the library once found; the target's handle
 
@@ -1256,30 +1256,22 @@ do
         end
     end
 
-    -- Hints (owner L1651, L1654, L1658), numbers only. Execute lines: HintBelow with the highest line present, threshold
+    -- Hints (owner L1651, L1658), numbers only. Execute lines: HintBelow with the highest line present, threshold
     -- only (the library learns the factor). The player's own line comes from its pack: an ability's `healthGate` (usable
     -- at or below that fraction) while the ability is known, and an ability's `ttdBelow = { pct = n, talent = key }`
     -- while that talent has a rank (no `talent`: always); a pack declaring either replaces its class's shared default.
     -- Each group member adds its class's default (Shared:RegisterTtdLines; no talents assumed), a TANK (roles set) not.
     -- Read out of combat only (UnitClass and roles on group tokens probed plain out of combat, L1658): at the spec's
     -- activation (login, a talent change; Activation.lua) and GROUP_ROSTER_UPDATE, in combat at its end, and when the
-    -- library is first found. A rate window: HintRate on the player's own successful cast of an ability declaring
-    -- `ttdRate = { factor = f, duration = s }` (L1654: own casts are plain; others' are not detectable). The cast and
-    -- the combat's end come from Events.lua's own handlers (CLEU_HANDLER, PLAYER_REGEN_ENABLED; owner 2026-11-22).
+    -- library is first found. The combat's end comes from Events.lua's own PLAYER_REGEN_ENABLED handler. No lust hint
+    -- (owner L1685, L1692).
     local UnitClass, UnitGroupRolesAssigned = Facade.UnitClass, Facade.UnitGroupRolesAssigned
-    local classLines = {} -- [class token] = pct (shared content)
+    local classLines = ns.ttdLines -- [class token] = pct (shared content; Engine/Schema/Shared.lua)
     local partyTokens, raidTokens = {}, {}
     for i = 1, 4 do partyTokens[ i ] = "party" .. i end
     for i = 1, 40 do raidTokens[ i ] = "raid" .. i end
     local hintsDirty = true -- the lines are to be sent at the next chance out of combat
     local sentBelow -- the line sent (nil: none)
-    local rateFactor, rateStart, rateEnd -- the last rate window sent
-
-    function ns.RegisterTtdLines( def )
-        for k, v in pairs( def ) do
-            if type( k ) == "string" and type( v ) == "number" then classLines[ k ] = v end
-        end
-    end
 
     -- The player's own line from its pack (nil: none active), and whether the pack declares any.
     local function ownLine()
@@ -1345,16 +1337,6 @@ do
         if hintsDirty then sendHints() end
     end
 
-    -- Events.lua's CLEU_HANDLER, SPELL_CAST_SUCCESS: our row, its ability already resolved.
-    function ns.TtdCastSuccess( ability, time )
-        local r = rawget( ability, "ttdRate" )
-        if type( r ) ~= "table" then return end
-        ttdLib = ttdLib or LibStub( TTD_MAJOR, true )
-        if not ttdLib then return end
-        rateFactor, rateStart, rateEnd = r.factor, time, time + r.duration
-        ttdLib:HintRate( TTD_OWNER, rateFactor, rateStart, rateEnd )
-    end
-
     -- The snapshot's time-to-die line (English only; Hekili:GetTTDInfo). Allocates.
     local function ttdLine()
         local s
@@ -1368,8 +1350,7 @@ do
                 s = format( "time to die: %s %s", tostring( st ), tostring( why ) ) -- l10n: verbatim
             end
         end
-        local rate = rateFactor and format( "x%.2f %.1f-%.1f", rateFactor, rateStart, rateEnd ) or "none" -- l10n: verbatim
-        return format( "%s; hints: below %s, rate %s", s, sentBelow and tostring( sentBelow ) or "none", rate ) -- l10n: verbatim
+        return format( "%s; hints: below %s", s, sentBelow and tostring( sentBelow ) or "none" ) -- l10n: verbatim
     end
 
     -- The target's live estimate in seconds, or nil. Allocates nothing once tracked.

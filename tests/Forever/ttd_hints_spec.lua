@@ -1,10 +1,9 @@
--- tests/Forever/ttd_hints_spec.lua (lane B8, owner L1651, L1654, L1658): Hekili's time-to-die hints to LibTimeToDie.
+-- tests/Forever/ttd_hints_spec.lua (lane B8, owner L1651, L1658): Hekili's time-to-die hints to LibTimeToDie.
 -- HintBelow("Hekili", pct), threshold only (the factor learned), with the highest execute line present: the player's
 -- own from its pack (abilities with `healthGate` while known, `ttdBelow` lines while their talent has a rank; these
 -- replace the shared default for the player's class), and each group member's class default from shared content
 -- (Shared:RegisterTtdLines), tanks out. Sent out of combat at login/spec change and GROUP_ROSTER_UPDATE (in combat:
--- at PLAYER_REGEN_ENABLED). HintRate("Hekili", factor, now, now + duration) from the combat-log handler's
--- SPELL_CAST_SUCCESS branch (our row, the ability resolved there) for an ability declaring `ttdRate`. Core's existing
+-- at PLAYER_REGEN_ENABLED). Core's existing
 -- handlers are extended, never doubled (owner 2026-11-22: "please do not construct new things when hekili had already
 -- previously been designed with cleu in mind"). The library is a double in the instance's LibStub.
 local headless = require("Game.harness.headless")
@@ -26,10 +25,6 @@ local function double()
     end
     function lib.HintBelow(_, owner, pct, factor)
         lib.hints[#lib.hints + 1] = { "below", owner, pct, factor }
-        return true
-    end
-    function lib.HintRate(_, owner, factor, s, e)
-        lib.hints[#lib.hints + 1] = { "rate", owner, factor, s, e }
         return true
     end
     return lib
@@ -54,24 +49,6 @@ local function below(lib)
             return x[3] or false
         end
     end
-end
-
--- One SPELL_CAST_SUCCESS row through the real log, as Game/Events/CombatLog.lua delivers it to CLEU_HANDLER.
-local function castRow(H, src, spell)
-    local L = H.ns.VirtualStateInternal.Log
-    local r = L.Emit("SPELL_CAST_SUCCESS", 16, H.ctl.now, false, "damage", "observed", src, 0, "", L.HOSTILE_FLAGS)
-    r[12], r[13], r[14] = spell, "", 1
-    L.Deliver()
-end
-
-local function rates(lib)
-    local out = {}
-    for _, x in ipairs(lib.hints) do
-        if x[1] == "rate" then
-            out[#out + 1] = x
-        end
-    end
-    return out
 end
 
 local function member(H, token, class, role)
@@ -165,37 +142,12 @@ describe("time-to-die hints (lane B8)", function()
         assert.is_false(below(lib))
     end)
 
-    it("our SPELL_CAST_SUCCESS row of a ttdRate ability: a rate window from now; another's row: none", function()
-        local H, lib = new(ww)
-        local A = H.Hekili.Class.abilities
-        rawset(A.battle_shout, "ttdRate", { factor = 1.3, duration = 40 })
-        H.ctl.combat = true
-        castRow(H, "Player-9", A.battle_shout.id)
-        castRow(H, H.ctl.guid.player, A.hamstring.id)
-        assert.are.same({}, rates(lib))
-        castRow(H, H.ctl.guid.player, A.battle_shout.id)
-        local now = H.ctl.now
-        assert.are.same({ { "rate", "Hekili", 1.3, now, now + 40 } }, rates(lib))
-        rawset(A.battle_shout, "ttdRate", nil)
-    end)
-
-    it("our cast event reaches it once, through the belief's cast row", function()
-        local H, lib = new(ww)
-        local A = H.Hekili.Class.abilities
-        rawset(A.battle_shout, "ttdRate", { factor = 1.3, duration = 40 })
-        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-ttd", A.battle_shout.id)
-        assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
-        assert.are.equal(1, #rates(lib))
-        rawset(A.battle_shout, "ttdRate", nil)
-    end)
-
-    it("time to die registers no event core already handles (the cast, the combat's end)", function()
+    it("time to die registers no event core already handles (the combat's end)", function()
         local fh = assert(io.open("src/Hekili/Engine/Sim/Targets.lua"))
         local src = fh:read("*a")
         fh:close()
         local at = src:find("local TTD_MAJOR", 1, true)
         local block = src:sub((assert(at)))
-        assert.is_nil(block:find('"UNIT_SPELLCAST_SUCCEEDED"', 1, true))
         assert.is_nil(block:find('"PLAYER_REGEN_ENABLED"', 1, true))
         assert.is_truthy(block:find('RegisterEvent( "GROUP_ROSTER_UPDATE"', 1, true)) -- core has no handler of it
     end)

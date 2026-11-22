@@ -26,10 +26,6 @@ local function double()
         lib.hints[#lib.hints + 1] = { "below", owner, pct, factor }
         return true
     end
-    function lib:HintRate(owner, factor, s, e)
-        lib.hints[#lib.hints + 1] = { "rate", owner, factor, s, e }
-        return true
-    end
     lib.h = h
     return lib
 end

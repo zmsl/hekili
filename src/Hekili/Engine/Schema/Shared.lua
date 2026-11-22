@@ -12,6 +12,10 @@ local function all()
     return Hekili.Class.specs[0]
 end
 
+-- [class token] = pct: Shared:RegisterTtdLines' table, read by the time-to-die hints (Engine/Sim/Targets.lua). Held
+-- here, so content registers without the simulation loaded.
+ns.ttdLines = {}
+
 local Shared = {}
 Shared.__index = Shared
 
@@ -52,7 +56,11 @@ end
 --- { [class token] = pct }: each class's default execute line, no talents (lane B8, owner L1658): the core hints the
 --- highest line present in the group to the time-to-die library (Engine/Sim/Targets.lua). A later call adds or replaces.
 function Shared:RegisterTtdLines(def)
-    ns.RegisterTtdLines(def)
+    for token, pct in pairs(def) do
+        if type(token) == "string" and type(pct) == "number" then
+            ns.ttdLines[token] = pct
+        end
+    end
 end
 
 function Hekili:NewShared()
