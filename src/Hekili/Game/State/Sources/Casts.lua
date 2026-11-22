@@ -49,9 +49,6 @@ end)
 
 local function stopped(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
-    if a then
-        I.UnpinStart(guid, spellID) -- before the castGUID check: a nil one pairs by spell (Sources/Target.lua)
-    end
     local g = guid
     if not a or g == nil or g ~= castGUID then
         return
@@ -61,7 +58,14 @@ local function stopped(api, t, unit, guid, spellID)
     I.Log.Cast("SPELL_CAST_FAILED", t, spellID, nil)
 end
 S.On("UNIT_SPELLCAST_FAILED", "player", stopped)
-S.On("UNIT_SPELLCAST_INTERRUPTED", "player", stopped)
+-- An interrupt ends the cast, so its START pin goes (Sources/Target.lua), before the castGUID check: a nil one pairs by
+-- spell. Not on FAILED: a refused press of the spell mid-cast fails too, and must not unpin the live cast.
+S.On("UNIT_SPELLCAST_INTERRUPTED", "player", function(api, t, unit, guid, spellID)
+    if unit == "player" then
+        I.UnpinStart(guid, spellID)
+    end
+    stopped(api, t, unit, guid, spellID)
+end)
 
 S.On("UNIT_SPELLCAST_DELAYED", "player", function(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)

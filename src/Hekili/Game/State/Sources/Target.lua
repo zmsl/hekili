@@ -245,7 +245,7 @@ S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, castGUID, spellID)
         stCast, stSpell, stSlot, stGone, stSwap = sentCast, sentSpell, sentSlot, sentGone, sentSwap
     end
 end)
---- Our cast stopped (Sources/Casts.lua: interrupted or failed): its START pin goes, so a later cast of the spell with
+--- Our cast was interrupted (Sources/Casts.lua): its START pin goes, so a later cast of the spell with
 --- no castGUID cannot take it. Allocates nothing.
 function I.UnpinStart(castGUID, spellID)
     if same(castGUID, spellID, stCast, stSpell) then

@@ -263,7 +263,7 @@ What reads the ID:
   target change or rebuild: the other enemies' debuffs cannot be known then. An adoption does not end that (a count
   there would bring back the line the target change just hid: on, off, on), and a plate's removal does not start it.
 - A cast keeps the slot from its UNIT_SPELLCAST_SENT (ledger L1734); a hard cast's START keeps it, so a press sent
-  during the cast cannot take it; its interrupt or failure drops the START's copy. The success pairs by castGUID, or by
+  during the cast cannot take it; its interrupt drops the START's copy. The success pairs by castGUID, or by
   spell when both read nil. If the target changed
   before the success folds, the cast's target auras go to that slot's memory, or nowhere once the slot was forgotten
   since (its mob died, lost its plate or was evicted).
