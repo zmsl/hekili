@@ -1237,8 +1237,8 @@ do
     }
 
     local DEFAULT_TTD = 30
-    -- Forever: target health is secret (the facade answers the TargetHealth belief), so the tracker is not fed and every
-    -- time to die answers this "unknown", far beyond any fight (State.lua's time_to_die treats 3600 as unknown too).
+    -- Forever: the tracker is not fed (FEED, below), so a time to die only it could answer, and the target's while the
+    -- library has none, answers this "unknown", far beyond any fight (State.lua's time_to_die treats 3600 as unknown too).
     local FOREVER = 3600
     local TRIVIAL = 5
     -- Forever: off. Fed the belief's health, it learnt a 0 rate (DEFAULT_TTD) before a pin and junk from the jump at one.
@@ -1357,6 +1357,24 @@ do
         end
         local est, _, _, s = ttdTrack:Get()
         return s == "live" and est or nil, s
+    end
+
+    -- shortcut: forget at the pull, remove when LibTimeToDie's own fix is vendored (L1730). Left to the library, which
+    -- carries the last mob's rate there: a direct swap in combat, and a swap from a dying mob to a tough one first seen
+    -- below full. Events.lua's PLAYER_TARGET_CHANGED handler calls it; the client clears the target at a kill. Once the
+    -- target is gone (none, or a corpse) the next is tracked anew, unless its GUID says it is the same mob.
+    local lastTarget, targetGone
+    function ns.TtdTargetChanged()
+        if plain( UnitExists( "target" ) ) == false or plain( UnitIsDead( "target" ) ) == true then
+            targetGone = true
+            return
+        end
+        local guid = plain( UnitGUID( "target" ) )
+        if targetGone and ttdTrack and ( not guid or guid ~= lastTarget ) then
+            ttdRelease()
+            targetTTD()
+        end
+        targetGone, lastTarget = nil, guid
     end
 
     -- targetTTD's answer when the target is plainly attackable, else nil. The library first, so with none (or
@@ -1651,7 +1669,7 @@ do
     Hekili.GetNumTTDsBefore = Hekili.GetNumTTDsWithin
 
     function Hekili:GetNumTTDsAfter( x )
-        if not FEED then return state.active_enemies end -- Forever: every enemy's time to die is unknown, so after x
+        if not FEED then return state.active_enemies end -- Forever: the unfed tracker times no enemy, so all count as after x
 
         local count = 0
         local dummy_override = state.target.is_dummy

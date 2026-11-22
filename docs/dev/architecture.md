@@ -359,8 +359,17 @@ enemy; with more they are unknown (only the target is tracked). One or several f
 it held one update, read before the token plates' hold of a fall; it is the count `active_enemies` starts from, so
 with plates off or the others outside the radius it is one. While the library primes (a target change, about 10
 frames) those two keep their last live answer less elapsed, 0.5 s at most from that answer; `GetTTD` and
-`GetTimeToPct` never keep it (the last target's time is no fact about this one). Unknown is 3600: any other state, a
-target that is not plainly attackable (a secret answer included), several enemies, no library. A refused track is
+`GetTimeToPct` never keep it (the last target's time is no fact about this one).
+
+The library carries a target's rate to the next one within 10 s. Until its own fix is vendored (L1730),
+`ns.TtdTargetChanged` (core's `PLAYER_TARGET_CHANGED` handler) notes a target that is gone (none, as the client answers
+right after a kill, or a corpse) and at the next living target releases the track and tracks again, unless the GUID
+says it is the same mob (a secret GUID forgets). That drops the carried rate, the keep and the learned execute factor.
+The library's part, so still carried: a direct swap in combat, and a swap from a dying mob to a tough one first seen
+below full.
+
+Unknown is 3600: any other state, a target that is not plainly attackable (a secret answer included), several enemies,
+no library. A refused track is
 asked again at most once a second. `Hekili.bandOff` and disable release the track. Hints, numbers only: the
 highest execute line present goes to `HintBelow` (threshold only), out of combat at the spec's activation,
 `GROUP_ROSTER_UPDATE` and the combat's end. The player's own line comes from its pack: an ability's `healthGate` while
