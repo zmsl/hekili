@@ -180,7 +180,7 @@ I.On(Obs.Read, function(o, t)
     end
 end)
 
--- (LibHiddenValues integration design 2.3, 2.5; lane B3) The library's band on our health (Sources/Bands.lua, channel
+-- (hidden-value integration design 2.3, 2.5; lane B3) The library's band on our health (Sources/Bands.lua, channel
 -- 0, fractions 0-1; poll 1.6 folds after poll 1.5's read and the drain's staged events): lo, hi and the middle,
 -- observed; unknown (b > c) is a secret read's "unknown". A plain read of this drain is exact and wins either way.
 I.On(Obs.Band, function(o, t)
