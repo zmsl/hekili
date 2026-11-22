@@ -1355,8 +1355,12 @@ do
             end
             if hintsDirty then sendHints() end
         end
-        local est, _, _, s = ttdTrack:Get()
-        return s == "live" and est or nil, s
+        local est, _, _, s, why = ttdTrack:Get()
+        -- shortcut: a seed answer reads unknown, remove when LibTimeToDie's own first-guess fix is vendored (L1736),
+        -- which replaces it. A seed is the stream's first hits over the time since its anchor: after a pull often one
+        -- hit, wildly short (live 3.63 s at 72%, then 52 s). Also the first second or two after a swap or a re-target
+        -- (L1742); a fit or a prior answers.
+        return s == "live" and why ~= "seed" and est or nil, s
     end
 
     -- shortcut: forget at the pull, remove when LibTimeToDie's own fix is vendored (L1730). Left to the library, which

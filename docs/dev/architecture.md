@@ -372,7 +372,13 @@ The library's part, so still carried: a direct swap in combat, a swap from a dyi
 below full, and a straight swap from a mob that died while targeted with no target event (M1: within 10 s, or at any
 dwell when no health event told the library either) or whose death reads secret (the library keeps answering for it).
 
-Unknown is 3600: any other state, a target that is not plainly attackable (a secret answer included), several enemies,
+A live answer whose reason is `seed` (the stream's first hits over the time since its anchor, live often one hit:
+3.63 s at 72%, then 52 s) is unknown until the library answers from a fit or a prior (owner L1742; shortcut until the
+library's first-guess fix is vendored and replaces it, L1736). It never sets the keep. The cost: the first 1-2 s after
+a pull or a re-target of the same mob read unknown, and on a direct swap the prior answers, then its seed reads
+unknown about 1.6 s, then the fit.
+
+Unknown is 3600: any other state, a seed, a target that is not plainly attackable (a secret answer included), several enemies,
 no library. A refused track is
 asked again at most once a second. `Hekili.bandOff` and disable release the track. Hints, numbers only: the
 highest execute line present goes to `HintBelow` (threshold only), out of combat at the spec's activation,

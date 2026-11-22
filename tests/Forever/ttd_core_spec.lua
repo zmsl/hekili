@@ -231,6 +231,31 @@ describe("time to die from LibTimeToDie (lane B8)", function()
         assert.is_truthy(s:match("live fit est 12%.5 lo 8 hi 20;"), s)
     end)
 
+    -- L1736, owner's A (L1742): the library's first guess reads unknown until a fit or a prior answers.
+    it("a live seed answers 3600 everywhere, priming keeps none of it, and the line says seed", function()
+        install(H, lib)
+        local st = hk.State
+        lib.h.state, lib.h.est, lib.h.lo, lib.h.hi, lib.h.reason = "live", 3.5, 1.75, 10.5, "seed"
+        assert.are.same(
+            { 3600, 3600, 3600 },
+            { hk:GetTTD("target"), hk:GetGreatestTTD(), hk:GetTimeToPct("target", 35) }
+        )
+        st.reset()
+        assert.are.same({ 3600, 3600 }, { st.fight_remains, st.target.time_to_die })
+        assert.is_truthy(hk:GetTTDInfo():match("time to die: live seed est 3%.5 lo 1%.75 hi 10%.5;"))
+        lib.h.state, lib.h.est, lib.h.reason = "priming", nil, nil
+        H.ctl.now = H.ctl.now + 0.1
+        assert.are.equal(3600, hk:GetGreatestTTD()) -- no seed kept
+        for _, why in ipairs({ "prior", "fit", "stalled" }) do
+            lib.h.state, lib.h.est, lib.h.reason = "live", 20, why
+            assert.are.same({ 20, 20 }, { hk:GetTTD("target"), hk:GetGreatestTTD() }, why)
+        end
+        lib.h.state, lib.h.est, lib.h.reason = "live", 18, "seed" -- after a fit: still unknown
+        assert.are.same({ 3600, 3600 }, { hk:GetTTD("target"), hk:GetTimeToPct("target", 35) })
+        lib.h.state = "priming" -- the keep holds the fit's 20, not the seed's 18
+        assert.are.equal(20, hk:GetGreatestTTD())
+    end)
+
     it("a debug snapshot carries the line", function()
         install(H, lib)
         lib.h.state, lib.h.est, lib.h.lo, lib.h.hi, lib.h.reason = "live", 12.5, 8, 20, "fit"

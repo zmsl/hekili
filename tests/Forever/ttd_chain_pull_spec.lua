@@ -249,23 +249,25 @@ describe("ttd-chain-pull: time to die forgets the last mob at a pull (lane B8, L
     end)
 
     -- The answers of e16716e84, recorded there (fight_remains/target.time_to_die): the same living mob targeted again
-    -- keeps them, after a deselect or a look at another mob.
+    -- keeps them, after a deselect or a look at another mob. Except its reads at 0.5 and 1.0 s, now 3600/3600 (L1742):
+    -- they are the re-primed stream's seed, which reads unknown (L1736). This rig's constant slope makes its seeds
+    -- accurate (13.6, 13.1 here); live seeds are not, so every seed reads unknown until a fit.
     local KEPT = {
         {
             "a deselect of 0.2 s",
             0.2,
-            answers = "13.9/3600.0 13.8/3600.0 13.6/13.6 13.1/13.1 11.1/11.1 9.1/9.1",
+            answers = "13.9/3600.0 13.8/3600.0 3600.0/3600.0 3600.0/3600.0 11.1/11.1 9.1/9.1",
         },
         {
             "a deselect of 5 s",
             5,
-            answers = "3600.0/3600.0 3600.0/3600.0 13.6/13.6 13.1/13.1 11.1/11.1 9.1/9.1",
+            answers = "3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 11.1/11.1 9.1/9.1",
         },
         {
             "a look at another mob",
             0.5,
             other = "Creature-2",
-            answers = "3600.0/3600.0 3600.0/3600.0 13.6/13.6 13.1/13.1 11.1/11.1 9.1/9.1",
+            answers = "3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 11.1/11.1 9.1/9.1",
         },
     }
     for _, case in ipairs(KEPT) do
@@ -330,6 +332,89 @@ describe("ttd-chain-pull: time to die forgets the last mob at a pull (lane B8, L
         local after = collectgarbage("count")
         collectgarbage("restart")
         assert.are.equal(before, after)
+        assert.are.equal(1, w.tracks)
+    end)
+end)
+
+-- L1736, owner's A (L1742): a seed (the stream's first hits over the time since its anchor) reads unknown until the
+-- library answers from a fit or a prior. Live a pull's seed is wildly short (3.63 s at 72%, then 52 s).
+describe("ttd-seed: the library's first guess reads unknown (lane B8, L1736)", function()
+    -- the library's state and reason, from the snapshot's line
+    local function reason(w)
+        return w.H.Hekili:GetTTDInfo():match("^time to die: (%S+) (%S+)")
+    end
+
+    -- runs of "reason: answer" over the reads, answer "known" when fight_remains, target.time_to_die and the time to
+    -- 35% all answer, "3600" when all three are unknown, else the three
+    local function runs(w, ticks, hit)
+        local out, last, n = {}, nil, 0
+        local short = {}
+        for i = 1, ticks do
+            w.step()
+            hit(i)
+            local r, t = w.read()
+            local p = w.H.Hekili:GetTimeToPct("target", 35)
+            local s, why = reason(w)
+            local key
+            if r < UNKNOWN and t < UNKNOWN and p < UNKNOWN then
+                key = "known"
+            elseif r == UNKNOWN and t == UNKNOWN and p == UNKNOWN then
+                key = "3600"
+            else
+                key = ("%.1f/%.1f/%.1f"):format(r, t, p)
+            end
+            key = (s == "live" and why or s) .. ": " .. key
+            if key == last then
+                n = n + 1
+            else
+                if last then
+                    out[#out + 1] = last .. " x" .. n
+                end
+                last, n = key, 1
+            end
+            if t < 30 then
+                short[#short + 1] = ("%.1f s: %s %.1f"):format(i * TICK, why, t)
+            end
+        end
+        out[#out + 1] = last .. " x" .. n
+        return table.concat(out, ", "), short
+    end
+
+    it(
+        "a mob first seen at 78%, one hit to 72% after the pull: unknown until the fit, then the fit's answer",
+        function()
+            local w = boot()
+            w.target("Creature-1", 78)
+            w.read()
+            w.wait(0.3)
+            w.combat(true)
+            w.wait(0.2)
+            w.health(72)
+            local seen, short = runs(w, 40, function(i)
+                if i > 1 then
+                    w.health(72 - 1.3 * (i - 1) * TICK)
+                end
+            end)
+            assert.are.equal("seed: 3600 x17, fit: known x23", seen)
+            assert.are.same({}, short) -- the seed read 2.5 s, true about 55
+        end
+    )
+
+    it("a direct swap in combat: the prior answers, its seed reads unknown about 1.6 s, then the fit", function()
+        local w = boot()
+        w.target("Creature-1", 100)
+        w.read()
+        w.wait(0.5)
+        w.combat(true)
+        w.fight(100, 5, 6)
+        w.target("Creature-2", 100)
+        local seen = runs(w, 40, function(i)
+            if i > 15 then
+                w.health(100 - 5 * (i - 15) * TICK)
+            end
+        end)
+        -- priming: the last mob's fight_remains, kept 0.1 s (I1); the prior (its rate carried); 1.6 s of seed
+        assert.are.equal("priming: 14.0/3600.0/3600.0 x1, prior: known x17, seed: 3600 x16, fit: known x6", seen)
         assert.are.equal(1, w.tracks)
     end)
 end)
