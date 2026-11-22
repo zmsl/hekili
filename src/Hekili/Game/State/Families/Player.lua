@@ -24,8 +24,8 @@ I.On(Obs.Moving, function(o)
     I.moving = o.b == 1
 end)
 
--- Health (player: plain reads, the band in combat; target: Families/TargetHealth.lua; others: the default 1.0), spell
--- haste, time to die.
+-- Health (player: a plain read when the client gives one, else the band; target: Families/TargetHealth.lua; others:
+-- the default 1.0), spell haste, time to die.
 local health, otherHealth, spellHaste, ttd
 I.healthMax = 0
 

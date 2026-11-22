@@ -10,7 +10,8 @@
 -- Not built until the in-game checkpoint (design §7) answers: a short answer (c = 1) as a health signal (line 4).
 -- UnitHealth and UnitHealthMax are secret on the target and on nameplates, out of combat too (the 2026-10-22
 -- captures, probe U5), so M stays learned, never read. A kill ends the slot at its death (TargetGone from the unit
--- registry's death events, Sources/Target.lua; naming no slot from poll 4's plain death read of a secret target).
+-- registry's death events, Sources/Target.lua; naming no slot from poll 4's plain death read of a secret target or of
+-- a corpse that died before its swap).
 -- The hidden-value library (integration design 2.3, 2.6; lane B2): while the library's band on the target is live
 -- (Sources/Bands.lua, Obs.Band channel -1, re-asserted every drain) it sets the interval and the estimate. It is a fact
 -- about its stamp and can lag; a gate's answer is a fact about the moment it was given, so it wins over the band of its
@@ -23,6 +24,7 @@ local Obs = VS.Obs
 
 --- A live target's health never reads below this fraction (Targets.lua's UpdateTTDs drops an enemy at or below 1%).
 I.TARGET_HEALTH_FLOOR = 0.02
+local OVER = 1e-6 -- a NOT is strictly over g
 
 -- What a gated ability's last answer said: nothing about health, above its gate (a guarded NOT), at or below it.
 local UNKNOWN, ABOVE, BELOW = -1, 0, 1
@@ -214,7 +216,7 @@ I.On(Obs.Usable, function(o, t, lag)
     elseif lag <= I.PIN_EXACT and guarded(k, a, t) then
         local top = g + I.EPS -- the no-band path's; against a band only the fact, over g, binds
         H.prev[k], H.notDmg[k] = ABOVE, H.dmg
-        H.uLo, H.uHi = H.uLo < g and g or H.uLo, H.uHi <= g and 1 or H.uHi -- above g; a bound below it healed
+        H.uLo, H.uHi = H.uLo <= g and g + OVER or H.uLo, H.uHi <= g and 1 or H.uHi -- above g; a bound below it healed
         if H.band then
             if clip(H.uLo, H.uHi) then
                 I.Sample(rec, "pinned", H.est0, t, Obs.Usable)
@@ -268,7 +270,7 @@ I.On(Obs.TargetDamage, function(o, t)
 end)
 
 -- A death (poll 4) or a slot taken for another GUID: the slot forgets M; the current target reads 0, observed, until
--- the next swap. Slot 0: the current target's death, the target without an identity (the map restriction).
+-- the next swap. Slot 0: the current target's death, with no identity (the map restriction) or told before its swap.
 I.On(Obs.TargetGone, function(o, t)
     local s = o.a
     if s > 0 then

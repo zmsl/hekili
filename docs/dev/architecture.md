@@ -675,9 +675,9 @@ with a wound row on us up to `I.TAKEN_ROW_LAG` (0.6 s) past it. A power that rea
 when combat ends; where the library has no max the watch is a percent one, a point wider each side, logged only once the
 belief read that max plain. With no live band everything below runs as without the library.
 
-**Player health.** The client hides the player's own health in combat (`UnitHealth`/`UnitHealthMax("player")` secret;
-owner L1461; the headless fake client answers so): `health.pct`, `health.current`, `health.deficit` read the plain
-value out of combat and, while the answer is secret, the hidden-value library's live 1% band
+**Player health.** The client hides the player's own health (`UnitHealth`/`UnitHealthMax("player")` secret in combat, owner L1461,
+and out of it on live, L1710; the headless fake client still answers plain out of combat): `health.pct`,
+`health.current`, `health.deficit` read the plain value whenever the client answers one and, while the answer is secret, the hidden-value library's live 1% band
 (`Game/State/Sources/Bands.lua`, channel 0): its middle, so a whole-number threshold answers as the true value does
 (`Game/State/Families/Player.lua`; a plain read of the same drain is exact and wins). With no live band (the library
 absent, priming, unavailable, `Hekili.bandOff`) the secret answer reads full, never a stale read from before the pull,

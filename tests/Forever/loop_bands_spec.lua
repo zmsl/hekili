@@ -25,6 +25,9 @@ local function fight(content, arm, seed, plant, duration)
     end
     ab.check = function(ok, label, line) -- the lines a record-only arm writes to .ab/<arm>.tsv
         lines[#lines + 1] = label .. " " .. tostring(line)
+        if label == "bands" then
+            lines.ok = ok -- the row's verdict
+        end
         if not plant then -- a planted family's run is read below, never asserted here
             return check(ok, label, line, "default")
         end
@@ -119,6 +122,17 @@ describe("the bands arm #slow", function()
         end)
         assert.is_true(run.bands.missed > 20, tostring(run.bands.missed))
         assert.is_truthy(run.bands.misses[1]:match("^%-1 at "), run.bands.misses[1])
+    end)
+
+    it("an estimate off the truth under bands that hold it fails the row", function()
+        local run, _, lines = fight(ww, "bands", 3, function(I, Obs)
+            I.On(Obs.Band, function(o)
+                if o.a == -1 and o.b <= o.c then
+                    I.th.est0, I.th.lo0, I.th.hi0 = 0, 0, 0
+                end
+            end)
+        end)
+        assert.are.same({ 0, true, false }, { run.bands.missed, run.bands.est.off > 20, lines.ok })
     end)
 
     -- The gate's path (loop.tally): three fights on one boot, run A with the oracle shadow, run B, the 30 s gap between
@@ -242,6 +256,11 @@ describe("the bands arm's containment check", function()
         assert.are.same({ 1, 1, 0, 0, 0, 0, 1, 1 }, check(o))
         o.est, o.iv = 0.02, { 0, 0.02 }
         assert.are.same({ 1, 1, 0, 0, 0, 1, 0, 0 }, check(o))
+    end)
+
+    it("a living target's band is checked though the family did not count it (review N3)", function()
+        local o = { band = { 0.18, 0.19 }, iv = { 0.21, 0.21 }, est = 0.21, truth = 0.184, used = 2, before = 2 }
+        assert.are.same({ 1, 1, 0, 0, 0, 0, 1, 1 }, check(o))
     end)
 
     it("a run's first applied band is checked", function()

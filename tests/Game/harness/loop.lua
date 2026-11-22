@@ -23,17 +23,19 @@ local M = {}
 -- true value (the fake library's pushes, lhv:TruthAt) lies inside the band the family applied. A channel a family reads
 -- (Sources/Bands.lua's I.bandUsed rose since the last check; b.used starts at the run's start) is checked against what
 -- it applied (I.bandUsedLo/Hi); a channel no family has read since the build against the band the belief logged
--- (I.bandLo/Hi) while live; a channel a family reads that applied nothing this drain (a corpse's band, ignored) is not
--- checked. run.bands: checked = held (the truth at the fold, the poll's clock, inside) + lagged (outside at the fold,
+-- (I.bandLo/Hi) while live, as a living target's live band is (the count is the family's own: it excuses no drain); any
+-- other channel a family reads that applied nothing this drain (a corpse's band, ignored) is not checked.
+-- run.bands: checked = held (the truth at the fold, the poll's clock, inside) + lagged (outside at the fold,
 -- inside no longer ago than the library's Latency: at that age, or at the band's own stamp I.bandT if newer; the stamp
 -- alone is no age, a still value's is old until it changes) + missed (neither: a wrong channel, unit, stamp or applied
 -- band, a frozen one, or a band logged while not live; the first five in misses); live (checks by channel).
 -- est: what the target's family made of its band (VS.Health("target"), clipped), checked apart from the band at each
--- drain it applied one. outside: its interval excludes the truth, unless the band lagged and the interval lies no
--- farther from the truth than that band. Its estimate (what a `target.health.pct` line reads): n = within (one cell,
--- 0.01, of the truth at the fold: every threshold line reads as the truth does unless the truth lies within one band of
--- it) + lagged (beyond, the band lagged and the estimate no farther than its middle) + floored (the truth under the
--- family's live-target floor, the estimate that floor) + off; offs: the first five off or outside; worst.
+-- drain it applied one or the living target had one live. outside: its interval excludes the truth, unless the band
+-- lagged and the interval lies no farther from the truth than that band. Its estimate (what a `target.health.pct` line
+-- reads): n = within (one cell, 0.01, of the truth at the fold: every threshold line reads as the truth does unless the
+-- truth lies within one band of it) + lagged (beyond, the band lagged and the estimate no farther than its middle) +
+-- floored (the truth under the family's live-target floor, the estimate that floor) + off; offs: the first five off or
+-- outside; worst.
 local BAND_EPS, CELL = 1e-9, 0.01
 local LATENCY = fake_lhv.DEFAULTS.latency * fake_lhv.DEFAULTS.frame
 local function away(x, lo, hi) -- how far x lies outside [lo, hi]
@@ -46,7 +48,8 @@ function M.bandCheck(run, H, lhv)
         local used = VI.bandUsed[ch] or 0
         local applied = used > 0 and used ~= (b.used[ch] or 0)
         b.used[ch] = used
-        if applied or (on and used == 0) then
+        local alive = ch < 0 and on and (lhv:TruthAt("health", "target", nil, now) or 0) > 0
+        if applied or alive or (on and used == 0) then
             local kind, unit, pt = "health", ch < 0 and "target" or "player", nil
             if ch > 0 then
                 kind, pt = "power", VI.res.type[ch]
@@ -80,7 +83,7 @@ function M.bandCheck(run, H, lhv)
                     )
                 end
             end
-            if applied and ch < 0 and truth then
+            if (applied or alive) and ch < 0 and truth then
                 local e, h = b.est, H.ns.VirtualState.Health("target", now)
                 local est, floor = h.est, VI.TARGET_HEALTH_FLOOR
                 local d, out = math.abs(est - truth), away(truth, h.lo, h.hi)
