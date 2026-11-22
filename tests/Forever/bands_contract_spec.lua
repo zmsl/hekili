@@ -390,6 +390,122 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.are.equal("0.63 0.64", frames(1, -1))
     end)
 
+    -- Lane B7 part 2 (design 3.3): the active priority's thresholds (def.bandPoints) reach the handle out of combat.
+    describe("the active priority's points", function()
+        local function mine()
+            for _, h in ipairs(LHV.reg) do
+                if h.owner == "HekiliBelief" and h.power == 0 and not h.released then
+                    return h
+                end
+            end
+        end
+
+        local function send(points, deficit, pct)
+            def.bandPoints = {
+                [0] = { points = points or {}, deficit = deficit or {}, pct = pct or {} },
+                [4] = { points = { 2, 5 }, deficit = {}, pct = {} }, -- a type with no handle: ignored
+            }
+            def.bandGen = (def.bandGen or 0) + 1
+        end
+
+        before_each(function()
+            W.unit.player.power[0] = 0.4555
+            ctl.powerMax[0] = 1000
+            boot()
+            live()
+        end)
+
+        it("points as they are, a deficit from the max, a fractional pct up; the sources untouched", function()
+            local e = { { 455, 5000, 455 }, { 543, 1200 }, { 62.45 } }
+            send(e[1], e[2], e[3])
+            frames(14)
+            assert.are.same({ 455, 457, 625 }, mine().points)
+            assert.are.equal("455 457", frames(1, MANA)) -- the cell 450-460 cut at both
+            assert.are.same({ { 455, 5000, 455 }, { 543, 1200 }, { 62.45 } }, e)
+        end)
+
+        it("the same list at a new generation keeps the band live", function()
+            send({ 455 })
+            frames(14)
+            assert.are.equal("455 460", frames(1, MANA))
+            local h, calls = mine(), 0
+            local set = h.SetPoints
+            function h.SetPoints(...)
+                calls = calls + 1
+                return set(...)
+            end
+            send({ 455 })
+            assert.are.equal("455 460|455 460", frames(2, MANA))
+            assert.are.equal(0, calls)
+        end)
+
+        it("a new max moves the deficit and pct points", function()
+            send(nil, { 543 }, { 62.45 })
+            frames(14)
+            ctl.powerMax[0], W.unit.player.max[0] = 1200, 1200
+            Fake.event("UNIT_MAXPOWER", "player")
+            frames(2) -- the max folds, then the points follow
+            assert.are.same({ 657, 750 }, mine().points) -- ceil(749.4)
+        end)
+
+        it("in combat the points wait for its end", function()
+            send({ 455 })
+            frames(14)
+            ctl.combat = true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            send({ 457 })
+            frames(3)
+            assert.are.same({ 455 }, mine().points)
+            ctl.combat = false
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            frames(1)
+            assert.are.same({ 457 }, mine().points)
+        end)
+
+        it("a refusal keeps the old set and shows its code in the snapshot", function()
+            send({ 455 })
+            frames(2)
+            send({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })
+            frames(2)
+            assert.are.same({ 455 }, mine().points)
+            assert.is_truthy(VS.Snapshot():find("points=edge-limit", 1, true))
+        end)
+
+        it("allocates nothing once the points are set", function()
+            boot(false)
+            send({ 455 })
+            frames(14)
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    VS.Drain(sync())
+                end, 1000)
+            )
+        end)
+    end)
+
+    -- (ledger L1666 c) a refused watch (the pool, the point caps: transient) is asked again at the next combat's end
+    it("a refused watch is asked again when combat ends", function()
+        local real, refuse = LHV.Watch, true
+        function LHV.Watch(...)
+            if refuse then
+                return nil, "pool-limit"
+            end
+            return real(...)
+        end
+        boot()
+        assert.is_true(Fake.login())
+        frames(3)
+        refuse = false
+        frames(3)
+        assert.are.same({}, LHV:GetSources()) -- never asked every drain
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        frames(14)
+        LHV.Watch = real
+        assert.are.equal("0.63 0.64", frames(1, -1))
+    end)
+
     it("allocates nothing over 1000 drains with every band live", function()
         boot(false)
         live()

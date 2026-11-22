@@ -13,13 +13,17 @@
 -- wins and clips it for its drain, L1675). Pauses: every watch after 2 s with no drain (the
 -- event facade's frame update, I.BandsIdle), a power whose type is neither the displayed power nor mana. Kill switch:
 -- def.providers.bands false releases every watch, out of combat (in combat at PLAYER_REGEN_ENABLED, decision 89).
--- Self-test: one retry out of combat 5 s after the first PLAYER_ENTERING_WORLD.
+-- Self-test: one retry out of combat 5 s after the first PLAYER_ENTERING_WORLD. Points (design 3.3, lane B7): the
+-- active priority's thresholds (def.bandPoints) go to each power handle out of combat, at a new def.bandGen or a new
+-- max; a refusal keeps the old set. A refused watch is asked again when combat ends (L1666 c: the caps are shared, so
+-- a refusal can pass).
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local S = I.Sources
 local Obs = VS.Obs
 local Plain, Direct = S.Plain, S.Direct
+local ceil = math.ceil
 
 local MAJOR = "LibHiddenValues-1.0"
 local OWNER = "HekiliBelief" -- the border check keeps the bare addon name out of Game/ (design 2.1)
@@ -33,6 +37,10 @@ local FUZZ = 1e-9 -- float slack on the one-cell margin
 -- why it is not asked again before the next build (false, a Watch refusal code or "unproven"), and whether it is paused.
 local n = 0
 local chan, spec, handle, ptype, refused, paused = {}, {}, {}, {}, {}, {}
+-- By watch k: the points' generation and max last resolved (false: not since the handle was made), the set the handle
+-- holds, and the code that refused the latest one (false: none).
+local pointGen, pointMax, points, pointCode = {}, {}, {}, {}
+local want = {} -- the list being resolved (never a def.bandPoints table: those are the stored sources)
 -- By channel: the library's stamp of the last live band, its low and high end (the family's units), whether the last
 -- poll logged a band, and how many settles found the belief's value outside it.
 I.bandT, I.bandLo, I.bandHi, I.bandLive, I.bandDisagree = {}, {}, {}, {}, {}
@@ -49,6 +57,65 @@ local function readShown(api)
     local raw = api.UnitPowerType("player") -- secret: Plain next
     local v = Plain(api, raw)
     shown = type(v) == "number" and v or nil
+end
+
+-- Puts p into `want` (sorted, distinct) when it is a whole point of 1..max.
+local function addPoint(p, max)
+    if p < 1 or p > max or p % 1 ~= 0 then
+        return
+    end
+    local i = #want
+    while i > 0 and want[i] > p do
+        i = i - 1
+    end
+    if i > 0 and want[i] == p then
+        return
+    end
+    for j = #want, i + 1, -1 do
+        want[j + 1] = want[j]
+    end
+    want[i + 1] = p
+end
+
+-- Power watch k's thresholds at the belief's max, sent when their generation or the max moved and the set changed
+-- (a new point primes the band for about 9 frames). Allocates only when the set changes (out of combat).
+local function setPoints(k)
+    local max, gen = I.res.max[chan[k]], I.def.bandGen or 0
+    if pointGen[k] == gen and pointMax[k] == max then
+        return
+    end
+    pointGen[k], pointMax[k], pointCode[k] = gen, max, false
+    for i = #want, 1, -1 do
+        want[i] = nil
+    end
+    local all = I.def.bandPoints
+    local e = all and all[ptype[k]]
+    if e then
+        for i = 1, #e.points do
+            addPoint(e.points[i], max)
+        end
+        for i = 1, #e.deficit do
+            addPoint(max - e.deficit[i], max)
+        end
+        for i = 1, #e.pct do
+            addPoint(ceil(e.pct[i] * max / 100 - FUZZ), max)
+        end
+    end
+    local have, same = points[k], #want == #points[k]
+    for i = 1, #want do
+        same = same and have[i] == want[i]
+    end
+    if same then
+        return
+    end
+    local ok, code = handle[k]:SetPoints(want)
+    if not ok then
+        pointCode[k] = code
+        return
+    end
+    for i = 1, #have > #want and #have or #want do
+        have[i] = want[i]
+    end
 end
 
 -- Makes every missing watch the capability allows (out of combat). Allocates a handle per watch made.
@@ -76,6 +143,9 @@ local function ensure(api)
                     refused[k] = "unproven"
                 else
                     handle[k], paused[k] = h, false
+                    if ptype[k] then -- it starts with no point
+                        pointGen[k], points[k], pointCode[k] = false, {}, false
+                    end
                 end
             end
         end
@@ -165,6 +235,11 @@ S.Poll(1.6, function(api, t)
         ensure(api)
         if LHV then
             retry(t)
+            for k = 1, n do
+                if handle[k] and ptype[k] then
+                    setPoints(k)
+                end
+            end
         end
     end
     idle = false
@@ -218,6 +293,14 @@ S.On("UNIT_DISPLAYPOWER", "player", function(api, t, unit)
     end
 end)
 
+S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
+    for k = 1, n do
+        if refused[k] ~= "unproven" then
+            refused[k] = false
+        end
+    end
+end)
+
 S.On("PLAYER_ENTERING_WORLD", nil, function(api, t)
     pewT = pewT or t
 end)
@@ -266,19 +349,23 @@ I.OnSnapshot(function(out, now)
     )
     for k = 1, n do
         local ch, h = chan[k], handle[k]
-        local state, reason = "none", refused[k] or nil
+        local state, reason, held = "none", refused[k] or nil, ""
         if h then
             state, reason = h:State()
+            if ptype[k] and points[k] then
+                held = " points=" .. (pointCode[k] or tostring(#points[k]))
+            end
         end
         out[#out + 1] = string.format(
-            "band %s state=%s reason=%s band=%s-%s age=%.2f disagree=%d",
+            "band %s state=%s reason=%s band=%s-%s age=%.2f disagree=%d%s",
             NAMES[ch] or ("power " .. tostring(ptype[k])),
             tostring(state),
             tostring(reason),
             tostring(I.bandLive[ch] and I.bandLo[ch] or "?"),
             tostring(I.bandLive[ch] and I.bandHi[ch] or "?"),
             I.bandLive[ch] and now - I.bandT[ch] or 0,
-            I.bandDisagree[ch]
+            I.bandDisagree[ch],
+            held
         )
     end
     local bars, usFrame, usPeak, _, _, desyncs, _, splits = LHV:GetStats()

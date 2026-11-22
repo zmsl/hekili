@@ -307,7 +307,9 @@ unions them, `ns.SetAplBands` (Tracked.lua) maps them to power types; sent at th
 entry's load, before a Build (every Build moves the generation) and when the active priority changes. A `points` value
 is the bar "at least p"; a `deficit` n is the point max - n; a `pct` (fractional only) is the point ceil(N / 100 x max).
 A resource with more than `ns.APL_POINT_CAP` (8, the library's points per source) distinct values sends none, and the
-priority's editor warns on its Source tab. The belief does not read them yet.
+priority's editor warns on its Source tab. `Game/State/Sources/Bands.lua` resolves them at the belief's max and gives
+each power watch its set out of combat, at a new generation or max (never editing the stored lists); a point outside
+1..max is dropped and an unchanged set is not sent again (a new point primes the band again).
 `spec:RegisterReaction(name, { who = "player"|"target", outcome = "dodge"|"parry"|"block"|"miss"|"deflect"|"evade"|"crit"|"swing"|"land"|"kill", hand = "main"|"off", now = fn })`
 crosses as `def.reactions`: a `now` function the belief runs at a settled outcome's row time
 (`Game/State/Families/Now.lua`; incoming from victim-side `UNIT_COMBAT`, ours from `Game/Events/Rows.lua`'s settled
