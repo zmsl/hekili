@@ -418,6 +418,111 @@ describe("a dungeon pull through the token plate count (T1)", function()
             )
         end
 
+        -- The real queue's Immolate CAST_FINISH start (nil none).
+        local function queuedStart()
+            for _, e in ipairs(S:GetQueue(true)) do
+                if e.action == "immolate" and e.type == "CAST_FINISH" then
+                    return e.start
+                end
+            end
+        end
+
+        for _, w in ipairs({ "A", "C" }) do
+            it("world " .. w .. ": a pushback after the tab is the same cast, on A: no flip at it", function()
+                boot(w)
+                local t0 = t
+                send()
+                mw.target(H, 2)
+                step()
+                local before = step()
+                assert.is_truthy(find(before, "immolate"), names(before))
+                H.ctl.now = t
+                H.ctl.casting = { (t0 + 0.5) * 1000, (t0 + 2.5) * 1000 } -- the bar's start and end move on
+                H.Fire("UNIT_SPELLCAST_DELAYED", "player", "Cast-I1", A.immolate.id)
+                assert.is_true(math.abs(queuedStart() - (t0 + 0.5)) < 1e-6, "the core re-queued it")
+                for _ = 1, 10 do
+                    assert.are.same(before, step(), "after the pushback")
+                end
+                assert.are.same({ false, 1 }, atEnd(), "on A, counted, not on B")
+                succeed()
+                for _ = 1, 6 do
+                    assert.are.same(before, step(), "at and after the success")
+                end
+            end)
+        end
+
+        -- Cast Immolate (Cast-I<k>) on the target with its bar starting at `from`, then one update.
+        local function recast(k, from)
+            H.ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-I" .. k, A.immolate.id)
+            H.ctl.casting = { from * 1000, (from + 2) * 1000 }
+            H.Fire("UNIT_SPELLCAST_START", "player", "Cast-I" .. k, A.immolate.id)
+        end
+        -- B's queue does not change from the update after the cast's start to after its success.
+        local function steady(k)
+            local during = step()
+            for _ = 1, 10 do
+                assert.are.same(during, step(), "during the cast")
+            end
+            H.ctl.now = t
+            H.ctl.casting = nil
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-I" .. k, A.immolate.id)
+            for _ = 1, 6 do
+                assert.are.same(during, step(), "at and after the success")
+            end
+        end
+
+        it("under Map, a cast stopped after the tab and cast again on B is a new cast: on B", function()
+            boot("C")
+            send()
+            mw.target(H, 2)
+            step()
+            H.ctl.now = t
+            H.ctl.casting = nil
+            H.Fire("UNIT_SPELLCAST_INTERRUPTED", "player", "Cast-I1", A.immolate.id)
+            step()
+            assert.is_nil(queuedStart(), "the core dropped it")
+            recast(2, t) -- before the stopped cast's finish
+            step()
+            assert.are.same({ true, 1 }, atEnd(), "sent at B: on B")
+            steady(2)
+        end)
+
+        -- Immolate sent on A, a tab to B, updates up to its finish, its success; then the next Immolate on B, its bar
+        -- starting `lead` s before the first's finish, after an update or in the success's own frame.
+        local function chain(lead, between)
+            boot("C")
+            local t0 = t
+            send()
+            mw.target(H, 2)
+            while t < t0 + 1.95 do
+                step()
+            end
+            succeed()
+            if between then
+                step()
+            end
+            recast(2, t0 + 2 - lead)
+            step()
+            return atEnd()
+        end
+
+        it("under Map, the next Immolate on B is a new cast at the last one's finish (spell queue window)", function()
+            assert.are.same({ true, 2 }, chain(0), "the first on A, this one on B")
+            steady(2)
+        end)
+
+        it("under Map, the next Immolate on B is a new cast after an update without the last one", function()
+            assert.are.same({ true, 2 }, chain(0.05, true), "the first on A, this one on B")
+            steady(2)
+        end)
+
+        it("a known limit: under Map the next Immolate on B, in the success's frame, starting early, is A's", function()
+            -- shortcut: no update saw the last one leave and its start is before the pinned finish, so it reads as
+            -- that cast (the core sim has it on A, the belief on B: one flip at its success)
+            assert.are.same({ false, 2 }, chain(0.05), "the core pinned it as the first one")
+        end)
+
         it("the known limit: under Map a tab before the first update after the cast's start flips once", function()
             boot("C")
             H.ctl.now = t

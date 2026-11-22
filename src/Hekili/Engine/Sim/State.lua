@@ -6328,6 +6328,13 @@ do
 
     local EVENT_EXPIRE_MARGIN = 0.2
 
+    -- The cast in flight with no GUID (the Map restriction; ledger L1734): its action and finish, and the target's
+    -- stable ID (Facade.TargetID) when the compare first met its CAST_FINISH, so a tab during the cast reads as one.
+    -- shortcut: a tab before the first update after the cast's start pins the new mob; exact with a pin at the SENT
+    -- (Engine/Sim/Events.lua), a reader the owner has not allowed. Likewise a cast of the same action that starts
+    -- before the pinned finish with no update since the last one ended reads as that cast.
+    local castPin = { time = -1 }
+
     function state:ResetQueues()
         for i = #virtualQueue, 1, -1 do
             RecycleEvent( virtualQueue, i )
@@ -6358,6 +6365,9 @@ do
 
             virtualQueue[ i ] = e
         end
+
+        -- the pinned cast left the real queue (its success, a stop): the next cast of that action pins anew
+        if castPin.action and ( realQueue[ castPin.action ] or 0 ) == 0 then castPin.time = -1 end
     end
 
 
@@ -6380,20 +6390,19 @@ do
     end
 
 
-    -- The cast in flight with no GUID (the Map restriction; ledger L1734): its action and start, and the target's
-    -- stable ID (Facade.TargetID) when the compare first met its CAST_FINISH, so a tab during the cast reads as one.
-    -- shortcut: a tab before the first update after the cast's start pins the new mob; exact with a pin at the SENT
-    -- (Engine/Sim/Events.lua), a reader the owner has not allowed.
-    local castPin = { start = -1 }
-
     -- True when event e is the cast in flight (copied from the real queue) and it went to another mob than the target
     -- now: by its GUID where it has one, else by the stable ID pinned for it (a projectile's impact: its cast's).
     local function landsElsewhere( e )
         if not e.inflight then return false end
         local g = e.target
         if g ~= nil and g ~= "unknown" then return g ~= state.target.unit end
-        if e.type == "CAST_FINISH" and ( castPin.action ~= e.action or castPin.start ~= e.start ) then
-            castPin.action, castPin.start, castPin.id = e.action, e.start, Facade.TargetID()
+        if e.type == "CAST_FINISH" then
+            -- a new cast (another action, or one starting at or after the pinned finish) pins anew; a pushback
+            -- (UNIT_SPELLCAST_DELAYED: a later start and finish, no target under Map) keeps the pin, moves its finish
+            if castPin.action ~= e.action or e.start >= castPin.time then
+                castPin.action, castPin.id = e.action, Facade.TargetID()
+            end
+            castPin.time = e.time
         end
         return castPin.action == e.action and castPin.id ~= nil and castPin.id ~= Facade.TargetID()
     end
