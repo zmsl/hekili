@@ -445,7 +445,7 @@ describe("the world's press", function()
             assert.are.equal(15, us.res[3].cur)
             local id = tostring(fs.SPENDER_C)
             assert.are.same({
-                "1.00 @channel 1000 4000 nil",
+                "1.00 @channel 1000 4000 " .. id,
                 "1.00 UNIT_SPELLCAST_CHANNEL_START player Cast-1 " .. id,
                 "1.00 UNIT_SPELLCAST_SUCCEEDED player Cast-1 " .. id,
                 "4.00 @channel nil nil nil",
@@ -465,13 +465,34 @@ describe("the world's press", function()
             assert.are.same({ { 1, 2 } }, ticks)
             local id, b = tostring(fs.SPENDER_C), tostring(fs.SPENDER_B)
             assert.are.same({
-                "1.00 @channel 1000 4000 nil",
+                "1.00 @channel 1000 4000 " .. id,
                 "1.00 UNIT_SPELLCAST_CHANNEL_START player Cast-1 " .. id,
                 "1.00 UNIT_SPELLCAST_SUCCEEDED player Cast-1 " .. id,
                 "2.50 @channel nil nil nil",
                 "2.50 UNIT_SPELLCAST_CHANNEL_STOP player Cast-1 " .. id,
                 "2.50 UNIT_SPELLCAST_SUCCEEDED player Cast-2 " .. b,
             }, casts())
+        end)
+
+        it("is not clipped within W.QUEUE of its next tick; a clip ends its own aura (its spell's ID)", function()
+            setup()
+            us.res[3] = { cur = 0, max = 100 }
+            W.t = 1
+            local p = channel()
+            p.effect = function(W2, e)
+                W2.applyAura(e.target, fs.SPENDER_C, 3) -- the channel's debuff
+                W2.applyAura(e, fs.SPENDER_A, 15) -- another aura of the start's
+            end
+            assert.is_true(W.press(us, "spender_c", p))
+            W.run(2.96) -- 0.04 s before the second tick
+            local b = { spell = fs.SPENDER_B, gcd = 1.5, clip = true }
+            assert.are.same({ false, "casting" }, { W.press(us, "spender_b", b) })
+            W.run(3)
+            assert.is_true(W.press(us, "spender_b", b))
+            assert.are.same({ { 1, 2 }, { 2, 3 } }, ticks)
+            assert.is_nil(us.channel)
+            assert.is_nil(us.target.auras[fs.SPENDER_C])
+            assert.is_truthy(us.auras[fs.SPENDER_A])
         end)
     end)
 
@@ -541,7 +562,7 @@ describe("the world's press", function()
         W.run(10)
         local c = tostring(fs.SPENDER_C)
         assert.are.same({
-            "1.00 @channel 1000 4000 nil",
+            "1.00 @channel 1000 4000 " .. c,
             "1.00 UNIT_SPELLCAST_CHANNEL_START player Cast-1 " .. c,
             "1.00 UNIT_SPELLCAST_SUCCEEDED player Cast-1 " .. c,
             "2.00 @channel nil nil nil",

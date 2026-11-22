@@ -932,6 +932,9 @@ function M.run(L, seed, o, drivers)
         if press then
             truth.Hekili.State.reset("Primary", true) -- Update leaves its last prediction (a predicted buff, query_time ahead of now)
             local p = content.resolve(key, truth, us) -- the world's us: its auras price the press (L1233)
+            -- another spell pressed during our channel cuts it, as a player's press does in game (the engine moved
+            -- off the channel: a pack's interrupt_if, CheckChannel); W.press keeps the GCD and the queue's reach
+            p.clip = us.channel ~= nil and us.channel.spell ~= p.spell
             local pre = W.res(us, p.pt)
             local n0 = #W.truth
             local ok, why = W.press(us, key, p)

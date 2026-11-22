@@ -219,8 +219,9 @@ function M.new(seed)
     --- a queued strike), reagent ({ itemID, n [1] }: a bag count the press needs, paid when its cast lands; short:
     --- "reagent"), cast (a cast time in seconds), channel ({ length, tick, gain = { pt, amount }, effect = fn(W, e,
     --- p, n) }: a channel of `length` s ticking every `tick` s, each tick's gain and effect; the cast, its cost and its
-    --- effects at the start), clip (a press during our channel stops it first, the client's cancel; else refused
-    --- "casting"), requires = fn(W, e) -> ok, why, price = fn(W, e) -> cost (its cost when the cast succeeds: a hard
+    --- effects at the start), clip (a press during our channel stops it first, the client's cancel, and its aura, the
+    --- channel's spell IDs on us or its target, with it; within W.QUEUE of its next tick or its end, or without `clip`,
+    --- refused "casting"), requires = fn(W, e) -> ok, why, price = fn(W, e) -> cost (its cost when the cast succeeds: a hard
     --- cast's landing, else the press; the press is still checked at `cost`), effect = fn(W, e, p), and the
     --- generic effects run after `effect`: gain { pt, amount }, points { pt, 1 | "all" } (1: one more on a landed hit
     --- of `effect`'s; "all": spend them all, unless `effect`'s hit was avoided), drain (a power type: spend what is left of it), aura { id, duration,
@@ -242,7 +243,10 @@ function M.new(seed)
     function W.press(e, key, p)
         local t = W.t
         local offGcd = p.offGcd or p.gcd == 0
-        local clip = p.clip and e.channel ~= nil -- our channel, cut once the press is accepted
+        local ch = e.channel
+        -- our channel, cut once the press is accepted; not within the spell queue's reach of its next tick or its end
+        -- (that tick lands first: the press is refused "casting", a later one cuts after it)
+        local clip = p.clip and ch ~= nil and math.min(ch.t0 + (ch.n + 1) * ch.tick, ch.ends) - t > W.QUEUE + 1e-9
         if not p.onNextSwing and not clip and t < (e.castUntil or 0) then
             return false, "casting"
         elseif not offGcd and t < e.gcdUntil - 1e-9 then -- the loop's ticks are a float sum: a 1.0 s GCD ends on one
@@ -273,6 +277,16 @@ function M.new(seed)
         end
         if clip then
             W.stopChannel(e)
+            -- its own aura ends with it, on us or its target, as wowsims's channel dot's
+            -- shortcut: a channel's aura is taken to share its spell's IDs; give the channel its auras if one does not
+            for _, dst in ipairs({ e, ch.dst }) do
+                for _, id in ipairs(ch.ids) do
+                    if dst.auras[id] then
+                        dst.auras[id] = nil
+                        W.emit({ kind = "aura", dst = dst, aura = id, stacks = 0, expires = 0, duration = 0 })
+                    end
+                end
+            end
         end
         local g = p.gcd
         if type(g) == "function" then
@@ -341,12 +355,15 @@ function M.new(seed)
             end)
         elseif p.channel then
             local c = p.channel
-            local ch = { spell = p.spell }
-            e.channel, e.castUntil = ch, t + c.length
+            -- n: its ticks landed (a clip's timing); ids and dst: whose auras a clip ends
+            ch = { spell = p.spell, ids = p.ids or { p.spell }, dst = e.target, t0 = t, tick = c.tick, n = 0 }
+            ch.ends = t + c.length
+            e.channel, e.castUntil = ch, ch.ends
             land(e.castUntil)
             for n = 1, math.floor(c.length / c.tick + 1e-9) do -- every tick lands, the one at the end too
                 W.at(t + n * c.tick, function()
                     if e.channel == ch then
+                        ch.n = n
                         if c.gain then
                             W.emit({ kind = "gain", src = e, pt = c.gain[1], rage = c.gain[2] })
                         end

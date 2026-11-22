@@ -782,7 +782,7 @@ function M.new(W, k)
             elseif ev.chanEnds then
                 chanN = castN
                 sent(tc, ev.onUs, guid, id)
-                push(tc, "@channel", t * 1000, ev.chanEnds * 1000)
+                push(tc, "@channel", t * 1000, ev.chanEnds * 1000, id)
                 castEv(tc, ev.onUs, "UNIT_SPELLCAST_CHANNEL_START", guid, id)
             else
                 sent(tc, ev.onUs, guid, id) -- an instant's SENT, the same ms

@@ -513,11 +513,15 @@ Strike or Maul does not end it) longer than the limit.
 
 A content's resolved press (`W.press`, `tests/Game/harness/world.lua`) may carry `cast` (a hard cast: the client sees
 UnitCastingInfo and UNIT_SPELLCAST_START at the press with the GCD's flag, then the success and UNIT_SPELLCAST_STOP at
-its end) or `channel = { length, tick, gain = { pt, amount }, effect = fn(W, e, p, n) }` (UnitChannelInfo, then
+its end) or `channel = { length, tick, gain = { pt, amount }, effect = fn(W, e, p, n) }` (UnitChannelInfo with the
+spell's ID, its 8th return, which `buff.casting.v1` and the engine's CheckChannel read, then
 UNIT_SPELLCAST_CHANNEL_START, then the success at the start, with the cost; a tick every `tick` s, its gain and effect;
 UNIT_SPELLCAST_CHANNEL_STOP at the end). Other presses are refused "casting" while either runs; a press with `clip = true`
-stops a running channel first (wowsims's `interruptIf`: the content sets it when its translation would break the
-channel). The replay feeds the same events from the log: a Casting line with a cast time opens the bar, and a completed
+stops a running channel first, and the channel's own aura (its spell's IDs, on us or its target) with it, unless the
+channel's next tick or its end is within `W.QUEUE`: that tick lands first, the press is refused "casting". The loop's
+driver sets `clip` on a press of another spell during our channel: the engine moved off the channel (a pack's
+`interrupt_if`, through CheckChannel), and a press cuts a channel in game. Ticks landed count, later ones never come;
+the GCD and cooldown checks still refuse first. The replay feeds the same events from the log: a Casting line with a cast time opens the bar, and a completed
 cast of an ability the kit declares `channeled` runs until its aura's next fade (a clip, on either unit), else for the
 kit's `cast`. The client's order at a channel's start (UnitChannelInfo before the success, which the engine's queue
 reads) is UNMEASURED: in-game checkpoint on a class with a channel. A fight's end stops a cast in progress (central fix

@@ -142,8 +142,6 @@ describe("the Mage loop worlds", function()
         assert.are.same({ 5, { "cast 12", "channelStop 17" } }, { missiles, kinds(n1 + 1) })
     end)
 
-    -- wowsims's interruptIf: while the oracle's belief channels Evocation at 99% mana or more, every resolved press
-    -- clips it; below that, none does.
     -- An Arcane instance and a world of its own, and upTo(t): the observer's stream (of the world run so far: one
     -- call) to world time `t` into the instance, so its belief is the world's.
     local function driven()
@@ -177,17 +175,6 @@ describe("the Mage loop worlds", function()
         assert(headless.cycle(H, base))
         return C, H, W, W.ents[1], upTo
     end
-
-    it("Arcane: resolves `clip` while the belief channels Evocation at 99% mana or more", function()
-        local C, H, W, us, upTo = driven()
-        assert.is_false(C.resolve("arcane_blast", H).clip or false) -- nothing channelling
-        W.t = 1
-        assert.is_true(W.press(us, "evocation", C.resolve("evocation", H)))
-        W.run(4)
-        upTo(3)
-        assert.is_true(H.ns.VirtualState.Power(0, H.ctl.now).est >= 0.99 * 6678) -- the Arcane pool
-        assert.is_true(C.resolve("arcane_blast", H).clip) -- full: any press clips it
-    end)
 
     -- The game takes a cast's cost when it completes, with the auras up then (owner, L1383): Arcane Wrath pressed under
     -- Arcane Power is checked at its x1.3 price but lands after Arcane Power ends and pays its own (the L1375 trace).
