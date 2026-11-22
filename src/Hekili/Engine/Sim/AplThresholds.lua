@@ -1,5 +1,5 @@
 -- Engine/Sim/AplThresholds.lua
--- The APL threshold harvest (LibHiddenValues integration design 3.1-3.4, lane B7): a resource the client hides reads
+-- The APL threshold harvest (bands integration design 3.1-3.4, lane B7): a resource the client hides reads
 -- at 1% from the band library, and a priority's own whole-number thresholds can be watched exactly as points. A
 -- load-time text scan beside AplWarnings.lua: Hekili:LoadScript runs ns.AplThresholds over an entry's texts and keeps
 -- the records on its script (`Bands`); scripts:PackBands unions them over a priority; the active priority's go to the
@@ -9,7 +9,7 @@ local addon, ns = ...
 local Hekili = _G[addon]
 local ceil = math.ceil
 
--- The library's distinct points per power value (LibHiddenValues POINTS_PER_SOURCE; a contract spec pins the two).
+-- The library's distinct points per power value (the band library's POINTS_PER_SOURCE; a contract spec pins the two).
 -- Over it the library refuses the whole list, so Hekili sends none for that resource and its editor warns.
 ns.APL_POINT_CAP = 8
 

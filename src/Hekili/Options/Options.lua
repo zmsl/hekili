@@ -5587,7 +5587,7 @@ found = true end
                                         return p.spec == Status.specID
                                     end
                                 },
-                                -- (LibHiddenValues integration design 3.4) over the band library's point cap
+                                -- (bands integration design 3.4) over the band library's point cap
                                 bandWarning = {
                                     type = "description",
                                     name = function() return scripts:BandWarning( pack ) or "" end,

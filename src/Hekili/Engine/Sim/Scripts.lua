@@ -1962,7 +1962,7 @@ function scripts:ApplyWindows( packName )
     end
 end
 
---- (LibHiddenValues integration design 3.3) Pack `pack`'s harvested thresholds (each script's `Bands`, Hekili:LoadScript)
+--- (bands integration design 3.3) Pack `pack`'s harvested thresholds (each script's `Bands`, Hekili:LoadScript)
 --- as { [resource key] = { points, deficit, pct } }: distinct and sorted, a percent only when fractional (a whole one
 --- is a 1% cell edge), only the keys of the pack's spec's resources. Cold path: the options and ApplyBands.
 function scripts:PackBands( pack )
@@ -2448,7 +2448,7 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
         Hekili:Error( "Forever: %s; `%s` in pack `%s` list `%s` entry %d (%s): %s.", subject, token, pack, list, id, data.action or "?", reads )
     end
 
-    -- (LibHiddenValues integration design 3.1) the thresholds the same four texts compare, and a sequence line's
+    -- (bands integration design 3.1) the thresholds the same four texts compare, and a sequence line's
     -- members' own conditions (their scripts are compiled apart: LoadSequences), for the band library
     local bands, res = {}, specData and specData.resources or {}
     local harvest = ns.AplThresholds

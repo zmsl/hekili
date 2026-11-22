@@ -480,7 +480,7 @@ function ns.SetAplWindows(records, cap)
     resolveApl()
 end
 
---- (LibHiddenValues integration design 3.3, lane B7) The active priority's harvested thresholds (Scripts.lua
+--- (bands integration design 3.3, lane B7) The active priority's harvested thresholds (Scripts.lua
 --- scripts:ApplyBands: { [resource key] = { points, deficit, pct } }, sorted plain numbers, a resource over the cap
 --- already left out) as def.bandPoints = { [powerType] = { points, deficit, pct } } at a new def.bandGen; a key that
 --- is not a resource of this spec is dropped. Every build re-maps them and moves the generation (buildDef).
