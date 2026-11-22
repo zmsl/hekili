@@ -15,7 +15,7 @@ The tables list the differences a priority author meets. The importer also rewri
 | `<resource>.current`, `.pct`, `.deficit` | The simulated amount | The amount the game reports | An estimate while the game hides the resource |
 | `<resource>.lo`, `.hi`, `.pct_lo` | Not available | Not available | The low and high ends of the estimate ([Resources](APL-Expression-Reference#resources)) |
 | `fight_remains` | From the simulated fight | Worked out from target health | The target's estimated time to die with one enemy; 3600 seconds (unknown) with several or no estimate |
-| `target.time_to_die` | From the simulated fight | Worked out from target health | An estimate at any number of enemies; 3600 seconds while there is none |
+| `target.time_to_die` | From the simulated fight | Worked out from target health | An estimate at any number of enemies; 3600 seconds while there is none. On a line checked for a target swap it reads as `fight_remains` does with several enemies |
 | `target.time_to_pct_<N>` | From the simulated fight | Worked out from target health | Worked out from the estimate and the target's health steps; 3600 seconds while there is no estimate |
 | `target.health.pct` and the other target health values | The simulated health | The health the game reports | Read in whole-percent steps; 100 for a moment after a target change. If the game offers no reading, 100 until an ability usable only at low target health narrows it |
 | `health.pct` | The simulated health | The health the game reports | Read in whole-percent steps, because the game hides it. If the game offers no reading, 100 |
