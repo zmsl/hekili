@@ -1109,10 +1109,16 @@ local function pin(r, v, width, t, origin, event, mid)
     I.Sample(R.power[r], origin, R.est0[r], t, event)
 end
 
+-- The top of a band [lo, hi): a closed cell's is itself.
+local function bandTop(lo, hi)
+    return hi > lo and hi - I.EPS or hi
+end
+
 -- One rung of the cost ladder: the resource was at least `c` (affordable) or below it, `lag` before t. A late bound
 -- is moved by the most regen could have changed it; a late short one is dropped if it then conflicts with the floor,
 -- and an affordable one above the believed top opens the top to the maximum, as a timely one does; while a band is live
--- only the band's top yields to it (lo = hi = c, L1675). True when it moved the estimate
+-- only the side it contradicts yields (L1675): a yes leaves the band's top (c past it: lo = hi = c), a short answer the
+-- band's low end (the record's bounds may lie inside the band, or the band be held). True when it moved the estimate
 -- (a snap: the estimate now stands on this rung, so the caller writes a `pinned` sample).
 local function ladder(r, c, affordable, t, lag)
     if lag > 0 and R.swing[r] == 0 then
@@ -1139,7 +1145,12 @@ local function ladder(r, c, affordable, t, lag)
         if R.hi0[r] < c then
             -- above the believed top: a gain the belief did not see (a refill: a potion, a pause, a mana return) put
             -- the slot anywhere from c to its maximum; a bound, never the pin [c, c] (GAP V)
-            R.hi0[r] = R.bandOn[r] and c or R.max[r]
+            local v = R.max[r]
+            if R.bandOn[r] then
+                v = bandTop(R.bandLo[r], R.bandHi[r])
+                v = v > c and v or c
+            end
+            R.hi0[r] = v
             R.capT[r] = -1e9 -- a usable answer above the top: the short one is contradicted, the read stands
         end
     else
@@ -1151,7 +1162,11 @@ local function ladder(r, c, affordable, t, lag)
             R.est0[r], R.snapT[r], snapped = top, t, true
         end
         if R.lo0[r] > top then
-            R.lo0[r] = top < 0 and 0 or top -- the newest bound wins
+            local v = top < 0 and 0 or top -- the newest bound wins
+            if R.bandOn[r] and R.bandLo[r] < v then
+                v = R.bandLo[r]
+            end
+            R.lo0[r] = v
         end
         if was >= top then
             R.capT[r], R.capB[r] = t, false
@@ -1740,7 +1755,7 @@ end
 -- re-assert takes back down (a usable clip of the last drain) is owed no more. Allocates nothing.
 local function applyBand(r, lo, hi, bt, t)
     local e, l, h, max = R.est0[r], R.lo0[r], R.hi0[r], R.max[r]
-    local top = hi > lo and hi - I.EPS or hi
+    local top = bandTop(lo, hi)
     local cell = max / 100
     if l > hi + cell or h < lo - cell then
         I.bandDisagree[r] = I.bandDisagree[r] + 1

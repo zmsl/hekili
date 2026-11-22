@@ -657,7 +657,8 @@ cell in points, cut at the priority's points), `Game/State/Families/Resources.lu
 a floor and the clamp of the estimate; one at most a point wide is an exact read, a disjoint one wins both ends, any
 ends the rest assumption, and none sets a cap mark. The drain's order is the precedence: events, the plain read (which
 wins its drain), the band, then the usability answers, which always win (owner L1675): the rungs stay on, an answer is a
-bound with no flip pin, and only the side it contradicts yields (a band top under a usable cost c: lo = hi = c). An
+bound with no flip pin, and only the side it contradicts yields (a yes at c: hi is the
+higher of c and the band's top; a short answer at c: lo is the lower of c - EPS and the band's low end). An
 exact band counts as readable only in the swing forecast (`predict`, `VS.SwingPending`). An event of ours after the
 band's stamp (a spend or gain, a swing's step, a hit's, a periodic tick) steps forward from it: the band is held until it
 moves or `I.bandShows[r]` has passed (`h:Latency()` plus `I.BAND_MARGIN`, the client's own delay; about 0.17 s at 60

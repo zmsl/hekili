@@ -3956,6 +3956,23 @@ describe("resource bands (lane B4)", function()
             assert.are.equal(460 - EPS, R.hi0[MANA])
         end)
 
+        -- (review I2) inside one band the record and the band differ: the band's side that no answer contradicts stands
+        it("a yes over the record's top, inside the band: the band's top stands", function()
+            set(MANA, 451, 451.5, 452)
+            band(10, MANA, 450, 470)
+            answer(10, SPELL, true)
+            I.Fold(10)
+            is(MANA, 460, 460, 470 - EPS)
+        end)
+
+        it("a short answer under the record's floor, inside the band: the band's floor stands", function()
+            set(MANA, 462, 465, 468)
+            band(10, MANA, 450, 470)
+            answer(10, SPELL, false)
+            I.Fold(10)
+            is(MANA, 450, 460 - EPS, 460 - EPS)
+        end)
+
         it("a flip with a band live pins nothing", function()
             band(10, MANA, 440, 470)
             answer(10, SPELL, false)
