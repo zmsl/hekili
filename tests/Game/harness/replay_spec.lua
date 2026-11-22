@@ -917,26 +917,26 @@ describe("the replay's channels and hard casts (central fix 22, gap BC)", functi
             local ev = s.ev[i]
             local head = ("%.2f %s"):format(s.t[i] - R.pull, ev)
             if ev == "@casting" or ev == "@channel" then
-                out[#out + 1] = head .. " " .. rel(s.a1[i]) .. " " .. rel(s.a2[i])
+                out[#out + 1] = head .. " " .. rel(s.a1[i]) .. " " .. rel(s.a2[i]) .. " " .. tostring(s.a3[i])
             elseif ev:match("^UNIT_SPELLCAST") and ev ~= "UNIT_SPELLCAST_SENT" and s.a1[i] == "player" then
                 out[#out + 1] = head .. " " .. tostring(s.a3[i])
             end
         end
         assert.are.same({
-            "0.00 @channel 0.00 2.50",
+            "0.00 @channel 0.00 2.50 900060",
             "0.00 UNIT_SPELLCAST_CHANNEL_START 900060",
             "0.00 UNIT_SPELLCAST_SUCCEEDED 900060",
-            "2.50 @channel nil nil",
+            "2.50 @channel nil nil nil",
             "2.50 UNIT_SPELLCAST_CHANNEL_STOP 900060",
-            "2.50 @casting 2.50 4.50",
+            "2.50 @casting 2.50 4.50 nil",
             "2.50 UNIT_SPELLCAST_START 900061",
-            "4.50 @casting nil nil",
+            "4.50 @casting nil nil nil",
             "4.50 UNIT_SPELLCAST_SUCCEEDED 900061",
             "4.50 UNIT_SPELLCAST_STOP 900061",
-            "5.00 @channel 5.00 8.00",
+            "5.00 @channel 5.00 8.00 900062",
             "5.00 UNIT_SPELLCAST_CHANNEL_START 900062",
             "5.00 UNIT_SPELLCAST_SUCCEEDED 900062",
-            "8.00 @channel nil nil",
+            "8.00 @channel nil nil nil",
             "8.00 UNIT_SPELLCAST_CHANNEL_STOP 900062",
         }, out)
     end)

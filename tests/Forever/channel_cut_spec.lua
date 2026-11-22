@@ -136,6 +136,13 @@ describe("the loop's driver cuts our channel when the engine moves off it", func
         local at = cut.stop - cut.start
         assert.is_true(at >= 2 - 1e-6 and at < 2.25, tostring(at)) -- its second tick landed: cut at the first poll on
         assert.are.equal("corruption", cut.next)
+        local off -- Wrack's debuff ends with the channel
+        for _, ev in ipairs(run.W.truth) do
+            if ev.kind == "aura" and ev.dst == run.us.target and ev.aura == 1316697 and ev.stacks == 0 and not off then
+                off = ev.t > cut.start and ev.t
+            end
+        end
+        assert.are.equal(cut.stop, off)
     end)
 
     it("Shadow: names Mind Flay to the engine and runs it to its own end", function()
@@ -160,16 +167,20 @@ describe("the loop's driver cuts our channel when the engine moves off it", func
         local C = require("Forever.helpers.mage_world").Arcane
         local topped
         local run, H = fight(C, 120, function(r, oracle)
-            -- the pool at 97% once Evocation runs: 99% comes within its 8 s
+            -- the pool at 75% once Evocation runs (its press's tick): at 466 a second of 6678, 95.9% at tick 3 and
+            -- full by tick 4, the GCD long over
             if not topped and channelKey(r, oracle) == "evocation" then
                 topped = true
-                r.W.emit({ kind = "gain", src = r.us, pt = 0, rage = 0.97 * r.us.powerMax - r.W.res(r.us, 0) })
+                r.W.emit({ kind = "gain", src = r.us, pt = 0, rage = 0.75 * r.us.powerMax - r.W.res(r.us, 0) })
             end
         end)
         assert.is_true(topped, "no Evocation")
         local cut = firstCut(run, channels(run, H, "evocation"))
         assert.is_truthy(cut, "no Evocation cut")
+        local at = cut.stop - cut.start
+        assert.is_true(at >= 4 - 1e-6 and at < 4.25, tostring(at)) -- 99% between ticks 3 and 4
         assert.is_truthy(cut.next)
+        assert.is_nil(run.selfCheck.power) -- the oracle's believed mana stays the truth's: the regen ends with the buff
         local off
         for _, ev in ipairs(run.W.truth) do -- the buff ends with the channel
             if ev.kind == "aura" and ev.dst == run.us and ev.aura == 12051 and ev.stacks == 0 and not off then
