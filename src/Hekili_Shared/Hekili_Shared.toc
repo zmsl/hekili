@@ -8,11 +8,12 @@
 ## Dependencies: Hekili
 ## Group: Hekili
 ## LoadOnDemand: 1
-## X-Hekili-ContentAPI: 16
+## X-Hekili-ContentAPI: 17
 
 Shared\Auras.lua
 Shared\Consumables.lua
 Shared\Items.lua
+Shared\TimeToDie.lua
 Races\Gnome.lua
 Races\NightElf.lua
 Races\Tauren.lua

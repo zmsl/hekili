@@ -1319,6 +1319,10 @@ local PASSTHROUGH = {
     },
     { "UnitEffectiveLevel", "plain [W sweep 2026-10-16]" },
     { "UnitFactionGroup", "plain [W sweep 2026-10-16]" },
+    {
+        "UnitGroupRolesAssigned",
+        "plain out of combat under the forced Map restriction [owner probe L1658, 2026-11-21]; in combat unprobed",
+    },
     { "UnitHasVehicleUI", "plain [W sweep 2026-10-16]" },
     { "UnitInParty", "plain [W sweep 2026-10-16]" },
     { "UnitInRaid", "plain [W sweep 2026-10-16]" },

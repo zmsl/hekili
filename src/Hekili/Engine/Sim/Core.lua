@@ -88,6 +88,7 @@ Hekili:ProfileCPU( "TotalRefresh", Hekili.TotalRefresh )
 function Hekili:OnDisable()
     self:UpdateDisplayVisibility()
     self:BuildUI()
+    self:ExpireTTDs( true ) -- Forever: releases the time-to-die library's track too (Targets.lua)
 
     ns.StopEventHandler()
 end

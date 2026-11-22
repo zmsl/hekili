@@ -1238,8 +1238,159 @@ do
     local FOREVER = 3600
     local TRIVIAL = 5
     -- Forever: off. Fed the belief's health, it learnt a 0 rate (DEFAULT_TTD) before a pin and junk from the jump at one.
-    -- shortcut: no time-to-die estimate; feed a belief-derived one here when a TargetHealth-based mechanism exists.
+    -- The target's time to die comes from LibTimeToDie instead (below).
     local FEED = false
+
+    -- Forever (lane B8, owner L1676): the target's time to die from LibTimeToDie, called directly (owner "Hekili"), by
+    -- token: GUIDs are secret in dungeons. Tracked on the first query (the library may load after this file, and the
+    -- harness installs it after login, so a miss is looked up again), released by Hekili.bandOff (the bands' hidden
+    -- switch) and at disable. Only a live estimate answers; every other state is today's FOREVER. Hints (execute
+    -- lines, a rate window) are Hekili's own: they bend only its estimate (LibTimeToDie README, Hints).
+    local TTD_MAJOR, TTD_OWNER = "LibTimeToDie-1.0", "Hekili"
+    local ttdLib, ttdTrack -- the library once found; the target's handle
+
+    local function ttdRelease()
+        if ttdTrack then
+            ttdTrack:Release()
+            ttdTrack = nil
+        end
+    end
+
+    -- Hints (owner L1651, L1654, L1658), numbers only. Execute lines: HintBelow with the highest line present, threshold
+    -- only (the library learns the factor). The player's own line comes from its pack: an ability's `healthGate` (usable
+    -- at or below that fraction) while the ability is known, and an ability's `ttdBelow = { pct = n, talent = key }`
+    -- while that talent has a rank (no `talent`: always); a pack declaring either replaces its class's shared default.
+    -- Each group member adds its class's default (Shared:RegisterTtdLines; no talents assumed), a TANK (roles set) not.
+    -- Read out of combat only (UnitClass and roles on group tokens probed plain out of combat, L1658): at the spec's
+    -- activation (login, a talent change; Activation.lua) and GROUP_ROSTER_UPDATE, in combat at its end, and when the
+    -- library is first found. A rate window: HintRate on the player's own successful cast of an ability declaring
+    -- `ttdRate = { factor = f, duration = s }` (L1654: own casts are plain; others' are not detectable).
+    local UnitClass, UnitGroupRolesAssigned = Facade.UnitClass, Facade.UnitGroupRolesAssigned
+    local classLines = {} -- [class token] = pct (shared content)
+    local partyTokens, raidTokens = {}, {}
+    for i = 1, 4 do partyTokens[ i ] = "party" .. i end
+    for i = 1, 40 do raidTokens[ i ] = "raid" .. i end
+    local hintsDirty = true -- the lines are to be sent at the next chance out of combat
+    local sentBelow -- the line sent (nil: none)
+    local rateFactor, rateStart, rateEnd -- the last rate window sent
+
+    function ns.RegisterTtdLines( def )
+        for k, v in pairs( def ) do
+            if type( k ) == "string" and type( v ) == "number" then classLines[ k ] = v end
+        end
+    end
+
+    -- The player's own line from its pack (nil: none active), and whether the pack declares any.
+    local function ownLine()
+        local best, declared = nil, false
+        for key, a in pairs( class.abilities ) do
+            if type( key ) == "string" and type( a ) == "table" then
+                local g, d = rawget( a, "healthGate" ), rawget( a, "ttdBelow" )
+                if type( g ) == "number" then
+                    declared = true
+                    local v = floor( 100 * g + 0.5 )
+                    if state:IsKnown( key ) and ( not best or v > best ) then best = v end
+                end
+                if type( d ) == "table" and type( d.pct ) == "number" then
+                    declared = true
+                    local t = d.talent and rawget( state.talent, d.talent )
+                    if ( not d.talent or t and ( t.rank or 0 ) > 0 ) and ( not best or d.pct > best ) then best = d.pct end
+                end
+            end
+        end
+        return best, declared
+    end
+
+    local function groupLine( best, token )
+        if UnitExists( token ) and UnitIsUnit( token, "player" ) ~= true and UnitGroupRolesAssigned( token ) ~= "TANK" then
+            local _, c = UnitClass( token )
+            local v = c and classLines[ c ]
+            if v and ( not best or v > best ) then return v end
+        end
+        return best
+    end
+
+    local function sendHints()
+        if InCombatLockdown() then return end -- PLAYER_REGEN_ENABLED sends them
+        ttdLib = ttdLib or LibStub( TTD_MAJOR, true )
+        if not ttdLib then return end
+        hintsDirty = false
+        local best, declared = ownLine()
+        if not declared then
+            local _, c = UnitClass( "player" )
+            best = c and classLines[ c ]
+        end
+        if IsInRaid() then
+            for i = 1, #raidTokens do best = groupLine( best, raidTokens[ i ] ) end
+        elseif GetNumGroupMembers() > 0 then
+            for i = 1, #partyTokens do best = groupLine( best, partyTokens[ i ] ) end
+        end
+        if best ~= sentBelow then
+            ttdLib:HintBelow( TTD_OWNER, best )
+            sentBelow = best
+        end
+    end
+
+    -- Activation.lua, after the talent ranks are read (login, a spec or talent change).
+    function ns.TtdHintsChanged()
+        hintsDirty = true
+        sendHints()
+    end
+
+    RegisterEvent( "GROUP_ROSTER_UPDATE", ns.TtdHintsChanged )
+    RegisterEvent( "PLAYER_REGEN_ENABLED", function()
+        if hintsDirty then sendHints() end
+    end )
+
+    ns.RegisterUnitEvent( "UNIT_SPELLCAST_SUCCEEDED", "player", nil, function( event, unit, _, spellID )
+        if unit ~= "player" then return end
+        local a = class.abilities[ spellID ]
+        local r = a and rawget( a, "ttdRate" )
+        if type( r ) ~= "table" then return end
+        ttdLib = ttdLib or LibStub( TTD_MAJOR, true )
+        if not ttdLib then return end
+        local now = GetTime()
+        rateFactor, rateStart, rateEnd = r.factor, now, now + r.duration
+        ttdLib:HintRate( TTD_OWNER, rateFactor, rateStart, rateEnd )
+    end )
+
+    -- The snapshot's time-to-die line (English only; Hekili:GetTTDInfo). Allocates.
+    local function ttdLine()
+        local s
+        if not ttdTrack then
+            s = format( "time to die: not tracked (%s)", Hekili.bandOff and "Hekili.bandOff" or ttdLib and "no query yet" or "no library" ) -- l10n: verbatim
+        else
+            local est, lo, hi, st, why = ttdTrack:Get()
+            if est then
+                s = format( "time to die: %s %s est %.1f lo %.1f hi %.1f", tostring( st ), tostring( why ), est, lo, hi ) -- l10n: verbatim
+            else
+                s = format( "time to die: %s %s", tostring( st ), tostring( why ) ) -- l10n: verbatim
+            end
+        end
+        local rate = rateFactor and format( "x%.2f %.1f-%.1f", rateFactor, rateStart, rateEnd ) or "none" -- l10n: verbatim
+        return format( "%s; hints: below %s, rate %s", s, sentBelow and tostring( sentBelow ) or "none", rate ) -- l10n: verbatim
+    end
+
+    -- The target's live estimate in seconds, or nil. Allocates nothing once tracked.
+    local function targetTTD()
+        if Hekili.bandOff then
+            ttdRelease()
+            return nil
+        end
+        if not ttdTrack then
+            ttdLib = ttdLib or LibStub( TTD_MAJOR, true )
+            ttdTrack = ttdLib and ttdLib:Track( TTD_OWNER, "target" ) or nil
+            if not ttdTrack then return nil end
+            if hintsDirty then sendHints() end
+        end
+        local est, _, _, s = ttdTrack:Get()
+        return s == "live" and est or nil
+    end
+
+    -- The target's estimate when it is attackable (the existing hostility test), else nil.
+    local function hostileTargetTTD()
+        return UnitExists( "target" ) and UnitCanAttack( "player", "target" ) and targetTTD() or nil
+    end
 
     local function UpdateEnemy(guid, healthPct, unit, time)
         local enemy = db[ guid ]
@@ -1335,6 +1486,10 @@ do
     function Hekili:GetTTD( unit, isGUID )
         if state.target.is_dummy then return 180 end
 
+        if unit == "target" and not isGUID then
+            return hostileTargetTTD() or FOREVER
+        end
+
         -- Forever: unknown for every target, a grey one too, as fight_remains (wowsims's remainingTime has no trivial case)
         local default = FEED and ( isGUID or UnitIsTrivial(unit) and UnitLevel(unit) > -1 ) and TRIVIAL or FOREVER
         local guid = isGUID and unit or UnitExists(unit) and UnitCanAttack("player", unit) and UnitGUID(unit)
@@ -1366,11 +1521,24 @@ do
 
     function Hekili:GetTimeToPct( unit, percent )
         local default = FEED and UnitIsTrivial( unit ) and TRIVIAL or FOREVER
-        local guid = UnitExists( unit ) and UnitCanAttack( "player", unit ) and UnitGUID( unit )
 
         if percent >= 1 then
             percent = percent / 100
         end
+
+        if unit == "target" then
+            -- The library answers the time to 0 only: scaled by the share of the health left above the percent, h the
+            -- facade's target health (the belief's, 0-100), on the estimate's own rate.
+            local est = hostileTargetTTD()
+            if not est then return FOREVER end
+            local hm = UnitHealthMax( "target" )
+            local h = hm > 0 and 100 * UnitHealth( "target" ) / hm or 0
+            local p = 100 * percent
+            if h <= p then return 0 end
+            return est * ( h - p ) / h
+        end
+
+        local guid = UnitExists( unit ) and UnitCanAttack( "player", unit ) and UnitGUID( unit )
 
         if not guid then return default end
 
@@ -1392,6 +1560,8 @@ do
         return ceil( ( healthPct - percent ) / enemy.rate ), enemy.n
     end
 
+    -- Forever: unchanged (no caller; the GUID table is never fed). shortcut: a GUID is secret in dungeons, so no GUID is
+    -- matched to the tracked target; compare with the target's GUID (plain only) if a caller appears.
     function Hekili:GetTimeToPctByGUID( guid, percent )
         if percent >= 1 then
             percent = percent / 100
@@ -1426,7 +1596,10 @@ do
             end
         end
 
-        if not validUnit then return FOREVER end
+        -- Forever: the GUID table is never fed, so fight_remains (longest_ttd) is the target's estimate.
+        -- shortcut: only the target is tracked, so another enemy outliving it is not seen; add tokens (plates, boss)
+        -- when LibTimeToDie proves them (its version 2).
+        if not validUnit then return hostileTargetTTD() or FOREVER end
 
         return time
     end
@@ -1464,7 +1637,7 @@ do
         end
 
         if not validUnit then
-            return FOREVER
+            return hostileTargetTTD() or FOREVER -- Forever: the target's estimate, as GetGreatestTTD
         end
 
         return time
@@ -1582,7 +1755,7 @@ do
     end
 
     function Hekili:GetTTDInfo()
-        local output = "targets:"
+        local output = ttdLine() .. "\ntargets:"
         local found = false
 
         if state.target.is_dummy then
@@ -1614,6 +1787,8 @@ do
                 EliminateEnemy( k )
             end
         end
+
+        if all then ttdRelease() end -- Forever: the library's track too (OnDisable); the next query tracks again
     end
 
     local trackedUnits = { "target", "boss1", "boss2", "boss3", "boss4", "boss5", "focus", "arena1", "arena2", "arena3", "arena4", "arena5" }

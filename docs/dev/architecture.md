@@ -351,6 +351,17 @@ harness sets the type on a world's mob (`entities.new{ creatureType }`, a conten
 request `mobType` through `tests/Forever/helpers/wowsims.lua` `creatureType`), and the client fake answers it
 (`ctl.creature[unit]`, default `"beast"`).
 
+**Time to die** (lane B8, owner L1676). `Engine/Sim/Targets.lua` calls LibTimeToDie directly (owner `"Hekili"`, the
+target by token, tracked on the first query): `Hekili:GetTTD("target")`, `GetTimeToPct("target", p)` (the estimate x
+(h - p) / h, h the facade's target health) and `GetGreatestTTD`/`GetLowestTTD` (`fight_remains`) answer its live
+estimate, every other state 3600 (unknown); `Hekili.bandOff` and disable release the track. Hints, numbers only: the
+highest execute line present goes to `HintBelow` (threshold only), out of combat at the spec's activation,
+`GROUP_ROSTER_UPDATE` and the combat's end. The player's own line comes from its pack: an ability's `healthGate` while
+known and an ability field `ttdBelow = { pct = n, talent = key }` while that talent has a rank; a pack declaring
+either replaces its class's default. Each group member (tanks out) adds its class's default from shared content,
+`shared:RegisterTtdLines({ [class token] = pct })` (`Hekili_Shared/Shared/TimeToDie.lua`). An ability field
+`ttdRate = { factor = f, duration = s }` sends `HintRate(f, now, now + s)` on the player's own successful cast.
+
 **Pets.** `RegisterPets` names the pets (`{ id, spell, duration, cap }`; a `cap` makes a counted guardian). Both
 layers have the verbs `summonPet(key, duration)` and `dismissPet(key)`: the sim's (`Engine/Sim/State.lua`, Hekili's)
 in `handler`, the belief's (`Game/State/Families/Now.lua`) in `now`, where a guardian's summon adds an expiring slot

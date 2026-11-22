@@ -343,6 +343,7 @@ function Hekili:SpecializationChanged()
     state:BuildWindows() -- the core's window tables (Engine/Sim/State.lua), from class.windows and the APL windows
 
     ns.updateTalents()
+    ns.TtdHintsChanged() -- the time-to-die hints read the talent ranks too (Engine/Sim/Targets.lua)
     ns.TrackedStatics() -- the records' static values, under `state` with this spec's talent ranks (Tracked.lua)
     -- the core's gear read 1 s later (Engine/Sim/Events.lua): a set-bonus aura reads the belief's records, which this
     -- build cleared (gear-aware spec §7, Q2); the belief's own full read is at the same time (Sources/Gear.lua)

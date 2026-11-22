@@ -8,8 +8,9 @@ cd "$(dirname "$0")/../.."
 host="heki""li"
 Host="Heki""li"
 # The host files that may name it (full paths): the embed and the TOC's OptionalDeps (the host embeds it after
-# LibHiddenValues). A later lane whose file names it adds that file here. LibHiddenValues has no allow-list.
-allow="^src/$Host/(embeds\.xml|$Host\.toc):"
+# LibHiddenValues), and the core's time to die (lane B8: Targets.lua calls it directly, owner L1676). A later lane whose
+# file names it adds that file here. LibHiddenValues has no allow-list.
+allow="^src/$Host/(embeds\.xml|$Host\.toc|Engine/Sim/Targets\.lua):"
 fail=0
 hits=$(grep -rniI --exclude=LICENSE "$host" src/LibTimeToDie tests/LibTimeToDie tools/libtimetodie)
 [ -n "$hits" ] && { echo "$hits"; fail=1; }

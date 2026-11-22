@@ -1,8 +1,8 @@
 -- Engine/Schema/Shared.lua
 -- Shared content (shared-content spec §3). `Hekili:NewShared()` returns a registration object the content files
 -- (Hekili_Shared/Shared/<File>.lua) use like a race pack's (Engine/Schema/Races.lua): RegisterAbility, RegisterAura,
--- RegisterResourceMod, RegisterCostMod, RegisterRegenMod, and RegisterStateExpr. Always live, for every class and race, into the shared
--- `all` spec, whose entries the class's own win in the merge (Engine/Schema/Spec/Activation.lua) and a race pack's replace
+-- RegisterResourceMod, RegisterCostMod, RegisterRegenMod, RegisterStateExpr and RegisterTtdLines. Always live, for
+-- every class and race, into the shared `all` spec, whose entries the class's own win in the merge (Engine/Schema/Spec/Activation.lua) and a race pack's replace
 -- (ns.applyRace).
 
 local addon, ns = ...
@@ -47,6 +47,12 @@ function Shared:RegisterRegenMod(def)
         local m = ns.raceMods.regenMods
         m[#m + 1] = def
     end
+end
+
+--- { [class token] = pct }: each class's default execute line, no talents (lane B8, owner L1658): the core hints the
+--- highest line present in the group to the time-to-die library (Engine/Sim/Targets.lua). A later call adds or replaces.
+function Shared:RegisterTtdLines(def)
+    ns.RegisterTtdLines(def)
 end
 
 function Hekili:NewShared()
