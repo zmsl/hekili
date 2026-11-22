@@ -297,7 +297,7 @@ Hekili.FeignEvent = ns.FeignEvent
 
 
 do
-    local isUnregistered = false
+    local isUnregistered = true -- nothing registers the event before the first wait
     local next = _G.next
 
     local requeued = {}
@@ -307,7 +307,7 @@ do
 
         if callbacks then
             for i = #callbacks, 1, -1 do
-                callbacks[i]( event, spellID, success )
+                callbacks[i]( success )
                 remove( callbacks, i )
             end
 
@@ -343,7 +343,7 @@ do
     function Hekili:RunSpellCallbacks()
         for spell, callbacks in pairs( spellCallbacks ) do
             for i = #callbacks, 1, -1 do
-                if not callbacks[ i ]( true ) == false then remove( callbacks, i ) end
+                if C_Spell.IsSpellDataCached( spell ) then callbacks[ i ]( true ); remove( callbacks, i ) end
             end
 
             if #callbacks == 0 then
