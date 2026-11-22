@@ -652,6 +652,21 @@ a fight that never ends soon, a grey (trivial) target's too (wowsims's `remainin
 `GetNumTTDsAfter` counts every enemy as after any time. The tracker's 0.5 s ticker is not started. A priority may read them without a load warning (`Engine/Sim/AplWarnings.lua` warns on no
 health or time-to-die token); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
 
+**Resource bands.** While a power's hidden-value band is live (`Game/State/Sources/Bands.lua`, channel r >= 1: the 1%
+cell in points, cut at the priority's points), `Game/State/Families/Resources.lua` (`applyBand`) takes it as a ceiling,
+a floor and the clamp of the estimate; one at most a point wide is an exact read, a disjoint one wins both ends, any
+ends the rest assumption, and none sets a cap mark. The drain's order is the precedence: events, the plain read (which
+wins its drain), the band, then the usability answers, which always win (owner L1675): the rungs stay on, an answer is a
+bound with no flip pin, and only the side it contradicts yields (a band top under a usable cost c: lo = hi = c). An
+exact band counts as readable only in the swing forecast (`predict`, `VS.SwingPending`). An event of ours after the
+band's stamp (a spend or gain, a swing's step, a hit's, a periodic tick) steps forward from it: the band is held until it
+moves or `I.bandShows[r]` has passed (`h:Latency()` plus `I.BAND_MARGIN`, the client's own delay; about 0.17 s at 60
+fps); a refund holds nothing. Regen is measured between two true crossings (the low end rose to the last top) with no
+known change between, the step scale from a band change covering exactly one landed swing, and the rage of a hit on us
+per flag class from one covering exactly one hit (L1673); a learned hit steps est and hi, never lo. A power that reads
+plain in combat releases its watch; with no plain max the watch is a percent one, a point wider each side. With no live
+band everything below runs as without the library.
+
 **Player health.** The client hides the player's own health in combat (`UnitHealth`/`UnitHealthMax("player")` secret;
 owner L1461; the headless fake client answers so): `health.pct`, `health.current`, `health.deficit` read the plain
 value out of combat and, while the answer is secret, the hidden-value library's live 1% band

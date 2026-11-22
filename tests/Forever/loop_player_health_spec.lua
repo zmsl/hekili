@@ -1,6 +1,7 @@
 -- tests/Forever/loop_player_health_spec.lua (LibHiddenValues integration design 2.5, 5.4, 6.1 lane B3): the player's
 -- health from the band in the loops. Each content's world with `heals` (scenarios.world: a healer's heal on us every
--- 6 s, so the band falls and rises), default arm vs bands arm on that world, three 60 s fights on one boot (loop.tally):
+-- 6 s, so the band falls and rises), default arm vs the bands-health arm (no power band: lane B4's resources move the
+-- rows by design) on that world, three 60 s fights on one boot (loop.tally):
 -- - the rows, flicker per minute and react p90 side by side: no stock pack reads our own health (the wowsims
 --   translations omit those lines), so they must be equal; a difference fails here and is traced, never re-floored;
 -- - in combat, the core's read of our health (Facade.UnitHealth / UnitHealthMax: what state.health.pct takes at each
@@ -89,7 +90,7 @@ describe("the player's health from the band in the loops (lane B3) #slow", funct
             local C = healed(case[2])
             local base, rb = tally(C, "default")
             local f = { n = 0, agree = 0, lagged = 0, wrong = 0, full = 0, low = 100, misses = {} }
-            local m, r = tally(C, "bands", f)
+            local m, r = tally(C, "bands-health", f)
             for _, key in ipairs(KEYS) do
                 assert.are.same(base[key], m[key], key)
             end

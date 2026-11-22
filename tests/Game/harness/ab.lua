@@ -189,6 +189,7 @@ for name, knobs in pairs({
     ["bands-lag"] = { bandLead = -1 },
     ["bands-spend-first"] = { spendFirst = 0.05 }, -- three frames at 60 fps: the client's delay the design allows
     ["bands-spend-late"] = { spendFirst = -0.05 },
+    ["bands-health"] = { bandPower = false }, -- the health bands alone (no power shown)
 }) do
     M.ARMS[name] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandKnobs = knobs }
 end

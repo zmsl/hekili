@@ -31,6 +31,7 @@ describe("the A/B harness", function()
             ["bands-lag"] = { bandLead = -1 },
             ["bands-spend-first"] = { spendFirst = 0.05 },
             ["bands-spend-late"] = { spendFirst = -0.05 },
+            ["bands-health"] = { bandPower = false },
         }
         for name, knobs in pairs(want) do
             assert.are.same({

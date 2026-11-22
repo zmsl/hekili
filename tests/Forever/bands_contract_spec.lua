@@ -576,6 +576,28 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.are.equal("999 1000", frames(1, MANA))
     end)
 
+    -- (lane B4) the whole path on the real library: secret power in combat, the family's records from the band, the
+    -- priority's point cutting the cell, the usable-free read between them
+    it("the resources family reads the band in combat, cut at the priority's point", function()
+        W.unit.player.power[0] = 0.4555
+        ctl.powerMax[0] = 1000
+        boot()
+        def.bandPoints = { [0] = { points = { 455 }, deficit = {}, pct = {} } }
+        def.bandGen = (def.bandGen or 0) + 1
+        live()
+        frames(14)
+        ctl.combat = true
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        frames(2)
+        local p = VS.Power(0, ctl.now)
+        assert.are.same({ 455, "observed" }, { p.lo, p.basis })
+        assert.is_true(p.est >= 455 and p.est < 460 and p.hi < 460)
+        W.unit.player.power[0] = 0.3125
+        frames(3)
+        p = VS.Power(0, ctl.now)
+        assert.is_true(p.lo == 310 and p.hi < 320)
+    end)
+
     it("allocates nothing over 1000 drains with every band live", function()
         boot(false)
         live()

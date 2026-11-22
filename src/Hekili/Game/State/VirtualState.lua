@@ -54,7 +54,8 @@ VS.Obs = {
     Range = 33, -- reserved
     TargetCast = 34, -- a: TargetCastOf; b: castBarID; c: interruptible 1 / 0 / -1 unknown
     TargetDamage = 35, -- b: a WOUND amount the target took (UNIT_COMBAT, plain); VirtualState's own, past TDF's range
-    PlayerHit = 36, -- a: I.HitKind; b: the amount (0: none, -1: a wound's secret amount); c: the attacker's level
+    PlayerHit = 36, -- a: I.HitKind; b: the amount (0: none; below 0 a wound's secret amount, by its plain flag: -1
+    -- none, -2 CRITICAL, -3 CRUSHING); c: the attacker's level
     TargetRange = 37, -- a: the target's least distance in yards; b: its greatest (math.huge: no bound), the range poll's
     -- (a = -1: the poll's age-out, no plain answer for 1.5 s: unknown)
     Avoided = 38, -- a: ability index; b: its cast's time; c: I.HitKind (DODGE, PARRY, MISS; DEFLECT, EVADE for reactions

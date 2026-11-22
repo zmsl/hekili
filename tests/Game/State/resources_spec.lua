@@ -3812,6 +3812,9 @@ describe("resource bands (lane B4)", function()
 
     -- the source's poll: a live band [lo, hi) of slot r stamped bt, re-asserted at t
     local function band(t, r, lo, hi, bt)
+        if I.log.n > 0 and I.bandT[r] ~= (bt or t) then
+            I.Fold(t - 1e-9) -- the source writes the stamp at its poll: what it logged before reads the old one
+        end
         I.bandT[r], I.bandShows[r] = bt or t, SHOWS
         S.Direct(Obs.Band, t, r, lo, hi)
     end
@@ -4180,6 +4183,192 @@ describe("resource bands (lane B4)", function()
             I.Fold(10.02)
             assert.is_true(R.assume[MANA] and R.lo0[MANA] + R.over[MANA] >= 900)
             assert.are.equal(0, I.bandUsed[MANA])
+        end)
+    end)
+
+    -- Calibration from band pins (owner L1673): a band change covers (the last stamp, this stamp]; only a window with
+    -- exactly one source teaches, into the existing scale and taken rate. Live, a hit's amount is secret: its flag alone.
+    describe("clean windows", function()
+        before_each(function()
+            at(6)
+            S.Direct(Obs.CombatStart, 7)
+            I.Fold(7)
+            band(8, RAGE, 10, 11) -- past the ticks at 7: the next ones at 10, 13
+            band(9, RAGE, 10, 11, 8)
+            band(10.01, RAGE, 13, 14, 10) -- the tick's own window
+            I.Fold(10.01)
+            I.Settle(10.01)
+        end)
+
+        -- one main-hand swing at 11 whose rage shows at 11.03: `rise` points; settled at its row by `outcome`
+        local function swing(rise, outcome, more, crit)
+            S.Direct(Obs.Swing, 11, 1, 0, 4)
+            if more then
+                more()
+            end
+            band(11.05, RAGE, 13 + rise, 14 + rise, 11.03)
+            I.Fold(11.05)
+            I.Settle(11.05)
+            if outcome == I.HitKind.WOUND then
+                S.Direct(Obs.Swing, 11, 1, 1, 1)
+                if crit then
+                    S.Direct(Obs.Swing, 11.45, 1, 1, 3)
+                end
+            end
+            if outcome then
+                S.Direct(Obs.SwingSettled, 11.45, 1, 11, outcome)
+            end
+            band(11.46, RAGE, 13 + rise, 14 + rise, 11.03)
+            I.Fold(11.46)
+            I.Settle(11.46)
+            return R.scale[RAGE]
+        end
+
+        it("one landed swing alone teaches the scale its rise", function()
+            assert.is_true(math.abs(swing(14, I.HitKind.WOUND) - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+        end)
+
+        it("its crit's extra is no part of the step", function()
+            assert.is_true(math.abs(swing(18, I.HitKind.WOUND, nil, true) - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+        end)
+
+        it("a swing and a hit in one window teach nothing; the value is still pinned", function()
+            local s = swing(14, I.HitKind.WOUND, function()
+                S.Direct(Obs.PlayerHit, 11.01, I.HitKind.WOUND, -1, 20)
+            end)
+            assert.are.equal(1, s)
+            is(RAGE, 27, 27, 27)
+            assert.are.equal(0, R.hitE[(RAGE - 1) * 4 + 1])
+        end)
+
+        for _, case in ipairs({
+            {
+                "our cast",
+                function()
+                    S.Direct(Obs.CastSuccess, 11.01, 1, 0, 0)
+                end,
+            },
+            {
+                "a gain of ours",
+                function()
+                    I.Fold(11.01)
+                    I.ResourceShift(1, 2, 11.01, Obs.CastSuccess)
+                end,
+            },
+            {
+                "a second swing",
+                function()
+                    S.Direct(Obs.Swing, 11.02, 1, 0, 4)
+                end,
+            },
+            {
+                "an avoid on us",
+                function()
+                    S.Direct(Obs.PlayerHit, 11.01, I.HitKind.DODGE, 0, 20)
+                end,
+            },
+        }) do
+            it(case[1] .. " beside the swing teaches nothing", function()
+                assert.are.equal(1, swing(14, I.HitKind.WOUND, case[2]))
+            end)
+        end
+
+        it("an avoided swing teaches nothing", function()
+            assert.are.equal(1, swing(14, I.HitKind.DODGE))
+        end)
+
+        it("a swing with no row is no landed one", function()
+            assert.are.equal(1, swing(14, -1))
+        end)
+
+        it("a swing not settled yet teaches nothing", function()
+            assert.are.equal(1, swing(14))
+        end)
+
+        it("a gain dated back into the window (a reaction of that swing) unteaches it", function()
+            S.Direct(Obs.Swing, 11, 1, 0, 4)
+            band(11.05, RAGE, 27, 28, 11.03)
+            I.Fold(11.05)
+            I.Settle(11.05)
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11, I.HitKind.WOUND)
+            I.Fold(11.45)
+            I.ResourceShift(RAGE, 5, 11, Obs.SwingSettled, 1)
+            I.Settle(11.45)
+            assert.are.equal(1, R.scale[RAGE])
+        end)
+
+        it("a periodic tick in the window teaches nothing", function()
+            S.Direct(Obs.Swing, 12.95, 1, 0, 4) -- the tick at 13
+            band(13.02, RAGE, 27, 28, 13.01)
+            S.Direct(Obs.SwingSettled, 13.4, 1, 12.95, I.HitKind.WOUND)
+            I.Fold(13.4)
+            I.Settle(13.4)
+            assert.are.equal(1, R.scale[RAGE])
+        end)
+
+        it("an event after the stamp is the next window's", function()
+            S.Direct(Obs.Swing, 11.02, 1, 0, 4)
+            band(11.03, RAGE, 14, 15, 11.01) -- a change before the swing
+            band(11.07, RAGE, 28, 29, 11.05) -- its rage
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11.02, I.HitKind.WOUND)
+            I.Fold(11.45)
+            I.Settle(11.45)
+            assert.is_true(math.abs(R.scale[RAGE] - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+        end)
+
+        for k, kind in ipairs({ { 1, -1 }, { 1, -2 }, { 1, -3 }, { 2, -1 } }) do
+            it("one hit alone teaches its flag's rage, class " .. k .. "; the next one steps est and hi", function()
+                S.Direct(Obs.PlayerHit, 11, kind[1], kind[2], 20)
+                band(11.02, RAGE, 20, 21, 11) -- 7 rage
+                I.Fold(11.02)
+                for j = 1, 4 do
+                    assert.are.equal(j == k and 7 or 0, R.hitE[(RAGE - 1) * 4 + j])
+                end
+                band(11.3, RAGE, 20, 21, 11)
+                S.Direct(Obs.PlayerHit, 11.4, kind[1], kind[2], 20)
+                band(11.4, RAGE, 20, 21, 11) -- not shown yet
+                I.Fold(11.4)
+                assert.are.same({ 20, 27 }, { R.lo0[RAGE], R.est0[RAGE] }) -- lo never rests on an estimate
+                assert.is_true(R.hi0[RAGE] >= 27)
+                assert.are.equal(0.7, VS.TakenRate(fs.RAGE, 11.4)) -- the existing taken rate
+            end)
+        end
+
+        it("two hits in one window, or an unlearned class, step nothing", function()
+            S.Direct(Obs.PlayerHit, 11, 1, -1, 20)
+            S.Direct(Obs.PlayerHit, 11.01, 1, -1, 20)
+            band(11.02, RAGE, 20, 21, 11.01)
+            S.Direct(Obs.PlayerHit, 11.4, 1, -1, 20)
+            band(11.4, RAGE, 20, 21, 11.01)
+            I.Fold(11.4)
+            is(RAGE, 20, 20, 20)
+            assert.are.equal(0, VS.TakenRate(fs.RAGE, 11.4))
+        end)
+
+        it("no band, no learned step (the value has nothing to correct it)", function()
+            S.Direct(Obs.PlayerHit, 11, 1, -1, 20)
+            band(11.02, RAGE, 20, 21, 11)
+            unknown(11.3, RAGE)
+            S.Direct(Obs.PlayerHit, 11.4, 1, -1, 20)
+            I.Fold(11.4)
+            is(RAGE, 20, 20, 20)
+        end)
+
+        it("allocates nothing", function()
+            local t = 20
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 2
+                    S.Direct(Obs.Swing, t, 1, 0, 4)
+                    band(t + 0.05, RAGE, 20 + t % 4 * 5, 21 + t % 4 * 5, t + 0.03)
+                    S.Direct(Obs.SwingSettled, t + 0.45, 1, t, I.HitKind.WOUND)
+                    S.Direct(Obs.PlayerHit, t + 0.9, 1, -2, 20)
+                    band(t + 0.95, RAGE, 27 + t % 4 * 5, 28 + t % 4 * 5, t + 0.93)
+                    I.Fold(t + 0.95)
+                    I.Settle(t + 0.95)
+                end, 500)
+            )
         end)
     end)
 

@@ -251,6 +251,7 @@ describe("the observer", function()
         assert.are.equal("2:50 3:30 5:40 cast 3", stream({ bandLead = -1 }))
         assert.are.equal("2:60 3:40 5:50 cast 3.05", stream({ spendFirst = 0.05 }))
         assert.are.equal("2:60 3:60 3.05:40 5:50 cast 3", stream({ spendFirst = -0.05 }))
+        assert.are.equal(" cast 3", stream({ bandPower = false }))
     end)
 
     it("fires the on-swing proc as a school-32 wound on the target and a heal on us, same ms", function()

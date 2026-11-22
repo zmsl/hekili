@@ -1,7 +1,9 @@
 -- tests/Forever/loop_bands_spec.lua (LibHiddenValues integration design 5.4, 6.1 lanes B1-B2): the `bands` arm. The
 -- driver's belief watches through fake_lhv.lua (loop.lua), the observer pushing the world's truth. The target health
 -- family reads its band (lane B2); no priority of these packs reads target health (their low-health lines are the
--- client's own usability gates), so every output of a fight still equals the default arm's on the same seed. At every
+-- client's own usability gates), so on the bands-health arm (no power band) every output of a fight still equals the
+-- default arm's on the same seed. The resources read theirs (lane B4): on the bands arms the outputs move, and the
+-- believed floor is above the truth on no more polls than the default arm's (the L1525 ratchet, in each lead arm). At every
 -- fold the truth lies inside the band the family applied, or the band lagged it (loop.bandCheck: containment, L1666 a),
 -- on each channel the world has; what the family made of it, clipped, holds the truth too, and its estimate lies
 -- within one band of the truth (`est`).
@@ -39,35 +41,47 @@ describe("the bands arm #slow", function()
         { "Feral (energy; mana and rage while not shown are paused)", dlw.Feral, { -1, 0 } },
         { "Frost (mana)", mw.Frost, { -1, 0 } },
     }) do
-        it(case[1] .. ": the rows equal the default arm's; each applied band holds the truth or lagged it", function()
-            local base = fight(case[2], "default", 3)
-            local run, H, lines = fight(case[2], "bands", 3)
-            for _, key in ipairs(ROWS) do
-                assert.are.same(base[key], run[key], key)
+        it(
+            case[1] .. ": the health bands alone leave the rows; each applied band holds the truth or lagged it",
+            function()
+                local base = fight(case[2], "default", 3)
+                local health = fight(case[2], "bands-health", 3)
+                for _, key in ipairs(ROWS) do
+                    assert.are.same(base[key], health[key], key)
+                end
+                for _, arm in ipairs({ "bands-lead", "bands-lag", "bands-spend-first", "bands-spend-late" }) do
+                    local lead = fight(case[2], arm, 3)
+                    assert.is_true(
+                        lead.loOver <= base.loOver,
+                        ("%s: lo over %d, default %d"):format(arm, lead.loOver, base.loOver)
+                    )
+                end
+                local run, H, lines = fight(case[2], "bands", 3)
+                assert.is_true(run.loOver <= base.loOver, ("lo over %d, default %d"):format(run.loOver, base.loOver))
+                local b = run.bands
+                assert.are.same({}, b.misses)
+                assert.are.equal(b.checked, b.held + b.lagged) -- held at the fold, or lagged: its own row (L1666 a)
+                local e = b.est -- the target's estimate within one band of the truth wherever its family applied one
+                assert.is_true(e.n > 20, tostring(e.n))
+                assert.are.same({}, e.offs)
+                assert.are.equal(0, e.off + e.outside)
+                assert.are.equal(e.n, e.within + e.lagged + e.floored)
+                for _, ch in ipairs(case[3]) do
+                    assert.is_true((b.live[ch] or 0) > 20, ch .. " " .. tostring(b.live[ch]))
+                end
+                local I = H.ns.VirtualStateInternal
+                local powers = 0
+                for ch, n in pairs(b.live) do
+                    powers = powers + (ch > 0 and n > 20 and 1 or 0)
+                    assert.is_number(I.bandDisagree[ch], ch)
+                end
+                assert.is_true(powers >= 1, "a power band") -- the class's own power, in points
+                assert.is_truthy(
+                    lines[#lines]:match("^bands seed 3 checked %d+ held %d+ lagged %d+ live .* est %d+ "),
+                    lines[#lines]
+                )
             end
-            local b = run.bands
-            assert.are.same({}, b.misses)
-            assert.are.equal(b.checked, b.held + b.lagged) -- held at the fold, or lagged: its own row (L1666 a)
-            local e = b.est -- the target's estimate within one band of the truth wherever its family applied one
-            assert.is_true(e.n > 20, tostring(e.n))
-            assert.are.same({}, e.offs)
-            assert.are.equal(0, e.off + e.outside)
-            assert.are.equal(e.n, e.within + e.lagged + e.floored)
-            for _, ch in ipairs(case[3]) do
-                assert.is_true((b.live[ch] or 0) > 20, ch .. " " .. tostring(b.live[ch]))
-            end
-            local I = H.ns.VirtualStateInternal
-            local powers = 0
-            for ch, n in pairs(b.live) do
-                powers = powers + (ch > 0 and n > 20 and 1 or 0)
-                assert.is_number(I.bandDisagree[ch], ch)
-            end
-            assert.is_true(powers >= 1, "a power band") -- the class's own power, in points
-            assert.is_truthy(
-                lines[#lines]:match("^bands seed 3 checked %d+ held %d+ lagged %d+ live .* est %d+ "),
-                lines[#lines]
-            )
-        end)
+        )
     end
 
     -- (review I4) whole fights, through the low-health part where the gate's answers meet the band and the resource runs
@@ -108,9 +122,11 @@ describe("the bands arm #slow", function()
         return m, lines
     end
 
-    it("three fights on one boot: the tally the default's, every fight's bands holding the truth", function()
+    it("three fights on one boot: health alone the default's tally, every fight's bands holding the truth", function()
         local base = tally("default")
-        local m, lines = tally("bands")
+        local m = tally("bands-health")
+        local bands, lines = tally("bands")
+        assert.is_true(bands.loOver <= base.loOver, ("lo over %d, default %d"):format(bands.loOver, base.loOver))
         for _, key in ipairs({ "fights", "both", "agree", "conf", "react", "refused", "attempts", "episodes" }) do
             assert.are.same(base[key], m[key], key)
         end
@@ -129,12 +145,10 @@ describe("the bands arm #slow", function()
         end
     end)
 
-    it("bands-drop: the capability lost mid-fight, the rows still the default's, no band logged after it", function()
+    it("bands-drop: the capability lost mid-fight, no floor more over, no band logged after it", function()
         local base = fight(ww, "default", 5)
         local run, H = fight(ww, "bands-drop", 5)
-        for _, key in ipairs(ROWS) do
-            assert.are.same(base[key], run[key], key)
-        end
+        assert.is_true(run.loOver <= base.loOver, ("lo over %d, default %d"):format(run.loOver, base.loOver))
         local I = H.ns.VirtualStateInternal
         for _, live in pairs(I.bandLive) do
             assert.is_false(live)

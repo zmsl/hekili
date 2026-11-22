@@ -92,6 +92,9 @@ M.DEFAULTS = {
     -- below 0 the bars show a spend that long after its cast event (a display catching up with the cast).
     bandLead = 0,
     spendFirst = 0,
+    -- (lane B4) false: the bars show no power (the watches prime for good), the bands-health arm: what the health bands
+    -- alone change, which the B2 and B3 loop rows pin.
+    bandPower = true,
 }
 
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
@@ -576,6 +579,9 @@ function M.new(W, k)
     end
     -- (k.bands) the power the bars show at t: the pool, moved by the two knobs.
     local function pushShown(t, pt)
+        if not k.bandPower then
+            return
+        end
         local r = pt ~= us.pt and us.res[pt] or nil
         local v, max = cur[pt], r and r.max or us.powerMax
         local full = v >= max
@@ -618,7 +624,9 @@ function M.new(W, k)
                     if v == nil then
                         v = r and us.res0[pt] or us.power0
                     end
-                    push(t, "@lhv", "power", "player", pt, v or 0, r and r.max or us.powerMax)
+                    if k.bandPower then
+                        push(t, "@lhv", "power", "player", pt, v or 0, r and r.max or us.powerMax)
+                    end
                 end
             end
             targets(t + 0.1, ev)

@@ -71,7 +71,12 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- own latest change (a spend or gain, I.ResourceShift; a refund is paid at its cast, so it is none), `stepT[r]` the
 -- latest other event we modelled (a swing's step, a hit's, a periodic tick), each at its own time. A band stamped
 -- before one (our own change's frame included) describes an earlier moment: skipped until it moves or until
--- I.bandShows[r] has passed, so what stepped forward from it stands.
+-- I.bandShows[r] has passed, so what stepped forward from it stands. Calibration from band pins (owner L1673, clean
+-- windows only): a band change covers (the last stamp, this stamp]; `winN[r]` counts the events we know of since the
+-- last stamp, `winT/K[r]` are the latest's time and the only one's source (seen). One swing of a hand and nothing
+-- else: that hand's sample, taught to the scale once it settled landed (its crit's extra out). One wound on us with a
+-- secret amount and nothing else: that rage is its flag class's (`hitE/D[(r - 1) * HIT_CLASSES + class]`: 1 plain, 2
+-- critical, 3 crushing, 4 partly blocked; L128), what such a hit then steps est and hi by while a band is live.
 local R = {
     n = 0,
     type = {},
@@ -175,6 +180,11 @@ local R = {
     movedT = {},
     shiftT = {},
     stepT = {},
+    winN = {},
+    winT = {},
+    winK = {},
+    hitE = {},
+    hitD = {},
     pinN = {}, -- the fight's flips at an unchanged cost (the providers audit, I.PinError)
     pinErr = {}, -- and the sum of |estimate before the flip - cost| over them
 }
@@ -351,6 +361,33 @@ local function stepped(r, t)
     end
 end
 
+-- What a window's event was: a swing of hand 1 or 2, OTHER, or HIT + its class for a hit we can learn from.
+local OTHER, HIT, HIT_CLASSES = 0, 2, 4
+-- Per hand, the swing a band change covered alone (shortcut: one a hand, so a swing settling after that hand's next
+-- covered one teaches nothing; widen if a trace shows off-hand samples lost): its slot (0: none), its window, the
+-- swing's time, the rise, whether it crit and whether it settled landed (taught at the fold's end).
+local smpR, smpFrom, smpTo, smpAt, smpV = { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }
+local smpCrit, smpLand = { false, false }, { false, false }
+
+-- An event of slot r at t that gives (or may give) it something besides continuous regen: the open window counts it; one
+-- dated back into a closed window unteaches that window's sample. Allocates nothing.
+local function seen(r, t, what)
+    if not R.bandOn[r] or R.swing[r] == 0 and not R.taken[r] then
+        return
+    elseif t <= R.bandAt[r] then
+        for h = 1, 2 do
+            if smpR[h] == r and t > smpFrom[h] and t <= smpTo[h] then
+                smpR[h] = 0
+            end
+        end
+        return
+    end
+    R.winN[r] = R.winN[r] + 1
+    if R.winN[r] == 1 or t > R.winT[r] then
+        R.winT[r], R.winK[r] = t, what
+    end
+end
+
 -- Slot r's modelled floor (lo0 + over) kept at or under the maximum. Allocates nothing.
 local function norm(r)
     local room = R.max[r] - R.lo0[r]
@@ -442,6 +479,9 @@ I.OnBuild(function(def, now)
     local list = def.resources
     R.n = #list
     hitRate[1], hitRate[2] = 1, 1
+    for h = 1, 2 do
+        smpR[h], smpLand[h] = 0, false
+    end
     for r = 1, R.n do
         local d = list[r]
         R.type[r], R.token[r], R.onTarget[r] = d.type, d.token, d.onTarget == true
@@ -488,6 +528,10 @@ I.OnBuild(function(def, now)
         R.bandAt[r], R.bandDone[r], R.bandLo[r], R.bandHi[r] = -1e9, -1e9, 0, 0
         R.markT[r], R.markV[r], R.movedT[r] = -1, 0, -1e9
         R.shiftT[r], R.stepT[r] = -1e9, -1e9
+        R.winN[r], R.winT[r], R.winK[r] = 0, 0, OTHER
+        for i = (r - 1) * HIT_CLASSES + 1, r * HIT_CLASSES do
+            R.hitE[i], R.hitD[i] = 0, 0
+        end
         R.decayDef[r] = d.decay
         R.decay[r] = 0
         R.decayIv[r], R.decayNext[r], R.topNext[r] = 0, 0, 0
@@ -836,6 +880,7 @@ I.OnAdvance(function(from, to)
         if v ~= 0 then
             local r = G.slot[g]
             stepped(r, tick)
+            seen(r, tick, OTHER)
             local max = R.max[r]
             R.est0[r] = clamp(R.est0[r] + v, max)
             R.lo0[r] = clamp(R.lo0[r] + v, max)
@@ -953,6 +998,16 @@ local function edged(r, from, to)
     return false
 end
 
+-- One measured ratio of swing-paid slot r's landed step to its model's into the step scale. Allocates nothing.
+local function rescale(r, ratio, t, event)
+    if ratio < 1 / I.REGEN_RATIO or ratio > I.REGEN_RATIO then
+        return -- noise: a missed spend, a cap
+    end
+    local scale, dev, spread = Stats.Ema(R.scale[r], R.dev[r], ratio, I.ALPHA, I.REGEN_SPREAD_MIN) -- floor x 1: a ratio
+    R.scale[r], R.dev[r], R.spread[r] = scale, dev, spread
+    I.Sample(R.regen[r], "modelled", scale * I.SwingPerSecond(r), t, event)
+end
+
 -- One regen measurement m (per second, between two pins ending at t) into the slot's regen (the EMA, TDF
 -- calibrate). A swing-paid slot calibrates its step scale against the spec's value per second of swinging. A shaped
 -- slot's m is the gain over the pins' interval, split by its weights (pinA, pinB; spans): with no time outside the
@@ -989,13 +1044,7 @@ local function calibrate(r, m, t, a, b, from, event)
     if ref == 0 then
         return
     end
-    local ratio = m / ref -- nonzero: ref ~= 0 checked
-    if ratio < 1 / I.REGEN_RATIO or ratio > I.REGEN_RATIO then
-        return -- noise: a missed spend, a cap
-    end
-    local scale, dev, spread = Stats.Ema(R.scale[r], R.dev[r], ratio, I.ALPHA, I.REGEN_SPREAD_MIN) -- floor x 1: a ratio
-    R.scale[r], R.dev[r], R.spread[r] = scale, dev, spread
-    I.Sample(R.regen[r], "modelled", scale * ref, t, event)
+    rescale(r, m / ref, t, event) -- nonzero: ref ~= 0 checked
 end
 
 -- Pins slot r at t to [v, v + width]; when this pin and the previous one both measure (exact, or `mid`), the regen
@@ -1727,6 +1776,64 @@ local function applyBand(r, lo, hi, bt, t)
     I.bandUsed[r], I.bandUsedLo[r], I.bandUsedHi[r] = I.bandUsed[r] + 1, lo, hi
 end
 
+-- Slot r's band moved to the low end lo at bt: what its window (the last stamp, bt] teaches, when one source alone lies
+-- in it (owner L1673); an event after the stamp is the next window's. The value itself needs none of this.
+-- Allocates nothing.
+local function closeWindow(r, lo, bt)
+    local n, what, e = R.winN[r], R.winK[r], R.winT[r]
+    if n > 0 and e > bt + 1e-6 then
+        R.winN[r] = n > 1 and 2 or 1 -- some of several may lie on either side: neither window is clean
+        return
+    end
+    R.winN[r] = 0
+    local rise = lo - R.bandLo[r]
+    if n ~= 1 or what == OTHER or rise <= 0 or not fighting or lo >= R.max[r] - I.EPS then
+        return -- none, mixed, a fall, or capped
+    end
+    if what <= HIT then
+        local h = what
+        smpR[h], smpFrom[h], smpTo[h], smpAt[h], smpV[h] = r, R.bandAt[r], bt, e, rise
+        smpCrit[h], smpLand[h] = false, false
+        return
+    end
+    local i = (r - 1) * HIT_CLASSES + what - HIT
+    if R.hitE[i] == 0 then
+        R.hitE[i] = rise
+    else
+        R.hitE[i], R.hitD[i] = Stats.Ema(R.hitE[i], R.hitD[i], rise, I.ALPHA, 0)
+    end
+end
+
+-- A covered swing's outcome, as it settled: only a seen landed one teaches (a close with no row is none).
+I.On(Obs.SwingSettled, function(o)
+    local h = o.a
+    if (h == 1 or h == 2) and smpR[h] > 0 and abs(smpAt[h] - o.b) < 1e-6 then
+        if o.c == I.HitKind.WOUND then
+            smpLand[h] = true
+        else
+            smpR[h] = 0
+        end
+    end
+end)
+
+-- At the fold's end, after its reactions (a gain of theirs dated into the window unteaches it) and its crit.
+I.OnSettle(function(now)
+    for h = 1, 2 do
+        if smpLand[h] then
+            smpLand[h] = false
+            local r = smpR[h]
+            if r > 0 then
+                smpR[h] = 0
+                local at = smpAt[h]
+                local v, crit = I.SwingValue(r, h, at), smpCrit[h] and I.SwingCrit(r, h, at) or 0
+                if v > 0 then
+                    rescale(r, (smpV[h] - crit) / v, now, Obs.Band) -- nonzero: v > 0 checked
+                end
+            end
+        end
+    end
+end)
+
 -- Whether the band stamped bt describes a moment before an event of ours that its delay may still hide at t (the hold,
 -- owner L1673): our own change at or after the stamp, a modelled step after it. Allocates nothing.
 local function holdsBack(r, bt, t)
@@ -1745,8 +1852,15 @@ I.On(Obs.Band, function(o, t)
         return unband(r)
     end
     local bt = I.bandT[r]
-    if R.bandOn[r] and bt ~= R.bandAt[r] and R.swing[r] == 0 then
-        crossing(r, lo, hi, bt)
+    if not R.bandOn[r] then
+        R.winN[r] = 0 -- the first band: no change to learn from
+    elseif bt ~= R.bandAt[r] then
+        if R.swing[r] == 0 then
+            crossing(r, lo, hi, bt)
+        end
+        if R.swing[r] > 0 or R.taken[r] then
+            closeWindow(r, lo, bt)
+        end
     end
     R.bandOn[r], R.banded[r] = true, hi - lo <= 1 + I.EPS
     R.bandAt[r], R.bandLo[r], R.bandHi[r] = bt, lo, hi
@@ -1775,6 +1889,7 @@ I.On(Obs.Swing, function(o, t)
         hitRate[hand] = (Stats.Ema(hitRate[hand], 0, 0, HIT_ALPHA, 0)) -- a swing: the share decays toward 0
         for r = 1, R.n do -- the estimate a credit of this swing is judged from (predict)
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
+                seen(r, o.t, hand)
                 swE[hand], swL[hand], swT[hand], swTop[hand], swSp[hand] =
                     R.est0[r], R.lo0[r], o.t, math.huge, R.spends[r]
                 snI[hand] = snI[hand] % SWN + 1
@@ -1868,6 +1983,9 @@ I.On(Obs.Swing, function(o, t)
     -- the swing's own time (rage is gained at the swing: its form or aura then decides): c = 1 is stamped at it, its
     -- crit (stamped at the wound) takes its record's
     local at = c == 3 and k > 0 and recSw[k] > 0 and recSw[k] or o.t
+    if c == 3 and smpR[hand] > 0 and abs(at - smpAt[hand]) < 1e-6 then
+        smpCrit[hand] = true
+    end
     for r = 1, R.n do
         if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
             local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
@@ -1900,6 +2018,9 @@ end)
 I.On(Obs.CastSuccess, function(o, t, lag)
     local a = o.a
     local r = I.ab.slot[a]
+    for s = 1, R.n do
+        seen(s, o.t, OTHER) -- our cast: no window holding it is clean
+    end
     I.SettleDebt(r)
     if r == 0 or I.ab.obj[a].onNextSwing then
         return
@@ -1912,16 +2033,52 @@ I.On(Obs.CastSuccess, function(o, t, lag)
     owe(r, e, lo, hi, o.t)
 end)
 
+-- Slot r's gain from a hit at t into its second's bin (VS.TakenRate). Allocates nothing.
+local function tookGain(r, t, gain)
+    local sec = floor(t) -- out of combat too: the pull's own hits count once combat starts
+    local i = sec % I.TAKEN_WINDOW + 1
+    local bin, stamp = R.takenBin[r], R.takenSec[r]
+    if stamp[i] ~= sec then
+        bin[i], stamp[i] = 0, sec
+    end
+    bin[i] = bin[i] + gain
+end
+
 -- A hit on the player (kinds 1-6; a heal brings no rage): each slot with a `taken` gains what it returns, the interval
 -- by its half-width (lo never below the estimate's gain minus it), clamped to [0, max]; kept out of the regen
 -- measurement and counted as our own gain (a flip it explains pins exactly, as I.ResourceShift's); one `modelled`
--- sample at the hit, and the gain into its second's bin. A `taken` that raises is counted as a `now`'s error.
+-- sample at the hit, and the gain into its second's bin. A `taken` that raises is counted as a `now`'s error. A wound
+-- whose amount is secret takes its class's learned rage instead, to est and hi while a band is live.
 I.On(Obs.PlayerHit, function(o, t)
     local kind = o.a
     if kind < I.HitKind.WOUND or kind > I.HitKind.MISS then
         return
-    elseif kind <= I.HitKind.BLOCKED and o.b < 0 then
-        return -- a wound's secret amount (b = -1, Sources/Player.lua): its rage is the estimate path (L128), not built
+    end
+    local class = 0 -- a wound with a secret amount (b < 0, Sources/Player.lua): its flag's class, else none
+    if kind <= I.HitKind.BLOCKED and o.b < 0 then
+        class = kind == I.HitKind.BLOCKED and HIT_CLASSES or -o.b
+    end
+    for r = 1, R.n do
+        seen(r, o.t, class > 0 and R.taken[r] and HIT + class or OTHER)
+    end
+    if class > 0 then -- its rage is secret: what hit-only band windows taught for its class (L128, L1673)
+        for r = 1, R.n do
+            local i = (r - 1) * HIT_CLASSES + class
+            local gain = R.hitE[i]
+            -- only from a live band, which corrects it within its delay; never to lo (affordability rests on no estimate)
+            if R.taken[r] and R.bandOn[r] and gain > 0 then
+                local width, max = gain * I.REGEN_SPREAD_MIN, R.max[r]
+                width = R.hitD[i] > width and R.hitD[i] or width
+                R.est0[r] = clamp(R.est0[r] + gain, max)
+                R.hi0[r] = clamp(R.hi0[r] + gain + width, max)
+                R.pinDelta[r], R.gain[r], R.pinOwn[r] = R.pinDelta[r] + gain, R.gain[r] + gain, true
+                moved(r, t)
+                stepped(r, o.t)
+                I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
+                tookGain(r, t, gain)
+            end
+        end
+        return
     end
     for r = 1, R.n do
         local f = R.taken[r]
@@ -1939,13 +2096,7 @@ I.On(Obs.PlayerHit, function(o, t)
                 moved(r, t)
                 stepped(r, o.t)
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
-                local sec = floor(t) -- out of combat too: the pull's own hits count once combat starts
-                local i = sec % I.TAKEN_WINDOW + 1
-                local bin, stamp = R.takenBin[r], R.takenSec[r]
-                if stamp[i] ~= sec then
-                    bin[i], stamp[i] = 0, sec
-                end
-                bin[i] = bin[i] + gain
+                tookGain(r, t, gain)
             end
         end
     end
@@ -2037,6 +2188,7 @@ I.On(Obs.CombatStart, function(o, t)
     fighting, fightT = true, t
     refresh()
     for r = 1, R.n do
+        seen(r, t, OTHER)
         R.decayNext[r], R.topNext[r] = 0, 0
         R.pinN[r], R.pinErr[r] = 0, 0
         moved(r, t)
@@ -2174,6 +2326,7 @@ function I.ResourceShift(r, delta, t, event, late)
     R.pinDelta[r] = R.pinDelta[r] + delta
     if delta ~= 0 then
         moved(r, t)
+        seen(r, t, OTHER)
         if event ~= Obs.Avoided and t > R.shiftT[r] then
             R.shiftT[r] = t
         end
