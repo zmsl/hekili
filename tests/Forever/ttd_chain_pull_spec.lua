@@ -1,7 +1,8 @@
 -- tests/Forever/ttd_chain_pull_spec.lua (ttd-chain-pull; lane B8, L1730): the pull after a target that is gone does not
 -- take that target's kill time. The real LibTimeToDie over the fake bands (ttd_rig.lua), through the core's
--- fight_remains and target.time_to_die. A direct swap in combat, and a swap from a dying mob to a tough one first seen
--- below full, are the library's part: not pinned here.
+-- fight_remains and target.time_to_die. A direct swap in combat, a swap from a dying mob to a tough one first seen
+-- below full, and one straight from a mob that died targeted with no target event or a secret death, are the
+-- library's part: not pinned here.
 local headless = require("Game.harness.headless")
 local fake_lhv = require("Game.harness.fake_lhv")
 local ttd_rig = require("Game.harness.ttd_rig")
@@ -217,6 +218,26 @@ describe("ttd-chain-pull: time to die forgets the last mob at a pull (lane B8, L
         w.target("Creature-2", 100)
         tough(w)
     end)
+
+    -- A plainly dead corpse is gone to the library (w.target's dead: no health), so a dwell does not keep the carry
+    -- fresh: past 10 s the library drops the rate itself and the track stays.
+    for _, case in ipairs({ { 12 }, { 30 }, { 15, cleared = true } }) do
+        local first = case.cleared and "none, then the corpse again" or "a targeted corpse"
+        it(("%s, %d s, then a pull: never under 30 s, the track kept"):format(first, case[1]), function()
+            local w = boot()
+            killFirst(w, 6)
+            if case.cleared then
+                w.none()
+                w.wait(1)
+            end
+            w.target("Creature-1", 0, true)
+            w.combat(false)
+            w.wait(case[1])
+            w.target("Creature-2", 100)
+            tough(w)
+            assert.are.equal(1, w.tracks)
+        end)
+    end
 
     it("a secret identity cannot be told from the last mob's: forgotten", function()
         local w = boot()

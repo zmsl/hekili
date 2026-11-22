@@ -1360,10 +1360,12 @@ do
     end
 
     -- shortcut: forget at the pull, remove when LibTimeToDie's own fix is vendored (L1730). Left to the library, which
-    -- carries the last mob's rate there: a direct swap in combat, and a swap from a dying mob to a tough one first seen
-    -- below full. Events.lua's PLAYER_TARGET_CHANGED handler calls it; the client clears the target at a kill. Once the
+    -- carries the last mob's rate there: a direct swap in combat, a swap from a dying mob to a tough one first seen
+    -- below full, and a straight swap from a mob that died targeted with no target event (M1) or whose death reads
+    -- secret. Events.lua's PLAYER_TARGET_CHANGED handler calls it; the client clears the target at a kill. Once the
     -- target is gone (none, or a corpse) a next one within the library's carry age is tracked anew, unless its GUID says
-    -- it is the same mob; a later one keeps the track, and with it the learned execute factor.
+    -- it is the same mob; a later one keeps the track, and with it the learned execute factor. A corpse's dwell needs no
+    -- renewal of that age: plainly dead at the event, it is gone to the library, whose carry ages from then.
     local TTD_CARRY = 10 -- seconds: the library's priorAge (Estimator.lua, not in its API); goes with the shortcut
     local lastTarget, goneAt
     function ns.TtdTargetChanged()

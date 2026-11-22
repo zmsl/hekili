@@ -366,9 +366,11 @@ The library carries a target's rate to the next one within 10 s. Until its own f
 right after a kill, or a corpse) and when the next living target comes within those 10 s (`TTD_CARRY`) releases the
 track and tracks again, unless the GUID says it is the same mob (a secret GUID forgets). That drops the carried rate,
 the keep and the learned execute factor. A later target keeps the track: the library drops the rate itself and the
-factor stays.
-The library's part, so still carried: a direct swap in combat, and a swap from a dying mob to a tough one first seen
-below full.
+factor stays. A corpse that stays targeted doesn't renew the 10 s on either side: plainly dead at a target or health
+event, it is gone to the library, which stops answering for it, so the carried rate ages from then.
+The library's part, so still carried: a direct swap in combat, a swap from a dying mob to a tough one first seen
+below full, and a straight swap from a mob that died while targeted with no target event (M1: within 10 s, or at any
+dwell when no health event told the library either) or whose death reads secret (the library keeps answering for it).
 
 Unknown is 3600: any other state, a target that is not plainly attackable (a secret answer included), several enemies,
 no library. A refused track is
