@@ -2337,6 +2337,12 @@ function I.ResourceShift(r, delta, t, event, late)
         dh, u = cover(delta, R.liftH[r], R.liftCH[r] - snCH[j])
         R.liftH[r], snCH[j] = R.liftH[r] - u, snCH[j] + u
     end
+    -- the band already holds this gain: it starts no hold, no short answer is put down to it, and lo takes none (the
+    -- band's low end has it; est and hi the re-assert clips, which only narrows, so it could not take lo back)
+    local shown = delta > 0 and event ~= Obs.Avoided and shownGain(r, delta, t)
+    if shown then
+        dl = 0
+    end
     R.est0[r] = clamp(R.est0[r] + de, max)
     local lo = R.lo0[r]
     R.lo0[r] = clamp(lo + dl, max)
@@ -2347,12 +2353,10 @@ function I.ResourceShift(r, delta, t, event, late)
     norm(r)
     R.hi0[r] = clamp(R.hi0[r] + dh, max)
     R.pinDelta[r] = R.pinDelta[r] + delta
-    local shown = false -- the band already holds this gain: it starts no hold, and no short answer is put down to it
     if delta ~= 0 then
         moved(r, t)
         seen(r, t, OTHER)
         if event ~= Obs.Avoided then
-            shown = delta > 0 and shownGain(r, delta, t)
             if not shown and t > R.shiftT[r] then
                 R.shiftT[r] = t
             end

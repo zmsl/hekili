@@ -4306,6 +4306,18 @@ describe("resource bands (lane B4)", function()
             is(NRG, 40 - EPS, 40 - EPS, 40 - EPS)
         end)
 
+        it("gain-first inside a wide band: the gain is in the low end already, never twice in lo", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            band(10.08, MANA, 460, 470, 10.06) -- 457 and a gain of 5: 462
+            I.Fold(10.11)
+            I.ResourceShift(MANA, 5, 10.11, Obs.CastSuccess)
+            band(10.11, MANA, 460, 470, 10.06)
+            I.Fold(10.11)
+            assert.is_true(R.lo0[MANA] < 462, R.lo0[MANA]) -- the truth
+            assert.is_true(R.est0[MANA] >= 460 and R.hi0[MANA] >= 465)
+        end)
+
         it("a rise smaller than the gain is another's: the gain still steps forward", function()
             at(10)
             band(10, NRG, 5, 6)

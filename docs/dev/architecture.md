@@ -663,8 +663,8 @@ exact band counts as readable only in the swing forecast (`predict`, `VS.SwingPe
 band's stamp (a spend or gain, a swing's step, a periodic tick) steps forward from it: the band is held until it
 moves or `I.bandShows[r]` has passed (`h:Latency()` plus `I.BAND_MARGIN`, the client's own delay; about 0.17 s at 60
 fps); a refund holds nothing. A spend also holds a newer band whose low end has not fallen (the display may trail the
-cast), and a gain the band already rose by within `I.BAND_MARGIN` holds nothing and excuses no short answer (the display
-may lead the cast). A hit on us is no such event (owner L1723, which narrows L1673): its rage shows at the damage and a
+cast), and a gain the band already rose by within `I.BAND_MARGIN` holds nothing, adds nothing to lo and excuses no
+short answer (the display may lead the cast). A hit on us is no such event (owner L1723, which narrows L1673): its rage shows at the damage and a
 melee row trails that by 0.39-0.57 s, so while a band is live the row, and a reaction's gain at it, moves nothing and
 holds nothing (the taken rate's bin still counts a plain amount's), and rage per hit is not learned. Regen is measured
 between two true crossings (the low end rose to the last top) with no known change between (so never from percent
