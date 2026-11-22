@@ -358,7 +358,7 @@ describe("time to die with more than one enemy (lane B8)", function()
         local H = boot()
         count(H, 2)
         count(H, 2)
-        assert.are.equal(5, H.Hekili:GetTTD("target"))
+        assert.are.same({ 5, 3600 }, { H.Hekili:GetTTD("target"), H.Hekili:GetGreatestTTD() })
         count(H, 1)
         count(H, 1)
         rawget(H.env, "LibStub").libs[MAJOR].h.state = "priming"
