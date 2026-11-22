@@ -578,15 +578,96 @@ describe("the synthesized combat log", function()
             })
         end)
 
-        it("emits no row when nobody is known to target us, or the answer is secret", function()
-            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 300, 1)
+        it("gives each avoid and wound nobody is known for a row with no source, in the client's shape", function()
+            for k, act in ipairs({ "DODGE", "PARRY", "BLOCK", "MISS" }) do
+                ctl.now = k
+                ctl.Fire("UNIT_COMBAT", "player", act, "", fake.SECRET, 1)
+                assert.are.same({
+                    k,
+                    "SWING_MISSED",
+                    false,
+                    "",
+                    "",
+                    L.NONE_FLAGS,
+                    0,
+                    "Player-1",
+                    "",
+                    L.PLAYER_FLAGS,
+                    0,
+                    act,
+                    false,
+                    0,
+                    false,
+                }, assert(got[k], act).row)
+                assert.are.equal(15, got[k].n)
+            end
+            ctl.now = 5
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "BLOCK_REDUCED", fake.SECRET, 1) -- live: the amount is secret
+            local w = got[5].row
+            assert.are.same(
+                { "SWING_DAMAGE", 21, "", L.NONE_FLAGS, "Player-1", 0, 1 },
+                { w[2], got[5].n, w[4], w[6], w[8], w[12], w[16] }
+            )
+            ctl.now = 6
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 70, 4)
+            local s = got[6].row
+            assert.are.same(
+                { "SPELL_DAMAGE", 24, "", L.NONE_FLAGS, "Player-1", 0, 4, 70 },
+                { s[2], got[6].n, s[4], s[6], s[8], s[12], s[14], s[15] }
+            )
+            assert.are.same({ 6, 6, 0 }, { #got, L.unattributed, L.onus.credited })
+        end)
+
+        it("gives a hit no source while the answer is secret or the attacker's GUID is", function()
             ctl.guid.target = "Creature-1"
             ctl.unitIs.targettarget = fake.SECRET
             ctl.Fire("PLAYER_TARGET_CHANGED")
             ctl.Fire("UNIT_COMBAT", "player", "PARRY", "", 0, 1)
-            assert.are.equal(0, #got)
-            assert.are.equal(2, L.unattributed)
             assert.are.equal("secret", I.Sources.status["UnitIsUnit target-of"])
+            ctl.guid.target, ctl.unitIs.targettarget = fake.SECRET, "player" -- the Map restriction: on us, who unknown
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.Fire("UNIT_COMBAT", "player", "DODGE", "", 0, 1)
+            assert.are.same({ 2, 2 }, { #got, L.unattributed })
+            assert.are.same({ "", "" }, { got[1].row[4], got[2].row[4] })
+        end)
+
+        it("makes no row for what is no hit or avoid, or whose action is secret", function()
+            for _, act in ipairs({ "HEAL", "ENERGIZE", "ABSORB", fake.SECRET }) do
+                ctl.Fire("UNIT_COMBAT", "player", act, "", fake.SECRET, 1)
+            end
+            assert.are.same({ 0, 0 }, { #got, L.unattributed })
+        end)
+
+        it("teaches no clock and no band from a hit with no source: a full clock table keeps every attacker", function()
+            local learned, learn = 0, I.Bands.Learn
+            I.Bands.Learn = function(...)
+                learned = learned + 1
+                return learn(...)
+            end
+            for k = 1, 8 do -- eight attackers, each alone once: every clock taken, the first's anchor the oldest
+                local unit = "nameplate" .. k
+                onUs(unit, "Creature-" .. k, k == 1 and 2.0 or 3.0)
+                ctl.Fire("NAME_PLATE_UNIT_ADDED", unit)
+                ctl.now = 9 + k
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+                ctl.unitIs[unit .. "target"] = nil
+                ctl.Fire("UNIT_TARGET", unit)
+            end
+            local before = learned
+            ctl.now = 18.5
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1) -- nobody on us
+            ctl.Fire("UNIT_COMBAT", "player", "PARRY", "", 0, 1)
+            I.Bands.Learn = learn
+            assert.are.equal(before, learned)
+            assert.are.equal(10, #got)
+            assert.are.same({ "", "" }, { got[9].row[4], got[10].row[4] })
+            for _, unit in ipairs({ "nameplate1", "nameplate2" }) do
+                ctl.unitIs[unit .. "target"] = "player"
+                ctl.Fire("UNIT_TARGET", unit)
+            end
+            ctl.now = 24 -- the first's clock (10 + 2.0 a swing); the second's predicts 23 and 26
+            ctl.Fire("UNIT_COMBAT", "player", "DODGE", "", 0, 1)
+            assert.are.equal("Creature-1", got[11].row[4])
         end)
 
         it("credits each hit to the attacker whose plain swing speed predicts it, and none off both clocks", function()
@@ -612,13 +693,14 @@ describe("the synthesized combat log", function()
             ctl.Fire("UNIT_COMBAT", "player", "BLOCK", "", 0, 1)
             ctl.now = 15.0 -- A predicts 14.05, B 16.7: off both
             ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 70, 1)
-            assert.are.same({ "Creature-A", "Creature-B", "Creature-A", "Creature-B" }, {
+            assert.are.same({ "Creature-A", "Creature-B", "Creature-A", "Creature-B", "" }, {
                 got[1].row[4],
                 got[2].row[4],
                 got[3].row[4],
                 got[4].row[4],
+                assert(got[5], "the hit off both clocks").row[4],
             })
-            assert.are.equal(4, #got)
+            assert.are.equal(5, #got)
             assert.are.equal("BLOCK", got[4].row[12])
             assert.are.equal(1, L.unattributed)
             assert.are.equal("readable", I.Sources.status["UnitAttackSpeed hostile"])
@@ -639,14 +721,15 @@ describe("the synthesized combat log", function()
             ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
             ctl.now = 33.5 -- on nobody's
             ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
-            assert.are.equal(7, #got)
+            assert.are.equal(8, #got)
             assert.are.equal("Creature-1", got[7].row[4])
+            assert.are.equal("", got[8].row[4])
             assert.are.equal(1, L.unattributed)
             ctl.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate1") -- the token still answers; the plate is gone
             ctl.now = 34.0 -- off the clock, but Creature-1 is alone again
             ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
-            assert.are.equal(8, #got)
-            assert.are.equal("Creature-1", got[8].row[4])
+            assert.are.equal(9, #got)
+            assert.are.equal("Creature-1", got[9].row[4])
         end)
 
         it("learns an attacker's period from the gaps when its speed is secret", function()
@@ -662,8 +745,9 @@ describe("the synthesized combat log", function()
             ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1) -- on Creature-1's learned clock
             ctl.now = 27.0
             ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1) -- on nobody's
-            assert.are.equal(4, #got)
+            assert.are.equal(5, #got)
             assert.are.equal("Creature-1", got[4].row[4])
+            assert.are.equal("", got[5].row[4])
             assert.are.equal(1, L.unattributed)
             ctl.Fire("PLAYER_REGEN_ENABLED") -- combat ends: anchors go, the learned period stays
             ctl.unitIs.nameplate3target = nil
@@ -674,8 +758,8 @@ describe("the synthesized combat log", function()
             ctl.Fire("UNIT_TARGET", "nameplate3")
             ctl.now = 102.02
             ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1) -- two on us: the kept period names Creature-1
-            assert.are.equal(6, #got)
-            assert.are.equal("Creature-1", got[6].row[4])
+            assert.are.equal(7, #got)
+            assert.are.equal("Creature-1", got[7].row[4])
         end)
 
         it("pulls a hostile's clock when it parries (parry haste), once per row on several tokens", function()
@@ -912,7 +996,7 @@ describe("the synthesized combat log", function()
                 twoBands()
                 local u = L.unattributed
                 hit(31.95, 40) -- A's clock (32) and B's (31.9); neither band holds 40: not the nearest clock's
-                assert.are.same({ 6, u + 1 }, { #got, L.unattributed })
+                assert.are.same({ 7, u + 1, "" }, { #got, L.unattributed, got[7] and source(7) })
             end)
 
             it("leaves a wound unattributed while a hostile on us has no band and no clock names it", function()
@@ -922,7 +1006,7 @@ describe("the synthesized combat log", function()
                 ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
                 hit(20, 20)
                 hit(21, 60)
-                assert.are.same({ 0, 2 }, { #got, L.unattributed })
+                assert.are.same({ 2, 2, "", "" }, { #got, L.unattributed, got[1] and source(1), got[2] and source(2) })
             end)
 
             it("credits a wound on one clock to the other whose band alone holds it", function()
@@ -964,7 +1048,7 @@ describe("the synthesized combat log", function()
                 twoBands()
                 hit(35.1, 28) -- off both clocks, inside A's band (up to 1.2 x 24 = 28.8): A's by band, not learned
                 hit(37.6, 29.5) -- off both clocks (A re-anchored at 35.1), outside the band: it was not widened to 28
-                assert.are.same({ "Creature-A" }, { source(7) })
+                assert.are.same({ "Creature-A", "" }, { source(7), got[8] and source(8) })
                 assert.are.equal(1, L.unattributed)
             end)
         end)
@@ -987,6 +1071,24 @@ describe("the synthesized combat log", function()
                 ctl.Fire("PLAYER_FOCUS_CHANGED")
                 I.Sources.Flush()
             end, 10000)
+            assert.are.equal(0, bytes)
+        end)
+
+        it("allocates nothing per hit with no source", function()
+            local sink = I.Events.CreateFrame("Frame")
+            local GetInfo, seen = Facade.CombatLogGetCurrentEventInfo, 0
+            sink:SetScript("OnEvent", function()
+                GetInfo()
+                seen = seen + 1
+            end)
+            sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+            cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+            local bytes = alloc.bytes(function(i)
+                ctl.now = i * 2
+                ctl.Fire("UNIT_COMBAT", "player", i % 2 == 0 and "WOUND" or "DODGE", "", fake.SECRET, i % 3)
+                I.Sources.Flush()
+            end, 10000)
+            assert.is_true(seen >= 10000)
             assert.are.equal(0, bytes)
         end)
     end)

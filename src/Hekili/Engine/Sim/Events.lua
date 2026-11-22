@@ -1746,7 +1746,8 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
     end
 
     if state.role.tank and state.GUID == destGUID and subtype:sub(1,5) == 'SWING' and not IsActuallyFriend( sourceName ) then
-        ns.updateTarget( sourceGUID, time, true )
+        -- Forever (L1691 item 1): no known attacker is no enemy. Tested here, not above: the next branch is our own swing's.
+        if sourceGUID ~= "" then ns.updateTarget( sourceGUID, time, true ) end
 
     elseif subtype:sub( 1, 5 ) == 'SWING' and not multistrike then
         if subtype == 'SWING_MISSED' then offhand = spellName end

@@ -18,7 +18,7 @@ I.Log = L
 L.POOL = 64
 L.PLAYER_FLAGS = 0x511 -- mine, friendly, player
 L.HOSTILE_FLAGS = 0xA48 -- outsider, hostile, NPC
-L.NONE_FLAGS = 0x80000000 -- COMBATLOG_OBJECT_NONE: a death row's empty source
+L.NONE_FLAGS = 0x80000000 -- COMBATLOG_OBJECT_NONE: an empty source (a death, a hit on us by nobody known)
 
 local rows = {}
 for i = 1, L.POOL do
