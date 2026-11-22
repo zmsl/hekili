@@ -266,3 +266,134 @@ describe("player start", function()
         end)
     end)
 end)
+
+-- Lane B3 (LibHiddenValues integration design 2.3, 2.5): the library's band on our health (Sources/Bands.lua, channel 0,
+-- fractions 0-1) sets the player's health record, its middle the estimate, observed; a plain read of the same drain is
+-- exact and wins; an unknown band is a secret read's "unknown" (full, conf 0). The fake library (harness fake_lhv.lua)
+-- answers the band 11 frames after the watch, the build's.
+describe("the player's health from the band (lane B3)", function()
+    local fake_lhv = require("Game.harness.fake_lhv")
+    local F = 1 / 60
+    local VS, I, S, api, ctl, lhv, Obs
+
+    local function drain(t)
+        ctl.Tick(t)
+        S.RunPolls(t)
+        I.Fold(t, false)
+        I.Settle(t)
+    end
+
+    local function frames(n)
+        for _ = 1, n do
+            drain(ctl.now + F)
+        end
+    end
+
+    local function push(hp) -- our true health out of 1000, now
+        lhv:Push("health", "player", nil, hp, 1000, ctl.now)
+    end
+
+    local function read()
+        local h = VS.Health("player", ctl.now)
+        return { h.lo, h.hi, h.est, h.basis, h.last.observed.event }
+    end
+
+    before_each(function()
+        api = fake.new()
+        ctl = api.ctl
+        ctl.now = 100
+        lhv = fake_lhv.new({
+            now = function()
+                return ctl.now
+            end,
+        })
+        ctl.LibStub = function(name)
+            return name == "LibHiddenValues-1.0" and lhv or nil
+        end
+        local ns = load.module()
+        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        S, Obs = I.Sources, VS.Obs
+        local def = fs.def(fs.new(9))
+        def.providers = { bands = true }
+        VS.Start(api)
+        I.Build(def, ctl.now)
+        ctl.health, ctl.healthMax = 1000, 1000
+    end)
+
+    it("in combat a live band sets lo, hi and the middle, observed; a heal raises it", function()
+        push(1000)
+        frames(1)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.combat = true
+        push(340)
+        frames(12)
+        assert.is_true(I.bandLive[0])
+        assert.are.same({ 0.34, 0.35, 0.345, "observed", Obs.Band }, read())
+        assert.is_true(VS.Health("player", ctl.now).conf > 0.99)
+        push(705) -- a heal
+        frames(3)
+        assert.are.same({ 0.7, 0.71, 0.705, "observed", Obs.Band }, read())
+    end)
+
+    it("out of combat the plain read of the same drain is exact and wins", function()
+        ctl.health = 300
+        push(340)
+        frames(12)
+        assert.is_true(I.bandLive[0]) -- logged, not applied
+        assert.are.same({ 0.3, 0.3, 0.3, "observed", Obs.Read }, read())
+    end)
+
+    it("at the pull: the band folds after CombatStart and the secret read, so the drain never reads full", function()
+        push(340)
+        ctl.health = 340
+        frames(12)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.combat = true
+        frames(1)
+        assert.are.same({ 0.34, 0.35, 0.345, "observed", Obs.Band }, read())
+    end)
+
+    it("an unknown band restores 'unknown' (full, conf 0); in the drain of a plain read it leaves the read", function()
+        S.Direct(Obs.Band, 101, 0, 0.5, 0.51)
+        I.Fold(101, false)
+        assert.are.same({ 0.5, 0.51, 0.505, "observed", Obs.Band }, read())
+        S.Direct(Obs.Band, 102, 0, 1, 0)
+        I.Fold(102, false)
+        local h = VS.Health("player", 102)
+        assert.are.same({ 0, 1, 1, "default", 0 }, { h.lo, h.hi, h.est, h.basis, h.conf })
+        S.Direct(Obs.Read, 103, 0, 0.3, I.ReadOf.Health)
+        S.Direct(Obs.Band, 103, 0, 1, 0)
+        I.Fold(103, false)
+        h = VS.Health("player", 103)
+        assert.are.same({ 0.3, 0.3, "observed" }, { h.lo, h.est, h.basis })
+        S.Direct(Obs.Band, 103, 0, 0.5, 0.51) -- a band in the same drain: the read still wins
+        I.Fold(103, false)
+        assert.are.equal(0.3, VS.Health("player", 103).est)
+    end)
+
+    it("another channel's band leaves the player's health alone", function()
+        S.Direct(Obs.Band, 101, -1, 0.2, 0.21)
+        S.Direct(Obs.Band, 101, 1, 40, 41)
+        I.Fold(101, false)
+        local h = VS.Health("player", 101)
+        assert.are.same({ 1, "default" }, { h.est, h.basis })
+    end)
+
+    it("folds a band, an unknown and a plain-read drain allocating nothing", function()
+        local t = 200
+        assert.are.equal(
+            0,
+            alloc.bytes(function(i)
+                t = t + 0.01
+                if i % 3 == 0 then
+                    S.Direct(Obs.Band, t, 0, 1, 0)
+                elseif i % 3 == 1 then
+                    S.Direct(Obs.Read, t, 0, 0.3, I.ReadOf.Health)
+                end
+                S.Direct(Obs.Band, t, 0, 0.5, 0.51)
+                I.Fold(t, false)
+                VS.Health("player", t)
+            end, 3000)
+        )
+    end)
+end)

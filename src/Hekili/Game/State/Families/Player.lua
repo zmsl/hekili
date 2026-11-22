@@ -24,7 +24,8 @@ I.On(Obs.Moving, function(o)
     I.moving = o.b == 1
 end)
 
--- Health (player: plain reads; target: Families/TargetHealth.lua; others: the default 1.0), spell haste, time to die.
+-- Health (player: plain reads, the band in combat; target: Families/TargetHealth.lua; others: the default 1.0), spell
+-- haste, time to die.
 local health, otherHealth, spellHaste, ttd
 I.healthMax = 0
 
@@ -179,6 +180,21 @@ I.On(Obs.Read, function(o, t)
     end
 end)
 
+-- (LibHiddenValues integration design 2.3, 2.5; lane B3) The library's band on our health (Sources/Bands.lua, channel
+-- 0, fractions 0-1; poll 1.6 folds after poll 1.5's read and the drain's staged events): lo, hi and the middle,
+-- observed; unknown (b > c) is a secret read's "unknown". A plain read of this drain is exact and wins either way.
+I.On(Obs.Band, function(o, t)
+    local s = health.last.observed
+    if o.a ~= 0 or s.t == t and s.event == Obs.Read then
+        return
+    elseif o.b > o.c then
+        healthUnknown(t, Obs.Band)
+    else
+        health.lo, health.hi, health.est = o.b, o.c, (o.b + o.c) / 2
+        I.Sample(health, "observed", health.est, t, Obs.Band)
+    end
+end)
+
 I.On(Obs.Haste, function(o, t)
     if o.c == 2 then
         spellHaste.est, spellHaste.lo, spellHaste.hi = o.b, o.b, o.b
@@ -190,8 +206,8 @@ I.On(Obs.Haste, function(o, t)
     end
 end)
 
---- (spec §3.2) Health fraction 0..1: the player's last plain read (conf decaying as an aura), 1 (full) before one and
---- after a secret read; the target's belief
+--- (spec §3.2) Health fraction 0..1: the player's last plain read or live band (conf decaying as an aura), 1 (full)
+--- before one and after a secret read with no band; the target's belief
 --- (Families/TargetHealth.lua); every other unit the default 1.0.
 function VS.Health(unit, now)
     if unit == "player" then

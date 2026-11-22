@@ -1,7 +1,8 @@
 -- tests/Forever/apl_warnings_spec.lua: ns.AplSecretToken (Task 9b; Engine/Sim/AplWarnings.lua, the core's own
 -- load-time scan since border batch 3), the scan behind Hekili:LoadScript's "Forever: ... is secret" warnings for
--- conditions that read target health (spec §6.5, §7.4) or the player's (hidden in combat, owner L1462); time to die
--- answers "unknown" (Targets.lua's FOREVER): unwarned.
+-- conditions that read target health (spec §6.5, §7.4); the player's own health (hidden in combat, owner L1462) is read
+-- from the hidden-value band in combat since lane B3, unwarned (FABLE-FOR-OWNER 7); time to die answers "unknown"
+-- (Targets.lua's FOREVER): unwarned.
 local alloc = require("Game.State.helpers.alloc")
 
 describe("APL secret-token scan", function()
@@ -23,24 +24,19 @@ describe("APL secret-token scan", function()
         assert.are.equal("target.health_percent", scan("target.health_percent>80"))
     end)
 
-    it("finds the player's health, hidden in combat", function()
-        assert.are.same({
-            "health.pct",
-            "your health is hidden in combat",
-            "your health reads full in combat, so a low-health check never passes there",
-        }, { scan("(health.pct<35)") })
-        for _, hp in ipairs({ "health.current<5000", "health.deficit>5000", "health.percent>50", "health.actual<9" }) do
-            assert.are.equal(hp:match("^[%a.]+"), scan("buff.spender_c.up&" .. hp), hp)
+    it("leaves the player's own health unwarned: the band reads it in combat (lane B3, FABLE-FOR-OWNER 7)", function()
+        for _, hp in ipairs({
+            "(health.pct<35)",
+            "health.current<5000",
+            "health.deficit>5000",
+            "health.percent>50",
+            "health.actual<9",
+            "health<5000",
+            "buff.spender_c.up&!(health>10)",
+        }) do
+            assert.is_nil(scan("buff.spender_c.up&" .. hp), hp)
         end
-        assert.are.equal("target.health.pct", scan("target.health.pct<20&health.pct<50")) -- target rows first
-    end)
-
-    it("finds a bare `health`, not health.max or a longer name", function()
-        assert.are.equal("health", scan("health<5000"))
-        assert.are.equal("health", scan("buff.spender_c.up&!(health>10)"))
-        assert.is_nil(scan("health.max>5"))
-        assert.is_nil(scan("target.health<5"))
-        assert.is_nil(scan("health_regen>5"))
+        assert.are.equal("target.health.pct", scan("health.pct<50&target.health.pct<20")) -- the target's still is
     end)
 
     it("finds a token in a target_if expression", function()

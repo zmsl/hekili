@@ -1,7 +1,9 @@
 -- tests/Forever/health_read_spec.lua (central fix 12 item 2; owner L1461, L1462): the client hides the player's health
--- in combat (UnitHealth and UnitHealthMax "player" secret, plain out of combat; the fake client answers so). A priority
--- line that reads it (`health.pct`) never fires while the client keeps the health secret (unknown reads as full, no
--- compare on a secret) and reads the plain value where the client gives one.
+-- in combat (UnitHealth and UnitHealthMax "player" secret, plain out of combat; the fake client answers so). Without the
+-- hidden-value library a priority line that reads it (`health.pct`) never fires while the client keeps the health
+-- secret (unknown reads as full, no compare on a secret) and reads the plain value where the client gives one. With
+-- the library's band (lane B3, integration design 2.5) it reads the band's middle in combat. No load-time warning
+-- either way (FABLE-FOR-OWNER 7: the own-health rows of Engine/Sim/AplWarnings.lua are gone).
 local headless = require("Game.harness.headless")
 local fake = require("Game.State.helpers.fake_api")
 local dlw = require("Forever.helpers.druid_loop_world")
@@ -25,16 +27,12 @@ describe("a player health read in a priority", function()
         return H.Hekili.Scripts:CheckScript(scriptID)
     end
 
-    -- the load-time warning (Engine/Sim/AplWarnings.lua), once: H.errors holds the format, ErrorKeys the text
-    local warned = { "Forever: %s; `%s` in pack `%s` list `%s` entry %d (%s): %s." }
+    -- no load-time warning (FABLE-FOR-OWNER 7): H.errors holds none
+    local warned = {}
 
-    it("loads on a Druid with one warning: the player's health is hidden in combat", function()
+    it("loads on a Druid with no warning: the player's health is no longer a dead read", function()
         assert.are.same(warned, H.errors)
-        local text = (
-            "Forever: your health is hidden in combat; `health.pct` in pack `%s` list `%s` entry 1"
-            .. " (frenzied_regeneration): your health reads full in combat, so a low-health check never passes there."
-        ):format(pack, list)
-        assert.are.same({ text }, H.Hekili.ErrorKeys)
+        assert.are.same({}, H.Hekili.ErrorKeys)
     end)
 
     it("the fake client hides the player's health in combat only", function()
@@ -60,7 +58,7 @@ describe("a player health read in a priority", function()
         end
         H.ctl.combat = false
         assert.is_true(fires(H.ctl.now + 1))
-        assert.are.same(warned, H.errors) -- the load's warning only
+        assert.are.same(warned, H.errors)
     end)
 
     it("never fires while the client keeps the health secret, and honours a plain read", function()
@@ -75,6 +73,64 @@ describe("a player health read in a priority", function()
         H.ctl.unitHealth.player = 200
         assert.is_true(fires(H.ctl.now + 1))
         assert.are.same(warned, H.errors)
+    end)
+end)
+
+-- Lane B3: the band source (Sources/Bands.lua) on the harness's fake library (fake_lhv.lua, in the instance's LibStub as
+-- the loop's bands arms install it); the band answers 11 frames after the watch, a change 2 frames after it fires.
+describe("a player health read in a priority, with the hidden-value band (lane B3)", function()
+    local fake_lhv = require("Game.harness.fake_lhv")
+    local F = 1 / 60
+    local H, scriptID, lhv
+
+    setup(function()
+        local C = dlw.Guardian
+        H = headless.new({ character = C.character(), pack = C.PACK })
+        lhv = fake_lhv.new({
+            now = function()
+                return H.ctl.now
+            end,
+        })
+        local major, minor = lhv:GetVersion()
+        local stub = rawget(H.env, "LibStub")
+        stub.libs[major], stub.minors[major] = lhv, minor
+        H.Hekili.bandOff = false
+        H.Hekili:ProvidersChanged()
+        local lists = H.Hekili.DB.profile.packs[C.PACK].lists
+        local list = next(lists)
+        table.insert(lists[list], 1, { action = "frenzied_regeneration", criteria = "health.pct<50", enabled = true })
+        H.Hekili:LoadScripts()
+        scriptID = C.PACK .. ":" .. list .. ":1"
+    end)
+
+    -- n frames, a cycle each; whether the line fires after the last, and the state's health.pct then
+    local function frames(n)
+        for i = 1, n do
+            assert.is_true(headless.cycle(H, H.ctl.now + F), i)
+        end
+        H.Hekili.State.reset()
+        return H.Hekili.Scripts:CheckScript(scriptID), H.Hekili.State.health.pct
+    end
+
+    local function push(hp)
+        lhv:Push("health", "player", nil, hp, 1000, H.ctl.now)
+    end
+
+    it("fires in combat on the band's middle, follows a heal, and reads full once the band is lost", function()
+        H.ctl.health, H.ctl.healthMax = 1000, 1000
+        push(1000)
+        assert.are.same({ false, 100 }, { frames(14) })
+        H.ctl.combat = true
+        H.ctl.Fire("PLAYER_REGEN_DISABLED")
+        push(455)
+        assert.are.same({ true, 45.5 }, { frames(3) })
+        push(505) -- a heal
+        assert.are.same({ false, 50.5 }, { frames(3) })
+        push(495)
+        assert.are.same({ true, 49.5 }, { frames(3) })
+        lhv:SetAvailable("unavailable", "error") -- the capability lost: today's "unknown", full
+        assert.are.same({ false, 100 }, { frames(3) })
+        assert.are.same({}, H.errors)
     end)
 end)
 
