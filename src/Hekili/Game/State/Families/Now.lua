@@ -90,6 +90,7 @@ I.nowErrors, I.nowError, I.nowRuns, I.castsRun = 0, nil, 0, 0
 -- keeps it in `ability.funcs`, where RunStressTest or an APL reading `action.x.now` can call it) writes nothing.
 local T, curA, live = 0, 0, false
 local flight = 0 -- the running cast's travel (s): its target aura writes start this long after T (`startsAtLanding`)
+local pinned = 0 -- the running cast's target writes go (I.CastSlot): 0 the target, s > 0 memory slot s, -1 nowhere
 -- True while a reaction runs: it is folded after its outcome's time T (a swing's row comes ~0.47 s after the swing, an
 -- avoid at its window's close), so its aura reads answer as of T (I.AuraAsOf), not the belief's latest.
 local asOf = false
@@ -413,6 +414,12 @@ local function aura(u, key, duration, stacks)
             return -- no number: a raising duration (counted by I.Eval) writes nothing
         end
         after = (u == 2 and T + flight or T) + d
+    end
+    if u == 2 and pinned ~= 0 then -- SENT at another mob (L1734): its memory, not the target now; nothing to undo
+        if pinned > 0 then
+            I.AuraMem(pinned, j, T + flight, after, stacks or 1)
+        end
+        return
     end
     if u == 2 and journal and undoN < UNDO then
         local first = true
@@ -872,9 +879,11 @@ local function run(o, t)
         rawset(NAMES, "instant", started == 0)
         rawset(NAMES, "cast_id", A.ids[a][o.c] or A.id[a] or 0) -- `c`: the cast ID's place (Sources/Casts.lua)
         flight = A.lands[a] and travel(a) or 0
+        pinned = I.CastSlot(a, o.t)
         local r, R = A.refundNow[a] and A.slot[a] or 0, I.res
         local e, l, h = R.est0[r], R.lo0[r], R.hi0[r] -- nil with no slot (r 0): not read
         call(A.now[a], a, t)
+        pinned = 0
         if r > 0 then -- the belief's own numbers (never a secret); a gain nets nothing back
             nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = e, l, R.pinT[r], R.liftE[r], R.liftL[r], R.liftH[r]
             e, l, h = e - R.est0[r], l - R.lo0[r], h - R.hi0[r]

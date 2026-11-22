@@ -214,6 +214,49 @@ end
 S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)
     swap(api, t)
 end)
+
+-- Our cast's target, pinned at its SENT (L1734): the castGUID, the target's memory slot, its key (an orphan's: its ID)
+-- and the swap serial then; by ability index, each success's copy of it (pinT: the success's time, -1 none).
+local sentCast, sentSlot, sentKey, sentSwap = nil, 0, nil, 0
+local pinT, pinSlot, pinKey, pinSwap = {}, {}, {}, {}
+local function keyOf(s)
+    local k = guid[s]
+    if k == false then
+        return I.targetID
+    end
+    return k
+end
+S.On("UNIT_SPELLCAST_SENT", "player", function(api, t, unit, _, castGUID)
+    if unit == "player" then
+        sentCast, sentSlot, sentKey, sentSwap = castGUID, I.targetSlot, keyOf(I.targetSlot), I.targetSwapN
+    end
+end)
+--- Our cast of ability a succeeded at t (Sources/Casts.lua): it keeps its SENT's pin when its castGUID is that SENT's.
+--- Allocates nothing.
+function I.PinSent(a, t, castGUID)
+    if castGUID ~= nil and castGUID == sentCast then
+        pinT[a], pinSlot[a], pinKey[a], pinSwap[a] = t, sentSlot, sentKey, sentSwap
+    else
+        pinT[a] = -1
+    end
+end
+--- Where our cast of ability a that succeeded at t writes the target's auras, at its fold (Families/Now.lua): 0 the
+--- target (no target change since its SENT, a tab back, no target at SENT, no SENT seen), s > 0 the memory slot of the
+--- mob it was SENT at, -1 nowhere (that mob is no longer remembered, or its slot holds another). Allocates nothing.
+function I.CastSlot(a, t)
+    local s = pinSlot[a]
+    if pinT[a] ~= t or pinSwap[a] == I.curSwapN or s == 0 then
+        return 0
+    elseif keyOf(s) ~= pinKey[a] then
+        return -1
+    end
+    return s == I.curSlot and 0 or s
+end
+I.OnBuild(function(def)
+    for a = 1, #def.abilities do
+        pinT[a], pinSlot[a], pinKey[a], pinSwap[a] = -1, 0, nil, 0
+    end
+end)
 S.OnStart(swap)
 I.OnBuild(function(def, now)
     if tokenMode then -- the build made the memory arrays anew and cleared the log: no ID's key survives it

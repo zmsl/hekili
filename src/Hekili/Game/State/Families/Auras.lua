@@ -393,6 +393,20 @@ local function load(s)
     changed(2)
 end
 
+--- Our cast's aura j in memory slot s, the mob it was SENT at, not the target now (L1734; Families/Now.lua): expiry
+--- `expires` (0: down), applied, stacks. The target's set is unchanged: no delta. Allocates nothing.
+function I.AuraMem(s, j, applied, expires, stacks)
+    if expires <= 0 then
+        memExp[s][j], memApplied[s][j], memStacks[s][j], memInst[s][j] = 0, 0, 0, 0
+        return
+    end
+    if memExp[s][j] <= applied then -- down (or run out unswept): a new application
+        I.nextInst = I.nextInst + 1
+        memInst[s][j] = I.nextInst
+    end
+    memExp[s][j], memApplied[s][j], memStacks[s][j] = expires, applied, stacks
+end
+
 -- TargetSwap: a is the new target's memory slot (0: none). TargetGone: forget slot a.
 I.On(Obs.TargetSwap, function(o)
     save(I.curSlot)

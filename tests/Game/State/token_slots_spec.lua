@@ -66,8 +66,9 @@ describe("token-keyed target memory (lane T2m)", function()
         return n
     end
 
-    -- w: the world; plates: how many plates are up (default 3); cdm: the Cooldown Manager tracks the debuff.
-    local function start(w, plates, cdm)
+    -- w: the world; plates: how many plates are up (default 3); cdm: the Cooldown Manager tracks the debuff; prep(def):
+    -- runs before the build.
+    local function start(w, plates, cdm, prep)
         world = w
         api, ctl = fake.new()
         ns = load.module()
@@ -81,6 +82,9 @@ describe("token-keyed target memory (lane T2m)", function()
             ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
             ti = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
             def.providers = { presence = "router", viewer = true }
+        end
+        if prep then
+            prep(def)
         end
         I.Build(def, 1)
         VS.Start(api)
@@ -755,6 +759,106 @@ describe("token-keyed target memory (lane T2m)", function()
             ctl.now = 13
             ctl.Fire("PLAYER_ENTERING_WORLD")
             assert.are_not.equal(old, I.plateID[2])
+        end)
+    end)
+
+    -- Ledger L1734 (owner's A): a hard cast's debuff lands on the mob it was SENT at, the slot pinned there, whatever
+    -- the target is at its success. Mobs 1 and 2 have plates; mob 5 has none (in the twin, plain Creature-5).
+    describe("a hard cast that lands after a tab (L1734)", function()
+        local n = 0
+        local function hard(d) -- SPENDER_C's `now` puts the debuff up for 15 s on the target, as a class file's does
+            local key
+            for j, au in ipairs(d.auras) do
+                if d.auraIds[j][1] == fs.SPENDER_C then
+                    key = au.key
+                end
+            end
+            for a, obj in ipairs(d.abilities) do
+                if d.abilityIds[a][1] == fs.SPENDER_C then
+                    obj.now = function()
+                        applyDebuff("target", key, 15) -- luacheck: ignore 113
+                    end
+                end
+            end
+        end
+        local function sent(t)
+            n = n + 1
+            ctl.now = t
+            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-h" .. n, fs.SPENDER_C)
+        end
+        local function success(t)
+            ctl.now = t
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-h" .. n, fs.SPENDER_C)
+            fold(t + 0.05)
+        end
+        local function count(t)
+            return ns.Facade.DebuffCount(fs.SPENDER_C, t) or "nil"
+        end
+        -- SENT on mob `from`, a tab to `to` before the success at 12: { on `to`, the count there, back on `from` }.
+        local function run(w, from, to)
+            start(w, 2, nil, hard)
+            tab(from, 10)
+            sent(10.5)
+            tab(to, 11)
+            success(12)
+            local out = { est(12.1) or "down", count(12.1) }
+            tab(from, 13)
+            out[3] = est(13.1) or "down"
+            return out
+        end
+
+        it("plated mob to plated mob: down on the new, up on the old, counted once (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                assert.are.same({ "down", 1, 27 }, run(w, 1, 2), w)
+            end
+        end)
+
+        it("plated mob to a plate-less one: the same (both worlds; under Map that target's count is unknown)", function()
+            assert.are.same({ "down", 1, 27 }, run("guid", 1, 5))
+            assert.are.same({ "down", "nil", 27 }, run("token", 1, 5))
+        end)
+
+        it("from a plate-less mob: never on the new one; under Map that mob is forgotten at the tab", function()
+            assert.are.same({ "down", 1, 27 }, run("guid", 5, 2))
+            -- the plate-less mob's ID and memory go at the tab away (spec 2.8): back on it, a new ID that knows nothing
+            assert.are.same({ "down", 0, "down" }, run("token", 5, 2))
+        end)
+
+        it("a tab in the success's own frame, folded before it: still the old mob's (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, nil, hard)
+                tab(1, 10)
+                sent(10.5)
+                ctl.now = 12
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-h" .. n, fs.SPENDER_C)
+                tab(2, 12) -- the success is staged; the swap is logged first
+                assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                tab(1, 13)
+                near(27, est(13.1), w)
+            end
+        end)
+
+        it("the old mob forgotten before the success (its plate gone under Map): on nobody", function()
+            start("token", 2, nil, hard)
+            tab(1, 10)
+            sent(10.5)
+            tab(2, 11)
+            plate("NAME_PLATE_UNIT_REMOVED", 1, 11.5)
+            success(12)
+            assert.are.same({ "down", 0 }, { est(12.1) or "down", count(12.1) })
+        end)
+
+        it("a tab back before the success: on the target, as with no tab (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, nil, hard)
+                tab(1, 10)
+                sent(10.5)
+                tab(2, 11)
+                tab(1, 11.5)
+                success(12)
+                near(27, est(12.1), w)
+                assert.are.equal(1, count(12.1), w)
+            end
         end)
     end)
 end)
