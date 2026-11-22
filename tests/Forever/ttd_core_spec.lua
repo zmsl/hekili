@@ -184,6 +184,24 @@ describe("time to die from LibTimeToDie (lane B8)", function()
         assert.are.equal(0, hk:GetTimeToPct("target", 100))
     end)
 
+    it("time to a percent below full health: scaled by the target health's band, 0 at 0 percent", function()
+        H.ctl.guid.target = "Creature-1"
+        assert.is_true(headless.cycle(H, H.ctl.now + 1))
+        local I, Obs, t = H.ns.VirtualStateInternal, H.ns.VirtualState.Obs, H.ctl.now
+        install(H, lib)
+        lib.h.state, lib.h.est = "live", 20
+        local function band(lo, hi)
+            I.Sources.Direct(Obs.Band, t, -1, lo, hi)
+            I.Fold(t)
+        end
+        band(0.30, 0.31) -- reads 30.5
+        assert.is_true(math.abs(hk:GetTimeToPct("target", 20) - 20 * 10.5 / 30.5) < 1e-9) -- not 16, full health's
+        assert.are.equal(0, hk:GetTimeToPct("target", 35))
+        I.Sources.Direct(Obs.TargetGone, t, 1)
+        I.Fold(t)
+        assert.are.equal(0, hk:GetTimeToPct("target", 0)) -- health 0 and 0 percent: never 0 / 0
+    end)
+
     it("Hekili.bandOff releases the track and answers 3600; off again tracks anew", function()
         install(H, lib)
         lib.h.state, lib.h.est = "live", 9
