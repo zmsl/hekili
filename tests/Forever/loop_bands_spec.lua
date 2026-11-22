@@ -3,7 +3,8 @@
 -- family reads its band (lane B2); no priority of these packs reads target health (their low-health lines are the
 -- client's own usability gates), so on the bands-health arm (no power band) every output of a fight still equals the
 -- default arm's on the same seed. The resources read theirs (lane B4): on the bands arms the outputs move, and the
--- believed floor is above the truth on no more polls than the default arm's (the L1525 ratchet, in each lead arm). At every
+-- believed floor is above the truth on no more polls than the default arm's (the L1525 ratchet, in each lead arm but
+-- bands-lead, which is a measurement: a live band is fact, L1671, so it gates nothing and prints both counts). At every
 -- fold the truth lies inside the band the family applied, or the band lagged it (loop.bandCheck: containment, L1666 a),
 -- on each channel the world has; what the family made of it, clipped, holds the truth too, and its estimate lies
 -- within one band of the truth (`est`).
@@ -76,8 +77,13 @@ describe("the bands arm #slow", function()
             end
         )
 
-        -- design 5.4's ratchet in each lead arm, a case apiece so that one over it hides none of the others
-        for _, arm in ipairs({ "bands-lead", "bands-lag", "bands-spend-first", "bands-spend-late" }) do
+        it(case[1] .. ", bands-lead: the floor over the truth, both counts printed, neither gated (L1671)", function()
+            local base, lead = fight(case[2], "default", 3), fight(case[2], "bands-lead", 3)
+            print(("bands-lead, %s: lo over %d, default %d"):format(case[1], lead.loOver, base.loOver))
+        end)
+
+        -- design 5.4's ratchet in each other lead arm, a case apiece so that one over it hides none of the others
+        for _, arm in ipairs({ "bands-lag", "bands-spend-first", "bands-spend-late" }) do
             it(
                 case[1] .. ", " .. arm .. ": the floor over the truth on no more polls than the default arm's",
                 function()
