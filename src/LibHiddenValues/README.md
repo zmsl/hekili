@@ -26,8 +26,10 @@ end)
 
 - The value is in `lo <= value < hi` (percent 0-100; `hi` is inclusive at 100). `dir` is `1` up, `-1` down, `0` for
   the first band after unknown. `t` is `GetTime()` of the frame in which the change was seen (for a handle on several
-  edges, the frame before the call; on a `step` or `precision` source, the frame of the change's last firing, or of a
-  prime's last push, two frames before the call; for an unknown call, the frame of the call); `q` is the quality
+  edges, the frame before the call; on a `step` or `precision` source, the frame of the change's LAST firing (one
+  frame after its first when its firings split over two frames), or of a prime's last push: two frames before the
+  call for a change of the value, one frame for an edge or point bar kept inside a ring quantum, which moves the band
+  while the value stays; for an unknown call, the frame of the call); `q` is the quality
   (`LHV.BAND` = 2, `LHV.UNKNOWN` = 0).
 - At most one call per handle per frame. A handle on one edge is called in the frame of the change; on several edges,
   one frame later, with the net band (a jump over three edges is one call); on a `step` or `precision` source every
@@ -91,12 +93,15 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   energy regen and spending). Named exceptions: a change undone on the next frame whose late halves cancel bar for bar
   rebuilds the same half state and confirms it (for mana a spend and a regen tick undoing each other across a cell,
   1249 -> 1250 -> 1249 read 1200: rare, never seen in the fake runs; pinned in `precision_spec`); firings later than
-  two frames can still confirm a half-landed state (in 15 minutes with firings 1-3 frames late: about 55-65 calls on
-  mana, 15 on energy). A value that changes on every frame is never confirmed: the source holds six frames, primes
-  again and repeats, reading unknown until the changes slow (a `step` watch on a target losing 1% a frame, dead in
-  under about 1.7 s at 60 fps). With each firing 1-2 frames late a cell every two frames already loses about half its
-  calls to desyncs (fake: 50 calls for 99 cells, 3 desyncs; a target dead in about 3.3 s at 60 fps, 6.6 s at 30); a
-  cell every three frames is clean. The owner's
+  two frames can still confirm a half-landed state (in 15 minutes with firings 1-3 frames late: 53-65 calls on mana,
+  15 on energy). A value that moves one way on every frame is never confirmed: the source holds six frames, primes
+  again and repeats, and every watch on that source reads unknown with it until the changes slow, edges-only watches
+  included, another addon's too (bars are shared): a `step` watch on a target losing 1% a frame, dead in under about
+  1.7 s at 60 fps. With each firing 1-2 frames late a cell every two frames already loses about half its calls to
+  desyncs (fake: 50 calls for 99 cells, 3 desyncs; a target dead in about 3.3 s at 60 fps, 6.6 s at 30; before the
+  Gray hold: 1 and 0 desyncs, now 6 at a cell a frame and 3 at a cell every two frames); a cell every three frames is
+  clean. A value alternating on every frame (35, 36, 35, ...) comes back to the held value every other decode: it
+  never desyncs and reads the held value until it settles. The owner's
   run (2026-11-21, mana regenerating 2-3 points at a time) saw about one change in four split over two frames.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every

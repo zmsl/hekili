@@ -83,8 +83,11 @@ below), the read-only cut (minor 6) and the fix lane (minor 7, below). Its in-ga
   | 1-2 | 101 / 0 | 25309 / 34259 | 9324 / 9080 | 9 / 11 | 0 / 0 |
   | 1-3 | 110 / 15 | 38232 / 44441 | 9111 / 8572 | 10 / 24 | 1635 / 1644 |
   One more frame per change (~16 ms); ~7 partial reads a minute at 1-2 late removed. At lag 0, 133 changes on
-  adjacent frames (a regen tick beside a spend) are held again (splits) and called once. A value that changes on every
-  frame is never confirmed (six frames held, a prime, repeating); the ring had the same property for mana. Fake, a
+  adjacent frames (a regen tick beside a spend) are held again (splits) and called once. A value moving one way on
+  every frame is never confirmed (six frames held, a prime, repeating; every watch on the source, edges-only ones of
+  other addons included, goes unknown with it); the ring had the same property for mana. A value alternating on every
+  frame (35, 36, 35, ...) returns to `s.qv` every other decode (the run resets): no desync, the held value stays
+  (re-review 3). Fake, a
   `step` watch and an edges watch on a target falling 99% to 1%, one cell every N frames; calls (unknown) / desyncs,
   before / held:
   | N | lag 0 | 1-2 frames late | 1-3 frames late |
