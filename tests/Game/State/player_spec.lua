@@ -333,6 +333,9 @@ describe("the player's health from the band (lane B3)", function()
         push(705) -- a heal
         frames(3)
         assert.are.same({ 0.7, 0.71, 0.705, "observed", Obs.Band }, read())
+        -- what it applied, for the harness's containment check (lane B2's hook, channel 0)
+        assert.is_true(I.bandUsed[0] > 0)
+        assert.are.same({ 0.7, 0.71 }, { I.bandUsedLo[0], I.bandUsedHi[0] })
     end)
 
     it("out of combat the plain read of the same drain is exact and wins", function()
@@ -341,6 +344,7 @@ describe("the player's health from the band (lane B3)", function()
         frames(12)
         assert.is_true(I.bandLive[0]) -- logged, not applied
         assert.are.same({ 0.3, 0.3, 0.3, "observed", Obs.Read }, read())
+        assert.are.equal(0, I.bandUsed[0])
     end)
 
     it("at the pull: the band folds after CombatStart and the secret read, so the drain never reads full", function()

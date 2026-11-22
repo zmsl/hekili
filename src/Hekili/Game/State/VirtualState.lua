@@ -72,7 +72,7 @@ VS.Obs = {
     -- Families/Now.lua runs the target "kill" reactions when it yields XP (0)
     Band = 44, -- a: the channel (r >= 1 a resource slot, 0 player health, -1 target health); b, c: the band's low and
     -- high end (health in fractions 0-1, power in points; b > c unknown): a live hidden-value band, re-asserted every
-    -- drain (Sources/Bands.lua, integration design 2.1-2.2); no family reads it yet (record-only, lane B1)
+    -- drain (Sources/Bands.lua, integration design 2.1-2.2); read by Families/TargetHealth.lua (-1) and Player.lua (0)
 }
 
 --- What a `PlayerHit` observation reports (its `a`), and each kind's name (the `taken` and `consumedBy` keys): a WOUND

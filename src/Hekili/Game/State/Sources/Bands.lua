@@ -1,16 +1,17 @@
 -- Game/State/Sources/Bands.lua
--- Hidden-value bands (LibHiddenValues integration design 2.1-2.3, 5.1-5.3; lane B1, record-only): the one belief file
+-- Hidden-value bands (LibHiddenValues integration design 2.1-2.3, 5.1-5.3; lane B1): the one belief file
 -- that watches health and power through LibHiddenValues-1.0, reached through the injected client's LibStub
 -- (`api.LibStub`: the game's, a fake in tests). Watches: the target's and the player's health and each tracked power
 -- the library proves (`step = 1`, `points = {}`: the band in points), derived from def.units and def.resources, made
 -- out of combat while the capability is not unavailable (at the build, and at a drain while one is missing). Poll 1.6
 -- re-asserts every live band as Obs.Band at each drain and logs one unknown at the change from live to anything else;
--- I.bandT[channel] keeps the library's stamp. Families/TargetHealth.lua reads the target's (lane B2); player health and
--- power wait for lanes B3-B4. A family that applies a band records it in I.bandUsed (a count) and I.bandUsedLo/Hi (what
--- it applied: the harness's containment check). A counter (I.bandDisagree, design 2.3) counts the settles at which the
--- belief's own value lies more than one cell (1%: 0.01 of health, max / 100 points of power) outside a live band, with
--- no effect on any output (for the target: a usable answer that contradicts the band, FABLE-FOR-OWNER 18). Pauses: every watch after 2 s with no drain (the event facade's frame update, I.BandsIdle), a power whose type
--- is neither the displayed power nor mana. Kill switch: def.providers.bands false releases every watch, out of combat
+-- I.bandT[channel] keeps the library's stamp. Families/TargetHealth.lua reads the target's (lane B2), Families/Player.lua
+-- the player's (lane B3); power waits for lane B4. A family that applies a band records it in I.bandUsed (a count) and
+-- I.bandUsedLo/Hi (what it applied: the harness's containment check). A counter (I.bandDisagree, design 2.3) counts the
+-- settles at which the belief's own value lies more than one cell (1%: 0.01 of health, max / 100 points of power)
+-- outside a live band, with no effect on any output (for the target: a usable answer that contradicts the band,
+-- FABLE-FOR-OWNER 18). Pauses: every watch after 2 s with no drain (the event facade's frame update, I.BandsIdle), a
+-- power whose type is neither the displayed power nor mana. Kill switch: def.providers.bands false releases every watch, out of combat
 -- (in combat at PLAYER_REGEN_ENABLED, decision 89). Self-test: one retry out of combat 5 s after the first
 -- PLAYER_ENTERING_WORLD.
 
