@@ -168,7 +168,7 @@ A talent key the class pack does not know reads as not taken and adds a warning 
 | `target.creature_type` | text | The target's creature type in snake case, such as `beast` or `undead`; `unknown` when hidden | Read | `target.creature_type='undead'` |
 | `target.is_undead`, `target.is_demon` | boolean | The creature type is undead, or demon | Read | `target.is_undead` |
 | `target.moving` | boolean | The target is moving | Read out of combat; false in combat | `!target.moving` |
-| `target.health.pct` | percent | The target's health | 100 unless narrowed (see below) | `target.health.pct<20` |
+| `target.health.pct` | percent | The target's health | In whole-percent steps (see below) | `target.health.pct<20` |
 
 From Feral (wowsims.com), shortened:
 
@@ -180,7 +180,7 @@ actions+=/cat_form,if=!buff.cat_form.up&(toggle.movement&target.outside5|target.
 > **On Forever:** The game gives addons no distance to the target, only whether each spell is in range. Hekili Forever brackets the distance between the ranges of the abilities it tracks. While the bracket is unknown, `target.withinN`, `target.outsideN` and `target.rangeAtoB` are all true, so a range test never blocks a line on its own.
 
 > [!NOTE]
-> **On Forever:** The game hides target health. `target.health.pct` reads 100 until an ability that is usable only at low target health shows that the target is below that point; on a specialization without such an ability it always reads 100. A priority that reads target health gets a "target health is secret" warning in **Warnings** when it loads.
+> **On Forever:** The game hides target health, and Hekili Forever reads it in whole-percent steps: `target.health.pct` reads the middle of the step, such as 19.5 between 19 and 20 percent. For a moment after a target change it reads 100. If the game offers no reading, it reads 100 until an ability that is usable only at low target health shows that the target is below that point.
 
 ## Toggles
 

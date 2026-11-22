@@ -11,9 +11,9 @@ The Forever client is a modern game client that hides many combat values from ad
 | What Hekili Forever can and cannot know | |
 |---|---|
 | Applies to | Every class and specialization |
-| Read directly | Combo points, ability usability, cooldown ready or not, shapeshift form, melee swings, nameplates |
+| Read directly | Combo points, ability usability, cooldown ready or not, shapeshift form, melee swings, nameplates, target health in whole-percent steps |
 | Estimated | Energy, rage, mana, cooldown times, buff and debuff times |
-| Not available | Target health, hits landed on a target |
+| Not available | Hits landed on a target |
 
 ## What the game reports
 
@@ -30,7 +30,7 @@ The Forever client is a modern game client that hides many combat values from ad
 | Cooldown remaining time | Estimated | From the cast time and the ability's cooldown. |
 | Buff and debuff times | Estimated | From the cast and the aura's duration. The game's Cooldown Manager can show some of them ([Cooldown Manager](Cooldown-Manager)). |
 | Hits landed on a target | Not available | |
-| Target health | Not available | So the time until a target dies is unknown. |
+| Target health | Read | In whole-percent steps; unknown for a moment after a target change. The time until a target dies is still unknown. |
 
 ## How a resource is estimated
 
