@@ -12,6 +12,7 @@
 ### Fixed
 
 - Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.
+- A `/reload` while you channel a spell no longer raises an "Unknown buff: cast" error, and the rest of that channel is predicted again.
 
 ### Known issues
 

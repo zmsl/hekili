@@ -44,3 +44,23 @@ describe("a wowsims.com channel line's interrupt_if through the engine", functio
         assert.are.equal("boolean", type(cut))
     end)
 end)
+
+-- L1753: a channel whose start the engine never saw (a /reload mid-channel: UnitChannelInfo answers, no success fired)
+-- is read at the reset from `buff.casting`, its ticks queued, no error.
+describe("a channel already running when the engine first looks (a /reload mid-channel)", function()
+    it("queues its ticks with no error", function()
+        local C = require("Forever.helpers.warlock_world").Affliction
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        local st = H.Hekili.State
+        local t0 = H.ctl.now
+        H.ctl.channel = { (t0 - 0.5) * 1000, (t0 + 5.5) * 1000, spell = 1316697 } -- Wrack, 0.5 s in, no success
+        st.reset("Primary", true)
+        assert.are.same({}, H.errors)
+        local ticks = 0
+        for _, e in ipairs(st.queue) do
+            ticks = ticks + (e.type == "CHANNEL_TICK" and 1 or 0)
+        end
+        assert.are.equal(5, ticks) -- 1 to 5 s in; the one at 6 s is the finish's
+    end)
+end)
