@@ -231,6 +231,37 @@ All functions are on `I.Units` (internal; not public surface). None allocates.
 
 Snapshot line: `units live=%d grace=%d gone=%d dead=%d unresolved=%d dup=%d evicted=%d deaths tell=%d poll=%d event=%d`.
 
+### 2.8 Stable IDs (a secret GUID)
+
+Under the Map restriction a unit's GUID is secret and the registry binds nothing. `Game/State/Sources/Target.lua` then
+tells mobs apart by a stable ID: an integer from one session counter, so it never equals a GUID string. Owner's design
+(deferrals L1687, L1690, L1696).
+
+- A plate number gets a new ID when the plate is added and forgets it when the plate is removed. Other plates keep
+  theirs. The client reuses a freed number at once: the mob that takes it gets a new ID.
+- The target takes its plate's ID (the plate whose `UnitIsUnit("target", plate)` answers a plain true), else a new ID
+  per target change.
+- A plate added that is the target adopts the target's ID, with no load and no swap. A target change later in that
+  frame undoes the adoption (the compare answered the new target before its event), so two mobs never merge.
+- The target keeps its ID and its live record through its plate's removal. An ID that no plate bears is forgotten at
+  the next target change, with its memory.
+- `PLAYER_TARGET_CHANGED` fires twice a swap. The second event keeps the ID: by the plate, and with no plate by being
+  in the first one's frame (one `GetTime`; that both events share a frame is assumed, unmeasured).
+- A rebuild is no target change: the IDs stand, the memory starts over. A flip between plain and secret target GUIDs
+  and a world entry renew every plate's ID and forget all memory. A /reload starts over.
+
+What reads the ID:
+
+- The target's memory slots are keyed by it, as by the GUID in the open world. Through the slot the believed auras
+  (`Families/Auras.lua`) and the target's health (`Families/TargetHealth.lua`) are per ID: a target with no plate
+  still holds a slot, so a usable answer bounds its health and poll 14 asks its range. A slot of an ID never reads
+  "fresh".
+- `Facade.DebuffCount` counts the slots. It stays nil (unknown) while the target took its ID with no plate and none
+  has adopted it: the other enemies' debuffs cannot be known then.
+
+What never does: `Facade.UnitGUID` (nil), a combat-log row's destination, the damage table, the core's enemy count, a
+registry slot and a ticket's pin. The registry's rows about such a unit stay unresolved (2.3).
+
 ## 3. Tickets
 
 The ticket model replaces Rows' pending-action ring (`actT`, `actKind`, `actX`, `actDst`, `actW`, `actRef`, `actLR`,
