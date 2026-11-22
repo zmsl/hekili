@@ -131,6 +131,7 @@ function M.bandCheck(run, H, lhv)
         end
     end
 end
+
 --- A run's M.bandCheck counts, empty.
 function M.newBands()
     return {

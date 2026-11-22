@@ -79,8 +79,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- windows only): a band change covers (the last stamp, this stamp]; `winN[r]` counts the events we know of since the
 -- last stamp, `winT/K[r]` are the latest's time and the only one's source (seen). One swing of a hand and nothing
 -- else: that hand's sample, taught to the scale once it settled landed (its crit's extra out) and I.TAKEN_ROW_LAG
--- passed with no wound row on us. Rage per hit on us is not learned (L1723: until a capture shows a band change against
--- the hit row).
+-- passed with no row on us that is a wound or pays by its `taken`. Rage per hit on us is not learned (L1723: until a
+-- capture shows a band change against the hit row).
 local R = {
     n = 0,
     type = {},

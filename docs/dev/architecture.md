@@ -671,9 +671,10 @@ between two true crossings (the low end rose to the last top) with no known chan
 bands, widened at both ends, nor from regen that passes more than a cell between two stamps, as 10 a second polled less
 often than every point; the flip pins that measured it are off while a band is live), the step scale from a band change
 covering exactly one landed swing (L1673): never with an event within `I.BAND_MARGIN` after a stamp at either end, nor
-with a wound row on us, or any row whose `taken` pays, up to `I.TAKEN_ROW_LAG` (0.6 s) past it. A power that reads plain in combat releases its watch
-when combat ends; where the library has no max the watch is a percent one, a point wider each side, logged only once the
-belief read that max plain. With no live band everything below runs as without the library.
+with a wound row on us, or any row whose `taken` pays, up to `I.TAKEN_ROW_LAG` (0.6 s) past it. A power that reads
+plain in combat releases its watch when combat ends; where the library has no max the watch is a percent one, a point
+wider each side, logged only once the belief read that max plain. With no live band everything below runs as without
+the library.
 
 **Player health.** The client hides the player's own health (`UnitHealth`/`UnitHealthMax("player")` secret in combat, owner L1461,
 and out of it on live, L1710; the headless fake client still answers plain out of combat): `health.pct`,
