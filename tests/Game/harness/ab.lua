@@ -181,7 +181,8 @@ M.ARMS["cycle-follow-off"] = {
 -- through fake_lhv.lua (loop.lua; the observer's `bands` firings), the plain oracle shadow stays without; `bandDrop`
 -- s after the pull the capability is lost (fake_lhv SetAvailable "unavailable", "error"; kept for the session, as the
 -- real library keeps it). The health families (lanes B2, B3) and the resources (B4) read theirs. The lead arms move
--- what the bars show (observer.lua `bandLead`, `spendFirst`, both unmeasured).
+-- what the bars show (observer.lua `bandLead`, `spendFirst`, `gainFirst`, all unmeasured); bands-taken-lag moves the
+-- hit row on us behind its rage, as measured (compare it with `lagged`, the same without bands).
 M.ARMS.bands = { outcomes = "default", presence = "router", viewer = false, bands = true }
 M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandDrop = 20 }
 for name, knobs in pairs({
@@ -189,6 +190,8 @@ for name, knobs in pairs({
     ["bands-lag"] = { bandLead = -1 },
     ["bands-spend-first"] = { spendFirst = 0.05 }, -- three frames at 60 fps: the client's delay the design allows
     ["bands-spend-late"] = { spendFirst = -0.05 },
+    ["bands-gain-first"] = { gainFirst = 0.05 }, -- the display ahead of the cast's success
+    ["bands-taken-lag"] = { takenLag = 0.48 }, -- the measured row lag (docs/research/2026-10-23-damagemeter-api.md)
     ["bands-health"] = { bandPower = false }, -- the health bands alone (no power shown)
 }) do
     M.ARMS[name] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandKnobs = knobs }

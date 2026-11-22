@@ -83,7 +83,7 @@ describe("the bands arm #slow", function()
         end)
 
         -- design 5.4's ratchet in each other lead arm, a case apiece so that one over it hides none of the others
-        for _, arm in ipairs({ "bands-lag", "bands-spend-first", "bands-spend-late" }) do
+        for _, arm in ipairs({ "bands-lag", "bands-spend-first", "bands-spend-late", "bands-gain-first" }) do
             it(
                 case[1] .. ", " .. arm .. ": the floor over the truth on no more polls than the default arm's",
                 function()

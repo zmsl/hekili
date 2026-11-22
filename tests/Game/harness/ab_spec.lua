@@ -31,6 +31,8 @@ describe("the A/B harness", function()
             ["bands-lag"] = { bandLead = -1 },
             ["bands-spend-first"] = { spendFirst = 0.05 },
             ["bands-spend-late"] = { spendFirst = -0.05 },
+            ["bands-gain-first"] = { gainFirst = 0.05 },
+            ["bands-taken-lag"] = { takenLag = 0.48 },
             ["bands-health"] = { bandPower = false },
         }
         for name, knobs in pairs(want) do

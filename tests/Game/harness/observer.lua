@@ -89,9 +89,11 @@ M.DEFAULTS = {
     -- server honours; only with `bands`) `bandLead` +1 / -1: the shown power is the true pool ahead of or behind by its
     -- latest regen tick (a predicted display, or one a server tick late; at full it shows full). `spendFirst` s: above
     -- 0 the cast event arrives that long after the bars show its spend (the power update ahead of the cast's success);
-    -- below 0 the bars show a spend that long after its cast event (a display catching up with the cast).
+    -- below 0 the bars show a spend that long after its cast event (a display catching up with the cast). `gainFirst` s:
+    -- the success of a cast that gains in its own frame arrives that long after the bars show the gain (review I4).
     bandLead = 0,
     spendFirst = 0,
+    gainFirst = 0,
     -- (lane B4) false: the bars show no power (the watches prime for good), the bands-health arm: what the health bands
     -- alone change, which the B2 and B3 loop rows pin.
     bandPower = true,
@@ -287,8 +289,28 @@ function M.new(W, k)
     local castOpen, castFrom, castTo = false, 0, 0 -- our hard cast in progress and its bar (DELAYED, pushback)
     -- One player cast event, echoed on targettarget (another castBarID) while our target targets us: every kind of
     -- them (captures b and c: SENT, START, SUCCEEDED, STOP, FAILED, INTERRUPTED, DELAYED).
-    local function castDone(t, ev) -- (k.spendFirst > 0) the success of a cast that pays, after the bars' spend
-        return k.bands and ev.cost and k.spendFirst > 0 and t + k.spendFirst or t
+    local cursor = 0 -- the truth rows read (obs.step)
+    local function gains(ev) -- whether one of the rows after our cast, in its frame, is a gain of ours (its effects)
+        for i = cursor + 1, #W.truth do
+            local x = W.truth[i]
+            if x.t > ev.t then
+                return false
+            elseif x.src == us and x.kind == "gain" and (x.rage or 0) > 0 then
+                return true
+            end
+        end
+        return false
+    end
+    -- The success of our cast, after what the bars show of it: a spend (k.spendFirst > 0), a gain (k.gainFirst > 0).
+    local function castDone(t, ev)
+        if not k.bands then
+            return t
+        elseif ev.cost and k.spendFirst > 0 then
+            return t + k.spendFirst
+        elseif k.gainFirst > 0 and ev.kind == "cast" and gains(ev) then
+            return t + k.gainFirst
+        end
+        return t
     end
     local function castEv(t, onUs, name, g, id, a4, a5)
         push(t, name, "player", g, id, a4, a5)
@@ -1048,7 +1070,6 @@ function M.new(W, k)
     local function bySeq(a, b)
         return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2])
     end
-    local cursor = 0
     function obs.step(tEnd)
         local truth = W.truth
         while truth[cursor + 1] and truth[cursor + 1].t <= tEnd do

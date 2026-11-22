@@ -254,6 +254,30 @@ describe("the observer", function()
         assert.are.equal(" cast 3", stream({ bandPower = false }))
     end)
 
+    -- (lane B4 review I4) unmeasured: the display ahead of the success of a cast that gains
+    it("(bands) gainFirst puts a gaining cast's success after the shown gain; no other cast moves", function()
+        setup()
+        us.power = 5
+        W.emit({ t = 2, kind = "cast", src = us, spell = "INSTANT" })
+        W.emit({ t = 2, kind = "gain", src = us, rage = 40 })
+        W.emit({ t = 4, kind = "cast", src = us, spell = "INSTANT" })
+        local function stream(knobs)
+            local o = observer.observe(W, setmetatable(knobs, { __index = observer.DEFAULTS }))
+            local rows = {}
+            for _, e in ipairs(events(o, 1)) do
+                if e[2] == "@lhv" and e[3] == "power" then
+                    rows[#rows + 1] = ("%g:%g"):format(e[1], e[6])
+                elseif e[2] == "UNIT_SPELLCAST_SUCCEEDED" and e[3] == "player" then
+                    rows[#rows + 1] = ("cast %g"):format(e[1])
+                end
+            end
+            return table.concat(rows, " ")
+        end
+        assert.are.equal("cast 2 2:45 cast 4", stream({ bands = true }))
+        assert.are.equal("2:45 cast 2.05 cast 4", stream({ bands = true, gainFirst = 0.05 }))
+        assert.are.equal("cast 2 cast 4", stream({ gainFirst = 0.05 })) -- only with bands
+    end)
+
     it("fires the on-swing proc as a school-32 wound on the target and a heal on us, same ms", function()
         setup()
         W.emit({ t = 7.002, kind = "proc", src = us, dst = mob, act = "WOUND", amount = 36, school = 32 })
