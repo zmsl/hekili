@@ -851,6 +851,64 @@ describe("token-keyed target memory (lane T2m)", function()
             assert.are.same({ "down", 0 }, { est(12.1) or "down", count(12.1) })
         end)
 
+        it("a press sent on the new mob during the cast does not take the cast's pin (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, nil, hard)
+                tab(1, 10)
+                sent(10.5)
+                ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-h" .. n, fs.SPENDER_C)
+                tab(2, 11)
+                ctl.now = 11.8 -- the spell queue window: the next press is sent before this cast's success
+                ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-next", fs.SPENDER_C)
+                success(12)
+                assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                tab(1, 13)
+                near(27, est(13.1), w)
+            end
+        end)
+
+        it("no castGUID (a secret one reads nil): the cast pairs by its spell (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, nil, hard)
+                tab(1, 10)
+                ctl.now = 10.5
+                ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", nil, fs.SPENDER_C)
+                ctl.Fire("UNIT_SPELLCAST_START", "player", nil, fs.SPENDER_C)
+                tab(2, 11)
+                ctl.now = 12
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", nil, fs.SPENDER_C)
+                fold(12.05)
+                assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                tab(1, 13)
+                near(27, est(13.1), w)
+            end
+        end)
+
+        it("the old mob died before the success: on nobody (open world)", function()
+            start("guid", 2, nil, hard)
+            tab(1, 10)
+            sent(10.5)
+            tab(2, 11)
+            ctl.now = 11.5
+            ctl.Fire("UNIT_DIED", "Creature-1")
+            fold(11.55)
+            success(12)
+            assert.are.same({ "down", 0 }, { est(12.1) or "down", count(12.1) })
+        end)
+
+        it("the same with the Cooldown Manager tracking the debuff (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, true, hard)
+                tab(1, 10)
+                sent(10.5)
+                tab(2, 11)
+                success(12)
+                assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                tab(1, 13)
+                near(27, est(13.1), w)
+            end
+        end)
+
         it("Facade.TargetID: the target's ID under Map, 0 for a target read plain, nil with none", function()
             start("token", 2)
             tab(1, 10)

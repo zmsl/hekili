@@ -26,8 +26,14 @@ local Plain, Stage, Direct = S.Plain, S.Stage, S.Direct
 -- collide; a friendly target read plain under Map is keyed by its GUID); "" free; false: an orphan, the current
 -- target's slot that no plate's ID finds (I.targetID still names it; forgotten at the next swap unless adopted).
 local guid, used = {}, {}
+local goneN = {} -- by memory slot: its TargetGone logs and rebuilds, so a cast's pin outlives no forgetting (L1734)
 for s = 1, I.TARGET_CAP do
-    guid[s], used[s] = "", 0
+    guid[s], used[s], goneN[s] = "", 0, 0
+end
+-- Slot s's memory is forgotten (logged): its mob died, left or was evicted. Allocates nothing.
+local function gone(t, s)
+    Direct(Obs.TargetGone, t, s)
+    goneN[s] = goneN[s] + 1
 end
 local tokenMode = false -- the key space (true: IDs): set by a secret target, cleared by a hostile plain one
 local forgetN, noPlateN = 0, 0 -- slots forgotten by plate edges and flips; Map swaps no plate answered (snapshot)
@@ -55,7 +61,7 @@ local function forget(s, t)
     if s == I.targetSlot then
         guid[s] = false
     else
-        Direct(Obs.TargetGone, t, s)
+        gone(t, s)
         guid[s] = ""
     end
 end
@@ -113,7 +119,7 @@ local function slotFor(g, t)
     end
     local s = free > 0 and free or oldest
     if guid[s] ~= "" then
-        Direct(Obs.TargetGone, t, s)
+        gone(t, s)
     end
     guid[s], used[s] = g, t
     return s, true -- newly taken: a GUID not held before (or forgotten)
@@ -196,7 +202,7 @@ local function swap(api, t, rebuilt)
     announce(api, t, s, fresh and not tokenMode)
     if not kept then
         if old > 0 and guid[old] == false then -- the orphan: its record was saved by this swap's fold, then forgotten
-            Direct(Obs.TargetGone, t, old)
+            gone(t, old)
             guid[old] = ""
         end
         if noPlate then
@@ -215,46 +221,60 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)
     swap(api, t)
 end)
 
--- Our cast's target, pinned at its SENT (L1734): the castGUID, the target's memory slot, its key (an orphan's: its ID)
--- and the swap serial then; by ability index, each success's copy of it (pinT: the success's time, -1 none).
-local sentCast, sentSlot, sentKey, sentSwap = nil, 0, nil, 0
-local pinT, pinSlot, pinKey, pinSwap = {}, {}, {}, {}
-local function keyOf(s)
-    local k = guid[s]
-    if k == false then
-        return I.targetID
+-- Our cast's target, pinned at its SENT (L1734): the castGUID and spell, the target's memory slot, that slot's forget
+-- count and the swap serial then. A hard cast's START keeps its SENT's (`st*`), so a press sent during the cast (the
+-- spell queue window) cannot take it. By ability index, each success's copy (pinT: the success's time, -1 none).
+local sentCast, sentSpell, sentSlot, sentGone, sentSwap = nil, 0, 0, 0, 0
+local stCast, stSpell, stSlot, stGone, stSwap = nil, 0, 0, 0, 0
+local pinT, pinSlot, pinGone, pinSwap = {}, {}, {}, {}
+-- Whether a cast event names the pinned cast: the same castGUID, or (one secret: nil) both nil and the same spell.
+local function same(castGUID, spellID, cast, spell)
+    if castGUID ~= nil then
+        return castGUID == cast
     end
-    return k
+    return cast == nil and spellID == spell
 end
-S.On("UNIT_SPELLCAST_SENT", "player", function(api, t, unit, _, castGUID)
+S.On("UNIT_SPELLCAST_SENT", "player", function(api, t, unit, _, castGUID, spellID)
     if unit == "player" then
-        sentCast, sentSlot, sentKey, sentSwap = castGUID, I.targetSlot, keyOf(I.targetSlot), I.targetSwapN
+        local s = I.targetSlot
+        sentCast, sentSpell, sentSlot, sentGone, sentSwap = castGUID, spellID, s, goneN[s] or 0, I.targetSwapN
     end
 end)
---- Our cast of ability a succeeded at t (Sources/Casts.lua): it keeps its SENT's pin when its castGUID is that SENT's.
+S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, castGUID, spellID)
+    if unit == "player" and same(castGUID, spellID, sentCast, sentSpell) then
+        stCast, stSpell, stSlot, stGone, stSwap = sentCast, sentSpell, sentSlot, sentGone, sentSwap
+    end
+end)
+--- Our cast of ability a (spellID) succeeded at t (Sources/Casts.lua): it keeps its START's pin, else its SENT's.
 --- Allocates nothing.
-function I.PinSent(a, t, castGUID)
-    if castGUID ~= nil and castGUID == sentCast then
-        pinT[a], pinSlot[a], pinKey[a], pinSwap[a] = t, sentSlot, sentKey, sentSwap
+function I.PinSent(a, t, castGUID, spellID)
+    if same(castGUID, spellID, stCast, stSpell) then
+        pinT[a], pinSlot[a], pinGone[a], pinSwap[a] = t, stSlot, stGone, stSwap
+        stCast, stSpell = nil, 0 -- used: a later cast of the spell with no castGUID cannot take it
+    elseif same(castGUID, spellID, sentCast, sentSpell) then
+        pinT[a], pinSlot[a], pinGone[a], pinSwap[a] = t, sentSlot, sentGone, sentSwap
     else
         pinT[a] = -1
     end
 end
 --- Where our cast of ability a that succeeded at t writes the target's auras, at its fold (Families/Now.lua): 0 the
 --- target (no target change since its SENT, a tab back, no target at SENT, no SENT seen), s > 0 the memory slot of the
---- mob it was SENT at, -1 nowhere (that mob is no longer remembered, or its slot holds another). Allocates nothing.
+--- mob it was SENT at, -1 nowhere (that slot was forgotten since: its mob died, left or was evicted). Allocates nothing.
 function I.CastSlot(a, t)
     local s = pinSlot[a]
     if pinT[a] ~= t or pinSwap[a] == I.curSwapN or s == 0 then
         return 0
-    elseif keyOf(s) ~= pinKey[a] then
+    elseif goneN[s] ~= pinGone[a] then
         return -1
     end
     return s == I.curSlot and 0 or s
 end
 I.OnBuild(function(def)
     for a = 1, #def.abilities do
-        pinT[a], pinSlot[a], pinKey[a], pinSwap[a] = -1, 0, nil, 0
+        pinT[a], pinSlot[a], pinGone[a], pinSwap[a] = -1, 0, 0, 0
+    end
+    for s = 1, I.TARGET_CAP do -- the build made the memory anew: no pin across it
+        goneN[s] = goneN[s] + 1
     end
 end)
 S.OnStart(swap)
@@ -409,7 +429,7 @@ local function died(uid, g, why, t)
     end
     for s = 1, I.TARGET_CAP do
         if guid[s] == g then
-            Direct(Obs.TargetGone, t, s)
+            gone(t, s)
             if s == I.targetSlot then
                 dead = true
             end

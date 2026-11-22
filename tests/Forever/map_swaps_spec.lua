@@ -418,6 +418,25 @@ describe("a dungeon pull through the token plate count (T1)", function()
             )
         end
 
+        it("the known limit: under Map a tab before the first update after the cast's start flips once", function()
+            boot("C")
+            H.ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-I1", A.immolate.id)
+            H.ctl.casting = { t * 1000, (t + 2) * 1000 }
+            H.Fire("UNIT_SPELLCAST_START", "player", "Cast-I1", A.immolate.id)
+            mw.target(H, 2) -- no update between: the core pins mob B's ID
+            step()
+            local before = step()
+            assert.is_nil(find(before, "immolate"), "the core believes it lands on B " .. names(before))
+            for _ = 1, 16 do
+                step()
+            end
+            succeed()
+            step()
+            local after = step()
+            assert.is_truthy(find(after, "immolate"), "the belief has it on A " .. names(after))
+        end)
+
         it("under Map, a plain target on either side of the tab still reads as a swap", function()
             boot("C")
             H.ctl.guid.target, H.ctl.unitIs.target, H.ctl.unitIs.nameplate1 = "Player-1", nil, nil

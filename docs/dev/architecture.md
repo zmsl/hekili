@@ -156,7 +156,8 @@ target's alone. So does the cast in flight when the target changed after it was 
 from the real queue (`e.inflight`), and `landsElsewhere` tells the change by the event's GUID where it has one. Under the
 Map restriction the event has no GUID, so it compares the stable ID (`Facade.TargetID`) pinned when the compare first met
 the cast with the ID now. The belief lands such a cast's target auras on the mob it was sent at: the memory slot pinned
-at UNIT_SPELLCAST_SENT, or nowhere once that mob is forgotten. The queue therefore does not change at the cast's
+at UNIT_SPELLCAST_SENT and kept through the cast's START, or nowhere once that slot is forgotten (the mob died, lost its
+plate or was evicted). The queue therefore does not change at the cast's
 success. A target change before the first update after the cast starts pins the new mob (a known limit). Time to die is never known on Forever, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
 off); no pack may declare `min_ttd` or `max_ttd` (`tests/Forever/packs_spec.lua`), and the slider is hidden. Under the
 Map restriction `active_enemies` is 1 until a GUID-free enemy count exists, so no cycle arms in dungeons yet.
