@@ -551,6 +551,19 @@ describe("token-keyed target memory (lane T2m)", function()
             assert.are.same({ 0, 0 }, { I.targetID, I.curSlot })
         end)
 
+        it("a target with no plate gets poll 14's per-ability range answers", function()
+            I.ab.rMax[1], I.ab.known[1] = 5, true
+            ctl.inRange.target = true
+            bare(10)
+            fold(10.05)
+            fold(10.2)
+            assert.is_true(I.rangeAnswer[1])
+            ctl.inRange.target = nil
+            ctl.distance.target = 20
+            fold(10.4)
+            assert.is_false(I.rangeAnswer[1])
+        end)
+
         it("no plate-less ID stays behind: 40 tabs leave plate 1's memory", function()
             tab(1, 10)
             castX(10.1, 15)

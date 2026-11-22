@@ -958,6 +958,17 @@ describe("target health", function()
                     end
                 end)
 
+                it("no target: a stale dead answer's end is no revive of nobody", function()
+                    target(nil)
+                    frame(0.5)
+                    ctl.dead.target = true
+                    frame(0.5)
+                    local n = I.targetSwapN
+                    ctl.dead.target = false
+                    frame(0.5)
+                    assert.are.equal(n, I.targetSwapN)
+                end)
+
                 it("allocates nothing over a death and a revive", function()
                     local alloc = require("Game.State.helpers.alloc")
                     die()

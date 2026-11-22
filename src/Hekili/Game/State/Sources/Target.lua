@@ -303,7 +303,7 @@ S.Poll(4, function(api, t)
     if d == false and seen then
         announce(api, t, I.targetSlot, false) -- no target change: its slot and its ID stand
     elseif d == true then
-        seen = true
+        seen = I.targetSlot > 0 -- a stale answer with no target is nobody's death
         if not dead then
             local u = I.Units.Uid(1)
             if u > 0 then
