@@ -56,13 +56,13 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 | Expression | Support | On Forever | Write this instead |
 |---|---|---|---|
 | `fight_remains`, `time_to_die` | Limited | With one enemy, the target's estimated time to die less the time the forecast looks ahead, no lower than 1; 3600 s less that time with several enemies or no estimate | `target.time_to_die` for the target alone |
-| `target.time_to_die` | Estimated | The target's estimated time to die less the time the forecast looks ahead and no lower than 1, at any number of enemies; 3600 s while there is no estimate | n/a |
+| `target.time_to_die` | Estimated | The target's estimated time to die less the time the forecast looks ahead and no lower than 1, at any number of enemies; 3600 s while there is no estimate. On a line checked for a target swap it reads as `fight_remains` does with several enemies | n/a |
 | `target.time_to_pct_<N>` | Estimated | The target's estimated time to die scaled by its health above N percent (0 at or below N), less the time the forecast looks ahead; 3600 s less that time while there is no estimate | n/a |
 | `time_to_pct_<N>` | Fixed | 3600 s, less the time the forecast looks ahead | `target.time_to_pct_<N>` |
 | `expected_combat_length` | Limited | The estimate or 3600 s, chosen as for `fight_remains` but without the look-ahead, plus `time` | n/a |
 
 > [!NOTE]
-> **On Forever:** The time to die is an estimate from the target's health steps, and only the current target has one. 3600 means unknown, so `fight_remains>60` passes and `fight_remains<8` does not while several enemies are counted or there is no estimate. One enemy means one counted enemy ([How targets are counted](How-Targets-Are-Counted)), so an enemy that is not counted, such as one without a nameplate or outside the radius, does not make the time unknown. After a target change, `fight_remains` keeps its last estimate, counting down, for up to half a second while the new target is read. The estimate can be well off early in a fight and near its end; `time` (the seconds since combat started) is read.
+> **On Forever:** The time to die is an estimate from the target's health steps, and only the current target has one. 3600 means unknown, so `fight_remains>60` passes and `fight_remains<8` does not while several enemies are counted or there is no estimate. One enemy means one counted enemy ([How targets are counted](How-Targets-Are-Counted)), so an enemy that is not counted, such as one without a nameplate or outside the radius, does not make the time unknown. A different enemy targeted after having no target, or a dead one, starts with no estimate. After other target changes, `fight_remains` keeps its last estimate, counting down, for up to half a second while the new target is read, and the new target's estimate can follow the last target's for several seconds. The estimate can be well off early in a fight and near its end; `time` (the seconds since combat started) is read.
 
 ## Health
 
