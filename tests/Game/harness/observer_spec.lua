@@ -278,6 +278,39 @@ describe("the observer", function()
         assert.are.equal("cast 2 cast 4", stream({ gainFirst = 0.05 })) -- only with bands
     end)
 
+    -- (lane B4 re-review H2) what the bars do not show, and what the cast only gives back, leads no success
+    it("(bands) gainFirst leaves a cast whose gain is a point or its refund", function()
+        local function success(gains)
+            setup()
+            W.emit({ t = 2, kind = "cast", src = us, spell = "INSTANT" })
+            for _, g in ipairs(gains) do
+                g.t, g.kind, g.src = 2, "gain", us
+                W.emit(g)
+            end
+            local k = setmetatable({ bands = true, gainFirst = 0.05 }, { __index = observer.DEFAULTS })
+            for _, e in ipairs(events(observer.observe(W, k), 1)) do
+                if e[2] == "UNIT_SPELLCAST_SUCCEEDED" and e[3] == "player" then
+                    return ("%g"):format(e[1])
+                end
+            end
+        end
+        assert.are.equal("2", success({ { pt = 4, rage = 1 } }))
+        assert.are.equal("2", success({ { rage = 8, refund = true } }))
+        assert.are.equal("2.05", success({ { pt = 4, rage = 1 }, { pt = 3, rage = 25 } }))
+        assert.are.equal("2.05", success({ { pt = 0, rage = 80 } }))
+    end)
+
+    it("(bands) the world marks an avoided press's refund", function()
+        setup()
+        us.pressing = { refund = 0.8, cost = 10 }
+        W.rollOutcome = function()
+            return "MISS", ""
+        end
+        W.hit(us, mob, 5, 1)
+        local g = W.truth[#W.truth - 1]
+        assert.are.same({ "gain", 8, true }, { g.kind, g.rage, g.refund })
+    end)
+
     it("fires the on-swing proc as a school-32 wound on the target and a heal on us, same ms", function()
         setup()
         W.emit({ t = 7.002, kind = "proc", src = us, dst = mob, act = "WOUND", amount = 36, school = 32 })

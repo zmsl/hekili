@@ -90,7 +90,8 @@ M.DEFAULTS = {
     -- latest regen tick (a predicted display, or one a server tick late; at full it shows full). `spendFirst` s: above
     -- 0 the cast event arrives that long after the bars show its spend (the power update ahead of the cast's success);
     -- below 0 the bars show a spend that long after its cast event (a display catching up with the cast). `gainFirst` s:
-    -- the success of a cast that gains in its own frame arrives that long after the bars show the gain (review I4).
+    -- the success of a cast that gains in its own frame (M.gains) arrives that long after the bars show the gain
+    -- (review I4, re-review H2).
     bandLead = 0,
     spendFirst = 0,
     gainFirst = 0,
@@ -102,6 +103,22 @@ M.DEFAULTS = {
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
 M.PUSHBACK = 0.5 -- s a hit on us adds to our hard cast's bar (DELAYED's moved @casting; UNMEASURED)
 M.FRAME = 1e-4 -- seconds: one update's events (a replay's lines of one timestamp sit 1e-6 apart; a strike's 1 ms is the next)
+
+local SHOWN = { [0] = true, [1] = true, [3] = true } -- mana, rage, energy: the powers the bars show
+
+--- Whether truth row i, a cast of `us`, gains a shown power in its own frame (the rows after it) other than its refund:
+--- what the bars can show ahead of its success.
+function M.gains(truth, i, us)
+    for j = i + 1, #truth do
+        local x = truth[j]
+        if x.t > truth[i].t then
+            return false
+        elseif x.src == us and x.kind == "gain" and not x.refund and (x.rage or 0) > 0 and SHOWN[x.pt or us.pt] then
+            return true
+        end
+    end
+    return false
+end
 
 -- Our spells as the fake spec's (its costs: the usability answers).
 M.SPELLS = {
@@ -290,24 +307,13 @@ function M.new(W, k)
     -- One player cast event, echoed on targettarget (another castBarID) while our target targets us: every kind of
     -- them (captures b and c: SENT, START, SUCCEEDED, STOP, FAILED, INTERRUPTED, DELAYED).
     local cursor = 0 -- the truth rows read (obs.step)
-    local function gains(ev) -- whether one of the rows after our cast, in its frame, is a gain of ours (its effects)
-        for i = cursor + 1, #W.truth do
-            local x = W.truth[i]
-            if x.t > ev.t then
-                return false
-            elseif x.src == us and x.kind == "gain" and (x.rage or 0) > 0 then
-                return true
-            end
-        end
-        return false
-    end
     -- The success of our cast, after what the bars show of it: a spend (k.spendFirst > 0), a gain (k.gainFirst > 0).
     local function castDone(t, ev)
         if not k.bands then
             return t
         elseif ev.cost and k.spendFirst > 0 then
             return t + k.spendFirst
-        elseif k.gainFirst > 0 and ev.kind == "cast" and gains(ev) then
+        elseif k.gainFirst > 0 and ev.kind == "cast" and M.gains(W.truth, cursor, us) then
             return t + k.gainFirst
         end
         return t

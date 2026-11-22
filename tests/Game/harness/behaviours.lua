@@ -147,7 +147,7 @@ function M.melee(p)
                         order = order,
                     })
                     if act ~= "WOUND" and (q.refund or 0) > 0 and (q.cost or 0) > 0 then -- its press's refund (W.hit), after the strike frame's spend
-                        W.emit({ kind = "gain", src = e, pt = q.pt, rage = q.refund * q.cost })
+                        W.emit({ kind = "gain", src = e, pt = q.pt, rage = q.refund * q.cost, refund = true })
                     end
                     if q.spell and e.struck then -- our content sees its strike's outcome (a crit's proc)
                         e.struck(W, act, flag)
