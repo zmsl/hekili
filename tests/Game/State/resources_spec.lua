@@ -4030,6 +4030,21 @@ describe("resource bands (lane B4)", function()
             assert.are.equal(0, VS.SwingPending(1))
         end)
 
+        -- (review M1) the band lost (priming, a pause, the drop) after it showed the swing
+        for _, case in ipairs({ { "at it", 9.9, 0 }, { "before it", 9.7, 9.9 } }) do
+            it("the band lost, one stamped " .. case[1] .. ": pending " .. case[3], function()
+                at(9.6)
+                band(9.8, RAGE, 2, 3, case[2] < 9.8 and case[2] or 9.6)
+                S.Direct(Obs.Swing, 9.9, 1, 0, 4)
+                I.Tickets.OpenSwing(9.9, 1, "", I.Log.PAIR_WINDOW_MS[1] / 1000, 0, false)
+                band(10, RAGE, 12, 13, case[2])
+                I.Fold(10)
+                unknown(10.2, RAGE)
+                I.Fold(10.2)
+                assert.are.equal(case[3], VS.SwingPending(1))
+            end)
+        end
+
         it("a rise is a lift: the swing in flight does not pay twice (L1504)", function()
             set(RAGE, 5, 5, 5)
             S.Direct(Obs.Swing, 9.9, 1, 0, 4)

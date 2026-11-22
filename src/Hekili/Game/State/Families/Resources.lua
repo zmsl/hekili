@@ -176,6 +176,7 @@ local R = {
     banded = {},
     bandAt = {},
     bandDone = {},
+    exactT = {}, -- the stamp of the latest exact band applied: a swing at or before it shows there (VS.SwingPending)
     bandLo = {},
     bandHi = {},
     plainT = {},
@@ -540,7 +541,7 @@ I.OnBuild(function(def, now)
         R.raised[r] = 0
         R.capT[r], R.capB[r] = -1e9, false
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
-        R.bandOn[r], R.banded[r], R.plainT[r] = false, false, -1e9
+        R.bandOn[r], R.banded[r], R.plainT[r], R.exactT[r] = false, false, -1e9, -1e9
         R.bandAt[r], R.bandDone[r], R.bandLo[r], R.bandHi[r] = -1e9, -1e9, 0, 0
         R.markT[r], R.markV[r], R.movedT[r] = -1, 0, -1e9
         R.shiftT[r], R.stepT[r] = -1e9, -1e9
@@ -1785,7 +1786,7 @@ local function applyBand(r, lo, hi, bt, t)
     R.pinValid[r] = false
     if R.banded[r] then
         pin(r, lo, 0, t, "observed", Obs.Band)
-        R.pinValid[r] = false
+        R.pinValid[r], R.exactT[r] = false, bt
     else
         local floor0, ceil0 = lo, top
         if l <= top and h >= lo then
@@ -2132,7 +2133,8 @@ end)
 --- only for the hand whose gain it could show (one the other hand's low step alone could not reach; neither: the
 --- earlier swing); one under the floor proves nothing. Also not once its swing ticket closes (credited, or no credit
 --- within its pending window: Events/Tickets.lua's T.SwingPending), after a spend from the slot (its cast's rung holds
---- what the game had), or for a slot read plain or by an exact band. Allocates nothing.
+--- what the game had), or for a slot read plain or by an exact band, or once one stamped at or after the swing was
+--- applied. Allocates nothing.
 function VS.SwingPending(hand)
     local p = I.Tickets.SwingPending(hand, I.clock) -- the swing ticket owns it (open, uncredited, in its window)
     -- `not I.built`: no slot pays before a build (the harness's stub world ticks swings unbuilt; ORACLE_MIN arrives in it)
@@ -2142,7 +2144,7 @@ function VS.SwingPending(hand)
     local paid = false
     for r = 1, R.n do
         if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
-            if R.readable[r] or R.banded[r] or R.spends[r] ~= swSp[hand] then
+            if R.readable[r] or R.banded[r] or R.exactT[r] >= p - 1e-6 or R.spends[r] ~= swSp[hand] then
                 return 0
             end
             paid = true
