@@ -24,7 +24,8 @@ VS.Obs = {
     Read = 5, -- a: resource slot or aura index (c: ReadOf); b: the exact value (amount; aura time remaining)
     Cooldown = 6, -- a: ability index; b: 1 ready / 0 not (the plain isActive flag); c: 1 the GCD flag edge
     PowerTick = 7, -- a: resource slot
-    TargetSwap = 8, -- a: memory slot (0 none); b: 1 a slot newly taken; c: 1 attackable (plain UnitCanAttack)
+    TargetSwap = 8, -- a: memory slot (0 none); b: 1 a slot newly taken; c: 1 attackable (plain UnitCanAttack); a
+    -- target change, or the same target alive again (Sources/Target.lua poll 4)
     CombatStart = 9,
     CombatEnd = 10,
     Group = 11, -- reserved

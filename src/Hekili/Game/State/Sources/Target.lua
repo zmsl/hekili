@@ -4,7 +4,8 @@
 -- plate's, else a new one per target change; forgotten once no plate bears it and it is not the target's), and logs
 -- `TargetSwap` (a: the slot, 0 no target; b: 1 a slot newly taken by a GUID; c: 1 plain UnitCanAttack) straight to the
 -- log, then walks the new target's auras; each
--- swap bumps I.targetSwapN (the pending-swap serial, lane A); poll 4 logs `TargetGone` for a dead target;
+-- swap bumps I.targetSwapN (the pending-swap serial, lane A); poll 4 logs `TargetGone` for a dead target, and a
+-- `TargetSwap` of the same slot for one that reads alive again;
 -- the target's UNIT_SPELLCAST_* events become `TargetCast` observations by castBarID (plain; the spellID and castGUID
 -- are secret on the target).
 -- The target's UNIT_COMBAT WOUND amounts become `TargetDamage` (b: the amount; target-health design §2.3c).
@@ -88,7 +89,7 @@ local function release(k, t)
         end
     end
 end
-local dead = false
+local dead, seen = false, false -- a death logged since the swap; poll 4 itself read the target dead since
 local HUGE = math.huge
 local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap or the age-out)
 local plainT = 0 -- the last plain range answer's time
@@ -128,6 +129,15 @@ local function plateOfTarget(api)
         end
     end
     return 0
+end
+
+-- The target by slot s starts over: no death, no range bracket held, its TargetSwap logged (b: fresh). At a swap and
+-- at a revive (poll 4). Allocates nothing.
+local function announce(api, t, s, fresh)
+    local attackable = s > 0 and Plain(api, api.UnitCanAttack("player", "target")) == true
+    dead, seen, lastLo, lastHi = false, false, -1, -1
+    Direct(Obs.TargetSwap, t, s, fresh and 1 or 0, attackable and 1 or 0)
+    I.targetSwapN = I.targetSwapN + 1 -- I.curSwapN copies it at the fold (Sources/Auras.lua waits for it)
 end
 
 -- A target swap: the new target's memory slot, then a walk of its auras. Also at Start and at each rebuild, so a
@@ -182,10 +192,8 @@ local function swap(api, t, rebuilt)
     elseif key ~= "" then
         s, fresh = slotFor(key, t)
     end
-    local attackable = s > 0 and Plain(api, api.UnitCanAttack("player", "target")) == true
-    dead, lastLo, lastHi = false, -1, -1
     -- (review F11) an ID's slot is never "fresh": an ID newly made says nothing of the mob's health
-    Direct(Obs.TargetSwap, t, s, fresh and not tokenMode and 1 or 0, attackable and 1 or 0)
+    announce(api, t, s, fresh and not tokenMode)
     if not kept then
         if old > 0 and guid[old] == false then -- the orphan: its record was saved by this swap's fold, then forgotten
             Direct(Obs.TargetGone, t, old)
@@ -198,7 +206,6 @@ local function swap(api, t, rebuilt)
     end
     I.targetID, swapT = id, t
     I.targetSlot = s -- the slot this swap names; I.curSlot follows at its fold
-    I.targetSwapN = I.targetSwapN + 1 -- I.curSwapN copies it at the fold (Sources/Auras.lua waits for it)
     if s > 0 and I.auras.n >= 2 then
         I.WalkAuras(api, 2, "target", t)
     end
@@ -288,17 +295,25 @@ end)
 -- Poll 4: the target's plain death goes to the registry, which tells every listener once (OnGone DEAD, below). A
 -- death it tells no more (a corpse: it died before this swap or build) or cannot (a secret target has no registry
 -- slot, with or without a plate) is logged as slot 0, the current target's (Families/Auras.lua ignores it: no slot to
--- forget). `dead` holds until the next swap: one log a death, whichever tell came first.
+-- forget). `dead` holds until the next swap or revive: one log a death, whichever tell came first. A revive (or a
+-- feign's end) is this read's own dead -> alive edge, whatever told the death (L1721): the same target starts over.
+-- A plain false only: a secret answer is no revive, and neither is a false that trails a death event (no edge).
 S.Poll(4, function(api, t)
-    if not dead and Plain(api, api.UnitIsDead("target")) == true then
-        local u = I.Units.Uid(1)
-        if u > 0 then
-            I.Units.Dead(u, t) -- its first death logs the slot and sets the latch (died, below)
+    local d = Plain(api, api.UnitIsDead("target"))
+    if d == false and seen then
+        announce(api, t, I.targetSlot, false) -- no target change: its slot and its ID stand
+    elseif d == true then
+        seen = true
+        if not dead then
+            local u = I.Units.Uid(1)
+            if u > 0 then
+                I.Units.Dead(u, t) -- its first death logs the slot and sets the latch (died, below)
+            end
+            if not dead and (u > 0 or I.Units.Secret(api, 1)) then
+                Direct(Obs.TargetGone, t, 0) -- a death told before this swap, or no identity
+            end
+            dead = true
         end
-        if not dead and (u > 0 or I.Units.Secret(api, 1)) then
-            Direct(Obs.TargetGone, t, 0) -- a death told before this swap, or no identity
-        end
-        dead = true
     end
 end)
 

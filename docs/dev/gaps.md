@@ -135,9 +135,10 @@ commit.
 - `Game/State/Families/Expect.lua:76`: `declared(au, "duration", "duration")` looks the same key up twice.
 - An aura with no declared duration gets RegisterAura's 30 s default and its ticks count from it (as the sim does).
 - `Game/State/Sources/Target.lua:4`: the header still says poll 4 logs TargetGone (now `I.Units.Dead` / OnGone DEAD).
-- `Game/State/Sources/Target.lua:85-91`: re-targeting a DEAD corpse emits a TargetGone for it (Target.lua:209-219), so
-  the belief and `Facade.UnitHealth` read 0 for it; core's `target.health.pct` stays 100 for a dead target. No free
-  slot emits none (spec §4.3's design); comment it.
+- `Game/State/Sources/Target.lua` poll 4: re-targeting a DEAD corpse emits a TargetGone for it, so the belief and
+  `Facade.UnitHealth` read 0 for it; core's `target.health.pct` stays 100 for a dead target. No free slot emits none
+  (spec §4.3's design); comment it. A dead target that reads alive again starts over (L1721), except after a death
+  only an event told (`UnitIsDead` never read true: no edge), which stays 0 until a target change.
 - `tests/Game/harness/drive.lua:353-373` (`M.outcomeRow`) was edited outside its task's Files list.
 - `Game/Events/Melee.lua` lost the why-comments of `Rows.lua@6027835f:26-73`, `:219-222`, `:404-407`; restore them.
 - `tests/Game/State/secrets_spec.lua:180-189` restores `_G` after the first assert (leaks on a failure).

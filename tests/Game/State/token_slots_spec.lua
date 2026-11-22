@@ -712,6 +712,21 @@ describe("token-keyed target memory (lane T2m)", function()
             assert.is_true(I.curSlot > 0)
         end)
 
+        it("a revive is no target change: the ID, the record and the memory stand (L1721)", function()
+            bare(10)
+            fold(10.05)
+            castX(10.1, 15)
+            local id, slot = I.targetID, I.curSlot
+            ctl.dead.target = true
+            fold(11)
+            ctl.dead.target = false
+            fold(11.5)
+            fold(11.7)
+            assert.are.same({ id, slot }, { I.targetID, I.curSlot })
+            assert.are.equal(I.targetSwapN, I.curSwapN, "nothing waits to fold")
+            near(25.1, est(11.8), "the record stands")
+        end)
+
         it("a restriction flip and a world entry renew every plate's ID", function()
             tab(1, 10)
             local old = I.plateID[2]

@@ -247,6 +247,7 @@ tells mobs apart by a stable ID: an integer from one session counter, so it neve
   the next target change, with its memory.
 - `PLAYER_TARGET_CHANGED` fires twice a swap. The second event keeps the ID: by the plate, and with no plate by being
   in the first one's frame (one `GetTime`; that both events share a frame is assumed, unmeasured).
+- A revive (poll 4's dead -> alive edge) is no target change: the ID and the slot stand, the health starts over.
 - A rebuild is no target change: the IDs stand, the memory starts over. A flip between plain and secret target GUIDs
   and a world entry renew every plate's ID and forget all memory. A /reload starts over.
 
