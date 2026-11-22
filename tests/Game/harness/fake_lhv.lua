@@ -15,7 +15,8 @@
 --            a firing back to the reported cut ends the change (an alternating value keeps the held band);
 --   desync:  a change still unreported 6 frames after its first firing is never confirmed: the source reads unknown,
 --            its prime decodes again, and the value is reported 10 frames after the desync at the earliest, held 2
---            frames after its last firing as any change; still moving 6 frames after that decode, it desyncs again
+--            frames after its last firing as any change (`t`: that firing, or the prime's end, 2 frames before the
+--            earliest report, if later); still moving 6 frames after that decode, it desyncs again
 --            (README, "Confirmation": "A value that moves one way on every frame is never confirmed");
 --   latency: h:Latency() answers 7 frames (README, h:Latency(): seven frames worst case); not a reporting rule;
 --   prime:   unknown for 10 frames after a watch starts, resumes or its unit changes (README, "Testing your addon":
@@ -147,7 +148,9 @@ function M.new(o)
                 if t + EPS < due then
                     return
                 end
-                s.pend, s.v, s.m, s.t, s.ready = false, s.pv, s.pm, s.pl, 0
+                -- t: the last firing, or the prime's end when the change was a desync's and fired before it
+                s.pend, s.v, s.m, s.ready = false, s.pv, s.pm, 0
+                s.t = s.pl > s.pf and s.pl or s.pf
             else
                 if t + EPS < cut then
                     return

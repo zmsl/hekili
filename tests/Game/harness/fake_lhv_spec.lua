@@ -1,12 +1,13 @@
 -- tests/Game/harness/fake_lhv_spec.lua (LibHiddenValues integration design 5.4 item 2, lane B0): the loops' fake
 -- library answers the handle contract wave 1 uses (Watch, Get, State, SetPoints, SetPaused, Release, ReleaseAll,
 -- IsAvailable, GetStats, Latency) with the same shapes and codes as the real library on its FakeClient, and times its
--- answers by the observer rules in its header (hold, latency, prime, 1% cells, point caps). No consumer yet.
+-- answers by the observer rules in its header (fires, hold, desync, prime, 1% cells, point caps). No consumer yet.
 local fake_lhv = require("Game.harness.fake_lhv")
 local alloc = require("Game.State.helpers.alloc")
 
 local FAKE = "src/LibHiddenValues/Testing/FakeClient.lua"
 local FRAME = 1 / 60
+local floor = math.floor
 
 -- Each world: target health 63.7%, player mana 45% of 1000. `live()` runs until fresh watches are live; `frame(pct)`
 -- runs one frame with the target's health at pct% (nil: unchanged); `max(m)` sets the mana max (mana stays 45%), seen
@@ -33,6 +34,7 @@ local IMPLS = {
                     W.unit.player.max[0] = m
                     Fake.event("UNIT_MAXPOWER", "player")
                 end,
+                now = rawget(_G, "GetTime"), -- the FakeClient's clock
                 done = Fake.restore,
             }
     end,
@@ -63,13 +65,15 @@ local IMPLS = {
                 max = function(m)
                     newMax = m
                 end,
+                now = now,
                 done = function() end,
             }
     end,
 }
 
 -- The target's health one frame at a time, pinned on the real library (LibHiddenValues README, "Confirmation"): each
--- case's row is the step watch's lo after every frame ("-": unknown), the frames of `seq` then `idle` frames unchanged.
+-- case's row is the step watch's lo after every frame ("-": unknown; "lo@n": its t n frames old, for a change of the
+-- sequence), the frames of `seq` then `idle` frames unchanged.
 local function down(from, n)
     local seq = {}
     for i = 1, n do
@@ -89,25 +93,25 @@ local SEQUENCES = {
         "one cell a frame for 5 frames: confirmed 2 frames after the last",
         down(62.5, 5),
         3,
-        "63 63 63 63 63 63 58 58",
+        "63 63 63 63 63 63 58@2 58@3",
     },
     {
         "one cell a frame for 6 frames: never confirmed, unknown, primes again",
         down(62.5, 6),
         12,
-        "63 63 63 63 63 63 - - - - - - - - - - 57 57",
+        "63 63 63 63 63 63 - - - - - - - - - - 57@2 57@3",
     },
     {
         "one cell a frame for 7 frames",
         down(62.5, 7),
         12,
-        "63 63 63 63 63 63 - - - - - - - - - - 56 56 56",
+        "63 63 63 63 63 63 - - - - - - - - - - 56@2 56@3 56@4",
     },
     {
         "a fall of 30 frames: unknown until it stops",
         down(62.5, 30),
         4,
-        "63 63 63 63 63 63 - - - - - - - - - - - - - - - - - - - - - - - - - 33 33 33",
+        "63 63 63 63 63 63 - - - - - - - - - - - - - - - - - - - - - - - - - 33@2 33@3 33@4",
     },
     {
         "alternating with the held cell: the held cell throughout",
@@ -119,7 +123,7 @@ local SEQUENCES = {
         "alternating between two other cells: never confirmed",
         alternate(62.5, 61.5, 10),
         12,
-        "63 63 63 63 63 63 - - - - - - - - - - 61 61 61 61 61 61",
+        "63 63 63 63 63 63 - - - - - - - - - - 61@2 61@3 61@4 61@5 61@6 61@7",
     },
     {
         "moving inside the held cell: nothing fires",
@@ -248,9 +252,11 @@ for _, name in ipairs({ "real", "fake" }) do
             it(case[1], function()
                 local hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
                 w.live()
-                local row = {}
+                local row, t0 = {}, w.now()
                 local function read()
-                    row[#row + 1] = tostring((hp:Get()) or "-")
+                    local lo, _, t = hp:Get()
+                    local age = lo and t >= t0 and floor((w.now() - t) / FRAME + 0.5)
+                    row[#row + 1] = lo and (age and lo .. "@" .. age or tostring(lo)) or "-"
                 end
                 for _, pct in ipairs(case[2]) do
                     w.frame(pct)
@@ -316,7 +322,7 @@ describe("fake_lhv's observer rules", function()
         t = t0 + 16 * FRAME
         assert.are.same({ "priming", nil }, { h:State(), (h:Get()) })
         t = t0 + 17 * FRAME
-        assert.are.same({ 83, 84, t0 + 6 * FRAME, lib.BAND }, { h:Get() })
+        assert.are.same({ 83, 84, t0 + 15 * FRAME, lib.BAND }, { h:Get() }) -- t: the prime's end, 2 frames back
     end)
 
     it("primes 10 frames after a watch, a resume and a unit change, then answers the current value", function()
