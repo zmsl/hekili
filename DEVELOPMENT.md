@@ -95,7 +95,8 @@ pinned in `mise.toml`. Nothing is installed system-wide. A new git worktree has 
 
 ### What the full check covers
 
-Run `make check` before every commit. CI runs the same steps on every push, except the type check.
+`make check` is the full check of an integration branch; a lane runs the fast checks (section 4, Review and merge).
+CI runs the same steps on every push, except the type check.
 
 - Lint (luacheck), formatting (StyLua; upstream Hekili files keep their own style), the type check
   (lua-language-server) and a syntax check of every Lua file.
@@ -108,7 +109,7 @@ Run `make check` before every commit. CI runs the same steps on every push, exce
 check in this worktree (tracked and untracked files, the index, the toolchain, the env vars the tests read), or when
 only docs no test reads changed (not README.md, CHANGELOG.md, docs/publishing/ or any doc under src/, tests/, tools/).
 `make check FULL=1` runs it all; so does any other command-line override (`TEST_EXCLUDE=`, `BUSTED=`) or `-i`/`-e`,
-and those leave no stamp. Pre-merge checks (the final reviewer's) use `FULL=1`. The stamp has a residual risk: a file
+and those leave no stamp. Before a merge, `make gate` on the integration branch is the full check; it never skips. The stamp has a residual risk: a file
 edited and then reverted while a green run was in progress, or a hand edit under `.lua/share` or to the `lua` binary
 on PATH (the stamp keys neither), can leave a stamp that no longer matches what was tested. When in doubt, `FULL=1`.
 
@@ -215,13 +216,19 @@ difference; `shadowHits` counts the hits. Run the loops with it on when touching
 
 ### Review and merge
 
-Work happens on a branch from `forever`.
+Work happens on a lane branch. It reaches `forever` only through an integration branch (`integ/<batch>`), also
+when the batch holds one lane.
 
-1. Keep `make check` green on every commit.
-2. Run `make gate` before asking for a merge. It runs the full check, then every class's 20-fight loops.
-   `make gate` never skips (it runs `make check-full`); neither do `gate-ab`, `accuracy`, the rig or packaging.
-3. Have the change reviewed against the rules above and the gate's output.
-4. Merge into `forever`. Never force-push it.
+1. On a lane, run the fast checks: lint, formatting, the type check, the syntax and API checks, the specs you touched
+   and, for a change that can move a decision, its 20-fight comparison against the base. The full check and the gate
+   are not run there.
+2. Have the lane reviewed against the rules above. A small lane may leave this to the integration review.
+3. Merge the reviewed lanes into the integration branch and run `make gate` on its tip. It runs the full check, then
+   every class's 20-fight loops. `make gate` never skips (it runs `make check-full`); neither do `gate-ab`,
+   `accuracy`, the rig or packaging.
+4. Have the whole integration branch reviewed on that exact tip, with the gate's output. This review is always the
+   last step before the merge. A commit after the gate or the review means both again.
+5. Fast-forward `forever` to the reviewed tip. Never force-push it.
 
 A change that moves a gate line says why in its commit.
 
