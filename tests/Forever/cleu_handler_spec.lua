@@ -236,11 +236,15 @@ describe("the combat-log handler", function()
             H.Hekili:UpdateDamageDetectionForCLEU()
             H.ns.updateMinion(STRANGER, H.ctl.now)
             H.log = {}
+            local sw = st.swings
+            local mh, oh = sw.mh_actual, sw.oh_actual
             for _, pet in ipairs({ PET, fake.SECRET, false }) do
                 H.ctl.guid.pet, H.ctl.exists.pet = pet or nil, true
                 worlds(function(emit, at)
                     emit()
                     assert.are.equal("", flush(), at)
+                    -- a counted minion's row would reach the own-swing branch, which logs nothing
+                    assert.are.same({ mh, oh }, { sw.mh_actual, sw.oh_actual }, at)
                 end)
             end
             assert.are.same({}, H.errors)
