@@ -22,7 +22,8 @@ local HEALTH = {
     ["target.health.percent"] = "target.health",
     ["target.health_pct"] = "target.health",
 }
-local RES_KIND = { [""] = "points", current = "points", actual = "points", deficit = "deficit", pct = "pct", percent = "pct" }
+-- `lo`, `pct_lo`: the band's floor, what the shipped priorities and press gates read (the bare token reads it too)
+local RES_KIND = { [""] = "points", current = "points", actual = "points", deficit = "deficit", pct = "pct", percent = "pct", lo = "points", pct_lo = "pct" }
 
 local function add(out, key, kind, n)
     out[#out + 1] = { key = key, kind = kind, n = n }

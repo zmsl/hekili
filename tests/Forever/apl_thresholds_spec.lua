@@ -95,6 +95,16 @@ describe("the APL threshold harvest", function()
             assert.are.same({ { "energy", "deficit", 0 } }, rows("energy.deficit>0")) -- at max
         end)
 
+        -- the shipped priorities read the band's floor (`lo`, what press gates read; design 1.1): the same value as
+        -- the bare token
+        it("the band's floor: <res>.lo is points, <res>.pct_lo is pct", function()
+            assert.are.same({ { "energy", "points", 40 } }, rows("energy.lo>=40"))
+            assert.are.same({ { "rage", "points", 74 } }, rows("rage.lo<=73"))
+            assert.are.same({ { "mana", "points", 2600 } }, rows("mana.lo<2600"))
+            assert.are.same({ { "mana", "pct", 30 } }, rows("mana.pct_lo<30"))
+            assert.are.same({}, rows("pet.energy.lo>=40"))
+        end)
+
         it("pct: <res>.pct and .percent, the literal as written", function()
             assert.are.same({ { "mana", "pct", 35 } }, rows("mana.pct<35"))
             assert.are.same({ { "mana", "pct", 33.3 } }, rows("mana.percent>=33.3"))
@@ -336,5 +346,49 @@ describe("the active priority's bands", function()
         gen = VSI.def.bandGen
         assert(headless.cycle(H, H.ctl.now + 0.4))
         assert.are.equal(gen, VSI.def.bandGen) -- no new generation while the priority stands
+    end)
+end)
+
+-- (design 3.4) every built-in priority stays within the band library's points per resource, so none warns or loses its
+-- points; and the harvest finds the shipped priorities' resource reads (their `.lo` floor) at all
+describe("the shipped priorities", function()
+    local WORLDS = {
+        { "Forever.helpers.druid_loop_world", "Feral" },
+        { "Forever.helpers.hunter_world", "Survival" },
+        { "Forever.helpers.mage_world", "Arcane" },
+        { "Forever.helpers.paladin_world", "Retribution" },
+        { "Forever.helpers.priest_world", "Shadow" },
+        { "Forever.helpers.rogue_world", "Combat" },
+        { "Forever.helpers.shaman_world", "Enhancement" },
+        { "Forever.helpers.warlock_world", "Affliction" },
+        { "Forever.helpers.warrior_world" },
+    }
+
+    it("each built-in priority compares each resource with at most the cap of exact values", function()
+        local over, found, packs = {}, {}, 0
+        for _, w in ipairs(WORLDS) do
+            local M = require(w[1])
+            local C = w[2] and M[w[2]] or M
+            local HH = headless.new({ character = C.character(), pack = C.PACK })
+            assert.are.same({}, HH.loadErrors)
+            for name, data in pairs(HH.Hekili.DB.profile.packs) do
+                if data.builtIn then
+                    packs = packs + 1
+                    for key, e in pairs(HH.Hekili.Scripts:PackBands(name)) do
+                        local n = HH.ns.AplPointCount(e)
+                        found[key] = true
+                        if n > HH.ns.APL_POINT_CAP then
+                            over[#over + 1] = name .. " " .. key .. " " .. n
+                        end
+                    end
+                    assert.is_nil(HH.Hekili.Scripts:BandWarning(name), name)
+                end
+            end
+        end
+        assert.is_true(packs > 9)
+        assert.are.same({}, over)
+        for _, key in ipairs({ "rage", "energy", "mana" }) do
+            assert.is_true(found[key], key .. ": no shipped priority's threshold harvested")
+        end
     end)
 end)

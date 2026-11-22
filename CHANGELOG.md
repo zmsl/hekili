@@ -4,8 +4,6 @@
 
 ### New
 
-- A priority that compares a resource with more than 8 different exact values now shows a warning on its Source tab: Hekili can watch only 8 of them exactly, so those conditions use the nearest 1% instead.
-
 ### Changed
 
 ### Fixed
