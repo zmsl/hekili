@@ -5,6 +5,7 @@
 local ld = require("Forever.helpers.load_druid")
 local headless = require("Game.harness.headless")
 local mw = require("Forever.helpers.map_world")
+local ww = require("Forever.helpers.warrior_world")
 
 -- A character of `class` who knows every rank of the class file's kit.
 local function character(file, class, classID, specID)
@@ -159,6 +160,36 @@ describe("a dungeon pull through the token plate count (T1)", function()
             spec.cycle = false
         end
     )
+
+    it("a stable ID is never an identity: no GUID, no row destination, no count (unit-registry spec 2.8)", function()
+        local H = mw.new("C")
+        local I, L = H.ns.VirtualStateInternal, H.ns.VirtualStateInternal.Log
+        local emit = L.Emit
+        local bad = 0
+        L.Emit = function(...)
+            local dst = select(9, ...) -- dstGUID
+            if type(dst) ~= "string" or dst:match("^%d+$") then
+                bad = bad + 1
+            end
+            return emit(...)
+        end
+        mw.plate(H, 1)
+        mw.target(H, 1)
+        local t = H.ctl.now
+        local _, settled = queue(H, t)
+        t = settled
+        local count = H.Hekili.State.active_enemies
+        for _, k in ipairs({ 0, 1 }) do
+            mw.target(H, k)
+            _, t = queue(H, t)
+            assert.is_true((I.targetID or 0) > 0, "an ID is held")
+            assert.is_nil(H.ns.Facade.UnitGUID("target"))
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-id" .. k, ww.character().known[1])
+            _, t = queue(H, t)
+        end
+        assert.are.equal(count, H.Hekili.State.active_enemies)
+        assert.are.equal(0, bad)
+    end)
 
     -- integ/dot review I1 (the owner's no-jitter rule): a dotted mob's plate leaving forgets its debuffs in the belief
     -- at once, so the enemy count must not stay one update above the debuff count: no swap flash on that update.

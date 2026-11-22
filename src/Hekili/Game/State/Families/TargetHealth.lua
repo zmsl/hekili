@@ -285,8 +285,8 @@ end)
 
 -- (lane B2, design 2.6) The library's band on the target, a fraction [lo, hi) (b > c: unknown). A live band sets the
 -- interval and the estimate, its middle (a live target's never under the floor: the enemy scan's UnitHealth > 1, as a
--- WOUND's), an anchor and an observed sample; M is left alone. No H.slot test: under the map lockdown a target can have
--- no plate slot, and a live band is the target. Ignored while dead: TargetGone wins (under the dungeon restrictions the
+-- WOUND's), an anchor and an observed sample; M is left alone. No H.slot test: a live band is the target, whatever
+-- slot it holds. Ignored while dead: TargetGone wins (under the dungeon restrictions the
 -- library keeps the lowest band on a corpse, its README). A usable answer wins over the band (L1675, FABLE-FOR-OWNER 18
 -- strengthened) of its own drain: the band clears the bound (poll 1.6 logs it each drain, before poll 2 asks again)
 -- and is clipped (clip above) at each answer that folds after it. The unknown drops a band applied since the last

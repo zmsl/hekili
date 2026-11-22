@@ -646,6 +646,18 @@ describe("target health", function()
                 reads(t + 0.2, 0.705, 0.7, 0.71)
             end)
 
+            it("no plate (the map lockdown): a usable answer bounds the target by its ID (L1689 a)", function()
+                swapTo(fake.SECRET)
+                frame(true, false)
+                reads(t, 0.2, 0, 0.2)
+            end)
+
+            it("no plate: a guarded NOT bounds it above the gate (L1689 a)", function()
+                swapTo(fake.SECRET)
+                frame(false, false)
+                reads(t, 1, 0.2 + I.EPS, 1)
+            end)
+
             it("two swaps in one frame: the first one's target answers nothing for the second", function()
                 swapTo("Creature-2")
                 answer(true, false)
@@ -692,7 +704,7 @@ describe("target health", function()
                     S.RunPolls(t)
                     I.Fold(t)
                     reads(t, 0.055, 0.05, 0.06)
-                    assert.are.equal(plate, I.targetSlot > 0)
+                    assert.is_true(I.targetSlot > 0) -- a slot by its ID, with a plate or without
                     assert.are.equal(0, I.Units.Uid(1)) -- no identity either way
                     local before = #gone
                     ctl.dead.target = true

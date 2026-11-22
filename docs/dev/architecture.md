@@ -60,8 +60,8 @@ values; `false, 0, 0, 0, 0` closed or unknown), a belief-only facade function li
 copy; the core's `state.reset` copies every registered window through it (`Engine/Sim/State.lua` `CopyWindows`);
 `WindowOp` is the only write back. The second is the debuff count (option D, owner decision 2, 2026-11-11):
 `ns.Facade.DebuffCount(spellID, now)` -> how many enemies the belief holds the aura up on (the target plus every
-remembered target slot, keyed by GUID in the open world and by nameplate under the Map restriction), or nil when unknown
-(the current target holds no memory slot, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on
+remembered target slot, keyed by GUID in the open world and by stable ID under the Map restriction), or nil when unknown
+(no target, a target whose ID has no plate, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on
 Forever"). `def` carries plain records (batch 4, the owner's
 design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a function the belief runs in its own
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
@@ -253,7 +253,7 @@ read. A file's `state.knownRank` local is the facade's function, safe in a helpe
 steps?, loop?, on_deviation?, strict?, reset_on_target_change? })` (`Engine/Schema/Spec.lua`) crosses `Build(def)` as
 `def.windows` (plain records, `steps` as ability indexes). `steps` need an `evaluator` (a cast never opens a window,
 L773: RegisterWindow raises). `reset_on_target_change` (a boolean, default false): a target change (`Obs.TargetSwap`:
-a re-selection, a Map swap by plate index, clearing the target, and the belief's own swap at `Start` and every
+a re-selection, a Map swap by stable ID, clearing the target, and the belief's own swap at `Start` and every
 `Build` included) closes the window and forgets the evaluator's last value, so a
 still-true evaluator reopens it at step 1 in the same `Drain`. `duration` is seconds, `"combat"` or a function. A function is the forecast's: it
 runs under `state` at each forecast open and each counted refresh. Its per-layer twin `now_duration` (required with a

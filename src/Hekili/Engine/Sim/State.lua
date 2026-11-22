@@ -4649,8 +4649,8 @@ local mt_active_dot = {
         if aura then
             if rawget( t, aura.key ) then return t[ aura.key ] end
             -- The belief's count (option D, owner decision 2): the target and every remembered target, all ranks
-            -- (one belief index per aura, so the copies are not summed again). Unknown (nil: the target holds no
-            -- memory slot, or there is no target while memory may hold it): every enemy counts as carrying it, so no
+            -- (one belief index per aura, so the copies are not summed again). Unknown (nil: no target while memory
+            -- may hold it, or the belief cannot know the others'): every enemy counts as carrying it, so no
             -- swap is suggested (never 0: a 0 suggests a swap for ever).
             local count = Facade.DebuffCount( aura.id, state.now ) or state.true_active_enemies
 
