@@ -17,7 +17,7 @@
 -- Self-test: one retry out of combat 5 s after the first PLAYER_ENTERING_WORLD. Points (design 3.3, lane B7): the
 -- active priority's thresholds (def.bandPoints) go to each power handle out of combat, at a new def.bandGen or a new
 -- max; a refusal keeps the old set. A refused watch is asked again when combat ends (L1666 c: the caps are shared, so
--- a refusal can pass).
+-- a refusal can pass). A power that proves plain in combat (R.readable) releases its watch for this build.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -254,9 +254,17 @@ S.Poll(1.6, function(api, t)
     end
     idle = false
     for k = 1, n do
-        local h = handle[k]
+        local h, pt = handle[k], ptype[k]
+        if h and pt and I.res.readable[chan[k]] then -- the plain read is better and free (and wins: no path moves)
+            h:Release()
+            h, handle[k], refused[k] = false, false, "readable"
+            local ch = chan[k]
+            if I.bandLive[ch] then
+                I.bandLive[ch] = false
+                Direct(Obs.Band, t, ch, 1, 0)
+            end
+        end
         if h then
-            local pt = ptype[k]
             local hold = pt ~= false and shown ~= nil and pt ~= shown and pt ~= MANA
             if hold ~= paused[k] then
                 h:SetPaused(hold) -- a resumed watch primes again
@@ -307,7 +315,7 @@ end)
 
 S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
     for k = 1, n do
-        if refused[k] ~= "unproven" then
+        if refused[k] ~= "unproven" and refused[k] ~= "readable" then
             refused[k] = false
         end
     end
