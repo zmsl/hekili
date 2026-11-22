@@ -38,6 +38,7 @@ A rule that changes what a wowsims line does, because the Forever client forces 
 | 21 | Casts at a second target | A cast aimed at wowsims's second target carries `other_target=1`: it is shown only on another target, with Recommend Target Swaps on, never on the current one. |
 | 22 | Mana under an amount | A test of the player's mana under an absolute amount N becomes a test of both the amount and its share of the mana pool, `mana.lo<N&mana.pct_lo<P`. P comes from the maximum mana in the exported log, rounded up. At the level the log was made for, the share never binds; a smaller pool at a lower level uses the share. |
 | 23 | The player's health | The game hides the player's health in combat, so an entry that reads it (`currentHealthPercent`, `currentHealth`), directly or through a variable, is omitted and listed in the header. |
+| 24 | Channel cuts | A channel's `interruptIf` becomes its line's `interrupt_if=<condition>`, so the priority suggests cutting the channel where wowsims does: at a tick, with the GCD ready, never to recast the same channel. `spellChanneledTicks`, the running channel's ticks so far, is read only there. An `interruptIf` the addon cannot read drops only the cut, with a `# Deviation:` line, as does an `allowRecast`. |
 
 ## Direct values
 

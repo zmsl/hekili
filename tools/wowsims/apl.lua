@@ -294,6 +294,14 @@
 -- 23. The player's health (`currentHealthPercent`, `currentHealth`; owner L1462): the client hides it in combat, so a
 --    read of it is unsupported (rule 2): the entry is omitted, as is a call or variable reading it. Another unit's
 --    health read is unsupported as any other unit's (`... of <unit>`).
+-- 24. A channelSpell's `interruptIf` (owner L1748: "if wowsims cuts channels, we should too") is its line's
+--    `interrupt_if=<condition>` (`1` when it folds true; none when it folds false or is absent, wowsims's plain cast):
+--    the engine cuts the channel at a tick with the GCD free when it holds (Engine/Sim/Core.lua CheckChannel), and
+--    its walk stops at the channel's own line when that would be the pick again, wowsims's recast-first (no cut)
+--    without `allowRecast`; an `allowRecast` is not carried (a `# Deviation:` line). An interruptIf the fork cannot
+--    read drops the clip only, with a `# Deviation:` line. `spellChanneledTicks` (the running channel's ticks so far)
+--    is read only there, as `floor(N-N*channel_remains/action.<key>.cast+0.01)` with N the kit ability's `cast` over
+--    its `tick_time`; elsewhere it is unsupported (rule 2).
 -- 14b. A `sequence` (wowsims: its members in order, each once, once per reset; design §3a) is a stepped window `<w>`
 --    (the snake of its name) whose steps are its cast members: one line a cast, `<key>,if=window.<w>.next.<key>`, its
 --    own condition after, consecutive equal lines once. A distance-only waitUntil member is the next cast's range gate,
@@ -1225,6 +1233,21 @@ local function value(c, n, pct)
             return nil, true
         end
         return SPELL_FIELD[k]:format(x), reads(c, x)
+    elseif k == "spellChanneledTicks" then -- rule 24: wowsims's running channel, the interruptIf's own
+        local x = c.channel or unsupported("spellChanneledTicks outside a channel's interruptIf")
+        local t = (c.set.abilities[x] or {}).tick_time
+        if type(t) == "function" then
+            local ok, n = pcall(t)
+            t = ok and n
+        end
+        local n = type(t) == "number" and t > 0 and (castTime(c, x) or 0) / t or 0
+        if n < 1 or math.abs(n - math.floor(n + 0.5)) > 1e-6 then
+            unsupported("spellChanneledTicks of " .. x .. ": no whole tick count")
+        end
+        n = math.floor(n + 0.5)
+        -- shortcut: +0.01 absorbs the tick instant's float; a haste change inside a hasted channel moves
+        -- action.<key>.cast off the running channel's length (none at the pins: Mind Flay's MF3 is its end)
+        return ("floor(%d-%d*channel_remains/action.%s.cast+0.01)"):format(n, n, x), false
     elseif k == "talentRank" then -- wowsims: the build's rank, 0 without points
         local t = talentOf(c, v.talentId)
         return t and ("talent." .. t .. ".rank") or "0", false
@@ -2147,6 +2170,29 @@ local function windowed(c, a)
     return out
 end
 
+-- Rule 24: channelSpell `ch`'s interruptIf as its line's `,interrupt_if=` modifier ("" for none), the channel `x`.
+local function interruptIf(c, x, ch)
+    if ch.interruptIf == nil or next(ch.interruptIf) == nil then
+        return ""
+    end
+    c.channel = x
+    local ok, cond = pcall(condition, c, ch.interruptIf)
+    c.channel = nil
+    if not ok then
+        if type(cond) ~= "table" then
+            error(cond, 0)
+        end
+        deviate(c, ("the channel's interruptIf is not carried (%s); it runs to its end."):format(cond.unsupported))
+        return ""
+    elseif cond == false then
+        return ""
+    end
+    if ch.allowRecast then
+        deviate(c, "allowRecast is not carried: the engine never cuts a channel to recast it.")
+    end
+    return ",interrupt_if=" .. (cond or "1")
+end
+
 -- One entry as a line body (a list of them for rules 13 and 14), or nil and why it folds away.
 local function entryBody(c, e)
     local a = e.action or {}
@@ -2170,7 +2216,7 @@ local function entryBody(c, e)
     if kind == "castSpell" or kind == "channelSpell" then
         local x = spellKey(c, a[kind].spellId)
         c.self, key = x, x
-        body = castBody(c, x)
+        body = castBody(c, x) .. (kind == "channelSpell" and interruptIf(c, x, a.channelSpell) or "")
     elseif kind == "multidot" or kind == "strictMultidot" then -- rule 17: the cast under "its DoT has at most maxOverlap left", this target only
         local m = a[kind]
         local n = m.maxDots or 0

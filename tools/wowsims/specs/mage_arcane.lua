@@ -32,9 +32,9 @@
 -- the channel), so the belief keeping its aura after a clip does not show here.
 -- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): the trinket (`use_items`; Eye of the Beast 13968 since ab0f00e4fc, 272438 on e4ef929e54, 18820 on e2842f0a78,
 -- 19339 before), Presence of Mind, Arcane Power and the mana gem, off the GCD, at the top of the list.
--- Deviation (Evocation's clip): wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the translator
--- drops channelSpell.interruptIf (tools/wowsims/apl.lua; a shared gap, reported), so the pack's line has no clip
--- condition; the world clips by wowsims's rule (mage_world.lua: any press while the belief channels it at 99%).
+-- Evocation's clip: wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the pack's lines carry it
+-- (`interrupt_if=mana.pct_lo>=99`, translator rule 24, L1748); the world clips by wowsims's rule (mage_world.lua: any
+-- press while the belief channels it at 99%).
 -- Read Ley Line (1259705) and its Energized (1270842) resolve to the High Order Skyborne race file; the Human the UI
 -- defaults to never knows it. Innervate (29166, another player's) reads false (rule 4).
 -- Re-pin e2842f0a78 (Task 10): the build's talents (presets.ts ArcaneTalents 050205223101311531-5500003-003, "Deep
