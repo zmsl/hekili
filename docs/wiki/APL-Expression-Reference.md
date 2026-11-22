@@ -180,7 +180,7 @@ actions+=/cat_form,if=!buff.cat_form.up&(toggle.movement&target.outside5|target.
 > **On Forever:** The game gives addons no distance to the target, only whether each spell is in range. Hekili Forever brackets the distance between the ranges of the abilities it tracks. While the bracket is unknown, `target.withinN`, `target.outsideN` and `target.rangeAtoB` are all true, so a range test never blocks a line on its own.
 
 > [!NOTE]
-> **On Forever:** The game hides target health, and Hekili Forever reads it in whole-percent steps: `target.health.pct` reads the middle of the step, such as 19.5 between 19 and 20 percent. For a moment after a target change it reads 100. If the game offers no reading, it reads 100 until an ability that is usable only at low target health shows that the target is below that point.
+> **On Forever:** The game hides target health, and Hekili Forever reads it in whole-percent steps: `target.health.pct` reads the middle of the step, such as 19.5 between 19 and 20 percent, and no lower than 2 while the target lives. The step can be a moment old, so an ability that is usable only at low target health takes priority over it: if the step reads 22 and an ability that needs 20 or less is usable, the value is 20. For a moment after a target change it reads 100. If the game offers no reading, it reads 100 until an ability that is usable only at low target health shows that the target is below that point.
 
 ## Toggles
 
