@@ -416,7 +416,7 @@ describe("LibTimeToDie tracking", function()
         Fake.event("PLAYER_REGEN_DISABLED")
         Fake.advance(0.02)
         to(88) -- a 12% opener chunk one frame after the anchor
-        Fake.advance(0.02)
+        Fake.advance(0.04) -- two frames: LibHiddenValues calls a step change once the next frame's decode agrees
         assert.are.equal("unknown", (h:State())) -- the anchor's slope would be one hit over no time
         assert.is_nil((h:Get()))
         fall(86, 85, 0.5) -- two crossings later it answers from them, not from the opener's interval
