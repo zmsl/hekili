@@ -265,6 +265,9 @@ for _, name in ipairs({ "real", "fake" }) do
             assert.are.same({ true, "ready" }, { lib:IsAvailable("health", "target") })
             assert.are.same({ false, "unavailable", "unproven" }, { lib:IsAvailable("health", "focus") })
             assert.are.same({ "unavailable", "unproven" }, { focus:State() })
+            assert.are.same({ "LibHiddenValues-1.0", 7 }, { lib:GetVersion() })
+            local verdict, lines, running = lib:GetSelfTest()
+            assert.are.same({ true, "table", false }, { verdict, type(lines), running })
             local stats = { lib:GetStats() }
             assert.are.equal(8, #stats)
             for i = 1, 8 do
@@ -464,6 +467,7 @@ describe("fake_lhv's observer rules", function()
         lib:SetAvailable("unavailable", "selftest")
         assert.are.same({ "unavailable", "selftest" }, { h:State() })
         assert.are.same({ false, "unavailable", "selftest" }, { lib:IsAvailable("health", "target") })
+        assert.is_false((lib:GetSelfTest()))
         assert.is_nil((h:Get()))
         lib:SetAvailable("ready")
         assert.are.same({ 50, 51 }, lohi(h))

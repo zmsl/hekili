@@ -35,7 +35,10 @@
 -- across a retarget is not); upgrade if a consumer's gate turns on that case. Sinks are kept, never called
 -- (the belief polls in Drain, decision 15). A point-precision spec is not read (Hekili never asks for one, decision
 -- 6). No aura kind (unproven here), no bar pool: GetStats counts
--- watches only. The unmeasured knobs (bandLead, spendFirst) come with the lanes that need them.
+-- watches only. GetVersion answers minor 7; GetSelfTest reads the capability (pending nil, a "selftest" loss false,
+-- else true) and SelfTest calls back at once. `o.history`: every push kept per source, lib:TruthAt(kind, unit, power,
+-- t) the last at or before t (the bands arms' containment, loop.bandCheck). The bands-drop arm's capability loss is
+-- lib:SetAvailable; the unmeasured knobs (bandLead, spendFirst) come with the lanes that need them (B4, B6).
 local M = {}
 
 M.DEFAULTS = {
@@ -310,6 +313,12 @@ function M.new(o)
     -- The observer's firing: the true value (plain, its own units; nil: no unit) of a source at t.
     function lib:Push(kind, unit, power, value, max, t)
         local s = source(kind, unit, kind == "power" and power or nil)
+        if o.history then -- the truth the harness checks a band against (lib:TruthAt); allocates
+            local hist = s.hist or { n = 0, t = {}, v = {}, m = {} }
+            s.hist = hist
+            hist.n = hist.n + 1
+            hist.t[hist.n], hist.v[hist.n], hist.m[hist.n] = t, value or false, max
+        end
         settle(s, t)
         if value == nil then
             s.pend, s.v, s.m, s.t, s.gone = false, nil, nil, t, true
@@ -359,6 +368,40 @@ function M.new(o)
     -- The capability (the bandDrop arm, a failed self-test): "ready", or "pending" / "unavailable" with a reason.
     function lib:SetAvailable(state, reason)
         cap, capWhy = state, reason
+    end
+
+    -- (o.history) The pushed truth of a source at t: the last push at or before t, value and max (nil: none; false:
+    -- no unit).
+    function lib:TruthAt(kind, unit, power, t)
+        local s = lib.sources[kind .. "|" .. unit .. "|" .. tostring(kind == "power" and power or nil)]
+        local hist = s and s.hist
+        for i = hist and hist.n or 0, 1, -1 do
+            if hist.t[i] <= t then
+                return hist.v[i], hist.m[i]
+            end
+        end
+        return nil
+    end
+
+    -- The major and the minor this fake follows (README, Diagnostics).
+    function lib:GetVersion()
+        return "LibHiddenValues-1.0", 7
+    end
+
+    -- The self-test as the capability says it: nil pending, false a failed self-test, else true; never running. No bar
+    -- model to test: SelfTest calls fn at once with that verdict.
+    local LINES = {}
+    function lib:GetSelfTest()
+        if cap == "pending" then
+            return nil, nil, false
+        end
+        return capWhy ~= "selftest", LINES, false
+    end
+
+    function lib:SelfTest(fn)
+        if fn then
+            fn((lib:GetSelfTest()), LINES)
+        end
     end
 
     function lib:IsAvailable(kind, unit)

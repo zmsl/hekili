@@ -15,8 +15,42 @@ local flicker = require("Game.harness.flicker")
 local timing = require("Game.harness.timing")
 local rng = require("Game.harness.rng")
 local edgestats = require("Game.harness.edgestats")
+local fake_lhv = require("Game.harness.fake_lhv")
 
 local M = {}
+
+-- (bands arms) The containment check of one drain (LibHiddenValues integration design 5.4): each channel the belief
+-- logged a live band for (Sources/Bands.lua's I.bandLive) against the truth the fake library was pushed, read at the
+-- band's own stamp I.bandT (the band says where the value was then: a step band is reported 2 frames after its last
+-- firing, so the truth at the poll may have moved on). run.bands: checked, held (the truth at the stamp inside the band;
+-- a miss is a wrong channel, unit, stamp or a band logged while not live), lagged (held, but the truth at the poll is
+-- outside: the reporting delay, counted apart), live (checks by channel) and the first misses.
+local BAND_EPS = 1e-9
+function M.bandCheck(run, H, lhv)
+    local VI, b = H.ns.VirtualStateInternal, run.bands
+    for ch, on in pairs(VI.bandLive) do
+        if on then
+            local kind, unit, pt = "health", ch < 0 and "target" or "player", nil
+            if ch > 0 then
+                kind, pt = "power", VI.res.type[ch]
+            end
+            local lo, hi = VI.bandLo[ch], VI.bandHi[ch]
+            local function inside(v, m)
+                local x = v and (kind == "health" and v / m or v) -- nonzero: a health push carries its max
+                return x and x >= lo - BAND_EPS and x <= hi + BAND_EPS
+            end
+            b.checked, b.live[ch] = b.checked + 1, (b.live[ch] or 0) + 1
+            if inside(lhv:TruthAt(kind, unit, pt, VI.bandT[ch])) then
+                b.held = b.held + 1
+                if not inside(lhv:TruthAt(kind, unit, pt, H.ctl.now)) then
+                    b.lagged = b.lagged + 1
+                end
+            elseif #b.misses < 5 then
+                b.misses[#b.misses + 1] = ("%s at %.3f: band %s-%s"):format(ch, VI.bandT[ch], lo, hi)
+            end
+        end
+    end
+end
 M.VERDICT_ARM = {} -- the verdict arms (ab.VERDICT; a -novd twin by its base name): their layout line adds `wrong`
 for _, name in ipairs(ab.VERDICT) do
     M.VERDICT_ARM[name] = true
@@ -376,6 +410,7 @@ function M.run(L, seed, o, drivers)
         readyShort = 0,
         heldReady = 0,
         loOver = 0,
+        bands = { checked = 0, held = 0, lagged = 0, live = {}, misses = {} }, -- a bands arm's M.bandCheck
     }
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
@@ -430,6 +465,25 @@ function M.run(L, seed, o, drivers)
         local first = cdm and ctl.viewer.layout == nil -- this call builds the instance's frames (scenarios.viewerLayout)
         local layout = cdm and M.viewerLayout(d.H, arm.layout, seed, wo) or nil
         d.H.Hekili.cdmOff = not cdm
+        -- a bands arm's driver (ab.lua): the fake library in this instance's LibStub, once (the belief keeps the
+        -- library it found), on the instance's clock, with its pushed truth (M.bandCheck); the switch is the debug
+        -- session flag Hekili.bandOff, as cdmOff (with no library in the default arm it changes nothing)
+        local bands = arm.bands and not d.plain or false
+        if bands and not ctl.lhv then
+            ctl.lhv = fake_lhv.new({
+                now = function()
+                    return ctl.now
+                end,
+                history = true,
+            })
+            local major, minor = ctl.lhv:GetVersion()
+            local stub = rawget(d.H.env, "LibStub")
+            stub.libs[major], stub.minors[major] = ctl.lhv, minor
+        end
+        if ctl.lhv then
+            ctl.lhv:SetAvailable("ready") -- a bands-drop arm's last fight lost it
+        end
+        d.H.Hekili.bandOff = not bands
         d.H.Hekili:ProvidersChanged()
         local VI = d.H.ns.VirtualStateInternal
         if VI and VI.def then -- (loop_spec's fake drivers have no belief)
@@ -490,6 +544,7 @@ function M.run(L, seed, o, drivers)
             __index = observer.DEFAULTS,
         })
         k.meter, k.viewer = arm.outcomes == "meter", cdm -- the arm's shapes (none in the default arm)
+        k.bands = bands
         ab.observe(k) -- and its other knobs (the meter arm's taken lead, as the gates' streams)
         for key, v in pairs(content.OBSERVE or {}) do -- the content's client knobs (other powers' reads, forms)
             k[key] = v
@@ -533,6 +588,8 @@ function M.run(L, seed, o, drivers)
             edge = (arm.world or arm.edge) and layout and VI and VI.presence and edgestats.start(d.H, VI) or nil, -- a stress arm's record
             -- (L972, L1009) a later fight's map rebuilt just before the pull, out of combat, as live's pre-pull form shift
             rebuild = layout ~= nil and arm.rebuild and not first or false,
+            lhv = bands and ctl.lhv or nil, -- a bands arm's driver: its fake library (M.bandCheck)
+            dropAt = bands and arm.bandDrop and wo.pull + arm.bandDrop or nil, -- bands-drop: the capability lost then
         }
     end
     local errors0 = {}
@@ -619,6 +676,10 @@ function M.run(L, seed, o, drivers)
                 end
             end
             feed(st.H, st.obs, tc, st.base, st.sink)
+            if st.dropAt and tc >= st.dropAt then -- bands-drop (ab.lua): the capability lost mid-fight
+                st.lhv:SetAvailable("unavailable", "error")
+                st.dropAt = nil
+            end
             st.H.Hekili.ActiveDebug = o.trace or false
             local counted = i == 1 and not o.trace -- the traced fight's debug pass is not runtime cost
             -- the seed turns the phase: a fight's first cycle, the most expensive, must not be every fight's first sample
@@ -643,6 +704,9 @@ function M.run(L, seed, o, drivers)
             st.H.Hekili.ActiveDebug = false
             if not ok then
                 run.raises = run.raises + 1
+            end
+            if st.lhv then -- outside the cycle's time and its sampled bytes
+                M.bandCheck(run, st.H, st.lhv)
             end
             queue(st.H, st.q, 3, res)
             if st.edge then
@@ -900,6 +964,26 @@ function M.run(L, seed, o, drivers)
         end
         if vt and i == 1 then -- a close in the gap's drain (after a kill) is checked too
             M.verdictTruth(vt, run, us, tEnd)
+        end
+        if st.lhv then -- a bands arm's containment row (record-only arms write it to .ab/<arm>.tsv)
+            M.bandCheck(run, st.H, st.lhv)
+            local b, live = run.bands, {}
+            for ch, n in pairs(b.live) do
+                live[#live + 1] = ch .. ":" .. n
+            end
+            table.sort(live)
+            ab.check(
+                b.held == b.checked,
+                "bands",
+                ("seed %d checked %d held %d lagged %d live %s%s"):format(
+                    seed,
+                    b.checked,
+                    b.held,
+                    b.lagged,
+                    table.concat(live, ","),
+                    b.misses[1] and (" misses " .. table.concat(b.misses, "; ")) or ""
+                )
+            )
         end
         if traced[i] then
             st.H.Hekili.Debug, st.H.Hekili.SaveDebugSnapshot = traced[i][1], traced[i][2]

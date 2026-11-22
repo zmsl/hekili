@@ -80,6 +80,11 @@ M.DEFAULTS = {
     -- does (its row goes to the first swing's tie and the secret hit row never hands it back): no undo, so only the
     -- Cooldown Manager's verdict can close the missed debuff. Never on the plain oracle.
     lostAvoid = false,
+    -- (LibHiddenValues lane B1, the bands arms) the hidden-value library's firings for fake_lhv.lua (drive.op `@lhv`):
+    -- the true target health at each wound on it and at each retarget (`@lhvPrime` first), our health at each wound on
+    -- us, each power at each change, all at the pre-pull. Added events only, never on the plain oracle. shortcut: a heal
+    -- carries no health snapshot (world.lua), so heals on us are not pushed; upgrade with a world that heals us.
+    bands = false,
 }
 
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
@@ -342,7 +347,17 @@ function M.new(W, k)
     -- the viewer arms: our auras on each entity (aura -> expires), and the target the items last read (CDM Task 8)
     local mine, viewerTarget, retargetAt = {}, false, -math.huge
     local viewerLast = {} -- (unit .. aura) -> its last @viewer edge's time: the client takes them in order (review I1)
+    -- (k.bands) each entity's health as the wounds left it, and the target the hidden-value library reads
+    local hp, bandTarget = {}, nil
+    for _, e in ipairs(W.ents) do
+        hp[e] = e.health
+    end
     local function retarget(t, tgt) -- the client re-reads its target items the frame after a change (CDM-O: f=1)
+        if k.bands and tgt ~= bandTarget then -- the library's target watches prime again on the new unit
+            bandTarget = tgt
+            push(t, "@lhvPrime", "target")
+            push(t, "@lhv", "health", "target", nil, tgt and hp[tgt] or nil, tgt and tgt.healthMax or nil)
+        end
         if k.viewer and tgt ~= viewerTarget then
             viewerTarget, retargetAt = tgt, t + 0.005
             push(retargetAt, "@viewerRetarget")
@@ -550,6 +565,22 @@ function M.new(W, k)
                 push(t, "UPDATE_SHAPESHIFT_FORM")
             end
             cache(t, ev)
+            if k.bands then -- the library's player sources: our health, each power (sorted: the stream must be stable)
+                push(t, "@lhv", "health", "player", nil, hp[us], us.healthMax)
+                local pts = { us.pt }
+                for pt in pairs(us.res) do
+                    pts[#pts + 1] = pt ~= us.pt and pt or nil
+                end
+                table.sort(pts)
+                for _, pt in ipairs(pts) do
+                    local r = pt ~= us.pt and us.res[pt] or nil
+                    local v = cur[pt]
+                    if v == nil then
+                        v = r and us.res0[pt] or us.power0
+                    end
+                    push(t, "@lhv", "power", "player", pt, v or 0, r and r.max or us.powerMax)
+                end
+            end
             targets(t + 0.1, ev)
             local v = ev.targets[us]
             if k.plain and v then
@@ -842,9 +873,22 @@ function M.new(W, k)
         if k.plain and hv and hv.health and ev.dst == ev.ourTarget then -- a secret-free client's target health
             push(t, "@health", "target", hv.health, ev.dst.healthMax)
         end
+        if k.bands and ev.act == "WOUND" and ev.dst and ev.health then -- the wound's health (world.lua's snapshot)
+            hp[ev.dst] = ev.health
+            if ev.dst == bandTarget then
+                push(t, "@lhv", "health", "target", nil, ev.health, ev.dst.healthMax)
+            end
+            if ev.dst == us then
+                push(t, "@lhv", "health", "player", nil, ev.health, us.healthMax)
+            end
+        end
         if ev.power or ev.resCur then
             local pt = ev.resCur and ev.pt or us.pt
             cur[pt] = ev.resCur or ev.power
+            if k.bands then
+                local r = pt ~= us.pt and us.res[pt] or nil
+                push(t, "@lhv", "power", "player", pt, cur[pt], r and r.max or us.powerMax)
+            end
             if k.plain and ev.power then -- a secret-free client's power, and its event
                 push(t, "@power", k.powerType, ev.power)
                 push(t, "UNIT_POWER_FREQUENT", "player", k.powerToken)

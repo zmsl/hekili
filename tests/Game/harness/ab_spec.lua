@@ -87,6 +87,31 @@ describe("the A/B harness", function()
         assert.is_false(scenarios.stream({ duration = 10 }, 7).secretAmount)
     end)
 
+    it("the bands arms (LibHiddenValues lane B1): the providers the default's, bandDrop on bands-drop only", function()
+        assert.are.same({ outcomes = "default", presence = "router", viewer = false, bands = true }, ab.ARMS.bands)
+        assert.are.same(ab.providers("default"), ab.providers("bands"))
+        assert.are.same(ab.providers("default"), ab.providers("bands-drop"))
+        assert.are.equal(20, ab.ARMS["bands-drop"].bandDrop)
+        assert.is_true(ab.ARMS["bands-drop"].bands)
+        assert.is_nil(ab.ARMS.default.bands)
+    end)
+
+    it("the observer's bands firings are added events only: the rest of the stream is today's", function()
+        local base = scenarios.stream({ duration = 30 }, 7)
+        local with = scenarios.stream({ duration = 30, observe = { bands = true } }, 7)
+        local j, firings = 0, 0
+        for i = 1, with.n do
+            if with.ev[i]:match("^@lhv") then
+                firings = firings + 1
+            else
+                j = j + 1
+                assert.are.same({ base.t[j], base.ev[j], base.a1[j] }, { with.t[i], with.ev[i], with.a1[i] })
+            end
+        end
+        assert.are.equal(base.n, j)
+        assert.is_true(firings > 10, firings)
+    end)
+
     local function count(s, ev)
         local n = 0
         for i = 1, s.n do
