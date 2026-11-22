@@ -5587,6 +5587,17 @@ found = true end
                                         return p.spec == Status.specID
                                     end
                                 },
+                                -- (LibHiddenValues integration design 3.4) over the band library's point cap
+                                bandWarning = {
+                                    type = "description",
+                                    name = function() return scripts:BandWarning( pack ) or "" end,
+                                    image = GetAtlasFile( "Ping_Chat_Warning" ),
+                                    imageCoords = GetAtlasCoords( "Ping_Chat_Warning" ),
+                                    fontSize = "medium",
+                                    width = "full",
+                                    order = 5.13,
+                                    hidden = function() return scripts:BandWarning( pack ) == nil end
+                                },
                                 profileConsiderations = {
                                     type = "description",
                                     name = L["\n|cFF00CCFFBefore trying to import a profile, please consider the following:|r\n\n" ..

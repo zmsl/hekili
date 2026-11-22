@@ -201,3 +201,133 @@ describe("the APL threshold harvest", function()
         end)
     end)
 end)
+
+describe("the active priority's bands", function()
+    local VSI, PACK = nil, ww.PACK
+    local WARN =
+        "This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."
+
+    before_each(function()
+        boot()
+        VSI = H.ns.VirtualStateInternal
+    end)
+
+    local function parse(text)
+        local lines = H.Hekili:ParseActionList(text, true) -- its warnings (an unknown test aura) do not matter here
+        for _, l in ipairs(lines) do
+            l.enabled = true
+        end
+        return lines
+    end
+
+    -- pack `name`'s default list from simc lines, loaded as an options edit does (a full LoadScripts)
+    local function install(name, text)
+        H.Hekili.DB.profile.packs[name].lists = { precombat = {}, default = parse(text) }
+        H.Hekili:LoadScripts()
+    end
+
+    local function lines(literals) -- one line per rage literal
+        local out = {}
+        for _, n in ipairs(literals) do
+            out[#out + 1] = "actions+=/berserker_stance,if=rage>=" .. n
+        end
+        return table.concat(out, "\n")
+    end
+
+    -- the priority editor's warning line for pack `name` (Options.lua, beside the import warning)
+    local function warningNode(name)
+        H.Hekili:EmbedPackOptions()
+        local found
+        local function walk(t, depth)
+            if found or depth > 8 or type(t) ~= "table" then
+                return
+            end
+            for k, v in pairs(t) do
+                if k == name and type(v) == "table" and v.args and v.args.profile then
+                    found = v.args.profile.args
+                    return
+                end
+                walk(v, depth + 1)
+            end
+        end
+        walk(H.Hekili.Options.args, 0)
+        return assert(found and found.bandWarning, "no bandWarning node for " .. name), found.importWarning
+    end
+
+    it("LoadScripts: each script keeps its records, the pack's union goes to def at a new generation", function()
+        local gen = VSI.def.bandGen
+        install(
+            PACK,
+            "actions+=/berserker_stance,if=rage>=40&target.health.pct<20\n"
+                .. "actions+=/berserker_stance,if=rage>=40&rage.deficit>=30&rage.pct<33.5&rage.pct<50\n"
+                .. "actions+=/variable,name=v,value=rage>60\n"
+                .. "actions+=/berserker_stance,if=buff.aura_a.stack>2&health.pct<35\n"
+                .. "actions+=/sequence,name=x:bloodrage,if=rage<=24:berserker_stance"
+        )
+        local DB = H.Hekili.Scripts.DB
+        assert.are.same(
+            { { key = "rage", kind = "points", n = 40 }, { key = "target.health", kind = "pct", n = 20 } },
+            DB[PACK .. ":default:1"].Bands
+        )
+        -- whole pct, health and aura: no point; a sequence member's own if= counts
+        local want = { points = { 25, 40, 61 }, deficit = { 29 }, pct = { 33.5 } }
+        assert.are.same({ rage = want }, H.Hekili.Scripts:PackBands(PACK))
+        assert.are.same({ [RAGE] = want }, VSI.def.bandPoints)
+        assert.are_not.equal(gen, VSI.def.bandGen)
+        assert.is_nil(H.Hekili.Scripts:BandWarning(PACK))
+    end)
+
+    it("one entry loaded outside a full load sends the pack's points again", function()
+        install(PACK, "actions+=/berserker_stance,if=rage>=40\nactions+=/berserker_stance,if=rage>=50")
+        local gen = VSI.def.bandGen
+        local e = H.Hekili.DB.profile.packs[PACK].lists.default[2]
+        e.criteria = "rage>=55"
+        H.Hekili:LoadScript(PACK, "default", 2)
+        assert.are.equal(gen + 1, VSI.def.bandGen)
+        assert.are.same({ 40, 55 }, VSI.def.bandPoints[RAGE].points)
+        e.action, e.var_name, e.value, e.criteria = "variable", "v", "rage>70", nil -- a variable line: the pure reload path
+        H.Hekili:LoadScript(PACK, "default", 2)
+        assert.are.same({ 40, 71 }, VSI.def.bandPoints[RAGE].points)
+    end)
+
+    it("over the cap: no points for that resource, and the editor warns; at the cap: exact, no warning", function()
+        local cap = H.ns.APL_POINT_CAP
+        assert.are.equal(8, cap)
+        local node, imp = warningNode(PACK)
+        install(PACK, lines({ 11, 12, 13, 14, 15, 16, 17, 18, 19 }))
+        assert.are.equal(9, #H.Hekili.Scripts:PackBands(PACK).rage.points)
+        assert.is_nil(VSI.def.bandPoints[RAGE])
+        local text = WARN:format("rage", 9, cap)
+        assert.are.equal(text, H.Hekili.Scripts:BandWarning(PACK))
+        assert.are.equal(text, node.name())
+        assert.is_false(node.hidden())
+        assert.is_not_nil(node.image) -- the import warning's icon, beside it
+        assert.are.same({ imp.image, imp.imageCoords, imp.fontSize }, { node.image, node.imageCoords, node.fontSize })
+        install(PACK, lines({ 11, 12, 13, 14, 15, 16, 17, 18 }))
+        assert.are.same({ 11, 12, 13, 14, 15, 16, 17, 18 }, VSI.def.bandPoints[RAGE].points)
+        assert.is_nil(H.Hekili.Scripts:BandWarning(PACK))
+        assert.is_true(node.hidden())
+    end)
+
+    it("follows the active priority: a change of priority sends the new one's, another's edit sends nothing", function()
+        install(PACK, "actions+=/berserker_stance,if=rage>=40")
+        local hk = H.Hekili
+        local mine = {}
+        for k, v in pairs(hk.DB.profile.packs[PACK]) do
+            mine[k] = v
+        end
+        mine.builtIn = false
+        hk.DB.profile.packs.Mine = mine
+        install("Mine", "actions+=/berserker_stance,if=rage>=70")
+        assert.are.same({ 40 }, VSI.def.bandPoints[RAGE].points) -- Mine is not active
+        local gen = VSI.def.bandGen
+        hk:LoadScript("Mine", "default", 1)
+        assert.are.equal(gen, VSI.def.bandGen)
+        hk.DB.profile.specs[ww.SPEC].package = "Mine"
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+        assert.are.same({ 70 }, VSI.def.bandPoints[RAGE].points)
+        gen = VSI.def.bandGen
+        assert(headless.cycle(H, H.ctl.now + 0.4))
+        assert.are.equal(gen, VSI.def.bandGen) -- no new generation while the priority stands
+    end)
+end)

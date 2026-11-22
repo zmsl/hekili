@@ -1032,5 +1032,8 @@ L["The next box and the alternatives."] = "La case Suivant et les alternatives."
 L["The picks on the lane."] = "Les choix sur la piste."
 L["The lane's time axis, the ruler and the focus zone."] = "L’axe du temps de la piste, la règle et la zone de mise en avant."
 
+-- Hekili/Engine/Sim/Scripts.lua
+-- L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = ""
+
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000ATTENTION|r : cette version d’Hekili Forever est prévue pour un client WoW Forever plus récent ; réinstalle-la pour %s."

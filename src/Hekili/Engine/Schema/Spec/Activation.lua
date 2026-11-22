@@ -338,6 +338,7 @@ function Hekili:SpecializationChanged()
     local specs = Hekili.Engine.settings.specs
     local active = specs and rawget( specs, state.spec.id or 0 )
     Hekili.Scripts:ApplyWindows( active and active.package )
+    Hekili.Scripts:ApplyBands( active and active.package ) -- its harvested thresholds too (Scripts.lua)
     ns.BuildTracked()
     state:BuildWindows() -- the core's window tables (Engine/Sim/State.lua), from class.windows and the APL windows
 

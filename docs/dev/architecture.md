@@ -300,6 +300,14 @@ condition fails now is rechecked like any entry, so "true in t" opens the window
 `window.<name>` gets that time as a recheck (its countdown). The decreasing-clock `<`/`<=` direction works today; the
 weave's "the next Auto Shot fires" is the wrap of a decreasing clock (`ranged_remains>ranged_speed-x`), which only
 ruling R6's `>`/`>=` wrap branch (Task 8b, `Engine/Sim/Scripts.lua`) times.
+The active priority's resource thresholds (LibHiddenValues integration design §3) cross as `def.bandPoints`
+(`{ [powerType] = { points, deficit, pct } }`, sorted plain numbers) at a new `def.bandGen`: `Engine/Sim/AplThresholds.lua`
+scans each entry's texts for a resource token compared with a number literal (`script.Bands`), `scripts:PackBands`
+unions them, `ns.SetAplBands` (Tracked.lua) maps them to power types; sent at the end of `LoadScripts`, after one
+entry's load, before a Build (every Build moves the generation) and when the active priority changes. A `points` value
+is the bar "at least p"; a `deficit` n is the point max - n; a `pct` (fractional only) is the point ceil(N / 100 x max).
+A resource with more than `ns.APL_POINT_CAP` (8, the library's points per source) distinct values sends none, and the
+priority's editor warns on its Source tab. The belief does not read them yet.
 `spec:RegisterReaction(name, { who = "player"|"target", outcome = "dodge"|"parry"|"block"|"miss"|"deflect"|"evade"|"crit"|"swing"|"land"|"kill", hand = "main"|"off", now = fn })`
 crosses as `def.reactions`: a `now` function the belief runs at a settled outcome's row time
 (`Game/State/Families/Now.lua`; incoming from victim-side `UNIT_COMBAT`, ours from `Game/Events/Rows.lua`'s settled

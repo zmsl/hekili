@@ -64,6 +64,16 @@ describe("the band contract: LibHiddenValues on its FakeClient beside fake_api",
         end)
     end)
 
+    -- (integration design 3.4, lane B7) the compiler leaves out a resource whose priority compares it with more exact
+    -- values than the library takes per source: the two caps are one number
+    it("Hekili's APL point cap is the library's points per source", function()
+        local ns = {}
+        assert(loadfile("src/Hekili/Engine/Sim/AplThresholds.lua"))("Hekili", ns)
+        local LHV = api.LibStub(MAJOR)
+        assert.are.equal(LHV.POINTS_PER_SOURCE, ns.APL_POINT_CAP)
+        assert.are.equal(LHV.POINTS_PER_SOURCE, select(5, LHV:GetPool()))
+    end)
+
     it("a target health watch primes: unknown until login and priming, then the true 1% cell", function()
         local LHV = api.LibStub(MAJOR)
         W.unit.target = { health = 0.537 }

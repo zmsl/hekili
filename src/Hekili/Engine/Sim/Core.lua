@@ -1920,6 +1920,8 @@ function Hekili.Update()
         scripts:ApplyWindows( packName )
         state:BuildWindows()
     end
+    -- (LibHiddenValues integration design 3.3) and its harvested thresholds: a string compare per update
+    if packName ~= scripts.appliedBands then scripts:ApplyBands( packName ) end
 
     -- VirtualState: fold what was observed since the last cycle and apply our casts through the spec, after the guards
     -- above and before any reset (docs/superpowers/specs/2026-10-14-hekili-virtualstate-design.md §5.1).

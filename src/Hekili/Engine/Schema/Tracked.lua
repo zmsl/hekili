@@ -243,6 +243,7 @@ local function cdmOf(rec)
 end
 
 local resolveApl -- below: the APL windows' records with this build's ability indexes
+local resolveBands -- below: the APL band points by this spec's power types
 local function buildDef()
     for _, name in ipairs(LISTS) do
         wipe(def[name])
@@ -424,6 +425,7 @@ local function buildDef()
     end
     def.units[1], def.units[2] = "player", "target"
     resolveApl() -- this build's ability indexes for the sequences' steps
+    resolveBands()
     settingsOf()
 end
 
@@ -476,6 +478,27 @@ end
 function ns.SetAplWindows(records, cap)
     def.aplSource, def.aplOpCap, def.aplGen = records, cap, (def.aplGen or 0) + 1
     resolveApl()
+end
+
+--- (LibHiddenValues integration design 3.3, lane B7) The active priority's harvested thresholds (Scripts.lua
+--- scripts:ApplyBands: { [resource key] = { points, deficit, pct } }, sorted plain numbers, a resource over the cap
+--- already left out) as def.bandPoints = { [powerType] = { points, deficit, pct } } at a new def.bandGen; a key that
+--- is not a resource of this spec is dropped. Every build re-maps them and moves the generation (buildDef).
+local bandSource = {}
+resolveBands = function()
+    local out = {}
+    for key, e in pairs(bandSource) do
+        local r = class.resources[key]
+        if r and type(r.type) == "number" then
+            out[r.type] = { points = e.points, deficit = e.deficit, pct = e.pct }
+        end
+    end
+    def.bandPoints, def.bandGen = out, (def.bandGen or 0) + 1
+end
+
+function ns.SetAplBands(records)
+    bandSource = records
+    resolveBands()
 end
 
 --- Rebuilds the belief's tracked set from the active spec (decision 8). Called at the end of
