@@ -37,6 +37,13 @@ local GreenPlus = "Interface\\AddOns\\Hekili\\Textures\\GreenPlus"
 local RedX = "Interface\\AddOns\\Hekili\\Textures\\RedX"
 local BlizzBlue = "|cFF00B4FF"
 local Bullet = AtlasToString( "characterupdate_arrow-bullet-point" )
+
+-- A resource key's name as the client shows it: its power token's global string ("RAGE": "Rage", "COMBO_POINTS"), a
+-- plain localized constant; the key itself when the client has none.
+local function PowerName( key )
+    local s = _G[ key:upper() ]
+    return type( s ) == "string" and s or key
+end
 local ClassColor = C_ClassColor.GetClassColor( Registry.ClassFile() )
 
 local GetSpellDescription = C_Spell.GetSpellDescription
@@ -5590,7 +5597,7 @@ found = true end
                                 -- (bands integration design 3.4) over the band library's point cap
                                 bandWarning = {
                                     type = "description",
-                                    name = function() return scripts:BandWarning( pack ) or "" end,
+                                    name = function() return scripts:BandWarning( pack, PowerName ) or "" end,
                                     image = GetAtlasFile( "Ping_Chat_Warning" ),
                                     imageCoords = GetAtlasCoords( "Ping_Chat_Warning" ),
                                     fontSize = "medium",

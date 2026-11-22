@@ -2010,12 +2010,13 @@ function scripts:ApplyBands( pack )
 end
 
 --- The priority editor's warning (Options.lua, beside the import warning): one line per resource over the cap, or nil.
-function scripts:BandWarning( pack )
+--- `nameOf(key)`: the resource's name to show (the options' client power name), else the key.
+function scripts:BandWarning( pack, nameOf )
     local text
     for key, e in orderedPairs( self:PackBands( pack ) ) do
         local n = ns.AplPointCount( e )
         if n > ns.APL_POINT_CAP then
-            local line = format( L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."], key, n, ns.APL_POINT_CAP )
+            local line = format( L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."], nameOf and nameOf( key ) or key, n, ns.APL_POINT_CAP )
             text = text and ( text .. "\n" .. line ) or line
         end
     end
@@ -2449,12 +2450,16 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     end
 
     -- (bands integration design 3.1) the thresholds the same four texts compare, and a sequence line's
-    -- members' own conditions (their scripts are compiled apart: LoadSequences), for the band library
+    -- members' own conditions (their scripts are compiled apart: LoadSequences), for the band library; a switched-off
+    -- entry declares nothing (as MarkPure and CheckWindows read it)
     local bands, res = {}, specData and specData.resources or {}
     local harvest = ns.AplThresholds
-    local nb = harvest( data.criteria, res, bands ) + harvest( data.value, res, bands )
-        + harvest( data.value_else, res, bands ) + harvest( data.target_if, res, bands )
-    if type( data.steps ) == "table" then
+    local nb = 0
+    if data.enabled ~= false then
+        nb = harvest( data.criteria, res, bands ) + harvest( data.value, res, bands )
+            + harvest( data.value_else, res, bands ) + harvest( data.target_if, res, bands )
+    end
+    if data.enabled ~= false and type( data.steps ) == "table" then
         for _, m in ipairs( data.steps ) do
             if type( m ) == "table" then nb = nb + harvest( m.criteria, res, bands ) end
         end

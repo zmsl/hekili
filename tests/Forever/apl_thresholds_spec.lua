@@ -295,9 +295,24 @@ describe("the active priority's bands", function()
         H.Hekili:LoadScript(PACK, "default", 2)
         assert.are.equal(gen + 1, VSI.def.bandGen)
         assert.are.same({ 40, 55 }, VSI.def.bandPoints[RAGE].points)
-        e.action, e.var_name, e.value, e.criteria = "variable", "v", "rage>70", nil -- a variable line: the pure reload path
+        e.action, e.var_name, e.value, e.criteria = "variable", "v", "rage>70", nil -- a stock variable: the same path
         H.Hekili:LoadScript(PACK, "default", 2)
         assert.are.same({ 40, 71 }, VSI.def.bandPoints[RAGE].points)
+        -- marked pure=1, the pack's pure map changes: LoadScript reloads every line of the pack and returns early
+        e.pure, e.value = 1, "rage>80"
+        gen = VSI.def.bandGen
+        H.Hekili:LoadScript(PACK, "default", 2)
+        assert.is_truthy(H.Hekili.Scripts.PackInfo[PACK].pure.v) -- the pure path ran
+        assert.are.same({ 40, 81 }, VSI.def.bandPoints[RAGE].points)
+        assert.are.equal(gen + 1, VSI.def.bandGen)
+    end)
+
+    it("a switched-off entry declares no threshold", function()
+        install(PACK, "actions+=/berserker_stance,if=rage>=40\nactions+=/berserker_stance,if=rage>=77")
+        H.Hekili.DB.profile.packs[PACK].lists.default[2].enabled = false
+        H.Hekili:LoadScripts()
+        assert.are.same({ rage = { points = { 40 }, deficit = {}, pct = {} } }, H.Hekili.Scripts:PackBands(PACK))
+        assert.are.same({ 40 }, VSI.def.bandPoints[RAGE].points)
     end)
 
     it("over the cap: no points for that resource, and the editor warns; at the cap: exact, no warning", function()
@@ -346,6 +361,40 @@ describe("the active priority's bands", function()
         gen = VSI.def.bandGen
         assert(headless.cycle(H, H.ctl.now + 0.4))
         assert.are.equal(gen, VSI.def.bandGen) -- no new generation while the priority stands
+    end)
+
+    it("a spec change builds the belief with the new active priority's points, before any update", function()
+        install(PACK, "actions+=/berserker_stance,if=rage>=40")
+        local hk = H.Hekili
+        local mine = {}
+        for k, v in pairs(hk.DB.profile.packs[PACK]) do
+            mine[k] = v
+        end
+        mine.builtIn = false
+        hk.DB.profile.packs.Mine = mine
+        install("Mine", "actions+=/berserker_stance,if=rage>=70")
+        hk.DB.profile.specs[ww.SPEC].package = "Mine"
+        local built
+        local build = H.ns.VirtualState.Build
+        H.ns.VirtualState.Build = function(def, ...)
+            built = def.bandPoints[RAGE] and def.bandPoints[RAGE].points
+            return build(def, ...)
+        end
+        hk:SpecializationChanged()
+        H.ns.VirtualState.Build = build
+        assert.are.same({ 70 }, built)
+    end)
+
+    it("the editor names the resource by the client's power name when it has one, else by its key", function()
+        local node = warningNode(PACK)
+        install(PACK, lines({ 11, 12, 13, 14, 15, 16, 17, 18, 19 }))
+        local G = H.env -- the addon's globals (headless.lua runs every file in it)
+        G.RAGE = "Wut"
+        local named = node.name()
+        G.RAGE = nil
+        local keyed = node.name()
+        assert.are.equal(WARN:format("Wut", 9, 8), named)
+        assert.are.equal(WARN:format("rage", 9, 8), keyed)
     end)
 end)
 
