@@ -265,6 +265,38 @@ describe("a dungeon pull through the token plate count (T1)", function()
             assert.is_nil(find(recs, "bane_of_havoc"), "first update after B's plate left " .. names(recs))
         end)
 
+        -- The stable IDs' adoption (unit-registry spec 2.8): the tab hides the line (the count unknown), and the late
+        -- plate must not bring it back before the next tab (on, off, on).
+        it("Destruction, Havoc on nobody: a late plate after the tab brings no Havoc before the next tab", function()
+            boot(2)
+            local function havoc()
+                return H.ns.Facade.DebuffCount(A.bane_of_havoc.id, t)
+            end
+            for k = 2, 1, -1 do -- both plates carry the cycled lines' debuffs, so the queue has room for Havoc's line
+                tab(k)
+                for _, a in ipairs({ "curse_of_the_elements", "immolate", "corruption" }) do
+                    cast(A[a].id)
+                end
+            end
+            local recs
+            recs, t = queue(H, t)
+            assert.are.equal(0, havoc(), "on A")
+            assert.is_truthy(find(recs, "bane_of_havoc"), "on A: Havoc shows " .. names(recs))
+            mw.target(H, 0)
+            recs = first() -- one update lands before the plate: the queue shows its answer an update later
+            assert.is_nil(havoc(), "no plate yet")
+            H.ctl.unitIs.target, H.ctl.unitIs.nameplate3 = "nameplate3", "target"
+            mw.plate(H, 3)
+            recs = first()
+            assert.is_nil(find(recs, "bane_of_havoc"), "the tab's unknown count hides the line " .. names(recs))
+            recs, t = queue(H, t)
+            assert.is_nil(find(recs, "bane_of_havoc"), "the late plate's mob, settled " .. names(recs))
+            assert.is_nil(havoc(), "still unknown")
+            mw.target(H, 1)
+            recs, t = queue(H, t)
+            assert.is_truthy(find(recs, "bane_of_havoc"), "the next tab: Havoc is back " .. names(recs))
+        end)
+
         -- The accepted trade-off of I1's fix (swaps read the count before the hold): a plate that flaps (REMOVED, then
         -- ADDED the next update) while it is the only enemy lacking the debuffs disarms the swap for that one update,
         -- while the held count (AoE lines, the display) stays. A dotted add dying is far more common than an edge flap

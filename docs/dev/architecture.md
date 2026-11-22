@@ -61,8 +61,9 @@ copy; the core's `state.reset` copies every registered window through it (`Engin
 `WindowOp` is the only write back. The second is the debuff count (option D, owner decision 2, 2026-11-11):
 `ns.Facade.DebuffCount(spellID, now)` -> how many enemies the belief holds the aura up on (the target plus every
 remembered target slot, keyed by GUID in the open world and by stable ID under the Map restriction), or nil when unknown
-(no target, a target whose ID has no plate, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on
-Forever"). `def` carries plain records (batch 4, the owner's
+(no target, a target no plate answered for at its target change, until the next one even if its plate is added
+meanwhile, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on Forever"). `def` carries plain
+records (batch 4, the owner's
 design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a function the belief runs in its own
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
 `tests/Forever/plain_records_spec.lua`), or absent; a function field may carry a static value the core computes under

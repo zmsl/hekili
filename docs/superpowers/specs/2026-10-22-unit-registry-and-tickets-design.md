@@ -245,11 +245,13 @@ tells mobs apart by a stable ID: an integer from one session counter, so it neve
   frame undoes the adoption (the compare answered the new target before its event), so two mobs never merge.
 - The target keeps its ID and its live record through its plate's removal. An ID that no plate bears is forgotten at
   the next target change, with its memory.
-- `PLAYER_TARGET_CHANGED` fires twice a swap. The second event keeps the ID: by the plate, and with no plate by being
-  in the first one's frame (one `GetTime`; that both events share a frame is assumed, unmeasured).
+- `PLAYER_TARGET_CHANGED` was once seen twice a swap (L1696) and is not seen so in the saved captures. Kept
+  idempotent: a second event keeps the ID by the plate, and with no plate by being in the first one's frame (one
+  `GetTime`).
 - A revive (poll 4's dead -> alive edge) is no target change: the ID and the slot stand, the health starts over.
 - A rebuild is no target change: the IDs stand, the memory starts over. A flip between plain and secret target GUIDs
-  and a world entry renew every plate's ID and forget all memory. A /reload starts over.
+  and a world entry renew every plate's ID and forget all memory; a world entry leaves the target's ID until its next
+  target change, so until then it can differ from its plate's. A /reload starts over.
 
 What reads the ID:
 
@@ -257,8 +259,9 @@ What reads the ID:
   (`Families/Auras.lua`) and the target's health (`Families/TargetHealth.lua`) are per ID: a target with no plate
   still holds a slot, so a usable answer bounds its health and poll 14 asks its range. A slot of an ID never reads
   "fresh".
-- `Facade.DebuffCount` counts the slots. It stays nil (unknown) while the target took its ID with no plate and none
-  has adopted it: the other enemies' debuffs cannot be known then.
+- `Facade.DebuffCount` counts the slots. It is nil (unknown) from a target change that no plate answered to the next
+  target change or rebuild: the other enemies' debuffs cannot be known then. An adoption does not end that (a count
+  there would bring back the line the target change just hid: on, off, on), and a plate's removal does not start it.
 
 What never does: `Facade.UnitGUID` (nil), a combat-log row's destination, the damage table, the core's enemy count, a
 registry slot and a ticket's pin. The registry's rows about such a unit stay unresolved (2.3).

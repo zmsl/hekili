@@ -34,8 +34,8 @@ local forgetN, noPlateN = 0, 0 -- slots forgotten by plate edges and flips; Map 
 I.targetKeys = guid -- read-only, for tests
 
 -- Stable IDs (spec §2.8): by plate number its ID (0: no plate), the target's (0: none, or a plain GUID), and whether
--- that one was made with no plate and none adopted it since (Facade.DebuffCount: unknown). Never an identity outside
--- the belief: no GUID, no row's destination, no count of enemies.
+-- the last target change made that one with no plate (Facade.DebuffCount: unknown; an adoption does not clear it).
+-- Never an identity outside the belief: no GUID, no row's destination, no count of enemies.
 local plateID, lastID = {}, 0
 for k = 1, 40 do
     plateID[k] = 0
@@ -160,7 +160,7 @@ local function swap(api, t, rebuilt)
         -- probe TP6) keeps them, keyed by its GUID string
         mode = false
     end
-    local again = rebuilt or t == swapT -- no new change: the build's, or the swap's second event (L1696)
+    local again = rebuilt or t == swapT -- no new change: the build's, or a swap's second event (L1696; kept idempotent)
     if adoptK > 0 and adoptT == t and not again then -- the plate added in this frame was the new target's
         release(adoptK, t)
         plateID[adoptK] = newID()
@@ -276,7 +276,8 @@ end
 S.On("NAME_PLATE_UNIT_REMOVED", nil, function(api, t, unit)
     plateEdge(t, unit)
 end)
--- An added plate that is the target adopts its ID and its slot: no swap, no load (no flicker); any other, a new ID.
+-- An added plate that is the target adopts its ID and its slot: no swap, no load, and I.targetNoPlate stands (no
+-- flicker: the debuff count the target change made unknown stays so); any other, a new ID.
 S.On("NAME_PLATE_UNIT_ADDED", nil, function(api, t, unit)
     local k = plateEdge(t, unit)
     if not k then
@@ -285,8 +286,7 @@ S.On("NAME_PLATE_UNIT_ADDED", nil, function(api, t, unit)
     local id = I.targetID
     if id > 0 and Plain(api, api.UnitIsUnit("target", unit)) == true then
         plateID[k], guid[I.targetSlot] = id, id
-        I.targetNoPlate = false
-        adoptK, adoptT = k, t -- a target change later in this frame undoes it (swap): the event order is unmeasured
+        adoptK, adoptT = k, t -- a target change later in this frame undoes it (swap): Map's event order is unmeasured
     else
         plateID[k] = newID()
     end
@@ -319,10 +319,9 @@ end)
 
 -- Poll 14: each tracked ability's plain range answer (action.<key>.in_range) while the target holds a memory slot,
 -- and the target's distance bracket, LibRangeCheck's (range plan R2: the facade's RangeLib; asked whenever there is
--- a target, a secret GUID's too, which takes no slot under the Map restriction). Logged when it changes; a poll with
--- no plain answer keeps the last for under RANGE_AGE s, then logs it unknown once (TargetRange a = -1: a secret,
--- raising or silent library never freezes the bracket for the fight). Allocates nothing once `answer` has grown to
--- the ability count.
+-- a target, a secret GUID's too). Logged when it changes; a poll with no plain answer keeps the last for under
+-- RANGE_AGE s, then logs it unknown once (TargetRange a = -1: a secret, raising or silent library never freezes the
+-- bracket for the fight). Allocates nothing once `answer` has grown to the ability count.
 S.Poll(14, function(api, t)
     if I.curSlot ~= 0 then
         local A = I.ab
