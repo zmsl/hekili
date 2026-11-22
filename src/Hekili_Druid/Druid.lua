@@ -246,6 +246,12 @@ spec:RegisterResource(
     { regen = 10, refundOnAvoid = 0.8 }
 )
 spec:RegisterResource(Enum.PowerType.ComboPoints)
+-- A combo point gained or spent is a plain COMBO_POINTS power event; refresh at once, reading no value.
+spec:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player", nil, function(_, _, powerType)
+    if powerType == "COMBO_POINTS" then
+        Hekili:ForceUpdate(powerType, true)
+    end
+end)
 
 spec:RegisterResource(
     Enum.PowerType.Rage,
