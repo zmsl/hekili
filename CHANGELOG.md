@@ -27,6 +27,7 @@
 - Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.
 - A `/reload` while you channel a spell no longer raises an "Unknown buff: cast" error, and the rest of that channel is predicted again.
 - Melee: when your auto attack misses, or is dodged or parried, shortly after an ability such as Rip, the energy or rage that ability cost is no longer counted as given back, so the next ability no longer lights up before you can afford it.
+- Fury Warrior: rage from an auto attack made just before Execute is no longer counted again after Execute spent all your rage, so an ability no longer lights up right after Execute before you can afford it.
 
 ### Known issues
 

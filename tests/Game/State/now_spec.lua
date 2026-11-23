@@ -2370,6 +2370,40 @@ describe("now handlers", function()
                 assert.are.equal(39, rage(5.6).est)
             end)
 
+            -- Fury L24 harness gate (lane swing-avoid-fix, L1793): a swing's rage was in the game's pool before the
+            -- cast whose `now` spent the whole pool (Execute); its wound after the cast credits nothing on top: 0, not 9
+            local function swingThenRest()
+                rest(true, false)
+                ctl.now = 4.9
+                ctl.Fire("PLAYER_SWING", 3.6, 0) -- its rage (9) is in; the cast below spends it with the rest
+                drain(4.95)
+                cast(fs.SPENDER_C, 5)
+                assert.are.equal(0, rage(5.04).est)
+            end
+            local function wound()
+                ctl.now = 5.374 -- the swing's wound (lag 0.474)
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 100, 1)
+                drain(5.4)
+                return rage(5.5)
+            end
+
+            it("a swing before a cast whose `now` emptied the pool, its wound after: no rage on top", function()
+                swingThenRest()
+                local r = wound()
+                assert.are.equal(1, I.Log.credited[1]) -- the credit itself stands
+                assert.are.same({ 0, 0, 0 }, { r.lo, r.est, r.hi })
+            end)
+
+            it(
+                "an avoided cast that emptied the pool: the swing before it pays on the give-back (40 - 10 + 9)",
+                function()
+                    swingThenRest()
+                    outcome(5.05, "DODGE")
+                    assert.are.equal(30, rage(5.1).est)
+                    assert.are.equal(39, wound().est)
+                end
+            )
+
             -- review I1: poll 2 re-asks every tracked spender each drain, so a standing usable answer (the live case)
             -- lifts lo and est to its rung right after the cast zeroes them
             for _, field in ipairs({ true, false }) do

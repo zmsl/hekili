@@ -47,7 +47,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- `liftE/L/H[r]` and `liftT[r]`: how far a rung lifted a swing-paid slot's est, lo and hi (our cast's success, a usable
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
--- may pay the rest).
+-- may pay the rest). `emptyT[r]`: when our cast's `now` last took the slot's top to 0 (it spent the whole pool, as an
+-- Execute: I.Emptied); a swing at or before it was in that pool, so its credit pays nothing (L1793).
 -- `capT[r]`: when a short answer last reached the floor since our last spend; until the next fold moves the clock a read
 -- stands on a ceiling, not a measurement (VS.Power's `capped`), and a poll still short marks it again; a usable answer
 -- above the top (the same poll's, a dearer ability) contradicts the short one and ends it. `capB[r]`: false
@@ -160,6 +161,7 @@ local R = {
     liftH = {},
     liftT = {},
     liftRec = {},
+    emptyT = {},
     liftCE = {},
     liftCL = {},
     liftCH = {},
@@ -535,7 +537,7 @@ I.OnBuild(function(def, now)
         R.ownT[r], R.ownV[r], R.castGain[r] = -1e9, 0, 0
         R.crossT[r], R.crossLo[r] = -1e9, 0
         R.pinN[r], R.pinErr[r] = 0, 0
-        R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
+        R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r], R.emptyT[r] = 0, 0, 0, -1e9, 0, -1e9
         R.liftCE[r], R.liftCL[r], R.liftCH[r] = 0, 0, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
         R.raised[r] = 0
@@ -1965,11 +1967,12 @@ I.On(Obs.Swing, function(o, t)
                 local pE, pL, pH = R.liftE[r], R.liftL[r], R.liftH[r]
                 -- a rung that lifted the slot while this swing was out already holds its rage (owe): net it first
                 local owes = o.t <= R.liftT[r] and t - R.liftT[r] <= I.LIFT_WINDOW
+                local keep = o.t > R.emptyT[r] and 1 or 0 -- 0: a cast since spent this swing's rage with the pool
                 if c == 5 then -- est and hi only: affordability never rests on an assumption
                     -- EV (decision 52 as ruled): the expected share of a step, read after the update above (a lost
                     -- close's: h0 x (1 - alpha^2), the swing's decay and the share's credit)
                     local f = hitRate[hand]
-                    local de = v * sc * f
+                    local de = v * sc * f * keep
                     local dh = de
                     if owes then
                         de, R.liftE[r] = net(de, R.liftE[r])
@@ -1988,8 +1991,8 @@ I.On(Obs.Swing, function(o, t)
                 elseif k > 0 and recR[k] == r then -- confirmed: the rest of a landed step, and its floor
                     R.liftRec[r] = owes and o.b or 0 -- as a landed swing's (c = 1): its crit pays the rest it owed
                     local w = I.SwingWidth(r, hand, o.t)
-                    local de, dh = v * sc * (1 - recAsm[k]), (v + w) * (sc + sp) - v * sc * recAsm[k]
-                    local dl = lowStep(r, hand, o.t)
+                    local de, dh = v * sc * (1 - recAsm[k]) * keep, ((v + w) * (sc + sp) - v * sc * recAsm[k]) * keep
+                    local dl = lowStep(r, hand, o.t) * keep
                     if owes then
                         de, R.liftE[r] = net(de, R.liftE[r])
                         dh, R.liftH[r] = net(dh > 0 and dh or 0, R.liftH[r])
@@ -2035,7 +2038,9 @@ I.On(Obs.Swing, function(o, t)
                 owes = R.liftRec[r] == o.b -- its crit pays the rest of what its landed step owed
             end
             local pE, pL, pH = R.liftE[r], R.liftL[r], R.liftH[r]
-            swingStep(r, hand, c, t, owes, at)
+            if at > R.emptyT[r] then -- else a cast since spent this swing's rage with the whole pool
+                swingStep(r, hand, c, t, owes, at)
+            end
             ownCover(r, hand, at, pE, pL, pH)
             if k > 0 and c == 1 then
                 local x = abs(o.t - swT[hand]) < 1e-6 and swE[hand] < e and swE[hand] or e
@@ -2469,6 +2474,12 @@ function I.LiftExplained(r, sE, sL, sH, gE, gL, gH)
     u = R.liftH[r] - sH
     u = u < gH and u or gH
     R.liftH[r] = u > 0 and R.liftH[r] - u or R.liftH[r]
+end
+
+--- Our cast's `now` took slot r's top to 0 at t (Families/Now.lua; -1e9: its avoid gave the pool back): a swing at or
+--- before t was in the pool it spent, so its credit pays nothing (L1793, R.emptyT). Allocates nothing.
+function I.Emptied(r, t)
+    R.emptyT[r] = t
 end
 
 --- A refund `d` proven wrong (the CDM verdict's, struck: Families/Now.lua I.VerdictTakeBack) comes back out of slot r:
