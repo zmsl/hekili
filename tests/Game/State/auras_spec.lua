@@ -2403,6 +2403,32 @@ describe("auras", function()
             end
         )
 
+        -- fix round 1: REFRESH_LAG's value (LAT 0.35 s; was 0.5) pinned at its boundary, both sides
+        for _, c in ipairs({ { 0.4, true }, { 0.3, false } }) do
+            it(
+                ("D14: an UP read %.1f s after our refresh, then dark: %s"):format(
+                    c[1],
+                    c[2] and "rule 1 closes it (past REFRESH_LAG)" or "it stays (inside REFRESH_LAG)"
+                ),
+                function()
+                    I.verdictOff = true -- rule 1 alone
+                    cast(1, SHOUT, 10, 120)
+                    ctl.ViewerAura(pi, "player")
+                    poll(10.5)
+                    poll(11)
+                    cast(1, SHOUT, 20, 120) -- our refresh: applied 20, expires 140
+                    poll(20 + c[1]) -- the item read UP this long after the write
+                    ctl.ViewerClear(pi)
+                    poll(20 + c[1] + 0.1)
+                    if c[2] then
+                        assert.is_nil(VS.Aura("player", fs.SPENDER_A, 20 + c[1] + 0.1))
+                    else
+                        assert.are.equal(140, est("player", fs.SPENDER_A, 20 + c[1] + 0.1))
+                    end
+                end
+            )
+        end
+
         it(
             "an UP while believed up stages nothing; UNKNOWN leaves the record; an item flap never takes it down",
             function()
