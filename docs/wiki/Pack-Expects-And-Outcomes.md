@@ -38,7 +38,7 @@ An ability's **`expects`** field tells the core what the cast's hit looks like: 
 
 A ticking kind reads the aura the ability applies: the ability's `cycle` if set, else its `aura`, else the aura with the ability's own key. That aura's `tick_time` is the period, and `floor(duration / tick_time)` is the number of ticks, both read at each cast; a function is evaluated in the simulated state. The ability itself has no tick fields.
 
-An `"instant"` or `"travel"` ability whose aura has a `tick_time` and `dot = "debuff"` also ticks after its hit. A `"ticks"` ability may also have a `velocity`, for a damage-over-time effect that flies to the target.
+An `"instant"` or `"travel"` ability whose aura has a `tick_time` and `dot = "debuff"` also ticks after its hit. A `"ticks"` ability may also have a `velocity`, for a damage-over-time effect that flies to the target. A `"debuff"` ability may have one too, for an effect that lands when the caster arrives, such as a charge's stun or root: the Cooldown Manager's check after the cast waits for that travel.
 
 ## Examples
 
