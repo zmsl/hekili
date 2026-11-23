@@ -2079,25 +2079,60 @@ describe("the wowsims APL translator's re-pin reads", function()
         assert.are.equal("actions=strike,if=action.strike.gcd<1.5", lines(g(100)))
     end)
 
-    it("omits a line reading the player's health, hidden in combat (rule 23); another unit's is unsupported", function()
-        local hidden = ": the player's health, hidden in combat"
-        local text, omitted = apl.translate({
-            valueVariables = { { name = "Low", value = cmp("OpLt", { currentHealthPercent = {} }, const("50%")) } },
-            priorityList = {
-                cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("60%"))),
-                cast(100, AND(cmp("OpGt", { currentHealth = {} }, const("1000")), const("true"))),
-                cast(100, { variableRef = { name = "Low" } }), -- through a variable too
-                cast(100, cmp("OpGt", { currentHealth = { sourceUnit = { type = "Pet" } } }, const("1000"))),
-                cast(100, cmp("OpLt", { currentManaPercent = {} }, const("50%"))), -- not health: kept
-            },
-        }, ctx({}))
-        assert.are.equal("actions=strike,if=mana.pct_lo<50", text)
-        assert.are.same({
-            "default #1: currentHealthPercent" .. hidden,
-            "default #2: currentHealth" .. hidden,
-            "default #3: currentHealthPercent" .. hidden,
-            "default #4: currentHealth of Pet",
-        }, omitted)
+    -- rule 23 (owner L1805, replacing L1462's omission): the player's health is read, its line guarded whole by its
+    -- enablement term (Facade.Known's `health.known`), through a variable too; another unit's is unsupported
+    it(
+        "guards a line reading the player's health with health.known (rule 23); another unit's is unsupported",
+        function()
+            local text, omitted = apl.translate({
+                valueVariables = { { name = "Low", value = cmp("OpLt", { currentHealthPercent = {} }, const("50%")) } },
+                priorityList = {
+                    cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("60%"))),
+                    cast(100, AND(cmp("OpGt", { currentHealth = {} }, const("1000")), const("true"))),
+                    cast(100, { variableRef = { name = "Low" } }), -- through a variable too
+                    cast(100, cmp("OpGt", { currentHealth = { sourceUnit = { type = "Pet" } } }, const("1000"))),
+                    cast(100, cmp("OpLt", { currentManaPercent = {} }, const("50%"))), -- not health: no guard
+                    -- an `|` branch and a `not`: the line's whole condition under the term (false while unknown)
+                    cast(100, OR(cmp("OpLt", { currentHealthPercent = {} }, const("40%")), { gcdIsReady = {} })),
+                    cast(100, NOT(cmp("OpGt", { currentHealthPercent = {} }, const("80%")))),
+                },
+            }, ctx({}))
+            assert.are.equal(
+                table.concat({
+                    "actions=strike,if=health.known&health.pct<=60",
+                    "actions+=/strike,if=health.known&health.current>1000",
+                    "actions+=/strike,if=health.known&health.pct<50",
+                    "actions+=/strike,if=mana.pct_lo<50",
+                    "actions+=/strike,if=health.known&(health.pct<40|gcd.remains<=0)",
+                    "actions+=/strike,if=health.known&!(health.pct>80)",
+                }, "\n"),
+                text
+            )
+            assert.are.same({ "default #4: currentHealth of Pet" }, omitted)
+        end
+    )
+
+    it("refuses a recipe's own line reading the player's health without health.known (rule 23)", function()
+        local function build(line)
+            return apl.translate(
+                { priorityList = { cast(100) } },
+                ctx({ extra = { { before = "strike", line = line } } })
+            )
+        end
+        assert.has_error(function()
+            build("dot,if=health.pct<30")
+        end, "rule 23: a line reads the player's health without health.known: actions=dot,if=health.pct<30")
+        assert.are.equal(
+            "actions=dot,if=health.known&health.pct<30\nactions+=/strike",
+            (build("dot,if=health.known&health.pct<30"))
+        )
+        assert.are.equal(
+            "actions=dot,if=target.health.pct<30\nactions+=/strike",
+            (build("dot,if=target.health.pct<30"))
+        )
+        assert.is_false(apl.unguarded("actions=dot,if=pet.health.pct<30|target.health.current>1"))
+        assert.is_true(apl.unguarded("actions=dot,if=target.health.known&health.deficit>1"))
+        assert.is_false(apl.unguarded("actions=dot,if=health.known&health.deficit>1"))
     end)
 
     it("auraDuration is the aura's duration on its unit, guarded; another player's is dropped", function()

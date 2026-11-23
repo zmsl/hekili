@@ -53,6 +53,12 @@ return {
         forever = "Estimated while hidden",
         example = "mana.deficit_pct>40",
     },
+    ["<resource>.known"] = {
+        type = "boolean",
+        meaning = "The amount is read now (plainly, or in whole-percent steps from the game's band), not only estimated",
+        forever = "Read",
+        example = "rage.known&rage.lo>=20",
+    },
     ["<resource>.regen"] = {
         type = "number per second",
         meaning = "The regeneration rate now",

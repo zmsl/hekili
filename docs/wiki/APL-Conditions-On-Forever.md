@@ -69,11 +69,15 @@ actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
 | Expression | Support | On Forever | Write this instead |
 |---|---|---|---|
 | `target.health.pct`, `target.health.current`, `target.health_pct` | Read | In whole-percent steps, no lower than 2 while the target lives; an ability usable only below a target-health threshold corrects a step that disagrees with it. 100 for a moment after a target change or a revive. If the game offers no reading, 100 until an ability usable only below a target-health threshold becomes usable, then that threshold, such as 20 | n/a |
-| `health.pct`, `health.current` | Read | The player's health in whole-percent steps: the game hides it, in combat and out, so it is the middle of the game's reported 1% band while one is live. If the game offers no reading, full (100). A plain reading, if the game ever gives one, is used as is | n/a |
+| `health.pct`, `health.current` | Read | The player's health in whole-percent steps: the game hides it, in combat and out, so it is the middle of the game's reported 1% band while one is live. When the reading drops out for a moment, as when health changes on almost every frame, the last reading stands for up to a second. If the game offers no reading, full (100). A plain reading, if the game ever gives one, is used as is | `health.known&health.pct<=40` |
+| `health.known` | Read | True while `health.pct` is a reading, false while it reads full for lack of one. Put it first on a line that tests the player's health, so the line stays off while there is no reading, a `health.pct>X` line included. The built-in priorities' low-health lines all carry it | n/a |
+| `<resource>.known`, such as `rage.known` | Read | True while that resource is read: plainly, or in whole-percent steps from the game's reported band. False while it is only estimated | n/a |
+| `aura.known` | Read | True while the game's Cooldown Manager can be read for the hidden aura values (stacks and time left). Nothing built in uses it yet | n/a |
 | `group_health`, `at_risk` | Fixed | Every other group member reads as full, because the game hides other players' health, and the player reads as `health.pct` does. `group_health` is the group's average health; `at_risk` counts the members below 70% health, so it is 1 while the player is below 70% and 0 otherwise | n/a |
 | `incoming_damage_<N>s`, `incoming_physical_damage_<N>s`, `incoming_magic_damage_<N>s`, `incoming_heal_<N>s` | Fixed | 0, because the game hides the amount of each hit and heal on the player | n/a |
 
 - At an ability's health threshold, write `<=`, such as `target.health.pct<=20`, not `<20`: when the ability's answer corrects a step, or stands in for a missing one, the value can be exactly the threshold.
+- Each kind of hidden reading, health, resources and Cooldown Manager auras, can stop on its own: `health.known` can be false while `rage.known` is true. A custom line that tests `health.pct` without `health.known` loads without a warning; without it, `health.pct>X` passes while there is no reading.
 - A class pack can name the low-health phase itself; its class file lists such names ([Pack class file anatomy](Pack-Class-File-Anatomy)).
 
 ## Buffs and debuffs

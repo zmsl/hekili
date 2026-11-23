@@ -440,11 +440,13 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
 What players read in a pack's description (the recipe's `notes`), and why. Warrior (the user's rulings, 2026-10-21):
 - The kit's toggles: Cooldowns hides Death Wish, Sweeping Strikes and Recklessness (Arms and Fury; Recklessness also
   behind its `wowsims_recklessness` pack setting, off by default) and the racials; Defensives hides Healthstone, Disarm,
-  Shield Wall, Last Stand, Stoneform and Shatter Curse, none of which a Warrior pack line casts; Potions hides none in
+  Shield Wall, Last Stand, Stoneform and Shatter Curse (Protection casts all but Disarm); Potions hides none in
   Warrior. Bloodrage, Intimidating Shout and Mocking Blow are under no toggle.
 - Protection's defensive lines (Last Stand, Shield Wall, Stoneform, Shatter Curse, Healthstone) and Guardian's
-  (Barkskin, Frenzied Regeneration) wait on a health threshold, and the client hides player health in combat, so the
-  translator omits them (rule 23, owner L1462): players press them by hand, and each pack's notes say so.
+  (Barkskin, Frenzied Regeneration) wait on a health threshold the client hides; they read the hidden-value band under
+  `health.known` (rule 23, owner L1805), and each pack's notes say they show only while Hekili can read the health.
+  Stoneform also needs a poison or disease on us (Hekili_Shared Races/Dwarf.lua), which our hidden auras never show in
+  combat, so its line stays false there (kept: wowsims's line, harmless false).
 - Protection's Demoralizing Shout (off unless Maintain Demoralizing Shout is on, rule 15) and Thunder Clap: a player
   keeps them for bosses with the per-ability Boss Encounter Only option or the Custom 1 toggle (no code change; the
   user approved the audit's proposal).

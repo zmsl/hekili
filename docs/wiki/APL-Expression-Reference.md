@@ -46,7 +46,7 @@ When a comparison asks a resource to reach a value, as in `energy.lo>=60` or `60
 ### Edge cases
 
 - `<resource>.time_to_<N>` with an N that is not a number reads 3600.
-- `health.pct` reads in whole-percent steps, because the game hides the player's health; 100 if the game offers no reading.
+- `health.pct` reads in whole-percent steps, because the game hides the player's health; 100 if the game offers no reading. `health.known` says whether there is one.
 - The WoW client raises an error on division by zero, unlike standard Lua. A value that can be zero must not be used as a divisor.
 
 ## Buffs and debuffs
@@ -233,7 +233,8 @@ actions+=/mind_flay,if=((action.inner_focus.known&prev.1.inner_focus)|(!action.i
 | `spell_targets.<key>` | number | Enemies counted for the ability; `active_enemies` unless the class pack limits it | Read | `spell_targets.swipe_bear>=3` |
 | `gcd.remains` | seconds | Time until the running GCD ends | Read | `gcd.remains<=0` |
 | `gcd.max` | seconds | The length of a GCD | Modelled | `gcd.max<1.5` |
-| `health.pct` | percent | The player's health | Whole-percent steps (the game hides it); 100 if the game offers no reading | `health.pct<=30` |
+| `health.pct` | percent | The player's health | Whole-percent steps (the game hides it); 100 if the game offers no reading | `health.known&health.pct<=30` |
+| `health.known` | boolean | The player's health has a reading | Read | `health.known&health.pct<=30` |
 | `totem.<element>.up` | boolean | A totem of that element is placed | Read out of combat; estimated in combat | `!totem.fire.up` |
 | `totem.<element>.remains` | seconds | Time until it expires | Estimated | `totem.fire.remains<2` |
 | `main_hand.<kind>`, `off_hand.<kind>` | boolean | The weapon in that hand is of a kind, such as `dagger` or `two_handed` | Read | `main_hand.dagger` |

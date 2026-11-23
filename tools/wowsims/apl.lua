@@ -292,9 +292,14 @@
 --    pool (a lower level, whose N may exceed its whole pool) reads the share. No log: unsupported (rule 2). A `not` of
 --    our mana under a number is rewritten too (`!(mana.lo<N&mana.pct_lo<P)`), while a direct `>` or `>=` a number
 --    stays absolute; no APL at the pins has either form.
--- 23. The player's health (`currentHealthPercent`, `currentHealth`; owner L1462): the client hides it in combat, so a
---    read of it is unsupported (rule 2): the entry is omitted, as is a call or variable reading it. Another unit's
---    health read is unsupported as any other unit's (`... of <unit>`).
+-- 23. A hidden value of ours read through the hidden-value library (owner L1805, replacing L1462's omission): the
+--    player's health (`currentHealthPercent` `health.pct`, a percent read under rule 8; `currentHealth`
+--    `health.current`) is read, and the whole line's condition gets that kind's enablement term first (M.KNOWN:
+--    `health.known&(...)`, also through a variable), so with the reads not working (no band, the library missing,
+--    refused, re-priming past the hold) the line is false, an inverted `>` read or an `|` branch included. A read outside
+--    a line's condition is unsupported (rule 2). Another unit's health read is unsupported as any other unit's (`... of
+--    <unit>`). Every emitted line, recipe lines included (`leveling`, `levelingFirst`, `extra`, `condition`, `guard`),
+--    that reads the player's health without `health.known` fails the build (M.unguarded).
 -- 24. A channelSpell's `interruptIf` (owner L1748: "if wowsims cuts channels, we should too") is its line's
 --    `interrupt_if=<condition>` (`1` when it folds true; none when it folds false or is absent, wowsims's plain cast):
 --    the engine reads it where wowsims does (Engine/Sim/Core.lua channelCut): at each tick but the last, with the GCD
@@ -391,6 +396,8 @@ M.VALUES = {
     currentEnergy = "energy.lo",
     currentMana = "mana.lo",
     currentManaPercent = "mana.pct_lo",
+    currentHealthPercent = "health.pct", -- rule 23: the line guarded (M.KNOWN)
+    currentHealth = "health.current",
     maxMana = "mana.max",
     currentManaRegen = "mana.regen",
     currentComboPoints = "combo_points.current",
@@ -899,7 +906,23 @@ local function reads(c, x)
 end
 
 -- Rule 8's percent reads (0-100 in the engine, 0-1 in wowsims).
-M.PERCENT = { currentManaPercent = true }
+M.PERCENT = { currentManaPercent = true, currentHealthPercent = true }
+
+-- Rule 23: a read of a hidden value of ours -> the enablement term its line is guarded by (Facade.Known's conditions).
+-- A power read would join here (`currentRage = "rage.known"`) once a line needs it; none does (the model answers).
+M.KNOWN = { currentHealthPercent = "health.known", currentHealth = "health.known" }
+
+-- Rule 23: whether line `s` reads the player's health (`health.<field>`, not another unit's `<unit>.health.`) without
+-- its enablement term.
+function M.unguarded(s)
+    s = " " .. s
+    for field in s:gmatch("[^%w_.]health%.([%a_][%w_]*)") do
+        if field ~= "known" then
+            return s:find("[^%w_.]health%.known%f[^%w_]") == nil
+        end
+    end
+    return false
+end
 
 -- Whether value node `n` is a percent read (variables followed).
 local function percentRead(c, n)
@@ -1171,9 +1194,6 @@ local function value(c, n, pct)
             unsupported("boolean as a value")
         end
         return s, false
-    elseif k == "currentHealthPercent" or k == "currentHealth" then -- rule 23
-        local u = v.sourceUnit and v.sourceUnit.type or "Self"
-        unsupported(k .. (u == "Self" and ": the player's health, hidden in combat" or " of " .. tostring(u)))
     elseif M.VALUES[k] then
         local u = v.sourceUnit and v.sourceUnit.type or "Self"
         local res = u == "Pet" and M.VALUES[k]:match("^(%a+)%.lo$") -- the pet's power: the sim's pet.<resource> (no band)
@@ -1181,6 +1201,12 @@ local function value(c, n, pct)
             return "pet." .. res, false
         elseif u ~= "Self" then
             unsupported(k .. " of " .. tostring(u))
+        end
+        if M.KNOWN[k] then -- rule 23: the line's condition is guarded
+            if not c.known then
+                unsupported(k .. ": outside a line's condition")
+            end
+            c.known[M.KNOWN[k]] = true
         end
         return M.VALUES[k], false
     elseif k == "variableRef" then
@@ -1879,17 +1905,31 @@ local function castBody(c, x)
 end
 
 -- Condition node `n` as text: nil when always true (a nil condition is true: wowsims's apl_action.go), false never.
+local function paren(s) -- `s` as one term of an `&`
+    return (grouped(s) or not s:find("|", 1, true)) and s or ("(" .. s .. ")")
+end
+
 local function condition(c, n)
-    local s, b, u = bool(c, n)
+    local outer, mine = c.known, {} -- rule 23: the enablement terms this condition's reads need
+    c.known = mine
+    local ok, s, b, u = pcall(bool, c, n)
+    c.known = outer
+    if not ok then
+        error(s, 0)
+    end
     if u ~= true and b == false then
         return false
     elseif u ~= true and s then
+        local terms = {}
+        for term in pairs(mine) do
+            terms[#terms + 1] = term
+        end
+        table.sort(terms)
+        if #terms > 0 then
+            s = table.concat(terms, "&") .. "&" .. paren(s)
+        end
         return emit(u, s, true)
     end
-end
-
-local function paren(s) -- `s` as one term of an `&`
-    return (grouped(s) or not s:find("|", 1, true)) and s or ("(" .. s .. ")")
 end
 
 -- Rule 7's guard of `key` after condition `cond` (either may be nil): one more `&` term.
@@ -3339,6 +3379,11 @@ function M.translate(rotation, c)
                 n = n + 1
                 text[#text + 1] = head .. (n == 1 and "=" or "+=/") .. line
             end
+        end
+    end
+    for _, line in ipairs(text) do -- rule 23: no line reads the player's health unguarded, a recipe's own included
+        if M.unguarded(line) then
+            error("rule 23: a line reads the player's health without health.known: " .. line, 0)
         end
     end
     text = table.concat(text, "\n")

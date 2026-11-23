@@ -738,14 +738,18 @@ wider each side, logged only once the belief read that max plain. With no live b
 the library.
 
 **Player health.** The client hides the player's own health (`UnitHealth`/`UnitHealthMax("player")` secret in combat, owner L1461,
-and out of it on live, L1710; the headless fake client still answers plain out of combat): `health.pct`,
+and `UnitHealth` out of it too on live, L1710, as the headless fake client answers): `health.pct`,
 `health.current`, `health.deficit` read the plain value whenever the client answers one and, while the answer is secret, the hidden-value library's live 1% band
 (`Game/State/Sources/Bands.lua`, channel 0): its middle, so a whole-number threshold answers as the true value does
 (`Game/State/Families/Player.lua`; a plain read of the same drain is exact and wins). With no live band (the library
 absent, priming, unavailable, `Hekili.bandOff`) the secret answer reads full, never a stale read from before the pull,
-and the facade's row never hands the core a secret. A custom line reading it gets no load warning (FABLE-FOR-OWNER 7);
-the translator still omits every wowsims entry reading `currentHealthPercent` or `currentHealth` (its rule 23, owner
-L1462).
+and the facade's row never hands the core a secret. A band lost while its watch still works (`I.bandOK`: a re-prime
+after values that moved on every frame) holds its last reading for `I.HEALTH_HOLD` (1 s from the last drain it was
+live; owner "Hold last reading", L1805), then reads full; `I.healthHolds` and `I.healthSnaps` count both. `health.known`
+(Facade.Known, §1) is true exactly while the estimate is a reading. A custom line reading it gets no load warning
+(FABLE-FOR-OWNER 7; L1805 keeps it so: the wiki tells authors to put `health.known` first); the translator keeps every
+wowsims entry reading `currentHealthPercent` or `currentHealth` under `health.known&` (its rule 23, owner L1805) and
+refuses a recipe line that reads the player's health without it.
 
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
 an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for
