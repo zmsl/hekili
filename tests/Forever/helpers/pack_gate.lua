@@ -571,7 +571,10 @@ M.FLICKER = {
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 83 / 107 / 86): flicker 0.11 -> 0.05, readyShort 1 -> 0,
     -- heldReady 112 -> 107
     -- loOver 5711 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 5711 / 2335 / 2664): untraced -> per-cell follow-up lane
-    ["Survival"] = { loOver = 5711, flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 107 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.00 / 0.03 / 0.02, press-only 0.02 / 0.03 / 0.05; excused press 3): flicker 0.05 -> 0.04 (the
+    -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
+    ["Survival"] = { loOver = 5711, flicker = 0.04, retracted = 0, readyShort = 0, heldReady = 107 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661), first measured (R6; seeds 1-20 / 21-40 / 41-60, steady
     -- icons on): flicker 0 / 0 / 0 each (Survival Melee's oracle 0.02 / 0.03 / 0.02, the others' 0), retracted 0,
     -- readyShort 0; heldReady the Hunter rows' cost-crossing class (the floor a few units under the truth, gap BT),
