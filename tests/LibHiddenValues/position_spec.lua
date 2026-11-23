@@ -60,7 +60,7 @@ describe("LibHiddenValues position", function()
             W.unit.target.health = v
             Fake.tick(3)
             local n = math.floor(v * 100 + 1e-9)
-            assert.are.same({ n, math.min(n + 1, 100) }, lohi(h), v)
+            assert.are.same(v == 0 and { 0, 0 } or { n, math.min(n + 1, 100) }, lohi(h), v) -- health: exact empty
         end
         W.unit.target.health = 0.62
         Fake.tick(3)
