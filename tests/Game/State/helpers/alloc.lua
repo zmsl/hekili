@@ -1,6 +1,6 @@
 -- tests/Game/State/helpers/alloc.lua
 -- Measures bytes allocated by a loop with the collector stopped (spec §2 zero-allocation rule).
--- Copied as is from Taco Dog Forever, tests/helpers/alloc.lua:7-33.
+-- Copied from Taco Dog Forever, tests/helpers/alloc.lua:7-33, its two measured calls put at one stack depth.
 local M = {}
 
 ---@param fn fun(i: integer)
@@ -20,12 +20,14 @@ function M.bytes(fn, iterations)
     collectgarbage("stop")
     -- A full collection shrinks Lua's own buffers (e.g. the stack), and the first call through the same path
     -- regrows them once: a cost per GC cycle, not per call. Absorb it through the measured path itself.
-    local ok, err = pcall(loop, 1)
-    local before = collectgarbage("count")
+    -- every local is declared first: both calls then run at one stack depth, so the first absorbs all of it
+    local ok, err, before, after = true, nil, 0, 0
+    ok, err = pcall(loop, 1)
+    before = collectgarbage("count")
     if ok then
         ok, err = pcall(loop, iterations)
     end
-    local after = collectgarbage("count")
+    after = collectgarbage("count")
     collectgarbage("restart")
     if not ok then
         error(err, 0)

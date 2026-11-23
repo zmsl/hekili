@@ -1040,7 +1040,7 @@ describe("auras", function()
             swap(fake.SECRET, 13) -- mob B carries our debuff too: the item stays lit
             poll(13.1) -- the first drain past the switch's frame: its polls run before the fold
             poll(13.3)
-            assert.are.equal(0, I.curSlot) -- the Map premise: no memory slot for a secret GUID
+            assert.is_true(I.curSlot > 0) -- the Map premise: an ID's slot, no identity to compare
             near(28.1, est("target", fs.SPENDER_C, 13.3), "B opened from its own light")
             for t = 13.5, 16.5, 0.5 do
                 poll(t)

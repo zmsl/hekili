@@ -172,6 +172,24 @@ describe("a target health read in a priority, a band under a gate that answers N
     it("the same with a second ability's answer after it", function()
         over20(gated == 1 and 2 or 1)
     end)
+
+    it("a revive with no target change never flashes low: 100 dead, 100 one update, then the band (L1721)", function()
+        local seen = {}
+        local function update(dead, lo)
+            t = t + 0.5
+            H.ctl.dead.target = dead
+            I.Sources.Direct(Obs.Band, t, -1, lo, lo + 0.01)
+            assert.is_true(headless.cycle(H, t))
+            H.Hekili.State.reset()
+            seen[#seen + 1] = math.floor(H.Hekili.State.target.health.pct * 10 + 0.5) / 10
+        end
+        update(true, 0)
+        update(true, 0)
+        update(false, 0.6)
+        update(false, 0.6)
+        update(false, 0.6)
+        assert.are.same({ 100, 100, 100, 60.5, 60.5 }, seen)
+    end)
 end)
 
 describe("the loop oracle's raw health rows", function()

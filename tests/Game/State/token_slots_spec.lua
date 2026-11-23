@@ -1,6 +1,7 @@
--- tests/Game/State/token_slots_spec.lua: the target's memory slots keyed by nameplate under Map (tab-targeting plan
--- §4-§5, lane T2m). Under the Map restriction the target's GUID is secret; the slot is keyed by the plate index whose
--- UnitIsUnit("target", "nameplateK") answers true. Scenarios also run with plain GUIDs: the answers must match.
+-- tests/Game/State/token_slots_spec.lua: the target's memory slots under Map (tab-targeting plan §4-§5, lane T2m;
+-- unit-registry spec §2.8). Under the Map restriction the target's GUID is secret; the slot is keyed by a stable ID: the
+-- ID of the plate whose UnitIsUnit("target", "nameplateK") answers true, else a new one per target change. Scenarios
+-- also run with plain GUIDs: the answers must match.
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
@@ -65,8 +66,9 @@ describe("token-keyed target memory (lane T2m)", function()
         return n
     end
 
-    -- w: the world; plates: how many plates are up (default 3); cdm: the Cooldown Manager tracks the debuff.
-    local function start(w, plates, cdm)
+    -- w: the world; plates: how many plates are up (default 3); cdm: the Cooldown Manager tracks the debuff; prep(def):
+    -- runs before the build.
+    local function start(w, plates, cdm, prep)
         world = w
         api, ctl = fake.new()
         ns = load.module()
@@ -80,6 +82,9 @@ describe("token-keyed target memory (lane T2m)", function()
             ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
             ti = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
             def.providers = { presence = "router", viewer = true }
+        end
+        if prep then
+            prep(def)
         end
         I.Build(def, 1)
         VS.Start(api)
@@ -149,8 +154,10 @@ describe("token-keyed target memory (lane T2m)", function()
         assert.is_nil(est(14.1), "ADDED alone")
         tab(2, 15)
         plate("NAME_PLATE_UNIT_REMOVED", 1, 15.5)
-        tab(1, 16) -- UnitIsUnit still names nameplate1, but no plate 1 is up: no plate answers
-        assert.are.equal(0, I.curSlot)
+        tab(1, 16) -- UnitIsUnit still names nameplate1, but no plate 1 is up: no plate answers, so a new ID
+        assert.is_true(I.curSlot > 0)
+        assert.are.equal(0, I.plateID[1], "the number forgot its ID")
+        assert.is_nil(est(16.1))
     end)
 
     it("a plate lost while targeted keeps the live record; its memory goes at the tab away (task 5)", function()
@@ -173,6 +180,7 @@ describe("token-keyed target memory (lane T2m)", function()
             -- no TargetGone for the current slot: it would read as a death. Poll 4's death names none (0): the record
             -- stands (integration design 2.3: death wins in the health family)
             assert.are.same(dies and { 0 } or {}, gone)
+            ctl.unitIs.target = nil -- another mob takes the number: it adopts nothing
             plate("NAME_PLATE_UNIT_ADDED", 1, 12)
             fold(12.1)
             near(25.1, est(12.1), "still up")
@@ -185,29 +193,31 @@ describe("token-keyed target memory (lane T2m)", function()
         end
     end)
 
-    it("a target no plate answers for takes slot 0 (task 6)", function()
+    it("a target no plate answers for takes a slot of a new ID, forgotten at the tab away (task 6)", function()
         start("token", 0) -- plates off: none up
         tab(1, 10)
-        assert.are.equal(0, I.curSlot)
+        assert.is_true(I.curSlot > 0)
         castX(10.1, 15)
         tab(2, 13)
         tab(1, 17)
         assert.is_nil(est(17.1))
-        assert.are.equal(0, quiet(17.1), "no flicker on slot 0")
+        assert.are.equal(0, quiet(17.1), "no flicker on the new ID")
         start("token") -- plates up, UnitIsUnit answers for none
         ctl.guid.target, ctl.unitIs.target = fake.SECRET, nil
         ctl.Fire("PLAYER_TARGET_CHANGED")
         fold(10)
-        assert.are.equal(0, I.curSlot)
+        assert.is_true(I.curSlot > 0)
     end)
 
-    it("every compare secret: slot 0, no error, no secret stored (task 6)", function()
+    it("every compare secret: a new ID, no error, no secret stored (task 6)", function()
         start("token")
         ctl.now = 10
         ctl.guid.target, ctl.unitIs.target = fake.SECRET, fake.SECRET
         ctl.Fire("PLAYER_TARGET_CHANGED")
+        plate("NAME_PLATE_UNIT_ADDED", 4, 10.01) -- the adoption's compare is secret too
         fold(10.05)
-        assert.are.equal(0, I.curSlot)
+        assert.is_true(I.curSlot > 0)
+        assert.are.equal(0, fake.secretsIn(I.plateID))
         assert.are.equal(0, fake.secretsIn(I.targetKeys))
         assert.are.equal(0, fake.secretsIn(I.Plates.active))
     end)
@@ -384,7 +394,10 @@ describe("token-keyed target memory (lane T2m)", function()
         ctl.unitIs.target = nil
         ctl.Fire("PLAYER_TARGET_CHANGED")
         fold(13)
-        assert.are.equal("target slots mode=token cur=0 keys=1 orphan=0 forget=2 noPlate=1", line())
+        assert.are.equal(
+            string.format("target slots mode=token cur=%d keys=1 orphan=1 forget=2 noPlate=1", I.curSlot),
+            line()
+        )
     end)
 
     it("a friendly target read plain (self, a party member) keeps the plate memory (review m1)", function()
@@ -435,6 +448,7 @@ describe("token-keyed target memory (lane T2m)", function()
         ctl.Fire("PLAYER_TARGET_CHANGED")
         local slot = I.targetSlot
         plate("NAME_PLATE_UNIT_REMOVED", 2, 13.01) -- before the swap folds
+        ctl.unitIs.target = nil -- another mob takes the number
         plate("NAME_PLATE_UNIT_ADDED", 2, 13.02)
         fold(13.05)
         near(31.1, est(13.05), "B's record, not A's")
@@ -449,8 +463,8 @@ describe("token-keyed target memory (lane T2m)", function()
     end)
 
     -- Option D (owner decision 2, 2026-11-11): Facade.DebuffCount, the core's count of enemies carrying our debuff: the
-    -- target and every remembered slot, by GUID in the open world and by plate under Map; nil when unknown.
-    it("Facade.DebuffCount counts the debuff across tabs in both worlds; nil with no slot (option D)", function()
+    -- target and every remembered slot, by GUID in the open world and by ID under Map; nil when unknown.
+    it("Facade.DebuffCount counts the debuff across tabs in both worlds; nil when unknown (option D)", function()
         local got = {}
         for _, w in ipairs(WORLDS) do
             start(w)
@@ -479,7 +493,7 @@ describe("token-keyed target memory (lane T2m)", function()
         end
         assert.are.same({ 0, 1, 2, 2, 1, 1 }, got.token)
         assert.are.same(got.token, got.guid)
-        start("token", 0) -- plates off: the target has no slot, so the count is unknown
+        start("token", 0) -- plates off: the target's ID has no plate, so the count is unknown
         tab(1, 10)
         assert.is_nil(ns.Facade.DebuffCount(fs.SPENDER_C, 10.1))
         start("guid")
@@ -487,5 +501,486 @@ describe("token-keyed target memory (lane T2m)", function()
         assert.is_nil(ns.Facade.DebuffCount(999999, 10.1), "an aura the belief does not track: unknown")
         tab(nil, 11)
         assert.is_nil(ns.Facade.DebuffCount(fs.SPENDER_C, 11.1), "no target: no slot")
+    end)
+
+    -- Unit-registry spec §2.8 (ledger L1687, L1690, L1696).
+    describe("stable IDs", function()
+        local gone, swaps
+        before_each(function()
+            start("token", 2)
+            gone, swaps = {}, {}
+            I.On(Obs.TargetGone, function(o)
+                gone[#gone + 1] = o.a
+            end)
+            I.On(Obs.TargetSwap, function(o)
+                swaps[#swaps + 1] = o.a
+            end)
+        end)
+        -- A target no plate answers for, at t, with no drain.
+        local function bare(t)
+            ctl.now = t
+            ctl.guid.target, ctl.unitIs.target = fake.SECRET, nil
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+        end
+        -- The target change to plate k's mob at t, with no drain.
+        local function to(k, t)
+            ctl.now = t
+            ctl.guid.target, ctl.unitIs.target = fake.SECRET, "nameplate" .. k
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+        end
+
+        it("a plate added gets a new ID; a removed number forgets it, the other plates keep theirs", function()
+            local one, two = I.plateID[1], I.plateID[2]
+            assert.is_true(one > 0 and two > 0 and one ~= two)
+            plate("NAME_PLATE_UNIT_REMOVED", 1, 10)
+            assert.are.same({ 0, two }, { I.plateID[1], I.plateID[2] })
+            plate("NAME_PLATE_UNIT_ADDED", 1, 10) -- reused at once
+            local again = I.plateID[1]
+            assert.is_true(again > 0 and again ~= one and again ~= two)
+            assert.are.equal(two, I.plateID[2])
+        end)
+
+        it("the target takes its plate's ID, else a new ID per target change", function()
+            tab(2, 10)
+            assert.are.equal(I.plateID[2], I.targetID)
+            bare(11)
+            local first = I.targetID
+            fold(11.05)
+            bare(12)
+            fold(12.05)
+            assert.is_true(first > 0 and I.targetID > 0 and first ~= I.targetID)
+            assert.is_true(first ~= I.plateID[1] and first ~= I.plateID[2])
+            assert.are.equal(1, #gone, "the first plate-less ID was forgotten at the tab away")
+            tab(nil, 13)
+            assert.are.same({ 0, 0 }, { I.targetID, I.curSlot })
+        end)
+
+        it("a target with no plate gets poll 14's per-ability range answers", function()
+            I.ab.rMax[1], I.ab.known[1] = 5, true
+            ctl.inRange.target = true
+            bare(10)
+            fold(10.05)
+            fold(10.2)
+            assert.is_true(I.rangeAnswer[1])
+            ctl.inRange.target = nil
+            ctl.distance.target = 20
+            fold(10.4)
+            assert.is_false(I.rangeAnswer[1])
+        end)
+
+        it("no plate-less ID stays behind: 40 tabs leave plate 1's memory", function()
+            tab(1, 10)
+            castX(10.1, 15)
+            for n = 1, 40 do
+                bare(10.2 + n * 0.1)
+                fold(10.25 + n * 0.1)
+            end
+            tab(1, 15)
+            near(25.1, est(15.1), "never evicted")
+        end)
+
+        it("a plate added late adopts the target's ID: no load, no swap, then remembered across tabs", function()
+            bare(10)
+            fold(10.05)
+            castX(10.1, 15)
+            local id, slot, n = I.targetID, I.curSlot, #swaps
+            assert.is_nil(ns.Facade.DebuffCount(fs.SPENDER_C, 10.2), "unknown with no plate")
+            ctl.unitIs.target = "nameplate5"
+            plate("NAME_PLATE_UNIT_ADDED", 5, 11)
+            assert.are.equal(0, quiet(11.05), "no flicker at the adoption")
+            assert.are.same({ id, id, slot, n }, { I.plateID[5], I.targetID, I.curSlot, #swaps })
+            assert.are.same({}, gone)
+            assert.is_nil(ns.Facade.DebuffCount(fs.SPENDER_C, 11.2), "still unknown until the next change")
+            tab(2, 12)
+            assert.is_nil(est(12.1))
+            tab(5, 13)
+            near(25.1, est(13.1), "the late plate's mob")
+            assert.are.equal(id, I.targetID)
+        end)
+
+        for _, back in ipairs({ 1, 7 }) do
+            it("the target keeps its ID through its plate's removal; back as plate " .. back, function()
+                tab(1, 10)
+                castX(10.1, 15)
+                local id = I.targetID
+                plate("NAME_PLATE_UNIT_REMOVED", 1, 11)
+                fold(11.05)
+                assert.are.same({ 0, id }, { I.plateID[1], I.targetID })
+                near(25.1, est(11.1))
+                ctl.unitIs.target = "nameplate" .. back
+                plate("NAME_PLATE_UNIT_ADDED", back, 11.5)
+                fold(11.55)
+                assert.are.equal(id, I.plateID[back])
+                tab(2, 12)
+                tab(back, 13)
+                near(25.1, est(13.1), "remembered through the removal")
+                assert.are.same({}, gone)
+            end)
+        end
+
+        it("a token moved with ADDED before REMOVED keeps the ID", function()
+            tab(1, 10)
+            castX(10.1, 15)
+            local id = I.targetID
+            ctl.unitIs.target = "nameplate6"
+            plate("NAME_PLATE_UNIT_ADDED", 6, 11)
+            plate("NAME_PLATE_UNIT_REMOVED", 1, 11)
+            fold(11.05)
+            tab(2, 12)
+            tab(6, 13)
+            assert.are.equal(id, I.targetID)
+            near(25.1, est(13.1))
+        end)
+
+        it("a target change later in the adoption's frame undoes it: two mobs never merge", function()
+            bare(10)
+            fold(10.05)
+            castX(10.1, 15) -- on A, with no plate
+            local a, slot = I.targetID, I.curSlot
+            ctl.unitIs.target = "nameplate5" -- the compare already answers B
+            plate("NAME_PLATE_UNIT_ADDED", 5, 11)
+            to(5, 11)
+            fold(11.05)
+            assert.are_not.equal(a, I.targetID)
+            assert.are.equal(I.plateID[5], I.targetID)
+            assert.is_nil(est(11.1), "B carries none of A's")
+            assert.are.same({ slot }, gone)
+            local b = I.targetID
+            to(5, 12)
+            fold(12.05)
+            assert.are.equal(b, I.targetID)
+        end)
+
+        it("the undo leaves a plated target its own ID and memory", function()
+            tab(1, 10)
+            castX(10.1, 15)
+            local a = I.targetID
+            ctl.unitIs.target = "nameplate5"
+            plate("NAME_PLATE_UNIT_ADDED", 5, 11)
+            to(5, 11)
+            local b = I.targetID
+            to(5, 11) -- the second event undoes nothing more
+            fold(11.05)
+            assert.are.equal(b, I.targetID, "no second new ID")
+            assert.are.equal(a, I.plateID[1])
+            assert.are_not.equal(a, b)
+            assert.is_nil(est(11.1))
+            tab(1, 12)
+            near(25.1, est(12.1), "A's, on plate 1")
+        end)
+
+        it("the swap's second event keeps the ID with no plate; a later change gets a new one", function()
+            bare(10)
+            local id, slot = I.targetID, I.targetSlot
+            bare(10)
+            fold(10.05)
+            assert.are.same({ id, slot }, { I.targetID, I.curSlot })
+            assert.are.same({}, gone, "no second new ID")
+            bare(11)
+            fold(11.05)
+            assert.are_not.equal(id, I.targetID)
+        end)
+
+        it("a plate added between the swap's two events keeps the adoption", function()
+            bare(10)
+            local id = I.targetID
+            ctl.unitIs.target = "nameplate5"
+            plate("NAME_PLATE_UNIT_ADDED", 5, 10)
+            to(5, 10)
+            fold(10.05)
+            assert.are.same({ id, id }, { I.plateID[5], I.targetID })
+            assert.are.same({}, gone)
+        end)
+
+        it("a plate removed between the swap's two events keeps the ID and the record", function()
+            tab(1, 10)
+            castX(10.1, 15)
+            tab(2, 11)
+            to(1, 12)
+            local id = I.targetID
+            plate("NAME_PLATE_UNIT_REMOVED", 1, 12)
+            to(1, 12)
+            fold(12.05)
+            assert.are.equal(id, I.targetID)
+            near(25.1, est(12.1))
+        end)
+
+        it("two changes in one frame, off a plate: the plate-less one is not the plated one", function()
+            to(1, 10)
+            local a = I.targetID
+            bare(10)
+            fold(10.05)
+            assert.are_not.equal(a, I.targetID)
+            assert.are.equal(a, I.plateID[1])
+        end)
+
+        it("a rebuild is no target change: the IDs stand", function()
+            tab(1, 10)
+            local one = I.plateID[1]
+            I.Build(def, 11)
+            fold(11.05)
+            assert.are.same({ one, one }, { I.plateID[1], I.targetID })
+            bare(12)
+            fold(12.05)
+            local id = I.targetID
+            I.Build(def, 13)
+            fold(13.05)
+            assert.are.equal(id, I.targetID)
+            assert.is_true(I.curSlot > 0)
+        end)
+
+        it("a revive is no target change: the ID, the record and the memory stand (L1721)", function()
+            bare(10)
+            fold(10.05)
+            castX(10.1, 15)
+            local id, slot = I.targetID, I.curSlot
+            ctl.dead.target = true
+            fold(11)
+            ctl.dead.target = false
+            fold(11.5)
+            fold(11.7)
+            assert.are.same({ id, slot }, { I.targetID, I.curSlot })
+            assert.are.equal(I.targetSwapN, I.curSwapN, "nothing waits to fold")
+            near(25.1, est(11.8), "the record stands")
+        end)
+
+        it("a restriction flip and a world entry renew every plate's ID", function()
+            tab(1, 10)
+            local old = I.plateID[2]
+            world = "guid"
+            tab(1, 11)
+            assert.are.equal(0, I.targetID, "a plain GUID has no ID")
+            assert.are_not.equal(old, I.plateID[2])
+            world = "token"
+            old = I.plateID[2]
+            tab(1, 12)
+            assert.are_not.equal(old, I.plateID[2])
+            old = I.plateID[2]
+            ctl.now = 13
+            ctl.Fire("PLAYER_ENTERING_WORLD")
+            assert.are_not.equal(old, I.plateID[2])
+        end)
+    end)
+
+    -- Ledger L1734 (owner's A): a hard cast's debuff lands on the mob it was SENT at, the slot pinned there, whatever
+    -- the target is at its success. Mobs 1 and 2 have plates; mob 5 has none (in the twin, plain Creature-5).
+    describe("a hard cast that lands after a tab (L1734)", function()
+        local n = 0
+        local function hard(d) -- SPENDER_C's `now` puts the debuff up for 15 s on the target, as a class file's does
+            local key
+            for j, au in ipairs(d.auras) do
+                if d.auraIds[j][1] == fs.SPENDER_C then
+                    key = au.key
+                end
+            end
+            for a, obj in ipairs(d.abilities) do
+                if d.abilityIds[a][1] == fs.SPENDER_C then
+                    obj.now = function()
+                        applyDebuff("target", key, 15) -- luacheck: ignore 113
+                    end
+                end
+            end
+        end
+        local function sent(t)
+            n = n + 1
+            ctl.now = t
+            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-h" .. n, fs.SPENDER_C)
+        end
+        local function success(t)
+            ctl.now = t
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-h" .. n, fs.SPENDER_C)
+            fold(t + 0.05)
+        end
+        local function count(t)
+            return ns.Facade.DebuffCount(fs.SPENDER_C, t) or "nil"
+        end
+        -- SENT on mob `from`, a tab to `to` before the success at 12: { on `to`, the count there, back on `from` }.
+        local function run(w, from, to)
+            start(w, 2, nil, hard)
+            tab(from, 10)
+            sent(10.5)
+            tab(to, 11)
+            success(12)
+            local out = { est(12.1) or "down", count(12.1) }
+            tab(from, 13)
+            out[3] = est(13.1) or "down"
+            return out
+        end
+
+        it("plated mob to plated mob: down on the new, up on the old, counted once (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                assert.are.same({ "down", 1, 27 }, run(w, 1, 2), w)
+            end
+        end)
+
+        it(
+            "plated mob to a plate-less one: the same (both worlds; under Map that target's count is unknown)",
+            function()
+                assert.are.same({ "down", 1, 27 }, run("guid", 1, 5))
+                assert.are.same({ "down", "nil", 27 }, run("token", 1, 5))
+            end
+        )
+
+        it("from a plate-less mob: never on the new one; under Map that mob is forgotten at the tab", function()
+            assert.are.same({ "down", 1, 27 }, run("guid", 5, 2))
+            -- the plate-less mob's ID and memory go at the tab away (spec 2.8): back on it, a new ID that knows nothing
+            assert.are.same({ "down", 0, "down" }, run("token", 5, 2))
+        end)
+
+        it("a tab in the success's own frame, folded before it: still the old mob's (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, nil, hard)
+                tab(1, 10)
+                sent(10.5)
+                ctl.now = 12
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-h" .. n, fs.SPENDER_C)
+                tab(2, 12) -- the success is staged; the swap is logged first
+                assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                tab(1, 13)
+                near(27, est(13.1), w)
+            end
+        end)
+
+        it("the old mob forgotten before the success (its plate gone under Map): on nobody", function()
+            start("token", 2, nil, hard)
+            tab(1, 10)
+            sent(10.5)
+            tab(2, 11)
+            plate("NAME_PLATE_UNIT_REMOVED", 1, 11.5)
+            success(12)
+            assert.are.same({ "down", 0 }, { est(12.1) or "down", count(12.1) })
+        end)
+
+        it("a press sent on the new mob during the cast does not take the cast's pin (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, nil, hard)
+                tab(1, 10)
+                sent(10.5)
+                ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-h" .. n, fs.SPENDER_C)
+                tab(2, 11)
+                ctl.now = 11.8 -- the spell queue window: the next press is sent before this cast's success
+                ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-next", fs.SPENDER_C)
+                success(12)
+                assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                tab(1, 13)
+                near(27, est(13.1), w)
+            end
+        end)
+
+        it("no castGUID (a secret one reads nil): the cast pairs by its spell (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, nil, hard)
+                tab(1, 10)
+                ctl.now = 10.5
+                ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", nil, fs.SPENDER_C)
+                ctl.Fire("UNIT_SPELLCAST_START", "player", nil, fs.SPENDER_C)
+                tab(2, 11)
+                ctl.now = 12
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", nil, fs.SPENDER_C)
+                fold(12.05)
+                assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                tab(1, 13)
+                near(27, est(13.1), w)
+            end
+        end)
+
+        it(
+            "no castGUID, the hard cast interrupted: a later instant one on the new mob lands there (both worlds)",
+            function()
+                for _, w in ipairs(WORLDS) do
+                    start(w, 2, nil, hard)
+                    tab(1, 10)
+                    ctl.now = 10.5
+                    ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", nil, fs.SPENDER_C)
+                    ctl.Fire("UNIT_SPELLCAST_START", "player", nil, fs.SPENDER_C)
+                    ctl.now = 11
+                    ctl.Fire("UNIT_SPELLCAST_INTERRUPTED", "player", nil, fs.SPENDER_C)
+                    tab(2, 11.2)
+                    ctl.now = 12
+                    ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", nil, fs.SPENDER_C) -- an instant: no START
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", nil, fs.SPENDER_C)
+                    fold(12.05)
+                    near(27, est(12.1), w)
+                    tab(1, 13)
+                    assert.are.equal("down", est(13.1) or "down", w)
+                end
+            end
+        )
+
+        it(
+            "no castGUID, a refused press fails mid-cast, then one is queued on the new mob: the cast stays the old mob's",
+            function()
+                for _, w in ipairs(WORLDS) do
+                    start(w, 2, nil, hard)
+                    tab(1, 10)
+                    ctl.now = 10.5
+                    ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", nil, fs.SPENDER_C)
+                    ctl.Fire("UNIT_SPELLCAST_START", "player", nil, fs.SPENDER_C)
+                    tab(2, 11)
+                    ctl.now = 11.2
+                    ctl.Fire("UNIT_SPELLCAST_FAILED", "player", nil, fs.SPENDER_C) -- refused: not this cast's stop
+                    ctl.now = 11.8 -- the spell queue window: the next press, sent on mob 2
+                    ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", nil, fs.SPENDER_C)
+                    ctl.now = 12
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", nil, fs.SPENDER_C)
+                    fold(12.05)
+                    assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                    tab(1, 13)
+                    near(27, est(13.1), w)
+                end
+            end
+        )
+
+        it("the old mob died before the success: on nobody (open world)", function()
+            start("guid", 2, nil, hard)
+            tab(1, 10)
+            sent(10.5)
+            tab(2, 11)
+            ctl.now = 11.5
+            ctl.Fire("UNIT_DIED", "Creature-1")
+            fold(11.55)
+            success(12)
+            assert.are.same({ "down", 0 }, { est(12.1) or "down", count(12.1) })
+        end)
+
+        it("the same with the Cooldown Manager tracking the debuff (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, true, hard)
+                tab(1, 10)
+                sent(10.5)
+                tab(2, 11)
+                success(12)
+                assert.are.same({ "down", 1 }, { est(12.1) or "down", count(12.1) }, w)
+                tab(1, 13)
+                near(27, est(13.1), w)
+            end
+        end)
+
+        it("Facade.TargetID: the target's ID under Map, 0 for a target read plain, nil with none", function()
+            start("token", 2)
+            tab(1, 10)
+            assert.is_true(I.plateID[1] > 0)
+            assert.are.equal(I.plateID[1], ns.Facade.TargetID())
+            tab(5, 11)
+            assert.is_true(ns.Facade.TargetID() > I.plateID[2], "a plate-less target: a new ID")
+            tab(nil, 12)
+            assert.is_nil(ns.Facade.TargetID())
+            start("guid", 2)
+            tab(1, 10)
+            assert.are.equal(0, ns.Facade.TargetID())
+        end)
+
+        it("a tab back before the success: on the target, as with no tab (both worlds)", function()
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, nil, hard)
+                tab(1, 10)
+                sent(10.5)
+                tab(2, 11)
+                tab(1, 11.5)
+                success(12)
+                near(27, est(12.1), w)
+                assert.are.equal(1, count(12.1), w)
+            end
+        end)
     end)
 end)

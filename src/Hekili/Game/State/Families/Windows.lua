@@ -237,7 +237,7 @@ I.On(Obs.CombatStart, function()
     Q.applied, Q.refused, Q.dropped, Q.lastDrop = 0, 0, 0, "" -- the snapshot's counts are since combat start
 end)
 
--- A target swap (a re-selection too; under Map by plate index, no GUID read) resets each row declared with it. Also
+-- A target swap (a re-selection too; under Map by stable ID, no GUID read) resets each row declared with it. Also
 -- logged for a cleared target and by VS.Start / every Build (Sources/Target.lua): harmless, declare() closed every row.
 I.On(Obs.TargetSwap, function()
     for w = 1, W.n do

@@ -1406,9 +1406,9 @@ describe("now handlers", function()
             ctl.Tick(5.01)
             VS.Drain(5.02)
             ctl.now = 5.05
-            ctl.Fire("PLAYER_TARGET_CHANGED") -- tab to mob B (slot 0 again: its GUID is secret)
+            ctl.Fire("PLAYER_TARGET_CHANGED") -- tab to mob B (its GUID secret, no plate: a new ID)
             VS.Drain(5.06)
-            assert.are.equal(0, I.curSlot) -- the Map premise: no memory slot for a secret GUID
+            assert.is_true(I.curSlot > 0) -- the Map premise: an ID's slot, no identity to compare
             local j = I.auras.bySpell[fs.SPENDER_C]
             I.AuraModel(2, j, 5.06, 20, 1, 5.06, VS.Obs.CastSuccess, true) -- B carries the debuff (an earlier cast)
             I.Sources.Direct(VS.Obs.Avoided, 5.1, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- the cast on A

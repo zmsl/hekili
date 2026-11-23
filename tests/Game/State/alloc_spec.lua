@@ -529,12 +529,21 @@ describe("zero allocation", function()
                 ctl.now = ctl.now + 0.1
                 -- now and then a plain hostile GUID: a flip to the GUID key space, and back at the next step (review m3)
                 ctl.guid.target = i % 10 == 3 and "Creature-1" or fake.SECRET
-                ctl.unitIs.target = TOK[i % 20 + 1] -- 20 mobs in turn: slots taken, kept and evicted
+                -- 20 mobs in turn: slots taken, kept and evicted; every 4th has no plate (a new ID, spec §2.8)
+                ctl.unitIs.target = i % 4 ~= 1 and TOK[i % 20 + 1] or nil
                 ctl.Fire("PLAYER_TARGET_CHANGED")
+                ctl.Fire("PLAYER_TARGET_CHANGED") -- twice a swap (L1696)
                 -- every 5th step the edge is the new target's own plate, before the fold: an orphan (review m3)
                 local edge = i % 5 == 0 and TOK[i % 20 + 1] or TOK[(i + 7) % 40 + 1]
                 ctl.Fire("NAME_PLATE_UNIT_REMOVED", edge)
+                if i % 15 == 0 then
+                    ctl.unitIs.target = nil -- another mob takes the number: the target's ID stays with no plate
+                end
                 ctl.Fire("NAME_PLATE_UNIT_ADDED", edge)
+                if i % 12 == 6 then -- an adoption the same frame's target change undoes
+                    ctl.Fire("NAME_PLATE_UNIT_ADDED", edge)
+                    ctl.Fire("PLAYER_TARGET_CHANGED")
+                end
                 if i % 10 == 7 then
                     ctl.Fire("PLAYER_ENTERING_WORLD") -- a world entry: every plate key forgotten
                 end

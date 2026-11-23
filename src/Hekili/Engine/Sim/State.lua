@@ -4649,8 +4649,8 @@ local mt_active_dot = {
         if aura then
             if rawget( t, aura.key ) then return t[ aura.key ] end
             -- The belief's count (option D, owner decision 2): the target and every remembered target, all ranks
-            -- (one belief index per aura, so the copies are not summed again). Unknown (nil: the target holds no
-            -- memory slot, or there is no target while memory may hold it): every enemy counts as carrying it, so no
+            -- (one belief index per aura, so the copies are not summed again). Unknown (nil: no target while memory
+            -- may hold it, or the belief cannot know the others'): every enemy counts as carrying it, so no
             -- swap is suggested (never 0: a 0 suggests a swap for ever).
             local count = Facade.DebuffCount( aura.id, state.now ) or state.true_active_enemies
 
@@ -6125,6 +6125,7 @@ do
             e.real   = nil
             e.cycle  = nil
             e.func   = nil
+            e.inflight = nil
 
             insert( eventPool, e )
             remove( queue, i )
@@ -6327,6 +6328,13 @@ do
 
     local EVENT_EXPIRE_MARGIN = 0.2
 
+    -- The cast in flight with no GUID (the Map restriction; ledger L1734): its action, finish and last success seen
+    -- (the ability's realCast), and the target's stable ID (Facade.TargetID) when the compare first met its
+    -- CAST_FINISH, so a tab during the cast reads as one.
+    -- shortcut: a tab before the first update after the cast's start pins the new mob; exact with a pin at the SENT
+    -- (Engine/Sim/Events.lua), a reader the owner has not allowed.
+    local castPin = { time = -1 }
+
     function state:ResetQueues()
         for i = #virtualQueue, 1, -1 do
             RecycleEvent( virtualQueue, i )
@@ -6353,9 +6361,13 @@ do
             e.time   = r.time
             e.type   = r.type
             e.target = r.target
+            e.inflight = true -- the game's own cast or impact, not a forecast (landsElsewhere)
 
             virtualQueue[ i ] = e
         end
+
+        -- the pinned cast left the real queue (its success, a stop): the next cast of that action pins anew
+        if castPin.action and ( realQueue[ castPin.action ] or 0 ) == 0 then castPin.time = -1 end
     end
 
 
@@ -6375,6 +6387,26 @@ do
     function state:GetQueue( real )
         if real then return realQueue end
         return virtualQueue
+    end
+
+
+    -- True when event e is the cast in flight (copied from the real queue) and it went to another mob than the target
+    -- now: by its GUID where it has one, else by the stable ID pinned for it (a projectile's impact: its cast's).
+    local function landsElsewhere( e )
+        if not e.inflight then return false end
+        local g = e.target
+        if g ~= nil and g ~= "unknown" then return g ~= state.target.unit end
+        if e.type == "CAST_FINISH" then
+            -- a new cast (another action, one starting at or after the pinned finish, or the action's success seen
+            -- since the pin) pins anew; a pushback (UNIT_SPELLCAST_DELAYED: a later start and finish, no target under
+            -- Map, no success) keeps the pin, moves its finish
+            local rc = class.abilities[ e.action ].realCast
+            if castPin.action ~= e.action or e.start >= castPin.time or rc ~= castPin.cast then
+                castPin.action, castPin.id, castPin.cast = e.action, Facade.TargetID(), rc
+            end
+            castPin.time = e.time
+        end
+        return castPin.action == e.action and castPin.id ~= nil and castPin.id ~= Facade.TargetID()
     end
 
 
@@ -6420,13 +6452,16 @@ do
                 expires, minTTD, maxTTD, aura = self.GetCycleInfo()
             end
 
-            if e.cycle or e.target and e.target ~= self.target.unit then
+            local elsewhere = landsElsewhere( e )
+
+            if e.cycle or elsewhere or e.target and e.target ~= self.target.unit then
                 if Hekili.ActiveDebug then Hekili:Debug( "Using ability on a different target." ) end
                 self.SetupCycle( ability )
             end
 
-            -- Perform the action (a swapped cast's event is flagged, Core.lua: its debuffs count, the target's stand).
-            self.cycle = e.cycle
+            -- Perform the action (a swapped cast's event is flagged, Core.lua, and the cast in flight since a tab lands on
+            -- the mob it was sent at, as the belief has it, L1734: its debuffs count, the target's stand).
+            self.cycle = e.cycle or elsewhere or nil
             self:RunHandler( action )
             self.cycle = nil
             self.hardcast = nil
@@ -6461,12 +6496,14 @@ do
                 expires, minTTD, maxTTD, aura = self.GetCycleInfo()
             end
 
-            if e.cycle or e.target and e.target ~= self.target.unit then
+            local elsewhere = landsElsewhere( e )
+
+            if e.cycle or elsewhere or e.target and e.target ~= self.target.unit then
                 if Hekili.ActiveDebug then Hekili:Debug( "Using ability on a different target." ) end
                 self.SetupCycle( ability )
             end
 
-            self.cycle = e.cycle
+            self.cycle = e.cycle or elsewhere or nil
             if ability.impact then ability.impact( e.real ) end
             self.cycle = nil
             self:StartCombat()

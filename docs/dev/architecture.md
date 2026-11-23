@@ -60,9 +60,15 @@ values; `false, 0, 0, 0, 0` closed or unknown), a belief-only facade function li
 copy; the core's `state.reset` copies every registered window through it (`Engine/Sim/State.lua` `CopyWindows`);
 `WindowOp` is the only write back. The second is the debuff count (option D, owner decision 2, 2026-11-11):
 `ns.Facade.DebuffCount(spellID, now)` -> how many enemies the belief holds the aura up on (the target plus every
-remembered target slot, keyed by GUID in the open world and by nameplate under the Map restriction), or nil when unknown
-(the current target holds no memory slot, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on
-Forever"). `def` carries plain records (batch 4, the owner's
+remembered target slot, keyed by GUID in the open world and by stable ID under the Map restriction), or nil when unknown
+(no target, a target no plate answered for at its target change, until the next one even if its plate is added
+meanwhile, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on Forever"). The third is the
+target's stable ID (ledger L1734, owner's A, 2026-11-22): `ns.Facade.TargetID()` -> an integer while the target's GUID
+is secret, 0 for a target read plain, nil with no target. It is never a GUID or a stand-in for one. Its one reader is
+`Engine/Sim/State.lua`'s swapped-cast compare (`landsElsewhere`, §2). `tools/check_border.sh` passes exactly two lines
+naming it there, both inside `landsElsewhere` and each exactly the cast's pin or the compare, so the ID never feeds a
+GUID field; it fails a read elsewhere in State.lua, a third read, a change to either line, and any other core file or
+pack that names `TargetID`. `def` carries plain records (batch 4, the owner's
 design 2026-11-01): no metatable, never a live Hekili table. Each field is a value, a function the belief runs in its own
 `now` context (`Families/Casts.lua` `I.Eval`: a raise is counted in `I.nowErrors` and fails
 `tests/Forever/plain_records_spec.lua`), or absent; a function field may carry a static value the core computes under
@@ -147,7 +153,15 @@ toggle off. `active_dot` is the belief's count (`Facade.DebuffCount`, §1: the t
 slot, by GUID in the open world and by nameplate under the Map restriction); unknown (the target holds no memory slot)
 is saturated, every enemy counted as carrying it, so no swap is suggested; the current target's own debuff floors it
 at 1. A swapped cast's handler runs with `state.cycle` set: its debuffs add to `active_dot` and leave the current
-target's alone. No enemy's time to die but the target's is known, so `cycle_min` and the TTD filters exclude nobody (only the
+target's alone. So does the cast in flight when the target changed after it was sent (ledger L1734). Its event comes
+from the real queue (`e.inflight`), and `landsElsewhere` tells the change by the event's GUID where it has one. Under
+the Map restriction the event has no GUID, so it compares the stable ID (`Facade.TargetID`) pinned when the compare
+first met the cast with the ID now. A pushback (UNIT_SPELLCAST_DELAYED) keeps that pin. A cast of another action pins
+anew, and so does one that starts at or after the pinned finish, one after the action's success (its `realCast`) or one
+after an update that found the pinned cast gone from the real queue. The belief lands such a cast's target auras on the
+mob it was sent at: the memory slot pinned at UNIT_SPELLCAST_SENT and kept through the cast's START, or nowhere once
+that slot is forgotten (the mob died, lost its plate or was evicted). The queue therefore does not change at the cast's
+success. A target change before the first update after the cast starts pins the new mob (a known limit). No enemy's time to die but the target's is known, so `cycle_min` and the TTD filters exclude nobody (only the
 target is tracked); no pack may declare `min_ttd` or `max_ttd` (`tests/Forever/packs_spec.lua`), and the slider is hidden. Under the
 Map restriction `active_enemies` is 1 until a GUID-free enemy count exists, so no cycle arms in dungeons yet.
 
@@ -253,7 +267,7 @@ read. A file's `state.knownRank` local is the facade's function, safe in a helpe
 steps?, loop?, on_deviation?, strict?, reset_on_target_change? })` (`Engine/Schema/Spec.lua`) crosses `Build(def)` as
 `def.windows` (plain records, `steps` as ability indexes). `steps` need an `evaluator` (a cast never opens a window,
 L773: RegisterWindow raises). `reset_on_target_change` (a boolean, default false): a target change (`Obs.TargetSwap`:
-a re-selection, a Map swap by plate index, clearing the target, and the belief's own swap at `Start` and every
+a re-selection, a Map swap by stable ID, clearing the target, and the belief's own swap at `Start` and every
 `Build` included) closes the window and forgets the evaluator's last value, so a
 still-true evaluator reopens it at step 1 in the same `Drain`. `duration` is seconds, `"combat"` or a function. A function is the forecast's: it
 runs under `state` at each forecast open and each counted refresh. Its per-layer twin `now_duration` (required with a

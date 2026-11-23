@@ -646,6 +646,18 @@ describe("target health", function()
                 reads(t + 0.2, 0.705, 0.7, 0.71)
             end)
 
+            it("no plate (the map lockdown): a usable answer bounds the target by its ID (L1689 a)", function()
+                swapTo(fake.SECRET)
+                frame(true, false)
+                reads(t, 0.2, 0, 0.2)
+            end)
+
+            it("no plate: a guarded NOT bounds it above the gate (L1689 a)", function()
+                swapTo(fake.SECRET)
+                frame(false, false)
+                reads(t, 1, 0.2 + I.EPS, 1)
+            end)
+
             it("two swaps in one frame: the first one's target answers nothing for the second", function()
                 swapTo("Creature-2")
                 answer(true, false)
@@ -692,7 +704,7 @@ describe("target health", function()
                     S.RunPolls(t)
                     I.Fold(t)
                     reads(t, 0.055, 0.05, 0.06)
-                    assert.are.equal(plate, I.targetSlot > 0)
+                    assert.is_true(I.targetSlot > 0) -- a slot by its ID, with a plate or without
                     assert.are.equal(0, I.Units.Uid(1)) -- no identity either way
                     local before = #gone
                     ctl.dead.target = true
@@ -802,6 +814,173 @@ describe("target health", function()
                     assert.are.equal(1, n)
                 end)
             end
+
+            -- Unpinned until L1721: poll 4's inner `not dead`, and the latch's slot test.
+            it("a poll-first kill logs one TargetGone", function()
+                local n = 0
+                I.On(Obs.TargetGone, function()
+                    n = n + 1
+                end)
+                ctl.dead.target = true
+                corpse()
+                corpse()
+                assert.are.equal(1, n)
+            end)
+
+            it("a remembered mob's death does not hide our target's own poll-only death", function()
+                target("Creature-2")
+                frame(0.5)
+                target("Creature-1")
+                frame(0.5)
+                ctl.Fire("UNIT_DIED", "Creature-2")
+                ctl.dead.target = true
+                corpse()
+            end)
+
+            -- L1721: one rule, the dead -> alive edge of poll 4's UnitIsDead read, for each path to a believed death.
+            describe("a target that lives again with no target change reads its band", function()
+                local function die()
+                    ctl.dead.target = true
+                    corpse()
+                end
+                local function secret(plate)
+                    if plate then
+                        ctl.guid.nameplate1 = fake.SECRET
+                        ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+                        ctl.unitIs.target = "nameplate1"
+                    end
+                    target(fake.SECRET)
+                    frame(0.5)
+                    die()
+                end
+                local PATHS = {
+                    {
+                        "the event, then the poll",
+                        function()
+                            ctl.Fire("UNIT_DIED", "Creature-1")
+                            corpse()
+                            die()
+                        end,
+                    },
+                    { "the poll alone (a feign read as dead)", die },
+                    {
+                        "a death first seen at the swap",
+                        function()
+                            target("Creature-2", true)
+                            corpse()
+                        end,
+                    },
+                    {
+                        "a secret GUID, with a plate",
+                        function()
+                            secret(true)
+                        end,
+                    },
+                    {
+                        "a secret GUID, with no plate",
+                        function()
+                            secret(false)
+                        end,
+                    },
+                    {
+                        "a tab back to a corpse held dead",
+                        function()
+                            die()
+                            target("Creature-2", false)
+                            frame(0.5)
+                            target("Creature-1", true)
+                            corpse()
+                        end,
+                    },
+                    {
+                        "died while not the target, then targeted dead",
+                        function()
+                            target("Creature-2")
+                            ctl.Fire("UNIT_DIED", "Creature-1")
+                            frame(0.5)
+                            target("Creature-1", true)
+                            corpse()
+                        end,
+                    },
+                    {
+                        "a rebuild on a held corpse",
+                        function()
+                            die()
+                            I.Build(def(), t)
+                            corpse()
+                        end,
+                    },
+                    {
+                        "held dead, retargeted alive, dead again",
+                        function()
+                            die()
+                            target("Creature-2", false)
+                            frame(0.5)
+                            target("Creature-1", false)
+                            frame(0.5)
+                            reads(t, 0.505, 0.5, 0.51)
+                            die()
+                        end,
+                    },
+                }
+                for _, path in ipairs(PATHS) do
+                    it(path[1], function()
+                        path[2]()
+                        local id, slot = I.targetID, I.targetSlot
+                        ctl.dead.target = false
+                        frame(0.6)
+                        reads(t, 1, 0, 1) -- one drain at the default, as after a target change
+                        for _ = 1, 3 do
+                            frame(0.6)
+                            reads(t, 0.605, 0.6, 0.61) -- and no flicker after
+                        end
+                        assert.is_true(ns.Facade.UnitHealth("target") > 0)
+                        assert.are.same({ id, slot }, { I.targetID, I.targetSlot }) -- no target change: no new ID
+                        die() -- and it can die again
+                    end)
+                end
+
+                it("a secret answer is no revive; the next plain false is", function()
+                    die()
+                    ctl.dead.target = fake.SECRET
+                    corpse()
+                    corpse()
+                    ctl.dead.target = false
+                    frame(0.6)
+                    frame(0.6)
+                    reads(t, 0.605, 0.6, 0.61)
+                end)
+
+                it("the event alone has no edge: a false read behind it never revives", function()
+                    ctl.Fire("UNIT_DIED", "Creature-1")
+                    for _ = 1, 3 do
+                        corpse()
+                    end
+                end)
+
+                it("no target: a stale dead answer's end is no revive of nobody", function()
+                    target(nil)
+                    frame(0.5)
+                    ctl.dead.target = true
+                    frame(0.5)
+                    local n = I.targetSwapN
+                    ctl.dead.target = false
+                    frame(0.5)
+                    assert.are.equal(n, I.targetSwapN)
+                end)
+
+                it("allocates nothing over a death and a revive", function()
+                    local alloc = require("Game.State.helpers.alloc")
+                    die()
+                    assert.are.equal(
+                        0,
+                        alloc.bytes(function()
+                            ctl.dead.target = not ctl.dead.target
+                            frame(0.3)
+                        end, 1000)
+                    )
+                end)
+            end)
         end)
 
         it("a combat end's restart is healed by the next drain's band", function()

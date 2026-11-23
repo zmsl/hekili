@@ -1,7 +1,7 @@
 -- Game/State/Families/Auras.lua
 -- The auras family (spec §6.3): per unit and tracked aura, the believed expiry, stacks, applied time and an invented
 -- stable instance ID; plain walk reads (observed), our casts' handler writes (modelled, Families/Now.lua), expiry by time;
--- per-target memory by slot (TARGET_CAP; Sources/Target.lua keys a slot by GUID, under Map by plate index); the
+-- per-target memory by slot (TARGET_CAP; Sources/Target.lua keys a slot by GUID, under Map by stable ID); the
 -- pending-swap serial I.curSwapN; the index order for AuraAt; AuraGen; Count.WithAura; a player aura's
 -- stacks spent by hits on the player (its `consumedBy`, tank design §3).
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Auras.lua and Belief/Targets.lua (Applier TargetSwap
@@ -391,6 +391,20 @@ local function load(s)
     end
     D.full[2] = true -- the whole set changed: a full update, not a delta
     changed(2)
+end
+
+--- Our cast's aura j in memory slot s, the mob it was SENT at, not the target now (L1734; Families/Now.lua): expiry
+--- `expires` (0: down), applied, stacks. The target's set is unchanged: no delta. Allocates nothing.
+function I.AuraMem(s, j, applied, expires, stacks)
+    if expires <= 0 then
+        memExp[s][j], memApplied[s][j], memStacks[s][j], memInst[s][j] = 0, 0, 0, 0
+        return
+    end
+    if memExp[s][j] <= applied then -- down (or run out unswept): a new application
+        I.nextInst = I.nextInst + 1
+        memInst[s][j] = I.nextInst
+    end
+    memExp[s][j], memApplied[s][j], memStacks[s][j] = expires, applied, stacks
 end
 
 -- TargetSwap: a is the new target's memory slot (0: none). TargetGone: forget slot a.

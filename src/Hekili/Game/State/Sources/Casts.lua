@@ -42,6 +42,7 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     -- priced now, on the last fold's belief: a cost-cutting aura the cast consumes (its UNIT_AURA read, Direct, can
     -- reach the log before this staged success) still prices it (I.CastCost); `c` the cast ID's place among the
     -- ability's IDs (a rank: the `now`'s cast_id, Families/Now.lua)
+    I.PinSent(a, t, castGUID, spellID) -- the mob it was SENT at (Sources/Target.lua, L1734)
     Stage(Obs.CastSuccess, t, a, I.CostOf(a), I.ab.idPos[spellID] or 1)
     I.Log.Cast("SPELL_CAST_SUCCESS", t, spellID, I.Units.Sent(castGUID) or I.Units.Pin(api, t))
 end)
@@ -57,7 +58,14 @@ local function stopped(api, t, unit, guid, spellID)
     I.Log.Cast("SPELL_CAST_FAILED", t, spellID, nil)
 end
 S.On("UNIT_SPELLCAST_FAILED", "player", stopped)
-S.On("UNIT_SPELLCAST_INTERRUPTED", "player", stopped)
+-- An interrupt ends the cast, so its START pin goes (Sources/Target.lua), before the castGUID check: a nil one pairs by
+-- spell. Not on FAILED: a refused press of the spell mid-cast fails too, and must not unpin the live cast.
+S.On("UNIT_SPELLCAST_INTERRUPTED", "player", function(api, t, unit, guid, spellID)
+    if unit == "player" then
+        I.UnpinStart(guid, spellID)
+    end
+    stopped(api, t, unit, guid, spellID)
+end)
 
 S.On("UNIT_SPELLCAST_DELAYED", "player", function(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)

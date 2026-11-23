@@ -429,7 +429,7 @@ local function judgeable(j, u)
         return false -- Sources/Forms.lua's and Sources/Enchants.lua's records
     end
     -- (review m3) a target change's TargetSwap folds after this drain's polls: until then the record is the old mob's,
-    -- so nothing is applied on the target; the next poll answers. A serial, not the slot: under Map every slot is 0
+    -- so nothing is applied on the target; the next poll answers. A serial, not the slot: a revive keeps its slot
     return u ~= 2 or I.targetSwapN == I.curSwapN
 end
 

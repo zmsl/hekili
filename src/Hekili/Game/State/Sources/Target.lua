@@ -1,9 +1,11 @@
 -- Game/State/Sources/Target.lua
 -- Target sources (spec §4.2): PLAYER_TARGET_CHANGED keeps a target -> memory slot map (TARGET_CAP slots, the least
--- recently used reused) keyed by GUID, or under Map (the GUID secret) by the target's plate index, forgotten at either
--- edge of that plate (tab-targeting T2m; no plate: no memory), and logs `TargetSwap` (a: the slot, 0 no target; b: 1 a
--- slot newly taken by a GUID; c: 1 plain UnitCanAttack) straight to the log, then walks the new target's auras; each
--- swap bumps I.targetSwapN (the pending-swap serial, lane A); poll 4 logs `TargetGone` for a dead target;
+-- recently used reused) keyed by GUID, or under Map (the GUID secret) by a stable ID (unit-registry spec §2.8: the
+-- plate's, else a new one per target change; forgotten once no plate bears it and it is not the target's), and logs
+-- `TargetSwap` (a: the slot, 0 no target; b: 1 a slot newly taken by a GUID; c: 1 plain UnitCanAttack) straight to the
+-- log, then walks the new target's auras; each
+-- swap bumps I.targetSwapN (the pending-swap serial, lane A); poll 4 logs `TargetGone` for a dead target, and a
+-- `TargetSwap` of the same slot for one that reads alive again;
 -- the target's UNIT_SPELLCAST_* events become `TargetCast` observations by castBarID (plain; the spellID and castGUID
 -- are secret on the target).
 -- The target's UNIT_COMBAT WOUND amounts become `TargetDamage` (b: the amount; target-health design §2.3c).
@@ -20,16 +22,37 @@ local Obs, Of = VS.Obs, I.TargetCastOf
 local Plain, Stage, Direct = S.Plain, S.Stage, S.Direct
 
 -- By memory slot: its key and when it was last the target. The key: the target's GUID (a string) while it reads plain;
--- under Map (the GUID secret) the index 1..40 of the plate that is the target (a number: never equal to a GUID, so the
--- two key spaces cannot collide; a friendly target read plain under Map is keyed by its GUID); "" free; false: an
--- orphan, the current target's slot whose plate left (no key finds it again; forgotten at the next swap).
+-- under Map (the GUID secret) the ID its plate bears (a number: never equal to a GUID, so the two key spaces cannot
+-- collide; a friendly target read plain under Map is keyed by its GUID); "" free; false: an orphan, the current
+-- target's slot that no plate's ID finds (I.targetID still names it; forgotten at the next swap unless adopted).
 local guid, used = {}, {}
+local goneN = {} -- by memory slot: its TargetGone logs and rebuilds, so a cast's pin outlives no forgetting (L1734)
 for s = 1, I.TARGET_CAP do
-    guid[s], used[s] = "", 0
+    guid[s], used[s], goneN[s] = "", 0, 0
 end
-local tokenMode = false -- the key space (true: plate indices): set by a secret target, cleared by a hostile plain one
+-- Slot s's memory is forgotten (logged): its mob died, left or was evicted. Allocates nothing.
+local function gone(t, s)
+    Direct(Obs.TargetGone, t, s)
+    goneN[s] = goneN[s] + 1
+end
+local tokenMode = false -- the key space (true: IDs): set by a secret target, cleared by a hostile plain one
 local forgetN, noPlateN = 0, 0 -- slots forgotten by plate edges and flips; Map swaps no plate answered (snapshot)
 I.targetKeys = guid -- read-only, for tests
+
+-- Stable IDs (spec §2.8): by plate number its ID (0: no plate), the target's (0: none, or a plain GUID), and whether
+-- the last target change made that one with no plate (Facade.DebuffCount: unknown; an adoption does not clear it).
+-- Never an identity outside the belief: no GUID, no row's destination, no count of enemies.
+local plateID, lastID = {}, 0
+for k = 1, 40 do
+    plateID[k] = 0
+end
+I.plateID, I.targetID, I.targetNoPlate = plateID, 0, false
+local adoptK, adoptT = 0, 0 -- the last adoption: its plate and frame
+local swapT = -1 -- the last target change's frame
+local function newID()
+    lastID = lastID + 1
+    return lastID
+end
 
 -- Forgets slot s: the current target's becomes an orphan with no log entry (a TargetGone on the current slot reads as
 -- its death, Families/Auras.lua and TargetHealth.lua: review F4), any other is logged gone and freed.
@@ -38,7 +61,7 @@ local function forget(s, t)
     if s == I.targetSlot then
         guid[s] = false
     else
-        Direct(Obs.TargetGone, t, s)
+        gone(t, s)
         guid[s] = ""
     end
 end
@@ -48,14 +71,37 @@ local function forgetAll(t)
             forget(s, t)
         end
     end
+    for k = 1, #plateID do
+        plateID[k] = I.Plates.active[k] and newID() or 0
+    end
 end
-local dead = false
+-- Plate number k forgets its ID; the memory keyed by it goes once no other plate bears it (a token move can add
+-- before it removes). Allocates nothing.
+local function release(k, t)
+    local id = plateID[k]
+    plateID[k] = 0
+    if id == 0 then
+        return
+    end
+    for j = 1, #plateID do
+        if plateID[j] == id then
+            return
+        end
+    end
+    for s = 1, I.TARGET_CAP do
+        if guid[s] == id then
+            forget(s, t)
+            return
+        end
+    end
+end
+local dead, seen = false, false -- a death logged since the swap; poll 4 itself read the target dead since
 local HUGE = math.huge
 local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap or the age-out)
 local plainT = 0 -- the last plain range answer's time
 local RANGE_AGE = 1.5 -- seconds with no plain answer before a held bracket goes unknown (batch review I1)
 I.targetSlot = 0 -- the memory slot the last swap logged (0: no target)
-I.targetSwapN = 0 -- each swap's serial; Families/Auras.lua copies it at the fold (a slot is 0 for every secret GUID)
+I.targetSwapN = 0 -- each swap's serial; Families/Auras.lua copies it at the fold (two swaps can name one slot)
 local answer = {} -- by ability index: this poll's plain answer (true, false, or 0 for none)
 I.rangeAnswer = answer -- Families/Now.lua's action.<key>.in_range reads it
 
@@ -73,14 +119,14 @@ local function slotFor(g, t)
     end
     local s = free > 0 and free or oldest
     if guid[s] ~= "" then
-        Direct(Obs.TargetGone, t, s)
+        gone(t, s)
     end
     guid[s], used[s] = g, t
     return s, true -- newly taken: a GUID not held before (or forgotten)
 end
 
 -- The index of the active plate whose unit is the target (a plain UnitIsUnit true), 0 none. At most 40 reads, once per
--- target change, never in a poll; a secret or false answer is "not this one".
+-- target change (a plate added asks once, for itself), never in a poll; a secret or false answer is "not this one".
 local function plateOfTarget(api)
     local P = I.Plates
     for k = 1, #P.token do
@@ -91,12 +137,22 @@ local function plateOfTarget(api)
     return 0
 end
 
+-- The target by slot s starts over: no death, no range bracket held, its TargetSwap logged (b: fresh). At a swap and
+-- at a revive (poll 4). Allocates nothing.
+local function announce(api, t, s, fresh)
+    local attackable = s > 0 and Plain(api, api.UnitCanAttack("player", "target")) == true
+    dead, seen, lastLo, lastHi = false, false, -1, -1
+    Direct(Obs.TargetSwap, t, s, fresh and 1 or 0, attackable and 1 or 0)
+    I.targetSwapN = I.targetSwapN + 1 -- I.curSwapN copies it at the fold (Sources/Auras.lua waits for it)
+end
+
 -- A target swap: the new target's memory slot, then a walk of its auras. Also at Start and at each rebuild, so a
 -- target already held at a /reload gets its slot (poll 4 then sees its death, a swap away keeps what was believed).
 -- No "built" guard: in game Start (PLAYER_LOGIN) comes before the first build (PLAYER_ENTERING_WORLD), and I.Build
 -- runs its hooks before it marks the set built; the slot map lives here, and a swap logged before a build is cleared
 -- by that build, which logs its own.
-local function swap(api, t)
+-- `rebuilt`: the build's own swap, no target change (the ID stands).
+local function swap(api, t, rebuilt)
     -- the registry bound it first (its PLAYER_TARGET_CHANGED handler is registered earlier); the pin binds it for a
     -- build before Start (headless), and its soft-enemy fallback never reaches token 1
     I.Units.Pin(api, t)
@@ -106,36 +162,56 @@ local function swap(api, t)
     if secret then
         mode = true
     elseif g ~= "" and (not tokenMode or Plain(api, api.UnitCanAttack("player", "target")) == true) then
-        -- (review m1) under Map only a hostile plain GUID leaves the plate keys: self or a party member (if plain,
+        -- (review m1) under Map only a hostile plain GUID leaves the IDs' keys: self or a party member (if plain,
         -- probe TP6) keeps them, keyed by its GUID string
         mode = false
+    end
+    local again = rebuilt or t == swapT -- no new change: the build's, or a swap's second event (L1696; kept idempotent)
+    if adoptK > 0 and adoptT == t and not again then -- the plate added in this frame was the new target's
+        release(adoptK, t)
+        plateID[adoptK] = newID()
     end
     if mode ~= tokenMode then -- (review F6) the key spaces never meet: a flip forgets every slot
         forgetAll(t)
         tokenMode = mode
     end
-    local key = g
+    local old = I.targetSlot
+    local key, id = g, 0
+    local kept, noPlate = false, false
     if secret then
-        key = plateOfTarget(api) -- 0: no plate answers (plates off, out of plate range): no memory
-        if key == 0 then
+        local k = plateOfTarget(api)
+        if k > 0 then
+            id = plateID[k]
+        elseif again and I.targetID > 0 and guid[old] == false then
+            -- shortcut: a real second change in one frame between two plate-less mobs shares the ID; split them if the
+            -- event's timing is measured and differs
+            id, kept = I.targetID, true
+        else -- no plate answers (plates off, out of plate range): an ID of its own
+            id, noPlate = newID(), true
             noPlateN = noPlateN + 1
         end
+        key = id
     end
-    local old = I.targetSlot
     local s, fresh = 0, false
-    if key ~= "" and key ~= 0 then
+    if kept then
+        s, used[old] = old, t
+    elseif key ~= "" then
         s, fresh = slotFor(key, t)
     end
-    local attackable = s > 0 and Plain(api, api.UnitCanAttack("player", "target")) == true
-    dead, lastLo, lastHi = false, -1, -1
-    -- (review F11) a plate slot is never "fresh": a plate index newly keyed says nothing of the mob's health
-    Direct(Obs.TargetSwap, t, s, fresh and not tokenMode and 1 or 0, attackable and 1 or 0)
-    if old > 0 and guid[old] == false then -- the orphan: its record was saved by this swap's fold, then forgotten
-        Direct(Obs.TargetGone, t, old)
-        guid[old] = ""
+    -- (review F11) an ID's slot is never "fresh": an ID newly made says nothing of the mob's health
+    announce(api, t, s, fresh and not tokenMode)
+    if not kept then
+        if old > 0 and guid[old] == false then -- the orphan: its record was saved by this swap's fold, then forgotten
+            gone(t, old)
+            guid[old] = ""
+        end
+        if noPlate then
+            guid[s] = false
+        end
+        I.targetNoPlate = noPlate
     end
+    I.targetID, swapT = id, t
     I.targetSlot = s -- the slot this swap names; I.curSlot follows at its fold
-    I.targetSwapN = I.targetSwapN + 1 -- I.curSwapN copies it at the fold (Sources/Auras.lua waits for it)
     if s > 0 and I.auras.n >= 2 then
         I.WalkAuras(api, 2, "target", t)
     end
@@ -144,21 +220,87 @@ end
 S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)
     swap(api, t)
 end)
+
+-- Our cast's target, pinned at its SENT (L1734): the castGUID and spell, the target's memory slot, that slot's forget
+-- count and the swap serial then. A hard cast's START keeps its SENT's (`st*`), so a press sent during the cast (the
+-- spell queue window) cannot take it. By ability index, each success's copy (pinT: the success's time, -1 none).
+local sentCast, sentSpell, sentSlot, sentGone, sentSwap = nil, 0, 0, 0, 0
+local stCast, stSpell, stSlot, stGone, stSwap = nil, 0, 0, 0, 0
+local pinT, pinSlot, pinGone, pinSwap = {}, {}, {}, {}
+-- Whether a cast event names the pinned cast: the same castGUID, or (one secret: nil) both nil and the same spell.
+local function same(castGUID, spellID, cast, spell)
+    if castGUID ~= nil then
+        return castGUID == cast
+    end
+    return cast == nil and spellID == spell
+end
+S.On("UNIT_SPELLCAST_SENT", "player", function(api, t, unit, _, castGUID, spellID)
+    if unit == "player" then
+        local s = I.targetSlot
+        sentCast, sentSpell, sentSlot, sentGone, sentSwap = castGUID, spellID, s, goneN[s] or 0, I.targetSwapN
+    end
+end)
+S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, castGUID, spellID)
+    if unit == "player" and same(castGUID, spellID, sentCast, sentSpell) then
+        stCast, stSpell, stSlot, stGone, stSwap = sentCast, sentSpell, sentSlot, sentGone, sentSwap
+    end
+end)
+--- Our cast was interrupted (Sources/Casts.lua): its START pin goes, so a later cast of the spell with
+--- no castGUID cannot take it. Allocates nothing.
+function I.UnpinStart(castGUID, spellID)
+    if same(castGUID, spellID, stCast, stSpell) then
+        stCast, stSpell = nil, 0
+    end
+end
+--- Our cast of ability a (spellID) succeeded at t (Sources/Casts.lua): it keeps its START's pin, else its SENT's.
+--- Allocates nothing.
+function I.PinSent(a, t, castGUID, spellID)
+    if same(castGUID, spellID, stCast, stSpell) then
+        pinT[a], pinSlot[a], pinGone[a], pinSwap[a] = t, stSlot, stGone, stSwap
+        stCast, stSpell = nil, 0 -- used: a later cast of the spell with no castGUID cannot take it
+    elseif same(castGUID, spellID, sentCast, sentSpell) then
+        pinT[a], pinSlot[a], pinGone[a], pinSwap[a] = t, sentSlot, sentGone, sentSwap
+    else
+        pinT[a] = -1
+    end
+end
+--- Where our cast of ability a that succeeded at t writes the target's auras, at its fold (Families/Now.lua): 0 the
+--- target (no target change since its SENT, a tab back, no target at SENT, no SENT seen), s > 0 the memory slot of the
+--- mob it was SENT at, -1 nowhere (that slot was forgotten since: its mob died, left or was evicted). Allocates nothing.
+function I.CastSlot(a, t)
+    local s = pinSlot[a]
+    if pinT[a] ~= t or pinSwap[a] == I.curSwapN or s == 0 then
+        return 0
+    elseif goneN[s] ~= pinGone[a] then
+        return -1
+    end
+    return s == I.curSlot and 0 or s
+end
+I.OnBuild(function(def)
+    for a = 1, #def.abilities do
+        pinT[a], pinSlot[a], pinGone[a], pinSwap[a] = -1, 0, 0, 0
+    end
+    for s = 1, I.TARGET_CAP do -- the build made the memory anew: no pin across it
+        goneN[s] = goneN[s] + 1
+    end
+end)
 S.OnStart(swap)
 I.OnBuild(function(def, now)
-    if tokenMode then -- the build made the memory arrays anew and cleared the log: no plate key survives it
+    if tokenMode then -- the build made the memory arrays anew and cleared the log: no ID's key survives it
         for s = 1, I.TARGET_CAP do
-            guid[s] = ""
+            if guid[s] ~= false then -- the plate-less target's stands: it keeps its ID and its slot
+                guid[s] = ""
+            end
         end
     end
     -- the build cleared the log: no swap waits. Set here, before this hook's swap bumps I.targetSwapN, so it holds
     -- whatever order the build hooks run in (review m6)
     I.curSwapN = I.targetSwapN
     if I.api then
-        swap(I.api, now)
+        swap(I.api, now, true)
     end
 end)
--- A world entry that is no rebuild (a zone change): the plates are new, so is every plate key.
+-- A world entry that is no rebuild (a zone change): the plates are new, so is every plate's ID.
 S.On("PLAYER_ENTERING_WORLD", nil, function(api, t)
     if tokenMode then
         forgetAll(t)
@@ -187,47 +329,69 @@ I.OnSnapshot(function(out)
     )
 end)
 
--- A plate's ADDED or REMOVED (review F3: both edges, a token may change mob at either): the memory keyed by it is
--- forgotten. A GUID key never equals a plate index. Allocates nothing.
-local function plateEdge(api, t, unit)
+-- A plate's ADDED or REMOVED (review F3: both edges, a token may change mob at either): the number forgets its ID
+-- (`release`). Answers the number, nil for no plate token. Allocates nothing.
+local function plateEdge(t, unit)
     local i = unit and I.Units.INDEX[unit]
     if not i then
-        return
+        return nil
     end
     local k = i - 2 -- nameplateK is the registry's token K + 2
-    for s = 1, I.TARGET_CAP do
-        if guid[s] == k then
-            forget(s, t)
-            return
-        end
+    if k == adoptK then
+        adoptK = 0
     end
+    release(k, t)
+    return k
 end
-S.On("NAME_PLATE_UNIT_ADDED", nil, plateEdge)
-S.On("NAME_PLATE_UNIT_REMOVED", nil, plateEdge)
+S.On("NAME_PLATE_UNIT_REMOVED", nil, function(api, t, unit)
+    plateEdge(t, unit)
+end)
+-- An added plate that is the target adopts its ID and its slot: no swap, no load, and I.targetNoPlate stands (no
+-- flicker: the debuff count the target change made unknown stays so); any other, a new ID.
+S.On("NAME_PLATE_UNIT_ADDED", nil, function(api, t, unit)
+    local k = plateEdge(t, unit)
+    if not k then
+        return
+    end
+    local id = I.targetID
+    if id > 0 and Plain(api, api.UnitIsUnit("target", unit)) == true then
+        plateID[k], guid[I.targetSlot] = id, id
+        adoptK, adoptT = k, t -- a target change later in this frame undoes it (swap): Map's event order is unmeasured
+    else
+        plateID[k] = newID()
+    end
+end)
 
 -- Poll 4: the target's plain death goes to the registry, which tells every listener once (OnGone DEAD, below). A
 -- death it tells no more (a corpse: it died before this swap or build) or cannot (a secret target has no registry
 -- slot, with or without a plate) is logged as slot 0, the current target's (Families/Auras.lua ignores it: no slot to
--- forget). `dead` holds until the next swap: one log a death, whichever tell came first.
+-- forget). `dead` holds until the next swap or revive: one log a death, whichever tell came first. A revive (or a
+-- feign's end) is this read's own dead -> alive edge, whatever told the death (L1721): the same target starts over.
+-- A plain false only: a secret answer is no revive, and neither is a false that trails a death event (no edge).
 S.Poll(4, function(api, t)
-    if not dead and Plain(api, api.UnitIsDead("target")) == true then
-        local u = I.Units.Uid(1)
-        if u > 0 then
-            I.Units.Dead(u, t) -- its first death logs the slot and sets the latch (died, below)
+    local d = Plain(api, api.UnitIsDead("target"))
+    if d == false and seen then
+        announce(api, t, I.targetSlot, false) -- no target change: its slot and its ID stand
+    elseif d == true then
+        seen = I.targetSlot > 0 -- a stale answer with no target is nobody's death
+        if not dead then
+            local u = I.Units.Uid(1)
+            if u > 0 then
+                I.Units.Dead(u, t) -- its first death logs the slot and sets the latch (died, below)
+            end
+            if not dead and (u > 0 or I.Units.Secret(api, 1)) then
+                Direct(Obs.TargetGone, t, 0) -- a death told before this swap, or no identity
+            end
+            dead = true
         end
-        if not dead and (u > 0 or I.Units.Secret(api, 1)) then
-            Direct(Obs.TargetGone, t, 0) -- a death told before this swap, or no identity
-        end
-        dead = true
     end
 end)
 
 -- Poll 14: each tracked ability's plain range answer (action.<key>.in_range) while the target holds a memory slot,
 -- and the target's distance bracket, LibRangeCheck's (range plan R2: the facade's RangeLib; asked whenever there is
--- a target, a secret GUID's too, which takes no slot under the Map restriction). Logged when it changes; a poll with
--- no plain answer keeps the last for under RANGE_AGE s, then logs it unknown once (TargetRange a = -1: a secret,
--- raising or silent library never freezes the bracket for the fight). Allocates nothing once `answer` has grown to
--- the ability count.
+-- a target, a secret GUID's too). Logged when it changes; a poll with no plain answer keeps the last for under
+-- RANGE_AGE s, then logs it unknown once (TargetRange a = -1: a secret, raising or silent library never freezes the
+-- bracket for the fight). Allocates nothing once `answer` has grown to the ability count.
 S.Poll(14, function(api, t)
     if I.curSlot ~= 0 then
         local A = I.ab
@@ -272,7 +436,7 @@ local function died(uid, g, why, t)
     end
     for s = 1, I.TARGET_CAP do
         if guid[s] == g then
-            Direct(Obs.TargetGone, t, s)
+            gone(t, s)
             if s == I.targetSlot then
                 dead = true
             end
