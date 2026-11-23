@@ -142,12 +142,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             -- "not usable", which pins no rage (inv-replay-drops). Every rank of a form now maps. The 2 left are the 0.2 s early
             -- exit (Core.lua:974): 121.90 primal_bite (Faerie Fire fades 0.05 s later) and 156.30 lacerate (Demoralizing Roar
             -- fades 0.15 s later). Live-like arm: 0.983 too. CN7 (rage from hits taken) stays a gap for Maul's off-GCD
-            -- `rage - cost >= 15`, not for the on-GCD score
-            0.98,
-            -- once the replay ends a cooldown at its log timestamp (the ready-time ruling)
-            -- Maul's untagged Casting lines are wowsims's queue at each swing (Cost = 0); its Tag 1 line is the hit,
-            -- when the game's cast succeeds
-            { procs = { ["9881:0"] = true } }
+            -- `rage - cost >= 15`, not for the on-GCD score. Timing fixture re-recorded (lane B4 round 4): the replay shows
+            -- Maul's queue presses (a `procs` "9881:0" option, older than the replay's queue, dropped all 65, so
+            -- IsCurrentSpell never answered); 183 -> 248 decisions, Maul rows only, real 0 both; on-GCD 0.983 unchanged
+            0.98
         )
     end)
     -- wowsims's sim starts in Dire Bear Form, so its list never shifts; the recipe's `bear_form` line does (a
