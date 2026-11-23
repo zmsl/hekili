@@ -14,7 +14,6 @@
 
 - The Defensives and Interrupts displays are now separate by default, so a defensive or an interrupt never takes the main display's place. Evasion, Divine Shield, Divine Protection, Lay on Hands, Deterrence, Mana Shield, Shadow Ward, Pummel and Counterspell now have their toggle. Death Coil, Ice Barrier and Earth Shock used as a defensive or an interrupt have their own entry in the ability list, so the toggle turns off only that use.
 - The Healthstone and healing potion names in the options follow your game's language.
-- An empty Interrupts display (no priority line for it) no longer costs any time each update.
 - Guardian and Protection Warrior (wowsims.com), and Feral in Bear Form: the low-health defensives are back (Barkskin, Frenzied Regeneration, Last Stand, Shield Wall, Stoneform, Shatter Curse and Healthstone, under the Defensives toggle). They show only while Hekili can read your health in combat; when it cannot, they stay hidden, as before. Custom priorities can test the same with `health.known`.
 - Arcane, Fire, Frost and Frostfire Mage, Shadow Priest and Affliction Warlock (wowsims.com): the priorities now suggest cutting a channel early where the reference rotation does, such as Evocation once your mana is nearly full, or Wrack once a damage-over-time effect needs reapplying.
 - Channel cut suggestions now come at the channel's tick and stay up until pressed; changing target decides the cut again for the new target.

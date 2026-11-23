@@ -41,7 +41,7 @@ Each recipe is `tools/wowsims/specs/<class>_<spec>.lua`. The file name is the sp
 | `prepullSkip` | `{ action, ... }`: leaves out that action's pre-pull lines. |
 | `leveling` | Lines appended to `actions` for lower levels. |
 | `levelingFirst` | Lines put first in `actions`: a form the simulation starts in and the APL never casts. |
-| `extra` | `{ { before = action, line = text } }`: a line put immediately before the first line of `before` (its last, with `last = true`). |
+| `extra` | `{ { before = action, line = text } }`: a line put immediately before the first line of `before` (its last, with `last = true`), or with `first = true` (no `before`) at the top of the main list, after the `levelingFirst` lines: a defensive line wowsims never casts, its threshold a `settings` number. |
 | `settings` | `{ [key] = { default = bool, desc = text } }`: a class setting a recipe line reads as `settings.<key>`. |
 | `maintenance` | `{ [action] = setting key }`: a raid debuff kept up; off in game, on in the test harness ([Pack translator rules](Pack-Translator-Rules), rule 15). |
 | `select` | A cast whose spell a class option picks (rule 16). |
@@ -100,7 +100,7 @@ actions+=/thunder_clap,if=settings.maintain_thunder_clap&!action.mortal_strike.k
 
 ### Adding what wowsims does not carry
 
-Only six recipe keys may add something wowsims does not carry: `leveling`, `levelingFirst`, `extra`, `requires`, `settings` and `focus`. Each use names its reason in the recipe's comment.
+Only six recipe keys may add something wowsims does not carry: `leveling`, `levelingFirst`, `extra`, `requires`, `settings` and `focus`. Each use names its reason in the recipe's comment. The one other source is the shared content: a health threshold it registers for every spec (the Healthstone's, the healing potion's) puts that line in every pack (translator rule 25).
 
 - A `leveling` line is a real rotation ability that a lower level casts for a genuine need: its buff about to expire, a debuff missing, a stack low, a resource to spend. It must be silent at level 60, which the line does by testing an ability the level-60 build has, as in `!action.mortal_strike.known&...` above. A leveling line is never a filler that recasts an active buff to fill an idle global cooldown.
 - An `extra` line is only for content wowsims cannot model, never to tune a wowsims line.
