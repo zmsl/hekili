@@ -194,3 +194,40 @@ describe("the healing potion", function()
         assert.is_true(S.cooldown.healing_potion.true_remains > 100)
     end)
 end)
+
+-- L1808 (def-2 part 2, item 3): the shared lines' sliders name their item in the player's language: the client's item
+-- name (plain) when it has the item, else the shared content's own string (Hekili_Shared's locale files)
+describe("the Healthstone and healing potion sliders", function()
+    local function label(H, key)
+        local S = H.Hekili.State
+        for _, e in ipairs(H.Hekili.Class.specs[S.spec.id].settings) do
+            if e.name == key then
+                return e.info.name()
+            end
+        end
+    end
+
+    it("read the shared content's string when the client has no item name yet (English, French)", function()
+        local H = headless.new({ character = ww.Protection.character(), pack = "Protection (wowsims.com)" })
+        assert.are.equal("Healthstone: at or below this health (%)", label(H, "healthstone_health"))
+        assert.are.equal("Healing Potion: at or below this health (%)", label(H, "healing_potion_health"))
+        local fr =
+            headless.new({ character = ww.Protection.character(), pack = "Protection (wowsims.com)", locale = "frFR" })
+        assert.is_truthy(label(fr, "healthstone_health"):find("Pierre de soins", 1, true))
+        assert.is_truthy(label(fr, "healing_potion_health"):find("Potion de soins", 1, true))
+    end)
+
+    it("read the client's item name when it has one", function()
+        local H = headless.new({
+            character = ww.Protection.character(),
+            pack = "Protection (wowsims.com)",
+            beforeLogin = function(core)
+                core.Client.C_Item.GetItemInfo = function(id)
+                    return ({ [5509] = "Client Stone", [929] = "Client Potion" })[id]
+                end
+            end,
+        })
+        assert.are.equal("Client Stone: at or below this health (%)", label(H, "healthstone_health"))
+        assert.are.equal("Client Potion: at or below this health (%)", label(H, "healing_potion_health"))
+    end)
+end)

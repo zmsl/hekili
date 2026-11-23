@@ -99,6 +99,13 @@ describe("shared content", function()
             self.exprs[key] = fn
         end
         _G.Hekili = { State = { race_token = "BloodElf" }, Class = { specs = { [0] = all }, file = "WARRIOR" } }
+        function _G.Hekili.GetLocale() -- the English table: a key answers itself (AceLocale's silent enUS)
+            return setmetatable({}, {
+                __index = function(_, k)
+                    return k
+                end,
+            })
+        end
         debuffs, bags, controls = {}, {}, {}
         ns = {
             Facade = {
@@ -109,6 +116,7 @@ describe("shared content", function()
                     IsUsableItem = function()
                         return true
                     end,
+                    GetItemInfo = function() end, -- no item cached: the shared content's own names
                 },
                 C_LossOfControl = {
                     GetActiveLossOfControlData = function(i)

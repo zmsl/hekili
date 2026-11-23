@@ -10,6 +10,19 @@
 
 local C_Item = Hekili.Client.C_Item
 local GetItemCount, IsUsableItem = C_Item.GetItemCount, C_Item.IsUsableItem
+local L = Hekili:GetLocale("Hekili_Shared")
+
+-- An item's name as the player's client shows it (architecture section 9: names the client translates come from
+-- the client): its item data, plain (W PR13), read once here; `fallback` (the shared content's string) while the
+-- client has not cached the item. One plain item stands for every rank: 5509 is "Healthstone", 929 "Healing
+-- Potion" (the wowsims pin's db.json).
+local function itemName(id, fallback)
+    local name = C_Item.GetItemInfo(id)
+    if type(name) == "string" and name ~= "" then
+        return name
+    end
+    return fallback
+end
 
 local class = Hekili.Class
 local state = Hekili.State -- upvalue: Hekili setfenv's ability functions to `state`, where the name `state` is not a key
@@ -91,8 +104,8 @@ local function healthstone()
 end
 
 shared:RegisterAbility("healthstone", {
-    name = "Healthstone", -- l10n: verbatim
-    listName = "|T538745:0|t |cff00ccff[Healthstone]|r",
+    name = itemName(5509, L["Healthstone"]),
+    listName = "|T538745:0|t |cff00ccff[" .. itemName(5509, L["Healthstone"]) .. "]|r",
     cast = 0,
     cooldown = 120, -- Classic's shared Healthstone cooldown; the item's own is read in game (spec §7 Q5)
     gcd = "off",
@@ -138,8 +151,9 @@ local function healingPotion()
 end
 
 shared:RegisterAbility("healing_potion", {
-    name = "Healing Potion", -- l10n: verbatim
-    listName = "|T136243:0|t |cff00ccff[Healing Potion]|r", -- one key for every rank: not the bags' item's name
+    name = itemName(929, L["Healing Potion"]),
+    -- one name for every rank, not the bags' item's
+    listName = "|T136243:0|t |cff00ccff[" .. itemName(929, L["Healing Potion"]) .. "]|r",
     cast = 0,
     cooldown = 120,
     gcd = "off",

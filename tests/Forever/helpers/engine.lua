@@ -286,6 +286,7 @@ function M.load(classToken, race)
                 return 0
             end,
             GetItemSpell = noop,
+            GetItemInfo = noop, -- no item cached: Hekili_Shared's own names (Consumables.lua itemName)
             IsUsableItem = function()
                 return true
             end,

@@ -10,6 +10,13 @@
 ## LoadOnDemand: 1
 ## X-Hekili-ContentAPI: 17
 
+Locales\enUS.lua
+Locales\deDE.lua
+Locales\esES.lua
+Locales\frFR.lua
+Locales\itIT.lua
+Locales\zhCN.lua
+
 Shared\Auras.lua
 Shared\Consumables.lua
 Shared\Items.lua

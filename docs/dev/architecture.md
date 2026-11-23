@@ -980,7 +980,8 @@ show in two slots when a held slot's icon is the next slot's new icon.
 
 Every piece of text a player sees is `L["English text"]`. The key is the English itself. Each addon with text is its
 own AceLocale-3.0 app (`Libs/AceLocale-3.0`, Ace3 Release-r1403), named after its folder: the core's table is `ns.L`
-(`local L = ns.L`), a pack's `local L = Hekili:GetLocale("Hekili_<Class>")`. Separate apps keep a pack's strings out
+(`local L = ns.L`), a pack's `local L = Hekili:GetLocale("Hekili_<Class>")`. The shared content's is `Hekili_Shared` (L1808: the
+Healthstone's and the healing potion's names while the client has not cached their item). Separate apps keep a pack's strings out
 of the core (core-is-generic) and stop one key meaning two things (the core's "Combat" and Rogue's spec).
 
 - **The locale block.** `Locales/enUS.lua` loads first: written by `tools/locales.py`, every key `L[key] = true`
