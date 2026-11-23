@@ -629,6 +629,10 @@ a kick gets a second key: the ability field `variantOf = "<original key>"` regis
 and toggle; the original keeps the spell's IDs, its name and the belief's record (`Spec/Abilities.lua`,
 `Tracked.lua`), the options list shows the variant with its toggle's name, and the pack sets each key's cooldown in
 the other's handler (Warlock `death_coil_defensive`, Mage `ice_barrier_defensive`, Shaman `earth_shock_interrupt`).
+A separate display whose active priority has no line for it is not walked (`Engine/Sim/Core.lua` `packHasLine`, read
+every update: an entry whose ability's toggle, the player's per-ability choice first, is the display's filter; the
+engine's internal verbs, `use_items` among them, count for Cooldowns and for a toggle a player gave an item), so the
+Interrupts display costs nothing until a priority has a kick; it publishes an empty set, as with its toggle off.
 
 ## 4. `Hekili.Virtual`
 

@@ -107,3 +107,59 @@ describe("the defensive and interrupt displays", function()
         end)
     end)
 end)
+
+-- def-2 part 2 item 4 (CPU): a separate display whose active priority has no line for it is not walked (no reset, no
+-- forecast); a line for it in a custom priority, or an ability a player moves onto its toggle, walks it again
+describe("a separate display with no line in the active priority", function()
+    local rw = require("Forever.helpers.rogue_world")
+    local H, walked
+
+    before_each(function()
+        H = headless.new({ character = rw.Combat.character(), pack = rw.Combat.PACK })
+        assert.are.same({}, H.loadErrors)
+        walked = {}
+        local S = H.Hekili.State
+        local reset = S.reset
+        S.reset = function(dispName, ...)
+            if dispName then
+                walked[dispName] = (walked[dispName] or 0) + 1
+            end
+            return reset(dispName, ...)
+        end
+    end)
+
+    local function cycles(n)
+        walked = {}
+        for _ = 1, n do
+            assert(headless.cycle(H, H.ctl.now + 0.2))
+        end
+        return walked
+    end
+
+    it("is skipped: Interrupts (no kick in the Combat priority), while Defensives and Primary are walked", function()
+        local w = cycles(5)
+        assert.is_nil(w.Interrupts)
+        assert.is_true((w.Defensives or 0) > 0 and (w.Primary or 0) > 0)
+    end)
+
+    it("is walked once a player moves an ability of the priority onto its toggle", function()
+        local spec = H.Hekili.DB.profile.specs[H.Hekili.State.spec.id]
+        spec.abilities.sinister_strike.toggle = "interrupts"
+        H.Hekili:ResetSpellCaches()
+        assert.is_true((cycles(5).Interrupts or 0) > 0)
+    end)
+
+    it("is walked for a custom priority with a kick line", function()
+        local spec = H.Hekili.State.spec.id
+        H.Hekili.DB.profile.packs["My Kicks"] = {
+            spec = spec,
+            builtIn = false,
+            lists = {
+                default = { { enabled = true, action = "kick" }, { enabled = true, action = "sinister_strike" } },
+            },
+        }
+        H.Hekili.DB.profile.specs[spec].package = "My Kicks"
+        H.Hekili.Scripts:LoadScripts()
+        assert.is_true((cycles(5).Interrupts or 0) > 0)
+    end)
+end)

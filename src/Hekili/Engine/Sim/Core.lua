@@ -1907,6 +1907,39 @@ local displayRules = {
     AOE        = { aoeDisplayRule                                                                       , "Interrupts" },
 }
 local separateDisplays = { "Interrupts", "Defensives", "Cooldowns" } -- the displays that walk their own Forecast Period
+local displayFilter = { Interrupts = "interrupts", Defensives = "defensives", Cooldowns = "cooldowns" } -- state.filter
+
+-- (L1808, def-2 part 2 item 4) Whether the active pack has a line separate display `dispName` could show: an entry
+-- whose ability's toggle (the player's per-ability choice first, as state:IsDisabled reads it) is the display's
+-- filter, or that names the filter itself. An engine verb (an internal ability: the trinkets' verb picks its items at
+-- run time) counts for Cooldowns, where those picks go by default, and for any toggle a player gave an item. A display
+-- with none is not walked (Defensives and Interrupts are separate by default: each walk is a reset and a forecast).
+-- Read every update, no cache: an options edit or a new priority counts at once. No allocation.
+local function packHasLine( dispName, pack, spec, settings )
+    local filter = displayFilter[ dispName ]
+    if not filter then return true end
+    local abilities, items = spec.abilities, spec.items
+    for _, list in pairs( pack.lists ) do
+        for i = 1, #list do
+            local action = list[ i ].action
+            local ability = action and class.abilities[ action ]
+            if ability and ability.id > -100 and ability.id < 0 then -- an engine verb (IsDisabled's "internal function")
+                if filter == "cooldowns" then return true end
+                for _, o in pairs( items ) do
+                    if o.toggle == filter then return true end
+                end
+            elseif ability then
+                local option = ability.item and items[ ability.key ] or abilities[ ability.key ]
+                local toggle = option and option.toggle
+                if not toggle or toggle == "default" then toggle = ability.toggle end
+                local tt = ( toggle == "potion" or toggle == "minor_cooldowns" ) and settings.toggles[ toggle ]
+                if tt and tt.separate and not tt.value then toggle = "cooldowns" end
+                if toggle == filter or ability[ filter ] then return true end
+            end
+        end
+    end
+    return false
+end
 
 -- Alternatives under resource uncertainty (display styles plan, Task 3c), for a display a subscriber asked them of
 -- (needs.alts): after the slot loop, so the main records never depend on them, records 1 and 2 each get the picks the
@@ -2039,7 +2072,7 @@ function Hekili.Update()
     for i = 1, #separateDisplays do
         local name = separateDisplays[ i ]
         local d = rawget( settings.displays, name )
-        if d and Output.Wanted( name ) and displayRules[ name ][ 1 ]( settings ) then
+        if d and Output.Wanted( name ) and displayRules[ name ][ 1 ]( settings ) and packHasLine( name, pack, spec, settings ) then
             local p = d.forecastPeriod or 15
             if p > horizon then horizon = p end
         end
@@ -2070,7 +2103,7 @@ function Hekili.Update()
         local wanted = Output.Wanted( dispName )
         local out = Displays[ dispName ]
 
-        if wanted and rule( settings ) then
+        if wanted and rule( settings ) and packHasLine( dispName, pack, spec, settings ) then
             -- Only the scratch set is written until Publish: every yield below leaves out.recs the last complete set.
             local Queue = Output.Begin( dispName )
             local numFilled = 0
@@ -2641,7 +2674,7 @@ function Hekili.Update()
             state.display = dispName
 
         else
-            -- Subscribed but its rule is off: publish an empty set (once). Unsubscribed: skipped untouched.
+            -- Subscribed but its rule is off, or its priority has no line for it: publish an empty set (once). Unsubscribed: skipped untouched.
             if wanted and out.count > 0 then
                 Output.Begin( dispName )
                 Output.Publish( dispName, 0 )
