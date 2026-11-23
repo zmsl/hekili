@@ -681,6 +681,44 @@ describe("the headless loop's bags, pet and stats (central fix 27)", function()
     end)
 end)
 
+describe("the headless loop's ledger events (loop.events)", function()
+    it("flags a retarget and our target's death, and a miss of our press but not of a white swing (L1762)", function()
+        local us, mob, other = {}, {}, {}
+        us.target = mob
+        local function flags(ev)
+            local e = {}
+            loop.events({ truth = { ev } }, us, 1, e)
+            return { e.target or false, e.miss or false, e.avoid or false }
+        end
+        assert.are.same({ true, false, false }, flags({ kind = "target", relist = true }))
+        assert.are.same({ true, false, false }, flags({ kind = "kill", dst = mob, ourTarget = mob }))
+        assert.are.same({ false, false, false }, flags({ kind = "kill", dst = other, ourTarget = mob }))
+        assert.are.same({ false, true, true }, flags({ kind = "spell", src = us, dst = mob, act = "DODGE" }))
+        assert.are.same({ false, true, true }, flags({ kind = "strike", src = us, dst = mob, act = "PARRY" }))
+        assert.are.same({ false, false, true }, flags({ kind = "swing", src = us, dst = mob, act = "MISS" }))
+        -- a ranged auto shot's miss (world.lua W.startRanged marks it `auto`): an avoid row, no press of ours (round 2)
+        assert.are.same(
+            { false, false, true },
+            flags({ kind = "spell", src = us, dst = mob, act = "MISS", auto = true })
+        )
+        -- the gated flicker's press and avoid facts (`press`, `outcome`): a ranged auto shot's cast and miss are neither
+        local function own(ev)
+            local e = {}
+            loop.events({ truth = { ev } }, us, 1, e)
+            return { e.cast or false, e.press or false, e.avoid or false, e.outcome or false }
+        end
+        assert.are.same({ true, false, false, false }, own({ kind = "cast", src = us, dst = mob, auto = true }))
+        assert.are.same(
+            { false, false, true, false },
+            own({ kind = "spell", src = us, dst = mob, act = "MISS", auto = true })
+        )
+        assert.are.same({ true, true, false, false }, own({ kind = "cast", src = us, dst = mob }))
+        assert.are.same({ false, false, true, true }, own({ kind = "swing", src = us, dst = mob, act = "DODGE" }))
+        assert.are.same({ false, false, false }, flags({ kind = "spell", src = us, dst = mob, act = "WOUND" }))
+        assert.are.same({ false, false, false }, flags({ kind = "spell", src = other, dst = us, act = "DODGE" }))
+    end)
+end)
+
 describe("the headless loop's flicker counter (loop.flips)", function()
     -- the owner's rule (2026-10-26): a blip the instance pressed (show-then-press within one tick) is not jitter
     local seq = { "a", "b", "a", "a" }
@@ -701,6 +739,16 @@ describe("the headless loop's flicker counter (loop.flips)", function()
         assert.are.equal(0, loop.flips(seq, 4, { {}, { c = true, b = true }, {}, {} }))
         assert.are.equal(1, loop.flips(seq, 4, { {}, { c = true }, {}, {} }))
         assert.are.equal(1, loop.flips(seq, 4, { {}, {}, { b = true }, {} })) -- cast after we flipped back
+    end)
+
+    it("excuses a flip whose change follows a fact (flicker.changes), unless either poll is stale (L1762)", function()
+        local by = {}
+        assert.are.equal(0, loop.flips(seq, 4, nil, { [2] = "aura" }, by))
+        assert.are.same({ aura = 1 }, by)
+        assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = false, [3] = "press" })) -- the return's fact alone
+        assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = "stale" }))
+        assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = "aura", [3] = "stale" })) -- taken back by a stale answer
+        assert.are.equal(0, loop.flips(seq, 4, { false, "b", false, false }, { [2] = "stale" })) -- the press rule stands
     end)
 
     it("records in a replay each in-combat tick's casts before the next tick", function()

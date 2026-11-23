@@ -193,7 +193,9 @@ local PACKS = {
         -- Shot shows (its 58.57 cooldown end); at 58.30 the spend is seen, Aimed shows (its GCD end 58.40); at 58.50
         -- Arcane, 0.07 s off, outranks it again, as wowsims's own re-queue (58.16 Aimed -> 58.36 Arcane). On the true
         -- pool Aimed shows at 58.10 too: no flip
-        0.34,
+        -- 0.34 -> 0 (0.00 measured on 46b3ac9b1, press-only 0.33): that flip's change to Aimed follows the spend seen at
+        -- 58.30, cause "jitter rule L1762: press justified" (the lo gap before it is an accuracy finding, not jitter)
+        0,
         nil,
         {},
         {},

@@ -864,7 +864,7 @@ function M.new(text, H, o)
                     W.emit({ kind = "cast", src = us, dst = mob, spell = use })
                 end
             elseif e.kind == "completed" and e.other == M.RANGED_AUTO and R.rangedSpeed then -- R18: the ranged auto attack
-                W.emit({ kind = "cast", src = us, dst = mob, spell = R.shootSpell })
+                W.emit({ kind = "cast", src = us, dst = mob, spell = R.shootSpell, auto = true }) -- no press (loop.lua)
             elseif not key and e.kind == "completed" and e.item then -- an unmapped item's use: still our cast
                 W.emit({ kind = "cast", src = us, dst = mob, spell = M.UNMAPPED_SPELL })
             elseif key and e.kind == "casting" then -- a hard cast's start: its cast bar, the GCD from now

@@ -568,14 +568,18 @@ describe("the world's resources", function()
                 us.rangedOn = false
             end)
             W.run(15)
-            local shots, swings = {}, 0
+            local shots, swings, auto = {}, 0, 0
             for _, ev in ipairs(W.truth) do
                 if ev.kind == "cast" then
                     shots[#shots + 1] = ev.t
+                    auto = auto + (ev.auto and 1 or 0)
                 elseif ev.kind == "swing" and ev.hand == 3 then
                     swings = swings + 1
+                elseif ev.kind == "spell" and ev.src == us then
+                    auto = auto + (ev.auto and 1 or 0)
                 end
             end
+            assert.are.equal(8, auto) -- each shot's cast and outcome marked: no press of ours (loop.lua's `miss`, L1762)
             assert.are.equal(4, #shots) -- 1.2, 4.0, 6.8, 9.6
             assert.is_true(math.abs(shots[4] - 9.6) < 1e-9)
             assert.are.equal(swing and 4 or 0, swings)

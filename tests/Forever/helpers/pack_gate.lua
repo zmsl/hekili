@@ -32,7 +32,8 @@ M.AGREEMENT_BY = {
 M.REACT_P90_BY = {}
 
 -- The flicker floors at 20 fights: per label the first-icon flicker/min (loop.flips: an A -> B -> A over three ticks,
--- not counted when the instance pressed B at the tick it showed or the next, owner rule 2026-10-26) and the
+-- not counted when the instance pressed B at the tick it showed or the next, owner rule 2026-10-26, nor, since the
+-- jitter rule L1762 round 2, when the change to B follows a fact at its poll and neither poll is stale) and the
 -- unjustified retracted readies/min (tests/Game/harness/flicker.lua). A floor is the worst of seeds 1-20 / 21-40 /
 -- 41-60 (beside it) rounded up to the next 0.1, 0 where all three measured 0 (parry-haste spec decision 63: the
 -- loops are deterministic but a world change reorders every seeded fight). A floor only moves down, except with a
@@ -99,7 +100,10 @@ M.FLICKER = {
     -- -> 0
     -- loOver 2998 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 2528 / 2695 / 2998): untraced -> per-cell follow-
     -- up lane (mostly 0.05-2 rage: the floor's scale - spread step, candidate)
-    ["Arms"] = { loOver = 2998, flicker = 0.06, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.02 / 0.04 / 0.04, press-only 0.04 / 0.04 / 0.06; excused avoid 2): flicker 0.06 -> 0.05 (the
+    -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: avoid justified"
+    ["Arms"] = { loOver = 2998, flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
@@ -158,7 +162,11 @@ M.FLICKER = {
     -- loOver 754 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 728 / 754 / 699): fix (a) lowered it from 1602 /
     -- 1556 / 1500; the rest untraced -> follow-up lane; a +5 on an avoided swing whose MISS row L.THETA refused
     -- is one traced class (fix 2, after foreign-avoids)
-    ["Fury L60"] = { loOver = 754, flicker = 0.3, flickerK = 0.6, retracted = 0.04, readyShort = 6, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.11 / 0.15 / 0.18, press-only 0.14 / 0.22 / 0.29; excused aura 1, press 3, avoid 2): flicker 0.3
+    -- -> 0.19 (the measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press,
+    -- avoid and aura edge justified"
+    ["Fury L60"] = { loOver = 754, flicker = 0.19, flickerK = 0.6, retracted = 0.04, readyShort = 6, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -244,7 +252,11 @@ M.FLICKER = {
     -- is the poll's): both lanes' causes, added
     -- loOver 337 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 337 / 177 / 251): untraced -> per-cell follow-up
     -- lane (mostly 0.05-2 rage, as Arms)
-    ["Fury L24"] = { loOver = 337, flicker = 0.31, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.09 / 0.09 / 0.09, press-only 0.23 / 0.30 / 0.24; excused press 16, avoid 1): flicker 0.31 -> 0.1
+    -- (the measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press and avoid
+    -- justified"
+    ["Fury L24"] = { loOver = 337, flicker = 0.1, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -311,7 +323,10 @@ M.FLICKER = {
     -- 0.08 / 0.02, heldReady 392 / 295 / 337 -> 383 / 289 / 331, measured 324100d36 -> 8e31c1cb7)
     -- loOver 2007 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 2007 / 1647 / 1889): untraced -> per-cell follow-
     -- up lane (mostly 0.05-2 rage, as Arms)
-    ["Warrior Protection"] = { loOver = 2007, flicker = 0.11, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.08 / 0.08 / 0.00, press-only 0.10 / 0.08 / 0.02; excused aura 2): flicker 0.11 -> 0.09 (the
+    -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: aura edge justified"
+    ["Warrior Protection"] = { loOver = 2007, flicker = 0.09, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -438,7 +453,10 @@ M.FLICKER = {
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0.295 / 0.249 /
     -- 0.261, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 447 / 390 / 410): flicker 0.35 -> 0.3
     -- loOver 2374 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 745 / 2374 / 999): untraced -> per-cell follow-up lane
-    ["Guardian"] = { loOver = 2374, flicker = 0.3, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.26 / 0.25 / 0.24, press-only 0.29 / 0.25 / 0.26; excused press 3): flicker 0.3 -> 0.27 (the
+    -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
+    ["Guardian"] = { loOver = 2374, flicker = 0.27, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
@@ -554,7 +572,10 @@ M.FLICKER = {
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 83 / 107 / 86): flicker 0.11 -> 0.05, readyShort 1 -> 0,
     -- heldReady 112 -> 107
     -- loOver 5711 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 5711 / 2335 / 2664): untraced -> per-cell follow-up lane
-    ["Survival"] = { loOver = 5711, flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 107 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.00 / 0.03 / 0.02, press-only 0.02 / 0.03 / 0.05; excused press 3): flicker 0.05 -> 0.04 (the
+    -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
+    ["Survival"] = { loOver = 5711, flicker = 0.04, retracted = 0, readyShort = 0, heldReady = 107 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661), first measured (R6; seeds 1-20 / 21-40 / 41-60, steady
     -- icons on): flicker 0 / 0 / 0 each (Survival Melee's oracle 0.02 / 0.03 / 0.02, the others' 0), retracted 0,
     -- readyShort 0; heldReady the Hunter rows' cost-crossing class (the floor a few units under the truth, gap BT),
@@ -616,7 +637,10 @@ M.FLICKER = {
     -- t 179.40: our Auto Shot (75) and its hit at 179.4000000000002, now at that poll; seed 43, re-timed, shows arcane_shot >
     -- rapid_fire > arcane_shot at 182.80, the poll after an Arcane Shot press
     -- loOver 196 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 0 / 196 / 0): untraced -> per-cell follow-up lane
-    ["Marksmanship Turret"] = { loOver = 196, flicker = 0.02, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0 / 0 / 0, press-only 0 / 0 / 0.02; excused press 1): flicker 0.02 -> 0, cause "jitter rule L1762:
+    -- press justified"
+    ["Marksmanship Turret"] = { loOver = 196, flicker = 0, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     -- heldReady 117 -> 236 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
     -- spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 210 / 236 / 186, flicker 0, retracted 0, readyShort
@@ -867,7 +891,10 @@ M.FLICKER = {
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 109 / 113): flicker 0.04 -> 0.02, heldReady 121 -> 113
     -- loOver 877 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 877 / 570 / 492): untraced -> per-cell follow-up
     -- lane (candidate: Fire's Master of Elements harness gap)
-    ["Frostfire"] = { loOver = 877, flicker = 0.02, retracted = 0, heldReady = 113 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0 / 0 / 0, press-only 0 / 0.02 / 0; excused press 1): flicker 0.02 -> 0, cause "jitter rule L1762:
+    -- press justified"
+    ["Frostfire"] = { loOver = 877, flicker = 0, retracted = 0, heldReady = 113 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0), retracted 0, readyShort 0 / 0 / 0, heldReady 113 / 113 / 109, agreement .999 / .998 / .997): flicker 0.01 (the
     -- measured worst + 0.01), heldReady 113 (the worst set)
@@ -926,7 +953,9 @@ M.FLICKER = {
     -- (seeds 21-40) is untraced
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0.033 / 0, readyShort 0 / 0 / 0, heldReady 0 / 1 / 1): flicker 0.02 -> 0
-    ["Smite"] = { flicker = 0, retracted = 0.04, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
+    -- jitter rule L1762: now-slot gating (R6; seeds 1-20 / 21-40 / 41-60: retracted, slot 1, 0 / 0 / 0; the all-slot
+    -- count 0 / 0.03 / 0: seeds 21-40's two are Shoot in a next slot at a near-tie, next R 0.03): retracted 0.04 -> 0
+    ["Smite"] = { flicker = 0, retracted = 0, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
@@ -1003,7 +1032,10 @@ M.FLICKER = {
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 2 / 1 / 1): flicker 0.033 -> 0.034; flicker LOOSENED 0.033
     -- -> 0.034: the floor was the line's two-decimal rounding of seeds 41-60's one flip, 0.0333 unrounded (the same on
     -- 314a87b86 before this wave, L1499 item 3), so the set never sat under it; nothing moved
-    ["SM Ruin"] = { flicker = 0.034, retracted = 0, heldReady = 2 }, -- 0.017 / 0 / 0.033, 0
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0 / 0 / 0.02, press-only 0 / 0 / 0.03; excused press 1): flicker 0.034 -> 0.03 (the measured worst
+    -- + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
+    ["SM Ruin"] = { flicker = 0.03, retracted = 0, heldReady = 2 }, -- 0.017 / 0 / 0.033, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 2 / 0):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0): heldReady 4 -> 0
