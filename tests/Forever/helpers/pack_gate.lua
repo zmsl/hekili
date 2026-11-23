@@ -473,7 +473,11 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0.26 / 0.25 / 0.24, press-only 0.29 / 0.25 / 0.26; excused press 3): flicker 0.3 -> 0.27 (the
     -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
-    ["Guardian"] = { loOver = 2374, flicker = 0.27, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0.29 / 0.25 /
+    -- 0.24, press-only 0.29 / 0.25 / 0.26; the newly counted return traced: seed 5 t 63.0 demoralizing_roar > maul on
+    -- our press > demoralizing_roar, t 123.0 lacerate > maul on our press > lacerate, both with no fact): flicker 0.27
+    -- -> 0.30 (the measured worst + 0.01), cause "jitter rule L1791: a return needs its own fact"
+    ["Guardian"] = { loOver = 2374, flicker = 0.30, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
