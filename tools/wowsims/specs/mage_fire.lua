@@ -26,8 +26,8 @@
 -- rank 11, 395 mana); the world's pools and regen the log's (6168; 29.13 a second, half of it while casting); Evocation's
 -- tick (mage_arcane.lua). Evocation is never clipped in this fight.
 -- Evocation's clip: wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the pack's lines carry it
--- (`interrupt_if=mana.pct_lo>=99`, translator rule 24, L1748); the world clips by wowsims's rule (mage_world.lua: any
--- press while the belief channels it at 99%).
+-- (`interrupt_if=mana.pct_lo>=99`, translator rule 24, L1748). The world clips the channel when the loop's driver
+-- presses another spell during it (the engine moved off it, L1752), and the clip ends Evocation's buff there.
 -- autocastOtherCooldowns (rule 13): the trinket (`use_items`; Eye of the Beast 13968 since the ab0f00e4fc re-pin, 272438 on e4ef929e54, 18820 on e2842f0a78, 19339 before), Combustion and the
 -- mana gem, off the GCD. Rule 12 drops Read Ley Line (mage_arcane.lua); Ignite (412538) and the missiles' 10274 are
 -- procs no key maps.
