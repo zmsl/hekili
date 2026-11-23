@@ -416,6 +416,7 @@ end
 -- read that instant again (CheckChannel then false). True when withdrawn.
 local cutRecast = false
 local function channelRecast()
+    if state.display ~= "Primary" and state.display ~= "AOE" then return false end -- the others never settle a point
     local c = state.display == "AOE" and cutAOE or cutPrimary
     if state.index ~= 1 or state.delay > CUT_EPS or state.buff.casting.applied ~= c.applied then return false end
     if state.offset == 0 then
@@ -2180,10 +2181,11 @@ function Hekili.Update()
                                 ]]
 
                             local channeling, shouldBreak = state:IsChanneling(), false
+                            cutRecast = false -- set by this iteration's walk only (one left by a walk outside the loop is stale)
 
                             if channeling then
                                 if debug then Hekili:Debug( "We are channeling, checking if we should break the channel..." ) end
-                                gcdStop, cutRecast = 0, false
+                                gcdStop = 0
                                 shouldBreak = Hekili:CheckChannel( nil, 0 )
                                 state.channel_breakable = shouldBreak
                             else
