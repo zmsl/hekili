@@ -70,7 +70,7 @@ is secret, 0 for a target read plain, nil with no target. It is never a GUID or 
 independently from the cdm reads"): `ns.Facade.Known(kind, powerType)` -> whether that kind's hidden values answer now,
 each kind on its own (`Facade.KNOWN_HEALTH` 1: the player's health estimate is a reading, a plain read, a live band or
 one held after a re-prime, false when it reads full; `KNOWN_POWER` 2: that power type read plain or its band live,
-false when the model alone answers; `KNOWN_AURA` 3: the hidden-value library's aura kind, by its capability report,
+false when the model alone answers; `KNOWN_AURA` 3: the hidden-value library's aura kind, by its capability report (asked with no spec, so it follows the library's shared bar self-test: a failed self-test turns `aura.known` off with health and power, while the Cooldown Manager's presence reads still stand),
 apart from the core's own Cooldown Manager reader). Its readers are the APL conditions `health.known`,
 `<power>.known` (the resource metatable) and `aura.known` (`Engine/Sim/State.lua`); the translator guards every
 generated line that reads the player's health with `health.known` (§6). `tools/check_border.sh` passes exactly two lines

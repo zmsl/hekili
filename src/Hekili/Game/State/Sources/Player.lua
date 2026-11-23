@@ -256,8 +256,8 @@ S.On("UNIT_SPELL_HASTE", "player", function(api, t, unit)
 end)
 
 -- Poll 1.5: the player's health, when plain (on live it reads secret in combat and out; owner L1461, L1710), and its
--- maximum. A secret read is "unknown" (b = -1): the belief reads the live band's middle, else full, until the next
--- plain one (Families/Player.lua).
+-- maximum. A secret read is "unknown" (b = -1): the belief reads the live band's middle, else the last band held for up
+-- to I.HEALTH_HOLD (1 s) after it went unknown (a re-prime), else full, until the next plain one (Families/Player.lua).
 S.Poll(1.5, function(api, t)
     local rawMax = api.UnitHealthMax("player") -- secret: Plain next
     local max = Plain(api, rawMax)
