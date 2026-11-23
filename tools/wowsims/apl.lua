@@ -1921,10 +1921,11 @@ local function condition(c, n)
             terms[#terms + 1] = term
         end
         table.sort(terms)
-        if #terms > 0 then
+        s = emit(u, s, true)
+        if #terms > 0 then -- outermost, after the known-test wrapper: no reading, no line (def-1 review minor 2)
             s = table.concat(terms, "&") .. "&" .. paren(s)
         end
-        return emit(u, s, true)
+        return s
     end
 end
 

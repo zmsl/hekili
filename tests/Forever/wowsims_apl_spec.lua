@@ -2138,6 +2138,24 @@ describe("the wowsims APL translator's re-pin reads", function()
         assert.is_false(apl.unguarded("actions=dot,if=health.known&health.deficit>1"))
     end)
 
+    -- def-1 review minor 2 (L1808): the enablement term goes outside the "action known" wrapper, so with no reading
+    -- the line is off even while the other ability is unlearned
+    it("puts health.known outside an action-known wrapper (rule 23)", function()
+        local text = apl.translate({
+            priorityList = {
+                cast(
+                    100,
+                    cmp("OpLt", { currentHealthPercent = {} }, { spellTimeToReady = { spellId = { spellId = 200 } } })
+                ),
+            },
+        }, ctx({}))
+        assert.are.equal(
+            "actions=strike,if=health.known&(!action.big_hit.known|health.pct<cooldown.big_hit.remains)",
+            text
+        )
+        assert.is_false(apl.unguarded(text))
+    end)
+
     -- def-1 review minor 1 (L1808): the term must guard the whole condition: first, the rest one group or free of a
     -- top-level `|`; the aliases of the player's health are reads too
     it("refuses a guard that does not cover the whole condition, and the aliases (rule 23)", function()
