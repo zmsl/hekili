@@ -4122,8 +4122,8 @@ describe("resource bands (lane B4)", function()
         -- T1 (Holy Shock seed 13): a gain at 30.800 lifted the value mid-cell, the band stamped 30.800 rose to the last
         -- top, and the next crossing read 11.6 a second for 7.54
         it("a band rising at our own change, or within the margin after it, starts no pair", function()
-            for _, lag in ipairs({ 0, 1 / 60, I.BAND_MARGIN - 0.01 }) do
-                local t = 20 * (lag + 1)
+            for k, lag in ipairs({ 0, 1 / 60, I.BAND_MARGIN - 0.01 }) do
+                local t = 20 * k -- later than the iteration before, whose bands run to t + 2
                 crossings({ t - 1, 440, 450 }, { t - 0.5, 450, 460 })
                 I.ResourceShift(MANA, 5, t, Obs.CastSuccess) -- inside the cell: the bar shows it as the next one
                 crossings({ t + lag, 460, 470 })
