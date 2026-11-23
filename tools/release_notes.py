@@ -22,6 +22,9 @@ import urllib.request
 API_URL = "https://api.anthropic.com/v1/messages"
 MODEL = "claude-opus-5-5"
 PLANS = "docs/superpowers/plans"
+# our own libraries (src/<name>): their changes are not Hekili's, and the notes never name them (owner rule)
+LIBRARIES = ("LibHiddenValues", "LibTimeToDie")
+LIBRARY_NAME = re.compile(r"\b(?:%s)(?:-\d+(?:\.\d+)*)?" % "|".join(LIBRARIES))
 
 SYSTEM = """\
 You write the release notes players read for Hekili Forever, a World of Warcraft addon for the WoW Forever client \
@@ -75,8 +78,10 @@ def open_after(text):
 def gather(ref, run=git):
     prev = previous_tag(ref, run)
     span = prev + ".." + ref if prev else ref
-    commits = run("log", "--no-merges", "--format=--- %s%n%b", span, "--", "src", ":!src/ForeverProbe", ":!src/LibHiddenValues", ":!src/LibTimeToDie")
+    excluded = [":!src/" + name for name in ("ForeverProbe",) + LIBRARIES]
+    commits = run("log", "--no-merges", "--format=--- %s%n%b", span, "--", "src", *excluded)
     commits = re.sub(r"^(Co-Authored-By|Claude-Session):.*\n?", "", commits, flags=re.M | re.I).strip()
+    commits = LIBRARY_NAME.sub("the library", commits)
     changelog = run("show", ref + ":CHANGELOG.md")
     # a final's "## <tag>" is written by publish.yml after the notes, so Unreleased leads; the tag's own section is the
     # fallback for tags cut before publish.yml wrote the changelog (v0.1.0, renamed by hand)
@@ -88,7 +93,8 @@ def gather(ref, run=git):
             body = open_after(run("show", ref + ":" + path))
             if body:
                 known.append(body)
-    return {"tag": ref, "previous": prev, "commits": commits, "changelog": entry, "known": "\n\n".join(known)}
+    known = LIBRARY_NAME.sub("the library", "\n\n".join(known))
+    return {"tag": ref, "previous": prev, "commits": commits, "changelog": entry, "known": known}
 
 
 def user_message(m):

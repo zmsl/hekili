@@ -110,6 +110,11 @@ class Gather(unittest.TestCase):
 
         self.assertEqual(rn.gather("v0.2.0", run)["changelog"], "### Fixed\n- Rogue loads.")
 
+    def test_names_no_library(self):  # owner: our libraries are never named in player text (batch 2 m2)
+        log = "--- fix(core): LibTimeToDie's first guess\nan adapter for LibHiddenValues-1.0 over LibStub\n"
+        m = rn.gather("v0.3.0", repo(log=log))
+        self.assertEqual(m["commits"], "--- fix(core): the library's first guess\nan adapter for the library over LibStub")
+
     def test_no_previous_tag_takes_all_history_and_no_plans(self):
         m = rn.gather("v0.3.0", repo(prev=None))
         self.assertIsNone(m["previous"])
