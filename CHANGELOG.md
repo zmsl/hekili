@@ -5,6 +5,7 @@
 ### New
 
 - A priority that compares a resource with more than 8 different exact values now shows a warning on its Source tab: Hekili can watch only 8 of them exactly, so those conditions use the nearest 1% instead.
+- Custom priorities: a line that tests your health without starting its condition with `health.known&` now gets a chat warning once when the priority loads, naming the priority, list and line. While Hekili cannot read your health it counts as full, so such a line can show when it should not.
 
 ### Changed
 

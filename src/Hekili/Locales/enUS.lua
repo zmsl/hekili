@@ -1027,6 +1027,7 @@ L["The lane's time axis, the ruler and the focus zone."] = true
 
 -- Hekili/Engine/Sim/Scripts.lua
 L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = true
+L["Priority %s, list %s, line %d reads your health without health.known first. While Hekili cannot read your health it counts as full, so this line can show when it should not: start its condition with health.known&."] = true
 
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = true

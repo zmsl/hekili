@@ -754,10 +754,14 @@ absent, priming, unavailable, `Hekili.bandOff`) the secret answer reads full, ne
 and the facade's row never hands the core a secret. A band lost while its watch still works (`I.bandOK`: a re-prime
 after values that moved on every frame) holds its last reading for `I.HEALTH_HOLD` (1 s from the last drain it was
 live; owner "Hold last reading", L1805), then reads full; `I.healthHolds` and `I.healthSnaps` count both. `health.known`
-(Facade.Known, §1) is true exactly while the estimate is a reading. A custom line reading it gets no load warning
-(FABLE-FOR-OWNER 7; L1805 keeps it so: the wiki tells authors to put `health.known` first); the translator keeps every
-wowsims entry reading `currentHealthPercent` or `currentHealth` under `health.known&` (its rule 23, owner L1805) and
-refuses a recipe line that reads the player's health without it.
+(Facade.Known, §1) is true exactly while the estimate is a reading. One check decides whether a line reads the
+player's health (`health.<field>`, `stat.health_pct`, `at_risk`) without `health.known&` guarding its whole condition
+(first, the rest one group or free of a top-level `|`): `ns.HealthUnguarded` (`Engine/Sim/AplThresholds.lua`). A custom
+priority's line that does is warned once a session at load, naming the priority, list and line (`Hekili:LoadScript`,
+`Hekili:Print`; owner L1808: "yes add the health.known warning but dont for the others since we model those": a power
+line reads the model, no warning); the translator, which loads the same file, keeps every wowsims entry reading
+`currentHealthPercent` or `currentHealth` under `health.known&` (its rule 23, owner L1805) and refuses any emitted line
+that fails the check.
 
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
 an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for

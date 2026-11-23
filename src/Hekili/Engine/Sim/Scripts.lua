@@ -2024,6 +2024,7 @@ function scripts:BandWarning( pack, nameOf )
 end
 
 local reportedWindowErrors = {} -- LoadScripts: the window compile errors already reported this session
+local reportedHealthLines = {} -- LoadScript: the custom lines warned this session for an unguarded health read (L1808)
 
 local function scriptLoader()
     if not Hekili.LoadingScripts and not scriptsLoaded then scripts:LoadScripts() end
@@ -2437,6 +2438,21 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     -- load's (LoadScripts reports it); the walk skips a script with an Error
     local cw = entries == pData.lists[ list ] and scripts.Windows[ pack ]
     if cw and cw.errorAt[ list .. ":" .. id ] then script.Error = cw.errorAt[ list .. ":" .. id ] end
+
+    -- (L1808, owner "yes add the health.known warning but dont for the others since we model those") a custom priority's
+    -- line reading the player's own health without health.known guarding its whole condition: unknown health reads
+    -- full, so the line can pass with no reading. Once a session per line (every options edit loads again); a shipped
+    -- priority is checked at build (the translator's rule 23, the same function). Power lines read the model: no warning.
+    if not pData.builtIn and entries == pData.lists[ list ] and data.enabled ~= false then
+        local unguarded = ns.HealthUnguarded
+        local text = unguarded( data.criteria ) and data.criteria or unguarded( data.value ) and data.value
+            or unguarded( data.value_else ) and data.value_else or unguarded( data.target_if ) and data.target_if
+        local seen = text and ( pack .. ":" .. list .. ":" .. id .. " " .. text )
+        if seen and not reportedHealthLines[ seen ] then
+            reportedHealthLines[ seen ] = true
+            Hekili:Print( format( L["Priority %s, list %s, line %d reads your health without health.known first. While Hekili cannot read your health it counts as full, so this line can show when it should not: start its condition with health.known&."], pack, list, id ) )
+        end
+    end
 
     -- (bands integration design 3.1) the thresholds the same four texts compare, and a sequence line's
     -- members' own conditions (their scripts are compiled apart: LoadSequences), for the band library; a switched-off
