@@ -4119,6 +4119,19 @@ describe("resource bands (lane B4)", function()
             assert.are.equal(10, crossings({ 12.5, 470, 480 }))
         end)
 
+        -- T1 (Holy Shock seed 13): a gain at 30.800 lifted the value mid-cell, the band stamped 30.800 rose to the last
+        -- top, and the next crossing read 11.6 a second for 7.54
+        it("a band rising at our own change, or within the margin after it, starts no pair", function()
+            for _, lag in ipairs({ 0, 1 / 60, I.BAND_MARGIN - 0.01 }) do
+                local t = 20 * (lag + 1)
+                crossings({ t - 1, 440, 450 }, { t - 0.5, 450, 460 })
+                I.ResourceShift(MANA, 5, t, Obs.CastSuccess) -- inside the cell: the bar shows it as the next one
+                crossings({ t + lag, 460, 470 })
+                assert.are.equal(10, crossings({ t + lag + 1.2, 470, 480 }), lag)
+                unknown(t + 2, MANA)
+            end
+        end)
+
         it("an exact band's pins measure nothing themselves", function()
             assert.are.equal(10, crossings({ 10, 40, 41, NRG }, { 12, 45, 46, NRG }, { 14, 58, 59, NRG }))
         end)
