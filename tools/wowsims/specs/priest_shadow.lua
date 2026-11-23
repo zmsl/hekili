@@ -21,9 +21,9 @@
 -- translator does not support spellExpectedDpet; owner question). Binding Heal (left the game) is out of the kit.
 -- Worked (P8): Smite fills below Mind Flay (a talent: the L10 bracket idled 8.0 s on Mind Blast's cooldown); the world's
 -- Shadow character knows Smite (P9.4), silent at 60.
--- Deviations: Mind Flay's channelSpell.interruptIf (MF3: clip at its third tick) is dropped by the translator (the
--- Mage lane's shared gap); with three ticks to a channel it is the channel's own end, so no decision moves (1.000).
--- The Dark Sac variable reads `mana.current<=2000` (absolute, as wowsims): the belief answers its floor on the secret
+-- Mind Flay's channelSpell.interruptIf (MF3: clip at its third tick) is its line's interrupt_if (translator rule 24,
+-- L1748); with three ticks to a channel it is the channel's own end, so no decision moves (1.000).
+-- Deviations: the Dark Sac variable reads `mana.current<=2000` (absolute, as wowsims): the belief answers its floor on the secret
 -- pool; the line is for an Undead build (Dark Sacrifice is the Undead's), never this Human one. The replay's mana belief
 -- runs about 1000 under the truth after the Demonic Rune and Major Mana Potion (rule 13 lines; the replay emits no cast
 -- for an item's use: the Mage lane's shared gap); no decision reads it here. Follow-up: the world's pool was not

@@ -27,7 +27,7 @@ actions+=/shadow_bolt,focus=1,if=(buff.shadow_trance.up|(talent.improved_shadow_
 actions+=/call_action_list,name=cooldowns,if=(active_enemies=1|(action.bane_of_doom.known&((!action.bane_of_doom.known|((fight_remains-5)/debuff.bane_of_doom.duration)<1)&(!action.bane_of_doom.known|!debuff.bane_of_doom.up)))|(action.bane_of_doom.known&debuff.bane_of_doom.up))
 actions+=/death_coil,if=(!action.shadow_bolt.known|(action.shadow_bolt.cast+action.shadow_bolt.travel_time)>fight_remains)
 actions+=/life_tap,if=(mana.pct_lo<30&fight_remains>60)
-actions+=/wrack
+actions+=/wrack,interrupt_if=((floor(6-6*channel_remains/action.wrack.cast+0.01)>=2&(!action.corruption.known|!debuff.corruption.up))|(floor(6-6*channel_remains/action.wrack.cast+0.01)>=2&(!action.bane_of_agony.known|!debuff.bane_of_agony.up)&(!action.bane_of_doom.known|!debuff.bane_of_doom.up))|(floor(6-6*channel_remains/action.wrack.cast+0.01)>=2&((!action.blood_fury.known|cooldown.blood_fury.ready)&action.blood_fury.known)&(active_enemies=1|(action.bane_of_doom.known&debuff.bane_of_doom.remains<=15))))
 actions+=/shadow_bolt
 actions+=/life_tap,if=!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost
 actions.single_multi_target_curse_logic=curse_of_the_elements,cycle_targets=1,focus=2,if=settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))

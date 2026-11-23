@@ -488,7 +488,7 @@ and Fire (wowsims.com) (Task 12 of the wowsims packs plan), Frostfire (wowsims.c
 talents 29 Fire points to 22 Frost) and Frost (wowsims.com) (new packs, 2026-11-12: the Frost Incin build, 31 Frost
 points, pool 6348), their replay and leveling gates `tests/Forever/wowsims_mage_spec.lua`.
 The worlds (`tests/Forever/helpers/mage_world.lua`) cast at 25 yd with cast bars and channels (Arcane Missiles,
-Evocation: any press at 99% mana clips it); the character is trainer-taught (no book ranks, as wowsims's), its pool and
+Evocation, cut at 99% mana by the pack's `interrupt_if` through the loop's driver); the character is trainer-taught (no book ranks, as wowsims's), its pool and
 regen are the logs' (Arcane 6678, Fire 6168; 29.13 a second outside the five-second rule, all of it while casting for
 Arcane, half for Fire and Frostfire; Evocation's mana is that regen's aura entry, spirit x 16 and all of it while
 casting, 466 a second as wowsims's logs, its channel ticks gaining nothing). Flicker floors (pack_gate `FLICKER`): Arcane 1.7 (1.66, oracle 1.46; 1.5 since the
@@ -697,8 +697,8 @@ Recorded deviations (each one's reason in the named file):
   log over the DB2's 2.5 s and 8 s (ruling M9; the charges' price floor(fraction x 1213), wowsims's 181 x (1 + 1.75 n));
   Read Ley Line a High Order Skyborne racial (unknown for the exports' Human); Master of Elements' refunds unbelieved
   (crits unseen, mana secret); the worlds' Mage is trainer-taught (no book ranks), as wowsims's; wowsims clips
-  Evocation at >= 99% mana (interruptIf), the translator drops channelSpell.interruptIf (shared gap, reported), the
-  world clips by wowsims's rule. Frostfire: Fingers of Frost's grant (a Chill's 15% roll) is unseen, so the sim spends
+  Evocation at >= 99% mana (interruptIf), the pack's lines carry it as `interrupt_if` (translator rule 24), the
+  loop's driver clips the channel when the engine moves off it. Frostfire: Fingers of Frost's grant (a Chill's 15% roll) is unseen, so the sim spends
   a charge on every damage cast (wowsims: none on the cast that granted them); the worlds' crits ignore Shatter (the
   harness's one crit rate); the world grants Fingers of Frost at Frostfire Bolt's cast end, wowsims at its hit about
   0.8 s later (the harness has no travel time: a shared limit); `includeReactionTime` on the Fingers of Frost read
@@ -716,7 +716,7 @@ Recorded deviations (each one's reason in the named file):
 - Priest (`priest_*.lua`, `Priest.lua`, `priest_world.lua`): Devouring Plague 24 s and Shadow Word: Death 18 s from
   wowsims's data and log over the DB2's 60 s and 15 s (ruling M9's precedent); Smite's down-ranked Holy Fire and Smite
   (rank 5 below 20% mana) at the top rank (rule 5 ignores `rank`: shared gap, owner ruling); Mind Flay's interruptIf
-  dropped (its third tick is the channel's end); the wand's Shoot one shot a wand speed long; Shadow's ready times sit
+  is its line's `interrupt_if` (its third tick is the channel's end); the wand's Shoot one shot a wand speed long; Shadow's ready times sit
   1.5 s early after each Mind Flay (the next icon ready at the GCD's end inside the channel).
 
 CPU and memory, release to release (`r.cpuMean`/p99 of the 3- and 20-fight lines, process CPU ms per Update; `make

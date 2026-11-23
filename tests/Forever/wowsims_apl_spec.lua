@@ -18,7 +18,7 @@ local function ctx(r, player, encounter, log)
                     return 6
                 end,
             },
-            drain = { key = "drain", id = 700, cast = 5, channeled = true, gcd = "spell" },
+            drain = { key = "drain", id = 700, cast = 5, channeled = true, tick_time = 1, gcd = "spell" },
             bolt = { key = "bolt", id = 800, cast = 2.5, velocity = 20, gcd = "spell" },
             trinket = { key = "trinket", id = -1, item = 555, gcd = "off" },
             stone = { key = "stone", id = -2, items = { 556, 557 }, gcd = "off" },
@@ -3283,6 +3283,42 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
         local text2, omitted = one(spell("spellIsChanneling", 999))
         assert.are.equal("actions=strike", text2)
         assert.are.same({ "default #1: dropped the unresolved spell 999 (its branch only)" }, omitted)
+    end)
+
+    -- L1748 (owner: "if wowsims cuts channels, we should too"): Evocation's 99% mana clip, Wrack's two-tick clips
+    it("a channelSpell's interruptIf is the line's interrupt_if; its ticks read only there", function()
+        local function channel(ci, cond, recast)
+            local e =
+                { action = { channelSpell = { spellId = { spellId = 700 }, interruptIf = ci, allowRecast = recast } } }
+            e.action.condition = cond
+            return apl.translate({ priorityList = { e } }, ctx({}))
+        end
+        local mana = cmp("OpGe", { currentManaPercent = {} }, const("99%"))
+        local ticks = spell("spellChanneledTicks", 700)
+        assert.are.equal("actions=drain,interrupt_if=mana.pct_lo>=99", channel(mana))
+        assert.are.equal(
+            "actions=drain,interrupt_if=floor(5-5*channel_remains/action.drain.cast+0.01)>=2,if=(!action.big_hit.known|cooldown.big_hit.ready)",
+            channel(cmp("OpGe", ticks, const("2")), { spellIsReady = { spellId = { spellId = 200 } } })
+        )
+        assert.are.equal("actions=drain,interrupt_if=1", channel(const("true"))) -- wowsims: cut at every check
+        assert.are.equal("actions=drain", channel(const("false")))
+        assert.are.equal("actions=drain", channel(nil)) -- none: wowsims's plain cast
+        -- an interruptIf the fork cannot read keeps the line and drops the clip, noted
+        local text, omitted, _, header = channel({ currentHealthPercent = {} })
+        assert.are.equal("actions=drain", text)
+        assert.are.same({}, omitted)
+        assert.are.same({
+            "# Deviation: default #1: the channel's interruptIf is not carried (currentHealthPercent); it runs to"
+                .. " its end.",
+        }, header)
+        local _, _, _, header2 = channel(mana, nil, true)
+        assert.are.same({
+            "# Deviation: default #1: allowRecast is not carried: the engine never cuts a channel to recast it.",
+        }, header2)
+        -- the ticks of the running channel: no channel outside an interruptIf (the line goes, rule 2)
+        local text3, omitted3 = one(cmp("OpGe", ticks, const("2")))
+        assert.are.equal("", text3)
+        assert.are.same({ "default #1: spellChanneledTicks outside a channel's interruptIf" }, omitted3)
     end)
 
     -- the travel fold puts Shadow Bolt in Affliction's precombat: its per-occurrence tiers are the role lines'

@@ -47,6 +47,7 @@ local OPTIONS = {
     mode = "mode", -- a `sequence` line's (windows design v6 §3.3): skip, wait or continue
     start_on_first = "start_on_first", -- a `strict_sequence` line's flags: 1
     hold_off_gcd = "hold_off_gcd",
+    interrupt_if = "interrupt_if", -- a channel's cut (wowsims's interruptIf, translator rule 24): a condition
 } -- plus if=, which runs to the end of the line (a sequence line: to its first member)
 -- kept as the line wrote them: text shown with the pick (label, icon) and its condition (label_if, icon_if)
 local VERBATIM = {
@@ -58,6 +59,7 @@ local VERBATIM = {
     icon_if = true,
     value = true,
     mode = true,
+    interrupt_if = true,
 }
 -- name= by action, as Options.lua ParseActionList's nameMap (any other action's is its list_name)
 local NAMES = {
@@ -79,7 +81,8 @@ end
 
 -- SimC-style lines into their lists and entries:
 -- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,cycle_targets=N][,max_cycle_targets=N]
--- [,other_target=N][,focus=N][,label=text][,label_if=cond][,icon=texture file id or path][,icon_if=cond][,if=criteria];
+-- [,other_target=N][,focus=N][,label=text][,label_if=cond][,icon=texture file id or path][,icon_if=cond]
+-- [,interrupt_if=cond (no comma: options split at every comma)][,if=criteria];
 -- variable,name=var[,pure=1],value=expression (CN25: a translated wowsims variable; pure=1: read in place);
 -- focus is a tier, 1 highest; buff_name is cancel_buff's aura.
 -- (strict_)sequence,name=window[,mode=m][,start_on_first=1][,hold_off_gcd=1][,if=criteria]:member[:member...], each
@@ -127,7 +130,7 @@ local function entry(body, line, enabled)
         if value == nil then
             error("bad value " .. opt .. " in: " .. line, 0)
         end
-        if k == "value" then
+        if k == "value" or k == "interrupt_if" then
             value = piped(value)
         end
         e[(k == "name" and NAMES[action]) or OPTIONS[k]] = value

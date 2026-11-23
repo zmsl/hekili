@@ -6961,7 +6961,7 @@ do
 
                     if tick_time and tick_time > 0 then
                         local next_tick = state.buff.casting.applied + tick_time
-                        local expires = state.buff.cast.expires
+                        local expires = state.buff.casting.expires
 
                         while( next_tick < expires ) do
                             state:QueueEvent( casting, state.buff.casting.applied, next_tick, "CHANNEL_TICK", destGUID )

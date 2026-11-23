@@ -485,11 +485,12 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         else
             ctl.viewer.shown[a1] = false
         end
-    elseif ev == "@casting" or ev == "@channel" then -- our cast bar's start and end in ms (nil: none), plain [W PR9]
+    elseif ev == "@casting" or ev == "@channel" then -- our cast bar's start and end in ms (nil: none), plain [W PR9];
+        -- a channel's spell ID third (UnitChannelInfo's 8th return, which buff.casting.v1 and CheckChannel read)
         local key = ev == "@casting" and "casting" or "channel"
-        local bar = c[key] or {} -- one per drive and kind, reused: fake_api answers its two fields
+        local bar = c[key] or {} -- one per drive and kind, reused: fake_api answers its fields
         c[key] = bar
-        bar[1], bar[2] = a1, a2
+        bar[1], bar[2], bar.spell = a1, a2, a3
         ctl[key] = a1 and bar or nil
     elseif ev == "@lhv" then -- kind, unit, power, value (nil: no unit), max: a firing of the bands arms' fake library
         if ctl.lhv then -- (loop.lua; observer.lua `bands`)

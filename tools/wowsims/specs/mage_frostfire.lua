@@ -19,7 +19,7 @@
 -- Channeling's -15%); Fingers of Frost's charges (the kit's handlers spend one a damage cast; the world grants on a
 -- Chill's landed hit at 15% and spends as wowsims does); the replay's procs (Frostfire Bolt's and Pyroblast's DoT parts
 -- {1237313 / 18809, Tag: 1}). The log's pool and regen are the Fire build's (6168; 29.13 a second, half while casting).
--- Deviations: Evocation's clip (the translator drops channelSpell.interruptIf; mage_fire.lua); rule 12 drops Read Ley
+-- Evocation's clip is its lines' interrupt_if (mage_fire.lua). Deviations: rule 12 drops Read Ley
 -- Line (mage_arcane.lua); Ignite (412538) is a proc no key maps; includeReactionTime on the Fingers of Frost read is
 -- ignored (rule 5), and no decision here turns on it. autocastOtherCooldowns (rule 13): the trinket
 -- (`use_items`; Eye of the Beast 13968 since the ab0f00e4fc re-pin, 272438 on e4ef929e54, 18820 on e2842f0a78, 19339 before) and the mana gem, off the GCD (this build has no Combustion).

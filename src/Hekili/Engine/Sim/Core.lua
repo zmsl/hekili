@@ -340,6 +340,98 @@ local default_modifiers = {
     interrupt = return_false
 }
 
+-- A channel's interrupt_if is read where wowsims reads its interruptIf (owner L1755 "c+hold"; sim/core dot.go
+-- periodicTick, apl.go DoNextAction): at each tick but its last, with the GCD ready or more than the spell queue window
+-- from ready, and at the GCD's end, while ticks remain. Once due at the real now it stays due until the channel ends (a
+-- press ends it), so the next action keeps its ready state between updates. The real channel is the one slot 1 of an
+-- update sees at its now, keyed by its start; an update settles each of its passed points once: on the point itself,
+-- else from the last update's forecast of it, else read now. Primary and AOE keep their own (review I-A: their target
+-- counts differ in dual and reactive modes); only their event loop reads it. A target change is a new fact (owner L1767):
+-- it releases a hold, and the condition is read again at once for the new target.
+local CUT_EPS = 0.01
+-- per main display: the real channel's start, point read, verdict, GCD end and the update it was settled in (`at`, its
+-- now), the target's GUID at the last real read; the forecast's first point read after the real now this update (`fcAt`)
+-- and its verdict
+local cutPrimary = { applied = nil, point = 0, due = false, gcd = 0, at = nil, target = nil, fcAt = nil, fcDue = false }
+local cutAOE = { applied = nil, point = 0, due = false, gcd = 0, at = nil, target = nil, fcAt = nil, fcDue = false }
+local gcdStop = 0 -- seconds from the instant read to a GCD end inside the channel, for the event loop's stop
+
+local function channelCut( modifiers, tick_time )
+    local c = state.display == "AOE" and cutAOE or cutPrimary
+    local casting = state.buff.casting
+    local applied, ends = casting.applied, casting.expires
+    local q = state.query_time
+    local gEnd = state.cooldown.global_cooldown.expires
+    local real = state.index == 1 and state.offset == 0 and state.delay == 0
+
+    if real and applied ~= c.applied then
+        c.applied, c.point, c.due, c.gcd, c.fcAt = applied, applied, false, 0, nil
+    end
+    local mine = applied == c.applied
+    local tgt = real and state.UnitGUID( "target" ) -- nil: none, or secret (no change seen then)
+    local retarget = real and mine and c.due and tgt ~= c.target
+    if real then c.target = tgt end
+    if mine and c.due and not retarget then return true end
+    if real and gEnd > q then
+        c.gcd = gEnd
+    elseif mine and gEnd <= applied then
+        gEnd = c.gcd -- a GCD over reads 0 at the real now: its end as last seen running
+    end
+
+    -- the latest point at or before the instant: a tick before the last, or the GCD's end inside the channel
+    local k = math.floor( ( q - applied + CUT_EPS ) / tick_time )
+    local p = k >= 1 and applied + k * tick_time or nil
+    if p and p >= ends - CUT_EPS then p = nil end
+    local atGcd = gEnd > applied + CUT_EPS and gEnd < ends - CUT_EPS and gEnd <= q + CUT_EPS and ( not p or gEnd > p )
+    if atGcd then p = gEnd end
+    if retarget and p then p, atGcd = q, false end -- read now; none once the ticks are done
+
+    local due = false
+    if p and ( retarget or not mine or p > c.point + CUT_EPS ) and ( real or q - p <= CUT_EPS ) then
+        local fcAt = c.fcAt
+        if real and q - p > CUT_EPS and fcAt and math.abs( fcAt - p ) <= CUT_EPS then
+            due = c.fcDue
+        else
+            local left = atGcd and 0 or math.max( 0, gEnd - p )
+            due = ( left == 0 or left > ns.SpellQueueWindow() ) and modifiers.interrupt_if() and true or false
+        end
+        if real then
+            c.point, c.due, c.at = p, due, state.now
+        elseif mine and state.index == 1 then
+            if not fcAt then
+                c.fcAt, c.fcDue = p, due
+            elseif math.abs( fcAt - p ) <= CUT_EPS then
+                due = c.fcDue -- withdrawn by channelRecast
+            end
+        end
+    end
+    if real then c.fcAt = nil end
+
+    if not due and gEnd > q + CUT_EPS and gEnd < ends - CUT_EPS then gcdStop = gEnd - q end
+    return due
+end
+
+-- (review m1) wowsims cuts at a point only if the first action, the channel ended, is not the channel itself. Slot 1's
+-- walk reaching the channel's own line ready at a point this update settled due (or forecast due) is that case: the
+-- point's verdict is withdrawn, so no hold is set there, and `cutRecast` has the event loop drop the walk's pick and
+-- read that instant again (CheckChannel then false). True when withdrawn.
+local cutRecast = false
+local function channelRecast()
+    if state.display ~= "Primary" and state.display ~= "AOE" then return false end -- the others never settle a point
+    local c = state.display == "AOE" and cutAOE or cutPrimary
+    if state.index ~= 1 or state.delay > CUT_EPS or state.buff.casting.applied ~= c.applied then return false end
+    if state.offset == 0 then
+        if not ( c.due and c.at == state.now ) then return false end
+        c.due = false
+    elseif c.fcAt and c.fcDue and math.abs( c.fcAt - state.query_time ) <= CUT_EPS then -- no forecast under a hold
+        c.fcDue = false
+    else
+        return false
+    end
+    cutRecast = true
+    return true
+end
+
 function Hekili:CheckChannel( ability, prio )
     if not state.channeling then
         if self.ActiveDebug then self:Debug( "CC: We aren't channeling; CheckChannel is false." ) end
@@ -387,12 +479,11 @@ function Hekili:CheckChannel( ability, prio )
         end
     end
 
-    if not a.tick_time and ( not aura or not aura.tick_time ) then
+    local tick_time = a.tick_time or aura and aura.tick_time
+    if not tick_time or tick_time <= 0 then -- a divisor below (the client raises on x/0)
         if self.ActiveDebug then self:Debug( "CC: No aura / no aura.tick_time to forecast channel breaktimes; don't break it." ) end
         return false
     end
-
-    local tick_time = a.tick_time or aura.tick_time
     local remains = state.channel_remains
 
     local act = state.this_action
@@ -431,11 +522,11 @@ function Hekili:CheckChannel( ability, prio )
 
         -- FIXME
         -- Why are some conditions not correctly making it to/through here? Example: "!talent.entropic_rift" on shadowpriest void_torrent cancel
-        if modifiers.interrupt_if and modifiers.interrupt_if() then
-            local timing = last_tick or ( state.query_time - state.buff.casting.applied ) % tick_time < 0.25
-            local imm = modifiers.interrupt_immediate and modifiers.interrupt_immediate()
-            if self.ActiveDebug then self:Debug( "CC: Interrupt_If - GCD: %s, Immediate: %s, Timing: %s.", tostringall( gcd, imm, timing ) ) end
-            if imm or gcd and timing then
+        if modifiers.interrupt_if then
+            local imm = modifiers.interrupt_immediate and modifiers.interrupt_immediate() and modifiers.interrupt_if()
+            local due = imm or channelCut( modifiers, tick_time )
+            if self.ActiveDebug then self:Debug( "CC: Interrupt_If - Imm: %s, Due: %s.", tostringall( imm, due ) ) end
+            if due then
                 state.this_action = act
                 return true
             end
@@ -1319,6 +1410,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                     if debug then self:Debug( " - this entry cannot break the channeled spell." ) end
                                                     if action == state.channel then
                                                         stop = scripts:CheckScript( scriptID )
+                                                        if stop then channelRecast() end
                                                     end
 
                                                 elseif not aScriptPass then
@@ -2089,9 +2181,11 @@ function Hekili.Update()
                                 ]]
 
                             local channeling, shouldBreak = state:IsChanneling(), false
+                            cutRecast = false -- set by this iteration's walk only (one left by a walk outside the loop is stale)
 
                             if channeling then
                                 if debug then Hekili:Debug( "We are channeling, checking if we should break the channel..." ) end
+                                gcdStop = 0
                                 shouldBreak = Hekili:CheckChannel( nil, 0 )
                                 state.channel_breakable = shouldBreak
                             else
@@ -2144,7 +2238,8 @@ function Hekili.Update()
                             if ( casting or channeling ) and not shouldBreak and not shouldCheck then
                                 if debug then Hekili:Debug( 1, "Finishing queued event #%d ( %s of %s ) due at %.2f as player is casting and castable spells are not ready.\nCasting: %s, Channeling: %s, Break: %s, Check: %s", n, event.type, event.action, t, casting and "Yes" or "No", channeling and "Yes" or "No", shouldBreak and "Yes" or "No", shouldCheck and "Yes" or "No" ) end
                                 if t >= 0 then
-                                    state.advance( t )
+                                    -- a channel cut is read at the GCD's end too (channelCut): stop there first
+                                    state.advance( channeling and gcdStop > 0 and gcdStop < t and gcdStop or t )
 
                                     if debug then -- the one resources line built with debug off (gap CD: 150-200 B per update on mana packs)
                                         local resources
@@ -2210,11 +2305,22 @@ function Hekili.Update()
                                     action, wait = nil, 10
                                 end
 
-                                if not action then
+                                if cutRecast then
+                                    -- (review m1) the walk withdrew the cut at this instant: its pick dropped, read again
+                                    if debug then Hekili:Debug( 1, "The channel's own line is first at this point; no cut, read again." ) end
+                                    cutRecast = false
+                                    action, wait = nil, 10
+                                    slot.action = nil
+                                    slot.actionName = nil
+                                    slot.actionID = nil
+                                    state.delay = 0
+                                    state:SetConstraint( 0, defaultMax )
+                                elseif not action then
                                     if debug then Hekili:Debug( "Time spent on event #%d PREADVANCE: %.2fms...", n, debugprofilestop() - eStart ) end
                                     if debug then Hekili:Debug( 1, "No recommendation found before event #%d (%s %s) at %.2f; triggering event and continuing ( %.2f ).\n", n, event.action or "NO ACTION", event.type or "NO TYPE", t, state.offset + state.delay ) end
 
-                                    state.advance( overrideTime or t )
+                                    local step = overrideTime or t
+                                    state.advance( channeling and gcdStop > 0 and gcdStop < step and gcdStop or step )
                                     if debug then Hekili:Debug( "Time spent on event #%d POSTADVANCE: %.2fms...", n, debugprofilestop() - eStart ) end
 
                                     event = events[ 1 ]
@@ -2413,7 +2519,7 @@ function Hekili.Update()
                                 state:QueueEvent( action, state.query_time, state.query_time + cast, "CHANNEL_FINISH", cast_target, nil, cycled )
 
                                 -- Queue ticks because we may not have an ability.tick function, but may have resources tied to an aura.
-                                if ability.tick_time then
+                                if ability.tick_time and ability.tick_time > 0 then -- a divisor (the client raises on x/0)
                                     local ticks = floor( cast / ability.tick_time )
                                     for i = 1, ticks do
                                         state:QueueEvent( action, state.query_time, state.query_time + ( i * ability.tick_time ), "CHANNEL_TICK", cast_target, nil, cycled )

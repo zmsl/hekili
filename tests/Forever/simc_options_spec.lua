@@ -148,6 +148,250 @@ describe("interrupt_global on a channel line", function()
     end)
 end)
 
+-- L1755 (owner: "c+hold"): a channel's interrupt_if is read where wowsims reads its interruptIf (dot.go periodicTick,
+-- apl.go DoNextAction): at each tick but the last, with the GCD ready or more than the spell queue window from ready,
+-- and at the GCD's end; once due it stays due until the channel ends.
+describe("interrupt_if on a channel line: read at wowsims's points, held once due", function()
+    -- Bloodrage above Cannibalize's line (10 s from world time 1, a tick each 2 s), its interrupt_if `cond(s)` (`s` s
+    -- into the channel at the instant read); `gcd`: a GCD the instance sees from the channel's start. Returns at(t,
+    -- over): the first recommendation's name and time at world time `t` (`over`: the GCD's entry cleared first).
+    local function cutRig(cond, gcd)
+        local H, W, us, upTo =
+            rig({ line("bloodrage"), line("cannibalize", { interrupt_if = "1" }), line("battle_shout") })
+        H.Hekili.Class.abilities.cannibalize.tick_time = 2
+        local st = H.Hekili.State
+        H.Hekili.Scripts.Channels[ww.PACK].cannibalize.interrupt_if = function()
+            return cond(st.query_time - 101)
+        end
+        W.t = 1
+        assert.is_true(
+            W.press(us, "cannibalize", { spell = CANNIBALIZE, gcd = 1.5, channel = { length = 10, tick = 2 } })
+        )
+        W.run(20)
+        if gcd then
+            H.ctl.cooldown[H.ns.GCD_SPELL] = { isActive = true, isOnGCD = false, startTime = 101, duration = gcd }
+        end
+        return function(t, over)
+            if over then
+                H.ctl.cooldown[H.ns.GCD_SPELL] = nil
+                gcd = nil
+            end
+            local out = upTo(t)
+            st.reset("Primary", true)
+            local left = math.max(0, 101 + (gcd or 0) - (100 + t))
+            assert.is_true(math.abs(st.cooldown.global_cooldown.remains - left) < 1e-6, "the GCD the instance sees")
+            return out.recs[1].actionName, out.recs[1].time
+        end,
+            H
+    end
+
+    it("a condition turned true mid-tick waits for the next tick", function()
+        local on = false
+        local at = cutRig(function()
+            return on
+        end)
+        at(3) -- the first tick (2 s in), read false
+        on = true
+        local name, t = at(3.2)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 1.8) < 0.05, tostring(t)) -- the second tick, 4 s in
+    end)
+
+    it("never in the last tick's interval (the ticks are done there)", function()
+        local on = false
+        local at = cutRig(function()
+            return on
+        end)
+        at(9) -- the fourth tick, read false
+        on = true
+        local name, t = at(9.2)
+        assert.is_true(name ~= "bloodrage" or t > 1.7, tostring(name) .. " at " .. tostring(t))
+    end)
+
+    it("once due, holds until the channel ends, the condition false again", function()
+        local on = true
+        local at = cutRig(function()
+            return on
+        end)
+        local name, t = at(3) -- the first tick
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        on = false
+        for _, w in ipairs({ 3.2, 3.4, 3.8, 4.6 }) do
+            name, t = at(w)
+            assert.are.equal("bloodrage", name)
+            assert.is_true(t < 0.05, w .. ": " .. tostring(t))
+        end
+    end)
+
+    -- an update late after a tick reads that tick as the last update forecast it there, not as of its own now (the
+    -- reviewer's DoT falling between the tick and the update)
+    it("a late update reads the passed tick as forecast at it", function()
+        local at = cutRig(function(s)
+            return s < 2.1 -- true at the first tick, false 0.3 s after it
+        end)
+        local name, t = at(2.9)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 0.1) < 0.05, tostring(t))
+        name, t = at(3.3)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        at = cutRig(function(s)
+            return s > 2.1 -- false at the first tick, true 0.3 s after it
+        end)
+        at(2.9)
+        name, t = at(3.3)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 1.7) < 0.05, tostring(t)) -- the second tick
+    end)
+
+    it("reads at the GCD's end inside the channel", function()
+        local at = cutRig(function()
+            return true
+        end, 1.5)
+        local name, t = at(1.2)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 1.3) < 0.05, tostring(t)) -- the GCD's end, 1.5 s in, before the first tick
+    end)
+
+    it("holds past the GCD's end once the client reads the GCD as over (no start, no duration)", function()
+        local at = cutRig(function()
+            return true
+        end, 1.5)
+        local name, t = at(1.2)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 1.3) < 0.05, tostring(t))
+        for _, w in ipairs({ 2.6, 2.8, 3.4 }) do
+            name, t = at(w, true) -- the GCD entry cleared: the live client's answer once it is over
+            assert.are.equal("bloodrage", name)
+            assert.is_true(t < 0.05, w .. ": " .. tostring(t))
+        end
+    end)
+
+    -- review I-A: in dual mode Primary (capped at one target) and AOE (three at least) read a count-dependent condition
+    -- (Affliction's Wrack Blood Fury clause reads active_enemies=1) each for itself: AOE's verdict never settles
+    -- Primary's tick, so Primary's wait does not blink, and AOE never shows the cut its own condition rejects
+    it("Primary and AOE keep their own verdicts in dual mode (a count-dependent condition)", function()
+        local st
+        local at, H = cutRig(function()
+            return st.active_enemies == 1
+        end)
+        st = H.Hekili.State
+        H.Hekili.Engine.settings.toggles.mode.value = "dual"
+        assert.is_true(H.Hekili.Engine.Subscribe("AOE", function() end))
+        local aoe = H.Hekili.Engine.Output.AOE
+        local name, t = at(2.9) -- Primary forecasts the first tick (2 s in) due
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 0.1) < 0.05, tostring(t))
+        for _, w in ipairs({ 3.3, 3.5, 4.9, 5.3 }) do
+            name, t = at(w)
+            assert.are.equal("bloodrage", name)
+            assert.is_true(t < 0.05, w .. ": " .. tostring(t))
+            local r = aoe.recs[1]
+            assert.is_true(r.actionName ~= "bloodrage" or r.time > 0.05, w .. ": AOE " .. tostring(r.time))
+        end
+    end)
+
+    -- review m1 (recast first against the hold): at a tick where the walk's pick is the channel's own line (Bloodrage on
+    -- cooldown until 0.5 s after it, Cannibalize ready), wowsims recasts rather than cuts. No hold is set there, so
+    -- Bloodrage off cooldown between ticks does not surface the cut: it waits for the next tick (4 s in)
+    it("sets no hold at a tick whose pick is the channel itself (recast first)", function()
+        local at, H = cutRig(function()
+            return true
+        end)
+        at(2.5)
+        local cd = H.ctl.cooldown
+        cd[CANNIBALIZE] = nil
+        cd[H.Hekili.Class.abilities.bloodrage.id] =
+            { isActive = true, isOnGCD = false, startTime = 103.5 - 60, duration = 60 }
+        for _, w in ipairs({ 3, 3.2, 3.6, 4.2 }) do
+            local name, t = at(w)
+            assert.is_true(
+                name ~= "bloodrage" or math.abs(t - (5 - w)) < 0.05,
+                w .. ": " .. tostring(name) .. " at " .. tostring(t)
+            )
+        end
+        local name, t = at(5)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        -- the same tick forecast from before it, then settled late from that forecast (Bloodrage off cooldown 0.6 s
+        -- after it): the forecast's pick there is the channel, so the late update sets no hold either
+        at, H = cutRig(function()
+            return true
+        end)
+        at(2)
+        cd = H.ctl.cooldown
+        cd[CANNIBALIZE] = nil
+        cd[H.Hekili.Class.abilities.bloodrage.id] =
+            { isActive = true, isOnGCD = false, startTime = 103.6 - 60, duration = 60 }
+        for _, w in ipairs({ 2.5, 3.4, 3.7 }) do
+            name, t = at(w)
+            assert.is_true(
+                name ~= "bloodrage" or math.abs(t - (5 - w)) < 0.05,
+                w .. ": " .. tostring(name) .. " at " .. tostring(t)
+            )
+        end
+    end)
+
+    -- a cut held from an earlier update survives a later walk that stops at the channel's own line (nothing above it
+    -- passes there), now and at a forecast point, with no error; the hold shows again once the line above is back
+    it("leaves a held cut to a later walk that stops at the channel's own line", function()
+        local at, H = cutRig(function()
+            return true
+        end)
+        H.Hekili.Class.abilities.cannibalize.tick = function() end -- a channel whose ticks act: the loop walks at each
+        at(2.5)
+        local cd, bloodrage = H.ctl.cooldown, H.Hekili.Class.abilities.bloodrage.id
+        cd[CANNIBALIZE] = nil
+        local name, t = at(3) -- the first tick, Bloodrage ready: held
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        cd[bloodrage] = { isActive = true, isOnGCD = false, startTime = 103.2, duration = 60 }
+        at(3.2)
+        cd[bloodrage] = nil
+        name, t = at(3.9) -- Bloodrage back off cooldown, between ticks: the hold still stands
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+    end)
+
+    -- review m4, owner L1767: a target change is a new fact, so it re-decides a held cut: the hold is released and the
+    -- condition read again, at once, for the new target (here true on every mob but the second)
+    it("a target change re-decides a held cut for the new target", function()
+        local st
+        local at, H = cutRig(function()
+            return st.UnitGUID("target") ~= "Creature-2"
+        end)
+        st = H.Hekili.State
+        local function swap(guid)
+            H.ctl.guid.target = guid
+            H.Fire("PLAYER_TARGET_CHANGED")
+        end
+        local name, t = at(3) -- the first tick, on the first mob: due and held
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        swap("Creature-3")
+        name, t = at(3.2) -- true for the new target too: due again at once
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        swap("Creature-2")
+        for _, w in ipairs({ 3.4, 3.6 }) do -- false for this one: released, and no later tick reads it true
+            name, t = at(w)
+            assert.is_true(name ~= "bloodrage" or t > 0.05, w .. ": " .. tostring(name) .. " at " .. tostring(t))
+        end
+    end)
+
+    it("reads a tick with the GCD more than the spell queue window away, not one within it", function()
+        local early = function(s)
+            return s < 2.1 -- true at the first tick only
+        end
+        local name, t = cutRig(early, 2.6)(1.2) -- the GCD 0.6 s from ready at the first tick: due there
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 2.4) < 0.05, tostring(t)) -- shown at the GCD's end
+        name, t = cutRig(early, 2.3)(1.2) -- 0.3 s from ready: not read there; false at the GCD's end
+        assert.is_true(name ~= "bloodrage" or t > 3, tostring(name) .. " at " .. tostring(t))
+    end)
+end)
+
 describe("max_energy on a line", function()
     -- A Feral cat in combat with 5 combo points and `energy` (plain to the fake client), the list one Ferocious Bite
     -- line; returns the first recommendation's name and time.

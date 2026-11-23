@@ -23,7 +23,7 @@ actions+=/ice_lance,focus=1,if=(buff.fingers_of_frost.stack=1&(!action.frostbolt
 actions+=/ice_barrier,focus=2,if=buff.frigid_power.remains<=3
 actions+=/frostbolt
 actions.mana_tools=read_ley_line
-actions.mana_tools+=/evocation
+actions.mana_tools+=/evocation,interrupt_if=mana.pct_lo>=99
 actions.aoe=cone_of_cold,focus=1,if=buff.fingers_of_frost.stack>=1
 actions.aoe+=/ice_lance,focus=1,if=buff.fingers_of_frost.stack>=1
 actions.aoe+=/cold_snap,use_off_gcd=1,if=(!action.cone_of_cold.known|cooldown.cone_of_cold.remains>=5)

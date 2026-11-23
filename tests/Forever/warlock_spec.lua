@@ -1321,7 +1321,7 @@ describe("Forever Warlock without the endgame filler", function()
     end
 
     for _, p in ipairs({
-        { "Affliction", "wrack", "wrack" },
+        { "Affliction", "wrack,", "wrack" }, -- its line carries interrupt_if= (L1748)
         { "Destruction", "incinerate", "incinerate" },
         { "Demonology", "searing_pain", "searing_pain" },
         { "SMRuin", "shadow_bolt" },

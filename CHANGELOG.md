@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Arcane, Fire, Frost and Frostfire Mage, Shadow Priest and Affliction Warlock (wowsims.com): the priorities now suggest cutting a channel early where the reference rotation does, such as Evocation once your mana is nearly full, or Wrack once a damage-over-time effect needs reapplying.
+- Channel cut suggestions now come at the channel's tick and stay up until pressed; changing target decides the cut again for the new target.
 - Rogue and Feral/Guardian Druid: the recommendation refreshes the moment a combo point is gained or spent, so the finisher shows without waiting for the next poll.
 - Custom priorities: `target.health.pct` and the other target health values now follow the target's health in whole-percent steps, instead of reading 100 until an ability that needs a low-health target became usable. They read no lower than 2 while the target is alive, and 100 for a moment after you change target. If the game offers no reading, they work as before.
 - Custom priorities: a line that reads target health no longer adds a "target health is secret" warning when the priority loads.
@@ -20,8 +22,11 @@
 - An enemy the game reports dead and then alive again while you still target it no longer reads 0 health until you change target.
 - Protection Warrior: when the game hides who attacked you (expected in dungeons), a dodge, parry or block now sets when the Revenge window ends, so Revenge is not recommended past it.
 - Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.
+- A `/reload` while you channel a spell no longer raises an "Unknown buff: cast" error, and the rest of that channel is predicted again.
 
 ### Known issues
+
+- When a channel cut is suggested, the ability shown is chosen as if the channel were still running, so an ability that waits for the channel to end is not suggested there. An ability that becomes ready just after a channel tick can be suggested as a cut where the reference rotation would recast the channel. Something that changes just before a channel tick can delay the cut suggestion to the next tick, or keep a cut shown after its reason has passed, and right after a channel starts a cut can be suggested between ticks.
 
 ### Upgrade notes
 

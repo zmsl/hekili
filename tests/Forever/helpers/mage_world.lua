@@ -18,8 +18,8 @@
 -- success at the end) and the two channels are the world's channels (W.press `channel`): Arcane Missiles a missile a
 -- tick (its rank's 3-5 s, a tick a second; Missile Barrage's half the time, a tick each 0.5 s, free), Evocation 8 s,
 -- a tick a second with no gain: its mana is the regen's (W.regenRate's aura entry, spirit x 16 and all of it while
--- casting: DB2 12051 auras 110 and 134; wowsims credits it at the 0.1 s regen tick, 466 a second in its logs). Any
--- press while Evocation runs at 99% mana or more clips it (wowsims's interruptIf in both APLs' Evocation group).
+-- casting: DB2 12051 auras 110 and 134; wowsims credits it at the 0.1 s regen tick, 466 a second in its logs). The
+-- packs' interrupt_if cuts Evocation at 99% mana (wowsims's interruptIf); the loop's driver clips it (loop.lua).
 -- Credit: wowsims/forever (MIT) as the reference for the charge, proc and gem rules; no code copied.
 local ld = require("Forever.helpers.load_druid")
 local world = require("Game.harness.world")
@@ -800,19 +800,10 @@ local function content(name)
                 return costOf(key, ids, H, onEntity(e, X))
             end
         end
-        -- Evocation clipped at 99% mana (the oracle's true belief: its channel and its mana)
-        local I = H.ns.VirtualStateInternal
-        p.clip = I.channel and I.castAb == I.ab.bySpell[12051] and VS.Power(MANA, H.ctl.now).est >= 0.99 * MAX
-        p.requires = function(W, e)
-            local ok, why = true, nil
-            if m.requires then
-                ok, why = m.requires(W, e, X)
+        if m.requires then
+            p.requires = function(W, e)
+                return m.requires(W, e, X)
             end
-            -- a clip ends Evocation's buff with its channel: W.press reads `requires` last, just before the clip
-            if ok and p.clip and e.channel then
-                drop(W, e, X, "evocation")
-            end
-            return ok, why
         end
         p.effect = function(W, e)
             if m.effect then
