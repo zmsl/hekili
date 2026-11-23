@@ -1094,20 +1094,20 @@ M.FLICKER = {
 -- An arm or label not named is judged on M.FLICKER (bands-drop, the stress arm, has none).
 M.ARM_FLOORS = {
     bands = {
-        -- L1783 (B4 round 4 trace; batch 3 bands run 22675171a: Arms 0.40, Fury L60 0.36, Fury L24 0.18, Warrior
-        -- Protection 0.25 /min): a stale usability answer under the harness's unmeasured G7 delay (L1675 clip) takes
-        -- the icon back after the band showed the crossing; the measured value + 0.01 (the line rounds to two decimals)
+        -- L1783 (B4 round 4 trace; batch 3 bands run 22675171a: Arms 0.40, Fury L60 0.36, Fury L24 0.18 /min): a
+        -- stale usability answer under the harness's unmeasured G7 delay (L1675 clip) takes the icon back after the
+        -- band showed the crossing; the measured value + 0.01 (the line rounds to two decimals). L1783 names Fury and
+        -- Arms only: Warrior Protection stays judged on M.FLICKER and reads MISS
         ["Arms"] = { flicker = 0.41 },
         ["Fury L60"] = { flicker = 0.37 },
         ["Fury L24"] = { flicker = 0.19 },
-        ["Warrior Protection"] = { flicker = 0.26 },
         -- T1 (L1794, traced on tag-blockers d578acd86): a regen pair of band crossings is stamped on the world's
         -- 0.1 s regen step (world.lua W.startRegen; the fake sees the pool only there), so each end reads up to one
         -- step late (the truth at the stamp sits that far into the cell: SM Ruin seed 2 104.010 3.87 over the low
         -- end, 105.210 0.14) and a 1.1-2.1 s window measures the rate 5-11% high; one such sample lifts the learned
         -- rate past the floor's 2% spread, and the floor kept inside the band (applyBand) holds the excess, at most
-        -- 0.1-0.5 mana, until a band edge. The client's bar follows its smooth regen per frame (band-source-design
-        -- 1.3), so the step at the stamp is the harness's. Seeds 1-20 as measured: SM Ruin seeds 2 and 3, Destruction
+        -- 0.1-0.5 mana, until a band edge. Inferred to be the harness's step, not measured: the mechanism is traced,
+        -- but whether the client's bar moves per frame or in steps is not (probe owed, L1800). Seeds 1-20 as measured: SM Ruin seeds 2 and 3, Destruction
         -- 2 and 14, Frost 15 (69.107: residues 2.705 and 0.398), Elemental 20 (171.762: 2.595 and 0.160)
         ["SM Ruin"] = { loOver = 279 },
         ["Destruction"] = { loOver = 303 },
