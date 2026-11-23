@@ -1,7 +1,7 @@
 -- tests/Forever/ttd_chain_pull_spec.lua (ttd-chain-pull; lane B8, L1730, L1736): the next target does not take the last
 -- one's kill time, and the first answers on a new target are the library's own. The real LibTimeToDie (vendored v0.4.0,
 -- minor 4) over the fake bands (ttd_rig.lua), through the core's fight_remains, target.time_to_die and time to a
--- percent. vendor-libs removed B8's two core stopgaps (forget at the pull, a seed reads unknown) and its 0.5 s keep.
+-- percent. vendor-libs removed B8's forget at the pull and its 0.5 s keep; a seed still reads unknown (the fight runs).
 local headless = require("Game.harness.headless")
 local fake_lhv = require("Game.harness.fake_lhv")
 local ttd_rig = require("Game.harness.ttd_rig")
@@ -351,7 +351,7 @@ describe("ttd-chain-pull: the next mob does not take the last one's kill time (l
     end)
 end)
 
--- L1736 (vendor-libs): LibTimeToDie minor 4's first answers, through the core, with B8's "a seed reads unknown" gone.
+-- L1736 (vendor-libs): LibTimeToDie minor 4's first answers, through the core; B8's "a seed reads unknown" stays.
 -- Minor 4 answers a new stream (a pull, a swap, a re-target) only once it spans 1.5 s, and carries no last-target rate
 -- before that. Live, B8's seed read 3.63 s at 72%, then 52 s.
 describe("ttd-first-guess: the library's first answers through the core (L1736)", function()
@@ -471,7 +471,7 @@ describe("ttd-first-guess: the library's first answers through the core (L1736)"
             end, function(i)
                 return 120 - math.max(0, i - 5) * TICK
             end)
-            assert.are.equal("priming: 3600 x1, unknown: 3600 x41, seed: known x12, fit: known x66", seen)
+            assert.are.equal("priming: 3600 x1, unknown: 3600 x41, seed: 3600 x12, fit: known x66", seen)
             assert.are.same({}, under)
         end
     )
@@ -496,7 +496,8 @@ describe("ttd-first-guess: the library's first answers through the core (L1736)"
         assert.are.same({}, under)
     end)
 
-    -- Fable I1: B8's rule blanked a re-seed after a speed-up. Minor 4 seeds no more after a fit; the blank is the
+    -- Fable I1: B8's rule blanked a re-seed after a speed-up. Minor 4 seeds no more after a fit, so the rule finds no
+    -- seed there; the blank is the
     -- library's own (its README: up to 1.5 s after a sudden speed-up), unchanged by the core.
     it("a 60 s kill that speeds up x2.5 below 20%: fit, about 1 s unknown, fit; never a seed", function()
         local w = boot()
@@ -522,21 +523,22 @@ describe("ttd-first-guess: the library's first answers through the core (L1736)"
         assert.are.equal("unknown: 3600 x21, fit: known x39", seen)
     end)
 
-    -- The residue (L1736): a burst then a fall 56 times slower gives a seed of about half the time for its 2 s, then a
-    -- fit still short (0.7), at a pull and on a target taken in combat alike. B8's rule read the seed's 2 s unknown and
+    -- Why the seed rule stays (L1736): a burst then a fall 56 times slower gives a seed of about half the time for its 2 s
+    -- (0.52 of it; without the rule it answered), then a fit still short, at a pull and on a target taken in combat
+    -- alike. The rule reads the seed's 2 s unknown and
     -- passed the same fit. The library's lab counted streams with a short read in such classes (opener bursts, lumpy
     -- hits) within one in 180 fights of B8's rule.
     local RESIDUE = {
-        { "at a pull", pull, 1, "unknown: 3600 x22, seed: known x20, fit: known x18" },
+        { "at a pull", pull, 1, "unknown: 3600 x22, seed: 3600 x20, fit: known x18" },
         {
             "after a direct swap in combat",
             swap,
             2,
-            "priming: 3600 x1, unknown: 3600 x22, seed: known x20, fit: known x17",
+            "priming: 3600 x1, unknown: 3600 x22, seed: 3600 x20, fit: known x17",
         },
     }
     for _, case in ipairs(RESIDUE) do
-        it(("a 28%% hit %s, then 0.5%% a second: the seed reads about half the time"):format(case[1]), function()
+        it(("a 28%% hit %s, then 0.5%% a second: the seed reads unknown, the fit"):format(case[1]), function()
             local w = boot()
             case[2](w)
             local at = case[3]
@@ -551,7 +553,7 @@ describe("ttd-first-guess: the library's first answers through the core (L1736)"
             end)
             assert.are.equal(case[4], seen)
             assert.are.same({}, under)
-            assert.are.equal("0.52", ("%.2f"):format(low)) -- the seed's first answer: 0.52 of the true time
+            assert.are.equal("0.74", ("%.2f"):format(low)) -- the fit's, never the seed's 0.52
         end)
     end
 end)

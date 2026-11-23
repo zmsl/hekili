@@ -1322,8 +1322,11 @@ do
             end
             if hintsDirty then sendHints() end
         end
-        local est, _, _, s = ttdTrack:Get()
-        return s == "live" and est or nil
+        local est, _, _, s, why = ttdTrack:Get()
+        -- shortcut: a seed answer reads unknown (owner L1742). LibTimeToDie minor 4 seeds only after 1.5 s of loss, but a
+        -- burst then a far slower fall still seeds at about half the true time; vendor-libs kept the rule on its fight
+        -- runs (removing it raised the swap set's flicker, L1736). Drop it when a library minor or a re-run shows no cost.
+        return s == "live" and why ~= "seed" and est or nil
     end
 
     -- targetTTD's answer when the target is plainly attackable, else nil. The library first, so with none (or

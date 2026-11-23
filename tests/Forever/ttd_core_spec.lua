@@ -223,11 +223,16 @@ describe("time to die from LibTimeToDie (lane B8)", function()
         assert.is_truthy(s:match("live fit est 12%.5 lo 8 hi 20;"), s)
     end)
 
-    -- vendor-libs (L1736): LibTimeToDie minor 4 publishes a seed only once it spans 1.5 s, so a seed answers as any
-    -- live answer does (B8's "a seed reads unknown" is gone).
-    it("a live answer of any reason answers everywhere, and the line says the reason", function()
+    -- L1736, owner's A (L1742), kept by vendor-libs on its fight runs: a live seed reads unknown everywhere.
+    it("a live seed answers 3600 everywhere; every other live reason answers; the line says the reason", function()
         install(H, lib)
-        for _, why in ipairs({ "seed", "prior", "fit", "stalled" }) do
+        lib.h.state, lib.h.est, lib.h.lo, lib.h.hi, lib.h.reason = "live", 3.5, 1.75, 10.5, "seed"
+        assert.are.same(
+            { 3600, 3600, 3600 },
+            { hk:GetTTD("target"), hk:GetGreatestTTD(), hk:GetTimeToPct("target", 35) }
+        )
+        assert.is_truthy(hk:GetTTDInfo():match("time to die: live seed est 3%.5 lo 1%.75 hi 10%.5;"))
+        for _, why in ipairs({ "prior", "fit", "stalled" }) do
             lib.h.state, lib.h.est, lib.h.lo, lib.h.hi, lib.h.reason = "live", 20, 10, 40, why
             assert.are.same(
                 { 20, 20, 13 },
