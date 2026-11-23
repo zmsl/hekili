@@ -32,6 +32,10 @@ L["on"] = "an"
 L["off"] = "aus"
 L["%s\n\nThe wowsims gate runs this as %s."] = "%s\n\nDie wowsims-Prüfung nutzt hier: %s."
 
+-- Hekili/Engine/Schema/Spec/Abilities.lua
+L["Interrupts"] = "Unterbrechungen"
+L["Defensives"] = "Defensive"
+
 -- Hekili/Engine/Schema/Spec/Packs.lua
 L["The %s priority was retired; a spec that used it now runs %s."] = "Die Priorität %s wurde eingestellt; eine Spezialisierung, die sie nutzte, verwendet jetzt %s."
 L["The |cFFFFD100%s|r priority was updated."] = "Die Priorität |cFFFFD100%s|r wurde aktualisiert."
@@ -131,8 +135,6 @@ L["next"] = "Nächstes"
 L["lane"] = "Spur"
 L["AOE"] = "AoE"
 L["Cooldowns"] = "Abklingzeiten"
-L["Interrupts"] = "Unterbrechungen"
-L["Defensives"] = "Defensive"
 L["Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"] = "Klasse |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"
 L["%s Icon"] = "Symbol (%s)"
 L["Width"] = "Breite"

@@ -32,6 +32,10 @@ L["on"] = "开"
 L["off"] = "关"
 L["%s\n\nThe wowsims gate runs this as %s."] = "%s\n\nwowsims 对照测试中此项为%s。"
 
+-- Hekili/Engine/Schema/Spec/Abilities.lua
+L["Interrupts"] = "打断"
+L["Defensives"] = "防御"
+
 -- Hekili/Engine/Schema/Spec/Packs.lua
 L["The %s priority was retired; a spec that used it now runs %s."] = "%s优先级已停用；使用它的专精现在将运行%s。"
 L["The |cFFFFD100%s|r priority was updated."] = "|cFFFFD100%s|r优先级已更新。"
@@ -131,8 +135,6 @@ L["next"] = "下一个"
 L["lane"] = "轨道"
 L["AOE"] = "AOE"
 L["Cooldowns"] = "爆发"
-L["Interrupts"] = "打断"
-L["Defensives"] = "防御"
 L["Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"] = "职业 |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"
 L["%s Icon"] = "%s图标"
 L["Width"] = "宽度"

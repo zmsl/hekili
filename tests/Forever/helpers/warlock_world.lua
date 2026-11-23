@@ -717,6 +717,8 @@ M.MAP = {
         end,
     },
 }
+-- (L1808) the defensive key casts the same spell
+M.MAP.death_coil_defensive = M.MAP.death_coil
 local PET = { summon_imp = "summon", summon_voidwalker = "summon", summon_succubus = "summon" }
 PET.summon_incubus, PET.summon_felhunter, PET.demonic_sacrifice = "summon", "summon", "dismiss"
 

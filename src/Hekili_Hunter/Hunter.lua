@@ -1117,6 +1117,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows({ 19263 }),
+        toggle = "defensives",
 
         now = applies("deterrence"),
         handler = applies("deterrence"),

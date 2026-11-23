@@ -6,6 +6,8 @@ local addon, ns = ...
 local Facade = ns.Facade
 local C_Item, C_Spell, GetTime = Facade.C_Item, Facade.C_Spell, Facade.GetTime
 local abs = math.abs
+local format = string.format
+local L = ns.L
 local Hekili = _G[ addon ]
 local class = Hekili.Class
 local state = Hekili.State
@@ -14,6 +16,16 @@ local GetSpellDescription = C_Spell.GetSpellDescription
 local GetSpellTexture = C_Spell.GetSpellTexture
 local GetItemSpell = C_Item.GetItemSpell
 local GetSpellInfo = C_Spell.GetSpellInfo
+
+--- An ability's options-list label: its icon and name; a variant's (`variantOf`, L1808) also names its toggle, so the
+--- list tells the two keys of one spell apart (the list is keyed by label: Options.lua EmbedAbilityOptions).
+function ns.AbilityListLabel( a, texture )
+    local label = "|T" .. texture .. ":0|t " .. a.name
+    if rawget( a, "variantOf" ) then
+        label = format( "%s (%s)", label, a.toggle == "interrupts" and L["Interrupts"] or L["Defensives"] )
+    end
+    return label
+end
 
 local protectedFunctions = {
     -- Channels.
@@ -386,12 +398,18 @@ local methods = {
 
                 local texture = a.texture or GetSpellTexture( a.id )
 
-                self.abilities[ a.name ] = self.abilities[ a.name ] or a
-                class.abilities[ a.name ] = class.abilities[ a.name ] or a
+                if data.variantOf then -- the spell's name stays its original's
+                    if not a.unlisted then
+                        class.abilityList[ ability ] = a.listName or ns.AbilityListLabel( a, texture )
+                    end
+                else
+                    self.abilities[ a.name ] = self.abilities[ a.name ] or a
+                    class.abilities[ a.name ] = class.abilities[ a.name ] or a
 
-                if not a.unlisted then
-                    class.abilityList[ ability ] = a.listName or ( "|T" .. texture .. ":0|t " .. a.name )
-                    class.abilityByName[ a.name ] = class.abilities[ a.name ] or a
+                    if not a.unlisted then
+                        class.abilityList[ ability ] = a.listName or ( "|T" .. texture .. ":0|t " .. a.name )
+                        class.abilityByName[ a.name ] = class.abilities[ a.name ] or a
+                    end
                 end
 
                 if type( rawget( a, "rangeSpell" ) ) == "number" then -- a function (a.funcs) is asked by ID each time
@@ -414,11 +432,14 @@ local methods = {
         end
 
         self.abilities[ ability ] = a
-        self.abilities[ a.id ] = a
+        -- `variantOf` (L1808): another ability's spell under its own key (its own toggle and options), for a spell one
+        -- line uses offensively and another as a defensive or a kick. The original keeps the spell's IDs, its name and
+        -- the belief's record (Tracked.lua); the pack shares the cooldown in both handlers.
+        if not data.variantOf then self.abilities[ a.id ] = a end
 
         if not a.unlisted then class.abilityList[ ability ] = class.abilityList[ ability ] or a.listName or a.name end
 
-        if data.copy then
+        if data.copy and not data.variantOf then
             if type( data.copy ) == "string" or type( data.copy ) == "number" then
                 self.abilities[ data.copy ] = a
             elseif type( data.copy ) == "table" then

@@ -23,6 +23,10 @@ L["on"] = true
 L["off"] = true
 L["%s\n\nThe wowsims gate runs this as %s."] = true
 
+-- Hekili/Engine/Schema/Spec/Abilities.lua
+L["Interrupts"] = true
+L["Defensives"] = true
+
 -- Hekili/Engine/Schema/Spec/Packs.lua
 L["The %s priority was retired; a spec that used it now runs %s."] = true
 L["The |cFFFFD100%s|r priority was updated."] = true
@@ -122,8 +126,6 @@ L["next"] = true
 L["lane"] = true
 L["AOE"] = true
 L["Cooldowns"] = true
-L["Interrupts"] = true
-L["Defensives"] = true
 L["Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"] = true
 L["%s Icon"] = true
 L["Width"] = true

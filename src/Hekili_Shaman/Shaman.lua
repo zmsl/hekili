@@ -412,12 +412,20 @@ local function shockCooldown()
     return 6 - 0.2 * talent.reverberation.rank
 end
 
-local function shockEffect(other, other2, debuffKey)
+-- `other3` (the simulation's handler only): Earth Shock's other key (L1808), sharing the shocks' cooldown; `kicks`:
+-- the cast interrupts the target's.
+local function shockEffect(other, other2, debuffKey, other3, kicks)
     return function()
         -- shockCooldown's formula, repeated: called from here it runs outside the handler's state environment (no
         -- `talent`)
         setCooldown(other, 6 - 0.2 * talent.reverberation.rank)
         setCooldown(other2, 6 - 0.2 * talent.reverberation.rank)
+        if other3 then
+            setCooldown(other3, 6 - 0.2 * talent.reverberation.rank)
+        end
+        if kicks then
+            interrupt()
+        end
         if debuffKey == "frost_shock" then
             applyDebuff("target", debuffKey, 8)
         elseif debuffKey then
@@ -499,8 +507,20 @@ local function shock(other, other2, ids, costs, debuffKey)
         known = knows(ids),
 
         now = shockEffect(other, other2, debuffKey),
-        handler = shockEffect(other, other2, debuffKey),
+        handler = shockEffect(other, other2, debuffKey, "earth_shock_interrupt"),
     }
+end
+
+-- Earth Shock as Forever's kick (L1808; its DB2 row interrupts): the same spell under its own key on the Interrupts
+-- toggle (`variantOf`: the spell's IDs and the belief's record stay earth_shock's). No shipped line casts it until the
+-- interrupt probe.
+local function kick()
+    local t = shock("flame_shock", "frost_shock", EARTH_SHOCK, EARTH_SHOCK_COST)
+    t.now = nil -- its `copy` stays: the ranks (a variant's copy maps no IDs: Spec/Abilities.lua)
+    t.variantOf, t.toggle = "earth_shock", "interrupts"
+    t.debuff, t.readyTime = "casting", state.timeToInterrupt
+    t.handler = shockEffect("flame_shock", "frost_shock", nil, "earth_shock", true)
+    return t
 end
 
 -- Mindfulness (1223033): 17/33/50% of the spirit regen while casting by rank (wowsims's curve, e5a9cd2a2d; its row's
@@ -925,6 +945,7 @@ spec:RegisterAbilities({
     },
 
     earth_shock = shock("flame_shock", "frost_shock", EARTH_SHOCK, EARTH_SHOCK_COST),
+    earth_shock_interrupt = kick(),
     flame_shock = shock("earth_shock", "frost_shock", FLAME_SHOCK, FLAME_SHOCK_COST, "flame_shock"),
     frost_shock = shock("earth_shock", "flame_shock", FROST_SHOCK, FROST_SHOCK_COST, "frost_shock"),
 

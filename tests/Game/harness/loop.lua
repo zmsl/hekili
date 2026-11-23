@@ -248,8 +248,8 @@ function M.powerLine(run)
 end
 
 --- (L1805) The "health" row of driver `st`'s run: the player-health band's holds begun and readings dropped this fight
---- (Families/Player.lua I.healthHolds, I.healthSnaps), and the Defensives-toggle abilities shown first in combat (ticks)
---- and pressed.
+--- (Families/Player.lua I.healthHolds, I.healthSnaps), the Defensives-toggle abilities shown first in Primary in combat
+--- (ticks) and pressed, and (L1808) the combat ticks the Defensives display showed one (the driver presses Primary only).
 function M.healthLine(run, st)
     local VI = st.H.ns.VirtualStateInternal
     local abilities = st.H.Hekili.Class.abilities
@@ -268,11 +268,12 @@ function M.healthLine(run, st)
             pressed = pressed + k
         end
     end
-    return ("holds %d snaps %d defensives shown %d pressed %d"):format(
+    return ("holds %d snaps %d defensives shown %d pressed %d in Defensives %d"):format(
         (VI and VI.healthHolds or 0) - st.holds0,
         (VI and VI.healthSnaps or 0) - st.snaps0,
         shown,
-        pressed
+        pressed,
+        run.defShown or 0
     )
 end
 
@@ -678,6 +679,7 @@ function M.run(L, seed, o, drivers)
         ticks = 0,
         presses = 0,
         pressedBy = {},
+        defShown = 0, -- (L1808) combat ticks the Defensives display showed an icon (M.healthLine)
         refused = {},
         unmatched = {},
         raises = 0,
@@ -1226,6 +1228,9 @@ function M.run(L, seed, o, drivers)
             local out = steps[1].H.Hekili.Engine.Output.Primary
             if out.count > 0 and out.recs[1].focus then
                 run.focus = run.focus + 1
+            end
+            if steps[1].H.Hekili.Engine.Output.Defensives.count > 0 then
+                run.defShown = run.defShown + 1
             end
             run.pressed[n] = R and {} or pressedKey -- the driver's own press this tick; a replay's casts (loop.flips)
             if R then

@@ -24,6 +24,8 @@ local FLAP_SEQ = "was closed by a close_window line and started again in the sam
 local function boot(lua)
     H = headless.new({ character = ww.character(), pack = ww.PACK })
     assert.are.same({}, H.loadErrors)
+    local toggles = H.Hekili.DB.profile.toggles -- (L1808) Primary only: these specs are about windows, not displays
+    toggles.defensives.separate, toggles.interrupts.separate = false, false
     local kit = H.Hekili.Class.kit
     for name, data in pairs(lua or {}) do
         kit:RegisterWindow(name, data)

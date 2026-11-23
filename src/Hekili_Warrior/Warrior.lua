@@ -1762,6 +1762,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims pummel.go; DB2 Discount Power On Miss
         known = knows(PUMMEL),
+        toggle = "interrupts",
         form = "berserker_stance",
         debuff = "casting",
         readyTime = state.timeToInterrupt,

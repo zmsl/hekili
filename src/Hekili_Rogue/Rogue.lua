@@ -1291,6 +1291,7 @@ spec:RegisterAbilities(rogue({
 
         startsCombat = false,
         known = knows(EVASION),
+        toggle = "defensives",
 
         now = function()
             applyBuff("evasion")

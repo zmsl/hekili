@@ -639,6 +639,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows({ 2139 }),
+        toggle = "interrupts",
         debuff = "casting",
         readyTime = state.timeToInterrupt,
 
@@ -753,10 +754,14 @@ local function snapped()
         setCooldown("ice_barrier", 0)
     end
 end
-local function barriered()
+-- `other` (the simulation's handler only): the key sharing the cooldown, Ice Barrier's other use (L1808).
+local function barriered(other)
     return function()
         applyBuff("ice_barrier")
         applyBuff("frigid_power")
+        if other then
+            setCooldown(other, 30)
+        end
     end
 end
 local function blocked()
@@ -824,7 +829,29 @@ spec:RegisterAbilities({
         usable = unlocked("frost"),
 
         now = barriered(),
-        handler = barriered(),
+        handler = barriered("ice_barrier_defensive"),
+    },
+
+    -- Ice Barrier as a defensive (L1808): Frost's wowsims lines cast it for Frigid Power; this key, on the Defensives
+    -- toggle, is its protective use (`variantOf`: the spell's IDs and the belief's record stay ice_barrier's). No
+    -- shipped line casts it yet.
+    ice_barrier_defensive = {
+        id = 11426,
+        variantOf = "ice_barrier",
+        copy = rest(ICE_BARRIER), -- its ranks (a variant's copy maps no IDs: Spec/Abilities.lua)
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = frostChanneled(ICE_BARRIER_COST, ICE_BARRIER),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(ICE_BARRIER),
+        usable = unlocked("frost"),
+        toggle = "defensives",
+
+        handler = barriered("ice_barrier"),
     },
 
     -- Off the GCD; 10 minutes (DB2 RecoveryTime; the pin's row: CooldownMs 600000, no GCD).
@@ -1093,6 +1120,7 @@ do
 
             startsCombat = false,
             known = knows(MANA_SHIELD),
+            toggle = "defensives",
             usable = unlocked("arcane"),
 
             now = buffed("mana_shield"),

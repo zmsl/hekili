@@ -979,6 +979,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(LAY_ON_HANDS),
+        toggle = "defensives",
 
         now = drainsMana(),
         handler = drainsMana(),
@@ -1151,6 +1152,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(DIVINE_SHIELD),
+        toggle = "defensives",
 
         usable = function()
             return not buff.forbearance.up, "forbearance"
@@ -1174,6 +1176,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(DIVINE_PROTECTION),
+        toggle = "defensives",
 
         usable = function()
             return not buff.forbearance.up, "forbearance"

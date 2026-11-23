@@ -31,6 +31,7 @@ local KIT = {
     cone_of_cold = { { 120, 8492, 10159, 10160, 10161 }, 555, 10, "spell" },
     ice_lance = { { 1312002, 400640, 1240044, 1240045, 1240046, 1240047 }, 160, 8, "spell" },
     ice_barrier = { { 11426, 13031, 13032, 13033 }, 480, 30, "spell" },
+    ice_barrier_defensive = { { 11426, 13031, 13032, 13033 }, 480, 30, "spell" }, -- (L1808) the same spell, Defensives
     cold_snap = { { 12472 }, 0, 600, "off" },
     blizzard = { { 10, 6141, 8427, 10185, 10186, 10187 }, 1400, 0, "spell" },
     frost_nova = { { 122, 865, 6131, 10230 }, 145, 25, "spell" },
@@ -135,7 +136,7 @@ describe("Forever Mage", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(36, n)
+        assert.are.equal(37, n)
         for _, key in ipairs({ "arcane_power", "presence_of_mind", "combustion", "cold_snap" }) do
             assert.are.equal("cooldowns", w.abilities[key].toggle, key)
         end

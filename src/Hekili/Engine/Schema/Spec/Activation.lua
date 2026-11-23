@@ -319,10 +319,10 @@ function Hekili:SpecializationChanged()
 
                 if data and data.name and data.iconID then
                     ability.name = ability.name or data.name
-                    class.abilityList[ k ] = "|T" .. data.iconID .. ":0|t " .. ability.name
+                    class.abilityList[ k ] = ns.AbilityListLabel( ability, data.iconID )
                 end
             else
-                class.abilityList[ k ] = "|T" .. ability.texture .. ":0|t " .. ability.name
+                class.abilityList[ k ] = ns.AbilityListLabel( ability, ability.texture )
             end
         end
     end

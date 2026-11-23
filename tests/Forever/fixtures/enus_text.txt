@@ -2305,7 +2305,7 @@ options.abilities.counterspell.toggle	name	Require Toggle
 options.abilities.counterspell.toggle	values.cooldowns	Cooldowns
 options.abilities.counterspell.toggle	values.custom1	Custom 1
 options.abilities.counterspell.toggle	values.custom2	Custom 2
-options.abilities.counterspell.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.counterspell.toggle	values.default	Default |cffffd100(Interrupts)|r
 options.abilities.counterspell.toggle	values.defensives	Defensives
 options.abilities.counterspell.toggle	values.interrupts	Interrupts
 options.abilities.counterspell.toggle	values.minor_cooldowns	Minor CDs
@@ -2721,6 +2721,39 @@ options.abilities.death_coil.toggle	values.interrupts	Interrupts
 options.abilities.death_coil.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.death_coil.toggle	values.none	None
 options.abilities.death_coil.toggle	values.potions	Potions
+options.abilities.death_coil_defensive	name	Spell 6789 (Defensives)
+options.abilities.death_coil_defensive.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 6789 (Defensives) unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 6789 (Defensives) can be recommended in any type of fight.
+options.abilities.death_coil_defensive.boss	name	Boss Encounter Only
+options.abilities.death_coil_defensive.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 6789 (Defensives) has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.death_coil_defensive.clash	name	Clash
+options.abilities.death_coil_defensive.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 6789 (Defensives).
+options.abilities.death_coil_defensive.disabled	name	Disable |T136000:0|t Spell 6789 (Defensives)
+options.abilities.death_coil_defensive.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.death_coil_defensive.dotCap	name	Maximum Applications
+options.abilities.death_coil_defensive.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.death_coil_defensive.hasIcon	name	Icon Replacement
+options.abilities.death_coil_defensive.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.death_coil_defensive.keybind	name	Override Keybind Text
+options.abilities.death_coil_defensive.lineBreak1	name	\032
+options.abilities.death_coil_defensive.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.death_coil_defensive.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.death_coil_defensive.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.death_coil_defensive.noIcon	name	Icon Replacement
+options.abilities.death_coil_defensive.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 6789 (Defensives) to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.death_coil_defensive.targetMax	name	Maximum Targets
+options.abilities.death_coil_defensive.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 6789 (Defensives) to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.death_coil_defensive.targetMin	name	Minimum Targets
+options.abilities.death_coil_defensive.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.death_coil_defensive.toggle	name	Require Toggle
+options.abilities.death_coil_defensive.toggle	values.cooldowns	Cooldowns
+options.abilities.death_coil_defensive.toggle	values.custom1	Custom 1
+options.abilities.death_coil_defensive.toggle	values.custom2	Custom 2
+options.abilities.death_coil_defensive.toggle	values.default	Default |cffffd100(Defensives)|r
+options.abilities.death_coil_defensive.toggle	values.defensives	Defensives
+options.abilities.death_coil_defensive.toggle	values.interrupts	Interrupts
+options.abilities.death_coil_defensive.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.death_coil_defensive.toggle	values.none	None
+options.abilities.death_coil_defensive.toggle	values.potions	Potions
 options.abilities.death_mark	name	Spell 1316709
 options.abilities.death_mark.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 1316709 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 1316709 can be recommended in any type of fight.
 options.abilities.death_mark.boss	name	Boss Encounter Only
@@ -3078,7 +3111,7 @@ options.abilities.deterrence.toggle	name	Require Toggle
 options.abilities.deterrence.toggle	values.cooldowns	Cooldowns
 options.abilities.deterrence.toggle	values.custom1	Custom 1
 options.abilities.deterrence.toggle	values.custom2	Custom 2
-options.abilities.deterrence.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.deterrence.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.deterrence.toggle	values.defensives	Defensives
 options.abilities.deterrence.toggle	values.interrupts	Interrupts
 options.abilities.deterrence.toggle	values.minor_cooldowns	Minor CDs
@@ -3408,7 +3441,7 @@ options.abilities.divine_protection.toggle	name	Require Toggle
 options.abilities.divine_protection.toggle	values.cooldowns	Cooldowns
 options.abilities.divine_protection.toggle	values.custom1	Custom 1
 options.abilities.divine_protection.toggle	values.custom2	Custom 2
-options.abilities.divine_protection.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.divine_protection.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.divine_protection.toggle	values.defensives	Defensives
 options.abilities.divine_protection.toggle	values.interrupts	Interrupts
 options.abilities.divine_protection.toggle	values.minor_cooldowns	Minor CDs
@@ -3441,7 +3474,7 @@ options.abilities.divine_shield.toggle	name	Require Toggle
 options.abilities.divine_shield.toggle	values.cooldowns	Cooldowns
 options.abilities.divine_shield.toggle	values.custom1	Custom 1
 options.abilities.divine_shield.toggle	values.custom2	Custom 2
-options.abilities.divine_shield.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.divine_shield.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.divine_shield.toggle	values.defensives	Defensives
 options.abilities.divine_shield.toggle	values.interrupts	Interrupts
 options.abilities.divine_shield.toggle	values.minor_cooldowns	Minor CDs
@@ -3612,6 +3645,39 @@ options.abilities.earth_shock.toggle	values.interrupts	Interrupts
 options.abilities.earth_shock.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.earth_shock.toggle	values.none	None
 options.abilities.earth_shock.toggle	values.potions	Potions
+options.abilities.earth_shock_interrupt	name	Spell 8042 (Interrupts)
+options.abilities.earth_shock_interrupt.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 8042 (Interrupts) unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 8042 (Interrupts) can be recommended in any type of fight.
+options.abilities.earth_shock_interrupt.boss	name	Boss Encounter Only
+options.abilities.earth_shock_interrupt.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 8042 (Interrupts) has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.earth_shock_interrupt.clash	name	Clash
+options.abilities.earth_shock_interrupt.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 8042 (Interrupts).
+options.abilities.earth_shock_interrupt.disabled	name	Disable |T136000:0|t Spell 8042 (Interrupts)
+options.abilities.earth_shock_interrupt.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.earth_shock_interrupt.dotCap	name	Maximum Applications
+options.abilities.earth_shock_interrupt.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.earth_shock_interrupt.hasIcon	name	Icon Replacement
+options.abilities.earth_shock_interrupt.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.earth_shock_interrupt.keybind	name	Override Keybind Text
+options.abilities.earth_shock_interrupt.lineBreak1	name	\032
+options.abilities.earth_shock_interrupt.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.earth_shock_interrupt.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.earth_shock_interrupt.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.earth_shock_interrupt.noIcon	name	Icon Replacement
+options.abilities.earth_shock_interrupt.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8042 (Interrupts) to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.earth_shock_interrupt.targetMax	name	Maximum Targets
+options.abilities.earth_shock_interrupt.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 8042 (Interrupts) to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.earth_shock_interrupt.targetMin	name	Minimum Targets
+options.abilities.earth_shock_interrupt.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.earth_shock_interrupt.toggle	name	Require Toggle
+options.abilities.earth_shock_interrupt.toggle	values.cooldowns	Cooldowns
+options.abilities.earth_shock_interrupt.toggle	values.custom1	Custom 1
+options.abilities.earth_shock_interrupt.toggle	values.custom2	Custom 2
+options.abilities.earth_shock_interrupt.toggle	values.default	Default |cffffd100(Interrupts)|r
+options.abilities.earth_shock_interrupt.toggle	values.defensives	Defensives
+options.abilities.earth_shock_interrupt.toggle	values.interrupts	Interrupts
+options.abilities.earth_shock_interrupt.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.earth_shock_interrupt.toggle	values.none	None
+options.abilities.earth_shock_interrupt.toggle	values.potions	Potions
 options.abilities.earthbind_totem	name	Spell 2484
 options.abilities.earthbind_totem.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 2484 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 2484 can be recommended in any type of fight.
 options.abilities.earthbind_totem.boss	name	Boss Encounter Only
@@ -3804,7 +3870,7 @@ options.abilities.evasion.toggle	name	Require Toggle
 options.abilities.evasion.toggle	values.cooldowns	Cooldowns
 options.abilities.evasion.toggle	values.custom1	Custom 1
 options.abilities.evasion.toggle	values.custom2	Custom 2
-options.abilities.evasion.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.evasion.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.evasion.toggle	values.defensives	Defensives
 options.abilities.evasion.toggle	values.interrupts	Interrupts
 options.abilities.evasion.toggle	values.minor_cooldowns	Minor CDs
@@ -6285,6 +6351,39 @@ options.abilities.ice_barrier.toggle	values.interrupts	Interrupts
 options.abilities.ice_barrier.toggle	values.minor_cooldowns	Minor CDs
 options.abilities.ice_barrier.toggle	values.none	None
 options.abilities.ice_barrier.toggle	values.potions	Potions
+options.abilities.ice_barrier_defensive	name	Spell 11426 (Defensives)
+options.abilities.ice_barrier_defensive.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 11426 (Defensives) unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 11426 (Defensives) can be recommended in any type of fight.
+options.abilities.ice_barrier_defensive.boss	name	Boss Encounter Only
+options.abilities.ice_barrier_defensive.clash	desc	If set above zero, the addon will pretend |T136000:0|t Spell 11426 (Defensives) has come off cooldown this much sooner than it actually has.  This can be helpful when an ability is very high priority and you want the addon to prefer it over abilities that are available sooner.
+options.abilities.ice_barrier_defensive.clash	name	Clash
+options.abilities.ice_barrier_defensive.disabled	desc	If checked, this ability will |cffff0000NEVER|r be recommended by the addon.  This can cause issues for some specializations, if other abilities depend on you using |T136000:0|t Spell 11426 (Defensives).
+options.abilities.ice_barrier_defensive.disabled	name	Disable |T136000:0|t Spell 11426 (Defensives)
+options.abilities.ice_barrier_defensive.dotCap	desc	If set above zero, this ability will not be recommended when it has been applied to this number of targets (or more). If the aura is refreshable on your current target, this limit is ignored.\n\nSet to zero to ignore this limit.
+options.abilities.ice_barrier_defensive.dotCap	name	Maximum Applications
+options.abilities.ice_barrier_defensive.hasIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_barrier_defensive.hasIcon	name	Icon Replacement
+options.abilities.ice_barrier_defensive.keybind	desc	If specified, the addon will show this text in place of the auto-detected keybind text when recommending this ability.  This can be helpful if your keybinds are detected incorrectly or is found on multiple action bars.\n|cFFFFD100No keybind detected for this ability.|r
+options.abilities.ice_barrier_defensive.keybind	name	Override Keybind Text
+options.abilities.ice_barrier_defensive.lineBreak1	name	\032
+options.abilities.ice_barrier_defensive.noFeignedCooldown	desc	If checked |cFFFFD100and|r Cooldowns are Shown Separately |cFFFFD100and|r Cooldowns are enabled, the addon will |cFFFF0000NOT|r pretend your cooldown abilities are fully on cooldown.\n\nThis may help resolve scenarios where abilities become desynchronized due to behavior differences between the Cooldowns display and your other displays.\n\nSee |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.
+options.abilities.ice_barrier_defensive.noFeignedCooldown	name	|cFFFFD100(GLOBAL)|r When Cooldowns Shown Separately, Use Actual Cooldown
+options.abilities.ice_barrier_defensive.noIcon	desc	If specified, the addon will attempt to load this texture instead of the default icon.  This can be a texture ID or a path to a texture file.\n\nLeave blank and press Enter to reset to the default icon.
+options.abilities.ice_barrier_defensive.noIcon	name	Icon Replacement
+options.abilities.ice_barrier_defensive.targetMax	desc	If set above zero, the addon will only allow |T136000:0|t Spell 11426 (Defensives) to be recommended if there are this many detected enemies (or fewer).  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_barrier_defensive.targetMax	name	Maximum Targets
+options.abilities.ice_barrier_defensive.targetMin	desc	If set above zero, the addon will only allow |T136000:0|t Spell 11426 (Defensives) to be recommended, if there are at least this many detected enemies.  All other action list conditions must also be met.\nSet to zero to ignore.
+options.abilities.ice_barrier_defensive.targetMin	name	Minimum Targets
+options.abilities.ice_barrier_defensive.toggle	desc	Specify a required toggle for this action to be used in the addon action list.  When toggled off, abilities are treated as unusable and the addon will pretend they are on cooldown (unless specified otherwise).
+options.abilities.ice_barrier_defensive.toggle	name	Require Toggle
+options.abilities.ice_barrier_defensive.toggle	values.cooldowns	Cooldowns
+options.abilities.ice_barrier_defensive.toggle	values.custom1	Custom 1
+options.abilities.ice_barrier_defensive.toggle	values.custom2	Custom 2
+options.abilities.ice_barrier_defensive.toggle	values.default	Default |cffffd100(Defensives)|r
+options.abilities.ice_barrier_defensive.toggle	values.defensives	Defensives
+options.abilities.ice_barrier_defensive.toggle	values.interrupts	Interrupts
+options.abilities.ice_barrier_defensive.toggle	values.minor_cooldowns	Minor CDs
+options.abilities.ice_barrier_defensive.toggle	values.none	None
+options.abilities.ice_barrier_defensive.toggle	values.potions	Potions
 options.abilities.ice_block	name	Spell 11958
 options.abilities.ice_block.boss	desc	If checked, the addon will not recommend |T136000:0|t Spell 11958 unless you are in a boss fight (or encounter).  If left unchecked, |T136000:0|t Spell 11958 can be recommended in any type of fight.
 options.abilities.ice_block.boss	name	Boss Encounter Only
@@ -6906,7 +7005,7 @@ options.abilities.lay_on_hands.toggle	name	Require Toggle
 options.abilities.lay_on_hands.toggle	values.cooldowns	Cooldowns
 options.abilities.lay_on_hands.toggle	values.custom1	Custom 1
 options.abilities.lay_on_hands.toggle	values.custom2	Custom 2
-options.abilities.lay_on_hands.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.lay_on_hands.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.lay_on_hands.toggle	values.defensives	Defensives
 options.abilities.lay_on_hands.toggle	values.interrupts	Interrupts
 options.abilities.lay_on_hands.toggle	values.minor_cooldowns	Minor CDs
@@ -7269,7 +7368,7 @@ options.abilities.mana_shield.toggle	name	Require Toggle
 options.abilities.mana_shield.toggle	values.cooldowns	Cooldowns
 options.abilities.mana_shield.toggle	values.custom1	Custom 1
 options.abilities.mana_shield.toggle	values.custom2	Custom 2
-options.abilities.mana_shield.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.mana_shield.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.mana_shield.toggle	values.defensives	Defensives
 options.abilities.mana_shield.toggle	values.interrupts	Interrupts
 options.abilities.mana_shield.toggle	values.minor_cooldowns	Minor CDs
@@ -8597,7 +8696,7 @@ options.abilities.pummel.toggle	name	Require Toggle
 options.abilities.pummel.toggle	values.cooldowns	Cooldowns
 options.abilities.pummel.toggle	values.custom1	Custom 1
 options.abilities.pummel.toggle	values.custom2	Custom 2
-options.abilities.pummel.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.pummel.toggle	values.default	Default |cffffd100(Interrupts)|r
 options.abilities.pummel.toggle	values.defensives	Defensives
 options.abilities.pummel.toggle	values.interrupts	Interrupts
 options.abilities.pummel.toggle	values.minor_cooldowns	Minor CDs
@@ -10280,7 +10379,7 @@ options.abilities.shadow_ward.toggle	name	Require Toggle
 options.abilities.shadow_ward.toggle	values.cooldowns	Cooldowns
 options.abilities.shadow_ward.toggle	values.custom1	Custom 1
 options.abilities.shadow_ward.toggle	values.custom2	Custom 2
-options.abilities.shadow_ward.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.shadow_ward.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.shadow_ward.toggle	values.defensives	Defensives
 options.abilities.shadow_ward.toggle	values.interrupts	Interrupts
 options.abilities.shadow_ward.toggle	values.minor_cooldowns	Minor CDs
@@ -18562,6 +18661,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action	values.curse_of_t
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.death_coil	|T136000:0|t Spell 6789
+options.packs.affliction.Affliction (wowsims.com).lists.action	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.demon_armor	|T136000:0|t Spell 706
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.demon_skin	|T136000:0|t Spell 687
 options.packs.affliction.Affliction (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -18645,6 +18745,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.curse
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.death_coil	|T136000:0|t Spell 6789
+options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.demon_armor	|T136000:0|t Spell 706
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.demon_skin	|T136000:0|t Spell 687
 options.packs.affliction.Affliction (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -18882,6 +18983,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.curse_of_the_
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.death_coil	|T136000:0|t Spell 6789
+options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.demon_armor	|T136000:0|t Spell 706
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.demon_skin	|T136000:0|t Spell 687
 options.packs.affliction.SM Ruin (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -18966,6 +19068,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.curse_of
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.death_coil	|T136000:0|t Spell 6789
+options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.demon_armor	|T136000:0|t Spell 706
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.demon_skin	|T136000:0|t Spell 687
 options.packs.affliction.SM Ruin (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -19280,6 +19383,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.action	values.frostfire_bolt	|T1
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_barrier_defensive	|T136000:0|t Spell 11426 (Defensives)
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.arcane.Arcane (wowsims.com).lists.action	values.mage_armor	|T136000:0|t Spell 6117
@@ -19355,6 +19459,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.frostfire_bol
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_barrier_defensive	|T136000:0|t Spell 11426 (Defensives)
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.arcane.Arcane (wowsims.com).lists.action_name	values.mage_armor	|T136000:0|t Spell 6117
@@ -21459,6 +21564,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action	values.curse_of_t
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.death_coil	|T136000:0|t Spell 6789
+options.packs.demonology.Demonology (wowsims.com).lists.action	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.demon_armor	|T136000:0|t Spell 706
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.demon_skin	|T136000:0|t Spell 687
 options.packs.demonology.Demonology (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -21543,6 +21649,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.curse
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.death_coil	|T136000:0|t Spell 6789
+options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.demon_armor	|T136000:0|t Spell 706
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.demon_skin	|T136000:0|t Spell 687
 options.packs.demonology.Demonology (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -21780,6 +21887,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.curse_of
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.death_coil	|T136000:0|t Spell 6789
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.demon_armor	|T136000:0|t Spell 706
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.demon_skin	|T136000:0|t Spell 687
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -21864,6 +21972,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.cur
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.death_coil	|T136000:0|t Spell 6789
+options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.demon_armor	|T136000:0|t Spell 706
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.demon_skin	|T136000:0|t Spell 687
 options.packs.demonology.Shadow Brand (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -22171,6 +22280,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action	values.curse_of
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.death_coil	|T136000:0|t Spell 6789
+options.packs.destruction.Destruction (wowsims.com).lists.action	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.demon_armor	|T136000:0|t Spell 706
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.demon_skin	|T136000:0|t Spell 687
 options.packs.destruction.Destruction (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
@@ -22258,6 +22368,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.cur
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.curse_of_tongues	|T136000:0|t Spell 1714
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.curse_of_weakness	|T136000:0|t Curse of Weakness
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.death_coil	|T136000:0|t Spell 6789
+options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.death_coil_defensive	|T136000:0|t Spell 6789 (Defensives)
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.demon_armor	|T136000:0|t Spell 706
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.demon_skin	|T136000:0|t Spell 687
 options.packs.destruction.Destruction (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
@@ -22915,6 +23026,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action	values.cure_poison	
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.disease_cleansing_totem	|T136000:0|t Spell 8170
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.earth_shock	|T136000:0|t Spell 8042
+options.packs.elemental.Elemental (wowsims.com).lists.action	values.earth_shock_interrupt	|T136000:0|t Spell 8042 (Interrupts)
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.earthbind_totem	|T136000:0|t Spell 2484
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.elemental.Elemental (wowsims.com).lists.action	values.fire_nova	|T136000:0|t Spell 408341
@@ -23002,6 +23114,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.cure_po
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.disease_cleansing_totem	|T136000:0|t Spell 8170
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.earth_shock	|T136000:0|t Spell 8042
+options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.earth_shock_interrupt	|T136000:0|t Spell 8042 (Interrupts)
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.earthbind_totem	|T136000:0|t Spell 2484
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.elemental.Elemental (wowsims.com).lists.action_name	values.fire_nova	|T136000:0|t Spell 408341
@@ -23271,6 +23384,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.cure_poi
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.disease_cleansing_totem	|T136000:0|t Spell 8170
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.earth_shock	|T136000:0|t Spell 8042
+options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.earth_shock_interrupt	|T136000:0|t Spell 8042 (Interrupts)
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.earthbind_totem	|T136000:0|t Spell 2484
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.enhancement.Enhancement (wowsims.com).lists.action	values.fire_nova	|T136000:0|t Spell 408341
@@ -23358,6 +23472,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.cur
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.demonic_rune	|T0:0|t [Item 12662]
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.disease_cleansing_totem	|T136000:0|t Spell 8170
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.earth_shock	|T136000:0|t Spell 8042
+options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.earth_shock_interrupt	|T136000:0|t Spell 8042 (Interrupts)
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.earthbind_totem	|T136000:0|t Spell 2484
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.elemental_mastery	|T136000:0|t Spell 16166
 options.packs.enhancement.Enhancement (wowsims.com).lists.action_name	values.fire_nova	|T136000:0|t Spell 408341
@@ -24065,6 +24180,7 @@ options.packs.fire.Fire (wowsims.com).lists.action	values.frostfire_bolt	|T13600
 options.packs.fire.Fire (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.fire.Fire (wowsims.com).lists.action	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.fire.Fire (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Fire (wowsims.com).lists.action	values.ice_barrier_defensive	|T136000:0|t Spell 11426 (Defensives)
 options.packs.fire.Fire (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Fire (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.fire.Fire (wowsims.com).lists.action	values.mage_armor	|T136000:0|t Spell 6117
@@ -24140,6 +24256,7 @@ options.packs.fire.Fire (wowsims.com).lists.action_name	values.frostfire_bolt	|T
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_barrier_defensive	|T136000:0|t Spell 11426 (Defensives)
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.fire.Fire (wowsims.com).lists.action_name	values.mage_armor	|T136000:0|t Spell 6117
@@ -24347,6 +24464,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.action	values.frostfire_bolt	|T
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_barrier_defensive	|T136000:0|t Spell 11426 (Defensives)
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.fire.Frostfire (wowsims.com).lists.action	values.mage_armor	|T136000:0|t Spell 6117
@@ -24419,6 +24537,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.frostfire_bo
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_barrier_defensive	|T136000:0|t Spell 11426 (Defensives)
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.fire.Frostfire (wowsims.com).lists.action_name	values.mage_armor	|T136000:0|t Spell 6117
@@ -24688,6 +24807,7 @@ options.packs.frost.Frost (wowsims.com).lists.action	values.frostfire_bolt	|T136
 options.packs.frost.Frost (wowsims.com).lists.action	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.frost.Frost (wowsims.com).lists.action	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.frost.Frost (wowsims.com).lists.action	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.frost.Frost (wowsims.com).lists.action	values.ice_barrier_defensive	|T136000:0|t Spell 11426 (Defensives)
 options.packs.frost.Frost (wowsims.com).lists.action	values.ice_block	|T136000:0|t Spell 11958
 options.packs.frost.Frost (wowsims.com).lists.action	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.frost.Frost (wowsims.com).lists.action	values.mage_armor	|T136000:0|t Spell 6117
@@ -24761,6 +24881,7 @@ options.packs.frost.Frost (wowsims.com).lists.action_name	values.frostfire_bolt	
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.healthstone	|T538745:0|t |cff00ccff[Healthstone]|r
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_armor	|T136000:0|t Spell 7302
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_barrier	|T136000:0|t Spell 11426
+options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_barrier_defensive	|T136000:0|t Spell 11426 (Defensives)
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_block	|T136000:0|t Spell 11958
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.ice_lance	|T136000:0|t Spell 1312002
 options.packs.frost.Frost (wowsims.com).lists.action_name	values.mage_armor	|T136000:0|t Spell 6117
@@ -29417,7 +29538,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	reverted 1	The |cFFFFD100Alpha|r priority was reverted.
 ~message	reverted 2	The |cFFFFD100Alpha|r and |cFFFFD100Beta|r priorities were reverted.
 ~message	reverted 3	The |cFFFFD100Beta|r, |cFFFFD100Alpha|r, and |cFFFFD100Gamma|r priorities were reverted.
-~message	snapshot	Snapshots saved:  Primary.
+~message	snapshot	Snapshots saved:  Interrupts, Defensives, Primary.
 ~message	styles	Display style 'enus_test' targets style API -1, this Hekili Forever has 1; not registered.
 ~message	styles	Display style 'queue' not registered: the name is a core display setting.
 ~message	unknown style	Display Primary: unknown style 'enus_nope', drawn as classic.

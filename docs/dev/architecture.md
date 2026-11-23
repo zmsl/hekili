@@ -616,6 +616,14 @@ is unsupported, and custom priorities bound to the legacy id are rebound to it. 
 `"<TOKEN>:<key>"` (`"WARRIOR:fury"`), which the importer resolves to this session's id (another class's key is kept
 as the string until that class logs in).
 
+**Defensives and interrupts** (owner, L1808: "Defensives and interrupts should always be categorized in defensive and
+interrupt displays"). The Defensives and Interrupts toggles are separate by default (`Options.lua` defaults), so an
+ability on either toggle shows only in its own display. A spell one line casts for damage and another as a defensive or
+a kick gets a second key: the ability field `variantOf = "<original key>"` registers the same spell under its own key
+and toggle; the original keeps the spell's IDs, its name and the belief's record (`Spec/Abilities.lua`,
+`Tracked.lua`), the options list shows the variant with its toggle's name, and the pack sets each key's cooldown in
+the other's handler (Warlock `death_coil_defensive`, Mage `ice_barrier_defensive`, Shaman `earth_shock_interrupt`).
+
 ## 4. `Hekili.Virtual`
 
 `Hekili.Virtual = { State, Events, Prof }` is published by the core (`Hekili.lua`, `Hekili.Virtual = log.debug`) from what the

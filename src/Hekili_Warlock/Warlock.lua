@@ -890,7 +890,7 @@ spec:RegisterAbilities({
         usable = unlocked("fire"),
     },
 
-    -- 120 s category cooldown.
+    -- 120 s category cooldown. The wowsims lines cast it for damage; its heal is `death_coil_defensive`'s (below).
     death_coil = {
         id = 6789,
         expects = "travel",
@@ -907,6 +907,33 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(DEATH_COIL),
         usable = unlocked("shadow"),
+
+        handler = function()
+            setCooldown("death_coil_defensive", 120)
+        end,
+    },
+
+    -- Death Coil as a defensive (L1808): the same spell under its own key on the Defensives toggle (`variantOf`: the
+    -- spell's IDs and the belief's record stay death_coil's), so the toggle routes this use alone.
+    death_coil_defensive = {
+        id = 6789,
+        variantOf = "death_coil",
+        copy = rest(DEATH_COIL), -- its ranks (a variant's copy maps no IDs: Spec/Abilities.lua)
+        cast = 0,
+        cooldown = 120,
+        gcd = "spell",
+
+        spend = byRank(DEATH_COIL_COST, DEATH_COIL),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(DEATH_COIL),
+        usable = unlocked("shadow"),
+        toggle = "defensives",
+
+        handler = function()
+            setCooldown("death_coil", 120)
+        end,
     },
 
     -- Our Immolate on the target is its condition (wowsims conflagrate.go); 10 s category cooldown.
@@ -1272,6 +1299,7 @@ do
 
             startsCombat = false,
             known = knows(SHADOW_WARD),
+            toggle = "defensives",
             usable = unlocked("shadow"),
 
             now = buffed("shadow_ward"),
