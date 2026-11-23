@@ -271,12 +271,10 @@ local GATES = {
                 "Furor rank 5",
                 {
                     onEnter = {
-                        bear = {
-                            [dw.RAGE] = function()
-                                return 10 -- 20% a rank of 10 rage: rank 5 always
-                            end,
-                        },
-                        cat = dw.entryRules("cat_form", 5), -- the class file's Cat entry at 5/5
+                        -- the class file's entries at 5/5, as the loop worlds' (L1809): Bear wipes rage, then Furor's
+                        -- certain 10; Cat keeps the whole pool
+                        bear = dw.entryRules("bear_form", 5),
+                        cat = dw.entryRules("cat_form", 5),
                     },
                     talents = { [17056] = 5 },
                 },
