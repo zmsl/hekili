@@ -339,7 +339,11 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0.08 / 0.08 / 0.00, press-only 0.10 / 0.08 / 0.02; excused aura 2): flicker 0.11 -> 0.09 (the
     -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: aura edge justified"
-    ["Warrior Protection"] = { loOver = 2007, flicker = 0.09, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0.10 / 0.08 /
+    -- 0.02, press-only 0.10 / 0.08 / 0.02; the newly counted return traced: seed 9 t 130.0 shield_block > sunder_armor
+    -- on an aura edge > shield_block with no fact): flicker 0.09 -> 0.11 (the measured worst + 0.01), cause "jitter
+    -- rule L1791: a return needs its own fact"
+    ["Warrior Protection"] = { loOver = 2007, flicker = 0.11, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
