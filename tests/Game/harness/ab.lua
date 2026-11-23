@@ -184,6 +184,9 @@ M.ARMS["cycle-follow-off"] = {
 -- real library keeps it). The health families (lanes B2, B3) and the resources (B4) read theirs. The lead arms move
 -- what the bars show (observer.lua `bandLead`, `spendFirst`, `gainFirst`, all unmeasured).
 M.ARMS.bands = { outcomes = "default", presence = "router", viewer = false, bands = true }
+-- (L1805, the fallback proof) both libraries absent with the switch on (Hekili.bandOff false, LibStub answering neither
+-- major): every reader takes its library-off path; its rows must equal the default arm's row for row.
+M.ARMS["lib-absent"] = { outcomes = "default", presence = "router", viewer = false, libAbsent = true }
 M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandDrop = 20 }
 -- The time to die (lane B8, design 2.7's jitter rule): the bands arm with the real LibTimeToDie over the fake library
 -- (ttd_rig.lua), so the core's fight_remains and time_to_die answer its live estimate; each fight writes a `ttd` row

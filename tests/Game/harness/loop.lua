@@ -247,6 +247,35 @@ function M.powerLine(run)
     )
 end
 
+--- (L1805) The "health" row of driver `st`'s run: the player-health band's holds begun and readings dropped this fight
+--- (Families/Player.lua I.healthHolds, I.healthSnaps), and the Defensives-toggle abilities shown first in combat (ticks)
+--- and pressed.
+function M.healthLine(run, st)
+    local VI = st.H.ns.VirtualStateInternal
+    local abilities = st.H.Hekili.Class.abilities
+    local function defensive(key)
+        local a = key and abilities[key]
+        return a and a.toggle == "defensives" or false
+    end
+    local shown, pressed = 0, 0
+    for n = 1, run.combat do
+        if defensive(run.ours[n]) then
+            shown = shown + 1
+        end
+    end
+    for key, k in pairs(run.pressedBy) do
+        if defensive(key) then
+            pressed = pressed + k
+        end
+    end
+    return ("holds %d snaps %d defensives shown %d pressed %d"):format(
+        (VI and VI.healthHolds or 0) - st.holds0,
+        (VI and VI.healthSnaps or 0) - st.snaps0,
+        shown,
+        pressed
+    )
+end
+
 --- An order arm's extra cycles (ab.lua `midPoll`, re-review H3): `after` s into each delay knobs k make (observer.delays).
 function M.newMidPolls(after, k, us)
     return { after = after, k = k, us = us, seen = 0, at = {} }
@@ -739,7 +768,13 @@ function M.run(L, seed, o, drivers)
         if bands and arm.ttd and not ctl.ttdRig then
             ctl.ttdRig = ttd_rig.install(d.H, ctl.lhv)
         end
-        d.H.Hekili.bandOff = not bands
+        -- lib-absent (ab.lua): the switch on, neither library in this instance's LibStub
+        local absent = arm.libAbsent and not d.plain or false
+        if absent then
+            local stub = rawget(d.H.env, "LibStub")
+            assert(stub.libs["LibHiddenValues-1.0"] == nil and stub.libs["LibTimeToDie-1.0"] == nil, "lib-absent")
+        end
+        d.H.Hekili.bandOff = not (bands or absent)
         d.H.Hekili:ProvidersChanged()
         local VI = d.H.ns.VirtualStateInternal
         if VI and VI.def then -- (loop_spec's fake drivers have no belief)
@@ -858,6 +893,9 @@ function M.run(L, seed, o, drivers)
             lhv = bands and ctl.lhv or nil, -- a bands arm's driver: its fake library (M.bandCheck)
             dropAt = bands and arm.bandDrop and wo.pull + arm.bandDrop or nil, -- bands-drop: the capability lost then
             ttd = bands and arm.ttd and ctl.ttdRig or nil, -- a ttd arm's driver: the library's rig (ttd_rig.poll)
+            -- (L1805) the player-health band's holds and snaps before this fight (M.healthLine)
+            holds0 = VI and VI.healthHolds or 0,
+            snaps0 = VI and VI.healthSnaps or 0,
         }
     end
     local errors0 = {}
@@ -1286,6 +1324,10 @@ function M.run(L, seed, o, drivers)
         end
         if st.ttd then
             ab.check(true, "ttd", M.ttdRow(run.ttd, W.killAt, seed, content.PACK))
+        end
+        if i == 1 and not st.plain and not R then -- (L1805) the record-only "health" row, every arm's
+            local who = tostring(st.H.ctl.class) .. " " .. tostring(st.H.Hekili.State.spec.key)
+            ab.record("health", ("%s arm %s seed %d %s"):format(who, armName, seed, M.healthLine(run, st)))
         end
         if i == 1 and run.power.n > 0 then -- the record-only "power" row: every arm's, a replay's too (re-review H4)
             local who = tostring(st.H.ctl.class) .. " " .. tostring(st.H.Hekili.State.spec.key)

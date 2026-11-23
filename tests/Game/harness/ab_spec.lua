@@ -167,6 +167,12 @@ describe("the A/B harness", function()
         assert.is_nil(ab.ARMS.default.bands)
     end)
 
+    it("the lib-absent arm (L1805): the default's providers, no bands, both libraries missing", function()
+        assert.are.same(ab.providers("default"), ab.providers("lib-absent"))
+        assert.is_true(ab.ARMS["lib-absent"].libAbsent)
+        assert.is_nil(ab.ARMS["lib-absent"].bands)
+    end)
+
     it("the observer's bands firings are added events only: the rest of the stream is today's", function()
         local base = scenarios.stream({ duration = 30 }, 7)
         local with = scenarios.stream({ duration = 30, observe = { bands = true } }, 7)
