@@ -113,10 +113,11 @@ I.presenceHold = holdN
 -- (the closes that refunded our missed cast, L1029) and backN (those refunds a strike took back); refPend[k] 1 while
 -- the last verdict's refund may still be struck (its strike window). A verdict is counted when its close folds (I.AuraVerdictClosed),
 -- never at the stage.
--- W0 and TOL (cdm-facts item 3, L448; were the spec's 1.0 s and 0.3 s): LAT, the measured cast-to-light latency with its
--- margin, after the write and after a travel alike. STRIKE_WIN 2.0 s stays (a guard: wider only takes back more wrong
--- verdicts).
-local W0, TOL, STRIKE_WIN = LAT, LAT, 2.0
+-- W0 and TOL (owner ruling O1 (a), L1770; were the spec's 1.0 s and 0.3 s, then LAT): 0.5 s after the write and after a
+-- travel alike. The worst fresh light measured is 323 ms (1 of about 250, L361; cast to light p99 27 ms, L448), so 0.5
+-- leaves a 177 ms margin, and the deadline wake keeps the verdict prompt at cast + 0.5. STRIKE_WIN 2.0 s stays (a
+-- guard: wider only takes back more wrong verdicts).
+local W0, TOL, STRIKE_WIN = 0.5, 0.5, 2.0
 -- strikePend[k]: the t of a light within STRIKE_WIN of a verdict (0 none), decided at the next poll, after this drain's
 -- fold has run our recast's write (the first Opus round's M2: the polls run before the fold).
 local W, verdictAt, verdictN, strikeN, darkN, strikePend, refundN = {}, {}, {}, {}, {}, {}, {}

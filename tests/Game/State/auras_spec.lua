@@ -1512,20 +1512,20 @@ describe("auras", function()
                 function()
                     prove()
                     cast(2, REND, 11, 15) -- dodged: the item never lights
-                    for _, t in ipairs({ 11.1, 11.2, 11.3, 11.34 }) do
+                    for _, t in ipairs({ 11.1, 11.2, 11.4, 11.49 }) do
                         poll(t)
                         assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
                     end
                     assert.is_true(P.fact.pdark[kT()])
                     assert.are.equal(0, P.covered) -- dark is never live: the verdict runs with no live slot
-                    poll(11.4)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.4))
-                    assert.are.same({ 1, 11.4 }, { I.auraVerdict.n[kT()], I.auraVerdict.at[kT()] })
+                    poll(11.5)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.5))
+                    assert.are.same({ 1, 11.5 }, { I.auraVerdict.n[kT()], I.auraVerdict.at[kT()] })
                     assert.are.same({ 1, 0 }, { I.presenceVerdict[kT()], I.presenceStrike[kT()] }) -- the harness's names
                     local snap = VS.Snapshot()
                     assert.is_truthy(
                         snap:find(
-                            "presence-verdict spender_c unit=target W=0.35 verdicts=1 strikes=0 pdark=true darkSlots=1",
+                            "presence-verdict spender_c unit=target W=0.50 verdicts=1 strikes=0 pdark=true darkSlots=1",
                             1,
                             true
                         ),
@@ -1540,6 +1540,23 @@ describe("auras", function()
                     )
                 end
             )
+
+            -- Owner ruling O1 (a), L1770: W0 0.5 s. The worst fresh light measured is 323 ms (1 of about 250).
+            it("O1: a light 0.4 s after our cast gets no verdict at all", function()
+                prove()
+                cast(2, REND, 11, 15)
+                poll(11.2)
+                poll(11.36)
+                ctl.ViewerAura(ti, "target") -- the late light
+                poll(11.4)
+                poll(11.6)
+                assert.are.same({ 26, 0, 0, 0 }, {
+                    est("target", fs.SPENDER_C, 11.6),
+                    I.auraVerdict.n[kT()],
+                    I.auraVerdict.strikes[kT()],
+                    I.PRESENCE.viewer.strikes[502],
+                })
+            end)
 
             -- Item 2 (L1764, cdm-facts): the verdict is judged only in a drain, and a drain runs only in a Hekili
             -- update, so with no update at the deadline the close waited for the next one (live: the next cast's).
@@ -1565,16 +1582,16 @@ describe("auras", function()
                     cast(2, REND, 11, 15) -- dodged: the item never lights
                     poll(11.2)
                     seen = 0
-                    for _, t in ipairs({ 11.25, 11.3, 11.34 }) do
+                    for _, t in ipairs({ 11.3, 11.4, 11.49 }) do
                         ctl.Tick(t)
                     end
                     assert.are.equal(0, seen)
-                    ctl.Tick(11 + I.auraVerdict.W[kT()]) -- cast + W (0.35 s)
+                    ctl.Tick(11 + I.auraVerdict.W[kT()]) -- cast + W (0.5 s)
                     assert.are.equal(1, seen) -- the core forces a cycle: its drain judges the record
-                    ctl.Tick(11.5)
+                    ctl.Tick(11.7)
                     assert.are.equal(1, seen) -- once
-                    poll(11.4)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.4))
+                    poll(11.5)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.5))
                 end)
 
                 it("no wake for a cast whose item lit, or with no proven dark item", function()
@@ -1643,13 +1660,13 @@ describe("auras", function()
                 assert.are.same({ true, 1 }, { I.PRESENCE.viewer.proven[502], I.PRESENCE.viewer.restored })
                 assert.are.equal(I.UNDECIDED, P.Presence(REND, 2)) -- a restore is no light: no fact
                 cast(2, REND, 11, 15) -- dodged: the item never lights
-                for _, t in ipairs({ 11.1, 11.2, 11.3 }) do
+                for _, t in ipairs({ 11.1, 11.2, 11.4 }) do
                     poll(t)
                     assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
                 end
-                poll(11.4)
-                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.4))
-                assert.are.same({ 1, 11.4 }, { I.auraVerdict.n[kT()], I.auraVerdict.at[kT()] })
+                poll(11.5)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.5))
+                assert.are.same({ 1, 11.5 }, { I.auraVerdict.n[kT()], I.auraVerdict.at[kT()] })
             end)
 
             it("an item never lit (unproven) gives no verdict", function()
@@ -1677,33 +1694,36 @@ describe("auras", function()
                 assert.are.equal(0, I.auraVerdict.n[kT()])
             end)
 
+            -- W0 == TOL (L1770): max(W0, travel + TOL) is travel + TOL for any travel, never below W0 (conservative)
             it("W per travel: max(W0, travel + TOL)", function()
                 prove()
                 I.AuraModel(2, REND, 11, 26, 1, 11, Obs.CastSuccess, true)
                 I.AuraOurs(2, REND, 1.5) -- a projectile: 1.5 s of travel
-                assert.are.equal(1.85, I.auraVerdict.W[kT()])
-                for _, t in ipairs({ 11.5, 12, 12.5, 12.8 }) do
+                assert.are.equal(2.0, I.auraVerdict.W[kT()])
+                for _, t in ipairs({ 11.5, 12, 12.5, 12.95 }) do
                     poll(t)
                     assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
                 end
-                poll(12.9)
-                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12.9))
+                poll(13)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13))
+                I.AuraOurs(2, REND, 0.2) -- short travel: still travel + TOL, wider than W0
+                assert.are.equal(0.7, I.auraVerdict.W[kT()])
                 I.AuraOurs(2, REND, 0) -- no travel: W0
-                assert.are.equal(0.35, I.auraVerdict.W[kT()])
+                assert.are.equal(0.5, I.auraVerdict.W[kT()])
             end)
 
             it("a CDM opener and a walk read of ours get W0", function()
                 I.AuraOurs(2, REND, 3)
-                assert.are.equal(3.35, I.auraVerdict.W[kT()])
+                assert.are.equal(3.5, I.auraVerdict.W[kT()])
                 ctl.ViewerAura(ti, "target") -- a CDM UP with no record opens it
                 poll(10.2)
-                assert.are.same({ 2, 0.35 }, { I.auraOurs[kT()], I.auraVerdict.W[kT()] })
+                assert.are.same({ 2, 0.5 }, { I.auraOurs[kT()], I.auraVerdict.W[kT()] })
                 I.AuraOurs(1, SHOUT, 3)
                 ctl.Fire("PLAYER_REGEN_ENABLED")
                 ctl.auras.player.HELPFUL[1] =
                     { spellId = fs.SPENDER_A, expirationTime = 200, applications = 0, sourceUnit = "player" }
                 ctl.Fire("UNIT_AURA", "player")
-                assert.are.same({ 3, 0.35 }, { I.auraOurs[SHOUT], I.auraVerdict.W[SHOUT] })
+                assert.are.same({ 3, 0.5 }, { I.auraOurs[SHOUT], I.auraVerdict.W[SHOUT] })
             end)
 
             it("a record ours did not open (ours 0) is never judged", function()
@@ -1730,12 +1750,12 @@ describe("auras", function()
                     poll(13) -- the swap's frame: settling
                     poll(13.2) -- the first monitored dark sweep: dark since 13.2
                     assert.are.equal(13.2, P.fact.pdarkT[kT()])
-                    for _, t in ipairs({ 13.3, 13.4, 13.5 }) do
+                    for _, t in ipairs({ 13.3, 13.5, 13.65 }) do
                         poll(t)
                         assert.are.equal(26, est("target", fs.SPENDER_C, t), t) -- W counts from 13.2, not the cast
                     end
-                    poll(13.6)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13.6)) -- continuously dark for W: dark means dark
+                    poll(13.7)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13.7)) -- continuously dark for W: dark means dark
                     assert.are.equal(1, I.auraVerdict.n[kT()])
                 end
             )
@@ -1748,12 +1768,12 @@ describe("auras", function()
                 poll(12)
                 assert.are.equal(26, est("target", fs.SPENDER_C, 12))
                 ctl.viewer.shown.BuffIconCooldownViewer = nil
-                for _, t in ipairs({ 12.2, 12.4, 12.5 }) do -- dark since 12.2
+                for _, t in ipairs({ 12.2, 12.4, 12.65 }) do -- dark since 12.2
                     poll(t)
                     assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
                 end
-                poll(12.6)
-                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12.6))
+                poll(12.7)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12.7))
             end)
 
             it(
@@ -1795,12 +1815,12 @@ describe("auras", function()
                     poll(15)
                     swap("Creature-1", 16)
                     poll(16)
-                    for _, t in ipairs({ 16.2, 16.4, 16.5 }) do -- dark since 16.2
+                    for _, t in ipairs({ 16.2, 16.4, 16.65 }) do -- dark since 16.2
                         poll(t)
                         assert.are.equal(26, est("target", fs.SPENDER_C, t), t)
                     end
-                    poll(16.6)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 16.6))
+                    poll(16.7)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 16.7))
                     assert.are.equal(1, I.auraVerdict.n[kT()])
                 end
             )
@@ -1868,12 +1888,12 @@ describe("auras", function()
                 prove()
                 cast(2, REND, 11, 15)
                 poll(11.2)
-                poll(11.4) -- the verdict: verdictAt 11.4
-                assert.are.equal(11.4, I.auraVerdict.at[kT()])
-                cast(2, REND, 11.4, 15) -- our recast, written at 11.4 after that drain
+                poll(11.5) -- the verdict: verdictAt 11.5
+                assert.are.equal(11.5, I.auraVerdict.at[kT()])
+                cast(2, REND, 11.5, 15) -- our recast, written at 11.5 after that drain
                 ctl.ViewerAura(ti, "target")
-                poll(11.6)
-                poll(11.8)
+                poll(11.7)
+                poll(11.9)
                 assert.are.same({ 0, 0, true }, {
                     I.auraVerdict.strikes[kT()],
                     I.PRESENCE.viewer.strikes[502],
@@ -2051,11 +2071,11 @@ describe("auras", function()
                 poll(11.0)
                 poll(11.2)
                 assert.are.equal(130.1, est("player", fs.SPENDER_A, 11.2))
-                poll(11.4)
-                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11.4)) -- the verdict
+                poll(11.5)
+                assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11.5)) -- the verdict
                 ctl.ViewerAura(pi2, "player") -- a wrong one: the item lights before any dark poll in between
-                poll(11.6)
-                assert.is_not_nil(VS.Aura("player", fs.SPENDER_A, 11.6)) -- not debounced against the old expiry
+                poll(11.7)
+                assert.is_not_nil(VS.Aura("player", fs.SPENDER_A, 11.7)) -- not debounced against the old expiry
             end)
 
             it(
@@ -2085,12 +2105,12 @@ describe("auras", function()
                     prove()
                     for _, c in ipairs({ 11, 14 }) do
                         cast(2, REND, c, 15)
-                        for _, dt in ipairs({ 0.1, 0.2, 0.3 }) do
+                        for _, dt in ipairs({ 0.1, 0.3, 0.45 }) do
                             poll(c + dt)
                             assert.are.equal(c + 15, est("target", fs.SPENDER_C, c + dt), c + dt)
                         end
-                        poll(c + 0.4)
-                        assert.is_nil(VS.Aura("target", fs.SPENDER_C, c + 0.4), c)
+                        poll(c + 0.5)
+                        assert.is_nil(VS.Aura("target", fs.SPENDER_C, c + 0.5), c)
                         poll(c + 2.5) -- past STRIKE_WIN
                     end
                     assert.are.same({ 2, 0, false, 2, 1, 0 }, {
@@ -2122,10 +2142,10 @@ describe("auras", function()
                     poll(22) -- rule 1 (it was seen lit)
                     assert.is_nil(VS.Aura("target", fs.SPENDER_C, 22))
                     cast(2, REND, 24, 15) -- silent again: judged again
-                    poll(24.3)
-                    assert.are.equal(39, est("target", fs.SPENDER_C, 24.3))
-                    poll(24.4)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 24.4))
+                    poll(24.45)
+                    assert.are.equal(39, est("target", fs.SPENDER_C, 24.45))
+                    poll(24.5)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 24.5))
                     assert.are.same({ 3, 1, true }, { I.auraVerdict.n[kT()], Q.silent[502], Q.proven[502] })
                 end
             )
@@ -2225,12 +2245,12 @@ describe("auras", function()
                     prove()
                     rebuild()
                     cast(2, REND, 13.5, 15) -- missed: the item stays dark
-                    for _, t in ipairs({ 13.6, 13.7, 13.8 }) do
+                    for _, t in ipairs({ 13.6, 13.8, 13.95 }) do
                         poll(t)
                         assert.are.equal(28.5, est("target", fs.SPENDER_C, t), t)
                     end
-                    poll(13.9)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13.9))
+                    poll(14)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 14))
                     local Q = I.PRESENCE.viewer
                     assert.are.same({ 1, true, 1, 0 }, { I.auraVerdict.n[kT()], Q.proven[502], Q.carried, Q.dropped })
                 end

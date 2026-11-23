@@ -2108,7 +2108,7 @@ describe("Forever Druid missed Rake closed by the Cooldown Manager at its deadli
     -- Item 3 (L448, L450): the global window comes from the measured cast-to-light latency; an instant's own window is
     -- W0, and the charge's root, whose item lit 863 ms after the cast (the charge travels), gets its own from the
     -- pack's velocity.
-    it("windows: Rake's verdict window is W0 (0.35 s); Feral Charge's root covers its 863 ms light", function()
+    it("windows: Rake's verdict window is W0 (0.5 s); Feral Charge's root covers its 863 ms light", function()
         local k = function(key)
             return I.AURA_UNIT + I.auras.byKey[key]
         end
@@ -2116,7 +2116,7 @@ describe("Forever Druid missed Rake closed by the Cooldown Manager at its deadli
         H.ctl.now = t
         H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-w1", 9904)
         assert.is_true(headless.cycle(H, t + 0.1))
-        assert.are.equal(0.35, I.auraVerdict.W[k("rake")])
+        assert.are.equal(0.5, I.auraVerdict.W[k("rake")])
         I.ab.rMax[I.ab.bySpell[1238122]] = 25 -- the client's maxRange (the fake's default is 5)
         t = t + 2
         H.ctl.now = t
