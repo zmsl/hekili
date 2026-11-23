@@ -2108,7 +2108,7 @@ describe("Forever Druid missed Rake closed by the Cooldown Manager at its deadli
     -- Item 3 (L448, L450): the global window comes from the measured cast-to-light latency; an instant's own window is
     -- W0, and the charge's root, whose item lit 863 ms after the cast (the charge travels), gets its own from the
     -- pack's velocity.
-    it("windows: Rake's verdict window is W0 (0.5 s); Feral Charge's root covers its 863 ms light", function()
+    it("windows: Rake's verdict window is W0 (0.5 s); Feral Charge's root covers a full-range charge", function()
         local k = function(key)
             return I.AURA_UNIT + I.auras.byKey[key]
         end
@@ -2123,7 +2123,8 @@ describe("Forever Druid missed Rake closed by the Cooldown Manager at its deadli
         H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-w2", 1238122)
         assert.is_true(headless.cycle(H, t + 0.1))
         assert.is_not_nil(VS.Aura("target", 19675, t + 0.1))
-        assert.is_true(I.auraVerdict.W[k("feral_charge_effect")] >= 0.863 + 0.3)
+        local w = I.auraVerdict.W[k("feral_charge_effect")]
+        assert.is_true(math.abs(w - (25 / 21 + 0.5)) < 1e-9, w) -- a full 25 yd charge at 21 yd/s, then TOL
         assert.are.same({}, H.errors)
     end)
 

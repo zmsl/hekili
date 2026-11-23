@@ -17,8 +17,9 @@ local DECLARED = {
         faerie_fire = { "debuff", nil, nil },
         growl = { "debuff", nil, nil },
         challenging_roar = { "debuff", nil, nil },
-        -- the root lands when the charge arrives: its Cooldown Manager item lit 863 ms after the cast (L361, L450)
-        feral_charge = { "debuff", 29, nil },
+        -- the root lands when the charge arrives: its Cooldown Manager item lit 863 ms after the cast (L361, L450); 21
+        -- yd/s, not 25 / 0.863 = 29, until a probe pairs distance with the light (fix round 1)
+        feral_charge = { "debuff", 21, nil },
     },
     Warrior = {
         sunder_armor = { "debuff", nil, nil },
