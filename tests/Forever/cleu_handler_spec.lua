@@ -348,3 +348,53 @@ describe("the combat-log handler", function()
         end)
     end)
 end)
+
+-- L1715: the pack's tank role reaches the enemy count. No role is set by hand: the spec's own (Activation.lua).
+describe("melee swings on us, by the active spec's role", function()
+    local protection = require("Forever.helpers.protection_gate")
+
+    -- Two plain-attacker swings on us, then (optional) two with no known attacker, through the real log.
+    local function swings(H, src1, src2, flags)
+        local L, me = H.L, H.ctl.guid.player
+        L.Swing(H.ctl.now, "onus", src1, flags, me, L.PLAYER_FLAGS, 100, "HIT", false)
+        L.Swing(H.ctl.now, "onus", src2, flags, me, L.PLAYER_FLAGS, 100, "HIT", false)
+        L.Deliver()
+    end
+
+    it("counts each attacker for a tank spec (Protection)", function()
+        local H = boot(protection.content(60))
+        fight(H, true)
+        swings(H, FOE, STRANGER, H.L.HOSTILE_FLAGS)
+        assert.is_true(H.ns.isTarget(FOE))
+        assert.is_true(H.ns.isTarget(STRANGER))
+        assert.are.equal(2, H.ns.numTargets())
+        -- another's swing on another: still filtered for a tank (our swing clock and the count stay)
+        local sw, L = H.Hekili.State.swings, H.L
+        local mh = sw.mh_actual
+        fight(H, true)
+        L.Swing(H.ctl.now, "swing", "Creature-5", L.HOSTILE_FLAGS, "Creature-6", L.HOSTILE_FLAGS, 100, "HIT", false)
+        L.Deliver()
+        assert.are.equal(mh, sw.mh_actual)
+        assert.is_false(H.ns.isTarget("Creature-6"))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("counts no attacker for an attack spec (Arms)", function()
+        local H = boot()
+        fight(H, true)
+        swings(H, FOE, STRANGER, H.L.HOSTILE_FLAGS)
+        assert.is_false(H.ns.isTarget(FOE))
+        assert.is_false(H.ns.isTarget(STRANGER))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("leaves a tank's count alone for swings with no known attacker", function()
+        local H = boot(protection.content(60))
+        fight(H, true)
+        H.ns.updateTarget(FOE, H.ctl.now, true)
+        swings(H, "", "", H.L.NONE_FLAGS)
+        assert.are.equal(1, H.ns.numTargets())
+        assert.is_false(H.ns.isTarget(""))
+        assert.are.same({}, H.errors)
+    end)
+end)
