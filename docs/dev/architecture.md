@@ -150,8 +150,8 @@ Swaps", off by default) arms upstream's cycle machinery for a line with `cycle_t
 `cycle_enemies`, the line reads the debuff as down and its record shows the cycle icon. `other_target=1` is a forced
 cycle: the line is usable only while a cycle is armed, so it is never shown on the current target and never with the
 toggle off. `active_dot` is the belief's count (`Facade.DebuffCount`, §1: the target plus every remembered target
-slot, by GUID in the open world and by nameplate under the Map restriction); unknown (the target holds no memory slot)
-is saturated, every enemy counted as carrying it, so no swap is suggested; the current target's own debuff floors it
+slot, by GUID in the open world and by stable ID under the Map restriction); unknown (no target, or under Map a
+target no plate answered for at its target change, `targetNoPlate`) is saturated, every enemy counted as carrying it, so no swap is suggested; the current target's own debuff floors it
 at 1. A swapped cast's handler runs with `state.cycle` set: its debuffs add to `active_dot` and leave the current
 target's alone. So does the cast in flight when the target changed after it was sent (ledger L1734). Its event comes
 from the real queue (`e.inflight`), and `landsElsewhere` tells the change by the event's GUID where it has one. Under

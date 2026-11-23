@@ -52,12 +52,12 @@ for k = 1, T.CAP do
 end
 
 -- Fix A (L1763): per instant (FRAME) ticket still COMMITTED, the avoid row on its GUID that no open ticket took at pass
--- 1 (live: logged 1-20 ms before the success, 28 of 287 cat instants): its time (0 none), unit, GUID, action, flag,
+-- 1 (live: logged 1-20 ms before the success, 28 of 287 melee instants): its time (0 none), unit, GUID, action, flag,
 -- amount (false: secret), school and the commit's castGUID. The success (T.Arm) routes it again at its own time (our
 -- swings score it there: fix round 1 I1), and when it came within EARLY before the success the armed cast's pass 1
 -- takes it at the success's time; held past EARLY, or the commit stopped or gone, it is routed as before.
 -- EARLY (fix round 1 M1): the measured lead of an own row over its success, 1-22 ms (L361: -22/-12/-6 ms; 28 of 287
--- cat instants, rake-miss-investigation), with a few ms over. Not SAME_FRAME (50 ms): an avoid of another player's that
+-- melee instants, L1763), with a few ms over. Not SAME_FRAME (50 ms): an avoid of another player's that
 -- far before our success would pay our cast.
 local EARLY = 0.025
 local hT, hU, hG, hAct, hFlag, hAmt, hSch, hCast = {}, {}, {}, {}, {}, {}, {}, {}
