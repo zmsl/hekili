@@ -16,7 +16,7 @@ The **displays** are the on-screen frames where Hekili Forever shows its recomme
 | **Interrupts** | Interrupts, when the **Interrupts** toggle is set to show them separately. |
 | **Defensives** | Defensive abilities, when the **Defensives** toggle is set to show them separately. |
 
-With the default settings, everything appears in the **Primary** display, and the **Cooldowns**, **Interrupts** and **Defensives** displays stay empty. While the options window is open, every display shows, so that it can be placed.
+With the default settings, interrupts appear in the **Interrupts** display, defensives in the **Defensives** display, and everything else in the **Primary** display; the **Cooldowns** display stays empty. A built-in priority's defensives (each class's save, the Healthstone and a healing potion) wait for your health to fall to their threshold, a slider per line on the specialization's priority settings. While the options window is open, every display shows, so that it can be placed.
 
 Each recommendation is worked out by simulating the next few seconds of the fight: Hekili Forever takes the first ability in the priority whose conditions hold, moves its simulated clock past that cast, and looks again. So the second icon is the ability expected after the first, and so on. A later icon is a forecast; it can change when the fight does.
 
