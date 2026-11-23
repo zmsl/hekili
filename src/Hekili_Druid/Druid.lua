@@ -2327,10 +2327,11 @@ local behind = {
     width = "full",
 }
 spec:RegisterSetting("behind", false, behind, "feral", "balance")
--- (L1808) Barkskin outside Bear Form, 50% (the review's value; casting it in Cat Form is the code's reading, not yet
--- seen in game): Balance's own line reads barkskin_health, Feral's cat line barkskin_cat_health (its barkskin_health
--- is the imported bear line's), each on its own page before any imported section; on Guardian's page too under Cat
--- Form (below: Guardian imports Feral's lists)
+-- (L1808) Barkskin outside Bear Form, 50% (the review's value; the owner: "barkskin is available in all forms", so no
+-- line is gated on a form): Balance's own line reads barkskin_health (any form), Feral's own list barkskin_cat_health
+-- (every form but Bear, where the imported Guardian line reads barkskin_health: one line a form, never two), each on
+-- its own page before any imported section; on Guardian's page too under Cat Form (below: Guardian imports Feral's
+-- lists)
 spec:RegisterSetting("barkskin_health", 50, spec:HealthOption("barkskin"), "balance")
 spec:RegisterSetting("barkskin_cat_health", 50, spec:HealthOption("barkskin"), "feral")
 

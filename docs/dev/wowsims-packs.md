@@ -454,7 +454,7 @@ What players read in a pack's description (the recipe's `notes`), and why. Warri
   potion (25%) lines (rule 25, from the shared settings), and each class's own save as a recipe `extra` `first` line:
   Evasion 50, Ice Block 15, Divine Shield 20, Lay on Hands 15 (not while Divine Shield is up), Power Word: Shield 50,
   Deterrence 35, Death Coil's defensive key 35, Barkskin 50 (Balance, and Feral outside Bear Form as
-  `barkskin_cat_health`; casting it in Cat Form is the code's reading, unconfirmed in game). Each threshold is a
+  `barkskin_cat_health`; the owner: "barkskin is available in all forms", so no line is gated on a form). Each threshold is a
   per-spec setting; each line is on the Defensives toggle, so it shows in the Defensives display only.
   Stoneform's ability is never usable, in combat or out: its `buff` gate (Hekili_Shared Races/Dwarf.lua) wants a
   poison or disease on us (Shared/Auras.lua `dispellable`, by the debuff rows' dispel type), and the facade's aura rows

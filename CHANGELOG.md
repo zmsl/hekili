@@ -4,7 +4,7 @@
 
 ### New
 
-- Every built-in priority now suggests your Healthstone at or below 30% health and a healing potion at or below 25%, and each class its own save: Evasion (Rogue, 50%), Ice Block (Mage, 15%), Divine Shield (20%) and Lay on Hands (15%, not while Divine Shield is up) for every Paladin, Power Word: Shield on yourself (Priest, 50%), Deterrence (Hunter, 35%), Death Coil (Warlock, 35%) and Barkskin (Balance, and Feral outside Bear Form, 50%; casting it in Cat Form is not yet confirmed in game). They show in the Defensives display, and only while Hekili can read your health in combat.
+- Every built-in priority now suggests your Healthstone at or below 30% health and a healing potion at or below 25%, and each class its own save: Evasion (Rogue, 50%), Ice Block (Mage, 15%), Divine Shield (20%) and Lay on Hands (15%, not while Divine Shield is up) for every Paladin, Power Word: Shield on yourself (Priest, 50%), Deterrence (Hunter, 35%), Death Coil (Warlock, 35%) and Barkskin (Balance, and Feral outside Bear Form, 50%; in any form). They show in the Defensives display, and only while Hekili can read your health in combat.
 - Each low-health defensive line has its own threshold: a slider on the specialization's priority settings, starting at the values above (Guardian's and Protection Warrior's at their earlier values).
 - Healing potions, from Minor to Major and the Restored and Perishable ones, under the Defensives toggle. A healing potion and a Major Mana Potion share their cooldown, and the forecast knows it.
 - A priority that compares a resource with more than 8 different exact values now shows a warning on its Source tab: Hekili can watch only 8 of them exactly, so those conditions use the nearest 1% instead.

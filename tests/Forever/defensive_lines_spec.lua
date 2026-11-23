@@ -304,3 +304,31 @@ for _, P in ipairs(LINES) do
         end)
     end)
 end
+
+-- L1808 (owner: "barkskin is available in all forms"): no Barkskin line waits on a form, and each form reaches one:
+-- Feral's own outside Bear Form, the imported Guardian line in it (and Guardian's own the other way round)
+describe("the Barkskin lines", function()
+    for _, P in ipairs({
+        { dlw.Balance, "Balance (wowsims.com)", { default = "" } },
+        { dlw.Feral, "Feral (wowsims.com)", { default = "!buff.bear_form.up", bear = "" } },
+        { dlw.Guardian, "Guardian (wowsims.com)", { default = "!buff.cat_form.up", cat = "" } },
+    }) do
+        it("of " .. P[2] .. " read no form but the import's own guard", function()
+            local H = headless.new({ character = P[1].character(), pack = P[2] })
+            local got = {}
+            for list, entries in pairs(H.Hekili.DB.profile.packs[P[2]].lists) do
+                for _, e in ipairs(entries) do
+                    if e.action == "barkskin" then
+                        assert.is_nil(got[list], list .. ": one Barkskin line a list")
+                        local forms = {} -- the form terms the line reads (tools/make_pack.lua's import guard)
+                        for f in (e.criteria or ""):gmatch("!?buff%.[%w_]*_form%.up") do
+                            forms[#forms + 1] = f
+                        end
+                        got[list] = table.concat(forms, "&")
+                    end
+                end
+            end
+            assert.are.same(P[3], got)
+        end)
+    end
+end)
