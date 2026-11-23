@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Guardian and Protection Warrior (wowsims.com), and Feral in Bear Form: the low-health defensives are back (Barkskin, Frenzied Regeneration, Last Stand, Shield Wall, Stoneform, Shatter Curse and Healthstone, under the Defensives toggle). They show only while Hekili can read your health in combat; when it cannot, they stay hidden, as before. Custom priorities can test the same with `health.known`.
 - Arcane, Fire, Frost and Frostfire Mage, Shadow Priest and Affliction Warlock (wowsims.com): the priorities now suggest cutting a channel early where the reference rotation does, such as Evocation once your mana is nearly full, or Wrack once a damage-over-time effect needs reapplying.
 - Channel cut suggestions now come at the channel's tick and stay up until pressed; changing target decides the cut again for the new target.
 - Rogue and Feral/Guardian Druid: the recommendation refreshes the moment a combo point is gained or spent, so the finisher shows without waiting for the next poll.
