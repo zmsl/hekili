@@ -42,6 +42,7 @@ local GAPS = {
     HUNTER = {
         [200355] = { "Deadly Aspects", "ambiguous, cat 2; auras quick_shots; no aura has 1299448; two different procs behind one item (Quick Shots 6150, Quick Strikes 1299448): a family, unobservable roll (no cov-hunter fix)" },
         [200423] = { "Aspects", "ambiguous, cat 2; auras aspect_of_the_beast,aspect_of_the_cheetah,aspect_of_the_hawk; abilities aspect_of_the_beast,aspect_of_the_cheetah,aspect_of_the_hawk; no aura has 13163,13159,20043,20190; lane core: one item for a family of auras, ambiguous by the map's one-aura rule" },
+        [200409] = { "Immolation Trap", "unmapped, cat 2; switched-off auras immolation_trap; cdm-facts fix round 1 I3: the now writes it at the placement, it lands when the trap is sprung" },
     },
     MAGE = {},
     PALADIN = {
