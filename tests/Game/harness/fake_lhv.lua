@@ -126,6 +126,16 @@ function M.new(o)
     local now = assert(o.now, "fake_lhv.new: o.now (the harness clock)")
     local lib = { UNKNOWN = M.UNKNOWN, BAND = M.BAND, ERR = M.ERR, rules = R, handles = {}, sources = {} }
     local cap, capWhy = "ready", nil
+    local kcap, kwhy = {}, {} -- [kind] = one kind's own loss (SetAvailable's `kind`), under the global one
+    local function capOf(kind)
+        if cap ~= "ready" then
+            return cap, capWhy
+        end
+        if kcap[kind] then
+            return kcap[kind], kwhy[kind]
+        end
+        return "ready"
+    end
     local H = {}
     H.__index = H
 
@@ -444,8 +454,14 @@ function M.new(o)
         end
     end
 
-    -- The capability (the bandDrop arm, a failed self-test): "ready", or "pending" / "unavailable" with a reason.
-    function lib:SetAvailable(state, reason)
+    -- The capability (the bandDrop arm, a failed self-test): "ready", or "pending" / "unavailable" with a reason; with
+    -- `kind`, that kind's alone (the real library loses one kind on its own: a read missing or raising, capability_spec),
+    -- "ready" clearing it. The global one comes first and never clears a kind's.
+    function lib:SetAvailable(state, reason, kind)
+        if kind then
+            kcap[kind], kwhy[kind] = state ~= "ready" and state or nil, reason
+            return
+        end
         cap, capWhy = state, reason
     end
 
@@ -483,14 +499,16 @@ function M.new(o)
         end
     end
 
+    -- The aura kind answers its capability with no unit (the Cooldown Manager's; no aura watch is modelled).
     function lib:IsAvailable(kind, unit)
-        if not UNITS[kind] then
+        if not UNITS[kind] and not (kind == "aura" and unit == nil) then
             return false, "unavailable", KNOWN[kind] and "unproven" or "unknown-kind"
         end
-        if cap == "ready" and unit ~= nil and not UNITS[kind][unit] then
+        local state, why = capOf(kind)
+        if state == "ready" and unit ~= nil and not UNITS[kind][unit] then
             return false, "unavailable", "unproven"
         end
-        return cap == "ready", cap, capWhy
+        return state == "ready", state, why
     end
 
     function lib:ReleaseAll(owner)
@@ -514,8 +532,9 @@ function M.new(o)
         if self.unproven then
             return "unavailable", self.unproven
         end
-        if cap ~= "ready" then
-            return cap, capWhy
+        local state, why = capOf(self.kind)
+        if state ~= "ready" then
+            return state, why
         end
         if self.paused then
             return "paused"

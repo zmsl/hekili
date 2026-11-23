@@ -1401,6 +1401,16 @@ function Facade.TargetID()
     return I.targetID
 end
 
+--- (L1805, owner "yes" 2026-11-23: the one new belief read for it) Whether the hidden values of one kind answer now,
+--- each on its own (Families/Player.lua, Sources/Bands.lua VS.Known): Facade.KNOWN_HEALTH the player's health (false:
+--- it reads full), KNOWN_POWER power type `powerType` (false: the model), KNOWN_AURA the hidden-value library's aura
+--- kind. Belief-only, like TargetID: the core's fourth belief read, by the APL conditions `health.known`,
+--- `<power>.known` and `aura.known` alone (Engine/Sim/State.lua). Allocates nothing.
+Facade.KNOWN_HEALTH, Facade.KNOWN_POWER, Facade.KNOWN_AURA = 1, 2, 3
+function Facade.Known(kind, powerType)
+    return VS.Known(kind, powerType)
+end
+
 Facade.Display = {}
 local function display(name, reason)
     local nsName, key = split(name)

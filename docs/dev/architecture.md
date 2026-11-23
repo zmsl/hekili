@@ -65,7 +65,15 @@ remembered target slot, keyed by GUID in the open world and by stable ID under t
 meanwhile, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on Forever"). The third is the
 target's stable ID (ledger L1734, owner's A, 2026-11-22): `ns.Facade.TargetID()` -> an integer while the target's GUID
 is secret, 0 for a target read plain, nil with no target. It is never a GUID or a stand-in for one. Its one reader is
-`Engine/Sim/State.lua`'s swapped-cast compare (`landsElsewhere`, §2). `tools/check_border.sh` passes exactly two lines
+`Engine/Sim/State.lua`'s swapped-cast compare (`landsElsewhere`, §2). The fourth is the hidden-value enablement
+(ledger L1805, the owner's "yes" 2026-11-23: "a single enablement check ... health and power reads can break
+independently from the cdm reads"): `ns.Facade.Known(kind, powerType)` -> whether that kind's hidden values answer now,
+each kind on its own (`Facade.KNOWN_HEALTH` 1: the player's health estimate is a reading, a plain read, a live band or
+one held after a re-prime, false when it reads full; `KNOWN_POWER` 2: that power type read plain or its band live,
+false when the model alone answers; `KNOWN_AURA` 3: the hidden-value library's aura kind, by its capability report,
+apart from the core's own Cooldown Manager reader). Its readers are the APL conditions `health.known`,
+`<power>.known` (the resource metatable) and `aura.known` (`Engine/Sim/State.lua`); the translator guards every
+generated line that reads the player's health with `health.known` (§6). `tools/check_border.sh` passes exactly two lines
 naming it there, both inside `landsElsewhere` and each exactly the cast's pin or the compare, so the ID never feeds a
 GUID field; it fails a read elsewhere in State.lua, a third read, a change to either line, and any other core file or
 pack that names `TargetID`. `def` carries plain records (batch 4, the owner's

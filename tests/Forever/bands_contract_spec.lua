@@ -352,6 +352,26 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.are.equal("0.63 0.64", frames(1, -1))
     end)
 
+    -- (L1805) the enablement per capability: one kind's read gone (capability_spec's "api" loss) turns that kind's
+    -- VS.Known off alone, the others staying on; health off reads full at once (the watch broken: no hold). A read
+    -- once gone is not asked again here (in game a missing function does not come back).
+    it("one kind lost at a time: that kind not known, the others still known", function()
+        boot()
+        live()
+        local function known()
+            return { VS.Known(1), VS.Known(2, 0), VS.Known(3) }
+        end
+        assert.are.same({ true, true, true }, known())
+        local want = { true, true, true }
+        for _, k in ipairs({ { 3, "C_CooldownViewer" }, { 2, "UnitPowerPercent" }, { 1, "UnitHealthPercent" } }) do
+            rawset(_G, k[2], nil)
+            frames(2)
+            want[k[1]] = false
+            assert.are.same(want, known(), k[2])
+        end
+        assert.are.equal(1, VS.Health("player", ctl.now).est)
+    end)
+
     it("a failed self-test: no watch, no band; one retry out of combat 5 s after the first world entry", function()
         Fake.set("closed", true)
         assert.is_false(Fake.login())

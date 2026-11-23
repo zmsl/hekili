@@ -55,6 +55,10 @@ local want = {} -- the list being resolved (never a def.bandPoints table: those 
 -- poll logged a band, and how many settles found the belief's value outside it.
 I.bandT, I.bandLo, I.bandHi, I.bandLive, I.bandDisagree = {}, {}, {}, {}, {}
 I.bandShows = {} -- by power channel: the band's delay behind an event of ours (I.BAND_MARGIN)
+-- (L1805) By channel: the watch works (switched on, the library found, its handle accepted and "live", or "priming"
+-- again: not refused, released, paused or unavailable). Families/Player.lua holds a lost band only while it is true.
+I.bandOK = {}
+I.auraKnown = false -- the library's aura kind answers (its own capability report; Hekili watches no aura yet)
 -- By channel: how many bands a family applied since the build, and the last one as it applied it.
 I.bandUsed, I.bandUsedLo, I.bandUsedHi = {}, {}, {}
 
@@ -183,9 +187,10 @@ local function off(t)
     if LHV then
         LHV:ReleaseAll(OWNER)
     end
+    I.auraKnown = false
     for k = 1, n do
         local ch = chan[k]
-        handle[k], refused[k], paused[k] = false, false, false
+        handle[k], refused[k], paused[k], I.bandOK[ch] = false, false, false, false
         if I.bandLive[ch] then
             I.bandLive[ch] = false
             Direct(Obs.Band, t, ch, 1, 0)
@@ -216,14 +221,16 @@ I.OnBuild(function(def, now)
         handle[k], refused[k], paused[k] = false, false, false
     end
     for ch in pairs(I.bandLive) do
-        I.bandLive[ch] = false
+        I.bandLive[ch], I.bandOK[ch] = false, false
     end
+    I.auraKnown = false
     n = 0
     local function add(ch, s, pt)
         n = n + 1
         chan[n], spec[n], handle[n], ptype[n], refused[n], paused[n] = ch, s, false, pt, false, false
         percent[n] = false
         I.bandT[ch], I.bandLo[ch], I.bandHi[ch], I.bandLive[ch], I.bandDisagree[ch] = 0, 0, 0, false, 0
+        I.bandOK[ch] = false
         I.bandUsed[ch], I.bandUsedLo[ch], I.bandUsedHi[ch] = 0, 0, 0
         if pt then
             I.bandShows[ch] = I.BAND_MARGIN -- until the handle says
@@ -274,6 +281,7 @@ S.Poll(1.6, function(api, t)
         end
     end
     idle = false
+    I.auraKnown = LHV ~= nil and (LHV:IsAvailable("aura")) == true
     for k = 1, n do
         local h, pt = handle[k], ptype[k]
         -- the plain read is better and free; the family ignores the band meanwhile, so the watch waits for combat's end
@@ -294,7 +302,9 @@ S.Poll(1.6, function(api, t)
             end
             local ch = chan[k]
             local lo, hi, bt
-            if h:State() == "live" and (not percent[k] or I.maxPlain[ch]) then
+            local st = h:State()
+            I.bandOK[ch] = st == "live" or st == "priming"
+            if st == "live" and (not percent[k] or I.maxPlain[ch]) then
                 lo, hi, bt = h:Get()
             end
             if lo then
@@ -314,9 +324,29 @@ S.Poll(1.6, function(api, t)
                 I.bandLive[ch] = false
                 Direct(Obs.Band, t, ch, 1, 0) -- b > c: unknown
             end
+        else
+            I.bandOK[chan[k]] = false
         end
     end
 end)
+
+--- (L1805; the core's fourth belief read, Facade.Known, owner "yes" 2026-11-23) Whether the hidden values of `kind`
+--- answer now, each kind on its own (one broken leaves the others): 1 the player's health (its estimate is a reading:
+--- a plain read, a live band or one held, Families/Player.lua; false means it reads full), 2 power type `powerType`
+--- (read plain in combat, or its band live; false means the model), 3 the library's aura kind (its capability report:
+--- a Cooldown Manager read would answer; the core's own Cooldown Manager reader, Hekili.cdmOff, is apart). Allocates
+--- nothing.
+function VS.Known(kind, powerType)
+    if kind == 1 then
+        return I.HealthKnown()
+    elseif kind == 2 then
+        local r = I.res.slotOf[powerType]
+        return r ~= nil and (I.res.readable[r] == true or I.bandLive[r] == true)
+    elseif kind == 3 then
+        return I.auraKnown
+    end
+    return false
+end
 
 --- The event facade's frame update: after IDLE s with no drain every watch pauses (the next drain resumes them).
 --- Allocates nothing.
