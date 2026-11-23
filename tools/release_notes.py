@@ -24,7 +24,12 @@ MODEL = "claude-opus-5-5"
 PLANS = "docs/superpowers/plans"
 # our own libraries (src/<name>): their changes are not Hekili's, and the notes never name them (owner rule)
 LIBRARIES = ("LibHiddenValues", "LibTimeToDie")
-LIBRARY_NAME = re.compile(r"\b(?:%s)(?:-\d+(?:\.\d+)*)?" % "|".join(LIBRARIES))
+# the full names (with a version) and the short forms of a subject or a path
+LIBRARY_NAME = re.compile(r"\b(?:%s)(?:-\d+(?:\.\d+)*)?|\w*lhv\w*" % "|".join(LIBRARIES), re.I)
+
+
+def scrub(text):
+    return re.sub(r"\b(the) (?:the )+library", r"\1 library", LIBRARY_NAME.sub("the library", text), flags=re.I)
 
 SYSTEM = """\
 You write the release notes players read for Hekili Forever, a World of Warcraft addon for the WoW Forever client \
@@ -81,7 +86,7 @@ def gather(ref, run=git):
     excluded = [":!src/" + name for name in ("ForeverProbe",) + LIBRARIES]
     commits = run("log", "--no-merges", "--format=--- %s%n%b", span, "--", "src", *excluded)
     commits = re.sub(r"^(Co-Authored-By|Claude-Session):.*\n?", "", commits, flags=re.M | re.I).strip()
-    commits = LIBRARY_NAME.sub("the library", commits)
+    commits = scrub(commits)
     changelog = run("show", ref + ":CHANGELOG.md")
     # a final's "## <tag>" is written by publish.yml after the notes, so Unreleased leads; the tag's own section is the
     # fallback for tags cut before publish.yml wrote the changelog (v0.1.0, renamed by hand)
@@ -93,7 +98,7 @@ def gather(ref, run=git):
             body = open_after(run("show", ref + ":" + path))
             if body:
                 known.append(body)
-    known = LIBRARY_NAME.sub("the library", "\n\n".join(known))
+    known = scrub("\n\n".join(known))
     return {"tag": ref, "previous": prev, "commits": commits, "changelog": entry, "known": known}
 
 
