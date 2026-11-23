@@ -393,6 +393,7 @@ local function events(W, us, from, e)
     end
     return #truth + 1
 end
+M.events = events -- loop_spec pins the flags (the jitter rule's facts, L1762)
 
 -- The believed cooldown remaining of ability `x` of instance `H` into `cd` (false: untracked), once a tick.
 local function cooldown(cd, H, x, now)
@@ -1339,6 +1340,8 @@ function M.tally(L, n, o)
     o = o or {}
     local m = blank()
     local lo = { tick = 1 / (o.hz or 5), react = o.react or M.REACT }
+    -- our ledger's late facts (L1762) where the arm's viewer is on, as loop.run turns it on: the driver only
+    local lv = { tick = lo.tick, react = lo.react, viewer = ab.ARMS[o.arm or ab.arm()].viewer }
     if o.hold == nil then
         m.hold = M.HOLD
     else
@@ -1388,7 +1391,7 @@ function M.tally(L, n, o)
         end
         m.attemptsB = m.attemptsB + b.attempts
         m.oracleFlicker = m.oracleFlicker + flips(a.theirs, a.combat, a.shadowPress)
-        m.led.ours = flicker.merge(m.led.ours, flicker.ledger(a.frames[1], lo))
+        m.led.ours = flicker.merge(m.led.ours, flicker.ledger(a.frames[1], lv))
         m.led.oracle = flicker.merge(m.led.oracle, flicker.ledger(a.frames[2], lo))
         for side, r in pairs({ A = a, B = b }) do
             local s = m[side]
@@ -1458,7 +1461,8 @@ function M.replay(L, R, o)
         m.misses[name] = true
     end
     local tick = 1 / (o and o.hz or 5)
-    m.led.ours = flicker.ledger(a.frames[1], { tick = tick, react = o and o.react or M.REACT })
+    local viewer = ab.ARMS[o and o.arm or ab.arm()].viewer -- our ledger's late facts (L1762)
+    m.led.ours = flicker.ledger(a.frames[1], { tick = tick, react = o and o.react or M.REACT, viewer = viewer })
     -- the decision points' flips (loop.run) and our unjustified retracted readies that wowsims's own cast of that
     -- ability within a tick confirms as wrong
     m.dec = { both = 0, agree = 0, conf = {}, flips = a.dec.flips, confirmed = 0 }

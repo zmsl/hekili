@@ -191,8 +191,9 @@ numbers, unchanged since the jitter rule (L1762, DEVELOPMENT.md "Flicker is an a
 follow them, unjustified only: `now dips D flashes F swaps S retracted R/min (oracle R') waits W`. That is slot 1, and
 `swaps` counts the now/next swaps among its dips and flashes. `pack_gate`'s retracted-ready floor reads this R. Then
 come `facts [target n; aura n; verdict n]`, the slot-1 changes those facts excused. A fact here is a death or
-retarget, an aura edge one poll before the change (a Cooldown Manager light), or the first change within 1.5 s of a
-miss of our press (the CDM verdict). Last come `next D/F/R/W` (slots 2-3) and `focus D/F/R/W`, both reported only. The
+retarget, an aura edge the earlier cause classes shadowed, and in an arm with the viewer on two late facts: an aura
+edge one poll before the change (a Cooldown Manager light), and the first change within 1.5 s of a miss of our press
+(the CDM verdict). Last come `next D/F/R/W` (slots 2-3) and `focus D/F/R/W`, both reported only. The
 20-fight Arms line's tail (forever-flicker, before the rule):
 
 ```

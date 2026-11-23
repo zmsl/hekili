@@ -681,6 +681,26 @@ describe("the headless loop's bags, pet and stats (central fix 27)", function()
     end)
 end)
 
+describe("the headless loop's ledger events (loop.events)", function()
+    it("flags a retarget and our target's death, and a miss of our press but not of a white swing (L1762)", function()
+        local us, mob, other = {}, {}, {}
+        us.target = mob
+        local function flags(ev)
+            local e = {}
+            loop.events({ truth = { ev } }, us, 1, e)
+            return { e.target or false, e.miss or false, e.avoid or false }
+        end
+        assert.are.same({ true, false, false }, flags({ kind = "target", relist = true }))
+        assert.are.same({ true, false, false }, flags({ kind = "kill", dst = mob, ourTarget = mob }))
+        assert.are.same({ false, false, false }, flags({ kind = "kill", dst = other, ourTarget = mob }))
+        assert.are.same({ false, true, true }, flags({ kind = "spell", src = us, dst = mob, act = "DODGE" }))
+        assert.are.same({ false, true, true }, flags({ kind = "strike", src = us, dst = mob, act = "PARRY" }))
+        assert.are.same({ false, false, true }, flags({ kind = "swing", src = us, dst = mob, act = "MISS" }))
+        assert.are.same({ false, false, false }, flags({ kind = "spell", src = us, dst = mob, act = "WOUND" }))
+        assert.are.same({ false, false, false }, flags({ kind = "spell", src = other, dst = us, act = "DODGE" }))
+    end)
+end)
+
 describe("the headless loop's flicker counter (loop.flips)", function()
     -- the owner's rule (2026-10-26): a blip the instance pressed (show-then-press within one tick) is not jitter
     local seq = { "a", "b", "a", "a" }

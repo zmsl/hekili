@@ -18,9 +18,10 @@
 -- slot 1 only (M.summary's `now`), a now<->next swap tagged on it (slot 2's icon taking slot 1, or slot 1's going to
 -- slot 2 and back); slots 2-3 (`next`) and the focus (`focus`) are reported. A change with a fact is a correction,
 -- never counted: the three classes above, and the facts the world emits at the change (`fact`): a death of our target
--- or a retarget, an aura edge at the change or one poll before it (a Cooldown Manager light lands 3-5 ms after the
--- edge, past the poll's end or flushed a poll late), and the first change within LATE after a miss of our press (the
--- CDM verdict: the belief learns of a lost avoid row at cast + 1.0 s, at its next drain). A builder's lost combo point
+-- or a retarget, an aura edge at the change, and in an arm with the Cooldown Manager on (o.viewer) two late ones: an
+-- aura edge one poll before the change (its light lands 3-5 ms after the edge, past the poll's end or flushed a poll
+-- late) and the first change within LATE after a miss of our press (the CDM verdict: the belief learns of a lost avoid
+-- row at cast + 1.0 s, at its next drain). A retraction takes only facts after its icon turned ready. A builder's lost combo point
 -- and an avoid's refund come in the same instant as the avoid row (world.lua W.hit, W.effects): the avoid class.
 -- The old all-slot numbers stay as they were (M.summary's top-level fields: history comparable).
 local M = {}
@@ -68,13 +69,13 @@ local function event(f, c)
     return ev.cast[c] or ev.spend[c] or ev.avoid[c] or ev.aura[c]
 end
 
--- The jitter rule's fact at poll c beyond the cause classes (L1762): a death or retarget, an aura edge now or one poll
--- before (a late Cooldown Manager light), else nil.
-local function fact(f, c)
+-- The jitter rule's fact at poll c beyond the cause classes (L1762): a death or retarget, an aura edge now or (`viewer`:
+-- the Cooldown Manager on, its light late) one poll before, else nil.
+local function fact(f, c, viewer)
     local ev = f.ev
     if ev.target[c] then
         return "target"
-    elseif ev.aura[c] or (c > 1 and ev.aura[c - 1]) then
+    elseif ev.aura[c] or (viewer and c > 1 and ev.aura[c - 1]) then
         return "aura"
     end
     return nil
@@ -133,7 +134,7 @@ local function reason(f, s, c, x, react, tick)
     return "condition"
 end
 
---- The ledger of frame `f` (o: tick, react, window): { entries, gapLo, gapEst }. Each entry { kind, slot, tick (the
+--- The ledger of frame `f` (o: tick, react, window, viewer: the arm's Cooldown Manager on, L1762's late facts):{ entries, gapLo, gapEst }. Each entry { kind, slot, tick (the
 --- change's poll), from, to, len (ticks), cause, justified, lo, est, truth (at the change), cost (the slot's, 0:
 --- not cost-gated), floor (the floor crossed the cost while the estimate stayed above it: floor jitter); a retracted
 --- one adds ready (its first ready tick), wait, reason and the belief's delta between the two polls: loP/loC, estP/estC,
@@ -155,7 +156,7 @@ function M.ledger(f, o)
         e.cause = e.cause or cause(f, p, c, e.from, e.to, tick)
         e.old = e.justified or JUSTIFIED[e.cause] or false -- the all-slot numbers' rule
         -- a retraction's fact is its ready run's (ledger below): fact() at c reaches back to the run's first poll
-        e.fact = not e.old and (e.fact or (e.kind ~= "retracted" and fact(f, c))) or nil
+        e.fact = not e.old and (e.fact or (e.kind ~= "retracted" and fact(f, c, o.viewer))) or nil
         e.justified = e.old or e.fact ~= nil
         if s == 1 and (e.kind == "dip" or e.kind == "flash") then -- a now<->next swap
             e.swap = f.name[2][p] == e.to or f.name[2][c] == e.from
@@ -246,10 +247,11 @@ function M.ledger(f, o)
             end
         end
     end
-    -- a miss of our press found late (the CDM verdict): the first unjustified change of each slot within LATE after it
+    -- a miss of our press found late (the CDM verdict, `viewer` arms only): the first unjustified change of each slot
+    -- within LATE after it
     -- shortcut: any own avoid row of kind spell or strike (a ranged auto shot's too); split by press if a floor needs it
     local late = math.ceil(M.LATE / tick - EPS)
-    for k = 1, n do
+    for k = 1, o.viewer and n or 0 do
         if f.ev.miss[k] then
             local first = {}
             for _, e in ipairs(led.entries) do

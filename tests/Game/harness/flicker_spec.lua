@@ -216,8 +216,9 @@ end)
 -- The jitter rule (L1762): the gate reads slot 1 (the now icon) and its now<->next swaps; slots 2-3 and the focus are
 -- reported; a fact (a press, an avoid, an aura edge, a death or retarget, a late-found miss) justifies a change.
 describe("the jitter rule's now slot (L1762)", function()
-    local function sum(rows)
-        return flicker.summary(flicker.merge(nil, flicker.ledger(build(rows), O)), 1)
+    local V = { tick = TICK, react = REACT, viewer = true } -- a Cooldown Manager arm: late lights, the verdict
+    local function sum(rows, o)
+        return flicker.summary(flicker.merge(nil, flicker.ledger(build(rows), o or O)), 1)
     end
 
     it(
@@ -257,8 +258,8 @@ describe("the jitter rule's now slot (L1762)", function()
         assert.are.equal(1, sum(rows(1)).now.retracted)
     end)
 
-    it("justifies a change at a death or retarget, and at an aura edge one poll before it (a late light)", function()
-        local function dip(ev)
+    it("justifies a change at a death or retarget, and (viewer on) at an aura edge one poll before it", function()
+        local function dip(ev, o)
             local r = {
                 { s = { { "a", 0.4 } } },
                 { s = { { "a", 0.2 } } },
@@ -270,13 +271,15 @@ describe("the jitter rule's now slot (L1762)", function()
                 r[at].ev = r[at].ev or {}
                 r[at].ev[k] = true
             end
-            return sum(r)
+            return sum(r, o)
         end
         assert.are.same({ 1, nil }, { dip({}).now.dips, dip({}).facts.target })
-        local t, a, early = dip({ target = 3 }), dip({ aura = 2 }), dip({ aura = 1 })
+        local t, a, early = dip({ target = 3 }), dip({ aura = 2 }, V), dip({ aura = 1 }, V)
         assert.are.same({ 0, 1, 1 }, { t.now.dips, t.facts.target, t.dips }) -- the old count keeps it
         assert.are.same({ 0, 1 }, { a.now.dips, a.facts.aura })
         assert.are.equal(1, early.now.dips) -- two polls before: no longer the change's fact
+        assert.are.same({ 1, nil }, { dip({ aura = 2 }).now.dips, dip({ aura = 2 }).facts.aura }) -- no viewer: no late light
+        assert.are.same({ 0, 1 }, { dip({ aura = 3 }).now.dips, dip({ aura = 3 }).dips }) -- at the change: the aura class
     end)
 
     it("justifies the first change within the late window after a miss of our press (the CDM verdict)", function()
@@ -288,10 +291,11 @@ describe("the jitter rule's now slot (L1762)", function()
         for _, i in ipairs({ 6, 8, 16 }) do -- three one-poll dips: 4 and 6 polls on (in the window), 14 on (past it)
             rows[i] = { s = { { "b", 0.1 } } }
         end
-        local s = sum(rows)
+        local s = sum(rows, V)
         assert.are.same({ 2, 1, 3 }, { s.now.dips, s.facts.verdict, s.dips }) -- only the first one is the correction
-        local led = flicker.ledger(build(rows), O)
+        local led = flicker.ledger(build(rows), V)
         assert.are.same({ true, "verdict" }, { led.entries[1].justified, led.entries[1].fact })
+        assert.are.same({ 3, nil }, { sum(rows).now.dips, sum(rows).facts.verdict }) -- no viewer: no verdict
     end)
 
     it(
