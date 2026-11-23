@@ -661,7 +661,11 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0 / 0 / 0, press-only 0 / 0 / 0.02; excused press 1): flicker 0.02 -> 0, cause "jitter rule L1762:
     -- press justified"
-    ["Marksmanship Turret"] = { loOver = 196, flicker = 0, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0 / 0 / 0.02,
+    -- press-only 0 / 0 / 0.02; the newly counted return traced: seed 43 t 182.6 arcane_shot > rapid_fire on our press >
+    -- arcane_shot with only the auto shot's cast (no fact)): flicker 0 -> 0.03 (the measured worst + 0.01), cause
+    -- "jitter rule L1791: a return needs its own fact"
+    ["Marksmanship Turret"] = { loOver = 196, flicker = 0.03, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     -- heldReady 117 -> 236 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
     -- spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 210 / 236 / 186, flicker 0, retracted 0, readyShort
