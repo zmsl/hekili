@@ -400,7 +400,9 @@ function I.AuraClaimFolded(k, t, ap)
 end
 
 --- Our cast wrote record (u, j) (Families/Now.lua's aura()): this application is ours (rule 2.5.1); `travel` (seconds,
---- 0 or nil none) widens its verdict window (cdm-verdict §2.3). Allocates nothing.
+--- 0 or nil none) widens its verdict window (cdm-verdict §2.3). With W0 == TOL (L1770) max(W0, travel + TOL) is
+--- travel + TOL for any travel: every travel widens W past W0, never narrows it, so a verdict comes later and never
+--- closes a landed cast early (conservative; fix round 1 M5). Allocates nothing.
 function I.AuraOurs(u, j, travel)
     if u <= 2 then
         local k = (u - 1) * I.AURA_UNIT + j
