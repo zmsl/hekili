@@ -158,7 +158,11 @@ M.FLICKER = {
     -- loOver 754 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 728 / 754 / 699): fix (a) lowered it from 1602 /
     -- 1556 / 1500; the rest untraced -> follow-up lane; a +5 on an avoided swing whose MISS row L.THETA refused
     -- is one traced class (fix 2, after foreign-avoids)
-    ["Fury L60"] = { loOver = 754, flicker = 0.3, flickerK = 0.6, retracted = 0.04, readyShort = 6, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.11 / 0.15 / 0.18, press-only 0.14 / 0.22 / 0.29; excused aura 1, press 3, avoid 2): flicker 0.3
+    -- -> 0.19 (the measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press,
+    -- avoid and aura edge justified"
+    ["Fury L60"] = { loOver = 754, flicker = 0.19, flickerK = 0.6, retracted = 0.04, readyShort = 6, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
