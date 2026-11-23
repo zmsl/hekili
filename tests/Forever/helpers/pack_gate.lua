@@ -636,7 +636,10 @@ M.FLICKER = {
     -- t 179.40: our Auto Shot (75) and its hit at 179.4000000000002, now at that poll; seed 43, re-timed, shows arcane_shot >
     -- rapid_fire > arcane_shot at 182.80, the poll after an Arcane Shot press
     -- loOver 196 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 0 / 196 / 0): untraced -> per-cell follow-up lane
-    ["Marksmanship Turret"] = { loOver = 196, flicker = 0.02, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0 / 0 / 0, press-only 0 / 0 / 0.02; excused press 1): flicker 0.02 -> 0, cause "jitter rule L1762:
+    -- press justified"
+    ["Marksmanship Turret"] = { loOver = 196, flicker = 0, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     -- heldReady 117 -> 236 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
     -- spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 210 / 236 / 186, flicker 0, retracted 0, readyShort
