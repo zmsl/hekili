@@ -307,6 +307,44 @@ for _, name in ipairs({ "real", "fake" }) do
             assert.are.same({ 1000, 1000 }, lohi(pts))
         end)
 
+        -- (minor 9, L1712) health exactly empty is the closed cell [0, 0], a little left [0, 1) ("above 0"); power at 0
+        -- keeps its bottom cell
+        it(
+            "health exactly empty reads [0, 0], a little left [0, 1); player and target; power at 0 keeps [0, 10]",
+            function()
+                local tgt = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
+                local me = assert(lib:Watch("A", { kind = "health", unit = "player", step = 1 }))
+                local pts =
+                    assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = {} }))
+                w.live()
+                local rows = {}
+                for _, pct in ipairs({ 0, 0.05, 0, 37 }) do
+                    w.hp(pct)
+                    w.frame(pct)
+                    for _ = 1, 3 do
+                        w.frame()
+                    end
+                    rows[#rows + 1] = table.concat({ pct, unpack(lohi(tgt)) }, " ")
+                    rows[#rows + 1] = table.concat({ pct, unpack(lohi(me)) }, " ")
+                end
+                assert.are.same({
+                    "0 0 0",
+                    "0 0 0",
+                    "0.05 0 1",
+                    "0.05 0 1",
+                    "0 0 0",
+                    "0 0 0",
+                    "37 37 38",
+                    "37 37 38",
+                }, rows)
+                w.mana(0)
+                for _ = 1, 4 do
+                    w.frame()
+                end
+                assert.are.same({ 0, 10 }, lohi(pts))
+            end
+        )
+
         it("SetPoints: true, or nil and a code with the old set kept", function()
             local hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
             local pts = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, points = { 400, 600 } }))
@@ -327,7 +365,7 @@ for _, name in ipairs({ "real", "fake" }) do
             assert.are.same({ true, "ready" }, { lib:IsAvailable("health", "target") })
             assert.are.same({ false, "unavailable", "unproven" }, { lib:IsAvailable("health", "focus") })
             assert.are.same({ "unavailable", "unproven" }, { focus:State() })
-            assert.are.same({ "LibHiddenValues-1.0", 8 }, { lib:GetVersion() })
+            assert.are.same({ "LibHiddenValues-1.0", 9 }, { lib:GetVersion() })
             local verdict, lines, running = lib:GetSelfTest()
             assert.are.same({ true, "table", false }, { verdict, type(lines), running })
             local stats = { lib:GetStats() }
@@ -618,14 +656,17 @@ describe("fake_lhv's observer rules", function()
         assert.are.equal("live", (h:State()))
     end)
 
-    it("1% cells are exact for whole values; full is its own cell [100, 100]; no unit is gone", function()
+    it("1% cells are exact for whole values; full is its own cell [100, 100], empty [0, 0]; no unit is gone", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1, edges = { 35 } })
         t = t + PRIMED
         for _, c in ipairs({
             { 29, 100, 29, 30 },
             { 1000, 1000, 100, 100 },
             { 995, 1000, 100 - 1, 100 },
-            { 0, 1000, 0, 1 },
+            { 0, 1000, 0, 0 },
+            { 1, 1000, 0, 1 },
+            { 1, 2000000, 0, 0 }, -- under max / 1,000,000: empty (the library's stated limit)
+            { 2, 1000000, 0, 1 },
             { 3550, 10000, 35, 36 },
         }) do
             lib:Push("health", "target", nil, c[1], c[2], t)
