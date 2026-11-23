@@ -195,7 +195,10 @@ local PACKS = {
         -- pool Aimed shows at 58.10 too: no flip
         -- 0.34 -> 0 (0.00 measured on 46b3ac9b1, press-only 0.33): that flip's change to Aimed follows the spend seen at
         -- 58.30, cause "jitter rule L1762: press justified" (the lo gap before it is an accuracy finding, not jitter)
-        0,
+        -- 0 -> 0.34 (0.333 measured on e8e94d5c9, press-only 0.33): the same flip (the trace's t 80.6-81.0 on the
+        -- replay clock) returns to Arcane Shot at a poll with no event, cause "jitter rule L1791: a return needs its
+        -- own fact"
+        0.34,
         nil,
         {},
         {},

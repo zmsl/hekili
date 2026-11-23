@@ -735,16 +735,25 @@ describe("the headless loop's flicker counter (loop.flips)", function()
         assert.are.equal(1, loop.flips(seq, 4, { "a", "c", "a", false }))
     end)
 
+    it("counts an icon -> empty -> icon blip: an empty slot is no press of it (L1791)", function()
+        local blank = { "a", false, "a", "a" } -- an empty slot and "no press" are both false
+        assert.are.equal(1, loop.flips(blank, 4, { false, false, false, false }))
+        assert.are.equal(1, loop.flips(blank, 4, { false, "c", false, false }))
+        assert.are.equal(1, loop.flips(blank, 4, { {}, {}, {}, {} })) -- a replay's sets of casts
+        assert.are.equal(0, loop.flips(blank, 4, nil, { [2] = "aura", [3] = "press" })) -- each poll a fact
+    end)
+
     it("takes a replay's set of casts per tick: B cast before the next tick is excused, another cast is not", function()
         assert.are.equal(0, loop.flips(seq, 4, { {}, { c = true, b = true }, {}, {} }))
         assert.are.equal(1, loop.flips(seq, 4, { {}, { c = true }, {}, {} }))
         assert.are.equal(1, loop.flips(seq, 4, { {}, {}, { b = true }, {} })) -- cast after we flipped back
     end)
 
-    it("excuses a flip whose change follows a fact (flicker.changes), unless either poll is stale (L1762)", function()
+    it("excuses a flip whose change and return each follow a fact, neither stale (L1762, L1791)", function()
         local by = {}
-        assert.are.equal(0, loop.flips(seq, 4, nil, { [2] = "aura" }, by))
+        assert.are.equal(0, loop.flips(seq, 4, nil, { [2] = "aura", [3] = "press" }, by))
         assert.are.same({ aura = 1 }, by)
+        assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = "aura", [3] = false })) -- the change's fact alone
         assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = false, [3] = "press" })) -- the return's fact alone
         assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = "stale" }))
         assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = "aura", [3] = "stale" })) -- taken back by a stale answer

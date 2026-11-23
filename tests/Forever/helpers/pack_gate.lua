@@ -33,7 +33,8 @@ M.REACT_P90_BY = {}
 
 -- The flicker floors at 20 fights: per label the first-icon flicker/min (loop.flips: an A -> B -> A over three ticks,
 -- not counted when the instance pressed B at the tick it showed or the next, owner rule 2026-10-26, nor, since the
--- jitter rule L1762 round 2, when the change to B follows a fact at its poll and neither poll is stale) and the
+-- jitter rule L1762 round 2 and L1791, when the change to B and the return to A each follow a fact at their own poll
+-- and neither poll is stale) and the
 -- unjustified retracted readies/min (tests/Game/harness/flicker.lua). A floor is the worst of seeds 1-20 / 21-40 /
 -- 41-60 (beside it) rounded up to the next 0.1, 0 where all three measured 0 (parry-haste spec decision 63: the
 -- loops are deterministic but a world change reorders every seeded fight). A floor only moves down, except with a
@@ -103,7 +104,12 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0.02 / 0.04 / 0.04, press-only 0.04 / 0.04 / 0.06; excused avoid 2): flicker 0.06 -> 0.05 (the
     -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: avoid justified"
-    ["Arms"] = { loOver = 2998, flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0.04 / 0.04 /
+    -- 0.06, press-only 0.04 / 0.04 / 0.06; the newly counted return traced: seed 49 t 68.8 rend > sunder_armor on an
+    -- avoid > rend with no fact): flicker 0.05 -> 0.07 (the measured worst + 0.01), cause "jitter rule L1791: a return
+    -- needs its own fact". Seeds 1-20 counted one more (0.02 -> 0.04): seed 5 t 130.6 rend > mortal_strike on an avoid
+    -- > rend, no fact at the return
+    ["Arms"] = { loOver = 2998, flicker = 0.07, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
@@ -166,7 +172,13 @@ M.FLICKER = {
     -- flicker 0.11 / 0.15 / 0.18, press-only 0.14 / 0.22 / 0.29; excused aura 1, press 3, avoid 2): flicker 0.3
     -- -> 0.19 (the measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press,
     -- avoid and aura edge justified"
-    ["Fury L60"] = { loOver = 754, flicker = 0.19, flickerK = 0.6, retracted = 0.04, readyShort = 6, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0.14 / 0.15 /
+    -- 0.25, press-only 0.14 / 0.22 / 0.29; the newly counted return traced: seed 47 t 23.6 heroic_strike > rend on an
+    -- avoid > heroic_strike, seed 60 t 3.2 reckless_swings > death_wish on an avoid > reckless_swings, both with no
+    -- fact): flicker 0.19 -> 0.26 (the measured worst + 0.01), cause "jitter rule L1791: a return needs its own fact".
+    -- Seeds 1-20 counted one more (0.11 -> 0.14): seed 16 t 9.4 sunder_armor > death_wish on an aura edge >
+    -- sunder_armor, no fact at the return
+    ["Fury L60"] = { loOver = 754, flicker = 0.26, flickerK = 0.6, retracted = 0.04, readyShort = 6, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -256,7 +268,16 @@ M.FLICKER = {
     -- flicker 0.09 / 0.09 / 0.09, press-only 0.23 / 0.30 / 0.24; excused press 16, avoid 1): flicker 0.31 -> 0.1
     -- (the measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press and avoid
     -- justified"
-    ["Fury L24"] = { loOver = 337, flicker = 0.1, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0.12 / 0.09 /
+    -- 0.12, press-only 0.23 / 0.30 / 0.24; the newly counted returns traced: seed 13 t 87.8 rend > sunder_armor on an
+    -- avoid > rend, seed 50 t 47.6 sunder_armor > heroic_strike on our press > sunder_armor (a swing only), both with
+    -- no fact): flicker 0.1 -> 0.13 (the measured worst + 0.01), cause "jitter rule L1791: a return needs its own fact"
+    -- jitter rule L1791, the empty blip (review fix round 1: loop.flips read an empty slot as a press of it; seeds 1-20
+    -- / 21-40 / 41-60 on 0e4c06a4d: flicker 0.15 / 0.12 / 0.12, press-only 0.26 / 0.33 / 0.24; the newly counted
+    -- returns traced: seed 11 t 37.2 and seed 25 t 70.0, rend > an empty slot on our press > rend waiting 14.8 s, the
+    -- return poll with no event): flicker 0.13 -> 0.16 (the measured worst + 0.01), cause "jitter rule L1791: an empty
+    -- blip's return needs a fact"
+    ["Fury L24"] = { loOver = 337, flicker = 0.16, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -326,7 +347,12 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0.08 / 0.08 / 0.00, press-only 0.10 / 0.08 / 0.02; excused aura 2): flicker 0.11 -> 0.09 (the
     -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: aura edge justified"
-    ["Warrior Protection"] = { loOver = 2007, flicker = 0.09, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0.10 / 0.08 /
+    -- 0.02, press-only 0.10 / 0.08 / 0.02; the newly counted return traced: seed 9 t 130.0 shield_block > sunder_armor
+    -- on an aura edge > shield_block with no fact): flicker 0.09 -> 0.11 (the measured worst + 0.01), cause "jitter
+    -- rule L1791: a return needs its own fact". Seeds 41-60 also count seed 44 t 10.0 shield_block > sunder_armor on
+    -- an aura edge > shield_block (a swing only at the return)
+    ["Warrior Protection"] = { loOver = 2007, flicker = 0.11, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -456,7 +482,11 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0.26 / 0.25 / 0.24, press-only 0.29 / 0.25 / 0.26; excused press 3): flicker 0.3 -> 0.27 (the
     -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
-    ["Guardian"] = { loOver = 2374, flicker = 0.27, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0.29 / 0.25 /
+    -- 0.24, press-only 0.29 / 0.25 / 0.26; the newly counted return traced: seed 5 t 63.0 demoralizing_roar > maul on
+    -- our press > demoralizing_roar, t 123.0 lacerate > maul on our press > lacerate, both with no fact): flicker 0.27
+    -- -> 0.30 (the measured worst + 0.01), cause "jitter rule L1791: a return needs its own fact"
+    ["Guardian"] = { loOver = 2374, flicker = 0.30, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
@@ -640,7 +670,11 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0 / 0 / 0, press-only 0 / 0 / 0.02; excused press 1): flicker 0.02 -> 0, cause "jitter rule L1762:
     -- press justified"
-    ["Marksmanship Turret"] = { loOver = 196, flicker = 0, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0 / 0 / 0.02,
+    -- press-only 0 / 0 / 0.02; the newly counted return traced: seed 43 t 182.6 arcane_shot > rapid_fire on our press >
+    -- arcane_shot with only the auto shot's cast (no fact)): flicker 0 -> 0.03 (the measured worst + 0.01), cause
+    -- "jitter rule L1791: a return needs its own fact"
+    ["Marksmanship Turret"] = { loOver = 196, flicker = 0.03, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     -- heldReady 117 -> 236 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
     -- spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 210 / 236 / 186, flicker 0, retracted 0, readyShort
@@ -894,7 +928,11 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0 / 0 / 0, press-only 0 / 0.02 / 0; excused press 1): flicker 0.02 -> 0, cause "jitter rule L1762:
     -- press justified"
-    ["Frostfire"] = { loOver = 877, flicker = 0, retracted = 0, heldReady = 113 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0 / 0.02 / 0,
+    -- press-only 0 / 0.02 / 0; the newly counted return traced: seed 31 t 40.6 scorch > fire_blast on our press >
+    -- scorch with no fact): flicker 0 -> 0.03 (the measured worst + 0.01), cause "jitter rule L1791: a return needs its
+    -- own fact"
+    ["Frostfire"] = { loOver = 877, flicker = 0.03, retracted = 0, heldReady = 113 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0), retracted 0, readyShort 0 / 0 / 0, heldReady 113 / 113 / 109, agreement .999 / .998 / .997): flicker 0.01 (the
     -- measured worst + 0.01), heldReady 113 (the worst set)

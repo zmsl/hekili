@@ -29,6 +29,9 @@
 -- crossing of the belief's power band (the band the power family applied moved, the belief inside it), and `stale`, the
 -- same crossing with the belief outside it: the reading follows an answer older than the band (lane B4 round 4's
 -- Fury class A and B), which vetoes every fact at its poll but our own press (a spend after the band's stamp).
+-- The return (L1791, the owner 2026-11-23: "new facts are always required"): in a, b, a the return to a needs its own
+-- new fact too, in loop.flips and in the ledger's dips; one aura edge is one fact, so its late light at the next poll
+-- does not excuse the change after the one it already excused.
 local M = {}
 
 M.WINDOW = 5 -- ticks (1 s at 5 Hz): an episode ends within this or is not one
@@ -119,6 +122,10 @@ function M.changes(f, o)
                 w = "avoid"
             else
                 w = fact(f, c, o.viewer) or false
+                -- the late light of the edge the change at c - 1 followed is that change's fact, not a new one (L1791)
+                if w == "aura" and not ev.aura[c] and why[c - 1] == "aura" then
+                    w = false
+                end
             end
             why[c] = w
         end
@@ -213,7 +220,18 @@ function M.ledger(f, o)
         e.old = e.justified or JUSTIFIED[e.cause] or false -- the all-slot numbers' rule
         -- a retraction's fact is its ready run's (ledger below): fact() at c reaches back to the run's first poll
         e.fact = not e.old and (e.fact or (e.kind ~= "retracted" and fact(f, c, o.viewer))) or nil
-        e.justified = e.old or e.fact ~= nil
+        e.front = e.old or e.fact ~= nil
+        if e.kind == "dip" then -- the return to `from` needs its own fact (L1791): a cause class or a fact at its poll
+            local j = c + e.len
+            local back = cause(f, j - 1, j, f.name[s][j - 1], e.from, tick)
+            back = JUSTIFIED[back] and back or fact(f, j, o.viewer)
+            -- the late light of the change's own aura edge is the change's fact, not the return's
+            if back == "aura" and not f.ev.aura[j] and j - 1 == c and (e.cause == "aura" or e.fact == "aura") then
+                back = nil
+            end
+            e.back = back
+        end
+        e.justified = e.front and (e.kind ~= "dip" or e.back ~= nil)
         if s == 1 and (e.kind == "dip" or e.kind == "flash") then -- a now<->next swap
             e.swap = f.name[2][p] == e.to or f.name[2][c] == e.from
         end
@@ -309,15 +327,21 @@ function M.ledger(f, o)
     local late = math.ceil(M.LATE / tick - EPS)
     for k = 1, o.viewer and n or 0 do
         if f.ev.miss[k] then
-            local first = {}
+            -- an entry's poll still short of a fact: the change's, else a dip's return (L1791)
+            local first, at = {}, {}
             for _, e in ipairs(led.entries) do
-                local x = first[e.slot]
-                if not e.justified and e.tick > k and e.tick <= k + late and (x == nil or e.tick < x.tick) then
-                    first[e.slot] = e
+                local x, t = first[e.slot], e.front and e.tick + e.len or e.tick
+                if not e.justified and t > k and t <= k + late and (x == nil or t < at[x]) then
+                    first[e.slot], at[e] = e, t
                 end
             end
             for _, e in pairs(first) do
-                e.justified, e.fact = true, "verdict"
+                if e.front then
+                    e.back = "verdict"
+                else
+                    e.fact, e.front = "verdict", true
+                end
+                e.justified = e.kind ~= "dip" or e.back ~= nil
             end
         end
     end
