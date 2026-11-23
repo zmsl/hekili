@@ -51,6 +51,37 @@ for k = 1, T.CAP do
     wT[k], wAmt[k], wFlag[k], wAt[k], wCls[k] = 0, 0, "", 0, 0
 end
 
+-- Fix A (L1763): per instant (FRAME) ticket still COMMITTED, the avoid row on its GUID that no open ticket took at pass
+-- 1 (live: logged 1-20 ms before the success, 28 of 287 cat instants): its time (0 none), unit, GUID, action, flag,
+-- amount (false: secret), school and the commit's castGUID. The success (T.Arm) routes it again at the success's time,
+-- inside SAME_FRAME of it, so the cast's own frame takes it; held past SAME_FRAME, or the commit stopped or gone, it is
+-- routed at its own time, as before.
+local hT, hU, hG, hAct, hFlag, hAmt, hSch, hCast = {}, {}, {}, {}, {}, {}, {}, {}
+for k = 1, T.CAP do
+    hT[k], hU[k], hG[k], hAct[k], hFlag[k], hAmt[k], hSch[k], hCast[k] = 0, 0, "", "", "", 0, 0, ""
+end
+local nHeld, releasing = 0, false
+local release -- (i, t): routes ticket i's held row at t (defined after route)
+
+-- The COMMITTED instant ticket on `g` with no held row, or 0. Allocates nothing.
+local function committed(g)
+    for i = 1, T.CAP do
+        if T.state[i] == T.COMMITTED and T.kind[i] == X.FRAME and T.guid[i] == g and hT[i] == 0 then
+            return i
+        end
+    end
+    return 0
+end
+
+--- Routes every held row whose commit is gone, stopped or SAME_FRAME old at `now`, at its own time. Allocates nothing.
+local function flushHeld(now)
+    for i = 1, T.CAP do
+        if hT[i] > 0 and (T.state[i] ~= T.COMMITTED or T.cast[i] ~= hCast[i] or now - hT[i] > SAME_FRAME) then
+            release(i, hT[i])
+        end
+    end
+end
+
 -- The PROV swing on `g` holding a tied avoid whose core band holds a white wound at t (its own: it landed), or nil.
 -- Allocates nothing.
 local function tieHolder(t, g, amount, flag)
@@ -284,6 +315,9 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
         end
     end
     local i = T.Arm(castGUID, t)
+    if i > 0 and hT[i] > 0 and hCast[i] == castGUID then -- fix A: its early own-frame row, now in its frame
+        release(i, t - hT[i] <= SAME_FRAME and t or hT[i])
+    end
     if i == 0 then
         i = T.OpenCast(t, a, spellID, U.Sent(castGUID) or U.Pin(api, t) or "")
     end
@@ -303,6 +337,9 @@ end)
 local function stopped(api, t, unit, castGUID)
     if unit == "player" then
         T.Stop(castGUID, t)
+        if nHeld > 0 then
+            flushHeld(t) -- a stopped commit's held row is routed at its own time
+        end
     end
 end
 S.On("UNIT_SPELLCAST_FAILED", "player", stopped)
@@ -646,6 +683,14 @@ local function route(t, g, uid, act, flag, amount, school)
         replacing = T.Replaceable(t, g, act, flag, amount, school, avoid)
         p, n = replacing, 1
     end
+    if p == 0 and avoid and not releasing then -- fix A: our instant's success may follow within its frame
+        local c = committed(g)
+        if c > 0 then
+            hT[c], hU[c], hG[c], hAct[c], hFlag[c], hSch[c], hCast[c] = t, uid, g, act, flag, school, T.cast[c]
+            hAmt[c], nHeld = not kindOnly and amount, nHeld + 1 -- false: secret, routed again as it came
+            return
+        end
+    end
     if p == 0 and avoid then
         p, n = T.Pick(t, g, 2, act, flag, amount, school, true)
         pass = 2
@@ -819,6 +864,12 @@ local function route(t, g, uid, act, flag, amount, school)
     creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
 end
 
+release = function(i, t)
+    hT[i], nHeld, releasing = 0, nHeld - 1, true
+    route(t, hG[i], hU[i], hAct[i], hFlag[i], hAmt[i] or nil, hSch[i])
+    releasing = false
+end
+
 -- (providers decision 73, count-only per the owner 2026-10-23) A row is routed at once; RowOwner is asked ROW_DELAY
 -- later for the audit only: FOREIGN counts `foreignByMeter` (and `disagree` when a ticket took the row), OURS on a row
 -- no ticket took counts `ownUnclaimed`. With ROW_DELAY 0 (Default) nothing is queued or asked. Preallocated.
@@ -926,6 +977,9 @@ end
 
 -- Closes the windows at `now` (each swing's row at its own time). Every OnUpdate. Allocates nothing.
 L.OnTick(function(now)
+    if nHeld > 0 then
+        flushHeld(now)
+    end
     M.advance(now)
     T.Decide(now) -- the Outcomes provider's swing answers (providers decision 70)
     T.Expire(now)
@@ -937,6 +991,9 @@ end)
 -- Combat end: nothing open survives into the next pull; the background and the lags are kept (decision D6). A
 -- provider swap asked for in combat applies now (I.SetProviders).
 S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
+    if nHeld > 0 then
+        flushHeld(math.huge)
+    end
     M.advance(t)
     if aN > 0 then
         ask(math.huge)

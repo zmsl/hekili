@@ -474,6 +474,45 @@ describe("rows with a secret amount (kind-only routing)", function()
         assert.are.same({ 0, 2, 0 }, { T.paid[X.FRAME], L.background, count(VS.Obs.Avoided) })
     end)
 
+    -- Fix A (L1763): the row logged before its success, the cast still COMMITTED, is held and paid at the success.
+    it("fix A: a secret DODGE 10 ms before a committed cast's success is the cast's, paid at the success", function()
+        ctl.now = 9.9
+        ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_F)
+        ctl.now = 9.99
+        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+        assert.are.same({ 0, 0 }, { T.paid[X.FRAME], count(VS.Obs.Avoided) }) -- held on the commit
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
+        assert.are.same({ 1, 1, 0 }, { T.paid[X.FRAME], count(VS.Obs.Avoided), L.background })
+        assert.are.same({ "SPELL_MISSED", fs.SPENDER_F, "DODGE" }, { got[#got][2], got[#got][12], got[#got][15] })
+    end)
+
+    it("fix A: a held row whose cast fails is routed at its own time (background, no ticket)", function()
+        ctl.now = 9.9
+        ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_F)
+        ctl.now = 9.99
+        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-1", fs.SPENDER_F)
+        assert.are.same({ 0, 0, 1 }, { T.paid[X.FRAME], count(VS.Obs.Avoided), T.foreign })
+    end)
+
+    it("allocates nothing holding an early secret avoid and paying it at the success", function()
+        I.Sources.Stage = stage
+        cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- the spec's own recorder allocates
+        ctl.now = 10
+        assert.are.equal(
+            0,
+            alloc.bytes(function()
+                ctl.now = ctl.now + 5
+                ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_F)
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", S, 1)
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
+                I.Sources.Flush()
+            end, 200)
+        )
+    end)
+
     it("allocates nothing routing a secret avoid and a secret crit", function()
         I.Sources.Stage = stage
         cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- the spec's own recorder allocates

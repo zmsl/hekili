@@ -2092,6 +2092,25 @@ describe("Forever Druid Rake after an avoided recast (hotfix 0.8.6)", function()
     -- Review M2: the belief's avoid undo already closed this record, so the core's `missable` hook is not what takes it
     -- down here. The real-chain proof that the hook removes a missed first cast is warlock_spec's EVADE case ("resisted
     -- or evaded by a row 0.15 s after the cast": the belief keeps the record, the core's stamp match drops it).
+    -- Fix A (L1763): live, about 10% of cat instants log their target row 1-20 ms before their success, while the
+    -- ticket is still COMMITTED (opened at SENT). The row is held and paid at the success, so the dodged Rake is down
+    -- in the cast's own cycle: the APL's `!debuff.rake.up` holds and Claw never shows in its place.
+    it("fix A: a Rake dodged with its row logged 15 ms before its success is down in the cast's own cycle", function()
+        t = t + 1
+        H.ctl.now = t - 0.1
+        H.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-early", 9904)
+        H.ctl.now = t - 0.015
+        H.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-early", 9904)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_nil(VS.Aura("target", 1822, t + 0.1))
+        assert.is_true(spec.missedAt.rake > 0) -- the SPELL_MISSED row reached the core's hook
+        S.reset("Primary", true)
+        assert.is_false(S.debuff.rake.up)
+        assert.are.same({}, H.errors)
+    end)
+
     it("leaves a dodged first Rake down", function()
         rake(1, "DODGE")
         t = t + 0.5

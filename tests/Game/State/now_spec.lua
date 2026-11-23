@@ -1533,6 +1533,68 @@ describe("now handlers", function()
             assert.are.equal(1, I.avoidsRun)
         end)
 
+        -- Fix A (L1763): live, 28 of 287 cat instants logged their target row 1-20 ms before their success, while the
+        -- ticket was still COMMITTED (opened at SENT): the row is held on that ticket and paid when the success arms it.
+        local function sentEarly(t, act, lead)
+            ctl.now = t - 0.1
+            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_C)
+            ctl.now = t - lead
+            ctl.Fire("UNIT_COMBAT", "target", act, "", 0, 1)
+            ctl.now = t
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Tick(t + 0.01)
+            VS.Drain(t + 0.02)
+            ctl.Tick(t + 0.03)
+        end
+
+        it("fix A: a dodge logged 15 ms before its success, the cast committed: no debuff, 80% back", function()
+            begin()
+            sentEarly(5, "DODGE", 0.015)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.1).est)
+            assert.are.equal(1, I.avoidsRun)
+            assert.are.same({ "SPELL_AURA_REMOVED", fs.SPENDER_C }, { rows[#rows][1], rows[#rows][3] })
+        end)
+
+        it("fix A: the row logged first in its success's own ms is the cast's", function()
+            begin()
+            sentEarly(5, "MISS", 0)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.1).est)
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
+        it(
+            "fix A: a dodge 15 ms early, 20 ms after our swing: the swing refuses it at the arm, the cast refunds",
+            function()
+                begin()
+                ctl.now = 4.965
+                ctl.Fire("PLAYER_SWING", 3.6, 0)
+                sentEarly(5, "DODGE", 0.015)
+                ctl.Tick(5.4)
+                VS.Drain(5.4)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.4))
+                assert.are.equal(8, VS.Power(fs.RAGE, 5.4).est)
+                assert.are.equal(1, I.avoidsRun)
+            end
+        )
+
+        it("fix A: a row more than a frame before the success is not held for it (a long commit's swing)", function()
+            begin()
+            ctl.now = 4.5
+            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_C)
+            ctl.now = 4.6
+            ctl.Fire("PLAYER_SWING", 3.6, 0)
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1) -- the swing's own frame
+            ctl.Tick(4.7)
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Tick(5.01)
+            VS.Drain(5.02)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+            assert.are.equal(0, I.avoidsRun)
+        end)
+
         it("an avoid 0.3 s after the cast is still the cast's: the hit and the refund come at the cast", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "DODGE", 0.3)
