@@ -478,12 +478,11 @@ function Hekili:CheckChannel( ability, prio )
         end
     end
 
-    if not a.tick_time and ( not aura or not aura.tick_time ) then
+    local tick_time = a.tick_time or aura and aura.tick_time
+    if not tick_time or tick_time <= 0 then -- a divisor below (the client raises on x/0)
         if self.ActiveDebug then self:Debug( "CC: No aura / no aura.tick_time to forecast channel breaktimes; don't break it." ) end
         return false
     end
-
-    local tick_time = a.tick_time or aura.tick_time
     local remains = state.channel_remains
 
     local act = state.this_action
@@ -2519,7 +2518,7 @@ function Hekili.Update()
                                 state:QueueEvent( action, state.query_time, state.query_time + cast, "CHANNEL_FINISH", cast_target, nil, cycled )
 
                                 -- Queue ticks because we may not have an ability.tick function, but may have resources tied to an aura.
-                                if ability.tick_time then
+                                if ability.tick_time and ability.tick_time > 0 then -- a divisor (the client raises on x/0)
                                     local ticks = floor( cast / ability.tick_time )
                                     for i = 1, ticks do
                                         state:QueueEvent( action, state.query_time, state.query_time + ( i * ability.tick_time ), "CHANNEL_TICK", cast_target, nil, cycled )
