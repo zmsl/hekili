@@ -21,7 +21,6 @@ local Hekili = _G[ addon ]
 local class = Hekili.Class
 local state = Hekili.State
 local PTR = ns.PTR
-local TTD = ns.TTD
 
 local formatKey = ns.formatKey
 local StyleGroup = Hekili.Engine.StyleGroup -- the bound style's keybinding text settings, or classic's

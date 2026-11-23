@@ -162,7 +162,6 @@ Hekili.Engine = {}
 ns.hotkeys = {}
 ns.keys = {}
 ns.targets = {}
-ns.TTD = {}
 
 ns.UI = {
     Displays = {},
