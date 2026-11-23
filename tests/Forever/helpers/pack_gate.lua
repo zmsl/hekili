@@ -256,7 +256,10 @@ M.FLICKER = {
     -- flicker 0.09 / 0.09 / 0.09, press-only 0.23 / 0.30 / 0.24; excused press 16, avoid 1): flicker 0.31 -> 0.1
     -- (the measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press and avoid
     -- justified"
-    ["Fury L24"] = { loOver = 337, flicker = 0.1, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
+    -- lane swing-avoid-fix (L1793; seeds 1-20 / 21-40 / 41-60 on fd349c7c4: loOver 286 / 127 / 251, flicker 0.09 / 0.09
+    -- / 0.09, heldReady 809 / 802 / 863; base 337 / 177 / 251): loOver 337 -> 286. Cause: a swing paid before Execute
+    -- (a `now` that empties the pool) credits nothing after it, and the swing-avoid pairing above
+    ["Fury L24"] = { loOver = 286, flicker = 0.1, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -373,7 +376,12 @@ M.FLICKER = {
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 307 / 325 / 314): flicker 0.03 -> 0
     -- loOver 73 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 35 / 73 / 45): untraced -> per-cell follow-up lane
-    ["Feral"] = { loOver = 73, flicker = 0, retracted = 0, heldReady = 325 }, -- 0.56 / 0.89 / 0.56, 0
+    -- lane swing-avoid-fix (L1793; seeds 1-20 / 21-40 / 41-60 on fd349c7c4: loOver 36 / 23 / 21, flicker 0 / 0 / 0,
+    -- heldReady 296 / 301 / 308; base 35 / 73 / 45, 307 / 325 / 314): loOver 73 -> 36, heldReady 325 -> 308. Cause: our
+    -- swing's avoid no longer refunds Rip (a swing after the cast that owes its row, or a provisional credit's core
+    -- band, takes it). 1-20's 35 -> 36: re-timed fights; its three episodes are an orphaned tail row and two sameMs
+    -- avoids in Rip's frame (the owner's tie hand-back), traced in the lane report
+    ["Feral"] = { loOver = 36, flicker = 0, retracted = 0, heldReady = 308 }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
