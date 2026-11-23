@@ -322,7 +322,10 @@ M.FLICKER = {
     -- 0.08 / 0.02, heldReady 392 / 295 / 337 -> 383 / 289 / 331, measured 324100d36 -> 8e31c1cb7)
     -- loOver 2007 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 2007 / 1647 / 1889): untraced -> per-cell follow-
     -- up lane (mostly 0.05-2 rage, as Arms)
-    ["Warrior Protection"] = { loOver = 2007, flicker = 0.11, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.08 / 0.08 / 0.00, press-only 0.10 / 0.08 / 0.02; excused aura 2): flicker 0.11 -> 0.09 (the
+    -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: aura edge justified"
+    ["Warrior Protection"] = { loOver = 2007, flicker = 0.09, retracted = 0, readyShort = 0, heldReady = 383 }, -- flicker 0.12 / 0.12 / 0.02, retracted 0 / 0 / 0 (ab0f, rolled)
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
