@@ -1054,14 +1054,18 @@ end
 --- One client frame at `t` with no Hekili.Update (L1793): the clock, the VirtualState frame's OnUpdate (the staged
 --- flush, the pairing windows' close, the rows' delivery), then the due timers. In game it runs every frame, between
 --- two event times; the engine's Update (the drain, its polls) is throttled to its rate (Engine/Driver.lua).
+--- `H` may be a fake_api client's ({ ctl, ns, Fire }: its frame's scripts in `scripts`, no timers).
 function M.frame(H, t)
     H.ctl.now = t
     local f = H.ns.VirtualStateInternal.Events.frame
-    local u = f and f.__scripts.OnUpdate
+    local scripts = f and (rawget(f, "__scripts") or f.scripts)
+    local u = scripts and scripts.OnUpdate
     if u then
         u(f, 0.1)
     end
-    H.RunTimers(t)
+    if H.RunTimers then
+        H.RunTimers(t)
+    end
 end
 
 --- One display cycle at `t`: a frame (M.frame), then Hekili.Update() called directly (never the wall-clock budgeted

@@ -496,13 +496,23 @@ function M.new(W, k)
     end
     -- UnitDamage read out of combat only (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1); the
     -- attack speeds (Sources/Swing.lua, probe W PR2) and the regen rates (probe W: 10.001 a second out of combat) too.
+    local maxSent = {} -- by power type: the maximum last pushed (cache)
     local function cache(t, ev)
         local d = ev.damage
         push(t, "@damage", d[1], d[2], d[3], d[4])
         if k.powerMax then -- UnitPowerMax, plain [W PR16]: the world's pools, not the character sheet's
             push(t, "@powerMax", us.pt, us.powerMax)
+            local moved = maxSent[us.pt] ~= us.powerMax
+            maxSent[us.pt] = us.powerMax
             for pt, r in pairs(us.res) do
                 push(t, "@powerMax", pt, r.max)
+                moved = moved or maxSent[pt] ~= r.max
+                maxSent[pt] = r.max
+            end
+            -- the client's event for a changed maximum (L1793): the first push moves the boot's sheet to the world's
+            -- pools, which a frame-timed answer before the next poll's read must not meet unknown
+            if moved then
+                push(t, "UNIT_MAXPOWER", "player")
             end
         end
         if k.playerSpeed and ev.speed then
