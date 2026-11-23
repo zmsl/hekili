@@ -181,7 +181,8 @@ describe("interrupt_if on a channel line: read at wowsims's points, held once du
             local left = math.max(0, 101 + (gcd or 0) - (100 + t))
             assert.is_true(math.abs(st.cooldown.global_cooldown.remains - left) < 1e-6, "the GCD the instance sees")
             return out.recs[1].actionName, out.recs[1].time
-        end
+        end,
+            H
     end
 
     it("a condition turned true mid-tick waits for the next tick", function()
@@ -264,6 +265,30 @@ describe("interrupt_if on a channel line: read at wowsims's points, held once du
             name, t = at(w, true) -- the GCD entry cleared: the live client's answer once it is over
             assert.are.equal("bloodrage", name)
             assert.is_true(t < 0.05, w .. ": " .. tostring(t))
+        end
+    end)
+
+    -- review I-A: in dual mode Primary (capped at one target) and AOE (three at least) read a count-dependent condition
+    -- (Affliction's Wrack Blood Fury clause reads active_enemies=1) each for itself: AOE's verdict never settles
+    -- Primary's tick, so Primary's wait does not blink, and AOE never shows the cut its own condition rejects
+    it("Primary and AOE keep their own verdicts in dual mode (a count-dependent condition)", function()
+        local st
+        local at, H = cutRig(function()
+            return st.active_enemies == 1
+        end)
+        st = H.Hekili.State
+        H.Hekili.Engine.settings.toggles.mode.value = "dual"
+        assert.is_true(H.Hekili.Engine.Subscribe("AOE", function() end))
+        local aoe = H.Hekili.Engine.Output.AOE
+        local name, t = at(2.9) -- Primary forecasts the first tick (2 s in) due
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 0.1) < 0.05, tostring(t))
+        for _, w in ipairs({ 3.3, 3.5, 4.9, 5.3 }) do
+            name, t = at(w)
+            assert.are.equal("bloodrage", name)
+            assert.is_true(t < 0.05, w .. ": " .. tostring(t))
+            local r = aoe.recs[1]
+            assert.is_true(r.actionName ~= "bloodrage" or r.time > 0.05, w .. ": AOE " .. tostring(r.time))
         end
     end)
 

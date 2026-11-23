@@ -344,28 +344,32 @@ local default_modifiers = {
 -- from ready, and at the GCD's end, while ticks remain. Once due at the real now it stays due until the channel ends (a
 -- press ends it), so the next action keeps its ready state between updates. The real channel is the one slot 1 of an
 -- update sees at its now, keyed by its start; an update settles each of its passed points once: on the point itself,
--- else from the last update's forecast of it, else read now.
+-- else from the last update's forecast of it, else read now. Primary and AOE keep their own (review I-A: their target
+-- counts differ in dual and reactive modes); the other displays share Primary's.
 local CUT_EPS = 0.01
-local cutApplied, cutPoint, cutDue, cutGcd = nil, 0, false, 0 -- the real channel: start, point read, verdict, GCD end
-local fcAt, fcDue = nil, false -- the forecast's first point read after the real now this update, and its verdict
+-- per main display: the real channel's start, point read, verdict and GCD end; the forecast's first point read after the
+-- real now this update (`fcAt`) and its verdict
+local cutPrimary = { applied = nil, point = 0, due = false, gcd = 0, fcAt = nil, fcDue = false }
+local cutAOE = { applied = nil, point = 0, due = false, gcd = 0, fcAt = nil, fcDue = false }
 local gcdStop = 0 -- seconds from the instant read to a GCD end inside the channel, for the event loop's stop
 
 local function channelCut( modifiers, tick_time )
+    local c = state.display == "AOE" and cutAOE or cutPrimary
     local casting = state.buff.casting
     local applied, ends = casting.applied, casting.expires
     local q = state.query_time
     local gEnd = state.cooldown.global_cooldown.expires
     local real = state.index == 1 and state.offset == 0 and state.delay == 0
 
-    if real and applied ~= cutApplied then
-        cutApplied, cutPoint, cutDue, cutGcd, fcAt = applied, applied, false, 0, nil
+    if real and applied ~= c.applied then
+        c.applied, c.point, c.due, c.gcd, c.fcAt = applied, applied, false, 0, nil
     end
-    local mine = applied == cutApplied
-    if mine and cutDue then return true end
+    local mine = applied == c.applied
+    if mine and c.due then return true end
     if real and gEnd > q then
-        cutGcd = gEnd
+        c.gcd = gEnd
     elseif mine and gEnd <= applied then
-        gEnd = cutGcd -- a GCD over reads 0 at the real now: its end as last seen running
+        gEnd = c.gcd -- a GCD over reads 0 at the real now: its end as last seen running
     end
 
     -- the latest point at or before the instant: a tick before the last, or the GCD's end inside the channel
@@ -376,20 +380,21 @@ local function channelCut( modifiers, tick_time )
     if atGcd then p = gEnd end
 
     local due = false
-    if p and ( not mine or p > cutPoint + CUT_EPS ) and ( real or q - p <= CUT_EPS ) then
+    if p and ( not mine or p > c.point + CUT_EPS ) and ( real or q - p <= CUT_EPS ) then
+        local fcAt = c.fcAt
         if real and q - p > CUT_EPS and fcAt and math.abs( fcAt - p ) <= CUT_EPS then
-            due = fcDue
+            due = c.fcDue
         else
             local left = atGcd and 0 or math.max( 0, gEnd - p )
             due = ( left == 0 or left > ns.SpellQueueWindow() ) and modifiers.interrupt_if() and true or false
         end
         if real then
-            cutPoint, cutDue = p, due
+            c.point, c.due = p, due
         elseif mine and state.index == 1 and not fcAt then
-            fcAt, fcDue = p, due
+            c.fcAt, c.fcDue = p, due
         end
     end
-    if real then fcAt = nil end
+    if real then c.fcAt = nil end
 
     if not due and gEnd > q + CUT_EPS and gEnd < ends - CUT_EPS then gcdStop = gEnd - q end
     return due
