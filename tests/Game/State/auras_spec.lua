@@ -1541,6 +1541,80 @@ describe("auras", function()
                 end
             )
 
+            -- Item 2 (L1764, cdm-facts): the verdict is judged only in a drain, and a drain runs only in a Hekili
+            -- update, so with no update at the deadline the close waited for the next one (live: the next cast's).
+            -- The OnUpdate lane forces one cycle at the deadline through onEdge's own path (UNIT_AURA on the token).
+            describe("the deadline wake (item 2)", function()
+                local seen, f
+                before_each(function()
+                    seen = 0
+                    f = I.Events.CreateFrame("Frame")
+                    f:SetScript("OnEvent", function(_, _, unit)
+                        if unit == "target" then
+                            seen = seen + 1
+                        end
+                    end)
+                    f:RegisterUnitEvent("UNIT_AURA", "target")
+                end)
+                after_each(function()
+                    f:UnregisterAllEvents()
+                end)
+
+                it("a missed cast's deadline delivers UNIT_AURA once, at cast + W, with no drain between", function()
+                    prove()
+                    cast(2, REND, 11, 15) -- dodged: the item never lights
+                    poll(11.2)
+                    seen = 0
+                    for _, t in ipairs({ 11.5, 11.9, 11.99 }) do
+                        ctl.Tick(t)
+                    end
+                    assert.are.equal(0, seen)
+                    ctl.Tick(12)
+                    assert.are.equal(1, seen) -- the core forces a cycle: its drain judges the record
+                    ctl.Tick(12.1)
+                    assert.are.equal(1, seen) -- once
+                    poll(12.15)
+                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12.15))
+                end)
+
+                it("no wake for a cast whose item lit, or with no proven dark item", function()
+                    prove()
+                    cast(2, REND, 11, 15)
+                    ctl.ViewerAura(ti, "target")
+                    poll(11.1) -- it landed: the light answers
+                    seen = 0
+                    for t = 11.2, 13, 0.1 do
+                        ctl.Tick(t)
+                    end
+                    assert.are.equal(0, seen)
+                    ctl.ViewerClear(ti)
+                    poll(13.1)
+                    I.auras.exp0[2][REND] = 0 -- (the model closed it) a fresh cast, its item unproven below
+                    I.PRESENCE.viewer.proven[502] = nil
+                    poll(13.2)
+                    cast(2, REND, 14, 15)
+                    seen = 0
+                    for t = 14.1, 16, 0.1 do
+                        ctl.Tick(t)
+                    end
+                    assert.are.equal(0, seen)
+                end)
+
+                it("allocates nothing arming and firing the wake", function()
+                    local alloc = require("Game.State.helpers.alloc")
+                    prove()
+                    local t = 11
+                    local bytes = alloc.bytes(function()
+                        t = t + 2
+                        cast(2, REND, t, 15)
+                        ctl.Tick(t + 1.5) -- past the deadline: one delivery
+                        I.auras.exp0[2][REND] = 0 -- the next cast is a fresh application
+                    end, 300)
+                    assert.are.equal(0, bytes)
+                    assert.is_true(seen >= 300)
+                end)
+            end)
+
             it("review M1: an in-combat rebuild leaves no stale pdark: no leaf, no verdict", function()
                 prove()
                 cast(2, REND, 11, 15)

@@ -123,9 +123,16 @@ I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (
 local lateTo = {}
 I.auraLateTo = lateTo
 local FAM = {} -- aura index -> the pack's family name (compared, never interpreted), false none
+-- The verdict's deadline (cdm-facts item 2, L1764): poll 15 judges only in a drain and a drain runs only in a Hekili
+-- update, so with no update at the deadline the close waited for the next one (live: the next cast's, rake-miss
+-- investigation §1). dueAt[k]: applied + W of a record our cast wrote over a proven item dark at the write (a verdict
+-- possible), 0 none; nextDue the earliest. The OnUpdate lane forces one cycle at it through onEdge's own path
+-- (UNIT_AURA on the unit's token): that drain sweeps and poll 15 judges, every guard as before. A light since the
+-- write, or the record no longer that cast's, cancels it.
+local dueAt, nextDue = {}, HUGE
 local function zeroVerdict(k)
     W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], refundN[k] = W0, 0, 0, 0, 0, 0, 0
-    backN[k], refPend[k], lateTo[k] = 0, 0, 0
+    backN[k], refPend[k], lateTo[k], dueAt[k] = 0, 0, 0, 0
 end
 -- The class's talent spells (def.talents) that a tracked aura lists as a `copy` (not its own ID), set at the build: an
 -- aura that copies its talent's ID (the Cooldown Manager links both) must not read the talent's own passive aura, which
@@ -381,8 +388,54 @@ function I.AuraOurs(u, j, travel)
         local k = (u - 1) * I.AURA_UNIT + j
         local w = (travel or 0) + TOL
         ours[k], oursAp[k], W[k] = BY_CAST, I.auras.applied[u][j], w > W0 and w or W0
+        local P = I.presence
+        local F = P and P.fact
+        if F and F.pdark and F.pdark[k] and P.Leaf and P.Leaf() ~= nil and not I.verdictOff then
+            dueAt[k] = oursAp[k] + W[k]
+            if dueAt[k] < nextDue then
+                nextDue = dueAt[k]
+            end
+        end
     end
 end
+
+-- The OnUpdate lane (item 2): at the earliest deadline, the records still our cast's with no light since force one
+-- cycle per unit. Allocates nothing.
+local function wake(now)
+    if now < nextDue or not I.built then
+        return
+    end
+    local U, nxt, fire1, fire2 = I.auras, HUGE, false, false
+    for u = 1, (U.n < 2 and U.n or 2) do
+        for j = 1, U.nAura do
+            local k = (u - 1) * I.AURA_UNIT + j
+            local d = dueAt[k]
+            if d > 0 and now >= d then
+                dueAt[k] = 0
+                if
+                    ours[k] == BY_CAST
+                    and oursAp[k] == U.applied[u][j]
+                    and upAt[k] < oursAp[k]
+                    and U.exp0[u][j] > now
+                then
+                    fire1, fire2 = fire1 or u == 1, fire2 or u == 2
+                end
+            elseif d > 0 and d < nxt then
+                nxt = d
+            end
+        end
+    end
+    nextDue = nxt
+    for u = 1, 2 do
+        if u == 1 and fire1 or u == 2 and fire2 then
+            local token = U.token[u]
+            I.Events.Deliver("UNIT_AURA", token, I.Events.AURA_INFO[token])
+        end
+    end
+end
+S.OnStart(function()
+    I.Log.OnTick(wake) -- CombatLog.lua loads after the Sources: its lane exists from Start
+end)
 
 -- The LONG write's remaining for (j, u): -1 (math.huge) only for a player aura with no numeric duration (as before).
 local function long(j, u)
@@ -767,7 +820,7 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
         end
         longE[k], lastE[k], lastSt[k], cyT[k] = 0, 0, 0, 0
         -- (review S1) a light on the next mob says nothing of mob A's verdict
-        verdictAt[k], strikePend[k], refPend[k], lateTo[k] = 0, 0, 0, 0
+        verdictAt[k], strikePend[k], refPend[k], lateTo[k], dueAt[k] = 0, 0, 0, 0, 0
     end
 end)
 

@@ -2044,6 +2044,67 @@ describe("Forever Druid Claw vs Shred (L602)", function()
     end)
 end)
 
+-- Lane cdm-facts item 2 (L1763, L1764): a Rake whose avoid row never reaches its ticket (the swing tie took it, or it
+-- was lost) falls back to the Cooldown Manager verdict. The verdict is judged only in a Hekili update; the belief's
+-- deadline wake forces one at cast + W, so the record closes then, not at the next cast's own update (Claw's).
+describe("Forever Druid missed Rake closed by the Cooldown Manager at its deadline (cdm-facts item 2)", function()
+    local headless = require("Game.harness.headless")
+    local dlw = require("Forever.helpers.druid_loop_world")
+    local H, S, VS, I, item, t
+
+    before_each(function()
+        local C = dlw.Feral
+        H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        S, VS, I = H.Hekili.State, H.ns.VirtualState, H.ns.VirtualStateInternal
+        local ctl = H.ctl
+        ctl.viewer.sets[2] = { 950 }
+        ctl.viewer.infos[950] = { spellID = 1822 }
+        item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 950)
+        H.Fire("COOLDOWN_VIEWER_DATA_LOADED") -- the map, out of combat
+        ctl.inRange.target, ctl.level.target, ctl.power[3] = true, 60, 100
+        H.Fire("PLAYER_TARGET_CHANGED")
+        ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        t = ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        -- a landed Rake proves the item: lit, then dark (a dispel closes it, rule 1)
+        t = t + 1
+        ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-prove", 9904)
+        ctl.ViewerAura(item, "target", 1822)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_true(headless.cycle(H, t + 0.6)) -- lit past REFRESH_LAG: its silence may close it (D14)
+        ctl.ViewerClear(item)
+        assert.is_true(headless.cycle(H, t + 1.1))
+        assert.is_nil(VS.Aura("target", 1822, t + 1.1))
+        assert.is_true(I.PRESENCE.viewer.proven[950])
+    end)
+
+    it("forces a cycle at cast + W, whose drain closes the Rake: no other update needed", function()
+        t = t + 2
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-missed", 9904) -- its row never comes; no light
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_not_nil(VS.Aura("target", 1822, t + 0.1))
+        local engine = H.ns.EngineFrame
+        local f = I.Events.frame
+        local W = I.auraVerdict.W[I.AURA_UNIT + I.auras.bySpell[1822]]
+        engine.criticalUpdate = false
+        H.ctl.now = t + W - 0.01
+        f.__scripts.OnUpdate(f, 0.01)
+        assert.is_false(engine.criticalUpdate)
+        H.ctl.now = t + W
+        f.__scripts.OnUpdate(f, 0.01) -- the deadline: the belief asks the core for one cycle
+        assert.is_true(engine.criticalUpdate)
+        assert.is_true(headless.cycle(H, t + W + 0.01))
+        assert.is_nil(VS.Aura("target", 1822, t + W + 0.01))
+        S.reset("Primary", true)
+        assert.is_false(S.debuff.rake.up)
+        assert.are.same({}, H.errors)
+    end)
+end)
+
 -- Player report 3 (hotfix 0.8.6, L1239): an avoided recast of a running Rake. The belief's avoid undo puts the first
 -- application back; the core's `missable` reset hook must leave it (it removes only the missed cast's own application),
 -- so `debuff.rake.up` holds with the first application's remains and the next Rake waits. Through the real engine.
