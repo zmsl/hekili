@@ -58,6 +58,35 @@ describe("time to die from LibTimeToDie (lane B8)", function()
         assert.are.equal(3600, hk:GetTimeToPct("target", 35))
     end)
 
+    -- L1703: the GUID tracker was never fed (removed); its getters keep the answers its empty table gave.
+    it("the getters only the GUID tracker could answer keep their empty-tracker answers", function()
+        H.ctl.exists.focus = true
+        assert.are.same({ 3600, 3600 }, { hk:GetTTD("focus"), hk:GetTimeToPct("focus", 35) })
+        assert.are.same({ 3600, 3600 }, { hk:GetDeathClockByGUID("Creature-0-1-2-3-4-5"), hk:GetGreatestTimeToPct(35) })
+        assert.are.equal(0.35 * 3600, hk:GetTimeToPctByGUID("Creature-0-1-2-3-4-5", 35))
+        assert.are.equal(0.2 * 3600, hk:GetTimeToPctByGUID(nil, 0.2))
+        assert.are.same({ 0, 0 }, { hk:GetNumTTDsWithin(10), hk:GetNumTTDsBefore(10) })
+        assert.are.equal(hk.State.active_enemies, hk:GetNumTTDsAfter(10))
+        assert.are.same({ 0, 0 }, { hk:GetNumTargetsAboveHealthPct(20), hk:GetNumTargetsBelowHealthPct(20, true) })
+        assert.are.equal(3600, hk:GetAddWaveTTD())
+        assert.is_truthy(hk:GetTTDInfo():match("\ntargets:  none$"))
+        H.ctl.exists.boss1 = true
+        assert.are.equal(0, hk:GetAddWaveTTD()) -- a boss up: the empty table's 0
+        hk:ExpireTTDs()
+        rawset(hk.State.target, "is_dummy", true)
+        assert.are.same({ 180, 180, 180, 180 }, {
+            hk:GetTTD("focus"),
+            hk:GetDeathClockByGUID("x"),
+            hk:GetGreatestTTD(),
+            hk:GetAddWaveTTD(),
+        })
+        assert.are.equal(3600, hk:GetTimeToPct("focus", 35))
+        assert.are.equal(0, hk:GetNumTTDsWithin(10))
+        assert.is_truthy(
+            hk:GetTTDInfo():match("\ntargets:    Target TTDs overridden; target is a training dummy  none$")
+        )
+    end)
+
     it("tracks the target lazily, once, as owner Hekili", function()
         install(H, lib)
         assert.are.equal(0, lib.tracks)

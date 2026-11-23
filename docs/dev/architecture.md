@@ -147,8 +147,8 @@ toggle off. `active_dot` is the belief's count (`Facade.DebuffCount`, §1: the t
 slot, by GUID in the open world and by nameplate under the Map restriction); unknown (the target holds no memory slot)
 is saturated, every enemy counted as carrying it, so no swap is suggested; the current target's own debuff floors it
 at 1. A swapped cast's handler runs with `state.cycle` set: its debuffs add to `active_dot` and leave the current
-target's alone. No enemy's time to die but the target's is known, so `cycle_min` and the TTD filters exclude nobody (`FEED` is
-off); no pack may declare `min_ttd` or `max_ttd` (`tests/Forever/packs_spec.lua`), and the slider is hidden. Under the
+target's alone. No enemy's time to die but the target's is known, so `cycle_min` and the TTD filters exclude nobody (only the
+target is tracked); no pack may declare `min_ttd` or `max_ttd` (`tests/Forever/packs_spec.lua`), and the slider is hidden. Under the
 Map restriction `active_enemies` is 1 until a GUID-free enemy count exists, so no cycle arms in dungeons yet.
 
 **`Engine.Configure(profile)`** and **`Engine.settings`** (`Engine/Settings.lua`). The engine reads configuration only
@@ -683,12 +683,12 @@ one (every wowsims list with no prepull actions, and make_pack writes none), `He
 default list from the forecast window `state.delayMax` as it would after an empty precombat pass
 (`tests/Forever/apl_entry_spec.lua`).
 
-**Time to die.** Target health is secret on Forever, so `Engine/Sim/Targets.lua`'s GUID tracker is not fed and the
-target's estimate (§3, Time to die) is the only one: `fight_remains`, `longest_ttd`, `target.time_to_die` and
-`target.time_to_pct_N` answer from it as §3 says, or "unknown": `FOREVER`, 3600 s, a fight that never ends soon, a grey
-(trivial) target's too (wowsims's `remainingTime` has no trivial case). What only the tracker could answer stays
-unknown: another unit's time to die, a bare `time_to_pct_N`, and `GetNumTTDsAfter` counts every enemy as after any
-time. The tracker's 0.5 s ticker is not started. A priority may read them without a load warning (`Engine/Sim/AplWarnings.lua` warns on no
+**Time to die.** Target health is secret on Forever, so `Engine/Sim/Targets.lua` keeps no per-GUID tracker (upstream's,
+never fed here, was removed: L1703) and the target's estimate (§3, Time to die) is the only one: `fight_remains`,
+`longest_ttd`, `target.time_to_die` and `target.time_to_pct_N` answer from it as §3 says, or "unknown": `FOREVER`,
+3600 s, a fight that never ends soon, a grey (trivial) target's too (wowsims's `remainingTime` has no trivial case).
+Everything else stays unknown: another unit's time to die, a bare `time_to_pct_N`, and `GetNumTTDsAfter` counts every
+enemy as after any time. A priority may read them without a load warning (`Engine/Sim/AplWarnings.lua` warns on no
 health or time-to-die token); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
 
 **Player health.** The client hides the player's own health (`UnitHealth`/`UnitHealthMax("player")` secret in combat, owner L1461,
