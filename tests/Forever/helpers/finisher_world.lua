@@ -47,7 +47,7 @@ end
 --- live). The fight starts at W.t0 with our white swings every SWING s.
 function M.world(o)
     o = o or {}
-    local W = { o = o, facts = {}, pubs = {}, queue = {}, seq = 0 }
+    local W = { o = o, facts = {}, pubs = {}, queue = {}, seq = 0, items = {} }
     local H = headless.new({
         character = character(),
         pack = dlw.Feral.PACK,
@@ -61,10 +61,11 @@ function M.world(o)
     local ctl = H.ctl
     ctl.viewer.log = false
     if o.viewer then
-        for _, b in pairs(BLEED) do
+        for _, k in ipairs({ "rip", "rake" }) do -- the items are this world's (W.items), never the shared table's
+            local b = BLEED[k]
             ctl.viewer.sets[2][#ctl.viewer.sets[2] + 1] = b.item
             ctl.viewer.infos[b.item] = { spellID = b.cast }
-            b.it = ctl.ViewerItem("BuffIconCooldownViewer", #ctl.viewer.sets[2], b.item)
+            W.items[k] = ctl.ViewerItem("BuffIconCooldownViewer", #ctl.viewer.sets[2], b.item)
         end
         H.Fire("COOLDOWN_VIEWER_DATA_LOADED")
     end
@@ -158,12 +159,13 @@ local function auraEdge(W, t, b, up)
     M.at(W, t, b .. (up and " up" or " down"), function(W2)
         W2.H.Fire("UNIT_AURA", "target")
     end)
-    if B.it then
+    local it = W.items[b]
+    if it then
         M.at(W, t + 0.004, b .. (up and " lit" or " dark"), function(W2)
             if up then
-                W2.ctl.ViewerAura(B.it, "target", B.cast)
+                W2.ctl.ViewerAura(it, "target", B.cast)
             else
-                W2.ctl.ViewerClear(B.it)
+                W2.ctl.ViewerClear(it)
             end
         end)
     end
@@ -427,6 +429,18 @@ function M.check(W, T, c)
                 fail(at .. " combo points " .. tostring(p.cp) .. ", truth " .. p.trueCp)
             end
             first = false
+        end
+    end
+    -- `c.expect` { { dt, name }, ... }: the first publish after T + dt shows `name` (the controls: the right icon is
+    -- reachable, so a case cannot pass by showing nothing wrong)
+    for _, e in ipairs(c.expect or {}) do
+        for _, p in ipairs(W.pubs) do
+            if p.t > T + e[1] then
+                if p.name ~= e[2] then
+                    fail(("%+.3f slot 1 shows %s, not %s"):format(p.t - T, tostring(p.name), e[2]))
+                end
+                break
+            end
         end
     end
     -- the flicker rule (memory no-jittery-recommendations): each change follows a fact since the change before

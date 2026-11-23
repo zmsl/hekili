@@ -117,20 +117,39 @@ for _, b in ipairs({ "rip", "rake" }) do
     end)
 end
 
+-- The controls: a bleed that lands cleanly. Rip: Shred after it (0 points), Ferocious Bite once 5 points come back at
+-- +1.5 s (builders not modelled), so the finisher the owner saw is reachable from this state. Rake: Shred after it.
+describe("Forever Feral: a landed bleed, no avoid anywhere (lane finisher-miss controls)", function()
+    it("Rip lands: Shred, then Ferocious Bite at 5 points, Rip believed up, no refund", function()
+        expectPass({ act = "WOUND", pointsAt = { 1.5, 5 }, expect = { { 0.004, "shred" }, { 1.5, "ferocious_bite" } } })
+    end)
+    it("Rake lands (its hit row 4 ms after): Shred, Rake believed up, no refund", function()
+        expectPass({ bleed = "rake", act = "WOUND", row = 0.004, expect = { { 0.004, "shred" } } })
+    end)
+end)
+
 -- The mirror: Rip lands (no row: it deals no direct damage) and our white swing's avoid comes in its window. Combo points
--- come back to 5 at +1.5 s (builders not modelled), so slot 1 must show Ferocious Bite then, not Rip (the control: Bite
--- is reachable from this state).
+-- come back to 5 at +1.5 s, so slot 1 must show Ferocious Bite then, not Rip. This world's swing lag band is the
+-- default (L.med 0.474, L.spr 0.060: core band 0.354-0.594; Rip's landing window med + 3 spr = 0.654): seed 8's traced
+-- lag 0.409 falls inside it here (the gate had med 0.464, spr 0.023), so its shape is re-timed to lag 0.62, past the band
+-- and inside Rip's window, as seed 8's was in the gate.
 describe("Forever Feral: a landed Rip and a white swing's avoid in its window (lane finisher-miss mirror)", function()
     local SHAPES = {
         { "seed 2's shape: the swing 0.335 s after, its DODGE at a tail lag 0.176", 0.335, "DODGE", 0.176 },
-        { "seed 8's shape: the swing 5 ms after, its MISS at lag 0.409", 0.005, "MISS", 0.409 },
+        { "seed 8's shape (re-timed): the swing 5 ms after, its MISS at lag 0.62", 0.005, "MISS", 0.62 },
         { "the core band: the swing's MISS in Rip's frame", TIE, "MISS", 0.474 },
         { "the swing's own ms: its MISS with PLAYER_SWING 11 ms after Rip", 0.011, "MISS", 0 },
     }
     for _, s in ipairs(SHAPES) do
         for _, arm in ipairs({ { "secret amounts", {} }, { "plain amounts", { plain = true } } }) do
-            it(("%s, %s: Rip stays up, no refund"):format(s[1], arm[1]), function()
-                local c = { act = "WOUND", swingAt = s[2], odd = { act = s[3], lag = s[4] }, pointsAt = { 1.5, 5 } }
+            it(("%s, %s: Rip stays up, no refund, Bite at 5 points"):format(s[1], arm[1]), function()
+                local c = {
+                    act = "WOUND",
+                    swingAt = s[2],
+                    odd = { act = s[3], lag = s[4] },
+                    pointsAt = { 1.5, 5 },
+                    expect = { { 1.5, "ferocious_bite" } },
+                }
                 for k, v in pairs(arm[2]) do
                     c[k] = v
                 end
@@ -144,6 +163,7 @@ describe("Forever Feral: a landed Rip and a white swing's avoid in its window (l
             swingAt = 0.335,
             odd = { act = "DODGE", lag = 0.176 },
             pointsAt = { 1.5, 5 },
+            expect = { { 1.5, "ferocious_bite" } },
             plain = true,
             viewer = "proven",
         })
