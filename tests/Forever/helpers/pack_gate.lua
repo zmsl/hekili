@@ -452,7 +452,10 @@ M.FLICKER = {
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0.295 / 0.249 /
     -- 0.261, retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 447 / 390 / 410): flicker 0.35 -> 0.3
     -- loOver 2374 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 745 / 2374 / 999): untraced -> per-cell follow-up lane
-    ["Guardian"] = { loOver = 2374, flicker = 0.3, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0.26 / 0.25 / 0.24, press-only 0.29 / 0.25 / 0.26; excused press 3): flicker 0.3 -> 0.27 (the
+    -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
+    ["Guardian"] = { loOver = 2374, flicker = 0.27, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
