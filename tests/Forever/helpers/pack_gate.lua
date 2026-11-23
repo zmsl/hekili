@@ -1005,7 +1005,9 @@ M.FLICKER = {
     -- 0.9 re-pin e5a9cd2a2d -> e4ef929e54 (R6; the new Wrack APL, the world's Wrack half points, then the world on
     -- wowsims's 35/11/5 build: instant Corruption, the Imp sacrificed, pool 6277): every cell 0 / 0 / 0 on all three
     -- sets, agreement .995 / .996 / .994; nothing moves
-    ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 7 }, -- 0 / 0 / 0, 0
+    ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
+    -- heldReady 7 -> 0 (lane harness-frames, measured 0 over 20 fights, agreement 0.997): the harness models a full
+    -- client frame per event time (L1793), so a channel-cutting Corruption press is stamped at the press
     -- heldReady 0 -> 7 (batch 3, the 20-fight case, measured 7): the harness feeds a poll's events in one frame, so a
     -- channel-cutting press is stamped up to 0.2 s late (L1793; frame-model lane owed)
     -- heldReady 6 -> 8 (re-pin e2842f0a78, Task 16, R6, R49; seeds 1-20 / 21-40 / 41-60: 7 / 8 / 2, flicker 0.17 / 0.17 /
