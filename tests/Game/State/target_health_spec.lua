@@ -444,6 +444,17 @@ describe("target health", function()
             assert.are.same({ I.TARGET_HEALTH_FLOOR, 0, I.TARGET_HEALTH_FLOOR }, { h.est, h.lo, h.hi }) -- never outside it
         end)
 
+        -- (minor 9, L1712) exactly empty is the band 0 0: death still comes from the death events, so the floor holds,
+        -- and the floor's own gap above an empty band is no disagreement
+        it("an empty band 0 0 reads the floor as 0-1 does, and counts no disagreement", function()
+            band(2, 0, 0)
+            I.Fold(2)
+            I.Settle(2)
+            local h = VS.Health("target", 2)
+            assert.are.same({ I.TARGET_HEALTH_FLOOR, 0, I.TARGET_HEALTH_FLOOR }, { h.est, h.lo, h.hi })
+            assert.are.equal(0, I.bandDisagree[-1])
+        end)
+
         local function reads(t, est, lo, hi)
             local h = VS.Health("target", t)
             within(est, h.est)

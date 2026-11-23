@@ -362,15 +362,18 @@ I.OnSettle(function(now)
     for k = 1, n do
         local ch = chan[k]
         if I.bandLive[ch] then
-            local v, cell = nil, 0.01
+            local v, cell, hi = nil, 0.01, I.bandHi[ch]
             if ch == TARGET then
                 v = I.th.est0
+                -- the family's live-target floor over an empty band (0 0, minor 9) is no disagreement: judged as 0-1 is
+                local low = I.TARGET_HEALTH_FLOOR - cell
+                hi = hi > low and hi or low
             elseif ch == PLAYER then
                 v = VS.Health("player", now).est
             else
                 v, cell = I.res.est0[ch], I.res.max[ch] / 100
             end
-            if v < I.bandLo[ch] - cell - FUZZ or v > I.bandHi[ch] + cell + FUZZ then
+            if v < I.bandLo[ch] - cell - FUZZ or v > hi + cell + FUZZ then
                 I.bandDisagree[ch] = I.bandDisagree[ch] + 1
             end
         end
