@@ -15,6 +15,11 @@ local PACKS = {
         character = dlw.Guardian.character,
         want = { "barkskin", "frenzied_regeneration" },
     },
+    { -- Feral imports Guardian's lists for Bear Form (APLs/packs.lua `imports`): the same two lines
+        name = "Feral (wowsims.com)",
+        character = dlw.Feral.character,
+        want = { "barkskin", "frenzied_regeneration" },
+    },
     {
         name = "Protection (wowsims.com)",
         character = ww.Protection.character,

@@ -445,8 +445,11 @@ What players read in a pack's description (the recipe's `notes`), and why. Warri
 - Protection's defensive lines (Last Stand, Shield Wall, Stoneform, Shatter Curse, Healthstone) and Guardian's
   (Barkskin, Frenzied Regeneration) wait on a health threshold the client hides; they read the hidden-value band under
   `health.known` (rule 23, owner L1805), and each pack's notes say they show only while Hekili can read the health.
-  Stoneform also needs a poison or disease on us (Hekili_Shared Races/Dwarf.lua), which our hidden auras never show in
-  combat, so its line stays false there (kept: wowsims's line, harmless false).
+  Stoneform's ability is never usable, in combat or out: its `buff` gate (Hekili_Shared Races/Dwarf.lua) wants a
+  poison or disease on us (Shared/Auras.lua `dispellable`, by the debuff rows' dispel type), and the facade's aura rows
+  carry no dispel type (Game/API/Facade.lua's records keep `dispelName` nil; in combat the client's own rows raise or
+  answer nil, FR-1). Its line's condition can pass at low health; the ability is never shown. Kept: wowsims's line
+  (and Paladin Protection's `actions=stoneform`), harmless.
 - Protection's Demoralizing Shout (off unless Maintain Demoralizing Shout is on, rule 15) and Thunder Clap: a player
   keeps them for bosses with the per-ability Boss Encounter Only option or the Custom 1 toggle (no code change; the
   user approved the audit's proposal).

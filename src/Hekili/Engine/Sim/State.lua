@@ -4110,8 +4110,8 @@ local mt_resource = {
         -- (L1805) the hidden-value reads of this pool answer now (Facade.Known): the player's health a reading, not
         -- the full it reads unknown; a power read plain or its band live, not the model alone
         elseif k == "known" then
-            local pt = rawget( t, "type" )
-            return Facade.Known( pt and Facade.KNOWN_POWER or Facade.KNOWN_HEALTH, pt )
+            if rawget( t, "resource" ) == "health" then return Facade.Known( Facade.KNOWN_HEALTH ) end
+            return Facade.Known( Facade.KNOWN_POWER, rawget( t, "type" ) ) -- a pool with no power type: false
 
         elseif k == "model" then
             return
