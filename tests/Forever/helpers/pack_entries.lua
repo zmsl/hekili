@@ -1,7 +1,10 @@
 -- tests/Forever/helpers/pack_entries.lua: a built pack list's entries for a check that walks every line. `flat(entries)`
 -- gives each entry and, right after a sequence line, its members (make_pack's `steps`, as Options.lua ParseActionList
 -- builds them), so a member is checked like any line. `LINE`: the engine's window-line actions, never an ability.
+-- `SHARED`: the shared content's lines every pack carries (translator rule 25, L1808) and the settings they read, which
+-- a class-file-only registry lacks.
 return {
+    SHARED = { healthstone = true, healing_potion = true, healthstone_health = true, healing_potion_health = true },
     LINE = { sequence = true, strict_sequence = true, restart_sequence = true, open_window = true, close_window = true },
     flat = function(entries)
         local out = {}

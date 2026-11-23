@@ -46,4 +46,14 @@ return {
     -- L1059 (owner): no pet out, call it; the pet dead, revive it: both lead the lists (levelingFirst puts them first
     -- in precombat and default). A Lone Wolf Hunter wants none out.
     levelingFirst = { "call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled", "revive_pet,if=pet.dead" },
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Deterrence (a talent:
+    -- silent without it) at or below 35%, each the def-int-beyond-wowsims review's default and a per-spec setting,
+    -- shown in the Defensives display only while the player's health is read (rule 23). The Healthstone and healing
+    -- potion lines come from the shared settings (rule 25).
+    extra = {
+        { first = true, line = "deterrence,use_off_gcd=1,if=health.known&health.pct<=settings.deterrence_health" },
+    },
+    settings = {
+        deterrence_health = { default = 35, desc = "player health threshold, percent" },
+    },
 }

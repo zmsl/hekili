@@ -175,6 +175,72 @@ describe("the wowsims APL translator", function()
         end, "extra: no big_hit line in actions")
     end)
 
+    -- L1808: a recipe's own defensive line goes first in the default list, in recipe order, after the levelingFirst
+    -- lines (which lead: a form, the Hunters' pet calls, L1059)
+    it("puts recipe extra lines marked `first` at the top of the default list, in recipe order", function()
+        local text = apl.translate(
+            { priorityList = { cast(100), cast(200) } },
+            ctx({
+                levelingFirst = { "roar" },
+                extra = {
+                    { first = true, line = "dot,if=health.known&health.pct<=settings.dot_health" },
+                    { before = "big_hit", line = "starfire" },
+                    { first = true, line = "drain,if=health.known&health.pct<=settings.drain_health" },
+                },
+            })
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=roar",
+                "actions+=/dot,if=health.known&health.pct<=settings.dot_health",
+                "actions+=/drain,if=health.known&health.pct<=settings.drain_health",
+                "actions+=/strike",
+                "actions+=/starfire",
+                "actions+=/big_hit",
+            }, "\n"),
+            text
+        )
+    end)
+
+    -- L1808 (owner "Setting per line"; Healthstone in every pack): a shared setting named `<action>_health` whose action
+    -- the ability set has is a line in every pack's default list, after the recipe's `first` lines, the setting
+    -- listed in the header; a pack that casts that action already keeps its own line, the next shared one after it
+    it("puts a line for each shared health setting in the default list (rule 25)", function()
+        local function build(r, list)
+            local c = ctx(r)
+            c.set.sharedSettings = { { "stone_health", 30 }, { "trinket_health", 25 }, { "nothing_health", 10 } }
+            return apl.translate({ priorityList = list }, c)
+        end
+        local text, _, toggles = build(
+            { extra = { { first = true, line = "dot,if=health.known&health.pct<=settings.dot_health" } } },
+            { cast(100) }
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=dot,if=health.known&health.pct<=settings.dot_health",
+                "actions+=/stone,use_off_gcd=1,if=health.known&health.pct<=settings.stone_health",
+                "actions+=/trinket,use_off_gcd=1,if=health.known&health.pct<=settings.trinket_health",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
+        assert.are.same({
+            { "stone_health", 30, "player health threshold, percent" },
+            { "trinket_health", 25, "player health threshold, percent" },
+        }, toggles)
+        -- the pack's own stone line (a wowsims line) stays where it is; the next shared line follows it
+        text = build({}, { cast(100), { action = { castSpell = { spellId = { itemId = 556 } } } }, cast(200) })
+        assert.are.equal(
+            table.concat({
+                "actions=strike",
+                "actions+=/stone,use_off_gcd=1",
+                "actions+=/trinket,use_off_gcd=1,if=health.known&health.pct<=settings.trinket_health",
+                "actions+=/big_hit",
+            }, "\n"),
+            text
+        )
+    end)
+
     it("puts a recipe extra line marked `last` before the last line of its anchor action", function()
         local text = apl.translate(
             { priorityList = { cast(100), cast(200), cast(100) } },
@@ -1533,6 +1599,7 @@ describe("the wowsims APL translator", function()
 
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR")
+        set.sharedSettings = nil -- rule 25's shared lines: their own test
         local c = apl.context(set, {})
         for id, key in pairs({
             [20572] = "blood_fury",
@@ -3123,6 +3190,7 @@ describe("the wowsims APL translator's auto-attack clocks", function()
             levelingFirst = { "call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled", "revive_pet,if=pet.dead" },
         }
         local set = require("Forever.helpers.engine").abilitySet(r.class)
+        set.sharedSettings = nil -- rule 25's shared lines: their own test
         local rotation = { valueVariables = player.rotation.valueVariables, priorityList = {} }
         for _, name in ipairs({ "Windup close", "Just shot", "Weave fits" }) do
             rotation.priorityList[#rotation.priorityList + 1] = {
@@ -3220,6 +3288,7 @@ describe("the wowsims APL translator on the Warlocks' assigned-curse check", fun
         }
         local r = dofile("tools/wowsims/specs/warlock_demonology.lua")
         local set = require("Forever.helpers.engine").abilitySet(r.class)
+        set.sharedSettings = nil -- rule 25's shared lines: their own test
         local player = { warlock = { options = { classOptions = {} } } } -- the zero value, Elements
         r.extra, r.guard = nil, nil -- the filler lines anchor on the shipped list's last Life Tap, not in this one
         r.select.castWarlockAssignedCurse.is = nil -- the shipped recipes name it now (CN3, the 0.7 re-pin): drop it for the "before"

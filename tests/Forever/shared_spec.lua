@@ -307,6 +307,7 @@ describe("shared content", function()
         load({ "Consumables" })
         assert.are.same({
             "demonic_rune",
+            "healing_potion",
             "healthstone",
             "major_mana_potion",
             "mana_gem",
@@ -361,15 +362,20 @@ describe("shared content", function()
         local a = all.abilities
         for key, want in pairs({ major_mana_potion = { 17531, 1800, 450 }, demonic_rune = { 16666, 1200, 300 } }) do
             assert.are.equal(a[key], a[want[1]], key) -- the use spell's success is the item's cast
-            local got = {}
+            local got, cds = {}, {}
             local env = {
                 gain = function(...)
                     got[#got + 1] = { ... }
+                end,
+                setCooldown = function(...)
+                    cds[#cds + 1] = { ... }
                 end,
             }
             setfenv(a[key].now, env)()
             setfenv(a[key].handler, env)()
             assert.are.same({ { want[2], "mana", want[3] }, { want[2], "mana" } }, got, key)
+            -- (L1808) the potions' shared category: a mana potion starts the healing potion's cooldown
+            assert.are.same(key == "major_mana_potion" and { { "healing_potion", 120 } } or {}, cds, key)
             assert.are_not.equal(a[key].now, a[key].handler, key) -- the belief rejects a `now` that is its handler
         end
     end)

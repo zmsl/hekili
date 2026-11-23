@@ -79,7 +79,15 @@ return {
     -- R49 (owner): wowsims gates Corruption, Siphon Life and Immolate (#8-#10) on spellExpectedDpet, omitted (rule 18),
     -- so these stand-ins cast each DoT when it is down or about to expire (the entries' own strictMultidot overlap,
     -- `maxOverlap = spellCastTime`): not wowsims; need-based (R41), before the APL's #11 Life Tap as #8-#10 sit
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Death Coil's
+    -- defensive key (the offensive line keeps death_coil) at or below 35%, each the def-int-beyond-wowsims review's
+    -- default and a per-spec setting, shown in the Defensives display only while the player's health is read (rule 23).
+    -- The Healthstone and healing potion lines come from the shared settings (rule 25).
     extra = {
+        {
+            first = true,
+            line = "death_coil_defensive,if=health.known&health.pct<=settings.death_coil_defensive_health",
+        },
         { before = "life_tap", line = "corruption,focus=2,if=debuff.corruption.remains<=action.corruption.cast" },
         { before = "life_tap", line = "siphon_life,focus=2,if=debuff.siphon_life.remains<=action.siphon_life.cast" },
         { before = "life_tap", line = "immolate,focus=2,if=debuff.immolate.remains<=action.immolate.cast" },
@@ -88,4 +96,7 @@ return {
         ["default #13"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
     }, -- the final Life Tap (header)
     leveling = {},
+    settings = {
+        death_coil_defensive_health = { default = 35, desc = "player health threshold, percent" },
+    },
 }

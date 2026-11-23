@@ -207,7 +207,11 @@ Translation:
   Form), which a trailing line would never reach; silent while the form is up. They lead a non-empty precombat list
   too, so a pre-pull cast never shows before the form.
 - `extra` (`{ { before = "<action>", line = "<simc line>" } }`): a line put just before the first `actions` line of
-  `before`, or its last with `last = true` (the translator errors when there is none). Only for content wowsims cannot model, never to tune a
+  `before`, or its last with `last = true` (the translator errors when there is none). With `first = true` (no `before`) it goes at
+  the top of `actions` after the `levelingFirst` lines, the `first` lines in recipe order: a defensive line wowsims never casts (L1808: Evasion, Ice
+  Block, Divine Shield, Lay on Hands, Power Word: Shield, Deterrence, Death Coil's defensive key, Barkskin outside Bear
+  Form), its threshold a recipe `settings` number. Rule 25 then adds the shared content's lines (Healthstone, healing
+  potion) after them. Only for content wowsims cannot model, never to tune a
   wowsims line, and each use names its reason in the recipe comment. The user's ruling (2026-10-21), for Warrior's
   Victory Rush: "This isn't something from wowsims, but needs to be added since it won't affect wowsims accuracy
   (wowsims never goes mob to mob so VR isn't ever a thing). Should be used just above bloodthirst (since it's a mini
@@ -446,6 +450,12 @@ What players read in a pack's description (the recipe's `notes`), and why. Warri
 - Protection's defensive lines (Last Stand, Shield Wall, Stoneform, Shatter Curse, Healthstone) and Guardian's
   (Barkskin, Frenzied Regeneration) wait on a health threshold the client hides; they read the hidden-value band under
   `health.known` (rule 23, owner L1805), and each pack's notes say they show only while Hekili can read the health.
+- Beyond wowsims (owner L1808, "All in the next release"): every pack carries the Healthstone (30%) and the healing
+  potion (25%) lines (rule 25, from the shared settings), and each class's own save as a recipe `extra` `first` line:
+  Evasion 50, Ice Block 15, Divine Shield 20, Lay on Hands 15 (not while Divine Shield is up), Power Word: Shield 50,
+  Deterrence 35, Death Coil's defensive key 35, Barkskin 50 (Balance, and Feral outside Bear Form as
+  `barkskin_cat_health`; casting it in Cat Form is the code's reading, unconfirmed in game). Each threshold is a
+  per-spec setting; each line is on the Defensives toggle, so it shows in the Defensives display only.
   Stoneform's ability is never usable, in combat or out: its `buff` gate (Hekili_Shared Races/Dwarf.lua) wants a
   poison or disease on us (Shared/Auras.lua `dispellable`, by the debuff rows' dispel type), and the facade's aura rows
   carry no dispel type (Game/API/Facade.lua's records keep `dispelName` nil; in combat the client's own rows raise or

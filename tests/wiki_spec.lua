@@ -381,7 +381,9 @@ describe("the options collector", function()
             assert.are.equal("In some cases", rows["Count Targets Near Your Pet"].shown)
             assert.are.equal("Yes", rows["Frame Budget"].shown)
             local editor = byLabel(options.rows(manifest["options-editor"]))
-            for _, field in ipairs({ "Use Off GCD", "Focus Tier", "Label", "Cycle Targets", "Variable Name" }) do
+            -- (L1808) the modifiers' group (Use Off GCD, Focus Tier, Label) left out: the boot's first entry is now a
+            -- defensive line with use_off_gcd=1, which shows that group
+            for _, field in ipairs({ "Cycle Targets", "Variable Name" }) do
                 assert.are.equal("In some cases", editor[field] and editor[field].shown, field)
             end
         end

@@ -53,10 +53,18 @@ return {
     -- its expected damage per execution time beats Mind Flay's and Mind Blast is 4 s or more from ready; the translator
     -- cannot compute the first term, CN5). The player's `prefer_starshards` setting (off by default, so the default pack is
     -- wowsims's without it) stands for it; upstream's second condition is kept.
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Power Word: Shield on
+    -- yourself (refused under Weakened Soul) at or below 50%, each the def-int-beyond-wowsims review's default and a
+    -- per-spec setting, shown in the Defensives display only while the player's health is read (rule 23). The
+    -- Healthstone and healing potion lines come from the shared settings (rule 25).
     extra = {
+        { first = true, line = "power_word_shield,if=health.known&health.pct<=settings.power_word_shield_health" },
         {
             before = "mind_flay",
             line = "starshards,if=settings.prefer_starshards&(!action.mind_blast.known|cooldown.mind_blast.remains>=4)",
         },
+    },
+    settings = {
+        power_word_shield_health = { default = 50, desc = "player health threshold, percent" },
     },
 }

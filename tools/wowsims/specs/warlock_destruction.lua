@@ -85,7 +85,17 @@ return {
     notes = {
         "Without Incinerate (a talent from level 40) this priority fills with Searing Pain, or with Shadow Bolt before Searing Pain is learned, and refreshes Immolate only when it would wear off within a Shadow Bolt cast.",
     },
-    extra = { { before = "life_tap", last = true, line = "shadow_bolt" } }, -- the filler (header)
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Death Coil's
+    -- defensive key (the offensive line keeps death_coil) at or below 35%, each the def-int-beyond-wowsims review's
+    -- default and a per-spec setting, shown in the Defensives display only while the player's health is read (rule 23).
+    -- The Healthstone and healing potion lines come from the shared settings (rule 25).
+    extra = {
+        {
+            first = true,
+            line = "death_coil_defensive,if=health.known&health.pct<=settings.death_coil_defensive_health",
+        },
+        { before = "life_tap", last = true, line = "shadow_bolt" }, -- the filler (header)
+    },
     guard = {
         -- the Immolate refreshes without Incinerate (header)
         ["default #16"] = {
@@ -99,4 +109,7 @@ return {
         ["default #18"] = { expect = "life_tap", cond = "!action.shadow_bolt.known|mana.lo<action.shadow_bolt.cost" },
     }, -- the final Life Tap (header)
     leveling = {},
+    settings = {
+        death_coil_defensive_health = { default = 35, desc = "player health threshold, percent" },
+    },
 }

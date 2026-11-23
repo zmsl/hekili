@@ -1152,7 +1152,10 @@ describe("Forever Warlock priorities", function()
             for list, entries in pairs(p.lists) do
                 for i, e in ipairs(pe.flat(entries)) do
                     local where = p.name .. " " .. list .. " " .. i
-                    assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action] or pe.LINE[e.action], where)
+                    assert.is_true(
+                        cls.abilities[e.action] ~= nil or shared[e.action] or pe.LINE[e.action] or pe.SHARED[e.action],
+                        where
+                    )
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
                             assert.is_true(kinds[kind][key] ~= nil or shared[key], where .. ": " .. key)

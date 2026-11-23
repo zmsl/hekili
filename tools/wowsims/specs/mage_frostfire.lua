@@ -77,4 +77,14 @@ return {
     map = { ["item:272438"] = "use_items", ["item:13968"] = "use_items" },
     focus = { pyroblast = 1, scorch = 2, evocation = 2, fire_blast = 1, counterspell = 1 },
     leveling = { "fireball,if=!action.frostfire_bolt.known" },
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Ice Block (a talent:
+    -- silent without it) at or below 15%, each the def-int-beyond-wowsims review's default and a per-spec setting,
+    -- shown in the Defensives display only while the player's health is read (rule 23). The Healthstone and healing
+    -- potion lines come from the shared settings (rule 25).
+    extra = {
+        { first = true, line = "ice_block,if=health.known&health.pct<=settings.ice_block_health" },
+    },
+    settings = {
+        ice_block_health = { default = 15, desc = "player health threshold, percent" },
+    },
 }

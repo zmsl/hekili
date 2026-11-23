@@ -83,7 +83,8 @@
 --    the `levelingFirst` lines lead a non-empty precombat list too (its pre-pull cast would show before the form):
 --    `leveling` lines are silent at 60, `levelingFirst` lines whenever their form is up. Each recipe `extra`
 --    ({ before = action, line = text }, content outside wowsims's model) goes just before the first `actions` line of
---    `before`, its last with `last = true` (an error when there is none). The recipe's `settings` ({ [key] = {
+--    `before`, its last with `last = true` (an error when there is none), or with `first = true` (no `before`) at
+--    the top of `actions` after the `levelingFirst` lines, the `first` ones in recipe order (a defensive line, L1808). The recipe's `settings` ({ [key] = {
 --    default = bool, desc = text } }) are pack settings like an ON/OFF group's: a line reads one as `settings.<key>`, and the header lists each one read.
 --    The recipe's `prepullSkip` ({ action key, ... }: an owner ruling against a wowsims pre-pull cast) omits that
 --    action's precombat lines, listed (an error when there is none).
@@ -316,6 +317,13 @@
 --    interruptIf the fork cannot read drops the clip only, with a `# Deviation:` line. `spellChanneledTicks` (the
 --    running channel's ticks so far) is read only there, as `floor(N-N*channel_remains/action.<key>.cast+0.01)` with N
 --    the kit ability's `cast` over its `tick_time`; elsewhere it is unsupported (rule 2).
+-- 25. A line every pack carries (L1808, owner "Setting per line"; the Healthstone in every pack): each shared setting
+--    (`shared:RegisterSetting`, the ability set's `sharedSettings`, in registration order) named `<action>_health`
+--    whose action the set has is the line `<action>[,use_off_gcd=1],if=health.known&health.pct<=settings.<key>` in the
+--    default list, after the recipe's `first` extras; a pack whose default list casts that action already keeps its
+--    own line (a wowsims line: Protection's Healthstone), and the next such line goes after it. The header lists the
+--    setting as rule 23's (the shared content registers it on every spec). No content is named here: the shared
+--    registration says which lines.
 -- 14b. A `sequence` (wowsims: its members in order, each once, once per reset; design §3a) is a stepped window `<w>`
 --    (the snake of its name) whose steps are its cast members: one line a cast, `<key>,if=window.<w>.next.<key>`, its
 --    own condition after, consecutive equal lines once. A distance-only waitUntil member is the next cast's range gate,
@@ -3261,9 +3269,16 @@ function M.translate(rotation, c)
             table.insert(origin.precombat, i, false)
         end
     end
+    -- the `first` extras so far: each goes after the ones before it, all after the levelingFirst lines (they lead: a
+    -- form the sim starts in, the Hunters' pet calls, L1059)
+    local firsts = #c.levelingFirst
     for _, x in ipairs(c.extra) do
         local at
-        for i, body in ipairs(byName.default) do
+        if x.first then
+            firsts = firsts + 1
+            at = firsts
+        end
+        for i, body in ipairs(x.first and {} or byName.default) do
             if body:match("^[%w_]+") == x.before then
                 at = i
                 -- a sequence's member (recipe `sequences`) is part of its sequence's line: the extra goes before that
@@ -3280,6 +3295,36 @@ function M.translate(rotation, c)
         end
         table.insert(byName.default, at, x.line)
         table.insert(origin.default, at, false)
+    end
+    local at = firsts -- rule 25: the shared health lines, after the `first` extras or the pack's own cast of one
+    for _, s in ipairs(c.set.sharedSettings or {}) do
+        local key = s[1]
+        local action = key:match("^([%w_]+)_health$")
+        local a = action and c.set.abilities[action]
+        if a then
+            local own
+            for i, body in ipairs(byName.default) do
+                if body:match("^[%w_]+") == action then
+                    own = own or i
+                end
+            end
+            if own then
+                at = own
+            else
+                at = at + 1
+                table.insert(
+                    byName.default,
+                    at,
+                    action
+                        .. (a.gcd == "off" and ",use_off_gcd=1" or "")
+                        .. ",if=health.known&health.pct<=settings."
+                        .. key
+                )
+                table.insert(origin.default, at, false)
+                c.healthSettings = c.healthSettings or {}
+                c.healthSettings[key] = s[2]
+            end
+        end
     end
     local done = {}
     repeat

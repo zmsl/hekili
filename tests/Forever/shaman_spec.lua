@@ -997,10 +997,19 @@ describe("Forever Shaman priorities", function()
         for list, entries in pairs(packs[PACK].lists) do
             for i, e in ipairs(pe.flat(entries)) do
                 local where = list .. " " .. i
-                assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action] == true or pe.LINE[e.action], where)
+                assert.is_true(
+                    cls.abilities[e.action] ~= nil
+                        or shared[e.action] == true
+                        or pe.LINE[e.action]
+                        or pe.SHARED[e.action],
+                    where
+                )
                 for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                     if kinds[kind] then
-                        assert.is_true(kinds[kind][key] ~= nil or elements[key] == true, where .. ": " .. key)
+                        assert.is_true(
+                            kinds[kind][key] ~= nil or elements[key] == true or pe.SHARED[key] == true,
+                            where .. ": " .. key
+                        )
                     elseif kind == "totem" then
                         assert.is_true(elements[key], where .. ": totem " .. key)
                     end

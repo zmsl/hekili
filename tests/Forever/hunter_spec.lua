@@ -894,7 +894,8 @@ describe("Forever Hunter priorities", function()
                         e.action == "call_action_list"
                             or pe.LINE[e.action]
                             or cls.abilities[e.action] ~= nil
-                            or racials[e.action],
+                            or racials[e.action]
+                            or pe.SHARED[e.action],
                         where
                     )
                     assert.is_true(not window or cls.windows[e.window_name or e.list_name] ~= nil, where)
@@ -903,7 +904,7 @@ describe("Forever Hunter priorities", function()
                     end
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
-                            assert.is_true(kinds[kind][key] ~= nil, where .. ": " .. key)
+                            assert.is_true(kinds[kind][key] ~= nil or pe.SHARED[key], where .. ": " .. key)
                         elseif kind == "pet" then
                             -- `dead`: the engine's pet-unit read (State.lua), Revive Pet's line (L1059)
                             assert.is_true(cls.pets[key] ~= nil or key == "dead", where .. ": pet " .. key)

@@ -13,17 +13,34 @@ local PACKS = {
     {
         name = "Guardian (wowsims.com)",
         character = dlw.Guardian.character,
-        want = { "barkskin", "frenzied_regeneration" },
+        -- sorted; (L1808) with the Healthstone and healing potion lines and the imported cat lists' Barkskin
+        want = {
+            "barkskin",
+            "barkskin",
+            "frenzied_regeneration",
+            "healing_potion",
+            "healing_potion",
+            "healthstone",
+            "healthstone",
+        },
     },
-    { -- Feral imports Guardian's lists for Bear Form (APLs/packs.lua `imports`): the same two lines
+    { -- Feral imports Guardian's lists for Bear Form (APLs/packs.lua `imports`): the same lines
         name = "Feral (wowsims.com)",
         character = dlw.Feral.character,
-        want = { "barkskin", "frenzied_regeneration" },
+        want = {
+            "barkskin",
+            "barkskin",
+            "frenzied_regeneration",
+            "healing_potion",
+            "healing_potion",
+            "healthstone",
+            "healthstone",
+        },
     },
     {
         name = "Protection (wowsims.com)",
         character = ww.Protection.character,
-        want = { "last_stand", "shield_wall", "stoneform", "shatter_curse", "healthstone" },
+        want = { "healing_potion", "healthstone", "last_stand", "shatter_curse", "shield_wall", "stoneform" },
     },
 }
 
@@ -82,7 +99,9 @@ for _, P in ipairs(PACKS) do
         end
 
         it("carries every restored line, each on the Defensives toggle", function()
-            assert.are.same(P.want, keys)
+            local got = { unpack(keys) }
+            table.sort(got) -- the lists' order is the profile table's
+            assert.are.same(P.want, got)
             for _, k in ipairs(keys) do
                 assert.are.equal("defensives", H.Hekili.Class.abilities[k].toggle, k)
             end
