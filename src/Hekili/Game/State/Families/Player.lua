@@ -241,7 +241,7 @@ function VS.SpellHaste(now)
     return spellHaste
 end
 
---- (spec §3.2) Time to die: the default 30 s (Hekili's DEFAULT_TTD), conf 0.
+--- (spec §3.2) Time to die: the default 30 s (the DEFAULT_TTD of Hekili's old GUID tracker, removed in L1703), conf 0.
 function VS.TTD(unit, now)
     return ttd
 end

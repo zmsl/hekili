@@ -2438,17 +2438,6 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     local cw = entries == pData.lists[ list ] and scripts.Windows[ pack ]
     if cw and cw.errorAt[ list .. ":" .. id ] then script.Error = cw.errorAt[ list .. ":" .. id ] end
 
-    -- Forever: a condition reading a secret token (AplWarnings.lua's rows; none today) is warned once. Target health
-    -- and the player's own (read from the hidden-value band, lanes B2/B3) and time to die are unwarned.
-    local scan = ns.AplSecretToken
-    local token, subject, reads = scan( data.criteria )
-    if not token then token, subject, reads = scan( data.value ) end
-    if not token then token, subject, reads = scan( data.value_else ) end
-    if not token then token, subject, reads = scan( data.target_if ) end
-    if token then
-        Hekili:Error( "Forever: %s; `%s` in pack `%s` list `%s` entry %d (%s): %s.", subject, token, pack, list, id, data.action or "?", reads )
-    end
-
     -- (bands integration design 3.1) the thresholds the same four texts compare, and a sequence line's
     -- members' own conditions (their scripts are compiled apart: LoadSequences), for the band library; a switched-off
     -- entry declares nothing (as MarkPure and CheckWindows read it)

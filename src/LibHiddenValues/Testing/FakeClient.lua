@@ -12,7 +12,8 @@
 --
 -- Surface: Fake.world (W.unit[token] = { health, power = { [Enum.PowerType] = fraction }, max = { [Enum.PowerType] =
 -- points }, powerType, dead }; W.secret: reads return secrets, true by default, as under the map lockdown; W.combat
--- does the same; W.secretBool: UnitIsDead returns a secret; W.maxSecret: UnitPowerMax returns a secret and
+-- does the same (false is a hypothetical for health: the live client's reads secret out of combat too, and the
+-- self-test fails on a plain one: turn it off after Fake.login()); W.secretBool: UnitIsDead returns a secret; W.maxSecret: UnitPowerMax returns a secret and
 -- C_Secrets.ShouldUnitPowerMaxBeSecret says so; W.locale: GetLocale, "enUS" by default), Fake.tick(n), Fake.event(name,
 -- ...), Fake.advance(seconds), Fake.set(knob, value), Fake.login(), Fake.restore(), Fake.printed (every print call: the
 -- library makes none). Knobs: "closed" (bars fed a secret stop firing: the leak is closed), "lag" n (firings arrive n
@@ -399,7 +400,16 @@ end)
 -- client's do without a range check: one gone silent stays silent on the next target until a target UNIT_AURA),
 -- lateSwap n (after PLAYER_TARGET_CHANGED every viewer sees no aura on the new target for n frames, then its auras
 -- arrive with a target UNIT_AURA: the owner's run of 2026-11-21 saw a Tracked Buffs icon dark ~0.4-0.6 s after a swap
--- onto a mob with the aura) }.
+-- onto a mob with the aura), filtered ({ [spellID] = true }: a linked aura the viewers' filtered aura scan misses, a
+-- harmful one on the player: the item's refresh writes the count "" holding none, then binds it, as the client's
+-- RefreshActive does through RefreshLinkedSpell, which calls the item's MarkDirty when the linked spell changed: the
+-- bar item's Clean is not modelled) }. Fake.cdmExpire(unit, spell): the aura runs out with no aura event.
+-- What an item shows comes from its cached info, as the client's: the data provider's entry, copied from W.cdm.catalogue
+-- at login and on the provider's events (PROVIDER), taken by the item when its cooldownID is set (a layout pass, a data
+-- pass with another ID or forced) and patched on COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED. Editing W.cdm.catalogue alone
+-- changes only what C_CooldownViewer answers; the viewers take a rebuilt one at their next layout or data pass (the
+-- client's provider tells them: a test calls Fake.cdmLayout or Fake.cdmData). An aura event writes no cooldownID; a
+-- layout, a data pass and a tracked bar's expiry (all items refreshed, IDs written, as before) do.
 -- W.aura[unit][spellID] = { stacks =, expires = GetTime() at its end, duration = } on "player" and "target": the
 -- player's own auras (Fake.setAura). The viewers lay out at login and on Fake.cdmLayout(), refresh their items on
 -- UNIT_AURA and PLAYER_TARGET_CHANGED, push a tracked bar's SetMinMaxValues(0, duration) and SetValue(seconds left)
@@ -503,7 +513,7 @@ install("C_CooldownViewer", {
         if not info then
             return nil
         end
-        local c = { cooldownID = id }
+        local c = { cooldownID = id, linkedSpellIDs = {} } -- never nil, as the client's
         for k, v in pairs(info) do
             c[k] = v
         end
@@ -521,18 +531,21 @@ end)
 local UNITS = { "player", "target" }
 local nextAuraId = 0
 local targetLate = 0 -- frames until a swapped-to target's auras arrive (W.cdm.lateSwap)
-local function findAura(cd)
-    local info = W.cdm.catalogue[cd]
+-- The client's filtered scan.
+local function findAura(info)
     if not info then
         return nil
     end
+    local missed = W.cdm.filtered
     for u = 1, 2 do
         local auras = W.aura[UNITS[u]]
         if auras and not (u == 2 and targetLate > 0) then
             local a = auras[info.spellID] or auras[info.overrideSpellID or 0] or auras[info.overrideTooltipSpellID or 0]
             local links = info.linkedSpellIDs
             for j = 1, links and #links or 0 do
-                a = a or auras[links[j]]
+                if not (missed and missed[links[j]]) then
+                    a = a or auras[links[j]]
+                end
             end
             if a then
                 return a, UNITS[u]
@@ -541,11 +554,7 @@ local function findAura(cd)
     end
 end
 
-local function refreshItem(item)
-    local a, unit
-    if item.cd then
-        a, unit = findAura(item.cd)
-    end
+local function bind(item, a, unit)
     item.aura = a
     if a then
         if not a.id then
@@ -558,6 +567,43 @@ local function refreshItem(item)
         item.auraInstanceID, item.auraDataUnit = nil, nil
     end
     item.on = a and unit or nil
+end
+-- A buff item's RefreshActive with no aura that still runs: RefreshLinkedSpell (the linked spells only, no filter,
+-- player first) binds one and, when the linked spell changed, MarkDirty. It writes no count.
+local linkedOf = {} -- cooldownID -> the client's cooldownInfo.linkedSpellID
+local function refreshActive(item)
+    local info = item.info
+    if not info then
+        return
+    end
+    local changed, links = false, info.linkedSpellIDs
+    for u = 1, 2 do
+        local spell, a
+        local auras = W.aura[UNITS[u]]
+        for j = 1, (auras and links and not (u == 2 and targetLate > 0)) and #links or 0 do
+            if auras[links[j]] then
+                spell, a = links[j], auras[links[j]]
+                break
+            end
+        end
+        changed = linkedOf[item.cd] ~= spell or changed
+        linkedOf[item.cd] = spell
+        if a then
+            bind(item, a, UNITS[u])
+            break
+        end
+    end
+    if changed then
+        item:MarkDirty()
+    end
+end
+local function refreshItem(item)
+    local a, unit
+    if item.cd then
+        a, unit = findAura(item.info)
+    end
+    bind(item, a, unit)
+    item.wrote = (item.wrote or 0) + 1 -- the count writes, for the suite
     local n = a and a.stacks or 0
     local fs = item.Icon and item.Icon.Applications or item.Applications and item.Applications.Applications
     if fs and hidden() then
@@ -569,12 +615,29 @@ local function refreshItem(item)
         item.Bar:SetMinMaxValues(0, 0)
         item.Bar:SetValue(0)
     end
+    if not a and fs and item.cd then -- RefreshActive, after the count was written
+        refreshActive(item)
+    end
 end
 
-local function refresh(v) -- RefreshData
+local provided = {} -- cooldownID -> the data provider's info (the client's GetCooldownInfoForID)
+local function provide()
+    provided = {}
+    for id, info in pairs(W.cdm.catalogue) do
+        local c = {}
+        for k, v in pairs(info) do
+            c[k] = v
+        end
+        provided[id] = c
+    end
+end
+local function refresh(v, force) -- RefreshData; force: the provider's data changed (forceSet)
     local ids = W.cdm[v.which]
     for item in pairs(v.itemFramePool.active) do
         local cd = ids[item.idx]
+        if cd ~= item.cd or force then -- SetCooldownID: the item takes the provider's info
+            item.info = cd and provided[cd]
+        end
         item.cd = cd
         if cd == nil then
             item.cooldownID = nil
@@ -589,6 +652,9 @@ local function newItem(v)
     local item = bframe(v)
     v.made = v.made + 1
     item.slot = v.made
+    item.MarkDirty = function(self) -- the item mixin's, called by method
+        self.needsFullRefresh = true
+    end
     if v.which == "bar" then
         item.Icon = bframe(item)
         item.Icon.Applications = bframe(item.Icon, "FontString")
@@ -611,7 +677,7 @@ local function layout(v) -- RefreshLayout: release every item, acquire max(#ids,
     end)
     for _, item in ipairs(rel) do
         pool.active[item] = nil
-        item.cooldownID, item.layoutIndex, item.idx, item.cd = nil, nil, nil, nil
+        item.cooldownID, item.layoutIndex, item.idx, item.cd, item.info = nil, nil, nil, nil, nil
         item.auraInstanceID, item.auraDataUnit, item.aura, item.on = nil, nil, nil, nil
         item:Hide()
         pool.inactive[#pool.inactive + 1] = item
@@ -686,8 +752,18 @@ local function viewerEvent(v, event)
                 refreshItem(item)
             end
         end
+    elseif event == "COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED" then
+        for item in pairs(v.itemFramePool.active) do -- SetOverrideSpell, then the item's own RefreshData
+            local now = item.info and W.cdm.catalogue[item.cd]
+            if now and now.overrideSpellID ~= item.info.overrideSpellID then
+                item.info.overrideSpellID = now.overrideSpellID
+                refreshItem(item)
+            end
+        end
     else
-        refresh(v)
+        for item in pairs(v.itemFramePool.active) do
+            refreshItem(item) -- the item's refresh: only a layout or a data pass writes a cooldownID
+        end
     end
 end
 -- The four viewers (built again by a reload), each with its item pool, in Fake.viewers in this order.
@@ -712,10 +788,15 @@ local function makeViewers()
             end,
         }
         v.OnAcquireItemFrame = function() end
-        v.RefreshData = function(self) -- the viewer's own: a layout pass or a data change (aura events refresh items)
-            refresh(self)
+        v.RefreshData = function(self, _, force) -- the viewer's own: a layout pass or a data change (forced)
+            refresh(self, force)
         end
-        v.events = { PLAYER_LOGIN = true, UNIT_AURA = true, PLAYER_TARGET_CHANGED = true }
+        v.events = {
+            PLAYER_LOGIN = true,
+            UNIT_AURA = true,
+            PLAYER_TARGET_CHANGED = true,
+            COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED = true,
+        }
         v.scripts.OnEvent = function(self, event)
             local was = inBlizz
             inBlizz = true
@@ -742,12 +823,15 @@ function Fake.cdmLayout()
     end
 end
 
+local function forced(v)
+    v:RefreshData(nil, true) -- method-dispatched: a hook sees it
+end
 -- A data change that keeps each viewer's item count (a drag reorder, a swap, a change at the 2-item minimum): the
 -- client calls only RefreshData, no frame is acquired and no event is sent.
 function Fake.cdmData()
     for k = 1, #viewers do
         if viewers[k]:IsVisible() then
-            blizz(viewers[k].RefreshData, viewers[k])
+            blizz(forced, viewers[k])
         end
     end
 end
@@ -764,6 +848,18 @@ function Fake.setAura(unit, spell, stacks, seconds)
         auras[spell] = a
     end
     Fake.event("UNIT_AURA", unit)
+end
+
+-- The aura runs out and no aura event has come: a Tracked Buffs icon holding it gets its OnCooldownDone, which runs
+-- RefreshActive alone (an icon has no OnUpdate that refreshes it).
+function Fake.cdmExpire(unit, spell)
+    local a = W.aura[unit][spell]
+    W.aura[unit][spell] = nil
+    for item in pairs(viewers[2].itemFramePool.active) do
+        if a and item.aura == a then
+            blizz(refreshActive, item)
+        end
+    end
 end
 
 -- The cooldownViewerEnabled CVar: the viewers show or hide (shown again: a layout pass), then CVAR_UPDATE.
@@ -832,7 +928,26 @@ function Fake.advance(seconds)
     Fake.tick(math.floor(seconds * 60 + 0.5))
 end
 
+-- The data provider's events (CooldownViewerSettingsDataProvider: its own rebuild; DATA_LOADED its first build,
+-- CooldownViewerSettings.lua:856: a later one is assumed to rebuild it too).
+local PROVIDER = {
+    PLAYER_LOGIN = true,
+    COOLDOWN_VIEWER_DATA_LOADED = true,
+    COOLDOWN_VIEWER_TABLE_HOTFIXED = true,
+    SPELLS_CHANGED = true,
+    PLAYER_EQUIPMENT_CHANGED = true,
+    PLAYER_PVP_TALENT_UPDATE = true,
+    TRAIT_CONFIG_UPDATED = true,
+    ACTIVE_PLAYER_SPECIALIZATION_CHANGED = true,
+    ACTIVE_COMBAT_CONFIG_CHANGED = true,
+    ACTIVE_TALENT_GROUP_CHANGED = true,
+}
+Fake.PROVIDER = PROVIDER
+
 function Fake.event(name, ...)
+    if PROVIDER[name] then
+        provide()
+    end
     if name == "PLAYER_LOGIN" then
         loggedIn = true
     elseif name == "PLAYER_TARGET_CHANGED" and W.cdm.lateSwap then

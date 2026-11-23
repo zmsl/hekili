@@ -2,12 +2,15 @@
 -- 25/50/75% curves are pushed plain values, one value every HOLDF frames: every change of a curve's output must fire
 -- once, within MAXLAG frames, and every output must be the curve convention's (1 below the edge, 2 at or above it,
 -- under whatever snapping the client does). A fourth bar is primed as a source's bar is (held low COUNT_FROM frames,
--- then fed a read through a curve that is 2 everywhere: the client's own value, secret where reads are) and must fire
--- once, inside the SETTLE window, never after: a prime's first band is the real one. About 45 frames, invisible. It
--- proves the firing mechanism, the curves and the prime's timing (for the push the client gives: a plain login read
--- proves the plain prime timing; the owner's run 2026-11-20 passed it in game), not the secret path's values (the
--- later shadow check). Until it passes the built kinds are "pending"; while a later run is going the earlier verdict
--- stands. Last file of the list: it ends the load and, after login (a late or upgraded copy), realises at once.
+-- then fed the player's health through a curve that is 2 everywhere) and must fire once, inside the SETTLE window,
+-- never after: a prime's first band is the real one. The push that moves that bar must be a secret (minor 8): the
+-- player's health reads secret in and out of combat on the live client (owner, 2026-11-22), so a plain or nil read
+-- there is no pass (it fails closed). About 45 frames, invisible. A pass proves the firing mechanism, the curves, and
+-- that a secret moved a bar whose firing arrived in time; not the secret path's values (the later shadow check). Its
+-- limit: a client change that stops those firings after a run is seen at the next SelfTest or login, not before.
+-- Until it passes the built kinds are "pending"; while a later run is going the earlier verdict stands (not over an
+-- upgrade from a minor before 8: it runs again). Last file of the list: it ends the load and, after login (a late or
+-- upgraded copy), realises at once.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
     return
@@ -24,7 +27,7 @@ local function finish(fail)
     local st = lib.st
     lib.st = nil
     local lines = {}
-    local primeOk = st.primeIn == 1 and st.primeLate == 0
+    local primeOk = st.fedSecret == true and st.primeIn == 1 and st.primeLate == 0
     local pass = not fail and not st.curveBad and st.maxLag <= MAXLAG and primeOk
     lib.freeBar(st.bars[#EDGES + 1])
     for k = 1, #EDGES do
@@ -40,9 +43,10 @@ local function finish(fail)
         )
     end
     lines[#lines + 1] = string.format(
-        "selftest prime: firings in the settle window %d, after it %d: %s",
+        "selftest prime: firings in the settle window %d, after it %d%s: %s",
         st.primeIn,
         st.primeLate,
+        st.fedSecret and "" or ", not fed a secret",
         primeOk and "ok" or "FAIL"
     )
     lines[#lines + 1] = string.format(
@@ -79,6 +83,9 @@ local function step()
     else
         local y = UnitHealthPercent("player", true, lib.stCurve)
         if issecretvalue(y) or y ~= nil then
+            if st.fedSecret ~= false then -- one plain push and the firing may be its own: no pass
+                st.fedSecret = issecretvalue(y)
+            end
             pb:SetValue(y)
         end
     end
@@ -190,7 +197,23 @@ function lib:GetSelfTest()
     return lib.stVerdict, lib.stLines, lib.st ~= nil
 end
 
+-- A minor before 8 passed a plain-fed prime: its verdict, and a run it left, do not stand; the test runs again.
+local rerun = not lib.stGuard and (lib.stVerdict ~= nil or lib.st ~= nil)
+lib.stGuard = true
+if rerun then
+    if lib.st then
+        for k = 1, #lib.st.bars do
+            lib.freeBar(lib.st.bars[k])
+        end
+    end
+    lib.st, lib.stVerdict, lib.stLines = nil, nil, nil
+end
+
 lib.loading = nil
 if IsLoggedIn and IsLoggedIn() then
     lib.realise()
+    if rerun then
+        lib.capChanged()
+        lib:SelfTest()
+    end
 end

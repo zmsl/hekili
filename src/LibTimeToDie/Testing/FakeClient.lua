@@ -13,21 +13,24 @@
 -- It is LibHiddenValues' Testing/FakeClient.lua (its header lists the world and the knobs; Fake.event fires a client
 -- event, e.g. "PLAYER_TARGET_CHANGED" after you swap Fake.world.unit.target) with this library loaded after it, plus
 -- UnitCanAttack (W.unit[token].friendly = true: a friendly unit; W.secretAttack = true: the answer is a secret). That
--- file is looked up in Libs/LibHiddenValues (the release zip's bundled copy), then beside this folder
+-- file is looked up in Libs/LibHiddenValues (a copy kept inside this folder), then beside this folder
 -- (libs/LibHiddenValues next to libs/LibTimeToDie); elsewhere pass its path:
--- loadfile(path)({ lhv = "path/to/LibHiddenValues/Testing/FakeClient.lua" }). Fake.loadTimeToDie() loads this library
+-- loadfile(path)({ lhv = "path/to/LibHiddenValues/Testing/FakeClient.lua", before = fn }) (fn runs once the fake globals
+-- exist, before any library loads). Fake.loadTimeToDie() loads this library
 -- again (the files of its TOC, in order).
 local opts = ... or {}
 local here = debug.getinfo(1, "S").source:match("^@(.*[/\\])") or "./"
 local root = here .. "../"
 
--- LibHiddenValues' fake: the bundled copy (Libs/LibHiddenValues, as in a release zip) or the sibling folder.
+-- LibHiddenValues' fake: a copy kept inside this folder (Libs/LibHiddenValues) or the sibling folder.
 local bundled = root .. "Libs/LibHiddenValues/Testing/FakeClient.lua"
 local f = io.open(bundled, "rb")
 if f then
     f:close()
 end
-local Fake = dofile(opts.lhv or (f and bundled or root .. "../LibHiddenValues/Testing/FakeClient.lua"))
+local Fake = loadfile(opts.lhv or (f and bundled or root .. "../LibHiddenValues/Testing/FakeClient.lua"))({
+    before = opts.before,
+})
 local W = Fake.world
 
 -- UnitCanAttack("player", unit): true unless W.unit[unit].friendly; false without the unit; W.secretAttack: a secret.

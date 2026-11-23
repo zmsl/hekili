@@ -1237,9 +1237,6 @@ describe("Forever Warrior", function()
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists")
-        local scanNs = {}
-        assert(loadfile("src/Hekili/Engine/Sim/AplWarnings.lua"))("Hekili", scanNs)
-        local secretToken = scanNs.AplSecretToken
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR") -- the class's, the shared kit's, every race's
         local racial = set.racial
         local kinds = {
@@ -1277,7 +1274,6 @@ describe("Forever Warrior", function()
                             assert.is_not_nil(kinds[kind][key] or racialAura, where .. ": no " .. kind .. " " .. key)
                         end
                     end
-                    assert.is_nil(secretToken(c), where) -- no health or time to die: secret on Forever (Task 9b)
                 end
             end
         end

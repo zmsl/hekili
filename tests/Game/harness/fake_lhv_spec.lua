@@ -327,7 +327,7 @@ for _, name in ipairs({ "real", "fake" }) do
             assert.are.same({ true, "ready" }, { lib:IsAvailable("health", "target") })
             assert.are.same({ false, "unavailable", "unproven" }, { lib:IsAvailable("health", "focus") })
             assert.are.same({ "unavailable", "unproven" }, { focus:State() })
-            assert.are.same({ "LibHiddenValues-1.0", 7 }, { lib:GetVersion() })
+            assert.are.same({ "LibHiddenValues-1.0", 8 }, { lib:GetVersion() })
             local verdict, lines, running = lib:GetSelfTest()
             assert.are.same({ true, "table", false }, { verdict, type(lines), running })
             local stats = { lib:GetStats() }

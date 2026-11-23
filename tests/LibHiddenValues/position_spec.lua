@@ -47,7 +47,7 @@ describe("LibHiddenValues position", function()
         Fake.restore()
     end)
 
-    -- Fix round 3: every change waits for the next frame's decode to agree (the confirm hold), so a jump is called two
+    -- Every change waits for the next frame's decode to agree (the confirm hold), so a jump is called two
     -- frames after its push (it was one).
     it("gives the 1% cell from 8 bars, any jump in one call two frames later", function()
         local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 }, sink)
@@ -84,7 +84,7 @@ describe("LibHiddenValues position", function()
         untilLive(h)
         assert.are.same({ 55, 56 }, lohi(h))
         W.unit.player.power[0] = 0.2
-        Fake.tick(3) -- the push, the held decode, the confirming decode (fix round 3)
+        Fake.tick(3) -- the push, the held decode, the confirming decode
         assert.are.same({ { 20, 21, -1 } }, calls)
     end)
 
@@ -98,7 +98,7 @@ describe("LibHiddenValues position", function()
         assert.are.same({ 37, 38 }, lohi(h))
         assert.are.same({ 20, 50 }, lohi(e))
         W.unit.target.health = 0.336
-        Fake.tick(3) -- each change: the push, a held decode, the confirming one (fix round 3)
+        Fake.tick(3) -- each change: the push, a held decode, the confirming one
         assert.are.same({ 33.5, 34 }, lohi(h))
         W.unit.target.health = 0.334
         Fake.tick(3)
@@ -203,7 +203,7 @@ describe("LibHiddenValues position", function()
         assert.are.same({ 38, 39 }, lohi(h))
     end)
 
-    -- Owner (fix round 3, "hold them too, it's consistency"): a jump 100 -> 85 whose Gray bit 0 and parity bars land a
+    -- Held as the ring's, for consistency: a jump 100 -> 85 whose Gray bit 0 and parity bars land a
     -- frame late is a valid cell for that frame, 84, a value the client never held. Every Gray change is held until the
     -- next frame's decode agrees, as the ring's: step watches and precision at a max of 100 or less alike; the first
     -- decode after a prime too (the jump on the prime's last push). The call comes within h:Latency() of the push.
@@ -257,7 +257,7 @@ describe("LibHiddenValues position", function()
         end
     end
 
-    -- L1645: exact energy (max 100, position) read 35, 36, 35, 36 over 4 frames after a spend in the owner's run.
+    -- Exact energy (max 100, position) read 35, 36, 35, 36 over 4 frames after a spend in an in-game run.
     it(
         "holds a one-point change with either of its two bars late, every point both ways: never another value",
         function()
@@ -268,7 +268,7 @@ describe("LibHiddenValues position", function()
             Fake.tick(1)
             local s, st = h.src, lib.barState
             -- Moves the energy to v with the k-th of the change's bars not arrived yet: one frame holds (invalid), the
-            -- late firing's frame holds (confirm hold, fix round 3), then v.
+            -- late firing's frame holds (confirm hold), then v.
             local function half(v, k)
                 local old, before = h:Exact(), {}
                 for j = 1, #s.core do

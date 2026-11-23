@@ -391,6 +391,70 @@ describe("LibHiddenValues aura kind", function()
         assert.are.same({ 2, math.huge }, band(h))
     end)
 
+    -- A count the bars did not take must not leave the absent band standing as known (it stood until the next count).
+    for name, apply in pairs({
+        ["while a new watch's bars hold low"] = function()
+            Fake.login()
+            W.combat = true
+            local h = watch({ spell = 5001, what = "stacks", edges = { 2, 3 } })
+            Fake.tick(2)
+            Fake.setAura("player", 5001, 3)
+            return h
+        end,
+        ["while a re-layout's bars hold low"] = function()
+            local h = watch({ spell = 5001, what = "stacks", edges = { 2, 3 } })
+            Fake.login()
+            W.combat = true
+            Fake.tick(20)
+            Fake.event("LOADING_SCREEN_DISABLED")
+            Fake.tick(2)
+            Fake.setAura("player", 5001, 3)
+            return h
+        end,
+        ["as combat ends after a login in it, the catalogue not read"] = function()
+            W.combat = true
+            Fake.login()
+            local info = _G.C_CooldownViewer.GetCooldownViewerCooldownInfo
+            _G.C_CooldownViewer.GetCooldownViewerCooldownInfo = function() end -- the first watch's read, refused
+            local h = watch({ spell = 5001, what = "stacks", edges = { 2, 3 } })
+            Fake.tick(5)
+            _G.C_CooldownViewer.GetCooldownViewerCooldownInfo = info
+            W.combat = false
+            Fake.event("PLAYER_REGEN_ENABLED")
+            Fake.tick(1) -- its bars start
+            Fake.setAura("player", 5001, 3)
+            return h
+        end,
+        ["as its placement moves to another entry"] = function()
+            W.cdm.catalogue = {
+                [11] = { spellID = 5001, category = 3 },
+                [17] = { spellID = 5001, category = 2, linkedSpellIDs = { 5013 } },
+            }
+            W.cdm.bar, W.cdm.icon = { 11 }, {}
+            local h = watch({ spell = 5001, what = "stacks", edges = { 2, 3 } })
+            Fake.login()
+            Fake.tick(20)
+            W.cdm.bar, W.cdm.icon = {}, { 17 }
+            Fake.cdmLayout() -- its count is written to an item the watch is not placed on yet
+            Fake.setAura("player", 5001, 3)
+            return h
+        end,
+    }) do
+        it("never holds the absent band over a stack count applied " .. name, function()
+            boot()
+            local h = apply()
+            Fake.tick(2) -- the presence read and its decode
+            for _ = 1, 200 do
+                Fake.tick(1)
+                assert.is_nil((h:Get())) -- unknown until the count is written again
+                assert.are.equal("priming", (h:State()))
+            end
+            Fake.setAura("player", 5001, 4)
+            Fake.tick(2 + lib.SETTLE)
+            assert.are.same({ 3, math.huge }, band(h))
+        end)
+    end
+
     it("bands seconds left in combat from the tracked bar: each fall, a refresh, the expiry", function()
         -- the timer starts at 21 offsets inside one frame, so some falls land inside a bar for a frame
         for k = 0, 20 do
@@ -699,7 +763,7 @@ describe("LibHiddenValues aura kind", function()
         end
     )
 
-    -- Review I2: the item lit on the player (plain or secret unit) said nothing of the new target, yet ended the doubt;
+    -- The item lit on the player (plain or secret unit) said nothing of the new target, yet ended the doubt;
     -- once the player's aura fell the dark item read a false 0 on a mob with the aura.
     for _, secretUnit in ipairs({ false, true }) do
         it(
@@ -889,7 +953,7 @@ describe("LibHiddenValues aura kind", function()
         end
         -- 4 viewers (acquire, RefreshData), 2 bar items (count + bar), 2 icon items (count); Essential and Utility
         -- items none (presence is a field read)
-        assert.are.equal(4 * 2 + 2 * 2 + 2, Fake.hooks)
+        assert.are.equal(4 * 2 + 2 * 2 + 2 * 2, Fake.hooks)
         for _, v in ipairs(Fake.viewers) do
             assert.is_true(v.shown)
             assert.is_nil(v.alpha)
@@ -931,12 +995,12 @@ describe("LibHiddenValues aura kind", function()
     for _, mode in ipairs({ "secret", "plain" }) do
         it("walks a fight with every read " .. mode .. " and no trap fires", function()
             boot()
-            W.secret = mode == "secret"
             watch({ spell = 5001, what = "stacks", edges = { 2, 3 } })
             watch({ spell = 5001, what = "left", edges = { 2, 5 } })
             watch({ spell = 5002, what = "up" })
             watch({ unit = "target", spell = 5003, what = "stacks", max = 3 })
-            Fake.login()
+            assert.is_true(Fake.login()) -- on a secret prime, as it must be
+            W.secret = mode == "secret" -- from here on every read is the mode's
             W.combat = mode == "secret"
             for i = 1, 300 do
                 if i % 40 == 1 then
@@ -957,7 +1021,6 @@ describe("LibHiddenValues aura kind", function()
 
     it("allocates nothing over 600 steady frames of presence, stacks and seconds", function()
         boot()
-        W.secret = false
         local n = 0
         local function count()
             n = n + 1
@@ -970,7 +1033,8 @@ describe("LibHiddenValues aura kind", function()
         W.cdm.essential = { 14 }
         Fake.setAura("player", 5004, 1, 600)
         W.unit.target = { health = 0.5 }
-        Fake.login()
+        assert.is_true(Fake.login()) -- on a secret prime, as it must be
+        W.secret = false -- plain values from here on
         -- a refresh every 200 frames (before the 4 s expiry: the fake allocates when it drops an aura), stacks 3 and
         -- 1 in turn: the seconds fall through 3 and 1 each time
         local function frame(i)

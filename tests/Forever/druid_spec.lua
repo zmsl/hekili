@@ -1082,9 +1082,6 @@ describe("Forever Druid", function()
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists", "druid")
-        local scanNs = {}
-        assert(loadfile("src/Hekili/Engine/Sim/AplWarnings.lua"))("Hekili", scanNs)
-        local secretToken = scanNs.AplSecretToken
         -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items; Hekili_Shared/Races' Night Elf racial and the
         -- Skyborne racial's aura (energized); the core's cancel_buff (tests/Forever/apl_entry_spec.lua), its buff_name a
         -- registered aura
@@ -1123,7 +1120,6 @@ describe("Forever Druid", function()
                             assert.is_true(ok, where .. ": no " .. kind .. " " .. key)
                         end
                     end
-                    assert.is_nil(secretToken(c), where) -- no health or time to die: secret on Forever
                 end
             end
         end

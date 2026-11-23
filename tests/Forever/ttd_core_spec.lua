@@ -1,8 +1,8 @@
 -- tests/Forever/ttd_core_spec.lua (lane B8, owner L1676): the core's time to die from LibTimeToDie, called directly
 -- (owner "Hekili", the target by token), inside Engine/Sim/Targets.lua's existing functions; every caller unchanged.
 -- A live estimate answers GetTTD, GetTimeToPct and fight_remains (GetGreatestTTD); every other state answers today's
--- unknown, 3600, but fight_remains keeps its last live answer through up to 0.5 s of priming. Tracked on the first
--- query, released by Hekili.bandOff (the bands' hidden switch) and at disable.
+-- unknown, 3600, priming too (nothing is kept through it). Tracked on the first query, released by Hekili.bandOff (the
+-- bands' hidden switch) and at disable.
 -- The library here is a double in the instance's LibStub (its own specs pin the real one).
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
@@ -58,6 +58,35 @@ describe("time to die from LibTimeToDie (lane B8)", function()
         assert.are.equal(3600, hk:GetTimeToPct("target", 35))
     end)
 
+    -- L1703: the GUID tracker was never fed (removed); its getters keep the answers its empty table gave.
+    it("the getters only the GUID tracker could answer keep their empty-tracker answers", function()
+        H.ctl.exists.focus = true
+        assert.are.same({ 3600, 3600 }, { hk:GetTTD("focus"), hk:GetTimeToPct("focus", 35) })
+        assert.are.same({ 3600, 3600 }, { hk:GetDeathClockByGUID("Creature-0-1-2-3-4-5"), hk:GetGreatestTimeToPct(35) })
+        assert.are.equal(0.35 * 3600, hk:GetTimeToPctByGUID("Creature-0-1-2-3-4-5", 35))
+        assert.are.equal(0.2 * 3600, hk:GetTimeToPctByGUID(nil, 0.2))
+        assert.are.same({ 0, 0 }, { hk:GetNumTTDsWithin(10), hk:GetNumTTDsBefore(10) })
+        assert.are.equal(hk.State.active_enemies, hk:GetNumTTDsAfter(10))
+        assert.are.same({ 0, 0 }, { hk:GetNumTargetsAboveHealthPct(20), hk:GetNumTargetsBelowHealthPct(20, true) })
+        assert.are.equal(3600, hk:GetAddWaveTTD())
+        assert.is_truthy(hk:GetTTDInfo():match("\ntargets:  none$"))
+        H.ctl.exists.boss1 = true
+        assert.are.equal(0, hk:GetAddWaveTTD()) -- a boss up: the empty table's 0
+        hk:ExpireTTDs()
+        rawset(hk.State.target, "is_dummy", true)
+        assert.are.same({ 180, 180, 180, 180 }, {
+            hk:GetTTD("focus"),
+            hk:GetDeathClockByGUID("x"),
+            hk:GetGreatestTTD(),
+            hk:GetAddWaveTTD(),
+        })
+        assert.are.equal(3600, hk:GetTimeToPct("focus", 35))
+        assert.are.equal(0, hk:GetNumTTDsWithin(10))
+        assert.is_truthy(
+            hk:GetTTDInfo():match("\ntargets:    Target TTDs overridden; target is a training dummy  none$")
+        )
+    end)
+
     it("tracks the target lazily, once, as owner Hekili", function()
         install(H, lib)
         assert.are.equal(0, lib.tracks)
@@ -90,56 +119,19 @@ describe("time to die from LibTimeToDie (lane B8)", function()
         end
     end)
 
-    it("priming keeps fight_remains' last live answer less elapsed, 0.5 s at most, never time_to_die", function()
+    -- vendor-libs: B8's 0.5 s keep is gone. LibTimeToDie answers priming only with no estimate, after a target change
+    -- (a re-prime of the same unit keeps answering), and minor 4 then answers nothing before 1.5 s of the new target's
+    -- loss: the keep bridged to no answer and showed the last target's time on this one.
+    it("priming after a live answer: fight_remains reads 3600 too, the last answer is not kept", function()
         install(H, lib)
         lib.h.state, lib.h.est = "live", 12
         assert.are.equal(12, hk:GetGreatestTTD())
         lib.h.state = "priming"
-        H.ctl.now = H.ctl.now + 0.25
-        assert.are.same({ 11.75, 11.75 }, { hk:GetGreatestTTD(), hk:GetLowestTTD() })
-        assert.are.same({ 3600, 3600 }, { hk:GetTTD("target"), hk:GetTimeToPct("target", 35) })
+        H.ctl.now = H.ctl.now + 0.1
+        assert.are.same({ 3600, 3600 }, { hk:GetGreatestTTD(), hk:GetLowestTTD() })
         local st = hk.State
         st.reset()
-        assert.are.same({ 11.75, 3600 }, { st.fight_remains, st.target.time_to_die })
-        H.ctl.now = H.ctl.now + 0.25
-        assert.are.equal(11.5, hk:GetGreatestTTD())
-        H.ctl.now = H.ctl.now + 0.05
-        assert.are.equal(3600, hk:GetGreatestTTD())
-        lib.h.state, lib.h.est = "live", 0.1
-        assert.are.equal(0.1, hk:GetGreatestTTD())
-        lib.h.state = "priming"
-        H.ctl.now = H.ctl.now + 0.2
-        assert.are.equal(0, hk:GetGreatestTTD()) -- never below 0
-    end)
-
-    it("live, priming for one update, live: fight_remains is never 3600", function()
-        install(H, lib)
-        for _, s in ipairs({ "live", "priming", "live", "priming", "live" }) do
-            lib.h.state, lib.h.est = s, 12
-            assert.is_true(hk:GetGreatestTTD() < 3600, s)
-            H.ctl.now = H.ctl.now + 0.2
-        end
-    end)
-
-    it("only priming keeps it: not another state, a friendly target or a released track", function()
-        install(H, lib)
-        local function live()
-            lib.h.state, lib.h.est, H.ctl.friendly.target = "live", 9, nil
-            assert.are.equal(9, hk:GetGreatestTTD())
-        end
-        for _, s in ipairs({ "unknown", "gone", "unavailable", "paused" }) do
-            live()
-            lib.h.state = s
-            assert.are.equal(3600, hk:GetGreatestTTD(), s)
-        end
-        live()
-        lib.h.state, H.ctl.friendly.target = "priming", true
-        assert.are.equal(3600, hk:GetGreatestTTD())
-        live()
-        hk.bandOff = true
-        assert.are.equal(3600, hk:GetGreatestTTD())
-        hk.bandOff, lib.h.state = nil, "priming"
-        assert.are.equal(3600, hk:GetGreatestTTD())
+        assert.are.same({ 3600, 3600 }, { st.fight_remains, st.target.time_to_die })
     end)
 
     it("a secret answer to the hostility test is never truth-tested: 3600", function()
@@ -231,29 +223,24 @@ describe("time to die from LibTimeToDie (lane B8)", function()
         assert.is_truthy(s:match("live fit est 12%.5 lo 8 hi 20;"), s)
     end)
 
-    -- L1736, owner's A (L1742): the library's first guess reads unknown until a fit or a prior answers.
-    it("a live seed answers 3600 everywhere, priming keeps none of it, and the line says seed", function()
+    -- L1736, owner's A (L1742), kept by vendor-libs on its fight runs: a live seed reads unknown everywhere.
+    it("a live seed answers 3600 everywhere; every other live reason answers; the line says the reason", function()
         install(H, lib)
-        local st = hk.State
         lib.h.state, lib.h.est, lib.h.lo, lib.h.hi, lib.h.reason = "live", 3.5, 1.75, 10.5, "seed"
         assert.are.same(
             { 3600, 3600, 3600 },
             { hk:GetTTD("target"), hk:GetGreatestTTD(), hk:GetTimeToPct("target", 35) }
         )
-        st.reset()
-        assert.are.same({ 3600, 3600 }, { st.fight_remains, st.target.time_to_die })
         assert.is_truthy(hk:GetTTDInfo():match("time to die: live seed est 3%.5 lo 1%.75 hi 10%.5;"))
-        lib.h.state, lib.h.est, lib.h.reason = "priming", nil, nil
-        H.ctl.now = H.ctl.now + 0.1
-        assert.are.equal(3600, hk:GetGreatestTTD()) -- no seed kept
         for _, why in ipairs({ "prior", "fit", "stalled" }) do
-            lib.h.state, lib.h.est, lib.h.reason = "live", 20, why
-            assert.are.same({ 20, 20 }, { hk:GetTTD("target"), hk:GetGreatestTTD() }, why)
+            lib.h.state, lib.h.est, lib.h.lo, lib.h.hi, lib.h.reason = "live", 20, 10, 40, why
+            assert.are.same(
+                { 20, 20, 13 },
+                { hk:GetTTD("target"), hk:GetGreatestTTD(), hk:GetTimeToPct("target", 35) },
+                why
+            )
+            assert.is_truthy(hk:GetTTDInfo():match("time to die: live " .. why .. " est 20 lo 10 hi 40;"), why)
         end
-        lib.h.state, lib.h.est, lib.h.reason = "live", 18, "seed" -- after a fit: still unknown
-        assert.are.same({ 3600, 3600 }, { hk:GetTTD("target"), hk:GetTimeToPct("target", 35) })
-        lib.h.state = "priming" -- the keep holds the fit's 20, not the seed's 18
-        assert.are.equal(20, hk:GetGreatestTTD())
     end)
 
     it("a debug snapshot carries the line", function()

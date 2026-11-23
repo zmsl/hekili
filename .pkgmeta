@@ -47,6 +47,7 @@ ignore:
     - .stylua.toml
     - .styluaignore
     - Makefile
+    - vendor.lock
     - mise.toml
     - src/Hekili_Warrior/APLs
     - src/Hekili_Druid/APLs

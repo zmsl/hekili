@@ -23,7 +23,6 @@ describe("LibHiddenValues secrets and efficiency", function()
 
     for _, mode in ipairs({ "secret", "plain" }) do
         it("walks a fight with every read " .. mode .. " and no trap fires", function()
-            W.secret = mode == "secret"
             W.secretBool = mode == "secret"
             W.unit.target = { health = 1.0 }
             local n = 0
@@ -36,7 +35,8 @@ describe("LibHiddenValues secrets and efficiency", function()
             assert(
                 lib:Watch("B", { kind = "power", unit = "player", power = Enum.PowerType.Energy, edges = { 50 } }, sink)
             )
-            Fake.login()
+            assert.is_true(Fake.login()) -- on a secret prime, as it must be
+            W.secret = mode == "secret" -- from here on every read is the mode's
             for i = 1, 300 do
                 W.unit.target.health = math.max(0, 1 - i / 250)
                 W.unit.player.health = 1 - i / 1000
@@ -104,7 +104,7 @@ describe("LibHiddenValues secrets and efficiency", function()
         Fake.login()
         local per = 2
         local function frame(i) -- each value holds 2 frames: a position or precision change is called once the next
-            i = math.floor(i / per) -- decode agrees (fix round 3); one changing every frame is never confirmed
+            i = math.floor(i / per) -- decode agrees; one changing every frame is never confirmed
             W.unit.target.health = (i % 37) / 36
             W.unit.player.power[0] = (i % 11) / 10
             W.unit.player.power[3] = (i % 13) / 12

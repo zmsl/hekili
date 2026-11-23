@@ -15,19 +15,19 @@ for k in pairs(_G) do
 end
 
 describe("LibHiddenValues standalone", function()
-    local Fake, W, lib
+    local Fake, W, lib, minor
 
     before_each(function()
         Fake = dofile(FAKE)
         W = Fake.world
-        lib = LibStub("LibHiddenValues-1.0")
+        lib, minor = LibStub("LibHiddenValues-1.0")
     end)
 
     after_each(function()
         Fake.restore()
     end)
 
-    it("names no host addon, and no host names it (tools/libhiddenvalues/check_standalone.sh)", function()
+    it("names no host addon and no consumer library (tools/libhiddenvalues/check_standalone.sh)", function()
         local p = io.popen("bash tools/libhiddenvalues/check_standalone.sh 2>&1; echo rc=$?")
         local out = p:read("*a")
         p:close()
@@ -58,6 +58,7 @@ describe("LibHiddenValues standalone", function()
         f:close()
         assert.is_truthy(s:match("## Interface: 16001"))
         assert.is_nil(s:match("SavedVariables"))
+        assert.is_nil(s:match("[Bb]indings"))
     end)
 
     it("loads the same minor twice without building or replacing anything", function()
@@ -74,16 +75,16 @@ describe("LibHiddenValues standalone", function()
         local watch = lib.Watch
         Fake.loadLibrary(0)
         assert.are.equal(watch, lib.Watch)
-        assert.are.same({ "LibHiddenValues-1.0", 7 }, { lib:GetVersion() })
+        assert.are.same({ "LibHiddenValues-1.0", minor }, { lib:GetVersion() })
     end)
 
     it("lets a newer minor before login inherit the registry", function()
         W.unit.target = { health = 0.6 }
         local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 50 } })
         local watch = lib.Watch
-        Fake.loadLibrary(8)
+        Fake.loadLibrary(minor + 1)
         assert.are_not.equal(watch, lib.Watch)
-        assert.are.same({ "LibHiddenValues-1.0", 8 }, { lib:GetVersion() })
+        assert.are.same({ "LibHiddenValues-1.0", minor + 1 }, { lib:GetVersion() })
         Fake.login()
         Fake.tick(10)
         assert.are.equal("live", (h:State()))
@@ -99,7 +100,7 @@ describe("LibHiddenValues standalone", function()
         Fake.login()
         Fake.tick(10)
         local n = #Fake.frames
-        Fake.loadLibrary(8)
+        Fake.loadLibrary(minor + 1)
         Fake.tick(10)
         assert.are.equal(n, #Fake.frames)
         assert.are.same({ 50, "nil", 50 }, calls)
@@ -112,7 +113,7 @@ describe("LibHiddenValues standalone", function()
         Fake.login()
         Fake.tick(20)
         lib.barCurve = nil -- minor 2's state: its bars read lib.curves[e]
-        Fake.loadLibrary(8)
+        Fake.loadLibrary(minor + 1)
         Fake.tick(20)
         for _, v in ipairs({ 0.65, 0.7, 0.75, 0.3, 0.35, 0.55 }) do
             W.unit.target.health = v
@@ -163,7 +164,7 @@ describe("LibHiddenValues standalone", function()
         Fake.tick(60)
         assert.are.same({ false, "unavailable", "selftest" }, { lib:IsAvailable("health") })
         lib:ReleaseAll("A")
-        Fake.loadLibrary(8) -- a newer minor after login
+        Fake.loadLibrary(minor + 1) -- a newer minor after login
         Fake.tick(10)
         assert.are.same({}, Fake.printed)
         assert.are.same({}, _G.SlashCmdList)

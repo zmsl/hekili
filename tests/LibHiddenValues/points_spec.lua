@@ -84,7 +84,7 @@ describe("LibHiddenValues points", function()
         untilLive(b)
         untilLive(c)
         mana(312)
-        Fake.tick(3) -- c's position cell is called after the confirm hold (fix round 3)
+        Fake.tick(3) -- c's position cell is called after the confirm hold
         assert.are.same({ 300, 2000 }, lohi(a))
         assert.are.same({ 310, 2000 }, lohi(b))
         assert.are.same({ 300, 320 }, lohi(c)) -- the 15% cell in points

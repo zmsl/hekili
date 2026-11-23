@@ -21,7 +21,6 @@ local Hekili = _G[ addon ]
 local class = Hekili.Class
 local state = Hekili.State
 local PTR = ns.PTR
-local TTD = ns.TTD
 
 local formatKey = ns.formatKey
 local StyleGroup = Hekili.Engine.StyleGroup -- the bound style's keybinding text settings, or classic's
@@ -1383,7 +1382,6 @@ do
         end
 
         state.target.updated = true
-        ns.TtdTargetChanged() -- time to die forgets a target that is gone (Targets.lua)
         Hekili:ForceUpdate( event, true )
     end )
 

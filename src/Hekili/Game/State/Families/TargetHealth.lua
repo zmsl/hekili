@@ -22,7 +22,8 @@ local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local Obs = VS.Obs
 
---- A live target's health never reads below this fraction (Targets.lua's UpdateTTDs drops an enemy at or below 1%).
+--- A live target's health never reads below this fraction (Targets.lua's old GUID time-to-die tracker, removed in L1703,
+--- dropped an enemy at or below 1%).
 I.TARGET_HEALTH_FLOOR = 0.02
 local OVER = 1e-6 -- a NOT is strictly over g
 
