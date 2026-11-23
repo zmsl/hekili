@@ -741,10 +741,11 @@ describe("the headless loop's flicker counter (loop.flips)", function()
         assert.are.equal(1, loop.flips(seq, 4, { {}, {}, { b = true }, {} })) -- cast after we flipped back
     end)
 
-    it("excuses a flip whose change follows a fact (flicker.changes), unless either poll is stale (L1762)", function()
+    it("excuses a flip whose change and return each follow a fact, neither stale (L1762, L1791)", function()
         local by = {}
-        assert.are.equal(0, loop.flips(seq, 4, nil, { [2] = "aura" }, by))
+        assert.are.equal(0, loop.flips(seq, 4, nil, { [2] = "aura", [3] = "press" }, by))
         assert.are.same({ aura = 1 }, by)
+        assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = "aura", [3] = false })) -- the change's fact alone
         assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = false, [3] = "press" })) -- the return's fact alone
         assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = "stale" }))
         assert.are.equal(1, loop.flips(seq, 4, nil, { [2] = "aura", [3] = "stale" })) -- taken back by a stale answer

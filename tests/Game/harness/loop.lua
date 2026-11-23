@@ -1417,8 +1417,8 @@ end
 -- in [t_i, t_i+1), B excused only if cast before the tick after it showed; nil: no presses). Owner rule
 -- 2026-10-26: a show-then-press within one tick is not jitter (a proc at a hard cast's landing, pressed at once).
 -- The jitter rule (L1762 round 2): `why` (flicker.changes: by tick, the fact a first-icon change follows, "stale" or
--- false; nil: presses only) also excuses a flip whose change to B follows a fact, unless that tick or the return's is
--- stale; `by` (optional) counts the excused ones by fact.
+-- false; nil: presses only) also excuses a flip whose change to B and return to A each follow a fact (L1791: a return
+-- needs its own), neither stale; `by` (optional) counts the excused ones by the change's fact.
 local function flips(seq, n, press, why, by)
     local f = 0
     for i = 1, n - 2 do
@@ -1431,8 +1431,8 @@ local function flips(seq, n, press, why, by)
             pressed = press and (p == b or press[i + 2] == b)
         end
         if seq[i] ~= b and seq[i + 2] == seq[i] and not pressed then
-            local w = why and why[i + 1]
-            if w and w ~= "stale" and why[i + 2] ~= "stale" then
+            local w, r = why and why[i + 1], why and why[i + 2]
+            if w and r and w ~= "stale" and r ~= "stale" then
                 if by then
                     by[w] = (by[w] or 0) + 1
                 end

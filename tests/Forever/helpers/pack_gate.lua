@@ -33,7 +33,8 @@ M.REACT_P90_BY = {}
 
 -- The flicker floors at 20 fights: per label the first-icon flicker/min (loop.flips: an A -> B -> A over three ticks,
 -- not counted when the instance pressed B at the tick it showed or the next, owner rule 2026-10-26, nor, since the
--- jitter rule L1762 round 2, when the change to B follows a fact at its poll and neither poll is stale) and the
+-- jitter rule L1762 round 2 and L1791, when the change to B and the return to A each follow a fact at their own poll
+-- and neither poll is stale) and the
 -- unjustified retracted readies/min (tests/Game/harness/flicker.lua). A floor is the worst of seeds 1-20 / 21-40 /
 -- 41-60 (beside it) rounded up to the next 0.1, 0 where all three measured 0 (parry-haste spec decision 63: the
 -- loops are deterministic but a world change reorders every seeded fight). A floor only moves down, except with a

@@ -231,7 +231,7 @@ describe("the jitter rule's now slot (L1762)", function()
             local s = sum({
                 { s = { { "a", 0 }, { "b", 0.3 } } },
                 { s = { { "b", 0 }, { "a", 0.1 } }, ev = { cast = true } },
-                { s = { { "a", 0 }, { "b", 0.1 } } },
+                { s = { { "a", 0 }, { "b", 0.1 } }, ev = { cast = true } }, -- the return on its own press (L1791)
                 { s = { { "b", 0.1 }, { "a", 0.2 } } }, -- a swap with no fact: slot 1's dip (gated), slot 2's (reported)
                 { s = { { "a", 0 }, { "b", 0.2 } } },
             })
@@ -268,7 +268,7 @@ describe("the jitter rule's now slot (L1762)", function()
                 { s = { { "a", 0.4 } } },
                 { s = { { "a", 0.2 } } },
                 { s = { { "b", 0.1 } } }, -- the dip's start, poll 3
-                { s = { { "a", 0 } } },
+                { s = { { "a", 0 } }, ev = { cast = true } }, -- the return, on our press (L1791: its own fact)
                 { s = { { "a", 0 } } },
             }
             for k, at in pairs(ev) do
@@ -295,11 +295,49 @@ describe("the jitter rule's now slot (L1762)", function()
         for _, i in ipairs({ 6, 8, 16 }) do -- three one-poll dips: 4 and 6 polls on (in the window), 14 on (past it)
             rows[i] = { s = { { "b", 0.1 } } }
         end
+        for _, i in ipairs({ 7, 9, 17 }) do -- each return on our press (L1791: its own fact)
+            rows[i].ev = { cast = true }
+        end
         local s = sum(rows, V)
         assert.are.same({ 2, 1, 3 }, { s.now.dips, s.facts.verdict, s.dips }) -- only the first one is the correction
         local led = flicker.ledger(build(rows), V)
         assert.are.same({ true, "verdict" }, { led.entries[1].justified, led.entries[1].fact })
         assert.are.same({ 3, nil }, { sum(rows).now.dips, sum(rows).facts.verdict }) -- no viewer: no verdict
+    end)
+
+    it("counts a dip whose return follows no fact of its own, the change's late light included (L1791)", function()
+        local function dip(ev, o)
+            local r = {
+                { s = { { "a", 0.4 } } },
+                { s = { { "a", 0.2 } } },
+                { s = { { "b", 0.1 } } }, -- the change, poll 3
+                { s = { { "a", 0 } } }, -- the return, poll 4
+                { s = { { "a", 0 } } },
+            }
+            for at, e in pairs(ev) do
+                r[at].ev = e
+            end
+            return sum(r, o)
+        end
+        local t = dip({ [3] = { target = true } })
+        assert.are.same({ 1, 1, nil }, { t.now.dips, t.dips, t.facts.target }) -- the return has no fact
+        assert.are.same({ 0, 1 }, { dip({ [3] = { target = true }, [4] = { avoid = true } }).now.dips, t.dips })
+        -- the viewer's late light at the return is the change's own aura edge, not a new fact; a second edge is one
+        assert.are.equal(1, dip({ [3] = { aura = true } }, V).now.dips)
+        assert.are.equal(0, dip({ [3] = { aura = true }, [4] = { aura = true } }, V).now.dips)
+        -- the change on our press: the edge at that poll is the return's own (its light lands at the return)
+        assert.are.equal(0, dip({ [3] = { aura = true, cast = true } }, V).now.dips)
+        -- the verdict as the return's fact: a miss of our press found late, the return within the window
+        local rows = {}
+        for i = 1, 8 do
+            rows[i] = { s = { { "a", 0.4 } } }
+        end
+        rows[2].ev = { miss = true, cast = true }
+        rows[5] = { s = { { "b", 0.1 } }, ev = { target = true } }
+        local s = sum(rows, V)
+        assert.are.same({ 0, 1, nil }, { s.now.dips, s.facts.target, s.facts.verdict }) -- by the change's
+        local e = flicker.ledger(build(rows), V).entries[1]
+        assert.are.same({ "target", "verdict", true }, { e.fact, e.back, e.justified })
     end)
 
     it(
@@ -321,7 +359,7 @@ describe("the jitter rule's now slot (L1762)", function()
         local s = sum({
             { s = { { "a", 0.4 } } },
             { s = { { "b", 0 } }, ev = { avoid = true } },
-            { s = { { "a", 0 } } },
+            { s = { { "a", 0 } }, ev = { avoid = true } }, -- the return on its own avoid row (L1791)
             { s = { { "a", 0 } } },
         })
         assert.are.same({ 0, 1 }, { s.now.dips, s.dips })
@@ -355,50 +393,90 @@ describe("the jitter rule on the gated flicker (flicker.changes, loop.flips, L17
         assert.are.same({ 1, false, 1 }, { n, why[4], old })
     end)
 
-    it("excuses a flip whose change follows a fact at its poll: press, avoid, aura edge, death or retarget", function()
+    -- the jitter rule's return (L1791, the owner 2026-11-23: "new facts are always required"): the change to b and the
+    -- return to a each follow their own new fact
+    it("counts a flip whose change follows a fact but whose return follows none (L1791)", function()
         for _, k in ipairs({ "press", "outcome", "aura", "target" }) do
-            local n, why, by, old = flip({ [4] = { ev = { [k] = true } } })
-            local name = k == "outcome" and "avoid" or k
-            assert.are.same({ 0, name, 1, 1 }, { n, why[4], by[name], old }, k)
+            local n, why = flip({ [4] = { ev = { [k] = true } } })
+            assert.are.same({ 1, k == "outcome" and "avoid" or k, false }, { n, why[4], why[5] }, k)
         end
-        -- a ranged auto shot's cast or avoid row alone (cast / avoid without press / outcome: loop.lua) is no fact
-        assert.are.same(
-            { 1, 1 },
-            { flip({ [4] = { ev = { cast = true } } }), (flip({ [4] = { ev = { avoid = true } } })) }
-        )
-        assert.are.equal(1, (flip({ [3] = { ev = { aura = true } } }))) -- a poll before, no viewer: not this change's
-        assert.are.equal(1, (flip({ [5] = { ev = { aura = true } } }))) -- the return's fact alone: the change had none
+        -- the return's fact alone: the change had none
+        assert.are.equal(1, (flip({ [5] = { ev = { aura = true } } })))
+    end)
+
+    it(
+        "excuses a flip whose change and return each follow a fact: press, avoid, aura edge, death or retarget",
+        function()
+            for _, k in ipairs({ "press", "outcome", "aura", "target" }) do
+                local n, why, by, old = flip({ [4] = { ev = { [k] = true } }, [5] = { ev = { press = true } } })
+                local name = k == "outcome" and "avoid" or k
+                assert.are.same({ 0, name, "press", 1, 1 }, { n, why[4], why[5], by[name], old }, k)
+            end
+            -- a ranged auto shot's cast or avoid row alone (cast / avoid without press / outcome: loop.lua) is no fact
+            local back = { ev = { press = true } }
+            assert.are.same({ 1, 1 }, {
+                flip({ [4] = { ev = { cast = true } }, [5] = back }),
+                (flip({ [4] = { ev = { avoid = true } }, [5] = back })),
+            })
+            assert.are.equal(1, (flip({ [3] = { ev = { aura = true } }, [5] = back }))) -- a poll before, no viewer
+        end
+    )
+
+    it("does not take the late light of the change's own aura edge as the return's fact (viewer on)", function()
+        local one = { [4] = { ev = { aura = true } } } -- one edge at the change: its light reaches the return poll
+        local n, why = flip(one, V)
+        assert.are.same({ 1, "aura", false }, { n, why[4], why[5] })
+        local two = { [4] = { ev = { aura = true } }, [5] = { ev = { aura = true } } } -- a second edge: a new fact
+        n, why = flip(two, V)
+        assert.are.same({ 0, "aura", "aura" }, { n, why[4], why[5] })
+        -- the change followed our press, not the edge: the edge's late light is the return's own
+        n, why = flip({ [4] = { ev = { aura = true, press = true } } }, V)
+        assert.are.same({ 0, "press", "aura" }, { n, why[4], why[5] })
     end)
 
     it(
         "excuses, with the Cooldown Manager on only, the late light and the verdict after a miss of our press",
         function()
-            local late = { [3] = { ev = { aura = true } } }
+            local back = { ev = { press = true } }
+            local late = { [3] = { ev = { aura = true } }, [5] = back }
             assert.are.same({ 0, "aura" }, { flip(late, V), select(2, flip(late, V))[4] })
-            local miss = { [1] = { ev = { miss = true, cast = true } } } -- our press's avoid row, 3 polls before the change
+            local miss = { [1] = { ev = { miss = true, cast = true } }, [5] = back } -- our press's avoid row, 3 polls on
             assert.are.same({ 0, "verdict" }, { flip(miss, V), select(2, flip(miss, V))[4] })
             assert.are.same({ 1, 1 }, { flip(late), (flip(miss)) }) -- the default arm: neither
+            -- the verdict as the return's fact: the change on an aura edge, the miss found late at the return
+            local ret = { [2] = { ev = { miss = true, cast = true } }, [4] = { ev = { aura = true } } }
+            local n, why = flip(ret, V)
+            assert.are.same({ 0, "aura", "verdict" }, { n, why[4], why[5] })
         end
     )
 
     it("excuses a crossing of the belief's power band that the belief follows", function()
-        local n, why = flip({ [3] = { band = { 15, 16 } }, [4] = { band = { 20, 21 }, lo = 20 } })
-        assert.are.same({ 0, "band" }, { n, why[4] })
-        -- the same band at both polls (a re-assert) is no crossing
-        assert.are.equal(1, (flip({ [3] = { band = { 20, 21 }, lo = 20 }, [4] = { band = { 20, 21 }, lo = 20 } })))
+        local up = { [3] = { band = { 15, 16 } }, [4] = { band = { 20, 21 }, lo = 20 } }
+        up[5] = { band = { 25, 26 }, lo = 25 } -- the return on a second crossing
+        local n, why = flip(up)
+        assert.are.same({ 0, "band", "band" }, { n, why[4], why[5] })
+        up[5] = { band = { 20, 21 }, lo = 20 } -- the same band at the return (a re-assert) is no crossing
+        assert.are.equal(1, (flip(up)))
     end)
 
     it("does not excuse a change that follows a stale answer, older than the band crossing at its poll", function()
         -- B4 round 4's class A: the band crosses to 33-34, the belief sits at 29.99 (a short answer from before it)
         local A = { [3] = { band = { 28, 29 } }, [4] = { band = { 33, 34 }, lo = 29.99, ev = { outcome = true } } }
+        A[5] = { band = { 33, 34 }, lo = 29.99, ev = { press = true } }
         local n, why = flip(A)
         assert.are.same({ 1, "stale" }, { n, why[4] }) -- the avoid at that poll does not excuse it either
         A[4].ev = { press = true } -- our own press: a spend after the band's stamp puts the belief under it
         assert.are.equal(0, (flip(A)))
+    end)
+
+    it("counts a stale return, even after a change on a fact and with another fact at the return (L1791)", function()
         -- class B: the change follows an aura edge, the return a stale answer under the next crossing
         local B = { [4] = { ev = { aura = true }, band = { 9, 10 }, lo = 9 }, [5] = { band = { 17, 18 }, lo = 9.99 } }
-        n, why = flip(B)
+        local n, why = flip(B)
         assert.are.same({ 1, "aura", "stale" }, { n, why[4], why[5] })
+        B[5].ev = { outcome = true, target = true } -- an avoid and a retarget at the stale poll: vetoed
+        n, why = flip(B)
+        assert.are.same({ 1, "stale" }, { n, why[5] })
     end)
 end)
 
