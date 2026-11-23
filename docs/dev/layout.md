@@ -186,8 +186,14 @@ run A over every displayed slot (queue positions 1-3 and the focus entry): `dips
 presses' left out), `top [cause n; cause n]` over them, `p90 length` (ticks), `retracted R/min (oracle R')` (ready, then
 waiting again within 1 s, no justifying event) with its top `ability:cause/reason`, `justified` (those with an event),
 `waits W/min (oracle W')` with its top `ability:cause`, `floor jitter` (lo crossing a slot's cost while est stays above
-it) and `at cost lo-truth m/p90 est-truth m/p90 (n)` (the band's gap at cost-gated decisions). The 20-fight Arms
-line's tail (forever-flicker):
+it) and `at cost lo-truth m/p90 est-truth m/p90 (n)` (the band's gap at cost-gated decisions). Those are the all-slot
+numbers, unchanged since the jitter rule (L1762, DEVELOPMENT.md "Flicker is an acceptance metric"). The rule's fields
+follow them, unjustified only: `now dips D flashes F swaps S retracted R/min (oracle R') waits W`. That is slot 1, and
+`swaps` counts the now/next swaps among its dips and flashes. `pack_gate`'s retracted-ready floor reads this R. Then
+come `facts [target n; aura n; verdict n]`, the slot-1 changes those facts excused. A fact here is a death or
+retarget, an aura edge one poll before the change (a Cooldown Manager light), or the first change within 1.5 s of a
+miss of our press (the CDM verdict). Last come `next D/F/R/W` (slots 2-3) and `focus D/F/R/W`, both reported only. The
+20-fight Arms line's tail (forever-flicker, before the rule):
 
 ```
 ... dips 11.28 flashes 2.59; top [swing 381; unknown 225]; p90 length 3 ticks; retracted 0.02/min (oracle 0.05) [sunder_armor:unknown/cost 1] justified 8.95; waits 15.97/min (oracle 7.00) [sunder_armor:swing 225; rend:swing 114]; floor jitter 0; at cost lo-truth -0.6/16.9 est-truth 1.1/15.1 (2426)
@@ -197,8 +203,8 @@ line's tail (forever-flicker):
 Heroic Strike report's snap-back (a countdown at most 0.3 s from done jumping up at least 0.4 s): Fury L24's focus-slot
 Heroic Strike reads 5.7/min here against that report's 0.97/min; the two are not comparable. A replay line adds
 `decision flips N (per 100)` (our first on-GCD icon changed between the tick's poll and wowsims's decision, with no
-cast, spend, avoid or aura change of ours between) and `retracted confirmed by wowsims` (a retraction of an ability
-wowsims cast within a tick). `pack_gate.FLICKER` floors each gated 20-fight loop's flicker and retracted readies (the
+cast, spend, avoid or aura change of ours between) and `retracted confirmed by wowsims` (a slot-1 retraction of an
+ability wowsims cast within a tick). `pack_gate.FLICKER` floors each gated 20-fight loop's flicker and slot-1 retracted readies (the
 measured value rounded up to the next 0.1, 0 where it measured 0; only ever down) and bars flicker <= oracle +
 `FLICKER_K` (0.5): redundant with the floors today, it tightens the bar when a change lowers the oracle's own flicker.
 `HEKILI_LOOP_HOLD=1 make test-<tag>` runs the display-side hold experiment (`; hold on`, floors not applied); as

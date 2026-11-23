@@ -304,6 +304,19 @@ Jittery recommendations are a defect, so flicker is judged beside agreement. A c
 needs a reason, and flicker has floors of its own. Between two equally good fixes, prefer the one that keeps the
 display still.
 
+**The jitter rule.** Jitter is a recommendation that flip-flops without a new fact. What matters most is the "now" icon
+(slot 1) and the now and next icons swapping places.
+
+- **A change after a fact is a correction.** A fact is a press, an avoid (a lost combo point and an energy or rage
+  refund arrive with it), an aura edge (one poll late, for a Cooldown Manager light), a death, a retarget, or a miss
+  found late by the Cooldown Manager verdict. Corrections are never held back and never counted against a lane.
+- **Only slot 1 is gated.** The gated flicker reads the first icon. The flicker ledger's gated number, retracted
+  readies, reads slot 1 only, and a now/next swap is tagged on its slot-1 entry.
+- **Slots 2-3 and the focus slot are reported, not gated.**
+- **Resource accuracy still comes first.** A correct icon is never hidden to lower a number.
+
+The ledger also keeps its old all-slot numbers on every line, so older lines stay comparable.
+
 A pack change is merged like a core change (section 4). Its review also checks that the pack still mirrors wowsims,
 that every addition uses one of the recipe keys above, and that no floor fell.
 
