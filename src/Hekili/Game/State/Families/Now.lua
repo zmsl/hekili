@@ -426,9 +426,10 @@ local function aura(u, key, duration, stacks)
     end
     I.AuraModel(u, j, u == 2 and T + flight or T, after, stacks or 1, T, CAST, u == 2)
     -- cdm-default rule 2.5.1: this application is ours (Sources/Auras.lua); a projectile's travel widens the
-    -- verdict's window (cdm-verdict §2.3; velocity > 0 only: the client raises on x/0)
-    local v = A.velocity[curA] or 0
-    I.AuraOurs(u, j, v > 0 and (A.rMax[curA] or 0) / v or 0)
+    -- verdict's window (cdm-verdict §2.3; velocity > 0 only: the client raises on x/0); with no range read, 40 yd
+    -- (every spell range, as Events/Tickets.lua's flight): a window too short would close a landed cast
+    local v, rm = A.velocity[curA] or 0, A.rMax[curA] or 0
+    I.AuraOurs(u, j, v > 0 and (rm > 0 and rm or 40) / v or 0)
     if u == 2 and journal then -- the cast's own write: what a verdict that it missed gives back (L1029)
         local r = curA > 0 and A.slot[curA] or 0
         -- a swap at or after the cast's success folded first (the success is staged): the cast was on the old

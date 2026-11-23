@@ -119,9 +119,12 @@ describe("now handlers", function()
         assert.are.equal(20, I.ab.velocity[a])
         I.ab.rMax[a] = 30 -- the range read's (Sources/Spellbook.lua)
         cast(2687, 5)
-        assert.is_true(math.abs(I.auraVerdict.W[k] - 1.8) < 1e-9, I.auraVerdict.W[k]) -- 30 / 20 + TOL 0.3
+        assert.is_true(math.abs(I.auraVerdict.W[k] - 1.85) < 1e-9, I.auraVerdict.W[k]) -- 30 / 20 + TOL 0.35
+        I.ab.rMax[a] = 0 -- no range read: 40 yd, every spell range (a window too short would close a landed cast)
+        cast(2687, 5.5)
+        assert.is_true(math.abs(I.auraVerdict.W[k] - 2.35) < 1e-9, I.auraVerdict.W[k]) -- 40 / 20 + TOL 0.35
         cast(fs.SPENDER_C, 6) -- no velocity: W0
-        assert.are.equal(1.0, I.auraVerdict.W[k])
+        assert.are.equal(0.35, I.auraVerdict.W[k])
     end)
 
     -- L482: a cast that `startsAtLanding` starts its `now`'s target auras at its landing, the target's believed
@@ -1845,8 +1848,8 @@ describe("now handlers", function()
         it("another cast of ours between the miss and the verdict: the miss is still refunded, once", function()
             begin(40)
             cast(fs.SPENDER_C, 5)
-            cast(fs.SPENDER_A, 5.9) -- the next GCD's press, before the verdict: the latest cast is no longer the miss
-            assert.are.equal(20, rage(5.95).est)
+            cast(fs.SPENDER_A, 5.2) -- a press before the verdict (cast + 0.35 s): the latest cast is no longer the miss
+            assert.are.equal(20, rage(5.25).est)
             for t = 6.1, 7.5, 0.2 do
                 drain(t)
             end

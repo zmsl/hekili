@@ -1331,8 +1331,9 @@ describe("Forever Druid in VirtualState's now context", function()
                 assert.are.same({ X.KIND[d.expects], want }, { A.expKind[a], A.school[a] }, A.key[a])
             end
         end
-        -- wrath, starfire, moonfire, insect_swarm and the debuffs demoralizing_roar, faerie_fire, growl, challenging_roar
-        assert.are.same({ 8, 0 }, { n, I.nowErrors })
+        -- wrath, starfire, moonfire, insect_swarm and the debuffs demoralizing_roar, faerie_fire, growl, challenging_roar,
+        -- feral_charge (its velocity: the Cooldown Manager verdict's window, L450)
+        assert.are.same({ 9, 0 }, { n, I.nowErrors })
     end)
 
     it("gives Primal Fury's 5 rage at a bear strike's own crit with the talent at 2/2, none at 0/2 (GAP T)", function()
@@ -2101,6 +2102,28 @@ describe("Forever Druid missed Rake closed by the Cooldown Manager at its deadli
         assert.is_nil(VS.Aura("target", 1822, t + W + 0.01))
         S.reset("Primary", true)
         assert.is_false(S.debuff.rake.up)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Item 3 (L448, L450): the global window comes from the measured cast-to-light latency; an instant's own window is
+    -- W0, and the charge's root, whose item lit 863 ms after the cast (the charge travels), gets its own from the
+    -- pack's velocity.
+    it("windows: Rake's verdict window is W0 (0.35 s); Feral Charge's root covers its 863 ms light", function()
+        local k = function(key)
+            return I.AURA_UNIT + I.auras.byKey[key]
+        end
+        t = t + 2
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-w1", 9904)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.are.equal(0.35, I.auraVerdict.W[k("rake")])
+        I.ab.rMax[I.ab.bySpell[1238122]] = 25 -- the client's maxRange (the fake's default is 5)
+        t = t + 2
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-w2", 1238122)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_not_nil(VS.Aura("target", 19675, t + 0.1))
+        assert.is_true(I.auraVerdict.W[k("feral_charge_effect")] >= 0.863 + 0.3)
         assert.are.same({}, H.errors)
     end)
 end)

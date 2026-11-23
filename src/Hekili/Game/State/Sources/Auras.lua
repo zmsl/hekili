@@ -67,14 +67,18 @@ I.auraOurs = ours
 -- before; LONG is finite where a duration exists: inf - inf is NaN), closed by the observed down (rule 1). A LONG
 -- record whose CDM stops answering UP (UNKNOWN, a hidden viewer, the leaf off, a target change) is clamped to HOLD
 -- once.
--- shortcut: HOLD 1.0 s is a guess (spec D9; the owner's 0.6/1.0/1.5): set it from the LAT probe (ledger CDM-LAT).
--- The rule's alternatives (4b's re-stage within LAPSE of the expiry, L309's LONG re-stage) were measured and removed
--- (cdm-default Task 9, review S2).
-local HOLD, LONG = 1.0, 3600
+-- HOLD (cdm-facts item 3, L448; was the 1.0 s guess D9): the measured Cooldown Manager latency with a margin. Cast to
+-- light p50 15 ms, p99 27 ms, max 109 ms of 110 casts (L448), a 100-120 ms tail and one 323 ms Rip light (L361); light
+-- to dark at the modelled expiry within 50 ms (L361: Enrage, Rake, Moonfire, Roots). LAT = 0.35 s covers the worst
+-- light seen with ~25 ms to spare and every dark at expiry seven times over. A delayed effect (a travel, a charge)
+-- declares its velocity instead (I.AuraOurs). The rule's alternatives (4b's re-stage within LAPSE of the expiry,
+-- L309's LONG re-stage) were measured and removed (cdm-default Task 9, review S2).
+local LAT = 0.35
+local HOLD, LONG = LAT, 3600
 -- D14: after our cast wrote an application, its NONE closes it only once the fact read UP REFRESH_LAG after the write: an
 -- item still showing the old application inside the client's latency says nothing of the new one.
--- shortcut: 0.5 s is unmeasured; the LAT probe (cast success vs the item's light) sets it.
-local REFRESH_LAG = 0.5
+-- The item's light after our cast: LAT (above; was the unmeasured 0.5 s).
+local REFRESH_LAG = LAT
 local DUR = {}
 -- By key (L310): lastE the model's expiry the last time an UP answer found the record up (0: none, or the item went
 -- dark since), lastSt its stacks; longE the expiry of the LONG write still standing (0 none). anyLong, anyLast: some
@@ -109,8 +113,10 @@ I.presenceHold = holdN
 -- (the closes that refunded our missed cast, L1029) and backN (those refunds a strike took back); refPend[k] 1 while
 -- the last verdict's refund may still be struck (its strike window). A verdict is counted when its close folds (I.AuraVerdictClosed),
 -- never at the stage.
--- shortcut: W0 1.0 s, TOL 0.3 s and STRIKE_WIN 2.0 s are the spec's (§6) from the 2026-11-09 sample; Task 10's P1 tunes them.
-local W0, TOL, STRIKE_WIN = 1.0, 0.3, 2.0
+-- W0 and TOL (cdm-facts item 3, L448; were the spec's 1.0 s and 0.3 s): LAT, the measured cast-to-light latency with its
+-- margin, after the write and after a travel alike. STRIKE_WIN 2.0 s stays (a guard: wider only takes back more wrong
+-- verdicts).
+local W0, TOL, STRIKE_WIN = LAT, LAT, 2.0
 -- strikePend[k]: the t of a light within STRIKE_WIN of a verdict (0 none), decided at the next poll, after this drain's
 -- fold has run our recast's write (the first Opus round's M2: the polls run before the fold).
 local W, verdictAt, verdictN, strikeN, darkN, strikePend, refundN = {}, {}, {}, {}, {}, {}, {}

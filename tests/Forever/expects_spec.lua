@@ -17,6 +17,8 @@ local DECLARED = {
         faerie_fire = { "debuff", nil, nil },
         growl = { "debuff", nil, nil },
         challenging_roar = { "debuff", nil, nil },
+        -- the root lands when the charge arrives: its Cooldown Manager item lit 863 ms after the cast (L361, L450)
+        feral_charge = { "debuff", 29, nil },
     },
     Warrior = {
         sunder_armor = { "debuff", nil, nil },

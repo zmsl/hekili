@@ -1238,6 +1238,11 @@ spec:RegisterAbilities({
     feral_charge = {
         id = 1238122,
         copy = { 16979 },
+        -- no damage (DB2, wowsims): its ticket takes its own avoid only. The root lands when the charge arrives: its
+        -- Cooldown Manager item lit 863 ms after the cast (L361), so the charge's speed (25 yd at most in 0.863 s)
+        -- widens the belief's verdict window for it alone (L450)
+        expects = "debuff",
+        velocity = 29,
         cast = 0,
         cooldown = 15,
         gcd = "off",
