@@ -1087,6 +1087,34 @@ M.FLICKER = {
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 1 / 1 / 0): flicker 0.02 -> 0
     ["Destruction"] = { flicker = 0, retracted = 0, heldReady = 1 }, -- 0 / 0 / 0, 1
 }
+
+-- A record-only arm's own floors (L1795, Fable T2), by arm then label: each field named here replaces that label's
+-- M.FLICKER field in that arm only (ab.arm()), so a ruled row reads ok there and a new row still prints MISS. Each
+-- value is the arm's measured seeds 1-20 (the only set the arm runs) with its cause; it only moves as M.FLICKER does.
+-- An arm or label not named is judged on M.FLICKER (bands-drop, the stress arm, has none).
+M.ARM_FLOORS = {
+    bands = {
+        -- L1783 (B4 round 4 trace; batch 3 bands run 22675171a: Arms 0.40, Fury L60 0.36, Fury L24 0.18, Warrior
+        -- Protection 0.25 /min): a stale usability answer under the harness's unmeasured G7 delay (L1675 clip) takes
+        -- the icon back after the band showed the crossing; the measured value + 0.01 (the line rounds to two decimals)
+        ["Arms"] = { flicker = 0.41 },
+        ["Fury L60"] = { flicker = 0.37 },
+        ["Fury L24"] = { flicker = 0.19 },
+        ["Warrior Protection"] = { flicker = 0.26 },
+        -- T1 (L1794, traced on tag-blockers d578acd86): a regen pair of band crossings is stamped on the world's
+        -- 0.1 s regen step (world.lua W.startRegen; the fake sees the pool only there), so each end reads up to one
+        -- step late (the truth at the stamp sits that far into the cell: SM Ruin seed 2 104.010 3.87 over the low
+        -- end, 105.210 0.14) and a 1.1-2.1 s window measures the rate 5-11% high; one such sample lifts the learned
+        -- rate past the floor's 2% spread, and the floor kept inside the band (applyBand) holds the excess, at most
+        -- 0.1-0.5 mana, until a band edge. The client's bar follows its smooth regen per frame (band-source-design
+        -- 1.3), so the step at the stamp is the harness's. Seeds 1-20 as measured: SM Ruin seeds 2 and 3, Destruction
+        -- 2 and 14, Frost 15 (69.107: residues 2.705 and 0.398), Elemental 20 (171.762: 2.595 and 0.160)
+        ["SM Ruin"] = { loOver = 279 },
+        ["Destruction"] = { loOver = 303 },
+        ["Frost"] = { loOver = 4 },
+        ["Elemental"] = { loOver = 1 },
+    },
+}
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. It tightens the bar when a change lowers the oracle's own flicker. 1.8 -> 0.5 (forever-gap-bd,
 -- 2026-10-26, the press rule and gap BD's cast bar; every gated pack but a row's own flickerK, seeds 1-20 / 21-40 /
@@ -1098,7 +1126,17 @@ M.FLICKER_K = 0.5
 --- The flicker floors of `label` (M.FLICKER) and, unless `reported`, flicker <= oracle + FLICKER_K, reported next to
 --- react p90 and the unmatched cost refusals (the line).
 function M.flicker(label, r, line, reported)
-    local fl = M.FLICKER[label]
+    local fl, own = M.FLICKER[label], (M.ARM_FLOORS[ab.arm()] or {})[label]
+    if own then -- the arm's fields over the label's (M.ARM_FLOORS)
+        local merged = {}
+        for k, v in pairs(fl or {}) do
+            merged[k] = v
+        end
+        for k, v in pairs(own) do
+            merged[k] = v
+        end
+        fl = merged
+    end
     if fl then
         ab.check(r.flicker <= fl.flicker, label, "flicker floor: " .. line)
         ab.check(r.retracted <= fl.retracted, label, "retracted-ready floor: " .. line)
