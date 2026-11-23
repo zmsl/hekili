@@ -34,7 +34,7 @@ local M = {}
 M.WINDOW = 5 -- ticks (1 s at 5 Hz): an episode ends within this or is not one
 M.SLOTS = 4 -- queue positions 1-3 (Primary's numIcons) and the focus entry
 M.FOCUS = 4
-M.EVENTS = { "cast", "spend", "avoid", "aura", "swing", "target", "miss" }
+M.EVENTS = { "cast", "spend", "avoid", "aura", "swing", "target", "miss", "press", "outcome" }
 M.LATE = 1.5 -- s: the CDM verdict's window (Auras.lua W0 1.0 s) plus one unforced update (0.5 s)
 local EPS = 1e-6
 local JUSTIFIED = { press = true, avoid = true, aura = true }
@@ -111,11 +111,11 @@ function M.changes(f, o)
     for c = 2, f.n do
         if name[c] ~= name[c - 1] then
             local w
-            if ev.cast[c] or ev.spend[c] then
+            if ev.press[c] then -- our cast or spend, a ranged auto shot's not (loop.lua `press`)
                 w = "press"
             elseif band(f, c) == "stale" then
                 w = "stale"
-            elseif ev.avoid[c] then
+            elseif ev.outcome[c] then -- an avoid row of ours, a ranged auto shot's not (loop.lua `outcome`)
                 w = "avoid"
             else
                 w = fact(f, c, o.viewer) or false

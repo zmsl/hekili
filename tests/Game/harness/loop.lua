@@ -373,21 +373,25 @@ local function events(W, us, from, e)
         local k = ev.kind
         if ev.src == us then
             -- a hard cast's start and a channel's end are ours too (fix 22: the client sees them at the press)
-            e.cast = e.cast
-                or k == "cast"
+            local cast = k == "cast"
                 or k == "castStart"
                 or k == "castStop"
                 or k == "channelStop"
                 or k == "strike"
                 or k == "queue"
                 or k == "unqueue"
-            e.spend = e.spend or ((k == "cast" or k == "strike" or k == "gain") and (ev.cost or 0) > 0)
-            e.avoid = e.avoid or (ev.act ~= nil and ev.act ~= "WOUND" and k ~= "tick")
+            local spend = (k == "cast" or k == "strike" or k == "gain") and (ev.cost or 0) > 0
+            local avoid = ev.act ~= nil and ev.act ~= "WOUND" and k ~= "tick"
+            e.cast, e.spend, e.avoid = e.cast or cast, e.spend or spend, e.avoid or avoid
+            -- the gated flicker's press and avoid facts (L1762 round 2): a ranged auto shot's cast and outcome (`auto`:
+            -- world.lua W.startRanged, replay.lua) are no press of ours; the ledger's classes above keep them
+            e.press = e.press or ((cast or spend) and not ev.auto)
+            e.outcome = e.outcome or (avoid and not ev.auto)
             e.swing = e.swing or k == "swing"
             e.aura = e.aura or k == "cdreset"
             -- the jitter rule's late fact (L1762): an avoid row of our press, not of a white swing nor a ranged auto
             -- shot (world.lua W.startRanged's `auto`); a wand's shot is its Shoot press's channel, so it stays
-            e.miss = e.miss or (ev.act ~= nil and ev.act ~= "WOUND" and (k == "spell" or k == "strike") and not ev.auto)
+            e.miss = e.miss or (avoid and (k == "spell" or k == "strike") and not ev.auto)
         end
         e.aura = e.aura or k == "form" or (k == "aura" and (ev.dst == us or (us.target ~= nil and ev.dst == us.target)))
         e.target = e.target or k == "target" or (k == "kill" and ev.dst == ev.ourTarget) -- a retarget, our target's death

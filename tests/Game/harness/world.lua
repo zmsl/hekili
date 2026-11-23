@@ -790,7 +790,7 @@ function M.new(seed)
                 return
             end
             local w = e.ranged
-            W.emit({ kind = "cast", src = e, dst = v, spell = spell })
+            W.emit({ kind = "cast", src = e, dst = v, spell = spell, auto = true }) -- `auto`: no press (loop.lua)
             if o.swing then
                 W.emit({ kind = "swing", src = e, dst = v, hand = 3, speed = w[3], ours = true })
             end

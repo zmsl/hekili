@@ -701,6 +701,19 @@ describe("the headless loop's ledger events (loop.events)", function()
             { false, false, true },
             flags({ kind = "spell", src = us, dst = mob, act = "MISS", auto = true })
         )
+        -- the gated flicker's press and avoid facts (`press`, `outcome`): a ranged auto shot's cast and miss are neither
+        local function own(ev)
+            local e = {}
+            loop.events({ truth = { ev } }, us, 1, e)
+            return { e.cast or false, e.press or false, e.avoid or false, e.outcome or false }
+        end
+        assert.are.same({ true, false, false, false }, own({ kind = "cast", src = us, dst = mob, auto = true }))
+        assert.are.same(
+            { false, false, true, false },
+            own({ kind = "spell", src = us, dst = mob, act = "MISS", auto = true })
+        )
+        assert.are.same({ true, true, false, false }, own({ kind = "cast", src = us, dst = mob }))
+        assert.are.same({ false, false, true, true }, own({ kind = "swing", src = us, dst = mob, act = "DODGE" }))
         assert.are.same({ false, false, false }, flags({ kind = "spell", src = us, dst = mob, act = "WOUND" }))
         assert.are.same({ false, false, false }, flags({ kind = "spell", src = other, dst = us, act = "DODGE" }))
     end)

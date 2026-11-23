@@ -356,11 +356,16 @@ describe("the jitter rule on the gated flicker (flicker.changes, loop.flips, L17
     end)
 
     it("excuses a flip whose change follows a fact at its poll: press, avoid, aura edge, death or retarget", function()
-        for _, k in ipairs({ "cast", "spend", "avoid", "aura", "target" }) do
+        for _, k in ipairs({ "press", "outcome", "aura", "target" }) do
             local n, why, by, old = flip({ [4] = { ev = { [k] = true } } })
-            local name = (k == "cast" or k == "spend") and "press" or k
+            local name = k == "outcome" and "avoid" or k
             assert.are.same({ 0, name, 1, 1 }, { n, why[4], by[name], old }, k)
         end
+        -- a ranged auto shot's cast or avoid row alone (cast / avoid without press / outcome: loop.lua) is no fact
+        assert.are.same(
+            { 1, 1 },
+            { flip({ [4] = { ev = { cast = true } } }), (flip({ [4] = { ev = { avoid = true } } })) }
+        )
         assert.are.equal(1, (flip({ [3] = { ev = { aura = true } } }))) -- a poll before, no viewer: not this change's
         assert.are.equal(1, (flip({ [5] = { ev = { aura = true } } }))) -- the return's fact alone: the change had none
     end)
@@ -385,10 +390,10 @@ describe("the jitter rule on the gated flicker (flicker.changes, loop.flips, L17
 
     it("does not excuse a change that follows a stale answer, older than the band crossing at its poll", function()
         -- B4 round 4's class A: the band crosses to 33-34, the belief sits at 29.99 (a short answer from before it)
-        local A = { [3] = { band = { 28, 29 } }, [4] = { band = { 33, 34 }, lo = 29.99, ev = { avoid = true } } }
+        local A = { [3] = { band = { 28, 29 } }, [4] = { band = { 33, 34 }, lo = 29.99, ev = { outcome = true } } }
         local n, why = flip(A)
         assert.are.same({ 1, "stale" }, { n, why[4] }) -- the avoid at that poll does not excuse it either
-        A[4].ev = { cast = true } -- our own press: a spend after the band's stamp puts the belief under it
+        A[4].ev = { press = true } -- our own press: a spend after the band's stamp puts the belief under it
         assert.are.equal(0, (flip(A)))
         -- class B: the change follows an aura edge, the return a stale answer under the next crossing
         local B = { [4] = { ev = { aura = true }, band = { 9, 10 }, lo = 9 }, [5] = { band = { 17, 18 }, lo = 9.99 } }
