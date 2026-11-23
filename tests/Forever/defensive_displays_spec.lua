@@ -39,7 +39,7 @@ describe("the defensive and interrupt displays", function()
         Warlock = { shadow_ward = "defensives", death_coil_defensive = "defensives" },
         Warrior = { pummel = "interrupts", shield_bash = "interrupts" },
         Shaman = { earth_shock_interrupt = "interrupts" },
-        Priest = { power_word_shield = "defensives" },
+        Priest = { power_word_shield = "defensives", desperate_prayer = "defensives" },
     }
     for Class, want in pairs(TOGGLES) do
         it("carry their toggle (" .. Class .. ")", function()

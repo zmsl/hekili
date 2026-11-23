@@ -898,6 +898,12 @@ local function utility(ids, costs, o)
         a.now = selfBuff(o.buff)
         a.handler = selfBuff(o.buff)
     end
+    a.toggle = o.toggle
+    if o.race then -- a race-locked spell: known only to that race (state.race: the client's race token, as race packs)
+        a.known = function()
+            return state.race[o.race] == true and knownRank(ids) > 0
+        end
+    end
     return a
 end
 
@@ -961,7 +967,9 @@ spec:RegisterAbilities({
         combat = true,
     }),
     fade_spell = utility(FADE, { 40, 75, 125, 175, 225, 275 }, { cooldown = 30, agile = true, buff = "fade_buff" }),
-    desperate_prayer = utility(DESPERATE_PRAYER, nil, { cooldown = 600 }),
+    -- owner L1808: "Desperate Prayer is exclusive to dwarf priests" (Forever: wowsims's priest spell data, the DB2
+    -- rows; the live Cooldown Manager catalog is filtered); a self-heal, under Defensives
+    desperate_prayer = utility(DESPERATE_PRAYER, nil, { cooldown = 600, toggle = "defensives", race = "dwarf" }),
     dispel_magic = utility(DISPEL_MAGIC, { 0.18, 0.18 }, { agile = true }),
     cure_disease = utility({ 528 }, { 0.15 }, { agile = true }),
     abolish_disease = utility({ 552 }, { 0.15 }, { agile = true }),
@@ -1068,19 +1076,21 @@ spec:RegisterSetting("prefer_starshards", false, {
 -- (L1808, owner "Setting per line") the health threshold of the packs' Power Word: Shield (50%) lines (the recipes'
 -- `extra`, the def-int-beyond-wowsims review's defaults): a 1-100 slider on every spec
 spec:RegisterSetting("power_word_shield_health", 50, spec:HealthOption("power_word_shield"))
+-- Desperate Prayer's line (Dwarf priests only; the review's 40%, its proposed value): every spec
+spec:RegisterSetting("desperate_prayer_health", 40, spec:HealthOption("desperate_prayer"))
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
 -- run it, never this block (tests/Forever/priest_spec.lua checks it matches). Each pack's .simc is generated from its
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/priest_*.lua).
 spec:RegisterPack(
     "Shadow (wowsims.com)",
-    20261123000,
-    [[Hekili:9I17VrQnq0)wYxsz7LcS7MEDBuOsTQTQP66PtL8zy9Inl(waJSnzvKoXF7DSHaMFLDtYD9(WjWZmVz8d75nzdwgCFGpgjjbFCL7Q3VC5Q1UUUb(Yhlib(fOOdO9Wd5Om4)9tqy2XQTwhzhf0mHDelBHYRhtziScPDL0u5D5b7MeurbjkW)t)7D)H)93i0Gf4NqXysDeer0mj5MQTYes12M1CIzCYdeE1wmjgvMkR2(RF6dvBHLR22cqj1rLrHtbNseshCHWrvGyHJeENMV3w)Q9NfS8fxbPGJYfPqDJHNzQusfvBryml)7GhoqEuyxT93rs0ntukw)ZD3dGKiLfIBCC2tLjL7uvVZaxxaycvmANBSRl564OnRTbwKZIPPalJIKuwUWUGtGG3HKE1u1(sehFfn27IDLXX2glAxwCzDu9w9qo7yE1FpcV355KrZXH7srczRDVc2rcp8iJJdfjusQoxjeuQmPgQlBEPisERNGivmia7WWcRDRfyiD1RiKSCYvLcsilooCFe2B55LcJWNbCWTWcMALxl(DimrkQzv4Zx2q(xTgq)MoJr8dHcueNgtJiQaSYq5i7u2TERG7bxQFdQGq1kxVAHzWK0YCIimLUproERy18v20RMnMf4KnNKHO5IB9CV06IENiQ)avawR9)lyIXUWWAde)I3s3fDGGjpWk5AokfTVK0aIL1ZA)YMKmYQzs(YjWiIXsHsCc7TOSzH6F9OXso5a6ziqT9Vvu3M)hyUnFBiUDeUGWpao3N8m9rzGkjzI5DbtYy50OqE5WB8MELH(mJhQUom5L3X3a7i7RIzrLcVv67JZ9bzW9Yb0WuqmIQ6dXeTnhuBycQFRdAEo0EuNQbhhRtF)DPeXb04yHQO6AXYjXaiDw7oE1vrnhSA)QByP9791lgTBItrpQVz80PjJcU5GeK(hSxAAao7DXCUVyUCKljCEzHmeYwCkJXTw)dR)(OeeGqAytn6yUVuXzhb7G35A7UCH36ECvgCgu)TBuincFb(GyRamnymKuQqk0Z9up8a84h1ZbrYr7sj4GF7jryqvEO6wGp0yh2juem6YjvwMtCmqc10GuAC6qvpTLGH63ll5JLnvPD9liTDIIV8mpsqvL8RNHM7etnt0ecTkq(XzaPVWRjqNqawb67ptAXu6TxkEsz5TlnFAbMZrB(TlXOeN)QjYO44F6C5yT68KS7Br3(086ziC)2P1nFLz1nNjR2jTRI6NpZOAf7vbT09mJYu)xh4W(RZf4Orc0rpSvPrlI51(h2DPZyGVwVs1cwH(WoIJrFIXcm3R9noa95A51PpRDBUMAJgUq7952TYqDUTSwQry4DX281oKHjr8Qgf5uZIORJHNE7rpk18ETbEzdP8StPOZ(WBbMdPae2RBkLP2ek9(HxEAPC1Km9o2ncEDnhOoP43(NX)CJTy8ZamNG6j)LdMAgLjp8QlluPmHXd8)lYbAkTAR1F28JDOnh8F]]
+    20261123001,
+    [[Hekili:9IvuZnQnq4Fl5fx7EPa2o9QBMqNPDA70056n3uYZGLbHrNbeJKiEYm3WV9UsqaHaITtUR5Hm2A1(TR(0QD)g7V0)bFViKa7)XvoRE)YLRw74S03t8ub23RafEaTh(qokd(VxckIESA78J0JCsg3kKMTqURNsPOijs7kjPI7Z93nkO8cCOV3N(37)dVhULRaZ3lHefHR9aZdNii3wTvKGR22SMDmLHFeZQ2gHJrLPIQT)6N(q1wy5QTTausSLrKBxWiyUWoQGBltWiUTa(ojFVL6RwFMtZxCnecgkNNc5De8zQmKeE1wuuen)7GpCa)e3QA7VJeOBhjvM)p3)aasIquWV12EprKuUtM92gBDbGjKXODoXoo4BId3S2cyrgnMKcSmkuqO5CRcggCEhs4wtv7lrSORjXUxTRmo2sBrRYIz1E1B1d50J5v)9a8ENRDgjpkyxkIlAT7wqpIzbhPSOaEcbNQIvcgLksQHAwZxkcf35YXcjdcWA6wq92AbgchCZwGzaXguWqpHzNhYMEncW1RWf0C81LCCanooyFyK7YZlcAUpb4W2ckOYvET43HWiHO(6cQlYmVyLRb3R9yre7qahfYiXKqS0H5zOCKvk9o3voooZuFdYGa5k3SAHUZ40YCmpiLSprm8OmVP8rFxnhS5WMSy4mejNFNRZS5x1RuR(MVaSwV)VeH1ofAwBG4xCx6SOdKi8J0sMIJsr7lXnGmF(lAFwtqgyvpiF5eyesPPqkoI9wu2Sq(xpASKHpGEbcuz)Bf1T5)bMBZ3gIBhMXXSdWM7tE67rAGiWz8P3seoJMtcdyLMV413vg6ZuwG85WOpEh(cSJSVoMgwYDxPEpo1fIX7sdAymigqv9HyK(Xg5weg1V1bjphAjQcLr5yD47FkfigGglIltQUE3mCmasN1UYRUmQPWQ9wxZs799nlgCAItrpPEz8C1Kwc3uibH)rRL6gGAVRMA7lMkg5cmJvwicGOfNsPS5R)H1FFyccqinOjhT1pxs)ScHtW7CSCwUWDDpUkdQbv3DdCPzIQVhmfNdMm03Ks4cUsqvTQe4JFujWcNJ2LIJ8)TNNUdJ7nhB67bn2HtcbbAIo5KLPM66lGCAIqAop9YI4etJLbCTra1khLeqBcOnU9YI9W50YWEZfe2UPWxEKhmbxg8FCcsUB6TEGgzYUeK3p1nvVj96aDIj(sq)PZKw0N13leppk7TRf40t0ohXaV9zAs1aF1MQj54nNlhRKdmk7(wekCAE9muk82P1nFLz1F(mz1oTesVw6CMU1kVq5LzJ5P8sxXHYrZ2Rt54arikVn7vQ1JyA1gMTx6m67PMqkB6lr3SL4q0hriI(zTVrd0NQNxNIa12MQR2a5mQDFUTR00d0Mwlviy(ySnETYA0jIxL4NtP(rLhMLV9OhP(HE9bUmzrVOUi1qFZxb6YIac71PlASdHmytPQrPDQxz3a4v5SVSsXR9xK4LekP9lAm1e1t(JG8sQI6v8QsluPiHcQJ(l8bskPA78)S53Trz2))(]]
 )
 spec:RegisterPack(
     "Smite (wowsims.com)",
-    20261123000,
-    [[Hekili:LwvyVTjmq0Fl7lDnArajPRRlQuPnTnTwTvvn6Nn4GpcEHyBHnnkFHF77mKKceynDtvQY587EVJZ3ZMmH8ijGrna5(PEtVCYKPZ888ibMTkGeOOXROlXfc6A8)bR5gOm68nYnA(ATtSC9ilOTzskZs0IcEM5wbzrVCQvqmj4HFD7xdECoJRJ5QmUa5nLZyqDwGoUFDMxgzsXG7I5MiZHNG8YigKqlYmLrF6HFugHHlJ2NFb31QP2vLZbTXLP0U2sKPD1wiHgmkxS0PkOZV1sXOXOo5uHodRFgUwA1LRlJOmMu8wCXkyR2Pm6ludDEp1Z5)82hrssngLEUR7sUjTyH9tWTd0riNyztx4L45bxKeF1mhSBMlt4zytHgB4sH2rLdyYlOgFLCdKhYfjfACNXfAiuMKeUmM5pP8UD43HAJmNfQt5qgBmpXpfOzMuNvc5gXz7(Hk2CTVgm2oakt30cRHDG4357whrBKcOT6NMensFaYryHkP5OVUtN)NzOhj0PsP5yMxtfulvHzYR9N41QOKzBdt45W4ezCH2FQf)5VHblkssCoSRtH6SwSm1B0)pn30lnc5t0Q0FoxvrUsQRs3c(jieeWACK)g)zJA3aOm5M6tzfLlAwo7RMUyqwBsHceurmyZOoOZUio5aLTTLAwp2rn4PEhHP8osaAiSt1DUYiJRn6QROQD54Y7RUYc1CrgWiFEVrbDoDNGjbX5i75CkEfZlo9mKbGyWAQJKngHS1ZHsOXe(Rt8JTgwzN9kK95b)xVYhzASIFXjkELPQPMDStwUEFhUEg8lAcQ8sn(u3dJeun7ApBqbU8FxGBojb(WadDhSKT08eTMwIVAWk)VyiB29BVz7Q(JdzvQTSnvRpZSLc8aSFoQCUdEUpT6CFYqE16Kn4FbhEFRpV9qdDTFkSIiKkAHjvMtc(oSINXXNI)2UxAR2M8Np]]
+    20261123001,
+    [[Hekili:LAvxpUPoq0Fl9LTB0ncij7TFeTSs9Q2R6UQD1QY(mGdEi4gITLTzJYl8BVJH8bqGUjTksroJpZ5mm2Njeoj85WakXaHpo1B67Mmz6mpVjHbMTsimqsswrwIl4K143bRzgOm(6nInA2ATtIy9ilOT5cc1s0IcwU5EE4IE5ulHKWGN(X9Fj455uMoHjZzCK3mgLc1zb6K(1zEzSjddUlMBQqbVaQYykKskYnLXF6PVvgJHlJ3NFbZ1QP2vQyG24sLAxBjs1UAlKidgLXx6uf05NAbF0yuhfHRZX6NIRfwDz6YycLk4VfxSc2QDkJ)mXqM3t9C93V)zKKmJrQN76UKzYkwyFeC7aDeYjw2KfEPEEWnPjFyMd2nvIuwo2uijgMGRDKkatEbX4lfBaveJNwOXDgxOHirAA0YeQ)KYh2HFhQncfnsNXGC6ywQFgqYnzoR4In8R29dzI5wFnySDauMUPfvd7aX)JVlE6ibf2yIKkYwqDEm3nREiUoI2i4q7hRZtHgPpa5iSiPWCsB785)id9iHotimNY8AcNyPkkxCR)eVwfLiFBuktbJtfjfA)Pw8x)gkSOin15WUofYRAXYuVr)90CxV0WfVqQs)yUYcLuORs3c(fic4WA0lDN)SrTBaeQyt91hjHXBwo7RMUyqwBsHe4eEcyZOoOZUiokGq32snR59Kg8uVtWu(qya60S2LoZIYzAJUA2x94dC5JvZcrnxKd0W)BVdeTKDTgHbjkKDfJGZUE1Bpd5ScnynnGKD9mxMId44ScoRJGnUZABahkGgwQlt7t9IwzV5cK9Ot7Yv(exQv8)9mfVYf3uZo(xlxVRdxhb)QUUkZBJh19WcdQml2ldOaV)pxG7olb(Wax5omdOLMN5SalXFCWk)3mbOz3V9MTRAS7pG5SEirt56B8rfhdzWRMvm4b)0Qd(jdzvRt2GFco8x19nnzOBDT)x9kIqQifMmbA7)kSILZW3Q4)39sdvBh(Rd]]
 )
 
 -- Spirit Tap (15270, 5 ranks: 20-100% chance; wowsims talents_shadow.go applySpiritTap): its buff after a kill that

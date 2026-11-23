@@ -170,6 +170,14 @@ local LINES = {
         "power_word_shield_health",
         spell = 17,
     },
+    { -- owner: "Desperate Prayer is exclusive to dwarf priests"
+        require("Forever.helpers.priest_world").Shadow,
+        "Shadow (wowsims.com)",
+        "desperate_prayer",
+        "desperate_prayer_health",
+        spell = 13908,
+        race = "Dwarf",
+    },
     {
         require("Forever.helpers.hunter_world").Survival,
         "Survival (wowsims.com)",
@@ -214,6 +222,7 @@ for _, P in ipairs(LINES) do
             if P.spell then
                 c.known[#c.known + 1] = P.spell
             end
+            c.race = P.race or c.race
             if P.talent then
                 c.talents = c.talents or {}
                 c.talents[P.talent] = 1
@@ -331,4 +340,43 @@ describe("the Barkskin lines", function()
             assert.are.same(P[3], got)
         end)
     end
+end)
+
+-- owner L1808: "Desperate Prayer is exclusive to dwarf priests": another race's Priest never sees the line, even with
+-- the spell in the spellbook (the race check, state.race: the client's race token, as the race packs read it)
+describe("Desperate Prayer for a priest of another race", function()
+    it("is unknown and never shown, at any health", function()
+        local pw = require("Forever.helpers.priest_world")
+        local c = pw.Shadow.character()
+        c.known[#c.known + 1], c.race = 13908, "Human"
+        local H = headless.new({ character = c, pack = "Shadow (wowsims.com)" })
+        local lhv = fake_lhv.new({
+            now = function()
+                return H.ctl.now
+            end,
+        })
+        local major, minor = lhv:GetVersion()
+        local stub = rawget(H.env, "LibStub")
+        stub.libs[major], stub.minors[major] = lhv, minor
+        H.Hekili.bandOff = false
+        H.Hekili:ProvidersChanged()
+        H.ctl.guid.target = "Creature-1"
+        H.ctl.health, H.ctl.healthMax = 1000, 1000
+        local S = H.Hekili.State
+        assert.is_false(S.action.desperate_prayer.known)
+        lhv:Push("health", "player", nil, 1000, 1000, H.ctl.now)
+        for _ = 1, 14 do
+            assert(headless.cycle(H, H.ctl.now + F))
+        end
+        H.ctl.combat = true
+        H.ctl.Fire("PLAYER_REGEN_DISABLED")
+        lhv:Push("health", "player", nil, 50, 1000, H.ctl.now) -- 5%: under every threshold
+        for _ = 1, 30 do
+            assert(headless.cycle(H, H.ctl.now + F))
+            local out = H.Hekili.Engine.Output.Defensives
+            for i = 1, out.count do
+                assert.are_not.equal("desperate_prayer", out.recs[i].actionName)
+            end
+        end
+    end)
 end)

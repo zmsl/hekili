@@ -453,6 +453,7 @@ What players read in a pack's description (the recipe's `notes`), and why. Warri
 - Beyond wowsims (owner L1808, "All in the next release"): every pack carries the Healthstone (30%) and the healing
   potion (25%) lines (rule 25, from the shared settings), and each class's own save as a recipe `extra` `first` line:
   Evasion 50, Ice Block 15, Divine Shield 20, Lay on Hands 15 (not while Divine Shield is up), Power Word: Shield 50,
+  Desperate Prayer 40 (owner: Dwarf priests only; its `known` reads the race token, `state.race`),
   Deterrence 35, Death Coil's defensive key 35, Barkskin 50 (Balance, and Feral outside Bear Form as
   `barkskin_cat_health`; the owner: "barkskin is available in all forms", so no line is gated on a form). Each threshold is a
   per-spec setting; each line is on the Defensives toggle, so it shows in the Defensives display only.

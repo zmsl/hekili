@@ -41,8 +41,11 @@ return {
     -- Healthstone and healing potion lines come from the shared settings (rule 25).
     extra = {
         { first = true, line = "power_word_shield,if=health.known&health.pct<=settings.power_word_shield_health" },
+        -- owner L1808: Desperate Prayer, Dwarf priests only (its `known`), 40% (the review's proposal)
+        { first = true, line = "desperate_prayer,if=health.known&health.pct<=settings.desperate_prayer_health" },
     },
     settings = {
         power_word_shield_health = { default = 50, desc = "player health threshold, percent" },
+        desperate_prayer_health = { default = 40, desc = "player health threshold, percent" },
     },
 }

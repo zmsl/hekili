@@ -3045,7 +3045,7 @@ options.abilities.desperate_prayer.toggle	name	Require Toggle
 options.abilities.desperate_prayer.toggle	values.cooldowns	Cooldowns
 options.abilities.desperate_prayer.toggle	values.custom1	Custom 1
 options.abilities.desperate_prayer.toggle	values.custom2	Custom 2
-options.abilities.desperate_prayer.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.desperate_prayer.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.desperate_prayer.toggle	values.defensives	Defensives
 options.abilities.desperate_prayer.toggle	values.interrupts	Interrupts
 options.abilities.desperate_prayer.toggle	values.minor_cooldowns	Minor CDs
@@ -22869,16 +22869,17 @@ options.packs.discipline.Smite (wowsims.com).lists.action	values.wait	|T136243:0
 options.packs.discipline.Smite (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.discipline.Smite (wowsims.com).lists.actionID	name	Entry
 options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 17 - |cFFFFD100|cffffd100health.known&health.pct<=settings.power_word_shield_health|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healthstone_health|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healing_potion_health|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 5019 - |cFFFFD100|cffffd100mana.pct_lo<=10|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 14914 - |cFFFFD100|cffffd100(!debuff.holy_fire.up&mana.pct_lo<=20)|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 14914 - |cFFFFD100|cffffd100(!debuff.holy_fire.up&mana.pct_lo>=20)|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 15237 - |cFFFFD100|cffffd100(buff.holy_purpose.up&active_enemies>=3)|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 589 - |cFFFFD100|cffffd100!debuff.shadow_word_pain.up|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 402174 - |cFFFFD100|cffffd100action.penance.ready|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 585 - |cFFFFD100|cffffd100mana.pct_lo<=20|r|r
-options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 585
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 13908 - |cFFFFD100|cffffd100health.known&health.pct<=settings.desperate_prayer_health|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healthstone_health|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healing_potion_health|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 5019 - |cFFFFD100|cffffd100mana.pct_lo<=10|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 14914 - |cFFFFD100|cffffd100(!debuff.holy_fire.up&mana.pct_lo<=20)|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 14914 - |cFFFFD100|cffffd100(!debuff.holy_fire.up&mana.pct_lo>=20)|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 15237 - |cFFFFD100|cffffd100(buff.holy_purpose.up&active_enemies>=3)|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 589 - |cFFFFD100|cffffd100!debuff.shadow_word_pain.up|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 402174 - |cFFFFD100|cffffd100action.penance.ready|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 585 - |cFFFFD100|cffffd100mana.pct_lo<=20|r|r
+options.packs.discipline.Smite (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 585
 options.packs.discipline.Smite (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.discipline.Smite (wowsims.com).lists.action_name	name	Action Name
 options.packs.discipline.Smite (wowsims.com).lists.action_name	values.abolish_disease	|T136000:0|t Spell 552
@@ -23023,7 +23024,7 @@ options.packs.discipline.Smite (wowsims.com).lists.modMoving.moving	values.1	Mov
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.discipline.Smite (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
+options.packs.discipline.Smite (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 13908)
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.discipline.Smite (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -23093,6 +23094,8 @@ options.packs.discipline.core	name	Specialization Settings
 options.packs.discipline.core.activate	desc	Recommend for Discipline from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.discipline.core.activate	name	Activate Discipline
 options.packs.discipline.core.activeMarker	name	|cFFFFD100Active|r
+options.packs.discipline.core.desperate_prayer_health	desc	The priority shows Spell 13908 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.discipline.core.desperate_prayer_health	name	Spell 13908: at or below this health (%)
 options.packs.discipline.core.disableSpacer	name	\032
 options.packs.discipline.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.discipline.core.enabled	name	Disable Discipline
@@ -27870,25 +27873,26 @@ options.packs.shadow.Shadow (wowsims.com).lists.action	values.wait	|T136243:0|t 
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	name	Entry
 options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 17 - |cFFFFD100|cffffd100health.known&health.pct<=settings.power_word_shield_health|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healthstone_health|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healing_potion_health|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 15473 - |cFFFFD100|cffffd100!buff.shadowform.up|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1277324 - |cFFFFD100|cffffd100(mana.lo<=2000&mana.pct_lo<=42)|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1259799 - |cFFFFD100|cffffd100(action.elunes_light.known&(gcd.remains<=0&(!action.shadow_word_pain.known||debuff.shadow_word_pain.remains>=10)&(!action.devouring_plague.known||((action.devouring_plague.known&debuff.devouring_plague.remains>=10)||(action.devouring_plague.known&cooldown.devouring_plague.remains>=8)))))|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1259813 - |cFFFFD100|cffffd100(action.eureka.known&(gcd.remains<=0&(!action.shadow_word_pain.known||debuff.shadow_word_pain.remains>=8)&(!action.devouring_plague.known||((action.devouring_plague.known&debuff.devouring_plague.remains>=8)||(action.devouring_plague.known&cooldown.devouring_plague.remains>=8)))))|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 20554
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r |cff00ccff[Use Items]|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r [Item 12662]
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r [Item 13444]
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 589 - |cFFFFD100|cffffd100!debuff.shadow_word_pain.up|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 2944 - |cFFFFD100|cffffd100!debuff.devouring_plague.up|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 8092
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1309595
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 14751
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 10797 - |cFFFFD100|cffffd100settings.prefer_starshards&(!action.mind_blast.known||cooldown.mind_blast.remains>=4)|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 15407 - |cFFFFD100|cffffd100((action.inner_focus.known&prev.1.inner_focus)||(!action.inner_focus.known))|r|r
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 15407
-options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 585 - |cFFFFD100|cffffd100!action.mind_flay.known|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 13908 - |cFFFFD100|cffffd100health.known&health.pct<=settings.desperate_prayer_health|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healthstone_health|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healing_potion_health|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 15473 - |cFFFFD100|cffffd100!buff.shadowform.up|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1277324 - |cFFFFD100|cffffd100(mana.lo<=2000&mana.pct_lo<=42)|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1259799 - |cFFFFD100|cffffd100(action.elunes_light.known&(gcd.remains<=0&(!action.shadow_word_pain.known||debuff.shadow_word_pain.remains>=10)&(!action.devouring_plague.known||((action.devouring_plague.known&debuff.devouring_plague.remains>=10)||(action.devouring_plague.known&cooldown.devouring_plague.remains>=8)))))|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 1259813 - |cFFFFD100|cffffd100(action.eureka.known&(gcd.remains<=0&(!action.shadow_word_pain.known||debuff.shadow_word_pain.remains>=8)&(!action.devouring_plague.known||((action.devouring_plague.known&debuff.devouring_plague.remains>=8)||(action.devouring_plague.known&cooldown.devouring_plague.remains>=8)))))|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 20554
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r |cff00ccff[Use Items]|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r [Item 12662]
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r [Item 13444]
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 589 - |cFFFFD100|cffffd100!debuff.shadow_word_pain.up|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2944 - |cFFFFD100|cffffd100!debuff.devouring_plague.up|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 8092
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1309595
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 14751
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 10797 - |cFFFFD100|cffffd100settings.prefer_starshards&(!action.mind_blast.known||cooldown.mind_blast.remains>=4)|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 15407 - |cFFFFD100|cffffd100((action.inner_focus.known&prev.1.inner_focus)||(!action.inner_focus.known))|r|r
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 15407
+options.packs.shadow.Shadow (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 585 - |cFFFFD100|cffffd100!action.mind_flay.known|r|r
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	name	Action Name
 options.packs.shadow.Shadow (wowsims.com).lists.action_name	values.abolish_disease	|T136000:0|t Spell 552
@@ -28033,7 +28037,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.modMoving.moving	values.1	Moving
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.extra_amount	desc	Specify the amount of extra resources to pool in addition to what is needed for the next entry.
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
-options.packs.shadow.Shadow (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
+options.packs.shadow.Shadow (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 13908)
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.shadow.Shadow (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
@@ -28103,6 +28107,8 @@ options.packs.shadow.core	name	Specialization Settings
 options.packs.shadow.core.activate	desc	Recommend for Shadow from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.shadow.core.activate	name	Activate Shadow
 options.packs.shadow.core.activeMarker	name	|cFFFFD100Active|r
+options.packs.shadow.core.desperate_prayer_health	desc	The priority shows Spell 13908 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.shadow.core.desperate_prayer_health	name	Spell 13908: at or below this health (%)
 options.packs.shadow.core.disableSpacer	name	\032
 options.packs.shadow.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.shadow.core.enabled	name	Disable Shadow
@@ -29774,7 +29780,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili help	Specialization Settings for Assassination:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100evasion_health|r = |cFF00FF0050.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec evasion_health #|r ( 1-100)\n\n
 ~message	/hekili help	Specialization Settings for Balance:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100behind|r = |cFFFF0000OFF|r (Always Behind)\n - |cFFFFD100barkskin_health|r = |cFF00FF0050.00|r, min: 1.00, max: 100.00\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec behind|r\n - Enable: |cFFFFD100/hek set spec behind on|r\n - Disable: |cFFFFD100/hek set spec behind off|r\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec barkskin_health #|r ( 1-100)\n\n
 ~message	/hekili help	Specialization Settings for Beast Mastery:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100deterrence_health|r = |cFF00FF0035.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec deterrence_health #|r ( 1-100)\n\n
-~message	/hekili help	Specialization Settings for Discipline:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100power_word_shield_health|r = |cFF00FF0050.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec power_word_shield_health #|r ( 1-100)\n\n
+~message	/hekili help	Specialization Settings for Discipline:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100power_word_shield_health|r = |cFF00FF0050.00|r, min: 1.00, max: 100.00\n - |cFFFFD100desperate_prayer_health|r = |cFF00FF0040.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec desperate_prayer_health #|r ( 1-100)\n\n
 ~message	/hekili help	Specialization Settings for Elemental:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healing_potion_health #|r ( 1-100)\n\n
 ~message	/hekili help	Specialization Settings for Protection:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100divine_shield_health|r = |cFF00FF0020.00|r, min: 1.00, max: 100.00\n - |cFFFFD100lay_on_hands_health|r = |cFF00FF0015.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec lay_on_hands_health #|r ( 1-100)\n\n
 ~message	/hekili help	Target Swap Setting:\n - Toggle Target Swap: |cFFFFD100/hek set cycle|r\n - Set minimum time to die for target swaps: |cFFFFD100/hek set cycle #|r (0-20)\n - Enable: |cFFFFD100/hek set cycle on|r\n - Disable: |cFFFFD100/hek set cycle off|r\n\n
@@ -29802,7 +29808,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili set	Specialization Settings for Assassination:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100evasion_health|r = |cFF00FF0050.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec evasion_health #|r ( 1-100)\n\n
 ~message	/hekili set	Specialization Settings for Balance:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100behind|r = |cFFFF0000OFF|r (Always Behind)\n - |cFFFFD100barkskin_health|r = |cFF00FF0050.00|r, min: 1.00, max: 100.00\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec behind|r\n - Enable: |cFFFFD100/hek set spec behind on|r\n - Disable: |cFFFFD100/hek set spec behind off|r\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec barkskin_health #|r ( 1-100)\n\n
 ~message	/hekili set	Specialization Settings for Beast Mastery:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100deterrence_health|r = |cFF00FF0035.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec deterrence_health #|r ( 1-100)\n\n
-~message	/hekili set	Specialization Settings for Discipline:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100power_word_shield_health|r = |cFF00FF0050.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec power_word_shield_health #|r ( 1-100)\n\n
+~message	/hekili set	Specialization Settings for Discipline:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100power_word_shield_health|r = |cFF00FF0050.00|r, min: 1.00, max: 100.00\n - |cFFFFD100desperate_prayer_health|r = |cFF00FF0040.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec desperate_prayer_health #|r ( 1-100)\n\n
 ~message	/hekili set	Specialization Settings for Elemental:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healing_potion_health #|r ( 1-100)\n\n
 ~message	/hekili set	Specialization Settings for Protection:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100healing_potion_health|r = |cFF00FF0025.00|r, min: 1.00, max: 100.00\n - |cFFFFD100divine_shield_health|r = |cFF00FF0020.00|r, min: 1.00, max: 100.00\n - |cFFFFD100lay_on_hands_health|r = |cFF00FF0015.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec lay_on_hands_health #|r ( 1-100)\n\n
 ~message	/hekili set	Target Swap Setting:\n - Toggle Target Swap: |cFFFFD100/hek set cycle|r\n - Set minimum time to die for target swaps: |cFFFFD100/hek set cycle #|r (0-20)\n - Enable: |cFFFFD100/hek set cycle on|r\n - Disable: |cFFFFD100/hek set cycle off|r\n\n
@@ -29823,6 +29829,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili set spec barkskin_health	Invalid value for barkskin_health. Must be between 1.00 and 100.00.
 ~message	/hekili set spec behind	behind set to |cFF00FF00ON|r.
 ~message	/hekili set spec death_coil_defensive_health	Invalid value for death_coil_defensive_health. Must be between 1.00 and 100.00.
+~message	/hekili set spec desperate_prayer_health	Invalid value for desperate_prayer_health. Must be between 1.00 and 100.00.
 ~message	/hekili set spec deterrence_health	Invalid value for deterrence_health. Must be between 1.00 and 100.00.
 ~message	/hekili set spec divine_shield_health	Invalid value for divine_shield_health. Must be between 1.00 and 100.00.
 ~message	/hekili set spec evasion_health	Invalid value for evasion_health. Must be between 1.00 and 100.00.

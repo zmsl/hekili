@@ -97,7 +97,10 @@ local OWN = {
     rogue = { evasion = { "evasion_health", 50 } },
     mage = { ice_block = { "ice_block_health", 15 } },
     paladin = { divine_shield = { "divine_shield_health", 20 }, lay_on_hands = { "lay_on_hands_health", 15 } },
-    priest = { power_word_shield = { "power_word_shield_health", 50 } },
+    priest = {
+        power_word_shield = { "power_word_shield_health", 50 },
+        desperate_prayer = { "desperate_prayer_health", 40 },
+    },
     hunter = { deterrence = { "deterrence_health", 35 } },
     warlock = { death_coil_defensive = { "death_coil_defensive_health", 35 } },
     shaman = {},
