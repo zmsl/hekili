@@ -150,6 +150,7 @@ function M.new()
         petPower = 0, -- UnitPower("pet") of the pet's power type `petPowerType` while exists.pet (SECRET: a secret read)
         petPowerType = 0,
         itemCount = {}, -- [itemID] = C_Item.GetItemCount (default 0)
+        itemUsable = {}, -- [itemID] = true: C_Item.IsUsableItem answers true (default false)
         -- [index] = UnitStat's value (its first two returns; default 0); .armor UnitArmor's, .block GetShieldBlock's
         stats = {},
         powerMax = {}, -- [powerType] = max
@@ -771,7 +772,9 @@ function M.new()
             return ctl.itemCount[id] or 0
         end,
         GetItemSpell = none,
-        IsUsableItem = no,
+        IsUsableItem = function(id)
+            return ctl.itemUsable[id] == true
+        end,
         GetItemInfo = function(id)
             local i = ctl.items[id]
             if i and not i.uncached then -- uncached: the client answers nothing until it has the item (Instant still does)
