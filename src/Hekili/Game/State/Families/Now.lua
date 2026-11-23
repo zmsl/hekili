@@ -162,6 +162,12 @@ local function readAura(unit, spell)
     if asOf then
         return I.AuraAsOf(unit, spell, T)
     end
+    if pinned ~= 0 and unit == "target" then -- SENT at another mob (L1734): read where `aura` writes; -1 forgotten
+        if pinned < 0 then
+            return nil
+        end
+        return I.AuraMemOf(pinned, spell, T)
+    end
     local rec, stacks, applied = I.CastAura(unit, spell, T)
     return rec and rec.est, stacks, applied
 end

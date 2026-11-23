@@ -970,6 +970,43 @@ describe("token-keyed target memory (lane T2m)", function()
             assert.are.equal(0, ns.Facade.TargetID())
         end)
 
+        it("a stacking debuff SENT at A, landed after a tab to B: +1 from A's own count, B unchanged", function()
+            local function stacking(d) -- SPENDER_C's `now` adds a stack, as Sunder Armor's `min(5, stack + 1)`
+                for a, obj in ipairs(d.abilities) do
+                    if d.abilityIds[a][1] == fs.SPENDER_C then
+                        local key = d.auras[REND].key
+                        obj.now = function()
+                            applyDebuff("target", key, 15, math.min(5, debuff[key].stack + 1)) -- luacheck: ignore 113
+                        end
+                    end
+                end
+            end
+            local function stacks(t)
+                local r, st = VS.Aura("target", fs.SPENDER_C, t)
+                return r and st or 0
+            end
+            for _, w in ipairs(WORLDS) do
+                start(w, 2, nil, stacking)
+                tab(1, 10)
+                sent(10.2)
+                success(10.4)
+                tab(2, 11)
+                sent(11.2)
+                success(11.4)
+                sent(11.6)
+                success(11.8)
+                assert.are.same({ 2 }, { stacks(11.9) }, w)
+                tab(1, 12)
+                assert.are.same({ 1 }, { stacks(12.1) }, w)
+                sent(12.2)
+                tab(2, 12.4)
+                success(13)
+                assert.are.same({ 2 }, { stacks(13.1) }, w .. ": B unchanged")
+                tab(1, 14)
+                assert.are.same({ 2 }, { stacks(14.1) }, w .. ": A's own 1, plus one")
+            end
+        end)
+
         it("a tab back before the success: on the target, as with no tab (both worlds)", function()
             for _, w in ipairs(WORLDS) do
                 start(w, 2, nil, hard)

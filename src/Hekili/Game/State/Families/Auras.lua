@@ -407,6 +407,16 @@ function I.AuraMem(s, j, applied, expires, stacks)
     memExp[s][j], memApplied[s][j], memStacks[s][j] = expires, applied, stacks
 end
 
+--- Read-only: the aura with spellID in memory slot s at t, as VS.Aura's answers: expiry (nil: down or unknown), stacks,
+--- applied. Our cast pinned to that mob reads it (Families/Now.lua). Allocates nothing.
+function I.AuraMemOf(s, spellID, t)
+    local j = U.bySpell[spellID]
+    if not j or not memExp[s] or memExp[s][j] <= t then
+        return nil
+    end
+    return memExp[s][j], memStacks[s][j], memApplied[s][j]
+end
+
 -- TargetSwap: a is the new target's memory slot (0: none). TargetGone: forget slot a.
 I.On(Obs.TargetSwap, function(o)
     save(I.curSlot)
