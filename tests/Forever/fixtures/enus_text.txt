@@ -29895,7 +29895,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	reverted 1	The |cFFFFD100Alpha|r priority was reverted.
 ~message	reverted 2	The |cFFFFD100Alpha|r and |cFFFFD100Beta|r priorities were reverted.
 ~message	reverted 3	The |cFFFFD100Beta|r, |cFFFFD100Alpha|r, and |cFFFFD100Gamma|r priorities were reverted.
-~message	snapshot	Snapshots saved:  Interrupts, Defensives, Primary.
+~message	snapshot	Snapshots saved:  Defensives, Primary.
 ~message	styles	Display style 'enus_test' targets style API -1, this Hekili Forever has 1; not registered.
 ~message	styles	Display style 'queue' not registered: the name is a core display setting.
 ~message	unknown style	Display Primary: unknown style 'enus_nope', drawn as classic.
