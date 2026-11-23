@@ -253,18 +253,18 @@ end
 function M.healthLine(run, st)
     local VI = st.H.ns.VirtualStateInternal
     local abilities = st.H.Hekili.Class.abilities
-    local function defensive(key)
+    local function shielded(key)
         local a = key and abilities[key]
         return a and a.toggle == "defensives" or false
     end
     local shown, pressed = 0, 0
     for n = 1, run.combat do
-        if defensive(run.ours[n]) then
+        if shielded(run.ours[n]) then
             shown = shown + 1
         end
     end
     for key, k in pairs(run.pressedBy) do
-        if defensive(key) then
+        if shielded(key) then
             pressed = pressed + k
         end
     end
