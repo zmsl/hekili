@@ -320,12 +320,15 @@ function M.new(W, k)
     -- them (captures b and c: SENT, START, SUCCEEDED, STOP, FAILED, INTERRUPTED, DELAYED).
     local cursor = 0 -- the truth rows read (obs.step)
     -- The success of our cast, after what the bars show of it: a spend (k.spendFirst > 0), a gain (k.gainFirst > 0).
+    local doneFrom, doneAt = -math.huge, 0 -- the delayed success's frame and its time (rows of its frame follow it, see read)
     local function castDone(t, ev)
         if not k.bands then
             return t
         elseif ev.cost and k.spendFirst > 0 then
+            doneFrom, doneAt = ev.t, t + k.spendFirst
             return t + k.spendFirst
         elseif k.gainFirst > 0 and ev.kind == "cast" and M.gains(W.truth, cursor, us) then
+            doneFrom, doneAt = ev.t, t + k.gainFirst
             return t + k.gainFirst
         end
         return t
@@ -643,6 +646,10 @@ function M.new(W, k)
     end
     local function read(ev)
         local t, kind = ev.t, ev.kind
+        -- a cast's own aura and avoid rows arrive in its success frame (captures: about 2% of own target rows precede the success by 1-17 ms; aura order unmeasured, AX3; ledger L1779)
+        if t - doneFrom < M.FRAME and (kind == "aura" or (ev.act and ev.src == us and ev.dst ~= us)) then
+            t = doneAt
+        end
         showSpends(t)
         if kind == "prepull" then -- 0.5 s before the pull: the cache, then the target 0.1 s later
             formDelta(t, ev.form)
