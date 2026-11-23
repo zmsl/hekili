@@ -28,7 +28,7 @@ The Forever client is a modern game client that hides many combat values from ad
 | Hits on the player | Read | Including misses, dodges and parries. |
 | Energy, rage and mana | Estimated | The exact amount is hidden in and out of combat. Where the game allows it, the 1% step the amount is in is read, and the estimate stays inside it. |
 | Cooldown remaining time | Estimated | From the cast time and the ability's cooldown. |
-| Buff and debuff times | Estimated | From the cast and the aura's duration. The game's Cooldown Manager can show some of them ([Cooldown Manager](Cooldown-Manager)). |
+| Buff and debuff times | Estimated | From the cast and the aura's duration. The game's Cooldown Manager can show some of them ([Cooldown Manager](Cooldown-Manager)). A debuff whose cast finishes after a target change counts on the enemy it was cast at. A missed or dodged instant is noticed from the game's report of the miss, or within about half a second from the Cooldown Manager. |
 | Hits landed on a target | Not available | |
 | Target health | Read | In whole-percent steps, and no lower than 2% while the target lives; unknown for a moment after a target change. When an ability that is usable only at low target health disagrees with the step, the ability's answer wins. If the game offers no reading, full (100) until such an ability becomes usable, then that ability's threshold. |
 | Time until the target dies | Estimated | From how fast its health falls; unknown until there is enough to estimate from. |

@@ -1750,14 +1750,16 @@ end
 
 -- Slot r's band moved to [lo, hi) at bt. A crossing: its low end rose to the top of the last one by continuous regen,
 -- so the value then was the new low end within a frame. Two at least I.PIN_GAP apart with no change we know of between
--- measure the regen (calibrate, never pin). Anything else that moves the low end (a jump, a fall, full) starts over;
+-- measure the regen (calibrate, never pin). A rise stamped at or within I.BAND_MARGIN after a change we know of is that
+-- change shown (a gain inside the cell: the value is not the low end; L1794), so it starts over too, as does anything
+-- else that moves the low end (a jump, a fall, full);
 -- a band whose top alone moved is neither. So a percent band (widened: the ends never meet) and regen past a cell
 -- between two stamps (10 a second polled less often than every point) are never measured. Allocates nothing.
 local function crossing(r, lo, hi, bt)
     local was = R.bandLo[r]
     if lo == was then
         return
-    elseif lo < was or abs(lo - R.bandHi[r]) > I.EPS or lo >= R.max[r] - I.EPS or R.movedT[r] > bt then
+    elseif lo < was or abs(lo - R.bandHi[r]) > I.EPS or lo >= R.max[r] - I.EPS or R.movedT[r] > bt - I.BAND_MARGIN then
         R.markT[r] = -1
         return
     end

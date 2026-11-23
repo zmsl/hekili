@@ -110,6 +110,29 @@ class Gather(unittest.TestCase):
 
         self.assertEqual(rn.gather("v0.2.0", run)["changelog"], "### Fixed\n- Rogue loads.")
 
+    def test_names_no_library(self):  # owner: our libraries are never named in player text (batch 2 m2)
+        log = "--- fix(core): LibTimeToDie's first guess\nan adapter for LibHiddenValues-1.0 over LibStub\n"
+        m = rn.gather("v0.3.0", repo(log=log))
+        self.assertEqual(m["commits"], "--- fix(core): the library's first guess\nan adapter for the library over LibStub")
+
+    def test_names_no_short_form_and_no_doubled_the(self):
+        log = "--- feat(lhv): the LibHiddenValues-1.0 shim\npaths tests/fake_lhv.lua and the lhv adapter\n"
+        m = rn.gather("v0.3.0", repo(log=log))
+        self.assertNotIn("lhv", m["commits"].lower())
+        self.assertNotIn("the the", m["commits"])
+
+    def test_known_issues_are_scrubbed_too(self):  # removing the substitution on `known` must fail this
+        plans = {
+            ("diff", "--name-only", "--diff-filter=AM", "v0.2.0", "v0.3.0", "--", rn.PLANS): "docs/superpowers/plans/p.md\n",
+            ("show", "v0.3.0:docs/superpowers/plans/p.md"): "## Open after Day 1\n- LibTimeToDie lags; the lhv shim too.\n",
+        }
+        run = fake_git(plans)
+        base = repo()
+        m = rn.gather("v0.3.0", lambda *a: run(*a) if a in plans else base(*a))
+        self.assertIn("the library lags", m["known"])
+        self.assertNotIn("lhv", m["known"].lower())
+        self.assertNotIn("LibTimeToDie", m["known"])
+
     def test_no_previous_tag_takes_all_history_and_no_plans(self):
         m = rn.gather("v0.3.0", repo(prev=None))
         self.assertIsNone(m["previous"])
