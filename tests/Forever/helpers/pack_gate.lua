@@ -926,7 +926,9 @@ M.FLICKER = {
     -- (seeds 21-40) is untraced
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0.033 / 0, readyShort 0 / 0 / 0, heldReady 0 / 1 / 1): flicker 0.02 -> 0
-    ["Smite"] = { flicker = 0, retracted = 0.04, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
+    -- jitter rule L1762: now-slot gating (R6; seeds 1-20 / 21-40 / 41-60: retracted, slot 1, 0 / 0 / 0; the all-slot
+    -- count 0 / 0.03 / 0: seeds 21-40's two are Shoot in a next slot at a near-tie, next R 0.03): retracted 0.04 -> 0
+    ["Smite"] = { flicker = 0, retracted = 0, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
