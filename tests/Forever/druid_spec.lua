@@ -1351,13 +1351,31 @@ describe("Forever Druid in VirtualState's now context", function()
 
     -- L586, Furor (wowsims forms.go): out of Cat the pool keeps its 10 a second except in Bear Form, and a Cat entry
     -- keeps 20% a rank of it: untalented, none. Cat at 2 (from 100), Shred at 3 (60), out of Cat at 4 to the caster
-    -- form or Bear Form, back into Cat at 7. At 5/5: 40 left, 50 at 4, then 80 (caster) or 50 (Bear); at 3/5: 60 at
-    -- the entry, 10 after Shred, 20 at 4, 50 at 7, x 0.6.
-    for _, x in ipairs({ { 0, false, 0 }, { 0, true, 0 }, { 5, false, 80 }, { 5, true, 50 }, { 3, false, 30 } }) do
-        local furor, bear, want = x[1], x[2], x[3]
+    -- form or Bear Form, back into Cat 3 s (or 10 s) later. At 5/5: 40 left, 50 at 4, then 80 (caster) or 50 (Bear);
+    -- at 3/5: 60 at the entry, 10 after Shred, 20 at 4, 50 at 7, x 0.6. The tooltip (L1809, owner 2026-11-23: the
+    -- entry is the only reset, a share by rank, not a roll) at rank r: 20r% of the energy at leaving Cat plus 2r a
+    -- second outside Bear, up to 20r: the same rule, the cap on the restored total (10 s: 1/5 and 3/5 cap at 20 and 60).
+    for _, x in ipairs({
+        { 0, false, 0 },
+        { 0, true, 0 },
+        { 1, false, 8 },
+        { 1, true, 2 },
+        { 2, false, 16 },
+        { 2, true, 4 },
+        { 3, false, 30 },
+        { 3, true, 12 },
+        { 4, false, 56 },
+        { 4, true, 32 },
+        { 5, false, 80 },
+        { 5, true, 50 },
+        { 1, false, 20, 10 },
+        { 3, false, 60, 10 },
+    }) do
+        local furor, bear, want, outside = x[1], x[2], x[3], x[4] or 3
         it(
-            ("enters Cat Form with Furor %d/5 after 3 s in %s: %d energy"):format(
+            ("enters Cat Form with Furor %d/5 after %d s in %s: %d energy"):format(
                 furor,
+                outside,
                 bear and "Bear Form" or "caster form",
                 want
             ),
@@ -1375,12 +1393,34 @@ describe("Forever Druid in VirtualState's now context", function()
                     ctl.Tick(4)
                     VS.Drain(4.01)
                 end
-                cast(768, 7)
-                near(want + 0.5, power(3, 7.05))
+                cast(768, 4 + outside)
+                near(want + 0.5, power(3, 4 + outside + 0.05))
                 assert.are.equal(0, I.nowErrors, tostring(I.nowError))
             end
         )
     end
+
+    -- A live band after the Cat entry is the game's value (memory lhv-live-band-is-fact): it replaces Furor's modelled
+    -- share. Furor 3/5, caster form 4..7: 30 at the entry; the band at 7.5 reads [42, 43).
+    it("takes a live energy band after a Cat entry over Furor's share", function()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        I.SetTalentRank(I.talents.bySpell[17056], 3)
+        cast(768, 2)
+        cast(5221, 3)
+        ctl.form = 0
+        ctl.Fire("UPDATE_SHAPESHIFT_FORM")
+        ctl.Tick(4)
+        VS.Drain(4.01)
+        cast(768, 7)
+        near(30.5, power(3, 7.05))
+        local r = I.res.slotOf[3]
+        I.Fold(7.5 - 1e-9)
+        I.bandT[r], I.bandShows[r] = 7.5, 0.17 -- stamped past the entry's hold (Resources.lua holdsBack)
+        I.Sources.Direct(VS.Obs.Band, 7.5, r, 42, 43)
+        VS.Drain(7.5)
+        local p = VS.Power(3, 7.5)
+        assert.are.same({ 42, 42 }, { p.est, p.lo })
+    end)
 
     -- Rage outside Bear Form (owner 2026-11-12: Cat Form out of combat, the client at 0, the belief pinned at 5). wowsims's
     -- Cat entry leaves rage alone (forms.go RegisterCatFormAura) and wowsims has no out-of-combat decay; the class file's
@@ -1467,6 +1507,29 @@ describe("Forever Druid in VirtualState's now context", function()
             assert.are.same(x[2], { r.est, r.lo, r.hi })
             assert.are.equal(0, I.nowErrors, tostring(I.nowError))
         end)
+    end
+
+    -- Owner 2026-11-23 (L1809): rage kept in Cat Form is real and decays out of combat (BandProbe2 2026-11-20: 19 -> 8);
+    -- only the Bear entry wipes it, then Furor's 10 is credited at 5/5 alone (a 20% a rank roll below: est and lo 0).
+    for _, x in ipairs({ { 0, { 0, 0, 0 } }, { 3, { 0, 0, 10 } }, { 5, { 10, 10, 10 } } }) do
+        it(
+            ("wipes rage decayed in Cat Form at a Bear entry with Furor %d/5 to [%d, %d]"):format(
+                x[1],
+                x[2][2],
+                x[2][3]
+            ),
+            function()
+                bearSwingCat()
+                I.SetTalentRank(I.talents.bySpell[17056], x[1])
+                I.Sources.Direct(VS.Obs.CombatEnd, 5)
+                VS.Drain(5)
+                near(7.5, settle(7.5).est) -- 11.25 less three quanta (5, 6, 7)
+                cast(5487, 7.5)
+                local r = VS.Power(1, 7.6)
+                assert.are.same(x[2], { r.est, r.lo, r.hi })
+                assert.are.equal(0, I.nowErrors, tostring(I.nowError))
+            end
+        )
     end
 
     -- Furor 3/5's unseen roll leaves the top 10 over the estimate. The estimate rests at its beat at 13; the top keeps
@@ -2206,5 +2269,27 @@ describe("Forever Druid Rake after an avoided recast (hotfix 0.8.6)", function()
         S.reset("Primary", true)
         assert.is_false(S.debuff.rake.up)
         assert.are.same({}, H.errors)
+    end)
+end)
+
+-- The harness worlds' shift entry rules come from the class file's swap_form (tests/Forever/helpers/druid_world.lua):
+-- the same rules as the belief's (owner L1809, 2026-11-23): Bear wipes rage, then Furor's 10 at 5/5 alone; Cat keeps
+-- Furor's share of the energy, rage untouched.
+describe("Forever Druid harness entry rules by Furor rank", function()
+    local dw = require("Forever.helpers.druid_world")
+    it("wipes rage into Bear Form and credits Furor's 10 at 5/5 only; keeps rank/5 of energy into Cat Form", function()
+        local function at(rule, cur)
+            return type(rule) == "function" and rule(nil, nil, nil, cur) or rule
+        end
+        local got = {}
+        for _, f in ipairs({ 0, 3, 5 }) do
+            local bear, cat = dw.entryRules("bear_form", f), dw.entryRules("cat_form", f)
+            got[#got + 1] =
+                { at(bear[dw.RAGE], 40), at(bear[dw.ENERGY], 40), at(cat[dw.RAGE], 40), at(cat[dw.ENERGY], 40) }
+        end
+        assert.are.same(
+            { { "zero", "keep", "keep", "zero" }, { "zero", "keep", "keep", 24 }, { 10, "keep", "keep", "keep" } },
+            got
+        )
     end)
 end)
