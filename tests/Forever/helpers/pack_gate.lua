@@ -890,7 +890,10 @@ M.FLICKER = {
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 109 / 113): flicker 0.04 -> 0.02, heldReady 121 -> 113
     -- loOver 877 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 877 / 570 / 492): untraced -> per-cell follow-up
     -- lane (candidate: Fire's Master of Elements harness gap)
-    ["Frostfire"] = { loOver = 877, flicker = 0.02, retracted = 0, heldReady = 113 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0 / 0 / 0, press-only 0 / 0.02 / 0; excused press 1): flicker 0.02 -> 0, cause "jitter rule L1762:
+    -- press justified"
+    ["Frostfire"] = { loOver = 877, flicker = 0, retracted = 0, heldReady = 113 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0), retracted 0, readyShort 0 / 0 / 0, heldReady 113 / 113 / 109, agreement .999 / .998 / .997): flicker 0.01 (the
     -- measured worst + 0.01), heldReady 113 (the worst set)
