@@ -428,12 +428,21 @@ end
 
 -- Fires the client events `obs` releases up to world time `t` into instance `H`, each at its own time (base + t);
 -- a cooldown's start, an aura's expiry, a totem's start and our cast bar (ms) move to the instance's clock.
-local function feed(H, obs, t, base, sink)
+-- Each event time is its own client frame (L1793): a frame (headless.frame) runs after one time's events, before the
+-- next time's, and after the last time's unless that is the poll's own (its cycle's frame); `sub`: a step inside the
+-- poll (step's world walk), its last time's frame runs too. A staged cast thus folds before a later time's Direct row.
+local function feed(H, obs, t, base, sink, sub)
     local s = obs.s
     local first, last = obs.step(t + M.TIE) -- the poll's tie, as step runs the world (M.TIE)
     local ctl = H.ctl
+    local prev = nil
     for i = first, last do
-        ctl.now = base + math.min(s.t[i], t) -- a tied event at the poll: the instance's clock never steps back
+        local at = base + math.min(s.t[i], t) -- a tied event at the poll: the instance's clock never steps back
+        if prev and at > prev then
+            headless.frame(H, prev)
+        end
+        prev = prev and prev > at and prev or at
+        ctl.now = prev
         local ev = s.ev[i]
         if ev:byte(1) == 64 then -- "@"
             local a1, a2, a3, a4 = s.a1[i], s.a2[i], s.a3[i], s.a4[i]
@@ -452,6 +461,9 @@ local function feed(H, obs, t, base, sink)
         else
             H.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
         end
+    end
+    if prev and (sub or prev < base + t) then
+        headless.frame(H, prev)
     end
 end
 M.feed = feed -- a spec with its own ticks over a world (a fight past a kill: tests/Forever/kill_rows_spec.lua)
@@ -919,6 +931,25 @@ function M.run(L, seed, o, drivers)
         end
     end
     local function step(tc) -- the world to `tc`, every instance fed and cycled
+        -- each world event time before the poll its own client frame (L1793): the world to it, then every instance's
+        -- observer and feed, so an answer reads the world as of its time (a due one, usableDelay late, stops it too)
+        while true do
+            local T = W.q[1] and W.q[1].t
+            for _, st in ipairs(steps) do
+                local d = st.obs.due()
+                T = d and (not T or d < T) and d or T
+            end
+            if not T or T >= tc then
+                break
+            end
+            T = math.max(T, W.t) -- an answer already due answers now: the world's clock never steps back
+            W.run(T)
+            -- shortcut: a viewer arm's layout events still land at the poll (below, after the lagged lights); give them
+            -- their own time here if a viewer arm's numbers hinge on their order against these events
+            for _, st in ipairs(steps) do
+                feed(st.H, st.obs, T, st.base, st.sink, true)
+            end
+        end
         W.run(tc + M.TIE)
         W.t = tc
         if ledger or hold then -- the events the ledger and the hold read
@@ -1234,6 +1265,10 @@ function M.run(L, seed, o, drivers)
     -- the out-of-combat gap: each instance's clock moves past the fight, after the last tick's own events (a kill by
     -- this tick's press, and the combat end it brings: else the next fight starts in combat for the instance); our cast
     -- still running ends there (fix 31 G3: its start would be the next fight's GCD anchor), after the last tick's metrics
+    run.ahead = 0 -- the answers' look-ahead (observer.lua obs.ahead): step's world walk keeps it within M.TIE
+    for _, st in ipairs(steps) do
+        run.ahead = math.max(run.ahead, st.obs.ahead)
+    end
     W.endCasts(us)
     -- a kill's combat end comes 1 s on (observer.COMBAT_END): fed up to it, on the tick grid (a clock off the grid
     -- reorders the next fights' float sums: Feral's flicker 2.12 -> 2.34 with the gap ending at the kill + 1 s)

@@ -1040,7 +1040,9 @@ function M.new(W, k)
     for pt, v in pairs(us.res0 or {}) do
         view[pt], cur[pt] = v, v
     end
+    obs.ahead = 0 -- how far the world had run past an answer's time when it was evaluated (its look-ahead, L1793)
     local function answer(t)
+        obs.ahead = math.max(obs.ahead, W.t - t)
         local flipped = false
         for _, u in ipairs(answers) do
             local ok, short = u[2](W, now, power, view)
@@ -1094,6 +1096,16 @@ function M.new(W, k)
     end
     local function bySeq(a, b)
         return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2])
+    end
+    --- The earliest time this observer has work at, or nil: a truth row not read yet (a press made after the last
+    --- step), or an answer still waiting (a gain's usableDelay). The loop runs the world only to it first, so the
+    --- answer reads the world as of its own time (L1793; obs.ahead).
+    function obs.due()
+        local d = W.truth[cursor + 1] and W.truth[cursor + 1].t
+        for _, x in ipairs(deltas) do
+            d = (d == nil or x[1] < d) and x[1] or d
+        end
+        return d
     end
     function obs.step(tEnd)
         local truth = W.truth
