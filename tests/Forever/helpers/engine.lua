@@ -80,6 +80,12 @@ local function newState(class, race)
         unpack = unpack,
         class = class,
         race_token = race,
+        -- State.lua's race table: the token's key true, any other false (a race-locked spell's `known`)
+        race = setmetatable({ [(race or ""):lower()] = true }, {
+            __index = function()
+                return false
+            end,
+        }),
         timeToInterrupt = noop,
         args = {},
         spec = {},
