@@ -49,13 +49,25 @@ end)
 | Kind | Spec | Proven on |
 |---|---|---|
 | `health` | `unit`, `edges`, `step`, `predicted` (default true) | `player`, `target` |
+| `health` on plates | the same, `step = 5` for the 5% cell (6 bars) | `nameplate1` to `nameplate40`: an in-game probe (at most 3 plates at once) matched a plate's bands to the target's 1% watch on every frame, and ran the 5% set with no split or desync (no boss tokens). Not yet run: bars made in combat (32 are made at login; a refused bar reads `suspended` until that token's next ADDED) and a real dungeon |
 | `power` | `unit`, `power` (`Enum.PowerType`, required), `edges`, `step`, `points`, `precision` | `player`: mana, energy, rage (rage: proven by a separate probe, the library's own run owed) |
 | `aura` | `unit`, `spell` or `cooldown`, `what`, `edges`, `max` | `player`, `target`: read from the Cooldown Manager; run in game on minor 7 (2026-11-21: the kind ready, target swaps and a cleared target right). The hooks on first use (minor 8) are not yet run there |
 
 A spec needs at least one of `edges`, `step`, `points` or `precision`.
 
+Plates: a plate token names a new unit after `NAME_PLATE_UNIT_REMOVED`/`ADDED`; tell them apart with those events, as
+with the target. A plate's watch reads unknown (`gone`) from its REMOVED (whatever `UnitExists` says then; never a
+death: half the removals measured were not) and primes again at every ADDED, so a token that names another mob in the same frame
+reads unknown, then the new mob's band with `dir` 0, never the old one: `h:Get()` is nil from the event on (a
+target change too), the sink's unknown call comes the next frame. A plate's plain death shows at its removal,
+about 0.25 s later (health events are read for `player` and `target` only).
+
 - `edges`: thresholds in percent, (0.05, 100].
-- `step`: position. Any step is granted as 1: the band is the 1% cell (`lo`, `lo + 1`), `h:Domain()` returns step 1.
+- `step`: position. Any step but 5 on health is granted as 1: the band is the 1% cell (`lo`, `lo + 1`), `h:Domain()`
+  returns step 1. `step = 5` on health (minor 10; on power it is granted as 1) is the 5% cell (`lo`, `lo + 5`; full
+  reads `100, 100`, and 95-99% reads `95, 100`), `h:Domain()` returns 5, on 6 bars (an edge on the 5% grid costs no bar). A 1% and a 5%
+  watch on one source run the 8 bars of the 1% set; the 5% watch answers from the 1% cell and is called only when its
+  5% cell changes. A 1% watch joining or leaving a source with a 5% watch primes it again (about 9 frames unknown).
   Beside `edges` the band is cut by both (an edge on the 1% grid costs no bar). The source runs 8 bars (a Gray code
   and a parity bar) while any watch on it asks for a step. A jump of any size is one call, two frames later (three when
   one change's firings split over two frames): every change is confirmed first (below). Full reads `100, 100`.
@@ -65,7 +77,7 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   Measured on plain values only; on the hidden values at empty, and predicted against real health at 0, it is
   assumed, not measured. Empty says nothing about death (that is your call); a unit the client plainly calls dead
   reads unknown (`gone`), so `0, 0` shows only before that. A watch with only `edges` reads `0, e` at empty, as before.
-  Power at 0 still reads `0, 1`.
+  Power at 0 still reads `0, 1`, and a 5% watch at 0 reads `0, 5` (exactly empty is the 1% step's only).
 - `points` (player power): whole-number thresholds in the value's own units, e.g. `{ 40, 60 }` energy. A handle with
   `points` (even `{}`) answers in points: `lo`, `hi` and `h:Domain()` (0 to the player's plain max) are in points.
   The cut is `points / max`; it moves with the max (`UNIT_MAXPOWER`: the handle goes unknown while it primes again).
@@ -327,7 +339,10 @@ turns it off after `Fake.login()`.
 Its header lists the world fields (`max` per power type for `points` and `precision`), the fault knobs (`closed`,
 `lag`, `secretlag`, `drop`, `stagger`, `jitter`, `seed`, `snap`, `maxpoints`, `refuse`) and what it does not model. It
 also models the Cooldown Manager (`W.cdm`, `W.aura`, `Fake.setAura`, `Fake.cdmLayout`, `Fake.cdmEnable`; a target's
-auras arriving late after a swap: `W.cdm.lateSwap`): see the comment above its viewers.
+auras arriving late after a swap: `W.cdm.lateSwap`): see the comment above its viewers. Plates:
+`Fake.plate(token, unitTable)` puts a unit on a nameplate token and fires `NAME_PLATE_UNIT_ADDED`, `Fake.plate(token,
+nil)` fires `NAME_PLATE_UNIT_REMOVED`; `UnitIsUnit` is true for two tokens of one unit table (`W.secretIsUnit` makes it
+a secret).
 
 ## Diagnostics
 

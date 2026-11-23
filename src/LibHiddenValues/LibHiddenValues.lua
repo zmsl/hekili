@@ -8,7 +8,7 @@
 -- (lib.loading). All state lives on lib, as plain data; scripts are one-line dispatchers through lib, so a newer minor
 -- replaces behaviour by replacing functions. Nothing is built before PLAYER_LOGIN. The addon name and the private
 -- table from `...` are never used (an embedded copy would receive its host's).
-local MAJOR, MINOR = "LibHiddenValues-1.0", 9
+local MAJOR, MINOR = "LibHiddenValues-1.0", 10
 local lib, oldMinor = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then
     return
@@ -405,7 +405,8 @@ function H:State()
     return state, reason
 end
 
--- step, min, max granted: a step of any size is granted as 1 (the 1% cell), nil for edges only. A points handle
+-- step, min, max granted: step 5 on health is granted as 5 (the 5% cell), any other step as 1 (the 1% cell), nil for
+-- edges only. A points handle
 -- answers in points: 0 to the plain max (nil while unknown), its step the 1% cell in points. The top is 100 for
 -- percents; for an aura, 1 (up), max (stacks; math.huge without one) or math.huge (seconds).
 function H:Domain()

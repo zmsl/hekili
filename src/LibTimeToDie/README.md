@@ -17,9 +17,11 @@ files), so you depend on LibTimeToDie alone:
 - Embedded: copy the `LibTimeToDie` folder into your addon and include `LibTimeToDie.xml` from your `embeds.xml`.
 
 LibStub runs the newest copy of each library on the client, wherever it was loaded from, so another addon's
-LibHiddenValues and the bundled one never both run. LibTimeToDie needs LibHiddenValues minor 5 or newer
-(`TTD.LHV_MIN`). Without LibHiddenValues every handle reads `unavailable, lhv-missing`, with an older one
-`unavailable, lhv-old`; both come alive once a suitable one is loaded.
+LibHiddenValues and the bundled one never both run. LibTimeToDie needs LibHiddenValues minor 10 or newer
+(`TTD.LHV_MIN`): nameplates and their 5% step came with it, and the whole library asks for it (the package bundles
+minor 10, so LibStub always has it when this package loads), so with an older one every token reads `unavailable,
+lhv-old`, the target too. Without LibHiddenValues every handle reads `unavailable, lhv-missing`. Both come alive once a
+suitable one is loaded.
 
 The package is built with `tools/package.sh [--tag v<major>.<minor>.<patch>]` (the folder and `LibTimeToDie-<version>.zip` in
 `.release/`, without `Testing/`; the repository vendors one LibHiddenValues source in `src/LibHiddenValues`). Two copies
@@ -38,8 +40,8 @@ local h = TTD:Track("MyAddon", "target", function(h, est, lo, hi, state)
     warning:SetShown(state == "live" and hi <= 10)
 end)
 
--- Or read it when you need it (no sink):
-local est, lo, hi, state, reason = h:Get()
+-- Or read it when you need it (no sink); id: which mob's estimate this is (below, "Past targets"):
+local est, lo, hi, state, reason, id = h:Get()
 
 -- Done with it (your frame closed, your module off):
 h:Release()                 -- or TTD:ReleaseAll("MyAddon"): every track and hint of yours
@@ -64,14 +66,16 @@ h:Release()                 -- or TTD:ReleaseAll("MyAddon"): every track and hin
 | `unavailable` | nil | `reason`: `lhv-missing`, `lhv-old`, a code LibHiddenValues refused the watch with, or LibHiddenValues' reason passed through (`unproven` for a token it does not read yet, `selftest`, `api`, `off`, `error`, `suspended`) |
 | `paused` | nil | your `SetPaused(true)`, or every track of the token paused |
 | `released` | nil | after `Release` |
+| `untracked` | nil | `TTD:Get(owner, token)` only: you have no estimate on that token now (a past target's life released, a plate token that names another unit now, a token nobody tracks) |
 
 `TTD:GetMessage(code)` gives the words for every code, state and reason (enUS for now; LibHiddenValues' reasons in its
 own words; `nil` for a locale without text).
 
 ## What it tracks
 
-Tokens are what LibHiddenValues reads health for: `player` and `target` now. Any other token returns a handle that
-reads `unavailable, unproven` until LibHiddenValues proves it; write against it now. `TTD:IsAvailable(token)` returns
+Tokens are what LibHiddenValues reads health for: `player`, `target` and `nameplate1` to `nameplate40` (5% bands, below)
+now. Any other token returns a handle that reads `unavailable, unproven` until LibHiddenValues proves it; write against
+it now. `TTD:IsAvailable(token)` returns
 `ok, state, reason` (LibHiddenValues' answer for health on that token).
 
 - One health watch per token (1% bands), shared by every track of it (and by any other addon's LibHiddenValues watch
@@ -79,7 +83,8 @@ reads `unavailable, unproven` until LibHiddenValues proves it; write against it 
 - One estimate per owner and token: every owner's estimator gets the same crossings; your tracks of a token share
   yours. An owner that starts tracking a unit already watched starts from its current band (the earlier crossings
   are not replayed).
-- A target change starts a fresh stream: the new target, also one you had targeted before, reads `unknown` until it
+- A target change starts a fresh stream unless the new target's plate holds its estimate (below, "Past targets"): the
+  new target reads `unknown` until it
   has lost health over 1.5 s after its first 1% crossing (2% of crossings, or 3% for a fit): a big first hit is not
   a rate, whether combat started before it or you took the target in combat. From then the last target's rate can
   make the first answers longer for a few seconds (the estimator's rule), never shorter. That rate is kept for 10 s
@@ -87,8 +92,8 @@ reads `unavailable, unproven` until LibHiddenValues proves it; write against it 
   exception is your hints' state, by design: a threshold factor learned by `HintBelow` (or a rate hint the last target's
   data dropped) carries to the next unit and can shorten its answers.
 - The same unit also reads `unknown` until its next percent when it heals 3% or more and combat then starts before it
-  loses health, after a plain death or loss of the unit that was none (a feign death), and when you clear it and
-  target it again.
+  loses health, and after a plain death or loss of the unit that was none (a feign death). Cleared and targeted again,
+  it gets its history back when its plate kept it (below), else it starts fresh.
 - A re-prime of the same unit (a UI scale change, a loading screen) keeps the history and keeps answering.
 - `gone` clears the stream and keeps your handle: the next unit starts fresh.
 - Combat start restarts a stream with no 1% crossing yet (a mob targeted at full long before the pull): the time it
@@ -97,6 +102,47 @@ reads `unavailable, unproven` until LibHiddenValues proves it; write against it 
   reads), and in the frame after a new band. A stream LibHiddenValues reports unavailable is read again only on a
   band, your read, a hint or a LibHiddenValues capability change; one with no watch (`lhv-missing`, `lhv-old`, a
   refusal) tries to open it at most once a second, on your read or the driver's.
+
+## Past targets (lives)
+
+Each mob's estimate is a life, with an `id` (a plain whole number, new per life, per session). When you switch away
+from a target, its life moves to that mob's nameplate, which feeds it at 5%; when you switch back, the target takes it
+again and answers at once (the same `id`, the 1% watch again) instead of reading `unknown` for a few seconds. A boss
+with adds: switch to an add and back, and the boss resumes its fit. A boss you never leave costs nothing: no plate
+watch, no extra reads, no allocation.
+
+```lua
+TTD:SetRecent("MyAddon", true)  -- on by default; false: your records stop following new targets (it restarts, as before); records already on plates stay until they go
+local est, lo, hi, state, reason, id = TTD:Get("MyAddon", "nameplate3") -- whatever that plate holds for you now
+for i = 1, 4 do                 -- your past targets still on their plates, newest first
+    local token, id = TTD:Recent("MyAddon", i)
+    if not token then break end
+end
+```
+
+| Call | Returns |
+|---|---|
+| `TTD:Get(owner, token)` | `est, lo, hi, state, reason, id` for whatever life `token` holds now, no handle, no allocation; no record of yours there: `nil, nil, nil, "untracked"` |
+| `TTD:Recent(owner, i)` | `token, id` of the i-th newest past target whose plate still holds its life with a record of yours; `nil` past the end |
+| `TTD:SetRecent(owner, on)` | `true`, or `nil, code` |
+| `TTD:Track(owner, "nameplateN", sink)` | a handle on that plate at 5%: a fresh life when it opens and after each `NAME_PLATE_UNIT_REMOVED`; it shares the target's life while it is the target's plate |
+
+- A life moves only on a plain `UnitIsUnit` true between the target and a shown plate, checked at a target change (and
+  for a plate that appears for the target, one read later unless a target change came first). A secret answer links
+  nothing. A plate token names a new unit after `NAME_PLATE_UNIT_REMOVED`: the plate's hold ends there (a returning
+  token never inherits). Which plate is which mob: the token is the reference now; `id` over time (the same `id` is the
+  same mob; a new `id` does not prove another mob).
+- Handed on only with a 1% crossing, a band and the mob not plainly dead, and if some owner has not opted out (an
+  opted-out owner's record stays behind). Kept until the plate's REMOVED, combat end, or more than four past targets
+  (`TTD.RECENT`; the oldest goes first; your own plate tracks do not count). Then `Get` reads `untracked` there.
+- While a plate feeds a life its range is 1.1x wider at both ends (`TTD.WIDEN`: 5% bands cover less often, the plates
+  lab). The hand-over band (the first band of the new watch) is never a crossing; a band whose bottom is 3% or more
+  above the last band's top is not that mob now: a new life and `id`. Every rise on a plate is fed (a 5% cell up is a
+  heal to the estimator). A plate that starts without a past target's life is a cold start: 10-25 s before its first
+  answer at 5%.
+- Costs: 6 LibHiddenValues bars per plate fed in the background (24 at most), none while the mob is the target; about
+  15 us a frame per plate fed. A plate watch is made when you switch away; a watch refused with `pool-limit` drops the life (a restart, as before); a bar refused later reads `suspended`.
+- Your hints stay yours across moves; a learned `HintBelow` factor carries as it does to a new target.
 
 ## Hints
 
@@ -153,11 +199,12 @@ A code LibHiddenValues refused the watch with (`pool-limit`: no bars left) is re
 ## Diagnostics
 
 The library prints nothing, registers no slash command and shows no frame. Its one frame (never shown) listens to
-`PLAYER_TARGET_CHANGED` and `PLAYER_REGEN_DISABLED` and runs the driver.
+`PLAYER_TARGET_CHANGED`, `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `NAME_PLATE_UNIT_ADDED` and
+`NAME_PLATE_UNIT_REMOVED` and runs the driver.
 
 | Call | Returns |
 |---|---|
-| `TTD:GetVersion()` | `"LibTimeToDie-1.0", 2` |
+| `TTD:GetVersion()` | `"LibTimeToDie-1.0", 5` |
 | `TTD:IsAvailable(token)` | `ok, state, reason` |
 | `TTD:GetStreams()` | a fresh array (call it from a command, not every frame), one row per tracked token and owner: `token`, `owner`, `tracks` and `sinks` (that owner's), `state`, `reason`, `est`, `lo`, `hi`, `crossings` (kept for the fit, at most 32), `drops` (hints the data contradicted), `rateFactor` (1: none), `rateStart`, `rateEnd` (nil: open), `executePct` (nil: none), `executeFactor` (with the stream's own measurement folded in) |
 
@@ -226,7 +273,6 @@ answer comes about 2 s later (chain pulls 1.0 -> 3.0 s) and up to about 5.5 s la
 
 ## Later (version 2)
 
-- Nameplate and boss tokens, once LibHiddenValues marks them proven.
-- Lazy coarse tracking of past targets through their nameplates (a background estimate per recent target).
-- The target adopting a watched nameplate's stream when you target that mob (no restart).
+- Boss tokens, once LibHiddenValues marks them proven.
+- A plate's death read before its removal (today it shows at the REMOVED, about 0.25 s late).
 - Hints per unit (today an owner's hints apply to all its hostile units).

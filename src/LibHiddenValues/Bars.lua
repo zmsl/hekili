@@ -11,7 +11,8 @@
 --
 -- A source runs one of three modes, chosen by its handles: edges only (one bar per edge); position (a listener asked
 -- for a step: the Gray code of the 1% cell n = 0..100 on 7 bars plus a parity bar, proven by BandProbe2;
--- an edge on the 1% grid then needs no bar); point precision (Kinds/Percent.lua's ring; at a point
+-- an edge on the 1% grid then needs no bar; while every step watch on it asks for 5, the 5% cell m = 0..20 on 5 bars
+-- plus parity, cell m = [5m, 5m + 5), cell 20 exactly 100, proven on plates by an in-game probe; an edge on the 5% grid needs no bar); point precision (Kinds/Percent.lua's ring; at a point
 -- step above 1 a step listener keeps a position set beside it, cut on whole points). A position
 -- decode checks the code, the parity and every edge bar against the cell: one bad frame holds the last band (a split:
 -- one change's firings landed in two frames), two in a row are a desync and the source primes again.
@@ -29,6 +30,7 @@ local LOW = 1 -- the curve's "below" output; "at or above" is 2
 local EPS = 0.0005 -- a guard point this far below each step (curve x scale 0-1), whichever way the client snaps
 local CAP = 256 -- bars are never destroyed (frames cannot be): a hard ceiling on the pool
 local NGRAY = 7 -- Gray bits of the 1% cell (101 values)
+local NG5, TOP5 = 5, 20 -- Gray bits and top cell of the 5% cell (21 values)
 -- Health's exact empty: x under EMPTYX reads the unused Gray index EMPTY (code 64, odd), 2 bars from cell 0 like any
 -- one-cell move; decoded as cell -1, the band [0, 0]. The step has no guard point: an in-game run measured a Step curve
 -- resolving 1e-6 at 0 on plain input; the secret path at empty is assumed the same (not measured). Limit: health
@@ -152,7 +154,7 @@ for k = 1, #lib.sources do
             lib.barCurve[i] = lib.barCurve[i] or lib.curveFor(e)
         end
     end
-    if s.kind == "health" and s.mode == "gray" and s.core then
+    if s.kind == "health" and s.mode == "gray" and s.core and s.cw ~= 5 then
         if lib.barCurve[s.core[1] or 0] ~= (lib.hcurve and lib.hcurve[1]) then
             s.mode = false -- an older minor's position core has no empty step: lib.sync builds it again
         end
@@ -209,19 +211,20 @@ function lib.levelCurve(bit, top, xOf, eps, first, stride, empty)
     return c
 end
 
--- A position set's curves (Gray bits 0-6, then the parity bar), the step into cell n at xOf(n); false when the client
--- refused one.
-local function grayList(xOf, eps, empty)
+-- A position set's curves (Gray bits 0 to bits - 1 of the cell 0..top, default the 1% set's, then the parity bar), the
+-- step into cell n at xOf(n); false when the client refused one.
+local function grayList(xOf, eps, empty, bits, top)
+    bits, top = bits or NGRAY, top or 100
     local ok, list = pcall(function()
         local t = {}
-        for k = 0, NGRAY - 1 do
+        for k = 0, bits - 1 do
             t[k + 1] = lib.levelCurve(function(n)
                 return math.floor(GRAY[n] / POW2[k]) % 2
-            end, 100, xOf, eps, nil, nil, empty)
+            end, top, xOf, eps, nil, nil, empty)
         end
-        t[NGRAY + 1] = lib.levelCurve(function(n)
+        t[bits + 1] = lib.levelCurve(function(n)
             return n % 2
-        end, 100, xOf, eps, nil, nil, empty)
+        end, top, xOf, eps, nil, nil, empty)
         return t
     end)
     return ok and list or false
@@ -231,9 +234,19 @@ local function pct(n)
     return n / 100
 end
 
+local function pct5(m)
+    return m * 5 / 100
+end
+
 -- The position set's curves on the percent scale, built once; health's (empty) with the exact-empty step, a set of
--- its own so an older minor's lib.gcurve stays as it was.
-function lib.grayCurves(empty)
+-- its own so an older minor's lib.gcurve stays as it was; five: the 5% set (no exact empty: the 1% step's only).
+function lib.grayCurves(empty, five)
+    if five then
+        if lib.g5curve == nil then
+            lib.g5curve = grayList(pct5, EPS, nil, NG5, TOP5)
+        end
+        return lib.g5curve
+    end
     if empty then
         if lib.hcurve == nil then
             lib.hcurve = grayList(pct, EPS, true)
@@ -290,8 +303,21 @@ function lib.freeBar(i)
     lib.free[#lib.free + 1] = i
 end
 
--- Every bar of the source primes; its handles go unknown until they are live again.
+-- The source's handles drop their band now: h:Get() never gives the band of a unit the token no longer names (a plate
+-- or target change, a removal) for the rest of the frame. The sink's unknown call is owed (h.owe) to the next decode.
+local function forget(s)
+    local hs = s.handles
+    for j = 1, #hs do
+        local h = hs[j]
+        if h.lo ~= nil then
+            h.lo, h.hi, h.q, h.owe = nil, nil, lib.UNKNOWN, true
+        end
+    end
+end
+
+-- Every bar of the source primes; its handles go unknown at once (forget) until they are live again.
 function lib.reprime(s)
+    forget(s)
     local prime, P = lib.barPrime, HOLD + SETTLE + 1
     for k = 1, #s.core do
         prime[s.core[k]] = P
@@ -308,13 +334,13 @@ function lib.reprime(s)
 end
 
 -- Whether a percent edge needs a bar of its own in a mode at the max M with the ring's point step g (position covers
--- the 1% grid; the ring covers every cut at step 1 and a cut on its quantum grid above it: a cut inside the value's
+-- the grid of its cell width w, 1 or 5; the ring covers every cut at step 1 and a cut on its quantum grid above it: a cut inside the value's
 -- quantum keeps its bar; a cut that is not a whole multiple of the step is kept too, the safe side).
-local function needEdge(mode, e, M, g)
+local function needEdge(mode, e, M, g, w)
     if mode == "ring" then
         return g ~= nil and g > 1 and (e * M) % (100 * g) ~= 0
     end
-    return mode == nil or (mode == "gray" and e % 1 ~= 0)
+    return mode == nil or (mode == "gray" and e % (w or 1) ~= 0)
 end
 
 -- Whether a point threshold needs a bar of its own in a mode at the max M (position covers p when p / M is on the 1%
@@ -339,7 +365,7 @@ local function served(s, h)
     local g = s.ring and s.ring.g
     for k = 1, #h.edges do
         local e = h.edges[k]
-        if not s.bar[e] and needEdge(mode, e, M, g) then
+        if not s.bar[e] and needEdge(mode, e, M, g, s.cw) then
             return false
         end
     end
@@ -387,14 +413,15 @@ function lib.modeFor(step, prec, M)
     return (step or prec) and "gray" or nil
 end
 
--- The source's mode, and whether any handle asks for a step.
+-- The source's mode, whether any handle asks for a step, and the position set's cell width: 5 while every step
+-- handle asks for 5 (and none for precision), else 1 (the finest wins).
 function lib.modeOf(s)
-    local step, prec = false, false
+    local step, prec, fine = false, false, false
     for j = 1, #s.handles do
         local h = s.handles[j]
-        step, prec = step or h.step ~= nil, prec or h.prec == true
+        step, prec, fine = step or h.step ~= nil, prec or h.prec == true, fine or h.step == 1
     end
-    return lib.modeFor(step, prec, s.max), step
+    return lib.modeFor(step, prec, s.max), step, step and not (fine or prec) and 5 or 1
 end
 
 -- Keeps a per-max cache under 4 entries before one is added: drops the maxes no source cuts with now (a max that comes
@@ -522,9 +549,9 @@ end
 -- counts with swapList as its points.
 function lib.need(s, add, swapH, swapList)
     local M = s.kind == "power" and lib.maxOf(s.unit, s.power, s.max) or nil
-    local step, prec, edges, points = false, false, {}, {}
+    local step, prec, fine, edges, points = false, false, false, {}, {}
     local function take(h)
-        step, prec = step or h.step ~= nil, prec or h.prec == true
+        step, prec, fine = step or h.step ~= nil, prec or h.prec == true, fine or h.step == 1
         for k = 1, #h.edges do
             edges[h.edges[k]] = true
         end
@@ -540,7 +567,8 @@ function lib.need(s, add, swapH, swapList)
         take(add)
     end
     local mode = lib.modeFor(step, prec, M)
-    local bars, pb, all, g = mode == "gray" and NGRAY + 1 or 0, 0, 0, nil
+    local w = step and not (fine or prec) and 5 or 1
+    local bars, pb, all, g = mode == "gray" and (w == 5 and NG5 + 1 or NGRAY + 1) or 0, 0, 0, nil
     if mode == "ring" then
         local r = lib.ringFor(M)
         bars, g = r and #r.curves or 0, r and r.g
@@ -551,7 +579,7 @@ function lib.need(s, add, swapH, swapList)
         bars = lib.RING_MAXBARS + (step and NGRAY + 1 or 0)
     end
     for e in pairs(edges) do
-        if prec or needEdge(mode, e, M, g) then
+        if prec or needEdge(mode, e, M, g, w) then
             bars = bars + 1
         end
     end
@@ -607,7 +635,7 @@ local function allocCore(s)
     if s.mode == "ring" then
         curves, beside = s.ring and s.ring.curves, s.gray
     else
-        curves = lib.grayCurves(s.kind == "health")
+        curves = lib.grayCurves(s.kind == "health", s.cw == 5)
     end
     if not curves then
         return false
@@ -640,32 +668,39 @@ function lib.sync(s)
         end
         s.pM = M
     end
-    local mode, step
+    local mode, step, cw = nil, nil, 1
     if ready then
-        mode, step = lib.modeOf(s)
+        mode, step, cw = lib.modeOf(s)
     end
     local ring = mode == "ring" and lib.ringFor(M) or nil
     if mode == "ring" and not ring then -- the client refused a ring curve at this max: no point precision here; the
         mode = step and "gray" or nil -- other watches keep their bars, a precision handle is suspended (served)
     end
-    if mode == "gray" and not lib.grayCurves(s.kind == "health") then -- refused too: edges only, a step handle is suspended
+    if mode == "gray" and not lib.grayCurves(s.kind == "health", cw == 5) then -- refused too: edges only, a step handle is suspended
         mode = nil
     end
     local g = ring and ring.g
     -- a step beside a ring of step above 1 keeps the position set; at step 1 the ring gives one cell
     local gray = ring and g > 1 and step and lib.grayFor(M) or nil
-    if mode ~= s.mode or ring ~= s.ring or gray ~= s.gray then -- a new mode, the ring of a new max, the set beside
+    -- a new mode, the ring of a new max, the set beside, the cell width (a minor-9 source has none: 1)
+    -- shortcut: a 1% watch joining or leaving a 5% source swaps the whole set (about 9 frames unknown); keep the 5% set
+    -- beside the 1% one if that churn matters in game
+    if mode ~= s.mode or ring ~= s.ring or gray ~= s.gray or cw ~= (s.cw or 1) then
         freeCore(s) -- the whole core primes again: shortcut, a step joining or leaving re-primes the ring too
         s.mode, s.ring, s.gray, s.bad, s.ok, s.qv, s.pend, s.run = mode, ring, gray, 0, false, nil, nil, 0
+        s.cw = cw
     end
     local want = false
     if ready then
         s.gone = not lib.present(s.unit) or (s.kind == "health" and lib.dead(s.unit))
+        if s.gone then
+            forget(s)
+        end
         if mode and not s.core[1] then
             allocCore(s)
         end
         for e, n in pairs(s.ref) do
-            if n > 0 and not s.bar[e] and needEdge(mode, e, M, g) then
+            if n > 0 and not s.bar[e] and needEdge(mode, e, M, g, cw) then
                 s.bar[e] = lib.allocBar(s, lib.curveFor(e))
             end
         end
@@ -687,7 +722,7 @@ function lib.sync(s)
         end
     end
     for e, i in pairs(s.bar) do
-        if not ready or s.ref[e] == 0 or not needEdge(mode, e, M, g) then
+        if not ready or s.ref[e] == 0 or not needEdge(mode, e, M, g, cw) then
             lib.freeBar(i)
             s.bar[e] = nil
         end
@@ -735,11 +770,12 @@ function lib.fire(i)
     end
 end
 
--- The 1% cell of a position set at core[off + 1 .. off + 8] (-1: empty, on health's set); nil and an error word when its
--- code or parity is off.
-local function grayCell(st, core, off, empty)
+-- The cell of a position set at core[off + 1 .. off + bits + 1] (default the 1% set: 7 bits, top 100; -1: empty, on
+-- health's set); nil and an error word when its code or parity is off.
+local function grayCell(st, core, off, empty, bits, top)
+    bits, top = bits or NGRAY, top or 100
     local code = 0
-    for k = 1, NGRAY do
+    for k = 1, bits do
         if st[core[off + k]] then
             code = code + POW2[k - 1]
         end
@@ -747,19 +783,26 @@ local function grayCell(st, core, off, empty)
     local n = GINV[code]
     if n == EMPTY and empty then
         n = -1 -- odd, as EMPTY: the parity check below holds
-    elseif n == nil or n > 100 then
+    elseif n == nil or n > top then
         return nil, "code"
     end
-    if st[core[off + NGRAY + 1]] ~= (n % 2 == 1) then
+    if st[core[off + bits + 1]] ~= (n % 2 == 1) then
         return nil, "parity"
     end
     return n
 end
 
--- The position set's cell from its bars (nil, n); an error word when the code, the parity or an edge bar disagrees.
+-- The position set's cell from its bars (nil, n: the cell's lowest percent); an error word when the code, the parity or
+-- an edge bar disagrees.
 local function grayDecode(s)
-    local st = lib.barState
-    local n, bad = grayCell(st, s.core, 0, s.kind == "health")
+    local st, w = lib.barState, s.cw or 1
+    local n, bad
+    if w == 5 then
+        n, bad = grayCell(st, s.core, 0, false, NG5, TOP5)
+        n = n and n * 5
+    else
+        n, bad = grayCell(st, s.core, 0, s.kind == "health")
+    end
     if not n then
         return bad
     end
@@ -767,7 +810,7 @@ local function grayDecode(s)
     for e, i in pairs(s.bar) do
         if prime[i] == 0 then
             if st[i] then
-                if n + 1 <= e then
+                if n + w <= e then
                     return "edge"
                 end
             elseif n >= e then
@@ -927,7 +970,7 @@ function lib.decodeSource(s)
 end
 
 -- The handle's band from the source, in percent, or in points for a points handle (h.pts; the max is known then):
--- the cell for a step handle, then its own edges and points, each from its bar or the cell. false when the bars
+-- the cell for a step handle (a 5% handle on the 1% set: the 5% cell holding the 1% one), then its own edges and points, each from its bar or the cell. false when the bars
 -- contradict each other (edges mode: a firing was lost).
 local function band(h)
     local s, st = h.src, lib.barState
@@ -955,12 +998,15 @@ local function band(h)
         elseif A then -- the 1% cells the exact value spans (one at step 1)
             n1, n2 = math.floor(100 * A / M), math.floor(100 * B / M)
         end
+        if h.step == 5 then -- empty is the 1% step's only: here cell 0
+            n1, n2 = n1 < 0 and 0 or n1 - n1 % 5, n2 < 0 and 0 or n2 - n2 % 5
+        end
         if n1 < 0 then -- health's exact empty
             lo, hi = 0, 0
         elseif pts then
             lo, hi = n1 * M / 100, n2 < 100 and (n2 + 1) * M / 100 or M
         else
-            lo, hi = n1, n2 < 100 and n2 + 1 or 100
+            lo, hi = n1, n2 < 100 and n2 + h.step or 100
         end
     end
     local edges = h.edges
@@ -1048,7 +1094,7 @@ function lib.decode(h)
             return
         end
     end
-    if lo == h.lo and hi == h.hi then
+    if lo == h.lo and hi == h.hi and not h.owe then
         return
     end
     local frame = lib.frameNo
@@ -1068,7 +1114,7 @@ function lib.decode(h)
     if lo and h.prec and select(2, lib.exact(h)) == 1 then
         q = lib.EXACT
     end
-    h.lo, h.hi, h.t, h.q, h.stamp = lo, hi, t, q, frame
+    h.lo, h.hi, h.t, h.q, h.stamp, h.owe = lo, hi, t, q, frame, nil
     local fn = h.sink
     if fn then
         local ok, err = pcall(fn, h, lo, hi, dir, t, q)

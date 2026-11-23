@@ -1,5 +1,6 @@
 -- Kinds/Percent.lua: health and power, in percent 0-100 (the client's reads give 0-1 through the curve; the scale is
--- fixed and checked by the self-test, never read). Proven (BandProbe run 2026-11-20): health on player and target,
+-- fixed and checked by the self-test, never read). Proven (BandProbe run 2026-11-20): health on player and target
+-- (nameplate1-40: below),
 -- power mana and energy on the player, by the type the spec names (required); rage on the player (BandProbe2 warm-up
 -- 2026-11-20, bear form in combat under the lockdown; the library's own run is owed). Anything else is a handle that
 -- reports "unavailable", "unproven".
@@ -61,7 +62,8 @@ local function validate(spec, h)
         end
     end
     h.unit, h.edges, h.power, h.predicted = unit, out, spec.power, spec.predicted ~= false
-    h.step = step and 1 or nil -- any step is granted as the 1% cell (Domain says so)
+    -- step 5 on health is granted as the 5% cell; any other step as the 1% cell (Domain says so)
+    h.step = step == 5 and h.kind == "health" and 5 or step and 1 or nil
     h.points = pts and lib.pointList(pts) or {}
     if pts and not lib.pointList(pts) then
         return E.POINTS_INVALID
@@ -106,6 +108,12 @@ lib.kinds.health = {
         return UnitHealthPercent(s.unit, s.predicted, curve)
     end,
 }
+
+-- Plates (an in-game probe): nameplate health is secret but decodes through bars, matching the target's 1%
+-- watch on every frame; the 5% set ran there with no split or desync. No boss tokens (no consumer yet).
+for i = 1, 40 do
+    lib.kinds.health.units["nameplate" .. i] = true
+end
 
 lib.kinds.power = {
     api = "UnitPowerPercent",

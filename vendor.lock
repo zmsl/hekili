@@ -4,17 +4,17 @@
       "name": "LibHiddenValues",
       "repository": "https://github.com/zmsl/LibHiddenValues",
       "path": "src/LibHiddenValues",
-      "tag": "v0.9.0",
-      "sha": "1c1fc05b71a5a130fb84c6664860f04cbb5539fe",
-      "digest": "sha256:639bb9419befd06aaceae73ed132b5b82c0f69b130ffeea7b4ae2eeacce24ae8"
+      "tag": "v0.10.0",
+      "sha": "73cb6ff074d3774b86bd2ee696675484d2652af1",
+      "digest": "sha256:ecc49ddd953c134c3a4a01fd18d781407765957eaac2fe32a8eb80b700edc8b3"
     },
     {
       "name": "LibTimeToDie",
       "repository": "https://github.com/zmsl/LibTimeToDie",
       "path": "src/LibTimeToDie",
-      "tag": "v0.4.0",
-      "sha": "1a62eabfcbd5009d13a629999f217453c65ae8ff",
-      "digest": "sha256:a5482de6330f870127a2e7436cded8e243dbfc6e393a1a4510197bb8afa71905"
+      "tag": "v0.5.0",
+      "sha": "62285d06ee23196a48029790dec8d2875ece8761",
+      "digest": "sha256:d3958547eee4d0a567a32a2f0f875b950513b0c936c6c59f4a73de9feb9a3e85"
     }
   ]
 }
