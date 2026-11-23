@@ -416,7 +416,7 @@ describe("facts and polls", function()
     end)
 
     it("reads the player's health when plain and caches the stats out of combat", function()
-        ctl.health, ctl.healthMax = 500, 1000
+        ctl.healthMax, ctl.unitHealth.player = 1000, 500 -- a plain read (live reads it secret always, L1710)
         drain(2)
         assert.are.equal(0.5, VS.Health("player", 2).est)
         assert.are.equal(1000, VS.HealthMax("player"))
@@ -427,7 +427,7 @@ describe("facts and polls", function()
     end)
 
     it("reads the player's health as full while the client keeps it secret, the plain value again after", function()
-        ctl.health, ctl.healthMax = 300, 1000
+        ctl.healthMax, ctl.unitHealth.player = 1000, 300 -- a plain read (live reads it secret always, L1710)
         drain(2)
         assert.are.equal(0.3, VS.Health("player", 2).est) -- out of combat, plain: honoured
         ctl.Fire("PLAYER_REGEN_DISABLED") -- the pull: the plain read from before it is forgotten at once

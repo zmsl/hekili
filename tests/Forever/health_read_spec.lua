@@ -1,5 +1,5 @@
--- tests/Forever/health_read_spec.lua (central fix 12 item 2; owner L1461, L1462): the client hides the player's health
--- in combat (UnitHealth and UnitHealthMax "player" secret, plain out of combat; the fake client answers so). Without the
+-- tests/Forever/health_read_spec.lua (central fix 12 item 2; owner L1461, L1462, L1710): the client hides the player's
+-- health in combat and out (UnitHealth "player" secret always, its maximum secret in combat; the fake client answers so). Without the
 -- hidden-value library a priority line that reads it (`health.pct`) never fires while the client keeps the health
 -- secret (unknown reads as full, no compare on a secret) and reads the plain value where the client gives one. With
 -- the library's band (lane B3, integration design 2.5) it reads the band's middle in combat. No load-time warning
@@ -36,35 +36,39 @@ describe("a player health read in a priority", function()
         assert.are.same({}, H.Hekili.ErrorKeys)
     end)
 
-    it("the fake client hides the player's health in combat only", function()
+    it("the fake client hides the player's health in combat and out (L1710), its maximum in combat only", function()
         local api, ctl = fake.new()
         ctl.health, ctl.healthMax, ctl.unitHealth.target = 300, 1000, 40
-        assert.are.equal(300, api.UnitHealth("player"))
+        assert.is_true(api.issecretvalue(api.UnitHealth("player")))
         assert.are.equal(1000, api.UnitHealthMax("player"))
         ctl.combat = true
         assert.is_true(api.issecretvalue(api.UnitHealth("player")))
         assert.is_true(api.issecretvalue(api.UnitHealthMax("player")))
         assert.are.equal(40, api.UnitHealth("target")) -- another unit's row is the test's own
         ctl.combat = false
+        assert.is_true(api.issecretvalue(api.UnitHealth("player")))
+        ctl.healthPlain = true -- the loop oracle's truth
         assert.are.equal(300, api.UnitHealth("player"))
     end)
 
-    it("reads full in combat, never comparing the secret, and the plain value again after it", function()
+    it("reads full in combat and out, never comparing the secret", function()
         H.ctl.health, H.ctl.healthMax = 300, 1000
-        assert.is_true(fires(H.ctl.now + 1)) -- plain (out of combat): 30% < 50
+        assert.is_false(fires(H.ctl.now + 1)) -- secret out of combat too: unknown reads as full
+        assert.are.equal(100, H.Hekili.State.health.pct)
         H.ctl.combat = true
         for i = 2, 4 do
             assert.is_false(fires(H.ctl.now + 1), i)
             assert.are.equal(100, H.Hekili.State.health.pct, i)
         end
         H.ctl.combat = false
-        assert.is_true(fires(H.ctl.now + 1))
+        assert.is_false(fires(H.ctl.now + 1))
         assert.are.same(warned, H.errors)
     end)
 
     it("never fires while the client keeps the health secret, and honours a plain read", function()
         H.ctl.health, H.ctl.healthMax = 300, 1000
-        assert.is_true(fires(H.ctl.now + 1)) -- plain (out of combat): 30% < 50
+        H.ctl.unitHealth.player = 300 -- a plain read (never seen on live): 30% < 50
+        assert.is_true(fires(H.ctl.now + 1))
         H.ctl.unitHealth.player = fake.SECRET -- secret: unknown reads as full
         for i = 2, 5 do
             assert.is_false(fires(H.ctl.now + 1), i)

@@ -8,6 +8,7 @@ describe("the at_risk condition", function()
     setup(function()
         H = headless.new({ raw = { "UnitHealth", "UnitHealthMax", "UnitExists", "UnitIsDeadOrGhost" } })
         S, ctl = H.Hekili.State, H.ctl
+        ctl.healthPlain = true -- the raw rows read the player's health too: the party's arithmetic, not its secrecy
     end)
 
     local function count(party)

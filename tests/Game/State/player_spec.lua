@@ -345,7 +345,7 @@ describe("the player's health from the band (lane B3)", function()
     end)
 
     it("out of combat the plain read of the same drain is exact and wins", function()
-        ctl.health = 300
+        ctl.unitHealth.player = 300 -- a plain read (live reads it secret always, L1710)
         push(340)
         frames(12)
         assert.is_true(I.bandLive[0]) -- logged, not applied
