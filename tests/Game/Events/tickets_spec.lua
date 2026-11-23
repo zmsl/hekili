@@ -763,6 +763,58 @@ describe("the ticket pool", function()
                 assert.are.equal(1, count(VS.Obs.Avoided))
             end)
 
+            -- Feral harness gate seed 2 (lane swing-avoid-fix, L1793): Rip (an instant, no expects) at 87.2, our swing at
+            -- 87.535 misses, its row at 87.711 (lag 0.176: the tail, outside its core band), 0.511 past Rip's success
+            -- (inside its landing window): the swing owes that row, so the miss is held on it, never Rip's refund
+            local function afterCast(rowT)
+                ctl.now = 87.2
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 87.535
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = rowT
+                ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            end
+
+            it("holds it on a swing from after the cast that still owes its row too (Feral Rip)", function()
+                afterCast(87.711)
+                assert.are.equal(0, count(VS.Obs.Avoided))
+                assert.are.same({ T.PROV, "MISS" }, { T.state[mh], T.avoid[mh] })
+            end)
+
+            it("gives it back to the cast when that later swing's own wound lands", function()
+                ctl.now = 50
+                ctl.damage = { 40, 50, 10, 12 } -- 45 is the main hand's (exact)
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                afterCast(87.711)
+                ctl.Tick(87.8) -- the cast's window still open
+                ctl.now = 87.82 -- the swing's own wound (lag 0.285): it landed, the miss was the cast's
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+                assert.are.same({ 1, 1 }, { count(VS.Obs.Swing, 1), count(VS.Obs.Avoided) })
+            end)
+
+            -- Feral harness gate seed 16 (lane swing-avoid-fix): our swing at 69.903 was credited provisionally by a
+            -- white wound 51 ms later (past the frame, outside its core band: TENT); Rip at 70.4, and the swing's own
+            -- dodge at 70.404 (lag 0.501, its core band) in Rip's own frame: the narrow-band row replaces the swing's
+            -- provisional credit, never Rip's refund
+            it("gives a cast's own-frame avoid to a provisionally credited swing whose core band holds it", function()
+                ctl.now = 50
+                ctl.damage = { 40, 50, 10, 12 }
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.now = 69.903
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = 69.954
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+                assert.are.equal(T.TENT, T.state[mh])
+                ctl.now = 70.4
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 70.404
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                assert.are.equal(0, count(VS.Obs.Avoided))
+                assert.are.same({ T.PROV, "DODGE", 1 }, { T.state[mh], T.avoid[mh], T.replaced })
+            end)
+
             it("leaves a swing's avoid with no cast near it to the swing (its core band)", function()
                 ctl.now = 59.749
                 ctl.Fire("PLAYER_SWING", 2.6, 0)

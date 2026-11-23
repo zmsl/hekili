@@ -137,9 +137,10 @@ local function tiedTo(p, t, g, amount, flag, band)
     return nil
 end
 
--- Gap AS, the forward order: the oldest swing of ours on `g` anchored before `at0` (a cast's success) that still owes
--- its row at t (no row yet, its window holding t), or 0. Allocates nothing.
-local function owedBefore(t, g, at0)
+-- Gap AS, the forward order: the oldest swing of ours on `g` that still owes its row at t (no row yet, its window
+-- holding t), before or after the cast's success (L1793: Feral's swing 0.27 s after Rip, its miss at a tail lag), or 0.
+-- Allocates nothing.
+local function owedSwing(t, g)
     local best = 0
     for i = 1, T.CAP do
         if
@@ -147,7 +148,7 @@ local function owedBefore(t, g, at0)
             and T.told[i] ~= 1 -- the Outcomes provider said HIT: no avoid is its
             and T.kind[i] == MELEE
             and T.guid[i] == g
-            and T.at[i] < at0
+            and T.at[i] <= t
             and t - T.at[i] <= T.w[i]
             and (best == 0 or T.at[i] < T.at[best])
         then
@@ -682,7 +683,7 @@ local function route(t, g, uid, act, flag, amount, school)
     local tied = false -- the MELEE tie took the row from a spell: pass (d) never hands it back
     local tiedP, tiedN = 0, 0 -- the spell ticket the tie took it from in its own frame (re-offered if the swing refuses)
     local frameSw, frameP = 0, 0 -- the swing the tie gave an avoid in a cast's own frame, and that cast's ticket (AS)
-    local owed = 0 -- the swing from before a cast an avoid past the cast's frame is held on (AS, the forward order)
+    local owed = 0 -- the swing an avoid past a cast's frame is held on (AS, the forward order)
     local p, n = T.Pick(t, g, 1, act, flag, amount, school, avoid)
     local pass = 1
     local replacing = 0
@@ -750,14 +751,32 @@ local function route(t, g, uid, act, flag, amount, school)
             else
                 crit = false
             end
-        elseif avoid and AVOIDS[act] and pass > 1 and T.kind[p] == X.FRAME and not T.Unmapped(t) then
-            -- the forward order (Fury L30, Sunder 60.40): past the cast's own frame, a swing of ours from before the cast
-            -- that still owes its row was resolved first; the avoid is held on the oldest such swing, whatever its lag
-            -- (the LR's weakest claim, 0: its own wound takes it back for the cast), never the cast's while one waits
-            -- (a swing's avoid act only; inside an unmapped success's window the excuse below takes it as nobody's)
-            owed = owedBefore(t, g, T.at[p])
-            if owed > 0 then
-                frameSw, frameP, p, tied = owed, p, 0, true
+        elseif avoid and AVOIDS[act] then
+            -- (L1793, Feral Rip) a swing credited provisionally (TENT) whose core band holds this avoid: the
+            -- swing's own row (decision 48's narrow band) replaces that credit below, as the tie; the cast's again if
+            -- the swing refuses it in the cast's own frame (a verdict fixed its credit)
+            local r = M.Replaceable(t, g, amount, flag, true, false)
+            if r then
+                if pass == 1 then
+                    tiedP, tiedN = p, n
+                    if t - T.at[p] <= SAME_FRAME then
+                        frameSw, frameP = r, p
+                    end
+                end
+                p, tied = 0, true
+            elseif pass > 1 and T.kind[p] == X.FRAME and not T.Unmapped(t) then
+                -- the forward order (Fury L30, Sunder 60.40): past the cast's own frame, a swing of ours that still
+                -- owes its row (from before the cast: resolved first; from after it: L1793, our instants' own rows
+                -- come in their frame) takes the avoid, held on the oldest such swing, whatever its lag (the LR's
+                -- weakest claim, 0: its own wound takes it back for the cast), never the cast's while one waits (a
+                -- swing's avoid act only; inside an unmapped success's window the excuse below takes it as nobody's).
+                -- shortcut: the give-back needs the cast's ticket still open (creditSwing), so a true late avoid of
+                -- the cast whose swing lands after the cast's window is never refunded (est low, the safe side; live
+                -- avoids are secret and never reach here); upgrade if a plain client shows cast avoids past their frame
+                owed = owedSwing(t, g)
+                if owed > 0 then
+                    frameSw, frameP, p, tied = owed, p, 0, true
+                end
             end
         end
     end
