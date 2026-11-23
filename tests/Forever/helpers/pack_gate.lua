@@ -1031,7 +1031,10 @@ M.FLICKER = {
     -- retracted 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 2 / 1 / 1): flicker 0.033 -> 0.034; flicker LOOSENED 0.033
     -- -> 0.034: the floor was the line's two-decimal rounding of seeds 41-60's one flip, 0.0333 unrounded (the same on
     -- 314a87b86 before this wave, L1499 item 3), so the set never sat under it; nothing moved
-    ["SM Ruin"] = { flicker = 0.034, retracted = 0, heldReady = 2 }, -- 0.017 / 0 / 0.033, 0
+    -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
+    -- flicker 0 / 0 / 0.02, press-only 0 / 0 / 0.03; excused press 1): flicker 0.034 -> 0.03 (the measured worst
+    -- + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
+    ["SM Ruin"] = { flicker = 0.03, retracted = 0, heldReady = 2 }, -- 0.017 / 0 / 0.033, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 2 / 0):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- 0.7 re-pin (R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0): heldReady 4 -> 0
