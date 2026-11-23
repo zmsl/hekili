@@ -357,26 +357,23 @@ x (h - p) / h, h the facade's target health, 0 at or below p) answer its live es
 `GetGreatestTTD` (`fight_remains`, `longest_ttd`: the longest among the enemies) and `GetLowestTTD` answer it with one
 enemy; with more they are unknown (only the target is tracked). One or several follows the enemy count's change after
 it held one update, read before the token plates' hold of a fall; it is the count `active_enemies` starts from, so
-with plates off or the others outside the radius it is one. While the library primes (a target change, about 10
-frames) those two keep their last live answer less elapsed, 0.5 s at most from that answer; `GetTTD` and
-`GetTimeToPct` never keep it (the last target's time is no fact about this one).
+with plates off or the others outside the radius it is one. Nothing is kept across a target change: the library
+answers `priming` only then (a re-prime of the same unit keeps answering), and after it nothing before 1.5 s of the
+new target's loss, so the last target's time would bridge to no answer and is no fact about this one (B8's 0.5 s keep
+went with vendor-libs, L1730).
 
-The library carries a target's rate to the next one within 10 s. Until its own fix is vendored (L1730),
-`ns.TtdTargetChanged` (core's `PLAYER_TARGET_CHANGED` handler) notes a target that is gone (none, as the client answers
-right after a kill, or a corpse) and when the next living target comes within those 10 s (`TTD_CARRY`) releases the
-track and tracks again, unless the GUID says it is the same mob (a secret GUID forgets). That drops the carried rate,
-the keep and the learned execute factor. A later target keeps the track: the library drops the rate itself and the
-factor stays. A corpse that stays targeted doesn't renew the 10 s on either side: plainly dead at a target or health
-event, it is gone to the library, which stops answering for it, so the carried rate ages from then.
-The library's part, so still carried: a direct swap in combat, a swap from a dying mob to a tough one first seen
-below full, and a straight swap from a mob that died while targeted with no target event (M1: within 10 s, or at any
-dwell when no health event told the library either) or whose death reads secret (the library keeps answering for it).
+The library forgets the last target itself (LibTimeToDie minor 3): a new target reads unknown until it loses health,
+and from then the last target's rate can only lengthen the first answers (a threshold factor learned through
+`HintBelow` still carries to the next unit and can shorten them, by design). So a target change never releases the
+track, and the learned execute factor stays (`tests/Forever/ttd_chain_pull_spec.lua`).
 
-A live answer whose reason is `seed` (the stream's first hits over the time since its anchor, live often one hit:
-3.63 s at 72%, then 52 s) is unknown until the library answers from a fit or a prior (owner L1742; shortcut until the
-library's first-guess fix is vendored and replaces it, L1736). It never sets the keep. The cost: the first 1-2 s after
-a pull or a re-target of the same mob read unknown, and on a direct swap the prior answers, then its seed reads
-unknown about 1.6 s, then the fit.
+Minor 4 answers a new stream (a pull, a swap, a re-target) only once its loss spans 1.5 s, then a seed until the first
+fit: a big first hit is no rate (live, minor 2 read 3.63 s at 72%, then 52 s). The core still reads a live answer whose
+reason is `seed` as unknown (owner L1742; shortcut): a burst then a far slower fall seeds at about half the true time
+for 2 s (the fit after it reads 0.74), and with the rule removed the Fury swap set's flicker rose 0.35 -> 0.40/min
+(vendor-libs fight runs, L1736). The rule would also blank a seed after a fit (Fable I1, L1756); minor 4 gave none in
+the probes, and the unknown of about a second after a sudden speed-up is the library's own (its README: up to 1.5 s on
+fast trash). Pinned through the core in the same spec.
 
 Unknown is 3600: any other state, a seed, a target that is not plainly attackable (a secret answer included), several enemies,
 no library. A refused track is
