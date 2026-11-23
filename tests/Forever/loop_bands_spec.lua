@@ -11,17 +11,29 @@
 -- on each channel the world has; what the family made of it, clipped, holds the truth too, and its estimate lies
 -- within one band of the truth (`est`).
 local loop = require("Game.harness.loop")
+local util = require("luassert.util")
 local ab = require("Game.harness.ab")
 local ww = require("Forever.helpers.warrior_world")
 local dlw = require("Forever.helpers.druid_loop_world")
 local mw = require("Forever.helpers.mage_world")
 local pw = require("Forever.helpers.paladin_world")
 
--- The outputs the gates read from a lone driver's run (loop.run's record), and the bands arm's lines. gap, readyShort
--- and heldReady need the oracle driver (L1733): the three-fight tally below compares them, on Arms.
-local ROWS = { "ours", "pressed", "presses", "pressedBy", "refused", "loOver", "up" }
+-- The outputs the gates read from a run (loop.run's record), and the bands arm's lines. gap, readyShort and heldReady
+-- need the oracle driver (L1733): `oracle` adds it as the gates run it (loop.fight's run A).
+local ROWS = { "ours", "pressed", "presses", "pressedBy", "refused", "gap", "readyShort", "heldReady", "loOver", "up" }
 
-local function fight(content, arm, seed, plant, duration)
+-- The keys of ROWS on which runs a and b differ, all of them (an early difference hides none after it).
+local function moved(a, b)
+    local keys = {}
+    for _, key in ipairs(ROWS) do
+        if not util.deepcompare(a[key], b[key]) then
+            keys[#keys + 1] = key
+        end
+    end
+    return keys
+end
+
+local function fight(content, arm, seed, plant, duration, oracle)
     local L, lines, check = loop.new(content), {}, ab.check
     if plant then
         plant(L.us.ns.VirtualStateInternal, L.us.ns.VirtualState.Obs)
@@ -35,7 +47,8 @@ local function fight(content, arm, seed, plant, duration)
             return check(ok, label, line, "default")
         end
     end
-    local ok, run = pcall(loop.run, L, seed, { duration = duration or 30, arm = arm }, { { H = L.us } })
+    local drivers = { { H = L.us }, oracle and { H = L.oracle, plain = true } or nil }
+    local ok, run = pcall(loop.run, L, seed, { duration = duration or 30, arm = arm }, drivers)
     ab.check = check
     assert(ok, run)
     assert.are.same({ 0, 0 }, { run.errors, run.raises })
@@ -45,17 +58,20 @@ end
 
 describe("the bands arm #slow", function()
     for _, case in ipairs({
-        { "Arms (rage)", ww, { -1, 0, 1 } },
+        -- case[4]: the seed-3 fight has a gap and a held-while-ready tick to compare (L1733); Feral's and Frost's 30 s
+        -- agree with the oracle on every tick, so theirs are 0 against 0 (compared, never able to fail there)
+        { "Arms (rage)", ww, { -1, 0, 1 }, true },
         { "Feral (energy; mana and rage while not shown are paused)", dlw.Feral, { -1, 0 } },
         { "Frost (mana)", mw.Frost, { -1, 0 } },
     }) do
         it(
             case[1] .. ": the health bands alone leave the rows; each applied band holds the truth or lagged it",
             function()
-                local base = fight(case[2], "default", 3)
-                local health = fight(case[2], "bands-health", 3)
-                for _, key in ipairs(ROWS) do
-                    assert.are.same(base[key], health[key], key)
+                local base = fight(case[2], "default", 3, nil, nil, true)
+                local health = fight(case[2], "bands-health", 3, nil, nil, true)
+                assert.are.same({}, moved(base, health))
+                if case[4] then -- (L1733) the oracle's rows are measured: a gap at a disagreement, a held tick
+                    assert.is_true(#base.gap > 0 and base.heldReady > 0, "the oracle's rows are empty")
                 end
                 local run, H, lines = fight(case[2], "bands", 3)
                 assert.is_true(run.loOver <= base.loOver, ("lo over %d, default %d"):format(run.loOver, base.loOver))
