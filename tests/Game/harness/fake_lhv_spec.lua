@@ -13,7 +13,7 @@ local floor = math.floor
 -- Each world: target health 63.7%, player health full, player mana 45% of 1000. `live()` runs until fresh watches are
 -- live; `frame(pct)` runs one frame with the target's health at pct% (nil: unchanged); `hp(pct)` and `mana(pct)` set our
 -- health and mana, seen on the next frame; `max(m)` sets the mana max (mana stays 45%), seen on the next frame; `retarget(pct)` swaps to a new
--- target at pct% (the client's PLAYER_TARGET_CHANGED).
+-- target at pct% (the client's PLAYER_TARGET_CHANGED); `clear()` clears the target (the same event, no unit).
 local IMPLS = {
     real = function()
         local Fake = dofile(FAKE)
@@ -45,6 +45,10 @@ local IMPLS = {
                 end,
                 retarget = function(pct)
                     W.unit.target = { health = pct / 100 }
+                    Fake.event("PLAYER_TARGET_CHANGED")
+                end,
+                clear = function()
+                    W.unit.target = nil
                     Fake.event("PLAYER_TARGET_CHANGED")
                 end,
                 now = rawget(_G, "GetTime"), -- the FakeClient's clock
@@ -95,6 +99,10 @@ local IMPLS = {
                 retarget = function(pct)
                     lib:Prime("target", now())
                     lib:Push("health", "target", nil, pct * 10, 1000, now())
+                end,
+                clear = function()
+                    lib:Prime("target", now())
+                    lib:Push("health", "target", nil, nil, nil, now())
                 end,
                 now = now,
                 done = function() end,
@@ -193,6 +201,12 @@ local PRIMES = {
 
 local function get(h)
     return { h:Get() }
+end
+
+-- lo, hi and q (Get's t left out)
+local function unknown(h)
+    local lo, hi, _, q = h:Get()
+    return { lo, hi, q }
 end
 
 local function lohi(h)
@@ -345,6 +359,31 @@ for _, name in ipairs({ "real", "fake" }) do
             end
         )
 
+        -- (minor 10, L1804) a retarget or a cleared target drops the band in the event's own frame: Get never gives the
+        -- last unit's band (minor 9 kept it for the rest of that frame); a paused watch on the source drops it too
+        it(
+            "a retarget and a cleared target read nil at once, a paused watch too; the new unit live after its prime",
+            function()
+                local hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
+                local held = assert(lib:Watch("B", { kind = "health", unit = "target", step = 1 }))
+                w.live()
+                held:SetPaused(true)
+                assert.are.same({ 63, 64 }, lohi(hp))
+                assert.are.same({ 63, 64 }, lohi(held))
+                w.retarget(19.5)
+                assert.are.same({ nil, nil, lib.UNKNOWN }, unknown(hp)) -- t: the real library keeps the last stamp
+                assert.are.same({ nil, nil, lib.UNKNOWN }, unknown(held))
+                assert.are.equal("priming", hp:State())
+                for _ = 1, 12 do
+                    w.frame()
+                end
+                assert.are.same({ "live", 19, 20 }, { hp:State(), unpack(lohi(hp)) })
+                w.clear()
+                assert.are.same({ nil, nil, lib.UNKNOWN }, unknown(hp))
+                assert.are.equal("gone", hp:State())
+            end
+        )
+
         it("SetPoints: true, or nil and a code with the old set kept", function()
             local hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
             local pts = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, points = { 400, 600 } }))
@@ -365,7 +404,7 @@ for _, name in ipairs({ "real", "fake" }) do
             assert.are.same({ true, "ready" }, { lib:IsAvailable("health", "target") })
             assert.are.same({ false, "unavailable", "unproven" }, { lib:IsAvailable("health", "focus") })
             assert.are.same({ "unavailable", "unproven" }, { focus:State() })
-            assert.are.same({ "LibHiddenValues-1.0", 9 }, { lib:GetVersion() })
+            assert.are.same({ "LibHiddenValues-1.0", 10 }, { lib:GetVersion() })
             local verdict, lines, running = lib:GetSelfTest()
             assert.are.same({ true, "table", false }, { verdict, type(lines), running })
             local stats = { lib:GetStats() }

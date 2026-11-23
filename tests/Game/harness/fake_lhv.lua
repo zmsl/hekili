@@ -41,7 +41,8 @@
 -- across a retarget is not); upgrade if a consumer's gate turns on that case. Sinks are kept, never called
 -- (the belief polls in Drain, decision 15). A point-precision spec is not read (Hekili never asks for one, decision
 -- 6). No aura kind (unproven here), no bar pool: GetStats counts
--- watches only. GetVersion answers minor 9; GetSelfTest reads the capability (pending nil, a "selftest" loss false,
+-- watches only. GetVersion answers minor 10 (LibTimeToDie minor 5 needs it; its Get is nil from a retarget or a gone
+-- unit on, as this fake's always was: Get answers only while State is live); GetSelfTest reads the capability (pending nil, a "selftest" loss false,
 -- else true) and SelfTest calls back at once. `o.history`: every push kept per source, lib:TruthAt(kind, unit, power,
 -- t) the last at or before t (the bands arms' containment, loop.bandCheck). The bands-drop arm's capability loss is
 -- lib:SetAvailable; the unmeasured knobs (bandLead, spendFirst) are the observer's (observer.lua).
@@ -402,6 +403,11 @@ function M.new(o)
         settle(s, t)
         if value == nil then
             s.pend, s.v, s.m, s.t, s.gone = false, nil, nil, t, true
+            for _, h in ipairs(lib.handles) do -- minor 10: a paused watch drops its band too (Bars.lua forget)
+                if h.src == s then
+                    h.plo, h.phi, h.pt = nil, nil, nil
+                end
+            end
             return
         end
         s.gone = false
@@ -446,9 +452,18 @@ function M.new(o)
                 report(s, s.pv, s.pm, s.pa)
             end
         end
+        -- minor 10 (Bars.lua forget): a source some unpaused watch feeds drops every watch's band at once, a paused
+        -- one's too; the real library feeds no source whose watches are all paused, so those keep theirs
+        local fed = false
+        for _, h in ipairs(lib.handles) do
+            fed = fed or (h.unit == unit and not h.paused)
+        end
         for _, h in ipairs(lib.handles) do
             if h.unit == unit and not h.released then
                 prime(h, t)
+                if fed then
+                    h.plo, h.phi, h.pt = nil, nil, nil
+                end
             end
         end
     end
@@ -473,7 +488,7 @@ function M.new(o)
 
     -- The major and the minor this fake follows (README, Diagnostics).
     function lib:GetVersion()
-        return "LibHiddenValues-1.0", 9
+        return "LibHiddenValues-1.0", 10
     end
 
     -- The self-test as the capability says it: nil pending, false a failed self-test, else true; never running. No bar

@@ -1,6 +1,6 @@
 -- tests/Forever/ttd_chain_pull_spec.lua (ttd-chain-pull; lane B8, L1730, L1736): the next target does not take the last
--- one's kill time, and the first answers on a new target are the library's own. The real LibTimeToDie (vendored v0.4.0,
--- minor 4) over the fake bands (ttd_rig.lua), through the core's fight_remains, target.time_to_die and time to a
+-- one's kill time, and the first answers on a new target are the library's own. The real LibTimeToDie (vendored v0.5.0,
+-- minor 5) over the fake bands (ttd_rig.lua), through the core's fight_remains, target.time_to_die and time to a
 -- percent. vendor-libs removed B8's forget at the pull and its 0.5 s keep; a seed still reads unknown (the fight runs).
 local headless = require("Game.harness.headless")
 local fake_lhv = require("Game.harness.fake_lhv")
@@ -10,8 +10,9 @@ local fake = require("Game.State.helpers.fake_api")
 
 local UNKNOWN, TICK = 3600, 0.1
 
--- `nilForNone`: UnitExists answers nil for no unit, not false
-local function boot(nilForNone)
+-- `nilForNone`: UnitExists answers nil for no unit, not false; `lhvMinor`: the hidden-value library's minor (default
+-- the fake's own)
+local function boot(nilForNone, lhvMinor)
     local new = fake.new
     if nilForNone then
         fake.new = function(...) -- before the facade resolves UnitExists
@@ -36,6 +37,11 @@ local function boot(nilForNone)
             return ctl.now
         end,
     })
+    if lhvMinor then
+        function bands.GetVersion()
+            return "LibHiddenValues-1.0", lhvMinor
+        end
+    end
     local major, minor = bands:GetVersion()
     local stub = rawget(H.env, "LibStub")
     stub.libs[major], stub.minors[major] = bands, minor
@@ -202,6 +208,21 @@ describe("ttd-chain-pull: the next mob does not take the last one's kill time (l
             assert.are.equal(1, w.tracks)
         end)
     end
+
+    -- The library-off fallback (L1805): LibTimeToDie minor 5 needs LibHiddenValues minor 10 (LHV_MIN), so an older copy
+    -- reads every token unavailable, lhv-old; the core answers unknown, as with no library, and raises nothing.
+    it("an older LibHiddenValues (minor 9): unknown throughout, no error", function()
+        local w = boot(false, 9)
+        w.target("Creature-1", 100)
+        w.combat(true)
+        local known = 0
+        w.fight(100, 100 / 30, 12, function(_, r, t)
+            known = known + ((r ~= UNKNOWN or t ~= UNKNOWN) and 1 or 0)
+        end)
+        assert.are.equal(0, known)
+        assert.are.equal(UNKNOWN, w.H.Hekili:GetTimeToPct("target", 20))
+        assert.is_truthy(w.H.Hekili:GetTTDInfo():find("time to die: unavailable lhv-old", 1, true))
+    end)
 
     it("no unit answered nil, not false: forgotten all the same", function()
         local w = boot(true)
