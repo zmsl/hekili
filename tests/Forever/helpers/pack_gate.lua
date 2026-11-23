@@ -265,7 +265,11 @@ M.FLICKER = {
     -- flicker 0.09 / 0.09 / 0.09, press-only 0.23 / 0.30 / 0.24; excused press 16, avoid 1): flicker 0.31 -> 0.1
     -- (the measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press and avoid
     -- justified"
-    ["Fury L24"] = { loOver = 337, flicker = 0.1, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0.12 / 0.09 /
+    -- 0.12, press-only 0.23 / 0.30 / 0.24; the newly counted return traced: seed 11 t 37.2 rend > an empty slot on our
+    -- press > rend, seed 13 t 87.8 rend > sunder_armor on an avoid > rend, both with no fact): flicker 0.1 -> 0.13 (the
+    -- measured worst + 0.01), cause "jitter rule L1791: a return needs its own fact"
+    ["Fury L24"] = { loOver = 337, flicker = 0.13, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
