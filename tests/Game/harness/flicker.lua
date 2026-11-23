@@ -154,7 +154,8 @@ function M.ledger(f, o)
         e.slot, e.tick = s, c
         e.cause = e.cause or cause(f, p, c, e.from, e.to, tick)
         e.old = e.justified or JUSTIFIED[e.cause] or false -- the all-slot numbers' rule
-        e.fact = not e.old and (e.fact or fact(f, c)) or nil
+        -- a retraction's fact is its ready run's (ledger below): fact() at c reaches back to the run's first poll
+        e.fact = not e.old and (e.fact or (e.kind ~= "retracted" and fact(f, c))) or nil
         e.justified = e.old or e.fact ~= nil
         if s == 1 and (e.kind == "dip" or e.kind == "flash") then -- a now<->next swap
             e.swap = f.name[2][p] == e.to or f.name[2][c] == e.from
@@ -217,7 +218,8 @@ function M.ledger(f, o)
                     end
                     local just, why = false, nil
                     for k = since + 1, c do
-                        just, why = just or event(f, k), why or fact(f, k)
+                        -- not fact(): its late aura reaches back to `since`, the edge that made the icon ready
+                        just, why = just or event(f, k), why or (f.ev.target[k] and "target")
                     end
                     add({
                         kind = "retracted",

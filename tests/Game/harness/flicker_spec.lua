@@ -294,6 +294,21 @@ describe("the jitter rule's now slot (L1762)", function()
         assert.are.same({ true, "verdict" }, { led.entries[1].justified, led.entries[1].fact })
     end)
 
+    it(
+        "does not excuse a retraction by the fact that made the icon ready (an aura edge at its first ready poll)",
+        function()
+            local rows = {
+                { s = { { "x", 0.4 } } },
+                { s = { { "x", 0 } }, ev = { aura = true } }, -- a proc shows x ready
+                { s = { { "x", 1.1 } } }, -- taken back with no fact
+                { s = { { "x", 0.9 } } },
+            }
+            assert.are.same({ 1, 1 }, { sum(rows).now.retracted, sum(rows).retracted })
+            rows[3].ev = { target = true } -- a retarget in the ready run: a correction
+            assert.are.same({ 0, 1 }, { sum(rows).now.retracted, sum(rows).retracted })
+        end
+    )
+
     it("an avoid row with no cast (a builder's lost combo point, an energy refund) justifies its change", function()
         local s = sum({
             { s = { { "a", 0.4 } } },
