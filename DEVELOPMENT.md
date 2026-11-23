@@ -321,8 +321,10 @@ display still.
 - **Only slot 1 is gated.** The gated flicker counts first-icon flips (A, B, A within three polls). A flip is
   excused when B was pressed (the show-then-press rule), or when the change to B and the return to A each follow a
   fact at their own poll and neither poll is stale. The line prints the old press-only count and the excused flips
-  by the change's fact beside it. The flicker ledger's dips take the same rule. Its gated number, retracted
-  readies, reads slot 1 only, and a now/next swap is tagged on its slot-1 entry.
+  by the change's fact beside it. An empty slot is never a press, so icon, empty, icon needs a fact at each poll
+  too. The flicker ledger's dips also need a fact at the return, but they are reported, not gated, and their check
+  is looser: it accepts the cause rows (a ranged auto shot's cast or avoid counts) and applies no stale veto. The
+  ledger's gated number, retracted readies, reads slot 1 only, and a now/next swap is tagged on its slot-1 entry.
 - **Slots 2-3 and the focus slot are reported, not gated.**
 - **Resource accuracy still comes first.** A correct icon is never hidden to lower a number.
 

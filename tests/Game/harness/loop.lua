@@ -1428,7 +1428,8 @@ local function flips(seq, n, press, why, by)
         if type(p) == "table" then
             pressed = p[b]
         else
-            pressed = press and (p == b or press[i + 2] == b)
+            -- an empty slot (false) is never a press: false also means "no press" (L1791)
+            pressed = press and b and (p == b or press[i + 2] == b)
         end
         if seq[i] ~= b and seq[i + 2] == seq[i] and not pressed then
             local w, r = why and why[i + 1], why and why[i + 2]

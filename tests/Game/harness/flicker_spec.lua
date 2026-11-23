@@ -340,6 +340,31 @@ describe("the jitter rule's now slot (L1762)", function()
         assert.are.same({ "target", "verdict", true }, { e.fact, e.back, e.justified })
     end)
 
+    it("fills one poll per verdict: the dip's change, or its return when the change came before the miss", function()
+        local function rows(mod)
+            local r = {}
+            for i = 1, 10 do
+                r[i] = { s = { { "a", 0.4 } } }
+            end
+            for i, x in pairs(mod) do
+                r[i] = x
+            end
+            return r
+        end
+        -- one miss, a dip with no fact at either poll: the verdict is the change's, the return still counts
+        local one =
+            rows({ [2] = { s = { { "a", 0.4 } }, ev = { miss = true, cast = true } }, [5] = { s = { { "b", 0.1 } } } })
+        local e = flicker.ledger(build(one), V).entries[1]
+        assert.are.same({ 1, "verdict", nil, false }, { sum(one, V).now.dips, e.fact, e.back, e.justified })
+        -- the change on a retarget before the miss, the return after it: the verdict is the return's
+        local before = rows({
+            [3] = { s = { { "b", 0.1 } }, ev = { target = true } },
+            [4] = { s = { { "b", 0.1 } }, ev = { miss = true, cast = true } },
+        })
+        e = flicker.ledger(build(before), V).entries[1]
+        assert.are.same({ 0, "target", "verdict" }, { sum(before, V).now.dips, e.fact, e.back })
+    end)
+
     it(
         "does not excuse a retraction by the fact that made the icon ready (an aura edge at its first ready poll)",
         function()
@@ -449,6 +474,11 @@ describe("the jitter rule on the gated flicker (flicker.changes, loop.flips, L17
             assert.are.same({ 0, "aura", "verdict" }, { n, why[4], why[5] })
         end
     )
+
+    it("takes one miss of our press as one fact: its verdict excuses the change, not the return as well", function()
+        local n, why = flip({ [3] = { ev = { miss = true, cast = true } } }, V)
+        assert.are.same({ 1, "verdict", false }, { n, why[4], why[5] })
+    end)
 
     it("excuses a crossing of the belief's power band that the belief follows", function()
         local up = { [3] = { band = { 15, 16 } }, [4] = { band = { 20, 21 }, lo = 20 } }

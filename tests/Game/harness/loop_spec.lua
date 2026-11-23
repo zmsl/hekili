@@ -735,6 +735,14 @@ describe("the headless loop's flicker counter (loop.flips)", function()
         assert.are.equal(1, loop.flips(seq, 4, { "a", "c", "a", false }))
     end)
 
+    it("counts an icon -> empty -> icon blip: an empty slot is no press of it (L1791)", function()
+        local blank = { "a", false, "a", "a" } -- an empty slot and "no press" are both false
+        assert.are.equal(1, loop.flips(blank, 4, { false, false, false, false }))
+        assert.are.equal(1, loop.flips(blank, 4, { false, "c", false, false }))
+        assert.are.equal(1, loop.flips(blank, 4, { {}, {}, {}, {} })) -- a replay's sets of casts
+        assert.are.equal(0, loop.flips(blank, 4, nil, { [2] = "aura", [3] = "press" })) -- each poll a fact
+    end)
+
     it("takes a replay's set of casts per tick: B cast before the next tick is excused, another cast is not", function()
         assert.are.equal(0, loop.flips(seq, 4, { {}, { c = true, b = true }, {}, {} }))
         assert.are.equal(1, loop.flips(seq, 4, { {}, { c = true }, {}, {} }))
