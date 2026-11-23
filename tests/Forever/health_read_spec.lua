@@ -3,7 +3,7 @@
 -- hidden-value library a priority line that reads it (`health.pct`) never fires while the client keeps the health
 -- secret (unknown reads as full, no compare on a secret) and reads the plain value where the client gives one. With
 -- the library's band (lane B3, integration design 2.5) it reads the band's middle in combat. No load-time warning
--- either way (FABLE-FOR-OWNER 7: the own-health rows of Engine/Sim/AplWarnings.lua are gone).
+-- either way (FABLE-FOR-OWNER 7; the load-time secret-token scan itself was removed, L1703).
 local headless = require("Game.harness.headless")
 local fake = require("Game.State.helpers.fake_api")
 local dlw = require("Forever.helpers.druid_loop_world")

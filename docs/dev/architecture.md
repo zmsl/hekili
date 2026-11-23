@@ -688,8 +688,8 @@ never fed here, was removed: L1703) and the target's estimate (§3, Time to die)
 `longest_ttd`, `target.time_to_die` and `target.time_to_pct_N` answer from it as §3 says, or "unknown": `FOREVER`,
 3600 s, a fight that never ends soon, a grey (trivial) target's too (wowsims's `remainingTime` has no trivial case).
 Everything else stays unknown: another unit's time to die, a bare `time_to_pct_N`, and `GetNumTTDsAfter` counts every
-enemy as after any time. A priority may read them without a load warning (`Engine/Sim/AplWarnings.lua` warns on no
-health or time-to-die token); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
+enemy as after any time. A priority may read them without a load warning (none is written for any
+token); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
 
 **Player health.** The client hides the player's own health (`UnitHealth`/`UnitHealthMax("player")` secret in combat, owner L1461,
 and out of it on live, L1710; the headless fake client still answers plain out of combat): `health.pct`,
