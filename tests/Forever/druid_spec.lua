@@ -1327,8 +1327,9 @@ describe("Forever Druid in VirtualState's now context", function()
                 assert.are.same({ X.KIND[d.expects], want }, { A.expKind[a], A.school[a] }, A.key[a])
             end
         end
-        -- wrath, starfire, moonfire, insect_swarm and the debuffs demoralizing_roar, faerie_fire, growl, challenging_roar
-        assert.are.same({ 8, 0 }, { n, I.nowErrors })
+        -- wrath, starfire, moonfire, insect_swarm and the debuffs demoralizing_roar, faerie_fire, growl, challenging_roar,
+        -- feral_charge (its velocity: the Cooldown Manager verdict's window, L450)
+        assert.are.same({ 9, 0 }, { n, I.nowErrors })
     end)
 
     it("gives Primal Fury's 5 rage at a bear strike's own crit with the talent at 2/2, none at 0/2 (GAP T)", function()
@@ -2040,6 +2041,97 @@ describe("Forever Druid Claw vs Shred (L602)", function()
     end)
 end)
 
+-- Lane cdm-facts item 2 (L1763, L1764): a Rake whose avoid row never reaches its ticket (the swing tie took it, or it
+-- was lost) falls back to the Cooldown Manager verdict. The verdict is judged only in a Hekili update; the belief's
+-- deadline wake forces one at cast + W, so the record closes then, not at the next cast's own update (Claw's).
+describe("Forever Druid missed Rake closed by the Cooldown Manager at its deadline (cdm-facts item 2)", function()
+    local headless = require("Game.harness.headless")
+    local dlw = require("Forever.helpers.druid_loop_world")
+    local H, S, VS, I, item, t
+
+    before_each(function()
+        local C = dlw.Feral
+        H = headless.new({ character = C.character(), pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        S, VS, I = H.Hekili.State, H.ns.VirtualState, H.ns.VirtualStateInternal
+        local ctl = H.ctl
+        ctl.viewer.sets[2] = { 950 }
+        ctl.viewer.infos[950] = { spellID = 1822 }
+        item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 950)
+        H.Fire("COOLDOWN_VIEWER_DATA_LOADED") -- the map, out of combat
+        ctl.inRange.target, ctl.level.target, ctl.power[3] = true, 60, 100
+        H.Fire("PLAYER_TARGET_CHANGED")
+        ctl.combat = true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        t = ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        -- a landed Rake proves the item: lit, then dark (a dispel closes it, rule 1)
+        t = t + 1
+        ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-prove", 9904)
+        ctl.ViewerAura(item, "target", 1822)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_true(headless.cycle(H, t + 0.6)) -- lit past REFRESH_LAG: its silence may close it (D14)
+        ctl.ViewerClear(item)
+        assert.is_true(headless.cycle(H, t + 1.1))
+        assert.is_nil(VS.Aura("target", 1822, t + 1.1))
+        assert.is_true(I.PRESENCE.viewer.proven[950])
+    end)
+
+    it("forces a cycle at cast + W, whose drain closes the Rake: no other update needed", function()
+        t = t + 2
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-missed", 9904) -- its row never comes; no light
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_not_nil(VS.Aura("target", 1822, t + 0.1))
+        local engine = H.ns.EngineFrame
+        local f = I.Events.frame
+        local W = I.auraVerdict.W[I.AURA_UNIT + I.auras.bySpell[1822]]
+        engine.criticalUpdate = false
+        H.ctl.now = t + W - 0.01
+        f.__scripts.OnUpdate(f, 0.01)
+        assert.is_false(engine.criticalUpdate)
+        H.ctl.now = t + W
+        f.__scripts.OnUpdate(f, 0.01) -- the deadline: the belief asks the core for one cycle
+        assert.is_true(engine.criticalUpdate)
+        assert.is_true(headless.cycle(H, t + W + 0.01))
+        assert.is_nil(VS.Aura("target", 1822, t + W + 0.01))
+        S.reset("Primary", true)
+        assert.is_false(S.debuff.rake.up)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- Item 3 (L448, L450): the global window comes from the measured cast-to-light latency; an instant's own window is
+    -- W0, and the charge's root, whose item lit 863 ms after the cast (the charge travels), gets its own from the
+    -- pack's velocity.
+    it("windows: Rake's verdict window is W0 (0.5 s); Feral Charge's root covers a full-range charge", function()
+        local k = function(key)
+            return I.AURA_UNIT + I.auras.byKey[key]
+        end
+        t = t + 2
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-w1", 9904)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.are.equal(0.5, I.auraVerdict.W[k("rake")])
+        I.ab.rMax[I.ab.bySpell[1238122]] = 25 -- the client's maxRange (the fake's default is 5)
+        t = t + 2
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-w2", 1238122)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_not_nil(VS.Aura("target", 19675, t + 0.1))
+        local w = I.auraVerdict.W[k("feral_charge_effect")]
+        assert.is_true(math.abs(w - (25 / 21 + 0.5)) < 1e-9, w) -- a full 25 yd charge at 21 yd/s, then TOL
+        assert.are.same({}, H.errors)
+    end)
+
+    -- fix round 1 I3: Hurricane's debuff lights at its first tick (tick_time 1), about 1 s after the cast, but its `now`
+    -- writes it at the cast; a verdict at cast + W0 would close a landed Hurricane and strike its item every cast
+    it("Hurricane's aura is off the Cooldown Manager (the pack's cdm = false reaches the build)", function()
+        assert.are.equal(false, I.def.auras[I.auras.byKey["hurricane"]].cdm)
+        assert.is_nil(I.def.auras[I.auras.byKey["rake"]].cdm) -- control: on
+    end)
+end)
+
 -- Player report 3 (hotfix 0.8.6, L1239): an avoided recast of a running Rake. The belief's avoid undo puts the first
 -- application back; the core's `missable` reset hook must leave it (it removes only the missed cast's own application),
 -- so `debuff.rake.up` holds with the first application's remains and the next Rake waits. Through the real engine.
@@ -2088,6 +2180,25 @@ describe("Forever Druid Rake after an avoided recast (hotfix 0.8.6)", function()
     -- Review M2: the belief's avoid undo already closed this record, so the core's `missable` hook is not what takes it
     -- down here. The real-chain proof that the hook removes a missed first cast is warlock_spec's EVADE case ("resisted
     -- or evaded by a row 0.15 s after the cast": the belief keeps the record, the core's stamp match drops it).
+    -- Fix A (L1763): live, about 10% of cat instants log their target row 1-20 ms before their success, while the
+    -- ticket is still COMMITTED (opened at SENT). The row is held and paid at the success, so the dodged Rake is down
+    -- in the cast's own cycle: the APL's `!debuff.rake.up` holds and Claw never shows in its place.
+    it("fix A: a Rake dodged with its row logged 15 ms before its success is down in the cast's own cycle", function()
+        t = t + 1
+        H.ctl.now = t - 0.1
+        H.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-early", 9904)
+        H.ctl.now = t - 0.015
+        H.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+        H.ctl.now = t
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-early", 9904)
+        assert.is_true(headless.cycle(H, t + 0.1))
+        assert.is_nil(VS.Aura("target", 1822, t + 0.1))
+        assert.is_true(spec.missedAt.rake > 0) -- the SPELL_MISSED row reached the core's hook
+        S.reset("Primary", true)
+        assert.is_false(S.debuff.rake.up)
+        assert.are.same({}, H.errors)
+    end)
+
     it("leaves a dodged first Rake down", function()
         rake(1, "DODGE")
         t = t + 0.5

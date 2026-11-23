@@ -627,6 +627,9 @@ spec:RegisterAuras({
         duration = 10,
         tick_time = 1,
         max_stack = 1,
+        -- off the Cooldown Manager (cdm-facts fix round 1 I3): its item lights at the first tick, about 1 s after the
+        -- cast, but the `now` writes the debuff at the cast, so a verdict at cast + W0 would close a landed Hurricane
+        cdm = false,
     },
     innervate = {
         id = 29166,
@@ -1238,6 +1241,14 @@ spec:RegisterAbilities({
     feral_charge = {
         id = 1238122,
         copy = { 16979 },
+        -- no damage (DB2, wowsims): its ticket takes its own avoid only. The root lands when the charge arrives: its
+        -- Cooldown Manager item lit 863 ms after the cast (L361), so the charge's speed widens the belief's verdict
+        -- window for it alone (L450).
+        -- shortcut: 21 yd/s, not 25 / 0.863 = 29: that one sample's distance is unknown, and if it was shorter than 25
+        -- yd the true speed is lower, so 29 would close a landed full-range root (cdm-facts fix round 1); upgrade with a
+        -- probe line pairing the charge's distance with its root's light
+        expects = "debuff",
+        velocity = 21,
         cast = 0,
         cooldown = 15,
         gcd = "off",

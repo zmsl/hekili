@@ -67,14 +67,21 @@ I.auraOurs = ours
 -- before; LONG is finite where a duration exists: inf - inf is NaN), closed by the observed down (rule 1). A LONG
 -- record whose CDM stops answering UP (UNKNOWN, a hidden viewer, the leaf off, a target change) is clamped to HOLD
 -- once.
--- shortcut: HOLD 1.0 s is a guess (spec D9; the owner's 0.6/1.0/1.5): set it from the LAT probe (ledger CDM-LAT).
--- The rule's alternatives (4b's re-stage within LAPSE of the expiry, L309's LONG re-stage) were measured and removed
--- (cdm-default Task 9, review S2).
-local HOLD, LONG = 1.0, 3600
+-- LAT (cdm-facts item 3, L448; was the 1.0 s guess D9): the measured Cooldown Manager latency with a margin. Cast to
+-- light p50 15 ms, p99 27 ms, max 109 ms of 110 casts (L448), a 100-120 ms tail and one 323 ms Rip light (L361); light
+-- to dark at the modelled expiry within 50 ms (L361: Enrage, Rake, Moonfire, Roots). LAT = 0.35 s covers the worst
+-- light seen with ~25 ms to spare and every dark at expiry seven times over. It feeds HOLD and REFRESH_LAG only (the
+-- verdict's W0 is the owner's 0.5 s, below). HOLD has three uses: hold()'s threshold (a CDM open gets its remaining
+-- time only past HOLD, else LONG), rule 4's debounce (lit HOLD past the model's expiry; the 50 ms dark evidence is
+-- for this one), and the LONG clamp (a record whose CDM stops answering is held HOLD more; its debounce then counts
+-- from that clamped expiry, fix round 1 I2). The rule's alternatives (4b's re-stage within LAPSE of the expiry, L309's
+-- LONG re-stage) were measured and removed (cdm-default Task 9, review S2).
+local LAT = 0.35
+local HOLD, LONG = LAT, 3600
 -- D14: after our cast wrote an application, its NONE closes it only once the fact read UP REFRESH_LAG after the write: an
 -- item still showing the old application inside the client's latency says nothing of the new one.
--- shortcut: 0.5 s is unmeasured; the LAT probe (cast success vs the item's light) sets it.
-local REFRESH_LAG = 0.5
+-- The item's light after our cast: LAT (above; was the unmeasured 0.5 s).
+local REFRESH_LAG = LAT
 local DUR = {}
 -- By key (L310): lastE the model's expiry the last time an UP answer found the record up (0: none, or the item went
 -- dark since), lastSt its stacks; longE the expiry of the LONG write still standing (0 none). anyLong, anyLast: some
@@ -109,8 +116,15 @@ I.presenceHold = holdN
 -- (the closes that refunded our missed cast, L1029) and backN (those refunds a strike took back); refPend[k] 1 while
 -- the last verdict's refund may still be struck (its strike window). A verdict is counted when its close folds (I.AuraVerdictClosed),
 -- never at the stage.
--- shortcut: W0 1.0 s, TOL 0.3 s and STRIKE_WIN 2.0 s are the spec's (§6) from the 2026-11-09 sample; Task 10's P1 tunes them.
-local W0, TOL, STRIKE_WIN = 1.0, 0.3, 2.0
+-- W0 and TOL (owner ruling O1 (a), L1770; were the spec's 1.0 s and 0.3 s, then LAT): 0.5 s after the write and after a
+-- travel alike. The worst fresh light measured is 323 ms (1 of about 250, L361; cast to light p99 27 ms, L448), so 0.5
+-- leaves a 177 ms margin, and the deadline wake keeps the verdict prompt at cast + 0.5. STRIKE_WIN 2.0 s stays (a
+-- guard: wider only takes back more wrong verdicts).
+local W0, TOL, STRIKE_WIN = 0.5, 0.5, 2.0
+-- LATE (owner ruling O1 (b), L1770): a light within LATE of the verdict is a late light (a lag spike past W), not a
+-- wrong item: the record re-opens and the refund is taken back, but no strike counts toward the item's STRIKES_MAX
+-- (strikes last until the next map build). A light later than LATE, still inside STRIKE_WIN, strikes as before.
+local LATE = 1.0
 -- strikePend[k]: the t of a light within STRIKE_WIN of a verdict (0 none), decided at the next poll, after this drain's
 -- fold has run our recast's write (the first Opus round's M2: the polls run before the fold).
 local W, verdictAt, verdictN, strikeN, darkN, strikePend, refundN = {}, {}, {}, {}, {}, {}, {}
@@ -123,9 +137,20 @@ I.presenceVerdict, I.presenceStrike = verdictN, strikeN -- the harness's names (
 local lateTo = {}
 I.auraLateTo = lateTo
 local FAM = {} -- aura index -> the pack's family name (compared, never interpreted), false none
+-- The verdict's deadline (cdm-facts item 2, L1764): poll 15 judges only in a drain and a drain runs only in a Hekili
+-- update, so with no update at the deadline the close waited for the next one (live: the next cast's, rake-miss
+-- investigation §1). dueAt[k]: applied + W of a record our cast wrote over a proven item dark at the write (a verdict
+-- possible), 0 none; nextDue the earliest. The OnUpdate lane forces one cycle at it through onEdge's own path
+-- (UNIT_AURA on the unit's token): that drain sweeps and poll 15 judges, every guard as before. A light since the
+-- write, or the record no longer that cast's, cancels it. It fires only in combat and for a record judgeable then
+-- (fix round 1 M4: each fire is a forced update and a full core aura rescan; tested at the fire, so an opener cast just
+-- before the combat flag keeps its wake). The owner approved this content-free target UNIT_AURA from a timer, through
+-- onEdge's own delivery (O2, L1771).
+local dueAt, nextDue = {}, HUGE
+local judgeable -- (j, u): defined below, with apply's guards
 local function zeroVerdict(k)
     W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], refundN[k] = W0, 0, 0, 0, 0, 0, 0
-    backN[k], refPend[k], lateTo[k] = 0, 0, 0
+    backN[k], refPend[k], lateTo[k], dueAt[k] = 0, 0, 0, 0
 end
 -- The class's talent spells (def.talents) that a tracked aura lists as a `copy` (not its own ID), set at the build: an
 -- aura that copies its talent's ID (the Cooldown Manager links both) must not read the talent's own passive aura, which
@@ -375,14 +400,64 @@ function I.AuraClaimFolded(k, t, ap)
 end
 
 --- Our cast wrote record (u, j) (Families/Now.lua's aura()): this application is ours (rule 2.5.1); `travel` (seconds,
---- 0 or nil none) widens its verdict window (cdm-verdict §2.3). Allocates nothing.
+--- 0 or nil none) widens its verdict window (cdm-verdict §2.3). With W0 == TOL (L1770) max(W0, travel + TOL) is
+--- travel + TOL for any travel: every travel widens W past W0, never narrows it, so a verdict comes later and never
+--- closes a landed cast early (conservative; fix round 1 M5). Allocates nothing.
 function I.AuraOurs(u, j, travel)
     if u <= 2 then
         local k = (u - 1) * I.AURA_UNIT + j
         local w = (travel or 0) + TOL
         ours[k], oursAp[k], W[k] = BY_CAST, I.auras.applied[u][j], w > W0 and w or W0
+        local P = I.presence
+        local F = P and P.fact
+        if F and F.pdark and F.pdark[k] and P.Leaf and P.Leaf() ~= nil and not I.verdictOff then
+            dueAt[k] = oursAp[k] + W[k]
+            if dueAt[k] < nextDue then
+                nextDue = dueAt[k]
+            end
+        end
     end
 end
+
+-- The OnUpdate lane (item 2): at the earliest deadline, the records still our cast's with no light since force one
+-- cycle per unit. Allocates nothing.
+local function wake(now)
+    if now < nextDue or not I.built then
+        return
+    end
+    local U, nxt, fire1, fire2 = I.auras, HUGE, false, false
+    for u = 1, (U.n < 2 and U.n or 2) do
+        for j = 1, U.nAura do
+            local k = (u - 1) * I.AURA_UNIT + j
+            local d = dueAt[k]
+            if d > 0 and now >= d then
+                dueAt[k] = 0
+                if
+                    ours[k] == BY_CAST
+                    and oursAp[k] == U.applied[u][j]
+                    and upAt[k] < oursAp[k]
+                    and U.exp0[u][j] > now
+                    and I.inCombat
+                    and judgeable(j, u)
+                then
+                    fire1, fire2 = fire1 or u == 1, fire2 or u == 2
+                end
+            elseif d > 0 and d < nxt then
+                nxt = d
+            end
+        end
+    end
+    nextDue = nxt
+    for u = 1, 2 do
+        if u == 1 and fire1 or u == 2 and fire2 then
+            local token = U.token[u]
+            I.Events.Deliver("UNIT_AURA", token, I.Events.AURA_INFO[token])
+        end
+    end
+end
+S.OnStart(function()
+    I.Log.OnTick(wake) -- CombatLog.lua loads after the Sources: its lane exists from Start
+end)
 
 -- The LONG write's remaining for (j, u): -1 (math.huge) only for a player aura with no numeric duration (as before).
 local function long(j, u)
@@ -419,7 +494,7 @@ end
 -- Whether a reduced fact may act on record (u, j) now: a plain walk wins out of combat (I7); forms and enchants are
 -- skipped on the player (M5); nothing on the target while a swap waits to fold (review m3). apply's and the verdict's
 -- guards (cdm-verdict §2.3). Allocates nothing.
-local function judgeable(j, u)
+judgeable = function(j, u)
     local U = I.auras
     if u > U.n or j > U.nAura then -- (4a review m5) an in-combat rebuild may shrink the set under the router's map
         return false
@@ -519,13 +594,17 @@ local function apply(j, u, up, t, edge)
 end
 
 -- One clamp of a LONG record whose CDM stopped answering UP: HOLD from t, once (the record's expiry no longer the
--- LONG write's, by a cast, a walk or a close, needs none). Allocates nothing.
+-- LONG write's, by a cast, a walk or a close, needs none). Rule 4's debounce then counts from the clamped expiry, not
+-- the LONG one an hour away (fix round 1 I2: a flap left a lit record down). Allocates nothing.
 local function clamp(j, u, t)
     local k = (u - 1) * I.AURA_UNIT + j
     local e = I.auras.exp0[u][j]
     if longE[k] == e and e > t + HOLD and staged[k] ~= t then
         staged[k] = t
         Direct(Obs.Read, t, k, HOLD, ReadOf.AuraHeld + I.auras.stacks[u][j] * I.AURA_STACK)
+        if lastE[k] > 0 then
+            lastE[k], anyLast = t + HOLD, true
+        end
     end
     longE[k] = 0
 end
@@ -573,10 +652,12 @@ local function verdict(j, u, k, a, t, F)
         -- >=: a cast stamped at the verdict's own time (its event in the frame of the closing poll, staged after
         -- that drain) is a new cast too; the judged application is at least W older than verdictAt, never equal
         if not (ours[k] == BY_CAST and oursAp[k] >= verdictAt[k]) then
-            strikeN[k] = strikeN[k] + 1
-            local P = I.presence
-            if P.Strike then
-                P.Strike(j, u)
+            if strikePend[k] - verdictAt[k] > LATE then
+                strikeN[k] = strikeN[k] + 1
+                local P = I.presence
+                if P.Strike then
+                    P.Strike(j, u)
+                end
             end
             -- it landed: the refund our verdict gave comes back out (L1029, the dangerous side: above the truth)
             if refPend[k] > 0 and I.VerdictTakeBack and I.VerdictTakeBack(j, t) then
@@ -767,7 +848,7 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
         end
         longE[k], lastE[k], lastSt[k], cyT[k] = 0, 0, 0, 0
         -- (review S1) a light on the next mob says nothing of mob A's verdict
-        verdictAt[k], strikePend[k], refPend[k], lateTo[k] = 0, 0, 0, 0
+        verdictAt[k], strikePend[k], refPend[k], lateTo[k], dueAt[k] = 0, 0, 0, 0, 0
     end
 end)
 

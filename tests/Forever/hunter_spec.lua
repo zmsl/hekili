@@ -270,6 +270,12 @@ describe("Forever Hunter", function()
         end
     )
 
+    -- fix round 1 I3: Immolation Trap's `now` writes its debuff at the placement; it lands when the trap is sprung, so a
+    -- verdict at cast + W0 would close a trap that later fires: its aura is off the Cooldown Manager
+    it("keeps Immolation Trap's debuff off the Cooldown Manager (cdm = false)", function()
+        assert.are.equal(false, rawget(w.auras.immolation_trap, "cdm"))
+    end)
+
     it("puts every trap on one 30 s category cooldown (shortened by Survivalist's Discipline)", function()
         local traps = { "immolation_trap", "explosive_trap", "freezing_trap", "frost_trap" }
         for _, me in ipairs(traps) do

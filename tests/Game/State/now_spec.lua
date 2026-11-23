@@ -119,9 +119,12 @@ describe("now handlers", function()
         assert.are.equal(20, I.ab.velocity[a])
         I.ab.rMax[a] = 30 -- the range read's (Sources/Spellbook.lua)
         cast(2687, 5)
-        assert.is_true(math.abs(I.auraVerdict.W[k] - 1.8) < 1e-9, I.auraVerdict.W[k]) -- 30 / 20 + TOL 0.3
+        assert.is_true(math.abs(I.auraVerdict.W[k] - 2.0) < 1e-9, I.auraVerdict.W[k]) -- 30 / 20 + TOL 0.5
+        I.ab.rMax[a] = 0 -- no range read: 40 yd, every spell range (a window too short would close a landed cast)
+        cast(2687, 5.5)
+        assert.is_true(math.abs(I.auraVerdict.W[k] - 2.5) < 1e-9, I.auraVerdict.W[k]) -- 40 / 20 + TOL 0.5
         cast(fs.SPENDER_C, 6) -- no velocity: W0
-        assert.are.equal(1.0, I.auraVerdict.W[k])
+        assert.are.equal(0.5, I.auraVerdict.W[k])
     end)
 
     -- L482: a cast that `startsAtLanding` starts its `now`'s target auras at its landing, the target's believed
@@ -1533,6 +1536,117 @@ describe("now handlers", function()
             assert.are.equal(1, I.avoidsRun)
         end)
 
+        -- Fix A (L1763): live, 28 of 287 cat instants logged their target row 1-20 ms before their success, while the
+        -- ticket was still COMMITTED (opened at SENT): the row is held on that ticket and paid when the success arms it.
+        local function sentEarly(t, act, lead)
+            ctl.now = t - 0.1
+            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_C)
+            ctl.now = t - lead
+            ctl.Fire("UNIT_COMBAT", "target", act, "", 0, 1)
+            ctl.now = t
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Tick(t + 0.01)
+            VS.Drain(t + 0.02)
+            ctl.Tick(t + 0.03)
+        end
+
+        it("fix A: a dodge logged 15 ms before its success, the cast committed: no debuff, 80% back", function()
+            begin()
+            sentEarly(5, "DODGE", 0.015)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.1).est)
+            assert.are.equal(1, I.avoidsRun)
+            assert.are.same({ "SPELL_AURA_REMOVED", fs.SPENDER_C }, { rows[#rows][1], rows[#rows][3] })
+        end)
+
+        it("fix A: the row logged first in its success's own ms is the cast's", function()
+            begin()
+            sentEarly(5, "MISS", 0)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.1).est)
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
+        it(
+            "fix A: a dodge 15 ms early, 20 ms after our swing: the swing refuses it at the arm, the cast refunds",
+            function()
+                begin()
+                ctl.now = 4.965
+                ctl.Fire("PLAYER_SWING", 3.6, 0)
+                sentEarly(5, "DODGE", 0.015)
+                ctl.Tick(5.4)
+                VS.Drain(5.4)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.4))
+                assert.are.equal(8, VS.Power(fs.RAGE, 5.4).est)
+                assert.are.equal(1, I.avoidsRun)
+            end
+        )
+
+        it("fix A: a row more than a frame before the success is not held for it (a long commit's swing)", function()
+            begin()
+            ctl.now = 4.5
+            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_C)
+            ctl.now = 4.6
+            ctl.Fire("PLAYER_SWING", 3.6, 0)
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1) -- the swing's own frame
+            ctl.Tick(4.7)
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Tick(5.01)
+            VS.Drain(5.02)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+            assert.are.equal(0, I.avoidsRun)
+        end)
+
+        -- fix round 1 M1: the early limit is the measured lead (1-22 ms), not the 50 ms frame
+        it("fix A: a dodge logged 22 ms before its success is the cast's", function()
+            begin()
+            sentEarly(5, "DODGE", 0.022)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
+        it("fix A: a dodge logged 40 ms before its success is not the cast's", function()
+            begin()
+            sentEarly(5, "DODGE", 0.04)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+            assert.are.equal(0, I.avoidsRun)
+        end)
+
+        -- fix round 1 I1: a held row is scored against our swings at its own time; only the cast's own-frame band
+        -- reads the success's. A white avoid inside the swing's core band (main 0.474 +/- 0.12 s, off 0.703 +/- 0.04 s)
+        -- at its own time is the swing's, whatever instant succeeds just after it.
+        local function swingThenEarly(hand, swingT, act, rowT, lead)
+            ctl.now = 1.0
+            ctl.Fire("PLAYER_SWING", 3.6, hand)
+            ctl.Tick(2.0)
+            ctl.now = swingT
+            ctl.Fire("PLAYER_SWING", 3.6, hand)
+            ctl.now = 4.9
+            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_C)
+            ctl.now = rowT
+            ctl.Fire("UNIT_COMBAT", "target", act, "", 0, 1)
+            ctl.now = rowT + lead
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Tick(rowT + 0.1)
+            VS.Drain(rowT + 0.1)
+            ctl.Tick(7.5)
+            VS.Drain(7.5)
+        end
+        for _, c in ipairs({
+            { "main-hand DODGE at lag 0.59, 15 ms before the success", 0, 4.41, "DODGE", 0.015 },
+            { "main-hand DODGE at lag 0.574, 40 ms before the success", 0, 4.426, "DODGE", 0.04 },
+            { "main-hand PARRY at lag 0.59, 15 ms before the success", 0, 4.41, "PARRY", 0.015 },
+            { "off-hand DODGE at lag 0.73, 15 ms before the success", 1, 4.27, "DODGE", 0.015 },
+        }) do
+            it("fix A: a swing's " .. c[1] .. " stays the swing's: the debuff stays, nothing back", function()
+                begin()
+                swingThenEarly(c[2], c[3], c[4], 5.0, c[5])
+                assert.are.equal(0, I.avoidsRun)
+                assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 7.5))
+            end)
+        end
+
         it("an avoid 0.3 s after the cast is still the cast's: the hit and the refund come at the cast", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "DODGE", 0.3)
@@ -1783,8 +1897,8 @@ describe("now handlers", function()
         it("another cast of ours between the miss and the verdict: the miss is still refunded, once", function()
             begin(40)
             cast(fs.SPENDER_C, 5)
-            cast(fs.SPENDER_A, 5.9) -- the next GCD's press, before the verdict: the latest cast is no longer the miss
-            assert.are.equal(20, rage(5.95).est)
+            cast(fs.SPENDER_A, 5.2) -- a press before the verdict (cast + 0.5 s): the latest cast is no longer the miss
+            assert.are.equal(20, rage(5.25).est)
             for t = 6.1, 7.5, 0.2 do
                 drain(t)
             end
@@ -1991,6 +2105,27 @@ describe("now handlers", function()
                 assert.are.equal(1, I.auraVerdict.back[k])
             end
         )
+
+        -- owner ruling O1 (b), L1770: a light within LATE (1 s) of the verdict is late, not a wrong item: the take-back
+        -- runs, no strike counts toward STRIKES_MAX
+        it("a light 0.6 s after a 0.5 s verdict is taken back with strikes unchanged", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            drain(5.3)
+            drain(5.5)
+            assert.are.same({ 1, 5.5, 38 }, { I.auraVerdict.n[k], I.auraVerdict.at[k], rage(5.5).est })
+            ctl.ViewerAura(ti, "target") -- it did land, 1.1 s after the cast
+            drain(6.1)
+            drain(6.3)
+            assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 6.3))
+            assert.are.same({ 0, 0, 1, 30, true }, {
+                I.auraVerdict.strikes[k],
+                I.PRESENCE.viewer.strikes[502],
+                I.auraVerdict.back[k],
+                rage(6.3).est,
+                I.PRESENCE.viewer.proven[502],
+            })
+        end)
 
         it("our recast's light after the verdict is no strike: the refund stands", function()
             begin(40)

@@ -17,6 +17,9 @@ local DECLARED = {
         faerie_fire = { "debuff", nil, nil },
         growl = { "debuff", nil, nil },
         challenging_roar = { "debuff", nil, nil },
+        -- the root lands when the charge arrives: its Cooldown Manager item lit 863 ms after the cast (L361, L450); 21
+        -- yd/s, not 25 / 0.863 = 29, until a probe pairs distance with the light (fix round 1)
+        feral_charge = { "debuff", 21, nil },
     },
     Warrior = {
         sunder_armor = { "debuff", nil, nil },
@@ -25,6 +28,9 @@ local DECLARED = {
         taunt = { "debuff", nil, nil },
         disarm = { "debuff", nil, nil },
         intimidating_shout = { "debuff", nil, nil },
+        -- the stun lands when the charge arrives (fix round 1 I3): Feral Charge's speed, borrowed, unmeasured
+        charge = { "debuff", 21, nil },
+        intercept = { "debuff", 21, nil },
     },
     Rogue = { expose_armor = { "debuff", nil, nil } },
     Warlock = {
