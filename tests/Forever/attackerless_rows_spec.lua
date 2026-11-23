@@ -51,7 +51,7 @@ for _, on in ipairs({ { "plain", "player" }, { "secret", mw.SECRET } }) do
         for _, case in ipairs({ { "DODGE" }, { "PARRY" }, { "BLOCK" }, { "WOUND", "BLOCK_REDUCED" } }) do
             it("opens Revenge on a " .. case[1] .. " and counts no enemy for it", function()
                 local H = dungeon(protection.content(60), on[2])
-                H.Hekili.State.role.tank = true -- the tank branch: the client's pseudo-spec role (unprobed) picks it
+                H.Hekili.State.role.tank = true -- the tank branch: a tank tree's role picks it (L1715)
                 for _, id in ipairs(REVENGE) do
                     H.ctl.usable[id] = { true, false } -- the client's answer; the row dates the window's end
                 end
