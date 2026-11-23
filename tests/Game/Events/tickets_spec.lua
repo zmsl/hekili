@@ -702,6 +702,39 @@ describe("the ticket pool", function()
                 assert.are.equal(1, count(VS.Obs.Avoided)) -- the miss was the cast's: its effect undone
             end)
 
+            -- fix round 1 I1: a row held on a committed instant (fix A) is scored at its own time, so the tie may give it
+            -- to a swing in the cast's frame; the swing's own wound hands it back, paid at the cast's success (not at
+            -- the row's time, before the cast's own write)
+            it("a held early row the tie gave a swing goes back to the cast at the cast's success", function()
+                ctl.now = 50
+                ctl.damage = { 40, 50, 10, 12 } -- 45 is the main hand's (exact)
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                local c = fs.new(9, nil, nil, true)
+                c.Class.abilities.spender_c.expects = "debuff"
+                I.Build(fs.def(c), 1)
+                ctl.now = 59.911
+                ctl.Fire("PLAYER_SWING", 2.6, 0) -- the row at 60.385 is at its core lag (0.474)
+                ctl.now = 60.3
+                ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_C)
+                ctl.now = 60.385
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- 15 ms before the success: held
+                ctl.now = 60.4
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                assert.are.equal(0, count(VS.Obs.Avoided)) -- the tie: the swing's for now
+                local at, inner = 0, I.Sources.Stage
+                I.Sources.Stage = function(kind, t, a, b2, c2)
+                    if kind == VS.Obs.Avoided then
+                        at = t
+                    end
+                    return inner(kind, t, a, b2, c2)
+                end
+                ctl.now = 60.45 -- the swing's own wound (lag 0.539): it landed
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+                I.Sources.Stage = inner
+                assert.are.equal(1, count(VS.Obs.Avoided))
+                assert.are.equal(60.4, at)
+            end)
+
             it("never holds a non-avoid miss (IMMUNE) on the swing: a swing takes avoids only", function()
                 sunder(60.48, "IMMUNE")
                 assert.are.same({ T.OPEN, "" }, { T.state[mh], T.avoid[mh] })

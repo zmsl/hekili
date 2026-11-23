@@ -870,7 +870,9 @@ local function route(t, g, uid, act, flag, amount, school)
         return
     end
     if avoid and credited == frameSw then
-        tieP[credited], tieAt[credited], tieSw[credited], tieT[credited] = frameP, T.at[frameP], T.at[credited], t
+        -- a held row (fix A) is paid back at its cast's success, never before the cast's own write
+        tieP[credited], tieAt[credited], tieSw[credited], tieT[credited] =
+            frameP, T.at[frameP], T.at[credited], t < T.at[frameP] and T.at[frameP] or t
     end
     creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
 end
