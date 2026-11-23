@@ -292,6 +292,47 @@ describe("interrupt_if on a channel line: read at wowsims's points, held once du
         end
     end)
 
+    -- review m1 (recast first against the hold): at a tick where the walk's pick is the channel's own line (Bloodrage on
+    -- cooldown until 0.5 s after it, Cannibalize ready), wowsims recasts rather than cuts. No hold is set there, so
+    -- Bloodrage off cooldown between ticks does not surface the cut: it waits for the next tick (4 s in)
+    it("sets no hold at a tick whose pick is the channel itself (recast first)", function()
+        local at, H = cutRig(function()
+            return true
+        end)
+        at(2.5)
+        local cd = H.ctl.cooldown
+        cd[CANNIBALIZE] = nil
+        cd[H.Hekili.Class.abilities.bloodrage.id] =
+            { isActive = true, isOnGCD = false, startTime = 103.5 - 60, duration = 60 }
+        for _, w in ipairs({ 3, 3.2, 3.6, 4.2 }) do
+            local name, t = at(w)
+            assert.is_true(
+                name ~= "bloodrage" or math.abs(t - (5 - w)) < 0.05,
+                w .. ": " .. tostring(name) .. " at " .. tostring(t)
+            )
+        end
+        local name, t = at(5)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        -- the same tick forecast from before it, then settled late from that forecast (Bloodrage off cooldown 0.6 s
+        -- after it): the forecast's pick there is the channel, so the late update sets no hold either
+        at, H = cutRig(function()
+            return true
+        end)
+        at(2)
+        cd = H.ctl.cooldown
+        cd[CANNIBALIZE] = nil
+        cd[H.Hekili.Class.abilities.bloodrage.id] =
+            { isActive = true, isOnGCD = false, startTime = 103.6 - 60, duration = 60 }
+        for _, w in ipairs({ 2.5, 3.4, 3.7 }) do
+            name, t = at(w)
+            assert.is_true(
+                name ~= "bloodrage" or math.abs(t - (5 - w)) < 0.05,
+                w .. ": " .. tostring(name) .. " at " .. tostring(t)
+            )
+        end
+    end)
+
     it("reads a tick with the GCD more than the spell queue window away, not one within it", function()
         local early = function(s)
             return s < 2.1 -- true at the first tick only

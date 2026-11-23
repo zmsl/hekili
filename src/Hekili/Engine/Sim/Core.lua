@@ -347,10 +347,10 @@ local default_modifiers = {
 -- else from the last update's forecast of it, else read now. Primary and AOE keep their own (review I-A: their target
 -- counts differ in dual and reactive modes); the other displays share Primary's.
 local CUT_EPS = 0.01
--- per main display: the real channel's start, point read, verdict and GCD end; the forecast's first point read after the
--- real now this update (`fcAt`) and its verdict
-local cutPrimary = { applied = nil, point = 0, due = false, gcd = 0, fcAt = nil, fcDue = false }
-local cutAOE = { applied = nil, point = 0, due = false, gcd = 0, fcAt = nil, fcDue = false }
+-- per main display: the real channel's start, point read, verdict, GCD end and the update it was settled in (`at`, its
+-- now); the forecast's first point read after the real now this update (`fcAt`) and its verdict
+local cutPrimary = { applied = nil, point = 0, due = false, gcd = 0, at = nil, fcAt = nil, fcDue = false }
+local cutAOE = { applied = nil, point = 0, due = false, gcd = 0, at = nil, fcAt = nil, fcDue = false }
 local gcdStop = 0 -- seconds from the instant read to a GCD end inside the channel, for the event loop's stop
 
 local function channelCut( modifiers, tick_time )
@@ -389,15 +389,39 @@ local function channelCut( modifiers, tick_time )
             due = ( left == 0 or left > ns.SpellQueueWindow() ) and modifiers.interrupt_if() and true or false
         end
         if real then
-            c.point, c.due = p, due
-        elseif mine and state.index == 1 and not fcAt then
-            c.fcAt, c.fcDue = p, due
+            c.point, c.due, c.at = p, due, state.now
+        elseif mine and state.index == 1 then
+            if not fcAt then
+                c.fcAt, c.fcDue = p, due
+            elseif math.abs( fcAt - p ) <= CUT_EPS then
+                due = c.fcDue -- withdrawn by channelRecast
+            end
         end
     end
     if real then c.fcAt = nil end
 
     if not due and gEnd > q + CUT_EPS and gEnd < ends - CUT_EPS then gcdStop = gEnd - q end
     return due
+end
+
+-- (review m1) wowsims cuts at a point only if the first action, the channel ended, is not the channel itself. Slot 1's
+-- walk reaching the channel's own line ready at a point this update settled due (or forecast due) is that case: the
+-- point's verdict is withdrawn, so no hold is set there, and `cutRecast` has the event loop drop the walk's pick and
+-- read that instant again (CheckChannel then false). True when withdrawn.
+local cutRecast = false
+local function channelRecast()
+    local c = state.display == "AOE" and cutAOE or cutPrimary
+    if state.index ~= 1 or state.delay > CUT_EPS or state.buff.casting.applied ~= c.applied then return false end
+    if state.offset == 0 then
+        if not ( c.due and c.at == state.now ) then return false end
+        c.due = false
+    elseif c.fcDue and math.abs( c.fcAt - state.query_time ) <= CUT_EPS then
+        c.fcDue = false
+    else
+        return false
+    end
+    cutRecast = true
+    return true
 end
 
 function Hekili:CheckChannel( ability, prio )
@@ -1379,6 +1403,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                     if debug then self:Debug( " - this entry cannot break the channeled spell." ) end
                                                     if action == state.channel then
                                                         stop = scripts:CheckScript( scriptID )
+                                                        if stop then channelRecast() end
                                                     end
 
                                                 elseif not aScriptPass then
@@ -2152,7 +2177,7 @@ function Hekili.Update()
 
                             if channeling then
                                 if debug then Hekili:Debug( "We are channeling, checking if we should break the channel..." ) end
-                                gcdStop = 0
+                                gcdStop, cutRecast = 0, false
                                 shouldBreak = Hekili:CheckChannel( nil, 0 )
                                 state.channel_breakable = shouldBreak
                             else
@@ -2272,7 +2297,17 @@ function Hekili.Update()
                                     action, wait = nil, 10
                                 end
 
-                                if not action then
+                                if cutRecast then
+                                    -- (review m1) the walk withdrew the cut at this instant: its pick dropped, read again
+                                    if debug then Hekili:Debug( 1, "The channel's own line is first at this point; no cut, read again." ) end
+                                    cutRecast = false
+                                    action, wait = nil, 10
+                                    slot.action = nil
+                                    slot.actionName = nil
+                                    slot.actionID = nil
+                                    state.delay = 0
+                                    state:SetConstraint( 0, defaultMax )
+                                elseif not action then
                                     if debug then Hekili:Debug( "Time spent on event #%d PREADVANCE: %.2fms...", n, debugprofilestop() - eStart ) end
                                     if debug then Hekili:Debug( 1, "No recommendation found before event #%d (%s %s) at %.2f; triggering event and continuing ( %.2f ).\n", n, event.action or "NO ACTION", event.type or "NO TYPE", t, state.offset + state.delay ) end
 
