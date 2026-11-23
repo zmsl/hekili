@@ -1248,6 +1248,12 @@ spec:RegisterAbilities({
     charge = {
         id = 100,
         copy = rest(CHARGE),
+        -- no damage (DB2, wowsims charge.go): its ticket takes its own avoid only. The stun lands when the charge
+        -- arrives, so its speed widens the verdict's window for it alone (cdm-facts fix round 1 I3).
+        -- shortcut: 21 yd/s is Feral Charge's (one 863 ms sample, Druid.lua), borrowed, unmeasured; upgrade with a probe
+        -- pairing distance with the stun's light
+        expects = "debuff",
+        velocity = 21,
         cast = 0,
         cooldown = 15,
         gcd = "off",
@@ -1550,6 +1556,11 @@ spec:RegisterAbilities({
     intercept = {
         id = 20252,
         copy = rest(INTERCEPT),
+        -- The stun lands when the charge arrives: Charge's velocity (cdm-facts fix round 1 I3). Its damage is the stun's
+        -- (wowsims intercept.go), at the arrival; the ticket takes its avoid only, so the stun's own wound (a secret
+        -- amount on live: background) or crit row (routed by kind) goes to nobody's ticket.
+        expects = "debuff",
+        velocity = 21,
         cast = 0,
         -- Improved Intercept (20504): -5 s a rank
         cooldown = function()

@@ -627,6 +627,9 @@ spec:RegisterAuras({
         duration = 10,
         tick_time = 1,
         max_stack = 1,
+        -- off the Cooldown Manager (cdm-facts fix round 1 I3): its item lights at the first tick, about 1 s after the
+        -- cast, but the `now` writes the debuff at the cast, so a verdict at cast + W0 would close a landed Hurricane
+        cdm = false,
     },
     innervate = {
         id = 29166,

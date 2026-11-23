@@ -27,6 +27,9 @@ local DECLARED = {
         taunt = { "debuff", nil, nil },
         disarm = { "debuff", nil, nil },
         intimidating_shout = { "debuff", nil, nil },
+        -- the stun lands when the charge arrives (fix round 1 I3): Feral Charge's speed, borrowed, unmeasured
+        charge = { "debuff", 21, nil },
+        intercept = { "debuff", 21, nil },
     },
     Rogue = { expose_armor = { "debuff", nil, nil } },
     Warlock = {

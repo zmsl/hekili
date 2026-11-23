@@ -472,6 +472,9 @@ spec:RegisterAuras({
         duration = 15,
         dot = "debuff",
         max_stack = 1,
+        -- off the Cooldown Manager (cdm-facts fix round 1 I3): the `now` writes it at the placement, it lands when the
+        -- trap is sprung, so a verdict at cast + W0 would close a trap that fires later
+        cdm = false,
     },
     -- The auras the abilities below apply, under the spell IDs the Cooldown Manager links (cdm/hunter.lua); durations from
     -- the pin's rows (Freezing Trap's by rank, Deterrence's 10 s, Trueshot Aura's 30 min), the Forever-only ones as the

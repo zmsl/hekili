@@ -2126,6 +2126,13 @@ describe("Forever Druid missed Rake closed by the Cooldown Manager at its deadli
         assert.is_true(I.auraVerdict.W[k("feral_charge_effect")] >= 0.863 + 0.3)
         assert.are.same({}, H.errors)
     end)
+
+    -- fix round 1 I3: Hurricane's debuff lights at its first tick (tick_time 1), about 1 s after the cast, but its `now`
+    -- writes it at the cast; a verdict at cast + W0 would close a landed Hurricane and strike its item every cast
+    it("Hurricane's aura is off the Cooldown Manager (the pack's cdm = false reaches the build)", function()
+        assert.are.equal(false, I.def.auras[I.auras.byKey["hurricane"]].cdm)
+        assert.is_nil(I.def.auras[I.auras.byKey["rake"]].cdm) -- control: on
+    end)
 end)
 
 -- Player report 3 (hotfix 0.8.6, L1239): an avoided recast of a running Rake. The belief's avoid undo puts the first
