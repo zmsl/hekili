@@ -67,12 +67,15 @@ I.auraOurs = ours
 -- before; LONG is finite where a duration exists: inf - inf is NaN), closed by the observed down (rule 1). A LONG
 -- record whose CDM stops answering UP (UNKNOWN, a hidden viewer, the leaf off, a target change) is clamped to HOLD
 -- once.
--- HOLD (cdm-facts item 3, L448; was the 1.0 s guess D9): the measured Cooldown Manager latency with a margin. Cast to
+-- LAT (cdm-facts item 3, L448; was the 1.0 s guess D9): the measured Cooldown Manager latency with a margin. Cast to
 -- light p50 15 ms, p99 27 ms, max 109 ms of 110 casts (L448), a 100-120 ms tail and one 323 ms Rip light (L361); light
 -- to dark at the modelled expiry within 50 ms (L361: Enrage, Rake, Moonfire, Roots). LAT = 0.35 s covers the worst
--- light seen with ~25 ms to spare and every dark at expiry seven times over. A delayed effect (a travel, a charge)
--- declares its velocity instead (I.AuraOurs). The rule's alternatives (4b's re-stage within LAPSE of the expiry,
--- L309's LONG re-stage) were measured and removed (cdm-default Task 9, review S2).
+-- light seen with ~25 ms to spare and every dark at expiry seven times over. It feeds HOLD and REFRESH_LAG only (the
+-- verdict's W0 is the owner's 0.5 s, below). HOLD has three uses: hold()'s threshold (a CDM open gets its remaining
+-- time only past HOLD, else LONG), rule 4's debounce (lit HOLD past the model's expiry; the 50 ms dark evidence is
+-- for this one), and the LONG clamp (a record whose CDM stops answering is held HOLD more; its debounce then counts
+-- from that clamped expiry, fix round 1 I2). The rule's alternatives (4b's re-stage within LAPSE of the expiry, L309's
+-- LONG re-stage) were measured and removed (cdm-default Task 9, review S2).
 local LAT = 0.35
 local HOLD, LONG = LAT, 3600
 -- D14: after our cast wrote an application, its NONE closes it only once the fact read UP REFRESH_LAG after the write: an
@@ -579,13 +582,17 @@ local function apply(j, u, up, t, edge)
 end
 
 -- One clamp of a LONG record whose CDM stopped answering UP: HOLD from t, once (the record's expiry no longer the
--- LONG write's, by a cast, a walk or a close, needs none). Allocates nothing.
+-- LONG write's, by a cast, a walk or a close, needs none). Rule 4's debounce then counts from the clamped expiry, not
+-- the LONG one an hour away (fix round 1 I2: a flap left a lit record down). Allocates nothing.
 local function clamp(j, u, t)
     local k = (u - 1) * I.AURA_UNIT + j
     local e = I.auras.exp0[u][j]
     if longE[k] == e and e > t + HOLD and staged[k] ~= t then
         staged[k] = t
         Direct(Obs.Read, t, k, HOLD, ReadOf.AuraHeld + I.auras.stacks[u][j] * I.AURA_STACK)
+        if lastE[k] > 0 then
+            lastE[k], anyLast = t + HOLD, true
+        end
     end
     longE[k] = 0
 end

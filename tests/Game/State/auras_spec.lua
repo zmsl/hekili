@@ -1243,6 +1243,28 @@ describe("auras", function()
             end
         )
 
+        -- fix round 1 I2: the clamp wrote a new expiry but left the debounce counting from the LONG one (an hour), so a
+        -- record clamped by one flap sweep and lit again past its clamped expiry stayed down while the item stayed lit
+        it("C: a flap clamps a long record; lit again past the clamped expiry, it re-establishes", function()
+            local def = fs.def(fs.new(9))
+            def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A }
+            def.auras[REND] = { key = "spender_c", id = fs.SPENDER_C }
+            start(def)
+            ctl.ViewerAura(ti, "target")
+            ctl.ViewerAura(pi, "player") -- another item lit throughout: the per-thing clamp (covered > 0)
+            poll(10.5)
+            poll(11)
+            ctl.ViewerRemove("BuffIconCooldownViewer", ti) -- one flap sweep (F13): UNKNOWN
+            poll(11.5)
+            assert.are.equal(11.85, est("target", fs.SPENDER_C, 11.5)) -- clamped to HOLD
+            local t2 = ctl.ViewerAcquire("BuffIconCooldownViewer", 502)
+            ctl.ViewerAura(t2, "target") -- lit again, the next sweep 0.5 s later
+            for t = 12, 13.5, 0.5 do
+                poll(t)
+            end
+            assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 13.5))
+        end)
+
         it(
             "C: a target switch clamps mob A's long record before it is remembered (Count.WithAura, swap back)",
             function()
