@@ -265,7 +265,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
                 -- the same R41 class, white swings MISS at 83.06, 85.56 and 90.56 keep the truth at 3.5 then 14.8 under the
                 -- 15 cost until 93.06; the streak's usable answers are Cat Form, caster Faerie Fire, Frenzied
                 -- Regeneration, Innervate and Demoralizing Roar with its debuff up, none the list presses
-                ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 9.4)
+                -- L40 9.4 -> 9.6 (9.6 s measured, seed 1; the harness models a full client frame per event time (L1793)): the same streak, its press one poll later: the
+                -- belief stamped Demoralizing Roar's 63.40 press at 63.52 before (one frame a poll), 63.40 now, so its
+                -- debuff falls at 93.40 and the list's Roar (wait 0.20 at 93.2) outranks Primal Bite until it is pressed
+                ws.live("Guardian (wowsims.com)", C, level == 10 and 10.2 or 9.6)
             end
         end)
     end
