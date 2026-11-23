@@ -153,8 +153,8 @@ end)
 -- and at the GCD's end; once due it stays due until the channel ends.
 describe("interrupt_if on a channel line: read at wowsims's points, held once due", function()
     -- Bloodrage above Cannibalize's line (10 s from world time 1, a tick each 2 s), its interrupt_if `cond(s)` (`s` s
-    -- into the channel at the instant read); `gcd`: a GCD the instance sees from the channel's start. Returns at(t):
-    -- the first recommendation's name and time at world time `t`.
+    -- into the channel at the instant read); `gcd`: a GCD the instance sees from the channel's start. Returns at(t,
+    -- over): the first recommendation's name and time at world time `t` (`over`: the GCD's entry cleared first).
     local function cutRig(cond, gcd)
         local H, W, us, upTo =
             rig({ line("bloodrage"), line("cannibalize", { interrupt_if = "1" }), line("battle_shout") })
@@ -171,7 +171,11 @@ describe("interrupt_if on a channel line: read at wowsims's points, held once du
         if gcd then
             H.ctl.cooldown[H.ns.GCD_SPELL] = { isActive = true, isOnGCD = false, startTime = 101, duration = gcd }
         end
-        return function(t)
+        return function(t, over)
+            if over then
+                H.ctl.cooldown[H.ns.GCD_SPELL] = nil
+                gcd = nil
+            end
             local out = upTo(t)
             st.reset("Primary", true)
             local left = math.max(0, 101 + (gcd or 0) - (100 + t))
@@ -247,6 +251,20 @@ describe("interrupt_if on a channel line: read at wowsims's points, held once du
         local name, t = at(1.2)
         assert.are.equal("bloodrage", name)
         assert.is_true(math.abs(t - 1.3) < 0.05, tostring(t)) -- the GCD's end, 1.5 s in, before the first tick
+    end)
+
+    it("holds past the GCD's end once the client reads the GCD as over (no start, no duration)", function()
+        local at = cutRig(function()
+            return true
+        end, 1.5)
+        local name, t = at(1.2)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 1.3) < 0.05, tostring(t))
+        for _, w in ipairs({ 2.6, 2.8, 3.4 }) do
+            name, t = at(w, true) -- the GCD entry cleared: the live client's answer once it is over
+            assert.are.equal("bloodrage", name)
+            assert.is_true(t < 0.05, w .. ": " .. tostring(t))
+        end
     end)
 
     it("reads a tick with the GCD more than the spell queue window away, not one within it", function()
