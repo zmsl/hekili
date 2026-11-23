@@ -1639,6 +1639,41 @@ describe("auras", function()
                     assert.are.equal(0, seen)
                 end)
 
+                -- fix round 1 M4: a forced update out of combat, or for a record nothing may judge, costs a full core
+                -- aura rescan for nothing; tested at the fire, so an opener cast just before the combat flag keeps it
+                it("no wake out of combat; an opener cast before the combat flag still gets its wake", function()
+                    prove()
+                    ctl.now = 10.8
+                    ctl.Fire("PLAYER_REGEN_ENABLED")
+                    cast(2, REND, 11, 15)
+                    seen = 0
+                    for t = 11.1, 12, 0.1 do
+                        ctl.Tick(t)
+                    end
+                    assert.are.equal(0, seen)
+                    I.auras.exp0[2][REND] = 0 -- (the model closed it) the next cast is a fresh application
+                    cast(2, REND, 13, 15) -- the opener, out of combat
+                    ctl.now = 13.1
+                    ctl.Fire("PLAYER_REGEN_DISABLED") -- the pull
+                    seen = 0
+                    for t = 13.2, 14, 0.1 do
+                        ctl.Tick(t)
+                    end
+                    assert.are.equal(1, seen)
+                end)
+
+                it("no wake while a target swap waits to fold (nothing on the target is judgeable)", function()
+                    prove()
+                    cast(2, REND, 11, 15)
+                    I.targetSwapN = I.curSwapN + 1 -- a swap staged, not yet folded (review m3)
+                    seen = 0
+                    for t = 11.1, 12, 0.1 do
+                        ctl.Tick(t)
+                    end
+                    I.targetSwapN = I.curSwapN
+                    assert.are.equal(0, seen)
+                end)
+
                 it("allocates nothing arming and firing the wake", function()
                     local alloc = require("Game.State.helpers.alloc")
                     prove()

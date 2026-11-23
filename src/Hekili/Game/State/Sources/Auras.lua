@@ -142,8 +142,12 @@ local FAM = {} -- aura index -> the pack's family name (compared, never interpre
 -- investigation §1). dueAt[k]: applied + W of a record our cast wrote over a proven item dark at the write (a verdict
 -- possible), 0 none; nextDue the earliest. The OnUpdate lane forces one cycle at it through onEdge's own path
 -- (UNIT_AURA on the unit's token): that drain sweeps and poll 15 judges, every guard as before. A light since the
--- write, or the record no longer that cast's, cancels it.
+-- write, or the record no longer that cast's, cancels it. It fires only in combat and for a record judgeable then
+-- (fix round 1 M4: each fire is a forced update and a full core aura rescan; tested at the fire, so an opener cast just
+-- before the combat flag keeps its wake). The owner approved this content-free target UNIT_AURA from a timer, through
+-- onEdge's own delivery (O2, L1771).
 local dueAt, nextDue = {}, HUGE
+local judgeable -- (j, u): defined below, with apply's guards
 local function zeroVerdict(k)
     W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], refundN[k] = W0, 0, 0, 0, 0, 0, 0
     backN[k], refPend[k], lateTo[k], dueAt[k] = 0, 0, 0, 0
@@ -431,6 +435,8 @@ local function wake(now)
                     and oursAp[k] == U.applied[u][j]
                     and upAt[k] < oursAp[k]
                     and U.exp0[u][j] > now
+                    and I.inCombat
+                    and judgeable(j, u)
                 then
                     fire1, fire2 = fire1 or u == 1, fire2 or u == 2
                 end
@@ -486,7 +492,7 @@ end
 -- Whether a reduced fact may act on record (u, j) now: a plain walk wins out of combat (I7); forms and enchants are
 -- skipped on the player (M5); nothing on the target while a swap waits to fold (review m3). apply's and the verdict's
 -- guards (cdm-verdict §2.3). Allocates nothing.
-local function judgeable(j, u)
+judgeable = function(j, u)
     local U = I.auras
     if u > U.n or j > U.nAura then -- (4a review m5) an in-combat rebuild may shrink the set under the router's map
         return false
