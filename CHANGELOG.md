@@ -25,6 +25,7 @@
 - An enemy the game reports dead and then alive again while you still target it no longer reads 0 health until you change target.
 - Protection Warrior: when the game hides who attacked you (expected in dungeons), a dodge, parry or block now sets when the Revenge window ends, so Revenge is not recommended past it.
 - Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.
+- Custom priorities: an interrupt (such as Kick, Pummel or Counterspell) is no longer suggested on a target's cast unless the game has said the cast can be interrupted.
 - A `/reload` while you channel a spell no longer raises an "Unknown buff: cast" error, and the rest of that channel is predicted again.
 
 ### Known issues
