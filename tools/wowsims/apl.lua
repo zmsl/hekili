@@ -299,7 +299,8 @@
 --    refused, re-priming past the hold) the line is false, an inverted `>` read or an `|` branch included. A read outside
 --    a line's condition is unsupported (rule 2). Another unit's health read is unsupported as any other unit's (`... of
 --    <unit>`). Every emitted line, recipe lines included (`leveling`, `levelingFirst`, `extra`, `condition`, `guard`),
---    that reads the player's health without `health.known` fails the build (M.unguarded).
+--    that reads the player's health (`health.<field>`, `stat.health_pct`, `at_risk`) without `health.known` guarding the
+--    whole condition (first, the rest one group or free of a top-level `|`) fails the build (M.unguarded).
 -- 24. A channelSpell's `interruptIf` (owner L1748: "if wowsims cuts channels, we should too") is its line's
 --    `interrupt_if=<condition>` (`1` when it folds true; none when it folds false or is absent, wowsims's plain cast):
 --    the engine reads it where wowsims does (Engine/Sim/Core.lua channelCut): at each tick but the last, with the GCD
@@ -912,17 +913,12 @@ M.PERCENT = { currentManaPercent = true, currentHealthPercent = true }
 -- A power read would join here (`currentRage = "rage.known"`) once a line needs it; none does (the model answers).
 M.KNOWN = { currentHealthPercent = "health.known", currentHealth = "health.known" }
 
--- Rule 23: whether line `s` reads the player's health (`health.<field>`, not another unit's `<unit>.health.`) without
--- its enablement term.
-function M.unguarded(s)
-    s = " " .. s
-    for field in s:gmatch("[^%w_.]health%.([%a_][%w_]*)") do
-        if field ~= "known" then
-            return s:find("[^%w_.]health%.known%f[^%w_]") == nil
-        end
-    end
-    return false
-end
+-- Rule 23: whether line `s` reads the player's health without its enablement term guarding the whole condition: the
+-- core's own check (src/Hekili/Engine/Sim/AplThresholds.lua ns.HealthUnguarded, which also warns a custom line at
+-- load), one function for both. Run from the repository root, as every tool here is.
+local core = {}
+assert(loadfile("src/Hekili/Engine/Sim/AplThresholds.lua"))("Hekili", core)
+M.unguarded = core.HealthUnguarded
 
 -- Whether value node `n` is a percent read (variables followed).
 local function percentRead(c, n)
@@ -3383,7 +3379,10 @@ function M.translate(rotation, c)
     end
     for _, line in ipairs(text) do -- rule 23: no line reads the player's health unguarded, a recipe's own included
         if M.unguarded(line) then
-            error("rule 23: a line reads the player's health without health.known: " .. line, 0)
+            error(
+                "rule 23: a line reads the player's health without health.known guarding the whole condition: " .. line,
+                0
+            )
         end
     end
     text = table.concat(text, "\n")

@@ -2119,9 +2119,12 @@ describe("the wowsims APL translator's re-pin reads", function()
                 ctx({ extra = { { before = "strike", line = line } } })
             )
         end
-        assert.has_error(function()
-            build("dot,if=health.pct<30")
-        end, "rule 23: a line reads the player's health without health.known: actions=dot,if=health.pct<30")
+        assert.has_error(
+            function()
+                build("dot,if=health.pct<30")
+            end,
+            "rule 23: a line reads the player's health without health.known guarding the whole condition: actions=dot,if=health.pct<30"
+        )
         assert.are.equal(
             "actions=dot,if=health.known&health.pct<30\nactions+=/strike",
             (build("dot,if=health.known&health.pct<30"))
@@ -2133,6 +2136,34 @@ describe("the wowsims APL translator's re-pin reads", function()
         assert.is_false(apl.unguarded("actions=dot,if=pet.health.pct<30|target.health.current>1"))
         assert.is_true(apl.unguarded("actions=dot,if=target.health.known&health.deficit>1"))
         assert.is_false(apl.unguarded("actions=dot,if=health.known&health.deficit>1"))
+    end)
+
+    -- def-1 review minor 1 (L1808): the term must guard the whole condition: first, the rest one group or free of a
+    -- top-level `|`; the aliases of the player's health are reads too
+    it("refuses a guard that does not cover the whole condition, and the aliases (rule 23)", function()
+        for _, line in ipairs({
+            "actions=dot,if=!health.known|health.pct<30", -- fires while unknown
+            "actions=dot,if=health.known&buff.x.up|health.pct>80", -- the inverted branch unguarded
+            "actions=dot,if=health.pct>80|health.known",
+            "actions=dot,if=health.pct<30&health.known",
+            "actions=dot,if=stat.health_pct<30",
+            "actions=dot,if=at_risk",
+            "actions=dot,if=health.known&at_risk|buff.x.up",
+            "actions=variable,name=low,value=health.pct<30",
+        }) do
+            assert.is_true(apl.unguarded(line), line)
+        end
+        for _, line in ipairs({
+            "actions=dot,if=health.known&health.pct<30",
+            "actions=dot,if=health.known&(health.pct<40|gcd.remains<=0)",
+            "actions=dot,if=health.known&!(health.pct>80)",
+            "actions=dot,use_off_gcd=1,if=health.known&health.pct<=60&(toggle.movement&target.outside5|target.within5)",
+            "actions=dot,if=(health.known&health.pct<30)&!buff.bear_form.up", -- an import's host guard after it
+            "actions=dot,if=health.known&stat.health_pct<30",
+            "actions=dot,if=target.health.pct<20|mana.pct<30",
+        }) do
+            assert.is_false(apl.unguarded(line), line)
+        end
     end)
 
     it("auraDuration is the aura's duration on its unit, guarded; another player's is dropped", function()
