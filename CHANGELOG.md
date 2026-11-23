@@ -17,7 +17,7 @@
 
 ### Known issues
 
-- When a channel cut is suggested, the ability shown is chosen as if the channel were still running, so an ability that waits for the channel to end is not suggested there. Something that changes just before a channel tick can delay the cut suggestion to the next tick.
+- When a channel cut is suggested, the ability shown is chosen as if the channel were still running, so an ability that waits for the channel to end is not suggested there. An ability that becomes ready just after a channel tick can be suggested as a cut where the reference rotation would recast the channel. Something that changes just before a channel tick can delay the cut suggestion to the next tick, or keep a cut shown after its reason has passed, and right after a channel starts a cut can be suggested between ticks.
 
 ### Upgrade notes
 

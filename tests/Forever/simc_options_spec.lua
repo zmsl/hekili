@@ -339,7 +339,7 @@ describe("interrupt_if on a channel line: read at wowsims's points, held once du
         local at, H = cutRig(function()
             return true
         end)
-        H.Hekili.Class.abilities.cannibalize.tick = function() end -- a channel whose ticks act (Wrack's): walked at each
+        H.Hekili.Class.abilities.cannibalize.tick = function() end -- a channel whose ticks act: the loop walks at each
         at(2.5)
         local cd, bloodrage = H.ctl.cooldown, H.Hekili.Class.abilities.bloodrage.id
         cd[CANNIBALIZE] = nil
