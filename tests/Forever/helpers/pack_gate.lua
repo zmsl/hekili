@@ -456,7 +456,13 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0.26 / 0.25 / 0.24, press-only 0.29 / 0.25 / 0.26; excused press 3): flicker 0.3 -> 0.27 (the
     -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
-    ["Guardian"] = { loOver = 2374, flicker = 0.27, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    -- harness-frames (L1793; cause harness: each event time its own client frame re-times the boot chain; seeds 1-20 /
+    -- 21-40 / 41-60 flicker 0.28 / 0.17 / 0.19): flicker 0.27 -> 0.29 (the measured worst + 0.01). Traced: the same
+    -- fights on fresh boots count 14 flips with frames against 15 without (a subset: none added); every counted flip,
+    -- both trees, is the maul -> X -> maul jitter with no fact at either change (the forecast swing's time passing,
+    -- seed 6 122.4), so seeds 1-20's 15 -> 16 is which fights the chain runs, not a new flip (the chain has forked by
+    -- seed 5's first poll: the rage belief the earlier fights carry, est 6.10 -> 6.31; the presses part at 3.4 s)
+    ["Guardian"] = { loOver = 2374, flicker = 0.29, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
