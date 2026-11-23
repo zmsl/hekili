@@ -1132,7 +1132,11 @@ describe("Forever Druid", function()
             n = n + 1
         end
         local roar = w.settings.maintain_demoralizing_roar
-        assert.are.same({ 2, false, false, true }, { n, w.settings.behind.default, roar.default, roar.option.sim })
+        assert.are.same({ 4, false, false, true }, { n, w.settings.behind.default, roar.default, roar.option.sim })
+        assert.are.same(
+            { 60, 25 },
+            { w.settings.barkskin_health.default, w.settings.frenzied_regeneration_health.default }
+        ) -- L1808
         assert.is_nil(w.options)
     end)
 

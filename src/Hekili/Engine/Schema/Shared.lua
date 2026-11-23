@@ -63,6 +63,51 @@ function Shared:RegisterTtdLines(def)
     end
 end
 
+-- { key, value, option }: Shared:RegisterSetting's settings, registered on every spec of the class when its kit is
+-- built (Spec/Kits.lua NewClass: the shared content loads before the class pack).
+ns.sharedSettings = {}
+
+--- (L1808) A spec setting every pack may read (a line the translator emits in every pack: the Healthstone's): kept
+--- here and registered on each of the class's specs, as the kit's own RegisterSetting with no spec list.
+function Shared:RegisterSetting(key, value, option)
+    local s = ns.sharedSettings
+    s[#s + 1] = { key, value, option }
+end
+
+--- (L1808, owner "Setting per line") A defensive line's player-health threshold setting's option (RegisterSetting's
+--- `option`; spec:HealthOption and shared:HealthOption): a 1-100 slider, read by the line as `settings.<key>`; its
+--- name and text name ability `ability` (the client's name, read when the options open; the key until it loads). A
+--- fresh table each call (load only). The core's strings and registry are read when the options ask, not here.
+function ns.HealthOption(ability)
+    local function label()
+        local a = Hekili.Class.abilities[ability]
+        return a and a.name or ability
+    end
+    return {
+        type = "range",
+        min = 1,
+        max = 100,
+        step = 1,
+        width = "full",
+        name = function()
+            local L = ns.L
+            return string.format(L["%s: at or below this health (%%)"], label())
+        end,
+        desc = function()
+            local L = ns.L
+            return string.format(
+                L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."],
+                label()
+            )
+        end,
+    }
+end
+
+--- ns.HealthOption, for a shared line's setting.
+function Shared:HealthOption(ability)
+    return ns.HealthOption(ability)
+end
+
 function Hekili:NewShared()
     return setmetatable({}, Shared)
 end

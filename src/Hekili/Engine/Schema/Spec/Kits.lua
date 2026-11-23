@@ -153,6 +153,9 @@ function Hekili:NewClass( token, def )
     end
 
     class.kit = kit
+    for _, s in ipairs( ns.sharedSettings or {} ) do -- (L1808) the shared content's settings, on every spec
+        kit:RegisterSetting( s[ 1 ], s[ 2 ], s[ 3 ] )
+    end
     return kit
 end
 

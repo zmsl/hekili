@@ -65,7 +65,8 @@ local format = string.format
 --   Also without a bump: Shared:RegisterTtdLines (lane B8; Hekili_Shared calls it only where the core has it) and the
 --   ability field `ttdBelow`; an older core sends no such hint and ignores the field.
 -- 17 (2026-11-23, def-2, L1808): the ability field `variantOf` (an older core gives the variant the spell's IDs, so
--- the original's casts would map to it).
+-- the original's casts would map to it), Shared:RegisterSetting and the HealthOption method (spec and shared: a
+-- defensive line's health threshold slider).
 local CONTENT_API = 17
 
 local done, notice = false, nil

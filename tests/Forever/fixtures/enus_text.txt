@@ -19284,6 +19284,8 @@ options.packs.affliction.core.assigned_curse	values.weakness	Curse of Weakness
 options.packs.affliction.core.disableSpacer	name	\032
 options.packs.affliction.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.affliction.core.enabled	name	Disable Affliction
+options.packs.affliction.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.affliction.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.affliction.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.affliction.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.affliction.core.package	name	Priority
@@ -19632,6 +19634,8 @@ options.packs.arcane.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.arcane.core.disableSpacer	name	\032
 options.packs.arcane.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.arcane.core.enabled	name	Disable Arcane
+options.packs.arcane.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.arcane.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.arcane.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.arcane.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.arcane.core.package	name	Priority
@@ -19640,6 +19644,8 @@ options.packs.arcane.core.package	values.Arcane (wowsims.com)	|W|T135932:0::::64
 options.packs.arcane.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.arcane.core.potion	name	Potion
 options.packs.arcane.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.arcane.core.prefHeader	name	|W|T135932:0::::64:64:4:60:4:60|t Arcane|w Preferences
+options.packs.arcane.core.prefSpacer	name	\032
 options.packs.arcane.performance	name	Performance
 options.packs.arcane.performance.forecastHeader	name	Forecast
 options.packs.arcane.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -20020,6 +20026,8 @@ options.packs.arms.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.arms.core.disableSpacer	name	\032
 options.packs.arms.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.arms.core.enabled	name	Disable Arms
+options.packs.arms.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.arms.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.arms.core.maintain_thunder_clap	desc	Keep Thunder Clap's slow on the target, recasting it only when it is missing (that includes the levels before Mortal Strike). Off: the priority never shows Thunder Clap.\n\nThe wowsims gate runs this as on.
 options.packs.arms.core.maintain_thunder_clap	name	Maintain Thunder Clap
 options.packs.arms.core.openPackage	desc	Open and view this priority pack and its action lists.
@@ -20375,6 +20383,8 @@ options.packs.assassination.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.assassination.core.disableSpacer	name	\032
 options.packs.assassination.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.assassination.core.enabled	name	Disable Assassination
+options.packs.assassination.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.assassination.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.assassination.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.assassination.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.assassination.core.package	name	Priority
@@ -20383,6 +20393,8 @@ options.packs.assassination.core.package	values.Assassination (wowsims.com)	|W|T
 options.packs.assassination.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.assassination.core.potion	name	Potion
 options.packs.assassination.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.assassination.core.prefHeader	name	|W|T132292:0::::64:64:4:60:4:60|t Assassination|w Preferences
+options.packs.assassination.core.prefSpacer	name	\032
 options.packs.assassination.performance	name	Performance
 options.packs.assassination.performance.forecastHeader	name	Forecast
 options.packs.assassination.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -20767,6 +20779,8 @@ options.packs.balance.core.behind	name	Always Behind
 options.packs.balance.core.disableSpacer	name	\032
 options.packs.balance.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.balance.core.enabled	name	Disable Balance
+options.packs.balance.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.balance.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.balance.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.balance.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.balance.core.package	name	Priority
@@ -21136,6 +21150,8 @@ options.packs.beast_mastery.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.beast_mastery.core.disableSpacer	name	\032
 options.packs.beast_mastery.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.beast_mastery.core.enabled	name	Disable Beast Mastery
+options.packs.beast_mastery.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.beast_mastery.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.beast_mastery.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.beast_mastery.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.beast_mastery.core.package	name	Priority
@@ -21144,6 +21160,8 @@ options.packs.beast_mastery.core.package	values.Beast Mastery Turret (wowsims.co
 options.packs.beast_mastery.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.beast_mastery.core.potion	name	Potion
 options.packs.beast_mastery.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.beast_mastery.core.prefHeader	name	|W|T132164:0::::64:64:4:60:4:60|t Beast Mastery|w Preferences
+options.packs.beast_mastery.core.prefSpacer	name	\032
 options.packs.beast_mastery.performance	name	Performance
 options.packs.beast_mastery.performance.forecastHeader	name	Forecast
 options.packs.beast_mastery.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -21484,6 +21502,8 @@ options.packs.combat.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.combat.core.disableSpacer	name	\032
 options.packs.combat.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.combat.core.enabled	name	Disable Combat
+options.packs.combat.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.combat.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.combat.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.combat.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.combat.core.package	name	Priority
@@ -21492,6 +21512,8 @@ options.packs.combat.core.package	values.Combat (wowsims.com)	|W|T132090:0::::64
 options.packs.combat.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.combat.core.potion	name	Potion
 options.packs.combat.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.combat.core.prefHeader	name	|W|T132090:0::::64:64:4:60:4:60|t Combat|w Preferences
+options.packs.combat.core.prefSpacer	name	\032
 options.packs.combat.performance	name	Performance
 options.packs.combat.performance.forecastHeader	name	Forecast
 options.packs.combat.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -22198,6 +22220,8 @@ options.packs.demonology.core.assigned_curse	values.weakness	Curse of Weakness
 options.packs.demonology.core.disableSpacer	name	\032
 options.packs.demonology.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.demonology.core.enabled	name	Disable Demonology
+options.packs.demonology.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.demonology.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.demonology.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.demonology.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.demonology.core.package	name	Priority
@@ -22594,6 +22618,8 @@ options.packs.destruction.core.assigned_curse	values.weakness	Curse of Weakness
 options.packs.destruction.core.disableSpacer	name	\032
 options.packs.destruction.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.destruction.core.enabled	name	Disable Destruction
+options.packs.destruction.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.destruction.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.destruction.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.destruction.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.destruction.core.package	name	Priority
@@ -22953,6 +22979,8 @@ options.packs.discipline.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.discipline.core.disableSpacer	name	\032
 options.packs.discipline.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.discipline.core.enabled	name	Disable Discipline
+options.packs.discipline.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.discipline.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.discipline.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.discipline.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.discipline.core.package	name	Priority
@@ -22961,6 +22989,8 @@ options.packs.discipline.core.package	values.Smite (wowsims.com)	|W|T135987:0:::
 options.packs.discipline.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.discipline.core.potion	name	Potion
 options.packs.discipline.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.discipline.core.prefHeader	name	|W|T135987:0::::64:64:4:60:4:60|t Discipline|w Preferences
+options.packs.discipline.core.prefSpacer	name	\032
 options.packs.discipline.performance	name	Performance
 options.packs.discipline.performance.forecastHeader	name	Forecast
 options.packs.discipline.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -23311,6 +23341,8 @@ options.packs.elemental.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.elemental.core.disableSpacer	name	\032
 options.packs.elemental.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.elemental.core.enabled	name	Disable Elemental
+options.packs.elemental.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.elemental.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.elemental.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.elemental.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.elemental.core.package	name	Priority
@@ -23319,6 +23351,8 @@ options.packs.elemental.core.package	values.Elemental (wowsims.com)	|W|T136048:0
 options.packs.elemental.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.elemental.core.potion	name	Potion
 options.packs.elemental.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.elemental.core.prefHeader	name	|W|T136048:0::::64:64:4:60:4:60|t Elemental|w Preferences
+options.packs.elemental.core.prefSpacer	name	\032
 options.packs.elemental.performance	name	Performance
 options.packs.elemental.performance.forecastHeader	name	Forecast
 options.packs.elemental.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -23673,6 +23707,8 @@ options.packs.enhancement.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.enhancement.core.disableSpacer	name	\032
 options.packs.enhancement.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.enhancement.core.enabled	name	Disable Enhancement
+options.packs.enhancement.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.enhancement.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.enhancement.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.enhancement.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.enhancement.core.package	name	Priority
@@ -23681,6 +23717,8 @@ options.packs.enhancement.core.package	values.Enhancement (wowsims.com)	|W|T1360
 options.packs.enhancement.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.enhancement.core.potion	name	Potion
 options.packs.enhancement.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.enhancement.core.prefHeader	name	|W|T136051:0::::64:64:4:60:4:60|t Enhancement|w Preferences
+options.packs.enhancement.core.prefSpacer	name	\032
 options.packs.enhancement.performance	name	Performance
 options.packs.enhancement.performance.forecastHeader	name	Forecast
 options.packs.enhancement.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -24073,13 +24111,19 @@ options.packs.feral.core	name	Specialization Settings
 options.packs.feral.core.activate	desc	Recommend for Feral from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.feral.core.activate	name	Activate Feral
 options.packs.feral.core.activeMarker	name	|cFFFFD100Active|r
+options.packs.feral.core.barkskin_health	desc	The priority shows Spell 22812 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.feral.core.barkskin_health	name	Spell 22812: at or below this health (%)
 options.packs.feral.core.behind	desc	Hekili assumes you are always behind the target. Below 2 ranks of Shredding Attacks, Claw is still preferred unless Clearcasting makes Shred free.
 options.packs.feral.core.behind	name	Always Behind
 options.packs.feral.core.disableSpacer	name	\032
 options.packs.feral.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.feral.core.enabled	name	Disable Feral
-options.packs.feral.core.feralSection2	name	Bear Form (Guardian)
-options.packs.feral.core.feralSectionText2	name	These settings come from the Guardian priority. They apply only while you are in Bear Form.
+options.packs.feral.core.feralSection3	name	Bear Form (Guardian)
+options.packs.feral.core.feralSectionText3	name	These settings come from the Guardian priority. They apply only while you are in Bear Form.
+options.packs.feral.core.frenzied_regeneration_health	desc	The priority shows Spell 22842 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.feral.core.frenzied_regeneration_health	name	Spell 22842: at or below this health (%)
+options.packs.feral.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.feral.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.feral.core.maintain_demoralizing_roar	desc	Keep Demoralizing Roar on the target, as a raid tank does, and recast it only when it is missing (that includes the levels before Lacerate). Off: the priority never shows it, and Berserk no longer waits for it.\n\nThe wowsims gate runs this as on.
 options.packs.feral.core.maintain_demoralizing_roar	name	Maintain Demoralizing Roar
 options.packs.feral.core.openPackage	desc	Open and view this priority pack and its action lists.
@@ -24710,6 +24754,8 @@ options.packs.fire.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.fire.core.disableSpacer	name	\032
 options.packs.fire.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.fire.core.enabled	name	Disable Fire
+options.packs.fire.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.fire.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.fire.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.fire.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.fire.core.package	name	Priority
@@ -24719,6 +24765,8 @@ options.packs.fire.core.package	values.Frostfire (wowsims.com)	|W|T135810:0::::6
 options.packs.fire.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.fire.core.potion	name	Potion
 options.packs.fire.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.fire.core.prefHeader	name	|W|T135810:0::::64:64:4:60:4:60|t Fire|w Preferences
+options.packs.fire.core.prefSpacer	name	\032
 options.packs.fire.performance	name	Performance
 options.packs.fire.performance.forecastHeader	name	Forecast
 options.packs.fire.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -25056,6 +25104,8 @@ options.packs.frost.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.frost.core.disableSpacer	name	\032
 options.packs.frost.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.frost.core.enabled	name	Disable Frost
+options.packs.frost.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.frost.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.frost.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.frost.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.frost.core.package	name	Priority
@@ -25064,6 +25114,8 @@ options.packs.frost.core.package	values.Frost (wowsims.com)	|W|T135846:0::::64:6
 options.packs.frost.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.frost.core.potion	name	Potion
 options.packs.frost.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.frost.core.prefHeader	name	|W|T135846:0::::64:64:4:60:4:60|t Frost|w Preferences
+options.packs.frost.core.prefSpacer	name	\032
 options.packs.frost.performance	name	Performance
 options.packs.frost.performance.forecastHeader	name	Forecast
 options.packs.frost.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -25436,6 +25488,8 @@ options.packs.fury.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.fury.core.disableSpacer	name	\032
 options.packs.fury.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.fury.core.enabled	name	Disable Fury
+options.packs.fury.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.fury.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.fury.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.fury.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.fury.core.package	name	Priority
@@ -25585,9 +25639,9 @@ options.packs.guardian.Guardian (wowsims.com).lists.actionID	name	Entry
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcat|r, if |cffffd100buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 5487 - |cFFFFD100|cffffd100(!buff.bear_form.up)&!buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1238122 - |cFFFFD100|cffffd100(target.outside5)&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 22812 - |cFFFFD100|cffffd100(health.known&health.pct<=60&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 22812 - |cFFFFD100|cffffd100(health.known&health.pct<=settings.barkskin_health&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1259799 - |cFFFFD100|cffffd100(action.elunes_light.known&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 22842 - |cFFFFD100|cffffd100(health.known&health.pct<25&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 22842 - |cFFFFD100|cffffd100(health.known&health.pct<settings.frenzied_regeneration_health&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 5229 - |cFFFFD100|cffffd100((action.lacerate.known&gcd.remains<=0&(!action.lacerate.known||rage.lo<action.lacerate.cost))&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 770 - |cFFFFD100|cffffd100((action.faerie_fire.known&debuff.faerie_fire.remains<=0)&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 99 - |cFFFFD100|cffffd100(settings.maintain_demoralizing_roar&(!(!(debuff.demoralizing_roar.remains<=0))&(toggle.movement&target.outside5||target.within5)))&!buff.cat_form.up|r|r
@@ -25839,13 +25893,19 @@ options.packs.guardian.core	name	Specialization Settings
 options.packs.guardian.core.activate	desc	Recommend for Guardian from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.guardian.core.activate	name	Activate Guardian
 options.packs.guardian.core.activeMarker	name	|cFFFFD100Active|r
+options.packs.guardian.core.barkskin_health	desc	The priority shows Spell 22812 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.guardian.core.barkskin_health	name	Spell 22812: at or below this health (%)
 options.packs.guardian.core.behind	desc	Hekili assumes you are always behind the target. Below 2 ranks of Shredding Attacks, Claw is still preferred unless Clearcasting makes Shred free.
 options.packs.guardian.core.behind	name	Always Behind
 options.packs.guardian.core.disableSpacer	name	\032
 options.packs.guardian.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.guardian.core.enabled	name	Disable Guardian
-options.packs.guardian.core.guardianSection2	name	Cat Form (Feral)
-options.packs.guardian.core.guardianSectionText2	name	These settings come from the Feral priority. They apply only while you are in Cat Form.
+options.packs.guardian.core.frenzied_regeneration_health	desc	The priority shows Spell 22842 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.guardian.core.frenzied_regeneration_health	name	Spell 22842: at or below this health (%)
+options.packs.guardian.core.guardianSection5	name	Cat Form (Feral)
+options.packs.guardian.core.guardianSectionText5	name	These settings come from the Feral priority. They apply only while you are in Cat Form.
+options.packs.guardian.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.guardian.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.guardian.core.maintain_demoralizing_roar	desc	Keep Demoralizing Roar on the target, as a raid tank does, and recast it only when it is missing (that includes the levels before Lacerate). Off: the priority never shows it, and Berserk no longer waits for it.\n\nThe wowsims gate runs this as on.
 options.packs.guardian.core.maintain_demoralizing_roar	name	Maintain Demoralizing Roar
 options.packs.guardian.core.openPackage	desc	Open and view this priority pack and its action lists.
@@ -26221,6 +26281,8 @@ options.packs.marksmanship.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.marksmanship.core.disableSpacer	name	\032
 options.packs.marksmanship.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.marksmanship.core.enabled	name	Disable Marksmanship
+options.packs.marksmanship.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.marksmanship.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.marksmanship.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.marksmanship.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.marksmanship.core.package	name	Priority
@@ -26229,6 +26291,8 @@ options.packs.marksmanship.core.package	values.Marksmanship Turret (wowsims.com)
 options.packs.marksmanship.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.marksmanship.core.potion	name	Potion
 options.packs.marksmanship.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.marksmanship.core.prefHeader	name	|W|T132222:0::::64:64:4:60:4:60|t Marksmanship|w Preferences
+options.packs.marksmanship.core.prefSpacer	name	\032
 options.packs.marksmanship.performance	name	Performance
 options.packs.marksmanship.performance.forecastHeader	name	Forecast
 options.packs.marksmanship.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -26415,16 +26479,16 @@ options.packs.protection.Protection (wowsims.com).lists.action	values.wait	|T136
 options.packs.protection.Protection (wowsims.com).lists.action	values.whirlwind	|T136000:0|t Spell 1680
 options.packs.protection.Protection (wowsims.com).lists.actionID	desc	Select the entry to modify in this action list.\n\nEntries in red are disabled, have no action set, have a conditional error, or use actions that are disabled/toggled off.
 options.packs.protection.Protection (wowsims.com).lists.actionID	name	Entry
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 12975 - |cFFFFD100|cffffd100health.known&(!(buff.last_stand.up||(action.shield_wall.known&buff.shield_wall.up))&health.pct<=40)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 12975 - |cFFFFD100|cffffd100health.known&(!(buff.last_stand.up||(action.shield_wall.known&buff.shield_wall.up))&health.pct<=settings.last_stand_health)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 20594
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 1311015
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 871 - |cFFFFD100|cffffd100health.known&(health.pct<=35&!((action.last_stand.known&buff.last_stand.up)||buff.shield_wall.up))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 871 - |cFFFFD100|cffffd100health.known&(health.pct<=settings.shield_wall_health&!((action.last_stand.known&buff.last_stand.up)||buff.shield_wall.up))|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20271
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20594 - |cFFFFD100|cffffd100health.known&((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1299026 - |cFFFFD100|cffffd100health.known&((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20594 - |cFFFFD100|cffffd100health.known&((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=settings.stoneform_health)|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1299026 - |cFFFFD100|cffffd100health.known&((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=settings.shatter_curse_health)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1310994 - |cFFFFD100|cffffd100(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0))|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1311649 - |cFFFFD100|cffffd100(buff.seal_of_fury.remains<mainhand_remains&!buff.seal_of_fury.up)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=30|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healthstone_health|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1329555
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 26573
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 12328
@@ -26755,6 +26819,10 @@ options.packs.protection.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.protection.core.disableSpacer	name	\032
 options.packs.protection.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.protection.core.enabled	name	Disable Protection
+options.packs.protection.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.protection.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.protection.core.last_stand_health	desc	The priority shows Spell 12975 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.protection.core.last_stand_health	name	Spell 12975: at or below this health (%)
 options.packs.protection.core.maintain_demoralizing_shout	desc	Keep Demoralizing Shout on the target, as a raid tank does. Off: the priority never shows it.\n\nThe wowsims gate runs this as on.
 options.packs.protection.core.maintain_demoralizing_shout	name	Maintain Demoralizing Shout
 options.packs.protection.core.openPackage	desc	Open and view this priority pack and its action lists.
@@ -26767,7 +26835,14 @@ options.packs.protection.core.potion	desc	Unless otherwise specified in the prio
 options.packs.protection.core.potion	name	Potion
 options.packs.protection.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
 options.packs.protection.core.prefHeader	name	|W|T134952:0::::64:64:4:60:4:60|t Protection|w Preferences
+options.packs.protection.core.prefHeader	name	|W|T135893:0::::64:64:4:60:4:60|t Protection|w Preferences
 options.packs.protection.core.prefSpacer	name	\032
+options.packs.protection.core.shatter_curse_health	desc	The priority shows Spell 1299026 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.protection.core.shatter_curse_health	name	Spell 1299026: at or below this health (%)
+options.packs.protection.core.shield_wall_health	desc	The priority shows Spell 871 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.protection.core.shield_wall_health	name	Spell 871: at or below this health (%)
+options.packs.protection.core.stoneform_health	desc	The priority shows Spell 20594 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.protection.core.stoneform_health	name	Spell 20594: at or below this health (%)
 options.packs.protection.performance	name	Performance
 options.packs.protection.performance.forecastHeader	name	Forecast
 options.packs.protection.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -27433,6 +27508,8 @@ options.packs.retribution.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.retribution.core.disableSpacer	name	\032
 options.packs.retribution.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.retribution.core.enabled	name	Disable Retribution
+options.packs.retribution.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.retribution.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.retribution.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.retribution.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.retribution.core.package	name	Priority
@@ -27442,6 +27519,8 @@ options.packs.retribution.core.package	values.Retribution (wowsims.com)	|W|T1358
 options.packs.retribution.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.retribution.core.potion	name	Potion
 options.packs.retribution.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.retribution.core.prefHeader	name	|W|T135873:0::::64:64:4:60:4:60|t Retribution|w Preferences
+options.packs.retribution.core.prefSpacer	name	\032
 options.packs.retribution.performance	name	Performance
 options.packs.retribution.performance.forecastHeader	name	Forecast
 options.packs.retribution.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -27800,6 +27879,8 @@ options.packs.shadow.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.shadow.core.disableSpacer	name	\032
 options.packs.shadow.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.shadow.core.enabled	name	Disable Shadow
+options.packs.shadow.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.shadow.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.shadow.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.shadow.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.shadow.core.package	name	Priority
@@ -28204,6 +28285,8 @@ options.packs.subtlety.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.subtlety.core.disableSpacer	name	\032
 options.packs.subtlety.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.subtlety.core.enabled	name	Disable Subtlety
+options.packs.subtlety.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.subtlety.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.subtlety.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.subtlety.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.subtlety.core.package	name	Priority
@@ -28212,6 +28295,8 @@ options.packs.subtlety.core.package	values.Subtlety (wowsims.com)	|W|T132320:0::
 options.packs.subtlety.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.subtlety.core.potion	name	Potion
 options.packs.subtlety.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.subtlety.core.prefHeader	name	|W|T132320:0::::64:64:4:60:4:60|t Subtlety|w Preferences
+options.packs.subtlety.core.prefSpacer	name	\032
 options.packs.subtlety.performance	name	Performance
 options.packs.subtlety.performance.forecastHeader	name	Forecast
 options.packs.subtlety.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -29214,6 +29299,8 @@ options.packs.survival.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.survival.core.disableSpacer	name	\032
 options.packs.survival.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.survival.core.enabled	name	Disable Survival
+options.packs.survival.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
+options.packs.survival.core.healthstone_health	name	Healthstone: at or below this health (%)
 options.packs.survival.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.survival.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.survival.core.package	name	Priority
@@ -29224,6 +29311,8 @@ options.packs.survival.core.package	values.Survival Turret (wowsims.com)	|W|T132
 options.packs.survival.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.survival.core.potion	name	Potion
 options.packs.survival.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
+options.packs.survival.core.prefHeader	name	|W|T132215:0::::64:64:4:60:4:60|t Survival|w Preferences
+options.packs.survival.core.prefSpacer	name	\032
 options.packs.survival.performance	name	Performance
 options.packs.survival.performance.forecastHeader	name	Forecast
 options.packs.survival.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -29420,15 +29509,15 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili fix toggles	Potions: ON
 ~message	/hekili help	Display Mode Control (currently |cFFFFD100automatic|r):\n - Toggle Mode: |cFFFFD100/hek set mode|r\n - Set specific mode:\n   - |cFFFFD100/hek set mode automatic|r\n   - |cFFFFD100/hek set mode single|r\n   - |cFFFFD100/hek set mode aoe|r\n   - |cFFFFD100/hek set mode dual|r\n   - |cFFFFD100/hek set mode reactive|r\n\n
 ~message	/hekili help	Other available commands:\n - |cFFFFD100/hekili priority|r - View or change priority settings\n - |cFFFFD100/hekili profile|r - View or change profiles\n - |cFFFFD100/hekili move|r - Unlock or lock the UI for positioning\n - |cFFFFD100/hekili enable|r or |cFFFFD100/hekili disable|r - Enable or disable the addon\n
-~message	/hekili help	Specialization Settings for Affliction:\n - |cFFFFD100assigned_curse|r = |cFF00B4FFelements|r, one of: \n\n
-~message	/hekili help	Specialization Settings for Arcane:\n\n
-~message	/hekili help	Specialization Settings for Arms:\n - |cFFFFD100wowsims_recklessness|r = |cFFFF0000OFF|r (Recklessness (wowsims.com))\n - |cFFFFD100wowsims_stance_dance|r = |cFFFF0000OFF|r (Stance Dance (wowsims.com))\n - |cFFFFD100maintain_thunder_clap|r = |cFFFF0000OFF|r (Maintain Thunder Clap)\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec maintain_thunder_clap|r\n - Enable: |cFFFFD100/hek set spec maintain_thunder_clap on|r\n - Disable: |cFFFFD100/hek set spec maintain_thunder_clap off|r\n\n
-~message	/hekili help	Specialization Settings for Assassination:\n\n
-~message	/hekili help	Specialization Settings for Balance:\n - |cFFFFD100behind|r = |cFFFF0000OFF|r (Always Behind)\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec behind|r\n - Enable: |cFFFFD100/hek set spec behind on|r\n - Disable: |cFFFFD100/hek set spec behind off|r\n\n
-~message	/hekili help	Specialization Settings for Beast Mastery:\n\n
-~message	/hekili help	Specialization Settings for Discipline:\n\n
-~message	/hekili help	Specialization Settings for Elemental:\n\n
-~message	/hekili help	Specialization Settings for Protection:\n\n
+~message	/hekili help	Specialization Settings for Affliction:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100assigned_curse|r = |cFF00B4FFelements|r, one of: \n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili help	Specialization Settings for Arcane:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili help	Specialization Settings for Arms:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100wowsims_recklessness|r = |cFFFF0000OFF|r (Recklessness (wowsims.com))\n - |cFFFFD100wowsims_stance_dance|r = |cFFFF0000OFF|r (Stance Dance (wowsims.com))\n - |cFFFFD100maintain_thunder_clap|r = |cFFFF0000OFF|r (Maintain Thunder Clap)\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec maintain_thunder_clap|r\n - Enable: |cFFFFD100/hek set spec maintain_thunder_clap on|r\n - Disable: |cFFFFD100/hek set spec maintain_thunder_clap off|r\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili help	Specialization Settings for Assassination:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili help	Specialization Settings for Balance:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100behind|r = |cFFFF0000OFF|r (Always Behind)\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec behind|r\n - Enable: |cFFFFD100/hek set spec behind on|r\n - Disable: |cFFFFD100/hek set spec behind off|r\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili help	Specialization Settings for Beast Mastery:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili help	Specialization Settings for Discipline:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili help	Specialization Settings for Elemental:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili help	Specialization Settings for Protection:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
 ~message	/hekili help	Target Swap Setting:\n - Toggle Target Swap: |cFFFFD100/hek set cycle|r\n - Set minimum time to die for target swaps: |cFFFFD100/hek set cycle #|r (0-20)\n - Enable: |cFFFFD100/hek set cycle on|r\n - Disable: |cFFFFD100/hek set cycle off|r\n\n
 ~message	/hekili help	Toggle Options:\n - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, |cFFFFD100movement|r, etc.\n - Example commands:\n   - Enable Cooldowns: |cFFFFD100/hek set cooldowns on|r\n   - Disable Interrupts: |cFFFFD100/hek set interrupts off|r\n   - Toggle Defensives: |cFFFFD100/hek set defensives|r\n\n
 ~message	/hekili help	Use |cFFFFD100/hekili set|r to adjust toggles, display modes, and specialization settings via chat commands or macros.\n\n
@@ -29448,15 +29537,15 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili profile Nope	Invalid profile name. Please choose a valid profile.
 ~message	/hekili set	Display Mode Control (currently |cFFFFD100automatic|r):\n - Toggle Mode: |cFFFFD100/hek set mode|r\n - Set specific mode:\n   - |cFFFFD100/hek set mode automatic|r\n   - |cFFFFD100/hek set mode single|r\n   - |cFFFFD100/hek set mode aoe|r\n   - |cFFFFD100/hek set mode dual|r\n   - |cFFFFD100/hek set mode reactive|r\n\n
 ~message	/hekili set	Other available commands:\n - |cFFFFD100/hekili priority|r - View or change priority settings\n - |cFFFFD100/hekili profile|r - View or change profiles\n - |cFFFFD100/hekili move|r - Unlock or lock the UI for positioning\n - |cFFFFD100/hekili enable|r or |cFFFFD100/hekili disable|r - Enable or disable the addon\n
-~message	/hekili set	Specialization Settings for Affliction:\n - |cFFFFD100assigned_curse|r = |cFF00B4FFelements|r, one of: \n\n
-~message	/hekili set	Specialization Settings for Arcane:\n\n
-~message	/hekili set	Specialization Settings for Arms:\n - |cFFFFD100wowsims_recklessness|r = |cFFFF0000OFF|r (Recklessness (wowsims.com))\n - |cFFFFD100wowsims_stance_dance|r = |cFFFF0000OFF|r (Stance Dance (wowsims.com))\n - |cFFFFD100maintain_thunder_clap|r = |cFFFF0000OFF|r (Maintain Thunder Clap)\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec maintain_thunder_clap|r\n - Enable: |cFFFFD100/hek set spec maintain_thunder_clap on|r\n - Disable: |cFFFFD100/hek set spec maintain_thunder_clap off|r\n\n
-~message	/hekili set	Specialization Settings for Assassination:\n\n
-~message	/hekili set	Specialization Settings for Balance:\n - |cFFFFD100behind|r = |cFFFF0000OFF|r (Always Behind)\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec behind|r\n - Enable: |cFFFFD100/hek set spec behind on|r\n - Disable: |cFFFFD100/hek set spec behind off|r\n\n
-~message	/hekili set	Specialization Settings for Beast Mastery:\n\n
-~message	/hekili set	Specialization Settings for Discipline:\n\n
-~message	/hekili set	Specialization Settings for Elemental:\n\n
-~message	/hekili set	Specialization Settings for Protection:\n\n
+~message	/hekili set	Specialization Settings for Affliction:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100assigned_curse|r = |cFF00B4FFelements|r, one of: \n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili set	Specialization Settings for Arcane:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili set	Specialization Settings for Arms:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100wowsims_recklessness|r = |cFFFF0000OFF|r (Recklessness (wowsims.com))\n - |cFFFFD100wowsims_stance_dance|r = |cFFFF0000OFF|r (Stance Dance (wowsims.com))\n - |cFFFFD100maintain_thunder_clap|r = |cFFFF0000OFF|r (Maintain Thunder Clap)\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec maintain_thunder_clap|r\n - Enable: |cFFFFD100/hek set spec maintain_thunder_clap on|r\n - Disable: |cFFFFD100/hek set spec maintain_thunder_clap off|r\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili set	Specialization Settings for Assassination:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili set	Specialization Settings for Balance:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n - |cFFFFD100behind|r = |cFFFF0000OFF|r (Always Behind)\n\nExample commands for toggling specialization settings:\n - Toggle On/Off: |cFFFFD100/hek set spec behind|r\n - Enable: |cFFFFD100/hek set spec behind on|r\n - Disable: |cFFFFD100/hek set spec behind off|r\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili set	Specialization Settings for Beast Mastery:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili set	Specialization Settings for Discipline:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili set	Specialization Settings for Elemental:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
+~message	/hekili set	Specialization Settings for Protection:\n - |cFFFFD100healthstone_health|r = |cFF00FF0030.00|r, min: 1.00, max: 100.00\n\nExample command for setting numeric values:\n - Set to a value within range: |cFFFFD100/hek set spec healthstone_health #|r ( 1-100)\n\n
 ~message	/hekili set	Target Swap Setting:\n - Toggle Target Swap: |cFFFFD100/hek set cycle|r\n - Set minimum time to die for target swaps: |cFFFFD100/hek set cycle #|r (0-20)\n - Enable: |cFFFFD100/hek set cycle on|r\n - Disable: |cFFFFD100/hek set cycle off|r\n\n
 ~message	/hekili set	Toggle Options:\n - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, |cFFFFD100movement|r, etc.\n - Example commands:\n   - Enable Cooldowns: |cFFFFD100/hek set cooldowns on|r\n   - Disable Interrupts: |cFFFFD100/hek set interrupts off|r\n   - Toggle Defensives: |cFFFFD100/hek set defensives|r\n\n
 ~message	/hekili set	Use |cFFFFD100/hekili set|r to adjust toggles, display modes, and specialization settings via chat commands or macros.\n\n
@@ -29471,9 +29560,9 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	/hekili set mode	Mode: Single-Target
 ~message	/hekili set mode aoe	Mode: AOE (Multi-Target)
 ~message	/hekili set nope	Invalid toggle or setting specified.
-~message	/hekili set spec	Invalid spec setting specified.
 ~message	/hekili set spec assigned_curse	Invalid value for assigned_curse. Use one of: .
 ~message	/hekili set spec behind	behind set to |cFF00FF00ON|r.
+~message	/hekili set spec healthstone_health	Invalid value for healthstone_health. Must be between 1.00 and 100.00.
 ~message	/hekili set spec maintain_thunder_clap	maintain_thunder_clap set to |cFF00FF00ON|r.
 ~message	/hekili set spec nope	Invalid spec setting specified.
 ~message	/hekili set spec wowsims_recklessness	wowsims_recklessness set to |cFF00FF00ON|r.

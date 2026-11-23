@@ -31,6 +31,9 @@ function M.load(vs, file, class)
             return function(_, ...)
                 reg[method] = reg[method] or {}
                 table.insert(reg[method], { ... })
+                if method == "HealthOption" then -- (L1808) the core's option shape (Spec.lua ns.HealthOption)
+                    return { type = "range", min = 1, max = 100, step = 1, health = (...) }
+                end
             end
         end,
     })

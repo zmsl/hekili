@@ -232,6 +232,12 @@ What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforc
   default and `sim` must be candidates (else RegisterSetting errors), the spec's page shows it as a dropdown, `/hekili
   set spec <key> <candidate>` sets it, and a priority reads it as `settings.<key>='<candidate>'` (a quoted string
   passes through the script language as is: `Engine/Sim/Scripts.lua` never extends a resource name inside quotes).
+  A defensive line's player-health threshold (owner L1808, "Setting per line") is a setting whose option comes from
+  `spec:HealthOption(ability)` (`ns.HealthOption`, `Engine/Schema/Spec.lua`): a 1-100 slider named after the ability
+  (the client's name, read when the options open); the line reads `health.pct<=settings.<action>_health`. Shared
+  content registers a setting for every spec with `shared:RegisterSetting(key, value, option)` (and
+  `shared:HealthOption`): kept in `ns.sharedSettings` and registered on each spec when `NewClass` builds the kit (the
+  shared content loads first).
 - `Hekili.State` (the simulation's `state`) and `Hekili.Class` (the registry the class file fills).
 - `Hekili.Client`: the game client as an addon may read it, the same table as `ns.Facade`. Content never names a WoW
   global (`tools/check_api_reads.sh`).

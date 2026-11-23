@@ -1040,3 +1040,7 @@ L["Priority %s, list %s, line %d reads your health without health.known first. W
 
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000ATTENTION|r : cette version d’Hekili Forever est prévue pour un client WoW Forever plus récent ; réinstalle-la pour %s."
+
+-- No longer used (the English changed or went away): reuse or delete
+L["%s: at or below this health (%%)"] = "%s : à ce niveau de vie ou moins (%%)"
+L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."] = "La priorité affiche %s dans l’affichage Défensifs dès que ta vie est à ce pourcentage ou en dessous, et seulement tant que Hekili peut lire ta vie en combat."

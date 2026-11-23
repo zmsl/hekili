@@ -212,10 +212,11 @@ Translation:
   Victory Rush: "This isn't something from wowsims, but needs to be added since it won't affect wowsims accuracy
   (wowsims never goes mob to mob so VR isn't ever a thing). Should be used just above bloodthirst (since it's a mini
   bloodthirst)."
-- `settings` (`{ <key> = { default = <bool>, desc = "<text>" } }`): a pack setting a recipe line reads as
-  `settings.<key>`, listed in the header (`# Setting <key> (<desc>), default <bool>.`) after the ON/OFF groups when a
+- `settings` (`{ <key> = { default = <bool or number>, desc = "<text>" } }`): a pack setting a recipe line reads as
+  `settings.<key>`, listed in the header (`# Setting <key> (<desc>), default <value>.`) after the ON/OFF groups when a
   line reads it; the class registers it beside the `wowsims_*` ones. For a recipe line a player may want to turn
-  off. (Guardian's leveling Demoralizing Roar had `demoralizing_roar_filler`; it is now governed by rule 15's
+  off, or a hand-written defensive line's health threshold (a number: `<action>_health`, L1808). A wowsims line's
+  health threshold needs no entry: rule 23 makes it `settings.<action>_health`, its default the APL's number. (Guardian's leveling Demoralizing Roar had `demoralizing_roar_filler`; it is now governed by rule 15's
   `maintain_demoralizing_roar`, below. Faerie Fire, free, has none.)
 - `prepullSkip` (`{ "<action>", ... }`): omits that action's `actions.precombat` lines, each listed in the header
   (the translator errors when there is none). Only under an owner ruling against a wowsims pre-pull cast, named in the

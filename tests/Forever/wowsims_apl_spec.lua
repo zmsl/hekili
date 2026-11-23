@@ -2084,31 +2084,47 @@ describe("the wowsims APL translator's re-pin reads", function()
     it(
         "guards a line reading the player's health with health.known (rule 23); another unit's is unsupported",
         function()
-            local text, omitted = apl.translate({
+            local text, omitted, read = apl.translate({
                 valueVariables = { { name = "Low", value = cmp("OpLt", { currentHealthPercent = {} }, const("50%")) } },
                 priorityList = {
                     cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("60%"))),
-                    cast(100, AND(cmp("OpGt", { currentHealth = {} }, const("1000")), const("true"))),
-                    cast(100, { variableRef = { name = "Low" } }), -- through a variable too
+                    cast(200, AND(cmp("OpGt", { currentHealth = {} }, const("1000")), const("true"))),
+                    cast(400, { variableRef = { name = "Low" } }), -- through a variable too
                     cast(100, cmp("OpGt", { currentHealth = { sourceUnit = { type = "Pet" } } }, const("1000"))),
                     cast(100, cmp("OpLt", { currentManaPercent = {} }, const("50%"))), -- not health: no guard
                     -- an `|` branch and a `not`: the line's whole condition under the term (false while unknown)
-                    cast(100, OR(cmp("OpLt", { currentHealthPercent = {} }, const("40%")), { gcdIsReady = {} })),
-                    cast(100, NOT(cmp("OpGt", { currentHealthPercent = {} }, const("80%")))),
+                    cast(600, OR(cmp("OpLt", { currentHealthPercent = {} }, const("40%")), { gcdIsReady = {} })),
+                    cast(500, NOT(cmp("OpGt", { currentHealthPercent = {} }, const("80%")))),
                 },
             }, ctx({}))
+            -- (L1808, owner "Setting per line") each percent threshold is its action's setting, default the number
             assert.are.equal(
                 table.concat({
-                    "actions=strike,if=health.known&health.pct<=60",
-                    "actions+=/strike,if=health.known&health.current>1000",
-                    "actions+=/strike,if=health.known&health.pct<50",
+                    "actions=strike,if=health.known&health.pct<=settings.strike_health",
+                    "actions+=/big_hit,if=health.known&health.current>1000",
+                    "actions+=/dot,if=health.known&health.pct<settings.dot_health",
                     "actions+=/strike,if=mana.pct_lo<50",
-                    "actions+=/strike,if=health.known&(health.pct<40|gcd.remains<=0)",
-                    "actions+=/strike,if=health.known&!(health.pct>80)",
+                    "actions+=/pyroblast,if=health.known&(health.pct<settings.pyroblast_health|gcd.remains<=0)",
+                    "actions+=/starfire,if=health.known&!(health.pct>settings.starfire_health)",
                 }, "\n"),
                 text
             )
             assert.are.same({ "default #4: currentHealth of Pet" }, omitted)
+            local t = "player health threshold, percent"
+            assert.are.same({
+                { "dot_health", 50, t },
+                { "pyroblast_health", 40, t },
+                { "starfire_health", 80, t },
+                { "strike_health", 60, t },
+            }, read)
+            assert.has_error(function()
+                apl.translate({
+                    priorityList = {
+                        cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("60%"))),
+                        cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("40%"))),
+                    },
+                }, ctx({}))
+            end, "rule 23: strike reads two health thresholds (60 and 40)")
         end
     )
 

@@ -295,7 +295,9 @@
 -- 23. A hidden value of ours read through the hidden-value library (owner L1805, replacing L1462's omission): the
 --    player's health (`currentHealthPercent` `health.pct`, a percent read under rule 8; `currentHealth`
 --    `health.current`) is read, and the whole line's condition gets that kind's enablement term first (M.KNOWN:
---    `health.known&(...)`, also through a variable), so with the reads not working (no band, the library missing,
+--    `health.known&(...)`, also through a variable; L1808, owner "Setting per line": a percent threshold becomes the
+--    line's per-spec setting `settings.<action>_health`, default the number, one per action), so with the reads not
+--    working (no band, the library missing,
 --    refused, re-priming past the hold) the line is false, an inverted `>` read or an `|` branch included. A read outside
 --    a line's condition is unsupported (rule 2). Another unit's health read is unsupported as any other unit's (`... of
 --    <unit>`). Every emitted line, recipe lines included (`leveling`, `levelingFirst`, `extra`, `condition`, `guard`),
@@ -920,6 +922,19 @@ local core = {}
 assert(loadfile("src/Hekili/Engine/Sim/AplThresholds.lua"))("Hekili", core)
 M.unguarded = core.HealthUnguarded
 
+-- Rule 23 (L1808): the setting key of the line's own action's health threshold `n` (`<action>_health`), recorded with
+-- its default for the header and the class's registration; one threshold an action (a second, different one raises).
+function M.healthSetting(c, n)
+    local key = (c.self or unsupported("the player's health against a number outside a cast line")) .. "_health"
+    c.healthSettings = c.healthSettings or {}
+    local had = c.healthSettings[key]
+    if had and had ~= n then
+        error(("rule 23: %s reads two health thresholds (%s and %s)"):format(c.self, tostring(had), tostring(n)), 0)
+    end
+    c.healthSettings[key] = n
+    return key
+end
+
 -- Whether value node `n` is a percent read (variables followed).
 local function percentRead(c, n)
     local k, v = next(n or {})
@@ -1493,6 +1508,13 @@ local function bool(c, n)
             local max = c.manaMax or unsupported("currentMana against a number (no log: the kit's pool unknown)")
             local o = M.OPS[under]
             return ("(mana.lo%s%s&mana.pct_lo%s%d)"):format(o, n, o, math.ceil(100 * tonumber(n) / max)), nil, u
+        end
+        -- rule 23 (L1808, owner "Setting per line"): the player's health against a number reads the line's per-spec
+        -- setting `<action>_health`, its default the number
+        if l == "health.pct" and tonumber(r) then
+            r = "settings." .. M.healthSetting(c, tonumber(r))
+        elseif r == "health.pct" and tonumber(l) then
+            unsupported("a number against the player's health (write the health first)")
         end
         return l .. op .. r, nil, u
     elseif k == "auraIsActive" then
@@ -3101,7 +3123,8 @@ function M.translate(rotation, c)
     end
     table.sort(own)
     for _, key in ipairs(own) do
-        toggles[#toggles + 1] = { key, c.settings[key].default == true, c.settings[key].desc }
+        local d = c.settings[key].default -- a bool, or a number (a health threshold, L1808)
+        toggles[#toggles + 1] = { key, type(d) == "number" and d or d == true, c.settings[key].desc }
     end
     local omitted, lists, byName = {}, {}, {}
     local origin = {} -- [list name][line] = its APL entry's index (for rule 1's notes)
@@ -3388,6 +3411,16 @@ function M.translate(rotation, c)
     end
     text = table.concat(text, "\n")
     -- only the settings an emitted line reads (ruling L14): a group whose every reader was omitted registers nothing
+    local hs = {} -- rule 23's health thresholds (L1808), each a setting of its line's action
+    for key in pairs(c.healthSettings or {}) do
+        hs[#hs + 1] = key
+    end
+    table.sort(hs)
+    for _, key in ipairs(hs) do
+        if not c.settings[key] then
+            toggles[#toggles + 1] = { key, c.healthSettings[key], "player health threshold, percent" }
+        end
+    end
     local read = {}
     for _, t in ipairs(toggles) do
         if text:find("settings%." .. t[1] .. "%f[^%w_]") then

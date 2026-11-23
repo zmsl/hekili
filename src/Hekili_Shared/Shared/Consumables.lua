@@ -120,6 +120,10 @@ shared:RegisterAbility("healthstone", {
     end,
 })
 
+-- (L1808, owner "Setting per line") the Healthstone line's player-health threshold, on every spec: the translator puts
+-- the line in every pack (wowsims's Protection threshold, 30%)
+shared:RegisterSetting("healthstone_health", 30, shared:HealthOption("healthstone"))
+
 -- The mana and energy consumables (C12), best first: item IDs from ItemSparse (DB2 1.60.1.70338); each cooldown from
 -- wowsims/forever's db.json (MIT, a reference only): the potion's own 2 min category, and the 2 min category the rune,
 -- the tea and the gems share (Thistle Tea's own 5 min); Mana Agate's row is absent there and is taken as its ranks'.
