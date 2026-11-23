@@ -165,6 +165,56 @@ describe("the loop's driver cuts our channel when the engine moves off it", func
         assert.is_true(cuts > 0, "no Wrack cut")
     end)
 
+    -- batch 3 integration (round 3): a press that cuts our channel lands its debuff at the press, and the belief stamps
+    -- it there. The press's events reach the belief a poll later with that poll's own rows (a dot's wound at the poll),
+    -- as one batch; in game a frame runs between them, so its staged events fold before the later row moves the clock.
+    it("Affliction, 3 seeds x 180 s: a Corruption press that cuts Wrack stamps its debuff at the press", function()
+        local C = require("Forever.helpers.warlock_world").Affliction
+        local checked, late = 0, {}
+        for seed = 1, 3 do
+            local L = loop.new(C)
+            local abilities = L.us.Hekili.Class.abilities
+            local id = L.us.Hekili.Class.auras.corruption.id
+            local VS = L.us.ns.VirtualState
+            local seen, stopAt, press = 0, -1, nil
+            local run = loop.run(L, seed, {
+                duration = 180,
+                mobHealth = 1e9,
+                on = function(r, steps, t)
+                    local base = steps[1].base
+                    if press and t > press + 1e-6 then -- the poll after the press: the belief folded it
+                        if r.us.target.auras[id] then
+                            checked = checked + 1
+                            local _, _, applied = VS.Aura("target", id, base + t)
+                            if not applied or math.abs(applied - base - press) > 1e-6 then
+                                late[#late + 1] = ("seed %d press %.2f: believed %s"):format(
+                                    seed,
+                                    press,
+                                    applied and ("%.2f"):format(applied - base) or "none"
+                                )
+                            end
+                        end
+                        press = nil
+                    end
+                    local truth = r.W.truth
+                    for k = seen + 1, #truth do
+                        local ev = truth[k]
+                        if ev.src == r.us and ev.kind == "channelStop" then
+                            stopAt = ev.t
+                        elseif ev.src == r.us and ev.kind == "cast" and ev.t == stopAt then
+                            local a = abilities[ev.spell]
+                            press = a and a.key == "corruption" and ev.t or press
+                        end
+                    end
+                    seen = #truth
+                end,
+            }, { { H = L.us } })
+            assert.are.equal(0, run.errors)
+        end
+        assert.is_true(checked > 0, "no Corruption press cut Wrack")
+        assert.are.same({}, late)
+    end)
+
     -- the blink (review I1): a player with a 0.5 s reaction; Corruption off at Wrack's press, so the cut is due at its
     -- second tick. From there the first icon stays Corruption, ready now, at every update until the press cuts Wrack.
     it("Affliction, a 0.5 s reaction: a due cut stays ready now until it is pressed", function()
