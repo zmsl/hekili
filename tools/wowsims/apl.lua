@@ -298,7 +298,8 @@
 --    `interrupt_if=<condition>` (`1` when it folds true; none when it folds false or is absent, wowsims's plain cast):
 --    the engine reads it where wowsims does (Engine/Sim/Core.lua channelCut): at each tick but the last, with the GCD
 --    ready or more than the spell queue window from ready, and at the GCD's end; once due, the cut stays due until the
---    channel ends. Its walk stops at the channel's own line when that would be the pick again, wowsims's recast-first
+--    channel ends, Primary and AOE each their own. Deviations: the walk at the cut still sees the channel up (review
+--    M6), and in game a late update reads a passed tick from the previous update's forecast (review m2). Its walk stops at the channel's own line when that would be the pick again, wowsims's recast-first
 --    (no cut) without `allowRecast`; an `allowRecast` is not carried (a `# Deviation:` line). An interruptIf the fork
 --    cannot read drops the clip only, with a `# Deviation:` line. `spellChanneledTicks` (the running channel's ticks so
 --    far) is read only there, as `floor(N-N*channel_remains/action.<key>.cast+0.01)` with N the kit ability's `cast`

@@ -17,6 +17,8 @@
 
 ### Known issues
 
+- When a channel cut is suggested, the ability shown is chosen as if the channel were still running, so an ability that waits for the channel to end is not suggested there. Something that changes just before a channel tick can delay the cut suggestion to the next tick.
+
 ### Upgrade notes
 
 ## v0.11.0
