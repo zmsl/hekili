@@ -213,6 +213,98 @@ describe("the flicker ledger", function()
     end)
 end)
 
+-- The jitter rule (L1762): the gate reads slot 1 (the now icon) and its now<->next swaps; slots 2-3 and the focus are
+-- reported; a fact (a press, an avoid, an aura edge, a death or retarget, a late-found miss) justifies a change.
+describe("the jitter rule's now slot (L1762)", function()
+    local function sum(rows)
+        return flicker.summary(flicker.merge(nil, flicker.ledger(build(rows), O)), 1)
+    end
+
+    it(
+        "gates slot 1 and tags a now<->next swap; slot 2's mirror is reported; the all-slot numbers unchanged",
+        function()
+            local s = sum({
+                { s = { { "a", 0 }, { "b", 0.3 } } },
+                { s = { { "b", 0 }, { "a", 0.1 } }, ev = { cast = true } },
+                { s = { { "a", 0 }, { "b", 0.1 } } },
+                { s = { { "b", 0.1 }, { "a", 0.2 } } }, -- a swap with no fact: slot 1's dip (gated), slot 2's (reported)
+                { s = { { "a", 0 }, { "b", 0.2 } } },
+            })
+            assert.are.same({ 2, 0, 0 }, { s.dips, s.flashes, s.retracted }) -- the old all-slot numbers
+            assert.are.same({ 1, 0, 1, 0, 0 }, { s.now.dips, s.now.flashes, s.now.swaps, s.now.retracted, s.now.waits })
+            assert.are.same({ 1, 0 }, { s.next.dips, s.next.flashes })
+            local line = flicker.line(s, s)
+            assert.is_truthy(
+                line:find("; now dips 1.00 flashes 0.00 swaps 1.00 retracted 0.00/min (oracle 0.00)", 1, true),
+                line
+            )
+        end
+    )
+
+    it("reports a retracted ready in slots 2-3 or the focus, gates one in slot 1", function()
+        local function rows(slot)
+            local function at(w)
+                local q = { { "a", 0.4 } }
+                q[slot] = { "x", w }
+                return { s = q }
+            end
+            return { at(0.4), at(0), at(1.1), at(0.9), at(0) }
+        end
+        local s2, s4 = sum(rows(2)), sum(rows(4))
+        assert.are.same({ 0, 1 }, { s2.now.retracted, s2.next.retracted })
+        assert.are.same({ 0, 1 }, { s4.now.retracted, s4.focus.retracted })
+        assert.are.same({ 1, 1 }, { s2.retracted, s4.retracted }) -- the old all-slot count keeps both
+        assert.are.equal(1, sum(rows(1)).now.retracted)
+    end)
+
+    it("justifies a change at a death or retarget, and at an aura edge one poll before it (a late light)", function()
+        local function dip(ev)
+            local r = {
+                { s = { { "a", 0.4 } } },
+                { s = { { "a", 0.2 } } },
+                { s = { { "b", 0.1 } } }, -- the dip's start, poll 3
+                { s = { { "a", 0 } } },
+                { s = { { "a", 0 } } },
+            }
+            for k, at in pairs(ev) do
+                r[at].ev = r[at].ev or {}
+                r[at].ev[k] = true
+            end
+            return sum(r)
+        end
+        assert.are.same({ 1, nil }, { dip({}).now.dips, dip({}).facts.target })
+        local t, a, early = dip({ target = 3 }), dip({ aura = 2 }), dip({ aura = 1 })
+        assert.are.same({ 0, 1, 1 }, { t.now.dips, t.facts.target, t.dips }) -- the old count keeps it
+        assert.are.same({ 0, 1 }, { a.now.dips, a.facts.aura })
+        assert.are.equal(1, early.now.dips) -- two polls before: no longer the change's fact
+    end)
+
+    it("justifies the first change within the late window after a miss of our press (the CDM verdict)", function()
+        local rows = {}
+        for i = 1, 20 do
+            rows[i] = { s = { { "a", 0.4 } } }
+        end
+        rows[2].ev = { miss = true, cast = true } -- our press's avoid row (the miss), at its cast
+        for _, i in ipairs({ 6, 8, 16 }) do -- three one-poll dips: 4 and 6 polls on (in the window), 14 on (past it)
+            rows[i] = { s = { { "b", 0.1 } } }
+        end
+        local s = sum(rows)
+        assert.are.same({ 2, 1, 3 }, { s.now.dips, s.facts.verdict, s.dips }) -- only the first one is the correction
+        local led = flicker.ledger(build(rows), O)
+        assert.are.same({ true, "verdict" }, { led.entries[1].justified, led.entries[1].fact })
+    end)
+
+    it("an avoid row with no cast (a builder's lost combo point, an energy refund) justifies its change", function()
+        local s = sum({
+            { s = { { "a", 0.4 } } },
+            { s = { { "b", 0 } }, ev = { avoid = true } },
+            { s = { { "a", 0 } } },
+            { s = { { "a", 0 } } },
+        })
+        assert.are.same({ 0, 1 }, { s.now.dips, s.dips })
+    end)
+end)
+
 describe("the display-side hold (o.hold)", function()
     local function q(name, time)
         return { name = { name, false, false, false }, time = { time, 0, 0, 0 }, cost = { 0, 0, 0, 0 } }
