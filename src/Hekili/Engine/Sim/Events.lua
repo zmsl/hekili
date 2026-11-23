@@ -1245,7 +1245,10 @@ local function UNIT_POWER_FREQUENT( event, unit, power )
         end
     end
 
-    local est, lo = UnitPower( "player", Enum.PowerType[ power ] )
+    local id = power and ns.GetResourceID( power:lower() ) -- the token's own pool; unknown: never the displayed one
+    if not id then return end
+
+    local est, lo = UnitPower( "player", id )
     local newPower = math.floor( lo or est ) -- power is spent in whole points; the floor, as before the streams split
 
     if lastPower[ power ] and newPower < lastPower[ power ] then

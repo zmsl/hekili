@@ -4,6 +4,8 @@
 
 ### New
 
+- A priority that compares a resource with more than 8 different exact values now shows a warning on its Source tab: Hekili can watch only 8 of them exactly, so those conditions use the nearest 1% instead.
+
 ### Changed
 
 - Arcane, Fire, Frost and Frostfire Mage, Shadow Priest and Affliction Warlock (wowsims.com): the priorities now suggest cutting a channel early where the reference rotation does, such as Evocation once your mana is nearly full, or Wrack once a damage-over-time effect needs reapplying.
@@ -14,6 +16,7 @@
 - Custom priorities: `health.pct` and the other player health values now follow your health in whole-percent steps, instead of reading 100. A line that reads them no longer adds a warning when the priority loads. If the game offers no reading, they read 100.
 - Arms and Fury Warrior, Rogue, Warlock, Balance and Feral Druid: Hekili Forever now estimates how long your target will live. When it counts one enemy, it can save some cooldowns for the end of the fight, skip bleeds and damage-over-time spells on a target about to die, and suggest finishing moves earlier. With several enemies, or before it has an estimate, it plans for a long fight as before; after a pull or a target change there is no estimate until the target has lost health for a few seconds (longer on a long fight), so one big hit is not taken for the target's pace. The estimate can be well off early in a fight and near its end.
 - Custom priorities: `fight_remains` follows that estimate with one enemy; `target.time_to_die` and `target.time_to_pct_<N>` follow it with any number of enemies. With no estimate they read as unknown (3600 seconds), as before.
+- Energy, rage and mana: where the game allows it, Hekili now reads the 1% step the amount is in and corrects its estimate with it, which also counts rage from hits you take. When the game says an ability is usable or not, that still wins.
 
 ### Fixed
 

@@ -321,7 +321,9 @@ unions them, `ns.SetAplBands` (Tracked.lua) maps them to power types; sent at th
 entry's load, before a Build (every Build moves the generation) and when the active priority changes. A `points` value
 is the bar "at least p"; a `deficit` n is the point max - n; a `pct` (fractional only) is the point ceil(N / 100 x max).
 A resource with more than `ns.APL_POINT_CAP` (8, the library's points per source) distinct values sends none, and the
-priority's editor warns on its Source tab. The belief does not read them yet.
+priority's editor warns on its Source tab. `Game/State/Sources/Bands.lua` resolves them at the belief's max and gives
+each power watch its set out of combat, at a new generation or max (never editing the stored lists); a point outside
+1..max is dropped and an unchanged set is not sent again (a new point primes the band again).
 `spec:RegisterReaction(name, { who = "player"|"target", outcome = "dodge"|"parry"|"block"|"miss"|"deflect"|"evade"|"crit"|"swing"|"land"|"kill", hand = "main"|"off", now = fn })`
 crosses as `def.reactions`: a `now` function the belief runs at a settled outcome's row time
 (`Game/State/Families/Now.lua`; incoming from victim-side `UNIT_COMBAT`, ours from `Game/Events/Rows.lua`'s settled
@@ -701,6 +703,31 @@ never fed here, was removed: L1703) and the target's estimate (§3, Time to die)
 Everything else stays unknown: another unit's time to die, a bare `time_to_pct_N`, and `GetNumTTDsAfter` counts every
 enemy as after any time. A priority may read them without a load warning (none is written for any
 token); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
+
+**Resource bands.** While a power's hidden-value band is live (`Game/State/Sources/Bands.lua`, channel r >= 1: the 1%
+cell in points, cut at the priority's points), `Game/State/Families/Resources.lua` (`applyBand`) takes it as a ceiling,
+a floor and the clamp of the estimate; one at most a point wide is an exact read, a disjoint one wins both ends, any
+ends the rest assumption, and none sets a cap mark. The drain's order is the precedence: events, the plain read (which
+wins its drain), the band, then the usability answers, which always win (owner L1675): the rungs stay on, an answer is a
+bound with no flip pin, and only the side it contradicts yields (a yes at c: hi is the
+higher of c and the band's top; a short answer at c: lo is the lower of c - EPS and the band's low end). An
+exact band counts as readable only in the swing forecast (`predict`, `VS.SwingPending`: there once it is stamped at
+or after the swing, or `I.bandShows[r]` has passed since it; until then the swing pends). An event of ours after the
+band's stamp (a spend or gain, a swing's step, a periodic tick) steps forward from it: the band is held until it
+moves or `I.bandShows[r]` has passed (`h:Latency()` plus `I.BAND_MARGIN`, the client's own delay; about 0.17 s at 60
+fps); a refund holds nothing. A spend also holds a newer band whose low end has not fallen (the display may trail the
+cast), and a gain the band already rose by within `I.BAND_MARGIN` holds nothing, adds nothing to lo and excuses no
+short answer (the display may lead the cast). A hit on us is no such event (owner L1723, which narrows L1673): its rage shows at the damage and a
+melee row trails that by 0.39-0.57 s, so while a band is live the row, and a reaction's gain at it, moves nothing and
+holds nothing (the taken rate's bin still counts a plain amount's), and rage per hit is not learned. Regen is measured
+between two true crossings (the low end rose to the last top) with no known change between (so never from percent
+bands, widened at both ends, nor from regen that passes more than a cell between two stamps, as 10 a second polled less
+often than every point; the flip pins that measured it are off while a band is live), the step scale from a band change
+covering exactly one landed swing (L1673): never with an event within `I.BAND_MARGIN` after a stamp at either end, nor
+with a wound row on us, or any row whose `taken` pays, up to `I.TAKEN_ROW_LAG` (0.6 s) past it. A power that reads
+plain in combat releases its watch when combat ends; where the library has no max the watch is a percent one, a point
+wider each side, logged only once the belief read that max plain. With no live band everything below runs as without
+the library.
 
 **Player health.** The client hides the player's own health (`UnitHealth`/`UnitHealthMax("player")` secret in combat, owner L1461,
 and out of it on live, L1710; the headless fake client still answers plain out of combat): `health.pct`,

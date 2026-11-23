@@ -55,6 +55,7 @@ M.UNMAPPED_SPELL = 0
 -- delayed shot is the exception), to the 10 ms.
 -- shortcut: the cast success only, no swingType 2 PLAYER_SWING (UNMEASURED on Forever; W.startRanged's default too).
 M.RANGED_AUTO = 4
+M.REFUND = 8 -- wowsims's OtherActionRefund: an avoided ability's resource given back (observer.gains)
 M.MOVE = 20 -- wowsims's OtherActionMove: the Movement aura (sim/core/movement.go), its stacks the distance in yards
 -- (max(int(d), 1): truncated, so the replay's position can be up to 1 yd short of wowsims's)
 
@@ -930,6 +931,7 @@ function M.new(text, H, o)
                             pt = pt ~= us.pt and pt or nil,
                             rage = delta > 0 and delta or nil,
                             cost = delta < 0 and -delta or nil,
+                            refund = e.other == M.REFUND or nil,
                         })
                     end
                 end

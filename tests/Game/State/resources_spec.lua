@@ -3751,3 +3751,894 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.equal(L.THETA_MIN, L.theta[1])
     end)
 end)
+
+-- Lane B4 (LibHiddenValues integration design 2.4, both columns, owner L1671; usable answers win, L1675): the family
+-- reads Obs.Band on the resource channels. A band is [lo, hi): its top is hi - EPS (a closed cell, lo == hi, itself).
+describe("resource bands (lane B4)", function()
+    local RAGE, MANA, NRG = 1, 2, 3 -- the slots
+    local SHOWS = 1 / 6 -- what the source sets for a watch at 60 fps (I.bandShows)
+    local PUNCH, SPELL, STAB, GUARDED, NUKE, SMASH = 1, 2, 3, 4, 5, 6 -- costs 20, 460, 40, 40 (its own need fails), 100, 60
+    local VS, I, R, S, Obs, EPS
+
+    before_each(function()
+        local api = fake.new()
+        local ns = load.module()
+        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        S, Obs, R, EPS = I.Sources, VS.Obs, I.res, I.EPS
+        I.Build({
+            school = load.school(),
+            fsr = load.constant("FSR"),
+            gcdSpell = load.constant("GCD_SPELL"),
+            oracleMin = load.constant("ORACLE_MIN"),
+            abilities = {
+                { key = "punch", spend = 20 },
+                { key = "spell", spend = 460 },
+                { key = "stab", spend = 40 },
+                {
+                    key = "guarded",
+                    spend = 40,
+                    usable = function()
+                        return false
+                    end,
+                },
+                { key = "nuke", spend = 100 },
+                { key = "smash", spend = 60 },
+            },
+            abilityIds = { { 1001 }, { 1002 }, { 1003 }, { 1004 }, { 1005 }, { 1006 } },
+            abilitySlot = { RAGE, MANA, NRG, NRG, MANA, NRG },
+            resources = {
+                {
+                    key = "rage",
+                    type = fs.RAGE,
+                    token = "RAGE",
+                    max = 100,
+                    swing = 1,
+                    swingValue = 10,
+                    swingCrit = 4,
+                    taken = function(_, amount)
+                        return amount > 0 and amount / 10 or nil
+                    end,
+                    auraRegen = { { value = 3, interval = 3 } },
+                },
+                { key = "mana", type = 0, token = "MANA", max = 1000, rest = true, regen = 10 },
+                { key = "energy", type = 3, token = "ENERGY", max = 100, rest = true, regen = 10 },
+            },
+            reactions = {
+                {
+                    who = "player",
+                    outcome = "block",
+                    now = function()
+                        gain(2, "rage")
+                    end,
+                },
+                {
+                    who = "player",
+                    outcome = "crit",
+                    now = function()
+                        gain(5, "rage")
+                    end,
+                },
+            },
+            auras = {},
+            auraIds = {},
+            talents = {},
+            units = { "player", "target" },
+        }, 1)
+        I.api = api
+    end)
+
+    -- the source's poll: a live band [lo, hi) of slot r stamped bt, re-asserted at t
+    local function band(t, r, lo, hi, bt)
+        if I.log.n > 0 and I.bandT[r] ~= (bt or t) then
+            I.Fold(t - 1e-9) -- the source writes the stamp at its poll: what it logged before reads the old one
+        end
+        I.bandT[r], I.bandShows[r] = bt or t, SHOWS
+        S.Direct(Obs.Band, t, r, lo, hi)
+    end
+    local function unknown(t, r)
+        S.Direct(Obs.Band, t, r, 1, 0)
+    end
+    local function answer(t, a, yes)
+        S.Direct(Obs.Usable, t, a, yes and 1 or 0, yes and 0 or 1)
+    end
+    local function set(r, lo, est, hi)
+        R.lo0[r], R.est0[r], R.hi0[r], R.over[r], R.assume[r] = lo, est, hi, 0, false
+    end
+    local function is(r, lo, est, hi)
+        local got = { R.lo0[r], R.est0[r], R.hi0[r] }
+        for i, want in ipairs({ lo, est, hi }) do
+            assert.is_true(
+                math.abs(got[i] - want) < 1e-6,
+                ("%d: want %s %s %s, got %s %s %s"):format(i, lo, est, hi, got[1], got[2], got[3])
+            )
+        end
+    end
+    local function at(t) -- the clock at t with nothing heard (regen moves the values: set them after it)
+        I.Fold(t)
+        I.Settle(t)
+    end
+
+    describe("the band's columns", function()
+        before_each(function()
+            at(10)
+        end)
+
+        it("a ceiling, a floor and the rest assumption's end; never a cap mark", function()
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 460 - EPS, 460 - EPS)
+            assert.are.same({ false, 0 }, { R.assume[MANA], R.over[MANA] })
+            local p = VS.Power(0, 10)
+            assert.are.same({ 450, "observed", false }, { p.lo, p.basis, p.capped })
+            assert.are.equal(1, I.bandUsed[MANA])
+            assert.are.same({ 450, 460 }, { I.bandUsedLo[MANA], I.bandUsedHi[MANA] })
+        end)
+
+        it("narrower bounds inside the band stand; est is clamped into it", function()
+            set(MANA, 453, 455, 458)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 453, 455, 458)
+            set(MANA, 430, 440, 455)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 450, 455)
+        end)
+
+        -- (review M3) a band that moved over a point is no disagreement: only the settle counts (Sources/Bands.lua)
+        it("a disjoint band wins both ends and counts nothing", function()
+            set(MANA, 480, 485, 490)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 460 - EPS, 460 - EPS)
+            assert.are.equal(0, I.bandDisagree[MANA])
+            set(MANA, 380, 400, 420)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 450, 460 - EPS)
+            assert.are.equal(0, I.bandDisagree[MANA])
+            set(MANA, 463, 464, 465) -- within a cell: the crossing the band has yet to show
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 450, 460 - EPS, 460 - EPS)
+            assert.are.equal(0, I.bandDisagree[MANA])
+        end)
+
+        it("a band of at most a point is an exact read; a wider one or an unknown clears it", function()
+            band(10, NRG, 42, 43)
+            I.Fold(10)
+            is(NRG, 42, 42, 42)
+            assert.is_true(R.banded[NRG])
+            assert.is_false(R.readable[NRG]) -- never ReadOf.Resource's path
+            band(10, NRG, 42, 44)
+            I.Fold(10)
+            assert.is_false(R.banded[NRG])
+            band(10, NRG, 100, 100) -- full: the closed cell
+            I.Fold(10)
+            is(NRG, 100, 100, 100)
+            unknown(10, NRG)
+            I.Fold(10)
+            assert.is_false(R.banded[NRG])
+            is(NRG, 100, 100, 100) -- the bounds folded stay, and age as any
+        end)
+
+        it("this drain's plain read wins", function()
+            S.Direct(Obs.Read, 10, MANA, 702, I.ReadOf.Resource)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 702, 702, 702)
+            assert.are.equal(0, I.bandUsed[MANA])
+        end)
+
+        it("a slot that reads plain in combat ignores its band", function()
+            R.readable[MANA] = true
+            set(MANA, 700, 700, 700)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            is(MANA, 700, 700, 700)
+        end)
+    end)
+
+    -- The controller's ruling (it replaces design 2.4's "read wherever R.readable is read"): a band never switches the
+    -- rungs off; while one is live a usable answer is a bound, never a flip pin, and only the side it contradicts yields.
+    describe("usable always wins (L1675)", function()
+        before_each(function()
+            at(10)
+        end)
+
+        it("a short answer under an exact band's floor: the bottom yields", function()
+            band(10, NRG, 42, 43)
+            answer(10, STAB, false)
+            I.Fold(10)
+            is(NRG, 40 - EPS, 40 - EPS, 40 - EPS)
+        end)
+
+        it("a usable answer over the band's top: lo = hi = the cost, never opened to the max", function()
+            band(10, RAGE, 12, 13)
+            answer(10, PUNCH, true)
+            I.Fold(10)
+            is(RAGE, 20, 20, 20)
+            band(10.05, RAGE, 12, 13, 10) -- the bound was about its drain
+            I.Fold(10.05)
+            is(RAGE, 12, 12, 12)
+        end)
+
+        it("agreeing, both narrow", function()
+            band(10, MANA, 450, 470)
+            answer(10, SPELL, true)
+            I.Fold(10)
+            is(MANA, 460, 470 - EPS, 470 - EPS)
+            band(10, MANA, 450, 470)
+            answer(10, SPELL, false)
+            I.Fold(10)
+            assert.are.equal(460 - EPS, R.hi0[MANA])
+        end)
+
+        -- (review I2) inside one band the record and the band differ: the band's side that no answer contradicts stands
+        it("a yes over the record's top, inside the band: the band's top stands", function()
+            set(MANA, 451, 451.5, 452)
+            band(10, MANA, 450, 470)
+            answer(10, SPELL, true)
+            I.Fold(10)
+            is(MANA, 460, 460, 470 - EPS)
+        end)
+
+        it("a short answer under the record's floor, inside the band: the band's floor stands", function()
+            set(MANA, 462, 465, 468)
+            band(10, MANA, 450, 470)
+            answer(10, SPELL, false)
+            I.Fold(10)
+            is(MANA, 450, 460 - EPS, 460 - EPS)
+        end)
+
+        it("a flip with a band live pins nothing", function()
+            band(10, MANA, 440, 470)
+            answer(10, SPELL, false)
+            band(10.05, MANA, 450, 470)
+            answer(10.05, SPELL, true)
+            I.Fold(10.05)
+            assert.are.equal(460, R.lo0[MANA])
+            assert.is_true(R.hi0[MANA] >= 460 and R.pinT[MANA] == 0)
+        end)
+
+        it("an exact slot's flip is a bound too", function()
+            band(10, NRG, 39, 40)
+            answer(10, STAB, false)
+            band(10.2, NRG, 39, 40, 10)
+            answer(10.2, STAB, true)
+            I.Fold(10.2)
+            is(NRG, 40, 40, 40) -- not the pin [40, 40 + the regen since]
+        end)
+
+        it("the precondition check runs for a banded slot", function()
+            band(10, NRG, 42, 43)
+            answer(10, GUARDED, false) -- short for its own requirement: no rung
+            I.Fold(10)
+            is(NRG, 42, 42, 42)
+        end)
+    end)
+
+    describe("swing-paid", function()
+        it("a banded slot pends no swing (the band shows it)", function()
+            at(9.8)
+            S.Direct(Obs.Swing, 9.9, 1, 0, 4)
+            I.Tickets.OpenSwing(9.9, 1, "", I.Log.PAIR_WINDOW_MS[1] / 1000, 0, false)
+            I.Fold(9.9)
+            assert.are.equal(9.9, VS.SwingPending(1))
+            band(10, RAGE, 12, 13, 9.9)
+            I.Fold(10)
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
+        -- (round 3) the display trails the swing: until then the band describes the moment before it (L1673)
+        it("an exact band older than the swing pends it while the band's delay may hide it, no longer", function()
+            at(9.8)
+            band(9.8, RAGE, 2, 3, 9.6)
+            S.Direct(Obs.Swing, 9.9, 1, 0, 4)
+            I.Tickets.OpenSwing(9.9, 1, "", I.Log.PAIR_WINDOW_MS[1] / 1000, 0, false)
+            band(9.91, RAGE, 2, 3, 9.6)
+            I.Fold(9.91)
+            assert.are.equal(9.9, VS.SwingPending(1))
+            local past = 9.9 + I.bandShows[RAGE] + 0.01
+            band(past, RAGE, 2, 3, 9.6) -- past the delay: it would have shown that swing's rage
+            I.Fold(past)
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
+        -- (review M1) the band lost (priming, a pause, the drop) after it showed the swing
+        for _, case in ipairs({ { "at it", 9.9, 0 }, { "before it", 9.7, 9.9 } }) do
+            it("the band lost, one stamped " .. case[1] .. ": pending " .. case[3], function()
+                at(9.6)
+                band(9.8, RAGE, 2, 3, case[2] < 9.8 and case[2] or 9.6)
+                S.Direct(Obs.Swing, 9.9, 1, 0, 4)
+                I.Tickets.OpenSwing(9.9, 1, "", I.Log.PAIR_WINDOW_MS[1] / 1000, 0, false)
+                band(10, RAGE, 12, 13, case[2])
+                I.Fold(10)
+                unknown(10.2, RAGE)
+                I.Fold(10.2)
+                assert.are.equal(case[3], VS.SwingPending(1))
+            end)
+        end
+
+        it("a rise is a lift: the swing in flight does not pay twice (L1504)", function()
+            set(RAGE, 5, 5, 5)
+            S.Direct(Obs.Swing, 9.9, 1, 0, 4)
+            band(10, RAGE, 22, 23, 9.9) -- that swing's rage
+            unknown(10.2, RAGE) -- the band lost before the wound
+            S.Direct(Obs.Swing, 9.9, 1, 1, 1)
+            I.Fold(10.4)
+            is(RAGE, 22, 22, 22)
+        end)
+
+        it("re-asserts after a usable clip do not pile the lift up", function()
+            set(RAGE, 12, 12, 12)
+            band(10, RAGE, 12, 13)
+            answer(10, PUNCH, true)
+            I.Fold(10)
+            assert.are.equal(8, R.liftE[RAGE])
+            for i = 1, 3 do
+                band(10 + i / 20, RAGE, 12, 13, 10)
+                answer(10 + i / 20, PUNCH, true)
+            end
+            I.Fold(10.2)
+            assert.are.same({ 8, 8 }, { R.liftE[RAGE], R.liftL[RAGE] })
+        end)
+    end)
+
+    describe("regen from crossings", function()
+        local function crossings(...)
+            local rows = { ... }
+            for _, x in ipairs(rows) do
+                band(x[1] + 0.05, x[4] or MANA, x[2], x[3], x[1])
+                I.Fold(x[1] + 0.05)
+            end
+            return R.regE[rows[1][4] or MANA]
+        end
+
+        it("two true crossings a pin gap apart measure the rate between their instants", function()
+            local e = crossings({ 9.5, 440, 450 }, { 10, 450, 460 }, { 11.2, 460, 470 })
+            assert.is_true(math.abs(e - (10 + I.ALPHA * (10 / 1.2 - 10))) < 1e-6, e)
+        end)
+
+        it("crossings closer than the gap add up until it", function()
+            local e = crossings({ 9.5, 440, 450 }, { 10, 450, 460 }, { 10.8, 460, 470 }, { 11.6, 470, 480 })
+            assert.is_true(math.abs(e - (10 + I.ALPHA * (20 / 1.6 - 10))) < 1e-6, e)
+        end)
+
+        it("the first band, a widened one, one whose hi alone moved and a jump are none", function()
+            assert.are.equal(10, crossings({ 9.5, 450, 460 }, { 11.2, 460, 470 }))
+            assert.are.equal(10, crossings({ 12.5, 460, 480 }, { 14, 460, 475 }, { 16, 440, 480 }))
+            assert.are.equal(10, crossings({ 17, 480, 490 }, { 18.5, 500, 510 }, { 20, 540, 550 }))
+        end)
+
+        it("an own spend, a gain or a new max between voids the pair", function()
+            crossings({ 9.5, 440, 450 }, { 10, 450, 460 })
+            I.ResourceShift(MANA, -1, 10.1, Obs.CastSuccess)
+            assert.are.equal(10, crossings({ 11.3, 460, 470 }))
+            S.Direct(Obs.Read, 11.4, MANA, 1000 + 1, I.ReadOf.Max)
+            assert.are.equal(10, crossings({ 12.5, 470, 480 }))
+        end)
+
+        it("an exact band's pins measure nothing themselves", function()
+            assert.are.equal(10, crossings({ 10, 40, 41, NRG }, { 12, 45, 46, NRG }, { 14, 58, 59, NRG }))
+        end)
+    end)
+
+    -- The hold after our own change, generalised to every event we know of after the stamp (owner L1673): the band
+    -- describes an earlier moment, so what stepped forward from it stands until the band moves or its delay has passed.
+    describe("events after the stamp step forward from it", function()
+        local function held(r, lo, hi, bt, from, want)
+            for _, after in ipairs({ 0, 0.04, 0.08, 0.12, 0.16 }) do -- the same band at every drain
+                band(from + after, r, lo, hi, bt)
+                I.Fold(from + after)
+                assert.is_true(
+                    math.abs(R.est0[r] - want) < 2.5,
+                    ("+%s: want %s, got %s"):format(after, want, R.est0[r])
+                )
+            end
+        end
+
+        it("an own spend: a band older than it is skipped, for the band's delay at most", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.ResourceShift(MANA, -100, 10.05, Obs.CastSuccess)
+            held(MANA, 450, 460, 10, 10.05, 360) -- no flash back over the spend
+            band(10.05 + SHOWS + 0.01, MANA, 450, 460, 10) -- the spend stayed inside the band
+            I.Fold(10.05 + SHOWS + 0.01)
+            assert.are.equal(450, R.lo0[MANA])
+        end)
+
+        it("spend-late: the old band is held; the band that shows the spend applies at once", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.ResourceShift(MANA, -100, 10.05, Obs.CastSuccess)
+            band(10.06, MANA, 450, 460, 10)
+            band(10.1, MANA, 340, 350, 10.09)
+            I.Fold(10.1)
+            is(MANA, 340, 350 - EPS, 350 - EPS)
+        end)
+
+        it("spend-first: counted twice for the band's delay at most, low", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            band(10.02, MANA, 350, 360, 10.01)
+            S.Direct(Obs.CastSuccess, 10.05, NUKE, 100, 0) -- folded with the band that already shows it
+            band(10.05, MANA, 350, 360, 10.01)
+            I.Fold(10.05)
+            assert.is_true(R.lo0[MANA] < 350 and R.est0[MANA] < 350)
+            band(10.05 + SHOWS + 0.01, MANA, 350, 360, 10.01)
+            I.Fold(10.05 + SHOWS + 0.01)
+            assert.are.equal(350, R.lo0[MANA])
+        end)
+
+        it("a band stamped in our change's own frame is held too", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.ResourceShift(MANA, -100, 10.05, Obs.CastSuccess)
+            band(10.08, MANA, 450, 460, 10.05)
+            I.Fold(10.08)
+            assert.is_true(R.est0[MANA] < 400)
+        end)
+
+        it("an own gain steps forward", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.ResourceShift(MANA, 200, 10.05, Obs.CastSuccess)
+            held(MANA, 450, 460, 10, 10.05, 660)
+        end)
+
+        it("a landed swing after the stamp steps forward, est, lo and hi", function()
+            at(9.9)
+            band(10, RAGE, 20, 21)
+            S.Direct(Obs.Swing, 10.05, 1, 0, 4)
+            S.Direct(Obs.Swing, 10.05, 1, 1, 1)
+            I.Fold(10.05)
+            held(RAGE, 20, 21, 10, 10.05, 30)
+            assert.is_true(R.lo0[RAGE] > 20 and R.hi0[RAGE] > 30)
+            band(10.05 + SHOWS + 0.01, RAGE, 20, 21, 10) -- no change shown: it paid none
+            I.Fold(10.05 + SHOWS + 0.01)
+            is(RAGE, 20, 20, 20)
+        end)
+
+        it("a swing at or before the stamp is in the band", function()
+            at(9.9)
+            S.Direct(Obs.Swing, 10, 1, 0, 4)
+            band(10.02, RAGE, 30, 31, 10)
+            S.Direct(Obs.Swing, 10.02, 1, 1, 1)
+            band(10.04, RAGE, 30, 31, 10.02)
+            I.Fold(10.04)
+            is(RAGE, 30, 30, 30)
+        end)
+
+        -- (review I5 a; owner L1723, option A) the rage of a hit on us shows at the damage, its row up to 0.57 s later
+        for _, case in ipairs({
+            { "a plain amount", 1, 80 },
+            { "a secret amount", 1, -1 },
+            { "a block and its reaction's gain", 3, 30 },
+            { "a partly blocked wound and its reaction's gain", 2, 80 },
+            { "a critical wound and its reaction's gain", 1, 80, true },
+            { "an avoid", 4, 30 },
+        }) do
+            it("a hit row on us changes nothing in the value: " .. case[1], function()
+                at(10)
+                S.Direct(Obs.CombatStart, 10) -- the taken rate is a fight's
+                band(10.04, RAGE, 17, 18, 10)
+                S.Direct(Obs.PlayerHit, 10.45, case[2], case[3], 20)
+                if case[4] then
+                    S.Direct(Obs.PlayerCrit, 10.45)
+                end
+                I.Fold(10.45)
+                is(RAGE, 17, 17, 17)
+                local bin = case[3] > 0 and case[3] / 100 or 0
+                assert.are.equal(bin, VS.TakenRate(fs.RAGE, 10.45)) -- the bin stays
+                local used = I.bandUsed[RAGE]
+                band(10.46, RAGE, 17, 18, 10) -- and no hold
+                I.Fold(10.46)
+                assert.are.equal(used + 1, I.bandUsed[RAGE])
+                assert.are.equal(0, I.nowErrors)
+            end)
+        end
+
+        it("no band live: a hit row and its reaction's gain step as today", function()
+            at(10)
+            set(RAGE, 20, 20, 20)
+            S.Direct(Obs.PlayerHit, 10.05, 1, 80, 20)
+            S.Direct(Obs.PlayerCrit, 10.05)
+            S.Direct(Obs.PlayerHit, 10.05, 1, -1, 20) -- a secret amount: none
+            I.Fold(10.05)
+            assert.are.equal(20 + 8 + 5, R.est0[RAGE])
+        end)
+
+        it("a periodic tick steps forward from its own time", function()
+            at(6)
+            S.Direct(Obs.CombatStart, 7)
+            band(9.9, RAGE, 20, 21)
+            I.Fold(9.9)
+            I.Settle(10) -- the tick at 10
+            held(RAGE, 20, 21, 9.9, 10, 23)
+        end)
+
+        -- (review I3) the bars show the spend late and a regen crossing stamps a newer band first
+        it("spend-late, a newer stamp that cannot show the spend: still held", function()
+            at(10)
+            band(10, NRG, 90, 91)
+            I.Fold(10)
+            I.ResourceShift(NRG, -40, 10.01, Obs.CastSuccess)
+            band(10.07, NRG, 91, 92, 10.02)
+            I.Fold(10.07)
+            assert.is_true(R.lo0[NRG] < 52 and R.est0[NRG] < 52, R.lo0[NRG])
+            band(10.1, NRG, 51, 52, 10.06) -- it shows the spend: at once
+            I.Fold(10.1)
+            is(NRG, 51, 51, 51)
+            band(10.14, NRG, 95, 96, 10.12) -- and the hold is over: a gain since is no held band
+            I.Fold(10.14)
+            is(NRG, 95, 95, 95)
+        end)
+
+        it("a spend that stayed unseen is held for the band's delay at most", function()
+            at(10)
+            band(10, NRG, 90, 91)
+            I.Fold(10)
+            I.ResourceShift(NRG, -40, 10.01, Obs.CastSuccess)
+            band(10.01 + SHOWS + 0.01, NRG, 91, 92, 10.1)
+            I.Fold(10.01 + SHOWS + 0.01)
+            is(NRG, 91, 91, 91)
+        end)
+
+        -- (review I4) the display ahead of the cast event: the band already holds the gain
+        local function gainFirst()
+            at(10)
+            band(10, NRG, 5, 6)
+            band(10.08, NRG, 45, 46, 10.06)
+            band(10.1, NRG, 46, 47, 10.08) -- a regen crossing since
+            I.Fold(10.1)
+            I.ResourceShift(NRG, 40, 10.11, Obs.CastSuccess)
+            band(10.11, NRG, 46, 47, 10.08)
+        end
+
+        it("gain-first: no hold for a gain the band already shows", function()
+            gainFirst()
+            I.Fold(10.11)
+            is(NRG, 46, 46, 46)
+        end)
+
+        it("gain-first: a short answer over that band stands", function()
+            gainFirst()
+            answer(10.11, SMASH, false) -- 60: the double count would have explained it
+            I.Fold(10.11)
+            is(NRG, 46, 46, 46)
+            assert.is_true(R.sinceShort[NRG] < math.huge) -- heard short, never "not"
+        end)
+
+        it("gain-first: a short answer under that band still wins (L1675)", function()
+            gainFirst()
+            answer(10.11, STAB, false) -- 40: inside what the gain would explain
+            I.Fold(10.11)
+            is(NRG, 40 - EPS, 40 - EPS, 40 - EPS)
+        end)
+
+        it("gain-first inside a wide band: the gain is in the low end already, never twice in lo", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            band(10.08, MANA, 460, 470, 10.06) -- 457 and a gain of 5: 462
+            I.Fold(10.11)
+            I.ResourceShift(MANA, 5, 10.11, Obs.CastSuccess)
+            band(10.11, MANA, 460, 470, 10.06)
+            I.Fold(10.11)
+            assert.is_true(R.lo0[MANA] < 462, R.lo0[MANA]) -- the truth
+            assert.is_true(R.est0[MANA] >= 460 and R.hi0[MANA] >= 465)
+        end)
+
+        -- (re-review N3) a roll's floor (amount - spread) is no second step in lo either
+        it("gain-first, a spread gain inside a wide band: never twice in lo", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            band(10.08, MANA, 460, 470, 10.06) -- 457 and a gain of 5 +-1: 462
+            I.Fold(10.11)
+            I.ResourceGainSpread(MANA, 5, 1, 10.11, Obs.CastSuccess)
+            band(10.11, MANA, 460, 470, 10.06)
+            I.Fold(10.11)
+            assert.is_true(R.lo0[MANA] < 462, R.lo0[MANA])
+            assert.is_true(R.est0[MANA] >= 460 and R.hi0[MANA] >= 465)
+        end)
+
+        it("a rise smaller than the gain is another's: the gain still steps forward", function()
+            at(10)
+            band(10, NRG, 5, 6)
+            band(10.08, NRG, 6, 7, 10.06)
+            I.Fold(10.08)
+            I.ResourceShift(NRG, 40, 10.11, Obs.CastSuccess)
+            band(10.11, NRG, 6, 7, 10.06)
+            I.Fold(10.11)
+            assert.is_true(R.est0[NRG] >= 46, R.est0[NRG])
+        end)
+
+        it("one rise explains one gain", function()
+            gainFirst()
+            I.Fold(10.11)
+            I.ResourceShift(NRG, 40, 10.11, Obs.CastSuccess)
+            band(10.12, NRG, 46, 47, 10.08)
+            I.Fold(10.12)
+            assert.is_true(R.est0[NRG] >= 86, R.est0[NRG])
+        end)
+
+        it("a refund is no change of now (paid at the cast): no hold", function()
+            at(10)
+            band(10, MANA, 450, 460)
+            I.Fold(10)
+            I.Refund(MANA, 80, 10.05)
+            band(10.05, MANA, 450, 460, 10)
+            I.Fold(10.05)
+            assert.are.equal(460 - EPS, R.est0[MANA])
+        end)
+
+        it("the rest assumption outlives a held band", function()
+            at(10)
+            I.ResourceShift(MANA, -100, 10, Obs.CastSuccess)
+            band(10.02, MANA, 990, 1000, 9.9)
+            I.Fold(10.02)
+            assert.is_true(R.assume[MANA] and R.lo0[MANA] + R.over[MANA] >= 900)
+            assert.are.equal(0, I.bandUsed[MANA])
+        end)
+    end)
+
+    -- Calibration from band pins (owner L1673): a band change covers (the last stamp, this stamp]; only a window with
+    -- exactly one source teaches, into the existing scale. A hit on us teaches nothing (owner L1723).
+    describe("clean windows", function()
+        before_each(function()
+            at(6)
+            S.Direct(Obs.CombatStart, 7)
+            I.Fold(7)
+            band(8, RAGE, 10, 11) -- past the ticks at 7: the next ones at 10, 13
+            band(9, RAGE, 10, 11, 8)
+            band(10.01, RAGE, 13, 14, 10) -- the tick's own window
+            I.Fold(10.01)
+            I.Settle(10.01)
+        end)
+
+        -- one main-hand swing at 11 whose rage shows at 11.03: `rise` points; settled at its row by `outcome`
+        local function swing(rise, outcome, more, crit, waiting)
+            S.Direct(Obs.Swing, 11, 1, 0, 4)
+            if more then
+                more()
+            end
+            band(11.05, RAGE, 13 + rise, 14 + rise, 11.03)
+            I.Fold(11.05)
+            I.Settle(11.05)
+            if outcome == I.HitKind.WOUND then
+                S.Direct(Obs.Swing, 11, 1, 1, 1)
+                if crit then
+                    S.Direct(Obs.Swing, 11.45, 1, 1, 3)
+                end
+            end
+            if outcome then
+                S.Direct(Obs.SwingSettled, 11.45, 1, 11, outcome)
+            end
+            band(11.46, RAGE, 13 + rise, 14 + rise, 11.03)
+            I.Fold(11.46)
+            I.Settle(11.46)
+            if not waiting then -- past the row's lag (review I5 b)
+                band(11.7, RAGE, 13 + rise, 14 + rise, 11.03)
+                I.Fold(11.7)
+                I.Settle(11.7)
+            end
+            return R.scale[RAGE]
+        end
+
+        it("one landed swing alone teaches the scale its rise", function()
+            assert.is_true(math.abs(swing(14, I.HitKind.WOUND) - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+        end)
+
+        it("its crit's extra is no part of the step", function()
+            assert.is_true(math.abs(swing(18, I.HitKind.WOUND, nil, true) - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+        end)
+
+        it("a swing and a hit in one window teach nothing; the value is still pinned", function()
+            local s = swing(14, I.HitKind.WOUND, function()
+                S.Direct(Obs.PlayerHit, 11.01, I.HitKind.WOUND, -1, 20)
+            end)
+            assert.are.equal(1, s)
+            is(RAGE, 27, 27, 27)
+        end)
+
+        for _, case in ipairs({
+            {
+                "our cast",
+                function()
+                    S.Direct(Obs.CastSuccess, 11.01, 1, 0, 0)
+                end,
+            },
+            {
+                "a gain of ours",
+                function()
+                    I.Fold(11.01)
+                    I.ResourceShift(1, 2, 11.01, Obs.CastSuccess)
+                end,
+            },
+            {
+                "a second swing",
+                function()
+                    S.Direct(Obs.Swing, 11.02, 1, 0, 4)
+                end,
+            },
+            {
+                "an avoid on us",
+                function()
+                    S.Direct(Obs.PlayerHit, 11.01, I.HitKind.DODGE, 0, 20)
+                end,
+            },
+        }) do
+            it(case[1] .. " beside the swing teaches nothing", function()
+                assert.are.equal(1, swing(14, I.HitKind.WOUND, case[2]))
+            end)
+        end
+
+        it("an avoided swing teaches nothing", function()
+            assert.are.equal(1, swing(14, I.HitKind.DODGE))
+        end)
+
+        it("a swing with no row is no landed one", function()
+            assert.are.equal(1, swing(14, -1))
+        end)
+
+        it("a swing not settled yet teaches nothing", function()
+            assert.are.equal(1, swing(14))
+        end)
+
+        it("a gain dated back into the window (a reaction of that swing) unteaches it", function()
+            S.Direct(Obs.Swing, 11, 1, 0, 4)
+            band(11.05, RAGE, 27, 28, 11.03)
+            I.Fold(11.05)
+            I.Settle(11.05)
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11, I.HitKind.WOUND)
+            I.Fold(11.45)
+            I.ResourceShift(RAGE, 5, 11, Obs.SwingSettled, 1)
+            I.Settle(11.7)
+            assert.are.equal(1, R.scale[RAGE])
+        end)
+
+        it("a periodic tick in the window teaches nothing", function()
+            S.Direct(Obs.Swing, 12.95, 1, 0, 4) -- the tick at 13
+            band(13.02, RAGE, 27, 28, 13.01)
+            S.Direct(Obs.SwingSettled, 13.4, 1, 12.95, I.HitKind.WOUND)
+            I.Fold(13.7)
+            I.Settle(13.7)
+            assert.are.equal(1, R.scale[RAGE])
+        end)
+
+        it("an event past the margin after the stamp is the next window's", function()
+            S.Direct(Obs.Swing, 11.02, 1, 0, 4)
+            band(11.03, RAGE, 14, 15, 10.95) -- a change before the swing
+            band(11.07, RAGE, 28, 29, 11.05) -- its rage
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11.02, I.HitKind.WOUND)
+            I.Fold(11.7)
+            I.Settle(11.7)
+            assert.is_true(math.abs(R.scale[RAGE] - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+        end)
+
+        -- (review I5 b) a hit's rage is in the band up to 0.57 s before its row on us
+        it("a swing's sample waits out the row's lag", function()
+            assert.are.equal(1, swing(14, I.HitKind.WOUND, nil, nil, true))
+        end)
+
+        for _, kind in ipairs({ 1, 2 }) do
+            it("a wound row on us within the lag after the window unteaches it, kind " .. kind, function()
+                swing(14, I.HitKind.WOUND, nil, nil, true)
+                S.Direct(Obs.PlayerHit, 11.55, kind, -1, 20) -- damage at 11, in the window
+                I.Fold(11.7)
+                I.Settle(11.7)
+                assert.are.equal(1, R.scale[RAGE])
+            end)
+        end
+
+        -- (re-review N4) a row of any kind whose `taken` pays was rage up to the lag ago
+        for _, kind in ipairs({ 3, 4, 5 }) do
+            it("a row of kind " .. kind .. " whose taken pays unteaches it, as a wound's", function()
+                swing(14, I.HitKind.WOUND, nil, nil, true)
+                S.Direct(Obs.PlayerHit, 11.55, kind, 30, 20)
+                I.Fold(11.7)
+                I.Settle(11.7)
+                assert.are.equal(1, R.scale[RAGE])
+            end)
+
+            it("a row of kind " .. kind .. " that pays nothing leaves it taught", function()
+                swing(14, I.HitKind.WOUND, nil, nil, true)
+                S.Direct(Obs.PlayerHit, 11.55, kind, 0, 20)
+                I.Fold(11.7)
+                I.Settle(11.7)
+                assert.is_true(math.abs(R.scale[RAGE] - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+            end)
+        end
+
+        it("a wound row past the lag leaves it taught", function()
+            swing(14, I.HitKind.WOUND, nil, nil, true)
+            S.Direct(Obs.PlayerHit, 11.68, 1, -1, 20)
+            I.Fold(11.7)
+            I.Settle(11.7)
+            assert.is_true(math.abs(R.scale[RAGE] - (1 + I.ALPHA * 0.4)) < 1e-6, R.scale[RAGE])
+        end)
+
+        -- (review I5 d) an event within the margin after a stamp may lie on either side of it
+        it("an event just after the stamp, heard before the band: neither window is clean", function()
+            S.Direct(Obs.Swing, 11.02, 1, 0, 4)
+            band(11.03, RAGE, 14, 15, 11.01)
+            band(11.07, RAGE, 28, 29, 11.05)
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11.02, I.HitKind.WOUND)
+            I.Fold(11.7)
+            I.Settle(11.7)
+            assert.are.equal(1, R.scale[RAGE])
+        end)
+
+        it("an event just after the stamp, heard after the band: the window it closed is unclean", function()
+            S.Direct(Obs.Swing, 11, 1, 0, 4)
+            band(11.05, RAGE, 27, 28, 11.03)
+            S.Direct(Obs.CastSuccess, 11.07, 1, 0, 0)
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11, I.HitKind.WOUND)
+            I.Fold(11.7)
+            I.Settle(11.7)
+            assert.are.equal(1, R.scale[RAGE])
+        end)
+
+        it("an event just after the stamp, heard after the band: the open window is unclean", function()
+            band(10.99, RAGE, 14, 15, 10.97)
+            S.Direct(Obs.Swing, 11, 1, 0, 4)
+            band(11.05, RAGE, 28, 29, 11.03)
+            S.Direct(Obs.SwingSettled, 11.45, 1, 11, I.HitKind.WOUND)
+            I.Fold(11.7)
+            I.Settle(11.7)
+            assert.are.equal(1, R.scale[RAGE])
+        end)
+
+        -- (review I5 c, cut; owner L1723) a hit's row is not its moment: rage per hit is not learned
+        for _, kind in ipairs({ 1, 2 }) do
+            it("a hit alone in a window teaches nothing, kind " .. kind, function()
+                S.Direct(Obs.PlayerHit, 11, kind, -1, 20)
+                band(11.02, RAGE, 20, 21, 11)
+                band(11.3, RAGE, 20, 21, 11)
+                S.Direct(Obs.PlayerHit, 11.4, kind, -1, 20)
+                band(11.4, RAGE, 20, 21, 11)
+                I.Fold(11.4)
+                is(RAGE, 20, 20, 20)
+                assert.is_nil(R.hitE)
+                assert.are.equal(0, VS.TakenRate(fs.RAGE, 11.4))
+            end)
+        end
+
+        it("allocates nothing", function()
+            local t = 20
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 2
+                    S.Direct(Obs.Swing, t, 1, 0, 4)
+                    band(t + 0.05, RAGE, 20 + t % 4 * 5, 21 + t % 4 * 5, t + 0.03)
+                    S.Direct(Obs.SwingSettled, t + 0.45, 1, t, I.HitKind.WOUND)
+                    S.Direct(Obs.PlayerHit, t + 0.9, 1, -1, 20)
+                    band(t + 0.95, RAGE, 27 + t % 4 * 5, 28 + t % 4 * 5, t + 0.93)
+                    I.Fold(t + 0.95)
+                    I.Settle(t + 0.95)
+                end, 500)
+            )
+        end)
+    end)
+
+    it("allocates nothing over bands, re-asserts and answers", function()
+        local t = 10
+        assert.are.equal(
+            0,
+            alloc.bytes(function()
+                t = t + 0.05
+                local k = math.floor(t) % 2
+                band(t, MANA, 450 + 10 * k, 460 + 10 * k, math.floor(t))
+                band(t, RAGE, 12 + 10 * k, 13 + 10 * k, math.floor(t))
+                answer(t, PUNCH, k == 1)
+                I.Fold(t)
+                I.Settle(t)
+            end, 1000)
+        )
+    end)
+end)

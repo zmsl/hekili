@@ -1,5 +1,6 @@
 -- tests/Game/harness/ab.lua (providers spec §4.1, decision 83): the arm (HEKILI_AB) and the floor assertions every gate
--- routes through: the default arm asserts; a provider arm records each cell in .ab/<arm>.tsv and never fails.
+-- routes through: the default arm asserts; a provider arm records each cell in .ab/<arm>.tsv and never fails. A
+-- recorded row (M.record) is judged in no arm and written in each, the default's in .ab/default.tsv.
 local M = {}
 
 M.ARMS = {
@@ -180,13 +181,43 @@ M.ARMS["cycle-follow-off"] = {
 -- The hidden-value bands (LibHiddenValues integration design 5.4; lane B1, record-only): the driver's belief watches
 -- through fake_lhv.lua (loop.lua; the observer's `bands` firings), the plain oracle shadow stays without; `bandDrop`
 -- s after the pull the capability is lost (fake_lhv SetAvailable "unavailable", "error"; kept for the session, as the
--- real library keeps it). The health families read theirs (lanes B2, B3); power waits (B4).
+-- real library keeps it). The health families (lanes B2, B3) and the resources (B4) read theirs. The lead arms move
+-- what the bars show (observer.lua `bandLead`, `spendFirst`, `gainFirst`, all unmeasured).
 M.ARMS.bands = { outcomes = "default", presence = "router", viewer = false, bands = true }
 M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandDrop = 20 }
 -- The time to die (lane B8, design 2.7's jitter rule): the bands arm with the real LibTimeToDie over the fake library
 -- (ttd_rig.lua), so the core's fight_remains and time_to_die answer its live estimate; each fight writes a `ttd` row
 -- (loop.ttdRow: answered polls, error against the kill). Record-only: its flicker is compared with the bands arm's.
 M.ARMS.ttd = { outcomes = "default", presence = "router", viewer = false, bands = true, ttd = true }
+for name, knobs in pairs({
+    ["bands-lead"] = { bandLead = 1 }, -- one regen tick
+    ["bands-lag"] = { bandLead = -1 },
+    ["bands-spend-first"] = { spendFirst = 0.05 }, -- three frames at 60 fps: the client's delay the design allows
+    ["bands-spend-late"] = { spendFirst = -0.05 },
+    ["bands-gain-first"] = { gainFirst = 0.05 }, -- the display ahead of the cast's success
+    ["bands-health"] = { bandPower = false }, -- the health bands alone (no power shown)
+}) do
+    M.ARMS[name] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandKnobs = knobs }
+end
+-- The order arms' phase (re-review H3): presses land on the 0.2 s poll and the belief drains only there, so a delayed
+-- success and its band would reach one drain. One extra cycle `midPoll` s after such a cast (loop.midPolls), inside
+-- its delay: once the band shows what came first (the fake reports a change 2 frames on, 0.033 s), before the rest
+-- shows (the success at 0.05 s; spend-late's spend at 0.083 s). Loops only: a replay's casts fall off the poll's grid.
+M.ARMS["bands-spend-first"].midPoll = 0.04
+M.ARMS["bands-spend-late"].midPoll = 0.08
+M.ARMS["bands-gain-first"].midPoll = 0.04
+-- bands-taken-lag, the ruled arm (L1723): live's secret amounts and the measured lag of the hit row on us
+-- (docs/research/2026-10-23-damagemeter-api.md), in `observe` and not bandKnobs, so the oracle's world is lagged too;
+-- compare it with lagged-secret, the same without bands. `observe` is HEKILI_AB's arm's alone (M.observe).
+for name, bands in pairs({ ["bands-taken-lag"] = true, ["lagged-secret"] = false }) do
+    M.ARMS[name] = {
+        outcomes = "default",
+        presence = "router",
+        viewer = false,
+        bands = bands or nil,
+        observe = { takenLag = 0.48, secretAmount = true },
+    }
+end
 M.VERDICT = {
     "viewer-reshuffle",
     "viewer-nonland",
@@ -224,16 +255,25 @@ function M.observe(k)
     end
 end
 
+local function write(arm, ok, label, line)
+    assert(io.popen("mkdir -p .ab")):close() -- popen: `execute` is a content key (tests/boundary_spec.lua)
+    local fh = assert(io.open(".ab/" .. arm .. ".tsv", "a"))
+    fh:write(label, "\t", ok and "ok" or "MISS", "\t", tostring(line), "\n")
+    fh:close()
+end
+
 function M.check(ok, label, line, arm)
     arm = arm or M.arm()
     if arm == "default" then
         assert(ok, label .. ": " .. tostring(line))
         return
     end
-    assert(io.popen("mkdir -p .ab")):close() -- popen: `execute` is a content key (tests/boundary_spec.lua)
-    local fh = assert(io.open(".ab/" .. arm .. ".tsv", "a"))
-    fh:write(label, "\t", ok and "ok" or "MISS", "\t", tostring(line), "\n")
-    fh:close()
+    write(arm, ok, label, line)
+end
+
+--- A row nothing is judged on (loop.lua's "power"): written in every arm, the default's too (.ab/default.tsv).
+function M.record(label, line)
+    write(M.arm(), true, label, line)
 end
 
 return M

@@ -14,6 +14,20 @@ ARM=${ACC_LIVE_ARM:-live-auras-none}
 LOOPTAGS=$(echo "${GATE_TAGS:-loop,druid,rogue,paladin,shaman,hunter,mage,priest,warlock}" | sed 's/party,//;s/,party//')
 rm -rf "$OUT" .accuracy/raw-live
 mkdir -p "$OUT" .accuracy/raw-live
+# Both passes record rows in .ab/default.tsv and .ab/$ARM.tsv, no gate-ab result: an earlier gate-ab's are put back.
+KEEP=$(mktemp -d) || exit 1
+for a in default "$ARM"; do
+    [ ! -f ".ab/$a.tsv" ] || cp ".ab/$a.tsv" "$KEEP/$a.tsv" || exit 1
+done
+restore() {
+    for a in default "$ARM"; do
+        rm -f ".ab/$a.tsv"
+        [ ! -f "$KEEP/$a.tsv" ] || cp "$KEEP/$a.tsv" ".ab/$a.tsv" || return 1
+    done
+    rm -rf "$KEEP"
+}
+trap restore EXIT
+trap 'exit 1' INT TERM
 jobs=$(($(nproc) > 3 ? $(nproc) - 2 : 1))
 for pass in full live; do
     if [ "$pass" = full ]; then out=$OUT arm=; else out=.accuracy/raw-live arm=$ARM; fi
@@ -25,5 +39,4 @@ for pass in full live; do
         timeout 3000 "$BUSTED" --helper=tools/accuracy/wrap.lua --tags="$tags" "$1" > "$OUT/$0.$(basename "$1" _spec.lua).txt" 2>&1'
 done
 echo "$ARM" > .accuracy/live-arm
-rm -f ".ab/$ARM.tsv" # the arm recorded its floors there; they are not a gate-ab result
 ls "$OUT" | wc -l

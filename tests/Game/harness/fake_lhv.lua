@@ -10,6 +10,11 @@
 -- on the real library too, so it pins them):
 --   fires:   a push fires only when it crosses a cut of a watch on the source (its 1% cell, an edge, a point); one that
 --            does not updates the value silently (README, `step`: the bars fire on a cell change);
+--   points:  on a step source an edge or a point crossed inside its cell is one bar's firing, reported a frame later,
+--            and waits with a cell change while one is pending (`t` then the last firing of the two); each handle's `t`
+--            is its own band's change (shared rows "points and a step", L1664 items 2-3);
+--   setpts:  SetPoints with a point that needs a new bar (off the step's grid, on no other watch) primes that handle
+--            9 frames, `t` the prime's end; another change of its band is a change of that frame (shared row);
 --   hold:    a change is reported 2 frames after its last firing: every change of a step source waits for the next
 --            frame's decode to agree (LibHiddenValues README, "Confirmation"; minor 7, `t` the change's last firing);
 --            a firing back to the reported cut ends the change (an alternating value keeps the held band);
@@ -23,7 +28,7 @@
 --            prime's end (2 frames back) unless the value fired since (README, "Testing your addon": priming 10
 --            frames at least: hold 4, push, settle 4, decode; shared rows "primes: ...", ledger L1664 item 1); a
 --            points handle (one point or more) for 9 frames after its max moves (README, `points`: its point bars are
---            placed again on UNIT_MAXPOWER);
+--            placed again on UNIT_MAXPOWER), `t` then that prime's end, a frame back;
 --   cells:   a step watch is the 1% cell [lo, lo + 1), full its own closed cell [100, 100] (Bars.lua `band`; ledger
 --            L1669), cut further by its edges or points; a points handle answers in points, its cell (max / 100) wide,
 --            [max, max] at full (README, `step`, `points`); the library's 0.05% guard below each edge is not modelled;
@@ -39,7 +44,7 @@
 -- watches only. GetVersion answers minor 8; GetSelfTest reads the capability (pending nil, a "selftest" loss false,
 -- else true) and SelfTest calls back at once. `o.history`: every push kept per source, lib:TruthAt(kind, unit, power,
 -- t) the last at or before t (the bands arms' containment, loop.bandCheck). The bands-drop arm's capability loss is
--- lib:SetAvailable; the unmeasured knobs (bandLead, spendFirst) come with the lanes that need them (B4, B6).
+-- lib:SetAvailable; the unmeasured knobs (bandLead, spendFirst) are the observer's (observer.lua).
 local M = {}
 
 M.DEFAULTS = {
@@ -97,6 +102,21 @@ local function pointList(pts)
     return list
 end
 
+-- The cuts of `pts` around v inside its 1% cell of max m.
+local function pointCut(pts, v, m)
+    local cell = floor(v * 100 / m)
+    local lo, hi = cell * m / 100, (cell + 1) * m / 100
+    for i = 1, #pts do
+        local p = pts[i]
+        if p <= v and p > lo then
+            lo = p
+        elseif p > v and p < hi then
+            hi = p
+        end
+    end
+    return lo, hi
+end
+
 function M.new(o)
     o = o or {}
     local R = {}
@@ -113,8 +133,9 @@ function M.new(o)
         local key = kind .. "|" .. unit .. "|" .. tostring(power)
         local s = lib.sources[key]
         if not s then
-            -- v, m: the reported value and max (v nil: unknown); pv, pm: the pending change, first at pf, last at pl,
-            -- not reported before `ready` (after a desync); mx: the last pushed max
+            -- v, m: the reported value and max (v nil: unknown); pv, pm: the pending change, first at pf, its last cell
+            -- firing at pl (cell: it holds one), its last firing of any bar at pa, not reported before `ready` (after a
+            -- desync); mx: the last pushed max
             s = {
                 key = key,
                 v = nil,
@@ -125,6 +146,8 @@ function M.new(o)
                 pm = nil,
                 pf = 0,
                 pl = 0,
+                pa = 0,
+                cell = false,
                 ready = 0,
                 mx = nil,
                 gone = false,
@@ -140,6 +163,45 @@ function M.new(o)
     local function prime(h, t)
         h.primeUntil = t + (R.prime + 1) * R.frame
         h.tFloor = h.primeUntil - R.hold * R.frame
+        h.t = h.tFloor
+    end
+
+    -- New point bars of h from `t` (a max change, SetPoints): unknown `rebar` frames, stamped a frame before its end.
+    local function rebar(h, untilT)
+        if h.primeUntil < untilT then
+            h.primeUntil, h.tFloor = untilT, untilT - R.frame
+        end
+    end
+
+    -- What fires on h between two values (each in its own units, of its max): nil, CUT (an edge or a point) or CELL.
+    local CUT, CELL = 1, 2
+    local function fires(h, v1, m1, v2, m2)
+        local x1, x2 = v1 * 100 / m1, v2 * 100 / m2
+        if h.step and floor(x1) ~= floor(x2) then
+            return CELL
+        end
+        local cuts, a, b = h.edges, x1, x2
+        if h.points then
+            cuts, a, b = h.points, v1, v2
+        end
+        for j = 1, #cuts do
+            if (a >= cuts[j]) ~= (b >= cuts[j]) then
+                return CUT
+            end
+        end
+        return nil
+    end
+
+    -- The source reports v at `stamp`: each handle whose band that moves takes the stamp.
+    local function report(s, v, m, stamp)
+        local hs = lib.handles
+        for i = 1, #hs do
+            local h = hs[i]
+            if h.src == s and (s.v == nil or (h.points and h.step and m ~= s.m) or fires(h, s.v, s.m, v, m)) then
+                h.t = stamp
+            end
+        end
+        s.v, s.m, s.t = v, m, stamp
     end
 
     -- Applies what happened by t with no firing since the last push, in order: the pending change is reported once it
@@ -147,7 +209,8 @@ function M.new(o)
     -- wins a tie); after a desync the prime's decode starts the change again (`reprime` frames to its earliest report).
     local function settle(s, t)
         while s.pend do
-            local due, cut = s.pl + R.hold * R.frame, s.pf + R.desync * R.frame
+            local due = s.cell and s.pl + R.hold * R.frame or s.pa + R.frame -- a point inside the cell: one bar
+            local cut = s.pf + R.desync * R.frame
             if due < s.ready then
                 due = s.ready
             end
@@ -156,37 +219,50 @@ function M.new(o)
                     return
                 end
                 -- t: the last firing, or the prime's end when the change was a desync's and fired before it
-                s.pend, s.v, s.m, s.ready = false, s.pv, s.pm, 0
-                s.t = s.pl > s.pf and s.pl or s.pf
+                s.pend, s.ready = false, 0
+                report(s, s.pv, s.pm, s.pa > s.pf and s.pa or s.pf)
             else
                 if t + EPS < cut then
                     return
                 end
-                s.v, s.ready = nil, cut + R.reprime * R.frame
+                s.v, s.cell, s.ready = nil, true, cut + R.reprime * R.frame
                 s.pf = s.ready - R.hold * R.frame
             end
         end
     end
 
-    -- Whether a bar of a watch on s fires between two values (each in its own units, of its max).
+    -- What fires on s between two values: nil, CUT or CELL (with no step watch every firing times as a cell's: the
+    -- edges-only shortcut above).
     local function crosses(s, v1, m1, v2, m2)
-        local x1, x2 = v1 * 100 / m1, v2 * 100 / m2
-        local hs = lib.handles
+        local hs, k, stepped = lib.handles, nil, false
         for i = 1, #hs do
             local h = hs[i]
             if h.src == s then
-                if h.step and floor(x1) ~= floor(x2) then
-                    return true
+                local f = fires(h, v1, m1, v2, m2)
+                if f == CELL then
+                    return CELL
                 end
-                local cuts, a, b = h.edges, x1, x2
-                if h.points then
-                    cuts, a, b = h.points, v1, v2
+                k, stepped = k or f, stepped or h.step ~= nil
+            end
+        end
+        return k and (stepped and k or CELL)
+    end
+
+    -- Whether h's new list needs a bar the source does not run: a point off the step's grid that no watch holds.
+    local function newBar(h, list)
+        local s, stepped, held = h.src, false, {}
+        for _, x in ipairs(lib.handles) do
+            if x.src == s then
+                stepped = stepped or x.step ~= nil
+                for j = 1, x.points and #x.points or 0 do
+                    held[x.points[j]] = true
                 end
-                for j = 1, #cuts do
-                    if (a >= cuts[j]) ~= (b >= cuts[j]) then
-                        return true
-                    end
-                end
+            end
+        end
+        for i = 1, #list do
+            local p = list[i]
+            if not held[p] and not (stepped and s.mx and p * 100 % s.mx == 0) then
+                return true
             end
         end
         return false
@@ -322,8 +398,8 @@ function M.new(o)
         s.gone = false
         if s.mx and max ~= s.mx then -- the point bars are placed again: each points handle primes
             for _, h in ipairs(lib.handles) do
-                if h.src == s and h.points and #h.points > 0 and h.primeUntil < t + R.rebar * R.frame then
-                    h.primeUntil = t + R.rebar * R.frame
+                if h.src == s and h.points and #h.points > 0 then
+                    rebar(h, t + R.rebar * R.frame)
                 end
             end
         end
@@ -336,21 +412,29 @@ function M.new(o)
             s.pend, s.ready, s.v, s.m = false, 0, value, max
             return
         end
-        if s.pend and not crosses(s, s.pv, s.pm, value, max) then -- inside the pending cut: nothing fires
-            s.pv, s.pm = value, max
-            return
+        local kind
+        if s.pend then
+            kind = crosses(s, s.pv, s.pm, value, max)
+            if not kind then -- inside the pending cut: nothing fires
+                s.pv, s.pm = value, max
+                return
+            end
+        else
+            kind = crosses(s, s.v, s.m, value, max)
+            s.pend, s.cell, s.pf, s.ready = true, false, t, 0
         end
-        if not s.pend then
-            s.pend, s.pf, s.ready = true, t, 0
+        if kind == CELL then
+            s.cell, s.pl = true, t
         end
-        s.pv, s.pm, s.pl = value, max, t
+        s.pv, s.pm, s.pa = value, max, t
     end
 
     -- The unit changed (a new target): every handle on it primes again; its sources take the latest value.
     function lib:Prime(unit, t)
         for _, s in pairs(lib.sources) do
             if s.pend and s.key:match("^%a+|" .. unit .. "|") then
-                s.pend, s.v, s.m, s.t, s.ready = false, s.pv, s.pm, s.pl, 0
+                s.pend, s.ready = false, 0
+                report(s, s.pv, s.pm, s.pa)
             end
         end
         for _, h in ipairs(lib.handles) do
@@ -478,9 +562,12 @@ function M.new(o)
             end
             lo, hi = lo > glo and lo or glo, hi < ghi and hi or ghi
         end
-        local t = s.t
+        local t, at = self.t or s.t, now()
         if self.tFloor and self.tFloor > t then -- a band first known at a prime: stamped at its end
             t = self.tFloor
+        end
+        if t > at then -- SetPoints' change: seen in the next frame
+            t = at
         end
         return lo, hi, t, M.BAND
     end
@@ -497,6 +584,19 @@ function M.new(o)
         local err = self.src and admit(self, pts)
         if err then
             return nil, err
+        end
+        local s = self.src
+        if s then
+            local t = now()
+            if newBar(self, pts) then
+                rebar(self, t + (R.rebar + 1) * R.frame)
+            elseif s.v ~= nil then -- a band the new set cuts elsewhere is a change of the next frame
+                local lo0, hi0 = pointCut(self.points, s.v, s.m)
+                local lo1, hi1 = pointCut(pts, s.v, s.m)
+                if lo0 ~= lo1 or hi0 ~= hi1 then
+                    self.t = t + R.frame
+                end
+            end
         end
         self.points = pts
         return true

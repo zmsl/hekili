@@ -250,6 +250,12 @@ describe("player start", function()
             assert.equal("secret", S.status["UNIT_COMBAT player amount"])
         end)
 
+        it("a secret amount is -1 whatever its flag (rage per hit is not learned, owner L1723)", function()
+            fire("player", "WOUND", "CRITICAL", fake.SECRET, 1)
+            fire("player", "WOUND", "CRUSHING", fake.SECRET, 1)
+            assert.are.same({ { 1, -1, 20 }, { 1, -1, 20 } }, seen)
+        end)
+
         it("caches the shield's block value out of combat only", function()
             local block = 31
             api.GetShieldBlock = function()

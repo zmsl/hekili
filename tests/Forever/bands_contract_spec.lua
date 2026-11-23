@@ -390,6 +390,253 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.are.equal("0.63 0.64", frames(1, -1))
     end)
 
+    -- Lane B7 part 2 (design 3.3): the active priority's thresholds (def.bandPoints) reach the handle out of combat.
+    describe("the active priority's points", function()
+        local function mine()
+            for _, h in ipairs(LHV.reg) do
+                if h.owner == "HekiliBelief" and h.power == 0 and not h.released then
+                    return h
+                end
+            end
+        end
+
+        local function send(points, deficit, pct)
+            def.bandPoints = {
+                [0] = { points = points or {}, deficit = deficit or {}, pct = pct or {} },
+                [4] = { points = { 2, 5 }, deficit = {}, pct = {} }, -- a type with no handle: ignored
+            }
+            def.bandGen = (def.bandGen or 0) + 1
+        end
+
+        before_each(function()
+            W.unit.player.power[0] = 0.4555
+            ctl.powerMax[0] = 1000
+            boot()
+            live()
+        end)
+
+        it("points as they are, a deficit from the max, a fractional pct up; the sources untouched", function()
+            local e = { { 455, 5000, 455 }, { 543, 1200 }, { 62.45 } }
+            send(e[1], e[2], e[3])
+            frames(14)
+            assert.are.same({ 455, 457, 625 }, mine().points)
+            assert.are.equal("455 457", frames(1, MANA)) -- the cell 450-460 cut at both
+            assert.are.same({ { 455, 5000, 455 }, { 543, 1200 }, { 62.45 } }, e)
+        end)
+
+        it("the same list at a new generation keeps the band live", function()
+            send({ 455 })
+            frames(14)
+            assert.are.equal("455 460", frames(1, MANA))
+            local h, calls = mine(), 0
+            local set = h.SetPoints
+            function h.SetPoints(...)
+                calls = calls + 1
+                return set(...)
+            end
+            send({ 455 })
+            assert.are.equal("455 460|455 460", frames(2, MANA))
+            assert.are.equal(0, calls)
+        end)
+
+        it("a new max moves the deficit and pct points", function()
+            send(nil, { 543 }, { 62.45 })
+            frames(14)
+            ctl.powerMax[0], W.unit.player.max[0] = 1200, 1200
+            Fake.event("UNIT_MAXPOWER", "player")
+            frames(2) -- the max folds, then the points follow
+            assert.are.same({ 657, 750 }, mine().points) -- ceil(749.4)
+        end)
+
+        it("in combat the points wait for its end", function()
+            send({ 455 })
+            frames(14)
+            ctl.combat = true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            send({ 457 })
+            frames(3)
+            assert.are.same({ 455 }, mine().points)
+            ctl.combat = false
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            frames(1)
+            assert.are.same({ 457 }, mine().points)
+        end)
+
+        it("a refusal keeps the old set and shows its code in the snapshot", function()
+            send({ 455 })
+            frames(2)
+            send({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })
+            frames(2)
+            assert.are.same({ 455 }, mine().points)
+            assert.is_truthy(VS.Snapshot():find("points=edge-limit", 1, true))
+        end)
+
+        it("refused points are asked again when combat ends (review M4)", function()
+            send({ 455 })
+            frames(14)
+            local h = mine()
+            local set, refuse = h.SetPoints, true
+            function h.SetPoints(...)
+                if refuse then
+                    return nil, "edge-limit"
+                end
+                return set(...)
+            end
+            send({ 457 })
+            frames(2)
+            refuse = false
+            frames(2)
+            assert.are.same({ 455 }, h.points) -- never asked every drain
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            frames(1)
+            assert.are.same({ 457 }, h.points)
+        end)
+
+        it("allocates nothing once the points are set", function()
+            boot(false)
+            send({ 455 })
+            frames(14)
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    VS.Drain(sync())
+                end, 1000)
+            )
+        end)
+    end)
+
+    -- (ledger L1666 c) a refused watch (the pool, the point caps: transient) is asked again at the next combat's end
+    it("a refused watch is asked again when combat ends", function()
+        local real, refuse = LHV.Watch, true
+        function LHV.Watch(...)
+            if refuse then
+                return nil, "pool-limit"
+            end
+            return real(...)
+        end
+        boot()
+        assert.is_true(Fake.login())
+        frames(3)
+        refuse = false
+        frames(3)
+        assert.are.same({}, LHV:GetSources()) -- never asked every drain
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        frames(14)
+        LHV.Watch = real
+        assert.are.equal("0.63 0.64", frames(1, -1))
+    end)
+
+    -- (lane B4, design 2.4) how long an event of ours outranks the band: the library's worst case from a change's first
+    -- firing (h:Latency(), by the measured frame time) and the client's own delay before that firing (3 frames at 60).
+    it("the hold covers the band's delay, the client's own included", function()
+        boot()
+        live()
+        local h
+        for _, x in ipairs(LHV.reg) do
+            h = (x.owner == "HekiliBelief" and x.power == 0) and x or h
+        end
+        assert.are.equal(h:Latency() + I.BAND_MARGIN, I.bandShows[MANA])
+        assert.is_true(I.BAND_MARGIN >= 3 * FRAME)
+        Fake.set("lag", 3) -- the client's
+        local before, t0, shownT = I.bandLo[MANA], nil, nil
+        for i = 1, 20 do
+            if i <= 5 then -- a change still moving: the library's worst case
+                W.unit.player.power[0] = (450 - 10 * i) / 1000
+            end
+            frames(1)
+            t0 = t0 or ctl.now
+            if I.bandLive[MANA] and I.bandLo[MANA] ~= before then
+                shownT = ctl.now
+                break
+            end
+        end
+        assert.is_true(shownT - t0 <= I.bandShows[MANA] + 1e-9, shownT - t0)
+    end)
+
+    -- (lane B4 task 4, design 2.3) a slot that proves plain in combat needs no band: the plain read is better and free
+    it("a power that reads plain in combat releases its watch when combat ends (decision 89)", function()
+        local function watched()
+            for _, h in ipairs(LHV.reg) do
+                if h.owner == "HekiliBelief" and h.power == 0 and not h.released then
+                    return true
+                end
+            end
+            return false
+        end
+        ctl.power[0] = 450 -- plain out of combat proves nothing
+        boot()
+        live()
+        assert.is_true(watched())
+        ctl.combat = true
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        frames(2)
+        assert.is_true(watched()) -- no watch changes mid-fight
+        assert.is_false(I.res.bandOn[MANA]) -- its band is ignored meanwhile
+        ctl.combat = false
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        frames(1)
+        assert.is_false(watched())
+        assert.is_false(I.bandLive[MANA])
+        frames(3)
+        assert.is_false(watched()) -- for this build
+    end)
+
+    -- (lane B4 task 5, design 2.4) with no plain max the library answers no points: a percent handle, converted with
+    -- the belief's own max and a point wider on each side
+    it("max-unknown: a percent watch, in points at the belief's max, widened a point", function()
+        W.maxSecret = true
+        ctl.powerMax[0] = 1000
+        boot()
+        live()
+        frames(14)
+        assert.are.equal("449 461", frames(1, MANA))
+        def.bandPoints = { [0] = { points = { 455 }, deficit = {}, pct = {} } }
+        def.bandGen = (def.bandGen or 0) + 1
+        assert.are.equal("449 461", frames(1, MANA)) -- a percent handle takes no points
+        assert.is_truthy(VS.Snapshot():find("points=max-unknown", 1, true))
+        W.unit.player.power[0] = 1
+        frames(4)
+        assert.are.equal("999 1000", frames(1, MANA))
+    end)
+
+    -- (review I6) a guessed maximum makes no floor: the fact is the percent
+    it("max-unknown and the belief's max never read plain: no band", function()
+        W.maxSecret = true
+        function api.UnitPowerMax() -- as hidden from the belief as from the library
+            return fake.SECRET
+        end
+        boot()
+        live()
+        frames(14)
+        assert.are.equal("", frames(1, MANA))
+        assert.is_false(I.bandLive[MANA])
+        assert.are.equal(0, I.bandUsed[MANA])
+    end)
+
+    -- (lane B4) the whole path on the real library: secret power in combat, the family's records from the band, the
+    -- priority's point cutting the cell, the usable-free read between them
+    it("the resources family reads the band in combat, cut at the priority's point", function()
+        W.unit.player.power[0] = 0.4555
+        ctl.powerMax[0] = 1000
+        boot()
+        def.bandPoints = { [0] = { points = { 455 }, deficit = {}, pct = {} } }
+        def.bandGen = (def.bandGen or 0) + 1
+        live()
+        frames(14)
+        ctl.combat = true
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        frames(2)
+        local p = VS.Power(0, ctl.now)
+        assert.are.same({ 455, "observed" }, { p.lo, p.basis })
+        assert.is_true(p.est >= 455 and p.est < 460 and p.hi < 460)
+        W.unit.player.power[0] = 0.3125
+        frames(3)
+        p = VS.Power(0, ctl.now)
+        assert.is_true(p.lo == 310 and p.hi < 320)
+    end)
+
     it("allocates nothing over 1000 drains with every band live", function()
         boot(false)
         live()

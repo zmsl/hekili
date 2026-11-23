@@ -84,7 +84,7 @@ mainhand = {
 },
 ```
 
-The Warrior's main-hand entry in `src/Hekili_Warrior/Warrior.lua` adds a `taken` function for rage from hits on the player, and both hands pass Unbridled Wrath's expected rage as `width`.
+The Warrior's main-hand entry in `src/Hekili_Warrior/Warrior.lua` adds a `taken` function for rage from hits on the player, and both hands pass Unbridled Wrath's expected rage as `width`. While Hekili Forever reads the 1% step rage is in, a hit's gain feeds only the forecast: the step already holds that rage.
 
 ### Aura entries
 

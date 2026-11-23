@@ -387,6 +387,8 @@ make gate AB_ARM=lagged               # the meter arm's baseline, by hand
 `tests/Game/harness/ab.lua` chooses the arm. The default arm asserts every floor as `make gate` does. A provider arm
 records each floor check as `label TAB ok|MISS TAB line` in `.ab/<arm>.tsv` and never fails (decision 86); health
 checks (errors, secrets, allocation, CPU) assert in every arm. Detection cells write `cell ...` and `audit ...` lines.
+A loop run or replay writes one `power` row in every arm, the default's in `.ab/default.tsv` (judged by nothing: polls,
+lo over, hi under, absolute error, band live and applied, step scale, regen, the order arms' branch counts).
 `make gate-ab` starts with `rm -rf .ab`: copy `.ab/lagged.tsv` aside first. While `make check` carries known failures,
 run `make -i gate-ab` (a failing check-full otherwise stops it after the first gate) and read each arm's verdict from
 its log. A viewer arm's `layout` lines carry the CDM audit counters (above). The meter arm also turns on a 0.48 s taken

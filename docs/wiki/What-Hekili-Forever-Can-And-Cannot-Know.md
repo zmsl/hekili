@@ -26,7 +26,7 @@ The Forever client is a modern game client that hides many combat values from ad
 | Melee swings | Read | Each swing is reported as it happens. |
 | Nameplates | Read | Used to count nearby enemies. |
 | Hits on the player | Read | Including misses, dodges and parries. |
-| Energy, rage and mana | Estimated | Hidden in and out of combat. |
+| Energy, rage and mana | Estimated | The exact amount is hidden in and out of combat. Where the game allows it, the 1% step the amount is in is read, and the estimate stays inside it. |
 | Cooldown remaining time | Estimated | From the cast time and the ability's cooldown. |
 | Buff and debuff times | Estimated | From the cast and the aura's duration. The game's Cooldown Manager can show some of them ([Cooldown Manager](Cooldown-Manager)). |
 | Hits landed on a target | Not available | |
@@ -35,11 +35,12 @@ The Forever client is a modern game client that hides many combat values from ad
 
 ## How a resource is estimated
 
-An estimate is built in four parts.
+An estimate is built in five parts.
 
 - **What the game still reports.** The estimate starts from values the game answers plainly: values read out of combat, the player's own casts, whether an ability is usable, and whether a cooldown is ready.
 - **Known changes.** Each cast spends its cost. Regeneration, melee swings and talents add to the total, using the same rules the class pack gives the simulation.
 - **Corrections.** When the game reports that an ability cannot be used for lack of resources, the amount must be below its cost. When the ability becomes usable, the amount is at least its cost. The estimate moves to agree whenever the game reveals something new.
+- **The 1% step.** Where the game allows it, Hekili Forever reads which 1% step of the maximum the amount is in. With a maximum of 100 that is the exact whole number. A resource the active priority compares with a number is also cut exactly at that number, for up to 8 numbers. The step can trail the game by a fraction of a second, so a cast or swing heard since then moves the estimate on from it, and the game's answer on whether an ability is usable always wins over it.
 - **A range.** Each estimate is a low end, a best guess and a high end, together with how the value was learned.
 
 ## Effect on recommendations

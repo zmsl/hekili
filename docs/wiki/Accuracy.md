@@ -29,7 +29,7 @@ The three measures are:
 
 ## Lowest values
 
-- **Guardian, matches wowsims (0.632):** the game hides the rage gained from hits the player takes, and Hekili Forever does not estimate it. Lacerate, Maul and Primal Bite therefore appear only once the game reports enough rage to use them.
+- **Guardian, matches wowsims (0.632):** the game hides the rage gained from hits the player takes, and Hekili Forever does not estimate it from the hits. Where the game allows it, that rage shows in the 1% step of rage that Hekili Forever reads, but these tests run without that step. In them Lacerate, Maul and Primal Bite therefore appear only once the game reports enough rage to use them.
 - **Live-like, solo:** the largest drops are for priorities that depend on the player's own buffs: Enhancement (0.175), Arcane (0.581), Survival (0.700) and Fire (0.780). Priorities that test none of their own buffs do not change.
 
 ## What the numbers do not show

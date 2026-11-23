@@ -43,7 +43,7 @@ M.OUTCOMES = {
 --- target reads 0.5 s before the pull), "pull", "stop", "form", "buff", "target", "aura", "totem", "queue", "unqueue", "gain", "kill", "move",
 --- "regen" and "decay" (a resource's continuous regen and out-of-combat decay, W.startRegen / W.startDecay). A gain
 --- (`rage`) or spend (`cost`) of ours is of power type `pt` (default our `pt`, the swing-paid `power`; another type's
---- value after it: `ev.resCur`).
+--- value after it: `ev.resCur`); an avoided press's refund is a gain with `refund`.
 function M.new(seed)
     -- crng: the client-detail draws (the same-ms avoid, a strike frame's order) apart from the fight's own
     local W = { t = 0, q = {}, seq = 0, truth = {}, rng = rng.new(seed), crng = rng.new(seed + 7919), ents = {} }
@@ -767,7 +767,7 @@ function M.new(seed)
         if act ~= "WOUND" and p and (p.refund or 0) > 0 and (p.cost or 0) > 0 then
             -- the server refunds at the cast's success (the user, 2026-10-20): before the outcome reports it
             e.pressing = nil -- once a press: a second hit of its effect is no second refund
-            W.emit({ kind = "gain", src = e, pt = p.pt, rage = p.refund * p.cost })
+            W.emit({ kind = "gain", src = e, pt = p.pt, rage = p.refund * p.cost, refund = true })
         end
         e.lastHit = W.emit({
             kind = "spell",

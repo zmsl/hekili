@@ -415,6 +415,146 @@ for _, name in ipairs({ "real", "fake" }) do
             end
             assert.are.equal(string.rep("-|540-552 ", 9) .. "400-600|540-552 400-600|540-552", table.concat(row, " "))
         end)
+
+        -- (ledger L1664 items 2-3, lane B4) points beside a step on one mana source, pinned on the real library: a
+        -- point inside a cell fires one bar (a frame), a cell change is confirmed (2 frames), and each handle's t is
+        -- its own band's change. `one`: Hekili's shape, one handle with both; `two`: two watches.
+        local function shown(h, t0)
+            local lo, hi, t = h:Get()
+            if h:State() ~= "live" or not lo then
+                return "-"
+            end
+            return t >= t0 and ("%d-%d@%d"):format(lo, hi, floor((w.now() - t) / FRAME + 0.5)) or lo .. "-" .. hi
+        end
+        local SLOW = { 45.35, 45.55, 45.75, 45.95, 46.15, 46.35, 46.55 }
+        for _, case in ipairs({
+            { "one", "a point inside the cell: a frame", { 45.55 }, 3, "450-453 455-460@1 455-460@2 455-460@3" },
+            {
+                "one",
+                "back over a point",
+                { 45.55, false, false, 45.2 },
+                2,
+                "450-453 455-460@1 455-460@2 455-460@3 450-453@1 450-453@2",
+            },
+            {
+                "one",
+                "two points a frame apart",
+                { 45.32, 45.75 },
+                2,
+                "450-453 453-455@1 455-460@1 455-460@2",
+            },
+            { "one", "a cell: two frames", { 46.2 }, 2, "450-453 450-453 460-465@2" },
+            { "one", "a point and a cell at once", { 46.6 }, 2, "450-453 450-453 465-470@2" },
+            { "one", "a point while a cell waits", { 46.2, 46.6 }, 2, "450-453 450-453 465-470@1 465-470@2" },
+            { "one", "a point, then a cell", { 45.55, 46.2 }, 3, "450-453 455-460@1 455-460@2 460-465@2 460-465@3" },
+            {
+                "one",
+                "point crossings while moving",
+                SLOW,
+                2,
+                "450-453 453-455@1 455-460@1 455-460@2 455-460@3 455-460@4 460-465@2 465-470@1 465-470@2",
+            },
+            {
+                "two",
+                "a point, then a cell",
+                { 45.55, 46.2 },
+                3,
+                "0-453|450-460 455-465@1|450-460 455-465@2|450-460 455-465@3|460-470@2 455-465@4|460-470@3",
+            },
+            {
+                "two",
+                "point crossings while moving",
+                SLOW,
+                2,
+                "0-453|450-460 453-455@1|450-460 455-465@1|450-460 455-465@2|450-460 455-465@3|450-460 455-465@4|450-460 "
+                    .. "455-465@5|460-470@2 465-1000@1|460-470@3 465-1000@2|460-470@4",
+            },
+        }) do
+            it("points and a step (" .. case[1] .. "): " .. case[2], function()
+                -- 450 + n: a bare literal would read as a spell ID (boundary_spec)
+                local spec = { kind = "power", unit = "player", power = 0, points = { 450 + 3, 455, 450 + 15 } }
+                spec.step = case[1] == "one" and 1 or nil
+                local a, b = assert(lib:Watch("A", spec)), nil
+                if case[1] == "two" then
+                    b = assert(lib:Watch("B", { kind = "power", unit = "player", power = 0, step = 1, points = {} }))
+                end
+                w.live()
+                w.frame()
+                w.frame()
+                local t0, row = w.now(), {}
+                for i = 1, #case[3] + case[4] do
+                    if case[3][i] then
+                        w.mana(case[3][i])
+                    end
+                    w.frame()
+                    row[i] = shown(a, t0) .. (b and "|" .. shown(b, t0) or "")
+                end
+                assert.are.equal(case[5], table.concat(row, " "))
+            end)
+        end
+
+        it(
+            "SetPoints: a new point bar primes (9 frames, t its end); the same, a grid point or none does not",
+            function()
+                local h = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = {} }))
+                w.live()
+                w.frame()
+                local t0 = w.now()
+                local function run(list, n)
+                    assert.is_true(h:SetPoints(list))
+                    local row = {}
+                    for i = 1, n do
+                        w.frame()
+                        row[i] = shown(h, t0)
+                    end
+                    return table.concat(row, " ")
+                end
+                assert.are.same({
+                    ("- "):rep(9) .. "450-455@1 450-455@2",
+                    "450-455@3",
+                    "450-455@4",
+                    "450-460@0", -- a removed point widens the band: a change, seen that frame
+                }, { run({ 455 }, 11), run({ 455 }, 1), run({ 455, 460 }, 1), run({}, 1) })
+            end
+        )
+
+        it("a max change on points beside a step: t is the new bars' prime end", function()
+            local h = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 1, points = { 455 } }))
+            w.live()
+            w.frame()
+            local t0, row = w.now(), {}
+            w.max(1200)
+            for i = 1, 11 do
+                w.frame()
+                row[i] = shown(h, t0)
+            end
+            assert.are.equal(("- "):rep(9) .. "540-552@1 540-552@2", table.concat(row, " "))
+        end)
+
+        for _, how in ipairs({ "watch", "resume" }) do
+            it("a step with points after a " .. how .. ": the band, t the prime's end (L1664 item 2)", function()
+                local spec = { kind = "power", unit = "player", power = 0, step = 1, points = { 455 } }
+                local h
+                if how == "resume" then
+                    h = assert(lib:Watch("A", spec))
+                end
+                w.live()
+                local t0 = w.now()
+                if how == "watch" then
+                    h = assert(lib:Watch("A", spec))
+                else
+                    h:SetPaused(true)
+                    w.frame()
+                    h:SetPaused(false)
+                end
+                local row = {}
+                for i = 1, 12 do
+                    w.frame()
+                    row[i] = shown(h, t0)
+                end
+                assert.are.equal(("- "):rep(10) .. "450-455@2 450-455@3", table.concat(row, " "))
+            end)
+        end
     end)
 end
 
