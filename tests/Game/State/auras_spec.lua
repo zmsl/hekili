@@ -1847,49 +1847,46 @@ describe("auras", function()
                 end
             )
 
-            it(
-                "a light within STRIKE_WIN of a verdict is a strike; two strikes retire the item for the build",
-                function()
-                    prove()
-                    cast(2, REND, 11, 15)
-                    poll(11.5)
-                    poll(12)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12)) -- the verdict
-                    ctl.ViewerAura(ti, "target") -- the late light (a lag spike): re-opens as a CDM open, one strike
-                    poll(12.5)
-                    assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 12.5))
-                    assert.are.equal(0, I.auraVerdict.strikes[kT()]) -- (review M2) judged at the next poll
-                    poll(12.7)
-                    assert.are.same({ 1, 1, 0 }, {
-                        I.auraVerdict.strikes[kT()],
-                        I.PRESENCE.viewer.strikes[502],
-                        I.auraVerdict.at[kT()],
-                    })
-                    ctl.ViewerClear(ti)
-                    poll(13) -- rule 1 closes the CDM open
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13))
-                    cast(2, REND, 15, 15)
-                    poll(15.5)
-                    poll(16)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 16)) -- the second verdict
-                    ctl.ViewerAura(ti, "target")
-                    poll(16.5)
-                    poll(16.7)
-                    assert.are.same({ 2, false, 1 }, {
-                        I.auraVerdict.strikes[kT()],
-                        I.PRESENCE.viewer.proven[502],
-                        I.PRESENCE.viewer.struck,
-                    })
-                    ctl.ViewerClear(ti)
-                    poll(17)
-                    cast(2, REND, 19, 15) -- retired: belief-only
-                    for t = 19.5, 22, 0.5 do
-                        poll(t)
-                        assert.are.equal(34, est("target", fs.SPENDER_C, t), t)
-                    end
-                    assert.are.equal(2, I.auraVerdict.n[kT()])
+            it("a light past LATE, within STRIKE_WIN of a verdict, is a strike; two strikes retire the item", function()
+                prove()
+                cast(2, REND, 11, 15)
+                poll(11.5)
+                poll(12)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12)) -- the verdict
+                ctl.ViewerAura(ti, "target") -- a light 1.2 s after the verdict: re-opens as a CDM open, one strike
+                poll(12.7)
+                assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 12.7))
+                assert.are.equal(0, I.auraVerdict.strikes[kT()]) -- (review M2) judged at the next poll
+                poll(12.9)
+                assert.are.same({ 1, 1, 0 }, {
+                    I.auraVerdict.strikes[kT()],
+                    I.PRESENCE.viewer.strikes[502],
+                    I.auraVerdict.at[kT()],
+                })
+                ctl.ViewerClear(ti)
+                poll(13) -- rule 1 closes the CDM open
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 13))
+                cast(2, REND, 15, 15)
+                poll(15.5)
+                poll(16)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 16)) -- the second verdict
+                ctl.ViewerAura(ti, "target")
+                poll(16.7)
+                poll(16.9)
+                assert.are.same({ 2, false, 1 }, {
+                    I.auraVerdict.strikes[kT()],
+                    I.PRESENCE.viewer.proven[502],
+                    I.PRESENCE.viewer.struck,
+                })
+                ctl.ViewerClear(ti)
+                poll(17)
+                cast(2, REND, 19, 15) -- retired: belief-only
+                for t = 19.5, 22, 0.5 do
+                    poll(t)
+                    assert.are.equal(34, est("target", fs.SPENDER_C, t), t)
                 end
-            )
+                assert.are.equal(2, I.auraVerdict.n[kT()])
+            end)
 
             it("a light after our new cast is no strike", function()
                 prove()
@@ -1960,10 +1957,10 @@ describe("auras", function()
                 cast(2, REND, 11, 15)
                 drain(11.5)
                 drain(12)
-                ctl.ViewerAura(ti, "target")
-                drain(12.5)
-                assert.are.equal(0, I.auraVerdict.strikes[kT()])
+                ctl.ViewerAura(ti, "target") -- 1.2 s after the verdict: past LATE
                 drain(12.7)
+                assert.are.equal(0, I.auraVerdict.strikes[kT()])
+                drain(12.9)
                 assert.are.same({ 1, 1 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
             end)
 

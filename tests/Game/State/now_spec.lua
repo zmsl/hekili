@@ -2106,6 +2106,27 @@ describe("now handlers", function()
             end
         )
 
+        -- owner ruling O1 (b), L1770: a light within LATE (1 s) of the verdict is late, not a wrong item: the take-back
+        -- runs, no strike counts toward STRIKES_MAX
+        it("a light 0.6 s after a 0.5 s verdict is taken back with strikes unchanged", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            drain(5.3)
+            drain(5.5)
+            assert.are.same({ 1, 5.5, 38 }, { I.auraVerdict.n[k], I.auraVerdict.at[k], rage(5.5).est })
+            ctl.ViewerAura(ti, "target") -- it did land, 1.1 s after the cast
+            drain(6.1)
+            drain(6.3)
+            assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 6.3))
+            assert.are.same({ 0, 0, 1, 30, true }, {
+                I.auraVerdict.strikes[k],
+                I.PRESENCE.viewer.strikes[502],
+                I.auraVerdict.back[k],
+                rage(6.3).est,
+                I.PRESENCE.viewer.proven[502],
+            })
+        end)
+
         it("our recast's light after the verdict is no strike: the refund stands", function()
             begin(40)
             cast(fs.SPENDER_C, 5)

@@ -121,6 +121,10 @@ I.presenceHold = holdN
 -- leaves a 177 ms margin, and the deadline wake keeps the verdict prompt at cast + 0.5. STRIKE_WIN 2.0 s stays (a
 -- guard: wider only takes back more wrong verdicts).
 local W0, TOL, STRIKE_WIN = 0.5, 0.5, 2.0
+-- LATE (owner ruling O1 (b), L1770): a light within LATE of the verdict is a late light (a lag spike past W), not a
+-- wrong item: the record re-opens and the refund is taken back, but no strike counts toward the item's STRIKES_MAX
+-- (strikes last until the next map build). A light later than LATE, still inside STRIKE_WIN, strikes as before.
+local LATE = 1.0
 -- strikePend[k]: the t of a light within STRIKE_WIN of a verdict (0 none), decided at the next poll, after this drain's
 -- fold has run our recast's write (the first Opus round's M2: the polls run before the fold).
 local W, verdictAt, verdictN, strikeN, darkN, strikePend, refundN = {}, {}, {}, {}, {}, {}, {}
@@ -640,10 +644,12 @@ local function verdict(j, u, k, a, t, F)
         -- >=: a cast stamped at the verdict's own time (its event in the frame of the closing poll, staged after
         -- that drain) is a new cast too; the judged application is at least W older than verdictAt, never equal
         if not (ours[k] == BY_CAST and oursAp[k] >= verdictAt[k]) then
-            strikeN[k] = strikeN[k] + 1
-            local P = I.presence
-            if P.Strike then
-                P.Strike(j, u)
+            if strikePend[k] - verdictAt[k] > LATE then
+                strikeN[k] = strikeN[k] + 1
+                local P = I.presence
+                if P.Strike then
+                    P.Strike(j, u)
+                end
             end
             -- it landed: the refund our verdict gave comes back out (L1029, the dangerous side: above the truth)
             if refPend[k] > 0 and I.VerdictTakeBack and I.VerdictTakeBack(j, t) then

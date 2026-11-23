@@ -398,8 +398,8 @@ describe("zero allocation", function()
             ctl.Fire("UNIT_AURA", "target")
             local REND, k = 2, I.AURA_UNIT + 2
             local t, maxDark, cycle, maxSince = 10, 0, 0, 0
-            -- a 12-poll cycle at 0.25 s: our cast (dark: dodged), the verdict at +1.0 (its close names the application,
-            -- counted at the fold), and every second cycle a late light at +1.5 (a strike) and dark again at +2.0 (rule 1
+            -- a 12-poll cycle at 0.25 s: our cast (dark: dodged), the verdict at +0.5 (its close names the application,
+            -- counted at the fold), and every second cycle a light at +1.75 (past LATE: a strike) and dark again at +2.0 (rule 1
             -- closes the CDM open). The cycle without a light leaves a silent verdict, so the next one's verdict suspends
             -- the proof and its light re-proves it (review M3); the strikes reset each cycle so the item is never retired
             local ok, bytes = pcall(alloc.bytes, function(i)
@@ -411,7 +411,7 @@ describe("zero allocation", function()
                     Q.strikes[502] = 0
                     I.AuraModel(2, REND, t, t + 15, 1, t, ns.VirtualState.Obs.CastSuccess, true)
                     I.AuraOurs(2, REND, 0)
-                elseif p == 6 and cycle % 2 == 0 then
+                elseif p == 7 and cycle % 2 == 0 then
                     hold(item, true, "target")
                 elseif p == 8 then
                     hold(item, false)
