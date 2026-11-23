@@ -1598,6 +1598,21 @@ describe("now handlers", function()
             assert.are.equal(0, I.avoidsRun)
         end)
 
+        -- fix round 1 M1: the early limit is the measured lead (1-22 ms), not the 50 ms frame
+        it("fix A: a dodge logged 22 ms before its success is the cast's", function()
+            begin()
+            sentEarly(5, "DODGE", 0.022)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
+        it("fix A: a dodge logged 40 ms before its success is not the cast's", function()
+            begin()
+            sentEarly(5, "DODGE", 0.04)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+            assert.are.equal(0, I.avoidsRun)
+        end)
+
         -- fix round 1 I1: a held row is scored against our swings at its own time; only the cast's own-frame band
         -- reads the success's. A white avoid inside the swing's core band (main 0.474 +/- 0.12 s, off 0.703 +/- 0.04 s)
         -- at its own time is the swing's, whatever instant succeeds just after it.

@@ -54,8 +54,12 @@ end
 -- Fix A (L1763): per instant (FRAME) ticket still COMMITTED, the avoid row on its GUID that no open ticket took at pass
 -- 1 (live: logged 1-20 ms before the success, 28 of 287 cat instants): its time (0 none), unit, GUID, action, flag,
 -- amount (false: secret), school and the commit's castGUID. The success (T.Arm) routes it again at its own time (our
--- swings score it there: fix round 1 I1), and when it came within SAME_FRAME before the success the armed cast's pass 1
--- takes it at the success's time; held past SAME_FRAME, or the commit stopped or gone, it is routed as before.
+-- swings score it there: fix round 1 I1), and when it came within EARLY before the success the armed cast's pass 1
+-- takes it at the success's time; held past EARLY, or the commit stopped or gone, it is routed as before.
+-- EARLY (fix round 1 M1): the measured lead of an own row over its success, 1-22 ms (L361: -22/-12/-6 ms; 28 of 287
+-- cat instants, rake-miss-investigation), with a few ms over. Not SAME_FRAME (50 ms): an avoid of another player's that
+-- far before our success would pay our cast.
+local EARLY = 0.025
 local hT, hU, hG, hAct, hFlag, hAmt, hSch, hCast = {}, {}, {}, {}, {}, {}, {}, {}
 for k = 1, T.CAP do
     hT[k], hU[k], hG[k], hAct[k], hFlag[k], hAmt[k], hSch[k], hCast[k] = 0, 0, "", "", "", 0, 0, ""
@@ -76,10 +80,10 @@ local function committed(g)
     return 0
 end
 
---- Routes every held row whose commit is gone, stopped or SAME_FRAME old at `now`, at its own time. Allocates nothing.
+--- Routes every held row whose commit is gone, stopped or EARLY old at `now`, at its own time. Allocates nothing.
 local function flushHeld(now)
     for i = 1, T.CAP do
-        if hT[i] > 0 and (T.state[i] ~= T.COMMITTED or T.cast[i] ~= hCast[i] or now - hT[i] > SAME_FRAME) then
+        if hT[i] > 0 and (T.state[i] ~= T.COMMITTED or T.cast[i] ~= hCast[i] or now - hT[i] > EARLY) then
             release(i, false)
         end
     end
@@ -319,7 +323,7 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     end
     local i = T.Arm(castGUID, t)
     if i > 0 and hT[i] > 0 and hCast[i] == castGUID then -- fix A: its early own-frame row, now in its frame
-        release(i, t - hT[i] <= SAME_FRAME)
+        release(i, t - hT[i] <= EARLY)
     end
     if i == 0 then
         i = T.OpenCast(t, a, spellID, U.Sent(castGUID) or U.Pin(api, t) or "")
