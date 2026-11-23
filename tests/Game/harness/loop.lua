@@ -385,8 +385,9 @@ local function events(W, us, from, e)
             e.avoid = e.avoid or (ev.act ~= nil and ev.act ~= "WOUND" and k ~= "tick")
             e.swing = e.swing or k == "swing"
             e.aura = e.aura or k == "cdreset"
-            -- the jitter rule's late fact (L1762): an avoid row of our press, not of a white swing
-            e.miss = e.miss or (ev.act ~= nil and ev.act ~= "WOUND" and (k == "spell" or k == "strike"))
+            -- the jitter rule's late fact (L1762): an avoid row of our press, not of a white swing nor a ranged auto
+            -- shot (world.lua W.startRanged's `auto`); a wand's shot is its Shoot press's channel, so it stays
+            e.miss = e.miss or (ev.act ~= nil and ev.act ~= "WOUND" and (k == "spell" or k == "strike") and not ev.auto)
         end
         e.aura = e.aura or k == "form" or (k == "aura" and (ev.dst == us or (us.target ~= nil and ev.dst == us.target)))
         e.target = e.target or k == "target" or (k == "kill" and ev.dst == ev.ourTarget) -- a retarget, our target's death
@@ -394,6 +395,17 @@ local function events(W, us, from, e)
     return #truth + 1
 end
 M.events = events -- loop_spec pins the flags (the jitter rule's facts, L1762)
+
+-- The power band of type `pt` the belief last applied (Sources/Bands.lua I.bandUsedLo/Hi of its resource slot), or
+-- false, false: none applied yet.
+local function band(VI, pt)
+    for r, d in ipairs(VI.def and VI.def.resources or {}) do
+        if d.type == pt and (VI.bandUsed[r] or 0) > 0 then
+            return VI.bandUsedLo[r], VI.bandUsedHi[r]
+        end
+    end
+    return false, false
+end
 
 -- The believed cooldown remaining of ability `x` of instance `H` into `cd` (false: untracked), once a tick.
 local function cooldown(cd, H, x, now)
@@ -1073,6 +1085,8 @@ function M.run(L, seed, o, drivers)
                     run.loOver = run.loOver + 1
                 end
                 f.pend[n] = VS.SwingPending(1) > 0 or VS.SwingPending(2) > 0
+                -- the power band the belief applied (the jitter rule's band fact, L1762 round 2): its slot's last
+                f.bLo[n], f.bHi[n] = band(st.H.ns.VirtualStateInternal, L.power.type)
                 f.cd[n], f.gcd[n], f.t[n], f.n = cd, math.max(0, us.gcdUntil - t), t, n
             end
             for _, key in ipairs(ledger and flicker.EVENTS or {}) do
@@ -1267,7 +1281,10 @@ end
 -- the next (`press[i]`: the key it pressed at in-combat tick i, false none; a replay's: the set of keys wowsims cast
 -- in [t_i, t_i+1), B excused only if cast before the tick after it showed; nil: no presses). Owner rule
 -- 2026-10-26: a show-then-press within one tick is not jitter (a proc at a hard cast's landing, pressed at once).
-local function flips(seq, n, press)
+-- The jitter rule (L1762 round 2): `why` (flicker.changes: by tick, the fact a first-icon change follows, "stale" or
+-- false; nil: presses only) also excuses a flip whose change to B follows a fact, unless that tick or the return's is
+-- stale; `by` (optional) counts the excused ones by fact.
+local function flips(seq, n, press, why, by)
     local f = 0
     for i = 1, n - 2 do
         local b = seq[i + 1]
@@ -1279,7 +1296,14 @@ local function flips(seq, n, press)
             pressed = press and (p == b or press[i + 2] == b)
         end
         if seq[i] ~= b and seq[i + 2] == seq[i] and not pressed then
-            f = f + 1
+            local w = why and why[i + 1]
+            if w and w ~= "stale" and why[i + 2] ~= "stale" then
+                if by then
+                    by[w] = (by[w] or 0) + 1
+                end
+            else
+                f = f + 1
+            end
         end
     end
     return f
@@ -1322,9 +1346,11 @@ local function blank()
     }
     m.unmatched = {} -- run A's refusals the oracle shadow would not have made (M.unmatched)
     m.refusedB, m.attemptsB = {}, 0 -- the oracle's own, driving run B (the projection's share: §5.2 as built)
-    m.A = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
-    m.B = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
+    m.A = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0, flickerOld = 0 }
+    m.B = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0, flickerOld = 0 }
     m.oracleFlicker, m.errors, m.raises, m.misses, m.secrets, m.selfCheck = 0, 0, 0, {}, {}, 0
+    -- the flips the jitter rule excused (L1762 round 2), ours by fact; the press-only count (the old rule): the oracle's
+    m.excused, m.oracleOld = {}, 0
     m.cpu, m.gap, m.focus, m.pressedBy = {}, {}, 0, {}
     m.ratio, m.cal = {}, {} -- per counted tick its cpu over its window's calibration (M.ratios); per counted run their mean
     m.bytes, m.sampled = 0, 0 -- allocated over the sampled ticks (M.BYTES_EVERY)
@@ -1390,14 +1416,18 @@ function M.tally(L, n, o)
             m.refusedB[why] = (m.refusedB[why] or 0) + k
         end
         m.attemptsB = m.attemptsB + b.attempts
-        m.oracleFlicker = m.oracleFlicker + flips(a.theirs, a.combat, a.shadowPress)
+        -- the shadow takes the world's facts (its frame: the shared events), never the viewer's late ones nor a band
+        m.oracleFlicker = m.oracleFlicker + flips(a.theirs, a.combat, a.shadowPress, flicker.changes(a.frames[2], lo))
+        m.oracleOld = m.oracleOld + flips(a.theirs, a.combat, a.shadowPress)
         m.led.ours = flicker.merge(m.led.ours, flicker.ledger(a.frames[1], lv))
         m.led.oracle = flicker.merge(m.led.oracle, flicker.ledger(a.frames[2], lo))
         for side, r in pairs({ A = a, B = b }) do
             local s = m[side]
             s.combat, s.full, s.idle = s.combat + r.combat, s.full + r.full, s.idle + r.idle
             s.damage, s.time = s.damage + r.damage, s.time + r.combat / (o.hz or 5)
-            s.flicker = s.flicker + flips(r.ours, r.combat, r.pressed)
+            local why = side == "A" and flicker.changes(a.frames[1], lv) or nil -- run B has no frames: presses only
+            s.flicker = s.flicker + flips(r.ours, r.combat, r.pressed, why, side == "A" and m.excused or nil)
+            s.flickerOld = s.flickerOld + flips(r.ours, r.combat, r.pressed)
             for key, k in pairs(r.up) do
                 s.up[key] = (s.up[key] or 0) + k
             end
@@ -1452,7 +1482,11 @@ function M.replay(L, R, o)
     reactions(a.ours, a.theirs, a.combat, m.react)
     local s = m.A
     s.combat, s.full, s.idle, s.damage, s.time = a.combat, a.full, a.idle, a.damage, a.combat / (o and o.hz or 5)
-    s.flicker = flips(a.ours, a.combat, a.pressed)
+    local tick = 1 / (o and o.hz or 5)
+    local viewer = ab.ARMS[o and o.arm or ab.arm()].viewer -- our ledger's late facts (L1762)
+    s.flicker =
+        flips(a.ours, a.combat, a.pressed, flicker.changes(a.frames[1], { tick = tick, viewer = viewer }), m.excused)
+    s.flickerOld = flips(a.ours, a.combat, a.pressed)
     m.B = s -- one side: a replay has no oracle run (the line's A/B fields read 1)
     m.errors, m.raises, m.cpu = a.errors, a.raises, a.cpu
     m.cal[1], m.bytes, m.sampled = a.cal, a.bytes, a.sampled
@@ -1460,8 +1494,6 @@ function M.replay(L, R, o)
     for _, name in ipairs(a.misses) do
         m.misses[name] = true
     end
-    local tick = 1 / (o and o.hz or 5)
-    local viewer = ab.ARMS[o and o.arm or ab.arm()].viewer -- our ledger's late facts (L1762)
     m.led.ours = flicker.ledger(a.frames[1], { tick = tick, react = o and o.react or M.REACT, viewer = viewer })
     -- the decision points' flips (loop.run) and our unjustified retracted readies that wowsims's own cast of that
     -- ability within a tick confirms as wrong
@@ -1547,6 +1579,9 @@ function M.summary(m)
         end
     end
     r.flicker, r.oracleFlicker = m.A.flicker / math.max(1e-9, minutes), m.oracleFlicker / math.max(1e-9, minutes)
+    -- the press-only count (the rule before L1762 round 2) beside it, and the flips the jitter rule excused, by fact
+    r.flickerOld, r.oracleFlickerOld = m.A.flickerOld / math.max(1e-9, minutes), m.oracleOld / math.max(1e-9, minutes)
+    r.excused = m.excused
     r.led, r.ledO = flicker.summary(m.led.ours, minutes), flicker.summary(m.led.oracle, minutes)
     r.retracted, r.retractedO = r.led.now.retracted, r.ledO.now.retracted -- the gated now slot (L1762)
     local sum = 0
@@ -1665,6 +1700,18 @@ function M.line(m)
                 m.dec.confirmed
             )
     end
+    local x = r.excused
+    line = line
+        .. ("; flicker press-only %.2f (oracle %.2f) excused [press %d; avoid %d; aura %d; target %d; band %d; verdict %d]"):format(
+            r.flickerOld,
+            r.oracleFlickerOld,
+            x.press or 0,
+            x.avoid or 0,
+            x.aura or 0,
+            x.target or 0,
+            x.band or 0,
+            x.verdict or 0
+        )
     line = line .. "; " .. flicker.line(r.led, r.ledO) -- the flicker ledger's fields, last (layout.md's columns)
     if m.hold then
         line = line .. "; hold on"

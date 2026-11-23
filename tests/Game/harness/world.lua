@@ -794,7 +794,8 @@ function M.new(seed)
             if o.swing then
                 W.emit({ kind = "swing", src = e, dst = v, hand = 3, speed = w[3], ours = true })
             end
-            W.hit(e, v, (w[1] + w[2]) / 2, 1, "miss") -- wowsims's auto shot: OutcomeRangedHitAndCrit
+            -- wowsims's auto shot: OutcomeRangedHitAndCrit; `auto`: no press of ours (loop.lua's `miss`, L1762)
+            W.hit(e, v, (w[1] + w[2]) / 2, 1, "miss").auto = true
             W.at(W.t + w[3], shot)
         end
         W.at(W.t + (o.delay or 0), shot)

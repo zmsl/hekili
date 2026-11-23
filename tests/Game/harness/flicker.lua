@@ -24,6 +24,11 @@
 -- row at cast + 1.0 s, at its next drain). A retraction takes only facts after its icon turned ready. A builder's lost combo point
 -- and an avoid's refund come in the same instant as the avoid row (world.lua W.hit, W.effects): the avoid class.
 -- The old all-slot numbers stay as they were (M.summary's top-level fields: history comparable).
+-- Round 2 (L1762): the gated flicker (loop.flips, first icon) takes the same facts per change (M.changes): a flip whose
+-- change follows a fact at its poll is a correction, unless that poll or the return's is stale. Two more facts: a
+-- crossing of the belief's power band (the band the power family applied moved, the belief inside it), and `stale`, the
+-- same crossing with the belief outside it: the reading follows an answer older than the band (lane B4 round 4's
+-- Fury class A and B), which vetoes every fact at its poll but our own press (a spend after the band's stamp).
 local M = {}
 
 M.WINDOW = 5 -- ticks (1 s at 5 Hz): an episode ends within this or is not one
@@ -45,13 +50,15 @@ end
 
 --- An empty frame over the run's events `ev`: per slot name, wait, cost (in the character's power, 0 otherwise); per
 --- tick lo, est, hi (the belief), truth (the world's power), pend (a swing pending: GAP AK), cd ({ [name] = believed
---- cooldown remaining } for the abilities shown this tick or the last), gcd (the world's GCD remaining), t.
+--- cooldown remaining } for the abilities shown this tick or the last), gcd (the world's GCD remaining), t, bLo and
+--- bHi (the power band the belief last applied, I.bandUsedLo/Hi; false or nil: none).
 function M.frame(ev)
     local f = { n = 0, name = {}, wait = {}, cost = {}, ev = ev }
     for s = 1, M.SLOTS do
         f.name[s], f.wait[s], f.cost[s] = {}, {}, {}
     end
     f.lo, f.est, f.hi, f.truth, f.pend, f.cd, f.gcd, f.t = {}, {}, {}, {}, {}, {}, {}, {}
+    f.bLo, f.bHi = {}, {}
     return f
 end
 
@@ -69,16 +76,65 @@ local function event(f, c)
     return ev.cast[c] or ev.spend[c] or ev.avoid[c] or ev.aura[c]
 end
 
+-- A crossing of the belief's power band at poll c: the band it applied moved since c - 1; "stale" when the belief lies
+-- outside it (its reading follows an answer older than the band), else true; false: no crossing.
+local function band(f, c)
+    local lo, hi = f.bLo[c], f.bHi[c]
+    if not lo or c < 2 or (lo == f.bLo[c - 1] and hi == f.bHi[c - 1]) then
+        return false
+    elseif f.hi[c] < lo - EPS or f.lo[c] > hi + EPS then
+        return "stale"
+    end
+    return true
+end
+
 -- The jitter rule's fact at poll c beyond the cause classes (L1762): a death or retarget, an aura edge now or (`viewer`:
--- the Cooldown Manager on, its light late) one poll before, else nil.
+-- the Cooldown Manager on, its light late) one poll before, a band crossing the belief follows, else nil.
 local function fact(f, c, viewer)
     local ev = f.ev
     if ev.target[c] then
         return "target"
     elseif ev.aura[c] or (viewer and c > 1 and ev.aura[c - 1]) then
         return "aura"
+    elseif band(f, c) == true then
+        return "band"
     end
     return nil
+end
+
+--- The jitter rule on slot 1's changes (L1762 round 2: the gated flicker, loop.flips): by poll c where the first icon
+--- changed, the fact it follows ("press", "avoid", fact()'s, or in a `viewer` arm "verdict": the first change left
+--- without one within LATE after a miss of our press), "stale" (a band crossing the belief lies outside: every fact
+--- but our press vetoed), else false. o: tick, viewer.
+function M.changes(f, o)
+    local why, ev, name = {}, f.ev, f.name[1]
+    for c = 2, f.n do
+        if name[c] ~= name[c - 1] then
+            local w
+            if ev.cast[c] or ev.spend[c] then
+                w = "press"
+            elseif band(f, c) == "stale" then
+                w = "stale"
+            elseif ev.avoid[c] then
+                w = "avoid"
+            else
+                w = fact(f, c, o.viewer) or false
+            end
+            why[c] = w
+        end
+    end
+    local late = math.ceil(M.LATE / o.tick - EPS)
+    for k = 1, o.viewer and f.n or 0 do
+        if ev.miss[k] then
+            for c = k + 1, math.min(f.n, k + late) do
+                if why[c] == false then
+                    why[c] = "verdict"
+                    break
+                end
+            end
+        end
+    end
+    return why
 end
 
 -- The cause class of a change between polls p and c (= p + 1) involving icons a (before) and b (after); a == b (a

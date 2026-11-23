@@ -4,7 +4,8 @@ local flicker = require("Game.harness.flicker")
 
 local TICK, REACT = 0.2, 0.05
 
--- rows: { s = { { name, wait, cost }, ... (slots 1-4) }, lo, est, hi, truth, pend, cd = { [name] = s }, ev = { cast = true } }
+-- rows: { s = { { name, wait, cost }, ... (slots 1-4) }, lo, est, hi, truth, pend, cd = { [name] = s }, ev = { cast = true },
+-- band = { lo, hi } }
 local function build(rows)
     local ev = flicker.events()
     local f = flicker.frame(ev)
@@ -19,6 +20,9 @@ local function build(rows)
             r.hi or f.est[n], r.pend or false, r.cd or {}, r.gcd or 0, n * TICK
         for _, k in ipairs(flicker.EVENTS) do
             ev[k][n] = (r.ev or {})[k] or false
+        end
+        if r.band then -- the power band the belief applied (flicker.frame's bLo/bHi)
+            f.bLo[n], f.bHi[n] = r.band[1], r.band[2]
         end
     end
     return f
@@ -321,6 +325,75 @@ describe("the jitter rule's now slot (L1762)", function()
             { s = { { "a", 0 } } },
         })
         assert.are.same({ 0, 1 }, { s.now.dips, s.dips })
+    end)
+end)
+
+describe("the jitter rule on the gated flicker (flicker.changes, loop.flips, L1762 round 2)", function()
+    local loop = require("Game.harness.loop")
+    local V = { tick = TICK, react = REACT, viewer = true }
+    -- a one-poll flip a,b,a at polls 3, 4, 5 (the change at 4, the return at 5); `mod` sets events and the belief's
+    -- power band by poll: { [poll] = { ev = {...}, band = { lo, hi }, lo = x (lo = est = hi) } }
+    local function flip(mod, o)
+        local rows = {}
+        for i, x in ipairs({ "a", "a", "a", "b", "a", "a" }) do
+            rows[i] = { s = { { x, 0.2 } } }
+            for k, v in pairs(mod and mod[i] or {}) do
+                rows[i][k] = v
+            end
+        end
+        local f = build(rows)
+        local seq = {}
+        for i = 1, f.n do
+            seq[i] = f.name[1][i]
+        end
+        local why, by = flicker.changes(f, o or O), {}
+        return loop.flips(seq, f.n, nil, why, by), why, by, loop.flips(seq, f.n)
+    end
+
+    it("counts a flip whose change has no fact; the old press-only count reads the same", function()
+        local n, why, _, old = flip()
+        assert.are.same({ 1, false, 1 }, { n, why[4], old })
+    end)
+
+    it("excuses a flip whose change follows a fact at its poll: press, avoid, aura edge, death or retarget", function()
+        for _, k in ipairs({ "cast", "spend", "avoid", "aura", "target" }) do
+            local n, why, by, old = flip({ [4] = { ev = { [k] = true } } })
+            local name = (k == "cast" or k == "spend") and "press" or k
+            assert.are.same({ 0, name, 1, 1 }, { n, why[4], by[name], old }, k)
+        end
+        assert.are.equal(1, (flip({ [3] = { ev = { aura = true } } }))) -- a poll before, no viewer: not this change's
+        assert.are.equal(1, (flip({ [5] = { ev = { aura = true } } }))) -- the return's fact alone: the change had none
+    end)
+
+    it(
+        "excuses, with the Cooldown Manager on only, the late light and the verdict after a miss of our press",
+        function()
+            local late = { [3] = { ev = { aura = true } } }
+            assert.are.same({ 0, "aura" }, { flip(late, V), select(2, flip(late, V))[4] })
+            local miss = { [1] = { ev = { miss = true, cast = true } } } -- our press's avoid row, 3 polls before the change
+            assert.are.same({ 0, "verdict" }, { flip(miss, V), select(2, flip(miss, V))[4] })
+            assert.are.same({ 1, 1 }, { flip(late), (flip(miss)) }) -- the default arm: neither
+        end
+    )
+
+    it("excuses a crossing of the belief's power band that the belief follows", function()
+        local n, why = flip({ [3] = { band = { 15, 16 } }, [4] = { band = { 20, 21 }, lo = 20 } })
+        assert.are.same({ 0, "band" }, { n, why[4] })
+        -- the same band at both polls (a re-assert) is no crossing
+        assert.are.equal(1, (flip({ [3] = { band = { 20, 21 }, lo = 20 }, [4] = { band = { 20, 21 }, lo = 20 } })))
+    end)
+
+    it("does not excuse a change that follows a stale answer, older than the band crossing at its poll", function()
+        -- B4 round 4's class A: the band crosses to 33-34, the belief sits at 29.99 (a short answer from before it)
+        local A = { [3] = { band = { 28, 29 } }, [4] = { band = { 33, 34 }, lo = 29.99, ev = { avoid = true } } }
+        local n, why = flip(A)
+        assert.are.same({ 1, "stale" }, { n, why[4] }) -- the avoid at that poll does not excuse it either
+        A[4].ev = { cast = true } -- our own press: a spend after the band's stamp puts the belief under it
+        assert.are.equal(0, (flip(A)))
+        -- class B: the change follows an aura edge, the return a stale answer under the next crossing
+        local B = { [4] = { ev = { aura = true }, band = { 9, 10 }, lo = 9 }, [5] = { band = { 17, 18 }, lo = 9.99 } }
+        n, why = flip(B)
+        assert.are.same({ 1, "aura", "stale" }, { n, why[4], why[5] })
     end)
 end)
 
