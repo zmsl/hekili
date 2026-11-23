@@ -385,8 +385,11 @@ local function events(W, us, from, e)
             e.avoid = e.avoid or (ev.act ~= nil and ev.act ~= "WOUND" and k ~= "tick")
             e.swing = e.swing or k == "swing"
             e.aura = e.aura or k == "cdreset"
+            -- the jitter rule's late fact (L1762): an avoid row of our press, not of a white swing
+            e.miss = e.miss or (ev.act ~= nil and ev.act ~= "WOUND" and (k == "spell" or k == "strike"))
         end
         e.aura = e.aura or k == "form" or (k == "aura" and (ev.dst == us or (us.target ~= nil and ev.dst == us.target)))
+        e.target = e.target or k == "target" or (k == "kill" and ev.dst == ev.ourTarget) -- a retarget, our target's death
     end
     return #truth + 1
 end
@@ -1471,7 +1474,7 @@ function M.replay(L, R, o)
         m.steady = false
     end
     for _, e in ipairs(m.led.ours.entries) do
-        if e.kind == "retracted" and not e.justified then
+        if e.kind == "retracted" and e.slot == 1 and not e.justified then -- the now slot (the jitter rule, L1762)
             local te = a.frames[1].t[e.tick]
             for _, d in ipairs(R.decisions) do
                 if d.key == e.from and math.abs(d.t - te) <= tick + 1e-9 then
@@ -1541,7 +1544,7 @@ function M.summary(m)
     end
     r.flicker, r.oracleFlicker = m.A.flicker / math.max(1e-9, minutes), m.oracleFlicker / math.max(1e-9, minutes)
     r.led, r.ledO = flicker.summary(m.led.ours, minutes), flicker.summary(m.led.oracle, minutes)
-    r.retracted, r.retractedO = r.led.retracted, r.ledO.retracted
+    r.retracted, r.retractedO = r.led.now.retracted, r.ledO.now.retracted -- the gated now slot (L1762)
     local sum = 0
     for _, ms in ipairs(m.cpu) do
         sum = sum + ms

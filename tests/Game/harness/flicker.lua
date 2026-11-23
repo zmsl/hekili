@@ -12,13 +12,24 @@
 -- no spend, or a pending swing ended with no credit), usability (an answer cut the floor, the estimate steady: G7),
 -- cooldown (a believed cooldown of either icon moved off its countdown), aura (an aura or form edge), swing (a swing
 -- of ours, or a pending one at either poll: the swing window), near-tie (the two icons' waits within one poll at the
--- earlier poll), unknown. A press, an avoid or an aura change justifies a change; the gates count the rest.
+-- earlier poll), unknown. A press, an avoid or an aura change justifies a change; the all-slot numbers count the rest.
+--
+-- The jitter rule (L1762, the owner 2026-11-23): jitter is the now icon flip-flopping with no new fact. The gate reads
+-- slot 1 only (M.summary's `now`), a now<->next swap tagged on it (slot 2's icon taking slot 1, or slot 1's going to
+-- slot 2 and back); slots 2-3 (`next`) and the focus (`focus`) are reported. A change with a fact is a correction,
+-- never counted: the three classes above, and the facts the world emits at the change (`fact`): a death of our target
+-- or a retarget, an aura edge at the change or one poll before it (a Cooldown Manager light lands 3-5 ms after the
+-- edge, past the poll's end or flushed a poll late), and the first change within LATE after a miss of our press (the
+-- CDM verdict: the belief learns of a lost avoid row at cast + 1.0 s, at its next drain). A builder's lost combo point
+-- and an avoid's refund come in the same instant as the avoid row (world.lua W.hit, W.effects): the avoid class.
+-- The old all-slot numbers stay as they were (M.summary's top-level fields: history comparable).
 local M = {}
 
 M.WINDOW = 5 -- ticks (1 s at 5 Hz): an episode ends within this or is not one
 M.SLOTS = 4 -- queue positions 1-3 (Primary's numIcons) and the focus entry
 M.FOCUS = 4
-M.EVENTS = { "cast", "spend", "avoid", "aura", "swing" }
+M.EVENTS = { "cast", "spend", "avoid", "aura", "swing", "target", "miss" }
+M.LATE = 1.5 -- s: the CDM verdict's window (Auras.lua W0 1.0 s) plus one unforced update (0.5 s)
 local EPS = 1e-6
 local JUSTIFIED = { press = true, avoid = true, aura = true }
 
@@ -55,6 +66,18 @@ end
 local function event(f, c)
     local ev = f.ev
     return ev.cast[c] or ev.spend[c] or ev.avoid[c] or ev.aura[c]
+end
+
+-- The jitter rule's fact at poll c beyond the cause classes (L1762): a death or retarget, an aura edge now or one poll
+-- before (a late Cooldown Manager light), else nil.
+local function fact(f, c)
+    local ev = f.ev
+    if ev.target[c] then
+        return "target"
+    elseif ev.aura[c] or (c > 1 and ev.aura[c - 1]) then
+        return "aura"
+    end
+    return nil
 end
 
 -- The cause class of a change between polls p and c (= p + 1) involving icons a (before) and b (after); a == b (a
@@ -130,7 +153,12 @@ function M.ledger(f, o)
     local function add(e, s, p, c)
         e.slot, e.tick = s, c
         e.cause = e.cause or cause(f, p, c, e.from, e.to, tick)
-        e.justified = e.justified or JUSTIFIED[e.cause] or false
+        e.old = e.justified or JUSTIFIED[e.cause] or false -- the all-slot numbers' rule
+        e.fact = not e.old and (e.fact or fact(f, c)) or nil
+        e.justified = e.old or e.fact ~= nil
+        if s == 1 and (e.kind == "dip" or e.kind == "flash") then -- a now<->next swap
+            e.swap = f.name[2][p] == e.to or f.name[2][c] == e.from
+        end
         e.lo, e.est, e.truth = f.lo[c], f.est[c], f.truth[c]
         local k = f.cost[s][p] > 0 and f.cost[s][p] or f.cost[s][c]
         e.cost, e.floor = k, false
@@ -187,9 +215,9 @@ function M.ledger(f, o)
                     while c + len <= n and name[c + len] == x and wait[c + len] > react do
                         len = len + 1
                     end
-                    local just = false
+                    local just, why = false, nil
                     for k = since + 1, c do
-                        just = just or event(f, k)
+                        just, why = just or event(f, k), why or fact(f, k)
                     end
                     add({
                         kind = "retracted",
@@ -200,6 +228,7 @@ function M.ledger(f, o)
                         wait = wait[c],
                         reason = reason(f, s, c, x, react, tick),
                         justified = just,
+                        fact = not just and why or nil,
                         loP = f.lo[p],
                         loC = f.lo[c],
                         estP = f.est[p],
@@ -212,6 +241,23 @@ function M.ledger(f, o)
                 end
             elseif same and wait[c] > math.max(0, wait[p] - tick) + tick + EPS and not event(f, c) then
                 add({ kind = "wait", from = x, to = x, len = 1 }, s, p, c)
+            end
+        end
+    end
+    -- a miss of our press found late (the CDM verdict): the first unjustified change of each slot within LATE after it
+    -- shortcut: any own avoid row of kind spell or strike (a ranged auto shot's too); split by press if a floor needs it
+    local late = math.ceil(M.LATE / tick - EPS)
+    for k = 1, n do
+        if f.ev.miss[k] then
+            local first = {}
+            for _, e in ipairs(led.entries) do
+                local x = first[e.slot]
+                if not e.justified and e.tick > k and e.tick <= k + late and (x == nil or e.tick < x.tick) then
+                    first[e.slot] = e
+                end
+            end
+            for _, e in pairs(first) do
+                e.justified, e.fact = true, "verdict"
             end
         end
     end
@@ -266,11 +312,26 @@ end
 --- oscillations (unjustified), justified retractions (per minute), the top causes of the dips and flashes, their p90
 --- length (ticks), the top retracted and wait abilities (ability:cause), floor jitter (count), the decision gaps
 --- (lo - truth and est - truth: median, p90 of the magnitude, n), and `byKind` counts (all slots) for the report.
+--- Those are the old all-slot numbers. The jitter rule's (L1762), per minute, the unjustified episodes of each kind
+--- (dips, flashes, retracted, waits; swaps: the now<->next ones among the dips and flashes): `now` (slot 1, gated),
+--- `next` (slots 2-3) and `focus` (reported); `facts` counts slot 1's changes the rule's facts justified, by fact.
 function M.summary(led, minutes)
     local mins = math.max(1e-9, minutes)
-    local r = { dips = 0, flashes = 0, retracted = 0, justified = 0, waits = 0, floor = 0 }
+    local r = { dips = 0, flashes = 0, retracted = 0, justified = 0, waits = 0, floor = 0, facts = {} }
     local causes, lens, rtop, wtop, bySlot = {}, {}, {}, {}, {}
+    local group = { "now", "next", "next", "focus" }
+    for _, key in ipairs({ "now", "next", "focus" }) do
+        r[key] = { dips = 0, flashes = 0, swaps = 0, retracted = 0, waits = 0 }
+    end
+    local plural = { dip = "dips", flash = "flashes", retracted = "retracted", wait = "waits" }
     for _, e in ipairs(led.entries) do
+        local g = r[group[e.slot]]
+        if not e.justified then
+            g[plural[e.kind]] = g[plural[e.kind]] + 1
+            g.swaps = g.swaps + (e.swap and 1 or 0)
+        elseif e.fact and e.slot == 1 then
+            r.facts[e.fact] = (r.facts[e.fact] or 0) + 1
+        end
         local slot = bySlot[e.slot] or {}
         bySlot[e.slot] = slot
         if e.kind == "dip" or e.kind == "flash" then
@@ -282,7 +343,7 @@ function M.summary(led, minutes)
                 slot[e.kind] = (slot[e.kind] or 0) + 1
             end
         elseif e.kind == "retracted" then
-            if e.justified then
+            if e.old then
                 r.justified = r.justified + 1
             else
                 r.retracted = r.retracted + 1
@@ -296,13 +357,18 @@ function M.summary(led, minutes)
             wtop[key] = (wtop[key] or 0) + 1
             slot.wait = (slot.wait or 0) + 1
         end
-        if e.floor and not e.justified and e.cause ~= "press" then
+        if e.floor and not e.old and e.cause ~= "press" then
             r.floor = r.floor + 1
         end
     end
     r.counts = { dips = r.dips, flashes = r.flashes, retracted = r.retracted, waits = r.waits }
     for _, key in ipairs({ "dips", "flashes", "retracted", "justified", "waits" }) do
         r[key] = r[key] / mins
+    end
+    for _, g in ipairs({ r.now, r.next, r.focus }) do
+        for key, v in pairs(g) do
+            g[key] = v / mins
+        end
     end
     r.causes, r.top = causes, top(causes, 2)
     r.lenP90 = quantile(lens, 0.9)
@@ -313,8 +379,26 @@ function M.summary(led, minutes)
     return r
 end
 
---- The ledger's fields for a loop line: ours `s` and the oracle shadow's `o` (M.summary).
+--- The ledger's fields for a loop line: ours `s` and the oracle shadow's `o` (M.summary): the old all-slot fields, then
+--- the jitter rule's (L1762): `now` (gated), its facts, `next` and `focus` (dips/flashes/retracted/waits per minute).
 function M.line(s, o)
+    local function g(x)
+        return ("%.2f/%.2f/%.2f/%.2f"):format(x.dips, x.flashes, x.retracted, x.waits)
+    end
+    local facts = ("target %d; aura %d; verdict %d"):format(
+        s.facts.target or 0,
+        s.facts.aura or 0,
+        s.facts.verdict or 0
+    )
+    local now = ("; now dips %.2f flashes %.2f swaps %.2f retracted %.2f/min (oracle %.2f) waits %.2f; facts [%s]"):format(
+        s.now.dips,
+        s.now.flashes,
+        s.now.swaps,
+        s.now.retracted,
+        o.now.retracted,
+        s.now.waits,
+        facts
+    ) .. "; next " .. g(s.next) .. "; focus " .. g(s.focus)
     return (
         "dips %.2f flashes %.2f; top [%s]; p90 length %d ticks; retracted %.2f/min (oracle %.2f) [%s] justified %.2f; "
         .. "waits %.2f/min (oracle %.2f) [%s]; floor jitter %d; at cost lo-truth %.1f/%.1f est-truth %.1f/%.1f (%d)"
@@ -336,7 +420,7 @@ function M.line(s, o)
         s.gapEstMed,
         s.gapEstP90,
         s.gapN
-    )
+    ) .. now
 end
 
 --- A display hold's state (M.hold), one per instance per run.
