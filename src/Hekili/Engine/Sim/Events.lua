@@ -1382,7 +1382,6 @@ do
         end
 
         state.target.updated = true
-        ns.TtdTargetChanged() -- time to die forgets a target that is gone (Targets.lua)
         Hekili:ForceUpdate( event, true )
     end )
 

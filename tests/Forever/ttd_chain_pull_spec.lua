@@ -1,8 +1,7 @@
--- tests/Forever/ttd_chain_pull_spec.lua (ttd-chain-pull; lane B8, L1730): the pull after a target that is gone does not
--- take that target's kill time. The real LibTimeToDie over the fake bands (ttd_rig.lua), through the core's
--- fight_remains and target.time_to_die. A direct swap in combat, a swap from a dying mob to a tough one first seen
--- below full, and one straight from a mob that died targeted with no target event or a secret death, are the
--- library's part: not pinned here.
+-- tests/Forever/ttd_chain_pull_spec.lua (ttd-chain-pull; lane B8, L1730, L1736): the next target does not take the last
+-- one's kill time, and the first answers on a new target are the library's own. The real LibTimeToDie (vendored v0.4.0,
+-- minor 4) over the fake bands (ttd_rig.lua), through the core's fight_remains, target.time_to_die and time to a
+-- percent. vendor-libs removed B8's two core stopgaps (forget at the pull, a seed reads unknown) and its 0.5 s keep.
 local headless = require("Game.harness.headless")
 local fake_lhv = require("Game.harness.fake_lhv")
 local ttd_rig = require("Game.harness.ttd_rig")
@@ -82,6 +81,11 @@ local function boot(nilForNone)
         H.Fire("PLAYER_TARGET_CHANGED")
     end
 
+    -- the hidden-value library primes the target's source again with no target change (a desync)
+    function w.prime()
+        bands:Prime("target", ctl.now)
+    end
+
     function w.combat(on)
         ctl.combat = on
         H.Fire(on and "PLAYER_REGEN_DISABLED" or "PLAYER_REGEN_ENABLED")
@@ -137,7 +141,7 @@ local function tough(w)
     assert.is_true(remains >= 30 and remains < UNKNOWN and ttd >= 30 and ttd < UNKNOWN)
 end
 
-describe("ttd-chain-pull: time to die forgets the last mob at a pull (lane B8, L1730)", function()
+describe("ttd-chain-pull: the next mob does not take the last one's kill time (lane B8, L1730)", function()
     for _, kill in ipairs({ 6, 15 }) do
         for _, gap in ipairs({ 1, 5, 9 }) do
             it(("a %d s kill, %d s, then a full 120 s mob: never under 30 s"):format(kill, gap), function()
@@ -248,30 +252,16 @@ describe("ttd-chain-pull: time to die forgets the last mob at a pull (lane B8, L
         tough(w)
     end)
 
-    -- The answers of e16716e84, recorded there (fight_remains/target.time_to_die): the same living mob targeted again
-    -- keeps them, after a deselect or a look at another mob. Except its reads at 0.5 and 1.0 s, now 3600/3600 (L1742):
-    -- they are the re-primed stream's seed, which reads unknown (L1736). This rig's constant slope makes its seeds
-    -- accurate (13.6, 13.1 here); live seeds are not, so every seed reads unknown until a fit.
+    -- The same living mob targeted again (fight_remains/target.time_to_die at 0, 0.1, 0.5, 1, 3 and 5 s). e16716e84
+    -- kept the mob's countdown for its first reads (the 0.2 s deselect: 13.9, 13.8). vendor-libs: nothing is kept across
+    -- a target change, and LibTimeToDie minor 4 answers the re-primed stream only after 1.5 s of loss, then its fit.
     local KEPT = {
-        {
-            "a deselect of 0.2 s",
-            0.2,
-            answers = "13.9/3600.0 13.8/3600.0 3600.0/3600.0 3600.0/3600.0 11.1/11.1 9.1/9.1",
-        },
-        {
-            "a deselect of 5 s",
-            5,
-            answers = "3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 11.1/11.1 9.1/9.1",
-        },
-        {
-            "a look at another mob",
-            0.5,
-            other = "Creature-2",
-            answers = "3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 11.1/11.1 9.1/9.1",
-        },
+        { "a deselect of 0.2 s", 0.2 },
+        { "a deselect of 5 s", 5 },
+        { "a look at another mob", 0.5, other = "Creature-2" },
     }
     for _, case in ipairs(KEPT) do
-        it(("the same mob targeted again after %s keeps its answers"):format(case[1]), function()
+        it(("the same mob targeted again after %s: unknown, then its own fit"):format(case[1]), function()
             local w = boot()
             w.target("Creature-1", 100)
             w.read()
@@ -293,28 +283,53 @@ describe("ttd-chain-pull: time to die forgets the last mob at a pull (lane B8, L
                     seen[#seen + 1] = ("%.1f/%.1f"):format(r, t)
                 end
             end)
-            assert.are.equal(case.answers, table.concat(seen, " "))
+            assert.are.equal(
+                "3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 3600.0/3600.0 11.1/11.1 9.1/9.1",
+                table.concat(seen, " ")
+            )
             assert.are.equal(1, w.tracks)
         end)
     end
 
-    it("a track once a pull: not at a direct swap, a repeated event, a corpse, no target or a read", function()
+    -- vendor-libs: the core's forget at the pull (TTD_CARRY) is gone; the library forgets the last mob itself.
+    it("one track: no target change, corpse, repeated event or read releases it", function()
         local w = boot()
         killFirst(w, 6)
-        w.target("Creature-2", 100) -- a direct swap: the library's part
-        assert.are.equal(1, w.tracks)
+        w.target("Creature-2", 100)
         w.none()
         w.H.Fire("PLAYER_TARGET_CHANGED")
         w.read()
         w.target("Creature-3", 0, true)
         w.read()
-        assert.are.equal(1, w.tracks)
         w.target("Creature-4", 100)
-        assert.are.equal(2, w.tracks) -- at the change, so the new mob is timed before anything reads it
         w.H.Fire("PLAYER_TARGET_CHANGED")
         w.read()
         w.read()
-        assert.are.equal(2, w.tracks)
+        assert.are.equal(1, w.tracks)
+    end)
+
+    -- L1730's straight swaps, B8's "the library's part": now pinned through the core.
+    it("a kill with no target event, then a straight swap to a full 120 s mob: never under 30 s", function()
+        local w = boot()
+        killFirst(w, 6)
+        w.health(0.5)
+        w.step()
+        w.target("Creature-2", 100)
+        tough(w)
+    end)
+
+    it("a direct swap in combat to a tough mob first seen at 70%: never under half its time", function()
+        local w = boot()
+        killFirst(w, 6)
+        w.target("Creature-2", 70)
+        local under = {}
+        w.fight(70, 70 / 84, 10, function(at, r, t)
+            local truth = 84 - at
+            if (r < UNKNOWN and r < truth / 2) or (t < UNKNOWN and t < truth / 2) then
+                under[#under + 1] = ("%.1f s: %.1f, %.1f"):format(at, r, t)
+            end
+        end)
+        assert.are.same({}, under)
     end)
 
     it("reads with no target allocate nothing and track nothing", function()
@@ -336,19 +351,22 @@ describe("ttd-chain-pull: time to die forgets the last mob at a pull (lane B8, L
     end)
 end)
 
--- L1736, owner's A (L1742): a seed (the stream's first hits over the time since its anchor) reads unknown until the
--- library answers from a fit or a prior. Live a pull's seed is wildly short (3.63 s at 72%, then 52 s).
-describe("ttd-seed: the library's first guess reads unknown (lane B8, L1736)", function()
+-- L1736 (vendor-libs): LibTimeToDie minor 4's first answers, through the core, with B8's "a seed reads unknown" gone.
+-- Minor 4 answers a new stream (a pull, a swap, a re-target) only once it spans 1.5 s, and carries no last-target rate
+-- before that. Live, B8's seed read 3.63 s at 72%, then 52 s.
+describe("ttd-first-guess: the library's first answers through the core (L1736)", function()
     -- the library's state and reason, from the snapshot's line
     local function reason(w)
         return w.H.Hekili:GetTTDInfo():match("^time to die: (%S+) (%S+)")
     end
 
     -- runs of "reason: answer" over the reads, answer "known" when fight_remains, target.time_to_die and the time to
-    -- 35% all answer, "3600" when all three are unknown, else the three
-    local function runs(w, ticks, hit)
+    -- 35% all answer, "3600" when all three are unknown, else the three; `short`: target.time_to_die under 30 s;
+    -- `under`: with `truth(i)` (the true time left), fight_remains or target.time_to_die under half of it; `low`: the
+    -- lowest fight_remains over the true time
+    local function runs(w, ticks, hit, truth)
         local out, last, n = {}, nil, 0
-        local short = {}
+        local short, under, low = {}, {}, math.huge
         for i = 1, ticks do
             w.step()
             hit(i)
@@ -375,9 +393,30 @@ describe("ttd-seed: the library's first guess reads unknown (lane B8, L1736)", f
             if t < 30 then
                 short[#short + 1] = ("%.1f s: %s %.1f"):format(i * TICK, why, t)
             end
+            local tr = truth and truth(i)
+            if tr and ((r < UNKNOWN and r < tr / 2) or (t < UNKNOWN and t < tr / 2)) then
+                under[#under + 1] = ("%.1f s: %s %.1f/%.1f, true %.1f"):format(i * TICK, why, r, t, tr)
+            end
+            if tr and r < UNKNOWN then
+                low = math.min(low, r / tr)
+            end
         end
         out[#out + 1] = last .. " x" .. n
-        return table.concat(out, ", "), short
+        return table.concat(out, ", "), short, under, low
+    end
+
+    local function pull(w)
+        w.target("Creature-1", 100)
+        w.read()
+        w.wait(0.5)
+        w.combat(true)
+    end
+
+    -- a 20 s mob fought 6 s, then a direct swap in combat to a full one
+    local function swap(w)
+        pull(w)
+        w.fight(100, 5, 6)
+        w.target("Creature-2", 100)
     end
 
     it(
@@ -395,30 +434,124 @@ describe("ttd-seed: the library's first guess reads unknown (lane B8, L1736)", f
                     w.health(72 - 1.3 * (i - 1) * TICK)
                 end
             end)
-            -- LibTimeToDie minor 4 (vendored v0.4.0) publishes no seed: unknown until 1.5 s of loss after the first
-            -- percent, then its fit (minor 2 published a seed of 2.5 s here, true about 55)
+            -- minor 2 published a seed of 2.5 s here (true about 55); B8's core rule read it unknown
             assert.are.equal("unknown: 3600 x17, fit: known x23", seen)
             assert.are.same({}, short)
         end
     )
 
-    it("a direct swap in combat: unknown until the new mob's fit", function()
+    it("a direct swap in combat: unknown until the new mob's fit, nothing kept from the last", function()
         local w = boot()
-        w.target("Creature-1", 100)
-        w.read()
-        w.wait(0.5)
-        w.combat(true)
-        w.fight(100, 5, 6)
-        w.target("Creature-2", 100)
+        swap(w)
         local seen = runs(w, 40, function(i)
             if i > 15 then
                 w.health(100 - 5 * (i - 15) * TICK)
             end
         end)
-        -- priming: the last mob's fight_remains, kept 0.1 s (I1); then unknown: LibTimeToDie minor 4 (vendored v0.4.0)
-        -- carries no rate to a new target before it loses health over 1.5 s (minor 2: the last mob's rate as prior 1.7 s,
-        -- then 1.6 s of seed)
-        assert.are.equal("priming: 14.0/3600.0/3600.0 x1, unknown: 3600 x33, fit: known x6", seen)
+        -- minor 2 + B8: the last mob's fight_remains kept 0.1 s, its rate as prior 1.7 s, then 1.6 s of seed read unknown
+        assert.are.equal("priming: 3600 x1, unknown: 3600 x33, fit: known x6", seen)
         assert.are.equal(1, w.tracks)
     end)
+
+    -- Fable m1 (a): B8's prior carried an opener's seed to the next mob (0.5 s, then 0.001 s).
+    it(
+        "an opener hit 100 to 72% in 0.2 s, then a direct swap to a full 120 s mob: never under half its time",
+        function()
+            local w = boot()
+            pull(w)
+            w.step()
+            w.health(86)
+            w.step()
+            w.health(72)
+            w.target("Creature-2", 100)
+            local seen, _, under = runs(w, 120, function(i)
+                if i > 5 then
+                    w.health(100 - (100 / 120) * (i - 5) * TICK)
+                end
+            end, function(i)
+                return 120 - math.max(0, i - 5) * TICK
+            end)
+            assert.are.equal("priming: 3600 x1, unknown: 3600 x41, seed: known x12, fit: known x66", seen)
+            assert.are.same({}, under)
+        end
+    )
+
+    -- Fable m1 (b), its stall.lua: B8 read stalled 0.01 s through the lull, then a prior of 2.9-2.3 s.
+    it("three quick crossings to 90%, a 6 s lull, then a 60 s rate: never under half the time", function()
+        local w = boot()
+        pull(w)
+        w.health(99)
+        local seen, _, under = runs(w, 140, function(i)
+            if i == 2 then
+                w.health(97.5)
+            elseif i == 3 then
+                w.health(90.5)
+            elseif i > 63 and (i - 63) % 6 == 0 then
+                w.health(90.5 - (i - 63) / 6)
+            end
+        end, function(i)
+            return 54 + math.max(0, 63 - i) * TICK
+        end)
+        assert.are.equal("unknown: 3600 x87, fit: known x53", seen)
+        assert.are.same({}, under)
+    end)
+
+    -- Fable I1: B8's rule blanked a re-seed after a speed-up. Minor 4 seeds no more after a fit; the blank is the
+    -- library's own (its README: up to 1.5 s after a sudden speed-up), unchanged by the core.
+    it("a 60 s kill that speeds up x2.5 below 20%: fit, about 1 s unknown, fit; never a seed", function()
+        local w = boot()
+        pull(w)
+        local pct = 100
+        local seen = runs(w, 520, function()
+            pct = pct - (pct > 20 and 100 / 60 or 2.5 * 100 / 60) * TICK
+            w.health(pct)
+        end)
+        assert.are.equal("unknown: 3600 x24, fit: known x464, unknown: 3600 x9, fit: known x23", seen)
+    end)
+
+    -- A same-unit re-prime (a desync: the hidden-value library primes the source again) keeps the estimate.
+    it("a re-prime of the target mid-fight: fight_remains keeps answering", function()
+        local w = boot()
+        pull(w)
+        local seen = runs(w, 60, function(i)
+            if i == 40 then
+                w.prime()
+            end
+            w.health(100 - 2 * i * TICK)
+        end)
+        assert.are.equal("unknown: 3600 x21, fit: known x39", seen)
+    end)
+
+    -- The residue (L1736): a burst then a fall 56 times slower gives a seed of about half the time for its 2 s, then a
+    -- fit still short (0.7), at a pull and on a target taken in combat alike. B8's rule read the seed's 2 s unknown and
+    -- passed the same fit. The library's lab counted streams with a short read in such classes (opener bursts, lumpy
+    -- hits) within one in 180 fights of B8's rule.
+    local RESIDUE = {
+        { "at a pull", pull, 1, "unknown: 3600 x22, seed: known x20, fit: known x18" },
+        {
+            "after a direct swap in combat",
+            swap,
+            2,
+            "priming: 3600 x1, unknown: 3600 x22, seed: known x20, fit: known x17",
+        },
+    }
+    for _, case in ipairs(RESIDUE) do
+        it(("a 28%% hit %s, then 0.5%% a second: the seed reads about half the time"):format(case[1]), function()
+            local w = boot()
+            case[2](w)
+            local at = case[3]
+            local seen, _, under, low = runs(w, 60, function(i)
+                if i == at then
+                    w.health(72)
+                elseif i > at then
+                    w.health(72 - 0.5 * (i - at) * TICK)
+                end
+            end, function(i)
+                return (72 - 0.5 * math.max(0, i - at) * TICK) / 0.5
+            end)
+            assert.are.equal(case[4], seen)
+            assert.are.same({}, under)
+            assert.are.equal("0.52", ("%.2f"):format(low)) -- the seed's first answer: 0.52 of the true time
+        end)
+    end
 end)

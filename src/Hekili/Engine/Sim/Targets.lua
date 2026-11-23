@@ -1216,15 +1216,14 @@ do
     -- Forever (lane B8, owner L1676): the target's time to die from LibTimeToDie, called directly, and the execute-line
     -- hints to it (docs/dev/architecture.md, "Time to die"). A missed LibStub lookup is repeated: the library may load late.
     local TTD_MAJOR, TTD_OWNER = "LibTimeToDie-1.0", "Hekili"
-    local TTD_RETRY, TTD_HOLD = 1, 0.5 -- seconds: between refused Tracks (each allocates); priming's keep (B8 I1)
+    local TTD_RETRY = 1 -- seconds: between refused Tracks (each allocates)
     local ttdLib, ttdTrack -- the library once found; the target's handle
     local ttdRetryAt = 0 -- no Track before this
-    local heldEst, heldAt -- fight_remains' last live answer, and when
 
     local function ttdRelease()
         if ttdTrack then
             ttdTrack:Release()
-            ttdTrack, heldEst = nil, nil
+            ttdTrack = nil
         end
     end
 
@@ -1305,7 +1304,7 @@ do
         return format( "time to die: %s %s est %s lo %s hi %s; hints: below %s", s or "not tracked", tostring( why ), tostring( est ), tostring( lo ), tostring( hi ), tostring( sentBelow or "none" ) ) -- l10n: verbatim
     end
 
-    -- The target's live estimate in seconds or nil, and the library's state. Allocates nothing once tracked or refused.
+    -- The target's live estimate in seconds or nil. Allocates nothing once tracked or refused.
     local function targetTTD()
         if Hekili.bandOff then
             ttdRelease()
@@ -1323,61 +1322,26 @@ do
             end
             if hintsDirty then sendHints() end
         end
-        local est, _, _, s, why = ttdTrack:Get()
-        -- shortcut: a seed answer reads unknown, remove when LibTimeToDie's own first-guess fix is vendored (L1736),
-        -- which replaces it. A seed is the stream's first hits over the time since its anchor: after a pull often one
-        -- hit, wildly short (live 3.63 s at 72%, then 52 s). Also the first second or two after a swap or a re-target
-        -- (L1742); a fit or a prior answers.
-        return s == "live" and why ~= "seed" and est or nil, s
-    end
-
-    -- shortcut: forget at the pull, remove when LibTimeToDie's own fix is vendored (L1730). Left to the library, which
-    -- carries the last mob's rate there: a direct swap in combat, a swap from a dying mob to a tough one first seen
-    -- below full, and a straight swap from a mob that died targeted with no target event (M1) or whose death reads
-    -- secret. Events.lua's PLAYER_TARGET_CHANGED handler calls it; the client clears the target at a kill. Once the
-    -- target is gone (none, or a corpse) a next one within the library's carry age is tracked anew, unless its GUID says
-    -- it is the same mob; a later one keeps the track, and with it the learned execute factor. A corpse's dwell needs no
-    -- renewal of that age: plainly dead at the event, it is gone to the library, whose carry ages from then.
-    local TTD_CARRY = 10 -- seconds: the library's priorAge (Estimator.lua, not in its API); goes with the shortcut
-    local lastTarget, goneAt
-    function ns.TtdTargetChanged()
-        local exists = UnitExists( "target" ) -- false or nil: no unit; a secret counts as one
-        if ( not issecretvalue( exists ) and not exists ) or plain( UnitIsDead( "target" ) ) == true then
-            goneAt = goneAt or GetTime()
-            return
-        end
-        local guid = plain( UnitGUID( "target" ) )
-        if goneAt and ttdTrack and ( not guid or guid ~= lastTarget ) and GetTime() - goneAt <= TTD_CARRY then
-            ttdRelease()
-            targetTTD()
-        end
-        goneAt, lastTarget = nil, guid
+        local est, _, _, s = ttdTrack:Get()
+        return s == "live" and est or nil
     end
 
     -- targetTTD's answer when the target is plainly attackable, else nil. The library first, so with none (or
     -- Hekili.bandOff) no client call is made.
     local function hostileTargetTTD()
-        local est, s = targetTTD()
-        if ( est or s == "priming" ) and plain( UnitExists( "target" ) ) and plain( UnitCanAttack( "player", "target" ) ) then
-            return est, s
+        local est = targetTTD()
+        if est and plain( UnitExists( "target" ) ) and plain( UnitCanAttack( "player", "target" ) ) then
+            return est
         end
     end
 
     -- The longest (and the shortest) time to die among the enemies (owner L1694): the target's with one enemy, unknown
-    -- with several (only the target is tracked; no scan here: that scan calls GetTTD itself). While the library primes
-    -- (a target change, about 10 frames) the last live answer counts down, TTD_HOLD at most, so a held cooldown is not
-    -- released. Never target.time_to_die: the last target's time is no fact about this one.
+    -- with several (only the target is tracked; no scan here: that scan calls GetTTD itself). Nothing is kept across a
+    -- target change: the library answers nothing for a new target before 1.5 s of its loss, so the last one's time
+    -- would bridge to no answer, and it is no fact about this one.
     local function onlyEnemyTTD()
         if several then return nil end
-        local est, s = hostileTargetTTD()
-        if est then
-            heldEst, heldAt = est, GetTime()
-            return est
-        end
-        if s == "priming" and heldEst then
-            local gap = GetTime() - heldAt
-            if gap <= TTD_HOLD then return max( 0, heldEst - gap ) end
-        end
+        return hostileTargetTTD()
     end
 
     -- Forever: the getters below keep the answers of the old GUID tracker's empty table (L1703); only the target's time
