@@ -2,7 +2,7 @@
 ## Title: LibHiddenValues
 ## Notes: Threshold events for unit health, power and auras. A library for other addons.
 ## Author: zmsl
-## Version: 0.1.0
+## Version: 0.9.0
 ## X-License: MIT
 
 Libs\LibStub\LibStub.lua

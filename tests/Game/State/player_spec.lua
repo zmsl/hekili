@@ -363,6 +363,12 @@ describe("the player's health from the band (lane B3)", function()
         assert.are.same({ 0.34, 0.35, 0.345, "observed", Obs.Band }, read())
     end)
 
+    it("an empty band 0 0 (minor 9) reads exactly 0, observed", function()
+        S.Direct(Obs.Band, 101, 0, 0, 0)
+        I.Fold(101, false)
+        assert.are.same({ 0, 0, 0, "observed", Obs.Band }, read())
+    end)
+
     it("an unknown band restores 'unknown' (full, conf 0); in the drain of a plain read it leaves the read", function()
         S.Direct(Obs.Band, 101, 0, 0.5, 0.51)
         I.Fold(101, false)

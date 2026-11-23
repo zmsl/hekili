@@ -247,6 +247,25 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.are.near(0.995, h.est, 1e-12)
     end)
 
+    -- (minor 9, L1712) exactly empty is the closed band [0, 0], a little left [0, 1): our health reads 0, the target's
+    -- family its live floor for both (death comes from the death events), and the floor counts no disagreement
+    it("exactly empty: the band 0 0 on both channels; a little left 0 0.01", function()
+        boot()
+        live()
+        ctl.combat = true
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        W.unit.player.health, W.unit.target.health = 0, 0
+        frames(4)
+        assert.are.same({ 0, 0, 0, 0 }, { I.bandLo[-1], I.bandHi[-1], I.bandLo[0], I.bandHi[0] })
+        local me, h = VS.Health("player", ctl.now), VS.Health("target", ctl.now)
+        assert.are.same({ 0, 0, 0 }, { me.lo, me.hi, me.est })
+        assert.are.same({ I.TARGET_HEALTH_FLOOR, 0, I.TARGET_HEALTH_FLOOR }, { h.est, h.lo, h.hi })
+        assert.are.equal(0, I.bandDisagree[-1])
+        W.unit.player.health, W.unit.target.health = 0.005, 0.005
+        frames(4)
+        assert.are.same({ 0, 0.01, 0, 0.01 }, { I.bandLo[-1], I.bandHi[-1], I.bandLo[0], I.bandHi[0] })
+    end)
+
     it("a target change: one unknown, nothing while it primes, then the new band stamped at the prime's end", function()
         boot()
         live()
