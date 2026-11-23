@@ -1598,6 +1598,40 @@ describe("now handlers", function()
             assert.are.equal(0, I.avoidsRun)
         end)
 
+        -- fix round 1 I1: a held row is scored against our swings at its own time; only the cast's own-frame band
+        -- reads the success's. A white avoid inside the swing's core band (main 0.474 +/- 0.12 s, off 0.703 +/- 0.04 s)
+        -- at its own time is the swing's, whatever instant succeeds just after it.
+        local function swingThenEarly(hand, swingT, act, rowT, lead)
+            ctl.now = 1.0
+            ctl.Fire("PLAYER_SWING", 3.6, hand)
+            ctl.Tick(2.0)
+            ctl.now = swingT
+            ctl.Fire("PLAYER_SWING", 3.6, hand)
+            ctl.now = 4.9
+            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_C)
+            ctl.now = rowT
+            ctl.Fire("UNIT_COMBAT", "target", act, "", 0, 1)
+            ctl.now = rowT + lead
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Tick(rowT + 0.1)
+            VS.Drain(rowT + 0.1)
+            ctl.Tick(7.5)
+            VS.Drain(7.5)
+        end
+        for _, c in ipairs({
+            { "main-hand DODGE at lag 0.59, 15 ms before the success", 0, 4.41, "DODGE", 0.015 },
+            { "main-hand DODGE at lag 0.574, 40 ms before the success", 0, 4.426, "DODGE", 0.04 },
+            { "main-hand PARRY at lag 0.59, 15 ms before the success", 0, 4.41, "PARRY", 0.015 },
+            { "off-hand DODGE at lag 0.73, 15 ms before the success", 1, 4.27, "DODGE", 0.015 },
+        }) do
+            it("fix A: a swing's " .. c[1] .. " stays the swing's: the debuff stays, nothing back", function()
+                begin()
+                swingThenEarly(c[2], c[3], c[4], 5.0, c[5])
+                assert.are.equal(0, I.avoidsRun)
+                assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 7.5))
+            end)
+        end
+
         it("an avoid 0.3 s after the cast is still the cast's: the hit and the refund come at the cast", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "DODGE", 0.3)

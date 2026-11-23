@@ -53,15 +53,18 @@ end
 
 -- Fix A (L1763): per instant (FRAME) ticket still COMMITTED, the avoid row on its GUID that no open ticket took at pass
 -- 1 (live: logged 1-20 ms before the success, 28 of 287 cat instants): its time (0 none), unit, GUID, action, flag,
--- amount (false: secret), school and the commit's castGUID. The success (T.Arm) routes it again at the success's time,
--- inside SAME_FRAME of it, so the cast's own frame takes it; held past SAME_FRAME, or the commit stopped or gone, it is
--- routed at its own time, as before.
+-- amount (false: secret), school and the commit's castGUID. The success (T.Arm) routes it again at its own time (our
+-- swings score it there: fix round 1 I1), and when it came within SAME_FRAME before the success the armed cast's pass 1
+-- takes it at the success's time; held past SAME_FRAME, or the commit stopped or gone, it is routed as before.
 local hT, hU, hG, hAct, hFlag, hAmt, hSch, hCast = {}, {}, {}, {}, {}, {}, {}, {}
 for k = 1, T.CAP do
     hT[k], hU[k], hG[k], hAct[k], hFlag[k], hAmt[k], hSch[k], hCast[k] = 0, 0, "", "", "", 0, 0, ""
 end
-local nHeld, releasing = 0, false
-local release -- (i, t): routes ticket i's held row at t (defined after route)
+-- rel: 0 a fresh row; -1 a held row routed at its own time; i > 0 ticket i's held row, in its success's frame (a file
+-- local, not a route argument: route's frame stays as it was, L1769). Every fresh row resets it (M3: a raise in a release
+-- cannot leave fix A off).
+local nHeld, rel = 0, 0
+local release -- (i, early): routes ticket i's held row at its own time (defined after route)
 
 -- The COMMITTED instant ticket on `g` with no held row, or 0. Allocates nothing.
 local function committed(g)
@@ -77,7 +80,7 @@ end
 local function flushHeld(now)
     for i = 1, T.CAP do
         if hT[i] > 0 and (T.state[i] ~= T.COMMITTED or T.cast[i] ~= hCast[i] or now - hT[i] > SAME_FRAME) then
-            release(i, hT[i])
+            release(i, false)
         end
     end
 end
@@ -316,7 +319,7 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     end
     local i = T.Arm(castGUID, t)
     if i > 0 and hT[i] > 0 and hCast[i] == castGUID then -- fix A: its early own-frame row, now in its frame
-        release(i, t - hT[i] <= SAME_FRAME and t or hT[i])
+        release(i, t - hT[i] <= SAME_FRAME)
     end
     if i == 0 then
         i = T.OpenCast(t, a, spellID, U.Sent(castGUID) or U.Pin(api, t) or "")
@@ -683,7 +686,10 @@ local function route(t, g, uid, act, flag, amount, school)
         replacing = T.Replaceable(t, g, act, flag, amount, school, avoid)
         p, n = replacing, 1
     end
-    if p == 0 and avoid and not releasing then -- fix A: our instant's success may follow within its frame
+    if p == 0 and rel > 0 then -- fix A: the held row; the armed cast's own frame reads the success's time
+        p, n = T.Pick(T.at[rel], g, 1, act, flag, amount, school, avoid)
+    end
+    if p == 0 and avoid and rel == 0 then -- fix A: our instant's success may follow within its frame
         local c = committed(g)
         if c > 0 then
             hT[c], hU[c], hG[c], hAct[c], hFlag[c], hSch[c], hCast[c] = t, uid, g, act, flag, school, T.cast[c]
@@ -842,7 +848,8 @@ local function route(t, g, uid, act, flag, amount, school)
         if replacing > 0 and p == replacing then
             T.Replace(p, t)
         end
-        paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
+        -- a held row the cast took at its success: paid there, never before the cast's own write
+        paySpell(p, n, pass, rel > 0 and t < T.at[p] and T.at[p] or t, act, flag, amount, school, avoid, crit)
         return
     elseif not credited then
         -- in its core band and amount classes, the swing's own if a cast's own avoid follows; never an unknown-class
@@ -864,10 +871,11 @@ local function route(t, g, uid, act, flag, amount, school)
     creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
 end
 
-release = function(i, t)
-    hT[i], nHeld, releasing = 0, nHeld - 1, true
+release = function(i, early)
+    local t = hT[i]
+    hT[i], nHeld, rel = 0, nHeld - 1, early and i or -1
     route(t, hG[i], hU[i], hAct[i], hFlag[i], hAmt[i] or nil, hSch[i])
-    releasing = false
+    rel = 0
 end
 
 -- (providers decision 73, count-only per the owner 2026-10-23) A row is routed at once; RowOwner is asked ROW_DELAY
@@ -919,6 +927,7 @@ end
 
 U.OnRow(function(t, g, uid, act, flag, amount, school)
     local f0, a0 = T.foreign, T.absorbed
+    rel = 0
     route(t, g, uid, act, flag, amount, school)
     -- a secret amount (live) is never asked about: RowOwner matches the meter by amount
     if I.outcomes.ROW_DELAY > 0 and (act == "WOUND" or MISSES[act]) and type(amount) == "number" then
