@@ -345,7 +345,7 @@ local default_modifiers = {
 -- press ends it), so the next action keeps its ready state between updates. The real channel is the one slot 1 of an
 -- update sees at its now, keyed by its start; an update settles each of its passed points once: on the point itself,
 -- else from the last update's forecast of it, else read now. Primary and AOE keep their own (review I-A: their target
--- counts differ in dual and reactive modes); the other displays share Primary's.
+-- counts differ in dual and reactive modes); only their event loop reads it.
 local CUT_EPS = 0.01
 -- per main display: the real channel's start, point read, verdict, GCD end and the update it was settled in (`at`, its
 -- now); the forecast's first point read after the real now this update (`fcAt`) and its verdict
@@ -415,7 +415,7 @@ local function channelRecast()
     if state.offset == 0 then
         if not ( c.due and c.at == state.now ) then return false end
         c.due = false
-    elseif c.fcDue and math.abs( c.fcAt - state.query_time ) <= CUT_EPS then
+    elseif c.fcAt and c.fcDue and math.abs( c.fcAt - state.query_time ) <= CUT_EPS then -- no forecast under a hold
         c.fcDue = false
     else
         return false

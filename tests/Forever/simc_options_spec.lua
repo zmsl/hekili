@@ -333,6 +333,27 @@ describe("interrupt_if on a channel line: read at wowsims's points, held once du
         end
     end)
 
+    -- a cut held from an earlier update survives a later walk that stops at the channel's own line (nothing above it
+    -- passes there), now and at a forecast point, with no error; the hold shows again once the line above is back
+    it("leaves a held cut to a later walk that stops at the channel's own line", function()
+        local at, H = cutRig(function()
+            return true
+        end)
+        H.Hekili.Class.abilities.cannibalize.tick = function() end -- a channel whose ticks act (Wrack's): walked at each
+        at(2.5)
+        local cd, bloodrage = H.ctl.cooldown, H.Hekili.Class.abilities.bloodrage.id
+        cd[CANNIBALIZE] = nil
+        local name, t = at(3) -- the first tick, Bloodrage ready: held
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        cd[bloodrage] = { isActive = true, isOnGCD = false, startTime = 103.2, duration = 60 }
+        at(3.2)
+        cd[bloodrage] = nil
+        name, t = at(3.9) -- Bloodrage back off cooldown, between ticks: the hold still stands
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+    end)
+
     it("reads a tick with the GCD more than the spell queue window away, not one within it", function()
         local early = function(s)
             return s < 2.1 -- true at the first tick only
