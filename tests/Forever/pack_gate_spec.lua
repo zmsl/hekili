@@ -29,4 +29,26 @@ describe("pack_gate's arm floors", function()
             assert.are.same(want, missed, name)
         end
     end)
+
+    it("merge the arm's loOver too: a row its default floors would MISS reads ok", function()
+        local arm, check = ab.arm, ab.check
+        finally(function()
+            ab.arm, ab.check = arm, check
+        end)
+        local missed
+        ab.check = function(ok, _, line)
+            if not ok then
+                missed[#missed + 1] = line:match("^%S+")
+            end
+        end
+        local r = { flicker = 0, retracted = 0, readyShort = 0, heldReady = 0, loOver = 279 }
+        for name, want in pairs({ default = { "floor-above-truth" }, bands = {} }) do
+            ab.arm = function()
+                return name
+            end
+            missed = {}
+            pack_gate.flicker("SM Ruin", r, "line", true)
+            assert.are.same(want, missed, name)
+        end
+    end)
 end)
