@@ -309,10 +309,16 @@ display still.
 
 - **A change after a fact is a correction.** A fact is a press, an avoid (a lost combo point and an energy or rage
   refund arrive with it), an aura edge, a death or a retarget. Where the Cooldown Manager is on, two late facts also
-  count: an aura edge one poll late (its light), and a miss found late by the Cooldown Manager verdict. Corrections
-  are never held back and never counted against a lane.
-- **Only slot 1 is gated.** The gated flicker reads the first icon. The flicker ledger's gated number, retracted
-  readies, reads slot 1 only, and a now/next swap is tagged on its slot-1 entry.
+  count: an aura edge one poll late (its light), and a miss of our own press found late by the Cooldown Manager
+  verdict (a ranged auto shot's miss is not a press). Where the belief reads a power band, a crossing of that band is
+  a fact too. Corrections are never held back and never counted against a lane.
+- **A stale answer is not a fact.** If the band crosses and the belief stays outside it, the belief is following an
+  answer older than the band. That poll excuses nothing except our own press.
+- **Only slot 1 is gated.** The gated flicker counts first-icon flips (A, B, A within three polls). A flip is
+  excused when B was pressed (the show-then-press rule) or when the change to B follows a fact at its own poll and
+  neither that poll nor the return's is stale. The line prints the old press-only count and the excused flips by
+  fact beside it. The flicker ledger's gated number, retracted readies, reads slot 1 only, and a now/next swap is
+  tagged on its slot-1 entry.
 - **Slots 2-3 and the focus slot are reported, not gated.**
 - **Resource accuracy still comes first.** A correct icon is never hidden to lower a number.
 

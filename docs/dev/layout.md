@@ -180,8 +180,13 @@ flicker 1.71/min, oracle 0.56; L24 0.908, 3.31/min, oracle 2.16), and Protection
 0.74/min, oracle 0.42; about 3 min a file, under the gate's slowest).
 
 The flicker columns (the flicker ledger, `tests/Game/harness/flicker.lua`; what counts and the cause classes: the
-headless loop design §5.1). `flicker X/min (oracle Y)` stays where it was (the first icon's A->B->A within 3 ticks,
-unchanged); the ledger's fields come last on every line (after a replay's decision fields, before `; hold on`), for
+headless loop design §5.1). `flicker X/min (oracle Y)` stays where it was: the first icon's A->B->A within 3 ticks,
+excused when B was pressed or, under the jitter rule (L1762 round 2), when the change to B follows a fact at its poll
+(`flicker.changes`: the ledger's facts below, plus a crossing of the belief's power band that the belief follows) and
+neither that poll nor the return's is stale (the band crossed and the belief lies outside it). The oracle's takes the
+world's facts only. Before the ledger's fields comes `flicker press-only X (oracle Y) excused [press n; avoid n; aura
+n; target n; band n; verdict n]`: the count under the old press-only rule, and our flips the facts excused. The
+ledger's fields come last on every line (after a replay's decision fields, before `; hold on`), for
 run A over every displayed slot (queue positions 1-3 and the focus entry): `dips` and `flashes` per minute (our
 presses' left out), `top [cause n; cause n]` over them, `p90 length` (ticks), `retracted R/min (oracle R')` (ready, then
 waiting again within 1 s, no justifying event) with its top `ability:cause/reason`, `justified` (those with an event),
@@ -193,7 +198,7 @@ follow them, unjustified only: `now dips D flashes F swaps S retracted R/min (or
 come `facts [target n; aura n; verdict n]`, the slot-1 changes those facts excused. A fact here is a death or
 retarget, an aura edge the earlier cause classes shadowed, and in an arm with the viewer on two late facts: an aura
 edge one poll before the change (a Cooldown Manager light), and the first change within 1.5 s of a miss of our press
-(the CDM verdict). Last come `next D/F/R/W` (slots 2-3) and `focus D/F/R/W`, both reported only. The
+(the CDM verdict; a ranged auto shot's miss is not one). A band crossing the belief follows is a fact too. Last come `next D/F/R/W` (slots 2-3) and `focus D/F/R/W`, both reported only. The
 20-fight Arms line's tail (forever-flicker, before the rule):
 
 ```
