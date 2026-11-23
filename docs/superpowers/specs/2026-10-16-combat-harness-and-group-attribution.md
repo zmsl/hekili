@@ -362,8 +362,8 @@ Two mobs of different strength then separate after three clean hits each; two of
 ### 4.3 What stays unattributed, and why
 Two or more same-kind hostiles whose clocks are unset or in phase; a spell (non-physical) with two or more hostiles on
 us; a hostile with no token (plates off or out of view) or a secret `UnitIsUnit` answer; more than 8 attackers (the
-slots). Cost: no row, so Hekili's `storeDamage` and the tank enemy count miss it, and Revenge falls back to its
-usability read (as on Forever today). Harness gates (`onus_spec`, n = 100): two attackers of 2x different strength:
+slots). Such a hit's row has no source (event-facade spec §2.4): `storeDamage` and the pack readers (Revenge) get it,
+the tank enemy count does not, and it teaches no clock or band. Harness gates (`onus_spec`, n = 100): two attackers of 2x different strength:
 precision >= 0.95, coverage >= 0.80; two identical attackers: precision >= 0.90, coverage reported.
 
 ### 4.4 Protection's damage-taken rage

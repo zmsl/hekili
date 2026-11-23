@@ -5,11 +5,12 @@
 -- not targeting us), and (b) a swing clock per attacker, an anchor and a period like our own hands: the period is
 -- UnitAttackSpeed(unit) when plain, else learned from the gaps between hits on us. A hit is credited to the attacker
 -- whose clock predicts a swing nearest it within ATTACK_TOLERANCE; while a single hostile targets us and its clock is
--- not set yet, to that one (which starts its clock); otherwise it stays unattributed and makes no row (no phantom
--- enemy for the tank branch, Events.lua's `ns.updateTarget( sourceGUID, ... )`). A physical wound also has each
--- attacker's amount band to go by (combat harness design §4): learned from the wounds its clock or the lone-hostile
--- rule credited, it separates two attackers of different strength. The same per-token reads count the hostiles
--- attacking someone else (VirtualState.LooseEnemies, tank design §2).
+-- not set yet, to that one (which starts its clock); otherwise (every hit while the GUIDs are secret, the Map
+-- restriction) its row has the source "" and the none flags (L1691 item 1): it teaches no clock or band, and the
+-- engine's tank count skips it (no phantom enemy). Only these hits and avoids make rows, never a health drop. A
+-- physical wound also has each attacker's amount band to go by (combat harness design §4): learned from the wounds its
+-- clock or the lone-hostile rule credited, it separates two attackers of different strength. The same per-token reads
+-- count the hostiles attacking someone else (VirtualState.LooseEnemies, tank design §2).
 -- Credits: secret-value handling after Catnip's (Durts) research; the signals are Taco Dog Forever's research
 -- (docs/research/2026-10-14-virtual-combat-log-events.md, C2, C4, M1-M4, D13).
 
@@ -304,31 +305,32 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         -- learn re-anchors without refining the period, since the gap is off by more than the tolerance)
         best = single
     end
+    local src, srcFlags, dst = "", L.NONE_FLAGS, L.player
     if not best then
-        L.unattributed = L.unattributed + 1
-        return
-    end
-    L.onus.credited = L.onus.credited + 1
-    local src, dst = U.Bound(best), L.player
-    if melee then -- a spell does not follow the swing clock: no clock made or moved for it
-        local k = clockOf(src)
-        if not undated then
-            learn(k, te, tokSpeed[best]) -- a band credit moves the clock too (it keeps the phase); the band learns later
-        end
-        if byBand then
-            L.onus.byBand = L.onus.byBand + 1
-        elseif a then -- a band learns from the clock's, the lone hostile's and the elimination's credits, never its own
-            Bands.Learn(atkLo, atkHi, atkN, k, a, 0)
+        L.unattributed = L.unattributed + 1 -- no source: no clock or band (find would take "" for a free slot)
+    else
+        L.onus.credited = L.onus.credited + 1
+        src, srcFlags = U.Bound(best), L.HOSTILE_FLAGS
+        if melee then -- a spell does not follow the swing clock: no clock made or moved for it
+            local k = clockOf(src)
+            if not undated then
+                learn(k, te, tokSpeed[best]) -- a band credit moves the clock too (it keeps the phase); the band learns later
+            end
+            if byBand then
+                L.onus.byBand = L.onus.byBand + 1
+            elseif a then -- a band learns from the clock's, the lone hostile's and the elimination's credits, never its own
+                Bands.Learn(atkLo, atkHi, atkN, k, a, 0)
+            end
         end
     end
     local amt = type(amount) == "number" and amount or 0 -- a secret amount (live, L67): 0, never guessed
     if act == "WOUND" and melee then
-        L.Swing(t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, amt, flag, false)
+        L.Swing(t, "onus", src, srcFlags, dst, L.PLAYER_FLAGS, amt, flag, false)
     elseif act == "WOUND" then
         local mask = type(school) == "number" and school or 1
-        L.SpellHit("SPELL_DAMAGE", t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, 0, mask, amt, flag)
+        L.SpellHit("SPELL_DAMAGE", t, "onus", src, srcFlags, dst, L.PLAYER_FLAGS, 0, mask, amt, flag)
     else
-        L.Miss(t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, nil, 1, act, false)
+        L.Miss(t, "onus", src, srcFlags, dst, L.PLAYER_FLAGS, nil, 1, act, false)
     end
 end)
 

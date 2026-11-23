@@ -285,10 +285,10 @@ Provenance is [V]'s: observed (a plain signal says it happened), inferred (plain
 | Own casts | `SPELL_CAST_START`, `SPELL_CAST_SUCCESS`, `SPELL_CAST_FAILED`; a channel's `SPELL_AURA_REMOVED` | our `UNIT_SPELLCAST_START/SUCCEEDED/FAILED/INTERRUPTED/CHANNEL_STOP` with the `UNIT_SPELLCAST_SENT` target GUID ([V] C36, C38, C40, D1; O16: 134 successes plain) | observed | `:1505-1601`: `realQueue` `CAST_FINISH`/`CHANNEL_*`/`PROJECTILE_IMPACT`, `AddToHistory` (`:1601`) |
 | Our swings | `SWING_DAMAGE` (amount, critical), `SWING_MISSED` (missType `DODGE`/`PARRY`/`MISS`, isOffHand) | `PLAYER_SWING` per hand for time and hand; the target's `UNIT_COMBAT` that follows it within the hand's `PAIR_WINDOW_MS` for the outcome, a wound's hand told by its amount (§3) ([V] C1, C3, D7; O3: `PLAYER_SWING` also fires on avoided swings; O1: the target's MISS, DODGE, PARRY plain, 374 firings); an on-next-swing strike's success takes its swing's outcome as `SPELL_DAMAGE`/`SPELL_MISSED` and no swing row | observed time; the outcome's attribution to us is inferred (`UNIT_COMBAT` is victim-side) | swing timers `:1622-1635`; class hooks (Overpower, §6) |
 | Our ability missed | `SPELL_MISSED` (missType) | our `UNIT_SPELLCAST_SUCCEEDED` of an ability that starts combat or strikes on the next swing, plus the target's `UNIT_COMBAT` DODGE/PARRY/MISS that follows it within 0.2 s ([V] C9, M2; O16: a dodged Heroic Strike still fired its success) | inferred | class hooks |
-| Avoided on us | `SWING_MISSED`/`SPELL_MISSED` with `destGUID` = ours | the player's `UNIT_COMBAT` DODGE, PARRY, BLOCK, MISS ([V] C4, M1-M4, D13; O1: 165 firings plain); the attacker is not in the event, so the row is emitted only when attribution names it (decision 6, below); otherwise no row | observed type, inferred source | class hooks (Revenge, §6); tank attacker counting `:1619-1620` |
+| Avoided on us | `SWING_MISSED`/`SPELL_MISSED` with `destGUID` = ours | the player's `UNIT_COMBAT` DODGE, PARRY, BLOCK, MISS ([V] C4, M1-M4, D13; O1: 165 firings plain); the attacker is not in the event: attribution names it (decision 6, below), else the source is `""` with the none flags | observed type, inferred or empty source | class hooks (Revenge, §6); tank attacker counting `:1619-1620` |
 | Deaths | `UNIT_DIED`, `PARTY_KILL` | `UNIT_DIED`, `PARTY_KILL`, `PLAYER_TARGET_DIED` with plain GUIDs ([V] C66-C68, D11; O6: 34/23/23 firings) | observed | `ns.eliminateUnit` (`:1403-1419`); Victory Rush window (§6) |
 | Damage we deal | `SWING_DAMAGE`, `SPELL_DAMAGE` on the target (phase B, with our swings and abilities above) and on plates (phase C) | the unit's `UNIT_COMBAT` WOUND paired with the swing or cast it follows (§3) | inferred | enemy counting `:1693-1701` (`ns.updateTarget`) |
-| Damage on us | `SWING_DAMAGE`, `SPELL_DAMAGE` with `destGUID` = ours | the player's `UNIT_COMBAT` WOUND (amount, school) ([V] C2, C4; O1); emitted only when attribution names the source, as above; physical (`schoolMask` 1) as `SWING_DAMAGE`, other schools as `SPELL_DAMAGE` with spellId 0 | observed (source inferred, as above) | `ns.storeDamage` (`:1451-1495`) |
+| Damage on us | `SWING_DAMAGE`, `SPELL_DAMAGE` with `destGUID` = ours | the player's `UNIT_COMBAT` WOUND (amount, school) ([V] C2, C4; O1); a hit on us with no known attacker makes a row with an empty source; physical (`schoolMask` 1) as `SWING_DAMAGE`, other schools as `SPELL_DAMAGE` with spellId 0 | observed (source inferred, as above) | `ns.storeDamage` (`:1451-1495`) |
 | Our casts' auras | `SPELL_AURA_APPLIED`/`_REFRESH`/`_REMOVED` on the target (debuffs) and on us (buffs) | phase B: what our cast's `now` verbs wrote (§12a: `applyBuff`, `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, against the aura's believed expiry before the cast), APPLIED or REFRESH at the cast's time, REMOVED when the cast removed it or at the modelled expiry ([V] C27, D3). Phase D adds travel time and the compensating `SPELL_AURA_REMOVED` when the cast's outcome was DODGE/PARRY/MISS | inferred / modelled | `ns.trackDebuff`, `active_dot` (`:1652-1687`) |
 | Energize | `SPELL_ENERGIZE` on us | phase B: a resource our cast's `now` gained (§12a's `gain`) ([V] C14, D6) | modelled | none in core ([V] §6; outline §1); class hooks |
 
@@ -351,16 +351,18 @@ set (no anchor or no period), the hit is that one's and starts its clock; a non-
 the swing clock) is credited only to a lone hostile, its clock set or not, and does not move the clock. A clock is
 made only when a hit is credited (a free slot first, else the oldest anchor's), so a learned period survives the
 anchors' reset at combat end.
-Otherwise the hit stays unattributed: no row (counted, `Snapshot()`'s `unattributed`), so it stays out of the enemy
-counter. The credited hit re-anchors that clock. Dodges and parries of our own swings are not attributed this way:
+Otherwise the hit stays unattributed (counted, `Snapshot()`'s `unattributed`): its row has no source, and it stays
+out of the enemy counter. The credited hit re-anchors that clock. Dodges and parries of our own swings are not attributed this way:
 they are the target's `UNIT_COMBAT` paired with our swing (§3).
 
-**No row on us with an unknown source.** The tank branch (`Events.lua:1619-1620`: tank role, `destGUID` ours, a
+**An unknown source on us is empty.** The tank branch (`Events.lua:1619-1620`: tank role, `destGUID` ours, a
 `SWING` subevent) calls `ns.updateTarget( sourceGUID, time, true )`, and `updateTarget` rejects only nil and our
-own GUID (`Targets.lua:659`). A `""` or invented source would become a counted enemy for Protection, and a nil
-source would leave a hole in the tuple (above). So an unattributed hit makes no row: Revenge then falls back to its
-usability read (§6) and `storeDamage` misses that hit, which is what Hekili does on Forever today. `cleu_rows_spec`
-checks it (nobody known to target us, or a secret answer: no row, counted).
+own GUID (`Targets.lua:659`). An invented source would become a counted enemy for Protection, and a nil source would
+leave a hole in the tuple (above). So an unattributed hit's row has the source `""` and the flags
+`COMBATLOG_OBJECT_NONE` (L1691 item 1), and the tank branch calls `updateTarget` only for a source that is not `""`.
+The row still reaches the class hooks (Revenge, §6) and `storeDamage` (its amount; 0 when secret). It teaches no
+swing clock and no band. Only a `UNIT_COMBAT` hit or avoid makes one, never a health drop alone (L1702 rule 7).
+`cleu_rows_spec`, `cleu_handler_spec` and `attackerless_rows_spec` check it.
 
 What cannot be synthesized ([V] §3; outline §1): overkill (so overkill elimination at `:1696` never fires and
 deaths come from `UNIT_DIED`/`PARTY_KILL` only), absorbed and over-energize amounts, the source of a hit beyond the
@@ -538,7 +540,7 @@ through the facade. It contains nothing Forever-specific about where an event co
   the next reset.
 - **Revenge.** The same handler records `enemy_revenge_trigger = GetTime()` on a row with `destGUID` ours and
   missType `DODGE`, `PARRY` or `BLOCK` (Classic's `misses`, `Classic/Warrior.lua:406-410, 447-448`); such a row
-  exists only when attribution named the attacker (§2.4, decision 6);
+  exists whether or not attribution named the attacker (§2.4, decision 6);
   `reset_precast` applies `revenge_usable` only when Revenge is usable now (`IsUsableSpell` gates both branches in
   Classic, `Classic/Warrior.lua:633-638`, and the port keeps that gate through `reactive()`): for the remaining
   `trigger + 5 − now` when a trigger is under 5 s old, else 5 s, replacing today's usability-only window (`Forever/Warrior.lua:421-428, 507`).
@@ -546,8 +548,8 @@ through the facade. It contains nothing Forever-specific about where an event co
   A `PARTY_KILL` row with our `sourceGUID` is available if the file later models the window ahead; nothing in this
   spec requires it.
 
-The fallback when attribution is impossible (no target `UNIT_COMBAT` within the window, or a hit on us no clock
-claims): the usability flip of the reactive ability is itself the signal ([V] D8: an Overpower
+The fallback when attribution of our own swing is impossible (no target `UNIT_COMBAT` within the window): the
+usability flip of the reactive ability is itself the signal ([V] D8: an Overpower
 `IsSpellUsable` false → true flip; it lagged a swing in O3, 4 flips after 34 melee no-rage swings). The layer does
 not emit a row from the flip; the class file's "usable now" branch, on the strict `usable` return, covers it.
 
@@ -611,7 +613,7 @@ Headless (busted, `Virtual/State/spec/`, the Phase 1 helpers `fake_api.lua` and 
   the outcome that follows pairs) within the hand's `PAIR_WINDOW_MS`; an unpaired outcome dropped and an unpaired
   swing emitted at its own time once its window closes; an on-next-swing strike takes its swing's outcome; a row
   emitted during a delivery follows it, never nested, counted; a full pool drops the oldest, counted. Hits on us:
-  credited to the one hostile targeting us; none and counted when nobody is known to, or `UnitIsUnit` is secret; two
+  credited to the one hostile targeting us; a hit with no known attacker makes a row with an empty source, counted, when nobody is known to, or `UnitIsUnit` is secret; two
   attackers told apart by their plain swing speeds, a hit off both clocks unattributed; a period learned from the
   gaps. 0 bytes per row.
 - `adapter_spec`: the adapter writes no cast history, queue or swing field (the rows do); our casts' aura rows
@@ -654,7 +656,7 @@ In game (the user runs it; Warrior on a dummy):
 |---|---|---|
 | E1 | Row wrappers slow hot reads (`GetTime`, `UnitExists` in the cycle; a hybrid adds a raw call) | in-game step 7; if the cycle grows by more than 5 %, the user decides between keeping the always-on wrapper (decision 4) and giving the hottest names the raw function |
 | E2 | A frame Hekili does not create through the facade registers events directly (a library, an XML template, a metatable call) | `check_api_reads.sh` greps the loaded files (§1.2); libraries are not Hekili core and keep their own frames |
-| E3 | Victim-side outcomes misattributed in groups (another attacker's dodge credited to our swing; a hit on us credited to the wrong attacker) | pairing within the hand's `PAIR_WINDOW_MS` and by amount only (§3); hits on us credited only by a clock within `ATTACK_TOLERANCE` or to the one hostile targeting us (§2.4), else no row; rows marked inferred; in Battle Stance the strict usability read corrects Overpower on the next reset (§6) |
+| E3 | Victim-side outcomes misattributed in groups (another attacker's dodge credited to our swing; a hit on us credited to the wrong attacker) | pairing within the hand's `PAIR_WINDOW_MS` and by amount only (§3); hits on us credited only by a clock within `ATTACK_TOLERANCE` or to the one hostile targeting us (§2.4), else the row has no source; rows marked inferred; in Battle Stance the strict usability read corrects Overpower on the next reset (§6) |
 | E4 | Own-cast and swing writes doubled while the Phase 1 feeds and the rows coexist | retire each feed in the same task as its rows (§7); in-game step 5 and a headless count of `AddToHistory` calls |
 | E5 | Hekili's dispatch allocates per delivered row (`Events.lua:84, 88-91`) | Hekili's retail cost; measured per row in in-game step 5; rows are emitted only for §11's families |
 | E6 | Registering an event the client does not know raises | `pcall` at subscription; stub entry (§2.1) |
@@ -664,7 +666,7 @@ In game (the user runs it; Warrior on a dummy):
 | E10 | A deferred row's time skew shifts a time-stamping consumer: the swing clock (up to the hand's `PAIR_WINDOW_MS`) or `trackDebuff` (up to one cycle) | every row with an observed basis is back-dated (§3, decision 5: slot 1 plus `Facade.GetTime` during delivery), checked by in-game step 6; modelled expiries are stamped at delivery |
 | E11 | A passthrough name is secret in some state nobody probed | the trace counts secrets per passthrough (§5); the name becomes a hybrid row |
 | E12 | A hybrid's raw answer out of combat and its model's in combat disagree at the edge (a cooldown read raw just before combat, the model's right after) | the model is seeded from the same plain reads (spec §4); the checkpoint's snapshot shows both classes answering (step 2) |
-| E13 | `UnitIsUnit("<token>target", "player")` or a hostile's `UnitAttackSpeed` is secret in combat | each goes through `Plain` and its status is noted (`Snapshot()`'s `read UnitIsUnit target-of`, `read UnitAttackSpeed hostile`); secret targeting means no row on us (the Revenge fallback, §6); a secret speed means a learned period (§2.4); phase B's probes measure both first |
+| E13 | `UnitIsUnit("<token>target", "player")` or a hostile's `UnitAttackSpeed` is secret in combat | each goes through `Plain` and its status is noted (`Snapshot()`'s `read UnitIsUnit target-of`, `read UnitAttackSpeed hostile`); secret targeting or a secret GUID means a row on us with no source (§2.4); a secret speed means a learned period (§2.4); phase B's probes measure both first |
 
 ## 11. Phasing
 
@@ -848,7 +850,7 @@ The user settled all nine; each is a rule in the section named.
 6. **Attribution of hits on us** (§2.4, §6): the set of hostiles targeting us (`UNIT_TARGET` and the target,
    focus and plate tokens, `UnitIsUnit("<unit>target", "player")`) and a swing clock per attacker (`UnitAttackSpeed`
    when plain, else learned from the gaps between hits on us while one hostile targets us); a hit goes to the
-   attacker whose clock predicts it within a tolerance, else it is unattributed and makes no row. Our own swings'
+   attacker whose clock predicts it within a tolerance, else it is unattributed and its row has no source. Our own swings'
    dodges and parries keep the pairing window. Phase B's checkpoint probes both inputs first.
 7. **The three remaining core edits move into the facade** (§7): a named follow-up task of the plan, after phase
    A (the plan runs it after phase B's tasks).

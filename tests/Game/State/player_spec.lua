@@ -209,7 +209,7 @@ describe("player start", function()
                 { 6, 0, 20 },
                 { 7, 30, 20 },
             }, seen)
-            assert.are.equal(7, I.Log.unattributed) -- no hostile on us: Attackers made no row, the belief still sees them
+            assert.are.equal(7, I.Log.unattributed) -- no hostile on us: Attackers credits nobody, the belief still sees them
         end)
 
         it("takes the attacker's level from the target only while the target's target is the player", function()
