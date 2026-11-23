@@ -88,6 +88,107 @@ describe("LibHiddenValues capability", function()
         assert.are.same({ true, "ready" }, { lib:IsAvailable("health", "target") })
     end)
 
+    -- Plain values firing prove nothing of the secret path. The client's player health reads secret in and out
+    -- of combat (measured 2026-11-22); a plain read is a hypothetical the guard fails closed.
+    describe("passes only on a prime fed a secret", function()
+        for _, case in ipairs({
+            { secret = false, closed = true, name = "a plain prime, the leak closed before login: fails" },
+            { secret = false, closed = false, name = "a plain prime, the leak open: fails closed" },
+            { secret = true, closed = true, name = "a secret prime, the leak closed before login: fails" },
+        }) do
+            it(case.name, function()
+                boot()
+                W.secret = case.secret
+                W.unit.target = { health = 1.0 }
+                if case.closed then
+                    Fake.set("closed", true)
+                end
+                local h = lib:Watch("A", { kind = "health", unit = "target", step = 1 }, sink)
+                local verdict = Fake.login()
+                Fake.tick(40)
+                W.combat = true
+                W.unit.target = { health = 0.8 }
+                Fake.event("PLAYER_TARGET_CHANGED")
+                Fake.tick(40)
+                local state, reason = h:State()
+                local got = { verdict, state, reason, tostring((h:Get())) }
+                assert.are.same({ false, "unavailable", "selftest", "nil" }, got)
+                assert.are.same({}, Fake.errors)
+            end)
+        end
+
+        it("a secret prime, the leak open: passes, in minor 7's frames", function()
+            boot()
+            Fake.event("PLAYER_LOGIN")
+            local frames = 0
+            while lib:GetSelfTest() == nil and frames < 120 do
+                Fake.tick(1)
+                frames = frames + 1
+            end
+            assert.are.equal(44, frames)
+            assert.are.same({ true, "ready" }, { lib:IsAvailable("health", "target") })
+            local _, lines = lib:GetSelfTest()
+            assert.are.equal("selftest prime: firings in the settle window 1, after it 0: ok", lines[4])
+        end)
+
+        it("says when the prime was not fed a secret", function()
+            boot()
+            W.secret = false
+            Fake.login()
+            local _, lines = lib:GetSelfTest()
+            assert.truthy(lines[4]:find("not fed a secret: FAIL", 1, true), lines[4])
+            assert.is_true(#lines[4] < 255)
+        end)
+
+        it("a retry with a plain read keeps failing", function()
+            boot()
+            Fake.set("closed", true)
+            assert.is_false(Fake.login())
+            W.secret = false
+            local verdict
+            lib:SelfTest(function(pass)
+                verdict = pass
+            end)
+            Fake.tick(60)
+            assert.is_false(verdict)
+        end)
+
+        it("secret pushes dropped, then a plain one that moves the bar: no pass", function()
+            boot()
+            local frame = getmetatable(_G.UIParent)
+            local push = frame.SetValue
+            frame.SetValue = function(self, v)
+                if not issecretvalue(v) then
+                    return push(self, v)
+                end
+            end
+            Fake.event("PLAYER_LOGIN")
+            for i = 1, 120 do
+                if i == 10 then
+                    W.secret = false
+                end
+                Fake.tick(1)
+            end
+            assert.is_false((lib:GetSelfTest()))
+        end)
+
+        it("the read turning secret after the push that moved the bar is no pass", function()
+            boot()
+            W.secret = false
+            Fake.set("closed", true)
+            Fake.event("PLAYER_LOGIN")
+            Fake.tick(15) -- past the prime's first live push
+            W.secret = true
+            assert.is_false(Fake.login())
+        end)
+
+        it("a prime fed nil is no pass", function()
+            boot()
+            rawset(_G, "UnitHealthPercent", function() end)
+            assert.is_false(Fake.login())
+        end)
+    end)
+
     it("fails the self-test when bars do not fire, and handles report it", function()
         boot()
         Fake.set("drop", 1)

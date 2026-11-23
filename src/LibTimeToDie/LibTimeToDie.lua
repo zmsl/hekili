@@ -1,15 +1,15 @@
 -- LibTimeToDie.lua: the entry point. LibStub("LibTimeToDie-1.0"): seconds until a unit's health reaches 0, with a
 -- range (lo, hi), from LibHiddenValues' 1% health bands. Consumers name what to track (unit tokens); the library opens
 -- one LibHiddenValues health watch per token (step 1, shared by every track of it, released with the last) and feeds
--- its bands to one estimator per owner of that token (Estimator.lua, the TTD lab's winner, lifted as is): each owner's
--- estimate sees the shared crossings and that owner's hints only. A target change starts a fresh stream (the estimator
--- carries the last rate); a re-prime of the same unit keeps the history; gone (no unit, plainly dead) clears the stream
--- and keeps the handle. Hints (HintRate, HintBelow) are numbers only and reach hostile units only.
+-- its bands to one estimator per owner of that token (Estimator.lua, the TTD lab's winner): each owner's estimate
+-- sees the shared crossings and that owner's hints only. A target change starts a fresh stream (the last rate may only
+-- lengthen its first answers); a re-prime of the same unit keeps the history; gone (no unit, plainly dead) clears the
+-- stream and keeps the handle. Hints (HintRate, HintBelow) are numbers only and reach hostile units only.
 --
 -- Upgrades: the newest minor on the client runs; Estimator.lua returns unless this copy won LibStub (lib.loading).
 -- State lives on lib as plain data; scripts are one-line dispatchers through lib. The addon name and the private table
 -- from `...` are never used (an embedded copy would receive its host's).
-local MAJOR, MINOR = "LibTimeToDie-1.0", 2
+local MAJOR, MINOR = "LibTimeToDie-1.0", 4
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then
     return
@@ -55,7 +55,7 @@ lib.MESSAGES = {
         ["lhv-old"] = "The LibHiddenValues loaded is older than this library needs.",
         fit = "Estimated from the recent fall of the health.",
         seed = "Estimated from the fall since the unit was first seen (little data yet).",
-        prior = "Estimated from the rate carried over from before a change of unit, a heal or a stall.",
+        prior = "Estimated from the rate from before a heal or a stall.",
         stalled = "The health stopped falling: the estimate holds.",
         pending = "Waiting for LibHiddenValues' self-test.",
         suspended = "LibHiddenValues had no bar free for it.",
@@ -413,8 +413,8 @@ local function flip(s, o)
     end
 end
 
--- The client's events. A target change: the target's streams start fresh (the carried rate stays) and the hints follow
--- its hostility; a gap between targets (no unit) is no flip. Combat start: an estimator that has seen no crossing yet
+-- The client's events. A target change: the target's streams start fresh (the last rate only lengthens) and the hints
+-- follow its hostility; a gap between targets (no unit) is no flip. Combat start: an estimator with no crossing yet
 -- starts again from now, so a mob targeted at full long before the pull is not anchored at the moment it was targeted
 -- (the TTD lab's note on the full anchor).
 function lib.event(event)

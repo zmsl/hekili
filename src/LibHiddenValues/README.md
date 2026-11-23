@@ -4,13 +4,12 @@ Threshold events for unit health and power, and for auras the client's Cooldown 
 Forever (Interface 16001), where the client hides those values from addons. Your addon says which thresholds it cares about; the library tells it, as plain numbers,
 which band the value is in and when it crosses one. Your code never touches a hidden value.
 
-MIT licence (see `LICENSE`). Works installed on its own or embedded in your addon; LibStub keeps one running copy (the
-newest minor) either way, and every addon that watches the same thing shares the same bars.
+MIT licence (see `LICENSE`). Embedded only: it is not published on its own. LibStub keeps one running copy (the
+newest minor), and every addon that watches the same thing shares the same bars.
 
 ## Quick start
 
-Standalone: list it in your TOC with `## OptionalDeps: LibHiddenValues`. Embedded: copy the folder into your addon
-and include `LibHiddenValues.xml` from your `embeds.xml`.
+Copy the folder into your addon and include `LibHiddenValues.xml` from your `embeds.xml`.
 
 ```lua
 local LHV = LibStub and LibStub("LibHiddenValues-1.0", true)
@@ -50,8 +49,8 @@ end)
 | Kind | Spec | Proven on |
 |---|---|---|
 | `health` | `unit`, `edges`, `step`, `predicted` (default true) | `player`, `target` |
-| `power` | `unit`, `power` (`Enum.PowerType`, required), `edges`, `step`, `points`, `precision` | `player`: mana, energy, rage (rage: proven by the BandProbe2 warm-up, the library's own run owed) |
-| `aura` | `unit`, `spell` or `cooldown`, `what`, `edges`, `max` | `player`, `target`: read from the Cooldown Manager, **not yet run in game** (below) |
+| `power` | `unit`, `power` (`Enum.PowerType`, required), `edges`, `step`, `points`, `precision` | `player`: mana, energy, rage (rage: proven by a separate probe, the library's own run owed) |
+| `aura` | `unit`, `spell` or `cooldown`, `what`, `edges`, `max` | `player`, `target`: read from the Cooldown Manager; run in game on minor 7 (2026-11-21: the kind ready, target swaps and a cleared target right). The hooks on first use (minor 8) are not yet run there |
 
 A spec needs at least one of `edges`, `step`, `points` or `precision`.
 
@@ -98,16 +97,16 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
   again and repeats, and every watch on that source reads unknown with it until the changes slow, edges-only watches
   included, another addon's too (bars are shared): a `step` watch on a target losing 1% a frame, dead in under about
   1.7 s at 60 fps. With each firing 1-2 frames late a cell every two frames already loses about half its calls to
-  desyncs (fake: 50 calls for 99 cells, 3 desyncs; a target dead in about 3.3 s at 60 fps, 6.6 s at 30; before the
-  Gray hold: 1 and 0 desyncs, now 6 at a cell a frame and 3 at a cell every two frames); a cell every three frames is
+  desyncs (fake: 50 calls for 99 cells, 3 desyncs; a target dead in about 3.3 s at 60 fps, 6.6 s at 30; without
+  the confirmation: 1 and 0 desyncs, with it 6 at a cell a frame and 3 at a cell every two frames); a cell every three frames is
   clean. A value alternating on every frame (35, 36, 35, ...) comes back to the held value every other decode: it
-  never desyncs and reads the held value until it settles. The owner's
+  never desyncs and reads the held value until it settles. An in-game
   run (2026-11-21, mana regenerating 2-3 points at a time) saw about one change in four split over two frames.
 
 `power` has no default: the displayed power changes with a form, and a handle must not change what it measures. Every
 other kind, token or option (focus or another power type, `points` or `precision` on health, the `focus` token, ...)
-returns a handle whose state is `"unavailable", "unproven"`: write against it now, it comes alive when its stage
-ships.
+returns a handle whose state is `"unavailable", "unproven"`: write against it now, it comes alive when that is
+built.
 
 ## Error codes
 
@@ -144,7 +143,7 @@ has no text for yet (enUS only for now). `GetMessage` also knows every state and
 The client hides aura data from addons in combat, but its Cooldown Manager still shows the auras the player placed
 there. The `aura` kind reads those items. It never changes the player's Cooldown Manager (nothing is
 shown, hidden, faded, moved or re-laid out; it only post-hooks the items' own updates), so it can only serve what the
-player placed.
+player placed. It attaches to nothing there until you watch an aura (below).
 
 ```lua
 -- Stacks of a debuff on the target (bands 0-2, 2-4, 4+), and whether a buff of mine is up.
@@ -166,8 +165,8 @@ LHV:Watch("MyAddon", { kind = "aura", unit = "player", cooldown = 1234, what = "
 The library reports what the Cooldown Manager shows: anything the item cannot tell is unknown. `up` 0 (with no stacks
 and no seconds, the lowest band: `0` to the lowest edge) means the item holds no aura of yours now: the item's reading,
 not proof that the aura is absent. Measured limits: the Cooldown Manager shows only auras the player cast, and on the
-player only helpful ones (F10), so a partner's debuff reads 0; and an item stayed silent a whole fight while its aura
-was up (F12, Mark of the Wild). After a target change every target watch whose item has not lit on the target since
+player only helpful ones, so a partner's debuff reads 0; and an item stayed silent a whole fight while its aura
+was up (Mark of the Wild). After a target change every target watch whose item has not lit on the target since
 is unknown (`gone`) until it does (lit on the player or on a secret unit does not count) or the client sends the new
 target's auras (a target `UNIT_AURA`): the client shows a new target's auras only once their update arrives (a Tracked
 Buffs icon stayed dark 0.4-0.6 s on a mob that had the aura), and an Essential or Utility item looks at the new target
@@ -187,6 +186,23 @@ up, which looks like "about to expire": watch `up` for such auras.
 through an edge; a plain fall through an edge is told within 2). When an aura comes back, `up` reads 1 at once while
 `stacks` and `left` keep the absent band for about `LHV.SETTLE` frames: read each handle on its own, or allow
 `h:Latency()` after `up` flips before combining them (a fresh application would otherwise read as about to expire).
+`stacks` keeps it only while a count settles: when the aura came up and the bars took no count (a new watch's or a
+re-layout's bars hold low 4 frames; the item was placed for the watch only after; the client bound the aura after
+writing the count), it is unknown until the client next writes the count. That can be for long, and where the count
+was below the lowest edge the absent band would have been true: with no further count it lasts the aura's life.
+
+When a watch moves to another entry (the spell's other entry now ranks first), nothing of the entry it left is kept:
+`up` is unknown for a frame, `left` until its bars settle, `stacks` until the client next writes that entry's count,
+also when the count is the same. The same entry on another viewer keeps its answer.
+
+A Tracked Buffs icon whose aura runs out with no aura event can show a linked aura and write no count of it: `stacks`
+is then unknown until the client next writes that icon's count (seen through the icon's `MarkDirty`, which the client
+calls when the linked spell changed). Known limit: an icon that binds the linked spell it already had calls nothing,
+and the band is the count of the aura before it until the client refreshes that item.
+
+After a target change, expect a target aura watch to read unknown on a mob that has the aura until its item lights
+or that target's `UNIT_AURA` arrives. A mob whose auras do not change sends neither: 0.8 to 6.4 seconds were measured
+in game.
 
 What each placement gives (the player chooses it in the Cooldown Manager's settings):
 
@@ -203,7 +219,7 @@ for the self-test like every bar. The kind's own answer (`IsAvailable("aura")`, 
 reason)`) describes the bars; ask with the whole spec, or read `h:State()`, for an `up` watch.
 
 `LHV:IsAvailable("aura", spec)` (the whole spec, without a watch) and `h:State()` answer `ready`, `pending` (not read
-yet; also after a reload in combat, until combat ends) or `unavailable` with one of these reasons:
+yet, or an item on screen the catalogue does not hold: below) or `unavailable` with one of these reasons:
 
 | Reason | Meaning | What the player can do |
 |---|---|---|
@@ -218,16 +234,70 @@ The library only reports: telling the player is your addon's choice. `LHV:OnCapa
 `fn("aura", state, reason)` when the kind changes (`cdm-off`) and `fn("aura", state, reason, h)` for each of your aura
 handles whose answer changed (the player placed or removed the aura, a layout change). A handle is `gone` (unknown)
 while its item cannot be read: its viewer hidden (Edit Mode "Hidden", or the whole UI hidden), Edit Mode open, or an
-item whose `cooldownID` the client keeps secret (which entry it shows is not known; until it reads plain again).
+item whose `cooldownID` the client keeps secret (which entry it shows is not known; until the next layout or data pass
+finds it plain).
 
-A bar is read 4 frames (`LHV.SETTLE`) after the client's first push into it, so the first band is the true one, once,
-with dir 0. A stacks watch started while its aura is already up stays `priming` until the client next writes the
+### When the library attaches to the Cooldown Manager
+
+The hooks go in on first use: the first `Watch` of an aura on `player` or `target` installs them (after login: one
+made earlier installs them on the first frame) and reads the items already on screen, in combat too. It sees nothing
+from before that: a target aura can be in a swap's doubt, and stacks wait for the next count. The hooks stay for the session (a hook cannot be removed), also after the watch is released. With no aura watch, health
+and power watches included, nothing is hooked and no item is read (the getters below read them when called).
+
+The catalogue (which entries exist and the spells they name) is not a hook and is kept known with no watch, read out
+of combat only, as by minor 7: at login, on the events that can change it (`COOLDOWN_VIEWER_DATA_LOADED`,
+`COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED`, `COOLDOWN_VIEWER_TABLE_HOTFIXED`, `PLAYER_LEVEL_CHANGED`, `SPELLS_CHANGED`,
+`PLAYER_EQUIPMENT_CHANGED`, `PLAYER_PVP_TALENT_UPDATE`, `TRAIT_CONFIG_UPDATED`,
+`ACTIVE_PLAYER_SPECIALIZATION_CHANGED`, `ACTIVE_COMBAT_CONFIG_CHANGED`, `ACTIVE_TALENT_GROUP_CHANGED`), when combat
+ends if one came during it, and with a watch whenever the items are read again out of combat. In combat the list from
+before the fight answers every watch and getter, so a change made during a fight is seen when it ends. An item on
+screen whose entry that list does not hold, met by the first watch or by a getter with no watch, makes new answers
+wait until the next read: a watch and `IsAvailable` with a spec say `pending` and `GetAuraEntries` says not read,
+never a 0 or a `not-in-cdm`.
+
+| Call | Hooks | Cooldown Manager work with no aura watch |
+|---|---|---|
+| `Watch` of an aura on `player` or `target` | installs them, each once: two per viewer (`OnAcquireItemFrame`, `RefreshData`), two per Tracked Bar item (the count's `SetText`, the bar's `SetValue`), two per Tracked Buffs icon (the count's `SetText`, the item's `MarkDirty`), none per Essential or Utility item | (it is the first use: the items are read, in combat too) |
+| `Watch` refused, of another unit, or of another kind | none | none |
+| none (login and the events) | none | on or off, and the catalogue as above |
+| `IsAvailable("aura")`, `GetKinds`, `OnCapability` | none | none of their own |
+| `IsAvailable("aura", spec)`, `GetAuraEntries` | none | reads the items when called, and out of combat a catalogue an event left old |
+| `GetAuraSources`, the other getters | none | none (`read`: the catalogue was read at least once) |
+
+With no watch, the kind's `cdm-off` that ends without an event stays until the next event or combat end: a `Watch`
+reads again, so watch rather than wait for `ready`. Viewers that appear after a watch are hooked at the next event the
+library listens to.
+
+Until the catalogue was read once (after a login or reload in combat, until that fight ends; or the Cooldown Manager off
+since), `IsAvailable` with a spec and `GetAuraEntries` say not read (`pending`; `read` false). While an item's `cooldownID`
+reads secret, which entry it shows cannot be told: a new watch (one watched again too), and `IsAvailable` with a spec, say `pending` where
+that item could be the entry that ranks first or the only one, and a watch that answered keeps its answer (its own
+item secret: `gone`).
+
+A bar is read 4 frames (`LHV.SETTLE`) after the client's first push into it, so the first band of a new watch is the
+pushed value's, once, with dir 0. A handle that joins another's live watch starts from that watch's last frame: its
+first band can be one frame old. A stacks watch started while its aura is already up stays `priming` until the client next writes the
 count (an application, a refresh, a target swap); after a re-layout (UI scale, a loading screen) an aura handle is
-unknown until its bars settle again. When an aura comes back the band before it stands while the count settles. A
+unknown until its bars settle again. When an aura comes back the band before it stands while the count settles (a
+count the bars took: with none, a stacks watch is unknown). A
 refresh within a frame of a seconds edge can be told up to 11 frames late (`h:Latency()`; the band before it stands
 meanwhile). `OnCapability` is not called from inside `Watch` or `IsAvailable`: read `h:State()` there (an answer
 `IsAvailable` gives may be a frame old; the callbacks follow on the next frame). A paused aura handle only reports
 unknown; its bars keep following the client.
+
+## The self-test
+
+At login, and on `LHV:SelfTest()`, invisible bars are pushed known values for about 45 frames, and one more bar is
+primed from the player's health. A pass requires that this prime was fed a secret: the player's health reads secret in
+and out of combat on the live client (measured 2026-11-22), so a plain or nil read there is no pass, and the kinds
+that rest on bars stay `unavailable, selftest`.
+
+A pass proves that the bars fire, that the curves follow the library's convention, and that a secret moved a bar whose
+firing arrived in time. It does not check the values behind secrets. Its limit: a client change that stops those
+firings after a run is seen at the next `SelfTest` or login, not before; until then bands can be stale.
+
+A copy that takes over from a minor before 8 after login does not keep that copy's verdict: it is `pending` while it
+runs the test again, and a stacks watch stays unknown until its next count change.
 
 ## Testing your addon
 
@@ -244,6 +314,9 @@ Fake.tick(1)
 Fake.restore()
 ```
 
+The self-test passes there only on a secret health read (`W.secret`, the default): a test that wants plain reads
+turns it off after `Fake.login()`.
+
 Its header lists the world fields (`max` per power type for `points` and `precision`), the fault knobs (`closed`,
 `lag`, `secretlag`, `drop`, `stagger`, `jitter`, `seed`, `snap`, `maxpoints`, `refuse`) and what it does not model. It
 also models the Cooldown Manager (`W.cdm`, `W.aura`, `Fake.setAura`, `Fake.cdmLayout`, `Fake.cdmEnable`; a target's
@@ -252,21 +325,20 @@ auras arriving late after a swap: `W.cdm.lateSwap`): see the comment above its v
 ## Diagnostics
 
 Diagnostics are a consumer's job: the library prints nothing (an error goes to the client's error handler), registers
-no slash command and shows no frame of its own. The calls below answer everything a diagnostic tool needs; LHVProbe is
-the reference consumer (`/lhvp`).
+no slash command and shows no frame of its own. The calls below answer everything a diagnostic tool needs.
 
 | Call | Returns |
 |---|---|
-| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 7`) |
+| `LHV:GetVersion()` | `major, minor` (`"LibHiddenValues-1.0", 8`) |
 | `LHV:GetKinds()` | a fresh array, one `{ kind =, state =, reason = }` per kind of the major, in contract order (`health`, `power`, `cooldown` ... `aura` ... `meter`: the major's twelve); `state` and `reason` as `IsAvailable` |
 | `LHV:IsAvailable(kind, unit)` | `ok, state, reason` (`state` `"ready"`, `"pending"` or `"unavailable"`; `reason` nil unless unavailable). `unit` may be a whole spec: the aura kind then answers for its placement |
 | `LHV:OnCapability(owner, fn)` | nothing; `fn(kind, state, reason)` on each change, and `fn("aura", state, reason, h)` for each of the owner's aura handles whose answer changed |
 | `LHV:GetAuraSources()` | a fresh array, one `{ unit =, spell =, cooldown =, what =, handles =, bars =, active =, cooldownID =, placement =, state =, reason =, up = }` per aura source with a watch (`cooldown` the entry a watch by entry names, else nil; `cooldownID` the entry read now; `placement` `"bar"`, `"icon"`, `"essential"`, `"utility"` or nil; `up` true, false or nil for unknown); then `off, read, texts, values, refused, reads`: the Cooldown Manager is off, its catalogue was read, count texts and bar values forwarded, values a bar refused, item reads |
-| `LHV:GetAuraEntries(spell)` | a fresh array, one `{ cooldownID =, spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = { ... }, hasAura =, selfAura =, category =, placement = }` per Cooldown Manager entry naming the spell (as its spell, override, tooltip override or a linked spell), in catalogue order: the client's plain facts from its out-of-combat read (`hasAura` and `selfAura` the client's booleans as given, nil when not plain; the library does not filter on them; `category` the default one; `placement` as in `GetAuraSources`, nil when no item shows it); then `read` (the catalogue was read). Choose one and watch it with `cooldown =` |
+| `LHV:GetAuraEntries(spell)` | a fresh array, one `{ cooldownID =, spellID =, overrideSpellID =, overrideTooltipSpellID =, linkedSpellIDs = { ... }, hasAura =, selfAura =, category =, placement = }` per Cooldown Manager entry naming the spell (as its spell, override, tooltip override or a linked spell), in catalogue order: the client's plain facts from the last catalogue read (`hasAura` and `selfAura` the client's booleans as given, nil when not plain; the library does not filter on them; `category` the default one; `placement` as in `GetAuraSources`, nil when no item shows it); then `read` (the catalogue was read and holds every item on screen). Choose one and watch it with `cooldown =` |
 | `LHV:GetStats()` | `bars, usFrame, usPeak, pushesPerSec, firesPerSec, desyncs, level, splits`: bars in use, average and peak µs per frame, pushes and firings per second, desyncs (a source whose bars contradicted each other, a lost firing: it primes again; a position or precision decode counts one only when still invalid on a frame with no new firing after an invalid one, or 4 in a row), governor level (0 for now), splits (a position decode held one frame). The frame times cover the library's whole frame, the self-test's frames included while it runs; with nothing fed the driver stops and every rate and time reads 0 |
 | `LHV:GetPool()` | `made, cap, pointBars, pointCap, pointCapPerSource`: bars made (32 at login; frames are never destroyed), the cap (256), point bars in use, and the point caps (64, 8) |
 | `LHV:GetSources()` | a fresh array, one `{ kind =, unit =, power =, predicted =, handles =, bars =, mode =, max =, active = }` per source with a watch, in creation order (`kind`, `unit`, `power`, `predicted` are the source's key: watches differing in any of them do not share bars; `power` nil for health; `mode` `"edges"`, `"gray"` (position) or `"ring"` (point precision); `max` the plain max a power source cuts points with; `active`: fed every frame) |
-| `LHV:SelfTest(fn)` | nothing; runs the self-test (or joins the run going) and calls `fn(pass, lines)` when it ends: `pass` a boolean, `lines` an array of strings under 255 characters, the last one `selftest PASS ...` or `selftest FAIL ...`. Called at once (inside `SelfTest`) when it cannot run: the client lacks the API, switched off, or no free bar (an earlier verdict then stands; with none it is a FAIL). Before login it waits for the login run. The capability has already changed when `fn` runs: `IsAvailable` and the handles' `State()` show the new verdict. `lines` is shared: read it, do not change it |
+| `LHV:SelfTest(fn)` | nothing; runs the self-test (or joins the run going) and calls `fn(pass, lines)` when it ends: `pass` a boolean, `lines` an array of strings under 255 characters, the last one `selftest PASS ...` or `selftest FAIL ...`. Called at once (inside `SelfTest`) when it cannot run: the client lacks the API, switched off, or no free bar (an earlier verdict then stands; with none it is a FAIL). A run whose prime was not fed a secret is a FAIL. Before login it waits for the login run. The capability has already changed when `fn` runs: `IsAvailable` and the handles' `State()` show the new verdict. `lines` is shared: read it, do not change it |
 | `LHV:GetSelfTest()` | `verdict, lines, running`: the last completed run's verdict (`true`/`false`) and its lines (the array `fn` got), both nil before the first run and again after `SetEnabled(true)` until the new run ends; and whether a run is going |
 | `LHV:SetEnabled(on)` | nothing. `false`: every kind `unavailable, off` for this session. `true` after `false`: pending until a fresh self-test passes (it starts one). Already on, it changes nothing: after a failed self-test, `LHV:SelfTest(fn)` runs it again and the kinds come back when it passes |
 

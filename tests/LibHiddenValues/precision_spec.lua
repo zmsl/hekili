@@ -293,7 +293,7 @@ describe("LibHiddenValues point precision", function()
         assert.are.equal(lib.ERR.POOL_LIMIT, err)
     end)
 
-    -- Review I2 (decision: lhv-stage3-fable-decisions.md): at a point step above 1 a threshold off the quantum grid
+    -- At a point step above 1 a threshold off the quantum grid
     -- falls inside the value's quantum; it keeps its own bar so it stays exact to the point.
     describe("at a point step above 1 (max 6400, step 3)", function()
         before_each(function()
@@ -320,7 +320,7 @@ describe("LibHiddenValues point precision", function()
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
-        -- Owner decision (L1624 question 2): a step watch reads one 1% cell, never the two a quantum can straddle
+        -- Decided: a step watch reads one 1% cell, never the two a quantum can straddle
         -- (3966-3968 spans 61% and 62%): the Gray set stays beside the ring while a step is asked.
         for _, snap in ipairs({ "left", "right", "nearest" }) do
             it("reads a step watch as one 1% cell beside the ring, its 8 bars counted (" .. snap .. ")", function()
@@ -515,7 +515,7 @@ describe("LibHiddenValues point precision", function()
             assert.are.same({ 3996, 3999 }, lohi(h))
             lib.fire(i) -- the late firing
             Fake.tick(1)
-            assert.are.same({ 0, 4000 }, lohi(p)) -- the first valid decode after a bad frame is held too (review I1)
+            assert.are.same({ 0, 4000 }, lohi(p)) -- the first valid decode after a bad frame is held too
             Fake.tick(1)
             assert.are.same({ 4002, 6400 }, lohi(p))
             assert.are.same({ 4005, 4008 }, lohi(h))
@@ -525,9 +525,9 @@ describe("LibHiddenValues point precision", function()
         end)
     end)
 
-    -- Review I3 (decision: lhv-stage3-fable-decisions.md): a one-step change across a cell boundary (every 50 quanta)
+    -- A one-step change across a cell boundary (every 50 quanta)
     -- toggles 2 fine bars, a cell bit and the parity bar; half of them alone is a valid state 50 quanta off. The
-    -- stagger knob cannot split one change that way: the bar states are set by hand, as the review's R5 did.
+    -- stagger knob cannot split one change that way: the bar states are set by hand.
     describe("a change across a ring cell boundary", function()
         local h, seen
 
@@ -750,7 +750,7 @@ describe("LibHiddenValues point precision", function()
             end
         end
 
-        -- Every value the sink was given was one the client held (review I1: a bad run ending on a half-landed change
+        -- Every value the sink was given was one the client held (a bad run ending on a half-landed change
         -- across a cell read 1200, 50 off, when its first valid decode was taken unchecked).
         local function onlyHeld(list)
             local ok = {}
@@ -763,10 +763,10 @@ describe("LibHiddenValues point precision", function()
         end
 
         -- Changes on adjacent frames, each with a bar a frame late (the last, onto 1250, its cell bars), so the decode
-        -- is bad while firings land. Review I1: the first valid decode after bad frames read 1200, 50 off, the client
+        -- is bad while firings land. The first valid decode after bad frames read 1200, 50 off, the client
         -- never held it (s.qv is stale then: from 1241 the ring moved 9, from 1400 a spend, neither looked suspect).
-        -- Review I3: the first call came on frame 5 while h:Latency() said 3; the measured frames are listed (fix round
-        -- 2: every change waits for the next decode to agree).
+        -- The first call came on frame 5 while h:Latency() said 3; the measured frames are listed (every change
+        -- waits for the next decode to agree).
         for _, case in ipairs({
             { 5, 1247, 1248, 1250 },
             { 6, 1246, 1247, 1248, 1250 },
@@ -826,7 +826,7 @@ describe("LibHiddenValues point precision", function()
             end)
         end
 
-        -- Re-review R1: a held jump, then a change across a cell whose cell bars land a frame late. The held frame's
+        -- A held jump, then a change across a cell whose cell bars land a frame late. The held frame's
         -- decode (1200: the ring at 1250, the cell still 24) was taken unchecked; it is held again until it repeats.
         it("never reports the decode of a held frame unless it repeats: 1300 to 1248, then +2 across 1250", function()
             start(1300)
@@ -841,7 +841,7 @@ describe("LibHiddenValues point precision", function()
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
-        -- Documented residual (re-review 2 M-R2b): a reversal across a cell on adjacent frames, 1249 -> 1250 -> 1249, the
+        -- Documented residual: a reversal across a cell on adjacent frames, 1249 -> 1250 -> 1249, the
         -- first push's cell bars a frame late and the second's ring bars a frame late. The first push's late cell
         -- firings cancel the second's cell firings, so the half state (the ring at 1250, the cell still 24: 1200)
         -- repeats on two decodes and is confirmed. It needs two changes to undo each other bar for bar (for mana a
@@ -872,7 +872,7 @@ describe("LibHiddenValues point precision", function()
             assert.are.equal(0, select(6, lib:GetStats()))
         end)
 
-        -- Re-review 2 I-R2a: a change half-landed as a prime ends (+2 across 1250 on the prime's last push, its cell bars
+        -- A change half-landed as a prime ends (+2 across 1250 on the prime's last push, its cell bars
         -- a frame late) read 1200 as the first decode after the prime and was taken unconfirmed. The first decode after a
         -- prime is held like any change; the first value still comes within h:Latency() of the prime's last push.
         for _, case in ipairs({
@@ -964,11 +964,11 @@ describe("LibHiddenValues point precision", function()
         -- A minute of regen (+2 or +3 every 5 to 7 frames) and a spend of 60-259 every 1 to 4 s from the max, each
         -- firing 1 or 2 frames late (lag 1, jitter 1: harsher than the run, where about 28% of the changes split). The
         -- spends outrun the regen by about 40 mana/s: the minute sweeps the range from the max down to 36 (70 frames
-        -- below 100); review M1: the old model sat below 100 mana for 3124 of its 3600 frames.
+        -- below 100); the old model sat below 100 mana for 3124 of its 3600 frames.
         it("keeps exact mana through a minute of regen with every firing 1-2 frames late: no desync", function()
             W.unit.player.max[0] = 2479
             start(2479)
-            assert.has_error(function() -- re-review M5: seed 0 would pin the generator (no jitter)
+            assert.has_error(function() -- seed 0 would pin the generator (no jitter)
                 Fake.set("seed", 0)
             end)
             Fake.set("lag", 1)

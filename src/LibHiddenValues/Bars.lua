@@ -10,11 +10,11 @@
 -- arrived reported the lowest band, then the real one with dir 1.
 --
 -- A source runs one of three modes, chosen by its handles: edges only (one bar per edge); position (a listener asked
--- for a step: the Gray code of the 1% cell n = 0..100 on 7 bars plus a parity bar, design 3.3, proven by BandProbe2;
--- an edge on the 1% grid then needs no bar); point precision (Kinds/Percent.lua's ring, stage 3 task D; at a point
--- step above 1 a step listener keeps a position set beside it, cut on whole points, owner L1624). A position
+-- for a step: the Gray code of the 1% cell n = 0..100 on 7 bars plus a parity bar, proven by BandProbe2;
+-- an edge on the 1% grid then needs no bar); point precision (Kinds/Percent.lua's ring; at a point
+-- step above 1 a step listener keeps a position set beside it, cut on whole points). A position
 -- decode checks the code, the parity and every edge bar against the cell: one bad frame holds the last band (a split:
--- one change's firings landed in two frames), two in a row are a desync and the source primes again (design 3.3).
+-- one change's firings landed in two frames), two in a row are a desync and the source primes again.
 -- The encoding stays internal: a handle reads its band through decode.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
@@ -32,9 +32,9 @@ local NGRAY = 7 -- Gray bits of the 1% cell (101 values)
 lib.HOLD, lib.SETTLE, lib.LOW, lib.POOL, lib.CAP = HOLD, SETTLE, LOW, 32, CAP
 -- Points per Step curve the client accepts (BandProbe2 0.3.0: 256 accepted, 512 refused); a guarded step costs 2.
 lib.MAXPTS = 256
--- Point thresholds that need a bar: at most per source and in total (owner L1613; tunable after a perf run).
+-- Point thresholds that need a bar: at most per source and in total (tunable after a perf run).
 lib.POINTS_PER_SOURCE, lib.POINTS_TOTAL = 8, 64
-local MINSP = 0.00001 -- the smallest step spacing proven on the 0-1 scale (BandProbe2 0.3.0 D2)
+local MINSP = 0.00001 -- the smallest step spacing proven on the 0-1 scale (BandProbe2 0.3.0)
 
 -- Point precision (BandProbe2 0.3.0's mana arm, C50): the value in quanta q (g points each) is cell c = q div N on a
 -- Gray code (cell bits + a parity bar) and ring position q mod N on N fine bars, where boundary q toggles bars q mod N
@@ -285,7 +285,7 @@ end
 
 -- Whether a percent edge needs a bar of its own in a mode at the max M with the ring's point step g (position covers
 -- the 1% grid; the ring covers every cut at step 1 and a cut on its quantum grid above it: a cut inside the value's
--- quantum keeps its bar, review I2; a cut that is not a whole multiple of the step is kept too, the safe side).
+-- quantum keeps its bar; a cut that is not a whole multiple of the step is kept too, the safe side).
 local function needEdge(mode, e, M, g)
     if mode == "ring" then
         return g ~= nil and g > 1 and (e * M) % (100 * g) ~= 0
@@ -453,7 +453,7 @@ local function cellPoint(n, M)
     return n > 100 and M + 1 or math.floor((n * M + 99) / 100)
 end
 
--- The position set beside a ring at the max M (owner L1624: a step watch reads one 1% cell where a quantum spans two):
+-- The position set beside a ring at the max M (a step watch reads one 1% cell where a quantum spans two):
 -- the step into cell n half a point below its first whole point, its guard a quarter point lower, as the ring's and
 -- the point bars' steps, so a whole-point value reads its own cell under any snapping. Per max, like the rings; false
 -- when the client refused a curve.
@@ -628,7 +628,7 @@ function lib.sync(s)
         mode = nil
     end
     local g = ring and ring.g
-    -- a step beside a ring of step above 1 keeps the position set (owner L1624); at step 1 the ring gives one cell
+    -- a step beside a ring of step above 1 keeps the position set; at step 1 the ring gives one cell
     local gray = ring and g > 1 and step and lib.grayFor(M) or nil
     if mode ~= s.mode or ring ~= s.ring or gray ~= s.gray then -- a new mode, the ring of a new max, the set beside
         freeCore(s) -- the whole core primes again: shortcut, a step joining or leaving re-primes the ring too
@@ -795,7 +795,7 @@ local function ringDecode(s)
     if q > r.mq then
         return "range"
     end
-    -- the kept bars (step above 1, review I2) against the quantum's points A..B; a bar still priming says nothing
+    -- the kept bars (step above 1) against the quantum's points A..B; a bar still priming says nothing
     local g, M, prime = r.g, s.max, lib.barPrime
     local A = q * g
     local B = math.min(A + g - 1, M)
@@ -821,7 +821,7 @@ local function ringDecode(s)
             end
         end
     end
-    if s.gray then -- the position set beside: its cell's whole points must meet the quantum's (owner L1624)
+    if s.gray then -- the position set beside: its cell's whole points must meet the quantum's
         local n, bad = grayCell(st, core, N + NB + 1)
         if not n then
             return bad
@@ -836,8 +836,8 @@ end
 
 -- Decodes the source's core set (position) before its handles. false: hold the handles' bands this frame (s.qv keeps
 -- the last accepted value: the ring's quantum, or the Gray 1% cell). A decode other than s.qv is held until confirmed:
--- the next frame's decode gives the same value (owner, fix round 2 for the ring, fix round 3 for Gray: "it's
--- consistency"); a prime clears s.qv, so its first decode is held too (re-review 2 I-R2a). Half of a change whose bars
+-- the next frame's decode gives the same value (the ring and Gray alike, for
+-- consistency); a prime clears s.qv, so its first decode is held too. Half of a change whose bars
 -- land over two frames is a valid state the client never held (a 2-3 point regen change across a cell read 50 off; a
 -- spend whose cell bits landed in part read another cell, 516 for 116; a spend whose cell bars all came late read as a
 -- small change, 272 for 122; a Gray jump 100 -> 85 with bit 0 and the parity late read 84); when a push's firings land

@@ -15,7 +15,7 @@ for l in LibHiddenValues LibTimeToDie; do need "Hekili/Libs/$l/$l.lua"; need "He
 incs=$(unzip -p "$zip" Hekili/embeds.xml | perl -0pe 's/<!--.*?-->//gs' | grep -o 'Libs.Lib[A-Za-z]*.Lib[A-Za-z]*\.xml' | tr '\\' '/' | tr '\n' ' ' || true)
 [ "$incs" = "Libs/LibHiddenValues/LibHiddenValues.xml Libs/LibTimeToDie/LibTimeToDie.xml " ] ||
     { echo "embeds.xml: the library includes are not open in order: '$incs'"; fail=1; }
-for bad in '^Hekili/src/' '/tests/' '/tools/' '/Testing/' '^Hekili/docs/' '/APLs/' '\.simc$' '^Hekili/Makefile$' '^Hekili/\.' 'ForeverProbe'; do
+for bad in '^Hekili/src/' '/tests/' '/tools/' '/Testing/' '^Hekili/docs/' '/APLs/' '\.simc$' '^Hekili/Makefile$' 'vendor\.lock' '^Hekili/\.' 'ForeverProbe'; do
     if grep -qE "$bad" <<<"$list"; then echo "unexpected: $(grep -E "$bad" <<<"$list" | head -3)"; fail=1; fi
 done
 ver=$(basename "$zip" .zip); ver=${ver#Hekili-}

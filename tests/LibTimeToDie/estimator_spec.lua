@@ -1,6 +1,8 @@
 -- tests/LibTimeToDie/estimator_spec.lua: the estimator's own checks, lifted with it from the TTD lab (branch ttd-lab
--- f29c14916, tools/ttd_lab/estimator_test.lua: 27 checks), one `it` per check, the asserts unchanged. The module is
--- loaded alone (no LibStub), as the lab ran it, with the library's defaults (staleAnchor 12, the lab's 8).
+-- f29c14916, tools/ttd_lab/estimator_test.lua: 27 checks), one `it` per check. The asserts are the lab's but for the
+-- four checks of a carry over a swap (marked minor 3: another unit's rate may only lengthen). The module is loaded
+-- alone (no LibStub), as the lab ran it, with the library's defaults (staleAnchor 12, the lab's 8; priorEmpty false)
+-- but the lab's anchors and seed (minor 4: anchorFull and anchorBelow true, seedTime 0; minor 4's own checks below).
 local PATH = "src/LibTimeToDie/Estimator.lua"
 
 local function loadEstimator()
@@ -57,6 +59,8 @@ describe("LibTimeToDie estimator (the TTD lab's checks)", function()
 
     setup(function()
         E = loadEstimator()
+        -- minor 4: these check the lab's anchors and seed, so this copy takes the lab's defaults for them
+        E.DEFAULTS.anchorFull, E.DEFAULTS.anchorBelow, E.DEFAULTS.seedTime = true, true, 0
     end)
 
     it("unknown before the first band and at full with no crossing", function()
@@ -108,17 +112,16 @@ describe("LibTimeToDie estimator (the TTD lab's checks)", function()
         assert(est and math.abs(est - 57) < 0.01, est) -- 1 s per percent from 57
     end)
 
-    it("the slope carries over a swap: the next mob answers from its first crossing", function()
+    it("the slope carries over a swap: from the next mob's first crossing, and only to lengthen", function()
         local e = E.New()
         local t = steady(e, 0, 100, 0.5, 20)
         assert(e:Get(t))
         e:Restart()
         e:Band(t + 1, 69, 70)
-        local est, _, _, state = e:Get(t + 1.1) -- no crossing yet: the carried slope from the band's middle
-        assert(state == "prior" and math.abs(est - 69.5 * 0.5) < 0.01, tostring(est))
-        e:Band(t + 1.5, 68, 69)
-        est = e:Get(t + 1.5)
-        assert(est and math.abs(est - 69 * 0.5) < 0.5, tostring(est)) -- the carried slope rules for 8 s; deadband
+        assert(e:Get(t + 1.1) == nil) -- minor 3: no crossing of its own yet
+        e:Band(t + 1.15, 68, 69) -- its own anchor slope: 0.3 s per percent, faster than the carried one
+        local est = e:Get(t + 1.15)
+        assert(est and math.abs(est - 69 * 0.5) < 0.5, tostring(est)) -- the slower carried slope rules
     end)
 
     it("with seedWeight 1 a carried slope mixes with the new mob's own anchor slope", function()
@@ -127,10 +130,10 @@ describe("LibTimeToDie estimator (the TTD lab's checks)", function()
         assert(e:Get(t))
         e:Restart()
         e:Band(t + 1, 99, 100) -- a fresh mob
-        e:Band(t + 3, 98, 99) -- its own anchor slope: 2 s per percent
-        local est, _, _, state = e:Get(t + 3)
+        e:Band(t + 1.2, 98, 99) -- its own anchor slope: 0.2 s per percent (minor 3: faster, so the carried one mixes)
+        local est, _, _, state = e:Get(t + 1.2)
         assert(state == "seed", state)
-        assert(math.abs(est - 99 * 1.25) < 0.01, est) -- (0.5 + 2) / 2 seconds per percent
+        assert(math.abs(est - 99 * 0.35) < 0.01, est) -- (0.5 + 0.2) / 2 seconds per percent
     end)
 
     it("a carried slope older than priorAge is dropped (a new pull)", function()
@@ -140,6 +143,8 @@ describe("LibTimeToDie estimator (the TTD lab's checks)", function()
         e:Restart()
         e:Band(t + 15, 69, 70)
         assert(e:Get(t + 15.1) == nil)
+        e:Band(t + 15.15, 68, 69) -- minor 3: so the check is seen at the crossing, where a carry would lengthen
+        assert(math.abs(e:Get(t + 15.15) - 69 * 0.3) < 0.01) -- its own slope
     end)
 
     it("without a carried slope a swap onto a damaged mob stays unknown until it has data", function()
@@ -224,10 +229,11 @@ describe("LibTimeToDie estimator (the TTD lab's checks)", function()
         e:Get(t + 2)
         e:Restart() -- a swap inside the hint's window
         local now = t + 2.6
-        e:Band(now - 0.1, 59, 60)
+        e:Band(now - 0.12, 59, 60)
+        e:Band(now, 58, 59) -- minor 3: its first crossing, at 0.48 base seconds per percent, under the carried 0.5
         est = e:Get(now)
-        local inHint = t + 10 - now -- 2 x inHint base seconds burnt at x2, the rest of 59.5 x 0.5 at the base rate
-        assert(math.abs(est - (inHint + 59.5 * 0.5 - 2 * inHint)) < 0.3, est)
+        local inHint = t + 10 - now -- 2 x inHint base seconds burnt at x2, the rest of 59 x 0.5 at the base rate
+        assert(math.abs(est - (inHint + 59 * 0.5 - 2 * inHint)) < 0.3, est)
     end)
 
     it("the detector drops a rate hint the data contradicts", function()
@@ -452,7 +458,7 @@ describe("LibTimeToDie estimator (the library's defaults)", function()
         local E = loadEstimator()
         assert.are.equal(12, E.DEFAULTS.staleAnchor)
         local function afterIdle(idle) -- idle at full, then one crossing; the truth is about 49 s
-            local e = E.New()
+            local e = E.New({ anchorFull = true }) -- minor 4: no anchor by default
             e:Band(0, 99, 100)
             e:Band(idle, 98, 99)
             return e:Get(idle + 0.01)
@@ -461,5 +467,224 @@ describe("LibTimeToDie estimator (the library's defaults)", function()
         assert.is_true(kept ~= nil and kept > 200, tostring(kept))
         local dropped = afterIdle(14)
         assert.is_true(dropped == nil or dropped < 100, tostring(dropped))
+    end)
+end)
+
+-- Minor 3 (not a lab check): a chain pull or a swap never gets the last unit's kill time.
+describe("LibTimeToDie estimator (a new unit)", function()
+    local E, e
+
+    before_each(function()
+        E = loadEstimator()
+        e = E.New()
+    end)
+
+    -- A mob first seen full falls evenly to `last` percent, `kill` seconds for all 100; read every 0.05 s.
+    local function trash(kill, last)
+        e:Band(0, 99, 100)
+        local t, seen = 0, 100
+        while seen > last do
+            t = t + 0.05
+            local p = math.max(last, 100 - math.floor(100 * t / kill + 1e-6))
+            if p < seen then
+                seen = p
+                e:Band(t, math.max(0, p - 1), p)
+            end
+            e:Get(t)
+        end
+        return t
+    end
+
+    -- The next unit: seen at `t0` in the band below `top`, a 120 s mob (1% per 1.2 s from `t0` + `phase`). Every read
+    -- of its first 5 s is unknown or at least `least`; at 5 s it has an answer of its own.
+    local function tough(t0, top, least, phase)
+        phase = phase or 1.2
+        e:Restart()
+        e:Band(t0, top - 1, top)
+        local fell = 0
+        local est
+        for i = 1, 100 do
+            local s = i * 0.05
+            local n = s >= phase and math.floor((s - phase) / 1.2 + 1e-6) + 1 or 0
+            if n > fell then
+                fell = n
+                e:Band(t0 + s, top - 1 - n, top - n)
+            end
+            est = e:Get(t0 + s)
+            assert(est == nil or est >= least, ("%.2f s: %s"):format(s, tostring(est)))
+        end
+        assert(est, "no answer at 5 s")
+    end
+
+    for _, kill in ipairs({ 6, 15 }) do
+        for _, gap in ipairs({ 1, 5, 9 }) do
+            it(("a %d s kill, %d s later a full 120 s mob: never under 30 s"):format(kill, gap), function()
+                tough(trash(kill, 0) + gap, 100, 30)
+            end)
+        end
+    end
+
+    it("a swap off dying trash to a full tough mob: never under 30 s", function()
+        tough(trash(6, 8) + 0.2, 100, 30)
+    end)
+
+    it("a swap off dying trash to a tough mob at 70%: no borrowed kill time", function()
+        tough(trash(6, 8) + 0.2, 70, 42)
+    end)
+
+    it("the new unit's first percent within newAnchor of its first band: still no borrowed kill time", function()
+        tough(trash(6, 8) + 0.2, 70, 42, 0.05)
+    end)
+
+    it("a heal before the new unit's first percent does not borrow the last unit's rate", function()
+        local t = trash(6, 8) + 0.2
+        e:Restart()
+        e:Band(t, 69, 70)
+        e:Get(t + 0.1)
+        e:Band(t + 0.5, 73, 74) -- healed
+        assert.is_nil((e:Get(t + 0.6)))
+    end)
+
+    it("waiting at full and combat start do not renew the last kill's rate", function()
+        local t = trash(6, 0) + 1
+        e:Restart()
+        e:Band(t, 100, 100) -- targeted at full
+        for i = 1, 70 do
+            assert.is_nil((e:Get(t + i * 0.1)))
+        end
+        e:Restart() -- combat start, 8 s after the kill: the library's re-anchor
+        e:Band(t + 7, 100, 100)
+        assert.is_nil((e:Get(t + 7.1)))
+    end)
+
+    -- The last unit answered from its own rate after a heal or a stall; that ends with it.
+    for _, how in ipairs({ "heal", "stall" }) do
+        it(
+            ("a %s on the last unit, then a swap: nothing borrowed before the new unit's percent"):format(how),
+            function()
+                local t = trash(6, 50) -- at 50
+                if how == "heal" then
+                    t = t + 0.2
+                    e:Band(t, 53, 54)
+                else
+                    t = t + 6
+                    e:Band(t, 48, 49) -- the crossing that ends a stall
+                end
+                local _, _, _, state = e:Get(t + 0.1)
+                assert.are.equal("prior", state)
+                e:Restart()
+                e:Band(t + 0.3, 99, 100)
+                for i = 1, 20 do
+                    assert.is_nil((e:Get(t + 0.3 + i * 0.05)))
+                end
+            end
+        )
+    end
+
+    -- The mob dies while targeted and stays targeted, read at band 0-1 (a death kept secret).
+    for _, kill in ipairs({ 6, 15 }) do
+        for _, dwell in ipairs({ 1, 5, 9, 12, 30 }) do
+            it(
+                ("a %d s kill, %d s on the corpse, a swap to a full 120 s mob: never under 30 s"):format(kill, dwell),
+                function()
+                    local t = trash(kill, 0)
+                    for _ = 1, dwell * 10 do
+                        t = t + 0.1
+                        e:Get(t)
+                    end
+                    tough(t + 0.2, 100, 30)
+                end
+            )
+        end
+    end
+
+    -- controls: what keeps its answer
+    it("the same unit keeps its rate over a stall's restart", function()
+        local t = steady(e, 0, 100, 0.5, 30) -- at 70
+        e:Get(t)
+        e:Band(t + 10, 68, 69) -- the crossing that ends a stall: the fit restarts
+        local est, _, _, state = e:Get(t + 10)
+        assert.are.equal("prior", state)
+        assert(math.abs(est - 69 * 0.5) < 3, est)
+    end)
+
+    it("a unit after a swap keeps its own rate over its heal", function()
+        trash(6, 8)
+        e:Restart()
+        local t = steady(e, 20, 90, 0.5, 20) -- the second unit, at 70
+        e:Get(t)
+        e:Band(t + 0.2, 74, 75) -- healed
+        local est, _, _, state = e:Get(t + 0.3)
+        assert.are.equal("prior", state)
+        assert(math.abs(est - 74.5 * 0.5) < 4, est)
+    end)
+
+    it("the next mob of a pack never reads a first chunk as a quick death", function()
+        local t = trash(10, 0) + 0.5
+        e:Restart()
+        e:Band(t, 99, 100)
+        e:Band(t + 0.15, 94, 95) -- a similar mob, a 5% first hit: its own slope alone says under 3 s
+        -- minor 3 answered the last rate here (about 9.5 s); minor 4 has no rate from one hit and waits
+        assert.is_nil((e:Get(t + 0.15)))
+    end)
+end)
+
+-- Minor 4 (not a lab check): one hit over a moment is not a rate. No anchor (anchorFull, anchorBelow false) and no seed
+-- answer until its span (first crossing to last) reaches seedTime, 1.5 s. Values from the first-guess lab's estimator
+-- with these switches (ttd-first-guess-build-report.md).
+describe("LibTimeToDie estimator (minor 4: the first estimate at a pull)", function()
+    local E
+
+    setup(function()
+        E = loadEstimator()
+    end)
+
+    it("the owner's live capture (21b fight 1) reads unknown until its fit, never 3.6 s", function()
+        local e = E.New()
+        e:Restart()
+        e:Band(0.30, 77, 78)
+        assert.is_nil((e:Get(0.32)))
+        e:Band(0.52, 72, 73) -- main read 3.55 [1.77, 10.65] seed here; the fight lasted about 55 s
+        local est, _, _, state = e:Get(0.54)
+        assert.is_nil(est)
+        assert.are.equal("unknown", state)
+        e:Band(3.54, 68, 69)
+        local lo, hi
+        est, lo, hi, state = e:Get(3.56)
+        assert.are.equal("fit", state)
+        assert.is_true(math.abs(est - 52.07) < 0.01, tostring(est))
+        assert.is_true(math.abs(lo - 28.81) < 0.01 and math.abs(hi - 94.14) < 0.01, lo .. " " .. hi)
+    end)
+
+    it("a big first hit on a full mob is not a rate: unknown, then answers near the truth", function()
+        local e = E.New()
+        e:Band(0, 100, 100) -- LibHiddenValues: full health is its own band
+        e:Band(0.6, 74, 75) -- a 25% first hit; main read 1.78 s with about 37 s to live
+        assert.is_nil((e:Get(0.62)))
+        local t, top = 0.6, 75
+        for _ = 1, 3 do -- then 0.5 s per percent
+            t, top = t + 0.5, top - 1
+            e:Band(t, top - 1, top)
+            local est = e:Get(t + 0.02)
+            assert.is_true(est == nil or est > 0.25 * 0.5 * (top - 0.5), tostring(est))
+        end
+        local est, _, _, state = e:Get(t + 0.02) -- 1.5 s of its own crossings
+        assert.are.equal("fit", state)
+        assert.is_true(math.abs(est - 35.98) < 0.01, tostring(est))
+    end)
+
+    it("a seed answers once its span reaches seedTime", function()
+        local function after(last) -- first seen at 59, then crossings at 1 s and 1.8 s, and the third at `last`
+            local e = E.New()
+            e:Band(0, 59, 60)
+            e:Band(1, 58, 59)
+            e:Band(1.8, 57, 58)
+            e:Band(last, 56, 57)
+            return e:Get(last)
+        end
+        assert.is_nil((after(2.4))) -- 2% over 1.4 s since the first crossing
+        local est, _, _, state = after(2.6) -- 2% over 1.6 s: 0.8 s per percent
+        assert.are.equal("seed", state)
+        assert.is_true(math.abs(est - 57 * 0.8) < 0.01, tostring(est)) -- from the crossing (57)
     end)
 end)

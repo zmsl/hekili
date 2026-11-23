@@ -36,7 +36,7 @@
 -- across a retarget is not); upgrade if a consumer's gate turns on that case. Sinks are kept, never called
 -- (the belief polls in Drain, decision 15). A point-precision spec is not read (Hekili never asks for one, decision
 -- 6). No aura kind (unproven here), no bar pool: GetStats counts
--- watches only. GetVersion answers minor 7; GetSelfTest reads the capability (pending nil, a "selftest" loss false,
+-- watches only. GetVersion answers minor 8; GetSelfTest reads the capability (pending nil, a "selftest" loss false,
 -- else true) and SelfTest calls back at once. `o.history`: every push kept per source, lib:TruthAt(kind, unit, power,
 -- t) the last at or before t (the bands arms' containment, loop.bandCheck). The bands-drop arm's capability loss is
 -- lib:SetAvailable; the unmeasured knobs (bandLead, spendFirst) come with the lanes that need them (B4, B6).
@@ -380,7 +380,7 @@ function M.new(o)
 
     -- The major and the minor this fake follows (README, Diagnostics).
     function lib:GetVersion()
-        return "LibHiddenValues-1.0", 7
+        return "LibHiddenValues-1.0", 8
     end
 
     -- The self-test as the capability says it: nil pending, false a failed self-test, else true; never running. No bar

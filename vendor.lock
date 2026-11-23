@@ -1,0 +1,20 @@
+{
+  "libraries": [
+    {
+      "name": "LibHiddenValues",
+      "repository": "https://github.com/zmsl/LibHiddenValues",
+      "path": "src/LibHiddenValues",
+      "tag": "v0.8.0",
+      "sha": "e206198f79efe173ead28645697057af6f5dbb47",
+      "digest": "sha256:c594b5714153661cf2214c71152d06107fd5b57441834ff16e3846225aba60bb"
+    },
+    {
+      "name": "LibTimeToDie",
+      "repository": "https://github.com/zmsl/LibTimeToDie",
+      "path": "src/LibTimeToDie",
+      "tag": "v0.4.0",
+      "sha": "1a62eabfcbd5009d13a629999f217453c65ae8ff",
+      "digest": "sha256:a5482de6330f870127a2e7436cded8e243dbfc6e393a1a4510197bb8afa71905"
+    }
+  ]
+}

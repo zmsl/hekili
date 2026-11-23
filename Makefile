@@ -158,6 +158,7 @@ api-check:
 	bash tools/check_border.sh
 	bash tools/libhiddenvalues/check_standalone.sh
 	bash tools/libtimetodie/check_standalone.sh
+	python3 -I tools/vendor_libs.py --check
 
 # The generated RegisterPack blocks match src/Hekili_*/APLs/ (make_pack writes only a changed file, so `make -j` is safe).
 packs-check: wowsims-packs packs

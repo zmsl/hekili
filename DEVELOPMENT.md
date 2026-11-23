@@ -175,6 +175,7 @@ shared addon holds the content every class uses. Nothing dev-only ships. Details
 | `tests/Game/` | Tests of the core, and the combat harness: the simulated client the gates fight in |
 | `tests/Forever/` | Tests of the engine, the packs and the displays, the class worlds and the gate specs |
 | `tests/Forever/wowsims/` | Each spec's exported wowsims request and fight log, checked in |
+| `src/LibHiddenValues/`, `src/LibTimeToDie/` | The two embedded libraries: copies of their own repositories' release tags, never edited here |
 | `tools/` | Pack generation, the API and boundary checks, the release tools |
 | `docs/` | References, specs, plans and research |
 
@@ -383,6 +384,9 @@ An in-game answer that differs from the model is a gap. Record it in [docs/dev/g
   raises flicker says why.
 - **Versioning.** Releases are tagged `vMAJOR.MINOR.PATCH`. A pre-release adds a suffix such as `-rc.1` and ships as
   a beta. Every addon in the zip carries the same version.
+- **Embedded libraries.** `python3 -I tools/vendor_libs.py --update --only <Name> --tag vX.Y.Z` replaces a library's
+  folder with that tag and records it in `vendor.lock`; `make api-check` fails when a folder differs from the lock.
+  Before a release tag, `python3 -I tools/vendor_libs.py --latest` on the release commit confirms each is the newest tag.
 - **Releasing.** Push the tag, read the draft release the workflow builds, then publish it to upload it to
   CurseForge. The procedure is in [docs/publishing/README.md](docs/publishing/README.md).
 

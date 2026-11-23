@@ -71,7 +71,7 @@ describe("LibTimeToDie tracking", function()
         assert.are.same({ "live", "fit" }, { h:State() })
     end)
 
-    it("a target change starts a fresh stream that answers from the carried rate", function()
+    it("a target change starts a fresh stream that answers from its own crossings", function()
         local h = ttd:Track("A", "target")
         Fake.tick(12)
         fall(99, 80, 0.5)
@@ -82,10 +82,194 @@ describe("LibTimeToDie tracking", function()
         assert.are.equal("priming", select(4, h:Get()))
         Fake.tick(12)
         local est, _, _, state, reason = h:Get()
+        assert.are.equal("unknown", state) -- no crossing yet, and the last mob's rate is not this one's
+        assert.is_nil(est)
+        Fake.advance(0.2)
+        fall(49, 49, 0.8)
+        assert.is_nil((h:Get())) -- minor 4: one crossing is no rate
+        fall(48, 47, 0.8) -- then 2% over 1.6 s since its first crossing
+        est, _, _, state, reason = h:Get()
         assert.are.equal("live", state)
-        assert.are.equal("prior", reason) -- no crossing yet: the last mob's rate from the band's middle
-        assert.is_true(math.abs(est - 49.5 * 0.5) < 2, tostring(est))
+        assert.are.equal("seed", reason)
+        -- its own seed, 0.8 s per percent (the last mob's 0.5 s per percent is faster, so it does not lengthen it)
+        assert.is_true(math.abs(est - 47 * 0.8) < 2, tostring(est))
     end)
+
+    -- Minor 3: the last target's slower rate lengthens the next one's first answers, its seed and its first fit.
+    it("a new target's first answers take the last target's slower rate, however much faster their own", function()
+        local h = ttd:Track("A", "target")
+        Fake.tick(12)
+        fall(99, 70, 1) -- 1 s per percent
+        W.unit.target = { health = 1.0 }
+        Fake.event("PLAYER_TARGET_CHANGED")
+        Fake.tick(12)
+        Fake.advance(0.2)
+        fall(95, 95, 0.05) -- a 5% first hit: its own seed would be about 4 s, the last rate over 20x slower
+        local est, _, _, state, reason = h:Get()
+        assert.are.same({ "unknown" }, { state }) -- minor 4: one hit is no rate, so there is nothing to lengthen
+        assert.is_nil(est)
+        Fake.advance(1.55)
+        fall(92, 92, 0.05) -- two crossings, 3% over 1.6 s: a fit of its own, about 49 s
+        est, _, _, state, reason = h:Get()
+        assert.are.same({ "live", "fit" }, { state, reason })
+        assert.is_true(est > 57, tostring(est)) -- about 65 s
+    end)
+
+    -- Minor 3: the next target is watched as the game sees it (death, no target, the combat events, the prime).
+    local function killThenTough(kill, gap, health)
+        local h = ttd:Track("A", "target")
+        Fake.tick(12)
+        Fake.event("PLAYER_REGEN_DISABLED")
+        local last = health and 0.08 or 0
+        for i = 1, math.ceil((1 - last) * kill / 0.05) - 1 do
+            W.unit.target.health = 1 - i * 0.05 / kill
+            Fake.advance(0.05)
+        end
+        if not health then -- a chain pull, not a swap
+            W.unit.target.health = 0
+            W.unit.target.dead = true
+            Fake.event("UNIT_HEALTH", "target")
+            Fake.tick(2)
+            W.unit.target = nil
+            Fake.event("PLAYER_TARGET_CHANGED")
+            Fake.event("PLAYER_REGEN_ENABLED")
+            Fake.advance(gap)
+        end
+        local from = health or 1
+        W.unit.target = { health = from }
+        Fake.event("PLAYER_TARGET_CHANGED")
+        Fake.tick(12)
+        if not health then
+            Fake.event("PLAYER_REGEN_DISABLED")
+        end
+        local least = math.min(30, 60 * from) -- 30 s; a borrowed kill time is 15 s at most
+        local est
+        for i = 1, 50 do
+            W.unit.target.health = from - i * 0.1 / 120
+            Fake.advance(0.1)
+            est = h:Get()
+            assert(est == nil or est >= least, ("%.1f s: %s"):format(i / 10, tostring(est)))
+        end
+        assert(est, "no answer at 5 s")
+    end
+
+    for _, kill in ipairs({ 6, 15 }) do
+        for _, gap in ipairs({ 1, 5, 9 }) do
+            it(("chain pull: a %d s kill, %d s, a full 120 s mob: never under 30 s"):format(kill, gap), function()
+                killThenTough(kill, gap)
+            end)
+        end
+    end
+
+    it("a swap in combat off dying trash to a full tough mob never reads its kill time", function()
+        killThenTough(6, 0, 1)
+    end)
+
+    it("a swap in combat off dying trash to a tough mob at 70% never reads its kill time", function()
+        killThenTough(6, 0, 0.6995)
+    end)
+
+    it("an upgrade from minor 2 gives the tracks it holds this copy's rules: no borrowed kill time", function()
+        ttd:Track("A", "target")
+        Fake.tick(12)
+        local e = ttd.streams[1].owners[1].e
+        local old = {} -- what minor 2 left: an estimator of its own class, with the lab's priorEmpty
+        for k, v in pairs(ttd.Estimator) do
+            old[k] = v
+        end
+        old.__index = old
+        setmetatable(e, old).priorEmpty = true
+        rawset(LibStub.minors, "LibTimeToDie-1.0", 2) -- the running copy is minor 2
+        Fake.loadTimeToDie()
+        assert.are.same({ "LibTimeToDie-1.0", 4 }, { ttd:GetVersion() })
+        killThenTough(6, 1) -- the same owner's track: the held estimator
+        assert.are.equal(ttd.Estimator, getmetatable(e))
+    end)
+
+    -- Minor 4: one hit over a moment is not a rate, whether combat starts before it or the target was taken in combat.
+    local function bigFirstHit(h, after)
+        Fake.advance(after)
+        to(75) -- a 25% first hit; about 37 s to live at the rate that follows
+        Fake.advance(0.1) -- LibHiddenValues calls a step change once a later frame's decode agrees
+        assert.are.equal(1, row("target").crossings)
+        local est, _, _, state = h:Get()
+        assert.is_nil(est) -- minor 3 read 0.8-1.6 s here
+        assert.are.equal("unknown", state)
+        Fake.advance(0.4)
+        fall(74, 71, 0.5) -- then 0.5 s per percent: 2 s of its own crossings
+        est = h:Get()
+        assert.is_true(est ~= nil and math.abs(est - 35) < 5, tostring(est))
+    end
+
+    it("a big first hit after combat start reads unknown, then near the truth", function()
+        local h = ttd:Track("A", "target")
+        Fake.tick(12)
+        Fake.event("PLAYER_REGEN_DISABLED")
+        bigFirstHit(h, 0.3)
+    end)
+
+    it("a big first hit on a target taken in combat reads unknown, then near the truth", function()
+        Fake.event("PLAYER_REGEN_DISABLED") -- in combat before the target is tracked: no combat start for it
+        local h = ttd:Track("A", "target")
+        Fake.tick(12)
+        bigFirstHit(h, 0.5)
+    end)
+
+    it("an upgrade from minor 3 gives the tracks it holds this copy's first-estimate rules", function()
+        local h = ttd:Track("A", "target")
+        Fake.tick(12)
+        local e = ttd.streams[1].owners[1].e
+        local old = {} -- what minor 3 left: an estimator of its own class, its anchors on and no seedTime
+        for k, v in pairs(ttd.Estimator) do
+            old[k] = v
+        end
+        old.__index = old
+        setmetatable(e, old)
+        e.anchorFull, e.anchorBelow, e.seedTime = true, true, nil
+        rawset(LibStub.minors, "LibTimeToDie-1.0", 3) -- the running copy is minor 3
+        Fake.loadTimeToDie()
+        assert.are.same({ "LibTimeToDie-1.0", 4 }, { ttd:GetVersion() })
+        assert.are.equal(ttd.Estimator, getmetatable(e))
+        Fake.event("PLAYER_REGEN_DISABLED")
+        bigFirstHit(h, 0.3) -- the held estimator reaches the seed rule
+    end)
+
+    -- No target event follows the death; later the player swaps straight to a full tough mob.
+    -- How the death reads: plain (gone), a secret (the band stays 0-1), or not said at all.
+    for _, death in ipairs({ "plain", "secret", "unsaid" }) do
+        for _, dwell in ipairs({ 1, 5, 9, 12, 30 }) do
+            it(
+                ("a corpse kept targeted %d s (%s death), then a swap: never under 30 s"):format(dwell, death),
+                function()
+                    local h = ttd:Track("A", "target")
+                    Fake.tick(12)
+                    Fake.event("PLAYER_REGEN_DISABLED")
+                    for i = 1, 119 do
+                        W.unit.target.health = 1 - i / 120
+                        Fake.advance(0.05)
+                    end
+                    W.secretBool = death == "secret" or nil
+                    W.unit.target.health = 0
+                    W.unit.target.dead = death ~= "unsaid"
+                    Fake.event("UNIT_HEALTH", "target")
+                    Fake.advance(dwell)
+                    assert.are.equal(death == "plain" and "gone" or "live", (h:State()))
+                    W.secretBool = nil
+                    W.unit.target = { health = 1.0 }
+                    Fake.event("PLAYER_TARGET_CHANGED")
+                    Fake.tick(12)
+                    local est
+                    for i = 1, 50 do
+                        W.unit.target.health = 1 - i * 0.1 / 120
+                        Fake.advance(0.1)
+                        est = h:Get()
+                        assert(est == nil or est >= 30, ("%.1f s: %s"):format(i / 10, tostring(est)))
+                    end
+                    assert(est, "no answer at 5 s")
+                end
+            )
+        end
+    end
 
     it("a re-prime of the same unit keeps the history and keeps answering", function()
         local h = ttd:Track("A", "target")
@@ -122,7 +306,9 @@ describe("LibTimeToDie tracking", function()
         W.unit.target = { health = 0.795 }
         Fake.event("PLAYER_TARGET_CHANGED")
         Fake.tick(12)
-        assert.are.equal("live", (h:State())) -- the carried rate answers at once
+        assert.are.equal("unknown", (h:State())) -- it watches the new one, with nothing borrowed
+        fall(79, 75, 0.5)
+        assert.are.equal("live", (h:State()))
     end)
 
     it("a death the client keeps secret is not gone: the band reaches 0-1 and the estimate stays near 0", function()
@@ -375,7 +561,7 @@ describe("LibTimeToDie tracking", function()
         end
         assert.are.equal(lhv:GetMessage("unproven"), ttd:GetMessage("unproven")) -- LibHiddenValues' reasons
         assert.is_nil(ttd:GetMessage("live", "deDE"))
-        assert.are.same({ "LibTimeToDie-1.0", 2 }, { ttd:GetVersion() })
+        assert.are.same({ "LibTimeToDie-1.0", 4 }, { ttd:GetVersion() })
     end)
 
     it("a token LibHiddenValues has not proven reads unavailable with its reason", function()
@@ -399,27 +585,27 @@ describe("LibTimeToDie tracking", function()
         assert.are.equal("unknown", (h:State()))
     end)
 
-    it("combat start anchors a mob that was targeted at full long before the pull", function()
+    it("a mob targeted at full long before the pull reads from its own crossings, not the idle time", function()
         local h = ttd:Track("A", "target")
         Fake.tick(12)
         Fake.advance(20) -- targeted, nobody hits it
         Fake.event("PLAYER_REGEN_DISABLED")
         Fake.advance(0.5) -- the first percent falls half a second into the pull
-        fall(99, 96, 0.5) -- four crossings: the fit is clamped to 0.2-5x the slope since the anchor
+        fall(99, 95, 0.5) -- five crossings over 2 s (minor 4: no anchor at the targeting or at combat start)
         local est = h:Get()
-        assert.is_true(math.abs(est - 95.5 * 0.5) < 0.15 * 95.5 * 0.5, tostring(est))
+        assert.is_true(est ~= nil and math.abs(est - 94.5 * 0.5) < 0.15 * 94.5 * 0.5, tostring(est))
     end)
 
-    it("a first crossing within 0.1 s of the combat-start anchor does not seed", function()
+    it("an opener chunk one frame after combat start does not seed", function()
         local h = ttd:Track("A", "target")
         Fake.tick(12)
         Fake.event("PLAYER_REGEN_DISABLED")
         Fake.advance(0.02)
         to(88) -- a 12% opener chunk one frame after the anchor
         Fake.advance(0.04) -- two frames: LibHiddenValues calls a step change once the next frame's decode agrees
-        assert.are.equal("unknown", (h:State())) -- the anchor's slope would be one hit over no time
+        assert.are.equal("unknown", (h:State())) -- one hit over no time is no rate
         assert.is_nil((h:Get()))
-        fall(86, 85, 0.5) -- two crossings later it answers from them, not from the opener's interval
+        fall(86, 83, 0.5) -- 1.5 s of crossings later it answers from them, not from the opener's interval
         local est, _, _, state = h:Get()
         assert.are.equal("live", state)
         assert.is_true(est > 8, tostring(est)) -- 2.6 s with the anchor kept

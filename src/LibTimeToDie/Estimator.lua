@@ -1,8 +1,9 @@
--- Estimator.lua: the estimator of one health stream, lifted as is from the TTD lab (branch ttd-lab f29c14916,
--- tools/ttd_lab/estimator.lua; the paths its comments name are on that branch). Only this header and the footer are
--- the library's: the lines between the two markers are the lab's file byte for byte, its last line (return E) moved
--- into the footer, which also sets the library's one default that differs from the lab's (staleAnchor). Loaded alone
--- (no LibStub: the busted specs) it returns the module.
+-- Estimator.lua: the estimator of one health stream, lifted from the TTD lab (branch ttd-lab f29c14916,
+-- tools/ttd_lab/estimator.lua; the paths its comments name are on that branch). Only this header, the footer, the
+-- statements marked "minor 3" or "minor 4" and comments on what they changed are the library's: otherwise the lines
+-- between the two markers are the lab's file byte for byte, its last line (return E) moved into the footer, which also
+-- sets the library's defaults that differ from the lab's (staleAnchor, priorEmpty, anchorFull, anchorBelow) and adds
+-- seedTime. Loaded alone (no LibStub: the busted specs) it returns the module.
 local lib = LibStub and LibStub("LibTimeToDie-1.0", true)
 if lib and not lib.loading then
     return
@@ -15,7 +16,7 @@ end
 -- crossings (half-life 6 s, 30 s window); with too little spread for a fit, the stream's cumulative slope from an
 -- anchor (the first band: 100% for a mob first seen full, the band's middle otherwise; dropped when the first crossing
 -- comes more than 8 s after it, an idle target, or less than 0.1 s after it, a first hit at the anchor); a slope
--- carries over a swap,
+-- carries over a swap (minor 3: only to lengthen),
 -- heal or stall for 8 s; a stall (no crossing for max(4 s, 5 x the mean gap)) holds the countdown; the published death
 -- time moves only past a deadband, so the countdown is smooth. Defaults: the TTD lab's winner (tools/ttd_lab/README.md).
 -- Rate changes (TTD lab run 2): a change detector (two-sided CUSUM of the crossings against the fit, on by default)
@@ -198,9 +199,9 @@ local function work(self, p)
     return p - (1 - 1 / self.xf) * min(p, self.xp)
 end
 
--- The slope a carried value can apply to: the latest answered one, else the one carried in.
+-- The slope a carried value can apply to: the latest answered one.
 local function carry(self, t)
-    self.bPrev = self.lastB or self.bPrev
+    self.bPrev = self.lastB -- minor 3: false before this unit's first answer (never the last unit's)
     self.carryFrom, self.resumed = t, true
     self.fresh, self.anchored = false, false
     clear(self)
@@ -383,7 +384,7 @@ local function slope(self, now, h)
     local carried = self.prior and self.bPrev and self.carryFrom and now - self.carryFrom < self.priorTime
     local n = self.n
     if n == 0 then
-        if carried and (self.priorEmpty or self.resumed) then -- a swap, or the same mob after a heal or stall
+        if carried and (self.priorEmpty or self.resumed) then -- a swap (minor 3: priorEmpty off), or a heal or stall
             return self.bPrev, "prior"
         end
         return nil
@@ -404,11 +405,15 @@ local function slope(self, now, h)
             b, state = c, "fit"
         elseif bcum then
             b, w, state = bcum, self.seedWeight, "seed"
+            if self.tLast - self.t0 < self.seedTime then -- minor 4: one hit over a moment is not a rate
+                b, w, state = nil, 0, "prior"
+            end
         else
             b, w, state = bfit, w, "fit"
         end
     end
-    if carried and w < 2 then
+    -- minor 3: another unit's slope may lengthen this one's own answer, never shorten it
+    if carried and w < 2 and (self.resumed or (b and self.bPrev > b)) then
         if b then
             local k = w + self.shrink
             b = (k * b + self.priorWeight * self.bPrev) / (k + self.priorWeight)
@@ -511,12 +516,28 @@ function E:Get(now)
     return est, lo, hi, state
 end
 -- lifted body ends
--- The library's defaults are the lab's except staleAnchor = 12 (owner 2026-11-21; the lab's default is 8, the value
--- the lifted header names): at a stream's first crossing, an anchor (its first band) older than 12 s is dropped and
--- the stream starts at that crossing, so a mob targeted at full and left idle does not stretch the first estimates.
+-- The library's defaults are the lab's except four, plus seedTime. staleAnchor = 12 (owner 2026-11-21; the lab's default is 8, the
+-- value the lifted header names): at a stream's first crossing, an anchor (its first band) older than 12 s is dropped
+-- and the stream starts at that crossing, so a mob targeted at full and left idle does not stretch the first estimates.
 E.DEFAULTS.staleAnchor = 12
+-- priorEmpty = false (minor 3; the lab's is true): no answer from another unit's slope before this unit's first
+-- crossing (a chain pull read the last mob's kill time). A stall or a heal still answers from the rate before it.
+E.DEFAULTS.priorEmpty = false
+-- Minor 4 (the first-guess lab, 2026-11-22): no anchor (anchorFull and anchorBelow false; the lab's are true), so
+-- a stream starts at its first 1% crossing, and a seed (the slope since that start, before a fit) answers only once it
+-- spans seedTime seconds. A big first hit at a pull read a few seconds on a mob with a minute left.
+E.DEFAULTS.anchorFull = false
+E.DEFAULTS.anchorBelow = false
+E.DEFAULTS.seedTime = 1.5
 if lib then
     lib.Estimator = E
+    for i = 1, #lib.streams do -- an upgrade: estimators an older minor made take this copy's rules
+        local owners = lib.streams[i].owners
+        for j = 1, #owners do
+            local e, D = setmetatable(owners[j].e, E), E.DEFAULTS
+            e.priorEmpty, e.anchorFull, e.anchorBelow, e.seedTime = false, D.anchorFull, D.anchorBelow, D.seedTime
+        end
+    end
     lib.loading = nil -- the last file of the TOC
 end
 return E

@@ -293,6 +293,7 @@ describe("LibHiddenValues contract", function()
     it("reports its version", function()
         local major, minor = lib:GetVersion()
         assert.are.equal("LibHiddenValues-1.0", major)
-        assert.are.equal(7, minor)
+        assert.is_number(minor)
+        assert.are.equal(select(2, LibStub(major)), minor) -- the running copy's
     end)
 end)

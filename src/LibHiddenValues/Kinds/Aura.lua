@@ -18,8 +18,12 @@
 -- a firing can trail its push), and again after each time the aura was absent: seconds come every frame while the
 -- aura is up; stacks only when the client rewrites the count (an application, a refresh, a target swap, a layout
 -- pass), so a stacks watch made while its aura is up is unknown ("priming") until then. While a bar settles after an
--- absence or a run, its handles keep their band; after a prime (a new bar, a re-layout) they are unknown. Hook-fed
--- bars follow every push, so a target swap does not prime them; a re-layout (UI scale, a loading screen) does.
+-- absence or a run, its handles keep their band; after a prime (a new bar, a re-layout) they are unknown, and so is
+-- a stacks handle whose aura came up with no count seen (the bars held low, or the item was not placed for it yet:
+-- the client writes the count in the call that sets the presence, so that push was dropped, or it wrote it holding
+-- no aura and bound one after: s.blank; or an icon bound another and wrote none: lib.cdmDirty). A move to another entry (cdm.place) and an inactive source keep no presence,
+-- and a move no count. Hook-fed bars follow every push, so a target swap does not prime them; a re-layout (UI scale, a
+-- loading screen) does.
 --
 -- This file reaches the shared machinery by wrapping lib.sync, lib.feed, lib.fire, lib.decode, lib.reprime, lib.event
 -- and lib.drive for aura sources (every script dispatches through lib, so this is the library's own upgrade path);
@@ -137,6 +141,9 @@ local function status(spec)
     if h.unproven then
         return "unavailable", h.unproven
     end
+    if not cdm.used then
+        cdm.readNow() -- no watch, so no hook keeps the last read true
+    end
     if cdm.dirty then
         lib.wake() -- the next frame reads again (and tells the callbacks); never from inside IsAvailable
     end
@@ -207,9 +214,20 @@ end
 -- Brings an aura source in line with the capability, its placement and its references. A paused handle only mutes:
 -- the client's pushes cost nothing, so the bars stay fed and need no priming when it resumes.
 local function sync(s)
+    if not cdm.used then -- the first watch: the hooks, and what the items show now
+        cdm.used = true
+        cdm.readNow()
+    end
+    local n = #s.handles
+    if s.idle and n > 0 then
+        s.idle = nil
+        if cdm.lost > 0 then -- watched again over a hidden identity: a new watch
+            s.placed, s.capState = false, nil
+        end
+    end
     if not s.placed then
         s.cap, cdm.dirty = "pending", true -- the first answer comes from the next read
-        if cdm.cataloged then
+        if cdm.cataloged then -- else noted as pending: ready is told later
             cdm.place()
         end
     end
@@ -231,7 +249,11 @@ local function sync(s)
             release(s, e)
         end
     end
-    s.active = ready and #s.handles > 0
+    s.idle = n == 0
+    s.active = ready and not s.idle
+    if not s.active then
+        s.up = nil -- not fed: what its item showed is not known any more
+    end
     if s.capState then
         lib.auraTell(s)
     end
@@ -257,7 +279,7 @@ local function feed(s)
             cdm.scan() -- a change no hook announced, or an item lost to secret identity: at most every RESCAN frames
             item = cdm.byCd[s.cd]
             if item == nil then
-                cdm.dirty = true -- not shown any more: answer again (out of combat; in combat the answers stand)
+                cdm.dirty = true -- not shown any more: answer again (with an identity secret the answers stand)
             end
         end
         if item and cdm.idOf(item) == s.cd and cdm.live(item) then
@@ -268,7 +290,7 @@ local function feed(s)
                 if issecretvalue(u) or u ~= s.unit then
                     up = nil -- held on a secret, no or another unit: the item says nothing of this one (unknown)
                 else
-                    s.litAt = cdm.swapNo -- lit for this unit: only that ends the swap doubt (review I2)
+                    s.litAt = cdm.swapNo -- lit for this unit: only that ends the swap doubt
                 end
             elseif cdm.doubt and s.unit == "target" and s.litAt ~= cdm.swapNo then
                 -- a silent item right after a target change says nothing of the new target: the client shows its
@@ -297,6 +319,8 @@ local function feed(s)
         end
         if not up then
             fedAt[i], soft[i] = false, true -- absent: a known value; the next push starts from it
+        elseif fedAt[i] and s.blank then
+            fedAt[i], s.dirty = false, true -- up, the last count written before it was: no count seen
         elseif fedAt[i] and now - fedAt[i] <= lib.SETTLE then
             s.dirty = true -- settling: decode again until it has settled
         end
@@ -341,7 +365,8 @@ local function decode(h)
                 local fa = fedAt[i]
                 if prime[i] > 0 or not fa or now - fa < settle then
                     waiting = true
-                    hard = hard or not soft[i]
+                    -- stacks: a count comes with the presence; none seen (the push was dropped) and no band stands
+                    hard = hard or not soft[i] or (h.what == "stacks" and not fa)
                 end
             end
             if waiting then
@@ -530,9 +555,12 @@ end
 -- order, with the client's plain facts: { cooldownID =, spellID =, overrideSpellID =, overrideTooltipSpellID =,
 -- linkedSpellIDs = { ... }, hasAura =, selfAura = (booleans as the client gives them, nil when not plain), category =
 -- its default category, placement = PLACE[viewer] showing it now or nil }; then
--- whether the catalogue was read (out of combat). A consumer picks one and watches it with cooldown = cooldownID. A
--- fresh array: a cold path.
+-- whether the catalogue was read and holds every item on screen. A consumer picks one and watches it with cooldown =
+-- cooldownID. A fresh array: a cold path.
 function lib:GetAuraEntries(spell)
+    if not cdm.used then
+        cdm.readNow()
+    end
     local out = {}
     local l = cdm.cataloged and cdm.cds[spell]
     for j = 1, l and #l or 0 do
@@ -555,5 +583,5 @@ function lib:GetAuraEntries(spell)
             placement = k and PLACE[k],
         }
     end
-    return out, cdm.cataloged and true or false
+    return out, cdm.cataloged and not cdm.unheld or false
 end

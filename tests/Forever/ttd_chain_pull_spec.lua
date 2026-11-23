@@ -395,12 +395,14 @@ describe("ttd-seed: the library's first guess reads unknown (lane B8, L1736)", f
                     w.health(72 - 1.3 * (i - 1) * TICK)
                 end
             end)
-            assert.are.equal("seed: 3600 x17, fit: known x23", seen)
-            assert.are.same({}, short) -- the seed read 2.5 s, true about 55
+            -- LibTimeToDie minor 4 (vendored v0.4.0) publishes no seed: unknown until 1.5 s of loss after the first
+            -- percent, then its fit (minor 2 published a seed of 2.5 s here, true about 55)
+            assert.are.equal("unknown: 3600 x17, fit: known x23", seen)
+            assert.are.same({}, short)
         end
     )
 
-    it("a direct swap in combat: the prior answers, its seed reads unknown about 1.6 s, then the fit", function()
+    it("a direct swap in combat: unknown until the new mob's fit", function()
         local w = boot()
         w.target("Creature-1", 100)
         w.read()
@@ -413,8 +415,10 @@ describe("ttd-seed: the library's first guess reads unknown (lane B8, L1736)", f
                 w.health(100 - 5 * (i - 15) * TICK)
             end
         end)
-        -- priming: the last mob's fight_remains, kept 0.1 s (I1); the prior (its rate carried); 1.6 s of seed
-        assert.are.equal("priming: 14.0/3600.0/3600.0 x1, prior: known x17, seed: 3600 x16, fit: known x6", seen)
+        -- priming: the last mob's fight_remains, kept 0.1 s (I1); then unknown: LibTimeToDie minor 4 (vendored v0.4.0)
+        -- carries no rate to a new target before it loses health over 1.5 s (minor 2: the last mob's rate as prior 1.7 s,
+        -- then 1.6 s of seed)
+        assert.are.equal("priming: 14.0/3600.0/3600.0 x1, unknown: 3600 x33, fit: known x6", seen)
         assert.are.equal(1, w.tracks)
     end)
 end)
