@@ -427,10 +427,12 @@ describe("ns.Facade", function()
             return select(8, Facade.UnitCastingInfo("target"))
         end
         for _, channel in ipairs({ false, true }) do
-            assert.is_true(notKick(nil, channel)) -- unknown
-            assert.is_false(notKick("UNIT_SPELLCAST_INTERRUPTIBLE", channel))
-            assert.is_true(notKick(nil, channel)) -- a new cast forgets the last one's answer
-            assert.is_true(notKick("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", channel))
+            local what = channel and "channel" or "cast"
+            assert.is_true(notKick(nil, channel), what .. " unknown")
+            assert.is_false(notKick("UNIT_SPELLCAST_INTERRUPTIBLE", channel), what .. " interruptible")
+            -- a new cast forgets the last one's answer
+            assert.is_true(notKick(nil, channel), what .. " unknown after an interruptible one")
+            assert.is_true(notKick("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", channel), what .. " not interruptible")
         end
     end)
 
