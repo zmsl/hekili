@@ -42,7 +42,18 @@ function M.install(H, lhv)
             return stub(name, silent)
         end,
     })
-    local env = setmetatable({ LibStub = proxy }, { __index = H.env })
+    -- shortcut: the library's UnitIsUnit answers a target and a plate plainly from the fake client's GUIDs, so a past
+    -- target's life moves to its plate (minor 5); live, under the Map restriction it may answer secret, which links
+    -- nothing. The belief's UnitIsUnit (ctl.unitIs) is left as it was: no belief row moves for it.
+    local ctl = H.ctl
+    local function unitIsUnit(a, b)
+        local ga, gb = ctl.guid[a], ctl.guid[b]
+        if a ~= b and type(ga) == "string" and type(gb) == "string" then
+            return ga == gb
+        end
+        return H.env.UnitIsUnit(a, b)
+    end
+    local env = setmetatable({ LibStub = proxy, UnitIsUnit = unitIsUnit }, { __index = H.env })
     for _, file in ipairs({ "LibTimeToDie.lua", "Estimator.lua" }) do -- LibTimeToDie.xml's order
         local f = assert(loadfile(SRC .. file))
         setfenv(f, env)

@@ -373,10 +373,13 @@ x (h - p) / h, h the facade's target health, 0 at or below p) answer its live es
 `GetGreatestTTD` (`fight_remains`, `longest_ttd`: the longest among the enemies) and `GetLowestTTD` answer it with one
 enemy; with more they are unknown (only the target is tracked). One or several follows the enemy count's change after
 it held one update, read before the token plates' hold of a fall; it is the count `active_enemies` starts from, so
-with plates off or the others outside the radius it is one. Nothing is kept across a target change: the library
-answers `priming` only then (a re-prime of the same unit keeps answering), and after it nothing before 1.5 s of the
-new target's loss, so the last target's time would bridge to no answer and is no fact about this one (B8's 0.5 s keep
-went with vendor-libs, L1730).
+with plates off or the others outside the radius it is one. The core keeps nothing across a target change (B8's
+0.5 s keep went with vendor-libs, L1730): it reads the library's answer for whatever the target is now. The library
+(minor 5) keeps a past target's estimate on that mob's nameplate (its "life", fed at 5%) and hands it back when the
+mob is targeted again, so switching back answers at once; a mob never targeted before reads nothing before 1.5 s of
+its loss. Lives are on by default for every owner (`SetRecent`, Hekili leaves it on), at most four, moved only on a
+plain `UnitIsUnit` true between the target and a shown plate (a secret answer links nothing). `Get` reads nil from the
+target change's own event on (LibHiddenValues minor 10); the core's readers all pass only a `live` state.
 
 The library forgets the last target itself (LibTimeToDie minor 3): a new target reads unknown until it loses health,
 and from then the last target's rate can only lengthen the first answers (a threshold factor learned through
@@ -392,7 +395,7 @@ the probes, and the unknown of about a second after a sudden speed-up is the lib
 fast trash). Pinned through the core in the same spec.
 
 Unknown is 3600: any other state, a seed, a target that is not plainly attackable (a secret answer included), several enemies,
-no library. A refused track is
+no library, or a LibHiddenValues older than minor 10 (`lhv-old`, LibTimeToDie's `LHV_MIN`). A refused track is
 asked again at most once a second. `Hekili.bandOff` and disable release the track. Hints, numbers only: the
 highest execute line present goes to `HintBelow` (threshold only), out of combat at the spec's activation,
 `GROUP_ROSTER_UPDATE` and the combat's end. The player's own line comes from its pack: an ability's `healthGate` while

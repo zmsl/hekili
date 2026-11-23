@@ -32,6 +32,11 @@
 --   cells:   a step watch is the 1% cell [lo, lo + 1), full its own closed cell [100, 100] (Bars.lua `band`; ledger
 --            L1669), health exactly empty (under max / 1,000,000) its own closed cell [0, 0] (minor 9, L1712), cut further by its edges or points; a points handle answers in points, its cell (max / 100) wide,
 --            [max, max] at full (README, `step`, `points`); the library's 0.05% guard below each edge is not modelled;
+--   plates:  (minor 10) health on nameplate1-40, a step 5 watch the 5% cell [c, c + 5) (95-99 [95, 100], full
+--            [100, 100], empty [0, 5]; README `step`), timed as any step source; the observer primes a plate at its
+--            ADDED and pushes nil (gone) at its REMOVED (observer.lua `plateBands`). shortcut: a 1% watch joining a 5%
+--            source does not prime it again (the real library swaps the whole set, about 9 frames unknown): no consumer
+--            mixes them; the library's 6 bars a plate are not modelled (no bar pool here);
 --   caps:    8 distinct points per source and 64 in total, over either the request is refused with edge-limit and
 --            nothing granted (README, `points`; GetPool).
 -- shortcut: every handle times as a step source (Hekili's watches are step = 1, design decision 13): an edges-only
@@ -79,18 +84,23 @@ M.ERR = {
 -- The kinds of the major (README, GetKinds) and the units and powers proven for the two this fake models.
 local KNOWN = { health = true, power = true, aura = true, cooldown = true, meter = true }
 local UNITS = { health = { player = true, target = true }, power = { player = true } }
+for i = 1, 40 do -- minor 10: nameplate health (the ttd arm's plates, observer.lua `plateBands`)
+    UNITS.health["nameplate" .. i] = true
+end
 local PROVEN_POWER = { [0] = true, [1] = true, [3] = true } -- Mana, Rage, Energy
 local GUARD = 0.05
 
 local floor, sort = math.floor, table.sort
 local EMPTYX = 0.000001 -- health under this fraction of max reads empty (Bars.lua EMPTYX, minor 9)
 
--- The 1% cell of v of max m; health empty is the cell -1 (the band [0, 0]).
-local function cellOf(kind, v, m)
-    if kind == "health" and v < m * EMPTYX then
-        return -1
+-- The cell of v of max m for a watch of step w (nil or 1: the 1% cell, health empty the cell -1, the band [0, 0]; 5: the
+-- 5% cell holding the 1% one, empty its cell 0: exact empty is the 1% step's only, minor 10).
+local function cellOf(kind, v, m, w)
+    local c = (kind == "health" and v < m * EMPTYX) and -1 or floor(v * 100 / m)
+    if w == 5 then
+        return c < 0 and 0 or c - c % 5
     end
-    return floor(v * 100 / m)
+    return c
 end
 
 -- A sorted list of distinct whole points >= 1, or nil.
@@ -187,7 +197,7 @@ function M.new(o)
     local CUT, CELL = 1, 2
     local function fires(h, v1, m1, v2, m2)
         local x1, x2 = v1 * 100 / m1, v2 * 100 / m2
-        if h.step and cellOf(h.kind, v1, m1) ~= cellOf(h.kind, v2, m2) then
+        if h.step and cellOf(h.kind, v1, m1, h.step) ~= cellOf(h.kind, v2, m2, h.step) then
             return CELL
         end
         local cuts, a, b = h.edges, x1, x2
@@ -369,7 +379,9 @@ function M.new(o)
         if pts and not list then
             return nil, E.POINTS_INVALID
         end
-        h.unit, h.power, h.edges, h.step = unit, kind == "power" and spec.power or nil, cuts, step and 1 or nil
+        -- step 5 on health is granted as the 5% cell (minor 10), any other step as the 1% cell
+        h.step = step == 5 and kind == "health" and 5 or step and 1 or nil
+        h.unit, h.power, h.edges = unit, kind == "power" and spec.power or nil, cuts
         h.points = list -- nil: a percent handle (a points handle's percent edges are not modelled)
         if
             not UNITS[kind][unit]
@@ -583,6 +595,10 @@ function M.new(o)
             local glo, ghi = cell, cell < 100 and cell + 1 or 100 -- full: the closed cell [100, 100] (ledger L1669)
             if cell < 0 then -- health empty: the closed cell [0, 0] (minor 9)
                 glo, ghi = 0, 0
+            end
+            if self.step == 5 then -- the 5% cell [c, c + 5), 95-99 [95, 100], full [100, 100], empty [0, 5] (minor 10)
+                glo = cellOf(self.kind, v, m, 5)
+                ghi = cell < 100 and glo + 5 or 100
             end
             if self.points then
                 glo, ghi = glo * m / 100, ghi * m / 100

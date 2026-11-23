@@ -51,12 +51,18 @@ local IMPLS = {
                     W.unit.target = nil
                     Fake.event("PLAYER_TARGET_CHANGED")
                 end,
+                plate = function(pct) -- nameplate1 shows a mob at pct% (nil: its plate goes)
+                    Fake.plate("nameplate1", pct and { health = pct / 100 } or nil)
+                end,
+                plateHp = function(pct)
+                    W.unit.nameplate1.health = pct / 100
+                end,
                 now = rawget(_G, "GetTime"), -- the FakeClient's clock
                 done = Fake.restore,
             }
     end,
     fake = function()
-        local k, newMax, newHp, newMana = 0, nil, nil, nil -- k: the frame number: the clock is 1000 + k frames, never a running sum
+        local k, newMax, newHp, newMana, newPlate = 0, nil, nil, nil, nil -- k: the frame number: the clock is 1000 + k frames, never a running sum
         local function now()
             return 1000 + k * FRAME
         end
@@ -86,6 +92,10 @@ local IMPLS = {
                         lib:Push("power", "player", 0, newMana * 10, 1000, now())
                         newMana = nil
                     end
+                    if newPlate then
+                        lib:Push("health", "nameplate1", nil, newPlate * 10, 1000, now())
+                        newPlate = nil
+                    end
                 end,
                 hp = function(pct)
                     newHp = pct
@@ -103,6 +113,15 @@ local IMPLS = {
                 clear = function()
                     lib:Prime("target", now())
                     lib:Push("health", "target", nil, nil, nil, now())
+                end,
+                plate = function(pct) -- the observer's plate pushes (observer.lua plateBands)
+                    if pct then
+                        lib:Prime("nameplate1", now())
+                    end
+                    lib:Push("health", "nameplate1", nil, pct and pct * 10, pct and 1000, now())
+                end,
+                plateHp = function(pct)
+                    newPlate = pct
                 end,
                 now = now,
                 done = function() end,
@@ -381,6 +400,28 @@ for _, name in ipairs({ "real", "fake" }) do
                 w.clear()
                 assert.are.same({ nil, nil, lib.UNKNOWN }, unknown(hp))
                 assert.are.equal("gone", hp:State())
+            end
+        )
+
+        -- (minor 10) a plate's health at the 5% step: the 5% cell, 95-99 [95, 100], full [100, 100], empty [0, 5]; its
+        -- REMOVED reads gone (the ttd arm's plates, observer.lua plateBands)
+        it(
+            "a plate at step 5: the 5% cell, 95-99 [95, 100], full [100, 100], empty [0, 5]; removed reads gone",
+            function()
+                local h = assert(lib:Watch("A", { kind = "health", unit = "nameplate1", step = 5 }))
+                w.plate(63.7)
+                w.live()
+                local rows = { table.concat(lohi(h), " ") }
+                for _, pct in ipairs({ 61, 97, 100, 0, 3 }) do
+                    w.plateHp(pct)
+                    for _ = 1, 4 do
+                        w.frame()
+                    end
+                    rows[#rows + 1] = table.concat({ pct, unpack(lohi(h)) }, " ")
+                end
+                assert.are.same({ "60 65", "61 60 65", "97 95 100", "100 100 100", "0 0 5", "3 0 5" }, rows)
+                w.plate(nil)
+                assert.are.same({ "gone", nil }, { h:State(), (h:Get()) })
             end
         )
 

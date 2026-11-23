@@ -1339,9 +1339,9 @@ do
     end
 
     -- The longest (and the shortest) time to die among the enemies (owner L1694): the target's with one enemy, unknown
-    -- with several (only the target is tracked; no scan here: that scan calls GetTTD itself). Nothing is kept across a
-    -- target change: the library answers nothing for a new target before 1.5 s of its loss, so the last one's time
-    -- would bridge to no answer, and it is no fact about this one.
+    -- with several (only the target is tracked; no scan here: that scan calls GetTTD itself). The core keeps nothing
+    -- across a target change: the library's answer is about whatever the target is now (a mob targeted again resumes
+    -- from its plate, LibTimeToDie minor 5; a new one reads nothing before 1.5 s of its loss).
     local function onlyEnemyTTD()
         if several then return nil end
         return hostileTargetTTD()
