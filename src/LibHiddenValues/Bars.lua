@@ -29,6 +29,11 @@ local LOW = 1 -- the curve's "below" output; "at or above" is 2
 local EPS = 0.0005 -- a guard point this far below each step (curve x scale 0-1), whichever way the client snaps
 local CAP = 256 -- bars are never destroyed (frames cannot be): a hard ceiling on the pool
 local NGRAY = 7 -- Gray bits of the 1% cell (101 values)
+-- Health's exact empty: x under EMPTYX reads the unused Gray index EMPTY (code 64, odd), 2 bars from cell 0 like any
+-- one-cell move; decoded as cell -1, the band [0, 0]. The step has no guard point: an in-game run measured a Step curve
+-- resolving 1e-6 at 0 on plain input; the secret path at empty is assumed the same (not measured). Limit: health
+-- under max / 1,000,000 reads empty (target max is secret).
+local EMPTY, EMPTYX = 127, 0.000001
 lib.HOLD, lib.SETTLE, lib.LOW, lib.POOL, lib.CAP = HOLD, SETTLE, LOW, 32, CAP
 -- Points per Step curve the client accepts (BandProbe2 0.3.0: 256 accepted, 512 refused); a guarded step costs 2.
 lib.MAXPTS = 256
@@ -147,6 +152,11 @@ for k = 1, #lib.sources do
             lib.barCurve[i] = lib.barCurve[i] or lib.curveFor(e)
         end
     end
+    if s.kind == "health" and s.mode == "gray" and s.core then
+        if lib.barCurve[s.core[1] or 0] ~= (lib.hcurve and lib.hcurve[1]) then
+            s.mode = false -- an older minor's position core has no empty step: lib.sync builds it again
+        end
+    end
 end
 
 -- The Step curve of a point threshold p at the plain max M: 1 below p, 2 at or above. The step sits half a point below
@@ -177,11 +187,16 @@ end
 -- A two-level Step curve over the integers 0..top: LOW + bit(n), the step into n at xOf(n), a guard point eps below
 -- it. Only n = first, first + stride, ... are read (default every n): the caller vouches that bit is constant between
 -- them. Raises when the client refuses a point (callers use pcall). A cold path: build time only.
-function lib.levelCurve(bit, top, xOf, eps, first, stride)
+function lib.levelCurve(bit, top, xOf, eps, first, stride, empty)
     local c = C_CurveUtil.CreateCurve()
     c:SetType(Enum.LuaCurveType.Step)
     local prev = bit(0)
-    c:AddPoint(0, LOW + prev)
+    if empty and bit(EMPTY) ~= prev then -- exactly 0 reads EMPTY: the step into cell 0 at EMPTYX, unguarded
+        c:AddPoint(0, LOW + bit(EMPTY))
+        c:AddPoint(EMPTYX, LOW + prev)
+    else
+        c:AddPoint(0, LOW + prev)
+    end
     for n = first or 1, top, stride or 1 do
         local b = bit(n)
         if b ~= prev then
@@ -196,28 +211,37 @@ end
 
 -- A position set's curves (Gray bits 0-6, then the parity bar), the step into cell n at xOf(n); false when the client
 -- refused one.
-local function grayList(xOf, eps)
+local function grayList(xOf, eps, empty)
     local ok, list = pcall(function()
         local t = {}
         for k = 0, NGRAY - 1 do
             t[k + 1] = lib.levelCurve(function(n)
                 return math.floor(GRAY[n] / POW2[k]) % 2
-            end, 100, xOf, eps)
+            end, 100, xOf, eps, nil, nil, empty)
         end
         t[NGRAY + 1] = lib.levelCurve(function(n)
             return n % 2
-        end, 100, xOf, eps)
+        end, 100, xOf, eps, nil, nil, empty)
         return t
     end)
     return ok and list or false
 end
 
--- The position set's curves on the percent scale, built once.
-function lib.grayCurves()
+local function pct(n)
+    return n / 100
+end
+
+-- The position set's curves on the percent scale, built once; health's (empty) with the exact-empty step, a set of
+-- its own so an older minor's lib.gcurve stays as it was.
+function lib.grayCurves(empty)
+    if empty then
+        if lib.hcurve == nil then
+            lib.hcurve = grayList(pct, EPS, true)
+        end
+        return lib.hcurve
+    end
     if lib.gcurve == nil then
-        lib.gcurve = grayList(function(n)
-            return n / 100
-        end, EPS)
+        lib.gcurve = grayList(pct, EPS)
     end
     return lib.gcurve
 end
@@ -583,7 +607,7 @@ local function allocCore(s)
     if s.mode == "ring" then
         curves, beside = s.ring and s.ring.curves, s.gray
     else
-        curves = lib.grayCurves()
+        curves = lib.grayCurves(s.kind == "health")
     end
     if not curves then
         return false
@@ -624,7 +648,7 @@ function lib.sync(s)
     if mode == "ring" and not ring then -- the client refused a ring curve at this max: no point precision here; the
         mode = step and "gray" or nil -- other watches keep their bars, a precision handle is suspended (served)
     end
-    if mode == "gray" and not lib.grayCurves() then -- refused too: edges only, a step handle is suspended
+    if mode == "gray" and not lib.grayCurves(s.kind == "health") then -- refused too: edges only, a step handle is suspended
         mode = nil
     end
     local g = ring and ring.g
@@ -711,8 +735,9 @@ function lib.fire(i)
     end
 end
 
--- The 1% cell of a position set at core[off + 1 .. off + 8]; nil and an error word when its code or parity is off.
-local function grayCell(st, core, off)
+-- The 1% cell of a position set at core[off + 1 .. off + 8] (-1: empty, on health's set); nil and an error word when its
+-- code or parity is off.
+local function grayCell(st, core, off, empty)
     local code = 0
     for k = 1, NGRAY do
         if st[core[off + k]] then
@@ -720,7 +745,9 @@ local function grayCell(st, core, off)
         end
     end
     local n = GINV[code]
-    if n == nil or n > 100 then
+    if n == EMPTY and empty then
+        n = -1 -- odd, as EMPTY: the parity check below holds
+    elseif n == nil or n > 100 then
         return nil, "code"
     end
     if st[core[off + NGRAY + 1]] ~= (n % 2 == 1) then
@@ -732,7 +759,7 @@ end
 -- The position set's cell from its bars (nil, n); an error word when the code, the parity or an edge bar disagrees.
 local function grayDecode(s)
     local st = lib.barState
-    local n, bad = grayCell(st, s.core, 0)
+    local n, bad = grayCell(st, s.core, 0, s.kind == "health")
     if not n then
         return bad
     end
@@ -928,7 +955,9 @@ local function band(h)
         elseif A then -- the 1% cells the exact value spans (one at step 1)
             n1, n2 = math.floor(100 * A / M), math.floor(100 * B / M)
         end
-        if pts then
+        if n1 < 0 then -- health's exact empty
+            lo, hi = 0, 0
+        elseif pts then
             lo, hi = n1 * M / 100, n2 < 100 and (n2 + 1) * M / 100 or M
         else
             lo, hi = n1, n2 < 100 and n2 + 1 or 100
@@ -985,7 +1014,7 @@ local function band(h)
             hi = p
         end
     end
-    if lo > hi or (lo == hi and hi < top) then
+    if lo > hi or (lo == hi and hi < top and not (h.step and n == -1)) then
         return false
     end
     return lo, hi

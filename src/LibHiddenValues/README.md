@@ -58,7 +58,14 @@ A spec needs at least one of `edges`, `step`, `points` or `precision`.
 - `step`: position. Any step is granted as 1: the band is the 1% cell (`lo`, `lo + 1`), `h:Domain()` returns step 1.
   Beside `edges` the band is cut by both (an edge on the 1% grid costs no bar). The source runs 8 bars (a Gray code
   and a parity bar) while any watch on it asks for a step. A jump of any size is one call, two frames later (three when
-  one change's firings split over two frames): every change is confirmed first (below).
+  one change's firings split over two frames): every change is confirmed first (below). Full reads `100, 100`.
+  Health only (minor 9): exactly empty reads `0, 0`, and `0, 1` means above 0 (a little left); no extra bar. Health
+  under one millionth of the max also reads empty: exact below 1,000,000 max health; at 1,000,000 and above the lowest health
+  (under max / 1,000,000) reads `0, 0`; a target's max is hidden, so the library cannot tell which side it is on.
+  Measured on plain values only; on the hidden values at empty, and predicted against real health at 0, it is
+  assumed, not measured. Empty says nothing about death (that is your call); a unit the client plainly calls dead
+  reads unknown (`gone`), so `0, 0` shows only before that. A watch with only `edges` reads `0, e` at empty, as before.
+  Power at 0 still reads `0, 1`.
 - `points` (player power): whole-number thresholds in the value's own units, e.g. `{ 40, 60 }` energy. A handle with
   `points` (even `{}`) answers in points: `lo`, `hi` and `h:Domain()` (0 to the player's plain max) are in points.
   The cut is `points / max`; it moves with the max (`UNIT_MAXPOWER`: the handle goes unknown while it primes again).
