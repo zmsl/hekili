@@ -104,7 +104,11 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0.02 / 0.04 / 0.04, press-only 0.04 / 0.04 / 0.06; excused avoid 2): flicker 0.06 -> 0.05 (the
     -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: avoid justified"
-    ["Arms"] = { loOver = 2998, flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    -- jitter rule L1791 (a return needs its own fact; seeds 1-20 / 21-40 / 41-60 on e8e94d5c9: flicker 0.04 / 0.04 /
+    -- 0.06, press-only 0.04 / 0.04 / 0.06; the newly counted return traced: seed 49 t 68.8 rend > sunder_armor on an
+    -- avoid > rend with no fact): flicker 0.05 -> 0.07 (the measured worst + 0.01), cause "jitter rule L1791: a return
+    -- needs its own fact"
+    ["Arms"] = { loOver = 2998, flicker = 0.07, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
