@@ -354,6 +354,32 @@ describe("interrupt_if on a channel line: read at wowsims's points, held once du
         assert.is_true(t < 0.05, tostring(t))
     end)
 
+    -- review m4, owner L1767: a target change is a new fact, so it re-decides a held cut: the hold is released and the
+    -- condition read again, at once, for the new target (here true on every mob but the second)
+    it("a target change re-decides a held cut for the new target", function()
+        local st
+        local at, H = cutRig(function()
+            return st.UnitGUID("target") ~= "Creature-2"
+        end)
+        st = H.Hekili.State
+        local function swap(guid)
+            H.ctl.guid.target = guid
+            H.Fire("PLAYER_TARGET_CHANGED")
+        end
+        local name, t = at(3) -- the first tick, on the first mob: due and held
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        swap("Creature-3")
+        name, t = at(3.2) -- true for the new target too: due again at once
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        swap("Creature-2")
+        for _, w in ipairs({ 3.4, 3.6 }) do -- false for this one: released, and no later tick reads it true
+            name, t = at(w)
+            assert.is_true(name ~= "bloodrage" or t > 0.05, w .. ": " .. tostring(name) .. " at " .. tostring(t))
+        end
+    end)
+
     it("reads a tick with the GCD more than the spell queue window away, not one within it", function()
         local early = function(s)
             return s < 2.1 -- true at the first tick only

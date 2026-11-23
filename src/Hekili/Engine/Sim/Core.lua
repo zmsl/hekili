@@ -345,12 +345,14 @@ local default_modifiers = {
 -- press ends it), so the next action keeps its ready state between updates. The real channel is the one slot 1 of an
 -- update sees at its now, keyed by its start; an update settles each of its passed points once: on the point itself,
 -- else from the last update's forecast of it, else read now. Primary and AOE keep their own (review I-A: their target
--- counts differ in dual and reactive modes); only their event loop reads it.
+-- counts differ in dual and reactive modes); only their event loop reads it. A target change is a new fact (owner L1767):
+-- it releases a hold, and the condition is read again at once for the new target.
 local CUT_EPS = 0.01
 -- per main display: the real channel's start, point read, verdict, GCD end and the update it was settled in (`at`, its
--- now); the forecast's first point read after the real now this update (`fcAt`) and its verdict
-local cutPrimary = { applied = nil, point = 0, due = false, gcd = 0, at = nil, fcAt = nil, fcDue = false }
-local cutAOE = { applied = nil, point = 0, due = false, gcd = 0, at = nil, fcAt = nil, fcDue = false }
+-- now), the target's GUID at the last real read; the forecast's first point read after the real now this update (`fcAt`)
+-- and its verdict
+local cutPrimary = { applied = nil, point = 0, due = false, gcd = 0, at = nil, target = nil, fcAt = nil, fcDue = false }
+local cutAOE = { applied = nil, point = 0, due = false, gcd = 0, at = nil, target = nil, fcAt = nil, fcDue = false }
 local gcdStop = 0 -- seconds from the instant read to a GCD end inside the channel, for the event loop's stop
 
 local function channelCut( modifiers, tick_time )
@@ -365,7 +367,10 @@ local function channelCut( modifiers, tick_time )
         c.applied, c.point, c.due, c.gcd, c.fcAt = applied, applied, false, 0, nil
     end
     local mine = applied == c.applied
-    if mine and c.due then return true end
+    local tgt = real and state.UnitGUID( "target" ) -- nil: none, or secret (no change seen then)
+    local retarget = real and mine and c.due and tgt ~= c.target
+    if real then c.target = tgt end
+    if mine and c.due and not retarget then return true end
     if real and gEnd > q then
         c.gcd = gEnd
     elseif mine and gEnd <= applied then
@@ -378,9 +383,10 @@ local function channelCut( modifiers, tick_time )
     if p and p >= ends - CUT_EPS then p = nil end
     local atGcd = gEnd > applied + CUT_EPS and gEnd < ends - CUT_EPS and gEnd <= q + CUT_EPS and ( not p or gEnd > p )
     if atGcd then p = gEnd end
+    if retarget and p then p, atGcd = q, false end -- read now; none once the ticks are done
 
     local due = false
-    if p and ( not mine or p > c.point + CUT_EPS ) and ( real or q - p <= CUT_EPS ) then
+    if p and ( retarget or not mine or p > c.point + CUT_EPS ) and ( real or q - p <= CUT_EPS ) then
         local fcAt = c.fcAt
         if real and q - p > CUT_EPS and fcAt and math.abs( fcAt - p ) <= CUT_EPS then
             due = c.fcDue

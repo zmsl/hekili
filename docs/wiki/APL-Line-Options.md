@@ -39,7 +39,7 @@ An option written `=1` is on; `=0` or leaving it out is off. Options that hold a
 | `target_if` | Condition | Read by the importer as `if=` when the line has none; a leading `min:` or `max:` is removed | none |
 | `caption` | Text, 20 characters at most | Short text that can appear on the icon, when the display shows captions | **Caption** |
 | `description` | Text | Shown when the display is paused and the icon is hovered | **Description** |
-| `interrupt_if`, `interrupt_immediate`, `chain`, `early_chain_if` | Condition | On the line of a channeled ability: when the channel may be broken for another line, or recast at its last tick. `interrupt_if` is read at each tick but the last (the GCD ready, or more than the spell queue window from ready) and at the GCD's end; once true, the cut stays shown until the channel ends | none |
+| `interrupt_if`, `interrupt_immediate`, `chain`, `early_chain_if` | Condition | On the line of a channeled ability: when the channel may be broken for another line, or recast at its last tick. `interrupt_if` is read at each tick but the last (the GCD ready, or more than the spell queue window from ready) and at the GCD's end; once true, the cut stays shown until the channel ends or the target changes | none |
 | `interrupt` | Condition | On the line of a channeled ability: while it holds, another line may break the channel, once the GCD is ready and at a channel tick | none |
 
 From Feral (wowsims.com):
