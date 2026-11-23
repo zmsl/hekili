@@ -148,6 +148,119 @@ describe("interrupt_global on a channel line", function()
     end)
 end)
 
+-- L1755 (owner: "c+hold"): a channel's interrupt_if is read where wowsims reads its interruptIf (dot.go periodicTick,
+-- apl.go DoNextAction): at each tick but the last, with the GCD ready or more than the spell queue window from ready,
+-- and at the GCD's end; once due it stays due until the channel ends.
+describe("interrupt_if on a channel line: read at wowsims's points, held once due", function()
+    -- Bloodrage above Cannibalize's line (10 s from world time 1, a tick each 2 s), its interrupt_if `cond(s)` (`s` s
+    -- into the channel at the instant read); `gcd`: a GCD the instance sees from the channel's start. Returns at(t):
+    -- the first recommendation's name and time at world time `t`.
+    local function cutRig(cond, gcd)
+        local H, W, us, upTo =
+            rig({ line("bloodrage"), line("cannibalize", { interrupt_if = "1" }), line("battle_shout") })
+        H.Hekili.Class.abilities.cannibalize.tick_time = 2
+        local st = H.Hekili.State
+        H.Hekili.Scripts.Channels[ww.PACK].cannibalize.interrupt_if = function()
+            return cond(st.query_time - 101)
+        end
+        W.t = 1
+        assert.is_true(
+            W.press(us, "cannibalize", { spell = CANNIBALIZE, gcd = 1.5, channel = { length = 10, tick = 2 } })
+        )
+        W.run(20)
+        if gcd then
+            H.ctl.cooldown[H.ns.GCD_SPELL] = { isActive = true, isOnGCD = false, startTime = 101, duration = gcd }
+        end
+        return function(t)
+            local out = upTo(t)
+            st.reset("Primary", true)
+            local left = math.max(0, 101 + (gcd or 0) - (100 + t))
+            assert.is_true(math.abs(st.cooldown.global_cooldown.remains - left) < 1e-6, "the GCD the instance sees")
+            return out.recs[1].actionName, out.recs[1].time
+        end
+    end
+
+    it("a condition turned true mid-tick waits for the next tick", function()
+        local on = false
+        local at = cutRig(function()
+            return on
+        end)
+        at(3) -- the first tick (2 s in), read false
+        on = true
+        local name, t = at(3.2)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 1.8) < 0.05, tostring(t)) -- the second tick, 4 s in
+    end)
+
+    it("never in the last tick's interval (the ticks are done there)", function()
+        local on = false
+        local at = cutRig(function()
+            return on
+        end)
+        at(9) -- the fourth tick, read false
+        on = true
+        local name, t = at(9.2)
+        assert.is_true(name ~= "bloodrage" or t > 1.7, tostring(name) .. " at " .. tostring(t))
+    end)
+
+    it("once due, holds until the channel ends, the condition false again", function()
+        local on = true
+        local at = cutRig(function()
+            return on
+        end)
+        local name, t = at(3) -- the first tick
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        on = false
+        for _, w in ipairs({ 3.2, 3.4, 3.8, 4.6 }) do
+            name, t = at(w)
+            assert.are.equal("bloodrage", name)
+            assert.is_true(t < 0.05, w .. ": " .. tostring(t))
+        end
+    end)
+
+    -- an update late after a tick reads that tick as the last update forecast it there, not as of its own now (the
+    -- reviewer's DoT falling between the tick and the update)
+    it("a late update reads the passed tick as forecast at it", function()
+        local at = cutRig(function(s)
+            return s < 2.1 -- true at the first tick, false 0.3 s after it
+        end)
+        local name, t = at(2.9)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 0.1) < 0.05, tostring(t))
+        name, t = at(3.3)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(t < 0.05, tostring(t))
+        at = cutRig(function(s)
+            return s > 2.1 -- false at the first tick, true 0.3 s after it
+        end)
+        at(2.9)
+        name, t = at(3.3)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 1.7) < 0.05, tostring(t)) -- the second tick
+    end)
+
+    it("reads at the GCD's end inside the channel", function()
+        local at = cutRig(function()
+            return true
+        end, 1.5)
+        local name, t = at(1.2)
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 1.3) < 0.05, tostring(t)) -- the GCD's end, 1.5 s in, before the first tick
+    end)
+
+    it("reads a tick with the GCD more than the spell queue window away, not one within it", function()
+        local early = function(s)
+            return s < 2.1 -- true at the first tick only
+        end
+        local name, t = cutRig(early, 2.6)(1.2) -- the GCD 0.6 s from ready at the first tick: due there
+        assert.are.equal("bloodrage", name)
+        assert.is_true(math.abs(t - 2.4) < 0.05, tostring(t)) -- shown at the GCD's end
+        name, t = cutRig(early, 2.3)(1.2) -- 0.3 s from ready: not read there; false at the GCD's end
+        assert.is_true(name ~= "bloodrage" or t > 3, tostring(name) .. " at " .. tostring(t))
+    end)
+end)
+
 describe("max_energy on a line", function()
     -- A Feral cat in combat with 5 combo points and `energy` (plain to the fake client), the list one Ferocious Bite
     -- line; returns the first recommendation's name and time.

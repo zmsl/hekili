@@ -296,12 +296,13 @@
 --    health read is unsupported as any other unit's (`... of <unit>`).
 -- 24. A channelSpell's `interruptIf` (owner L1748: "if wowsims cuts channels, we should too") is its line's
 --    `interrupt_if=<condition>` (`1` when it folds true; none when it folds false or is absent, wowsims's plain cast):
---    the engine cuts the channel at a tick with the GCD free when it holds (Engine/Sim/Core.lua CheckChannel), and
---    its walk stops at the channel's own line when that would be the pick again, wowsims's recast-first (no cut)
---    without `allowRecast`; an `allowRecast` is not carried (a `# Deviation:` line). An interruptIf the fork cannot
---    read drops the clip only, with a `# Deviation:` line. `spellChanneledTicks` (the running channel's ticks so far)
---    is read only there, as `floor(N-N*channel_remains/action.<key>.cast+0.01)` with N the kit ability's `cast` over
---    its `tick_time`; elsewhere it is unsupported (rule 2).
+--    the engine reads it where wowsims does (Engine/Sim/Core.lua channelCut): at each tick but the last, with the GCD
+--    ready or more than the spell queue window from ready, and at the GCD's end; once due, the cut stays due until the
+--    channel ends. Its walk stops at the channel's own line when that would be the pick again, wowsims's recast-first
+--    (no cut) without `allowRecast`; an `allowRecast` is not carried (a `# Deviation:` line). An interruptIf the fork
+--    cannot read drops the clip only, with a `# Deviation:` line. `spellChanneledTicks` (the running channel's ticks so
+--    far) is read only there, as `floor(N-N*channel_remains/action.<key>.cast+0.01)` with N the kit ability's `cast`
+--    over its `tick_time`; elsewhere it is unsupported (rule 2).
 -- 14b. A `sequence` (wowsims: its members in order, each once, once per reset; design §3a) is a stepped window `<w>`
 --    (the snake of its name) whose steps are its cast members: one line a cast, `<key>,if=window.<w>.next.<key>`, its
 --    own condition after, consecutive equal lines once. A distance-only waitUntil member is the next cast's range gate,

@@ -145,6 +145,64 @@ describe("the loop's driver cuts our channel when the engine moves off it", func
         assert.are.equal(cut.stop, off)
     end)
 
+    -- L1755 (owner: "c+hold"): the engine reads the cut where wowsims does, so with no reaction every cut lands on a
+    -- tick before Wrack's last (wowsims's pinned log: Wrack's lengths are whole seconds)
+    it("Affliction, 3 seeds x 180 s: every Wrack cut lands on a tick before its last", function()
+        local C = require("Forever.helpers.warlock_world").Affliction
+        local cuts = 0
+        for seed = 1, 3 do
+            local L = loop.new(C)
+            local run = loop.run(L, seed, { duration = 180, mobHealth = 1e9 }, { { H = L.oracle, plain = true } })
+            assert.are.equal(0, run.errors)
+            for _, c in ipairs(channels(run, L.oracle, "wrack")) do
+                if c.stop and c.stop < c.ends - 1e-6 and c.stop < run.t - 1e-6 then
+                    cuts = cuts + 1
+                    local at = c.stop - c.start
+                    assert.is_true(math.abs(at - math.floor(at + 0.5)) < 1e-6 and at < 5 + 1e-6, seed .. ": +" .. at)
+                end
+            end
+        end
+        assert.is_true(cuts > 0, "no Wrack cut")
+    end)
+
+    -- the blink (review I1): a player with a 0.5 s reaction; Corruption off at Wrack's press, so the cut is due at its
+    -- second tick. From there the first icon stays Corruption, ready now, at every update until the press cuts Wrack.
+    it("Affliction, a 0.5 s reaction: a due cut stays ready now until it is pressed", function()
+        local C = require("Forever.helpers.warlock_world").Affliction
+        local L = loop.new(C)
+        local dropped, due, rows = nil, nil, {}
+        local run = loop.run(L, 1, {
+            duration = 40,
+            mobHealth = 1e9,
+            reaction = 0.5,
+            on = function(r, steps, t)
+                local H = L.oracle
+                local v, id = r.us.target, H.Hekili.Class.auras.corruption.id
+                local key = channelKey(r, H)
+                if not dropped and key == "wrack" and v.auras[id] then
+                    dropped = t
+                    v.dots.corruption, v.auras[id] = nil, nil
+                    r.W.emit({ kind = "aura", dst = v, aura = id, stacks = 0, expires = 0, duration = 0 })
+                end
+                local q = steps[1].q
+                if dropped and key == "wrack" and q.name[1] == "corruption" then
+                    due = due or (q.time[1] < 1e-6 and t)
+                    if due then
+                        rows[#rows + 1] = ("%.2f %.3f"):format(t, q.time[1])
+                        assert.is_true(q.time[1] < 1e-6, table.concat(rows, ", "))
+                    end
+                end
+            end,
+        }, { { H = L.oracle, plain = true } })
+        assert.are.equal(0, run.errors)
+        assert.is_truthy(due, "no cut due")
+        local cut = firstCut(run, channels(run, L.oracle, "wrack"))
+        assert.is_truthy(cut, "no Wrack cut")
+        assert.is_true(math.abs(due - cut.start - 2) < 1e-6, tostring(due - cut.start)) -- due at the second tick
+        assert.is_true(cut.stop - due < 0.5 + 0.2 + 1e-6, tostring(cut.stop - due)) -- pressed after the reaction
+        assert.are.equal("corruption", cut.next)
+    end)
+
     it("Shadow: names Mind Flay to the engine and runs it to its own end", function()
         local C = require("Forever.helpers.priest_world").Shadow
         local seen, named, prev = 0, 0, nil

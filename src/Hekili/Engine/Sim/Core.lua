@@ -339,6 +339,62 @@ local default_modifiers = {
     interrupt = return_false
 }
 
+-- A channel's interrupt_if is read where wowsims reads its interruptIf (owner L1755 "c+hold"; sim/core dot.go
+-- periodicTick, apl.go DoNextAction): at each tick but its last, with the GCD ready or more than the spell queue window
+-- from ready, and at the GCD's end, while ticks remain. Once due at the real now it stays due until the channel ends (a
+-- press ends it), so the next action keeps its ready state between updates. The real channel is the one slot 1 of an
+-- update sees at its now, keyed by its start; an update settles each of its passed points once: on the point itself,
+-- else from the last update's forecast of it, else read now.
+local CUT_EPS = 0.01
+local cutApplied, cutPoint, cutDue, cutGcd = nil, 0, false, 0 -- the real channel: start, point read, verdict, GCD end
+local fcAt, fcDue = nil, false -- the forecast's first point read after the real now this update, and its verdict
+local gcdStop = 0 -- seconds from the instant read to a GCD end inside the channel, for the event loop's stop
+
+local function channelCut( modifiers, tick_time )
+    local casting = state.buff.casting
+    local applied, ends = casting.applied, casting.expires
+    local q = state.query_time
+    local gEnd = state.cooldown.global_cooldown.expires
+    local real = state.index == 1 and state.offset == 0 and state.delay == 0
+
+    if real and applied ~= cutApplied then
+        cutApplied, cutPoint, cutDue, cutGcd, fcAt = applied, applied, false, 0, nil
+    end
+    local mine = applied == cutApplied
+    if mine and cutDue then return true end
+    if real and gEnd > q then
+        cutGcd = gEnd
+    elseif mine and gEnd <= applied then
+        gEnd = cutGcd -- a GCD over reads 0 at the real now: its end as last seen running
+    end
+
+    -- the latest point at or before the instant: a tick before the last, or the GCD's end inside the channel
+    local k = math.floor( ( q - applied + CUT_EPS ) / tick_time )
+    local p = k >= 1 and applied + k * tick_time or nil
+    if p and p >= ends - CUT_EPS then p = nil end
+    local atGcd = gEnd > applied + CUT_EPS and gEnd < ends - CUT_EPS and gEnd <= q + CUT_EPS and ( not p or gEnd > p )
+    if atGcd then p = gEnd end
+
+    local due = false
+    if p and ( not mine or p > cutPoint + CUT_EPS ) and ( real or q - p <= CUT_EPS ) then
+        if real and q - p > CUT_EPS and fcAt and math.abs( fcAt - p ) <= CUT_EPS then
+            due = fcDue
+        else
+            local left = atGcd and 0 or math.max( 0, gEnd - p )
+            due = ( left == 0 or left > ns.SpellQueueWindow() ) and modifiers.interrupt_if() and true or false
+        end
+        if real then
+            cutPoint, cutDue = p, due
+        elseif mine and state.index == 1 and not fcAt then
+            fcAt, fcDue = p, due
+        end
+    end
+    if real then fcAt = nil end
+
+    if not due and gEnd > q + CUT_EPS and gEnd < ends - CUT_EPS then gcdStop = gEnd - q end
+    return due
+end
+
 function Hekili:CheckChannel( ability, prio )
     if not state.channeling then
         if self.ActiveDebug then self:Debug( "CC: We aren't channeling; CheckChannel is false." ) end
@@ -430,11 +486,11 @@ function Hekili:CheckChannel( ability, prio )
 
         -- FIXME
         -- Why are some conditions not correctly making it to/through here? Example: "!talent.entropic_rift" on shadowpriest void_torrent cancel
-        if modifiers.interrupt_if and modifiers.interrupt_if() then
-            local timing = last_tick or ( state.query_time - state.buff.casting.applied ) % tick_time < 0.25
-            local imm = modifiers.interrupt_immediate and modifiers.interrupt_immediate()
-            if self.ActiveDebug then self:Debug( "CC: Interrupt_If - GCD: %s, Immediate: %s, Timing: %s.", tostringall( gcd, imm, timing ) ) end
-            if imm or gcd and timing then
+        if modifiers.interrupt_if then
+            local imm = modifiers.interrupt_immediate and modifiers.interrupt_immediate() and modifiers.interrupt_if()
+            local due = imm or channelCut( modifiers, tick_time )
+            if self.ActiveDebug then self:Debug( "CC: Interrupt_If - Imm: %s, Due: %s.", tostringall( imm, due ) ) end
+            if due then
                 state.this_action = act
                 return true
             end
@@ -2091,6 +2147,7 @@ function Hekili.Update()
 
                             if channeling then
                                 if debug then Hekili:Debug( "We are channeling, checking if we should break the channel..." ) end
+                                gcdStop = 0
                                 shouldBreak = Hekili:CheckChannel( nil, 0 )
                                 state.channel_breakable = shouldBreak
                             else
@@ -2143,7 +2200,8 @@ function Hekili.Update()
                             if ( casting or channeling ) and not shouldBreak and not shouldCheck then
                                 if debug then Hekili:Debug( 1, "Finishing queued event #%d ( %s of %s ) due at %.2f as player is casting and castable spells are not ready.\nCasting: %s, Channeling: %s, Break: %s, Check: %s", n, event.type, event.action, t, casting and "Yes" or "No", channeling and "Yes" or "No", shouldBreak and "Yes" or "No", shouldCheck and "Yes" or "No" ) end
                                 if t >= 0 then
-                                    state.advance( t )
+                                    -- a channel cut is read at the GCD's end too (channelCut): stop there first
+                                    state.advance( channeling and gcdStop > 0 and gcdStop < t and gcdStop or t )
 
                                     if debug then -- the one resources line built with debug off (gap CD: 150-200 B per update on mana packs)
                                         local resources
@@ -2213,7 +2271,8 @@ function Hekili.Update()
                                     if debug then Hekili:Debug( "Time spent on event #%d PREADVANCE: %.2fms...", n, debugprofilestop() - eStart ) end
                                     if debug then Hekili:Debug( 1, "No recommendation found before event #%d (%s %s) at %.2f; triggering event and continuing ( %.2f ).\n", n, event.action or "NO ACTION", event.type or "NO TYPE", t, state.offset + state.delay ) end
 
-                                    state.advance( overrideTime or t )
+                                    local step = overrideTime or t
+                                    state.advance( channeling and gcdStop > 0 and gcdStop < step and gcdStop or step )
                                     if debug then Hekili:Debug( "Time spent on event #%d POSTADVANCE: %.2fms...", n, debugprofilestop() - eStart ) end
 
                                     event = events[ 1 ]
