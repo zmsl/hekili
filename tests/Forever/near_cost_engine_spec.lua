@@ -133,7 +133,8 @@ describe("the Clash setting on a booted Mage", function()
     end)
 
     -- the later entry's Clash: Fireball (off the GCD, 0.32 s on its floor) and Scorch at the GCD's end (0.29 s) are
-    -- within the 0.05 s pad; Scorch's Clash 0.3 makes it ready sooner by more, so it takes over
+    -- within the 0.05 s pad; Scorch's Clash 0.3 makes it ready sooner by more, but a later entry not ready before the
+    -- pick's wait falls inside EARLY_EXIT never takes it (owner's choice B, ledger L1813): the pick stays
     local function scorchClash(clash)
         local set = clashed(clash, "scorch")
         return function(H)
@@ -145,11 +146,14 @@ describe("the Clash setting on a booted Mage", function()
     end
     local OFF = { { enabled = true, action = "fireball", use_off_gcd = 1 }, { enabled = true, action = "scorch" } }
 
-    it("lets a later entry with Clash take over a pick ready less than its Clash sooner", function()
-        local slot = first(0, nil, scorchClash(0.3), OFF)
-        assert.are.equal("scorch", slot.actionName)
-        assert.is_true(slot.wait > 0.28 and slot.wait < 0.3, slot.wait) -- its real wait: the GCD's end
-    end)
+    it(
+        "keeps the pick over a later entry with Clash not ready before the pick is inside EARLY_EXIT (L1813, B)",
+        function()
+            local slot = first(0, nil, scorchClash(0.3), OFF)
+            assert.are.equal("fireball", slot.actionName) -- Scorch at 0.29 is not ready before 0.32 - EARLY_EXIT
+            assert.is_true(slot.wait > 0.3 and slot.wait < 0.35, slot.wait) -- the pick's own floor wait
+        end
+    )
 
     it("keeps the pick over that entry with no Clash: under the 0.05 s pad", function()
         local slot = first(0, nil, scorchClash(0), OFF)
@@ -168,5 +172,37 @@ describe("the Clash setting on a booted Mage", function()
             spec.abilities.mana_gem.clash = 0.4 -- the ability table is not an item's
             assert.are.equal(0, S:ClashOffset("mana_gem"))
         end)
+    end)
+end)
+
+-- frostfire-flash (ledger L1813, bands arm seeds 2/11/12/16/20): a later entry waiting on its floor alone took the
+-- icon from an earlier one held by something else at 0.21 s vs 0.31 s, then lost it the next update with no new fact
+-- (the earlier one's wait 0.11, inside EARLY_EXIT, ended the walk). Owner's choice B: a later entry takes the icon only
+-- if it is ready before the pick's wait falls inside EARLY_EXIT, so the pick stays over both updates. Here the GCD
+-- holds Scorch and the floor alone holds Fireball (taken off the GCD).
+describe("a later entry not ready before the pick is inside EARLY_EXIT", function()
+    local LIST = { { enabled = true, action = "scorch" }, { enabled = true, action = "fireball", use_off_gcd = 1 } }
+    local function shape(left)
+        return function(H)
+            rawset(H.Hekili.Class.abilities.fireball, "gcd", "off")
+            H.ns.VirtualState.GcdInfo = function(t)
+                return t - (1.5 - left), 1.5
+            end
+        end
+    end
+
+    it("leaves the pick in place over both updates, nothing shown ready while its floor is short", function()
+        local slot = first(0, nil, shape(0.31), LIST, 0.21 * REGEN) -- Fireball 0.21 s, Scorch 0.31 s
+        assert.are.equal("scorch", slot.actionName)
+        assert.is_true(slot.wait > 0.3, slot.wait)
+        slot = first(0, nil, shape(0.11), LIST, 0.6) -- Fireball 0.016 s (shown 0.06), Scorch 0.11 s
+        assert.are.equal("scorch", slot.actionName)
+        assert.is_true(slot.wait > 0.1, slot.wait)
+    end)
+
+    it("still lets a later entry ready before then take the icon", function()
+        local slot = first(0, nil, shape(0.31), LIST, 0.05 * REGEN) -- Fireball 0.05 s (shown 0.06) < 0.31 - 0.2
+        assert.are.equal("fireball", slot.actionName)
+        assert.is_true(slot.wait > 0.05, slot.wait) -- its floor is short: never shown ready (C1)
     end)
 end)

@@ -1240,6 +1240,11 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                             if debug then self:Debug( "The current pick (%s at %.2f) is near its cost (the estimate reaches it within %.2f s); not displaced by %s at %.2f.", rAction, rWait, EARLY_EXIT, action, wait_time ) end
                         elseif rAction and ( rWait - state:ClashOffset( rAction ) ) - ( wait_time - clash ) <= 0.05 then
                             if debug then self:Debug( "The action is not ready in time ( %.2f vs. %.2f [%s] ) [ Clash: %.2f vs. %.2f ] - padded by 0.05s.", wait_time, rWait, rAction or "NONE", clash, state:ClashOffset( rAction ) ) end
+                        elseif rAction and wait_time >= rWait - EARLY_EXIT then
+                            -- Forever (ledger L1813, owner's choice B): a later entry takes the pick only if it is ready before the
+                            -- pick's wait falls inside EARLY_EXIT, where the walk ends at the pick: else it shows for an update or
+                            -- two and the pick takes the icon back with nothing new (a countdown flash). Clash does not enter.
+                            if debug then self:Debug( "The action ( %.2f ) is not ready before the current pick ( %s at %.2f ) is inside %.2fs; the pick stays.", wait_time, rAction, rWait, EARLY_EXIT ) end
                         else
                             -- APL checks.
                             if precombatFilter and not ability.essential then
