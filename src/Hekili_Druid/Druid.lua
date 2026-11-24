@@ -1881,6 +1881,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        expects = "debuff", -- no direct damage (wowsims rip.go: CalcAndDealOutcome): a white wound in its frame is never its
         refundOnAvoid = true, -- wowsims rip.go; DB2 Discount Power On Miss
         known = knows(RIP),
         missable = true,

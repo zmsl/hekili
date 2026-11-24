@@ -20,7 +20,7 @@ An ability's **`expects`** field tells the core what the cast's hit looks like: 
 |---|---|---|
 | `"none"` | No row: a buff, a summon, a form | |
 | `"instant"` | One row in the same frame as the cast | `school` |
-| `"debuff"` | An effect that deals no damage, such as an armor debuff or a taunt. Only its own miss, dodge or parry pays it; its success makes no row. | No `school`, no ticking aura |
+| `"debuff"` | An effect with no direct hit, such as an armor debuff, a taunt or a bleed whose damage comes only from its ticks. Only its own miss, dodge or parry pays it; its success makes no row, and its ticks are not its rows. | No `school`; its aura may tick, but not with `dot = "debuff"` |
 | `"travel"` | A projectile: one row when it arrives | `velocity` |
 | `"strike"` | One row with the next melee swing | `onNextSwing` |
 | `"ticks"` | A damage-over-time effect with no direct hit: one row per tick | An aura with `tick_time` and `dot = "debuff"` |

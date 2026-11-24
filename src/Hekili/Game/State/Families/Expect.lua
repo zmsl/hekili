@@ -8,7 +8,8 @@
 -- `now` context (I.Eval, Families/Casts.lua), never under Hekili's state. Declared: the pack's own value, before the haste wrapper RegisterAura installs (Engine/Schema/
 -- Spec.lua keeps it as `base_tick_time`), as Families/Casts.lua reads `declaredSpend`. A declared instant or travel
 -- ability also ticks when that aura is upstream's debuff dot (`dot = "debuff"`, the field mt_dot reads). "debuff" is
--- an effect that deals no damage: the instant kind with school 0, so its ticket takes only its own MISS, DODGE or PARRY
+-- an effect that deals no direct damage (its aura may tick, never a `dot = "debuff"` one: those ticks are background
+-- rows): the instant kind with school 0, so its ticket takes only its own MISS, DODGE or PARRY
 -- (Kinds.lua K.Accepts) and closes `expired`, never `lost` (Tickets.lua); an "instant" must name its school. An absent
 -- `expects` takes today's behaviour: "strike" with `onNextSwing`, "instant" with `startsCombat`, else "none", with
 -- school ANY unless the ability names one (CHANNEL is opt-in). A malformed declaration is counted once in
@@ -94,8 +95,9 @@ local function malformed(obj, e, k, s, au)
         return "velocity is not a positive number" -- 0, a negative or NaN would make the hard window meaningless
     elseif obj.school ~= nil and not s then
         return "unknown school " .. tostring(obj.school)
-    elseif e == "debuff" and (obj.school ~= nil or au) then
-        return "debuff deals no damage: no school, no ticking aura"
+    elseif e == "debuff" and (obj.school ~= nil or (au and rawget(au, "dot") == "debuff")) then
+        -- its aura may tick (L1810: Rip): those ticks stay background rows, never this school-0 ticket's
+        return 'debuff deals no direct damage: no school, no dot = "debuff" aura'
     elseif e == "instant" and not s then
         return 'instant needs a school (no damage: expects "debuff")'
     elseif k == X.FLIGHT and not v then
