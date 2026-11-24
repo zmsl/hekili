@@ -3316,7 +3316,11 @@ function M.translate(rotation, c)
         table.insert(origin.default, at, false)
     end
     -- rule 25: the shared health lines, after the `first` extras and after wowsims's own defensive lines (an ability on
-    -- the Defensives toggle: they keep wowsims's order, def-2 review Minor 9), the pack's own cast of one included
+    -- the Defensives toggle: they keep wowsims's order, def-2 review Minor 9), the pack's own cast of one included.
+    -- shortcut: the scan spans the whole default list, so a wowsims Defensives line late in a list would pull the shared
+    -- lines below damage lines (seen only with Defensives not separate); no shipped pack has one (def-2c re-review Minor
+    -- 4). Bounding it to a leading block would reorder a shipped pack whose defensive lines sit among other lines (a
+    -- form, a charge, a racial); bound it to the last defensive line before the first damage cast if one appears.
     local at = firsts
     for i, body in ipairs(byName.default) do
         local a = origin.default[i] ~= false and c.set.abilities[body:match("^[%w_]+")]
