@@ -391,8 +391,8 @@ fit: a big first hit is no rate (live, minor 2 read 3.63 s at 72%, then 52 s). T
 reason is `seed` as unknown (owner L1742; shortcut): a burst then a far slower fall seeds at about half the true time
 for 2 s (the fit after it reads 0.74), and with the rule removed the Fury swap set's flicker rose 0.35 -> 0.40/min
 (vendor-libs fight runs, L1736). The rule blanks a seed only while its life (the id `Get` returns) has given no non-seed
-answer: the core remembers the last five such lives in place (the library keeps four past targets' lives, plus the
-target's). Minor 5 can step from a fit, a stall or a prior to a seed and back, on a mob targeted again and after a
+answer: the core remembers five such lives in place by recency, a life shown again written again, so the one dropped
+is the least recently shown (the library keeps its four most recent past targets' lives, plus the target's). Minor 5 can step from a fit, a stall or a prior to a seed and back, on a mob targeted again and after a
 stall on one never left (the ttd arm: Arms seed 17, Feral seed 20); it keeps showing, where the blank read known,
 unknown, known (vendor-libs-next I1). The unknown of about a second after a sudden speed-up is the library's own (its
 README: up to 1.5 s on fast trash). Pinned through the core in the same spec.

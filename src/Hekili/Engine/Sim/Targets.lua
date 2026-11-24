@@ -1219,10 +1219,18 @@ do
     local TTD_RETRY = 1 -- seconds: between refused Tracks (each allocates)
     local ttdLib, ttdTrack -- the library once found; the target's handle
     local ttdRetryAt = 0 -- no Track before this
-    -- The last lives (the library's plain whole-number ids) that gave a non-seed answer, written in place: the library
-    -- keeps at most four past targets' lives on their plates, plus the target's.
+    -- Lives (the library's plain whole-number ids) that have given a non-seed answer, by recency, written in place: a
+    -- life shown again after another is written again (repeats allowed), so the slot overwritten is the least recently
+    -- shown, as the library keeps its most recent past targets (at most four on their plates, plus the target's).
     local REAL_LIVES = 5
-    local realLives, realNext = { 0, 0, 0, 0, 0 }, 1
+    local realLives, realLast = { 0, 0, 0, 0, 0 }, 1
+
+    local function noteReal( id )
+        if realLives[ realLast ] ~= id then
+            realLast = realLast % REAL_LIVES + 1
+            realLives[ realLast ] = id
+        end
+    end
 
     local function hadReal( id )
         for i = 1, REAL_LIVES do
@@ -1341,13 +1349,14 @@ do
         -- resumed on a switch back can step from a fit to a seed and back: it keeps showing (vendor-libs-next I1, no
         -- known, unknown, known). Drop the rule when a library minor or a re-run shows no cost.
         if why ~= "seed" then
-            if id and not hadReal( id ) then
-                realLives[ realNext ] = id
-                realNext = realNext % REAL_LIVES + 1
-            end
+            if id then noteReal( id ) end
             return est
         end
-        return id and hadReal( id ) and est or nil
+        if id and hadReal( id ) then
+            noteReal( id )
+            return est
+        end
+        return nil
     end
 
     -- targetTTD's answer when the target is plainly attackable, else nil. The library first, so with none (or

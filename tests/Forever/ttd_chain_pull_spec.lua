@@ -352,6 +352,64 @@ describe("ttd-chain-pull: the next mob does not take the last one's kill time (l
         )
     end
 
+    -- vendor-libs-next-2 re-review m1: the core's remembered lives follow recency, as the library's do. A 600 s boss,
+    -- a fresh add fought 3 s to a fit, 10 s back on the boss, then four more such adds: the boss was the target after
+    -- the first add, so on the switch back (12 s away, its first answers seeds) it still shows. Remembered by first
+    -- answer, five adds pushed it out and it read 3600 for all 10 s.
+    it(
+        "back to a 600 s boss after five adds with a fit each, 10 s on it after the first: known at every read",
+        function()
+            local w = boot()
+            local ctl, bands = w.H.ctl, w.rig.lhv
+            ctl.guid.nameplate1 = "Creature-1"
+            bands:Prime("nameplate1", ctl.now)
+            bands:Push("health", "nameplate1", nil, 1200, 1200, ctl.now)
+            w.H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+            local rate, hp = 100 / 600, 100
+            w.target("Creature-1", 100)
+            w.combat(true)
+            local function boss()
+                w.step()
+                hp = hp - rate * TICK
+                w.health(hp)
+                bands:Push("health", "nameplate1", nil, 12 * hp, 1200, ctl.now)
+                return w.read()
+            end
+            for _ = 1, 1500 do
+                boss()
+            end
+            for add = 1, 5 do
+                w.target("Creature-" .. (add + 1), 100)
+                local fit = false
+                for i = 1, 30 do
+                    w.step()
+                    w.health(100 - 9 * i * TICK)
+                    w.read()
+                    fit = fit or w.H.Hekili:GetTTDInfo():match("^time to die: live fit ") ~= nil
+                end
+                assert.is_true(fit, "add " .. add)
+                if add == 1 then
+                    w.target("Creature-1", hp)
+                    for _ = 1, 100 do
+                        boss()
+                    end
+                end
+            end
+            w.target("Creature-1", hp)
+            local unknown = {}
+            for i = 1, 100 do
+                local r, t = boss()
+                if r >= UNKNOWN or t >= UNKNOWN then
+                    unknown[#unknown + 1] = ("%.1f s: %s"):format(
+                        i * TICK,
+                        w.H.Hekili:GetTTDInfo():match("^time to die: %S+ %S+")
+                    )
+                end
+            end
+            assert.are.same({}, unknown)
+        end
+    )
+
     it("no unit answered nil, not false: forgotten all the same", function()
         local w = boot(true)
         killFirst(w, 6)
