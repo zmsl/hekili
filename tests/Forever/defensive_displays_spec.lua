@@ -287,8 +287,8 @@ describe("a separate display with no line in the active priority", function()
             return H.Hekili.DB.profile.specs[spec]
         end
 
-        it("is skipped while the health is unread, walked once it is read", function()
-            assert.is_nil(cycles(5).Defensives)
+        -- the library answering the player's health (a reading after its first prime)
+        local function library()
             local lhv = fake_lhv.new({
                 now = function()
                     return H.ctl.now
@@ -301,12 +301,54 @@ describe("a separate display with no line in the active priority", function()
             H.Hekili:ProvidersChanged()
             H.ctl.health, H.ctl.healthMax = 1000, 1000
             lhv:Push("health", "player", nil, 1000, 1000, H.ctl.now)
-            cycles(12)
-            assert.is_true((cycles(5).Defensives or 0) > 0)
-            lhv:SetAvailable("unavailable", "error", "health") -- the reading lost: skipped again
-            cycles(1)
+            return lhv
+        end
+
+        -- n updates, one at a time: each walks Defensives exactly when the health is read (the skip's live read,
+        -- Core.lua canPass, the same instant); returns the first update that read it, or nil
+        local function each(n, want)
+            local S, first = H.Hekili.State, nil
+            for i = 1, n do
+                local w = cycles(1)
+                local known = S.health.known == true
+                assert.are.equal(known, (w.Defensives or 0) > 0, "update " .. i)
+                if want ~= nil then
+                    assert.are.equal(want, known, "update " .. i)
+                end
+                first = first or (known and i or nil)
+            end
+            return first
+        end
+
+        it("is skipped while the health is unread, walked from the first update with a reading", function()
             assert.is_nil(cycles(5).Defensives)
+            local lhv = library()
+            assert.is_true((each(20) or 0) > 1) -- unread through the prime, then read: walked from that update on
+            lhv:SetAvailable("unavailable", "error", "health") -- the reading lost: skipped from the next update
+            each(2) -- the loss reaches the read at the next update at the latest
+            each(5, false)
         end)
+
+        it(
+            "is walked on the first update after the Defensives toggle comes back on, and after a pack reload",
+            function()
+                local lhv = library()
+                each(14)
+                each(1, true)
+                local toggles = H.Hekili.DB.profile.toggles
+                toggles.defensives.value = false
+                assert.is_nil(cycles(3).Defensives)
+                toggles.defensives.value = true
+                each(1, true)
+                H.Hekili.Scripts:LoadScripts() -- a pack reload sets each script's NeedsHealth again
+                each(1, true)
+                lhv:SetAvailable("unavailable", "error", "health")
+                each(2)
+                each(1, false)
+                H.Hekili.Scripts:LoadScripts()
+                each(3, false)
+            end
+        )
 
         it("is walked for a custom line that does not need it", function()
             custom({
