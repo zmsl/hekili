@@ -708,7 +708,8 @@ describe("Forever Priest through the engine", function()
 end)
 
 -- A percent-of-base cost is rounded whole before Mental Agility cuts it, the cut left unrounded (wowsims mana.go
--- newManaCost: int32(pct x base) / 100, then spell.go ApplyCostModifiers: cost x PercentModifier; L1793 item 1).
+-- newManaCost at ab0f00e4fc rounds the percent of base to the nearest (upstream 18a464037f), then spell.go
+-- ApplyCostModifiers: cost x PercentModifier; L1793 item 1).
 describe("Forever Priest percent-of-base costs under Mental Agility", function()
     it("price round(pct x base) x (1 - cut), in the belief and the sim", function()
         -- base 1376: Power Infusion 20% is 275, Shadowform 40% is 550

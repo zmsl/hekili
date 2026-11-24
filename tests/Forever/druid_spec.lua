@@ -318,6 +318,7 @@ describe("Forever Druid", function()
         local function mana(key)
             return priced(w, at(key), "mana")
         end
+        -- the uncut whole prices at rank 2 (the cut is a cost modifier: percent_cost_order_spec.lua prices it by rank)
         assert.are.same({ 684, 435 }, { mana("shifting_power"), mana("moonkin_form") })
         e.talent = rank(0)
         assert.are.same({ 684, 684, 62 }, { mana("shifting_power"), mana("cat_form"), mana("innervate") })

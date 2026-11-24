@@ -78,7 +78,8 @@ function Race:RegisterResourceMod(def)
     end
 end
 
---- { aura = key, talent = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil, unless = key | nil }:
+--- { aura = key, talent = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil, unless = key | nil,
+--- perStack = true | nil }: with `perStack` an aura's pct counts once for each stack it holds.
 --- an ability whose spell ID (or one of its `copy` ranks) is listed (every ability paid from the resource when `spells`
 --- is nil) costs less while the aura is up; with charges, each such cast whose declared cost is above 0 takes a stack.
 --- With `talent` (a talent key) the modifier also needs that talent's rank above 0, and needs no `aura` (a passive
@@ -208,6 +209,10 @@ function M.Apply(cost, a, points)
             local p, f = m.pct, m.flat
             p, f = type(p) == "table" and p[rank] or p, type(f) == "table" and f[rank] or f
             if type(p) == "number" then
+                if m.perStack then
+                    local n = m.aura and buff[m.aura].stack or 1
+                    p = p * (n and n > 0 and n or 1)
+                end
                 cost = cost * (1 + p)
             elseif type(f) == "number" then
                 cost = cost + f

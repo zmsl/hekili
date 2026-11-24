@@ -1103,7 +1103,8 @@ describe("Forever Shaman through the engine", function()
 
     -- Totemic Focus (16173, aura 108 misc 14, -5% a rank on mask 0x20081018: every totem, not Stormstrike; wowsims pin
     -- spells_auto_gen.go:13198): the client's totem cost read carries the cut, so the base it teaches (I.LearnBases)
-    -- stays 1520 only when the totem's declared cost carries it too.
+    -- stays 1520 only when the cut is priced into the read: the talent's cost modifier on the totem does it (read
+    -- through I.PassiveCostFactor).
     it("keeps base mana 1520 and Stormstrike at 122 under a Totemic Focus 5/5 totem cost read", function()
         local c = character()
         c.talents = { [16173] = 5 }
