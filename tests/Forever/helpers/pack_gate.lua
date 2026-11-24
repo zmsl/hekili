@@ -1136,9 +1136,16 @@ M.ARM_FLOORS = {
         -- stale usability answer under the harness's unmeasured G7 delay (L1675 clip) takes the icon back after the
         -- band showed the crossing; the measured value + 0.01 (the line rounds to two decimals). L1783 names Fury and
         -- Arms only: Warrior Protection stays judged on M.FLICKER and reads MISS
+        -- then jitter rule L1791: a return needs its own fact (batch 4 bands run 76cc46e51, seeds 1-20, + 0.01): Fury
+        -- L60 0.36 -> 0.40 (seed 15 t3.6 death_wish > sunder_armor > death_wish, change a band, return none), Fury L24
+        -- 0.18 -> 0.21 (seed 9 t4.8 rend > sunder_armor > rend, change an avoid, return none)
         ["Arms"] = { flicker = 0.41 },
-        ["Fury L60"] = { flicker = 0.37 },
-        ["Fury L24"] = { flicker = 0.19 },
+        ["Fury L60"] = { flicker = 0.41 },
+        ["Fury L24"] = { flicker = 0.22 },
+        -- jitter rule L1791: a return needs its own fact (batch 4 bands run 76cc46e51, seeds 1-20: 0.08, + 0.01): five
+        -- scorch > frostfire_bolt > scorch, the change at the mana band's crossing of 308.4, the return with no fact
+        -- (seeds 2, 11, 12, 16, 20); the default arm reads 0 / 0.02 / 0 on the same rule (M.FLICKER 0.03)
+        ["Frostfire"] = { flicker = 0.09 },
         -- T1 (L1794, traced on tag-blockers d578acd86): a regen pair of band crossings is stamped on the world's
         -- 0.1 s regen step (world.lua W.startRegen; the fake sees the pool only there), so each end reads up to one
         -- step late (the truth at the stamp sits that far into the cell: SM Ruin seed 2 104.010 3.87 over the low
