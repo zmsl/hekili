@@ -1929,7 +1929,8 @@ local function packHasLine( dispName, pack, spec, settings )
     local abilities, items = spec.abilities, spec.items
     for _, list in pairs( pack.lists ) do
         for i = 1, #list do
-            local action = list[ i ].action
+            local entry = list[ i ]
+            local action = entry.enabled ~= false and entry.action -- (def-2 review Minor 7) a line switched off: none
             local ability = action and class.abilities[ action ]
             if ability and ability.id > -100 and ability.id < 0 then -- an engine verb (IsDisabled's "internal function")
                 if filter == "cooldowns" then return true end
@@ -1937,12 +1938,16 @@ local function packHasLine( dispName, pack, spec, settings )
                     if o.toggle == filter then return true end
                 end
             elseif ability then
-                local option = ability.item and items[ ability.key ] or abilities[ ability.key ]
+                -- an item ability by its declaration, not its `item` value (a best-in-bags function: bag reads)
+                local funcs = rawget( ability, "funcs" )
+                local isItem = rawget( ability, "item" ) or funcs and funcs.item
+                local option = isItem and items[ ability.key ] or abilities[ ability.key ]
                 local toggle = option and option.toggle
                 if not toggle or toggle == "default" then toggle = ability.toggle end
                 local tt = ( toggle == "potion" or toggle == "minor_cooldowns" ) and settings.toggles[ toggle ]
                 if tt and tt.separate and not tt.value then toggle = "cooldowns" end
-                if ( toggle == filter or ability[ filter ] ) and canPass( list, i ) then return true end
+                if ( toggle == filter or ability[ filter ] ) and not ( option and option.disabled ) -- the player's disable
+                    and canPass( list, i ) then return true end
             end
         end
     end

@@ -246,6 +246,19 @@ describe("a separate display with no line in the active priority", function()
             })
             assert.is_true((cycles(5).Defensives or 0) > 0)
         end)
+
+        -- def-2 review Minor 7: a line the player switched off, or its ability disabled, shows nothing either
+        it("is skipped for a line switched off or an ability disabled", function()
+            local entry = { enabled = false, action = "evasion", criteria = "buff.evasion.down" }
+            local spec = custom({ entry, { enabled = true, action = "sinister_strike" } })
+            assert.is_nil(cycles(5).Defensives)
+            entry.enabled = true
+            H.Hekili.Scripts:LoadScripts()
+            assert.is_true((cycles(5).Defensives or 0) > 0)
+            spec.abilities.evasion.disabled = true
+            H.Hekili:ResetSpellCaches()
+            assert.is_nil(cycles(5).Defensives)
+        end)
     end)
 
     it("is walked once a player moves an ability of the priority onto its toggle", function()
