@@ -584,6 +584,15 @@ local function firstGcd(H)
     return false
 end
 
+-- scenarios.world's first mob: the only one whose health is the fight's (the others 1e9)
+local function firstMob(W)
+    for _, e in ipairs(W.ents) do
+        if e.kind == "mob" then
+            return e
+        end
+    end
+end
+
 --- One run of fight `seed`: the instances in `drivers` (each { H, plain }) stepped on one world in lockstep, the
 --- first one's first icon pressed, each press resolved from the run's truth instance (the oracle when it is driven,
 --- else the first driver). `o`: duration (combat seconds [180]), mobHealth, hz [5], react [REACT], reaction
@@ -916,6 +925,23 @@ function M.run(L, seed, o, drivers)
         ttd[i] = hk.GetGreatestTTD
         hk.GetGreatestTTD = function()
             return endAt - ctl.now
+        end
+    end
+    -- (L1814) a ttd arm's plain instances answer the true time left (fix1_helper's truth override), so the arm measures
+    -- what our estimate costs, not the oracle's blindness: the killable mob's health over the rate it fell at in this
+    -- world's calibration (o.ttdRate: M.truthRate, by the driving side), no more than the fight's cap leaves. Our driver
+    -- keeps the library's estimate. shortcut: the rate is a mean, so the answer is near the kill, not on it (the truth
+    -- arm's median error 2-13 s, batch 4); replace it if that error nears the library's.
+    local rate = not R and arm.ttd and o.ttdRate
+    if rate then
+        local perS, mob = drivers[1].plain and rate.B or rate.A, firstMob(W)
+        local function left()
+            return math.max(0, math.min(mob.health / perS, W.stopAt - math.max(W.t, M.PULL)))
+        end
+        for i, st in ipairs(steps) do
+            if st.plain then
+                ttd[i], st.H.Hekili.GetGreatestTTD = st.H.Hekili.GetGreatestTTD, left
+            end
         end
     end
     local function step(tc) -- the world to `tc`, every instance fed and cycled
@@ -1494,6 +1520,45 @@ local function blank()
     return m
 end
 
+M.TRUTH_SEEDS = 4 -- M.truthRate's calibration fights (fix1_helper's seeds 1-4)
+local truthRates = setmetatable({}, { __mode = "k" }) -- by content, then mobHealth/duration
+
+--- (L1814) A ttd arm's truth: the killable mob's health lost a second, { A = run A (ours driving), B = run B (the
+--- oracle) }, over M.TRUTH_SEEDS fights on a fresh boot of `content` under `o`'s arm (o.mobHealth, o.duration), the
+--- rows they would write dropped; one calibration a content, health and duration. nil where the mob cannot die (health
+--- 1e8 or more: the fight ends at its cap, and both sides answer the unknown, 3600).
+function M.truthRate(content, o)
+    local health = o.mobHealth or content.WORLD.mobHealth
+    if health >= 1e8 then
+        return nil
+    end
+    local key = health .. "/" .. (o.duration or 180)
+    local byKey = truthRates[content] or {}
+    truthRates[content] = byKey
+    if byKey[key] then
+        return byKey[key]
+    end
+    local lost, secs = { A = 0, B = 0 }, { A = 0, B = 0 }
+    local check, record = ab.check, ab.record
+    ab.check, ab.record = function() end, function() end -- the calibration's rows are not the arm's
+    local ok, err = pcall(function()
+        local L = M.new(content)
+        for seed = 1, M.TRUTH_SEEDS do
+            local a, b = M.fight(L, seed, { trace = false, mobHealth = health, duration = o.duration, arm = o.arm })
+            for side, r in pairs({ A = a, B = b }) do
+                local mob = firstMob(r.W)
+                lost[side] = lost[side] + mob.healthMax - mob.health
+                secs[side] = secs[side] + r.combat * M.TICK
+            end
+        end
+    end)
+    ab.check, ab.record = check, record
+    assert(ok, err)
+    assert(lost.A > 0 and lost.B > 0 and secs.A > 0 and secs.B > 0, "no damage in the calibration")
+    byKey[key] = { A = lost.A / secs.A, B = lost.B / secs.B }
+    return byKey[key]
+end
+
 --- `n` fights (seeds 1..n, from `o.seed0` + 1) on `L`'s boot: run A and run B each, tallied (§5.1). The first fight
 --- runs traced when `o.trace` is unset (one per scenario: the facade's secret passthroughs), and adds no cpu sample
 --- (the debug pass's cost is not runtime). Returns the tally; its
@@ -1503,7 +1568,13 @@ function M.tally(L, n, o)
     local m = blank()
     local lo = { tick = 1 / (o.hz or 5), react = o.react or M.REACT }
     -- our ledger's late facts (L1762) where the arm's viewer is on, as loop.run turns it on: the driver only
-    local lv = { tick = lo.tick, react = lo.react, viewer = ab.ARMS[o.arm or ab.arm()].viewer }
+    local arm = ab.ARMS[o.arm or ab.arm()]
+    local lv = { tick = lo.tick, react = lo.react, viewer = arm.viewer }
+    -- (L1814) a ttd arm's plain oracle answers the true time left (M.run): the world's calibrated rate, once
+    local ttdRate = o.ttdRate
+    if ttdRate == nil and arm.ttd then
+        ttdRate = M.truthRate(L.content, o)
+    end
     if o.hold == nil then
         m.hold = M.HOLD
     else
@@ -1518,7 +1589,7 @@ function M.tally(L, n, o)
     end
     for f = 1, n do
         local seed = (o.seed0 or 0) + f
-        local po = setmetatable({ trace = o.trace == nil and f == 1 or o.trace }, { __index = o })
+        local po = setmetatable({ trace = o.trace == nil and f == 1 or o.trace, ttdRate = ttdRate }, { __index = o })
         local a, b = M.fight(L, seed, po)
         m.fights = m.fights + 1
         for i = 1, a.combat do
