@@ -358,6 +358,10 @@ M.TICK = 0.2 -- 5 Hz, the in-game combat rate (D1); o.hz = 10 the option
 -- A poll at t owns the world's events due up to t + TIE: a float sum (a swing chain's 170.0000000000002) lands on its
 -- poll, paid before that poll's press and fed at it (L1281 a); under replay.EPS, a log line's place in its timestamp
 M.TIE = 1e-9
+-- One client frame per wowsims timestamp (L1793): event times within this of the last one fed share a frame. A replay
+-- puts a timestamp's lines replay.EPS (1e-6) apart (up to 30 lines in the checked-in logs, so chained, not a window) and
+-- its timestamps 0.01 s apart (the log's grain); far under observer.FRAME (1e-4) and a real frame (~16 ms)
+M.SAME_FRAME = 1e-5
 M.REACT = 0.05 -- a first icon whose wait is at most this is shown as ready: pressed
 
 --- Ready while short (the owner's rule, dim never promote): an icon pressed as ready with the truth before the press
@@ -428,17 +432,19 @@ end
 
 -- Fires the client events `obs` releases up to world time `t` into instance `H`, each at its own time (base + t);
 -- a cooldown's start, an aura's expiry, a totem's start and our cast bar (ms) move to the instance's clock.
--- Each event time is its own client frame (L1793): a frame (headless.frame) runs after one time's events, before the
--- next time's, and after the last time's unless that is the poll's own (its cycle's frame); `sub`: a step inside the
--- poll (step's world walk), its last time's frame runs too. A staged cast thus folds before a later time's Direct row.
-local function feed(H, obs, t, base, sink, sub)
+-- Each event time is its own client frame (L1793), times within M.SAME_FRAME of the last one fed sharing it (one
+-- wowsims timestamp): a frame (headless.frame) runs after one time's events, before the next time's, and after the
+-- last time's unless the poll's cycle covers it (its own frame). `sub`: a step inside the poll (step's world walk);
+-- the last time's frame is left open and returned, for the next stop's feed (`open`) to run or join. A staged cast thus
+-- folds before a later time's Direct row.
+local function feed(H, obs, t, base, sink, sub, open)
     local s = obs.s
     local first, last = obs.step(t + M.TIE) -- the poll's tie, as step runs the world (M.TIE)
     local ctl = H.ctl
-    local prev = nil
+    local prev = open
     for i = first, last do
         local at = base + math.min(s.t[i], t) -- a tied event at the poll: the instance's clock never steps back
-        if prev and at > prev then
+        if prev and at > prev + M.SAME_FRAME then
             headless.frame(H, prev)
         end
         prev = prev and prev > at and prev or at
@@ -462,7 +468,10 @@ local function feed(H, obs, t, base, sink, sub)
             H.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
         end
     end
-    if prev and (sub or prev < base + t) then
+    if sub then
+        return prev
+    end
+    if prev and prev + M.SAME_FRAME < base + t then
         headless.frame(H, prev)
     end
 end
@@ -932,7 +941,8 @@ function M.run(L, seed, o, drivers)
     end
     local function step(tc) -- the world to `tc`, every instance fed and cycled
         -- each world event time before the poll its own client frame (L1793): the world to it, then every instance's
-        -- observer and feed, so an answer reads the world as of its time (a due one, usableDelay late, stops it too)
+        -- observer and feed, so an answer reads the world as of its time (a due one, usableDelay late, stops it too);
+        -- a stop's frame waits in st.open, joined by the next stop or the poll within M.SAME_FRAME (one timestamp)
         while true do
             local T = W.q[1] and W.q[1].t
             for _, st in ipairs(steps) do
@@ -947,7 +957,7 @@ function M.run(L, seed, o, drivers)
             -- shortcut: a viewer arm's layout events still land at the poll (below, after the lagged lights); give them
             -- their own time here if a viewer arm's numbers hinge on their order against these events
             for _, st in ipairs(steps) do
-                feed(st.H, st.obs, T, st.base, st.sink, true)
+                st.open = feed(st.H, st.obs, T, st.base, st.sink, true, st.open)
             end
         end
         W.run(tc + M.TIE)
@@ -974,7 +984,8 @@ function M.run(L, seed, o, drivers)
                     st.li = st.li + 1
                 end
             end
-            feed(st.H, st.obs, tc, st.base, st.sink)
+            feed(st.H, st.obs, tc, st.base, st.sink, nil, st.open)
+            st.open = nil
             if st.dropAt and tc >= st.dropAt then -- bands-drop (ab.lua): the capability lost mid-fight
                 st.lhv:SetAvailable("unavailable", "error")
                 st.dropAt = nil
