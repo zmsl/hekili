@@ -341,7 +341,8 @@ local function recall()
 end
 
 -- Totemic Focus (16173, aura 108 misc 14: -5% a rank on mask 0x20081018, every totem here; wowsims pin
--- spells_auto_gen.go:13198): on the fraction too, so the client's cut cost read teaches the true base (I.LearnBases).
+-- spells_auto_gen.go:13198): a flat cost takes it here; a fraction's is the cost modifier below (the client's cut
+-- cost read still teaches the base, I.PassiveCostFactor).
 local function totemAbility(key)
     local t = TOTEMS[key]
     return {
@@ -355,7 +356,8 @@ local function totemAbility(key)
         gcd = "totem",
 
         spend = function()
-            return byRank(t.cost, t.ids) * (1 - 0.05 * talent.totemic_focus.rank)
+            local c = byRank(t.cost, t.ids)
+            return c < 1 and c or c * (1 - 0.05 * talent.totemic_focus.rank) -- a percent of base: the cost modifier cuts it
         end,
         spendType = "mana",
 
@@ -737,6 +739,14 @@ spec:RegisterCostMod({
     pct = -1,
     charges = 1,
     spells = { 403, 421, 8042, 8050, 408341, 8056 },
+})
+-- Totemic Focus's -5% a rank on the percent-of-base costs (Earthbind, Grounding, the two cleansing totems, Totemic
+-- Call): each cost is rounded whole, then cut unrounded (wowsims mana.go newManaCost, then spell.go ApplyCostModifiers;
+-- L1793 item 1). The flat totems take it in their own function.
+spec:RegisterCostMod({
+    talent = "totemic_focus",
+    pct = { -0.05, -0.1, -0.15, -0.2, -0.25 },
+    spells = { 2484, 8177, 8166, 8170, 437009 },
 })
 
 spec:RegisterAbilities({
@@ -1124,7 +1134,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.25 * (1 - 0.05 * talent.totemic_focus.rank) -- Totemic Focus 16173's mask holds Totemic Call
+            return 0.25 -- Totemic Focus 16173's mask holds Totemic Call: its cut is the cost modifier
         end,
         spendType = "mana",
 

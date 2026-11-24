@@ -292,7 +292,8 @@ describe("Forever Paladin", function()
                 return math.floor(ld.run(w.abilities[key].spend, e) * 100000 + 0.5) / 100000
             end
             for _, key in ipairs({ "cleanse", "purify" }) do
-                assert.are.same({ 0.08, 0.072, 0.064, 0.0576 }, {
+                -- the fraction as declared; the cost modifiers cut the rounded whole (percent_cost_order_spec.lua)
+                assert.are.same({ 0.08, 0.08, 0.08, 0.08 }, {
                     price(key, {}),
                     price(key, { purifying_power = 1 }),
                     price(key, { purifying_power = 2 }),
@@ -427,7 +428,7 @@ describe("Forever Paladin", function()
         assert.is_true(math.abs(ld.run(w.abilities.holy_strike.spend, e) - 18) < 1e-9)
         assert.is_true(math.abs(ld.run(w.abilities.consecration.spend, e) - 305.1) < 1e-9)
         assert.is_true(math.abs(ld.run(w.abilities.hammer_of_wrath.spend, e) - 425 * 0.6) < 1e-9)
-        assert.is_true(math.abs(ld.run(w.abilities.judgement.spend, e) - 0.06 * 0.9) < 1e-9)
+        assert.is_true(math.abs(ld.run(w.abilities.judgement.spend, e) - 0.06) < 1e-9) -- its cut is the cost modifier
     end)
 
     it(

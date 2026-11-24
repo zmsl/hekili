@@ -814,6 +814,13 @@ spec:RegisterCostMod({
         408120,
     },
 })
+-- Natural Shapeshifter's -10% a rank on the form costs, percent of base: the cost is rounded whole, then cut
+-- unrounded (wowsims mana.go newManaCost, then spell.go ApplyCostModifiers; L1793 item 1).
+spec:RegisterCostMod({
+    talent = "natural_shapeshifter",
+    pct = { -0.1, -0.2, -0.3 },
+    spells = { 1066, 5487, 768, 24858, 783, 1322605 },
+})
 
 -- Poised (1328827): aura 107 misc 14 -10 flat Energy on the class mask {8622080, 536870912} against SpellClassSet 7 (the
 -- eight abilities wowsims's mechanics_test names; rank-1 IDs, the ranks through each ability's `copy`); one charge.
@@ -889,7 +896,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.20 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return 0.20
         end,
         spendType = "mana",
 
@@ -964,7 +971,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return 0.55
         end,
         spendType = "mana",
 
@@ -1024,7 +1031,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return 0.55
         end,
         spendType = "mana",
 
@@ -1629,7 +1636,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.35 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return 0.35
         end,
         spendType = "mana",
 
@@ -1913,7 +1920,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return 0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return 0.55
         end,
         spendType = "mana",
 
@@ -2047,7 +2054,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.20 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return 0.20
         end,
         spendType = "mana",
 

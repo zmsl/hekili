@@ -301,14 +301,15 @@ describe("Forever Druid", function()
             { 43, 38, 13, 18, 18, 48, 13 },
             { at("claw"), at("rake"), at("maul"), at("swipe_bear"), at("primal_bite"), at("shred"), at("lacerate") }
         )
-        -- Natural Shapeshifter -10% a rank on the forms and Shifting Power: a fraction of the base mana
+        -- Natural Shapeshifter -10% a rank on the forms and Shifting Power: a fraction of the base mana as declared;
+        -- its cut is a cost modifier on the rounded whole (percent_cost_order_spec.lua)
         for key, cost in pairs({
-            cat_form = 0.44,
-            bear_form = 0.44,
-            shifting_power = 0.44,
-            moonkin_form = 0.28,
-            travel_form = 0.16,
-            aquatic_form = 0.16,
+            cat_form = 0.55,
+            bear_form = 0.55,
+            shifting_power = 0.55,
+            moonkin_form = 0.35,
+            travel_form = 0.2,
+            aquatic_form = 0.2,
         }) do
             near(cost, at(key))
         end
@@ -317,7 +318,7 @@ describe("Forever Druid", function()
         local function mana(key)
             return priced(w, at(key), "mana")
         end
-        assert.are.same({ 547, 348 }, { mana("shifting_power"), mana("moonkin_form") })
+        assert.are.same({ 684, 435 }, { mana("shifting_power"), mana("moonkin_form") })
         e.talent = rank(0)
         assert.are.same({ 684, 684, 62 }, { mana("shifting_power"), mana("cat_form"), mana("innervate") })
         e.talent = rank(2)
@@ -994,7 +995,7 @@ describe("Forever Druid", function()
     end)
 
     it("declares Poised as a flat -10 cost modifier over the eight Feral abilities (one charge)", function()
-        local m = w.costMods[2]
+        local m = w.costMods[3]
         assert.are.same(
             { "poised", -10, 1, { 1082, 1822, 5221, 6785, 9005, 1079, 1328618, 8998 } },
             { m.aura, m.flat, m.charges, m.spells }
@@ -1003,7 +1004,7 @@ describe("Forever Druid", function()
 
     it("declares the Idol of Ferocity's aura as a flat -2 on Claw and Rake (wowsims e4ef929e54, 27851)", function()
         assert.are.equal(27851, w.auras.idol_of_ferocity.id)
-        local m = w.costMods[3]
+        local m = w.costMods[4]
         assert.are.same({ "idol_of_ferocity", -2, nil, { 1082, 1822 } }, { m.aura, m.flat, m.charges, m.spells })
     end)
 
@@ -1016,7 +1017,7 @@ describe("Forever Druid", function()
     end)
 
     it("declares Clearcasting as one cost modifier over the covered rank-1 IDs, and no `spend` reads it", function()
-        assert.are.equal(3, #w.costMods) -- Clearcasting, Poised, the Idol of Ferocity
+        assert.are.equal(4, #w.costMods) -- Clearcasting, Natural Shapeshifter, Poised, the Idol of Ferocity
         local m = w.costMods[1]
         assert.are.same({ "clearcasting", -1, 1, COVERED }, { m.aura, m.pct, m.charges, m.spells })
         local first = {}

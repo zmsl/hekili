@@ -199,7 +199,8 @@ end
 
 local function sealCost(costs, ids)
     return function()
-        return byRank(costs, ids) * sealMult(talent)
+        local c = byRank(costs, ids)
+        return c < 1 and c or c * sealMult(talent) -- a percent of base: its cut is the cost modifier below
     end
 end
 
@@ -344,6 +345,19 @@ spec:RegisterTalents({
 -- The Justice sets (wowsims item_sets.go; the item ids the pin's db.json ships, four pieces each so far): only the
 -- 5-piece bonuses move a recommendation's timing (a hidden aura each, read through set_bonus); the 2- and 4-piece
 -- bonuses are stats, nothing the belief models.
+-- Benediction's -2% a rank and Purifying Power's -10% a rank on the percent-of-base costs (Seal of Justice, Cleanse,
+-- Purify, Judgement, Blessing of Freedom, Righteous Fury): each cost is rounded whole, then cut unrounded (wowsims mana.go
+-- newManaCost, then spell.go ApplyCostModifiers; L1793 item 1). The flat costs take theirs in their own function.
+spec:RegisterCostMod({
+    talent = "benediction",
+    pct = { -0.02, -0.04, -0.06, -0.08, -0.1 },
+    spells = { 20164, 4987, 1152, 20271, 1044, 25780 },
+})
+spec:RegisterCostMod({
+    talent = "purifying_power",
+    pct = { -0.1, -0.2 },
+    spells = { 4987, 1152 },
+})
 spec:RegisterGear("justice_battlegear", 273908, 273909, 273910, 273911)
 spec:RegisterGear("justice_armor", 273912, 273913, 273914, 273915)
 spec:RegisterGear("justice_battleplate", 273916, 273917, 273918, 273919)
@@ -664,7 +678,7 @@ end
 -- Purifying Power (429144): -10% a rank on Cleanse and Purify, 8% of base mana.
 local function cleanseCost()
     return function()
-        return 0.08 * (1 - 0.1 * talent.purifying_power.rank) * (1 - 0.02 * talent.benediction.rank)
+        return 0.08
     end
 end
 local function spendsFavor()
@@ -713,7 +727,7 @@ spec:RegisterAbilities({
         gcd = "off",
 
         spend = function()
-            return 0.06 * (1 - 0.02 * talent.benediction.rank)
+            return 0.06
         end,
         spendType = "mana",
 
@@ -1071,7 +1085,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.1 * (1 - 0.02 * talent.benediction.rank)
+            return 0.1
         end,
         spendType = "mana",
 
@@ -1295,7 +1309,7 @@ spec:RegisterAbilities({
 
     righteous_fury = selfBuff("righteous_fury", RIGHTEOUS_FURY, {
         spend = function()
-            return 0.3 * (1 - 0.02 * talent.benediction.rank)
+            return 0.3
         end,
         spendType = "mana",
     }),

@@ -175,6 +175,9 @@ end
 --   logs show (321.2 of 365 under 4/5), though our DB2 mask lacks it: wowsims over the DB2.
 -- wowsims's logs: 2/2 Resourcefulness pays 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap; 2/5
 -- Efficiency 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting.
+-- Improved Revive Pet's -20% a rank on Revive Pet (100% of base): the base is rounded whole, then cut unrounded
+-- (wowsims mana.go newManaCost, then spell.go ApplyCostModifiers; L1793 item 1).
+spec:RegisterCostMod({ talent = "improved_revive_pet", pct = { -0.2, -0.4 }, spells = { 982 } })
 spec:RegisterCostMod({
     talent = "resourcefulness",
     pct = { -0.3, -0.6 },
@@ -1284,7 +1287,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 1 - 0.2 * talent.improved_revive_pet.rank
+            return 1
         end,
         spendBase = true,
         spendType = "mana",

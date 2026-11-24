@@ -504,7 +504,7 @@ describe("Forever Hunter", function()
                 e.talent.improved_revive_pet = { rank = r, enabled = r > 0 }
                 out[#out + 1] = { ld.run(rp.cast, e), math.floor(ld.run(rp.spend, e) * 100 + 0.5) / 100 }
             end
-            assert.are.same({ { 10, 1 }, { 7, 0.8 }, { 4, 0.6 } }, out)
+            assert.are.same({ { 10, 1 }, { 7, 1 }, { 4, 1 } }, out) -- the cost modifier cuts the whole price
             w.game.known[883], w.game.known[982] = true, true
             local function usable(key, id, u)
                 w.game.usable[id] = u
@@ -684,6 +684,7 @@ describe("Forever Hunter", function()
             end
         end
         assert.are.same({
+            { "improved_revive_pet", false, { -0.2, -0.4 }, 1 },
             { "resourcefulness", false, { -0.3, -0.6 }, 9 },
             { "efficiency", false, { -0.03, -0.06, -0.09, -0.12, -0.15 }, 18 },
         }, mods)

@@ -373,6 +373,11 @@ describe("Forever Shaman", function()
     it("makes Clearcasting a charged -100% on the elemental spells", function()
         assert.are.same({
             { aura = "clearcasting", pct = -1, charges = 1, spells = { 403, 421, 8042, 8050, 408341, 8056 } },
+            {
+                talent = "totemic_focus",
+                pct = { -0.05, -0.1, -0.15, -0.2, -0.25 },
+                spells = { 2484, 8177, 8166, 8170, 437009 },
+            },
         }, w.costMods)
         assert.are.same({ 16246, 15 }, { w.auras.clearcasting.id, w.auras.clearcasting.duration })
     end)
@@ -1362,7 +1367,7 @@ describe("Forever Shaman manual-press kit", function()
         assert.is_near(100 * 0.75, ld.run(w.abilities.mana_spring_totem.spend, e), 1e-9)
         assert.are.equal(13, ld.run(w.abilities.grounding_totem.cooldown, e))
         assert.are.equal(30, ld.run(w.abilities.stoneclaw_totem.cooldown, e))
-        assert.is_near(0.25 * 0.75, ld.run(w.abilities.totemic_call.spend, e), 1e-9)
+        assert.is_near(0.25, ld.run(w.abilities.totemic_call.spend, e), 1e-9) -- a fraction: its cut is the cost modifier
     end)
 
     -- wowsims e4ef929e54 totems.go registerTotemicRecallSpell (36936: level 20, a 1.5 s GCD, no cost): every totem
