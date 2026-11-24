@@ -30,7 +30,6 @@
 - Protection Warrior: when the game hides who attacked you (expected in dungeons), a dodge, parry or block now sets when the Revenge window ends, so Revenge is not recommended past it.
 - Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.
 - A `/reload` while you channel a spell no longer raises an "Unknown buff: cast" error, and the rest of that channel is predicted again.
-- Melee: an auto attack that misses, or is dodged or parried, close to an ability such as Rip is now more often read as the auto attack's own miss rather than the ability's.
 - Fury Warrior: rage from an auto attack made just before Execute is no longer counted again after Execute spent all your rage, so an ability no longer lights up right after Execute before you can afford it.
 
 ### Known issues
