@@ -1999,30 +1999,33 @@ describe("auras", function()
                 assert.are.same({ 1, 1 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
             end)
 
-            -- Hotfix 0.8.6 (L1239 cause 2), then L1810 F4b: an avoid credited to a cast whose item lit since the cast
-            -- (it landed) is refused: no undo, no refund, the record stays the cast's (before F4b: undone, then
-            -- re-opened at the next poll with the cast's refund kept).
-            it(
-                "an avoid credited to a cast whose item lit since the cast changes nothing: no undo, no refund",
-                function()
-                    local def = fs.def(fs.new(9))
-                    for _, ab in ipairs(def.abilities) do
-                        ab.now = ab.funcs and ab.funcs.now
-                    end
-                    start(def)
-                    ctl.now = 11
-                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
-                    ctl.ViewerAura(ti, "target") -- it landed and lights
-                    drain(11)
-                    drain(11.2) -- an UP on the record up: the debounce remembers its expiry
-                    assert.are.equal(26, est("target", fs.SPENDER_C, 11.2))
-                    ctl.now = 11.3
-                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- credited to the cast: the light refuses it
-                    drain(11.3)
-                    assert.are.equal(26, est("target", fs.SPENDER_C, 11.3))
-                    assert.are.equal(0, I.avoidsRun)
+            -- Hotfix 0.8.6 (L1239 cause 2): an avoid credited to a cast that landed (its item lit) undoes the cast's
+            -- write; like any close it drops the debounce's memory, so the still-lit item re-opens at the next poll
+            -- instead of HOLD past the undone cast's expiry.
+            it("an avoid undo's close drops the debounce's memory: the lit item re-opens at the next poll", function()
+                local def = fs.def(fs.new(9))
+                for _, ab in ipairs(def.abilities) do
+                    ab.now = ab.funcs and ab.funcs.now
                 end
-            )
+                start(def)
+                ctl.now = 11
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.ViewerAura(ti, "target") -- it landed and lights
+                drain(11)
+                drain(11.2) -- an UP on the record up: the debounce remembers its expiry
+                assert.are.equal(26, est("target", fs.SPENDER_C, 11.2))
+                ctl.now = 11.3
+                local before = VS.Power(0, 11.3) -- (L1810 F4b) lit since the cast: no refund
+                before = before and before.est
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- credited to the cast: the undo closes it
+                drain(11.3)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.3))
+                assert.are.equal(1, I.avoidsRun)
+                local after = VS.Power(0, 11.3)
+                assert.are.equal(before, after and after.est)
+                drain(11.5)
+                assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 11.5)) -- not debounced against the old 26
+            end)
 
             -- Hotfix 0.8.6 fix round 1 (review I1): a light that began before the undone cast is the earlier
             -- application's, still shown by the viewer's lag; the undo's close must not let it re-open the record.

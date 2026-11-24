@@ -1010,12 +1010,13 @@ I.On(Obs.Avoided, function(o, t)
     end
     undoA = 0
     forget(o.a, o.b) -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
-    -- (L1810 F4b) a record this cast's `now` wrote whose Cooldown Manager item lit since the cast: it landed, so the
-    -- avoid is another's in its frame (the owner's tie ruling gave it the cast): no undo, no refund
+    -- (L1810 F4b, L1770) a record this cast's `now` wrote whose Cooldown Manager item lit since the cast: it landed, so
+    -- the avoid is another's in its frame (the owner's tie ruling gave it the cast): no onAvoid, no refund. The undo
+    -- still runs: its close lets the lit item re-open the record at the next poll as the light's own application (Hekili's
+    -- missable hook drops the cast's, Engine/Schema/Spec/Abilities.lua trackMisses)
+    local lit = false
     for k = 1, I.curSwapN == undoSwap and undoN or 0 do
-        if I.AuraLitSince(undoJ[k], o.b) then
-            return
-        end
+        lit = lit or I.AuraLitSince(undoJ[k], o.b)
     end
     for k = 1, I.curSwapN == undoSwap and undoN or 0 do -- another target since the cast: its auras are not these
         local j = undoJ[k]
@@ -1028,7 +1029,7 @@ I.On(Obs.Avoided, function(o, t)
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
     end
     I.avoidsRun = I.avoidsRun + 1
-    if o.c == UNLANDED then
+    if o.c == UNLANDED or lit then
         return
     end
     -- onAvoid runs before the give-back check (L1295): a spend from the slot here would count as a spend since the

@@ -185,27 +185,17 @@ describe("Forever Feral: a landed Rip and a white swing's avoid in its window (l
             assert(#fails > 0 and fails[1]:find("the belief holds rip down", 1, true), msg)
         end
     )
-    -- F4b: the light (Rip's item lit since the cast) is the fact that Rip landed: the belief keeps Rip up and gives no
-    -- refund. PINNED display limit: Hekili's missable hook (Engine/Schema/Spec/Abilities.lua trackMisses) still drops the
-    -- cast's application at its SPELL_MISSED row, so slot 1 shows Rip at 5 points (ledger, lane finisher-miss-fix)
-    local function beliefOnly(base)
+    -- F4b: the light (Rip's item lit since the cast) is the fact that Rip landed: no refund, the light's record up
+    local function withViewer(base)
         local c = { viewer = "proven", expect = { { 1.5, "ferocious_bite" } } }
         for k, v in pairs(base) do
             c[k] = v
         end
-        local W, T, fails = run(c)
-        local msg = table.concat(fails, "\n") .. "\n" .. fw.timeline(W, T)
-        assert(#fails > 0, msg)
-        for _, f in ipairs(fails) do
-            assert(f:find("slot 1 shows rip", 1, true), msg)
-        end
+        expectPass(c)
     end
-    it(
-        "the swing's own ms, secret amounts, viewer proven: the light keeps Rip up, no refund (slot 1 PINNED)",
-        function()
-            beliefOnly(OWN_MS)
-        end
-    )
+    it("the swing's own ms, secret amounts, viewer proven: the light keeps Rip up, no refund, Bite at 5", function()
+        withViewer(OWN_MS)
+    end)
     -- the F1 residual: a bleed's tick (a secret white wound) in the swing's core band 1 ms before the swing's own MISS in
     -- Rip's frame reads as the swing's landing, so the MISS goes to Rip. PINNED with no viewer; the light takes it back.
     local TICK =
@@ -216,9 +206,9 @@ describe("Forever Feral: a landed Rip and a white swing's avoid in its window (l
         assert(#fails > 0 and fails[1]:find("the belief holds rip down", 1, true), msg)
     end)
     it(
-        "the core band with a tick 1 ms before the swing's MISS, secret, viewer proven: Rip stays up (slot 1 PINNED)",
+        "the core band with a tick 1 ms before the swing's MISS, secret, viewer proven: Rip stays up, no refund",
         function()
-            beliefOnly(TICK)
+            withViewer(TICK)
         end
     )
     it("seed 2's shape, plain amounts, viewer proven (the light is the fact that Rip landed): Rip stays up", function()

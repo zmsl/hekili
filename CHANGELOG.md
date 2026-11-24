@@ -21,7 +21,6 @@
 ### Fixed
 
 - Feral Druid: a Rip or Rake that misses while one of your white swings lands at the same moment is now seen as missed, so Hekili no longer suggests Ferocious Bite (or Shred) as if the bleed were up.
-- Feral Druid: Rip is no longer taken as landed when a white swing hits in the same moment it misses.
 - When the Cooldown Manager shows that your debuff missed, the next suggestion appears at once instead of one update later.
 - When the Cooldown Manager shows your debuff landed, a miss reported for another attack in the same moment no longer takes the debuff away or gives its energy back.
 - Warrior: a white swing that was dodged, parried or missed no longer counts as rage still on its way.
