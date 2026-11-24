@@ -659,6 +659,24 @@ describe("ttd-first-guess: the library's first answers through the core (L1736)"
         assert.are.equal("unknown: 3600 x24, fit: known x464, unknown: 3600 x9, fit: known x23", seen)
     end)
 
+    -- vendor-libs-next: minor 5 seeds again after a stall on a mob never left (the ttd arm's Arms seed 17, Feral seed
+    -- 20). That life has given a fit, so its seed shows; the old rule read it 3600 between known reads.
+    it("a 120 s mob with a 6 s lull after 15 s: stalled, prior, seed, fit, all known after the first fit", function()
+        local w = boot()
+        pull(w)
+        local pct = 100
+        local seen = runs(w, 300, function(i)
+            if i <= 150 or i > 210 then
+                pct = pct - 100 / 120 * TICK
+            end
+            w.health(pct)
+        end)
+        assert.are.equal(
+            "unknown: 3600 x37, seed: 3600 x12, fit: known x156, stalled: known x12, prior: known x24, seed: known x12, fit: known x47",
+            seen
+        )
+    end)
+
     -- A same-unit re-prime (a desync: the hidden-value library primes the source again) keeps the estimate.
     it("a re-prime of the target mid-fight: fight_remains keeps answering", function()
         local w = boot()
