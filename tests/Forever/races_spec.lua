@@ -513,9 +513,10 @@ describe("race packs in VirtualState's now context", function()
     end
 end)
 
--- Audit item 3: a Dwarf Protection Warrior's Stoneform gate reads only auras that exist (no "Unknown buff" logged).
+-- Owner 2026-11-24: Stoneform waits for no poison or disease (wowsims racials.go:18-48 has no dispel requirement; on
+-- Forever no dispellable aura is ever up), so a Dwarf's Stoneform has no aura gate and reads no unknown aura.
 describe("the Dwarf's Stoneform through the engine", function()
-    it("evaluates its buff gate without an unknown aura", function()
+    it("has no aura gate and reads no unknown aura", function()
         local headless = require("Game.harness.headless")
         local ww = require("Forever.helpers.warrior_world")
         local c = ww.Protection.character()
@@ -524,7 +525,8 @@ describe("the Dwarf's Stoneform through the engine", function()
         assert.are.same({}, H.loadErrors)
         local a = H.Hekili.Class.abilities.stoneform
         assert.is_table(a)
-        assert.is_string(a.buff) -- the ability's `buff` function reads each aura it gates on
+        assert.is_nil(a.buff)
+        assert.is_nil(a.debuff)
         for _, k in ipairs(H.Hekili.ErrorKeys) do
             assert.is_nil(k:find("Unknown buff", 1, true), k)
         end

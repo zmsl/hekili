@@ -188,6 +188,58 @@ describe("a variant's keybind and bar glow (Warlock, Death Coil)", function()
     end)
 end)
 
+-- (def-2c re-review F2) The Defensives skip below covers every built-in priority: each line on the Defensives toggle
+-- (the ability's own, racials and shared items included) is NeedsHealth, so none walks Defensives while the player's
+-- health is unread (the library-off rule: no defensive shown without a reading).
+describe("every built-in priority's Defensives lines", function()
+    it("each need a health reading (all 30 priorities, each with one at least)", function()
+        local CLASSES = { -- one world a class: a boot loads every priority of its class (Scripts:LoadScripts)
+            Druid = require("Forever.helpers.druid_loop_world").Guardian,
+            Warrior = require("Forever.helpers.warrior_world").Protection,
+            Rogue = require("Forever.helpers.rogue_world").Combat,
+            Mage = require("Forever.helpers.mage_world").Frost,
+            Paladin = require("Forever.helpers.paladin_world").Retribution,
+            Priest = require("Forever.helpers.priest_world").Shadow,
+            Hunter = require("Forever.helpers.hunter_world").Survival,
+            Warlock = require("Forever.helpers.warlock_world").Affliction,
+            Shaman = require("Forever.helpers.shaman_world").Enhancement,
+        }
+        local packs, bare = {}, {}
+        for class, C in pairs(CLASSES) do
+            local H = headless.new({ character = C.character(), pack = C.PACK or "Protection (wowsims.com)" })
+            assert.are.same({}, H.loadErrors)
+            local abilities, DB = H.Hekili.Class.abilities, H.Hekili.Scripts.DB
+            for name, p in pairs(H.Hekili.DB.profile.packs) do
+                if p.builtIn then
+                    local key = class .. " " .. name
+                    packs[key] = packs[key] or 0
+                    for list, entries in pairs(p.lists) do
+                        for i, e in ipairs(entries) do
+                            local a = abilities[e.action]
+                            if a and a.toggle == "defensives" then
+                                local script = DB[name .. ":" .. list .. ":" .. i]
+                                assert.is_table(script, name .. ":" .. list .. ":" .. i)
+                                packs[key] = packs[key] + 1
+                                if not script.NeedsHealth then
+                                    bare[#bare + 1] = key .. " " .. list .. " " .. i .. ": " .. e.action
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        table.sort(bare)
+        assert.are.same({}, bare)
+        local n = 0
+        for name, lines in pairs(packs) do
+            n = n + 1
+            assert.is_true(lines > 0, name .. ": no Defensives line")
+        end
+        assert.are.equal(30, n)
+    end)
+end)
+
 -- def-2 part 2 item 4 (CPU): a separate display whose active priority has no line for it is not walked (no reset, no
 -- forecast); a line for it in a custom priority, or an ability a player moves onto its toggle, walks it again
 describe("a separate display with no line in the active priority", function()

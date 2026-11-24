@@ -26,6 +26,12 @@ local PACKS = {
             healthstone_health = 30,
         },
     },
+    -- (owner 2026-11-24) Protection Paladin's Stoneform: Protection Warrior's line and default, a Protection setting
+    ["Protection (wowsims.com), Paladin"] = {
+        require("Forever.helpers.paladin_world").Protection.character,
+        { stoneform_health = 50, divine_shield_health = 20, lay_on_hands_health = 15, healthstone_health = 30 },
+        pack = "Protection (wowsims.com)",
+    },
 }
 
 describe("a shared setting", function()
@@ -47,8 +53,9 @@ describe("a shared setting", function()
     end)
 end)
 
-for pack, P in pairs(PACKS) do
-    describe("the health settings of " .. pack, function()
+for label, P in pairs(PACKS) do
+    local pack = P.pack or label
+    describe("the health settings of " .. label, function()
         local H
 
         before_each(function()
@@ -269,5 +276,24 @@ describe("the health sliders", function()
             local info = entry(H, "desperate_prayer_health").info
             assert.are.equal(hidden, info.hidden ~= nil and info.hidden() == true, race)
         end
+    end)
+end)
+
+-- (owner 2026-11-24) Protection Paladin's Stoneform threshold is that spec's own setting, not a shared one: a shared
+-- `<action>_health` would give every pack of every class the line (translator rule 25)
+describe("Protection Paladin's Stoneform setting", function()
+    it("is registered on Protection, not on Retribution", function()
+        local pw = require("Forever.helpers.paladin_world")
+        local function has(C)
+            local H = headless.new({ character = C.character(), pack = C.PACK })
+            for _, e in ipairs(H.Hekili.Class.specs[H.Hekili.State.spec.id].settings) do
+                if e.name == "stoneform_health" then
+                    return true
+                end
+            end
+            return false
+        end
+        assert.is_true(has(pw.Protection))
+        assert.is_false(has(pw.Retribution))
     end)
 end)

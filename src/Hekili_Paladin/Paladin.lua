@@ -1346,6 +1346,9 @@ spec:RegisterSelector(
 -- lines (the recipes' `extra`, the def-int-beyond-wowsims review's defaults): a 1-100 slider on every spec
 spec:RegisterSetting("divine_shield_health", 20, spec:HealthOption("divine_shield"))
 spec:RegisterSetting("lay_on_hands_health", 15, spec:HealthOption("lay_on_hands"))
+-- (owner 2026-11-24) a Dwarf's Stoneform in Protection (wowsims.com) (translator rule 13: a tank's defensive racial) at
+-- or below Protection Warrior's 50%; Protection's own, not a shared setting (rule 25 would put the line in every pack)
+spec:RegisterSetting("stoneform_health", 50, spec:HealthOption("stoneform"), "protection")
 
 -- The priorities, one a spec, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit
 -- those (a wowsims.com pack: its recipe, tools/wowsims/specs/) and run it, never these blocks
@@ -1357,8 +1360,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Protection (wowsims.com)",
-    20261124000,
-    [[Hekili:LA13VTTnq4)wYlPXOzsYPzDDg1pKHIHLI2Gc4(SKOepzXzArb(J6zGa93(okPitjl5y3(InnV7((UJ8UpZW5HFpCfLOHWNUl4U3pF(D3heeeUsVVecxvss3qwJlkiBXp)MuOHuntuufFZoXofBRYlvSDM1Z9CbHArlXW46hlctgfyvjKIi9WxE4tp(0IYoedxLZOuOjmqLEc2wufRZHQ4298Zes4hGSkMczedxxf)W3(svmUDvCpqmmFl9k)scNqzf(hO3NuYv(Ta4H)WdHMp7wKkjPqXXcHIRfwQzQQycLkkEdUydSx5vf)jIMSyKu6MV(43rqY16s1cF)1mDUjXwf(dCDgIjM5KKGSGa4(S0p8op8yvkYyC8ONuNLkVsjGbNq0lLS15Aqyurzg5(BzzlVkXKL51FFptz1Npk43U0xcAjlXynermsIdadSmjekGWJezr4LruQ0OiuqEaMXS6c1sk7hScisLZao1gxogHo3BtHyxX1T)Omv)XLkqRzfRvE9cjQXLoaXmIt2hHzDoPGQopeDJOfWRV5Qge7txdkp3uC9TykN5MfkTOaWR1TUB2GDTPBnkapzYIwNsxo)8YtNWhPUT7GUfvkS78ZI)begHcnSTKtKQOedFhrUPpjUE(Vg6AyluON2f1owMoAchTjC3vqNpTh)PcbNIlCmiHTewH6JlVzeJuSb2c0VfmR)DuB3z9StMi1OwExnX96DRNGEbF7N2(KO2nU(QJ9DqNqk(fK2Kb9UVe89yZJiDttXQjCBY25oqJwlfMcQhuqs4a9zkut2iEmGYwORNPARRJnJd4Ba3TH)titzkSJnCfkgPScY91T5mLwv)NfnAK4YNQ)ZJ2mm8VErKcDXD6iCvQKPbjJGs8VAF4yt4HAmxMGk353lJPlEYFQrFB69UjsVoPaRt3pWjNUE7zzxqoZ6xwjDSiHL2F)cO9GeWLZ8rYhwYF)zs(q5fBS)XzgB30UnOpCMbnqcYTCNu85xs9XMC)5GKZHZFzDhNsZXs4QAra7aeY)8Gj6tDfQQDCQr7dkx9pXEDfStlHvt6ud5oAAdQNPM7CK5Q9B4O3l(9IUxOT3zv3JBoL4w)3x5EkmX7VoL81W3AncCh)AStk4ah)QRJbDI3MvFkGNdeJoxGH9pWggNHpI9VBFJAT5W))d]]
+    20261124001,
+    [[Hekili:LA13VnQrq4)wYlPXQPGDU0RxJo)qQov1C6A0jX9mWc7GzRxyr7poxlfXF7DwGGxWGJDVxSHDN57BMDN5JjCv43cdOene(8DlV79RwD39lxUkmqVVccdQiPBjBWhkjf4VFvk0qQMjkRJVzNyNIvO8sfflSwUNliulAjggx)uzyYKaRQGuePh)YJF6PNFOQhXWGCgLcTUbQ0tW2d1X6COoUBn)mHe(oiRJPqgXW11Xp(1VuhJlxhpaedZ3sVYVIWjuwP)b69jvCLFhaE4lEi08f3IujjLkoMiu8zHLAMQoMqPIYFcFylSx5vh)jIM8WeH0n)9tFdbjxRRup47VHPZnj2SWFKPlqmXiNKSmB5s4(S0p8op8yvkYyC8ON0eLkVkjGoNq0RLSn5Aqyurzg5(BzzRVkXKL5nCDptv9NpY5FETVe0swIXUreXijoamANzHqbeEKilcVmIsLgfHcYdWm1UUqTMY(oReIu5mGtT(LJEOZ92wk2vED3lvP6pUwbAnRCJYBGlrTM0digrCY(imQZjLu15HORhDaE9nx1I4q6Ar5L2KB4oMQfUrHslkb8AT48cHEZNiHAxPXIBnkappZI2KsxV68G2X9zahnlQsyx5)l(hqyck0qrfNivrjg(oIC7qsCT8Fm0nqbuQN3e1owMoAgdTbC)fxVnDxAPcbNIp4SHekiSs1hxFZeBsXYElq)YYfdVz7QPB64YePg167AiEqfFtF3R4B)1wDf1TW1xDSTJQFsX)G02iyW9LGVhl5ePBBtwnHBd2EZbA0gPWus9GsschOVqHgYMWIru2bDtNyxED82OSWwWDz4FfYuMQO(ZHbOeMYkJpuTNZuAvZNyAvwXhFU5toDry4F8Q0gAIBpvyqQKPbjJGFy4nRdNsxiuJXYmu521FzmDX6fZjyydV3nt41RiCzX2yHelf3pIcNEg7nrpLokfxgPhlXyP9xVaApiGC5mFK4JL83FMKpwCY67VDM(2RvyD6dNPtJeWCt3zLU(H0USb3Vpk4C48hw1Yj1C2jmOrcX2(H8VA5mv5UYCngoNWWbDVHNyVT(3PfaBiDojchfXr5ZCDToIKn2nU17v7Ev1m0w7e0pq1PKghotN7PWmZ8DkXVXZ3nbChpb4jLRGJN07yqNzEWMtb8CGy05c0T)c2Y4mCW5)SBU4MTd)V]]
 )
 spec:RegisterPack(
     "Holy Shock (wowsims.com)",

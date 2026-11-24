@@ -2012,9 +2012,16 @@ describe("the wowsims APL translator", function()
         local function want(...)
             local out = {}
             for i, x in ipairs({ ... }) do
-                out[i] = (i == 1 and "actions=" or "actions+=/") .. x .. ",if=time>=5"
+                out[i] = (i == 1 and "actions=" or "actions+=/")
+                    .. x
+                    .. (x:find(",if=", 1, true) and "" or ",if=time>=5")
             end
             return table.concat(out, "\n")
+        end
+        -- a tank's defensive racial waits for low health (owner 2026-11-24; rule 23's setting, wowsims casts it on
+        -- cooldown): the health term outermost, so the core's guard detector reads the whole line as guarded
+        local function low(x)
+            return x .. ",if=health.known&health.pct<=settings." .. x .. "_health&time>=5"
         end
         -- every class racial in racials.go's order, where the sampled one was used; Stoneform and Shatter Curse
         -- (defensive only) are a tank's
@@ -2032,11 +2039,11 @@ describe("the wowsims APL translator", function()
         assert.are.equal(
             want(
                 "trinket,use_off_gcd=1",
-                "stoneform",
+                low("stoneform"),
                 "eureka,use_off_gcd=1",
                 "elunes_light,use_off_gcd=1",
                 "blood_fury,use_off_gcd=1",
-                "shatter_curse",
+                low("shatter_curse"),
                 "berserking,use_off_gcd=1",
                 "roar,use_off_gcd=1"
             ),
@@ -2083,8 +2090,21 @@ describe("the wowsims APL translator", function()
             { "default #3: autocastOtherCooldowns: spell 20572 is blood_fury, which the APL casts itself" },
             omitted
         )
-        -- a Paladin tank's only racial cooldown is the Dwarf's; no log line at all still gives it
-        assert.are.equal(want("stoneform"), lines("ClassPaladin", log(), true))
+        -- a Paladin tank's only racial cooldown is the Dwarf's; no log line at all still gives it, with its setting
+        -- (default 50, M.RACIALS) and a deviation line
+        assert.are.equal(want(low("stoneform")), lines("ClassPaladin", log(), true))
+        local _, _, read, header = apl.translate(
+            { priorityList = { auto } },
+            apl.context(kit, {}, log(), { class = "ClassPaladin" }, nil, true)
+        )
+        assert.are.same({ { "stoneform_health", 50, "player health threshold, percent" } }, read)
+        assert.are.same({
+            "# Deviation: default #1: stoneform: wowsims autocasts it on cooldown for a tank; here at or below "
+                .. "settings.stoneform_health, under health.known",
+        }, header)
+        local core = {}
+        assert(loadfile("src/Hekili/Engine/Sim/AplThresholds.lua"))("Hekili", core)
+        assert.is_true(core.HealthGuarded(want(low("stoneform")):match(",if=(.*)$")))
         assert.are.equal("", lines("ClassPaladin", log()))
         -- a defensive-health threshold or a cooldown timing (the player's `cooldowns`) is not modelled: an error
         local ok, err = pcall(

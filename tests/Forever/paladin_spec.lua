@@ -850,7 +850,7 @@ describe("Forever Paladin priorities", function()
                 for i, e in ipairs(pe.flat(entries)) do
                     local where = name .. " " .. list .. " " .. i
                     local isList = e.action == "run_action_list" or e.action == "call_action_list" or pe.LINE[e.action]
-                    -- stoneform: the Dwarf racial (Hekili_Shared/Races), rule 13's line for a tank
+                    -- stoneform: the Dwarf racial (Hekili_Shared/Races), rule 13's low-health line for a tank
                     -- use_items is Hekili's `all` (Hekili_Shared/Shared/Items.lua), as in druid_spec
                     local shared = e.action == "use_items" or e.action == "stoneform" or pe.SHARED[e.action]
                     assert.is_true(cls.abilities[e.action] ~= nil or isList or shared, where)

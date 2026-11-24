@@ -42,10 +42,17 @@ local PACKS = {
         character = ww.Protection.character,
         want = { "healing_potion", "healthstone", "last_stand", "shatter_curse", "shield_wall", "stoneform" },
     },
+    { -- (owner 2026-11-24) rule 13's Stoneform waits for low health, as Protection Warrior's own line
+        name = "Protection (wowsims.com)",
+        character = require("Forever.helpers.paladin_world").Protection.character,
+        label = ", Paladin",
+        want = { "divine_shield", "healing_potion", "healthstone", "lay_on_hands", "stoneform" },
+        low = 100, -- 10%: under Lay on Hands' 15
+    },
 }
 
 for _, P in ipairs(PACKS) do
-    describe("the restored defensive lines of " .. P.name, function()
+    describe("the restored defensive lines of " .. P.name .. (P.label or ""), function()
         local H, lhv, ids, keys
 
         before_each(function()
@@ -113,7 +120,7 @@ for _, P in ipairs(PACKS) do
             assert.are.same(all(false), frames(12)) -- a reading, at full
             H.ctl.combat = true
             H.ctl.Fire("PLAYER_REGEN_DISABLED")
-            push(200) -- 20%: under every threshold (the lowest, Frenzied Regeneration's, is < 25)
+            push(P.low or 200) -- 20%: under every threshold (the lowest, Frenzied Regeneration's, is < 25)
             assert.are.same(all(true), frames(3))
             lhv:Prime("player", H.ctl.now) -- about 10 frames unknown, under the 1 s bound
             for i = 1, 12 do
@@ -170,6 +177,26 @@ local LINES = {
         "power_word_shield_health",
         spell = 17,
     },
+    -- (owner 2026-11-24) a Dwarf tank's Stoneform: no poison or disease needed, at or below its setting (a Dwarf knows
+    -- it from level 1; the worlds know only what their rotation casts)
+    {
+        ww.Protection,
+        "Protection (wowsims.com)",
+        "stoneform",
+        "stoneform_health",
+        spell = 20594,
+        race = "Dwarf",
+        label = ", Warrior",
+    },
+    {
+        require("Forever.helpers.paladin_world").Protection,
+        "Protection (wowsims.com)",
+        "stoneform",
+        "stoneform_health",
+        spell = 20594,
+        race = "Dwarf",
+        label = ", Paladin",
+    },
     { -- owner: "Desperate Prayer is exclusive to dwarf priests"
         require("Forever.helpers.priest_world").Shadow,
         "Shadow (wowsims.com)",
@@ -209,7 +236,7 @@ local LINES = {
 
 for _, P in ipairs(LINES) do
     local C, pack, action, key = P[1], P[2], P[3], P[4]
-    describe("the " .. action .. " line of " .. pack, function()
+    describe("the " .. action .. " line of " .. pack .. (P.label or ""), function()
         local H, lhv, S
 
         local function setting(k, v)

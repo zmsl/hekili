@@ -212,7 +212,7 @@ Translation:
   Block, Divine Shield, Lay on Hands, Power Word: Shield, Deterrence, Death Coil's defensive key, Barkskin outside Bear
   Form), its threshold a recipe `settings` number. Rule 25 then adds the shared content's lines (Healthstone, healing
   potion) after them and after the wowsims list's own defensive lines (Defensives toggle: Guardian's Barkskin and Frenzied
-  Regeneration, Protection Paladin's Stoneform), which keep wowsims's order. Only for content wowsims cannot model, never to tune a
+  Regeneration, Protection Paladin's low-health Stoneform), which keep wowsims's order. Only for content wowsims cannot model, never to tune a
   wowsims line, and each use names its reason in the recipe comment. The user's ruling (2026-10-21), for Warrior's
   Victory Rush: "This isn't something from wowsims, but needs to be added since it won't affect wowsims accuracy
   (wowsims never goes mob to mob so VR isn't ever a thing). Should be used just above bloodthirst (since it's a mini
@@ -458,11 +458,10 @@ What players read in a pack's description (the recipe's `notes`), and why. Warri
   Deterrence 35, Death Coil's defensive key 35, Barkskin 50 (Balance, and Feral outside Bear Form as
   `barkskin_cat_health`; the owner: "barkskin is available in all forms", so no line is gated on a form). Each threshold is a
   per-spec setting; each line is on the Defensives toggle, so it shows in the Defensives display only.
-  Stoneform's ability is never usable, in combat or out: its `buff` gate (Hekili_Shared Races/Dwarf.lua) wants a
-  poison or disease on us (Shared/Auras.lua `dispellable`, by the debuff rows' dispel type), and the facade's aura rows
-  carry no dispel type (Game/API/Facade.lua's records keep `dispelName` nil; in combat the client's own rows raise or
-  answer nil, FR-1). Its line's condition can pass at low health; the ability is never shown. Kept: wowsims's line
-  (and Paladin Protection's `actions=stoneform`), harmless.
+  Stoneform (owner 2026-11-24): no aura gate (wowsims racials.go:18-48 has no dispel requirement; the game's usable
+  answer decides in game). Both tank packs show a Dwarf's Stoneform at or below 50%: Protection Warrior's from its
+  wowsims line (rule 23), Protection Paladin's from rule 13 (a tank's defensive racial, which wowsims autocasts on
+  cooldown: a `# Deviation:` line), each a Protection setting `stoneform_health`.
 - Protection's Demoralizing Shout (off unless Maintain Demoralizing Shout is on, rule 15) and Thunder Clap: a player
   keeps them for bosses with the per-ability Boss Encounter Only option or the Custom 1 toggle (no code change; the
   user approved the audit's proposal).

@@ -165,7 +165,10 @@
 --    takes every racial major cooldown of the request's class (M.RACIALS by M.CLASS_RACES, the defensive ones only for a
 --    tank, none the APL casts itself), as one block in racials.go's order where the log first used one, else first
 --    (racials register first, sim/core/character.go:304, all at priority 0); each other race's line is inert, its
---    racial unknown (Engine/Schema/Races.lua). The player's cooldown timings or `hpPercentForDefensives`, which
+--    racial unknown (Engine/Schema/Races.lua). A defensive racial's line waits for low health (owner 2026-11-24):
+--    `health.known&health.pct<=settings.<key>_health&...` (rule 23's guard and per-spec setting, default M.RACIALS's
+--    `health`), with a `# Deviation:` line (wowsims autocasts it on cooldown for a tank: `hpPercentForDefensives` 0).
+--    The player's cooldown timings or `hpPercentForDefensives`, which
 --    change when wowsims autocasts a racial, are an error (none at the pin). `castAllStatBuffCooldowns` (every instant major cooldown
 --    whose buff raises one of its stat types, out of the autocast list) is one line per instant cast (Effective Time 0s: off
 --    the GCD, as wowsims's EffectiveTime() == 0) in the log whose
@@ -476,10 +479,11 @@ end
 
 -- Rule 13's racials: wowsims's racial major cooldowns (sim/core/racials.go, AddMajorCooldown), in its registration
 -- order (the race switch's), each { race, spell ID (Eureka!: by class, racials.go:349-363), defensive (Survival only:
--- autocast for a tank alone, sim/core/major_cooldown.go:258-263) }. Read Ley Line and Elemental Blessing are APL-only
--- (racials.go:261-264); the other races have no cooldown.
+-- autocast for a tank alone, sim/core/major_cooldown.go:258-263), health (a defensive one's low-health default, the
+-- owner's 2026-11-24 ruling: Protection Warrior's wowsims APL value for both) }. Read Ley Line and Elemental Blessing
+-- are APL-only (racials.go:261-264); the other races have no cooldown.
 M.RACIALS = {
-    { race = "RaceDwarf", id = 20594, defensive = true }, -- Stoneform, racials.go:18-48
+    { race = "RaceDwarf", id = 20594, defensive = true, health = 50 }, -- Stoneform, racials.go:18-48
     {
         race = "RaceGnome",
         id = {
@@ -492,7 +496,7 @@ M.RACIALS = {
     }, -- Eureka!, racials.go:344-417
     { race = "RaceNightElf", id = 1259799 }, -- Elune's Light, racials.go:61-76 (DPS: aura_helpers.go:412-428)
     { race = "RaceOrc", id = 20572 }, -- Blood Fury, racials.go:80-118
-    { race = "RaceOrc", id = 1299026, defensive = true }, -- Shatter Curse, racials.go:120-160
+    { race = "RaceOrc", id = 1299026, defensive = true, health = 50 }, -- Shatter Curse, racials.go:120-160
     { race = "RaceTroll", id = 20554 }, -- Berserking, racials.go:166-197
 }
 
@@ -1886,6 +1890,10 @@ local function automatic(c, kind, v)
                 c.notes[#c.notes + 1] = kind .. ": unmapped " .. what
             elseif not c.namedKeys[x] then -- one the APL casts is no autocast cooldown (sim/core/apl.go:333-340)
                 block[#block + 1] = x
+                if rc.defensive then -- a tank's: its low-health default (the entry's emission reads it)
+                    c.lowHealth = c.lowHealth or {}
+                    c.lowHealth[x] = rc.health
+                end
             end
         end
         racial[x or ""] = true
@@ -2380,6 +2388,17 @@ local function entryBody(c, e)
             local off = c.offGcd[x]
             local line = x .. (off and ",use_off_gcd=1" or "")
             local cx = guarded(c, x, required(c, x, cond))
+            local hp = c.lowHealth and c.lowHealth[x]
+            if hp then -- rule 13: a tank's defensive racial waits for low health, rule 23's setting and guard outermost
+                local key = x .. "_health"
+                c.healthSettings = c.healthSettings or {}
+                c.healthSettings[key] = hp
+                cx = "health.known&health.pct<=settings." .. key .. (cx and ("&" .. paren(cx)) or "")
+                c.deviations[#c.deviations + 1] = x
+                    .. ": wowsims autocasts it on cooldown for a tank; here at or below settings."
+                    .. key
+                    .. ", under health.known"
+            end
             out[i] = cx and (line .. ",if=" .. cx) or line
         end
         return out
