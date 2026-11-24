@@ -303,9 +303,9 @@ fields and holds every pack's current lines.
   agreement shows what our time-to-die estimate costs. Its floors are `pack_gate.ARM_FLOORS.shipped`. Each one is
   the arm's reading on seeds 1-20, the seeds the gate runs, and has its cause written beside it, with seeds 21-40
   and 41-60 as the spread. A row it does not name keeps the default floor.
-- **Neither arm has the live client's own secrets.** Two are left out of the shipped arm: our auras raise in combat
-  (the `live-auras` arms) and combat-log amounts are secret (`secretAmount`, the `secret` arm). Those arms only
-  record; whether one should gate is still an open question.
+- **Two of the live client's secrets are in neither gated arm:** our auras raising in combat (the `live-auras` arms)
+  and secret combat-log amounts (`secretAmount`, the `secret` arm). Those arms only record; whether one should gate
+  is still an open question.
 
 The shipped arm gates because a floor measured only in the default arm passes changes that show up only with the
 bands, the time to die or the Cooldown Manager on. The other arms (`make gate-ab`, `make gate-body AB_ARM=<arm>`)

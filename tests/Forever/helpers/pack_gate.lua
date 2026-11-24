@@ -1202,11 +1202,12 @@ M.ARM_FLOORS = {
         ["Marksmanship Turret"] = { heldReady = 219 },
         ["Elemental"] = { heldReady = 336, loOver = 1 },
         ["Warrior Protection"] = { flicker = 0.30, heldReady = 400 },
-        -- Shipped only, untraced, trace pending L1823 (arms-trace-2; provisional). Balance held 194 / 187 / 165
-        -- against the bands arm's 189 / 174 / 174 and the ttd arm's 189 (seeds 1-20): the Druid's fixture layout moves
-        -- it. Feral flicker 0.04 / 0 / 0, two flips on seeds 1-20 (bands 0 / 0.02 / 0; the ttd arm 0.02 on 1-20, Fable
-        -- batch 4 I4's seed 2 t47.0 shifting_power > rake > shifting_power, a return on a reading older than the energy
-        -- band: G7, L1784); the second flip not traced
+        -- Shipped only, traced (arms-trace-2, L1823). Balance held 194 / 187 / 165 against the bands arm's 189 / 174 /
+        -- 174 and the ttd arm's 189 (seeds 1-20): re-timed fights after one viewer fact: seed 6 t7.6, without the
+        -- viewer the belief drops a landed Insect Swarm on an avoid row and recasts it; all 5 extra polls are Wrath's
+        -- cost crossing one poll late (L1118). Feral flicker 0.04 / 0 / 0, two flips on seeds 1-20 (bands 0 / 0.02 / 0;
+        -- the ttd arm 0.02 on 1-20): G7 stale-usability return (L1784): a return from a reading older than the band
+        -- (seed 12 t78.2; seed 2 t47.2), the shipped arm's viewer re-times the boot after seed 4 t75.4's missed Rake
         ["Balance"] = { heldReady = 194 },
         ["Feral"] = { flicker = 0.05 },
     },
