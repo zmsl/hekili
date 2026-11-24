@@ -723,6 +723,7 @@ local function route(t, g, uid, act, flag, amount, school)
     local tiedP, tiedN = 0, 0 -- the spell ticket the tie took it from in its own frame (re-offered if the swing refuses)
     local frameSw, frameP = 0, 0 -- the swing the tie gave an avoid in a cast's own frame, and that cast's ticket (AS)
     local owed = 0 -- the swing an avoid past a cast's frame is held on (AS, the forward order)
+    local held = 0 -- the provisionally credited swing whose core band took a cast's avoid (replaced below, unscored)
     local p, n = T.Pick(t, g, 1, act, flag, amount, school, avoid)
     local pass = 1
     local replacing = 0
@@ -793,10 +794,14 @@ local function route(t, g, uid, act, flag, amount, school)
                 crit = false
             end
         elseif avoid and AVOIDS[act] then
-            -- (L1793, Feral Rip) a swing credited provisionally (TENT) whose core band holds this avoid: the
-            -- swing's own row (decision 48's narrow band) replaces that credit below, as the tie; the cast's again if
-            -- the swing refuses it in the cast's own frame (a verdict fixed its credit)
+            -- (L1793) a swing credited provisionally (TENT) whose core band holds this avoid: the swing's own row
+            -- (decision 48's narrow band) replaces that credit below, as the tie, and no other swing's score takes it;
+            -- a credit a verdict or a spend fixed is no longer replaceable: the row stays the cast's
             local r = M.Replaceable(t, g, amount, flag, true, false)
+            if r and T.rec[r] > 0 and I.CreditFixed and I.CreditFixed(T.rec[r]) then
+                T.Final(r, t)
+                r = nil
+            end
             if r then
                 if pass == 1 then
                     tiedP, tiedN = p, n
@@ -804,7 +809,7 @@ local function route(t, g, uid, act, flag, amount, school)
                         frameSw, frameP = r, p
                     end
                 end
-                p, tied = 0, true
+                p, tied, held = 0, true, r
             elseif pass > 1 and T.kind[p] == X.FRAME and not T.Unmapped(t) then
                 -- the forward order (Fury L30, Sunder 60.40): past the cast's own frame, a swing of ours that still
                 -- owes its row (from before the cast: resolved first; from after it: L1793, our instants' own rows
@@ -826,7 +831,13 @@ local function route(t, g, uid, act, flag, amount, school)
     local refused = 0 -- the swing the LR refused this wound for (AS's reversed order)
     if owed > 0 then
         credited, lr, ref, lag, second = owed, 0, T.x[owed], t - T.at[owed], 0
-    elseif p == 0 and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
+    elseif
+        held == 0
+        and p == 0
+        and white
+        and (AVOIDS[act] or not avoid)
+        and not (not avoid and t - lastW0 <= SAME_FRAME)
+    then
         if not avoid then
             local _, maxMain = VS.Stat("UnitDamage")
             local form = Plain(I.api, I.api.GetShapeshiftForm()) -- secret: Plain; plain in combat (Facade's stance row)
@@ -843,7 +854,7 @@ local function route(t, g, uid, act, flag, amount, school)
         end
     end
     if p == 0 and not credited and white and (AVOIDS[act] or not avoid) then
-        local r = M.Replaceable(t, g, amount, flag, avoid, unknown)
+        local r = held > 0 and held or M.Replaceable(t, g, amount, flag, avoid, unknown)
         if r and T.rec[r] > 0 and I.CreditFixed and I.CreditFixed(T.rec[r]) then
             T.Final(r, t) -- a verdict or a spend measured its rage: no longer replaceable (spec §2.3)
             r = nil

@@ -826,6 +826,31 @@ describe("the ticket pool", function()
                 assert.are.same({ T.PROV, "DODGE", 1 }, { T.state[mh], T.avoid[mh], T.replaced })
             end)
 
+            -- review of swing-avoid-fix, Important 1: dual wield, the off hand open at 69.760 (lag 0.644 at the dodge,
+            -- outside its band: the tie refused it). The matched provisional credit is replaced; the generic score never
+            -- gives the row to that other open swing (no give-back record)
+            it("replaces the provisional credit it matched, never another open swing's score (dual wield)", function()
+                ctl.now = 50
+                ctl.damage = { 40, 50, 10, 12 }
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.now = 69.76
+                ctl.Fire("PLAYER_SWING", 2.6, 1)
+                oh = T.lastSwing[2]
+                ctl.now = 69.903
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = 69.954
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+                assert.are.same({ T.TENT, T.OPEN }, { T.state[mh], T.state[oh] })
+                ctl.now = 70.4
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 70.404
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                assert.are.equal(0, count(VS.Obs.Avoided))
+                assert.are.same({ T.PROV, "DODGE", 1 }, { T.state[mh], T.avoid[mh], T.replaced })
+                assert.are.same({ T.OPEN, "" }, { T.state[oh], T.avoid[oh] })
+            end)
+
             it("leaves a swing's avoid with no cast near it to the swing (its core band)", function()
                 ctl.now = 59.749
                 ctl.Fire("PLAYER_SWING", 2.6, 0)
