@@ -13,11 +13,11 @@ return {
         party = { recall = 1.00, melee = 0.81, melee2 = 0.96, rageErr = 17.4, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.00, wash = 1.4, unrecovered = 2.1 },
         busy = { recall = 1.00, melee = 0.69, melee2 = 0.85, rageErr = 19.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.00, wash = 0.5, unrecovered = 9.1 },
     },
-    -- K10: melee recall does not hold under a session lag (spec §6.2's check; party 0.36, busy 0.18 against K1's 0.83 / 0.70). The session's landing median from [0.4, 1.0] s drives it (without it 0.86 / 0.73); the first-swing lag costs party 0.06; jitter, pushback and PLAYER_ENTER_COMBAT cost nothing. Measured, not a target (Task 13 finding; the melee scoring is probe U15's).
+    -- K10: melee recall does not hold under a session lag (spec §6.2's check; party 0.36, busy 0.18 against K1's 0.83 / 0.70). The session's landing median from [0.4, 1.0] s drives it (without it 0.86 / 0.73); the first-swing lag costs party 0.06; jitter, pushback and PLAYER_ENTER_COMBAT cost nothing. Measured, not a target (Task 13 finding; the melee scoring is probe U15's). L1810: busy wash 0.0 -> 0.5 (one own swap, 9 rage in 20 fights: a provisional credit rightly replaced by our own avoid re-scores a partner's wound in the crowd), party 1.8 -> 1.4.
     K10 = {
         solo = { recall = 0.95, melee = 0.96, melee2 = 0.96, rageErr = 15.1, staged = 0.88, false100 = 4.5, leak100 = 1.6, lostDiff = 3, residual = 0, postClear = 1.00, recovered = 0.00, wash = 2.7, unrecovered = 1.5 },
-        party = { recall = 0.92, melee = 0.38, melee2 = 0.95, rageErr = 24.2, staged = 0.86, false100 = 7.7, leak100 = 1.4, lostDiff = 1, residual = 0, postClear = 1.00, recovered = 0.13, wash = 1.8, unrecovered = 5.7 },
-        busy = { recall = 0.69, melee = 0.17, melee2 = 0.84, rageErr = 29.5, staged = 0.72, false100 = 29.4, leak100 = 2.1, lostDiff = 5, residual = 0, postClear = 1.00, recovered = 0.16, wash = 0.0, unrecovered = 11.9 },
+        party = { recall = 0.92, melee = 0.38, melee2 = 0.95, rageErr = 24.2, staged = 0.86, false100 = 7.7, leak100 = 1.4, lostDiff = 1, residual = 0, postClear = 1.00, recovered = 0.13, wash = 1.4, unrecovered = 5.7 },
+        busy = { recall = 0.69, melee = 0.17, melee2 = 0.84, rageErr = 29.5, staged = 0.72, false100 = 29.4, leak100 = 2.1, lostDiff = 5, residual = 0, postClear = 1.00, recovered = 0.16, wash = 0.5, unrecovered = 11.9 },
     },
     K11 = {
         party = { recall = 0.89, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.86, false100 = 11.2, leak100 = 4.7, lostDiff = 0, residual = 0, postClear = 1.00, recovered = 0.66, wash = 0.0, unrecovered = 1.6 },

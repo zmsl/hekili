@@ -20,7 +20,7 @@
 
 ### Fixed
 
-- Feral Druid: a Rip or Rake that misses while one of your white swings lands at the same moment is now seen as missed, so Hekili no longer suggests Ferocious Bite (or Shred) as if the bleed were up.
+- Feral Druid: a Rip or Rake that misses while one of your white swings lands at the same moment is now usually seen as missed, so Hekili far less often suggests Ferocious Bite (or Shred) as if the bleed were up.
 - Feral Druid and Rogue: a combo point builder (such as Rake or Sinister Strike) now counts as landed when your combo points rise after it and as missed when they do not, even when one of your white swings is dodged or missed at the same moment, so a landed Rake is no longer suggested again and a missed one is suggested again at once.
 - When the Cooldown Manager shows that your debuff missed, the next suggestion appears at once instead of one update later.
 - When the Cooldown Manager shows your debuff landed, a miss reported for another attack in the same moment no longer takes the debuff away or gives its energy back.
@@ -31,7 +31,7 @@
 - Protection Warrior: when the game hides who attacked you (expected in dungeons), a dodge, parry or block now sets when the Revenge window ends, so Revenge is not recommended past it.
 - Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.
 - A `/reload` while you channel a spell no longer raises an "Unknown buff: cast" error, and the rest of that channel is predicted again.
-- Melee: an auto attack that misses, or is dodged or parried, close to an ability such as Rip is now more often read as the auto attack's own miss rather than the ability's, so the energy or rage the ability cost is less often counted as given back and the next ability lights up before you can afford it less often.
+- Melee: an auto attack that misses, or is dodged or parried, close to an ability such as Rip is now more often read as the auto attack's own miss rather than the ability's.
 - Fury Warrior: rage from an auto attack made just before Execute is no longer counted again after Execute spent all your rage, so an ability no longer lights up right after Execute before you can afford it.
 
 ### Known issues

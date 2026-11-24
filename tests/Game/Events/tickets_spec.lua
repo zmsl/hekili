@@ -963,6 +963,18 @@ describe("the ticket pool", function()
                 assert.are.same({ 1, T.OPEN }, { count(VS.Obs.Avoided), T.state[sw] })
             end)
 
+            -- the wound stamped in the success's own frame is the cast's own hit (a landed instant's direct damage), not
+            -- the swing's landing: the avoid in a later frame stays the swing's by the tie (false-refund bisect, L1810)
+            it(
+                "the wound at the cast's own success stamp is the cast's hit: the tie keeps the avoid on the swing",
+                function()
+                    ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1) -- 163.6, lag 0.47
+                    ctl.now = 163.603 -- lag 0.473, the core band
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                    assert.are.same({ 0, T.PROV }, { count(VS.Obs.Avoided), T.state[sw] })
+                end
+            )
+
             it("the avoid first: the tie holds it on the swing, its secret wound then gives it back", function()
                 ctl.now = 163.603
                 ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)

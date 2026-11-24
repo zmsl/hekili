@@ -48,11 +48,11 @@ local tieP, tieAt, tieSw, tieT = {}, {}, {}, {}
 local wT, wAmt, wFlag, wAt, wCls = {}, {}, {}, {}, {}
 -- (L1810 F1) Live, per swing ticket: the anchor of the swing whose secret white wound came in its core band (0 none): it
 -- landed, so a cast's own-frame avoid in that band is the cast's. -1 none (a swing may be anchored at 0).
-local sAt = {}
+local sAt, sT = {}, {} -- sT: that wound's time (a wound in a cast's success frame is the cast's own hit)
 for k = 1, T.CAP do
     tieP[k], tieAt[k], tieSw[k], tieT[k] = 0, 0, 0, 0
     wT[k], wAmt[k], wFlag[k], wAt[k], wCls[k] = 0, 0, "", 0, 0
-    sAt[k] = -1
+    sAt[k], sT[k] = -1, 0
 end
 
 -- Fix A (L1763): per instant (FRAME) ticket still COMMITTED, the avoid row on its GUID that no open ticket took at pass
@@ -144,9 +144,10 @@ end
 -- (L1810 F1) The swing of ours on `g` whose landing a secret white wound at t most likely is, on timing alone: OPEN (it
 -- still owes its row) or PROV holding a tied avoid, t in its core band, its LR over the unknown class's theta. Nil when
 -- none. Allocates nothing.
--- shortcut: any white wound qualifies (a periodic tick, another player's swing): one in the band before a swing's true
--- avoid in a cast's frame gives that avoid to the cast (the residual, lane finisher-miss-fix report); where the cast's
--- aura is tracked, the Cooldown Manager's light takes the refund back. Upgrade if live captures show it.
+-- shortcut: any other white wound qualifies (a periodic tick, another player's swing): one in the band before a swing's
+-- true avoid in a cast's frame gives that avoid to the cast (the residual, lane finisher-miss-fix report); where the
+-- cast's aura is tracked, the Cooldown Manager's light takes the refund back. The cast's own direct hit, stamped in its
+-- success's frame, is excluded at the use (route). Upgrade if live captures show it.
 local function secretOwner(t, g)
     for i = 1, T.CAP do
         local st, h = T.state[i], T.x[i]
@@ -703,7 +704,7 @@ local function route(t, g, uid, act, flag, amount, school)
             creditSwing(i, t, act, flag, nil, false, true, math.huge, h, d, 0, M.thetaIndex(h, 4, h, d))
             return
         elseif i then
-            sAt[i] = T.at[i]
+            sAt[i], sT[i] = T.at[i], t
         end
         if U.IsTarget(uid, t) then
             M.background(act, 0, "", false, avoid, false)
@@ -782,7 +783,17 @@ local function route(t, g, uid, act, flag, amount, school)
                     local wk = M.thetaIndex(h, wCls[sw], h, wl)
                     creditSwing(sw, wT[sw], "WOUND", wFlag[sw], wAmt[sw], false, false, math.huge, h, wl, 0, wk)
                     wAt[sw] = 0
-                elseif own and sAt[sw] == T.at[sw] then -- (L1810 F1) its secret wound came first: the cast's avoid
+                elseif
+                    own
+                    and sAt[sw] == T.at[sw]
+                    and not (
+                        sT[sw] == T.at[p]
+                        and t > T.at[p]
+                        and I.Kinds.Accepts(p, "WOUND", flag, nil, school, false)
+                    )
+                then -- (L1810 F1) its secret wound came first: the cast's avoid (a wound stamped at the cast's own
+                    -- success, the cast taking a wound of that school, with this avoid a frame later, was the cast's
+                    -- own hit: the tie below keeps the avoid on the swing, the owner ruling 2026-10-24)
                     sAt[sw] = -1
                 else
                     if own then -- the cast's own frame: its again if the swing lands
