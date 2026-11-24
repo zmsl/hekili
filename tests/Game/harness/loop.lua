@@ -1521,19 +1521,26 @@ local function blank()
 end
 
 M.TRUTH_SEEDS = 4 -- M.truthRate's calibration fights (fix1_helper's seeds 1-4)
-local truthRates = setmetatable({}, { __mode = "k" }) -- by content, then mobHealth/duration/others
+local truthRates = setmetatable({}, { __mode = "k" }) -- by content, then arm/mobHealth/duration/others
 
 --- (L1814) A ttd arm's truth: the killable mob's health lost a second, { A = run A (ours driving), B = run B (the
 --- oracle) }, over M.TRUTH_SEEDS fights on a fresh boot of `content` under `o`'s arm (o.mobHealth, o.duration and
 --- o.others: a party's damage on the target counts), the rows they would write dropped; one calibration a content,
---- health, duration and party. nil where the mob cannot die (health 1e8 or more: the fight ends at its cap, and both
---- sides answer the unknown, 3600).
+--- arm, health, duration and party. nil where the mob cannot die (health 1e8 or more: the fight ends at its cap, and
+--- both sides answer the unknown, 3600).
 function M.truthRate(content, o)
     local health = o.mobHealth or content.WORLD.mobHealth
     if health >= 1e8 then
         return nil
     end
-    local key = health .. "/" .. (o.duration or 180) .. "/" .. table.concat(o.others or {}, ",")
+    -- each arm drives its own rate A (live-like review M1)
+    local key = (o.arm or ab.arm())
+        .. "/"
+        .. health
+        .. "/"
+        .. (o.duration or 180)
+        .. "/"
+        .. table.concat(o.others or {}, ",")
     local byKey = truthRates[content] or {}
     truthRates[content] = byKey
     if byKey[key] then

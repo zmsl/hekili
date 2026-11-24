@@ -297,12 +297,15 @@ fields and holds every pack's current lines.
 
 - **The default arm** has no hidden-value bands, no time to die and no Cooldown Manager. It is the reference every
   floor in `tests/Forever/helpers/pack_gate.lua` was measured on, and it keeps them.
-- **The `shipped` arm** is the addon as players run it: the bands, the time-to-die library and the Cooldown Manager
-  are all on, as they ship. The Cooldown Manager uses the class's real layout where a fixture exists (Druid, Mage,
+- **The `shipped` arm** has the addon's switches as they ship: the bands, the time-to-die library and the Cooldown
+  Manager are all on. The Cooldown Manager uses the class's real layout where a fixture exists (Druid, Mage,
   Paladin, Warrior); other classes run it with no items. In this arm the oracle is told the true time left, so the
   agreement shows what our time-to-die estimate costs. Its floors are `pack_gate.ARM_FLOORS.shipped`. Each one is
-  the worst of seeds 1-20, 21-40 and 41-60 and has its cause written beside it. A row it does not name keeps the
-  default floor.
+  the arm's reading on seeds 1-20, the seeds the gate runs, and has its cause written beside it, with seeds 21-40
+  and 41-60 as the spread. A row it does not name keeps the default floor.
+- **Neither arm has the live client's own secrets.** Two are left out of the shipped arm: our auras raise in combat
+  (the `live-auras` arms) and combat-log amounts are secret (`secretAmount`, the `secret` arm). Those arms only
+  record; whether one should gate is still an open question.
 
 The shipped arm gates because a floor measured only in the default arm passes changes that show up only with the
 bands, the time to die or the Cooldown Manager on. The other arms (`make gate-ab`, `make gate-body AB_ARM=<arm>`)
