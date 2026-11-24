@@ -34,12 +34,12 @@
 actions.precombat=bear_form,if=!buff.bear_form.up
 actions.precombat+=/enrage,use_off_gcd=1
 actions=bear_form,if=!buff.bear_form.up
-actions+=/healthstone,use_off_gcd=1,if=health.known&health.pct<=settings.healthstone_health
-actions+=/healing_potion,use_off_gcd=1,if=health.known&health.pct<=settings.healing_potion_health
 actions+=/feral_charge,use_off_gcd=1,if=target.outside5
 actions+=/barkskin,if=health.known&health.pct<=settings.barkskin_health&(toggle.movement&target.outside5|target.within5)
 actions+=/elunes_light,use_off_gcd=1,if=action.elunes_light.known&(toggle.movement&target.outside5|target.within5)
 actions+=/frenzied_regeneration,if=health.known&health.pct<settings.frenzied_regeneration_health&(toggle.movement&target.outside5|target.within5)
+actions+=/healthstone,use_off_gcd=1,if=health.known&health.pct<=settings.healthstone_health
+actions+=/healing_potion,use_off_gcd=1,if=health.known&health.pct<=settings.healing_potion_health
 actions+=/enrage,use_off_gcd=1,if=(action.lacerate.known&gcd.remains<=0&(!action.lacerate.known|rage.lo<action.lacerate.cost))&(toggle.movement&target.outside5|target.within5)
 actions+=/faerie_fire,if=(action.faerie_fire.known&debuff.faerie_fire.remains<=0)&(toggle.movement&target.outside5|target.within5)
 actions+=/demoralizing_roar,focus=2,if=settings.maintain_demoralizing_roar&(!(!(debuff.demoralizing_roar.remains<=0))&(toggle.movement&target.outside5|target.within5))

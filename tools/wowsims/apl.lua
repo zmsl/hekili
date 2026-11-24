@@ -3296,7 +3296,15 @@ function M.translate(rotation, c)
         table.insert(byName.default, at, x.line)
         table.insert(origin.default, at, false)
     end
-    local at = firsts -- rule 25: the shared health lines, after the `first` extras or the pack's own cast of one
+    -- rule 25: the shared health lines, after the `first` extras and after wowsims's own defensive lines (an ability on
+    -- the Defensives toggle: they keep wowsims's order, def-2 review Minor 9), the pack's own cast of one included
+    local at = firsts
+    for i, body in ipairs(byName.default) do
+        local a = origin.default[i] ~= false and c.set.abilities[body:match("^[%w_]+")]
+        if a and rawget(a, "toggle") == "defensives" then
+            at = math.max(at, i)
+        end
+    end
     for _, s in ipairs(c.set.sharedSettings or {}) do
         local key = s[1]
         local action = key:match("^([%w_]+)_health$")
@@ -3309,7 +3317,7 @@ function M.translate(rotation, c)
                 end
             end
             if own then
-                at = own
+                at = math.max(at, own)
             else
                 at = at + 1
                 table.insert(

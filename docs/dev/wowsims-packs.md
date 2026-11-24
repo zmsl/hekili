@@ -211,7 +211,8 @@ Translation:
   the top of `actions` after the `levelingFirst` lines, the `first` lines in recipe order: a defensive line wowsims never casts (L1808: Evasion, Ice
   Block, Divine Shield, Lay on Hands, Power Word: Shield, Deterrence, Death Coil's defensive key, Barkskin outside Bear
   Form), its threshold a recipe `settings` number. Rule 25 then adds the shared content's lines (Healthstone, healing
-  potion) after them. Only for content wowsims cannot model, never to tune a
+  potion) after them and after the wowsims list's own defensive lines (Defensives toggle: Guardian's Barkskin and Frenzied
+  Regeneration, Protection Paladin's Stoneform), which keep wowsims's order. Only for content wowsims cannot model, never to tune a
   wowsims line, and each use names its reason in the recipe comment. The user's ruling (2026-10-21), for Warrior's
   Victory Rush: "This isn't something from wowsims, but needs to be added since it won't affect wowsims accuracy
   (wowsims never goes mob to mob so VR isn't ever a thing). Should be used just above bloodthirst (since it's a mini

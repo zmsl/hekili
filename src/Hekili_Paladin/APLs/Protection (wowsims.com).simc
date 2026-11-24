@@ -15,9 +15,9 @@ actions.precombat+=/retribution_aura,if=!buff.retribution_aura.up
 actions.precombat+=/seal_of_the_crusader,if=!buff.seal_of_the_crusader.up
 actions=divine_shield,if=health.known&health.pct<=settings.divine_shield_health
 actions+=/lay_on_hands,if=health.known&health.pct<=settings.lay_on_hands_health&(!action.divine_shield.known|!buff.divine_shield.up)
+actions+=/stoneform
 actions+=/healthstone,use_off_gcd=1,if=health.known&health.pct<=settings.healthstone_health
 actions+=/healing_potion,use_off_gcd=1,if=health.known&health.pct<=settings.healing_potion_health
-actions+=/stoneform
 actions+=/templars_bulwark,use_off_gcd=1
 actions+=/judgement,use_off_gcd=1
 actions+=/swift_judgement,use_off_gcd=1,if=(!action.judgement.known|cooldown.judgement.remains<=(cooldown.judgement.duration-0))

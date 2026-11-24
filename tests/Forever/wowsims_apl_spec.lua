@@ -239,6 +239,42 @@ describe("the wowsims APL translator", function()
             }, "\n"),
             text
         )
+        -- def-2 review Minor 9 (stick with wowsims): wowsims's own defensive lines (an ability on the Defensives
+        -- toggle) keep their order; the shared lines come after the last of them, the pack's own stone line included
+        local c = ctx({})
+        c.set.sharedSettings = { { "stone_health", 30 }, { "trinket_health", 25 } }
+        c.set.abilities.big_hit.toggle = "defensives"
+        c.set.abilities.stone.toggle = "defensives"
+        text = apl.translate({ priorityList = { cast(100), cast(200), cast(300), cast(200), cast(100) } }, c)
+        assert.are.equal(
+            table.concat({
+                "actions=strike",
+                "actions+=/big_hit",
+                "actions+=/roar,use_off_gcd=1",
+                "actions+=/big_hit",
+                "actions+=/stone,use_off_gcd=1,if=health.known&health.pct<=settings.stone_health",
+                "actions+=/trinket,use_off_gcd=1,if=health.known&health.pct<=settings.trinket_health",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
+        c = ctx({})
+        c.set.sharedSettings = { { "stone_health", 30 }, { "trinket_health", 25 } }
+        c.set.abilities.big_hit.toggle = "defensives"
+        c.set.abilities.stone.toggle = "defensives"
+        text = apl.translate(
+            { priorityList = { { action = { castSpell = { spellId = { itemId = 556 } } } }, cast(200), cast(100) } },
+            c
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=stone,use_off_gcd=1",
+                "actions+=/big_hit",
+                "actions+=/trinket,use_off_gcd=1,if=health.known&health.pct<=settings.trinket_health",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
     end)
 
     it("puts a recipe extra line marked `last` before the last line of its anchor action", function()
