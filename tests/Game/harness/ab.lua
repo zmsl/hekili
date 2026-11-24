@@ -194,7 +194,7 @@ M.ARMS.ttd = { outcomes = "default", presence = "router", viewer = false, bands 
 -- switch on (Engine/Schema/Tracked.lua providersOf: the Cooldown Manager unless Hekili.cdmOff, the bands unless
 -- Hekili.bandOff; Engine/Sim/Targets.lua: the time to die with the bands): the bands, the real LibTimeToDie (the ttd
 -- arm's, its plain oracle told the true time left: loop.run) and the Cooldown Manager with the class's real layout
--- (the fixture: Druid, Mage, Paladin and Warrior have one; the other classes' viewer is on with no item). `gate`: it
+-- (tools/data/cooldownviewer's fixture; a class without one runs the viewer with no item). `gate`: it
 -- asserts as the default arm does (M.check), its own floors in pack_gate.ARM_FLOORS.shipped; `make gate` runs it.
 -- The client's own secrets (our auras in combat, UNIT_COMBAT amounts) are not switches of ours: not in this arm.
 M.ARMS.shipped = {

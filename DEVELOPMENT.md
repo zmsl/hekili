@@ -225,8 +225,8 @@ when the batch holds one lane.
    are not run there.
 2. Have the lane reviewed against the rules above. A small lane may leave this to the integration review.
 3. Merge the reviewed lanes into the integration branch and run `make gate` on its tip. It runs the full check, then
-   every class's 20-fight loops. `make gate` never skips (it runs `make check-full`); neither do `gate-ab`,
-   `accuracy`, the rig or packaging.
+   every class's 20-fight loops in the default arm and then in the shipped arm (section 5, "Two arms gate").
+   `make gate` never skips (it runs `make check-full`); neither do `gate-ab`, `accuracy`, the rig or packaging.
 4. Have the whole integration branch reviewed on that exact tip, with the gate's output. This review is always the
    last step before the merge. A commit after the gate or the review means both again.
 5. Fast-forward `forever` to the reviewed tip. Never force-push it.
@@ -292,6 +292,21 @@ fields and holds every pack's current lines.
 
 `make check` runs short 3-fight versions. Each class's 20-fight loops have their own target, such as
 `make test-druid`; the Makefile's gate tag list names them all. `make gate` runs every one.
+
+**Two arms gate.** `make gate` runs the loops twice, and a miss in either fails it:
+
+- **The default arm** has no hidden-value bands, no time to die and no Cooldown Manager. It is the reference every
+  floor in `tests/Forever/helpers/pack_gate.lua` was measured on, and it keeps them.
+- **The `shipped` arm** is the addon as players run it: the bands, the time-to-die library and the Cooldown Manager
+  are all on, as they ship. The Cooldown Manager uses the class's real layout where a fixture exists (Druid, Mage,
+  Paladin, Warrior); other classes run it with no items. In this arm the oracle is told the true time left, so the
+  agreement shows what our time-to-die estimate costs. Its floors are `pack_gate.ARM_FLOORS.shipped`. Each one is
+  the worst of seeds 1-20, 21-40 and 41-60 and has its cause written beside it. A row it does not name keeps the
+  default floor.
+
+The shipped arm gates because a floor measured only in the default arm passes changes that show up only with the
+bands, the time to die or the Cooldown Manager on. The other arms (`make gate-ab`, `make gate-body AB_ARM=<arm>`)
+record their rows in `.ab/<arm>.tsv` and never fail: they are measurements, read by hand.
 
 ### Floors only rise
 

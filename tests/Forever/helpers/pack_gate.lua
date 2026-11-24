@@ -1126,10 +1126,12 @@ M.FLICKER = {
     ["Destruction"] = { flicker = 0, retracted = 0, heldReady = 1 }, -- 0 / 0 / 0, 1
 }
 
--- A record-only arm's own floors (L1795, Fable T2), by arm then label: each field named here replaces that label's
--- M.FLICKER field in that arm only (ab.arm()), so a ruled row reads ok there and a new row still prints MISS. Each
--- value is the arm's measured seeds 1-20 (the only set the arm runs) with its cause; it only moves as M.FLICKER does.
--- An arm or label not named is judged on M.FLICKER (bands-drop, the stress arm, has none).
+-- An arm's own floors (L1795, Fable T2; L1814), by arm then label: each field named here replaces that label's
+-- M.FLICKER field in that arm only (ab.arm()), so a ruled row reads ok there and a new row still prints MISS (the
+-- record-only bands arm) or fails (the gated shipped arm, ab.lua). Each value carries its cause. bands: the arm's
+-- measured seeds 1-20, the only set a gate-ab run gives it. shipped: the worst of seeds 1-20 / 21-40 / 41-60, named
+-- only where it reads worse than M.FLICKER. An arm or label not named is judged on M.FLICKER (bands-drop, the stress
+-- arm, has none).
 M.ARM_FLOORS = {
     bands = {
         -- L1783 (B4 round 4 trace; batch 3 bands run 22675171a: Arms 0.40, Fury L60 0.36, Fury L24 0.18 /min): a
@@ -1158,6 +1160,58 @@ M.ARM_FLOORS = {
         ["Destruction"] = { loOver = 303 },
         ["Frost"] = { loOver = 4 },
         ["Elemental"] = { loOver = 1 },
+    },
+    -- The gated shipped arm (L1814: bands, time to die and the Cooldown Manager on, as the addon ships). Measured on
+    -- live-like-arm 04ca28b70 (batch 4 b72b09cd0 + the arm), seeds 1-20 / 21-40 / 41-60, against the bands arm (b4:
+    -- the batch 4 run's seeds 1-20; 21-40 and 41-60 on this tree) and the default arm on the same seeds. A flicker
+    -- floor is the worst + 0.01 (the line rounds to two decimals), a count the worst.
+    shipped = {
+        -- Equal to or under the bands arm on every set: L1783 (a stale usability answer under the harness's G7 delay)
+        -- and L1791 (a return needs its own fact), the bands arm's causes. Arms 0.40 / 0.20 / 0.23 (bands the same),
+        -- Fury L60 0.36 / 0.32 / 0.39 (bands 0.40 / 0.58 / 0.43), Fury L24 0.18 / 0.18 / 0.34 (bands 0.21 / 0.18 /
+        -- 0.40: the bands arm's own 0.22 holds seeds 1-20 only)
+        ["Arms"] = { flicker = 0.41 },
+        ["Fury L60"] = { flicker = 0.40 },
+        ["Fury L24"] = { flicker = 0.35 },
+        -- L1813, a real flash (Fable batch 4 I2, owner ruling owed): scorch > frostfire_bolt > scorch at the mana
+        -- band's crossing of 308.4, counted under L1791. 0.08 / 0.07 / 0.10, the bands arm the same; default 0 /
+        -- 0.02 / 0
+        ["Frostfire"] = { flicker = 0.11 },
+        -- T1 (L1794, see the bands arm's): a regen pair of band crossings stamped on the world's 0.1 s regen step;
+        -- inferred the harness's step (probe owed, L1800). Every value the bands arm's on the same set: SM Ruin 279 /
+        -- 452 / 0, Destruction 303 / 0 / 0, Frost 4 / 49 / 0, Elemental 1 / 0 / 0. Shadow 0 / 132 / 31, Smite 0 / 1 / 0
+        -- and Enhancement 0 / 5 / 38 are the same shape (mana packs, bands on; M.FLICKER 0), not traced pack by pack
+        ["SM Ruin"] = { loOver = 452 },
+        ["Destruction"] = { loOver = 303 },
+        ["Frost"] = { loOver = 49 },
+        ["Smite"] = { loOver = 1 },
+        -- The bands arm's untraced held-while-ready rows (L1795: they read MISS in that arm since batch 3), the shipped
+        -- arm equal or under: Combat 168 / 161 / 173 (bands 169 / 173 / 177; default 160 / 157 on 21-60), Marksmanship
+        -- Turret 219 / 218 / 211 (bands the same). Elemental 336 / 345 / 314, loOver 1 / 0 / 0 (bands the same; default
+        -- 308 / 297): held icons at a mana cost crossing with bands on, likely L1797's waits (conditional on the G7
+        -- probe, L1784), not traced. Warrior Protection flicker 0.29 / 0.10 / 0.13 (bands 0.29 / 0.12 / 0.12; Fable
+        -- batch 4 m1: its 0.25 -> 0.29 is L1791) and held 400 / 304 / 374 (bands the same; default 289 / 331)
+        ["Combat"] = { heldReady = 173 },
+        ["Marksmanship Turret"] = { heldReady = 219 },
+        ["Elemental"] = { heldReady = 345, loOver = 1 },
+        ["Warrior Protection"] = { flicker = 0.30, heldReady = 400 },
+        -- Rows the bands arm reads on seeds 21-60, where no bands run looked before (untraced; the shipped arm equals
+        -- the bands arm on each): Retribution held 129 / 144 / 158 (default 151 / 140), Enhancement flicker 0 / 0.02 /
+        -- 0.02, held 153 / 170 / 163 (default 166 / 169), Shadow flicker 0 / 0 / 0.02 (default 0 / 0), Beast Mastery
+        -- Turret flicker 0 / 0.02 / 0.03 (default 0 / 0.02)
+        ["Retribution"] = { heldReady = 158 },
+        ["Enhancement"] = { flicker = 0.03, heldReady = 170, loOver = 38 },
+        ["Shadow"] = { flicker = 0.03, loOver = 132 },
+        ["Beast Mastery Turret"] = { flicker = 0.04 },
+        -- The default arm's own (L1793, the one-frame poll feed): M.FLICKER's 7 is seeds 1-20 only; the default arm
+        -- reads 45 / 49 on 21-40 / 41-60, the bands and shipped arms 7 / 26 / 58
+        ["Affliction"] = { heldReady = 58 },
+        -- Shipped only, untraced. Balance held 194 / 187 / 165 against the bands arm's 189 / 174 / 174 and the ttd
+        -- arm's 189 (seeds 1-20): the Druid's fixture layout moves it. Feral flicker 0.04 / 0 / 0, two flips on seeds
+        -- 1-20 (bands 0 / 0.02 / 0; the ttd arm 0.02 on 1-20, Fable batch 4 I4's seed 2 t47.0 shifting_power > rake >
+        -- shifting_power, a return on a reading older than the energy band: G7, L1784); the second flip not traced
+        ["Balance"] = { heldReady = 194 },
+        ["Feral"] = { flicker = 0.05 },
     },
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded

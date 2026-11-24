@@ -54,6 +54,8 @@ describe("the ttd arm (record-only) #slow", function()
         assert.is_true(rate.A > 0 and rate.B > 0)
         assert.are.equal(rate, loop.truthRate(L.content, o)) -- one calibration a world
         assert.is_nil(loop.truthRate(L.content, { duration = 60, mobHealth = 1e9 })) -- no kill: no truth to tell
+        local party = loop.truthRate(L.content, { duration = 60, arm = "ttd", others = { "melee", "caster" } })
+        assert.is_true(party.A > rate.A) -- a party's damage on the target is the world's rate too
         local seen = {}
         o.on = function(run, steps, t)
             if t >= loop.PULL + 5 and not seen.oracle and steps[2] then

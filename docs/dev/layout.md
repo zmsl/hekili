@@ -140,6 +140,8 @@ the class's `loop_<class>_spec.lua` keeps the boot checks and the 3-fight `#slow
 its slowest file: `druid_harness_spec.lua`'s seven `#druid` scenarios (345 s under the gate's load), then
 `loop_warrior_spec.lua` (#loop and #party, 292 s) and Feral (303 s); `make gate` 694 s, `make check` 246 s here. One
 spec file at one tag: `.lua/bin/busted --tags=druid tests/Forever/loop_druid_feral_spec.lua`.
+`make gate` then runs the same tags again under the gated shipped arm (DEVELOPMENT.md "Two arms gate"), in the same
+lock hold: 643 s more here (2026-11-23, its body measured record-only).
 `make gate-ab` (the gate once per providers arm, provider arms recorded in `.ab/`, never failed) and `make cdv-coverage`
 (the Cooldown Manager coverage report, dev-only) are described in `docs/dev/providers-ab.md`, with the two
 experimental options and their Snapshot audit lines.

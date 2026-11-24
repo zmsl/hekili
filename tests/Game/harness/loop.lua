@@ -1521,18 +1521,19 @@ local function blank()
 end
 
 M.TRUTH_SEEDS = 4 -- M.truthRate's calibration fights (fix1_helper's seeds 1-4)
-local truthRates = setmetatable({}, { __mode = "k" }) -- by content, then mobHealth/duration
+local truthRates = setmetatable({}, { __mode = "k" }) -- by content, then mobHealth/duration/others
 
 --- (L1814) A ttd arm's truth: the killable mob's health lost a second, { A = run A (ours driving), B = run B (the
---- oracle) }, over M.TRUTH_SEEDS fights on a fresh boot of `content` under `o`'s arm (o.mobHealth, o.duration), the
---- rows they would write dropped; one calibration a content, health and duration. nil where the mob cannot die (health
---- 1e8 or more: the fight ends at its cap, and both sides answer the unknown, 3600).
+--- oracle) }, over M.TRUTH_SEEDS fights on a fresh boot of `content` under `o`'s arm (o.mobHealth, o.duration and
+--- o.others: a party's damage on the target counts), the rows they would write dropped; one calibration a content,
+--- health, duration and party. nil where the mob cannot die (health 1e8 or more: the fight ends at its cap, and both
+--- sides answer the unknown, 3600).
 function M.truthRate(content, o)
     local health = o.mobHealth or content.WORLD.mobHealth
     if health >= 1e8 then
         return nil
     end
-    local key = health .. "/" .. (o.duration or 180)
+    local key = health .. "/" .. (o.duration or 180) .. "/" .. table.concat(o.others or {}, ",")
     local byKey = truthRates[content] or {}
     truthRates[content] = byKey
     if byKey[key] then
@@ -1544,7 +1545,11 @@ function M.truthRate(content, o)
     local ok, err = pcall(function()
         local L = M.new(content)
         for seed = 1, M.TRUTH_SEEDS do
-            local a, b = M.fight(L, seed, { trace = false, mobHealth = health, duration = o.duration, arm = o.arm })
+            local a, b = M.fight(
+                L,
+                seed,
+                { trace = false, mobHealth = health, duration = o.duration, others = o.others, arm = o.arm }
+            )
             for side, r in pairs({ A = a, B = b }) do
                 local mob = firstMob(r.W)
                 lost[side] = lost[side] + mob.healthMax - mob.health

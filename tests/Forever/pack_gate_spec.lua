@@ -30,6 +30,42 @@ describe("pack_gate's arm floors", function()
         end
     end)
 
+    -- (L1814) the gated shipped arm: a row it measured reads ok there, the default and bands arms keep their floors
+    it("the shipped arm's own floors apply in that arm alone, each only where it reads worse", function()
+        local arm, check = ab.arm, ab.check
+        finally(function()
+            ab.arm, ab.check = arm, check
+        end)
+        local missed
+        ab.check = function(ok, _, line)
+            if not ok then
+                missed[#missed + 1] = line:match("^[^:]+")
+            end
+        end
+        local r = { flicker = 0, retracted = 0, readyShort = 0, heldReady = 194, loOver = 0 }
+        for name, want in pairs({
+            default = { "held-while-ready floor" },
+            bands = { "held-while-ready floor" },
+            shipped = {},
+        }) do
+            ab.arm = function()
+                return name
+            end
+            missed = {}
+            pack_gate.flicker("Balance", r, "line", true)
+            assert.are.same(want, missed, name)
+        end
+        local fields = { flicker = true, retracted = true, readyShort = true, heldReady = true, loOver = true }
+        for label, own in pairs(pack_gate.ARM_FLOORS.shipped) do
+            local fl = pack_gate.FLICKER[label]
+            assert.is_table(fl, label) -- a gated label's other fields come from M.FLICKER
+            for k, v in pairs(own) do
+                assert.is_true(fields[k], label .. " " .. k)
+                assert.is_true(v > (fl[k] or 0), label .. " " .. k) -- named only where the shipped arm reads worse
+            end
+        end
+    end)
+
     it("merge the arm's loOver too: a row its default floors would MISS reads ok", function()
         local arm, check = ab.arm, ab.check
         finally(function()
