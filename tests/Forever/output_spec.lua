@@ -594,6 +594,21 @@ describe("Engine.Output (headless Arms)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- L1810 F3: a target aura event is a fact (in combat only the belief's own reach Hekili: a Cooldown Manager edge, the
+    -- verdict's deadline wake, the drain's deltas), so the change it brings shows at once; a player one stays held (the
+    -- client's own events, refreshes of no concern among them)
+    it("steady icons: a target aura event shows the next set at once; a player one does not", function()
+        local acts, acted = 0, H.ns.Output.Acted
+        H.ns.Output.Acted = function()
+            acts = acts + 1
+        end
+        H.Fire("UNIT_AURA", "target", { isFullUpdate = true })
+        H.Fire("UNIT_AURA", "player", { isFullUpdate = true })
+        H.ns.Output.Acted = acted
+        assert.are.equal(1, acts)
+        assert.are.same({}, H.errors)
+    end)
+
     -- review M3: the behaviour, not the call: a countdown icon replaced by another at the first publish after the pull
     -- shows at once; the same swap with no pull between is held one publish.
     for _, pull in ipairs({ true, false }) do
