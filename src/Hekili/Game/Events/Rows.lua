@@ -46,9 +46,13 @@ local tieP, tieAt, tieSw, tieT = {}, {}, {}, {}
 -- class then; wAt the swing's anchor, 0 none). An avoid in a cast's own frame then finds the swing landed: the avoid
 -- is the cast's.
 local wT, wAmt, wFlag, wAt, wCls = {}, {}, {}, {}, {}
+-- (L1810 F1) Live, per swing ticket: the anchor of the swing whose secret white wound came in its core band (0 none): it
+-- landed, so a cast's own-frame avoid in that band is the cast's. -1 none (a swing may be anchored at 0).
+local sAt = {}
 for k = 1, T.CAP do
     tieP[k], tieAt[k], tieSw[k], tieT[k] = 0, 0, 0, 0
     wT[k], wAmt[k], wFlag[k], wAt[k], wCls[k] = 0, 0, "", 0, 0
+    sAt[k] = -1
 end
 
 -- Fix A (L1763): per instant (FRAME) ticket still COMMITTED, the avoid row on its GUID that no open ticket took at pass
@@ -132,6 +136,31 @@ local function tiedTo(p, t, g, amount, flag, band)
             and M.classOf(h, amount, flag) > 0
         then
             return i
+        end
+    end
+    return nil
+end
+
+-- (L1810 F1) The swing of ours on `g` whose landing a secret white wound at t most likely is, on timing alone: OPEN (it
+-- still owes its row) or PROV holding a tied avoid, t in its core band, its LR over the unknown class's theta. Nil when
+-- none. Allocates nothing.
+-- shortcut: any white wound qualifies (a bleed's tick, another player's swing): one in the band before a swing's true
+-- avoid in a cast's frame gives that avoid to the cast (the residual, lane finisher-miss-fix report); where the cast's
+-- aura is tracked, the Cooldown Manager's light takes the refund back. Upgrade if live captures show it.
+local function secretOwner(t, g)
+    for i = 1, T.CAP do
+        local st, h = T.state[i], T.x[i]
+        if
+            T.kind[i] == MELEE
+            and T.guid[i] == g
+            and T.told[i] ~= 2
+            and (st == T.OPEN or (st == T.PROV and tieP[i] > 0 and T.at[i] == tieSw[i]))
+            and math.abs(t - T.at[i] - L.med[h]) <= 2 * L.spr[h]
+        then
+            local f = M.density(i, t)
+            if f / M.lambda(8) >= L.theta[M.thetaIndex(h, 4, h, t - T.at[i])] then
+                return i
+            end
         end
     end
     return nil
@@ -666,6 +695,16 @@ local function route(t, g, uid, act, flag, amount, school)
     -- and a secret flag or school (unseen live) hides the row's kind: both only counted, as before.
     local secret = type(amount) ~= "number"
     if type(flag) ~= "string" or type(school) ~= "number" or (secret and not avoid and flag ~= "CRITICAL") then
+        -- (L1810 F1) a secret white wound in a swing's core band: that swing landed. The avoid it holds by the tie
+        -- goes back to the cast (creditSwing, amount unknown); else remembered for a cast's own-frame avoid after it
+        local i = secret and school == 1 and act == "WOUND" and type(flag) == "string" and secretOwner(t, g)
+        if i and T.state[i] == T.PROV then
+            local h, d = T.x[i], t - T.at[i]
+            creditSwing(i, t, act, flag, nil, false, true, math.huge, h, d, 0, M.thetaIndex(h, 4, h, d))
+            return
+        elseif i then
+            sAt[i] = T.at[i]
+        end
         if U.IsTarget(uid, t) then
             M.background(act, 0, "", false, avoid, false)
         end
@@ -742,6 +781,8 @@ local function route(t, g, uid, act, flag, amount, school)
                     local wk = M.thetaIndex(h, wCls[sw], h, wl)
                     creditSwing(sw, wT[sw], "WOUND", wFlag[sw], wAmt[sw], false, false, math.huge, h, wl, 0, wk)
                     wAt[sw] = 0
+                elseif own and sAt[sw] == T.at[sw] then -- (L1810 F1) its secret wound came first: the cast's avoid
+                    sAt[sw] = -1
                 else
                     if own then -- the cast's own frame: its again if the swing lands
                         frameSw, frameP = sw, p

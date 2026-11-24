@@ -905,6 +905,46 @@ describe("the ticket pool", function()
             assert.are.same({ 1, 1, 0 }, { count(VS.Obs.Swing, 1), count(VS.Obs.Avoided), count(VS.Obs.Landed) })
         end)
 
+        -- L1810 F1 (live: every amount secret): the swing's own secret white wound in its core band says it landed, so
+        -- a cast's own-frame avoid in that band is the cast's, in either order
+        describe("a swing's secret wound in its core band and a cast's own-frame avoid (L1810 F1)", function()
+            local sw
+            before_each(function()
+                ctl.now = 150
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.now = 163.13
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                sw = T.lastSwing[1]
+                ctl.now = 163.6
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            end)
+
+            it("the wound first: the avoid stays the cast's, the swing still owes nothing of it", function()
+                ctl.now = 163.603 -- lag 0.473, the core band
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+                ctl.now = 163.604
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                assert.are.same({ 1, T.OPEN }, { count(VS.Obs.Avoided), T.state[sw] })
+            end)
+
+            it("the avoid first: the tie holds it on the swing, its secret wound then gives it back", function()
+                ctl.now = 163.603
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                assert.are.same({ 0, T.PROV }, { count(VS.Obs.Avoided), T.state[sw] }) -- MELEE wins the tie
+                ctl.now = 163.61
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+                assert.are.same({ 1, 1, 0 }, { count(VS.Obs.Avoided), count(VS.Obs.Swing, 1), count(VS.Obs.Landed) })
+            end)
+
+            it("a secret wound outside the swing's core band changes nothing: the tie keeps the avoid", function()
+                ctl.now = 163.33 -- lag 0.2
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+                ctl.now = 163.603
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                assert.are.same({ 0, T.PROV }, { count(VS.Obs.Avoided), T.state[sw] })
+            end)
+        end)
+
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
             T.Learn("Creature-1", 20, 1.5, 9)
