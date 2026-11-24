@@ -186,7 +186,7 @@ describe("a later entry not ready before the pick is inside EARLY_EXIT", functio
         return function(H)
             rawset(H.Hekili.Class.abilities.fireball, "gcd", "off")
             H.ns.VirtualState.GcdInfo = function(t)
-                return t - (1.5 - left), 1.5
+                return t - 0.1, left + 0.1 -- the GCD holds Scorch `left` more
             end
         end
     end
@@ -204,5 +204,13 @@ describe("a later entry not ready before the pick is inside EARLY_EXIT", functio
         local slot = first(0, nil, shape(0.31), LIST, 0.05 * REGEN) -- Fireball 0.05 s (shown 0.06) < 0.31 - 0.2
         assert.are.equal("fireball", slot.actionName)
         assert.is_true(slot.wait > 0.05, slot.wait) -- its floor is short: never shown ready (C1)
+    end)
+
+    -- the rule holds only while the pick's wait is within EARLY_EXIT + one update (the owner's near-tie, L1813): a
+    -- pick 5 s away does not block an entry ready at 4.9 s
+    it("does not keep a pick far outside the window over an entry ready sooner", function()
+        local slot = first(0, nil, shape(5), LIST, 4.9 * REGEN) -- Fireball 4.9 s, Scorch 5 s
+        assert.are.equal("fireball", slot.actionName)
+        assert.is_true(slot.wait > 4.8 and slot.wait < 5, slot.wait)
     end)
 end)
