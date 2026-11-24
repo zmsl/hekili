@@ -2405,6 +2405,16 @@ function I.ResourceShift(r, delta, t, event, late)
     return shown
 end
 
+--- The least slot r regenerates over (from, from + dt]: the floor's rates over the spans (spans, above); 0 for a slot
+--- its swings pay. A late refund's floor (Families/Now.lua, L1832). Allocates nothing.
+function I.RegenLo(r, from, dt)
+    if R.swing[r] ~= 0 or dt <= 0 then
+        return 0
+    end
+    local a, b, k = spans(r, from, dt)
+    return R.regL[r] * a + R.spL[r] * b + k
+end
+
 --- An avoided cast's refund `d` (> 0) to slot r, dated at that cast's success (the server refunds there, the user
 --- 2026-10-20; the target's avoid only reports it later): est and hi take it, clamped by the lowest top a short answer
 --- set since the cast plus what the slot gained since that answer (the answer already saw the refunded pool; regen or

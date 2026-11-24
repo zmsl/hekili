@@ -119,18 +119,21 @@ local vA, vT, vPaid, vAp, vSpends, vRaised = {}, {}, {}, {}, {}, {}
 -- replaces it.
 local bR, bD, bE, bL, bH, bP = {}, {}, {}, {}, {}, {}
 -- (L1832) The point fact of the latest cast: its `now` gained slot ptR, a slot the client answers plain in combat (its
--- reads keep it, Resources.lua R.readable, and the last one was plain: the combo points); ptV0 the slot before the gain,
--- ptSwap the target serial. A plain read after the cast showing the slot risen proves the cast landed; one PT_LAG or more
--- after it showing no rise proves it avoided (wowsims: a builder's point comes only with a landed hit, rake.go:26-30,
--- sinister_strike.go:23-27). The fact beats the rows' timing: the cast's own avoid waits for it (held: hC its kind, hT
--- its row's time) and the settle decides, after the drain's read and any TargetGone. Silent, so the rows' verdict
--- stands: at the slot's max, a read that fell (a spend), a secret read, a target swap or death since the cast, no plain
--- read past the lag, the next cast. ptGo 1: landed (a later avoid of the cast is another's). ptV, ptVT: the latest read
--- at or after the cast (ptVT -1 none, -2 secret).
--- shortcut: PT_LAG is unmeasured (the 2026-11-22 capture has the point's power event and the count change in one frame,
--- no success stamp beside them); upgrade with a probe of the success -> UNIT_POWER_FREQUENT COMBO_POINTS dt. Below the
--- forced update's 0.2 s wait (Engine/Driver.lua), so the update a cast forces decides it.
+-- reads keep it, Resources.lua R.readable: the combo points); ptV0 the slot before the cast: its last plain read at
+-- least PT_LAG before it (a read closer may already show the cast's own gain: the power update can lead the success,
+-- the bands arms' spend-first), on this target; ptSwap the target serial. A plain read after the cast showing the slot
+-- above ptV0 proves the cast landed; one PT_LAG or more after it showing no rise proves it avoided (wowsims: a
+-- builder's point comes only with a landed hit, rake.go:26-30, sinister_strike.go:23-27). The fact beats the rows'
+-- timing: the cast's own avoid waits for it (held: hC its kind, hT its row's time). Silent, so the rows' verdict
+-- stands: at the slot's max, no read old enough, a read that fell (a spend), a secret read, a target swap or death since
+-- the cast, no plain read past the lag by the settle, the next cast. ptGo 1: landed (a later avoid of the cast is
+-- another's). ptV, ptVT: the latest read at or after the cast (ptVT -1 none, -2 secret). rdV/rdT 1 and 2: by slot, its
+-- last two plain reads (time -1e9 none). castE, castL, castSp: the cast's slot after its spend, and its spend serial.
+-- shortcut: PT_LAG is unmeasured for the points (the 2026-11-22 capture has their power event and the count change in
+-- one frame, no success stamp beside them); upgrade with a probe of the success -> UNIT_POWER_FREQUENT COMBO_POINTS dt.
 local PT_LAG = 0.1
+local rdV1, rdT1, rdV2, rdT2 = {}, {}, {}, {}
+local castE, castL, castSp = 0, 0, 0
 local ptA, ptT, ptR, ptV0, ptSwap, ptGo, ptV, ptVT = 0, -1, 0, 0, 0, 0, 0, -1
 local hHeld, hC, hT = false, 0, 0
 local pointSilent -- (t): the fact says nothing; a held avoid gets the rows' verdict (beside the Obs.Avoided apply)
@@ -385,16 +388,14 @@ local function shift(n, resource, spread)
     end
     -- the latest cast's own gain of a slot read plain in combat, below its max: a point fact to wait for (L1832)
     local R = I.res
-    if
-        n > 0
-        and journal
-        and curA == undoA
-        and ptA == 0
-        and R.readable[r]
-        and I.readPlain[r]
-        and R.est0[r] < R.max[r]
-    then
-        ptA, ptT, ptR, ptV0, ptSwap, ptGo, ptVT = curA, undoT, r, R.est0[r], I.curSwapN, 0, -1
+    if n > 0 and journal and curA == undoA and ptA == 0 and R.readable[r] and I.readPlain[r] then
+        local old = undoT - PT_LAG + 1e-6
+        local v0 = rdT1[r] <= old and rdT1[r] >= I.curSwapT and rdV1[r]
+            or rdT2[r] <= old and rdT2[r] >= I.curSwapT and rdV2[r]
+            or -1
+        if v0 >= 0 and v0 < R.max[r] then
+            ptA, ptT, ptR, ptV0, ptSwap, ptGo, ptVT = curA, undoT, r, v0, I.curSwapN, 0, -1
+        end
     end
     if not (onUs and I.res.bandOn[r]) then -- a hit's row on us trails what it gave: a live band has it (owner L1723)
         if n > 0 and type(spread) == "number" and spread > 0 then
@@ -694,6 +695,9 @@ end
 -- The tracked set: keys to indices, proxies, and each ability's `now` bound to the context.
 
 I.OnBuild(function(def)
+    for r = 1, #def.resources do
+        rdV1[r], rdT1[r], rdV2[r], rdT2[r] = 0, -1e9, 0, -1e9
+    end
     for k in pairs(abByKey) do
         abByKey[k] = nil
     end
@@ -911,6 +915,10 @@ local function run(o, t)
     nowE, nowL, nowH = 0, 0, 0
     local started = o.kind == CAST and A.castStartT[a] or 0 -- read before `automatic` and the line after clear it
     automatic(a, t, o.kind, o)
+    local cs, R = A.slot[a], I.res
+    if cs > 0 then
+        castE, castL, castSp = R.est0[cs], R.lo0[cs], R.spends[cs]
+    end
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
     I.WindowCast(a, t) -- the stepped and strict windows' one per-cast hook (Families/Windows.lua), before the `now`
@@ -1080,6 +1088,12 @@ local function undo(a, castT, c, rowT, t, late)
     if r > 0 and nowH > 0 and I.res.pinT[r] == nowPin and I.res.spends[r] == nowSp then
         I.Refund(r, d + nowE, t, false, d + nowL, d + nowH, nowE0 + d, nowL0 + d)
         I.LiftExplained(r, nowLE, nowLL, nowLH, d + nowE, d + nowL, d + nowH)
+    elseif r > 0 and d > 0 and late and I.res.spends[r] == castSp then
+        -- the point fact's undo comes a drain or more after the row would have: a usable answer since only bounded the
+        -- refunded pool, so the slot after the cast's spend plus the share and its least regen since is a floor
+        -- (I.Refund's fE, fL)
+        local g = I.RegenLo(r, castT, t - castT)
+        I.Refund(r, d, t, false, nil, nil, castE + d + g, castL + d + g)
     elseif r > 0 and d > 0 then
         I.Refund(r, d, t) -- at the fold; the answers since the cast's spend already saw it
     end
@@ -1115,12 +1129,11 @@ I.On(Obs.Avoided, function(o, t)
     undo(o.a, o.b, o.c, o.t, t)
 end)
 
--- (L1832) The point fact's decision at t: risen, landed (a held avoid is another's); no rise by a read PT_LAG or more after the cast,
--- avoided (undone as a miss when no avoid of its own came: the kind only gates the refund and no reaction runs); a
--- fall, a secret read or a swap, silent. It runs at the slot's read, in poll 1, so an undo comes before the drain's
--- usable answers and bands (poll 2 on), as an avoid's row would; a no-rise read from 0 waits for the settle (`final`),
--- after poll 4's TargetGone (a killing builder's points go with the target), and so does any read inside the lag; at
--- the settle, no plain read past the lag is silent. Allocates nothing.
+-- (L1832) The point fact's decision at t: risen, landed (a held avoid is another's); no rise (see above), avoided (undone
+-- as a miss when no avoid of its own came: the kind only gates the refund and no reaction runs); a fall, a secret read
+-- or a swap, silent. It runs at the slot's read, in poll 1, so an undo comes before the drain's 1% bands and usable
+-- answers (polls 1.6 and 2), as an avoid row's would: after them, those answers read as already holding the refund
+-- (I.Refund) and it is lost. At the settle (`final`), no plain read past the lag is silent. Allocates nothing.
 local MISS = I.HitKind.MISS
 local function decide(t, final)
     if ptA == 0 or ptGo ~= 0 then
@@ -1140,20 +1153,24 @@ local function decide(t, final)
         end
         ptGo, hHeld = 1, false
         forget(ptA, ptT) -- proven landed: no CDM verdict refunds it
-    elseif ptVT - ptT >= PT_LAG and ptV == ptV0 and (final or ptV0 > 0) then
+    elseif ptV == ptV0 and ptVT - ptT >= PT_LAG - 1e-6 then
         local a, held = ptA, hHeld
         ptA, hHeld = 0, false
         if a == undoA and ptT == undoT then -- not already consumed (the CDM verdict's refund, I.VerdictRefund)
             undo(a, ptT, held and hC or MISS, held and hT or ptVT, t, true)
         end
-    elseif final and t - ptT >= PT_LAG then
+    elseif final and t - ptT >= PT_LAG - 1e-6 then
         pointSilent(t)
     end
 end
 -- The fact's read: the latest read of the slot at or after the cast; a secret one (the target-bound read's substituted
 -- 0, Sources/Power.lua I.readPlain) is none.
 I.On(Obs.Read, function(o, t)
-    if ptA ~= 0 and o.c == I.ReadOf.Resource and o.a == ptR and o.t >= ptT then
+    local r = o.a
+    if o.c == I.ReadOf.Resource and I.readPlain[r] and o.t > rdT1[r] then
+        rdV2[r], rdT2[r], rdV1[r], rdT1[r] = rdV1[r], rdT1[r], o.b, o.t
+    end
+    if ptA ~= 0 and o.c == I.ReadOf.Resource and r == ptR and o.t >= ptT then
         if I.readPlain[ptR] then
             ptV, ptVT = o.b, o.t
         else

@@ -532,14 +532,18 @@ undoes.
 
 **The point fact** (L1832). A cast whose `now` gains a resource the client answers plain in combat (the combo
 points: a builder's `gain(1, "combo_points")`, which a pack declares in `now` beside its `handler`'s) is settled by that
-resource's next plain reads, not by the rows' timing (`Families/Now.lua`): a read after the cast showing it risen (by
-any amount: a crit's extra point counts) proves the cast landed, and a read at least `PT_LAG` (0.1 s) after it showing
-no rise proves it avoided. The cast's own `Obs.Avoided` waits for the fact; the settle after each fold decides. Landed:
+resource's plain reads, not by the rows' timing (`Families/Now.lua`): against its last plain read at least `PT_LAG`
+(0.1 s) before the cast (a closer one may already show the cast's gain), a read after the cast showing it risen (by any
+amount: a crit's extra point counts) proves the cast landed, and one `PT_LAG` or more after it showing no rise proves
+it avoided. The cast's own `Obs.Avoided` waits for the fact, which is decided at the resource's read (poll 1), before
+the drain's bands and usable answers; a refund decided a drain late keeps the slot's state after the cast's spend plus
+the share as a floor (an answer since only bounded it). Landed:
 the held avoid was another's, nothing is undone or refunded, and each target record the `now` wrote re-opens at the
 fact's time with its expiry kept (the avoid's SPELL_MISSED already went to Hekili, whose missable hook drops a record
 applied at the cast's stamp). Avoided: the undo and refund run as an avoid's, with no reaction when no avoid row of its
-own came. Silent, so the rows' verdict stands: at the resource's maximum before the cast, a read that fell, a secret
-read (the target-bound read substitutes 0), a target swap or death, no plain read past the lag, or the next cast.
+own came. Silent, so the rows' verdict stands: at the resource's maximum before the cast, no read old enough, a read
+that fell, a secret read (the target-bound read substitutes 0), a target swap or death, no plain read past the lag, or
+the next cast.
 Finishers predict no gain in `now` and stay with the rows (a missed finisher keeps its points in wowsims: a later fact).
 
 **A GCD modifier.** `spec:RegisterGcdMod({ aura = <key>, pct = <n>, spells = { <ids> } | nil })` (aura audit C12;
