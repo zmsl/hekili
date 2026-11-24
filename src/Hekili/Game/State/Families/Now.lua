@@ -1031,8 +1031,8 @@ local function forget(a, castT)
     end
 end
 -- The latest cast's undo: ability a cast at castT, avoided with I.HitKind c (or I.UNLANDED) at its row's time rowT,
--- applied at t. Allocates nothing.
-local function undo(a, castT, c, rowT, t)
+-- applied at t. `late`: the point fact's, at the settle after the drain's reads (L1832). Allocates nothing.
+local function undo(a, castT, c, rowT, t, late)
     undoA = 0
     forget(a, castT) -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
     -- (L1810 F4b, L1770) a record this cast's `now` wrote whose Cooldown Manager item lit since the cast: it landed, so
@@ -1065,6 +1065,9 @@ local function undo(a, castT, c, rowT, t)
         journal = true
     end
     local r = A.slot[a]
+    if late and r > 0 and I.res.plainT[r] >= castT then
+        r = 0 -- a plain read of the slot since the cast, folded before this settle, already holds the refund
+    end
     local d = r > 0 and paid * A.refund[a] or 0
     -- the `now`'s take comes back unless a pin since the cast (a plain read, a crossing) already measured the pool;
     -- a usable answer since (the poll's rung, every drain) only bounds it from below: the floors (I.Refund's fE, fL)
@@ -1089,7 +1092,7 @@ pointSilent = function(t)
     if hHeld then
         hHeld = false
         if a == undoA and ptT == undoT then
-            undo(a, ptT, hC, hT, t)
+            undo(a, ptT, hC, hT, t, true)
         end
     end
 end
@@ -1159,7 +1162,7 @@ I.OnSettle(function(now)
             local a, held = ptA, hHeld
             ptA, hHeld = 0, false
             if a == undoA and ptT == undoT then -- not already consumed (the CDM verdict's refund, I.VerdictRefund)
-                undo(a, ptT, held and hC or MISS, held and hT or ptVT, now)
+                undo(a, ptT, held and hC or MISS, held and hT or ptVT, now, true)
             end
         else
             pointSilent(now)
