@@ -522,7 +522,11 @@ M.READY = {
     -- { 0.32, 2 } -> { 3.67, 1 } (the harness models a full client frame per event time (L1793)): both holy_strike rows now in:cost (37.90 0.32 -> 0.07, lo -5.6 -> -0.4;
     -- 98.81 0.71 -> 0.07, lo -12.1 -> -0.5) and the lo-truth gaps shrink (114.81 -99 -> -71); the one real row is
     -- seal_of_fury 142.31 (gcd class), never shown before, now shown 3.67 late
-    paladin_protection = { 3.67, 1 }, -- 3.670, 1
+    -- { 3.67, 1 } -> { 0.32, 2 } (L1793: one wowsims timestamp is one client frame): back to the pre-frame rows, 37.90
+    -- holy_strike late 0.32 (lo -5.55) and 98.81 late 0.71 (lo -12.1); seal_of_fury 142.31 never again. Sampled 37.90:
+    -- part 3's tree held the mana floor 10-13 over the truth from 35.5 to 37.1 (lo 12.96-18.93, truth 5.55), which let
+    -- 37.90 read in:cost; now lo stays under the truth (0 -> 14.85 at 37.9, truth 18.75), so holy_strike shows late
+    paladin_protection = { 0.32, 2 }, -- 0.320, 2
     -- { 0.29, 10 } -> { 0.10, 7 } re-pin e2842f0a78 (fresh floor, Task 17: the Unsealed Wrath APL and the opener move):
     -- holy_strike 5 (max 0.10), seal_of_command 1 (0.23), seal_of_righteousness 1 (0.17)
     -- { 0.10, 7 } -> { 0.07, 2 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log, the GCD-edge replay fix): real 2, cost
@@ -572,7 +576,10 @@ M.READY = {
     -- reopens the closed band, L1341; bisected as druid_feral's): eviscerate at 7.00 late 0.18 -> in:cost 0.06
     -- (lo-truth -1.77 -> -0.30); real 13 (all late), median 0.200
     -- { 0.33, 13 } -> { 0.33, 14 } (the harness models a full client frame per event time (L1793)): 78 rows moved (cost class), re-recorded; one real row more
-    rogue_assassination = { 0.33, 14 }, -- 0.33, 14; 0.20, 13 -> 0.33, 13 re-pin e4ef929e54 -> ab0f00e4fc: the new gear sets' random energy procs (Darkmantle 4-piece 27788 +20, Stormshroud 3-piece 23863 +30; unmodelled, owner L1396/L1397) are unseen energy gains, energy being secret; fixture re-recorded; 99 on-GCD, 98 timed, 13 real (all late, cost class), median 0.330; 0.28, 36 -> 0.20, 14 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) re-times the log, the pack is logically unchanged; 78 timed, 14 real (all late; cost class)
+    -- { 0.33, 14 } -> { 0.38, 13 } (L1793: one wowsims timestamp is one client frame): 40 rows moved, cost class, the
+    -- energy floor under the truth at the cost; e.g. 126.94 mutilate late 0.33 -> 0.38 (lo-truth -3.31 -> -3.78), 99.90
+    -- eviscerate 0.46 -> 0.33; real 13 (all late), median 0.380
+    rogue_assassination = { 0.38, 13 }, -- 0.33, 14; 0.20, 13 -> 0.33, 13 re-pin e4ef929e54 -> ab0f00e4fc: the new gear sets' random energy procs (Darkmantle 4-piece 27788 +20, Stormshroud 3-piece 23863 +30; unmodelled, owner L1396/L1397) are unseen energy gains, energy being secret; fixture re-recorded; 99 on-GCD, 98 timed, 13 real (all late, cost class), median 0.330; 0.28, 36 -> 0.20, 14 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) re-times the log, the pack is logically unchanged; 78 timed, 14 real (all late; cost class)
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)
     -- { 0.24, 20 } -> { 0.24, 21 } R42 (the replay answers fight_remains from the log): only rows that were
