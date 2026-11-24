@@ -161,9 +161,10 @@ local PACKS = {
         -- traced per tick): the one miss is the Serpent Sting refresh against Summon Hawk at 84.41 s: our sting comes due
         -- 0.07 s after the decision tick and outranks the hawk (0.01 s), wowsims's sting is still up for its hawk (the
         -- Turret rows' Serpent Sting class; the old list had no hawk at that refresh)
+        -- 0.98 -> 1.00 (1.000 of 55; re-pin ab0f00e4fc: the new log's hawk rotation has no sting miss)
         -- 1.00 -> 0.98 (0.982 of 55, L1793): gap DB: the engine exits the list at an ability ready in < 0.2 s (Arcane
         -- Shot 0.17 s at 173.07); the L1793 frame model folds Summon Hawk at 167.24 as wowsims's log does
-        0.98, -- 0.98 -> 1.00 (1.000 of 55; re-pin ab0f00e4fc: the new log's hawk rotation has no sting miss)
+        0.98,
         -- live L40 6 -> 11.0 (4.4 before: the old list cast neither shot at 40), the re-pin's L40 cause (above, traced): Summon Hawk 10 x 189 and
         -- Arcane Shot 5 x 189 are 2835 of 6006 mana; the streak (t 99.8-110.6) runs the pool 15.2 -> 159.7 waiting on
         -- Aimed Shot 160.

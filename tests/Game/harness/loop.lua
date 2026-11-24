@@ -940,6 +940,12 @@ function M.run(L, seed, o, drivers)
         end
     end
     local function step(tc) -- the world to `tc`, every instance fed and cycled
+        for _, st in ipairs(steps) do -- a viewer arm: the last poll's lagged lights land now, before this poll's events
+            -- (one poll late, I-B; the walk below feeds the @viewer ops it queues, L1793 I1)
+            if st.layout and st.H.ctl.viewer.pending[1] then
+                st.H.ctl.ViewerFlush()
+            end
+        end
         -- each world event time before the poll its own client frame (L1793): the world to it, then every instance's
         -- observer and feed, so an answer reads the world as of its time (a due one, usableDelay late, stops it too);
         -- a stop's frame waits in st.open, joined by the next stop or the poll within M.SAME_FRAME (one timestamp)
@@ -954,8 +960,8 @@ function M.run(L, seed, o, drivers)
             end
             T = math.max(T, W.t) -- an answer already due answers now: the world's clock never steps back
             W.run(T)
-            -- shortcut: a viewer arm's layout events still land at the poll (below, after the lagged lights); give them
-            -- their own time here if a viewer arm's numbers hinge on their order against these events
+            -- shortcut: a viewer arm's layout events still land at the poll (below); give them their own time here if a
+            -- viewer arm's numbers hinge on their order against these events
             for _, st in ipairs(steps) do
                 st.open = feed(st.H, st.obs, T, st.base, st.sink, true, st.open)
             end
@@ -973,10 +979,11 @@ function M.run(L, seed, o, drivers)
         end
         for i, st in ipairs(steps) do
             local lay = st.layout
-            if lay then -- a viewer arm (outside the sampled bytes): the last poll's lagged lights land now (one poll
-                -- late, I-B), then the layout's own events up to this poll
-                if st.H.ctl.viewer.pending[1] then
-                    st.H.ctl.ViewerFlush()
+            if lay then -- a viewer arm (outside the sampled bytes): the walk's last frame, if before this poll's
+                -- time, then the layout's own events up to this poll (the lagged lights landed at the step's top)
+                if st.open and st.open + M.SAME_FRAME < st.base + tc then
+                    headless.frame(st.H, st.open)
+                    st.open = nil
                 end
                 while lay[st.li] and lay[st.li][1] <= tc do
                     local e = lay[st.li]

@@ -67,3 +67,45 @@ describe("the loop's client frames (L1793)", function()
         assert.are.same({}, overs)
     end)
 end)
+
+-- L1793 review I1: the mixed viewer preset's lagging item (ctl.viewer.lag on even seeds, the seen rule's I-B) lands
+-- its light one poll late. The world walk feeds the @viewer op (3-5 ms after its aura) before the poll, so the poll's
+-- flush must run before the walk, as before the frame model, or the light lands in the poll that fed it.
+describe("the loop's lagged viewer lights (L1793 I1)", function()
+    it("viewer-mixed, Arms seed 2, 180 s: every lagged light is pending for exactly one poll's cycle", function()
+        local ab = require("Game.harness.ab")
+        local headless = require("Game.harness.headless")
+        local L = loop.new(require("Forever.helpers.warrior_world"))
+        local ctl, cycle, flush, check = L.us.ctl, headless.cycle, L.us.ctl.ViewerFlush, ab.check
+        local cycles, counts = {}, {} -- per pending light: the cycles that ran while it was pending; per flushed light
+        headless.cycle = function(H, t)
+            if H == L.us then
+                for _, e in ipairs(ctl.viewer.pending) do
+                    cycles[e] = (cycles[e] or 0) + 1
+                end
+            end
+            return cycle(H, t)
+        end
+        ctl.ViewerFlush = function()
+            for _, e in ipairs(ctl.viewer.pending) do
+                counts[#counts + 1] = cycles[e] or 0
+            end
+            return flush()
+        end
+        ab.check = function(ok, label, line) -- the lines a provider arm writes to .ab/<arm>.tsv
+            return check(ok, label, line, "default")
+        end
+        local ok, run = pcall(loop.run, L, 2, { duration = 180, arm = "viewer-mixed" }, { { H = L.us } })
+        headless.cycle, ctl.ViewerFlush, ab.check = cycle, flush, check
+        assert(ok, run)
+        assert.are.equal(1, ctl.viewer.lag)
+        assert.is_true(#counts > 0, "no lagged light flushed")
+        local off = {}
+        for _, n in ipairs(counts) do
+            if n ~= 1 then
+                off[n] = (off[n] or 0) + 1
+            end
+        end
+        assert.are.same({}, off, ("of %d lagged lights, by polls pending"):format(#counts))
+    end)
+end)
