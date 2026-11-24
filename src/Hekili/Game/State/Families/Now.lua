@@ -118,8 +118,8 @@ local vA, vT, vPaid, vAp, vSpends, vRaised = {}, {}, {}, {}, {}, {}
 -- bP the slot's pin time then), until a strike takes it back (I.VerdictTakeBack) or another refund on the record
 -- replaces it.
 local bR, bD, bE, bL, bH, bP = {}, {}, {}, {}, {}, {}
--- (L1832) The point fact of the latest cast: its `now` gained slot ptR, a slot the client answers plain in combat (its
--- reads keep it, Resources.lua R.readable: the combo points); ptV0 the slot before the cast: its last plain read at
+-- (L1832) The point fact of the latest cast: its `now` gained slot ptR, a counter the client answers plain in combat
+-- (its reads keep it, Resources.lua R.readable; no regen, swing pay or decay: the combo points); ptV0 the slot before the cast: its last plain read at
 -- least PT_LAG before it (a read closer may already show the cast's own gain: the power update can lead the success,
 -- the bands arms' spend-first), on this target; ptSwap the target serial. A plain read after the cast showing the slot
 -- above ptV0 proves the cast landed; one PT_LAG or more after it showing no rise proves it avoided (wowsims: a
@@ -388,7 +388,19 @@ local function shift(n, resource, spread)
     end
     -- the latest cast's own gain of a slot read plain in combat, below its max: a point fact to wait for (L1832)
     local R = I.res
-    if n > 0 and journal and curA == undoA and ptA == 0 and R.readable[r] and I.readPlain[r] then
+    -- a counter only (no regen, no swing pay, no decay: the points): a pool that moves by itself proves nothing by a
+    -- read, and in the plain oracle energy and rage read plain too
+    if
+        n > 0
+        and journal
+        and curA == undoA
+        and ptA == 0
+        and R.readable[r]
+        and I.readPlain[r]
+        and not R.restMax[r]
+        and R.swing[r] == 0
+        and R.decay[r] == 0
+    then
         local old = undoT - PT_LAG + 1e-6
         local v0 = rdT1[r] <= old and rdT1[r] >= I.curSwapT and rdV1[r]
             or rdT2[r] <= old and rdT2[r] >= I.curSwapT and rdV2[r]

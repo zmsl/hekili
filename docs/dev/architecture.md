@@ -530,9 +530,9 @@ by pushbacks) and at most 0.5 s after it; a broken channel, one whose times were
 channel's, whose start was secret) runs nothing. Both write `modelled` samples no avoid
 undoes.
 
-**The point fact** (L1832). A cast whose `now` gains a resource the client answers plain in combat (the combo
-points: a builder's `gain(1, "combo_points")`, which a pack declares in `now` beside its `handler`'s) is settled by that
-resource's plain reads, not by the rows' timing (`Families/Now.lua`): against its last plain read at least `PT_LAG`
+**The point fact** (L1832). A cast whose `now` gains a counter the client answers plain in combat (a resource with
+no regen, swing pay or decay: the combo points, a builder's `gain(1, "combo_points")`, which a pack declares in `now`
+beside its `handler`'s) is settled by that resource's plain reads, not by the rows' timing (`Families/Now.lua`): against its last plain read at least `PT_LAG`
 (0.1 s) before the cast (a closer one may already show the cast's gain), a read after the cast showing it risen (by any
 amount: a crit's extra point counts) proves the cast landed, and one `PT_LAG` or more after it showing no rise proves
 it avoided. The cast's own `Obs.Avoided` waits for the fact, which is decided at the resource's read (poll 1), before

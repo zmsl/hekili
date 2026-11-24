@@ -353,8 +353,10 @@ local function content(name)
         mobHealth = 15000,
     }
 
-    -- The client's other power reads: combo points plain (research addendum), energy never.
-    C.OBSERVE = { plainPower = { [POINTS] = "always" }, powerTokens = TOKENS }
+    -- The client's other power reads: combo points plain (research addendum), energy never. UnitPowerMax answers the
+    -- world's pools, plain [W PR16]: the points' 5 as live (2026-11-23 capture, SNAP resource COMBO_POINTS max=5), not
+    -- the fake's 100, so a builder at 5 points is at the cap (L1832: the point fact is silent there).
+    C.OBSERVE = { plainPower = { [POINTS] = "always" }, powerTokens = TOKENS, powerMax = true }
 
     -- No power is swing-paid.
     function C.gain()
