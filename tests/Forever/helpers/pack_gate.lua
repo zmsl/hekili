@@ -171,7 +171,9 @@ M.FLICKER = {
     -- 737. readyShort's 6 -> 8 (seed 8, a fight re-timed by a corrected Sunder refund at 43.463, then a PROV swing
     -- still forecast as pending) is left at 6 for the controller's ruling (lane report)
     -- lane finisher-miss-fix (controller ruling): readyShort 6 -> 8, cause "re-timed fight hits T.SwingPending counting
-    -- a swing that already holds its own avoid (swing-avoid-fix; fixed in item 5)"
+    -- a swing that already holds its own avoid (swing-avoid-fix; fixed in item 5)". The flicker floor 0.19 has no
+    -- headroom: seeds 21-40 read 0.19 since swing-avoid-fix (base 0.15), jitter in re-timed fights, not a fact (the
+    -- oracle's own flicker on that set 0.37 -> 0.45; swing-avoid-fix review, check 4 and Minor 8)
     ["Fury L60"] = { loOver = 737, flicker = 0.19, flickerK = 0.6, retracted = 0.04, readyShort = 8, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
@@ -264,7 +266,9 @@ M.FLICKER = {
     -- justified"
     -- lane swing-avoid-fix (L1793; seeds 1-20 / 21-40 / 41-60 on fd349c7c4: loOver 286 / 127 / 251, flicker 0.09 / 0.09
     -- / 0.09, heldReady 809 / 802 / 863; base 337 / 177 / 251): loOver 337 -> 286. Cause: a swing paid before Execute
-    -- (a `now` that empties the pool) credits nothing after it, and the swing-avoid pairing above
+    -- (a `now` that empties the pool) credits nothing after it, and the swing-avoid pairing above. Untraced, under the
+    -- floor: heldReady 797 -> 809 on seeds 1-20 (base 797 / 802 / 863), the only measured signal for a landed swing's
+    -- rage the emptying mark could drop (swing-avoid-fix review, Minor 8)
     ["Fury L24"] = { loOver = 286, flicker = 0.1, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
