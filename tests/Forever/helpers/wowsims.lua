@@ -503,6 +503,8 @@ M.READY = {
     -- the regen band's lo under est after the five-second rule; traced at 131.80: the Sudden Insight deficit of 84.01
     -- was gone by 120.7)
     -- { 0.39, 2 } -> { 0.36, 4 } (the harness models a full client frame per event time (L1793)): 16 rows moved, re-recorded
+    -- Cause (traced, arms-trace-2 item 3): frame model truer: exact pin at the 104.6 Scorch flip; the regen fit measures
+    -- 28.0 against truth 28.6, where base's 32.2 included an uncredited Master of Elements refund (L1412/U7)
     mage_frostfire = { 0.36, 4 }, -- 0.360, 4
     -- { 0.23, 3 } -> { 0.29, 3 }: frostbolt 132.00 / 157.30 late 0.29 (cost class, lo 8.3 / 8.1 under the truth),
     -- 179.20 0.16 (slack)
@@ -512,6 +514,8 @@ M.READY = {
     -- { 0.24, 5 } -> { 0.00, 0 } re-pin e5a9cd2a2d -> e4ef929e54 (the new log, the GCD-edge replay fix): real 0; the
     -- one late row left, judgement 154.44 (0.20 s, cost), is off the GCD
     -- { 0.00, 0 } -> { 0.27, 1 } (the harness models a full client frame per event time (L1793)): 14 rows moved, one on-GCD row late 0.27
+    -- Cause (traced, arms-trace-2 item 4): frame model truer: exact pin at 82.9; rate 7.556 against truth 7.55, where
+    -- base's seed band sat 0.7 under truth
     paladin_holy_shock = { 0.27, 1 }, -- was { 0.24, 5 } (new pack 2026-11-12, R6 first measurement: cost and slack classes)
     -- { 0.86, 7 } -> { 0.00, 0 } re-pin e2842f0a78: real 0 once Holy Shield's block hits are procs (PROT_REPLAY)
     -- { 0.00, 0 } -> { 0.43, 1 } pin move 2 on CN8 (rank 4 log, PROT_REPLAY's rank-4 procs, steady icons): one row, holy_strike
@@ -579,6 +583,9 @@ M.READY = {
     -- { 0.33, 14 } -> { 0.38, 13 } (L1793: one wowsims timestamp is one client frame): 40 rows moved, cost class, the
     -- energy floor under the truth at the cost; e.g. 126.94 mutilate late 0.33 -> 0.38 (lo-truth -3.31 -> -3.78), 99.90
     -- eviscerate 0.46 -> 0.33; real 13 (all late), median 0.380
+    -- PENDING (arms-trace-2 item 5, 68.90 mutilate in:cost -> late 0.76): belief defects at a same-instant cost crossing
+    -- (pin lowers a floor the same instant proved; I.Refund trusts a short answer made before the refund), lane owed
+    -- (ledger L1828)
     rogue_assassination = { 0.38, 13 }, -- 0.33, 14; 0.20, 13 -> 0.33, 13 re-pin e4ef929e54 -> ab0f00e4fc: the new gear sets' random energy procs (Darkmantle 4-piece 27788 +20, Stormshroud 3-piece 23863 +30; unmodelled, owner L1396/L1397) are unseen energy gains, energy being secret; fixture re-recorded; 99 on-GCD, 98 timed, 13 real (all late, cost class), median 0.330; 0.28, 36 -> 0.20, 14 re-pin e5a9cd2a2d -> e4ef929e54: the gear change (four slots, Darkmantle out) re-times the log, the pack is logically unchanged; 78 timed, 14 real (all late; cost class)
     -- { 0.20, 18 } -> { 0.24, 20 } re-pin e2842f0a78: cost class; 6 of the 7 large rows follow a 27788 energize (6 in
     -- the new log, 2 in the old: 21.18, 56.26, 64.69, 65.49, 69.00, 83.96), the rest the floor's lag (gap BQ/CE)
@@ -704,6 +711,8 @@ M.READY = {
     -- Overpower 139.36, Execute 161.30, and the Whirlwind 101.30 gcd row); the one new late row, Whirlwind 101.30 (0.68 s
     -- late), is an honest floor on the tip (rung lo = est = 25.000 vs truth 29.898 after the 100.334 main-hand credit is
     -- fully netted against the 100.00 rung); the base side was not traced (base tree removed after the bite test)
+    -- floor unchanged under L1793 (arms-trace-2 item 6): the 84.98 heroic_strike queue row in:grain -> late 0.49; swing
+    -- scale: base calibrated 1.30 on a window holding proc rage; hf stays 1.00
     warrior_fury = { 0.64, 10 },
     -- { 0.38, 11 } -> { 0.37, 3 } re-pin e2842f0a78 (lane 14, R6; after 5049ede22's GCD fix): 98 decisions, 3 real, all
     -- early, class aura: Shield Slam 49.84 (0.24), Sunder Armor 71.77 / 143.44 (0.37 / 0.44): wowsims queues Shield Block
