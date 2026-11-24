@@ -1010,6 +1010,13 @@ I.On(Obs.Avoided, function(o, t)
     end
     undoA = 0
     forget(o.a, o.b) -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
+    -- (L1810 F4b) a record this cast's `now` wrote whose Cooldown Manager item lit since the cast: it landed, so the
+    -- avoid is another's in its frame (the owner's tie ruling gave it the cast): no undo, no refund
+    for k = 1, I.curSwapN == undoSwap and undoN or 0 do
+        if I.AuraLitSince(undoJ[k], o.b) then
+            return
+        end
+    end
     for k = 1, I.curSwapN == undoSwap and undoN or 0 do -- another target since the cast: its auras are not these
         local j = undoJ[k]
         local rec = VS.Aura("target", auraSpell[j], t)

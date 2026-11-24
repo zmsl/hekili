@@ -71,7 +71,20 @@ for _, b in ipairs({ "rip", "rake" }) do
             it(
                 ("3 %s %s, its row in a white swing's row frame, plain amounts, no viewer (window 0)"):format(name, act),
                 function()
-                    expectPass({ bleed = b, act = act, row = 0.004, swingAt = TIE, plain = true })
+                    local c = { bleed = b, act = act, row = 0.004, swingAt = TIE, plain = true }
+                    if b == "rip" then
+                        return expectPass(c)
+                    end
+                    -- Rake has a direct hit: the swing's plain wound in Rake's own frame is its landing by timing alone
+                    -- (the amount class would decide it; plain amounts are the beta arm). PINNED: Rake believed up
+                    -- (ledger, lane finisher-miss-fix)
+                    local W, T, fails = run(c)
+                    local msg = table.concat(fails, "\n") .. "\n" .. fw.timeline(W, T)
+                    local up = false
+                    for _, f in ipairs(fails) do
+                        up = up or f:find("the belief holds rake up", 1, true) ~= nil
+                    end
+                    assert(up, msg)
                 end
             )
             it(
@@ -140,8 +153,11 @@ describe("Forever Feral: a landed Rip and a white swing's avoid in its window (l
         { "the core band: the swing's MISS in Rip's frame", TIE, "MISS", 0.474 },
         { "the swing's own ms: its MISS with PLAYER_SWING 11 ms after Rip", 0.011, "MISS", 0 },
     }
-    for _, s in ipairs(SHAPES) do
-        for _, arm in ipairs({ { "secret amounts", {} }, { "plain amounts", { plain = true } } }) do
+    for si, s in ipairs(SHAPES) do
+        -- the swing's own ms, secret: pinned below (the owner's same-frame tie ruling)
+        local arms = si == #SHAPES and { { "plain amounts", { plain = true } } }
+            or { { "secret amounts", {} }, { "plain amounts", { plain = true } } }
+        for _, arm in ipairs(arms) do
             it(("%s, %s: Rip stays up, no refund, Bite at 5 points"):format(s[1], arm[1]), function()
                 local c = {
                     act = "WOUND",
@@ -157,6 +173,54 @@ describe("Forever Feral: a landed Rip and a white swing's avoid in its window (l
             end)
         end
     end
+    -- F5 (owner ruling 2026-10-24: a same-frame avoid the swing refuses is the spell's): with no Cooldown Manager fact, a
+    -- landed Rip is refunded and believed down when our swing misses in its own ms. PINNED as today's window: the belief
+    -- holds Rip down and the energy over the truth (ledger, lane finisher-miss-fix).
+    local OWN_MS = { act = "WOUND", swingAt = 0.011, odd = { act = "MISS", lag = 0 }, pointsAt = { 1.5, 5 } }
+    it(
+        "the swing's own ms, secret amounts, no viewer: PINNED, Rip believed down and refunded (the tie ruling)",
+        function()
+            local W, T, fails = run(OWN_MS)
+            local msg = table.concat(fails, "\n") .. "\n" .. fw.timeline(W, T)
+            assert(#fails > 0 and fails[1]:find("the belief holds rip down", 1, true), msg)
+        end
+    )
+    -- F4b: the light (Rip's item lit since the cast) is the fact that Rip landed: the belief keeps Rip up and gives no
+    -- refund. PINNED display limit: Hekili's missable hook (Engine/Schema/Spec/Abilities.lua trackMisses) still drops the
+    -- cast's application at its SPELL_MISSED row, so slot 1 shows Rip at 5 points (ledger, lane finisher-miss-fix)
+    local function beliefOnly(base)
+        local c = { viewer = "proven", expect = { { 1.5, "ferocious_bite" } } }
+        for k, v in pairs(base) do
+            c[k] = v
+        end
+        local W, T, fails = run(c)
+        local msg = table.concat(fails, "\n") .. "\n" .. fw.timeline(W, T)
+        assert(#fails > 0, msg)
+        for _, f in ipairs(fails) do
+            assert(f:find("slot 1 shows rip", 1, true), msg)
+        end
+    end
+    it(
+        "the swing's own ms, secret amounts, viewer proven: the light keeps Rip up, no refund (slot 1 PINNED)",
+        function()
+            beliefOnly(OWN_MS)
+        end
+    )
+    -- the F1 residual: a bleed's tick (a secret white wound) in the swing's core band 1 ms before the swing's own MISS in
+    -- Rip's frame reads as the swing's landing, so the MISS goes to Rip. PINNED with no viewer; the light takes it back.
+    local TICK =
+        { act = "WOUND", swingAt = TIE, odd = { act = "MISS", lag = 0.474 }, tickAt = 0.002, pointsAt = { 1.5, 5 } }
+    it("the core band with a tick 1 ms before the swing's MISS, secret, no viewer: PINNED, Rip refunded", function()
+        local W, T, fails = run(TICK)
+        local msg = table.concat(fails, "\n") .. "\n" .. fw.timeline(W, T)
+        assert(#fails > 0 and fails[1]:find("the belief holds rip down", 1, true), msg)
+    end)
+    it(
+        "the core band with a tick 1 ms before the swing's MISS, secret, viewer proven: Rip stays up (slot 1 PINNED)",
+        function()
+            beliefOnly(TICK)
+        end
+    )
     it("seed 2's shape, plain amounts, viewer proven (the light is the fact that Rip landed): Rip stays up", function()
         expectPass({
             act = "WOUND",

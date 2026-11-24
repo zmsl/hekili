@@ -310,7 +310,8 @@ function M.prelude(W, o)
 end
 
 --- One case: the world (`c.viewer`, `c.cdmOff`, `c.plain`), the prelude (`c.bleed`, `c.swingAt`, `c.odd`), then our
---- cast of c.bleed at T with `c.act` and its row at `c.row` (nil: none), run to T + `c.span` (3.5). Returns W, T.
+--- cast of c.bleed at T with `c.act` and its row at `c.row` (nil: none), a tick at `c.tickAt` (nil: none), run to
+--- T + `c.span` (3.5). Returns W, T.
 function M.case(c)
     local W = M.world(c)
     local T = M.prelude(W, c)
@@ -318,6 +319,11 @@ function M.case(c)
     local b = c.bleed or "rip"
     W.bleed = b
     M.cast(W, T, b, { act = c.act, row = c.row })
+    if c.tickAt then -- a bleed's tick (a background white wound) at T + c.tickAt
+        M.at(W, T + c.tickAt, "tick", function(W2)
+            row(W2, "WOUND", 30)
+        end, true)
+    end
     if c.pointsAt then -- builders not modelled: the plain points come back
         M.at(W, T + c.pointsAt[1], "points", function(W2)
             points(W2, c.pointsAt[2])
