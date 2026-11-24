@@ -246,6 +246,40 @@ describe("ttd-chain-pull: the next mob does not take the last one's kill time (l
         assert.are.same({ UNKNOWN, UNKNOWN }, { w.read() })
     end)
 
+    -- LibTimeToDie minor 5's lives through the core: switched away, the target's estimate stays on its plate (fed at 5%);
+    -- switched back while that plate is shown, fight_remains and time_to_die answer at once, not after 1.5 s of loss.
+    it("back to a mob whose plate kept its estimate: known at the first read; a new mob still unknown", function()
+        local w = boot()
+        local ctl, bands = w.H.ctl, w.rig.lhv
+        local function plate(tok, guid, pct)
+            ctl.guid[tok] = guid
+            bands:Prime(tok, ctl.now)
+            bands:Push("health", tok, nil, 12 * pct, 1200, ctl.now)
+            w.H.Fire("NAME_PLATE_UNIT_ADDED", tok)
+        end
+        plate("nameplate1", "Creature-1", 100)
+        plate("nameplate2", "Creature-2", 100)
+        w.target("Creature-1", 100)
+        w.combat(true)
+        local seen = {}
+        w.fight(100, 100 / 120, 12, function(_, r)
+            seen[1] = r
+        end)
+        assert.is_true(seen[1] < UNKNOWN)
+        local left = 100 - 100 / 120 * 12
+        bands:Push("health", "nameplate1", nil, 12 * left, 1200, ctl.now)
+        w.target("Creature-2", 100) -- a new mob: no estimate yet
+        assert.are.same({ UNKNOWN, UNKNOWN }, { w.read() })
+        for _ = 1, 20 do
+            w.step()
+        end
+        w.target("Creature-1", left) -- back: its plate held the estimate
+        w.step()
+        local remains, ttd = w.read()
+        assert.is_true(remains < UNKNOWN and ttd < UNKNOWN, ("%s %s"):format(remains, ttd))
+        assert.is_true(ttd > 60 and ttd < 200, tostring(ttd)) -- about 106 s left at its own pace
+    end)
+
     it("no unit answered nil, not false: forgotten all the same", function()
         local w = boot(true)
         killFirst(w, 6)
