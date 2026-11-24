@@ -208,6 +208,13 @@ local function guarded(s)
     return false
 end
 
+--- (def-2 review, CPU) Whether condition `s` needs the player's health read: `health.known` guards all of it (the
+--- sense above), so its line cannot pass while the health is unread (Scripts.lua's NeedsHealth, read by Core.lua's
+--- display skip). Load only.
+function ns.HealthGuarded(s)
+    return type(s) == "string" and guarded((s:gsub("%s", "")))
+end
+
 function ns.HealthUnguarded(s)
     if type(s) ~= "string" then
         return false

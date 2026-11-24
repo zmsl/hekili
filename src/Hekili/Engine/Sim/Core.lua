@@ -1915,6 +1915,14 @@ local displayFilter = { Interrupts = "interrupts", Defensives = "defensives", Co
 -- run time) counts for Cooldowns, where those picks go by default, and for any toggle a player gave an item. A display
 -- with none is not walked (Defensives and Interrupts are separate by default: each walk is a reset and a forecast).
 -- Read every update, no cache: an options edit or a new priority counts at once. No allocation.
+-- (def-2 review, CPU) A line `health.known` guards whole (Scripts.lua's NeedsHealth, the guard detector's sense) does
+-- not count while the health is unread (its own term, state.health.known): no reading, no Defensives walk.
+local function canPass( list, i )
+    local ids = scripts.IDs[ list ]
+    local script = ids and scripts.DB[ ids[ i ] ]
+    return not ( script and script.NeedsHealth ) or state.health.known
+end
+
 local function packHasLine( dispName, pack, spec, settings )
     local filter = displayFilter[ dispName ]
     if not filter then return true end
@@ -1934,7 +1942,7 @@ local function packHasLine( dispName, pack, spec, settings )
                 if not toggle or toggle == "default" then toggle = ability.toggle end
                 local tt = ( toggle == "potion" or toggle == "minor_cooldowns" ) and settings.toggles[ toggle ]
                 if tt and tt.separate and not tt.value then toggle = "cooldowns" end
-                if toggle == filter or ability[ filter ] then return true end
+                if ( toggle == filter or ability[ filter ] ) and canPass( list, i ) then return true end
             end
         end
     end

@@ -2470,6 +2470,7 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
         end
     end
     script.Bands = nb > 0 and bands or nil
+    script.NeedsHealth = ns.HealthGuarded( data.criteria ) -- no pass while the health is unread (Core.lua's skip)
 
     script.action = data.action
     local lua = script.Lua

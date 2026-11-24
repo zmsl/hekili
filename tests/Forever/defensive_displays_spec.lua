@@ -199,10 +199,53 @@ describe("a separate display with no line in the active priority", function()
         return walked
     end
 
-    it("is skipped: Interrupts (no kick in the Combat priority), while Defensives and Primary are walked", function()
+    it("is skipped: Interrupts (no kick in the Combat priority), while Primary is walked", function()
         local w = cycles(5)
         assert.is_nil(w.Interrupts)
-        assert.is_true((w.Defensives or 0) > 0 and (w.Primary or 0) > 0)
+        assert.is_true((w.Primary or 0) > 0)
+    end)
+
+    -- def-2 review CPU item: every Defensives line of the Combat priority reads `health.known&...` (the guard
+    -- detector's sense), so none can pass while the health is unread: the display is not walked until a reading
+    describe("whose every line needs a health reading", function()
+        local fake_lhv = require("Game.harness.fake_lhv")
+
+        local function custom(entries)
+            local spec = H.Hekili.State.spec.id
+            H.Hekili.DB.profile.packs["My Evasion"] = { spec = spec, builtIn = false, lists = { default = entries } }
+            H.Hekili.DB.profile.specs[spec].package = "My Evasion"
+            H.Hekili.Scripts:LoadScripts()
+            return H.Hekili.DB.profile.specs[spec]
+        end
+
+        it("is skipped while the health is unread, walked once it is read", function()
+            assert.is_nil(cycles(5).Defensives)
+            local lhv = fake_lhv.new({
+                now = function()
+                    return H.ctl.now
+                end,
+            })
+            local major, minor = lhv:GetVersion()
+            local stub = rawget(H.env, "LibStub")
+            stub.libs[major], stub.minors[major] = lhv, minor
+            H.Hekili.bandOff = false
+            H.Hekili:ProvidersChanged()
+            H.ctl.health, H.ctl.healthMax = 1000, 1000
+            lhv:Push("health", "player", nil, 1000, 1000, H.ctl.now)
+            cycles(12)
+            assert.is_true((cycles(5).Defensives or 0) > 0)
+            lhv:SetAvailable("unavailable", "error", "health") -- the reading lost: skipped again
+            cycles(1)
+            assert.is_nil(cycles(5).Defensives)
+        end)
+
+        it("is walked for a custom line that does not need it", function()
+            custom({
+                { enabled = true, action = "evasion", criteria = "buff.evasion.down" },
+                { enabled = true, action = "sinister_strike" },
+            })
+            assert.is_true((cycles(5).Defensives or 0) > 0)
+        end)
     end)
 
     it("is walked once a player moves an ability of the priority onto its toggle", function()
