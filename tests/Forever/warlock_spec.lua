@@ -305,10 +305,8 @@ describe("Forever Warlock", function()
         })
         assert.are.equal(340, ld.run(A.corruption.spend, e)) -- outside the mask
         e = env({ master_summoner = 2 })
-        assert.are.same(
-            { 0.48, 0.6 },
-            { near(ld.run(A.summon_imp.spend, e)), near(ld.run(A.summon_succubus.spend, e)) }
-        )
+        -- the fraction as declared: Master Summoner's cut is a cost modifier on the rounded whole (percent_cost_order_spec)
+        assert.are.same({ 0.8, 1 }, { near(ld.run(A.summon_imp.spend, e)), near(ld.run(A.summon_succubus.spend, e)) })
     end)
 
     it("keeps one Curse and one Bane on the target, Amplify Curse spent by Agony and Weakness", function()
@@ -548,16 +546,16 @@ describe("Forever Warlock", function()
         local A = w.abilities
         local e = env({ master_summoner = 2 })
         e.buff = buffs({ fel_domination = 1 })
-        assert.are.same({ 0.5, 0.1 }, {
+        assert.are.same({ 0.5, 1 }, { -- the cost cuts are cost modifiers (percent_cost_order_spec)
             near(ld.run(A.summon_imp.cast, e)),
             near(ld.run(A.summon_succubus.spend, e)),
         })
         e = env({})
         e.buff = buffs({ fel_domination = 1 })
-        assert.are.same({ 4.5, 0.4 }, {
+        assert.are.same({ 4.5, 0.8 }, {
             near(ld.run(A.summon_imp.cast, e)),
             near(ld.run(A.summon_imp.spend, e)),
-        }) -- 10 - 5.5 s; 0.8 x (1 - 0.5)
+        }) -- 10 - 5.5 s; the 0.8 as declared
         e = env({})
         e.summonPet, e.dismissPet = function() end, function() end
         ld.run(A.summon_imp.handler, e)
