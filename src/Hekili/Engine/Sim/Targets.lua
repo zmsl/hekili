@@ -1219,6 +1219,17 @@ do
     local TTD_RETRY = 1 -- seconds: between refused Tracks (each allocates)
     local ttdLib, ttdTrack -- the library once found; the target's handle
     local ttdRetryAt = 0 -- no Track before this
+    -- The last lives (the library's plain whole-number ids) that gave a non-seed answer, written in place: the library
+    -- keeps at most four past targets' lives on their plates, plus the target's.
+    local REAL_LIVES = 5
+    local realLives, realNext = { 0, 0, 0, 0, 0 }, 1
+
+    local function hadReal( id )
+        for i = 1, REAL_LIVES do
+            if realLives[ i ] == id then return true end
+        end
+        return false
+    end
 
     local function ttdRelease()
         if ttdTrack then
@@ -1322,11 +1333,21 @@ do
             end
             if hintsDirty then sendHints() end
         end
-        local est, _, _, s, why = ttdTrack:Get()
-        -- shortcut: a seed answer reads unknown (owner L1742). LibTimeToDie minor 4 seeds only after 1.5 s of loss, but a
-        -- burst then a far slower fall still seeds at about half the true time; vendor-libs kept the rule on its fight
-        -- runs (removing it raised the swap set's flicker, L1736). Drop it when a library minor or a re-run shows no cost.
-        return s == "live" and why ~= "seed" and est or nil
+        local est, _, _, s, why, id = ttdTrack:Get()
+        if s ~= "live" then return nil end
+        -- shortcut: a seed answer reads unknown (owner L1742) until its life has given a non-seed answer. LibTimeToDie
+        -- minor 4 seeds only after 1.5 s of loss, but a burst then a far slower fall still seeds at about half the true
+        -- time; vendor-libs kept the rule on its fight runs (removing it raised the swap set's flicker, L1736). A life
+        -- resumed on a switch back can step from a fit to a seed and back: it keeps showing (vendor-libs-next I1, no
+        -- known, unknown, known). Drop the rule when a library minor or a re-run shows no cost.
+        if why ~= "seed" then
+            if id and not hadReal( id ) then
+                realLives[ realNext ] = id
+                realNext = realNext % REAL_LIVES + 1
+            end
+            return est
+        end
+        return id and hadReal( id ) and est or nil
     end
 
     -- targetTTD's answer when the target is plainly attackable, else nil. The library first, so with none (or

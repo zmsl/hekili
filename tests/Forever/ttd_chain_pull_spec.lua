@@ -248,37 +248,109 @@ describe("ttd-chain-pull: the next mob does not take the last one's kill time (l
 
     -- LibTimeToDie minor 5's lives through the core: switched away, the target's estimate stays on its plate (fed at 5%);
     -- switched back while that plate is shown, fight_remains and time_to_die answer at once, not after 1.5 s of loss.
-    it("back to a mob whose plate kept its estimate: known at the first read; a new mob still unknown", function()
-        local w = boot()
-        local ctl, bands = w.H.ctl, w.rig.lhv
-        local function plate(tok, guid, pct)
-            ctl.guid[tok] = guid
-            bands:Prime(tok, ctl.now)
-            bands:Push("health", tok, nil, 12 * pct, 1200, ctl.now)
-            w.H.Fire("NAME_PLATE_UNIT_ADDED", tok)
-        end
-        plate("nameplate1", "Creature-1", 100)
-        plate("nameplate2", "Creature-2", 100)
-        w.target("Creature-1", 100)
-        w.combat(true)
-        local seen = {}
-        w.fight(100, 100 / 120, 12, function(_, r)
-            seen[1] = r
+    -- Every read for 6 s after a 5 s swap (the review's I1 cases) lies within [pace - 5.5, 1.1 x pace], pace the boss's
+    -- true time left. Low end: the boss lost nothing while away, and the life holds its estimate, counting it down, until
+    -- the next band, so the first reads are short by the time away (measured: 102 at pace 107, 13 at 18); 0.5 s more
+    -- for the fall since the last band. High end: LibTimeToDie's WIDEN (1.1), a plate-fed life's range, both ends
+    -- (measured: 1.001 x pace at most). A resume at 1.8x pace, or an unknown, fails.
+    for _, at in ipairs({ 90, 15 }) do
+        it(("back to a mob at %d%% whose plate kept its estimate: near pace from the first read"):format(at), function()
+            local w = boot()
+            local ctl, bands = w.H.ctl, w.rig.lhv
+            local function plate(tok, guid, pct)
+                ctl.guid[tok] = guid
+                bands:Prime(tok, ctl.now)
+                bands:Push("health", tok, nil, 12 * pct, 1200, ctl.now)
+                w.H.Fire("NAME_PLATE_UNIT_ADDED", tok)
+            end
+            plate("nameplate1", "Creature-1", 100)
+            plate("nameplate2", "Creature-2", 100)
+            w.target("Creature-1", 100)
+            w.combat(true)
+            local rate, away = 100 / 120, 5
+            local ticks = math.floor((100 - at) / rate / TICK + 0.5)
+            local remains = w.fight(100, rate, ticks * TICK)
+            assert.is_true(remains < UNKNOWN)
+            local left = 100 - rate * ticks * TICK
+            bands:Push("health", "nameplate1", nil, 12 * left, 1200, ctl.now)
+            w.target("Creature-2", 100) -- a new mob: no estimate yet
+            assert.are.same({ UNKNOWN, UNKNOWN }, { w.read() })
+            w.wait(away)
+            w.target("Creature-1", left) -- back: its plate held the estimate
+            local off = {}
+            w.fight(left, rate, 6, function(t, r, ttd)
+                local pace = (left - rate * t) / rate
+                if r ~= ttd or ttd < pace - away - 0.5 or ttd > 1.1 * pace then
+                    off[#off + 1] = ("%.1f s: %.1f/%.1f, pace %.1f"):format(t, r, ttd, pace)
+                end
+            end)
+            assert.are.same({}, off)
         end)
-        assert.is_true(seen[1] < UNKNOWN)
-        local left = 100 - 100 / 120 * 12
-        bands:Push("health", "nameplate1", nil, 12 * left, 1200, ctl.now)
-        w.target("Creature-2", 100) -- a new mob: no estimate yet
-        assert.are.same({ UNKNOWN, UNKNOWN }, { w.read() })
-        for _ = 1, 20 do
-            w.step()
-        end
-        w.target("Creature-1", left) -- back: its plate held the estimate
-        w.step()
-        local remains, ttd = w.read()
-        assert.is_true(remains < UNKNOWN and ttd < UNKNOWN, ("%s %s"):format(remains, ttd))
-        assert.is_true(ttd > 60 and ttd < 200, tostring(ttd)) -- about 106 s left at its own pace
-    end)
+    end
+
+    -- vendor-libs-next review I1: a resumed life can answer stalled, prior or fit, then seed, then fit; the seed rule
+    -- blanked the seed part, so the reading went known, 3600, known (a 120 s boss at 15%: 16, then 3600 for 1.2 s,
+    -- then 12). A life that has given a non-seed answer keeps showing the library's answer through a seed; a mob never
+    -- estimated before still reads 3600 on its seed. The add here (a 28% hit, then 0.5% a second: the seed shape of
+    -- ttd-first-guess's residue) is that fresh mob, and its fit comes before the switch back on the 10 s cases.
+    -- Plates fed every tick, a read every tick; { boss length, seconds away, health at the switch back }.
+    for _, case in ipairs({ { 120, 5, 15 }, { 180, 6, 40 }, { 600, 10, 20 } }) do
+        local len, away, at = case[1], case[2], case[3]
+        it(
+            ("back to a %d s boss at %d%% after %d s on a fresh add: known at every read"):format(len, at, away),
+            function()
+                local w = boot()
+                local ctl, bands = w.H.ctl, w.rig.lhv
+                for i = 1, 2 do
+                    local tok = "nameplate" .. i
+                    ctl.guid[tok] = "Creature-" .. i
+                    bands:Prime(tok, ctl.now)
+                    bands:Push("health", tok, nil, 1200, 1200, ctl.now)
+                    w.H.Fire("NAME_PLATE_UNIT_ADDED", tok)
+                end
+                local rate, hp = 100 / len, 100
+                w.target("Creature-1", 100)
+                w.combat(true)
+                local function boss()
+                    w.step()
+                    hp = hp - rate * TICK
+                    w.health(hp)
+                    bands:Push("health", "nameplate1", nil, 12 * hp, 1200, ctl.now)
+                    return w.read()
+                end
+                for _ = 1, math.floor((100 - at) / rate / TICK + 0.5) do
+                    boss()
+                end
+                w.target("Creature-2", 100)
+                local seeds, shown = 0, {}
+                for i = 1, math.floor(away / TICK + 0.5) do
+                    w.step()
+                    w.health(i == 1 and 72 or 72 - 0.5 * (i - 1) * TICK)
+                    local r, t = w.read()
+                    if w.H.Hekili:GetTTDInfo():match("^time to die: live seed ") then
+                        seeds = seeds + 1
+                        if r < UNKNOWN or t < UNKNOWN then
+                            shown[#shown + 1] = ("%.1f s: %.1f/%.1f"):format(i * TICK, r, t)
+                        end
+                    end
+                end
+                assert.is_true(seeds > 0)
+                assert.are.same({}, shown)
+                w.target("Creature-1", hp)
+                local unknown = {}
+                for i = 1, 200 do
+                    local r, t = boss()
+                    if r >= UNKNOWN or t >= UNKNOWN then
+                        unknown[#unknown + 1] = ("%.1f s: %s"):format(
+                            i * TICK,
+                            w.H.Hekili:GetTTDInfo():match("^time to die: %S+ %S+")
+                        )
+                    end
+                end
+                assert.are.same({}, unknown)
+            end
+        )
+    end
 
     it("no unit answered nil, not false: forgotten all the same", function()
         local w = boot(true)

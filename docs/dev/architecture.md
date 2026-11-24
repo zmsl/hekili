@@ -390,11 +390,15 @@ Minor 4 answers a new stream (a pull, a swap, a re-target) only once its loss sp
 fit: a big first hit is no rate (live, minor 2 read 3.63 s at 72%, then 52 s). The core still reads a live answer whose
 reason is `seed` as unknown (owner L1742; shortcut): a burst then a far slower fall seeds at about half the true time
 for 2 s (the fit after it reads 0.74), and with the rule removed the Fury swap set's flicker rose 0.35 -> 0.40/min
-(vendor-libs fight runs, L1736). The rule would also blank a seed after a fit (Fable I1, L1756); minor 4 gave none in
-the probes, and the unknown of about a second after a sudden speed-up is the library's own (its README: up to 1.5 s on
-fast trash). Pinned through the core in the same spec.
+(vendor-libs fight runs, L1736). The rule blanks a seed only while its life (the id `Get` returns) has given no non-seed
+answer: the core remembers the last five such lives in place (the library keeps four past targets' lives, plus the
+target's). A mob targeted again can step from a fit or a prior to a seed and back (minor 5); it keeps showing, where
+the blank read known, unknown, known (vendor-libs-next I1). Minor 4 gave no seed after a fit on one unbroken stream,
+and the unknown of about a second after a sudden speed-up is the library's own (its README: up to 1.5 s on fast
+trash). Pinned through the core in the same spec.
 
-Unknown is 3600: any other state, a seed, a target that is not plainly attackable (a secret answer included), several enemies,
+Unknown is 3600: any other state, a seed before its life's first other answer, a target that is not plainly attackable (a secret
+answer included), several enemies,
 no library, or a LibHiddenValues older than minor 10 (`lhv-old`, LibTimeToDie's `LHV_MIN`). A refused track is
 asked again at most once a second. `Hekili.bandOff` and disable release the track. Hints, numbers only: the
 highest execute line present goes to `HintBelow` (threshold only), out of combat at the spec's activation,
