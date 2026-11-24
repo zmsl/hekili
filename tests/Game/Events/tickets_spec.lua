@@ -975,6 +975,15 @@ describe("the ticket pool", function()
                 end
             )
 
+            it(
+                "wound and avoid both at the success stamp: one frame, timing cannot split them, F1 gives the avoid to the cast",
+                function()
+                    ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1) -- 163.6
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1) -- 163.6, the same frame
+                    assert.are.same({ 1, T.OPEN }, { count(VS.Obs.Avoided), T.state[sw] })
+                end
+            )
+
             it("the avoid first: the tie holds it on the swing, its secret wound then gives it back", function()
                 ctl.now = 163.603
                 ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
@@ -992,6 +1001,26 @@ describe("the ticket pool", function()
                 assert.are.same({ 0, T.PROV }, { count(VS.Obs.Avoided), T.state[sw] })
             end)
         end)
+
+        it(
+            "a cast that takes no wound of that school keeps F1: a wound at its stamp is the swing's landing (L1810)",
+            function()
+                local c = fs.new(9, nil, nil, true)
+                c.Class.abilities.spender_c.expects = "debuff"
+                I.Build(fs.def(c), 1)
+                ctl.now = 150
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.now = 163.13
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                local s = T.lastSwing[1]
+                ctl.now = 163.6
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+                ctl.now = 163.603
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                assert.are.same({ 1, T.OPEN }, { count(VS.Obs.Avoided), T.state[s] })
+            end
+        )
 
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30

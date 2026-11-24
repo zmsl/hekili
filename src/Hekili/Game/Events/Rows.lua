@@ -148,6 +148,10 @@ end
 -- true avoid in a cast's frame gives that avoid to the cast (the residual, lane finisher-miss-fix report); where the
 -- cast's aura is tracked, the Cooldown Manager's light takes the refund back. The cast's own direct hit, stamped in its
 -- success's frame, is excluded at the use (route). Upgrade if live captures show it.
+-- shortcut: the cast's own hit is told by its stamp alone, so two live shapes still give a swing's avoid to a landed
+-- cast: (a) its own wound logged a frame before the success, (b) the swing's avoid inside the success's own frame (one
+-- stamp for all three rows: F1 keeps it), upgrade with the combo-point fact lane for builders, then the Pr-2 claim
+-- table.
 local function secretOwner(t, g)
     for i = 1, T.CAP do
         local st, h = T.state[i], T.x[i]
