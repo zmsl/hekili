@@ -41,8 +41,8 @@ L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = true
 L["%s, picked from your talents."] = true
 
 -- Hekili/Engine/Schema/Shared.lua
-L["%s: at or below this health (%%)"] = true
-L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."] = true
+L["%s: once health is under (%%)"] = true
+L["The priority shows %s in the Defensives display once your health is under this percentage (Hekili reads it in 1%% steps), and only while Hekili can read your health in combat."] = true
 
 -- Hekili/Engine/Sim/Targets.lua
 L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = true

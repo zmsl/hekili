@@ -792,9 +792,9 @@ local HekiliSpecMixin = {
 
     -- (L1808, owner "Setting per line") The option of a defensive line's player-health threshold, for RegisterSetting:
     -- a 1-100 slider the line reads as `settings.<key>` (`health.pct<=settings.<key>`); its text names `ability` by
-    -- its name in the client (read when the options open).
-    HealthOption = function( self, ability )
-        return ns.HealthOption( ability )
+    -- its name in the client (read when the options open), and `qualifier`'s (an ability key) after it when given.
+    HealthOption = function( self, ability, qualifier )
+        return ns.HealthOption( ability, qualifier )
     end,
 
     -- For faster variables.

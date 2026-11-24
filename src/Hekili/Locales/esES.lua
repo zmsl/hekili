@@ -51,8 +51,8 @@ L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = "%s: la priori
 L["%s, picked from your talents."] = "%s, elegida según tus talentos."
 
 -- Hekili/Engine/Schema/Shared.lua
-L["%s: at or below this health (%%)"] = "%s: con esta salud o menos (%%)"
-L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."] = "La prioridad muestra %s en el panel de defensivas cuando tu salud está en este porcentaje o por debajo, y solo mientras Hekili pueda leer tu salud en combate."
+L["%s: once health is under (%%)"] = "%s: cuando la salud baje de (%%)"
+L["The priority shows %s in the Defensives display once your health is under this percentage (Hekili reads it in 1%% steps), and only while Hekili can read your health in combat."] = "La prioridad muestra %s en el panel de defensivas cuando tu salud baja de este porcentaje (Hekili la lee en pasos del 1 %%), y solo mientras Hekili pueda leer tu salud en combate."
 
 -- Hekili/Engine/Sim/Targets.lua
 L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = "Las placas de nombre de enemigos están desactivadas, así que en esta instancia Hekili Forever solo cuenta tu objetivo. Activa Mostrar placas de nombre de enemigos y Mostrar todas las placas de nombre."

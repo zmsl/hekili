@@ -2331,9 +2331,9 @@ spec:RegisterSetting("behind", false, behind, "feral", "balance")
 -- line is gated on a form): Balance's own line reads barkskin_health (any form), Feral's own list barkskin_cat_health
 -- (every form but Bear, where the imported Guardian line reads barkskin_health: one line a form, never two), each on
 -- its own page before any imported section; on Guardian's page too under Cat Form (below: Guardian imports Feral's
--- lists)
+-- lists). Feral's and Guardian's pages each show both, so each label names its form, as the sections do.
 spec:RegisterSetting("barkskin_health", 50, spec:HealthOption("barkskin"), "balance")
-spec:RegisterSetting("barkskin_cat_health", 50, spec:HealthOption("barkskin"), "feral")
+spec:RegisterSetting("barkskin_cat_health", 50, spec:HealthOption("barkskin", "cat_form"), "feral")
 
 -- The maintenance debuff (tools/wowsims/apl.lua rule 15; the recipe's `maintenance`): a raid's debuff, off in game
 -- (open-world mobs die before it pays off), on under the harness (`sim`: wowsims's raid boss).
@@ -2371,15 +2371,15 @@ spec:RegisterSetting(
 -- (L1808, owner "Setting per line") the health thresholds of Guardian's defensive lines (its wowsims values), on Feral's
 -- page too under Bear Form: Feral imports those lines
 for _, s in ipairs({
-    { "barkskin_health", 60, "barkskin" },
+    { "barkskin_health", 60, "barkskin", "bear_form" },
     { "frenzied_regeneration_health", 25, "frenzied_regeneration" },
 }) do
-    spec:RegisterSetting(s[1], s[2], spec:HealthOption(s[3]), "guardian")
+    spec:RegisterSetting(s[1], s[2], spec:HealthOption(s[3], s[4]), "guardian")
     spec:RegisterSetting(
         s[1],
         s[2],
         imported(
-            spec:HealthOption(s[3]),
+            spec:HealthOption(s[3], s[4]),
             L["Bear Form (Guardian)"],
             L["These settings come from the Guardian priority. They apply only while you are in Bear Form."]
         ),
@@ -2400,7 +2400,7 @@ spec:RegisterSetting(
     "barkskin_cat_health",
     50,
     imported(
-        spec:HealthOption("barkskin"),
+        spec:HealthOption("barkskin", "cat_form"),
         L["Cat Form (Feral)"],
         L["These settings come from the Feral priority. They apply only while you are in Cat Form."]
     ),

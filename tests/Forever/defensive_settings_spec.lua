@@ -212,8 +212,8 @@ describe("the Healthstone and healing potion sliders", function()
 
     it("read the shared content's string when the client has no item name yet (English, French)", function()
         local H = headless.new({ character = ww.Protection.character(), pack = "Protection (wowsims.com)" })
-        assert.are.equal("Healthstone: at or below this health (%)", label(H, "healthstone_health"))
-        assert.are.equal("Healing Potion: at or below this health (%)", label(H, "healing_potion_health"))
+        assert.are.equal("Healthstone: once health is under (%)", label(H, "healthstone_health"))
+        assert.are.equal("Healing Potion: once health is under (%)", label(H, "healing_potion_health"))
         local fr =
             headless.new({ character = ww.Protection.character(), pack = "Protection (wowsims.com)", locale = "frFR" })
         assert.is_truthy(label(fr, "healthstone_health"):find("Pierre de soins", 1, true))
@@ -230,7 +230,44 @@ describe("the Healthstone and healing potion sliders", function()
                 end
             end,
         })
-        assert.are.equal("Client Stone: at or below this health (%)", label(H, "healthstone_health"))
-        assert.are.equal("Client Potion: at or below this health (%)", label(H, "healing_potion_health"))
+        assert.are.equal("Client Stone: once health is under (%)", label(H, "healthstone_health"))
+        assert.are.equal("Client Potion: once health is under (%)", label(H, "healing_potion_health"))
+    end)
+end)
+
+-- def-2 review Minors 4 and 5: the two Barkskin sliders on Feral's and Guardian's pages say which form each is for
+-- (the form's name in the client); Desperate Prayer's slider shows only for a Dwarf priest (its line's race)
+describe("the health sliders", function()
+    local function entry(H, key)
+        local S = H.Hekili.State
+        local found
+        for _, e in ipairs(H.Hekili.Class.specs[S.spec.id].settings) do
+            if e.name == key then
+                found = e
+            end
+        end
+        return assert(found, key)
+    end
+
+    for _, P in ipairs({ { "Feral", "Feral (wowsims.com)" }, { "Guardian", "Guardian (wowsims.com)" } }) do
+        it("tell the two Barkskin sliders apart by form (" .. P[1] .. ")", function()
+            local H = headless.new({ character = dlw[P[1]].character(), pack = P[2] })
+            local bear, cat = entry(H, "barkskin_health").info.name(), entry(H, "barkskin_cat_health").info.name()
+            assert.are_not.equal(bear, cat)
+            local A = H.Hekili.Class.abilities -- the forms' names, as the client gives them
+            assert.is_truthy(bear:find("(" .. A.bear_form.name .. ")", 1, true), bear)
+            assert.is_truthy(cat:find("(" .. A.cat_form.name .. ")", 1, true), cat)
+        end)
+    end
+
+    it("show Desperate Prayer's only for a Dwarf priest", function()
+        local pw = require("Forever.helpers.priest_world")
+        for race, hidden in pairs({ Dwarf = false, Human = true }) do
+            local c = pw.Shadow.character()
+            c.race = race
+            local H = headless.new({ character = c, pack = "Shadow (wowsims.com)" })
+            local info = entry(H, "desperate_prayer_health").info
+            assert.are.equal(hidden, info.hidden ~= nil and info.hidden() == true, race)
+        end
     end)
 end)

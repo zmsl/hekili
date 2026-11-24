@@ -746,12 +746,16 @@ local function coned()
     end
 end
 -- Cold Snap: every Frost-only cooldown ends (wowsims cold_snap.go: Frost Nova, Cone of Cold, Ice Block and Ice Barrier).
-local function snapped()
+-- `other` (the simulation's handler only): Ice Barrier's other key (L1808; the belief has one record, by ID).
+local function snapped(other)
     return function()
         setCooldown("frost_nova", 0)
         setCooldown("cone_of_cold", 0)
         setCooldown("ice_block", 0)
         setCooldown("ice_barrier", 0)
+        if other then
+            setCooldown(other, 0)
+        end
     end
 end
 -- `other` (the simulation's handler only): the key sharing the cooldown, Ice Barrier's other use (L1808).
@@ -866,7 +870,7 @@ spec:RegisterAbilities({
         known = knows({ 12472 }),
 
         now = snapped(),
-        handler = snapped(),
+        handler = snapped("ice_barrier_defensive"),
     },
 
     -- A channel of 8 s, a tick a second (the AoE list's filler: three targets or more).
@@ -1140,6 +1144,7 @@ do
 
             startsCombat = false,
             known = knows(FIRE_WARD),
+            toggle = "defensives",
             usable = unlocked("fire"),
 
             now = warded("fire_ward", "frost_ward"),
@@ -1159,6 +1164,7 @@ do
 
             startsCombat = false,
             known = knows(FROST_WARD),
+            toggle = "defensives",
             usable = unlocked("frost"),
 
             now = warded("frost_ward", "fire_ward"),

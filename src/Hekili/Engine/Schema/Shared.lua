@@ -77,12 +77,20 @@ end
 
 --- (L1808, owner "Setting per line") A defensive line's player-health threshold setting's option (RegisterSetting's
 --- `option`; spec:HealthOption and shared:HealthOption): a 1-100 slider, read by the line as `settings.<key>`; its
---- name and text name ability `ability` (the client's name, read when the options open; the key until it loads). A
---- fresh table each call (load only). The registry is read when the options ask, not here.
-function ns.HealthOption(ability)
+--- name and text name ability `ability` (the client's name, read when the options open; the key until it loads), and
+--- `qualifier`, an ability key too, in parentheses after it when given (two sliders of one ability on a page: the
+--- form each is for). A fresh table each call (load only). The registry is read when the options ask, not here.
+--- The line fires once the health is under the setting: the reading comes in 1% steps, each read at its middle.
+function ns.HealthOption(ability, qualifier)
+    local function named(key)
+        local a = Hekili.Class.abilities[key]
+        return a and a.name or key
+    end
     local function label()
-        local a = Hekili.Class.abilities[ability]
-        return a and a.name or ability
+        if qualifier then
+            return string.format("%s (%s)", named(ability), named(qualifier))
+        end
+        return named(ability)
     end
     return {
         type = "range",
@@ -91,11 +99,11 @@ function ns.HealthOption(ability)
         step = 1,
         width = "full",
         name = function()
-            return string.format(L["%s: at or below this health (%%)"], label())
+            return string.format(L["%s: once health is under (%%)"], label())
         end,
         desc = function()
             return string.format(
-                L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."],
+                L["The priority shows %s in the Defensives display once your health is under this percentage (Hekili reads it in 1%% steps), and only while Hekili can read your health in combat."],
                 label()
             )
         end,
@@ -103,8 +111,8 @@ function ns.HealthOption(ability)
 end
 
 --- ns.HealthOption, for a shared line's setting.
-function Shared:HealthOption(ability)
-    return ns.HealthOption(ability)
+function Shared:HealthOption(ability, qualifier)
+    return ns.HealthOption(ability, qualifier)
 end
 
 function Hekili:NewShared()

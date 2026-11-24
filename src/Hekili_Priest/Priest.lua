@@ -1076,8 +1076,13 @@ spec:RegisterSetting("prefer_starshards", false, {
 -- (L1808, owner "Setting per line") the health threshold of the packs' Power Word: Shield (50%) lines (the recipes'
 -- `extra`, the def-int-beyond-wowsims review's defaults): a 1-100 slider on every spec
 spec:RegisterSetting("power_word_shield_health", 50, spec:HealthOption("power_word_shield"))
--- Desperate Prayer's line (Dwarf priests only; the review's 40%, its proposed value): every spec
-spec:RegisterSetting("desperate_prayer_health", 40, spec:HealthOption("desperate_prayer"))
+-- Desperate Prayer's line (Dwarf priests only; the review's 40%, its proposed value): every spec, shown to a Dwarf
+-- alone (the race its `known` reads)
+local prayer = spec:HealthOption("desperate_prayer")
+prayer.hidden = function()
+    return state.race.dwarf ~= true
+end
+spec:RegisterSetting("desperate_prayer_health", 40, prayer)
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
 -- run it, never this block (tests/Forever/priest_spec.lua checks it matches). Each pack's .simc is generated from its

@@ -50,8 +50,8 @@ L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = "%s：根据�
 L["%s, picked from your talents."] = "%s，根据你的天赋选用。"
 
 -- Hekili/Engine/Schema/Shared.lua
--- L["%s: at or below this health (%%)"] = ""
--- L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."] = ""
+L["%s: once health is under (%%)"] = "%s：生命值低于此值时（%%）"
+L["The priority shows %s in the Defensives display once your health is under this percentage (Hekili reads it in 1%% steps), and only while Hekili can read your health in combat."] = "优先级会在防御显示框中显示%s：当你的生命值低于此百分比时（Hekili 以 1%% 为步长读取），且仅在 Hekili 能在战斗中读取你的生命值时。"
 
 -- Hekili/Engine/Sim/Targets.lua
 L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = "敌方姓名板已关闭，因此在此副本中 Hekili Forever 只统计你的目标。请开启“显示敌方姓名板”和“显示所有姓名板”。"

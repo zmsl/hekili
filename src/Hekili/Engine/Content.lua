@@ -67,6 +67,8 @@ local format = string.format
 -- 17 (2026-11-23, def-2, L1808): the ability field `variantOf` (an older core gives the variant the spell's IDs, so
 -- the original's casts would map to it), Shared:RegisterSetting and the HealthOption method (spec and shared: a
 -- defensive line's health threshold slider).
+--   Since then, without a bump: HealthOption's second argument (an ability key naming the slider's form, def-2 review
+--   Minor 4); an older core shows the ability's name alone.
 local CONTENT_API = 17
 
 local done, notice = false, nil

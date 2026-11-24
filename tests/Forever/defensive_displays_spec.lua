@@ -35,6 +35,8 @@ describe("the defensive and interrupt displays", function()
             ice_block = "defensives",
             counterspell = "interrupts",
             ice_barrier_defensive = "defensives",
+            fire_ward = "defensives", -- def-2 review Minor 10: the school wards, like Shadow Ward
+            frost_ward = "defensives",
         },
         Warlock = { shadow_ward = "defensives", death_coil_defensive = "defensives" },
         Warrior = { pummel = "interrupts", shield_bash = "interrupts" },
@@ -105,6 +107,21 @@ describe("the defensive and interrupt displays", function()
             S.runHandler("death_coil")
             assert.is_true(S.cooldown.death_coil_defensive.true_remains > 100)
         end)
+    end)
+
+    -- def-2 review Minor 6: Cold Snap ends Ice Barrier's cooldown under both keys in the simulation
+    it("Cold Snap ends both Ice Barrier keys' cooldown (Mage)", function()
+        local mw = require("Forever.helpers.mage_world")
+        local H = headless.new({ character = mw.Frost.character(), pack = mw.Frost.PACK })
+        assert.are.same({}, H.loadErrors)
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+        local S = H.Hekili.State
+        S.reset("Primary")
+        S.setCooldown("ice_barrier", 30) -- a cast's: its own key's cooldown, and its handler the other's
+        S.setCooldown("ice_barrier_defensive", 30)
+        S.runHandler("cold_snap")
+        assert.are.equal(0, S.cooldown.ice_barrier.true_remains)
+        assert.are.equal(0, S.cooldown.ice_barrier_defensive.true_remains)
     end)
 end)
 

@@ -50,8 +50,8 @@ L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = "%s : la prior
 L["%s, picked from your talents."] = "%s, choisie d’après tes talents."
 
 -- Hekili/Engine/Schema/Shared.lua
-L["%s: at or below this health (%%)"] = "%s : à ce niveau de vie ou moins (%%)"
-L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."] = "La priorité affiche %s dans l’affichage Défensifs dès que ta vie est à ce pourcentage ou en dessous, et seulement tant que Hekili peut lire ta vie en combat."
+L["%s: once health is under (%%)"] = "%s : dès que la vie passe sous (%%)"
+L["The priority shows %s in the Defensives display once your health is under this percentage (Hekili reads it in 1%% steps), and only while Hekili can read your health in combat."] = "La priorité affiche %s dans l’affichage Défensifs dès que ta vie passe sous ce pourcentage (Hekili la lit par paliers de 1 %%), et seulement tant que Hekili peut lire ta vie en combat."
 
 -- Hekili/Engine/Sim/Targets.lua
 L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = "Les barres d’info des adversaires sont désactivées : dans cette instance, Hekili Forever ne compte que ta cible. Active « Barres d’info des adversaires » et « Montrer toutes les barres d’info »."
