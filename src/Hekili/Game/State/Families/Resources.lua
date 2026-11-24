@@ -2038,6 +2038,7 @@ I.On(Obs.Swing, function(o, t)
                 owes = R.liftRec[r] == o.b -- its crit pays the rest of what its landed step owed
             end
             local pE, pL, pH = R.liftE[r], R.liftL[r], R.liftH[r]
+            -- a swing stamped in the emptying cast's own frame is dropped whatever the real order was (the safe side)
             if at > R.emptyT[r] then -- else a cast since spent this swing's rage with the whole pool
                 swingStep(r, hand, c, t, owes, at)
             end
