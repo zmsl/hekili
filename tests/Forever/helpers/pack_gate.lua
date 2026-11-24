@@ -103,7 +103,9 @@ M.FLICKER = {
     -- jitter rule L1762 round 2 (the gated flicker takes the facts; seeds 1-20 / 21-40 / 41-60 on 46b3ac9b1:
     -- flicker 0.02 / 0.04 / 0.04, press-only 0.04 / 0.04 / 0.06; excused avoid 2): flicker 0.06 -> 0.05 (the
     -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: avoid justified"
-    ["Arms"] = { loOver = 2998, flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    -- lane finisher-miss-fix-2 (seeds 1-20 / 21-40 / 41-60 on 77707bd1a: loOver 2520 / 2690 / 2984): loOver 2998 ->
+    -- 2984, the measured worst (swing-avoid pairing, T.SwingPending fixed)
+    ["Arms"] = { loOver = 2984, flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 322 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
@@ -174,7 +176,11 @@ M.FLICKER = {
     -- a swing that already holds its own avoid (swing-avoid-fix; fixed in item 5)". The flicker floor 0.19 has no
     -- headroom: seeds 21-40 read 0.19 since swing-avoid-fix (base 0.15), jitter in re-timed fights, not a fact (the
     -- oracle's own flicker on that set 0.37 -> 0.45; swing-avoid-fix review, check 4 and Minor 8)
-    ["Fury L60"] = { loOver = 737, flicker = 0.19, flickerK = 0.6, retracted = 0.04, readyShort = 8, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
+    -- lane finisher-miss-fix-2 (seeds 1-20 / 21-40 / 41-60 on 77707bd1a: readyShort 4 / 4 / 0, flicker 0.10 / 0.15 /
+    -- 0.15, loOver 712 / 753 / 717, heldReady 274 / 265 / 277): readyShort 8 -> 4, cause "T.SwingPending fixed
+    -- (finisher-miss-fix item 5)"; flicker 0.19 -> 0.16 (the measured worst + 0.01). loOver 753 and heldReady 277 on
+    -- the ungated sets 21-40 / 41-60 sit over their floors, untraced (not loosened; lane report)
+    ["Fury L60"] = { loOver = 737, flicker = 0.16, flickerK = 0.6, retracted = 0.04, readyShort = 4, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -269,7 +275,9 @@ M.FLICKER = {
     -- (a `now` that empties the pool) credits nothing after it, and the swing-avoid pairing above. Untraced, under the
     -- floor: heldReady 797 -> 809 on seeds 1-20 (base 797 / 802 / 863), the only measured signal for a landed swing's
     -- rage the emptying mark could drop (swing-avoid-fix review, Minor 8)
-    ["Fury L24"] = { loOver = 286, flicker = 0.1, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
+    -- lane finisher-miss-fix-2 (seeds 1-20 / 21-40 / 41-60 on 77707bd1a: loOver 276 / 116 / 249, heldReady 838 / 793 /
+    -- 863): loOver 286 -> 276, the measured worst
+    ["Fury L24"] = { loOver = 276, flicker = 0.1, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
