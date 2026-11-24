@@ -2394,6 +2394,34 @@ describe("now handlers", function()
                 assert.are.same({ 0, 0, 0 }, { r.lo, r.est, r.hi })
             end)
 
+            -- review of swing-avoid-fix, Minor 5: the mark compares the swing's own time, not "a cast emptied it"
+            it("a swing after a cast whose `now` emptied the pool still pays its step (0 + 9)", function()
+                rest(true, false)
+                cast(fs.SPENDER_C, 5)
+                assert.are.equal(0, rage(5.04).est)
+                ctl.now = 5.1
+                ctl.Fire("PLAYER_SWING", 3.6, 0)
+                ctl.now = 5.574 -- its wound (lag 0.474)
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 100, 1)
+                drain(5.6)
+                assert.are.equal(9, rage(5.7).est)
+            end)
+
+            it(
+                "a provider's swing before the emptying cast, assumed then confirmed after it: nothing on top",
+                function()
+                    rest(true, false)
+                    I.Sources.Stage(VS.Obs.Swing, 4.9, 1, 6, 5) -- a provider's HIT: record 6, assumed (est and hi)
+                    drain(4.95)
+                    cast(fs.SPENDER_C, 5)
+                    assert.are.equal(0, rage(5.04).est)
+                    I.Sources.Stage(VS.Obs.Swing, 4.9, 1, 6, 7) -- its row confirms it after the cast
+                    drain(5.4)
+                    local r = rage(5.5)
+                    assert.are.same({ 0, 0, 0 }, { r.lo, r.est, r.hi })
+                end
+            )
+
             it(
                 "an avoided cast that emptied the pool: the swing before it pays on the give-back (40 - 10 + 9)",
                 function()
