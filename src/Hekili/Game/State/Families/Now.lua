@@ -1065,8 +1065,10 @@ local function undo(a, castT, c, rowT, t, late)
         journal = true
     end
     local r = A.slot[a]
-    if late and r > 0 and I.res.plainT[r] >= castT then
-        r = 0 -- a plain read of the slot since the cast, folded before this settle, already holds the refund
+    -- a measurement of the slot since the cast, folded before this settle (a plain read; a 1% band, its time
+    -- R.bandAt), already holds the refund: none on top of it
+    if late and r > 0 and (I.res.plainT[r] >= castT or (I.res.bandOn[r] and I.res.bandAt[r] >= castT)) then
+        r = 0
     end
     local d = r > 0 and paid * A.refund[a] or 0
     -- the `now`'s take comes back unless a pin since the cast (a plain read, a crossing) already measured the pool;
@@ -1113,15 +1115,51 @@ I.On(Obs.Avoided, function(o, t)
     undo(o.a, o.b, o.c, o.t, t)
 end)
 
--- (L1832) The point fact's read: the latest read of the slot at or after the cast; a secret one (the target-bound read's
--- substituted 0, Sources/Power.lua I.readPlain) is none. Allocates nothing.
-I.On(Obs.Read, function(o)
+-- (L1832) The point fact's decision at t: risen, landed (a held avoid is another's); no rise by a read PT_LAG or more after the cast,
+-- avoided (undone as a miss when no avoid of its own came: the kind only gates the refund and no reaction runs); a
+-- fall, a secret read or a swap, silent. It runs at the slot's read, in poll 1, so an undo comes before the drain's
+-- usable answers and bands (poll 2 on), as an avoid's row would; a no-rise read from 0 waits for the settle (`final`),
+-- after poll 4's TargetGone (a killing builder's points go with the target), and so does any read inside the lag; at
+-- the settle, no plain read past the lag is silent. Allocates nothing.
+local MISS = I.HitKind.MISS
+local function decide(t, final)
+    if ptA == 0 or ptGo ~= 0 then
+        return
+    elseif I.curSwapN ~= ptSwap or ptVT == -2 then
+        return pointSilent(t)
+    elseif ptVT >= ptT and ptV > ptV0 then
+        -- a held avoid went out as the cast's SPELL_MISSED (Events/Rows.lua), and Hekili's missable hook drops a record
+        -- applied at the cast's stamp (Engine/Schema/Spec/Abilities.lua trackMisses): each record its `now` wrote
+        -- re-opens at the fact, its expiry and stacks kept (as F4b's light re-opens one, L1810)
+        for k = 1, hHeld and I.curSwapN == undoSwap and undoN or 0 do
+            local j = undoJ[k]
+            local rec, st = VS.Aura("target", auraSpell[j], t)
+            if rec and rec.est > t then
+                I.AuraModel(2, j, t, rec.est, st or 1, t, Obs.Landed, true)
+            end
+        end
+        ptGo, hHeld = 1, false
+        forget(ptA, ptT) -- proven landed: no CDM verdict refunds it
+    elseif ptVT - ptT >= PT_LAG and ptV == ptV0 and (final or ptV0 > 0) then
+        local a, held = ptA, hHeld
+        ptA, hHeld = 0, false
+        if a == undoA and ptT == undoT then -- not already consumed (the CDM verdict's refund, I.VerdictRefund)
+            undo(a, ptT, held and hC or MISS, held and hT or ptVT, t, true)
+        end
+    elseif final and t - ptT >= PT_LAG then
+        pointSilent(t)
+    end
+end
+-- The fact's read: the latest read of the slot at or after the cast; a secret one (the target-bound read's substituted
+-- 0, Sources/Power.lua I.readPlain) is none.
+I.On(Obs.Read, function(o, t)
     if ptA ~= 0 and o.c == I.ReadOf.Resource and o.a == ptR and o.t >= ptT then
         if I.readPlain[ptR] then
             ptV, ptVT = o.b, o.t
         else
             ptVT = -2 -- the slot went secret: no fact
         end
+        decide(t, false)
     end
 end)
 -- A death since the cast: its points went with the target (wowsims core/energy.go:233-243), so only a rise read before
@@ -1135,39 +1173,8 @@ I.On(Obs.TargetGone, function(_, t)
         end
     end
 end)
--- The decision, once a drain's observations are folded: risen, landed (a held avoid is another's); no rise by a read
--- PT_LAG or more after the cast, avoided (undone as a miss when no avoid of its own came: the kind only gates the
--- refund and no reaction runs); a fall, a secret read, a swap or no plain read past the lag, silent. Allocates nothing.
-local MISS = I.HitKind.MISS
 I.OnSettle(function(now)
-    if ptA == 0 or ptGo ~= 0 then
-        return
-    elseif I.curSwapN ~= ptSwap or ptVT == -2 then
-        return pointSilent(now)
-    elseif ptVT >= ptT and ptV > ptV0 then
-        -- a held avoid went out as the cast's SPELL_MISSED (Events/Rows.lua), and Hekili's missable hook drops a record
-        -- applied at the cast's stamp (Engine/Schema/Spec/Abilities.lua trackMisses): each record its `now` wrote
-        -- re-opens at the fact, its expiry and stacks kept (as F4b's light re-opens one, L1810)
-        for k = 1, hHeld and I.curSwapN == undoSwap and undoN or 0 do
-            local j = undoJ[k]
-            local rec, st = VS.Aura("target", auraSpell[j], now)
-            if rec and rec.est > now then
-                I.AuraModel(2, j, now, rec.est, st or 1, now, Obs.Landed, true)
-            end
-        end
-        ptGo, hHeld = 1, false
-        forget(ptA, ptT) -- proven landed: no CDM verdict refunds it
-    elseif now - ptT >= PT_LAG then
-        if ptVT - ptT >= PT_LAG and ptV == ptV0 then
-            local a, held = ptA, hHeld
-            ptA, hHeld = 0, false
-            if a == undoA and ptT == undoT then -- not already consumed (the CDM verdict's refund, I.VerdictRefund)
-                undo(a, ptT, held and hC or MISS, held and hT or ptVT, now, true)
-            end
-        else
-            pointSilent(now)
-        end
-    end
+    decide(now, true)
 end)
 
 --- The CDM verdict closed target aura j's application `ap` as missed (Sources/Auras.lua, L1029): the cast whose own
