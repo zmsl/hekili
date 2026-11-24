@@ -196,7 +196,8 @@ end
 --- only); a landed Rake's row is its initial hit (rake.go CalcAndDealDamage). Landed: the combo points 2 ms after the
 --- success (Rip spends all, Rake adds one), the aura edge 11 ms after (its viewer light 4 ms later: about the measured
 --- 15 ms), the ticks (a wound row each tick_time: Rip 2 s, Rake 3 s) and the run-out. Avoided: 80% of the cost back at
---- once, the combo points kept (rip.go spends them only when it lands).
+--- once, the combo points kept (rip.go spends them only when it lands). `c.gain`: the points a landed Rake adds (1;
+--- 2 with Blood Frenzy's point on its crit, wowsims talents_feral_combat.go:146).
 function M.cast(W, t, b, c)
     local B = BLEED[b]
     local guid = "Cast-" .. b .. "-" .. t
@@ -215,7 +216,7 @@ function M.cast(W, t, b, c)
     end
     if landed then
         M.at(W, t + (c.cpLag or 0.002), b .. " points", function(W2)
-            points(W2, b == "rip" and 0 or math.min(5, W2.cp + 1))
+            points(W2, b == "rip" and 0 or math.min(5, W2.cp + (c.gain or 1))) -- `c.gain` 2: Blood Frenzy's crit point
         end)
         local exp = t + (b == "rip" and 12 or 9)
         M.at(W, t, b .. " applied", function(W2)
@@ -310,7 +311,7 @@ function M.prelude(W, o)
 end
 
 --- One case: the world (`c.viewer`, `c.cdmOff`, `c.plain`), the prelude (`c.bleed`, `c.swingAt`, `c.odd`), then our
---- cast of c.bleed at T with `c.act` and its row at `c.row` (nil: none), a tick at `c.tickAt` (nil: none), run to
+--- cast of c.bleed at T with `c.act`, its row at `c.row` (nil: none) and its points `c.gain`, a tick at `c.tickAt`, run to
 --- T + `c.span` (3.5). Returns W, T.
 function M.case(c)
     local W = M.world(c)
@@ -318,7 +319,7 @@ function M.case(c)
     M.run(W, T - 0.5)
     local b = c.bleed or "rip"
     W.bleed = b
-    M.cast(W, T, b, { act = c.act, row = c.row })
+    M.cast(W, T, b, { act = c.act, row = c.row, gain = c.gain })
     if c.tickAt then -- a bleed's tick (a background white wound) at T + c.tickAt
         M.at(W, T + c.tickAt, "tick", function(W2)
             row(W2, "WOUND", 30)

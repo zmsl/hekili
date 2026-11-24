@@ -530,6 +530,18 @@ by pushbacks) and at most 0.5 s after it; a broken channel, one whose times were
 channel's, whose start was secret) runs nothing. Both write `modelled` samples no avoid
 undoes.
 
+**The point fact** (L1832). A cast whose `now` gains a resource the client answers plain in combat (the combo
+points: a builder's `gain(1, "combo_points")`, which a pack declares in `now` beside its `handler`'s) is settled by that
+resource's next plain reads, not by the rows' timing (`Families/Now.lua`): a read after the cast showing it risen (by
+any amount: a crit's extra point counts) proves the cast landed, and a read at least `PT_LAG` (0.1 s) after it showing
+no rise proves it avoided. The cast's own `Obs.Avoided` waits for the fact; the settle after each fold decides. Landed:
+the held avoid was another's, nothing is undone or refunded, and each target record the `now` wrote re-opens at the
+fact's time with its expiry kept (the avoid's SPELL_MISSED already went to Hekili, whose missable hook drops a record
+applied at the cast's stamp). Avoided: the undo and refund run as an avoid's, with no reaction when no avoid row of its
+own came. Silent, so the rows' verdict stands: at the resource's maximum before the cast, a read that fell, a secret
+read (the target-bound read substitutes 0), a target swap or death, no plain read past the lag, or the next cast.
+Finishers predict no gain in `now` and stay with the rows (a missed finisher keeps its points in wowsims: a later fact).
+
 **A GCD modifier.** `spec:RegisterGcdMod({ aura = <key>, pct = <n>, spells = { <ids> } | nil })` (aura audit C12;
 the cost modifier's shape and scope: `spells` nil is every ability, a listed ID matches the ability's `id` or a `copy`
 rank) makes a spell-kind GCD (1 + pct) as long while the player's aura is up, before the floor, as wowsims's

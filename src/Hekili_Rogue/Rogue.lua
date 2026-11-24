@@ -548,6 +548,7 @@ spec:RegisterAbilities(rogue({
             removeBuff("vanish")
             removeBuff("ghostly_strike_next")
             removeBuff("cold_blood")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -575,6 +576,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             removeBuff("cold_blood")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -713,6 +715,7 @@ spec:RegisterAbilities(rogue({
             removeBuff("vanish")
             removeBuff("ghostly_strike_next")
             applyDebuff("target", "garrote", 18 + 9 * talent.blood_splatter.rank)
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -740,6 +743,7 @@ spec:RegisterAbilities(rogue({
         now = function()
             applyBuff("ghostly_strike")
             applyBuff("ghostly_strike_next")
+            gain(1, "combo_points")
         end,
         onAvoid = function() -- the next-Garrote buff is the landing's: a dodge, parry or miss gives none
             removeBuff("ghostly_strike_next")
@@ -770,6 +774,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             applyDebuff("target", "hemorrhage")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -850,6 +855,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             removeBuff("cold_blood")
+            gain(2, "combo_points")
         end,
 
         handler = function()
@@ -950,6 +956,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             removeBuff("cold_blood")
+            gain(1, "combo_points")
         end,
 
         handler = function()

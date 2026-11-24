@@ -1448,6 +1448,87 @@ describe("now handlers", function()
             assert.are.equal(0, I.avoidsRun)
         end)
 
+        -- (L1832) The point fact: a cast whose `now` gains a slot the client answers plain in combat landed when a plain
+        -- read after it shows the slot risen, and was avoided when a read PT_LAG or more after it shows no rise; that
+        -- read beats the rows' timing. Silent at the slot's max, on a secret read (the target-bound read's substituted 0),
+        -- and with no plain read past the lag: the row's verdict stands.
+        describe("the point fact (a `now` gain of a slot read plain in combat)", function()
+            local POINTS = 4
+            local function beginPoints(before)
+                h.Class.resources.combo_points = { type = POINTS }
+                h.Class.abilities.spender_c.funcs.now = function()
+                    applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+                    gain(1, "combo_points") -- luacheck: ignore 113 (the `now` context's verb)
+                end
+                ctl.power[POINTS], ctl.powerMax[POINTS] = before, 5
+                begin()
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+                ctl.now = 4.5
+                VS.Drain(4.5) -- an in-combat plain read: the slot is readable
+            end
+            -- the cast at 5, the points `after` from its success on, its outcome row `act` (nil: none) 4 ms after, then a
+            -- drain inside the lag (5.02) and one past it (5.2)
+            local function castRead(act, after)
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.comboPoints.target = after
+                if act then
+                    ctl.now = 5.004
+                    ctl.Fire("UNIT_COMBAT", "target", act, "", 0, 1)
+                end
+                ctl.Tick(5.01)
+                VS.Drain(5.02)
+                ctl.now = 5.2
+                ctl.Tick(5.2)
+                VS.Drain(5.2)
+            end
+            local function landedState()
+                local rec = VS.Aura("target", fs.SPENDER_C, 5.3)
+                return { rec and rec.est or false, VS.Power(fs.RAGE, 5.3).est, I.avoidsRun }
+            end
+
+            it("a dodge row in the cast's frame and the points risen: landed, the row is another's", function()
+                beginPoints(2)
+                castRead("DODGE", 3)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            it("an extra point (a crit's) proves the landing as well", function()
+                beginPoints(2)
+                castRead("DODGE", 4)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            it("no row and no rise by a read past the lag: avoided, undone with 80% back", function()
+                beginPoints(2)
+                castRead(nil, 2)
+                assert.are.same({ false, 8, 1 }, landedState())
+            end)
+            it("a dodge row and no rise: undone once", function()
+                beginPoints(2)
+                castRead("DODGE", 2)
+                assert.are.same({ false, 8, 1 }, landedState())
+            end)
+            it("at the slot's max: silent, a cast with no row stays landed", function()
+                beginPoints(5)
+                castRead(nil, 5)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            it("at the slot's max: silent, a dodge row's verdict stands", function()
+                beginPoints(5)
+                castRead("DODGE", 5)
+                assert.are.same({ false, 8, 1 }, landedState())
+            end)
+            it("a secret read (the target-bound read's 0) is no fact: a cast with no row stays landed", function()
+                beginPoints(2)
+                castRead(nil, fake.SECRET)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            it("a secret read is no fact: a dodge row's verdict stands", function()
+                beginPoints(2)
+                castRead("DODGE", fake.SECRET)
+                assert.are.same({ false, 8, 1 }, landedState())
+            end)
+        end)
+
         it("a parry of a refresh puts the earlier application back, its expiry and stacks", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 40)

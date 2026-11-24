@@ -115,6 +115,8 @@ local KIT = {
 
 -- The abilities whose cast changes the now-state beyond its declared cost, cooldown and GCD (spec §4).
 local NOW = {
+    "claw",
+    "shred",
     "rake",
     "rip",
     "ferocious_bite",
@@ -817,16 +819,26 @@ describe("Forever Druid", function()
             end
         )
 
-        it("writes no combo points from any `now`", function()
+        -- the builders' point is the point fact's prediction (L1832: the plain read after the cast proves landed or
+        -- avoided); no `now` spends points (a finisher's spend is read; a missed one keeps them, wowsims rip.go:29-33)
+        it("writes a builder's one combo point from its `now`, and spends none from any", function()
             local e = ld.env(w)
             e.talent = rank(1)
+            local builders = {}
             for _, k in ipairs(NOW) do
+                e.gained = {}
                 ld.run(w.abilities[k].now, e)
-            end
-            for _, list in ipairs({ e.gained, e.spent }) do
-                for _, v in ipairs(list) do
-                    assert.are_not.equal("combo_points", v[2])
+                for _, v in ipairs(e.gained) do
+                    if v[2] == "combo_points" then
+                        assert.are.equal(1, v[1], k)
+                        builders[#builders + 1] = k
+                    end
                 end
+            end
+            table.sort(builders)
+            assert.are.same({ "claw", "pounce", "rake", "ravage", "shred" }, builders)
+            for _, v in ipairs(e.spent) do
+                assert.are_not.equal("combo_points", v[2])
             end
         end)
     end)
@@ -1305,7 +1317,7 @@ describe("Forever Druid in VirtualState's now context", function()
         I.Sources.Direct(VS.Obs.Swing, 16, 1, 0, 1)
         VS.Drain(16)
         assert.are.equal(power(1, 15.1), power(1, 16))
-        assert.are.same({ 0, 9 }, { I.nowErrors, I.nowRuns })
+        assert.are.same({ 0, 10 }, { I.nowErrors, I.nowRuns }) -- Shred's `now` too: its point (L1832)
     end)
 
     -- L576 bug 1: energy is secret even out of combat and the rate read never came (a /reload in combat): the build

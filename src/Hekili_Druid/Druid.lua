@@ -1086,6 +1086,11 @@ spec:RegisterAbilities({
         known = knows(CLAW),
         form = "cat_form",
 
+        -- a builder's point only on a landed hit (wowsims claw.go:13-16): the plain read after the cast proves which
+        now = function()
+            gain(1, "combo_points")
+        end,
+
         handler = function()
             gain(1, "combo_points")
         end,
@@ -1714,6 +1719,7 @@ spec:RegisterAbilities({
             removeBuff("prowl")
             applyDebuff("target", "pounce", 2 + 0.5 * talent.brutal_impact.rank)
             applyDebuff("target", "pounce_bleed")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -1792,6 +1798,7 @@ spec:RegisterAbilities({
 
         now = function()
             applyDebuff("target", "rake")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -1817,6 +1824,7 @@ spec:RegisterAbilities({
 
         now = function()
             removeBuff("prowl")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -1950,6 +1958,10 @@ spec:RegisterAbilities({
 
         -- Shred needs us behind the target: the packs' Shred and Claw lines choose by `target.is_targeting_player`,
         -- `settings.behind` and Shredding Attacks (tools/wowsims/specs/druid_feral.lua, L602)
+        now = function()
+            gain(1, "combo_points")
+        end,
+
         handler = function()
             gain(1, "combo_points")
         end,

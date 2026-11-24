@@ -71,20 +71,9 @@ for _, b in ipairs({ "rip", "rake" }) do
             it(
                 ("3 %s %s, its row in a white swing's row frame, plain amounts, no viewer (window 0)"):format(name, act),
                 function()
-                    local c = { bleed = b, act = act, row = 0.004, swingAt = TIE, plain = true }
-                    if b == "rip" then
-                        return expectPass(c)
-                    end
-                    -- Rake has a direct hit: the swing's plain wound in Rake's own frame is its landing by timing alone
-                    -- (the amount class would decide it; plain amounts are the beta arm). PINNED: Rake believed up
-                    -- (ledger, lane finisher-miss-fix)
-                    local W, T, fails = run(c)
-                    local msg = table.concat(fails, "\n") .. "\n" .. fw.timeline(W, T)
-                    local up = false
-                    for _, f in ipairs(fails) do
-                        up = up or f:find("the belief holds rake up", 1, true) ~= nil
-                    end
-                    assert(up, msg)
+                    -- Rake has a direct hit: the swing's plain wound in Rake's own frame reads as its landing by timing
+                    -- alone; the combo point that never came is the fact that it was avoided (L1832)
+                    expectPass({ bleed = b, act = act, row = 0.004, swingAt = TIE, plain = true })
                 end
             )
             it(
@@ -104,11 +93,12 @@ for _, b in ipairs({ "rip", "rake" }) do
             )
         end
 
-        -- 5: no row and no Cooldown Manager fact: nothing tells the belief, so it keeps the bleed its full duration. Not a
-        -- defect of a path (there is no information); pinned as today's window so a change shows.
+        -- 5: no row and no Cooldown Manager fact. Rip: nothing tells the belief, so it keeps the bleed its full duration
+        -- (not a defect of a path: there is no information; pinned as today's window so a change shows). Rake: the
+        -- combo point that never came tells it (L1832): back at the first read past the fact's lag.
         for _, arm in ipairs({ { "Hekili.cdmOff", { viewer = "proven", cdmOff = true } }, { "not tracked", {} } }) do
             it(
-                ("5 %s DODGE, no row, viewer %s: today's window is the bleed's full duration"):format(name, arm[1]),
+                ("5 %s DODGE, no row, viewer %s: today's window (Rake: the missing point's)"):format(name, arm[1]),
                 function()
                     local c = { bleed = b, act = "DODGE", span = b == "rip" and 13 or 10 }
                     for k, v in pairs(arm[2]) do
@@ -122,7 +112,7 @@ for _, b in ipairs({ "rip", "rake" }) do
                         assert(sum.wrongLast and sum.wrongLast > 8.5 and sum.wrongLast < 9.1, msg)
                         assert(sum.back and sum.back >= 12 and sum.back < 12.6, msg)
                     else
-                        assert(sum.back and sum.back >= 9 and sum.back < 9.6, msg) -- Rake back at its believed expiry (9 s)
+                        assert(sum.back and sum.back < 0.3, msg) -- the first forced update's read decides (0.2 s)
                     end
                 end
             )
@@ -222,4 +212,51 @@ describe("Forever Feral: a landed Rip and a white swing's avoid in its window (l
             viewer = "proven",
         })
     end)
+end)
+
+-- (L1832) The combo point fact: a builder that lands adds a point and an avoided one adds none (wowsims rake.go:26-30),
+-- and the points are plain in combat. Rake's `now` predicts its point, so the plain read after the cast confirms or
+-- refutes it whatever the rows' timing said. Rip predicts no point (a finisher: silent; the pinned Rip cases above stand).
+describe("Forever Feral: the combo point fact (lane cp-fact, L1832)", function()
+    local function with(base, more)
+        local c = {}
+        for k, v in pairs(base) do
+            c[k] = v
+        end
+        for k, v in pairs(more or {}) do
+            c[k] = v
+        end
+        return c
+    end
+    -- the bisect's shape (false-refund-bisect report): Rake's own wound 1 ms after its success, our swing's MISS 30 ms
+    -- after it in that swing's core band: the wound reads as the swing's landing (F1) and the MISS is paid to Rake
+    local NEAR = {
+        bleed = "rake",
+        act = "WOUND",
+        row = 0.001,
+        swingAt = 0.03 - 0.474,
+        odd = { act = "MISS", lag = 0.474 },
+        expect = { { 0.004, "shred" } },
+    }
+    it("a landed Rake, our swing's MISS in its frame (core band), secret: its point keeps it up, no refund", function()
+        expectPass(NEAR)
+    end)
+    it("the same with Blood Frenzy's crit point (2 points): Rake stays up, no refund", function()
+        expectPass(with(NEAR, { gain = 2 }))
+    end)
+    -- the old same-frame tie (finisher-miss-trace s36): our swing still owes its row (its MISS comes at a tail lag), so
+    -- it takes Rake's own-ms avoid in its core band; the point that never came undoes Rake at the first read past the
+    -- fact's lag (window 0.25: that read is the first forced update's, 0.2 s after the success)
+    for _, act in ipairs(ACTS) do
+        it(("a %s Rake tied to our open swing, secret: the missing point undoes it"):format(act), function()
+            expectPass({
+                bleed = "rake",
+                act = act,
+                row = 0.004,
+                swingAt = TIE,
+                odd = { act = "MISS", lag = 1.2 },
+                window = 0.25,
+            })
+        end)
+    end
 end)

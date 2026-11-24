@@ -16,6 +16,8 @@ local last = {}
 -- By slot: its maximum answered plain since the build (a read equal to the believed max is none logged, so the family's
 -- maxRead does not say it). A percent band is points only then (Bands.lua).
 I.maxPlain = {}
+-- By slot: its last read answered a plain number (a secret or nil target-bound answer reads 0, below: no fact, L1832).
+I.readPlain = {}
 
 -- Asks every tracked spender (an ability whose cost is paid from a tracked resource). `onlyChanged`: report only
 -- the answers that changed (the events); `direct`: into the log (the poll) rather than staged. True when any
@@ -58,7 +60,7 @@ I.OnBuild(function(def)
         last[a] = -1
     end
     for r = 1, #def.resources do
-        I.maxPlain[r] = false
+        I.maxPlain[r], I.readPlain[r] = false, false
     end
 end)
 
@@ -116,6 +118,7 @@ local function readOnTarget(api, t, r)
     local raw = api.GetComboPoints("player", "target") -- secret: Plain next
     Note("GetComboPoints", S.StatusOf(api, raw))
     local v = Plain(api, raw)
+    I.readPlain[r] = type(v) == "number"
     Direct(Obs.Read, t, r, type(v) == "number" and v or 0, ReadOf.Resource)
 end
 
@@ -145,6 +148,7 @@ S.Poll(1, function(api, t)
             v = Plain(api, raw)
         end
         if type(v) == "number" then
+            I.readPlain[r] = true
             Direct(Obs.Read, t, r, v, ReadOf.Resource)
         end
         if not I.inCombat and R.swing[r] == 0 then
