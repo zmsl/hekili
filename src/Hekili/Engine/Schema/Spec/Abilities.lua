@@ -27,6 +27,21 @@ function ns.AbilityListLabel( a, texture )
     return label
 end
 
+-- Adds `key` to ability `a`'s `bind` (a key or a list of keys), once. Load only.
+local function joinBind( a, key )
+    local bind = rawget( a, "bind" )
+    if bind == nil then
+        a.bind = key
+    elseif type( bind ) ~= "table" then
+        if bind ~= key then a.bind = { bind, key } end
+    else
+        for _, b in ipairs( bind ) do
+            if b == key then return end
+        end
+        bind[ #bind + 1 ] = key
+    end
+end
+
 local protectedFunctions = {
     -- Channels.
     start = true,
@@ -436,6 +451,16 @@ local methods = {
         -- line uses offensively and another as a defensive or a kick. The original keeps the spell's IDs, its name and
         -- the belief's record (Tracked.lua); the pack shares the cooldown in both handlers.
         if not data.variantOf then self.abilities[ a.id ] = a end
+        -- A bar holds the spell once, as its original (by ID): the variant takes the original's keybind and bar glow
+        -- through the original's `bind` (Events.lua, BarGlow.lua), whichever of the two registers first.
+        if data.variantOf then
+            local orig = rawget( self.abilities, data.variantOf )
+            if orig then joinBind( orig, ability ) end
+        else
+            for k, v in pairs( self.abilities ) do
+                if type( k ) == "string" and rawget( v, "variantOf" ) == ability then joinBind( a, k ) end
+            end
+        end
 
         if not a.unlisted then class.abilityList[ ability ] = class.abilityList[ ability ] or a.listName or a.name end
 

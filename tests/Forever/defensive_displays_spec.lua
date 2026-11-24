@@ -108,6 +108,69 @@ describe("the defensive and interrupt displays", function()
     end)
 end)
 
+-- def-2 review Minor 1: a bar holds the spell once, by its ID, so the keybind reader and the bar glow resolve the
+-- original; the variant takes the original's keybind and glows the original's button (the original's `bind`)
+describe("a variant's keybind and bar glow (Warlock, Death Coil)", function()
+    local fake = require("Game.State.helpers.fake_api")
+    local wl = require("Forever.helpers.warlock_world")
+    local H
+
+    before_each(function()
+        local fakeNew = fake.new
+        fake.new = function(...)
+            local api, ctl = fakeNew(...)
+            api.GetActionInfo = function(slot)
+                if slot == 1 then
+                    return "spell", 6789
+                end
+            end
+            api.GetBindingKey = function(command)
+                if command == "ACTIONBUTTON1" then
+                    return "5"
+                end
+            end
+            return api, ctl
+        end
+        local ok, h = pcall(headless.new, { character = wl.Affliction.character(), pack = wl.Affliction.PACK })
+        fake.new = fakeNew
+        assert(ok, h)
+        H = h
+        assert.are.same({}, H.loadErrors)
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+    end)
+
+    it("shows the original's keybind", function()
+        H.ns.ReadKeybindings()
+        local conf = H.Hekili.DB.profile.displays.Defensives
+        assert.are.equal("5", H.Hekili:GetBindingForAction("death_coil", conf, 1))
+        assert.are.equal("5", H.Hekili:GetBindingForAction("death_coil_defensive", conf, 1))
+    end)
+
+    it("glows the original's button", function()
+        local BG = H.ns.UI.BarGlow
+        local lit = {}
+        BG.Glower = {
+            ProcGlow_Start = function(b, opts)
+                lit[b] = opts.key
+            end,
+            ProcGlow_Stop = function(b)
+                lit[b] = nil
+            end,
+        }
+        local cfg = H.Hekili.DB.profile.barGlow
+        cfg.enabled, cfg.combatOnly = true, false
+        BG.Apply()
+        H.env.ActionButton1 = { action = 1 }
+        BG.Rescan()
+        local o = H.ns.Output.Begin("Primary")
+        o[1].actionName, o[1].actionID, o[1].texture = "death_coil_defensive", 6789, "tex"
+        o[1].time, o[1].exact_time = 0, H.ctl.now
+        H.ns.Output.steady = false
+        H.ns.Output.Publish("Primary", 1)
+        assert.is_not_nil(lit[H.env.ActionButton1])
+    end)
+end)
+
 -- def-2 part 2 item 4 (CPU): a separate display whose active priority has no line for it is not walked (no reset, no
 -- forecast); a line for it in a custom priority, or an ability a player moves onto its toggle, walks it again
 describe("a separate display with no line in the active priority", function()
