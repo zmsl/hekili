@@ -170,7 +170,9 @@ M.FLICKER = {
     -- 699; readyShort 8 / 1 / 0, base 6 / 1 / 0; flicker 0.10 / 0.19 / 0.18, base 0.11 / 0.15 / 0.18): loOver 754 ->
     -- 737. readyShort's 6 -> 8 (seed 8, a fight re-timed by a corrected Sunder refund at 43.463, then a PROV swing
     -- still forecast as pending) is left at 6 for the controller's ruling (lane report)
-    ["Fury L60"] = { loOver = 737, flicker = 0.19, flickerK = 0.6, retracted = 0.04, readyShort = 6, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
+    -- lane finisher-miss-fix (controller ruling): readyShort 6 -> 8, cause "re-timed fight hits T.SwingPending counting
+    -- a swing that already holds its own avoid (swing-avoid-fix; fixed in item 5)"
+    ["Fury L60"] = { loOver = 737, flicker = 0.19, flickerK = 0.6, retracted = 0.04, readyShort = 8, heldReady = 276 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
