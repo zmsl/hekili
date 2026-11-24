@@ -1328,8 +1328,8 @@ describe("Forever Druid in VirtualState's now context", function()
             end
         end
         -- wrath, starfire, moonfire, insect_swarm and the debuffs demoralizing_roar, faerie_fire, growl, challenging_roar,
-        -- feral_charge (its velocity: the Cooldown Manager verdict's window, L450)
-        assert.are.same({ 9, 0 }, { n, I.nowErrors })
+        -- feral_charge (its velocity: the Cooldown Manager verdict's window, L450), rip ("debuff": avoids only, L1810 F2)
+        assert.are.same({ 10, 0 }, { n, I.nowErrors })
     end)
 
     it("gives Primal Fury's 5 rage at a bear strike's own crit with the talent at 2/2, none at 0/2 (GAP T)", function()
