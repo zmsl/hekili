@@ -1315,11 +1315,11 @@ do
     RegisterUnitEvent( "UNIT_AURA", "player", "target", function( event, unit, data )
         local isPlayer = ( unit == "player" )
         instanceDB = isPlayer and playerInstances or targetInstances
-        -- L1810 F3: a target aura event is a fact (in combat only the belief's reach us: an edge, the verdict's wake,
-        -- the drain's deltas); the steady icons show what it changes at once, never one update late
-        if not isPlayer then ns.Output.Acted() end
-
         if data.isFullUpdate then
+            -- L1810 F3: a target full update is a fact (in combat only the belief's reach us: a Cooldown Manager edge,
+            -- the verdict's wake, a whole-set change); the steady icons show what it changes at once. A delta is the
+            -- drain's own bookkeeping (our write, a believed expiry) and waits like any other change
+            if not isPlayer then ns.Output.Acted() end
             wipe( instanceDB )
 
             ForEachAura( unit, "HELPFUL", nil, StoreInstanceInfo, true )
