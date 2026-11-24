@@ -412,9 +412,8 @@ local function shockCooldown()
     return 6 - 0.2 * talent.reverberation.rank
 end
 
--- `other3` (the simulation's handler only): Earth Shock's other key (L1808), sharing the shocks' cooldown; `kicks`:
--- the cast interrupts the target's.
-local function shockEffect(other, other2, debuffKey, other3, kicks)
+-- `other3` (the simulation's handler only): Earth Shock's other key (L1808), sharing the shocks' cooldown.
+local function shockEffect(other, other2, debuffKey, other3)
     return function()
         -- shockCooldown's formula, repeated: called from here it runs outside the handler's state environment (no
         -- `talent`)
@@ -422,9 +421,6 @@ local function shockEffect(other, other2, debuffKey, other3, kicks)
         setCooldown(other2, 6 - 0.2 * talent.reverberation.rank)
         if other3 then
             setCooldown(other3, 6 - 0.2 * talent.reverberation.rank)
-        end
-        if kicks then
-            interrupt()
         end
         if debuffKey == "frost_shock" then
             applyDebuff("target", debuffKey, 8)
@@ -519,7 +515,16 @@ local function kick()
     t.now = nil -- its `copy` stays: the ranks (a variant's copy maps no IDs: Spec/Abilities.lua)
     t.variantOf, t.toggle = "earth_shock", "interrupts"
     t.debuff, t.readyTime = "casting", state.timeToInterrupt
-    t.handler = shockEffect("flame_shock", "frost_shock", nil, "earth_shock", true)
+    -- the simulation's handler only (no `now`): Earth Shock's effect, the shocks' cooldown on its other keys, and the
+    -- target's cast interrupted; its own closure, so no belief-run function names `interrupt`
+    t.handler = function()
+        setCooldown("flame_shock", 6 - 0.2 * talent.reverberation.rank)
+        setCooldown("frost_shock", 6 - 0.2 * talent.reverberation.rank)
+        setCooldown("earth_shock", 6 - 0.2 * talent.reverberation.rank)
+        removeBuff("revelation")
+        removeDebuff("target", "stormstrike")
+        interrupt()
+    end
     return t
 end
 
