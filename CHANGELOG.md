@@ -20,6 +20,11 @@
 
 ### Fixed
 
+- Feral Druid: a Rip or Rake that misses while one of your white swings lands at the same moment is now seen as missed, so Hekili no longer suggests Ferocious Bite (or Shred) as if the bleed were up.
+- Feral Druid: Rip is no longer taken as landed when a white swing hits in the same moment it misses.
+- When the Cooldown Manager shows that your debuff missed, the next suggestion appears at once instead of one update later.
+- When the Cooldown Manager shows your debuff landed, a miss reported for another attack in the same moment no longer takes the debuff away or gives its energy back.
+- Warrior: a white swing that was dodged, parried or missed no longer counts as rage still on its way.
 - When the game hides enemy identities, as in dungeons, your debuffs on an enemy are still remembered when its nameplate appears late, or drops out and returns while you target it. With no nameplate, your target's low health is still read from an ability usable only below a health threshold, and range checks keep updating.
 - A stacking debuff (such as Sunder Armor) used on one enemy just before you change target now adds its stack to that enemy's own count, not the new target's, so its stack count is right when you target it again.
 - An enemy the game reports dead and then alive again while you still target it no longer reads 0 health until you change target.
