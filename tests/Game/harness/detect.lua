@@ -299,7 +299,9 @@ M.NOTES = {
     K10 = "K10: melee recall does not hold under a session lag (spec §6.2's check; party 0.36, busy 0.18 against K1's"
         .. " 0.83 / 0.70). The session's landing median from [0.4, 1.0] s drives it (without it 0.86 / 0.73); the"
         .. " first-swing lag costs party 0.06; jitter, pushback and PLAYER_ENTER_COMBAT cost nothing. Measured, not"
-        .. " a target (Task 13 finding; the melee scoring is probe U15's).",
+        .. " a target (Task 13 finding; the melee scoring is probe U15's). L1810: busy wash 0.0 -> 0.5 (one own swap,"
+        .. " 9 rage in 20 fights: a provisional credit rightly replaced by our own avoid re-scores a partner's wound in"
+        .. " the crowd), party 1.8 -> 1.4.",
     K13 = "K13: phase 0 solo's 17.8 divergent pairs per 100 own is the synthetic worst case (a twin in our very ms on"
         .. " every press), not an in-game rate; spec §4's union-belief trigger (> 1 per 100 paid) needs an in-game"
         .. " rate: probe U16, a party capture with a same-school caster on our target. Party and busy are floors (crowd"
