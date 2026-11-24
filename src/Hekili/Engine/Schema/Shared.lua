@@ -7,6 +7,7 @@
 
 local addon, ns = ...
 local Hekili = _G[addon]
+local L = ns.L -- top level: tools/locales.py reads a file's strings only with this line (the locales load first)
 
 local function all()
     return Hekili.Class.specs[0]
@@ -77,7 +78,7 @@ end
 --- (L1808, owner "Setting per line") A defensive line's player-health threshold setting's option (RegisterSetting's
 --- `option`; spec:HealthOption and shared:HealthOption): a 1-100 slider, read by the line as `settings.<key>`; its
 --- name and text name ability `ability` (the client's name, read when the options open; the key until it loads). A
---- fresh table each call (load only). The core's strings and registry are read when the options ask, not here.
+--- fresh table each call (load only). The registry is read when the options ask, not here.
 function ns.HealthOption(ability)
     local function label()
         local a = Hekili.Class.abilities[ability]
@@ -90,11 +91,9 @@ function ns.HealthOption(ability)
         step = 1,
         width = "full",
         name = function()
-            local L = ns.L
             return string.format(L["%s: at or below this health (%%)"], label())
         end,
         desc = function()
-            local L = ns.L
             return string.format(
                 L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."],
                 label()

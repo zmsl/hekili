@@ -49,6 +49,10 @@ L["The %s, and |cFFFFD100%s|r priorities were reverted."] = "%s和|cFFFFD100%s|r
 L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = "%s：根据你的天赋选用|cFFFFD100%s|r优先级。"
 L["%s, picked from your talents."] = "%s，根据你的天赋选用。"
 
+-- Hekili/Engine/Schema/Shared.lua
+-- L["%s: at or below this health (%%)"] = ""
+-- L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."] = ""
+
 -- Hekili/Engine/Sim/Targets.lua
 L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = "敌方姓名板已关闭，因此在此副本中 Hekili Forever 只统计你的目标。请开启“显示敌方姓名板”和“显示所有姓名板”。"
 

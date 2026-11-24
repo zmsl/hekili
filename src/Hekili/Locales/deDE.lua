@@ -49,6 +49,10 @@ L["The %s, and |cFFFFD100%s|r priorities were reverted."] = "Die Prioritäten %s
 L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = "%s: die Priorität |cFFFFD100%s|r, anhand deiner Talente gewählt."
 L["%s, picked from your talents."] = "%s, anhand deiner Talente gewählt."
 
+-- Hekili/Engine/Schema/Shared.lua
+L["%s: at or below this health (%%)"] = "%s: bei dieser Gesundheit oder darunter (%%)"
+L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."] = "Die Priorität zeigt %s in der Anzeige „Defensive“, sobald deine Gesundheit bei diesem Prozentsatz oder darunter liegt, und nur, solange Hekili deine Gesundheit im Kampf lesen kann."
+
 -- Hekili/Engine/Sim/Targets.lua
 L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = "Gegnerische Namensplaketten sind aus, daher zählt Hekili Forever in dieser Instanz nur dein Ziel. Aktiviere „Gegnerische Namensplaketten anzeigen“ und „Alle Namensplaketten anzeigen“."
 
@@ -1040,7 +1044,3 @@ L["Priority %s, list %s, line %d reads your health without health.known first. W
 
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000WARNUNG|r: Diese Version von Hekili Forever ist für einen neueren Client von WoW Forever; installiere neu für %s."
-
--- No longer used (the English changed or went away): reuse or delete
-L["%s: at or below this health (%%)"] = "%s: bei dieser Gesundheit oder darunter (%%)"
-L["The priority shows %s in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat."] = "Die Priorität zeigt %s in der Anzeige „Defensive“, sobald deine Gesundheit bei diesem Prozentsatz oder darunter liegt, und nur, solange Hekili deine Gesundheit im Kampf lesen kann."
