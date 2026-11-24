@@ -4563,7 +4563,7 @@ options.abilities.fire_ward.toggle	name	Require Toggle
 options.abilities.fire_ward.toggle	values.cooldowns	Cooldowns
 options.abilities.fire_ward.toggle	values.custom1	Custom 1
 options.abilities.fire_ward.toggle	values.custom2	Custom 2
-options.abilities.fire_ward.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.fire_ward.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.fire_ward.toggle	values.defensives	Defensives
 options.abilities.fire_ward.toggle	values.interrupts	Interrupts
 options.abilities.fire_ward.toggle	values.minor_cooldowns	Minor CDs
@@ -5124,7 +5124,7 @@ options.abilities.frost_ward.toggle	name	Require Toggle
 options.abilities.frost_ward.toggle	values.cooldowns	Cooldowns
 options.abilities.frost_ward.toggle	values.custom1	Custom 1
 options.abilities.frost_ward.toggle	values.custom2	Custom 2
-options.abilities.frost_ward.toggle	values.default	Default |cffffd100(none)|r
+options.abilities.frost_ward.toggle	values.default	Default |cffffd100(Defensives)|r
 options.abilities.frost_ward.toggle	values.defensives	Defensives
 options.abilities.frost_ward.toggle	values.interrupts	Interrupts
 options.abilities.frost_ward.toggle	values.minor_cooldowns	Minor CDs
@@ -19315,15 +19315,15 @@ options.packs.affliction.core.assigned_curse	values.elements	Curse of the Elemen
 options.packs.affliction.core.assigned_curse	values.nocurse	No Curse
 options.packs.affliction.core.assigned_curse	values.recklessness	Curse of Recklessness
 options.packs.affliction.core.assigned_curse	values.weakness	Curse of Weakness
-options.packs.affliction.core.death_coil_defensive_health	desc	The priority shows Spell 6789 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.affliction.core.death_coil_defensive_health	name	Spell 6789: at or below this health (%)
+options.packs.affliction.core.death_coil_defensive_health	desc	The priority shows Spell 6789 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.affliction.core.death_coil_defensive_health	name	Spell 6789: once health is under (%)
 options.packs.affliction.core.disableSpacer	name	\032
 options.packs.affliction.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.affliction.core.enabled	name	Disable Affliction
-options.packs.affliction.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.affliction.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.affliction.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.affliction.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.affliction.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.affliction.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.affliction.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.affliction.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.affliction.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.affliction.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.affliction.core.package	name	Priority
@@ -19677,12 +19677,12 @@ options.packs.arcane.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.arcane.core.disableSpacer	name	\032
 options.packs.arcane.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.arcane.core.enabled	name	Disable Arcane
-options.packs.arcane.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.arcane.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.arcane.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.arcane.core.healthstone_health	name	Healthstone: at or below this health (%)
-options.packs.arcane.core.ice_block_health	desc	The priority shows Spell 11958 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.arcane.core.ice_block_health	name	Spell 11958: at or below this health (%)
+options.packs.arcane.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.arcane.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.arcane.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.arcane.core.healthstone_health	name	Healthstone: once health is under (%)
+options.packs.arcane.core.ice_block_health	desc	The priority shows Spell 11958 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.arcane.core.ice_block_health	name	Spell 11958: once health is under (%)
 options.packs.arcane.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.arcane.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.arcane.core.package	name	Priority
@@ -20077,10 +20077,10 @@ options.packs.arms.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.arms.core.disableSpacer	name	\032
 options.packs.arms.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.arms.core.enabled	name	Disable Arms
-options.packs.arms.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.arms.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.arms.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.arms.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.arms.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.arms.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.arms.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.arms.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.arms.core.maintain_thunder_clap	desc	Keep Thunder Clap's slow on the target, recasting it only when it is missing (that includes the levels before Mortal Strike). Off: the priority never shows Thunder Clap.\n\nThe wowsims gate runs this as on.
 options.packs.arms.core.maintain_thunder_clap	name	Maintain Thunder Clap
 options.packs.arms.core.openPackage	desc	Open and view this priority pack and its action lists.
@@ -20441,12 +20441,12 @@ options.packs.assassination.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.assassination.core.disableSpacer	name	\032
 options.packs.assassination.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.assassination.core.enabled	name	Disable Assassination
-options.packs.assassination.core.evasion_health	desc	The priority shows Spell 5277 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.assassination.core.evasion_health	name	Spell 5277: at or below this health (%)
-options.packs.assassination.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.assassination.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.assassination.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.assassination.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.assassination.core.evasion_health	desc	The priority shows Spell 5277 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.assassination.core.evasion_health	name	Spell 5277: once health is under (%)
+options.packs.assassination.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.assassination.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.assassination.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.assassination.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.assassination.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.assassination.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.assassination.core.package	name	Priority
@@ -20841,17 +20841,17 @@ options.packs.balance.core	name	Specialization Settings
 options.packs.balance.core.activate	desc	Recommend for Balance from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.balance.core.activate	name	Activate Balance
 options.packs.balance.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.balance.core.barkskin_health	desc	The priority shows Spell 22812 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.balance.core.barkskin_health	name	Spell 22812: at or below this health (%)
+options.packs.balance.core.barkskin_health	desc	The priority shows Spell 22812 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.balance.core.barkskin_health	name	Spell 22812: once health is under (%)
 options.packs.balance.core.behind	desc	Hekili assumes you are always behind the target. Below 2 ranks of Shredding Attacks, Claw is still preferred unless Clearcasting makes Shred free.
 options.packs.balance.core.behind	name	Always Behind
 options.packs.balance.core.disableSpacer	name	\032
 options.packs.balance.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.balance.core.enabled	name	Disable Balance
-options.packs.balance.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.balance.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.balance.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.balance.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.balance.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.balance.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.balance.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.balance.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.balance.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.balance.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.balance.core.package	name	Priority
@@ -21223,15 +21223,15 @@ options.packs.beast_mastery.core	name	Specialization Settings
 options.packs.beast_mastery.core.activate	desc	Recommend for Beast Mastery from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.beast_mastery.core.activate	name	Activate Beast Mastery
 options.packs.beast_mastery.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.beast_mastery.core.deterrence_health	desc	The priority shows Spell 19263 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.beast_mastery.core.deterrence_health	name	Spell 19263: at or below this health (%)
+options.packs.beast_mastery.core.deterrence_health	desc	The priority shows Spell 19263 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.beast_mastery.core.deterrence_health	name	Spell 19263: once health is under (%)
 options.packs.beast_mastery.core.disableSpacer	name	\032
 options.packs.beast_mastery.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.beast_mastery.core.enabled	name	Disable Beast Mastery
-options.packs.beast_mastery.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.beast_mastery.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.beast_mastery.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.beast_mastery.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.beast_mastery.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.beast_mastery.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.beast_mastery.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.beast_mastery.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.beast_mastery.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.beast_mastery.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.beast_mastery.core.package	name	Priority
@@ -21587,12 +21587,12 @@ options.packs.combat.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.combat.core.disableSpacer	name	\032
 options.packs.combat.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.combat.core.enabled	name	Disable Combat
-options.packs.combat.core.evasion_health	desc	The priority shows Spell 5277 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.combat.core.evasion_health	name	Spell 5277: at or below this health (%)
-options.packs.combat.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.combat.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.combat.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.combat.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.combat.core.evasion_health	desc	The priority shows Spell 5277 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.combat.core.evasion_health	name	Spell 5277: once health is under (%)
+options.packs.combat.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.combat.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.combat.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.combat.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.combat.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.combat.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.combat.core.package	name	Priority
@@ -22316,15 +22316,15 @@ options.packs.demonology.core.assigned_curse	values.elements	Curse of the Elemen
 options.packs.demonology.core.assigned_curse	values.nocurse	No Curse
 options.packs.demonology.core.assigned_curse	values.recklessness	Curse of Recklessness
 options.packs.demonology.core.assigned_curse	values.weakness	Curse of Weakness
-options.packs.demonology.core.death_coil_defensive_health	desc	The priority shows Spell 6789 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.demonology.core.death_coil_defensive_health	name	Spell 6789: at or below this health (%)
+options.packs.demonology.core.death_coil_defensive_health	desc	The priority shows Spell 6789 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.demonology.core.death_coil_defensive_health	name	Spell 6789: once health is under (%)
 options.packs.demonology.core.disableSpacer	name	\032
 options.packs.demonology.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.demonology.core.enabled	name	Disable Demonology
-options.packs.demonology.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.demonology.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.demonology.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.demonology.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.demonology.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.demonology.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.demonology.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.demonology.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.demonology.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.demonology.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.demonology.core.package	name	Priority
@@ -22723,15 +22723,15 @@ options.packs.destruction.core.assigned_curse	values.elements	Curse of the Eleme
 options.packs.destruction.core.assigned_curse	values.nocurse	No Curse
 options.packs.destruction.core.assigned_curse	values.recklessness	Curse of Recklessness
 options.packs.destruction.core.assigned_curse	values.weakness	Curse of Weakness
-options.packs.destruction.core.death_coil_defensive_health	desc	The priority shows Spell 6789 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.destruction.core.death_coil_defensive_health	name	Spell 6789: at or below this health (%)
+options.packs.destruction.core.death_coil_defensive_health	desc	The priority shows Spell 6789 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.destruction.core.death_coil_defensive_health	name	Spell 6789: once health is under (%)
 options.packs.destruction.core.disableSpacer	name	\032
 options.packs.destruction.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.destruction.core.enabled	name	Disable Destruction
-options.packs.destruction.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.destruction.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.destruction.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.destruction.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.destruction.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.destruction.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.destruction.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.destruction.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.destruction.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.destruction.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.destruction.core.package	name	Priority
@@ -23094,15 +23094,15 @@ options.packs.discipline.core	name	Specialization Settings
 options.packs.discipline.core.activate	desc	Recommend for Discipline from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.discipline.core.activate	name	Activate Discipline
 options.packs.discipline.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.discipline.core.desperate_prayer_health	desc	The priority shows Spell 13908 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.discipline.core.desperate_prayer_health	name	Spell 13908: at or below this health (%)
+options.packs.discipline.core.desperate_prayer_health	desc	The priority shows Spell 13908 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.discipline.core.desperate_prayer_health	name	Spell 13908: once health is under (%)
 options.packs.discipline.core.disableSpacer	name	\032
 options.packs.discipline.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.discipline.core.enabled	name	Disable Discipline
-options.packs.discipline.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.discipline.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.discipline.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.discipline.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.discipline.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.discipline.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.discipline.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.discipline.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.discipline.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.discipline.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.discipline.core.package	name	Priority
@@ -23111,8 +23111,8 @@ options.packs.discipline.core.package	values.Smite (wowsims.com)	|W|T135987:0:::
 options.packs.discipline.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.discipline.core.potion	name	Potion
 options.packs.discipline.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
-options.packs.discipline.core.power_word_shield_health	desc	The priority shows Spell 17 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.discipline.core.power_word_shield_health	name	Spell 17: at or below this health (%)
+options.packs.discipline.core.power_word_shield_health	desc	The priority shows Spell 17 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.discipline.core.power_word_shield_health	name	Spell 17: once health is under (%)
 options.packs.discipline.core.prefHeader	name	|W|T135987:0::::64:64:4:60:4:60|t Discipline|w Preferences
 options.packs.discipline.core.prefSpacer	name	\032
 options.packs.discipline.performance	name	Performance
@@ -23469,10 +23469,10 @@ options.packs.elemental.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.elemental.core.disableSpacer	name	\032
 options.packs.elemental.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.elemental.core.enabled	name	Disable Elemental
-options.packs.elemental.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.elemental.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.elemental.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.elemental.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.elemental.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.elemental.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.elemental.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.elemental.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.elemental.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.elemental.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.elemental.core.package	name	Priority
@@ -23841,10 +23841,10 @@ options.packs.enhancement.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.enhancement.core.disableSpacer	name	\032
 options.packs.enhancement.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.enhancement.core.enabled	name	Disable Enhancement
-options.packs.enhancement.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.enhancement.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.enhancement.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.enhancement.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.enhancement.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.enhancement.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.enhancement.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.enhancement.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.enhancement.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.enhancement.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.enhancement.core.package	name	Priority
@@ -24252,10 +24252,10 @@ options.packs.feral.core	name	Specialization Settings
 options.packs.feral.core.activate	desc	Recommend for Feral from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.feral.core.activate	name	Activate Feral
 options.packs.feral.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.feral.core.barkskin_cat_health	desc	The priority shows Spell 22812 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.feral.core.barkskin_cat_health	name	Spell 22812: at or below this health (%)
-options.packs.feral.core.barkskin_health	desc	The priority shows Spell 22812 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.feral.core.barkskin_health	name	Spell 22812: at or below this health (%)
+options.packs.feral.core.barkskin_cat_health	desc	The priority shows Spell 22812 (Spell 768) in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.feral.core.barkskin_cat_health	name	Spell 22812 (Spell 768): once health is under (%)
+options.packs.feral.core.barkskin_health	desc	The priority shows Spell 22812 (Spell 5487) in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.feral.core.barkskin_health	name	Spell 22812 (Spell 5487): once health is under (%)
 options.packs.feral.core.behind	desc	Hekili assumes you are always behind the target. Below 2 ranks of Shredding Attacks, Claw is still preferred unless Clearcasting makes Shred free.
 options.packs.feral.core.behind	name	Always Behind
 options.packs.feral.core.disableSpacer	name	\032
@@ -24263,12 +24263,12 @@ options.packs.feral.core.enabled	desc	No recommendations while this specializati
 options.packs.feral.core.enabled	name	Disable Feral
 options.packs.feral.core.feralSection5	name	Bear Form (Guardian)
 options.packs.feral.core.feralSectionText5	name	These settings come from the Guardian priority. They apply only while you are in Bear Form.
-options.packs.feral.core.frenzied_regeneration_health	desc	The priority shows Spell 22842 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.feral.core.frenzied_regeneration_health	name	Spell 22842: at or below this health (%)
-options.packs.feral.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.feral.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.feral.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.feral.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.feral.core.frenzied_regeneration_health	desc	The priority shows Spell 22842 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.feral.core.frenzied_regeneration_health	name	Spell 22842: once health is under (%)
+options.packs.feral.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.feral.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.feral.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.feral.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.feral.core.maintain_demoralizing_roar	desc	Keep Demoralizing Roar on the target, as a raid tank does, and recast it only when it is missing (that includes the levels before Lacerate). Off: the priority never shows it, and Berserk no longer waits for it.\n\nThe wowsims gate runs this as on.
 options.packs.feral.core.maintain_demoralizing_roar	name	Maintain Demoralizing Roar
 options.packs.feral.core.openPackage	desc	Open and view this priority pack and its action lists.
@@ -24909,12 +24909,12 @@ options.packs.fire.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.fire.core.disableSpacer	name	\032
 options.packs.fire.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.fire.core.enabled	name	Disable Fire
-options.packs.fire.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.fire.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.fire.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.fire.core.healthstone_health	name	Healthstone: at or below this health (%)
-options.packs.fire.core.ice_block_health	desc	The priority shows Spell 11958 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.fire.core.ice_block_health	name	Spell 11958: at or below this health (%)
+options.packs.fire.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.fire.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.fire.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.fire.core.healthstone_health	name	Healthstone: once health is under (%)
+options.packs.fire.core.ice_block_health	desc	The priority shows Spell 11958 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.fire.core.ice_block_health	name	Spell 11958: once health is under (%)
 options.packs.fire.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.fire.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.fire.core.package	name	Priority
@@ -25268,12 +25268,12 @@ options.packs.frost.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.frost.core.disableSpacer	name	\032
 options.packs.frost.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.frost.core.enabled	name	Disable Frost
-options.packs.frost.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.frost.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.frost.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.frost.core.healthstone_health	name	Healthstone: at or below this health (%)
-options.packs.frost.core.ice_block_health	desc	The priority shows Spell 11958 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.frost.core.ice_block_health	name	Spell 11958: at or below this health (%)
+options.packs.frost.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.frost.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.frost.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.frost.core.healthstone_health	name	Healthstone: once health is under (%)
+options.packs.frost.core.ice_block_health	desc	The priority shows Spell 11958 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.frost.core.ice_block_health	name	Spell 11958: once health is under (%)
 options.packs.frost.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.frost.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.frost.core.package	name	Priority
@@ -25660,10 +25660,10 @@ options.packs.fury.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.fury.core.disableSpacer	name	\032
 options.packs.fury.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.fury.core.enabled	name	Disable Fury
-options.packs.fury.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.fury.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.fury.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.fury.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.fury.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.fury.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.fury.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.fury.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.fury.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.fury.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.fury.core.package	name	Priority
@@ -25813,12 +25813,12 @@ options.packs.guardian.Guardian (wowsims.com).lists.actionID	desc	Select the ent
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	name	Entry
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffcat|r, if |cffffd100buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 5487 - |cFFFFD100|cffffd100(!buff.bear_form.up)&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100(health.known&health.pct<=settings.healthstone_health)&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100(health.known&health.pct<=settings.healing_potion_health)&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1238122 - |cFFFFD100|cffffd100(target.outside5)&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 22812 - |cFFFFD100|cffffd100(health.known&health.pct<=settings.barkskin_health&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r Spell 1259799 - |cFFFFD100|cffffd100(action.elunes_light.known&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
-options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 22842 - |cFFFFD100|cffffd100(health.known&health.pct<settings.frenzied_regeneration_health&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 1238122 - |cFFFFD100|cffffd100(target.outside5)&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 22812 - |cFFFFD100|cffffd100(health.known&health.pct<=settings.barkskin_health&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 1259799 - |cFFFFD100|cffffd100(action.elunes_light.known&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 22842 - |cFFFFD100|cffffd100(health.known&health.pct<settings.frenzied_regeneration_health&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100(health.known&health.pct<=settings.healthstone_health)&!buff.cat_form.up|r|r
+options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100(health.known&health.pct<=settings.healing_potion_health)&!buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 5229 - |cFFFFD100|cffffd100((action.lacerate.known&gcd.remains<=0&(!action.lacerate.known||rage.lo<action.lacerate.cost))&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 770 - |cFFFFD100|cffffd100((action.faerie_fire.known&debuff.faerie_fire.remains<=0)&(toggle.movement&target.outside5||target.within5))&!buff.cat_form.up|r|r
 options.packs.guardian.Guardian (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 99 - |cFFFFD100|cffffd100(settings.maintain_demoralizing_roar&(!(!(debuff.demoralizing_roar.remains<=0))&(toggle.movement&target.outside5||target.within5)))&!buff.cat_form.up|r|r
@@ -26071,23 +26071,23 @@ options.packs.guardian.core	name	Specialization Settings
 options.packs.guardian.core.activate	desc	Recommend for Guardian from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.guardian.core.activate	name	Activate Guardian
 options.packs.guardian.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.guardian.core.barkskin_cat_health	desc	The priority shows Spell 22812 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.guardian.core.barkskin_cat_health	name	Spell 22812: at or below this health (%)
-options.packs.guardian.core.barkskin_health	desc	The priority shows Spell 22812 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.guardian.core.barkskin_health	name	Spell 22812: at or below this health (%)
+options.packs.guardian.core.barkskin_cat_health	desc	The priority shows Spell 22812 (Spell 768) in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.guardian.core.barkskin_cat_health	name	Spell 22812 (Spell 768): once health is under (%)
+options.packs.guardian.core.barkskin_health	desc	The priority shows Spell 22812 (Spell 5487) in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.guardian.core.barkskin_health	name	Spell 22812 (Spell 5487): once health is under (%)
 options.packs.guardian.core.behind	desc	Hekili assumes you are always behind the target. Below 2 ranks of Shredding Attacks, Claw is still preferred unless Clearcasting makes Shred free.
 options.packs.guardian.core.behind	name	Always Behind
 options.packs.guardian.core.disableSpacer	name	\032
 options.packs.guardian.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.guardian.core.enabled	name	Disable Guardian
-options.packs.guardian.core.frenzied_regeneration_health	desc	The priority shows Spell 22842 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.guardian.core.frenzied_regeneration_health	name	Spell 22842: at or below this health (%)
+options.packs.guardian.core.frenzied_regeneration_health	desc	The priority shows Spell 22842 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.guardian.core.frenzied_regeneration_health	name	Spell 22842: once health is under (%)
 options.packs.guardian.core.guardianSection6	name	Cat Form (Feral)
 options.packs.guardian.core.guardianSectionText6	name	These settings come from the Feral priority. They apply only while you are in Cat Form.
-options.packs.guardian.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.guardian.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.guardian.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.guardian.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.guardian.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.guardian.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.guardian.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.guardian.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.guardian.core.maintain_demoralizing_roar	desc	Keep Demoralizing Roar on the target, as a raid tank does, and recast it only when it is missing (that includes the levels before Lacerate). Off: the priority never shows it, and Berserk no longer waits for it.\n\nThe wowsims gate runs this as on.
 options.packs.guardian.core.maintain_demoralizing_roar	name	Maintain Demoralizing Roar
 options.packs.guardian.core.openPackage	desc	Open and view this priority pack and its action lists.
@@ -26465,15 +26465,15 @@ options.packs.marksmanship.core	name	Specialization Settings
 options.packs.marksmanship.core.activate	desc	Recommend for Marksmanship from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.marksmanship.core.activate	name	Activate Marksmanship
 options.packs.marksmanship.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.marksmanship.core.deterrence_health	desc	The priority shows Spell 19263 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.marksmanship.core.deterrence_health	name	Spell 19263: at or below this health (%)
+options.packs.marksmanship.core.deterrence_health	desc	The priority shows Spell 19263 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.marksmanship.core.deterrence_health	name	Spell 19263: once health is under (%)
 options.packs.marksmanship.core.disableSpacer	name	\032
 options.packs.marksmanship.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.marksmanship.core.enabled	name	Disable Marksmanship
-options.packs.marksmanship.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.marksmanship.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.marksmanship.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.marksmanship.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.marksmanship.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.marksmanship.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.marksmanship.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.marksmanship.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.marksmanship.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.marksmanship.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.marksmanship.core.package	name	Priority
@@ -26675,11 +26675,11 @@ options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cF
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0001	|cFFFFD1001.|r Spell 642 - |cFFFFD100|cffffd100health.known&health.pct<=settings.divine_shield_health|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 633 - |cFFFFD100|cffffd100health.known&health.pct<=settings.lay_on_hands_health&(!action.divine_shield.known||!buff.divine_shield.up)|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 871 - |cFFFFD100|cffffd100health.known&(health.pct<=settings.shield_wall_health&!((action.last_stand.known&buff.last_stand.up)||buff.shield_wall.up))|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20594
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r Spell 20594 - |cFFFFD100|cffffd100health.known&((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=settings.stoneform_health)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healthstone_health|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r Spell 1299026 - |cFFFFD100|cffffd100health.known&((!(action.last_stand.known||action.shield_wall.known)||!((action.last_stand.known&buff.last_stand.up)||(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=settings.shatter_curse_health)|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healing_potion_health|r|r
-options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r Spell 20594
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healthstone_health|r|r
+options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healing_potion_health|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healthstone_health|r|r
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 1311015
 options.packs.protection.Protection (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healing_potion_health|r|r
@@ -27016,18 +27016,18 @@ options.packs.protection.core.activate	desc	Recommend for Protection from now on
 options.packs.protection.core.activate	name	Activate Protection
 options.packs.protection.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.protection.core.disableSpacer	name	\032
-options.packs.protection.core.divine_shield_health	desc	The priority shows Spell 642 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.protection.core.divine_shield_health	name	Spell 642: at or below this health (%)
+options.packs.protection.core.divine_shield_health	desc	The priority shows Spell 642 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.protection.core.divine_shield_health	name	Spell 642: once health is under (%)
 options.packs.protection.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.protection.core.enabled	name	Disable Protection
-options.packs.protection.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.protection.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.protection.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.protection.core.healthstone_health	name	Healthstone: at or below this health (%)
-options.packs.protection.core.last_stand_health	desc	The priority shows Spell 12975 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.protection.core.last_stand_health	name	Spell 12975: at or below this health (%)
-options.packs.protection.core.lay_on_hands_health	desc	The priority shows Spell 633 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.protection.core.lay_on_hands_health	name	Spell 633: at or below this health (%)
+options.packs.protection.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.protection.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.protection.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.protection.core.healthstone_health	name	Healthstone: once health is under (%)
+options.packs.protection.core.last_stand_health	desc	The priority shows Spell 12975 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.protection.core.last_stand_health	name	Spell 12975: once health is under (%)
+options.packs.protection.core.lay_on_hands_health	desc	The priority shows Spell 633 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.protection.core.lay_on_hands_health	name	Spell 633: once health is under (%)
 options.packs.protection.core.maintain_demoralizing_shout	desc	Keep Demoralizing Shout on the target, as a raid tank does. Off: the priority never shows it.\n\nThe wowsims gate runs this as on.
 options.packs.protection.core.maintain_demoralizing_shout	name	Maintain Demoralizing Shout
 options.packs.protection.core.openPackage	desc	Open and view this priority pack and its action lists.
@@ -27042,12 +27042,12 @@ options.packs.protection.core.potion	values.default	|T967533:0|t |cFFFFD100Defau
 options.packs.protection.core.prefHeader	name	|W|T134952:0::::64:64:4:60:4:60|t Protection|w Preferences
 options.packs.protection.core.prefHeader	name	|W|T135893:0::::64:64:4:60:4:60|t Protection|w Preferences
 options.packs.protection.core.prefSpacer	name	\032
-options.packs.protection.core.shatter_curse_health	desc	The priority shows Spell 1299026 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.protection.core.shatter_curse_health	name	Spell 1299026: at or below this health (%)
-options.packs.protection.core.shield_wall_health	desc	The priority shows Spell 871 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.protection.core.shield_wall_health	name	Spell 871: at or below this health (%)
-options.packs.protection.core.stoneform_health	desc	The priority shows Spell 20594 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.protection.core.stoneform_health	name	Spell 20594: at or below this health (%)
+options.packs.protection.core.shatter_curse_health	desc	The priority shows Spell 1299026 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.protection.core.shatter_curse_health	name	Spell 1299026: once health is under (%)
+options.packs.protection.core.shield_wall_health	desc	The priority shows Spell 871 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.protection.core.shield_wall_health	name	Spell 871: once health is under (%)
+options.packs.protection.core.stoneform_health	desc	The priority shows Spell 20594 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.protection.core.stoneform_health	name	Spell 20594: once health is under (%)
 options.packs.protection.performance	name	Performance
 options.packs.protection.performance.forecastHeader	name	Forecast
 options.packs.protection.performance.forecastWindow	desc	How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.
@@ -27725,16 +27725,16 @@ options.packs.retribution.core.activate	desc	Recommend for Retribution from now 
 options.packs.retribution.core.activate	name	Activate Retribution
 options.packs.retribution.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.retribution.core.disableSpacer	name	\032
-options.packs.retribution.core.divine_shield_health	desc	The priority shows Spell 642 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.retribution.core.divine_shield_health	name	Spell 642: at or below this health (%)
+options.packs.retribution.core.divine_shield_health	desc	The priority shows Spell 642 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.retribution.core.divine_shield_health	name	Spell 642: once health is under (%)
 options.packs.retribution.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.retribution.core.enabled	name	Disable Retribution
-options.packs.retribution.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.retribution.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.retribution.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.retribution.core.healthstone_health	name	Healthstone: at or below this health (%)
-options.packs.retribution.core.lay_on_hands_health	desc	The priority shows Spell 633 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.retribution.core.lay_on_hands_health	name	Spell 633: at or below this health (%)
+options.packs.retribution.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.retribution.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.retribution.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.retribution.core.healthstone_health	name	Healthstone: once health is under (%)
+options.packs.retribution.core.lay_on_hands_health	desc	The priority shows Spell 633 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.retribution.core.lay_on_hands_health	name	Spell 633: once health is under (%)
 options.packs.retribution.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.retribution.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.retribution.core.package	name	Priority
@@ -28107,15 +28107,15 @@ options.packs.shadow.core	name	Specialization Settings
 options.packs.shadow.core.activate	desc	Recommend for Shadow from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.shadow.core.activate	name	Activate Shadow
 options.packs.shadow.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.shadow.core.desperate_prayer_health	desc	The priority shows Spell 13908 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.shadow.core.desperate_prayer_health	name	Spell 13908: at or below this health (%)
+options.packs.shadow.core.desperate_prayer_health	desc	The priority shows Spell 13908 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.shadow.core.desperate_prayer_health	name	Spell 13908: once health is under (%)
 options.packs.shadow.core.disableSpacer	name	\032
 options.packs.shadow.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.shadow.core.enabled	name	Disable Shadow
-options.packs.shadow.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.shadow.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.shadow.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.shadow.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.shadow.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.shadow.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.shadow.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.shadow.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.shadow.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.shadow.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.shadow.core.package	name	Priority
@@ -28124,8 +28124,8 @@ options.packs.shadow.core.package	values.Shadow (wowsims.com)	|W|T136207:0::::64
 options.packs.shadow.core.potion	desc	Unless otherwise specified in the priority, the selected potion will be recommended.
 options.packs.shadow.core.potion	name	Potion
 options.packs.shadow.core.potion	values.default	|T967533:0|t |cFFFFD100Default|r
-options.packs.shadow.core.power_word_shield_health	desc	The priority shows Spell 17 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.shadow.core.power_word_shield_health	name	Spell 17: at or below this health (%)
+options.packs.shadow.core.power_word_shield_health	desc	The priority shows Spell 17 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.shadow.core.power_word_shield_health	name	Spell 17: once health is under (%)
 options.packs.shadow.core.prefHeader	name	|W|T136207:0::::64:64:4:60:4:60|t Shadow|w Preferences
 options.packs.shadow.core.prefSpacer	name	\032
 options.packs.shadow.core.prefer_starshards	desc	Shadow only, and only when you know Starshards (the Night Elf racial). When enabled, the priority shows Starshards before Mind Flay whenever Mind Blast is 4 seconds or more from ready. Off: the priority never shows Starshards.
@@ -28527,12 +28527,12 @@ options.packs.subtlety.core.activeMarker	name	|cFFFFD100Active|r
 options.packs.subtlety.core.disableSpacer	name	\032
 options.packs.subtlety.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.subtlety.core.enabled	name	Disable Subtlety
-options.packs.subtlety.core.evasion_health	desc	The priority shows Spell 5277 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.subtlety.core.evasion_health	name	Spell 5277: at or below this health (%)
-options.packs.subtlety.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.subtlety.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.subtlety.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.subtlety.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.subtlety.core.evasion_health	desc	The priority shows Spell 5277 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.subtlety.core.evasion_health	name	Spell 5277: once health is under (%)
+options.packs.subtlety.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.subtlety.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.subtlety.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.subtlety.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.subtlety.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.subtlety.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.subtlety.core.package	name	Priority
@@ -29557,15 +29557,15 @@ options.packs.survival.core	name	Specialization Settings
 options.packs.survival.core.activate	desc	Recommend for Survival from now on. The choice is kept for your current talent tree: a talent swap to another tree activates the specialization chosen for that one (also |cFFFFD100/hekili spec name|r).
 options.packs.survival.core.activate	name	Activate Survival
 options.packs.survival.core.activeMarker	name	|cFFFFD100Active|r
-options.packs.survival.core.deterrence_health	desc	The priority shows Spell 19263 in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.survival.core.deterrence_health	name	Spell 19263: at or below this health (%)
+options.packs.survival.core.deterrence_health	desc	The priority shows Spell 19263 in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.survival.core.deterrence_health	name	Spell 19263: once health is under (%)
 options.packs.survival.core.disableSpacer	name	\032
 options.packs.survival.core.enabled	desc	No recommendations while this specialization is active.
 options.packs.survival.core.enabled	name	Disable Survival
-options.packs.survival.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.survival.core.healing_potion_health	name	Healing Potion: at or below this health (%)
-options.packs.survival.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is at or below this percentage, and only while Hekili can read your health in combat.
-options.packs.survival.core.healthstone_health	name	Healthstone: at or below this health (%)
+options.packs.survival.core.healing_potion_health	desc	The priority shows Healing Potion in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.survival.core.healing_potion_health	name	Healing Potion: once health is under (%)
+options.packs.survival.core.healthstone_health	desc	The priority shows Healthstone in the Defensives display once your health is under this percentage (Hekili reads it in 1% steps), and only while Hekili can read your health in combat.
+options.packs.survival.core.healthstone_health	name	Healthstone: once health is under (%)
 options.packs.survival.core.openPackage	desc	Open and view this priority pack and its action lists.
 options.packs.survival.core.package	desc	The addon will use the selected package when making its priority recommendations.
 options.packs.survival.core.package	name	Priority
@@ -29903,6 +29903,7 @@ options.toggles.troubleshooting.snapshot.key	name	Snapshot
 ~message	reverted 2	The |cFFFFD100Alpha|r and |cFFFFD100Beta|r priorities were reverted.
 ~message	reverted 3	The |cFFFFD100Beta|r, |cFFFFD100Alpha|r, and |cFFFFD100Gamma|r priorities were reverted.
 ~message	snapshot	Snapshots saved:  Defensives, Primary.
+~message	snapshot	Snapshots saved:  Primary.
 ~message	styles	Display style 'enus_test' targets style API -1, this Hekili Forever has 1; not registered.
 ~message	styles	Display style 'queue' not registered: the name is a core display setting.
 ~message	unknown style	Display Primary: unknown style 'enus_nope', drawn as classic.

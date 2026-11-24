@@ -629,10 +629,15 @@ a kick gets a second key: the ability field `variantOf = "<original key>"` regis
 and toggle; the original keeps the spell's IDs, its name and the belief's record (`Spec/Abilities.lua`,
 `Tracked.lua`), the options list shows the variant with its toggle's name, and the pack sets each key's cooldown in
 the other's handler (Warlock `death_coil_defensive`, Mage `ice_barrier_defensive`, Shaman `earth_shock_interrupt`).
+A bar holds the spell once, as the original, so the variant joins the original's `bind`: it shows the original's
+keybind and glows its button.
 A separate display whose active priority has no line for it is not walked (`Engine/Sim/Core.lua` `packHasLine`, read
-every update: an entry whose ability's toggle, the player's per-ability choice first, is the display's filter; the
-engine's internal verbs, `use_items` among them, count for Cooldowns and for a toggle a player gave an item), so the
-Interrupts display costs nothing until a priority has a kick; it publishes an empty set, as with its toggle off.
+every update: an entry, not switched off, whose ability's toggle, the player's per-ability choice first, is the
+display's filter and which the player has not disabled; the engine's internal verbs, `use_items` among them, count for
+Cooldowns and for a toggle a player gave an item), so the Interrupts display costs nothing until a priority has a kick;
+it publishes an empty set, as with its toggle off. A line `health.known` guards whole (`ns.HealthGuarded`, the
+detector's sense; the script's `NeedsHealth`) counts only while `state.health.known`: with no health reading the
+Defensives display is not walked either.
 
 ## 4. `Hekili.Virtual`
 
@@ -765,7 +770,8 @@ and the facade's row never hands the core a secret. A band lost while its watch 
 after values that moved on every frame) holds its last reading for `I.HEALTH_HOLD` (1 s from the last drain it was
 live; owner "Hold last reading", L1805), then reads full; `I.healthHolds` and `I.healthSnaps` count both. `health.known`
 (Facade.Known, §1) is true exactly while the estimate is a reading. One check decides whether a line reads the
-player's health (`health.<field>`, `stat.health_pct`, `at_risk`) without `health.known&` guarding its whole condition
+player's health (`health.<field>`, `stat.health`, `stat.health_pct`, `stat.maximum_health`, `group_health`,
+`raid_health`, `at_risk`) without `health.known&` guarding its whole condition
 (first, the rest one group or free of a top-level `|`): `ns.HealthUnguarded` (`Engine/Sim/AplThresholds.lua`). A custom
 priority's line that does is warned once a session at load, naming the priority, list and line (`Hekili:LoadScript`,
 `Hekili:Print`; owner L1808: "yes add the health.known warning but dont for the others since we model those": a power

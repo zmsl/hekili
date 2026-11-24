@@ -114,8 +114,9 @@ function M.invariant(seed, fights)
         )
     )
     for _, d in ipairs(DISPLAYS) do
-        -- Interrupts aside: no kick in the Arms priority, so it is not walked (Core.lua packHasLine, L1808)
-        assert.is_true(d == "Interrupts" or computed[d] > 100, d .. " was not computed")
+        -- Interrupts aside: no kick in the Arms priority, so it is not walked (Core.lua packHasLine, L1808); Defensives
+        -- too: its every line needs health.known, walked only while the player's health is read (def-2 review, CPU)
+        assert.is_true(d == "Interrupts" or d == "Defensives" or computed[d] > 100, d .. " was not computed")
     end
     assert.are.equal(0, offAlts)
     assert.is_true(onAlts > 0, "no record carried an alternative: the passes never ran")
