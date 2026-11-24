@@ -253,6 +253,17 @@ describe("the ticket pool", function()
             assert.are.equal(0, T.SwingPending(1, 10.5))
         end)
 
+        -- L1810 item 5 (swing-avoid-fix: Fury L60 readyShort): a swing holding its own avoid (PROV) pends no rage; a
+        -- hand-back (its own wound) credits it then
+        it("is not a swing that holds its own avoid", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+            assert.are.equal(T.PROV, T.state[T.lastSwing[1]])
+            assert.are.equal(0, T.SwingPending(1, 10.5))
+        end)
+
         it("does not make a retraction's re-open the hand's latest swing", function()
             local i = T.OpenSwing(20, 1, "Creature-1", 1.5, 0, false, true)
             assert.are.equal(T.OPEN, T.state[i])

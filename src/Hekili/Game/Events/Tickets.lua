@@ -392,8 +392,10 @@ function T.SwingPending(hand, t)
         return at0
     elseif state[i] < OPEN or state[i] == T.TENT or kind[i] ~= MELEE or at[i] ~= at0 then
         return 0 -- a TENT swing is credited, provisionally (attribution-recovery decision 48)
-    elseif T.told[i] == 2 then
-        return 0 -- the provider said AVOID: no rage pends (providers decision 70)
+    elseif T.told[i] == 2 or state[i] == PROV then
+        -- the provider said AVOID (providers decision 70), or it holds its own avoid (L1810: a hand-back credits it
+        -- then): no rage pends
+        return 0
     end
     return at0
 end
