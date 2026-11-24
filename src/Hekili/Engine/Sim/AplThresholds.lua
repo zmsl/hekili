@@ -134,15 +134,31 @@ end
 -- health reads full, so an unguarded line (`health.pct>80`, or a `|` branch beside the term) passes on no reading.
 -- `s`: a condition, or a whole APL line (`actions=x,if=...`: its `if=` is the condition). Guarded: the condition is
 -- `health.known&R`, R one group or free of a top-level `|`, or `(G)&T` with G guarded and T free of a top-level `|`.
--- Reads: `health.<field>` but `health.known` (not another unit's `<unit>.health.`), `stat.health_pct`, `at_risk`.
+-- Reads: `health.<field>` but `health.known` (not another unit's `<unit>.health.`), and the other names of the
+-- player's health (State.lua): `stat.health`, `stat.health_pct`, `stat.maximum_health` (the `health.max` read),
+-- `group_health` (the player's with the party's), `raid_health` (its twin in the state's list), `at_risk`.
 -- Allocates: load only (gsub/sub on the text).
+local ALIASES = {
+    "[^%w_.]stat%.health%f[^%w_]",
+    "[^%w_.]stat%.health_pct%f[^%w_]",
+    "[^%w_.]stat%.maximum_health%f[^%w_]",
+    "[^%w_.]group_health%f[^%w_]",
+    "[^%w_.]raid_health%f[^%w_]",
+    "[^%w_.]at_risk%f[^%w_]",
+}
+
 local function readsHealth(t)
     for field in t:gmatch("[^%w_.]health%.([%a_][%w_]*)") do
         if field ~= "known" then
             return true
         end
     end
-    return t:find("[^%w_.]stat%.health_pct%f[^%w_]") ~= nil or t:find("[^%w_.]at_risk%f[^%w_]") ~= nil
+    for i = 1, #ALIASES do
+        if t:find(ALIASES[i]) then
+            return true
+        end
+    end
+    return false
 end
 
 -- The index of the `)` closing the `(` at `i` of `s`, or nil.
