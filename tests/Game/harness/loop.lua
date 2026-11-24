@@ -738,6 +738,8 @@ function M.run(L, seed, o, drivers)
         -- time to die (Targets.lua) answers from it
         if bands and arm.ttd and not ctl.ttdRig then
             ctl.ttdRig = ttd_rig.install(d.H, ctl.lhv)
+        elseif bands and arm.ttd then
+            ttd_rig.newFight(ctl.ttdRig) -- the last world's plates are gone (ttd_rig.lua)
         end
         d.H.Hekili.bandOff = not bands
         d.H.Hekili:ProvidersChanged()

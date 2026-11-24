@@ -46,7 +46,7 @@ local function boot(nilForNone, lhvMinor)
     local stub = rawget(H.env, "LibStub")
     stub.libs[major], stub.minors[major] = bands, minor
     local rig = ttd_rig.install(H, bands)
-    local w = { H = H, tracks = 0 }
+    local w = { H = H, tracks = 0, rig = rig }
     local track = rig.lib.Track
     function rig.lib.Track(...)
         w.tracks = w.tracks + 1
@@ -222,6 +222,28 @@ describe("ttd-chain-pull: the next mob does not take the last one's kill time (l
         assert.are.equal(0, known)
         assert.are.equal(UNKNOWN, w.H.Hekili:GetTimeToPct("target", 20))
         assert.is_truthy(w.H.Hekili:GetTTDInfo():find("time to die: unavailable lhv-old", 1, true))
+    end)
+
+    -- The harness's worlds reuse nameplate1 for each fight's new mob with no NAME_PLATE_UNIT_REMOVED between (the client
+    -- always fires one first); LibTimeToDie minor 5 then took the new mob for the plate's last one and carried its time
+    -- into the pull (the ttd arm's Balance seeds: 249 s at a fresh pull). ttd_rig.newFight is the removal, per fight.
+    it("a new fight's mob on the last fight's plate token: unknown at the pull (ttd_rig.newFight)", function()
+        local w = boot()
+        local ctl = w.H.ctl
+        ctl.guid.nameplate1 = "Creature-1"
+        w.target("Creature-1", 100)
+        w.H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+        w.combat(true)
+        local remains = w.fight(100, 100 / 60, 10)
+        assert.is_true(remains < UNKNOWN)
+        w.combat(false)
+        ttd_rig.newFight(w.rig)
+        ctl.guid.nameplate1 = "Creature-2"
+        w.target("Creature-2", 100)
+        w.H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+        w.combat(true)
+        w.step()
+        assert.are.same({ UNKNOWN, UNKNOWN }, { w.read() })
     end)
 
     it("no unit answered nil, not false: forgotten all the same", function()

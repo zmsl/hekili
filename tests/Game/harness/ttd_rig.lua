@@ -63,6 +63,26 @@ function M.install(H, lhv)
     return rig
 end
 
+--- A new fight in the same instance (loop.lua): the last world's plates are gone. The client fires
+--- NAME_PLATE_UNIT_REMOVED before a plate token names another mob, but each harness world starts afresh with
+--- nameplate1..N naming new mobs; unheard, the library takes the new target for the last one (the plate token it
+--- linked, LibTimeToDie minor 5) and carries its estimate into the pull. So the library's frame hears each removal and
+--- the fake's plate sources read gone. shortcut: the library's frame only; the instance's other frames keep today's
+--- stream.
+function M.newFight(rig)
+    local f, lhv, now = rig.lib.frame, rig.lhv, rig.ctl.now
+    local on = f and f.__scripts.OnEvent
+    for i = 1, 40 do
+        local tok = "nameplate" .. i
+        if on and rig.lib.plates and rig.lib.plates[tok] then
+            on(f, "NAME_PLATE_UNIT_REMOVED", tok)
+        end
+        if lhv.sources["health|" .. tok .. "|nil"] then
+            lhv:Push("health", tok, nil, nil, nil, now)
+        end
+    end
+end
+
 --- One harness tick: each watch's band change to the library's sink, then the library's driver. Allocates nothing.
 function M.poll(rig)
     local ws = rig.watches
