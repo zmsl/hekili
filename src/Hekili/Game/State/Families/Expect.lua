@@ -96,7 +96,7 @@ local function malformed(obj, e, k, s, au)
     elseif obj.school ~= nil and not s then
         return "unknown school " .. tostring(obj.school)
     elseif e == "debuff" and (obj.school ~= nil or (au and rawget(au, "dot") == "debuff")) then
-        -- its aura may tick (L1810: Rip): those ticks stay background rows, never this school-0 ticket's
+        -- its aura may tick (L1810): those ticks stay background rows, never this school-0 ticket's
         return 'debuff deals no direct damage: no school, no dot = "debuff" aura'
     elseif e == "instant" and not s then
         return 'instant needs a school (no damage: expects "debuff")'

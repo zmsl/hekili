@@ -47,8 +47,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- `liftE/L/H[r]` and `liftT[r]`: how far a rung lifted a swing-paid slot's est, lo and hi (our cast's success, a usable
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
--- may pay the rest). `emptyT[r]`: when our cast's `now` last took the slot's top to 0 (it spent the whole pool, as an
--- Execute: I.Emptied); a swing at or before it was in that pool, so its credit pays nothing (L1793).
+-- may pay the rest). `emptyT[r]`: when our cast's `now` last took the slot's top to 0 (it spent the whole pool: a
+-- spend-all, I.Emptied); a swing at or before it was in that pool, so its credit pays nothing (L1793).
 -- `capT[r]`: when a short answer last reached the floor since our last spend; until the next fold moves the clock a read
 -- stands on a ceiling, not a measurement (VS.Power's `capped`), and a poll still short marks it again; a usable answer
 -- above the top (the same poll's, a dearer ability) contradicts the short one and ends it. `capB[r]`: false

@@ -144,7 +144,7 @@ end
 -- (L1810 F1) The swing of ours on `g` whose landing a secret white wound at t most likely is, on timing alone: OPEN (it
 -- still owes its row) or PROV holding a tied avoid, t in its core band, its LR over the unknown class's theta. Nil when
 -- none. Allocates nothing.
--- shortcut: any white wound qualifies (a bleed's tick, another player's swing): one in the band before a swing's true
+-- shortcut: any white wound qualifies (a periodic tick, another player's swing): one in the band before a swing's true
 -- avoid in a cast's frame gives that avoid to the cast (the residual, lane finisher-miss-fix report); where the cast's
 -- aura is tracked, the Cooldown Manager's light takes the refund back. Upgrade if live captures show it.
 local function secretOwner(t, g)
@@ -167,7 +167,7 @@ local function secretOwner(t, g)
 end
 
 -- Gap AS, the forward order: the oldest swing of ours on `g` that still owes its row at t (no row yet, its window
--- holding t), before or after the cast's success (L1793: Feral's swing 0.27 s after Rip, its miss at a tail lag), or 0.
+-- holding t), before or after the cast's success (L1793: a swing 0.27 s after an instant, its miss at a tail lag), or 0.
 -- Allocates nothing.
 local function owedSwing(t, g)
     local best = 0
@@ -811,7 +811,7 @@ local function route(t, g, uid, act, flag, amount, school)
                 end
                 p, tied, held = 0, true, r
             elseif pass > 1 and T.kind[p] == X.FRAME and not T.Unmapped(t) then
-                -- the forward order (Fury L30, Sunder 60.40): past the cast's own frame, a swing of ours that still
+                -- the forward order (L629, L1793): past the cast's own frame, a swing of ours that still
                 -- owes its row (from before the cast: resolved first; from after it: L1793, our instants' own rows
                 -- come in their frame) takes the avoid, held on the oldest such swing, whatever its lag (the LR's
                 -- weakest claim, 0: its own wound takes it back for the cast), never the cast's while one waits (a
