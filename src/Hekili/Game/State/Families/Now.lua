@@ -151,6 +151,10 @@ local rfT, rfOld = {}, {}
 -- How long after its success a cast's own avoid row may still come: its cast ticket's window (Events/Tickets.lua arm:
 -- the learned main-hand landing lag's median plus three spreads, I.Log.LandWindow(1), never under
 -- I.Melee.CAST_WINDOW). Allocates nothing.
+-- shortcut (review M5): learned, so bounded only by the median's clamp (the main hand's pair window, 1.5 s) plus three
+-- spreads; seeded 0.654 s. At or past the gap between refundable casts (about a GCD) a slot pressed every GCD keeps
+-- I.RefundPending true and its pins calibrate nothing while pressing (regen holds its last value: no error, no
+-- learning). Upgrade (cap it under the GCD) if a trace shows the window there.
 local function rowWindow()
     local w, cw = I.Log.LandWindow(1), I.Melee.CAST_WINDOW
     return w > cw and w or cw
@@ -1115,8 +1119,8 @@ local function undo(a, castT, c, rowT, t, late)
     if c == UNLANDED or lit then
         return
     end
-    -- onAvoid runs before the give-back check (L1295): a spend from the slot here would count as a spend since the
-    -- cast and cut the refund to the share (est low, the safe side); no pack's onAvoid spends today
+    -- onAvoid runs before the give-back check (L1295): a spend from the slot here counts as a spend since the cast and
+    -- cuts the refund to the share (est low, the safe side); an onAvoid that spends back its own `now` gain does that
     if A.onAvoid[a] then
         journal = false
         call(A.onAvoid[a], a, rowT)
@@ -1136,6 +1140,11 @@ local function undo(a, castT, c, rowT, t, late)
     -- an `onAvoid` takes back its own (Warrior's Heroic Strike: Unbridled Wrath and Reckless Swings), not again here.
     -- shortcut: a full resist or immunity (UNLANDED, returned above) keeps the gain, unmeasured as its refund is;
     -- upgrade if such a gain shows over the truth
+    -- shortcut (review M6): "refundOnAvoid" stands for "its `now` gain needs the landing", a proxy true of every pack
+    -- today, not a declaration; upgrade with the pack field registry lane (pack-declares-specifics)
+    -- shortcut (review M3, ledger L1844): an exact pin between the cast and a late row already holds the pool without
+    -- the gain, and this takes it off again: est low by the gain until the next answer (rare: 100% Relentless, an
+    -- avoided finisher, a flip pin inside the row's lag); upgrade with the late-row harness arm or a live snapshot
     if r > 0 and gainH > 0 and A.refund[a] > 0 and not A.onAvoid[a] then
         I.Unrefund(r, gainE, gainE, gainL, gainH, t, gainPin)
         I.res.castGain[r] = I.res.castGain[r] - gainE -- a cast's declared gain no longer explains a flip
@@ -1371,8 +1380,15 @@ I.On(Obs.SwingSettled, function(o)
         fire(2, LAND, o.b, o.a)
     end
 end)
-I.On(Obs.PlayerHit, function(o)
+local DODGE = I.HitKind.DODGE
+I.On(Obs.PlayerHit, function(o, t)
     fire(1, OUTCOME_OF[o.a] or 0, o.t)
+    -- (L1832 review M4) our own dodge since the cast may add a point of its own (a talent's chance, never modelled as
+    -- a gain): a rise then proves nothing, so the fact goes silent and the rows decide.
+    -- shortcut: a dodge row folded after the fact decided "landed" cannot take it back; upgrade if a trace shows one
+    if o.a == DODGE and ptA ~= 0 and ptGo == 0 and o.t >= ptT then
+        pointSilent(t)
+    end
 end)
 I.On(Obs.PlayerCrit, function(o)
     fire(1, CRIT, o.t)

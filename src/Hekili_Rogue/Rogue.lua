@@ -1170,6 +1170,8 @@ spec:RegisterAbilities(rogue({
         startsCombat = true,
         known = knows(GOUGE),
 
+        -- (L1832 review M7) its point is the handler's only: no `now` gain, so no point fact (the rows decide its
+        -- avoid; it refunds nothing); wowsims has no cast for it, so no parity gap
         now = function()
             removeBuff("stealth")
             removeBuff("vanish")
@@ -1229,6 +1231,7 @@ spec:RegisterAbilities(rogue({
             return buff.stealth.up or buff.vanish.up, "requires stealth"
         end,
 
+        -- (L1832 review M7) as Gouge: its points are the handler's only, no point fact; wowsims has no cast for it
         now = function()
             removeBuff("stealth")
             removeBuff("vanish")

@@ -532,19 +532,33 @@ undoes.
 
 **The point fact** (L1832). A cast whose `now` gains a counter the client answers plain in combat (a resource with
 no regen, swing pay or decay: the combo points, a builder's `gain(1, "combo_points")`, which a pack declares in `now`
-beside its `handler`'s) is settled by that resource's plain reads, not by the rows' timing (`Families/Now.lua`): against its last plain read at least `PT_LAG`
-(0.08 s) before the cast (a closer one may already show the cast's gain), a read after the cast showing it risen (by any
-amount: a crit's extra point counts) proves the cast landed, and one `PT_LAG` or more after it showing no rise proves
-it avoided. The cast's own `Obs.Avoided` waits for the fact, which is decided at the resource's read (poll 1), before
+beside its `handler`'s) is settled by that resource's plain reads, not by the rows' timing (`Families/Now.lua`): against its last plain read
+strictly before the cast's frame (`I.SAME_FRAME`; live, a builder's point never came before its success), a read after
+the cast showing it risen (by any amount: a crit's extra point counts) proves the cast landed, and one `PT_AVOID`
+(0.3 s, the owner's two Feral captures: 33 landed builders, the latest point 0.119 s after the success) or more after
+it showing no rise proves it avoided. The cast's own `Obs.Avoided` waits for the fact, which is decided at the resource's read (poll 1), before
 the drain's bands and usable answers; a refund decided a drain late keeps the slot's state after the cast's spend plus
 the share as a floor (an answer since only bounded it). Landed:
 the held avoid was another's, nothing is undone or refunded, and each target record the `now` wrote re-opens at the
 fact's time with its expiry kept (the avoid's SPELL_MISSED already went to Hekili, whose missable hook drops a record
-applied at the cast's stamp). Avoided: the undo and refund run as an avoid's, with no reaction when no avoid row of its
-own came. Silent, so the rows' verdict stands: at the resource's maximum before the cast, no read old enough, a read
-that fell, a secret read (the target-bound read substitutes 0), a target swap or death, no plain read past the lag, or
-the next cast.
+applied at the cast's stamp); an avoid paid to the cast after the fact decided (live, the normal order: the point in
+the success's frame, the rows about 0.47 s later) re-opens them the same way, at the row. Avoided: the undo and refund
+run as an avoid's, with no reaction when no avoid row of its own came. Silent, so the rows' verdict stands: at the
+resource's maximum before the cast, no read old enough, a read that fell, a secret read (the target-bound read
+substitutes 0), a target swap or death, no plain read past `PT_AVOID` by the settle, or the next cast.
 Finishers predict no gain in `now` and stay with the rows (a missed finisher keeps its points in wowsims: a later fact).
+
+**The refund guard** (L1832, owner 2026-11-25 "guard every refund"). The server refunds an avoided cast at its success;
+the belief books it at the avoid's row or the point fact. While a refund on a cost slot is unsettled (the latest
+refundable cast's point fact pending, or its own avoid row still inside the cast ticket's window, `I.Log.LandWindow(1)`
+never under `I.Melee.CAST_WINDOW`), `I.RefundPending` holds every regen measurement of that slot: an exact pin
+calibrates nothing, and a swing-paid slot's pin adds nothing to the swing-scale window (`Families/Resources.lua` pin).
+A refund booked after a pin since its cast leaves that pin measuring nothing (`pinValid`). Band crossings need no
+guard: they measure band values only, and the cast's booked spend and the late refund each start the pair over.
+
+**What only a landing gains.** A refundable cast's `now` gain to its own cost slot (Rogue's Relentless Strikes on a
+finisher, counted only when certain: 100%, never its expected value) goes back out on its avoid, as no spend
+(`I.Unrefund`), before the refund; an ability with its own `onAvoid` takes back its own gain there.
 
 **A GCD modifier.** `spec:RegisterGcdMod({ aura = <key>, pct = <n>, spells = { <ids> } | nil })` (aura audit C12;
 the cost modifier's shape and scope: `spells` nil is every ability, a listed ID matches the ability's `id` or a `copy`

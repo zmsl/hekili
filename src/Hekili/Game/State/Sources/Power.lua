@@ -150,6 +150,8 @@ S.Poll(1, function(api, t)
         if type(v) == "number" then
             I.readPlain[r] = true
             Direct(Obs.Read, t, r, v, ReadOf.Resource)
+        elseif not R.onTarget[r] then
+            I.readPlain[r] = false -- a secret answer: no fact (readOnTarget sets its own)
         end
         if not I.inCombat and R.swing[r] == 0 then
             local rawIn, rawAct = api.GetPowerRegenForPowerType(R.type[r]) -- secret: Plain next
