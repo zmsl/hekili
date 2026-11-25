@@ -7,12 +7,24 @@
 ### Changed
 
 ### Fixed
-- Simplified Chinese: the forecast window note, the priority editor's Condition and Display headers, the warning when a priority compares more exact values than Hekili can watch, and the snapshot help are now translated, thanks to dodoels; the custom-line health warning and Healing Potion are translated too.
-- German, Spanish and French: the warning when a priority compares more exact values than Hekili can watch is now translated.
 
 ### Known issues
 
 ### Upgrade notes
+
+## v0.12.1
+
+_Released 2026-11-25_
+
+This release fills the remaining translation gaps for Simplified Chinese, German, Spanish and French.
+
+### Core and display
+- Simplified Chinese: the forecast window note about a separate display's longer Forecast Period extending the resource forecast is now translated, thanks to dodoels.
+- Simplified Chinese: the priority editor's Condition and Display section headers are now translated.
+- Simplified Chinese: the snapshot help is now translated and matches the current English text.
+- Simplified Chinese: the health warning on custom priority lines and the Healing Potion name are now translated.
+- German, Spanish, French and Simplified Chinese: the priority editor warning shown when a priority compares more exact values than Hekili can watch is now translated.
+- German, Spanish, French and Simplified Chinese are now fully translated throughout Hekili.
 
 ## v0.12.0
 
