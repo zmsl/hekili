@@ -131,7 +131,7 @@ local bR, bD, bE, bL, bH, bP = {}, {}, {}, {}, {}, {}
 -- last two plain reads (time -1e9 none). castE, castL, castSp: the cast's slot after its spend, and its spend serial.
 -- shortcut: PT_LAG is unmeasured for the points (the 2026-11-22 capture has their power event and the count change in
 -- one frame, no success stamp beside them); upgrade with a probe of the success -> UNIT_POWER_FREQUENT COMBO_POINTS dt.
-local PT_LAG = 0.1
+local PT_LAG = 0.08 -- over a 0.05 s frame (I.SAME_FRAME) with margin; under the 0.1 s poll grid of a replay
 local rdV1, rdT1, rdV2, rdT2 = {}, {}, {}, {}
 local castE, castL, castSp = 0, 0, 0
 local ptA, ptT, ptR, ptV0, ptSwap, ptGo, ptV, ptVT = 0, -1, 0, 0, 0, 0, 0, -1
@@ -1102,10 +1102,10 @@ local function undo(a, castT, c, rowT, t, late)
         I.LiftExplained(r, nowLE, nowLL, nowLH, d + nowE, d + nowL, d + nowH)
     elseif r > 0 and d > 0 and late and I.res.spends[r] == castSp then
         -- the point fact's undo comes a drain or more after the row would have: a usable answer since only bounded the
-        -- refunded pool, so the slot after the cast's spend plus the share and its least regen since is a floor
-        -- (I.Refund's fE, fL)
+        -- refunded pool, so the slot after the cast's spend plus the share is a floor (I.Refund's fE, fL); est adds the
+        -- least regen since, lo none (continuous regen runs ahead of a ticking pool: lo would pass the truth)
         local g = I.RegenLo(r, castT, t - castT)
-        I.Refund(r, d, t, false, nil, nil, castE + d + g, castL + d + g)
+        I.Refund(r, d, t, false, nil, nil, castE + d + g, castL + d)
     elseif r > 0 and d > 0 then
         I.Refund(r, d, t) -- at the fold; the answers since the cast's spend already saw it
     end
