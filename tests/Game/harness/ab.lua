@@ -1,6 +1,7 @@
 -- tests/Game/harness/ab.lua (providers spec §4.1, decision 83): the arm (HEKILI_AB) and the floor assertions every gate
--- routes through: the default arm asserts; a provider arm records each cell in .ab/<arm>.tsv and never fails. A
--- recorded row (M.record) is judged in no arm and written in each, the default's in .ab/default.tsv.
+-- routes through: the default arm asserts; a provider arm records each cell in .ab/<arm>.tsv and never fails, but a
+-- gated one (`gate`: shipped) records and asserts. A recorded row (M.record) is judged in no arm and written in each,
+-- the default's in .ab/default.tsv.
 local M = {}
 
 M.ARMS = {
@@ -189,6 +190,22 @@ M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = fal
 -- (ttd_rig.lua), so the core's fight_remains and time_to_die answer its live estimate; each fight writes a `ttd` row
 -- (loop.ttdRow: answered polls, error against the kill). Record-only: its flicker is compared with the bands arm's.
 M.ARMS.ttd = { outcomes = "default", presence = "router", viewer = false, bands = true, ttd = true }
+-- The shipped arm (L1814, Fable batch 4 I1; owner 2026-11-23 "Yes, before the tag"): the addon as it ships, every
+-- switch on (Engine/Schema/Tracked.lua providersOf: the Cooldown Manager unless Hekili.cdmOff, the bands unless
+-- Hekili.bandOff; Engine/Sim/Targets.lua: the time to die with the bands): the bands, the real LibTimeToDie (the ttd
+-- arm's, its plain oracle told the true time left: loop.run) and the Cooldown Manager with the class's real layout
+-- (tools/data/cooldownviewer's fixture; a class without one runs the viewer with no item). `gate`: it
+-- asserts as the default arm does (M.check), its own floors in pack_gate.ARM_FLOORS.shipped; `make gate` runs it.
+-- The client's own secrets (our auras in combat, UNIT_COMBAT amounts) are not switches of ours: not in this arm.
+M.ARMS.shipped = {
+    outcomes = "default",
+    presence = "router",
+    viewer = true,
+    layout = "fixture",
+    bands = true,
+    ttd = true,
+    gate = true,
+}
 for name, knobs in pairs({
     ["bands-lead"] = { bandLead = 1 }, -- one regen tick
     ["bands-lag"] = { bandLead = -1 },
@@ -269,6 +286,9 @@ function M.check(ok, label, line, arm)
         return
     end
     write(arm, ok, label, line)
+    if M.ARMS[arm] and M.ARMS[arm].gate then -- a gated arm (shipped): its row written, then judged
+        assert(ok, label .. ": " .. tostring(line))
+    end
 end
 
 --- A row nothing is judged on (loop.lua's "power"): written in every arm, the default's too (.ab/default.tsv).

@@ -16,6 +16,8 @@ launch-day probes in `docs/dev/ingame-ledger.md` (DM-P, DM-M, CDM-T, CDM-E, CDM-
 | `viewer-none`, `viewer-buffs`, `viewer-fixture`, `viewer-mixed` | presence "router" with the viewer leaf (cdm-default decision 110) | the loops' Cooldown Manager layout (`scenarios.viewerLayout`): none, one Buff icon item per pack aura, the class fixture plus an Essential entry per ability, or the mixed layout (0-3 items per aura over the four viewers, silent items, a hidden viewer, a re-point, pool growth, lag on even seeds) | `make gate-ab` |
 | `secret` | the Default providers | live UNIT_COMBAT: amounts secret (2026-11-08 dump) | by hand |
 | `lagged` | the Default providers | the meter arm's 0.48 s taken lead only | by hand |
+| `ttd` | the Default providers, the bands on | the fake hidden-value library and the real LibTimeToDie on the driver; the plain oracle answers `fight_remains` with the true time left (L1814) | `make gate-ab` |
+| `shipped` | as the addon ships: the viewer leaf, the bands, the time to die | `ttd` plus the Cooldown Manager with the class fixture layout (Druid, Mage, Paladin, Warrior; other classes have no item) | `make gate` (gated, its own floors in `pack_gate.ARM_FLOORS.shipped`: DEVELOPMENT.md "Two arms gate") |
 
 The meter arm changes two things at once: the provider, and the rows on us arriving 0.48 s late (DM §3's measured lead,
 which `EnemyHitAt` needs). So the meter's baseline is `lagged`, not `default`: the two differ only by the leaf and its
