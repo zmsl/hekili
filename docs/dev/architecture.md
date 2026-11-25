@@ -583,6 +583,8 @@ exact pins measure no regen across a window whose start is at or before the cast
 pin in the cast's own frame starts no measuring window). Without it the next pin pair learned an unseen proc as regen
 (Assassination 10 to 11.5-13 a second, then a finisher shown ready while short). The swing scale's window does not
 honour it yet (no pack declares one on a swing-paid slot). Band crossings measured 10 a second on the bands arm without it.
+Shortcut: a chance gain declared on a cast every 1 s (`I.PIN_GAP`) or less would skip every window, so that slot's regen
+would stop learning and keep its last value; no pack does (Assassination skips 25% of its windows).
 
 **What only a landing gains.** A refundable cast's `now` gain to its own cost slot (Rogue's Relentless Strikes on a
 finisher, counted only when certain: 100%, never its expected value) goes back out on its avoid, as no spend

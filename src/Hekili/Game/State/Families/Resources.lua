@@ -1123,6 +1123,8 @@ local function pin(r, v, width, t, origin, event, mid)
         -- (L1832) a refund unsettled on the slot: the pin holds what the server gave back, the belief not yet; a gain
         -- a cast may have given at or after the window's start (I.ResourceMayGain; a pin at its own stamp included:
         -- one frame per event time) is in the pin or not, unseen: either way the window measures nothing
+        -- shortcut: a chance gain declared on a cast every <= PIN_GAP (1 s) skips every window, so the slot's regen stops
+        -- learning and keeps its last value (Assassination skips 25%); bound the skipped share if a pack declares one
         local gain = vm - R.pinV[r] - R.pinDelta[r]
         local m = R.shaped[r] and gain or gain / dt -- nonzero: dt >= PIN_GAP (1 s)
         calibrate(r, m, t, R.pinA[r], R.pinB[r], R.pinT[r], Obs.Usable)
