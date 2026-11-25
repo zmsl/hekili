@@ -427,7 +427,7 @@ Their worlds take the export's whole talent string; the Turret worlds stand at 1
 with two one-handers (its live bars at 11 yd, R63, `W.SurvivalMeleeRanged`). At the re-pin ab0f00e4fc (Pre-BiS gear),
 replay decisions on-GCD: 1.000 (55), 0.983 (60), 1.000 (55), 1.000 (81); the 20-fight lines (seeds 1-20 / 21-40 /
 41-60), with each world's pool and regen from its log, read held while ready 239 / 237 / 241, 203 / 225 / 219, 253 /
-253 / 255 and 280 / 285 / 290, flicker 0 (Beast Mastery Turret 0.02; rows in `pack_gate.FLICKER`: floors at the worst of the three seed sets).
+253 / 255 and 280 / 285 / 290, flicker 0 (Beast Mastery Turret 0.02; rows in `pack_gate.FLICKER`: since batch 5 each floor is the seeds 1-20 reading, the one rule of L1814).
 The held ticks are the near-cost edge (a dry pool at a cost, our estimate a few mana under the truth), plus, in the
 Beast Mastery and Survival Turret worlds, Rapid Fire behind an Aimed Shot paid at the cast's end, its wait paced from
 the belief's floor at an unpinned fight-opening pool.
