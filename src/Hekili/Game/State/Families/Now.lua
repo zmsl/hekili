@@ -1385,9 +1385,10 @@ I.On(Obs.SwingSettled, function(o)
 end)
 -- shortcut (L1832 review M4): our own dodge may add a point of its own (a talent's chance, never modelled as a gain);
 -- one inside an avoided builder's PT_AVOID window reads as its landing (no refund, its debuff kept). Not guarded: the
--- dodge's row on us trails the dodge (rows on us 0.39-0.57 s, Resources.lua I.TAKEN_ROW_LAG), so the fact has decided
--- before it comes, and a row that came in the window would be an earlier dodge's. Rare (the talent, tanking, a dodge
--- in 0.3 s); upgrade if a pack declares that point, or a live snapshot shows a false landing after a dodge.
+-- dodge's row on us is taken to trail the dodge as melee WOUND rows on us do (0.39-0.57 s, Resources.lua
+-- I.TAKEN_ROW_LAG; extrapolated, not measured for dodges: L1849), so the fact has decided before it comes, and a row
+-- that came in the window would be an earlier dodge's. Rare (the talent, tanking, a dodge in 0.3 s); upgrade if a pack
+-- declares that point, a live snapshot shows a false landing after a dodge, or dodge rows on us prove prompt (L1849).
 I.On(Obs.PlayerHit, function(o)
     fire(1, OUTCOME_OF[o.a] or 0, o.t)
 end)
