@@ -28,6 +28,7 @@
 - Fury Warrior: Reckless Swings' 5 rage from a white swing is no longer counted a second time after the game has already shown it, so a rage-costing ability lights up before you can afford it less often; it may light up a moment later instead.
 - A spell with a cast time that finishes after you change target now counts on the enemy it was cast at, not on your new target, so it is no longer skipped on the new target or suggested again on the old one.
 - When an instant such as Rake misses or is dodged, Hekili now notices it within about half a second and suggests it again, instead of after your next ability. A Cooldown Manager icon that lights a little late no longer turns this check off.
+- Custom priorities: an interrupt (such as Kick, Pummel or Counterspell) is no longer suggested on a target's cast unless the game has said the cast can be interrupted. The game has not yet been seen saying so, so such a line will rarely light up for now.
 - A `/reload` while you channel a spell no longer raises an "Unknown buff: cast" error, and the rest of that channel is predicted again.
 
 ### Known issues

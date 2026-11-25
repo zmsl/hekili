@@ -399,10 +399,41 @@ describe("ns.Facade", function()
         I.Fold(10, false)
         local name, _, _, s, e, _, bar, notKick = Facade.UnitCastingInfo("target")
         assert.are.same(
-            { "Casting", 10000, (10 + I.TARGET_CAST_DEFAULT) * 1000, 77, false },
+            { "Casting", 10000, (10 + I.TARGET_CAST_DEFAULT) * 1000, 77, true },
             { name, s, e, bar, notKick }
         )
         assert.is_nil(Facade.UnitChannelInfo("target"))
+    end)
+
+    -- Library-off fallback (L1805): with interruptibility unknown, recommend no interrupt.
+    it("reads a target cast as interruptible only once the client says so", function()
+        local function notKick(event, channel)
+            ctl.now = ctl.now + 5
+            ctl.Fire(
+                channel and "UNIT_SPELLCAST_CHANNEL_START" or "UNIT_SPELLCAST_START",
+                "target",
+                fake.SECRET,
+                fake.SECRET,
+                77
+            )
+            if event then
+                ctl.Fire(event, "target")
+            end
+            ctl.Tick(ctl.now)
+            I.Fold(ctl.now, false)
+            if channel then
+                return select(7, Facade.UnitChannelInfo("target"))
+            end
+            return select(8, Facade.UnitCastingInfo("target"))
+        end
+        for _, channel in ipairs({ false, true }) do
+            local what = channel and "channel" or "cast"
+            assert.is_true(notKick(nil, channel), what .. " unknown")
+            assert.is_false(notKick("UNIT_SPELLCAST_INTERRUPTIBLE", channel), what .. " interruptible")
+            -- a new cast forgets the last one's answer
+            assert.is_true(notKick(nil, channel), what .. " unknown after an interruptible one")
+            assert.is_true(notKick("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", channel), what .. " not interruptible")
+        end
     end)
 
     it("answers spells, power types and units nothing tracks in the real shapes, without an error", function()

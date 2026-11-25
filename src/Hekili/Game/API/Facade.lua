@@ -1080,7 +1080,8 @@ kept("C_Spell.GetSpellCastCount", "virtual", zero, "flagged SecretWhenCooldownsR
 kept("C_Spell.GetSpellLossOfControlCooldown", "virtual", nothing, "absent on Forever")
 
 ----------------------------------------------------------------------------------------------------------------------
--- Casts: the player's own are plain [W PR9], the target's secret [W PR8]
+-- Casts: the player's own are plain [W PR9], the target's secret [W PR8]. A target cast is interruptible only once
+-- the client said so: unknown reads not interruptible, so no interrupt is recommended without the fact (L1805).
 
 local CAST_ICON = 136243
 
@@ -1099,7 +1100,7 @@ kept("UnitCastingInfo", "hybrid", function(unit, ...)
     if not rec then
         return nil
     end
-    return "Casting", "", CAST_ICON, start * 1000, rec.est * 1000, false, castBarID, interruptible == 0, 0
+    return "Casting", "", CAST_ICON, start * 1000, rec.est * 1000, false, castBarID, interruptible ~= 1, 0
 end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 
 kept("UnitChannelInfo", "hybrid", function(unit, ...)
@@ -1117,7 +1118,7 @@ kept("UnitChannelInfo", "hybrid", function(unit, ...)
     if not rec then
         return nil
     end
-    return "Channeling", "", CAST_ICON, start * 1000, rec.est * 1000, false, interruptible == 0, 0
+    return "Channeling", "", CAST_ICON, start * 1000, rec.est * 1000, false, interruptible ~= 1, 0
 end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 
 ----------------------------------------------------------------------------------------------------------------------
