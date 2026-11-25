@@ -771,7 +771,8 @@ M.FLICKER = {
     -- arcane_shot with only the auto shot's cast (no fact)): flicker 0 -> 0.03 (the measured worst + 0.01), cause
     -- "jitter rule L1791: a return needs its own fact"
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): flicker 0.03
-    -- -> 0
+    -- -> 0; loOver 196 not tightened (controller ruling): default 0, but bands / shipped read 15 vs forever's 14 (seed 2,
+    -- one poll), untraced and ledgered
     ["Marksmanship Turret"] = { loOver = 196, flicker = 0, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     -- heldReady 117 -> 236 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
@@ -900,8 +901,8 @@ M.FLICKER = {
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 85 / 93 / 81): flicker 0.01 -> 0
     -- loOver 5 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 5 / 3 / 0): untraced -> per-cell follow-up lane
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 93
-    -- -> 89, loOver 5 -> 0; held 85 on forever: untraced on this arm (the bands arm's 60 -> 86 is priest-cost-rounding
-    -- 3e0023f5c, Judgement 81.9, integ5 tracer C)
+    -- -> 89, loOver 5 -> 0; held 85 on forever. Likely cause (inferred for this arm, traced on bands by integ5 tracer
+    -- C: 60 -> 86): priest-cost-rounding 3e0023f5c prices Judgement 82 -> 81.9, which re-times the mana-floor fights
     ["Holy Shock"] = { loOver = 0, flicker = 0, retracted = 0, readyShort = 0, heldReady = 89 },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
@@ -1365,7 +1366,12 @@ M.ARM_FLOORS = {
         ["Combat"] = { heldReady = 168 },
         ["Marksmanship Turret"] = { heldReady = 219 },
         ["Elemental"] = { heldReady = 336, loOver = 1 },
-        ["Warrior Protection"] = { flicker = 0.30, heldReady = 400 },
+        -- then batch 5 (controller ruling, stage 3; seeds 1-20 on 9a8a95e23): flicker 0.30 -> 0.31, heldReady 400 -> 391.
+        -- The Rows.lua gate (df3072694, L1810) keeps a cast's own-stamp MISS on the cast, and the frames-merge step
+        -- (integ5 tracer C, seed 16 t166.0, the L1783 stale class: 17 -> 18 flips, 0.304/min) now shows in this arm too:
+        -- its 20 per-seed rows are identical to the bands arm's; held 394 -> 391 and agreement 0.966 -> 0.968 improve.
+        -- Inferred: the viewer verdict used to re-time the shipped fights away from that flip
+        ["Warrior Protection"] = { flicker = 0.31, heldReady = 391 },
         -- Shipped only, traced (arms-trace-2, L1823). Balance held 194 / 187 / 165 against the bands arm's 189 / 174 /
         -- 174 and the ttd arm's 189 (seeds 1-20): re-timed fights after one viewer fact: seed 6 t7.6, without the
         -- viewer the belief drops a landed Insect Swarm on an avoid row and recasts it; all 5 extra polls are Wrath's
