@@ -307,7 +307,11 @@ M.FLICKER = {
     -- 863): loOver 286 -> 276, the measured worst
     -- INTEG: re-measure (batch 5: loOver 451 from harness-frames-5 over finisher-miss-fix-3's 276, flicker 0.16
     -- from the L1791 return rule; the higher of each until the merged tree is measured)
-    ["Fury L24"] = { loOver = 451, flicker = 0.16, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
+    -- cp-fact L1832 (traced, integ5 tracer A move 3): the refund guard (I.RefundPending) skips a window of the swing
+    -- scale's one calibration (1.160 -> 1.111 before seed 9, power abs err lower on seeds 9-20); the re-timed seed 9
+    -- meets one forecast sunder_armor > heroic_strike > sunder_armor (change no fact, return aura): 0.15 -> 0.18;
+    -- seeds 21-40 / 41-60 0.15 / 0.14 (unchanged): flicker 0.16 -> 0.19
+    ["Fury L24"] = { loOver = 451, flicker = 0.19, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -1065,7 +1069,12 @@ M.FLICKER = {
     -- 0 / 0.033 / 0, readyShort 0 / 0 / 0, heldReady 0 / 1 / 1): flicker 0.02 -> 0
     -- jitter rule L1762: now-slot gating (R6; seeds 1-20 / 21-40 / 41-60: retracted, slot 1, 0 / 0 / 0; the all-slot
     -- count 0 / 0.03 / 0: seeds 21-40's two are Shoot in a next slot at a near-tie, next R 0.03): retracted 0.04 -> 0
-    ["Smite"] = { flicker = 0, retracted = 0, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
+    -- harness-frames L1793 meets L1791 (5ee7dce0c; seeds 1-20 flicker 0.02, press-only 0.02): flicker 0 -> 0.03 (the
+    -- measured worst + 0.01). One flip, seed 18 t 58.6 holy_fire > shoot > holy_fire: Shoot's channel ends (a fact),
+    -- the .simc:10 mana.pct_lo<=10 line takes slot 1 on lo 615.0 (truth 626.7, the 10 % line 615.1); the return one poll
+    -- later is regen crossing it, no fact (L1813/L1816 class, Pr-5). The frame model re-times the fights; lo-truth
+    -- unchanged (integ5-trace-B-report.md move 1)
+    ["Smite"] = { flicker = 0.03, retracted = 0, heldReady = 1 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
@@ -1217,8 +1226,14 @@ M.ARM_FLOORS = {
         -- then jitter rule L1791: a return needs its own fact (batch 4 bands run 76cc46e51, seeds 1-20, + 0.01): Fury
         -- L60 0.36 -> 0.40 (seed 15 t3.6 death_wish > sunder_armor > death_wish, change a band, return none), Fury L24
         -- 0.18 -> 0.21 (seed 9 t4.8 rend > sunder_armor > rend, change an avoid, return none)
-        ["Arms"] = { flicker = 0.41 },
-        ["Fury L60"] = { flicker = 0.41 },
+        -- then harness-frames L1793 (5ee7dce0c, seeds 1-20 0.44 + 0.01): Fury L60 0.41 -> 0.45, the re-timed seed 6
+        -- t87.6 execute > sunder_armor > execute: the change at the GCD's end with no fact (the oracle makes it too), the
+        -- return a stale band read at a white swing (L1783); every other flip identical to fd666cd8a
+        -- then harness-frames L1793 (5ee7dce0c; seeds 1-20 0.42 in both arms, 21 -> 22 flips): Arms 0.41 -> 0.43, the
+        -- fights re-time from seed 10, every moved flip the L1783 stale class (no fact / stale) (integ5-trace-B-report.md
+        -- moves 3 and 5)
+        ["Arms"] = { flicker = 0.43 },
+        ["Fury L60"] = { flicker = 0.45 },
         ["Fury L24"] = { flicker = 0.22 },
         -- jitter rule L1791: a return needs its own fact (batch 4 bands run 76cc46e51, seeds 1-20: 0.08, + 0.01): five
         -- scorch > frostfire_bolt > scorch, the change at the mana band's crossing of 308.4, the return with no fact
@@ -1236,6 +1251,11 @@ M.ARM_FLOORS = {
         ["Destruction"] = { loOver = 303 },
         ["Frost"] = { loOver = 4 },
         ["Elemental"] = { loOver = 1 },
+        -- T1 (L1794) re-timed by harness-frames L1793 (5ee7dce0c; fd666cd8a reads 0): seed 9's pre-pull band pair
+        -- 2740.218 -> 2741.718 reads a 1.5 s window (true 1.598 s), spirit 30.07 vs 27.5, spE 28.27 (spL 27.72 over the
+        -- truth); the floor climbs 0.07-0.375 over the truth in seed 9's 1.4 s out of the five-second rule after a mana
+        -- gain (2754.8) and holds it to the exact read at 2763.4: 43 polls (integ5-trace-B-report.md move 2)
+        ["Affliction"] = { loOver = 43 },
     },
     -- The gated shipped arm (L1814: bands, time to die and the Cooldown Manager on, as the addon ships). Measured on
     -- live-like-arm 04ca28b70 (batch 4 b72b09cd0 + the arm), seeds 1-20 / 21-40 / 41-60 beside each row (the floor is
@@ -1252,9 +1272,17 @@ M.ARM_FLOORS = {
         -- and L1791 (a return needs its own fact), the bands arm's causes. Arms 0.40 / 0.20 / 0.23 (bands the same),
         -- Fury L60 0.36 / 0.32 / 0.39 (bands 0.40 / 0.58 / 0.43), Fury L24 0.18 / 0.18 / 0.34 (bands 0.21 / 0.18 /
         -- 0.40)
-        ["Arms"] = { flicker = 0.41 },
+        -- then harness-frames L1793 (5ee7dce0c; seeds 1-20 0.42 in both arms, 21 -> 22 flips): Arms 0.41 -> 0.43, the
+        -- fights re-time from seed 10, every moved flip the L1783 stale class (no fact / stale) (integ5-trace-B-report.md
+        -- move 5)
+        -- harness-frames-5 (L1793, traced integ5 tracer A move 3b, fd666cd8a -> 5ee7dce0c): one client frame per event
+        -- time re-times every fight; seeds 1-20 / 21-40 / 41-60 0.21 / 0.18 / 0.23 (was 0.18 / 0.18 / 0.34): s7
+        -- sunder_armor > rend > sunder_armor (stale change, verdict return) and s11 heroic_strike > rend > heroic_strike
+        -- (no-fact change, band return) come, s12 bloodrage > sunder_armor > bloodrage goes; all L1783 / L1791 kinds:
+        -- Fury L24 0.19 -> 0.22
+        ["Arms"] = { flicker = 0.43 },
         ["Fury L60"] = { flicker = 0.37 },
-        ["Fury L24"] = { flicker = 0.19 },
+        ["Fury L24"] = { flicker = 0.22 },
         -- L1813, a real flash (Fable batch 4 I2, owner ruling owed): scorch > frostfire_bolt > scorch at the mana
         -- band's crossing of 308.4, counted under L1791. 0.08 / 0.07 / 0.10, the bands arm the same; default 0 /
         -- 0.02 / 0
@@ -1265,6 +1293,11 @@ M.ARM_FLOORS = {
         ["SM Ruin"] = { loOver = 279 },
         ["Destruction"] = { loOver = 303 },
         ["Frost"] = { loOver = 4 },
+        -- T1 (L1794) re-timed by harness-frames L1793 (5ee7dce0c; fd666cd8a reads 0): seed 9's pre-pull band pair
+        -- 2740.218 -> 2741.718 reads a 1.5 s window (true 1.598 s), spirit 30.07 vs 27.5, spE 28.27 (spL 27.72 over the
+        -- truth); the floor climbs 0.07-0.375 over the truth in seed 9's 1.4 s out of the five-second rule after a mana
+        -- gain (2754.8) and holds it to the exact read at 2763.4: 43 polls (integ5-trace-B-report.md move 2)
+        ["Affliction"] = { loOver = 43 },
         -- The bands arm's untraced held-while-ready rows (L1799: they read MISS in that arm since batch 3), the shipped
         -- arm equal or under: Combat 168 / 161 / 173 (bands 169 / 173 / 177; default 160 / 157 on 21-60), Marksmanship
         -- Turret 219 / 218 / 211 (bands the same). Elemental 336 / 345 / 314, loOver 1 / 0 / 0 (bands the same; default
@@ -1282,7 +1315,10 @@ M.ARM_FLOORS = {
         -- cost crossing one poll late (L1118). Feral flicker 0.04 / 0 / 0, two flips on seeds 1-20 (bands 0 / 0.02 / 0;
         -- the ttd arm 0.02 on 1-20): G7 stale-usability return (L1784): a return from a reading older than the band
         -- (seed 12 t78.2; seed 2 t47.2), the shipped arm's viewer re-times the boot after seed 4 t75.4's missed Rake
-        ["Balance"] = { heldReady = 194 },
+        -- then harness-frames L1793 (5ee7dce0c; seeds 1-20 201, the I1 viewer fix reversed reads 201 too): 194 -> 201,
+        -- every held tick Wrath within 0.25 s (L1118), the fights re-timed from seed 1 (default 189 -> 183)
+        -- (integ5-trace-B-report.md move 4)
+        ["Balance"] = { heldReady = 201 },
         ["Feral"] = { flicker = 0.05 },
     },
 }
