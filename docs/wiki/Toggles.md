@@ -25,7 +25,7 @@ The toggle names that `/hekili set` accepts are `cooldowns` (also `cd` or `cds`)
 
 Some toggles have their own options:
 
-- The "Show in Separate ... Display" box of **Major Cooldowns**, **Interrupts** and **Defensives** moves the abilities of that toggle out of the **Primary** display and into the **Cooldowns**, **Interrupts** or **Defensives** display. Those displays show something only while this option is on.
+- The "Show in Separate ... Display" box of **Major Cooldowns**, **Interrupts** and **Defensives** moves the abilities of that toggle out of the **Primary** display and into the **Cooldowns**, **Interrupts** or **Defensives** display. Those displays show something only while this option is on. It is on by default for **Interrupts** and **Defensives**, so a defensive or an interrupt never takes the **Primary** display's place; turn it off to show them there.
 - The "Active During Bloodlust" and "Active During Power Infusion" boxes treat **Major Cooldowns** as on while that effect is up, even when the toggle is off.
 - **Auto-Enable when Major Cooldowns Active**, under **Minor Cooldowns** and **Potions**, lets those abilities be recommended whenever **Major Cooldowns** is on.
 - **Interrupt Timing** sets how late in an enemy's cast an interrupt is recommended: by default, when 0.25 seconds or less of the cast remain.

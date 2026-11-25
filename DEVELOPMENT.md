@@ -254,7 +254,9 @@ addon's keys.
 
 Only six recipe keys may add something wowsims does not carry: `leveling`, `levelingFirst`, `extra`, `requires`,
 `settings` and `focus`. [docs/dev/wowsims-packs.md](docs/dev/wowsims-packs.md) gives each one's meaning, the full
-recipe, the rules and the translator's behaviour.
+recipe, the rules and the translator's behaviour. The
+shared content is the one other source: a health threshold it registers for every spec (the Healthstone's, the
+healing potion's) puts that line in every pack (translator rule 25).
 
 ### Regenerate
 

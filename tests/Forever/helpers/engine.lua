@@ -80,6 +80,12 @@ local function newState(class, race)
         unpack = unpack,
         class = class,
         race_token = race,
+        -- State.lua's race table: the token's key true, any other false (a race-locked spell's `known`)
+        race = setmetatable({ [(race or ""):lower()] = true }, {
+            __index = function()
+                return false
+            end,
+        }),
         timeToInterrupt = noop,
         args = {},
         spec = {},
@@ -286,6 +292,7 @@ function M.load(classToken, race)
                 return 0
             end,
             GetItemSpell = noop,
+            GetItemInfo = noop, -- no item cached: Hekili_Shared's own names (Consumables.lua itemName)
             IsUsableItem = function()
                 return true
             end,
@@ -475,6 +482,8 @@ function M.abilitySet(classToken, race)
     local set = merged(base)
     -- stateExprs: the kit's state expressions (the translator's autoTimeToNext reads which hand clocks the kit has)
     set.talents, set.racial, set.stateExprs = base.class.kit.talents, {}, base.class.kit.stateExprs
+    -- the shared content's settings ({ key, value, option }, registration order): translator rule 25's lines
+    set.sharedSettings = base.ns.sharedSettings
     for _, r in ipairs(race and { race } or base.races) do
         local env = race and base or M.load(classToken, r)
         local t = merged(env)

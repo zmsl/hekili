@@ -1107,7 +1107,10 @@ describe("Forever Druid", function()
                         assert.is_not_nil(p.lists[e.list_name], where .. ": no list " .. e.list_name)
                     else
                         assert.is_true(
-                            w.abilities[e.action] ~= nil or sharedActions[e.action] or pe.LINE[e.action],
+                            w.abilities[e.action] ~= nil
+                                or sharedActions[e.action]
+                                or pe.LINE[e.action]
+                                or pe.SHARED[e.action],
                             where .. ": no ability " .. e.action
                         )
                         assert.is_true(
@@ -1118,7 +1121,7 @@ describe("Forever Druid", function()
                     local c = (e.criteria or "") .. " " .. (e.value or "") -- CN25: a pure variable's text too
                     for kind, key in c:gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
-                            local ok = kinds[kind][key] ~= nil or (shared[kind] or {})[key]
+                            local ok = kinds[kind][key] ~= nil or (shared[kind] or {})[key] or pe.SHARED[key]
                             assert.is_true(ok, where .. ": no " .. kind .. " " .. key)
                         end
                     end
@@ -1134,7 +1137,16 @@ describe("Forever Druid", function()
             n = n + 1
         end
         local roar = w.settings.maintain_demoralizing_roar
-        assert.are.same({ 2, false, false, true }, { n, w.settings.behind.default, roar.default, roar.option.sim })
+        assert.are.same({ 5, false, false, true }, { n, w.settings.behind.default, roar.default, roar.option.sim })
+        -- L1808: the recorder keeps the first default, Balance's own Barkskin 50 (Guardian's and Feral's bear line 60
+        -- is registered after it, on those specs: tests/Forever/defensive_settings_spec.lua reads each spec's)
+        assert.are.same({ 50, 25, 50 }, {
+            w.settings.barkskin_health.default,
+            w.settings.frenzied_regeneration_health.default,
+            w.settings.barkskin_cat_health.default,
+        })
+        assert.are.same({ "balance", "guardian", "feral" }, w.settings.barkskin_health.specs)
+        assert.are.same({ "feral", "guardian" }, w.settings.barkskin_cat_health.specs)
         assert.is_nil(w.options)
     end)
 

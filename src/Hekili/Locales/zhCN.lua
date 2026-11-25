@@ -32,6 +32,10 @@ L["on"] = "开"
 L["off"] = "关"
 L["%s\n\nThe wowsims gate runs this as %s."] = "%s\n\nwowsims 对照测试中此项为%s。"
 
+-- Hekili/Engine/Schema/Spec/Abilities.lua
+L["Interrupts"] = "打断"
+L["Defensives"] = "防御"
+
 -- Hekili/Engine/Schema/Spec/Packs.lua
 L["The %s priority was retired; a spec that used it now runs %s."] = "%s优先级已停用；使用它的专精现在将运行%s。"
 L["The |cFFFFD100%s|r priority was updated."] = "|cFFFFD100%s|r优先级已更新。"
@@ -44,6 +48,10 @@ L["The %s, and |cFFFFD100%s|r priorities were reverted."] = "%s和|cFFFFD100%s|r
 -- Hekili/Engine/Schema/Spec/Activation.lua
 L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = "%s：根据你的天赋选用|cFFFFD100%s|r优先级。"
 L["%s, picked from your talents."] = "%s，根据你的天赋选用。"
+
+-- Hekili/Engine/Schema/Shared.lua
+L["%s: once health is under (%%)"] = "%s：生命值低于此值时（%%）"
+L["The priority shows %s in the Defensives display once your health is under this percentage (Hekili reads it in 1%% steps), and only while Hekili can read your health in combat."] = "优先级会在防御显示框中显示%s：当你的生命值低于此百分比时（Hekili 以 1%% 为步长读取），且仅在 Hekili 能在战斗中读取你的生命值时。"
 
 -- Hekili/Engine/Sim/Targets.lua
 L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = "敌方姓名板已关闭，因此在此副本中 Hekili Forever 只统计你的目标。请开启“显示敌方姓名板”和“显示所有姓名板”。"
@@ -131,8 +139,6 @@ L["next"] = "下一个"
 L["lane"] = "轨道"
 L["AOE"] = "AOE"
 L["Cooldowns"] = "爆发"
-L["Interrupts"] = "打断"
-L["Defensives"] = "防御"
 L["Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"] = "职业 |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"
 L["%s Icon"] = "%s图标"
 L["Width"] = "宽度"
@@ -1034,6 +1040,7 @@ L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴�
 
 -- Hekili/Engine/Sim/Scripts.lua
 -- L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = ""
+-- L["Priority %s, list %s, line %d reads your health without health.known first. While Hekili cannot read your health it counts as full, so this line can show when it should not: start its condition with health.known&."] = ""
 
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"

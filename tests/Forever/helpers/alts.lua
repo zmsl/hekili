@@ -47,10 +47,11 @@ local DISPLAYS = { "Interrupts", "Defensives", "Cooldowns", "Primary", "AOE" }
 -- display following one whose passes ran (AOE after Primary, the next Update's Interrupts after AOE) starts from
 -- whatever reset it gets. Every Update of both instances appends one
 -- string of every display's records. With `need`, a passive subscriber on Primary and on AOE declares the need.
--- Returns the Update strings, how many records carried an alternative and, per display, how many Updates computed it.
+-- Returns the Update strings, how many records carried an alternative, per display how many Updates computed it, and
+-- how many Updates read the player's health and computed Defensives while it was read.
 local function run(need, seed, fights)
     local L = loop.new(ww)
-    local seen, withAlts, computed = {}, 0, {}
+    local seen, withAlts, computed, read = {}, 0, {}, { updates = 0, defensives = 0 }
     for _, d in ipairs(DISPLAYS) do
         computed[d] = 0
     end
@@ -70,13 +71,21 @@ local function run(need, seed, fights)
             assert.is_true(hk.Engine.Subscribe("AOE", function() end, true, { alts = true }))
         end
         local upd, versions = hk.Update, {}
+        for _, d in ipairs(DISPLAYS) do -- the boot's versions: only a walk's publish counts as computed
+            versions[d] = hk.Engine.Output[d].version
+        end
         hk.Update = function(...)
             local r = upd(...)
+            local known = hk.State.health.known == true -- the skip's own read (Core.lua canPass), live
+            read.updates = read.updates + (known and 1 or 0)
             local parts = { name }
             for _, d in ipairs(DISPLAYS) do
                 local p = hk.Engine.Output[d]
                 if p.version ~= versions[d] then
                     versions[d], computed[d] = p.version, computed[d] + 1
+                    if d == "Defensives" and known then
+                        read.defensives = read.defensives + 1
+                    end
                 end
                 parts[#parts + 1] = d .. " " .. p.version
                 for i = 1, p.count do
@@ -91,7 +100,7 @@ local function run(need, seed, fights)
         end
     end
     loop.tally(L, fights or 1, { seed0 = seed - 1, trace = seed == 1 })
-    return seen, withAlts, computed
+    return seen, withAlts, computed, read
 end
 
 --- The invariant on Arms gate fight `seed` (split one seed a file from the seeds 1-3 run so the parallel runner
@@ -99,7 +108,7 @@ end
 --- recs[1..count], every field but alts, identical with the need off and on.
 function M.invariant(seed, fights)
     local off, offAlts = run(false, seed, fights)
-    local on, onAlts, computed = run(true, seed, fights)
+    local on, onAlts, computed, read = run(true, seed, fights)
     local c = {}
     for _, d in ipairs(DISPLAYS) do
         c[#c + 1] = d .. " " .. computed[d]
@@ -114,8 +123,21 @@ function M.invariant(seed, fights)
         )
     )
     for _, d in ipairs(DISPLAYS) do
-        assert.is_true(computed[d] > 100, d .. " was not computed")
+        -- Interrupts aside: no kick in the Arms priority, so it is not walked (Core.lua packHasLine, L1808); Defensives
+        -- below: its every line needs health.known, walked only while the player's health is read (def-2 review, CPU)
+        assert.is_true(d == "Interrupts" or d == "Defensives" or computed[d] > 100, d .. " was not computed")
     end
+    -- (def-2c re-review Minor 6) Defensives is exempt only while the health is unread: never walked then, and walked
+    -- while it is read (an Update that yields mid-walk publishes no version, so not every read Update counts)
+    print(
+        ("Defensives: %d computed, %d while read, of %d read Updates"):format(
+            computed.Defensives,
+            read.defensives,
+            read.updates
+        )
+    )
+    assert.are.equal(read.defensives, computed.Defensives, "Defensives computed while the health was unread")
+    assert.is_true(read.updates == 0 or read.defensives > 0, "Defensives not computed while the health was read")
     assert.are.equal(0, offAlts)
     assert.is_true(onAlts > 0, "no record carried an alternative: the passes never ran")
     assert.are.equal(#off, #on)

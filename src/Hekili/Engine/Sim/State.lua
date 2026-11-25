@@ -4107,6 +4107,12 @@ local mt_resource = {
         elseif k == "modmax" then
             return t.max
 
+        -- (L1805) the hidden-value reads of this pool answer now (Facade.Known): the player's health a reading, not
+        -- the full it reads unknown; a power read plain or its band live, not the model alone
+        elseif k == "known" then
+            if rawget( t, "resource" ) == "health" then return Facade.Known( Facade.KNOWN_HEALTH ) end
+            return Facade.Known( Facade.KNOWN_POWER, rawget( t, "type" ) ) -- a pool with no power type: false
+
         elseif k == "model" then
             return
 
@@ -5746,6 +5752,7 @@ local mt_weapon_type = {
 
 local mt_aura = {
     __index = function( t, k )
+        if k == "known" then return Facade.Known( Facade.KNOWN_AURA ) end -- (L1805) the library's aura kind answers
         return rawget( state.buff, k ) or rawget( state.debuff, k )
     end
 }

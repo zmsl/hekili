@@ -635,7 +635,7 @@ def main(argv):
     held = {}  # [locale] = the keys some pack's file of that language holds
     for name, (grouped, _, packs) in sorted(found.items(), key=lambda f: f[0] == CORE):  # the packs first, then the core
         if not grouped:
-            continue  # an addon with no text (Hekili_Shared) has no Locales/
+            continue  # an addon with no text has no Locales/
         keys = [k for ks in grouped.values() for k in ks]
         sync(os.path.join(locales_dir(name), "enUS.lua"), render_enus(name, grouped), check, stale)
         for locale in sorted(set(languages(name)) | set(core_langs)):

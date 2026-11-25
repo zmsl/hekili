@@ -41,4 +41,20 @@ return {
     map = { [25902] = "holy_shock" },
     -- by role (docs/dev/wowsims-packs.md): Hammer of Wrath's execute window 1, the seal and Consecration kept up 2
     focus = { hammer_of_wrath = 1, seal_of_righteousness = 2, consecration = 2 },
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Divine Shield (its
+    -- usable check refuses it under Forbearance) at or below 20%; Lay on Hands (all Paladin specs, the controller's
+    -- L1808 default; drains all mana) at or below 15%, each the def-int-beyond-wowsims review's default and a per-spec
+    -- setting, shown in the Defensives display only while the player's health is read (rule 23). The Healthstone and
+    -- healing potion lines come from the shared settings (rule 25).
+    extra = {
+        { first = true, line = "divine_shield,if=health.known&health.pct<=settings.divine_shield_health" },
+        {
+            first = true,
+            line = "lay_on_hands,if=health.known&health.pct<=settings.lay_on_hands_health&(!action.divine_shield.known|!buff.divine_shield.up)",
+        },
+    },
+    settings = {
+        divine_shield_health = { default = 20, desc = "player health threshold, percent" },
+        lay_on_hands_health = { default = 15, desc = "player health threshold, percent" },
+    },
 }

@@ -643,6 +643,8 @@ M.MAP = {
         end,
     },
 }
+-- (L1808) the defensive key casts the same spell
+M.MAP.ice_barrier_defensive = M.MAP.ice_barrier
 
 -- The book ranks (Fireball 12, Frostbolt 11, Arcane Missiles 8, DB2 level 56-60) no trainer teaches: wowsims/forever's
 -- Mage registers the last trainer rank (sim/mage/fireball.go:11-12, frostbolt.go:11-12, arcane_missiles.go:11-12; its

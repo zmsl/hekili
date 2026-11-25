@@ -30,9 +30,10 @@
 -- pin's replay was 0.923 (117) with 14.65/min flicker (off-GCD Maul alternation; oracle 0.00).
 -- Worked (Task 7g): the bear's 11.25 rage a white swing and a crit's 8.65 more; Primal Fury's 5 on our crits (16959) as
 -- the strikes' `onCrit`.
--- Translation: Frenzied Regeneration (< 25%) and Barkskin (<= 60%) read the player's health, which the client hides in
--- combat: both lines are omitted (translator rule 23, owner L1462); Feral imports this list, so its bear lines lose
--- them too.
+-- Translation: Frenzied Regeneration (< 25%) and Barkskin (<= 60%) read the player's health, which the client hides:
+-- both lines read the hidden-value band under `health.known` (translator rule 23, owner L1805, replacing L1462's
+-- omission); Feral imports this list, so its bear lines have them too. The replay does not replay our health (full):
+-- neither fires there.
 -- Sim-setup difference (ruling L16): wowsims's sim starts in Dire Bear Form (its pre-pull) and its list never shifts, so out of form
 -- the list showed nothing; the `bear_form` line (the Feral APL's own cat_form pattern) never fires in the replay.
 return {
@@ -56,7 +57,7 @@ return {
     },
     -- player-facing lines of the in-game description
     notes = {
-        "Barkskin and Frenzied Regeneration are not in this priority: they wait for low health, and the game hides your health from addons in combat. Use them by hand.",
+        "Barkskin and Frenzied Regeneration wait for low health. They show only while Hekili can read your health in combat; when it cannot, use them by hand.",
     },
     -- a tank: the raid's tank (the target swings at it) and presets.ts:55-69's healing model (apply_defaults.ts:108-125)
     tank = true,

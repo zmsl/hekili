@@ -300,6 +300,7 @@ M.MAP = {
         end,
     },
     blood_fury = selfAura("blood_fury"), -- the Orc racial (Hekili_Shared/Races/Orc.lua; the wowsims Arms build's race)
+    shatter_curse = selfAura("shatter_curse"), -- the Orc defensive racial (L1805: Protection's line at <= 50% health)
     shield_block = selfAura("shield_block"),
     last_stand = selfAura("last_stand"), -- its health gain not modelled
     shield_wall = selfAura("shield_wall"),

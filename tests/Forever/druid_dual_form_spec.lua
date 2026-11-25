@@ -163,31 +163,47 @@ describe("the form-following Druid packs", function()
             end)
             local out = {}
             for i, r in ipairs(rows) do
-                out[i] = r[2] .. " " .. (r[2] == "toggle" and r[3] or r[4])
+                out[i] = r[2] .. " " .. ((r[2] == "toggle" or r[2] == "range") and r[3] or r[4])
             end
             return out
         end
 
         it("puts Guardian's Roar on Feral's page below its own, after a divider and what it is for", function()
-            assert.are.same({
-                "toggle behind",
-                "header Bear Form (Guardian)",
-                "description These settings come from the Guardian priority. They apply only while you are in Bear Form.",
-                "toggle maintain_demoralizing_roar",
-            }, page("feral"))
+            assert.are.same(
+                { -- (L1808) the shared thresholds first; Feral's own Barkskin before the section; Guardian's in it
+                    "range healthstone_health",
+                    "range healing_potion_health",
+                    "toggle behind",
+                    "range barkskin_cat_health",
+                    "header Bear Form (Guardian)",
+                    "description These settings come from the Guardian priority. They apply only while you are in Bear Form.",
+                    "toggle maintain_demoralizing_roar",
+                    "range barkskin_health",
+                    "range frenzied_regeneration_health",
+                },
+                page("feral")
+            )
         end)
 
         it("puts the Shred setting the cat lines read on Guardian's page below its own, likewise", function()
             assert.are.same({
+                "range healthstone_health",
+                "range healing_potion_health",
                 "toggle maintain_demoralizing_roar",
+                "range barkskin_health",
+                "range frenzied_regeneration_health",
                 "header Cat Form (Feral)",
                 "description These settings come from the Feral priority. They apply only while you are in Cat Form.",
                 "toggle behind",
+                "range barkskin_cat_health",
             }, page("guardian"))
         end)
 
-        it("leaves Balance's page as it was", function()
-            assert.are.same({ "toggle behind" }, page("balance"))
+        it("leaves Balance's page without a section (its own Barkskin, L1808)", function()
+            assert.are.same(
+                { "range healthstone_health", "range healing_potion_health", "toggle behind", "range barkskin_health" },
+                page("balance")
+            )
         end)
     end)
 end)

@@ -304,7 +304,7 @@ describe("the player's health from the band (lane B3)", function()
         return { h.lo, h.hi, h.est, h.basis, h.last.observed.event }
     end
 
-    before_each(function()
+    local function boot(withLib)
         api = fake.new()
         ctl = api.ctl
         ctl.now = 100
@@ -314,7 +314,7 @@ describe("the player's health from the band (lane B3)", function()
             end,
         })
         ctl.LibStub = function(name)
-            return name == "LibHiddenValues-1.0" and lhv or nil
+            return withLib and name == "LibHiddenValues-1.0" and lhv or nil
         end
         local ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -324,6 +324,10 @@ describe("the player's health from the band (lane B3)", function()
         VS.Start(api)
         I.Build(def, ctl.now)
         ctl.health, ctl.healthMax = 1000, 1000
+    end
+
+    before_each(function()
+        boot(true)
     end)
 
     it("in combat a live band sets lo, hi and the middle, observed; a heal raises it", function()
@@ -345,7 +349,7 @@ describe("the player's health from the band (lane B3)", function()
     end)
 
     it("out of combat the plain read of the same drain is exact and wins", function()
-        ctl.health = 300
+        ctl.unitHealth.player = 300 -- a plain read (live reads it secret always, L1710)
         push(340)
         frames(12)
         assert.is_true(I.bandLive[0]) -- logged, not applied
@@ -400,6 +404,103 @@ describe("the player's health from the band (lane B3)", function()
         local h = VS.Health("player", ctl.now)
         assert.are.same({ 0, 1, 1, "default", 0 }, { h.lo, h.hi, h.est, h.basis, h.conf })
         assert.are.equal(Obs.Band, h.last.default.event)
+    end)
+
+    -- (L1805, owner "Hold last reading") a band lost while its watch still works (a re-prime: the value moved on every
+    -- frame, Sources/Bands.lua I.bandOK) holds its last reading up to I.HEALTH_HOLD; past it, or with the watch broken,
+    -- today's fallback: full, unknown. VS.Known(1) is true exactly while the estimate is a reading.
+    local function known()
+        return VS.Known(1)
+    end
+
+    it("a re-prime shorter than the bound holds the last band: no flip, one hold, no snap", function()
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.combat = true
+        push(340)
+        frames(12)
+        assert.is_true(known())
+        lhv:Prime("player", ctl.now) -- 10 frames unknown
+        for i = 1, 9 do
+            frames(1)
+            assert.are.same({ 0.34, 0.35, 0.345, "observed", Obs.Band }, read(), i)
+            assert.is_true(known(), i)
+        end
+        frames(3)
+        assert.is_true(I.bandLive[0])
+        assert.are.same({ 0.34, 0.35, 0.345, "observed", Obs.Band }, read())
+        assert.are.same({ 1, 0 }, { I.healthHolds, I.healthSnaps })
+    end)
+
+    it("a re-prime past the bound reads full and unknown once the bound runs out (one snap)", function()
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.combat = true
+        push(340)
+        frames(12)
+        local lost = ctl.now
+        local seen = {}
+        while ctl.now - lost < I.HEALTH_HOLD + 0.1 do
+            lhv:Prime("player", ctl.now) -- still moving: primes again before it confirms
+            frames(1)
+            seen[#seen + 1] = known()
+            if ctl.now - lost <= I.HEALTH_HOLD - 0.02 then
+                assert.are.equal(0.345, VS.Health("player", ctl.now).est)
+            end
+        end
+        assert.is_false(known())
+        local h = VS.Health("player", ctl.now)
+        assert.are.same({ 1, "default" }, { h.est, h.basis })
+        assert.are.same({ 1, 1 }, { I.healthHolds, I.healthSnaps })
+        assert.is_true(seen[1])
+        assert.is_false(seen[#seen])
+    end)
+
+    it("the capability lost or the kill switch: full at once, no hold", function()
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.combat = true
+        push(340)
+        frames(12)
+        lhv:SetAvailable("unavailable", "error")
+        frames(1)
+        assert.is_false(known())
+        assert.are.same({ 1, "default" }, { VS.Health("player", ctl.now).est, VS.Health("player", ctl.now).basis })
+        assert.are.same({ 0, 1 }, { I.healthHolds, I.healthSnaps })
+        lhv:SetAvailable("ready")
+        frames(12)
+        assert.is_true(known())
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        ctl.combat = false
+        I.def.providers.bands = false -- the kill switch (Hekili.bandOff), applied out of combat
+        frames(1)
+        assert.is_false(known())
+        assert.are.equal(1, VS.Health("player", ctl.now).est)
+        assert.are.same({ 0, 2 }, { I.healthHolds, I.healthSnaps })
+    end)
+
+    it("is not known before the first band, nor with no library", function()
+        frames(1)
+        assert.are.same({ false, true }, { known(), VS.Known(3) })
+        boot(false)
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.combat = true
+        push(340)
+        frames(12)
+        assert.are.same({ false, false }, { known(), VS.Known(3) })
+        assert.are.equal(1, VS.Health("player", ctl.now).est)
+    end)
+
+    it("health lost alone leaves power and the aura kind known (partial enablement)", function()
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.combat = true
+        push(340)
+        frames(12)
+        assert.are.same({ true, true }, { known(), VS.Known(3) })
+        lhv:SetAvailable("unavailable", "error", "health")
+        frames(1)
+        assert.are.same({ false, true }, { known(), VS.Known(3) })
+        lhv:SetAvailable("ready", nil, "health")
+        lhv:SetAvailable("unavailable", "error", "aura")
+        frames(12)
+        assert.are.same({ true, false }, { known(), VS.Known(3) })
     end)
 
     it("another channel's band leaves the player's health alone", function()

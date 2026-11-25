@@ -1,5 +1,5 @@
--- tests/Forever/health_read_spec.lua (central fix 12 item 2; owner L1461, L1462): the client hides the player's health
--- in combat (UnitHealth and UnitHealthMax "player" secret, plain out of combat; the fake client answers so). Without the
+-- tests/Forever/health_read_spec.lua (central fix 12 item 2; owner L1461, L1462, L1710): the client hides the player's
+-- health in combat and out (UnitHealth "player" secret always, its maximum secret in combat; the fake client answers so). Without the
 -- hidden-value library a priority line that reads it (`health.pct`) never fires while the client keeps the health
 -- secret (unknown reads as full, no compare on a secret) and reads the plain value where the client gives one. With
 -- the library's band (lane B3, integration design 2.5) it reads the band's middle in combat. No load-time warning
@@ -36,35 +36,39 @@ describe("a player health read in a priority", function()
         assert.are.same({}, H.Hekili.ErrorKeys)
     end)
 
-    it("the fake client hides the player's health in combat only", function()
+    it("the fake client hides the player's health in combat and out (L1710), its maximum in combat only", function()
         local api, ctl = fake.new()
         ctl.health, ctl.healthMax, ctl.unitHealth.target = 300, 1000, 40
-        assert.are.equal(300, api.UnitHealth("player"))
+        assert.is_true(api.issecretvalue(api.UnitHealth("player")))
         assert.are.equal(1000, api.UnitHealthMax("player"))
         ctl.combat = true
         assert.is_true(api.issecretvalue(api.UnitHealth("player")))
         assert.is_true(api.issecretvalue(api.UnitHealthMax("player")))
         assert.are.equal(40, api.UnitHealth("target")) -- another unit's row is the test's own
         ctl.combat = false
+        assert.is_true(api.issecretvalue(api.UnitHealth("player")))
+        ctl.healthPlain = true -- the loop oracle's truth
         assert.are.equal(300, api.UnitHealth("player"))
     end)
 
-    it("reads full in combat, never comparing the secret, and the plain value again after it", function()
+    it("reads full in combat and out, never comparing the secret", function()
         H.ctl.health, H.ctl.healthMax = 300, 1000
-        assert.is_true(fires(H.ctl.now + 1)) -- plain (out of combat): 30% < 50
+        assert.is_false(fires(H.ctl.now + 1)) -- secret out of combat too: unknown reads as full
+        assert.are.equal(100, H.Hekili.State.health.pct)
         H.ctl.combat = true
         for i = 2, 4 do
             assert.is_false(fires(H.ctl.now + 1), i)
             assert.are.equal(100, H.Hekili.State.health.pct, i)
         end
         H.ctl.combat = false
-        assert.is_true(fires(H.ctl.now + 1))
+        assert.is_false(fires(H.ctl.now + 1))
         assert.are.same(warned, H.errors)
     end)
 
     it("never fires while the client keeps the health secret, and honours a plain read", function()
         H.ctl.health, H.ctl.healthMax = 300, 1000
-        assert.is_true(fires(H.ctl.now + 1)) -- plain (out of combat): 30% < 50
+        H.ctl.unitHealth.player = 300 -- a plain read (never seen on live): 30% < 50
+        assert.is_true(fires(H.ctl.now + 1))
         H.ctl.unitHealth.player = fake.SECRET -- secret: unknown reads as full
         for i = 2, 5 do
             assert.is_false(fires(H.ctl.now + 1), i)
@@ -133,6 +137,119 @@ describe("a player health read in a priority, with the hidden-value band (lane B
         assert.are.same({ false, 100 }, { frames(3) })
         assert.are.same({}, H.errors)
     end)
+end)
+
+-- L1805: the per-capability enablement (`health.known`, `<power>.known`, `aura.known`; Facade.Known) and the hold of a
+-- lost band (owner "Hold last reading"). A guarded line never fires on an unknown, an inverted one (`>`) included.
+describe("the enablement conditions in a priority (L1805)", function()
+    local fake_lhv = require("Game.harness.fake_lhv")
+    local F = 1 / 60
+    local H, S, lhv, low, high
+
+    before_each(function()
+        local C = dlw.Guardian
+        H = headless.new({ character = C.character(), pack = C.PACK })
+        S = H.Hekili.State
+        lhv = fake_lhv.new({
+            now = function()
+                return H.ctl.now
+            end,
+        })
+        local major, minor = lhv:GetVersion()
+        local stub = rawget(H.env, "LibStub")
+        stub.libs[major], stub.minors[major] = lhv, minor
+        H.Hekili.bandOff = false
+        H.Hekili:ProvidersChanged()
+        local lists = H.Hekili.DB.profile.packs[C.PACK].lists
+        local list = next(lists)
+        table.insert(lists[list], 1, { action = "barkskin", criteria = "health.known&health.pct>50", enabled = true })
+        table.insert(lists[list], 1, {
+            action = "frenzied_regeneration",
+            criteria = "health.known&health.pct<50",
+            enabled = true,
+        })
+        H.Hekili:LoadScripts()
+        low, high = C.PACK .. ":" .. list .. ":1", C.PACK .. ":" .. list .. ":2"
+        H.ctl.health, H.ctl.healthMax = 1000, 1000
+    end)
+
+    -- n frames, a cycle each; then { the low line, the inverted line, health.known, rage.known, aura.known, health.pct }
+    local function frames(n)
+        for i = 1, n do
+            assert.is_true(headless.cycle(H, H.ctl.now + F), i)
+        end
+        S.reset()
+        local Sc = H.Hekili.Scripts
+        return { Sc:CheckScript(low), Sc:CheckScript(high), S.health.known, S.rage.known, S.aura.known, S.health.pct }
+    end
+
+    local function push(hp, rage)
+        lhv:Push("health", "player", nil, hp, 1000, H.ctl.now)
+        lhv:Push("power", "player", 1, rage or 40, 100, H.ctl.now)
+    end
+
+    -- the watches are made out of combat: frames there first, at full; while the first prime runs the health is unknown
+    -- (full, and both lines false: the inverted one too), then the band reads full (a reading: the inverted line fires)
+    local function pull()
+        push(1000)
+        local r = frames(2)
+        assert.are.same({ false, false, false, 100 }, { r[1], r[2], r[3], r[6] })
+        r = frames(12)
+        assert.are.same({ false, true, true, 100 }, { r[1], r[2], r[3], r[6] })
+        H.ctl.combat = true
+        H.ctl.Fire("PLAYER_REGEN_DISABLED")
+    end
+
+    it(
+        "reads false on an unknown at the first prime, live then, and false again once the capability is lost",
+        function()
+            pull()
+            push(300)
+            assert.are.same({ true, false, true, true, true, 30.5 }, frames(3))
+            push(700)
+            assert.are.same({ false, true, true }, { unpack(frames(3), 1, 3) })
+            lhv:SetAvailable("unavailable", "error")
+            assert.are.same({ false, false, false, false, false, 100 }, frames(1))
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    it("health lost alone: its lines silent, power and the aura kind still known; then power lost alone", function()
+        pull()
+        push(300)
+        assert.are.same({ true, false, true, true, true, 30.5 }, frames(3))
+        lhv:SetAvailable("unavailable", "error", "health")
+        assert.are.same({ false, false, false, true, true, 100 }, frames(2))
+        lhv:SetAvailable("ready", nil, "health")
+        lhv:SetAvailable("unavailable", "error", "power")
+        assert.are.same({ true, false, true, false, true, 30.5 }, frames(14))
+    end)
+
+    it(
+        "a re-prime shorter than the bound keeps the defensive steady; past the bound it goes and stays false",
+        function()
+            pull()
+            push(300)
+            assert.are.same({ true, false, true }, { unpack(frames(3), 1, 3) })
+            lhv:Prime("player", H.ctl.now) -- about 10 frames unknown
+            for i = 1, 12 do
+                assert.are.same({ true, false, true }, { unpack(frames(1), 1, 3) }, i)
+            end
+            local lost = H.ctl.now
+            local fell
+            while H.ctl.now - lost < 3 do -- a band drop past the bound, mid-fight: false and staying false
+                lhv:Prime("player", H.ctl.now)
+                local r = frames(1)
+                if r[1] == false then
+                    fell = fell or H.ctl.now - lost
+                    assert.are.same({ false, false, false, 100 }, { r[1], r[2], r[3], r[6] })
+                else
+                    assert.is_nil(fell)
+                end
+            end
+            assert.is_true(fell > 0.9 and fell < 1.1, fell)
+        end
+    )
 end)
 
 -- Lane B2 (L1675): a NOT under every guard says strictly above the gate, where a priority line reads it too.

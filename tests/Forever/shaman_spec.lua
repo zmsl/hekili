@@ -17,6 +17,7 @@ local KIT = {
     lightning_bolt = { { 403, 529, 548, 915, 943, 6041, 10391, 10392, 15207, 15208 }, 220, 0, "spell" },
     lightning_shield = { { 324, 325, 905, 945, 8134, 10431, 10432 }, 370, 0, "spell" },
     earth_shock = { { 8042, 8044, 8045, 8046, 10412, 10413, 10414 }, 450, 6, "spell" },
+    earth_shock_interrupt = { { 8042, 8044, 8045, 8046, 10412, 10413, 10414 }, 450, 6, "spell" }, -- (L1808) Interrupts
     flame_shock = { { 8050, 8052, 8053, 10447, 10448, 29228 }, 410, 6, "spell" },
     fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 375, 10, "spell" }, -- the game's (owner's tooltips, every rank; DB2 520)
     stormstrike = { { 17364 }, 0.08, 8, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat); 8 s (e4ef929e54)
@@ -152,7 +153,7 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(47, n)
+        assert.are.equal(48, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
@@ -395,12 +396,26 @@ describe("Forever Shaman", function()
                     cds[#cds + 1] = { k, v }
                 end
                 ld.run(w.abilities[case[1]][field], e)
-                assert.are.same(
-                    { { { case[2][1], 6 }, { case[2][2], 6 } }, case[3] },
-                    { cds, e.applied },
-                    case[1] .. " " .. field
-                )
+                local want = { { case[2][1], 6 }, { case[2][2], 6 } }
+                if field == "handler" then -- the simulation also sets Earth Shock's kick key (L1808)
+                    want[3] = { "earth_shock_interrupt", 6 }
+                end
+                assert.are.same({ want, case[3] }, { cds, e.applied }, case[1] .. " " .. field)
             end
+        end
+        do -- the kick key: Earth Shock's effect, all three shocks' cooldown, and the target's cast interrupted
+            local e = ld.env(w)
+            local cds, kicked = {}, 0
+            e.setCooldown = function(k, v)
+                cds[#cds + 1] = { k, v }
+            end
+            e.interrupt = function()
+                kicked = kicked + 1
+            end
+            ld.run(w.abilities.earth_shock_interrupt.handler, e)
+            assert.are.same({ { "flame_shock", 6 }, { "frost_shock", 6 }, { "earth_shock", 6 } }, cds)
+            assert.are.equal(1, kicked)
+            assert.is_nil(w.abilities.earth_shock_interrupt.now)
         end
         local e = ld.env(w)
         assert.are.same({ 8050, 12 }, { w.auras.flame_shock.id, ld.run(w.auras.flame_shock.duration, e) })
@@ -731,7 +746,7 @@ describe("Forever Shaman", function()
             cds[#cds + 1] = { k, v }
         end
         ld.run(w.abilities.earth_shock.handler, e)
-        assert.are.same({ { "flame_shock", 5 }, { "frost_shock", 5 } }, cds)
+        assert.are.same({ { "flame_shock", 5 }, { "frost_shock", 5 }, { "earth_shock_interrupt", 5 } }, cds)
     end)
 
     -- Shamanistic Focus (1223030, aura 108 misc 14, -45% on mask 0x90100400: the shocks and Lightning Shield); wowsims's
@@ -987,10 +1002,19 @@ describe("Forever Shaman priorities", function()
         for list, entries in pairs(packs[PACK].lists) do
             for i, e in ipairs(pe.flat(entries)) do
                 local where = list .. " " .. i
-                assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action] == true or pe.LINE[e.action], where)
+                assert.is_true(
+                    cls.abilities[e.action] ~= nil
+                        or shared[e.action] == true
+                        or pe.LINE[e.action]
+                        or pe.SHARED[e.action],
+                    where
+                )
                 for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                     if kinds[kind] then
-                        assert.is_true(kinds[kind][key] ~= nil or elements[key] == true, where .. ": " .. key)
+                        assert.is_true(
+                            kinds[kind][key] ~= nil or elements[key] == true or pe.SHARED[key] == true,
+                            where .. ": " .. key
+                        )
                     elseif kind == "totem" then
                         assert.is_true(elements[key], where .. ": totem " .. key)
                     end

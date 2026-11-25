@@ -29,13 +29,44 @@ end)
 local health, otherHealth, spellHaste, ttd
 I.healthMax = 0
 
+-- (L1805, owner "Hold last reading") A band lost while its watch still works (I.bandOK: a re-prime, the value moved on
+-- every frame) holds its last reading for HEALTH_HOLD s from the last drain it was live; past that, or with the watch
+-- broken (refused, released, the capability lost, the kill switch), the reading is dropped. Measured on the library's
+-- own fake client (def-1 report): one desync reads unknown 10 frames (0.17 s at 60 fps, 0.33 at 30), a value moving
+-- every frame for k frames about k; 1 s covers one desync down to 10 fps and a run of about 55 frames at 60 fps.
+I.HEALTH_HOLD = 1
+I.healthHolds, I.healthSnaps = 0, 0 -- the holds begun and the band readings dropped (the harness reports both)
+local holding = false
+
+-- Whether the last reading is a band that may still stand at t (above). Allocates nothing.
+local function bandHeld(t)
+    local s = health.last.observed
+    return s.t > 0 and s.event == Obs.Band and I.bandOK[0] == true and t - s.t <= I.HEALTH_HOLD
+end
+
 -- The player's health unknown from t: full (a defensive "health.pct<50" never fires, a "health.pct>50" gate always
--- passes), the last plain read forgotten so the basis is "default" and the confidence 0. A secret read and the pull
--- (a read from before it may be stale until the next poll) both make it unknown.
+-- passes), the last reading forgotten so the basis is "default", the confidence 0 and VS.Known(1) false. A secret read
+-- and the pull (a plain read from before it may be stale until the next poll) both make it unknown.
 local function healthUnknown(t, event)
+    local s = health.last.observed
+    if s.t > 0 and s.event == Obs.Band then
+        I.healthSnaps = I.healthSnaps + 1
+    end
+    holding = false
     health.est, health.lo, health.hi = 1, 0, 1
-    health.last.observed.t = 0
+    s.t = 0
     I.Sample(health, "default", 1, t, event)
+end
+
+-- A secret read or a lost band: the band held while it may stand (one hold counted per loss), else unknown.
+local function healthLost(t, event)
+    if bandHeld(t) then
+        if not holding then
+            holding, I.healthHolds = true, I.healthHolds + 1
+        end
+        return
+    end
+    healthUnknown(t, event)
 end
 
 -- The stat split (owner rule L971; accuracy-085 item 4): a pack's player aura declares what it does to the spell haste
@@ -114,7 +145,9 @@ end
 
 I.On(Obs.CombatStart, function(o, t)
     I.combatT = t
-    healthUnknown(t, Obs.CombatStart)
+    if not bandHeld(t) then -- a band is no read from before the pull: it stands
+        healthUnknown(t, Obs.CombatStart)
+    end
     splitAtPull(t)
 end)
 
@@ -173,8 +206,11 @@ end)
 
 I.On(Obs.Read, function(o, t)
     if o.c == ReadOf.Health and o.b < 0 then
-        healthUnknown(t, Obs.Read)
+        if not I.bandLive[0] then -- a live band (poll 1.6 of this drain, folded next) is the reading
+            healthLost(t, Obs.Read)
+        end
     elseif o.c == ReadOf.Health then
+        holding = false
         health.est, health.lo, health.hi = o.b, o.b, o.b
         I.Sample(health, "observed", o.b, t, Obs.Read)
     end
@@ -189,8 +225,9 @@ I.On(Obs.Band, function(o, t)
     if o.a ~= 0 or s.t == t and s.event == Obs.Read then
         return
     elseif o.b > o.c then
-        healthUnknown(t, Obs.Band)
+        healthLost(t, Obs.Band)
     else
+        holding = false
         health.lo, health.hi, health.est = o.b, o.c, (o.b + o.c) / 2
         I.bandUsed[0], I.bandUsedLo[0], I.bandUsedHi[0] = I.bandUsed[0] + 1, o.b, o.c
         I.Sample(health, "observed", health.est, t, Obs.Band)
@@ -219,6 +256,11 @@ function VS.Health(unit, now)
         return I.TargetHealth(now)
     end
     return otherHealth
+end
+
+--- (L1805) The player's health estimate is a reading (a plain read, a live band or one held), not the default full.
+function I.HealthKnown()
+    return health.basis == "observed"
 end
 
 --- (spec §3.1) The player's last plain maximum health; 100 for any other unit.

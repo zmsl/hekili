@@ -150,6 +150,7 @@ function M.new()
         petPower = 0, -- UnitPower("pet") of the pet's power type `petPowerType` while exists.pet (SECRET: a secret read)
         petPowerType = 0,
         itemCount = {}, -- [itemID] = C_Item.GetItemCount (default 0)
+        itemUsable = {}, -- [itemID] = true: C_Item.IsUsableItem answers true (default false)
         -- [index] = UnitStat's value (its first two returns; default 0); .armor UnitArmor's, .block GetShieldBlock's
         stats = {},
         powerMax = {}, -- [powerType] = max
@@ -171,8 +172,8 @@ function M.new()
         spellHaste = 0,
         health = 1000,
         healthMax = 1000,
-        -- [unit] = UnitHealth / UnitHealthMax (default: health / healthMax; the player's SECRET in combat, owner L1461,
-        -- unless healthPlain: the loop oracle's truth)
+        -- [unit] = UnitHealth / UnitHealthMax (default: health / healthMax; the player's health SECRET always, its
+        -- maximum in combat, owner L1461, L1710, unless healthPlain: the loop oracle's truth)
         unitHealth = {},
         unitHealthMax = {},
         healthPlain = false,
@@ -349,11 +350,13 @@ function M.new()
         end
         return r[1], r[2]
     end
-    local function hidden(unit) -- the player's own health: secret in combat (owner L1461)
-        return unit == "player" and ctl.combat and not ctl.healthPlain
+    -- the player's own health: secret in combat and out (owner L1461; L1710 measured out of combat), its maximum in
+    -- combat only; neither with healthPlain
+    local function hidden(unit, always)
+        return unit == "player" and (always or ctl.combat) and not ctl.healthPlain
     end
     function api.UnitHealth(unit)
-        return ctl.unitHealth[unit] or (hidden(unit) and SECRET) or ctl.health
+        return ctl.unitHealth[unit] or (hidden(unit, true) and SECRET) or ctl.health
     end
     function api.UnitHealthMax(unit)
         return ctl.unitHealthMax[unit] or (hidden(unit) and SECRET) or ctl.healthMax
@@ -769,7 +772,9 @@ function M.new()
             return ctl.itemCount[id] or 0
         end,
         GetItemSpell = none,
-        IsUsableItem = no,
+        IsUsableItem = function(id)
+            return ctl.itemUsable[id] == true
+        end,
         GetItemInfo = function(id)
             local i = ctl.items[id]
             if i and not i.uncached then -- uncached: the client answers nothing until it has the item (Instant still does)

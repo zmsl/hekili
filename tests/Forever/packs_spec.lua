@@ -103,6 +103,12 @@ describe("Forever priorities", function()
         it("registers every setting a priority reads on that priority's spec (" .. class .. ")", function()
             local w = load()
             local hits = {}
+            -- (L1808) a shared content setting is registered on every spec (Engine/Schema/Spec/Kits.lua NewClass)
+            local p = io.popen("cat src/Hekili_Shared/Shared/*.lua src/Hekili_Shared/Races/*.lua")
+            for name in p:read("*a"):gmatch('shared:RegisterSetting%(%s*"([%w_]+)"') do
+                w.settings[name] = w.settings[name] or {}
+            end
+            p:close()
             for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", class)) do
                 local key = type(p.spec) == "string" and p.spec:match(":(.+)$") -- nil: a pseudo-spec manifest
                 for name in p.simc:gmatch("settings%.([%w_]+)") do

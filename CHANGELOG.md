@@ -4,10 +4,18 @@
 
 ### New
 
+- Every built-in priority now suggests your Healthstone once your health is under 30% and a healing potion once it is under 25%, and each class its own save: Evasion (Rogue, 50%), Ice Block (Mage, 15%), Divine Shield (20%) and Lay on Hands (15%, not while Divine Shield is up) for every Paladin, Power Word: Shield on yourself (Priest, 50%), Desperate Prayer (Dwarf Priest, 40%), Deterrence (Hunter, 35%), Death Coil (Warlock, 35%) and Barkskin (Balance, and Feral outside Bear Form, 50%; in any form). They show in the Defensives display, and only while Hekili can read your health in combat.
+- Each low-health defensive line has its own threshold: a slider on the specialization's priority settings, starting at the values above (Guardian's and Protection Warrior's at their earlier values). Hekili reads your health in 1% steps, so a line shows once your health is under its setting. Feral's and Guardian's two Barkskin sliders each name their form, and Desperate Prayer's shows only for a Dwarf Priest.
+- Healing potions, from Minor to Major and the Restored and Perishable ones, under the Defensives toggle. A healing potion and a Major Mana Potion share their cooldown, and the forecast knows it.
 - A priority that compares a resource with more than 8 different exact values now shows a warning on its Source tab: Hekili can watch only 8 of them exactly, so those conditions use the nearest 1% instead.
+- Custom priorities: a line that tests your health without starting its condition with `health.known&` now gets a chat warning once when the priority loads, naming the priority, list and line. While Hekili cannot read your health it counts as full, so such a line can show when it should not.
 
 ### Changed
 
+- The Defensives and Interrupts displays are now separate by default, so a defensive or an interrupt never takes the main display's place. Evasion, Divine Shield, Divine Protection, Lay on Hands, Deterrence, Mana Shield, Shadow Ward, Fire Ward, Frost Ward, Pummel and Counterspell now have their toggle. Death Coil, Ice Barrier and Earth Shock used as a defensive or an interrupt have their own entry in the ability list, so the toggle turns off only that use.
+- The Healthstone and healing potion names in the options follow your game's language.
+- Guardian and Protection Warrior (wowsims.com), and Feral in Bear Form: the low-health defensives are back (Barkskin, Frenzied Regeneration, Last Stand, Shield Wall, Stoneform, Shatter Curse and Healthstone, under the Defensives toggle). They show only while Hekili can read your health in combat; when it cannot, they stay hidden, as before. Custom priorities can test the same with `health.known`.
+- Stoneform no longer waits for a poison or disease on you. Protection Warrior and Protection Paladin (wowsims.com) now suggest a Dwarf's Stoneform once your health is under 50%, each with its own slider. They show only while Hekili can read your health in combat.
 - Arcane, Fire, Frost and Frostfire Mage, Shadow Priest and Affliction Warlock (wowsims.com): the priorities now suggest cutting a channel early where the reference rotation does, such as Evocation once your mana is nearly full, or Wrack once a damage-over-time effect needs reapplying.
 - Channel cut suggestions now come at the channel's tick and stay up until pressed; changing target decides the cut again for the new target.
 - Rogue and Feral/Guardian Druid: the recommendation refreshes the moment a combo point is gained or spent, so the finisher shows without waiting for the next poll.
@@ -37,6 +45,8 @@
 - When a channel cut is suggested, the ability shown is chosen as if the channel were still running, so an ability that waits for the channel to end is not suggested there. An ability that becomes ready just after a channel tick can be suggested as a cut where the reference rotation would recast the channel. Something that changes just before a channel tick can delay the cut suggestion to the next tick, or keep a cut shown after its reason has passed, and right after a channel starts a cut can be suggested between ticks.
 
 ### Upgrade notes
+
+- Every profile now shows defensives and interrupts in their own displays. To show them in the main display again, turn off "Show in Separate ... Display" under the Defensives and Interrupts toggles.
 
 ## v0.11.0
 

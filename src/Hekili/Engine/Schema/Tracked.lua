@@ -340,7 +340,7 @@ local function buildDef()
     end
     for _, k in ipairs(sortedKeys(class.abilities)) do
         local a = class.abilities[k]
-        if a.key == k and k ~= "global_cooldown" then
+        if a.key == k and k ~= "global_cooldown" and not a.variantOf then -- a variant's casts are its original's (L1808)
             local ids = idsOf(a)
             if #ids > 0 then
                 local rec = recordOf(a)

@@ -128,3 +128,107 @@ function ns.AplPointCount(e)
     return #e.points + #e.deficit + #e.pct
 end
 
+
+-- (L1805 rule 23, L1808) The player's own health read without its enablement term guarding the whole condition: the
+-- translator refuses such a generated line, and a custom priority line is warned at load (Scripts.lua). Unknown
+-- health reads full, so an unguarded line (`health.pct>80`, or a `|` branch beside the term) passes on no reading.
+-- `s`: a condition, or a whole APL line (`actions=x,if=...`: its `if=` is the condition). Guarded: the condition is
+-- `health.known&R`, R one group or free of a top-level `|`, or `(G)&T` with G guarded and T free of a top-level `|`.
+-- Reads: `health.<field>` but `health.known` (not another unit's `<unit>.health.`), and the other names of the
+-- player's health (State.lua): `stat.health`, `stat.health_pct`, `stat.maximum_health` (the `health.max` read),
+-- `group_health` (the player's with the party's), `raid_health` (its twin in the state's list), `at_risk`.
+-- Allocates: load only (gsub/sub on the text).
+local ALIASES = {
+    "[^%w_.]stat%.health%f[^%w_]",
+    "[^%w_.]stat%.health_pct%f[^%w_]",
+    "[^%w_.]stat%.maximum_health%f[^%w_]",
+    "[^%w_.]group_health%f[^%w_]",
+    "[^%w_.]raid_health%f[^%w_]",
+    "[^%w_.]at_risk%f[^%w_]",
+}
+
+local function readsHealth(t)
+    for field in t:gmatch("[^%w_.]health%.([%a_][%w_]*)") do
+        if field ~= "known" then
+            return true
+        end
+    end
+    for i = 1, #ALIASES do
+        if t:find(ALIASES[i]) then
+            return true
+        end
+    end
+    return false
+end
+
+-- The index of the `)` closing the `(` at `i` of `s`, or nil.
+local function closing(s, i)
+    local depth = 0
+    for j = i, #s do
+        local c = s:sub(j, j)
+        if c == "(" then
+            depth = depth + 1
+        elseif c == ")" then
+            depth = depth - 1
+            if depth == 0 then
+                return j
+            end
+        end
+    end
+end
+
+-- Whether `s` has a `|` outside every parenthesis.
+local function topOr(s)
+    local depth = 0
+    for j = 1, #s do
+        local c = s:sub(j, j)
+        if c == "(" then
+            depth = depth + 1
+        elseif c == ")" then
+            depth = depth - 1
+        elseif c == "|" and depth == 0 then
+            return true
+        end
+    end
+    return false
+end
+
+local TERM = "health.known&"
+
+local function guarded(s)
+    if s:sub(1, #TERM) == TERM then
+        local rest = s:sub(#TERM + 1)
+        return rest ~= "" and (closing(rest, 1) == #rest and rest:sub(1, 1) == "(" or not topOr(rest))
+    end
+    if s:sub(1, 1) == "(" then
+        local j = closing(s, 1)
+        local tail = j and s:sub(j + 1) or ""
+        return j ~= nil and guarded(s:sub(2, j - 1)) and (tail == "" or tail:sub(1, 1) == "&" and not topOr(tail))
+    end
+    return false
+end
+
+--- (def-2 review, CPU) Whether condition `s` needs the player's health read: `health.known` guards all of it (the
+--- sense above), so its line cannot pass while the health is unread (Scripts.lua's NeedsHealth, read by Core.lua's
+--- display skip). Load only.
+function ns.HealthGuarded(s)
+    return type(s) == "string" and guarded((s:gsub("%s", "")))
+end
+
+function ns.HealthUnguarded(s)
+    if type(s) ~= "string" then
+        return false
+    end
+    s = s:gsub("%s", "")
+    if not readsHealth(" " .. s) then
+        return false
+    end
+    local cond = s
+    if s:find("^actions") then
+        cond = s:match(",if=(.*)$")
+        if not cond or readsHealth(" " .. s:sub(1, #s - #cond)) then
+            return true -- read outside the line's condition (a value=, a target_if=)
+        end
+    end
+    return not guarded(cond)
+end

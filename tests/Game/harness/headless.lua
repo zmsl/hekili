@@ -256,6 +256,11 @@ function M.new(o)
     local api, ctl = fake.new()
     ctl.now = o.now or 1000
     ctl.locale = o.locale -- the client's language (nil: enUS)
+    -- a raw UnitHealth row is the oracle's secret-free client: the player's health plain from the start (the core does
+    -- arithmetic on that row as the priorities load; live hides it in and out of combat, L1710)
+    for _, name in ipairs(o.raw or {}) do
+        ctl.healthPlain = ctl.healthPlain or name == "UnitHealth"
+    end
     local H = { api = api, ctl = ctl, frames = {}, timers = {}, errors = {}, loadErrors = {}, prints = {} }
     H.phase, H.misses = "load", { load = {}, login = {}, run = {} }
     local env = {}

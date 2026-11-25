@@ -60,4 +60,14 @@ return {
     -- sort by soonest; Venom none (the user, 2026-10-21)
     focus = { garrote = 1, slice_and_dice = 1, rupture = 1 },
     leveling = {},
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Evasion at or below
+    -- 50%, each the def-int-beyond-wowsims review's default and a per-spec setting, shown in the Defensives display
+    -- only while the player's health is read (rule 23). The Healthstone and healing potion lines come from the shared
+    -- settings (rule 25).
+    extra = {
+        { first = true, line = "evasion,use_off_gcd=1,if=health.known&health.pct<=settings.evasion_health" },
+    },
+    settings = {
+        evasion_health = { default = 50, desc = "player health threshold, percent" },
+    },
 }

@@ -83,7 +83,17 @@ return {
     -- whose first swing closes the opener before its seal, R16) would never cast either: the live loop idled 86 s
     -- from the Crusader seal's end. Seal of Command when neither is up, once the Crusader's Judgement is out (or no
     -- seal is up at all); a genuine need (no damage seal), R41. Silent while either seal is up.
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Divine Shield (its
+    -- usable check refuses it under Forbearance) at or below 20%; Lay on Hands (all Paladin specs, the controller's
+    -- L1808 default; drains all mana) at or below 15%, each the def-int-beyond-wowsims review's default and a per-spec
+    -- setting, shown in the Defensives display only while the player's health is read (rule 23). The Healthstone and
+    -- healing potion lines come from the shared settings (rule 25).
     extra = {
+        { first = true, line = "divine_shield,if=health.known&health.pct<=settings.divine_shield_health" },
+        {
+            first = true,
+            line = "lay_on_hands,if=health.known&health.pct<=settings.lay_on_hands_health&(!action.divine_shield.known|!buff.divine_shield.up)",
+        },
         {
             before = "seal_of_command",
             -- the other abilities' reads guarded (rule 6, tools/check_pack_levels.lua): an unlearned Seal of
@@ -96,5 +106,9 @@ return {
     leveling = {
         "seal_of_command,focus=2,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up",
         "seal_of_righteousness,focus=2,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<gcd.max*2",
+    },
+    settings = {
+        divine_shield_health = { default = 20, desc = "player health threshold, percent" },
+        lay_on_hands_health = { default = 15, desc = "player health threshold, percent" },
     },
 }

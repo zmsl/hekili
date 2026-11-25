@@ -243,8 +243,10 @@ describe("Hekili:NewClass (the engine headless)", function()
         kit:RegisterSetting("n_shared", 3, opt)
         kit:RegisterSetting("n_two", 4, { type = "toggle", name = "T" }, "two")
         local one, two, heal = kit.specs.one, kit.specs.two, kit.specs.heal
-        assert.are.same({ "n_shared" }, names(one.settings))
-        assert.are.same({ "n_shared", "n_two" }, names(two.settings))
+        -- (L1808) the shared content's settings (the Healthstone and healing potion thresholds) first, on every
+        -- supported spec
+        assert.are.same({ "healthstone_health", "healing_potion_health", "n_shared" }, names(one.settings))
+        assert.are.same({ "healthstone_health", "healing_potion_health", "n_shared", "n_two" }, names(two.settings))
         assert.are.same({}, names(heal.settings))
         assert.are_not.equal(one.settings[1].info, two.settings[1].info)
         assert.is_nil(opt.get) -- the caller's table is copied, not filled

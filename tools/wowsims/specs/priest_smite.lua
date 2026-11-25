@@ -35,4 +35,17 @@ return {
     -- Ruling P5: the content focus picks (no retired list): the DoT upkeep and Inner Focus
     focus = { shadow_word_pain = 2, holy_fire = 2, inner_focus = 1 },
     leveling = {},
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Power Word: Shield on
+    -- yourself (refused under Weakened Soul) at or below 50%, each the def-int-beyond-wowsims review's default and a
+    -- per-spec setting, shown in the Defensives display only while the player's health is read (rule 23). The
+    -- Healthstone and healing potion lines come from the shared settings (rule 25).
+    extra = {
+        { first = true, line = "power_word_shield,if=health.known&health.pct<=settings.power_word_shield_health" },
+        -- owner L1808: Desperate Prayer, Dwarf priests only (its `known`), 40% (the review's proposal)
+        { first = true, line = "desperate_prayer,if=health.known&health.pct<=settings.desperate_prayer_health" },
+    },
+    settings = {
+        power_word_shield_health = { default = 50, desc = "player health threshold, percent" },
+        desperate_prayer_health = { default = 40, desc = "player health threshold, percent" },
+    },
 }

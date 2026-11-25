@@ -97,4 +97,14 @@ return {
         rake = 2,
     },
     leveling = {},
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Barkskin at or below
+    -- 50%, each the def-int-beyond-wowsims review's default and a per-spec setting, shown in the Defensives display
+    -- only while the player's health is read (rule 23). The Healthstone and healing potion lines come from the shared
+    -- settings (rule 25).
+    extra = {
+        { first = true, line = "barkskin,if=health.known&health.pct<=settings.barkskin_cat_health" },
+    },
+    settings = {
+        barkskin_cat_health = { default = 50, desc = "player health threshold, percent" },
+    },
 }

@@ -179,6 +179,8 @@ describe("a choice setting", function()
     local function boot(scenario)
         local H = headless.new({ character = ww.character(), pack = ww.PACK, scenario = scenario })
         assert.are.same({}, H.loadErrors)
+        local toggles = H.Hekili.DB.profile.toggles -- (L1808) one display: the snapshot read below is Primary's
+        toggles.defensives.separate, toggles.interrupts.separate = false, false
         local id = H.Hekili.State.spec.id
         local spec = H.Hekili.Class.specs[id]
         local option =

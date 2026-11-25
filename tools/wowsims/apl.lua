@@ -83,7 +83,8 @@
 --    the `levelingFirst` lines lead a non-empty precombat list too (its pre-pull cast would show before the form):
 --    `leveling` lines are silent at 60, `levelingFirst` lines whenever their form is up. Each recipe `extra`
 --    ({ before = action, line = text }, content outside wowsims's model) goes just before the first `actions` line of
---    `before`, its last with `last = true` (an error when there is none). The recipe's `settings` ({ [key] = {
+--    `before`, its last with `last = true` (an error when there is none), or with `first = true` (no `before`) at
+--    the top of `actions` after the `levelingFirst` lines, the `first` ones in recipe order (a defensive line, L1808). The recipe's `settings` ({ [key] = {
 --    default = bool, desc = text } }) are pack settings like an ON/OFF group's: a line reads one as `settings.<key>`, and the header lists each one read.
 --    The recipe's `prepullSkip` ({ action key, ... }: an owner ruling against a wowsims pre-pull cast) omits that
 --    action's precombat lines, listed (an error when there is none).
@@ -92,7 +93,8 @@
 --    an `and`/`or` writes a repeated term once): an APL written for a talent build (wowsims picks it by that
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
 --    The recipe's `guard` ({ [action key or group's snake name] = SimC expression }) appends `&(<expression>)` to the
---    condition of each such entry (rule 13's automatic lines too), in every list (after a required talent); keyed
+--    condition of each such entry (rule 13's automatic lines too, a defensive racial's inside its health term), in
+--    every list (after a required talent); keyed
 --    "<list> #<n>", to that entry's cast line, or a move entry's condition, which its reached lines carry (rule 19,
 --    the ON variant), its value { expect = action, cond = expression }: the build raises when that entry is not the
 --    expected action (its cast key, else its kind), names none, or sits in a list never translated: a
@@ -164,7 +166,10 @@
 --    takes every racial major cooldown of the request's class (M.RACIALS by M.CLASS_RACES, the defensive ones only for a
 --    tank, none the APL casts itself), as one block in racials.go's order where the log first used one, else first
 --    (racials register first, sim/core/character.go:304, all at priority 0); each other race's line is inert, its
---    racial unknown (Engine/Schema/Races.lua). The player's cooldown timings or `hpPercentForDefensives`, which
+--    racial unknown (Engine/Schema/Races.lua). A defensive racial's line waits for low health (owner 2026-11-24):
+--    `health.known&health.pct<=settings.<key>_health&...` (rule 23's guard and per-spec setting, default M.RACIALS's
+--    `health`), with a `# Deviation:` line (wowsims autocasts it on cooldown for a tank: `hpPercentForDefensives` 0).
+--    The player's cooldown timings or `hpPercentForDefensives`, which
 --    change when wowsims autocasts a racial, are an error (none at the pin). `castAllStatBuffCooldowns` (every instant major cooldown
 --    whose buff raises one of its stat types, out of the autocast list) is one line per instant cast (Effective Time 0s: off
 --    the GCD, as wowsims's EffectiveTime() == 0) in the log whose
@@ -292,9 +297,17 @@
 --    pool (a lower level, whose N may exceed its whole pool) reads the share. No log: unsupported (rule 2). A `not` of
 --    our mana under a number is rewritten too (`!(mana.lo<N&mana.pct_lo<P)`), while a direct `>` or `>=` a number
 --    stays absolute; no APL at the pins has either form.
--- 23. The player's health (`currentHealthPercent`, `currentHealth`; owner L1462): the client hides it in combat, so a
---    read of it is unsupported (rule 2): the entry is omitted, as is a call or variable reading it. Another unit's
---    health read is unsupported as any other unit's (`... of <unit>`).
+-- 23. A hidden value of ours read through the hidden-value library (owner L1805, replacing L1462's omission): the
+--    player's health (`currentHealthPercent` `health.pct`, a percent read under rule 8; `currentHealth`
+--    `health.current`) is read, and the whole line's condition gets that kind's enablement term first (M.KNOWN:
+--    `health.known&(...)`, also through a variable; L1808, owner "Setting per line": a percent threshold becomes the
+--    line's per-spec setting `settings.<action>_health`, default the number, one per action), so with the reads not
+--    working (no band, the library missing,
+--    refused, re-priming past the hold) the line is false, an inverted `>` read or an `|` branch included. A read outside
+--    a line's condition is unsupported (rule 2). Another unit's health read is unsupported as any other unit's (`... of
+--    <unit>`). Every emitted line, recipe lines included (`leveling`, `levelingFirst`, `extra`, `condition`, `guard`),
+--    that reads the player's health (`health.<field>`, `stat.health_pct`, `at_risk`) without `health.known` guarding the
+--    whole condition (first, the rest one group or free of a top-level `|`) fails the build (M.unguarded).
 -- 24. A channelSpell's `interruptIf` (owner L1748: "if wowsims cuts channels, we should too") is its line's
 --    `interrupt_if=<condition>` (`1` when it folds true; none when it folds false or is absent, wowsims's plain cast):
 --    the engine reads it where wowsims does (Engine/Sim/Core.lua channelCut): at each tick but the last, with the GCD
@@ -308,6 +321,13 @@
 --    interruptIf the fork cannot read drops the clip only, with a `# Deviation:` line. `spellChanneledTicks` (the
 --    running channel's ticks so far) is read only there, as `floor(N-N*channel_remains/action.<key>.cast+0.01)` with N
 --    the kit ability's `cast` over its `tick_time`; elsewhere it is unsupported (rule 2).
+-- 25. A line every pack carries (L1808, owner "Setting per line"; the Healthstone in every pack): each shared setting
+--    (`shared:RegisterSetting`, the ability set's `sharedSettings`, in registration order) named `<action>_health`
+--    whose action the set has is the line `<action>[,use_off_gcd=1],if=health.known&health.pct<=settings.<key>` in the
+--    default list, after the recipe's `first` extras; a pack whose default list casts that action already keeps its
+--    own line (a wowsims line: Protection's Healthstone), and the next such line goes after it. The header lists the
+--    setting as rule 23's (the shared content registers it on every spec). No content is named here: the shared
+--    registration says which lines.
 -- 14b. A `sequence` (wowsims: its members in order, each once, once per reset; design §3a) is a stepped window `<w>`
 --    (the snake of its name) whose steps are its cast members: one line a cast, `<key>,if=window.<w>.next.<key>`, its
 --    own condition after, consecutive equal lines once. A distance-only waitUntil member is the next cast's range gate,
@@ -391,6 +411,8 @@ M.VALUES = {
     currentEnergy = "energy.lo",
     currentMana = "mana.lo",
     currentManaPercent = "mana.pct_lo",
+    currentHealthPercent = "health.pct", -- rule 23: the line guarded (M.KNOWN)
+    currentHealth = "health.current",
     maxMana = "mana.max",
     currentManaRegen = "mana.regen",
     currentComboPoints = "combo_points.current",
@@ -458,10 +480,11 @@ end
 
 -- Rule 13's racials: wowsims's racial major cooldowns (sim/core/racials.go, AddMajorCooldown), in its registration
 -- order (the race switch's), each { race, spell ID (Eureka!: by class, racials.go:349-363), defensive (Survival only:
--- autocast for a tank alone, sim/core/major_cooldown.go:258-263) }. Read Ley Line and Elemental Blessing are APL-only
--- (racials.go:261-264); the other races have no cooldown.
+-- autocast for a tank alone, sim/core/major_cooldown.go:258-263), health (a defensive one's low-health default, the
+-- owner's 2026-11-24 ruling: Protection Warrior's wowsims APL value for both) }. Read Ley Line and Elemental Blessing
+-- are APL-only (racials.go:261-264); the other races have no cooldown.
 M.RACIALS = {
-    { race = "RaceDwarf", id = 20594, defensive = true }, -- Stoneform, racials.go:18-48
+    { race = "RaceDwarf", id = 20594, defensive = true, health = 50 }, -- Stoneform, racials.go:18-48
     {
         race = "RaceGnome",
         id = {
@@ -474,7 +497,7 @@ M.RACIALS = {
     }, -- Eureka!, racials.go:344-417
     { race = "RaceNightElf", id = 1259799 }, -- Elune's Light, racials.go:61-76 (DPS: aura_helpers.go:412-428)
     { race = "RaceOrc", id = 20572 }, -- Blood Fury, racials.go:80-118
-    { race = "RaceOrc", id = 1299026, defensive = true }, -- Shatter Curse, racials.go:120-160
+    { race = "RaceOrc", id = 1299026, defensive = true, health = 50 }, -- Shatter Curse, racials.go:120-160
     { race = "RaceTroll", id = 20554 }, -- Berserking, racials.go:166-197
 }
 
@@ -899,7 +922,31 @@ local function reads(c, x)
 end
 
 -- Rule 8's percent reads (0-100 in the engine, 0-1 in wowsims).
-M.PERCENT = { currentManaPercent = true }
+M.PERCENT = { currentManaPercent = true, currentHealthPercent = true }
+
+-- Rule 23: a read of a hidden value of ours -> the enablement term its line is guarded by (Facade.Known's conditions).
+-- A power read would join here (`currentRage = "rage.known"`) once a line needs it; none does (the model answers).
+M.KNOWN = { currentHealthPercent = "health.known", currentHealth = "health.known" }
+
+-- Rule 23: whether line `s` reads the player's health without its enablement term guarding the whole condition: the
+-- core's own check (src/Hekili/Engine/Sim/AplThresholds.lua ns.HealthUnguarded, which also warns a custom line at
+-- load), one function for both. Run from the repository root, as every tool here is.
+local core = {}
+assert(loadfile("src/Hekili/Engine/Sim/AplThresholds.lua"))("Hekili", core)
+M.unguarded = core.HealthUnguarded
+
+-- Rule 23 (L1808): the setting key of the line's own action's health threshold `n` (`<action>_health`), recorded with
+-- its default for the header and the class's registration; one threshold an action (a second, different one raises).
+function M.healthSetting(c, n)
+    local key = (c.self or unsupported("the player's health against a number outside a cast line")) .. "_health"
+    c.healthSettings = c.healthSettings or {}
+    local had = c.healthSettings[key]
+    if had and had ~= n then
+        error(("rule 23: %s reads two health thresholds (%s and %s)"):format(c.self, tostring(had), tostring(n)), 0)
+    end
+    c.healthSettings[key] = n
+    return key
+end
 
 -- Whether value node `n` is a percent read (variables followed).
 local function percentRead(c, n)
@@ -1171,9 +1218,6 @@ local function value(c, n, pct)
             unsupported("boolean as a value")
         end
         return s, false
-    elseif k == "currentHealthPercent" or k == "currentHealth" then -- rule 23
-        local u = v.sourceUnit and v.sourceUnit.type or "Self"
-        unsupported(k .. (u == "Self" and ": the player's health, hidden in combat" or " of " .. tostring(u)))
     elseif M.VALUES[k] then
         local u = v.sourceUnit and v.sourceUnit.type or "Self"
         local res = u == "Pet" and M.VALUES[k]:match("^(%a+)%.lo$") -- the pet's power: the sim's pet.<resource> (no band)
@@ -1181,6 +1225,12 @@ local function value(c, n, pct)
             return "pet." .. res, false
         elseif u ~= "Self" then
             unsupported(k .. " of " .. tostring(u))
+        end
+        if M.KNOWN[k] then -- rule 23: the line's condition is guarded
+            if not c.known then
+                unsupported(k .. ": outside a line's condition")
+            end
+            c.known[M.KNOWN[k]] = true
         end
         return M.VALUES[k], false
     elseif k == "variableRef" then
@@ -1471,6 +1521,13 @@ local function bool(c, n)
             local max = c.manaMax or unsupported("currentMana against a number (no log: the kit's pool unknown)")
             local o = M.OPS[under]
             return ("(mana.lo%s%s&mana.pct_lo%s%d)"):format(o, n, o, math.ceil(100 * tonumber(n) / max)), nil, u
+        end
+        -- rule 23 (L1808, owner "Setting per line"): the player's health against a number reads the line's per-spec
+        -- setting `<action>_health`, its default the number
+        if l == "health.pct" and tonumber(r) then
+            r = "settings." .. M.healthSetting(c, tonumber(r))
+        elseif r == "health.pct" and tonumber(l) then
+            unsupported("a number against the player's health (write the health first)")
         end
         return l .. op .. r, nil, u
     elseif k == "auraIsActive" then
@@ -1834,6 +1891,10 @@ local function automatic(c, kind, v)
                 c.notes[#c.notes + 1] = kind .. ": unmapped " .. what
             elseif not c.namedKeys[x] then -- one the APL casts is no autocast cooldown (sim/core/apl.go:333-340)
                 block[#block + 1] = x
+                if rc.defensive then -- a tank's: its low-health default (the entry's emission reads it)
+                    c.lowHealth = c.lowHealth or {}
+                    c.lowHealth[x] = rc.health
+                end
             end
         end
         racial[x or ""] = true
@@ -1879,17 +1940,32 @@ local function castBody(c, x)
 end
 
 -- Condition node `n` as text: nil when always true (a nil condition is true: wowsims's apl_action.go), false never.
+local function paren(s) -- `s` as one term of an `&`
+    return (grouped(s) or not s:find("|", 1, true)) and s or ("(" .. s .. ")")
+end
+
 local function condition(c, n)
-    local s, b, u = bool(c, n)
+    local outer, mine = c.known, {} -- rule 23: the enablement terms this condition's reads need
+    c.known = mine
+    local ok, s, b, u = pcall(bool, c, n)
+    c.known = outer
+    if not ok then
+        error(s, 0)
+    end
     if u ~= true and b == false then
         return false
     elseif u ~= true and s then
-        return emit(u, s, true)
+        local terms = {}
+        for term in pairs(mine) do
+            terms[#terms + 1] = term
+        end
+        table.sort(terms)
+        s = emit(u, s, true)
+        if #terms > 0 then -- outermost, after the known-test wrapper: no reading, no line (def-1 review minor 2)
+            s = table.concat(terms, "&") .. "&" .. paren(s)
+        end
+        return s
     end
-end
-
-local function paren(s) -- `s` as one term of an `&`
-    return (grouped(s) or not s:find("|", 1, true)) and s or ("(" .. s .. ")")
 end
 
 -- Rule 7's guard of `key` after condition `cond` (either may be nil): one more `&` term.
@@ -2313,6 +2389,17 @@ local function entryBody(c, e)
             local off = c.offGcd[x]
             local line = x .. (off and ",use_off_gcd=1" or "")
             local cx = guarded(c, x, required(c, x, cond))
+            local hp = c.lowHealth and c.lowHealth[x]
+            if hp then -- rule 13: a tank's defensive racial waits for low health, rule 23's setting and guard outermost
+                local key = x .. "_health"
+                c.healthSettings = c.healthSettings or {}
+                c.healthSettings[key] = hp
+                cx = "health.known&health.pct<=settings." .. key .. (cx and ("&" .. paren(cx)) or "")
+                c.deviations[#c.deviations + 1] = x
+                    .. ": wowsims autocasts it on cooldown for a tank; here at or below settings."
+                    .. key
+                    .. ", under health.known"
+            end
             out[i] = cx and (line .. ",if=" .. cx) or line
         end
         return out
@@ -3064,7 +3151,8 @@ function M.translate(rotation, c)
     end
     table.sort(own)
     for _, key in ipairs(own) do
-        toggles[#toggles + 1] = { key, c.settings[key].default == true, c.settings[key].desc }
+        local d = c.settings[key].default -- a bool, or a number (a health threshold, L1808)
+        toggles[#toggles + 1] = { key, type(d) == "number" and d or d == true, c.settings[key].desc }
     end
     local omitted, lists, byName = {}, {}, {}
     local origin = {} -- [list name][line] = its APL entry's index (for rule 1's notes)
@@ -3201,9 +3289,16 @@ function M.translate(rotation, c)
             table.insert(origin.precombat, i, false)
         end
     end
+    -- the `first` extras so far: each goes after the ones before it, all after the levelingFirst lines (they lead: a
+    -- form the sim starts in, the Hunters' pet calls, L1059)
+    local firsts = #c.levelingFirst
     for _, x in ipairs(c.extra) do
         local at
-        for i, body in ipairs(byName.default) do
+        if x.first then
+            firsts = firsts + 1
+            at = firsts
+        end
+        for i, body in ipairs(x.first and {} or byName.default) do
             if body:match("^[%w_]+") == x.before then
                 at = i
                 -- a sequence's member (recipe `sequences`) is part of its sequence's line: the extra goes before that
@@ -3220,6 +3315,48 @@ function M.translate(rotation, c)
         end
         table.insert(byName.default, at, x.line)
         table.insert(origin.default, at, false)
+    end
+    -- rule 25: the shared health lines, after the `first` extras and after wowsims's own defensive lines (an ability on
+    -- the Defensives toggle: they keep wowsims's order, def-2 review Minor 9), the pack's own cast of one included.
+    -- shortcut: the scan spans the whole default list, so a wowsims Defensives line late in a list would pull the shared
+    -- lines below damage lines (seen only with Defensives not separate); no shipped pack has one (def-2c re-review Minor
+    -- 4). Bounding it to a leading block would reorder a shipped pack whose defensive lines sit among other lines (a
+    -- form, a charge, a racial); bound it to the last defensive line before the first damage cast if one appears.
+    local at = firsts
+    for i, body in ipairs(byName.default) do
+        local a = origin.default[i] ~= false and c.set.abilities[body:match("^[%w_]+")]
+        if a and rawget(a, "toggle") == "defensives" then
+            at = math.max(at, i)
+        end
+    end
+    for _, s in ipairs(c.set.sharedSettings or {}) do
+        local key = s[1]
+        local action = key:match("^([%w_]+)_health$")
+        local a = action and c.set.abilities[action]
+        if a then
+            local own
+            for i, body in ipairs(byName.default) do
+                if body:match("^[%w_]+") == action then
+                    own = own or i
+                end
+            end
+            if own then
+                at = math.max(at, own)
+            else
+                at = at + 1
+                table.insert(
+                    byName.default,
+                    at,
+                    action
+                        .. (a.gcd == "off" and ",use_off_gcd=1" or "")
+                        .. ",if=health.known&health.pct<=settings."
+                        .. key
+                )
+                table.insert(origin.default, at, false)
+                c.healthSettings = c.healthSettings or {}
+                c.healthSettings[key] = s[2]
+            end
+        end
     end
     local done = {}
     repeat
@@ -3341,8 +3478,26 @@ function M.translate(rotation, c)
             end
         end
     end
+    for _, line in ipairs(text) do -- rule 23: no line reads the player's health unguarded, a recipe's own included
+        if M.unguarded(line) then
+            error(
+                "rule 23: a line reads the player's health without health.known guarding the whole condition: " .. line,
+                0
+            )
+        end
+    end
     text = table.concat(text, "\n")
     -- only the settings an emitted line reads (ruling L14): a group whose every reader was omitted registers nothing
+    local hs = {} -- rule 23's health thresholds (L1808), each a setting of its line's action
+    for key in pairs(c.healthSettings or {}) do
+        hs[#hs + 1] = key
+    end
+    table.sort(hs)
+    for _, key in ipairs(hs) do
+        if not c.settings[key] then
+            toggles[#toggles + 1] = { key, c.healthSettings[key], "player health threshold, percent" }
+        end
+    end
     local read = {}
     for _, t in ipairs(toggles) do
         if text:find("settings%." .. t[1] .. "%f[^%w_]") then

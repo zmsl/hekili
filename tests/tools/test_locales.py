@@ -40,8 +40,12 @@ class Repository(unittest.TestCase):
             if grouped:
                 self.assertEqual(set(locales.languages(name)), core, name)
 
-    def test_the_shared_content_has_no_text(self):
-        self.assertFalse(os.path.isdir(locales.locales_dir("Hekili_Shared")))
+    def test_the_shared_content_loads_its_text_first(self):
+        # L1808: the Healthstone's and healing potion's names (Shared/Consumables.lua) are the shared content's text
+        with open(os.path.join(locales.SRC, "Hekili_Shared", "Hekili_Shared.toc"), encoding="utf-8") as f:
+            files = [line.strip() for line in f if line.strip().endswith(".lua")]
+        self.assertEqual("Locales\\enUS.lua", files[0])
+        self.assertLess(files.index("Locales\\zhCN.lua"), files.index("Shared\\Consumables.lua"))
 
 
 class Keys(unittest.TestCase):

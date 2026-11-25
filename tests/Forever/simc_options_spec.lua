@@ -21,6 +21,7 @@ local function rig(list, lists)
     c.known[#c.known + 1] = CANNIBALIZE
     local H = headless.new({ character = c, pack = ww.PACK })
     assert.are.same({}, H.loadErrors)
+    H.Hekili.DB.profile.toggles.defensives.separate = false -- (L1808) the rig's channel, Cannibalize, is a defensive
     lists = lists or {}
     lists.default = list
     H.Hekili.DB.profile.packs[ww.PACK].lists = lists

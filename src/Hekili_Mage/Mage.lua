@@ -642,6 +642,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows({ 2139 }),
+        toggle = "interrupts",
         debuff = "casting",
         readyTime = state.timeToInterrupt,
 
@@ -748,18 +749,26 @@ local function coned()
     end
 end
 -- Cold Snap: every Frost-only cooldown ends (wowsims cold_snap.go: Frost Nova, Cone of Cold, Ice Block and Ice Barrier).
-local function snapped()
+-- `other` (the simulation's handler only): Ice Barrier's other key (L1808; the belief has one record, by ID).
+local function snapped(other)
     return function()
         setCooldown("frost_nova", 0)
         setCooldown("cone_of_cold", 0)
         setCooldown("ice_block", 0)
         setCooldown("ice_barrier", 0)
+        if other then
+            setCooldown(other, 0)
+        end
     end
 end
-local function barriered()
+-- `other` (the simulation's handler only): the key sharing the cooldown, Ice Barrier's other use (L1808).
+local function barriered(other)
     return function()
         applyBuff("ice_barrier")
         applyBuff("frigid_power")
+        if other then
+            setCooldown(other, 30)
+        end
     end
 end
 local function blocked()
@@ -827,7 +836,29 @@ spec:RegisterAbilities({
         usable = unlocked("frost"),
 
         now = barriered(),
-        handler = barriered(),
+        handler = barriered("ice_barrier_defensive"),
+    },
+
+    -- Ice Barrier as a defensive (L1808): Frost's wowsims lines cast it for Frigid Power; this key, on the Defensives
+    -- toggle, is its protective use (`variantOf`: the spell's IDs and the belief's record stay ice_barrier's). No
+    -- shipped line casts it yet.
+    ice_barrier_defensive = {
+        id = 11426,
+        variantOf = "ice_barrier",
+        copy = rest(ICE_BARRIER), -- its ranks (a variant's copy maps no IDs: Spec/Abilities.lua)
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = frostChanneled(ICE_BARRIER_COST, ICE_BARRIER),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(ICE_BARRIER),
+        usable = unlocked("frost"),
+        toggle = "defensives",
+
+        handler = barriered("ice_barrier"),
     },
 
     -- Off the GCD; 10 minutes (DB2 RecoveryTime; the pin's row: CooldownMs 600000, no GCD).
@@ -842,7 +873,7 @@ spec:RegisterAbilities({
         known = knows({ 12472 }),
 
         now = snapped(),
-        handler = snapped(),
+        handler = snapped("ice_barrier_defensive"),
     },
 
     -- A channel of 8 s, a tick a second (the AoE list's filler: three targets or more).
@@ -1096,6 +1127,7 @@ do
 
             startsCombat = false,
             known = knows(MANA_SHIELD),
+            toggle = "defensives",
             usable = unlocked("arcane"),
 
             now = buffed("mana_shield"),
@@ -1115,6 +1147,7 @@ do
 
             startsCombat = false,
             known = knows(FIRE_WARD),
+            toggle = "defensives",
             usable = unlocked("fire"),
 
             now = warded("fire_ward", "frost_ward"),
@@ -1134,6 +1167,7 @@ do
 
             startsCombat = false,
             known = knows(FROST_WARD),
+            toggle = "defensives",
             usable = unlocked("frost"),
 
             now = warded("frost_ward", "fire_ward"),
@@ -1387,26 +1421,30 @@ spec:RegisterSelector("frostfire", { spec = "fire", pack = "Frostfire (wowsims.c
     return tab2 > tab1 and tab2 > tab3 and talent.ice_shards.rank > 0
 end)
 
+-- (L1808, owner "Setting per line") the health threshold of the packs' Ice Block (15%) lines (the recipes'
+-- `extra`, the def-int-beyond-wowsims review's defaults): a 1-100 slider on every spec
+spec:RegisterSetting("ice_block_health", 15, spec:HealthOption("ice_block"))
+
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
 -- run it, never this block (tests/Forever/mage_spec.lua checks it matches). Each pack's .simc is generated from its
 -- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/mage_*.lua).
 spec:RegisterPack(
     "Arcane (wowsims.com)",
-    20261122000,
-    [[Hekili:9IvBpQnoq4Fl7xAjQOaSTxB3vhN0EQVC7PBRQu6NDWjXb8HJDKTZI4eIF7DCEpbhk7Uh8fKXE888mJhM5rGMH(bYlcRjOVD90RF)SzxF90PtrE6TPeKxkoCnEjSGJtGpVtgI5K9lgTrSrrtuUHIehJvBzcCKXtbzuM(EokWQtvPKqK3d391pFlo3viVv0OisH9ev4aqC7(f6vWML7njwijpsK7xerIXzm9(f399)z)cyByvLdYOtm4PMKarWKOu1eCkd(i)CxyT7)QeCNXGVLyUIb0ncwlmyrv7xGJIe8xdlwt2QC3V4tyn(wlCy0d3)dWjR06u1TtMSKQxLfyO9KEM6a(eOkoyA80PK3fh(X36cjpPiMYGmboutfCLBQKaxoaRNlj4iFgzRpJcr0FFGbVzEz04VrI1RQTyEiMX8l(cCxLES55Bo5rri2S3yA88emh7MgQ9zIFF(SP13f8jjtswJhNPi(I4y)LHrZNzUYOGS4y3eQsb81palLqI1nlD3OI762MmUR5In8xfkeSiyr3Zmb2whN2GgWeIi)4m52lnWePIixt5lVWalfbg48HkBFW2vMY0lmfmOr1Ke1fg3YZtfBiYlm0M6E)LKKlmSLNx6D14yryMQa3bGT9THFXRi8W8YLekpYc5VAqsU7yK0chZpo3NvbEF4ldEy7hDNDWPo7QjZax85swhNN9vhkoBVFmvcpamSsBX6d2pwku6abtBsvxPXmcxxHmLR04akJQ36s44agmzPU9DDB4U93lEfZlgiCICj9)irqzWRkJ3o2weWow8PP9DtBEUMiLzPA)Un8)J53CtNhyloV61TZrTEATDLNi9HNZdVWloMocb3DS49Q6YNUNwu)S7aIczFKhmvxboSNmhZixLrnunTHV8TCLwLvdO)SAEpYRdCiVqj0rwsXiVNy6ePbA0dJ2zlKxV0vdfA4zB4F6vhN)Ydtq(2)pdYJvU8sQxSuWaCxBK5Mlz1wfrdT6PoRji6RSROyZVqEEteAPuO1iddYnPLC1EDYjdni8zpj02R2q8Pri45NtV7u5uTgXZpN(TtKt2KpE(z37pr2vRS88tPpCIuQTOZZpR(4jYQk9ONFgDZGDBgaUdsDvQxrE5YxnXb4xO90PfQ9vdATpSfDDhvyxodgA0AB7ToA7PQS9fjT9LOT9xNd63V3AoWyy)gXvg2i)n3S(9g75Vgd73WQ2FvcKBN5)1cLlMsw)FCC6kNSmZBGCqoc4m9kb0i4ViRb83Vy0xk)xAYpg9Z]]
+    20261123000,
+    [[Hekili:9I12UnUnq0VL8Ywludz7KTB3eSUaPO32IMGcO9zktjrzXAjsbsQy4cd)T3H6UPPCStQ9lgsKdNZzgoA4Hgnd9nKxewrqpF70B)0Sz3E30PtrEQn5eKxooCfEj8adNb)(OieZi7wmAnFTKMjDd5zoAR2KYXrApfuqtvFLHcS6uzoje590J)(V(aU0viVeAuePYEImCaiEy3cvcmy9ytI5cYleXUfrKyCrQA3Ih)7)A3cyy4PghuqNOXtojdIGjr5Yj48u4NY5DHND)hjN5mg8TaZKPaDJGN5ASOYDlWrrC23bpSISr6UBXVGv4hSWHrp91VbojrPYLpmzYsQkPiqt7jgM6a(eOkoyA80PKpgh(57CHKNGhttHmbour5mPBUGaloaRMli4i)uYg)uker)5bg89ZRJg)1cSkP1I50qIFqkpC1yA88ecovL4UIXxZ(q9l5HQVmxsukkBP0T1C)QPBDeaq1isfNrgxij(84y)LHrZNDAUU3YhW5Gz(5C9iVv)35blqeItt9REfsJs1yDL8CYl8qCjMakzygw7w)u(xMpBA)vtkeKv4dj2OGI4y3mQucBD(byHaQXClY3oQATU93xQ5FiNNgbpS)C694noo9bf2k4r(XfInxBGjcjrScYNxzGf8anC(Wh5(GTj6VyVYuqJgvrYKxzCRNpNVMiUYqRR79xsYUYWwpFT3LJJ5HfYkCha2(RgA(jjSWYYLmklYc5VzqsU9yK0chlNU0NnbUj81bpm8lUZoywNTTKzGf(wjRJZBEPdfN9hpMk0hjGLklwFW4XcUufWtv6u1nkCkHPAqMYKkCanLQ24sy4Gu4q22tYABdV)rDv7ILfdegrSK(VKiOm4d1X7E2wfWow8PU9DxBEMIief5k)9B4)tZV)(92GT48MD39MQ3wRTLCM0h2opCbV7y6ieC7XI3BAlF2F2Q6NThqui7J8abosWHgk(0h5k1cdBPn8YZLIoRRgq)CJ0hK3EWH8cfqhzbfJ8oZ0jsb0WaJ(zlKNr6QJcD8Sp8NF1XLV8qhK39)zqESYL3t9ILcgG7kTI)s17hRIOvAAFM(6Ycnv0ARGO3bhA8BHSNK1Zd0d16ABl6yW2PK98r(avWAW)Ob4Do1q0Bhpmfmx9nSF1fa7kCaN)dNyKvjIEVsTH0x8MfyO5ZNor(0PV(YZPF8u5uR07lpN(8jYjBQYV8S7(tKDTc2V8uc(8404uFX8xbAz20CiA1i0)kqjZMSDaoaEhK8AUxaYR8Ib6ar74tTnQPoBRNWzrX8rLmxYaZEPg8U0ERIgo37m8UU0W75wdVEoWSLV1CG2qZEXng2DXIsZmBpA4Vodn7z16VMRE0pZ)6xbPs)r7FK2PRj1IoIbYbLiGlujCOvWFqwb4VBXOFR(VcSCA0)n]]
 )
 spec:RegisterPack(
     "Fire (wowsims.com)",
-    20261122000,
-    [[Hekili:1EvBVTTnq4Fl5lzrygs2oXDnbrfOdBDRdRfdq9ZuMI6KnNLffiPsMhm8V9EuswVz5xuDlmGHepYN75oE84JitiFH4fs1a5Zthp9ntMmD64XJjE6nPaXlLYwrxGpKqxJ))bUe2n)UxfVQ4Rv2mXAlZC2elOHgCcY4X6pMqc6fsvkWiEF69)XV)ueceXBjpmekMnOy9c)t7MRxIdwoMtKqcVaYDZdHiAwSE383)p)9U54W7MxU8mUJXtkN1iZDctvo00yLtiaPMzyJVz)VkrI1ieBjnrfJuneFwy8fxTBonmuK8t4dRGnk7DZ)nQM(upC4Up9XVGGSuRtvp54SGRxMfyOTtNPAHyIuLgmoA8y4Hi2BV3gtCsrepgZduMMlsu2PsaxCav7MUrkcIPk9U)Q0OlJgh7x8IFmxPhz2sCHxemQzSr8i37UPWUD1YTxLiEnz7AAc1ow88bMzcL2QYh)SRtLPrrcwMYDsoUbzrr2lb0rjl8ZsTvASUW9(Bp0FW)bSmZ0AHQz72VD8GJQycjBzPJMM7O7cHCFLVGxYItajnGhZ1Bk85ZZ2E8ziH1uEI65zw3EwCEy7EUxWIgeVfZHmjSIoktb(IOi)fSWIuYzW3DwtqcIfIq)Om5MRfiqQa5kKLxjq42Lz5(4zlFkg(MJkxjKMvZ1WA1vIJ5eqMkVK(6aYu07VawFLWGPhAsz1Brn6n5RU542zPBpCW91JLfATSXW)SQo)0Yu)hHkNYAUsH9munpEM75sd(buPe3mrg19aya2aPvxI6tLLTjycrCi(qtlLbX7CBSidsfrWHhNRgXUQ1KReOH(XWgSVvcuqHCodyMFb))HqKT3wIFR5wWlREW0C0SU1xIgKYSuTpIDEVUuM2pw8o3hFSyl74GFl209f7jTnzTTkj13sgi9TWn6dwWvhtNGGBpv8Et1UCBRM32yT9aIIzFIhEhMcbSZf6MRHuM79ROn(YNZvuaj0GyiK8R7VDJ41YDepMe7wi5uI3atNensJo(Oz2I41jDvtHAE209dV64hF5HjiV)7zqEQYLRPEPNcgK7AJKUCbA9vr0dT6Qy5mswQJ2UYIkQk9l0RwNk6PMPbl(w03utHkReV8UYMaUNTV9tVU5QzwpCCwDwrmZ2(Dtn0jKdvZ8cBvr5ud)N1H)nUS1KhQRkZfs1m(o7TWg4FZfcFTeRb7IF5sDrL4Rb7I3EHUOpzzd2zpEHoRsW2G9WKXxOlQ1YnCF0TPXX8XEzEd3dDBiShXMQXAFGSFLF)iK(LtWUDqQPYrK8DqmSxUy7ott620PzRjJ4UEBrFGCXVb9I5EVBlJoTxYV9O6tHpLII6gVf)8Oz6LcjX7pHv42n(b6FO87VZnt(k]]
+    20261123000,
+    [[Hekili:1Iv7UTTnu0NL8NmlSaj7K4UMGOc0HTU1H1IbO(BjtrDLnNLffiPsMhm0ZEVuswF7puCdcGGeVKNZHKxE5j2DM73CDcikW9R3o923nB2T3nD6uxh12eW1jHqxtwIVet2Gp)etazlM8c)fjBJ0KY3yO7Z2iojqJJFkls95yx)bHuMauxNV8X)43FmebY1zfliak6niPdc)JzluRWglBZkKlGNbr2IaiKKgPYw8X)5VZwGnNTOC4PmlntsRnOYTcsKwKKiPvaaj6EyIFz(VsESXni2csSmcLAa(oxZftMTGeeWJ)j8L1WwPz2IFJOipoGgM8Lp)neKvkvI8rlRLm1QuFTST60vdetuQe)PHtNc3hsF)DM4cNGhYIW1bcvX4XsZebGd2NOSt2k4(rePk7VkdAZOGNFeNU(gwO9kGePwzUoM)s81LFKqvpzlbLIfVuAw1DVIWva9Z2wfTiv8y4Muj4Xdd9wsdSNDEq3y4haCSBEjCDlVw8RryakOKOiVIp9Iys1n6StB4zoLKZjYYKRkIBwTswW4UnKyIze)PEHPCPYOjlvHUjKttLfQFIFAyOwHAP6LMykv4re77UUpFW)b0uD3AHQoZ3R9wl2QKYf0vLeDBortcGCUYhWZPrXGG4ZIyQTfC(08DhUhcydHflFAUX1NeN73Tx7fQOHWBPCivaRj93qpb(2ZBccMsYd8ctfBVuGaHeeRrvEHaHBx6H7HLz8i40xx14cHupAMc2iVqC0fdsLdFmAuaPt69wcBUqyWLhsCz2Bro6v5JUz7MPj7634(8XYeTwXO4dJQZpTcn8rOYUSHjLy5tzZJN5mxgWZNie4MjQOUha9XciTQsuFQSSmbLZJcWxAgPCs8b7gdsJuXmO)X5QwmRknzlasGxeSfRBHfFZLqUMbCLFj7)HauTxxIFR(wOlJbWuF0SU0xSceI0eLhIDEToS2Qxe)d2p8qXw2Hb)A8(NNnN1oKXUQfPHgYiLVbUr3Bax8C6icC3XMVxvTl3oQ(RTg76juC131bVoxIa2XBJ(AiP2cuLSXp(AU5kiM4hbbU)6(l6DDArNRdvGvlemIRZixoDvOm6WrZvlxNolx1sOwNnPF8zhV9Ph6j5D)iNKhlD5sYxgiHb1Us7Un3R6XYiQSR1uPN2QuxxEdLq0OMVM)kkByJBCK23)3qBrhJ2A3DJN5Eod1KFFhYhy3URrWt4eSwWDDBwCy3R4)iQoddvX8dRIxJTXAjuf11j)Yo9ckY37oqYu9Dw6E9lhwvN0B48D)WmzEexM1kViw1S8wT(F)zMyv4pT587KMB0W)WzcFTZ1rtXSPNlhvMAhphDRSCiogYV74z7ClYuzfE8uCUfuQDjpEo6w34qCS3a94zOBnH9i20NB7ZKd7P(TWuDUa7wePwkhWmDV5WEJ4TlonRBDNMvN02MhSkDpJ4VcN45S3TQrNkm53lx97TCSBMRR9w8NdjvTIlCD(tynUDNTyYNk)rEYd7(9d]]
 )
 spec:RegisterPack(
     "Frostfire (wowsims.com)",
-    20261122000,
-    [[Hekili:1EvBVTTnq4Fl9lUwOgs2oXDnbrdOdBDldRfdq9ZuMI6KnNPffiPsMlm0V9DuYws2w(T5weGajrEp3ZD854DMmI8vsqm1aKVmE443pA04XdhoKeywLbKGmkBbDg(qkDj()pPKAtcxbft7)Q8vnFP2Ljx6y34kHKgBblkNlmpNsI6exDgWibF(J)(V9OfisWCECmuTBqZoUpESyQzo(XnFZlrQGxavX0yiHMlmft)4F)xftXpxmTng5CpRp1ElXaXlot7rZeO5jrU4dU)JwM6maXwrt1cKVX4ZsRV46IP04yz6BXhwaR0Uft)vQH(yhCO)NF(RiiZnMm9JEEZ4M55rwA7T3wDqmrQsJgMmCiCFc7d35IzpLmHlWKbLz4YuTBMcqJJOg)SvkzKGQnf)5Mf9zuHiS6LqbxBgypC8HxKmQ9Bd4j(9Ft16U1M7Uiv(A66L0uQRq(0blZWmMtTpENVNMjvS5dsKSCT)4sq7hdr5jjU2mB4l5IuqrJ4cUzLR2GkLNMS(47qblP8u9ttC6DwCUF9w(xXcx4FbwUHNoZzhoc5kybDqUgcLjjHZyX(JSm9m47pPnircPmomjxT6wbcuAqTaz5nceEMynpe17Hum8Tk3BesR1CdSuFJ4y1pHZGL3im16Un6Rse6xcWCGApOdZZ2y4D9oum3OhAJAPVpa2n0kDgE8yZQj2lh2i0gVJ5BV1imskm7dCew1zHBlz2D3vLx124wxn6RaACOawHLQPqvTzjJamdnJ)ni2npR3gm3zVvq60bMwLFD1EDbAQbuQ8mti6JYY8mMjui)z)hEOQ694oPhEFZlUJ2DjN113I0Ljxzy4407qd(UfBNGORpvC)gMukIXN2Bv7BRCwFaHXtdsaEnUgbCVgB2BI12(F10hF5lLTxHuAKaIj)Y2l4jb74osatHfNkoLeCLPvIbPXr8rdrcktK2Dg0ovsc2lxUdrUE9YpEbJnCV7ht4Ekj0TOH6qeHrHXoUt5ClDPs6Gw73i)mDYBsl7pTqLsnSAGUMCwh6O2AHZ1XEY6VBT(prV)MOQATwN0DimA1IYMIBekLtn0o(oBVll83FHW3mpXv7IjxQlQN04QDX7Vqx01mixTZ(Pl0z1tNC1E4dxOh2o3Yv7GhoErX)NXvAyu9Q1I4rw)nA4rD4jhKPb4MPG2d5J1lA3jzk36XAPSDqO206udevDtx9VM5uDeBYhv)fqZnZLksWFalWtf83y9Pn)eQYLj)3p]]
+    20261123000,
+    [[Hekili:1E1FpoQnq0pl3)KUOgr(XU56TRwQ0v1ETxvVtvI7VHymdjUXbJSn72ufLp7DmKyiecjC5ofPiaB)EppEMHhbtc(sGFmrdbFE64PVDYKP3pE84aF9MmiWpJqxrwGxKswJ))bPqPtysy387Ev8QITw5sfRDmtCdxqInGfLZ46pMge1kUQmGg4)P3)7)2tgGc8xYIJHYzdk6554PDZ1lXhU)zJses4fqUBEmKqY56DZF)F)x7MJpE386yKZgz4unAnUrgfNPgrY44YtICXlC)hLi1ziITKKQ4OEJXRfgUyQDZjXXI0FaVyfSr5UB(Vs0KNArd39Pp(feKLADM6PrJwW0lZJmYEuJP6GyIsLenoz8y4He67U3fJEsrcJJbdcvZePk3mjGloIO9Y2ifrCIsV7p3pOhJcHrCbD1qwI3sGW1lDxLkEnDW(BYO6N9uGwZsxOCTtpSCylq)O3OYNO0IuyyUccfjjHlOXEtUoORT8ZaooTWmH5jFT4xHqluqjCEy5THCMsp0KN6bViOKcorwU7nLJ7AJKLmUDnjL4YfpFYWum5XPolkQqsxomrqZvEtla9UyikpjX1KKf(sopfKKigNP34Q0yrZZZ2E(ziH1ewQ65zodUiopS9G(lvHl8Van3eECosJqUewroniFb89MvhemnrehMKl3CRabsfixHQ8gbcptmlpel9dj423ueFJqAwntdRv3ioM8NWfW6BegBE3(8RceURaamF3CqhMNTFH3p40K5Q8H6OwW9jWUxwPlWJhtunX0NCFI20Jw(HgOHrcUUjWryvNbUdI54zxwEzxJRTA0tcK4qoSblvX(nf1MfkcWi0c2)bXU5zd2J5rZTesNwW0K5BR2TfOPAqkZZ0HihfL5yBLqU4N9E8XYQ3ZtYaS17lUtoEiNT2UiTTKEUnCCgC6c(MT36qOB7AF)gQqWJXRAmQ5UnoBprW4PrGp(gnfcyJ3XB6eRmwbSYhV5ZfonGusehId(LdVRlW)i6c8PsS4uYib(9mSgOrzCgoQeIFrG0mt)6HYa)gXYJes)Zx((NWy2U3)9z72vk0TKd1sseUl0gNFfw46klX6IPUsVSdIMMFAljPw)Bd)wkR5UPFKEQTO2oS6I2ktp9N5tmmzi)HgK3YPDt)rxWGuLGBAcRSbqy5NmuLkIQy25vXfncnB73mhvDyPQAxvowTciu)V9kpclnJvF)Drlbg4)PRe(kBA9MI3DTuynW1BkE8kPOnRD9MSjJVs2SU(6pfnBjDokoyiS)m0SJuT6IVgJGvsYoQnpEsbHn7fvryNweRaUYFzdKB2OXUGJ8iwm1MDdQJTXIzDz1LvZY3Hy)K5UElsv8O8NpjxVuid8)dyfESGFi)h2)D6fdh8)p]]
 )
 spec:RegisterPack(
     "Frost (wowsims.com)",
-    20261122000,
-    [[Hekili:1EvBVTTnq4Fl9lBXygYwonnnbvbOdBDRblfdW9ZsMI8KnNPefiPINlg0V9DuYswsrYwXD7lj0K3ZZD8EJN8D9)Q)sgXa(FzX8fVZ1DXI5ZN7V0Spf8xMsOBjRXfjKy8VFsj1M8vxTtUtZJ1ouz8eRq7fscZsuygxy(CIFyVCQtbQ)YN(4V9R3hzzYF5goJbLIdAA)k4(8vMnq(Qd7nlsQGNbv(kgerYeO4F8p)J8v425RQWNXNzvMEwmA9ZyP6zKubc1ESdU05V0YKjtrMvKeTanvgUwA1exNVIWyYKFexSf2RDYx9led5(ESGRE6ZFfjzJXKQVF2S1CZMSqRrpRJOtqor7IeopA(C4Tr03FTd64uYiUa9ReQHlt0oPkabhsmECkeesukoOMYJ8EtywuKtJnDYsZF8fW(jVYRyOeDlvh7rjcrq5pceCTzQny6ftsibgPuOTkW(lNuQjqi)G3n1yrcHmfSLmntdbYOOG1uMNRfrHffXtwdknEsqPVTHzHydfsjliktT)cXJNbQTOqxgELm0IkaZFcik6gB2WLXKfe3aX6ldEHZEneFzO7pasKGLa7(pdbqceZb9dEx3cPuWc0jK0xQ4REtPyy6AsHtYkRZ2e5UK)HIPfmCr7ZuqmHNGQ42jT1XrzMgjPz6sfWGI72oEIXE3OB4cHJ2GDuANGzZQfKek0e8v97xkH7(d1gFD6(bl)fBd)nqZmiptM0vPv1xLQDXXOHIVMZcsL7W6Sdx6p02V(YQmNJ1tEkGWceWEmyLa9jHTS6zjLy3FAH)rLLAcAxh(G3D3DemgT9gYtFcF1dEUT4yi)9RJI)FsRUzsFMAprPt3nSeAOG)TVruS8h9xInG14rDEnYwjPTpAHaW)9LIxcHesOay()S)sQcl4vCI9vTt5CQAFJiACT8xwyWwAnOI)U5UoQ1M4R7qCJ4HvIgM2HiwtDFQy15dww1)2bVx9fJAFBoSF99zHLWB6qyfGQWjkdo2WXkP(cCvyAvg2xuOzLxjPnk9oYtDPAPYpm2XPtzA)EAJ4qNw5LPHbLJx14A1J1ouOT8b6ZNtH()xrcZXNUhlZDZfgK56h1hlZDtkgI5(EUFS64DJuh1dcmwIVDKexnIWy599dM7zzS1ebJm9Z2hej(UrAW)N3s52IwkUZh8IDQjkgtxy3HRxV05no5ahNT7T75ExO)jrgrFu3U15viQn0YMz1F6WPAK2slNPfFpnU6x1OYjzMnsKYFh2YfC8ZP(0HVwQ4y))9p]]
+    20261123000,
+    [[Hekili:1EvuVTTnq4Fl9LUymdzRKMMMGOa0HTU1I1Ib4(SKPOozZzAsbsQ45Gb9BFhfTKLKLTv82EjrIK333X7UpDNd9d)E4SeIbc)21tV(9((xFZ0PtdNz2MbHZYi0vKf4dcYA8VFsj1MI5xTrUrZwR9OY1JShAlxssSafNZ4MplcJ7ftDgqdN91p(R)YdPwKcNTKLKaUJdAA)e8qXCZsOy(U1MKkvWZGQyEcKsY54X)4F87fZXLlMxzFoBILm9K1O3pjjtpHKXrtTB7Hp69NAPy0yezfrO5ORMGplTmX0fZjjjsXpGpSc2Q9kM)Zed5HE8GR(6N)ocYsJjt)WKjlyML5XwNEsNJocXe9ls800PtH3Ls)WnEyGtjtzCmUsOgMuO9YuaACmXeWOqumrPyGAmln4nX5PPEnw0lpR4lhy2pg4UIXsmSuTTdlUKUYI0sGWnl9wjKBeVD3lzuZJbAWyyIfAV6Jh52UgieD3kAJuaJZ1qKmnnAbnjWFyq3W8JaoESOmPDLlf)9i0dfucNh5EnIZ0MX266G1ebjYiLCTLg7BwCJ4YhdUTP1qUcwro0XktoPiXGsJ7e5kZAKHqBXiQmjknxT9cTh3duRWdDz2RKXwRIqPuerrxAfgxgswJygyT(YmVmyVawFzw3FcKibla21FgIabSMb6NcUPLLsEsKwqYoK4REJ7yOYvugKSN1vN93uSSibFO9EkynHjqkUBuBo2FMXPsAU2rqcuE32Weg7DJUKX5EAd(X12fywPhNiOqtJVQ)4IZC)3w781k)DE(bld)fqZTcLrJ6sA1NAC0E9(SHITGLG6Pn4NC2DPFSDC9Wp44TxpfOasseh2Ijlb03jSYQNLusPKVm(OYZmrT1HpfC)97ngZ2bhlsFIy1tb(TW4yX7xhe))uwD7O(C1EYsNUXGZ0yo7LxiQKIVeod7fPXT60y2QK02(3Ob4)(w5qbGGeZHKWFkCgvHcEfJyBWFQGtvNm0IgxRWzLoSfwds8)ASRZATb(Moa3iFyprdxBxgRj3NkxD(KLL(3D07vF5O23MDRxFFU2c4TDaSYGQ0jEgCcQ9kP(sCv20sg2xwOPYZbAdP3ECQLQoY3nb2PyUEAIMrKZ3jV7qi95Zhlb3ykJxhPhoEYRPUQ9WhVEMpyWLtxv1EmLgL3D6q6u3rUb4BuT0tf2XUzU5EoVuflRruF)arD)erdf57gkY1ZknuK)WarUVPOgkh3pqoQNVAOa7pDGixn61Gb(49bSq2AuRbwaABWyrEOA5)Z)y9DLFS2VROEp4NAwTH0FZ)4s2lDsUtok3z7l63vM3n53)mEdOdLFxPELf1oQRnr9Vp9SnkQy5mnp7Pzq)uJKtYnlLiK)gSIXz4Vz)t7(j5LBh(pp]]
 )

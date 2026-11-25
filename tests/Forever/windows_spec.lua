@@ -6,6 +6,8 @@ local ww = require("Forever.helpers.warrior_world")
 local function boot()
     local H = headless.new({ character = ww.character(), pack = ww.PACK })
     assert.are.same({}, H.loadErrors)
+    local toggles = H.Hekili.DB.profile.toggles -- (L1808) Primary only: these specs are about windows, not displays
+    toggles.defensives.separate, toggles.interrupts.separate = false, false
     return H
 end
 

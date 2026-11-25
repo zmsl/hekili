@@ -7,6 +7,7 @@
 
 local addon, ns = ...
 local Hekili = _G[addon]
+local L = ns.L -- top level: tools/locales.py reads a file's strings only with this line (the locales load first)
 
 local function all()
     return Hekili.Class.specs[0]
@@ -61,6 +62,57 @@ function Shared:RegisterTtdLines(def)
             ns.ttdLines[token] = pct
         end
     end
+end
+
+-- { key, value, option }: Shared:RegisterSetting's settings, registered on every spec of the class when its kit is
+-- built (Spec/Kits.lua NewClass: the shared content loads before the class pack).
+ns.sharedSettings = {}
+
+--- (L1808) A spec setting every pack may read (a line the translator emits in every pack: the Healthstone's): kept
+--- here and registered on each of the class's specs, as the kit's own RegisterSetting with no spec list.
+function Shared:RegisterSetting(key, value, option)
+    local s = ns.sharedSettings
+    s[#s + 1] = { key, value, option }
+end
+
+--- (L1808, owner "Setting per line") A defensive line's player-health threshold setting's option (RegisterSetting's
+--- `option`; spec:HealthOption and shared:HealthOption): a 1-100 slider, read by the line as `settings.<key>`; its
+--- name and text name ability `ability` (the client's name, read when the options open; the key until it loads), and
+--- `qualifier`, an ability key too, in parentheses after it when given (two sliders of one ability on a page: the
+--- form each is for). A fresh table each call (load only). The registry is read when the options ask, not here.
+--- The line fires once the health is under the setting: the reading comes in 1% steps, each read at its middle.
+function ns.HealthOption(ability, qualifier)
+    local function named(key)
+        local a = Hekili.Class.abilities[key]
+        return a and a.name or key
+    end
+    local function label()
+        if qualifier then
+            return string.format("%s (%s)", named(ability), named(qualifier))
+        end
+        return named(ability)
+    end
+    return {
+        type = "range",
+        min = 1,
+        max = 100,
+        step = 1,
+        width = "full",
+        name = function()
+            return string.format(L["%s: once health is under (%%)"], label())
+        end,
+        desc = function()
+            return string.format(
+                L["The priority shows %s in the Defensives display once your health is under this percentage (Hekili reads it in 1%% steps), and only while Hekili can read your health in combat."],
+                label()
+            )
+        end,
+    }
+end
+
+--- ns.HealthOption, for a shared line's setting.
+function Shared:HealthOption(ability, qualifier)
+    return ns.HealthOption(ability, qualifier)
 end
 
 function Hekili:NewShared()

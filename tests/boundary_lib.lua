@@ -234,6 +234,13 @@ local function content()
         })
         local ns = { Facade = any }
         _G.Hekili.Client = any
+        function _G.Hekili.GetLocale() -- the English table (Hekili_Shared's locale files are skipped below)
+            return setmetatable({}, {
+                __index = function(_, k)
+                    return k
+                end,
+            })
+        end
         _G.Hekili.SCHOOL = require("Game.State.helpers.load").school() -- Auras.lua reads it at load
         assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         assert(loadfile("src/Hekili/Engine/Schema/Shared.lua"))("Hekili", ns)
@@ -256,7 +263,9 @@ local function content()
     end
     for _, file in ipairs(addons.lua({ "Hekili_Shared" })) do -- the race and shared files
         local path = file:gsub("^src/", "")
-        run(path, read(file):match('NewRace%("(%w+)"'))
+        if not path:match("/Locales/") then -- the string tables: registrations only
+            run(path, read(file):match('NewRace%("(%w+)"'))
+        end
     end
     _G.Hekili = saved or nil
     return { keys = keys, ids = ids, abilities = abilities }

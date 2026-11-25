@@ -651,11 +651,11 @@ describe("Forever Rogue priorities", function()
                 for i, e in ipairs(pe.flat(entries)) do
                     local where = name .. " " .. list .. " " .. i
                     assert.is_true(
-                        w.abilities[e.action] ~= nil or shared[e.action] or pe.LINE[e.action],
+                        w.abilities[e.action] ~= nil or shared[e.action] or pe.LINE[e.action] or pe.SHARED[e.action],
                         where .. ": " .. e.action
                     )
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
-                        if kinds[kind] and not shared[key] then
+                        if kinds[kind] and not shared[key] and not pe.SHARED[key] then
                             assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)
                         end
                     end

@@ -93,4 +93,23 @@ return {
     map = { [25903] = "holy_shock", [1311015] = "templars_bulwark" },
     focus = { seal_of_fury = 2, holy_shield = 2 },
     leveling = {},
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Divine Shield (its
+    -- usable check refuses it under Forbearance) at or below 20%; Lay on Hands (all Paladin specs, the controller's
+    -- L1808 default; drains all mana) at or below 15%, each the def-int-beyond-wowsims review's default and a per-spec
+    -- setting, shown in the Defensives display only while the player's health is read (rule 23). The Healthstone and
+    -- healing potion lines come from the shared settings (rule 25).
+    extra = {
+        { first = true, line = "divine_shield,if=health.known&health.pct<=settings.divine_shield_health" },
+        {
+            first = true,
+            line = "lay_on_hands,if=health.known&health.pct<=settings.lay_on_hands_health&(!action.divine_shield.known|!buff.divine_shield.up)",
+        },
+    },
+    -- guard (owner ruling 2026-11-24, L1808): rule 13's low-health Stoneform waits while Divine Shield is up, the term
+    -- the Lay on Hands line has (a wasted GCD and 3 min cooldown under the shield; wowsims never casts Divine Shield)
+    guard = { stoneform = "!action.divine_shield.known|!buff.divine_shield.up" },
+    settings = {
+        divine_shield_health = { default = 20, desc = "player health threshold, percent" },
+        lay_on_hands_health = { default = 15, desc = "player health threshold, percent" },
+    },
 }

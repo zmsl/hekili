@@ -158,7 +158,8 @@ Translation:
   talent is taken (Retribution's Twist of Light lines; Warrior's Berserker Rage, the user's ruling below). Not added
   when the condition already has the talent test as a top-level `&` term. A key naming no APL entry is an error (CN12; an omitted entry still matches).
 - `guard` (`{ [action or group snake name] = SimC expression }`): one `&(<expression>)` term appended to each such
-  entry's condition, in every list (rule 16's select lines too); keyed `"<list> #<n>"` (the APL's entry number), to
+  entry's condition, in every list (rule 16's select lines and rule 13's automatic lines too, a defensive racial's
+  inside its health term); keyed `"<list> #<n>"` (the APL's entry number), to
   that one entry's line (a move's reached lines carry it), with the value `{ expect = "<action>", cond = "<SimC
   expression>" }`: the build raises when that entry is not the expected action (its cast key, else its kind, e.g.
   `"move"`), names none, or sits in a list never translated, so a re-pin that shifts the list cannot silently guard
@@ -207,15 +208,21 @@ Translation:
   Form), which a trailing line would never reach; silent while the form is up. They lead a non-empty precombat list
   too, so a pre-pull cast never shows before the form.
 - `extra` (`{ { before = "<action>", line = "<simc line>" } }`): a line put just before the first `actions` line of
-  `before`, or its last with `last = true` (the translator errors when there is none). Only for content wowsims cannot model, never to tune a
+  `before`, or its last with `last = true` (the translator errors when there is none). With `first = true` (no `before`) it goes at
+  the top of `actions` after the `levelingFirst` lines, the `first` lines in recipe order: a defensive line wowsims never casts (L1808: Evasion, Ice
+  Block, Divine Shield, Lay on Hands, Power Word: Shield, Deterrence, Death Coil's defensive key, Barkskin outside Bear
+  Form), its threshold a recipe `settings` number. Rule 25 then adds the shared content's lines (Healthstone, healing
+  potion) after them and after the wowsims list's own defensive lines (Defensives toggle: Guardian's Barkskin and Frenzied
+  Regeneration, Protection Paladin's low-health Stoneform), which keep wowsims's order. Only for content wowsims cannot model, never to tune a
   wowsims line, and each use names its reason in the recipe comment. The user's ruling (2026-10-21), for Warrior's
   Victory Rush: "This isn't something from wowsims, but needs to be added since it won't affect wowsims accuracy
   (wowsims never goes mob to mob so VR isn't ever a thing). Should be used just above bloodthirst (since it's a mini
   bloodthirst)."
-- `settings` (`{ <key> = { default = <bool>, desc = "<text>" } }`): a pack setting a recipe line reads as
-  `settings.<key>`, listed in the header (`# Setting <key> (<desc>), default <bool>.`) after the ON/OFF groups when a
+- `settings` (`{ <key> = { default = <bool or number>, desc = "<text>" } }`): a pack setting a recipe line reads as
+  `settings.<key>`, listed in the header (`# Setting <key> (<desc>), default <value>.`) after the ON/OFF groups when a
   line reads it; the class registers it beside the `wowsims_*` ones. For a recipe line a player may want to turn
-  off. (Guardian's leveling Demoralizing Roar had `demoralizing_roar_filler`; it is now governed by rule 15's
+  off, or a hand-written defensive line's health threshold (a number: `<action>_health`, L1808). A wowsims line's
+  health threshold needs no entry: rule 23 makes it `settings.<action>_health`, its default the APL's number. (Guardian's leveling Demoralizing Roar had `demoralizing_roar_filler`; it is now governed by rule 15's
   `maintain_demoralizing_roar`, below. Faerie Fire, free, has none.)
 - `prepullSkip` (`{ "<action>", ... }`): omits that action's `actions.precombat` lines, each listed in the header
   (the translator errors when there is none). Only under an owner ruling against a wowsims pre-pull cast, named in the
@@ -434,17 +441,33 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   `action.incinerate.known|(action.shadow_bolt.known&debuff.immolate.remains<action.shadow_bolt.cast)`: without
   Incinerate Immolate shows only inside the filler's cast of falling off, as wowsims's own line uses Incinerate's; with
   Incinerate the lines are wowsims's.
+- Paladin Protection, Stoneform under Divine Shield (owner 2026-11-24, L1808): rule 13's low-health Stoneform must not
+  show while Divine Shield is up, the term the Lay on Hands line has: `guard = { stoneform =
+  "!action.divine_shield.known|!buff.divine_shield.up" }`. wowsims never casts Divine Shield, so no replay or loop
+  number moves, and the gate's races cannot use Stoneform. Under the shield the engine forecasts its fall and queues
+  the line for then (Lay on Hands the same), unit-tested in defensive_lines_spec. Not checked in game.
 
 ## Pack notes
 
 What players read in a pack's description (the recipe's `notes`), and why. Warrior (the user's rulings, 2026-10-21):
 - The kit's toggles: Cooldowns hides Death Wish, Sweeping Strikes and Recklessness (Arms and Fury; Recklessness also
   behind its `wowsims_recklessness` pack setting, off by default) and the racials; Defensives hides Healthstone, Disarm,
-  Shield Wall, Last Stand, Stoneform and Shatter Curse, none of which a Warrior pack line casts; Potions hides none in
+  Shield Wall, Last Stand, Stoneform and Shatter Curse (Protection casts all but Disarm); Potions hides none in
   Warrior. Bloodrage, Intimidating Shout and Mocking Blow are under no toggle.
 - Protection's defensive lines (Last Stand, Shield Wall, Stoneform, Shatter Curse, Healthstone) and Guardian's
-  (Barkskin, Frenzied Regeneration) wait on a health threshold, and the client hides player health in combat, so the
-  translator omits them (rule 23, owner L1462): players press them by hand, and each pack's notes say so.
+  (Barkskin, Frenzied Regeneration) wait on a health threshold the client hides; they read the hidden-value band under
+  `health.known` (rule 23, owner L1805), and each pack's notes say they show only while Hekili can read the health.
+- Beyond wowsims (owner L1808, "All in the next release"): every pack carries the Healthstone (30%) and the healing
+  potion (25%) lines (rule 25, from the shared settings), and each class's own save as a recipe `extra` `first` line:
+  Evasion 50, Ice Block 15, Divine Shield 20, Lay on Hands 15 (not while Divine Shield is up), Power Word: Shield 50,
+  Desperate Prayer 40 (owner: Dwarf priests only; its `known` reads the race token, `state.race`),
+  Deterrence 35, Death Coil's defensive key 35, Barkskin 50 (Balance, and Feral outside Bear Form as
+  `barkskin_cat_health`; the owner: "barkskin is available in all forms", so no line is gated on a form). Each threshold is a
+  per-spec setting; each line is on the Defensives toggle, so it shows in the Defensives display only.
+  Stoneform (owner 2026-11-24): no aura gate (wowsims racials.go:18-48 has no dispel requirement; the game's usable
+  answer decides in game). Both tank packs show a Dwarf's Stoneform at or below 50%: Protection Warrior's from its
+  wowsims line (rule 23), Protection Paladin's from rule 13 (a tank's defensive racial, which wowsims autocasts on
+  cooldown: a `# Deviation:` line), each a Protection setting `stoneform_health`.
 - Protection's Demoralizing Shout (off unless Maintain Demoralizing Shout is on, rule 15) and Thunder Clap: a player
   keeps them for bosses with the per-ability Boss Encounter Only option or the Custom 1 toggle (no code change; the
   user approved the audit's proposal).

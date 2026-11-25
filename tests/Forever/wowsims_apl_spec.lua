@@ -175,6 +175,108 @@ describe("the wowsims APL translator", function()
         end, "extra: no big_hit line in actions")
     end)
 
+    -- L1808: a recipe's own defensive line goes first in the default list, in recipe order, after the levelingFirst
+    -- lines (which lead: a form, the Hunters' pet calls, L1059)
+    it("puts recipe extra lines marked `first` at the top of the default list, in recipe order", function()
+        local text = apl.translate(
+            { priorityList = { cast(100), cast(200) } },
+            ctx({
+                levelingFirst = { "roar" },
+                extra = {
+                    { first = true, line = "dot,if=health.known&health.pct<=settings.dot_health" },
+                    { before = "big_hit", line = "starfire" },
+                    { first = true, line = "drain,if=health.known&health.pct<=settings.drain_health" },
+                },
+            })
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=roar",
+                "actions+=/dot,if=health.known&health.pct<=settings.dot_health",
+                "actions+=/drain,if=health.known&health.pct<=settings.drain_health",
+                "actions+=/strike",
+                "actions+=/starfire",
+                "actions+=/big_hit",
+            }, "\n"),
+            text
+        )
+    end)
+
+    -- L1808 (owner "Setting per line"; Healthstone in every pack): a shared setting named `<action>_health` whose action
+    -- the ability set has is a line in every pack's default list, after the recipe's `first` lines, the setting
+    -- listed in the header; a pack that casts that action already keeps its own line, the next shared one after it
+    it("puts a line for each shared health setting in the default list (rule 25)", function()
+        local function build(r, list)
+            local c = ctx(r)
+            c.set.sharedSettings = { { "stone_health", 30 }, { "trinket_health", 25 }, { "nothing_health", 10 } }
+            return apl.translate({ priorityList = list }, c)
+        end
+        local text, _, toggles = build(
+            { extra = { { first = true, line = "dot,if=health.known&health.pct<=settings.dot_health" } } },
+            { cast(100) }
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=dot,if=health.known&health.pct<=settings.dot_health",
+                "actions+=/stone,use_off_gcd=1,if=health.known&health.pct<=settings.stone_health",
+                "actions+=/trinket,use_off_gcd=1,if=health.known&health.pct<=settings.trinket_health",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
+        assert.are.same({
+            { "stone_health", 30, "player health threshold, percent" },
+            { "trinket_health", 25, "player health threshold, percent" },
+        }, toggles)
+        -- the pack's own stone line (a wowsims line) stays where it is; the next shared line follows it
+        text = build({}, { cast(100), { action = { castSpell = { spellId = { itemId = 556 } } } }, cast(200) })
+        assert.are.equal(
+            table.concat({
+                "actions=strike",
+                "actions+=/stone,use_off_gcd=1",
+                "actions+=/trinket,use_off_gcd=1,if=health.known&health.pct<=settings.trinket_health",
+                "actions+=/big_hit",
+            }, "\n"),
+            text
+        )
+        -- def-2 review Minor 9 (stick with wowsims): wowsims's own defensive lines (an ability on the Defensives
+        -- toggle) keep their order; the shared lines come after the last of them, the pack's own stone line included
+        local c = ctx({})
+        c.set.sharedSettings = { { "stone_health", 30 }, { "trinket_health", 25 } }
+        c.set.abilities.big_hit.toggle = "defensives"
+        c.set.abilities.stone.toggle = "defensives"
+        text = apl.translate({ priorityList = { cast(100), cast(200), cast(300), cast(200), cast(100) } }, c)
+        assert.are.equal(
+            table.concat({
+                "actions=strike",
+                "actions+=/big_hit",
+                "actions+=/roar,use_off_gcd=1",
+                "actions+=/big_hit",
+                "actions+=/stone,use_off_gcd=1,if=health.known&health.pct<=settings.stone_health",
+                "actions+=/trinket,use_off_gcd=1,if=health.known&health.pct<=settings.trinket_health",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
+        c = ctx({})
+        c.set.sharedSettings = { { "stone_health", 30 }, { "trinket_health", 25 } }
+        c.set.abilities.big_hit.toggle = "defensives"
+        c.set.abilities.stone.toggle = "defensives"
+        text = apl.translate(
+            { priorityList = { { action = { castSpell = { spellId = { itemId = 556 } } } }, cast(200), cast(100) } },
+            c
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=stone,use_off_gcd=1",
+                "actions+=/big_hit",
+                "actions+=/trinket,use_off_gcd=1,if=health.known&health.pct<=settings.trinket_health",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
+    end)
+
     it("puts a recipe extra line marked `last` before the last line of its anchor action", function()
         local text = apl.translate(
             { priorityList = { cast(100), cast(200), cast(100) } },
@@ -1533,6 +1635,7 @@ describe("the wowsims APL translator", function()
 
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR")
+        set.sharedSettings = nil -- rule 25's shared lines: their own test
         local c = apl.context(set, {})
         for id, key in pairs({
             [20572] = "blood_fury",
@@ -1909,9 +2012,16 @@ describe("the wowsims APL translator", function()
         local function want(...)
             local out = {}
             for i, x in ipairs({ ... }) do
-                out[i] = (i == 1 and "actions=" or "actions+=/") .. x .. ",if=time>=5"
+                out[i] = (i == 1 and "actions=" or "actions+=/")
+                    .. x
+                    .. (x:find(",if=", 1, true) and "" or ",if=time>=5")
             end
             return table.concat(out, "\n")
+        end
+        -- a tank's defensive racial waits for low health (owner 2026-11-24; rule 23's setting, wowsims casts it on
+        -- cooldown): the health term outermost, so the core's guard detector reads the whole line as guarded
+        local function low(x)
+            return x .. ",if=health.known&health.pct<=settings." .. x .. "_health&time>=5"
         end
         -- every class racial in racials.go's order, where the sampled one was used; Stoneform and Shatter Curse
         -- (defensive only) are a tank's
@@ -1929,11 +2039,11 @@ describe("the wowsims APL translator", function()
         assert.are.equal(
             want(
                 "trinket,use_off_gcd=1",
-                "stoneform",
+                low("stoneform"),
                 "eureka,use_off_gcd=1",
                 "elunes_light,use_off_gcd=1",
                 "blood_fury,use_off_gcd=1",
-                "shatter_curse",
+                low("shatter_curse"),
                 "berserking,use_off_gcd=1",
                 "roar,use_off_gcd=1"
             ),
@@ -1980,9 +2090,40 @@ describe("the wowsims APL translator", function()
             { "default #3: autocastOtherCooldowns: spell 20572 is blood_fury, which the APL casts itself" },
             omitted
         )
-        -- a Paladin tank's only racial cooldown is the Dwarf's; no log line at all still gives it
-        assert.are.equal(want("stoneform"), lines("ClassPaladin", log(), true))
+        -- a Paladin tank's only racial cooldown is the Dwarf's; no log line at all still gives it, with its setting
+        -- (default 50, M.RACIALS) and a deviation line
+        assert.are.equal(want(low("stoneform")), lines("ClassPaladin", log(), true))
+        local _, _, read, header = apl.translate(
+            { priorityList = { auto } },
+            apl.context(kit, {}, log(), { class = "ClassPaladin" }, nil, true)
+        )
+        assert.are.same({ { "stoneform_health", 50, "player health threshold, percent" } }, read)
+        assert.are.same({
+            "# Deviation: default #1: stoneform: wowsims autocasts it on cooldown for a tank; here at or below "
+                .. "settings.stoneform_health, under health.known",
+        }, header)
+        local core = {}
+        assert(loadfile("src/Hekili/Engine/Sim/AplThresholds.lua"))("Hekili", core)
+        assert.is_true(core.HealthGuarded(want(low("stoneform")):match(",if=(.*)$")))
         assert.are.equal("", lines("ClassPaladin", log()))
+        -- a recipe guard (rule 7, keyed by the racial's action) is one more term inside the health term, which stays
+        -- outermost (owner 2026-11-24, L1808: Protection Paladin's Stoneform waits while Divine Shield is up)
+        local shielded = apl.translate(
+            { priorityList = { auto } },
+            apl.context(
+                kit,
+                { guard = { stoneform = "!action.roar.known|!buff.roar.up" } },
+                log(),
+                { class = "ClassPaladin" },
+                nil,
+                true
+            )
+        )
+        assert.are.equal(
+            "actions=stoneform,if=health.known&health.pct<=settings.stoneform_health&(time>=5&(!action.roar.known|!buff.roar.up))",
+            shielded
+        )
+        assert.is_true(core.HealthGuarded(shielded:match(",if=(.*)$")))
         -- a defensive-health threshold or a cooldown timing (the player's `cooldowns`) is not modelled: an error
         local ok, err = pcall(
             apl.translate,
@@ -2079,25 +2220,125 @@ describe("the wowsims APL translator's re-pin reads", function()
         assert.are.equal("actions=strike,if=action.strike.gcd<1.5", lines(g(100)))
     end)
 
-    it("omits a line reading the player's health, hidden in combat (rule 23); another unit's is unsupported", function()
-        local hidden = ": the player's health, hidden in combat"
-        local text, omitted = apl.translate({
-            valueVariables = { { name = "Low", value = cmp("OpLt", { currentHealthPercent = {} }, const("50%")) } },
+    -- rule 23 (owner L1805, replacing L1462's omission): the player's health is read, its line guarded whole by its
+    -- enablement term (Facade.Known's `health.known`), through a variable too; another unit's is unsupported
+    it(
+        "guards a line reading the player's health with health.known (rule 23); another unit's is unsupported",
+        function()
+            local text, omitted, read = apl.translate({
+                valueVariables = { { name = "Low", value = cmp("OpLt", { currentHealthPercent = {} }, const("50%")) } },
+                priorityList = {
+                    cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("60%"))),
+                    cast(200, AND(cmp("OpGt", { currentHealth = {} }, const("1000")), const("true"))),
+                    cast(400, { variableRef = { name = "Low" } }), -- through a variable too
+                    cast(100, cmp("OpGt", { currentHealth = { sourceUnit = { type = "Pet" } } }, const("1000"))),
+                    cast(100, cmp("OpLt", { currentManaPercent = {} }, const("50%"))), -- not health: no guard
+                    -- an `|` branch and a `not`: the line's whole condition under the term (false while unknown)
+                    cast(600, OR(cmp("OpLt", { currentHealthPercent = {} }, const("40%")), { gcdIsReady = {} })),
+                    cast(500, NOT(cmp("OpGt", { currentHealthPercent = {} }, const("80%")))),
+                },
+            }, ctx({}))
+            -- (L1808, owner "Setting per line") each percent threshold is its action's setting, default the number
+            assert.are.equal(
+                table.concat({
+                    "actions=strike,if=health.known&health.pct<=settings.strike_health",
+                    "actions+=/big_hit,if=health.known&health.current>1000",
+                    "actions+=/dot,if=health.known&health.pct<settings.dot_health",
+                    "actions+=/strike,if=mana.pct_lo<50",
+                    "actions+=/pyroblast,if=health.known&(health.pct<settings.pyroblast_health|gcd.remains<=0)",
+                    "actions+=/starfire,if=health.known&!(health.pct>settings.starfire_health)",
+                }, "\n"),
+                text
+            )
+            assert.are.same({ "default #4: currentHealth of Pet" }, omitted)
+            local t = "player health threshold, percent"
+            assert.are.same({
+                { "dot_health", 50, t },
+                { "pyroblast_health", 40, t },
+                { "starfire_health", 80, t },
+                { "strike_health", 60, t },
+            }, read)
+            assert.has_error(function()
+                apl.translate({
+                    priorityList = {
+                        cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("60%"))),
+                        cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("40%"))),
+                    },
+                }, ctx({}))
+            end, "rule 23: strike reads two health thresholds (60 and 40)")
+        end
+    )
+
+    it("refuses a recipe's own line reading the player's health without health.known (rule 23)", function()
+        local function build(line)
+            return apl.translate(
+                { priorityList = { cast(100) } },
+                ctx({ extra = { { before = "strike", line = line } } })
+            )
+        end
+        assert.has_error(
+            function()
+                build("dot,if=health.pct<30")
+            end,
+            "rule 23: a line reads the player's health without health.known guarding the whole condition: actions=dot,if=health.pct<30"
+        )
+        assert.are.equal(
+            "actions=dot,if=health.known&health.pct<30\nactions+=/strike",
+            (build("dot,if=health.known&health.pct<30"))
+        )
+        assert.are.equal(
+            "actions=dot,if=target.health.pct<30\nactions+=/strike",
+            (build("dot,if=target.health.pct<30"))
+        )
+        assert.is_false(apl.unguarded("actions=dot,if=pet.health.pct<30|target.health.current>1"))
+        assert.is_true(apl.unguarded("actions=dot,if=target.health.known&health.deficit>1"))
+        assert.is_false(apl.unguarded("actions=dot,if=health.known&health.deficit>1"))
+    end)
+
+    -- def-1 review minor 2 (L1808): the enablement term goes outside the "action known" wrapper, so with no reading
+    -- the line is off even while the other ability is unlearned
+    it("puts health.known outside an action-known wrapper (rule 23)", function()
+        local text = apl.translate({
             priorityList = {
-                cast(100, cmp("OpLe", { currentHealthPercent = {} }, const("60%"))),
-                cast(100, AND(cmp("OpGt", { currentHealth = {} }, const("1000")), const("true"))),
-                cast(100, { variableRef = { name = "Low" } }), -- through a variable too
-                cast(100, cmp("OpGt", { currentHealth = { sourceUnit = { type = "Pet" } } }, const("1000"))),
-                cast(100, cmp("OpLt", { currentManaPercent = {} }, const("50%"))), -- not health: kept
+                cast(
+                    100,
+                    cmp("OpLt", { currentHealthPercent = {} }, { spellTimeToReady = { spellId = { spellId = 200 } } })
+                ),
             },
         }, ctx({}))
-        assert.are.equal("actions=strike,if=mana.pct_lo<50", text)
-        assert.are.same({
-            "default #1: currentHealthPercent" .. hidden,
-            "default #2: currentHealth" .. hidden,
-            "default #3: currentHealthPercent" .. hidden,
-            "default #4: currentHealth of Pet",
-        }, omitted)
+        assert.are.equal(
+            "actions=strike,if=health.known&(!action.big_hit.known|health.pct<cooldown.big_hit.remains)",
+            text
+        )
+        assert.is_false(apl.unguarded(text))
+    end)
+
+    -- def-1 review minor 1 (L1808): the term must guard the whole condition: first, the rest one group or free of a
+    -- top-level `|`; the aliases of the player's health are reads too
+    it("refuses a guard that does not cover the whole condition, and the aliases (rule 23)", function()
+        for _, line in ipairs({
+            "actions=dot,if=!health.known|health.pct<30", -- fires while unknown
+            "actions=dot,if=health.known&buff.x.up|health.pct>80", -- the inverted branch unguarded
+            "actions=dot,if=health.pct>80|health.known",
+            "actions=dot,if=health.pct<30&health.known",
+            "actions=dot,if=stat.health_pct<30",
+            "actions=dot,if=at_risk",
+            "actions=dot,if=health.known&at_risk|buff.x.up",
+            "actions=variable,name=low,value=health.pct<30",
+        }) do
+            assert.is_true(apl.unguarded(line), line)
+        end
+        for _, line in ipairs({
+            "actions=dot,if=health.known&health.pct<30",
+            "actions=dot,if=health.known&(health.pct<40|gcd.remains<=0)",
+            "actions=dot,if=health.known&!(health.pct>80)",
+            "actions=dot,use_off_gcd=1,if=health.known&health.pct<=60&(toggle.movement&target.outside5|target.within5)",
+            "actions=dot,if=(health.known&health.pct<30)&!buff.bear_form.up", -- an import's host guard after it
+            "actions=dot,if=health.known&stat.health_pct<30",
+            "actions=dot,if=target.health.pct<20|mana.pct<30",
+        }) do
+            assert.is_false(apl.unguarded(line), line)
+        end
     end)
 
     it("auraDuration is the aura's duration on its unit, guarded; another player's is dropped", function()
@@ -3023,6 +3264,7 @@ describe("the wowsims APL translator's auto-attack clocks", function()
             levelingFirst = { "call_pet,if=!pet_out&!pet.dead&!talent.lone_wolf.enabled", "revive_pet,if=pet.dead" },
         }
         local set = require("Forever.helpers.engine").abilitySet(r.class)
+        set.sharedSettings = nil -- rule 25's shared lines: their own test
         local rotation = { valueVariables = player.rotation.valueVariables, priorityList = {} }
         for _, name in ipairs({ "Windup close", "Just shot", "Weave fits" }) do
             rotation.priorityList[#rotation.priorityList + 1] = {
@@ -3075,11 +3317,13 @@ describe("the wowsims APL translator on a .siml-parsed APL", function()
             local r = dofile("tools/wowsims/specs/" .. spec .. ".lua")
             local set = require("Forever.helpers.engine").abilitySet(r.class)
             local log = slurp("tests/Forever/wowsims/" .. spec .. ".log")
-            local player = json.decode(slurp("tests/Forever/wowsims/" .. spec .. ".json")).raid.parties[1].players[1]
-            local want = { apl.translate(player.rotation, apl.context(set, r, log, player)) }
+            local req = json.decode(slurp("tests/Forever/wowsims/" .. spec .. ".json"))
+            local player = req.raid.parties[1].players[1]
+            local tank = apl.isTank(req) -- as dry.lua translates it: a tank gets rule 13 lines (Protection guards one)
+            local want = { apl.translate(player.rotation, apl.context(set, r, log, player, req.encounter, tank)) }
             local siml = json.decode(slurp("tests/Forever/fixtures/wowsims_siml_" .. spec .. ".apl.json"))
             assert.are.equal("TypeAPL", siml.type)
-            local got = { apl.translate(siml, apl.context(set, r, log, player)) }
+            local got = { apl.translate(siml, apl.context(set, r, log, player, req.encounter, tank)) }
             assert.are.same(want, got)
         end)
     end
@@ -3120,6 +3364,7 @@ describe("the wowsims APL translator on the Warlocks' assigned-curse check", fun
         }
         local r = dofile("tools/wowsims/specs/warlock_demonology.lua")
         local set = require("Forever.helpers.engine").abilitySet(r.class)
+        set.sharedSettings = nil -- rule 25's shared lines: their own test
         local player = { warlock = { options = { classOptions = {} } } } -- the zero value, Elements
         r.extra, r.guard = nil, nil -- the filler lines anchor on the shipped list's last Life Tap, not in this one
         r.select.castWarlockAssignedCurse.is = nil -- the shipped recipes name it now (CN3, the 0.7 re-pin): drop it for the "before"

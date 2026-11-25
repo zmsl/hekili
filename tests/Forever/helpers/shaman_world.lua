@@ -306,6 +306,8 @@ M.MAP = {
     magma_totem = totem("magma_totem"),
     windfury_totem = totem("windfury_totem"),
 }
+-- (L1808) the kick key casts the same spell
+M.MAP.earth_shock_interrupt = M.MAP.earth_shock
 
 -- The packs' worlds: `pack` the priority, `spec` its spec id, `kit` the abilities the character knows (every rank),
 -- `talents` the build's ({ [rank-1 spell] = rank }; none: no points), `weapon` the main hand, `distance` ours from the

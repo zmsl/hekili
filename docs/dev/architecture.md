@@ -65,7 +65,15 @@ remembered target slot, keyed by GUID in the open world and by stable ID under t
 meanwhile, or the aura is untracked); `state.active_dot` reads it (§2, "Target swaps on Forever"). The third is the
 target's stable ID (ledger L1734, owner's A, 2026-11-22): `ns.Facade.TargetID()` -> an integer while the target's GUID
 is secret, 0 for a target read plain, nil with no target. It is never a GUID or a stand-in for one. Its one reader is
-`Engine/Sim/State.lua`'s swapped-cast compare (`landsElsewhere`, §2). `tools/check_border.sh` passes exactly two lines
+`Engine/Sim/State.lua`'s swapped-cast compare (`landsElsewhere`, §2). The fourth is the hidden-value enablement
+(ledger L1805, the owner's "yes" 2026-11-23: "a single enablement check ... health and power reads can break
+independently from the cdm reads"): `ns.Facade.Known(kind, powerType)` -> whether that kind's hidden values answer now,
+each kind on its own (`Facade.KNOWN_HEALTH` 1: the player's health estimate is a reading, a plain read, a live band or
+one held after a re-prime, false when it reads full; `KNOWN_POWER` 2: that power type read plain or its band live,
+false when the model alone answers; `KNOWN_AURA` 3: the hidden-value library's aura kind, by its capability report (asked with no spec, so it follows the library's shared bar self-test: a failed self-test turns `aura.known` off with health and power, while the Cooldown Manager's presence reads still stand),
+apart from the core's own Cooldown Manager reader). Its readers are the APL conditions `health.known`,
+`<power>.known` (the resource metatable) and `aura.known` (`Engine/Sim/State.lua`); the translator guards every
+generated line that reads the player's health with `health.known` (§6). `tools/check_border.sh` passes exactly two lines
 naming it there, both inside `landsElsewhere` and each exactly the cast's pin or the compare, so the ID never feeds a
 GUID field; it fails a read elsewhere in State.lua, a third read, a change to either line, and any other core file or
 pack that names `TargetID`. `def` carries plain records (batch 4, the owner's
@@ -224,6 +232,12 @@ What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforc
   default and `sim` must be candidates (else RegisterSetting errors), the spec's page shows it as a dropdown, `/hekili
   set spec <key> <candidate>` sets it, and a priority reads it as `settings.<key>='<candidate>'` (a quoted string
   passes through the script language as is: `Engine/Sim/Scripts.lua` never extends a resource name inside quotes).
+  A defensive line's player-health threshold (owner L1808, "Setting per line") is a setting whose option comes from
+  `spec:HealthOption(ability)` (`ns.HealthOption`, `Engine/Schema/Spec.lua`): a 1-100 slider named after the ability
+  (the client's name, read when the options open); the line reads `health.pct<=settings.<action>_health`. Shared
+  content registers a setting for every spec with `shared:RegisterSetting(key, value, option)` (and
+  `shared:HealthOption`): kept in `ns.sharedSettings` and registered on each spec when `NewClass` builds the kit (the
+  shared content loads first).
 - `Hekili.State` (the simulation's `state`) and `Hekili.Class` (the registry the class file fills).
 - `Hekili.Client`: the game client as an addon may read it, the same table as `ns.Facade`. Content never names a WoW
   global (`tools/check_api_reads.sh`).
@@ -615,6 +629,23 @@ is unsupported, and custom priorities bound to the legacy id are rebound to it. 
 `"<TOKEN>:<key>"` (`"WARRIOR:fury"`), which the importer resolves to this session's id (another class's key is kept
 as the string until that class logs in).
 
+**Defensives and interrupts** (owner, L1808: "Defensives and interrupts should always be categorized in defensive and
+interrupt displays"). The Defensives and Interrupts toggles are separate by default (`Options.lua` defaults), so an
+ability on either toggle shows only in its own display. A spell one line casts for damage and another as a defensive or
+a kick gets a second key: the ability field `variantOf = "<original key>"` registers the same spell under its own key
+and toggle; the original keeps the spell's IDs, its name and the belief's record (`Spec/Abilities.lua`,
+`Tracked.lua`), the options list shows the variant with its toggle's name, and the pack sets each key's cooldown in
+the other's handler (Warlock `death_coil_defensive`, Mage `ice_barrier_defensive`, Shaman `earth_shock_interrupt`).
+A bar holds the spell once, as the original, so the variant joins the original's `bind`: it shows the original's
+keybind and glows its button.
+A separate display whose active priority has no line for it is not walked (`Engine/Sim/Core.lua` `packHasLine`, read
+every update: an entry, not switched off, whose ability's toggle, the player's per-ability choice first, is the
+display's filter and which the player has not disabled; the engine's internal verbs, `use_items` among them, count for
+Cooldowns and for a toggle a player gave an item), so the Interrupts display costs nothing until a priority has a kick;
+it publishes an empty set, as with its toggle off. A line `health.known` guards whole (`ns.HealthGuarded`, the
+detector's sense; the script's `NeedsHealth`) counts only while `state.health.known`: with no health reading the
+Defensives display is not walked either.
+
 ## 4. `Hekili.Virtual`
 
 `Hekili.Virtual = { State, Events, Prof }` is published by the core (`Hekili.lua`, `Hekili.Virtual = log.debug`) from what the
@@ -737,14 +768,23 @@ wider each side, logged only once the belief read that max plain. With no live b
 the library.
 
 **Player health.** The client hides the player's own health (`UnitHealth`/`UnitHealthMax("player")` secret in combat, owner L1461,
-and out of it on live, L1710; the headless fake client still answers plain out of combat): `health.pct`,
+and `UnitHealth` out of it too on live, L1710, as the headless fake client answers): `health.pct`,
 `health.current`, `health.deficit` read the plain value whenever the client answers one and, while the answer is secret, the hidden-value library's live 1% band
 (`Game/State/Sources/Bands.lua`, channel 0): its middle, so a whole-number threshold answers as the true value does
 (`Game/State/Families/Player.lua`; a plain read of the same drain is exact and wins). With no live band (the library
 absent, priming, unavailable, `Hekili.bandOff`) the secret answer reads full, never a stale read from before the pull,
-and the facade's row never hands the core a secret. A custom line reading it gets no load warning (FABLE-FOR-OWNER 7);
-the translator still omits every wowsims entry reading `currentHealthPercent` or `currentHealth` (its rule 23, owner
-L1462).
+and the facade's row never hands the core a secret. A band lost while its watch still works (`I.bandOK`: a re-prime
+after values that moved on every frame) holds its last reading for `I.HEALTH_HOLD` (1 s from the last drain it was
+live; owner "Hold last reading", L1805), then reads full; `I.healthHolds` and `I.healthSnaps` count both. `health.known`
+(Facade.Known, §1) is true exactly while the estimate is a reading. One check decides whether a line reads the
+player's health (`health.<field>`, `stat.health`, `stat.health_pct`, `stat.maximum_health`, `group_health`,
+`raid_health`, `at_risk`) without `health.known&` guarding its whole condition
+(first, the rest one group or free of a top-level `|`): `ns.HealthUnguarded` (`Engine/Sim/AplThresholds.lua`). A custom
+priority's line that does is warned once a session at load, naming the priority, list and line (`Hekili:LoadScript`,
+`Hekili:Print`; owner L1808: "yes add the health.known warning but dont for the others since we model those": a power
+line reads the model, no warning); the translator, which loads the same file, keeps every wowsims entry reading
+`currentHealthPercent` or `currentHealth` under `health.known&` (its rule 23, owner L1805) and refuses any emitted line
+that fails the check.
 
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
 an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for
@@ -957,7 +997,8 @@ show in two slots when a held slot's icon is the next slot's new icon.
 
 Every piece of text a player sees is `L["English text"]`. The key is the English itself. Each addon with text is its
 own AceLocale-3.0 app (`Libs/AceLocale-3.0`, Ace3 Release-r1403), named after its folder: the core's table is `ns.L`
-(`local L = ns.L`), a pack's `local L = Hekili:GetLocale("Hekili_<Class>")`. Separate apps keep a pack's strings out
+(`local L = ns.L`), a pack's `local L = Hekili:GetLocale("Hekili_<Class>")`. The shared content's is `Hekili_Shared` (L1808: the
+Healthstone's and the healing potion's names while the client has not cached their item). Separate apps keep a pack's strings out
 of the core (core-is-generic) and stop one key meaning two things (the core's "Combat" and Rogue's spec).
 
 - **The locale block.** `Locales/enUS.lua` loads first: written by `tools/locales.py`, every key `L[key] = true`

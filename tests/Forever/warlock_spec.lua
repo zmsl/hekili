@@ -30,6 +30,7 @@ local KIT = {
     rain_of_fire = { { 5740, 6219, 11677, 11678 }, 1185, 0, "spell" },
     hellfire = { { 1949, 11683, 11684 }, 1300, 0, "spell" },
     death_coil = { { 6789, 17925, 17926 }, 600, 120, "spell" },
+    death_coil_defensive = { { 6789, 17925, 17926 }, 600, 120, "spell" }, -- (L1808) the same spell, Defensives
     conflagrate = { { 1293817, 1293818, 17962, 18930, 18931, 18932 }, 255, 10, "spell" },
     shadowburn = { { 17877, 18867, 18868, 18869, 18870, 18871 }, 365, 15, "spell" },
     searing_pain = { { 5676, 17919, 17920, 17921, 17922, 17923 }, 168, 0, "spell" },
@@ -137,7 +138,7 @@ describe("Forever Warlock", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(43, n)
+        assert.are.equal(44, n)
         assert.are.equal("cooldowns", w.abilities.amplify_curse.toggle)
         for _, key in ipairs({
             "summon_imp",
@@ -1149,7 +1150,10 @@ describe("Forever Warlock priorities", function()
             for list, entries in pairs(p.lists) do
                 for i, e in ipairs(pe.flat(entries)) do
                     local where = p.name .. " " .. list .. " " .. i
-                    assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action] or pe.LINE[e.action], where)
+                    assert.is_true(
+                        cls.abilities[e.action] ~= nil or shared[e.action] or pe.LINE[e.action] or pe.SHARED[e.action],
+                        where
+                    )
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
                             assert.is_true(kinds[kind][key] ~= nil or shared[key], where .. ": " .. key)

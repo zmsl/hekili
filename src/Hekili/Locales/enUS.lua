@@ -23,6 +23,10 @@ L["on"] = true
 L["off"] = true
 L["%s\n\nThe wowsims gate runs this as %s."] = true
 
+-- Hekili/Engine/Schema/Spec/Abilities.lua
+L["Interrupts"] = true
+L["Defensives"] = true
+
 -- Hekili/Engine/Schema/Spec/Packs.lua
 L["The %s priority was retired; a spec that used it now runs %s."] = true
 L["The |cFFFFD100%s|r priority was updated."] = true
@@ -35,6 +39,10 @@ L["The %s, and |cFFFFD100%s|r priorities were reverted."] = true
 -- Hekili/Engine/Schema/Spec/Activation.lua
 L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = true
 L["%s, picked from your talents."] = true
+
+-- Hekili/Engine/Schema/Shared.lua
+L["%s: once health is under (%%)"] = true
+L["The priority shows %s in the Defensives display once your health is under this percentage (Hekili reads it in 1%% steps), and only while Hekili can read your health in combat."] = true
 
 -- Hekili/Engine/Sim/Targets.lua
 L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = true
@@ -122,8 +130,6 @@ L["next"] = true
 L["lane"] = true
 L["AOE"] = true
 L["Cooldowns"] = true
-L["Interrupts"] = true
-L["Defensives"] = true
 L["Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"] = true
 L["%s Icon"] = true
 L["Width"] = true
@@ -1025,6 +1031,7 @@ L["The lane's time axis, the ruler and the focus zone."] = true
 
 -- Hekili/Engine/Sim/Scripts.lua
 L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = true
+L["Priority %s, list %s, line %d reads your health without health.known first. While Hekili cannot read your health it counts as full, so this line can show when it should not: start its condition with health.known&."] = true
 
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = true

@@ -52,4 +52,14 @@ return {
     -- by role (docs/dev/wowsims-packs.md): Cone of Cold on five Winter's Chill stacks and Ice Lance (one Fingers of
     -- Frost charge while Frostbolt casts; 0 casts in wowsims's fight) are windows to catch (1); Ice Barrier, kept up for Frigid Power, is upkeep (2)
     focus = { cone_of_cold = 1, ice_lance = 1, ice_barrier = 2 },
+    -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Ice Block (a talent:
+    -- silent without it) at or below 15%, each the def-int-beyond-wowsims review's default and a per-spec setting,
+    -- shown in the Defensives display only while the player's health is read (rule 23). The Healthstone and healing
+    -- potion lines come from the shared settings (rule 25).
+    extra = {
+        { first = true, line = "ice_block,if=health.known&health.pct<=settings.ice_block_health" },
+    },
+    settings = {
+        ice_block_health = { default = 15, desc = "player health threshold, percent" },
+    },
 }

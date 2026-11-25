@@ -32,6 +32,10 @@ L["on"] = "activé"
 L["off"] = "désactivé"
 L["%s\n\nThe wowsims gate runs this as %s."] = "%s\n\nLe test wowsims utilise : %s."
 
+-- Hekili/Engine/Schema/Spec/Abilities.lua
+L["Interrupts"] = "Interruptions"
+L["Defensives"] = "Défensifs"
+
 -- Hekili/Engine/Schema/Spec/Packs.lua
 L["The %s priority was retired; a spec that used it now runs %s."] = "La priorité %s a été retirée ; une spécialisation qui l’utilisait exécute maintenant %s."
 L["The |cFFFFD100%s|r priority was updated."] = "La priorité |cFFFFD100%s|r a été mise à jour."
@@ -44,6 +48,10 @@ L["The %s, and |cFFFFD100%s|r priorities were reverted."] = "Les priorités %s e
 -- Hekili/Engine/Schema/Spec/Activation.lua
 L["%s: the |cFFFFD100%s|r priority, picked from your talents."] = "%s : la priorité |cFFFFD100%s|r, choisie d’après tes talents."
 L["%s, picked from your talents."] = "%s, choisie d’après tes talents."
+
+-- Hekili/Engine/Schema/Shared.lua
+L["%s: once health is under (%%)"] = "%s : dès que la vie passe sous (%%)"
+L["The priority shows %s in the Defensives display once your health is under this percentage (Hekili reads it in 1%% steps), and only while Hekili can read your health in combat."] = "La priorité affiche %s dans l’affichage Défensifs dès que ta vie passe sous ce pourcentage (Hekili la lit par paliers de 1 %%), et seulement tant que Hekili peut lire ta vie en combat."
 
 -- Hekili/Engine/Sim/Targets.lua
 L["Enemy nameplates are off, so in this instance Hekili Forever counts only your target. Turn on Show Enemy Nameplates and Show All Nameplates."] = "Les barres d’info des adversaires sont désactivées : dans cette instance, Hekili Forever ne compte que ta cible. Active « Barres d’info des adversaires » et « Montrer toutes les barres d’info »."
@@ -131,8 +139,6 @@ L["next"] = "suivante"
 L["lane"] = "piste"
 L["AOE"] = "AoE"
 L["Cooldowns"] = "Temps de recharge"
-L["Interrupts"] = "Interruptions"
-L["Defensives"] = "Défensifs"
 L["Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"] = "Classe |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"
 L["%s Icon"] = "Icône (%s)"
 L["Width"] = "Largeur"
@@ -1034,6 +1040,7 @@ L["The lane's time axis, the ruler and the focus zone."] = "L’axe du temps de 
 
 -- Hekili/Engine/Sim/Scripts.lua
 -- L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = ""
+L["Priority %s, list %s, line %d reads your health without health.known first. While Hekili cannot read your health it counts as full, so this line can show when it should not: start its condition with health.known&."] = "La priorité %s, liste %s, ligne %d lit ta vie sans health.known en tête. Tant que Hekili ne peut pas lire ta vie, elle compte comme pleine, donc cette ligne peut s’afficher à tort : commence sa condition par health.known&."
 
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000ATTENTION|r : cette version d’Hekili Forever est prévue pour un client WoW Forever plus récent ; réinstalle-la pour %s."
