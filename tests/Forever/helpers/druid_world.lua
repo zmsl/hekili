@@ -92,23 +92,31 @@ local function nowGains(key)
 end
 
 -- A shift's entry rule per resource, from the class file's swap_form at 50 of each and Furor at rank `furor` (0):
--- "zero" when it spends it all, "keep" when none, else a function keeping the same share of the pool (Furor's).
+-- "zero" when it spends it all, "keep" when none, else a function keeping the same share of the pool (Furor's), plus
+-- what it gains after (Furor's certain 10 rage into Bear Form at 5/5).
 local function entryRules(form, furor)
     local w, e = class()
     local talent = e.talent
     e.talent = setmetatable({ furor = { rank = furor or 0, enabled = (furor or 0) > 0 } }, getmetatable(talent))
-    e.spent, e.rage.current, e.energy.current = {}, 50, 50
+    e.spent, e.gained, e.rage.current, e.energy.current = {}, {}, 50, 50
     e.swap_form(form)
     e.talent = talent
-    local rules = { [M.RAGE] = "keep", [M.ENERGY] = "keep" }
+    local keep, add = { [M.RAGE] = 1, [M.ENERGY] = 1 }, { [M.RAGE] = 0, [M.ENERGY] = 0 }
     for _, s in ipairs(e.spent) do
-        if s[1] == 50 then
-            rules[PT[s[2]]] = "zero"
-        elseif s[1] > 0 then
-            local keep = 1 - s[1] / 50
-            rules[PT[s[2]]] = function(_, _, _, cur)
-                return cur * keep
+        keep[PT[s[2]]] = 1 - s[1] / 50
+    end
+    for _, g in ipairs(e.gained) do
+        add[PT[g[2]]] = add[PT[g[2]]] + g[1]
+    end
+    local rules = {}
+    for pt, k in pairs(keep) do
+        local a = add[pt]
+        if a ~= 0 or (k ~= 0 and k ~= 1) then
+            rules[pt] = function(_, _, _, cur)
+                return cur * k + a
             end
+        else
+            rules[pt] = k == 0 and "zero" or "keep"
         end
     end
     return rules
