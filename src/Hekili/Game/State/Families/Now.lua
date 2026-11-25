@@ -1179,6 +1179,20 @@ pointSilent = function(t)
     end
 end
 
+-- (L1832) An avoid of a cast the point fact proved landed went out as the cast's SPELL_MISSED (Events/Rows.lua), and
+-- Hekili's missable hook drops a record applied at the cast's stamp (Engine/Schema/Spec/Abilities.lua trackMisses):
+-- each record its `now` wrote re-opens at t, its expiry and stacks kept (as F4b's light re-opens one, L1810). Allocates
+-- nothing.
+local function reopen(t)
+    for k = 1, I.curSwapN == undoSwap and undoN or 0 do
+        local j = undoJ[k]
+        local rec, st = VS.Aura("target", auraSpell[j], t)
+        if rec and rec.est > t then
+            I.AuraModel(2, j, t, rec.est, st or 1, t, Obs.Landed, true)
+        end
+    end
+end
+
 I.On(Obs.Avoided, function(o, t)
     fire(2, OUTCOME_OF[o.c] or 0, o.t) -- first: the target's reactions, at the outcome's row
     if o.c == DEFLECT or o.c == EVADE then -- staged for reactions only (Events/Rows.lua REACTED): no undo, no refund
@@ -1189,6 +1203,8 @@ I.On(Obs.Avoided, function(o, t)
     elseif ptA == o.a and ptT == o.b then -- (L1832) the point fact decides: held until the settle, or another's
         if ptGo == 0 and not hHeld then
             hHeld, hC, hT = true, o.c, o.t
+        elseif ptGo == 1 then -- decided landed before this row (live: the point in the success's frame, rows ~0.47 s on)
+            reopen(t)
         end
         return
     end
@@ -1207,15 +1223,8 @@ local function decide(t, final)
     elseif I.curSwapN ~= ptSwap or ptVT == -2 then
         return pointSilent(t)
     elseif ptVT >= ptT and ptV > ptV0 then
-        -- a held avoid went out as the cast's SPELL_MISSED (Events/Rows.lua), and Hekili's missable hook drops a record
-        -- applied at the cast's stamp (Engine/Schema/Spec/Abilities.lua trackMisses): each record its `now` wrote
-        -- re-opens at the fact, its expiry and stacks kept (as F4b's light re-opens one, L1810)
-        for k = 1, hHeld and I.curSwapN == undoSwap and undoN or 0 do
-            local j = undoJ[k]
-            local rec, st = VS.Aura("target", auraSpell[j], t)
-            if rec and rec.est > t then
-                I.AuraModel(2, j, t, rec.est, st or 1, t, Obs.Landed, true)
-            end
+        if hHeld then
+            reopen(t)
         end
         ptGo, hHeld = 1, false
         forget(ptA, ptT) -- proven landed: no CDM verdict refunds it

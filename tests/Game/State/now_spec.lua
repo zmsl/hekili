@@ -1576,6 +1576,24 @@ describe("now handlers", function()
                 readAt(5.2, 3)
                 assert.are.same({ 20, 0, 0 }, landedState())
             end)
+            -- (review I1) live, the point comes in the success's frame and a row ~0.47 s after it: a foreign avoid paid to
+            -- the cast after the fact decided "landed" goes out as the cast's SPELL_MISSED at the cast's stamp, and
+            -- Hekili's missable hook drops a record applied at that stamp; the record re-opens at the row instead
+            it(
+                "a foreign avoid row after the deciding read: landed, its record no longer at the cast's stamp",
+                function()
+                    beginPoints(2)
+                    ctl.now = 5
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                    readAt(5.02, 3) -- the fact: landed
+                    ctl.now = 5.47
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                    readAt(5.5, 3)
+                    local rec, _, applied = VS.Aura("target", fs.SPENDER_C, 5.5)
+                    assert.are.same({ 20, 0, 0 }, landedState())
+                    assert.is_true(rec ~= nil and math.abs(applied - 5) >= 0.01, tostring(applied))
+                end
+            )
             -- the same capture (seq 121 -> 124): a crit's second point 0.089 s after the first, with no cast of its own;
             -- the next builder's slot before it is the count after that point, so its avoid is not read as a rise
             it("a crit's late extra point, then an avoided builder: that builder is undone", function()
