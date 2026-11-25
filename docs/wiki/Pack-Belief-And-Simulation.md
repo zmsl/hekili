@@ -75,6 +75,7 @@ The two layers also need different things.
 
 - **The simulation may use helpers the belief does not have.** Bear Form's `handler` calls the state function `swap_form`, registered with `RegisterStateFunction`, which exists only in the simulation. Its `now` writes the same steps out with the belief's verbs.
 - **The belief has verbs the simulation does not need.** Shifting into Bear Form loses all rage and then gains a share from the Furor talent, which below the talent's last rank is a roll the addon cannot see. The belief records that as a range with `resetResource`; the simulation spends its low end and gains only the certain part.
+- **A gain that may not come is never counted.** Relentless Strikes restores energy after a finisher only by a chance below 100% at most talent ranks and combo points. Its `now` calls `mayGain`, which adds nothing, so that a proc that did come is not mistaken for faster energy regeneration; the `handler` gains nothing either.
 
 From `src/Hekili_Druid/Druid.lua`, shortened:
 

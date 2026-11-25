@@ -98,7 +98,7 @@ files["src/Hekili/UI/UI.lua"] = { globals = { "p" } } -- upstream's stray global
 -- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Game/State/Families/Now.lua).
 local nowEnv = {
     "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "removeStack", "setCooldown",
-    "summonTotem", "summonPet", "dismissPet", "reduceCooldown", "level", "resetResource",
+    "summonTotem", "summonPet", "dismissPet", "reduceCooldown", "level", "resetResource", "mayGain",
     "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
     "runic_power", "totem", "action", "settings", "haste", "instant", "cast_start", "cast_id", "target",
@@ -133,6 +133,7 @@ files["src/Hekili_Druid/Druid.lua"] = { globals = druidEnv }
 -- The Rogue's further `state` names.
 local rogueEnv = {
     "energy", "combo_points", "cooldown", "combat", "class", "interrupt", "stealthed", "expose_due", "window", "closeWindow",
+    "mayGain", -- the belief's verb (Families/Now.lua): read in the finishers' `now` only (Relentless Strikes)
 }
 for _, k in ipairs(stateEnv) do
     rogueEnv[#rogueEnv + 1] = k

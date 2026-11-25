@@ -95,12 +95,17 @@ local DEADLY_POISON = { 20844, 8985, 8984, 2893, 2892 }
 -- Relentless Strikes (14179, rank curve {4, 8, 12, 16, 20} % a combo point to restore 14181's 25 energy; wowsims
 -- rogue.go:107-114 ApplyFinisher: chance x points, one proc, only on a landed finisher): the energy only when the chance
 -- is 100% (rank 5 at 5 points). A lower chance is a random resource proc, never an expected gain (owner L1397,
--- 2026-11-25): the reads and pins find a proc that came. The belief takes it back when the finisher is avoided (its
--- `now`'s gain, Families/Now.lua undo). `talent` and `gain` are the caller's: the sim's state or the belief's.
+-- 2026-11-25): the reads find a proc that came, and the belief's `mayGain` keeps its regen pins from learning one as
+-- regen (L1832, cp-fact-4). The belief takes the gain back when the finisher is avoided (its `now`'s gain,
+-- Families/Now.lua undo). `talent`, `gain` and `mayGain` are the caller's: the sim's state or the belief's (a
+-- `handler` passes no `mayGain`: the sim books nothing).
 local RELENTLESS_ENERGY = 25
-local function relentless(talent, points, gain)
-    if talent.relentless_strikes.rank * points >= 25 then -- 4% x rank x points >= 100%, in integers
+local function relentless(talent, points, gain, mayGain)
+    local chance = talent.relentless_strikes.rank * points -- 4% x rank x points, in integers of 4%
+    if chance >= 25 then
         gain(RELENTLESS_ENERGY, "energy")
+    elseif chance > 0 and mayGain then
+        mayGain(RELENTLESS_ENERGY, "energy")
     end
 end
 
@@ -649,7 +654,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             removeBuff("cold_blood")
-            relentless(talent, combo_points.current, gain)
+            relentless(talent, combo_points.current, gain, mayGain)
         end,
 
         handler = function()
@@ -680,7 +685,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             applyDebuff("target", "expose_armor")
-            relentless(talent, combo_points.current, gain)
+            relentless(talent, combo_points.current, gain, mayGain)
         end,
 
         handler = function()
@@ -929,7 +934,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             applyDebuff("target", "rupture", 6 + 2 * combo_points.current + 6 * talent.blood_splatter.rank)
-            relentless(talent, combo_points.current, gain)
+            relentless(talent, combo_points.current, gain, mayGain)
         end,
 
         handler = function()
@@ -986,7 +991,7 @@ spec:RegisterAbilities(rogue({
         -- Replaces the running one (checkpoint Q8).
         now = function()
             applyBuff("slice_and_dice", sndDuration(combo_points.current, talent.improved_slice_and_dice.rank))
-            relentless(talent, combo_points.current, gain)
+            relentless(talent, combo_points.current, gain, mayGain)
         end,
 
         handler = function()
@@ -1105,7 +1110,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             applyDebuff("target", "death_mark")
-            relentless(talent, combo_points.current, gain)
+            relentless(talent, combo_points.current, gain, mayGain)
         end,
 
         handler = function()
@@ -1203,7 +1208,7 @@ spec:RegisterAbilities(rogue({
         now = function()
             removeBuff("stealth")
             removeBuff("vanish")
-            relentless(talent, combo_points.current, gain)
+            relentless(talent, combo_points.current, gain, mayGain)
         end,
 
         handler = function()

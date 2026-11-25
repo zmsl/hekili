@@ -2178,6 +2178,103 @@ describe("now handlers", function()
         end)
     end)
 
+    -- (L1832, cp-fact-4) A gain the cast may give (a proc chance below 100%): `mayGain` books none of it, and a pin
+    -- window that holds its stamp (a pin at the stamp included) measures no regen; a booked `gain` still measures.
+    describe("a gain the cast may give (mayGain)", function()
+        local ENERGY = 3
+        -- energy (regen 10), the probe spender_a at 40 (its flips pin the pool), spender_c at `cost` whose `now` runs
+        -- `now`; nothing refunds on an avoid
+        local function boot(cost, now)
+            h.Class.resources.energy = { type = ENERGY, state = { meta = { regen = 10 } } }
+            local probe, c = h.Class.abilities.spender_a, h.Class.abilities.spender_c
+            probe.spendType, probe.spend = "energy", 40
+            c.spendType, c.spend, c.funcs.now = "energy", cost, now
+            start()
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+        end
+        local function answer(t, ok)
+            ctl.now = t
+            ctl.usable[fs.SPENDER_A] = { ok, not ok }
+            ctl.Tick(t)
+            VS.Drain(t)
+        end
+        local function castAt(id, t)
+            ctl.now = t
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", id)
+        end
+        local function regen(t)
+            return VS.Regen(ENERGY, t).est
+        end
+        local function maybe25()
+            mayGain(25, "energy") -- luacheck: ignore 113 (the `now` context's verb)
+        end
+
+        -- true regen 12: pinned at 40 at 1.5; at 5.0 (pool 82) spender_c spends 70 and the proc gives 25 (37), back
+        -- at 40 by 5.25; the window 1.5 -> 5.3 measures (40 + 70) / 3.8 = 18.4 a second unless the stamp holds it;
+        -- then the probe spends 40 at 5.5 (pool 43 -> 3), back at 40 by 8.6: that window measures
+        it("a window holding the possible gain's stamp measures nothing; the next window measures", function()
+            boot(70, maybe25)
+            answer(1.4, false)
+            answer(1.5, true)
+            castAt(fs.SPENDER_C, 5.0)
+            answer(5.05, false)
+            assert.is_true(math.abs(VS.Power(ENERGY, 5.05).est - 5.5) < 1e-6) -- 40 + 35.5 (regen 10) - 70: no 25 booked
+            answer(5.2, false)
+            answer(5.3, true)
+            assert.are.equal(10, regen(5.3))
+            castAt(fs.SPENDER_A, 5.5)
+            answer(5.55, false)
+            answer(8.5, false)
+            answer(8.6, true)
+            assert.is_true(regen(8.6) > 10, tostring(regen(8.6)))
+        end)
+        -- (integ5 tracer A, seed 2) true regen 10: pinned at 40 at 2.1; the probe spends 40 at 2.5 (44 -> 4); at 3.0
+        -- spender_c (free) procs 35 (44) and the probe flips usable in the cast's frame: a pin at the stamp (40, the
+        -- pool 44); the probe spends 40 at 3.5 (49 -> 9), back at 40 by 6.6: the window from the stamp's pin measures
+        -- 40 / 3.6 = 11.1 a second unless the stamp holds it
+        it("a pin at the possible gain's own stamp starts no measuring window", function()
+            boot(0, function()
+                mayGain(35, "energy") -- luacheck: ignore 113 (the `now` context's verb)
+            end)
+            answer(2.0, false)
+            answer(2.1, true)
+            castAt(fs.SPENDER_A, 2.5)
+            answer(2.55, false)
+            answer(2.95, false)
+            castAt(fs.SPENDER_C, 3.0)
+            answer(3.0, true)
+            castAt(fs.SPENDER_A, 3.5)
+            answer(3.55, false)
+            answer(6.5, false)
+            answer(6.6, true)
+            assert.are.equal(10, regen(6.6))
+        end)
+        -- the same as the first, the gain at 100% (`gain`): booked, and its window measures 12
+        it("a certain gain is booked and its window still measures", function()
+            boot(70, function()
+                gain(25, "energy") -- luacheck: ignore 113 (the `now` context's verb)
+            end)
+            answer(1.4, false)
+            answer(1.5, true)
+            castAt(fs.SPENDER_C, 5.0)
+            answer(5.05, false)
+            assert.is_true(math.abs(VS.Power(ENERGY, 5.05).est - 30.5) < 1e-6) -- 40 + 35.5 (regen 10) - 70 + 25
+            answer(5.2, false)
+            answer(5.3, true)
+            assert.is_true(regen(5.3) > 10, tostring(regen(5.3)))
+        end)
+        it("raises on an untracked resource, as the other verbs", function()
+            boot(0, function()
+                mayGain(25, "no_such_resource") -- luacheck: ignore 113 (the `now` context's verb)
+            end)
+            castAt(fs.SPENDER_C, 3.0)
+            answer(3.0, false)
+            assert.are.equal(1, I.nowErrors)
+            assert.is_truthy(tostring(I.nowError):find("no_such_resource", 1, true))
+        end)
+    end)
+
     -- L1029 (owner, reverses L318(3)): the CDM verdict's close of our missed cast's target aura refunds the cast's
     -- `refundOnAvoid` share once, through the avoid's own refund (I.Refund); an avoid or a hand-back of the same cast
     -- refunds it at most once with the verdict, whichever comes first.

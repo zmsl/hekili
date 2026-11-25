@@ -78,6 +78,7 @@ The verbs write the effect of a cast. In a `handler` they change the simulated s
 | `gain(amount, resource, extra)` | Adds to a resource. In a `now`, `extra` is the half-width of a roll the belief cannot see: the floor takes `amount - extra` and the top `amount + extra`. In a `handler`, it is the overcap. | Yes | Yes |
 | `spend(amount, resource)` | Takes from a resource | Yes | Yes |
 | `resetResource(resource, amount, upto)` | Sets a resource to `amount`, or up to `upto` more by a roll the belief cannot see | Yes | No |
+| `mayGain(amount, resource)` | Says the cast may give `amount` by a proc chance below 100%. Nothing is added; the regen the addon learns ignores the time around the cast. | Yes | No |
 | `applyBuff(aura, duration, stacks)` | Puts a player aura up. Without `duration`, the aura's registered one. | Yes | Yes |
 | `applyDebuff(unit, aura, duration, stacks)` | Puts a target aura up | Yes | Yes |
 | `removeBuff(aura)` | Takes a player aura down | Yes | Yes |
