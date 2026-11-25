@@ -277,7 +277,12 @@ M.FLICKER = {
     -- returns traced: seed 11 t 37.2 and seed 25 t 70.0, rend > an empty slot on our press > rend waiting 14.8 s, the
     -- return poll with no event): flicker 0.13 -> 0.16 (the measured worst + 0.01), cause "jitter rule L1791: an empty
     -- blip's return needs a fact"
-    ["Fury L24"] = { loOver = 337, flicker = 0.16, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
+    -- loOver 337 -> 451 (seeds 1-20 / 21-40 / 41-60: 451 / 191 / 273, base 337 / 177 / 251; the same fights 324 -> 333):
+    -- L1793 frame model re-times the fights; residue = the Execute swing-rage class, fixed in lane swing-avoid-fix
+    -- (re-tighten at its merge)
+    -- INTEG: re-measure (batch 5: loOver 451 from harness-frames-5, flicker 0.16 from the L1791 return rule; the
+    -- higher of each until the merged tree is measured)
+    ["Fury L24"] = { loOver = 451, flicker = 0.16, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 863 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -486,6 +491,14 @@ M.FLICKER = {
     -- 0.24, press-only 0.29 / 0.25 / 0.26; the newly counted return traced: seed 5 t 63.0 demoralizing_roar > maul on
     -- our press > demoralizing_roar, t 123.0 lacerate > maul on our press > lacerate, both with no fact): flicker 0.27
     -- -> 0.30 (the measured worst + 0.01), cause "jitter rule L1791: a return needs its own fact"
+    -- harness-frames (L1793; cause harness: each event time its own client frame re-times the boot chain; seeds 1-20 /
+    -- 21-40 / 41-60 flicker 0.28 / 0.17 / 0.19): flicker 0.27 -> 0.29 (the measured worst + 0.01). Traced: the same
+    -- fights on fresh boots count 14 flips with frames against 15 without (a subset: none added); every counted flip,
+    -- both trees, is the maul -> X -> maul jitter with no fact at either change (the forecast swing's time passing,
+    -- seed 6 122.4), so seeds 1-20's 15 -> 16 is which fights the chain runs, not a new flip (the chain has forked by
+    -- seed 5's first poll: the rage belief the earlier fights carry, est 6.10 -> 6.31; the presses part at 3.4 s)
+    -- INTEG: re-measure (batch 5: flicker 0.30 from the L1791 return rule over harness-frames-5's 0.29; the higher
+    -- until the merged tree is measured)
     ["Guardian"] = { loOver = 2374, flicker = 0.30, retracted = 0, readyShort = 0, heldReady = 447 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
@@ -1043,7 +1056,9 @@ M.FLICKER = {
     -- 0.9 re-pin e5a9cd2a2d -> e4ef929e54 (R6; the new Wrack APL, the world's Wrack half points, then the world on
     -- wowsims's 35/11/5 build: instant Corruption, the Imp sacrificed, pool 6277): every cell 0 / 0 / 0 on all three
     -- sets, agreement .995 / .996 / .994; nothing moves
-    ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 7 }, -- 0 / 0 / 0, 0
+    ["Affliction"] = { flicker = 0, retracted = 0, heldReady = 0 }, -- 0 / 0 / 0, 0
+    -- heldReady 7 -> 0 (lane harness-frames, measured 0 over 20 fights, agreement 0.997): the harness models a full
+    -- client frame per event time (L1793), so a channel-cutting Corruption press is stamped at the press
     -- heldReady 0 -> 7 (batch 3, the 20-fight case, measured 7): the harness feeds a poll's events in one frame, so a
     -- channel-cutting press is stamped up to 0.2 s late (L1793; frame-model lane owed)
     -- heldReady 6 -> 8 (re-pin e2842f0a78, Task 16, R6, R49; seeds 1-20 / 21-40 / 41-60: 7 / 8 / 2, flicker 0.17 / 0.17 /

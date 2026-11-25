@@ -496,13 +496,23 @@ function M.new(W, k)
     end
     -- UnitDamage read out of combat only (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1); the
     -- attack speeds (Sources/Swing.lua, probe W PR2) and the regen rates (probe W: 10.001 a second out of combat) too.
+    local maxSent = {} -- by power type: the maximum last pushed (cache)
     local function cache(t, ev)
         local d = ev.damage
         push(t, "@damage", d[1], d[2], d[3], d[4])
         if k.powerMax then -- UnitPowerMax, plain [W PR16]: the world's pools, not the character sheet's
             push(t, "@powerMax", us.pt, us.powerMax)
+            local moved = maxSent[us.pt] ~= us.powerMax
+            maxSent[us.pt] = us.powerMax
             for pt, r in pairs(us.res) do
                 push(t, "@powerMax", pt, r.max)
+                moved = moved or maxSent[pt] ~= r.max
+                maxSent[pt] = r.max
+            end
+            -- the client's event for a changed maximum (L1793): the first push moves the boot's sheet to the world's
+            -- pools, which a frame-timed answer before the next poll's read must not meet unknown
+            if moved then
+                push(t, "UNIT_MAXPOWER", "player")
             end
         end
         if k.playerSpeed and ev.speed then
@@ -1040,7 +1050,9 @@ function M.new(W, k)
     for pt, v in pairs(us.res0 or {}) do
         view[pt], cur[pt] = v, v
     end
+    obs.ahead = 0 -- how far the world had run past an answer's time when it was evaluated (its look-ahead, L1793)
     local function answer(t)
+        obs.ahead = math.max(obs.ahead, W.t - t)
         local flipped = false
         for _, u in ipairs(answers) do
             local ok, short = u[2](W, now, power, view)
@@ -1094,6 +1106,16 @@ function M.new(W, k)
     end
     local function bySeq(a, b)
         return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2])
+    end
+    --- The earliest time this observer has work at, or nil: a truth row not read yet (a press made after the last
+    --- step), or an answer still waiting (a gain's usableDelay). The loop runs the world only to it first, so the
+    --- answer reads the world as of its own time (L1793; obs.ahead).
+    function obs.due()
+        local d = W.truth[cursor + 1] and W.truth[cursor + 1].t
+        for _, x in ipairs(deltas) do
+            d = (d == nil or x[1] < d) and x[1] or d
+        end
+        return d
     end
     function obs.step(tEnd)
         local truth = W.truth
