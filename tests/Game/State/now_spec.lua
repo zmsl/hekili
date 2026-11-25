@@ -1594,6 +1594,34 @@ describe("now handlers", function()
                     assert.is_true(rec ~= nil and math.abs(applied - 5) >= 0.01, tostring(applied))
                 end
             )
+            -- the same with the Cooldown Manager on (its item proven, lit by the landing): no regression against the
+            -- undo's close and the light's re-open that came before the point fact
+            it("the same with the cast's Cooldown Manager item proven and lit: landed, no refund", function()
+                table.insert(ctl.viewer.sets[2], 502)
+                ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
+                local ti = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+                beginPoints(2)
+                ctl.auras.target.HARMFUL[1] = fake.SECRET
+                ctl.Fire("UNIT_AURA", "target")
+                readAt(4.6, 2)
+                ctl.ViewerAura(ti, "target")
+                readAt(4.7, 2)
+                ctl.ViewerClear(ti)
+                readAt(4.8, 2)
+                assert.is_true(I.PRESENCE.viewer.proven[502])
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 5.015
+                ctl.ViewerAura(ti, "target") -- the landing's light
+                readAt(5.02, 3)
+                ctl.now = 5.47
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                readAt(5.5, 3)
+                readAt(6, 3)
+                local rec, _, applied = VS.Aura("target", fs.SPENDER_C, 6)
+                assert.are.same({ 0, 0 }, { VS.Power(fs.RAGE, 6).est, I.avoidsRun })
+                assert.is_true(rec ~= nil and rec.est > 6 and math.abs(applied - 5) >= 0.01, tostring(applied))
+            end)
             -- the same capture (seq 121 -> 124): a crit's second point 0.089 s after the first, with no cast of its own;
             -- the next builder's slot before it is the count after that point, so its avoid is not read as a rise
             it("a crit's late extra point, then an avoided builder: that builder is undone", function()
@@ -1661,17 +1689,6 @@ describe("now handlers", function()
                 readAt(5.45, 2) -- the second cast avoided: undone once; the first stays landed
                 assert.are.equal(1, I.avoidsRun)
                 assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.5).est)
-            end)
-            -- (review M4) a dodge of ours inside the window may add a point of its own (a talent's chance, never
-            -- modelled): the rise proves nothing, so the cast's own dodge row decides
-            it("our own dodge since the cast is silent: the cast's dodge row undoes it", function()
-                beginPoints(2)
-                castDodge()
-                ctl.now = 5.01
-                ctl.Fire("UNIT_COMBAT", "player", "DODGE", "", 0, 1)
-                readAt(5.02, 3)
-                readAt(5.4, 3)
-                assert.are.same({ 8, 1 }, rageAvoids(5.5))
             end)
             -- (review M8) a secret UnitPower read ends the slot's plainness: no fact opens, the row decides at once
             it("a secret read of a pooled counter before the cast: no fact, a dodge row undoes at once", function()

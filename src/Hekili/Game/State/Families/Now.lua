@@ -1208,6 +1208,9 @@ I.On(Obs.Avoided, function(o, t)
         forget(o.a, o.b) -- nor by the verdict: the avoid path refunds none here (review 1b)
         return
     elseif o.a ~= undoA or o.b ~= undoT then
+        -- shortcut (L1832): a cast between a landed builder and this late row (off the GCD, inside the row's ~0.47 s)
+        -- took the undo journal, so its records do not re-open and Hekili's missable hook drops them as before the
+        -- point fact; upgrade (keep the builder's journal past an off-GCD cast) if a trace shows it
         return
     elseif ptA == o.a and ptT == o.b then -- (L1832) the point fact decides: held until the settle, or another's
         if ptGo == 0 and not hHeld then
@@ -1380,15 +1383,13 @@ I.On(Obs.SwingSettled, function(o)
         fire(2, LAND, o.b, o.a)
     end
 end)
-local DODGE = I.HitKind.DODGE
-I.On(Obs.PlayerHit, function(o, t)
+-- shortcut (L1832 review M4): our own dodge may add a point of its own (a talent's chance, never modelled as a gain);
+-- one inside an avoided builder's PT_AVOID window reads as its landing (no refund, its debuff kept). Not guarded: the
+-- dodge's row on us trails the dodge (rows on us 0.39-0.57 s, Resources.lua I.TAKEN_ROW_LAG), so the fact has decided
+-- before it comes, and a row that came in the window would be an earlier dodge's. Rare (the talent, tanking, a dodge
+-- in 0.3 s); upgrade if a pack declares that point, or a live snapshot shows a false landing after a dodge.
+I.On(Obs.PlayerHit, function(o)
     fire(1, OUTCOME_OF[o.a] or 0, o.t)
-    -- (L1832 review M4) our own dodge since the cast may add a point of its own (a talent's chance, never modelled as
-    -- a gain): a rise then proves nothing, so the fact goes silent and the rows decide.
-    -- shortcut: a dodge row folded after the fact decided "landed" cannot take it back; upgrade if a trace shows one
-    if o.a == DODGE and ptA ~= 0 and ptGo == 0 and o.t >= ptT then
-        pointSilent(t)
-    end
 end)
 I.On(Obs.PlayerCrit, function(o)
     fire(1, CRIT, o.t)
