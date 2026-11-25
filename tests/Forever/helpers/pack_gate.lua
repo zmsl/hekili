@@ -540,7 +540,23 @@ M.FLICKER = {
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 130 / 141 / 127): heldReady 159 -> 141
     -- loOver 105 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 86 / 105 / 83): untraced -> per-cell follow-up lane
-    ["Assassination"] = { loOver = 105, flicker = 0, retracted = 0, heldReady = 141 }, -- 0 / 0 / 0, 0
+    -- lane cp-fact-2 (L1832; seeds 1-20, the gated reading, L1814): loOver 105 -> 119. Cause: Relentless Strikes counted
+    -- only at 100% (owner L1397: no expected gain for a random proc), the world rolling it (W.krng) as the game does: a
+    -- proc below 100% is unseen energy, and the next exact pin measures it as regen (seed 1: regE 10 -> 11.83 over the
+    -- 1.2-4.4 window holding Slice and Dice's roll), so the floor runs ahead of the truth until the EMA decays. The 86 it
+    -- replaces was the expected-energy class (the belief's mean kept after an avoided finisher, cp-fact trace); a window
+    -- that may hold a proc measuring nothing gives 39 (counterfactual, not built: needs a pack declaration, owner call)
+    -- Same lane and cause (seeds 1-20 on c2206d81f: heldReady 166, dps A/B 0.971; the expected-energy helper with the world
+    -- paying its mean on the same tree: 133, 1.004): heldReady 141 -> 166. A roll the belief does not count leaves its
+    -- energy under the truth until a usable answer or a pin finds it, so the oracle shows the builder ready first.
+    -- Cause split (cp-fact-3, seeds 1-20 on the tip; world mean/rolled x the expected-energy helper/100%, default arm;
+    -- bands arm in brackets): mean+expected loOver 0 [0], heldReady 133 [119], dps 1.004 [1.002]; rolled+expected 369 [6],
+    -- 171 [145], 0.966 [0.954]; rolled+100% (the tip) 119 [0], 166 [145], 0.971 [0.954]; mean+100% 708 [0], 178 [119],
+    -- 1.018 [1.002]. So heldReady and dps move with the world's rolls alone (bands: identical under both rules); the
+    -- 100% rule's share is loOver, 369 -> 119 on the rolled world (the expected gain over a roll that did not come).
+    -- The rolled dps A/B is partly the two runs' own rolls: A and B fight differently, so their W.krng draws part
+    -- (Relentless procs A 355 / B 350 default, 361 / 350 bands), while bands agreement is 0.999
+    ["Assassination"] = { loOver = 119, flicker = 0, retracted = 0, heldReady = 166 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
     -- tree, flips match base's tick for tick; Sinister Strike's entry is gated on `!(buff.slice_and_dice.remains<=2)`,
@@ -562,7 +578,14 @@ M.FLICKER = {
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 164 / 160 / 157): flicker 0.01 -> 0
     -- loOver 419 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 0 / 419 / 386): untraced -> per-cell follow-up lane
-    ["Combat"] = { loOver = 419, flicker = 0, retracted = 0, heldReady = 164 }, -- 0.15 / 0 / 0.02, 0
+    -- lane cp-fact-2 (L1832; seeds 1-20 on c2206d81f: flicker 0.06, PT_AVOID 0.08 on the same tree 0.00): flicker
+    -- 0 -> 0.06. Cause: the point fact's "no rise" window, 0.08 -> 0.3 s (owner 2026-11-25, the two Feral captures'
+    -- late points): an avoided builder's held avoid and its refund land a poll or two later. Owner-visible cost.
+    -- Traced (cp-fact-3, 2 flips): seeds 6 (66.6) and 11 (71.6), each an avoided Sinister Strike (PARRY / MISS) shown
+    -- wrong until its usable flip: the "no rise" refund at +0.3 s leaves the pool under the cost (the late floor without
+    -- regen), the usable flip at +0.8 s shows it one poll before the APL's own change (Shank's cooldown / Slice and
+    -- Dice at 0 s, the oracle's change at the same tick); each change follows a fact, the ledger lists none of them
+    ["Combat"] = { loOver = 419, flicker = 0.06, retracted = 0, heldReady = 164 }, -- 0.15 / 0 / 0.02, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 382 / 364 / 363):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /

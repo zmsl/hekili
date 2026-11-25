@@ -105,6 +105,9 @@ local undoA, undoT, undoSwap, paid, undoN = 0, -1, 0, 0, 0
 -- ability with `refundNowOnAvoid`; 0 otherwise. With them: est and lo before the `now` (nowE0, nowL0), the slot's
 -- pin time (nowPin), its rung lifts (nowLE/LL/LH, Resources.lua owe) and its spend serial (nowSp) at the cast.
 local nowE, nowL, nowH, nowE0, nowL0, nowPin, nowLE, nowLL, nowLH, nowSp = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+-- And what its `now` gained that slot (est, floor, top; L1832: a finisher's Relentless Strikes energy, which only a
+-- landing gives), with the slot's pin time after the `now` (gainPin); 0 otherwise.
+local gainE, gainL, gainH, gainPin = 0, 0, 0, 0
 local journal = true -- false while an `onCrit` runs: a landed crit's writes are no avoid's to undo
 local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
@@ -118,6 +121,52 @@ local vA, vT, vPaid, vAp, vSpends, vRaised = {}, {}, {}, {}, {}, {}
 -- bP the slot's pin time then), until a strike takes it back (I.VerdictTakeBack) or another refund on the record
 -- replaces it.
 local bR, bD, bE, bL, bH, bP = {}, {}, {}, {}, {}, {}
+-- (L1832) The point fact of the latest cast: its `now` gained slot ptR, a counter the client answers plain in combat
+-- (its reads keep it, Resources.lua R.readable; no regen, swing pay or decay: the combo points); ptV0 the slot before the
+-- cast: its last plain read before the cast's frame (I.SAME_FRAME; live, a builder's point never came before its
+-- success, but the harness's assumed bands spend-first / gain-first arms show it up to a frame early), on this target;
+-- ptSwap the target serial. A plain read after the cast showing the slot above ptV0 proves the cast landed; one PT_AVOID
+-- or more after it showing no rise proves it avoided (wowsims: a builder's point comes only with a landed hit,
+-- rake.go:26-30, sinister_strike.go:23-27; live, an avoided builder sends no point event at all). The fact beats the rows'
+-- timing: the cast's own avoid waits for it (held: hC its kind, hT its row's time). Silent, so the rows' verdict
+-- stands: at the slot's max, no read old enough, a read that fell (a spend), a secret read, a target swap or death since
+-- the cast, no plain read past PT_AVOID by the settle, the next cast. ptGo 1: landed (a later avoid of the cast is
+-- another's). ptV, ptVT: the latest read at or after the cast (ptVT -1 none, -2 secret). rdV/rdT 1 and 2: by slot, its
+-- last two plain reads (time -1e9 none). castE, castL, castSp, castPin: the cast's slot after its spend, its spend
+-- serial and its pin time then.
+-- PT_AVOID from the owner's two Feral captures (probe-cp-lag-2026-11-25.txt): of 33 landed builders, 29 showed the point
+-- in the success's own frame and 4 later, at 0.102 / 0.103 / 0.105 / 0.119 s; none before the success. 0.3 s covers the
+-- tail with margin (n = 33: a longer tail is unseen); a crit's second point once came 0.089 s after the first.
+local PT_AVOID = 0.3
+local rdV1, rdT1, rdV2, rdT2 = {}, {}, {}, {}
+local castE, castL, castSp, castPin = 0, 0, 0, 0
+local ptA, ptT, ptR, ptV0, ptSwap, ptGo, ptV, ptVT = 0, -1, 0, 0, 0, 0, 0, -1
+local hHeld, hC, hT = false, 0, 0
+-- (L1832, owner 2026-11-25 "guard every refund") By cost slot: the success time of the latest cast whose avoid would
+-- refund it, while that refund is unsettled (-1 none), and the window end of an earlier such cast a newer one replaced
+-- (rfOld). Settled: an undo or the CDM verdict booked it, or the landing was proven (Obs.Landed, the point fact, a lit
+-- item). While unsettled, the slot's pins measure no regen (I.RefundPending): the server refunds at the success, the
+-- belief only at the avoid's row. Filled at OnBuild.
+local rfT, rfOld = {}, {}
+-- How long after its success a cast's own avoid row may still come: its cast ticket's window (Events/Tickets.lua arm:
+-- the learned main-hand landing lag's median plus three spreads, I.Log.LandWindow(1), never under
+-- I.Melee.CAST_WINDOW). Allocates nothing.
+-- shortcut (review M5): learned, so bounded only by the median's clamp (the main hand's pair window, 1.5 s) plus three
+-- spreads; seeded 0.654 s. At or past the gap between refundable casts (about a GCD) a slot pressed every GCD keeps
+-- I.RefundPending true and its pins calibrate nothing while pressing (regen holds its last value: no error, no
+-- learning). Upgrade (cap it under the GCD) if a trace shows the window there.
+local function rowWindow()
+    local w, cw = I.Log.LandWindow(1), I.Melee.CAST_WINDOW
+    return w > cw and w or cw
+end
+-- The cast of ability a at castT no longer owes its slot a refund (booked or proven landed). Allocates nothing.
+local function settled(a, castT)
+    local r = A.slot[a]
+    if r > 0 and rfT[r] == castT then
+        rfT[r] = -1
+    end
+end
+local pointSilent -- (t): the fact says nothing; a held avoid gets the rows' verdict (beside the Obs.Avoided apply)
 local refund = {} -- by resource slot: the class's default share (the resource meta's `refundOnAvoid`), 0 none
 A.refund = {} -- by ability index: the share of its cost an avoid gives back (the ability's `refundOnAvoid`), 0 none
 A.refundNow = {} -- by ability index: true when an avoid gives back what its `now` took (`refundNowOnAvoid`, L1237)
@@ -366,6 +415,29 @@ local function shift(n, resource, spread)
     end
     if type(n) ~= "number" or n == 0 then
         return
+    end
+    -- the latest cast's own gain of a slot read plain in combat, below its max: a point fact to wait for (L1832)
+    local R = I.res
+    -- a counter only (no regen, no swing pay, no decay: the points): a pool that moves by itself proves nothing by a
+    -- read, and in the plain oracle energy and rage read plain too
+    if
+        n > 0
+        and journal
+        and curA == undoA
+        and ptA == 0
+        and R.readable[r]
+        and I.readPlain[r]
+        and not R.restMax[r]
+        and R.swing[r] == 0
+        and R.decay[r] == 0
+    then
+        local old = undoT - I.SAME_FRAME - 1e-6 -- strictly before the cast's frame
+        local v0 = rdT1[r] <= old and rdT1[r] >= I.curSwapT and rdV1[r]
+            or rdT2[r] <= old and rdT2[r] >= I.curSwapT and rdV2[r]
+            or -1
+        if v0 >= 0 and v0 < R.max[r] then
+            ptA, ptT, ptR, ptV0, ptSwap, ptGo, ptVT = curA, undoT, r, v0, I.curSwapN, 0, -1
+        end
     end
     if not (onUs and I.res.bandOn[r]) then -- a hit's row on us trails what it gave: a live band has it (owner L1723)
         if n > 0 and type(spread) == "number" and spread > 0 then
@@ -665,6 +737,9 @@ end
 -- The tracked set: keys to indices, proxies, and each ability's `now` bound to the context.
 
 I.OnBuild(function(def)
+    for r = 1, #def.resources do
+        rdV1[r], rdT1[r], rdV2[r], rdT2[r] = 0, -1e9, 0, -1e9
+    end
     for k in pairs(abByKey) do
         abByKey[k] = nil
     end
@@ -753,6 +828,7 @@ I.OnBuild(function(def)
     end
     for r = 1, #def.resources do
         local d = def.resources[r]
+        rfT[r], rfOld[r] = -1, -1
         if d.key then
             resByKey[d.key] = r
             rawset(NAMES, d.key, setmetatable({ type = d.type }, resourceMeta))
@@ -877,10 +953,22 @@ local function run(o, t)
         return
     end
 
+    pointSilent(t) -- the last cast's undo is about to go: an avoid it still holds gets the rows' verdict first
     undoA, undoT, undoSwap, paid, undoN = a, o.t, I.curSwapN, 0, 0
     nowE, nowL, nowH = 0, 0, 0
+    gainE, gainL, gainH = 0, 0, 0
     local started = o.kind == CAST and A.castStartT[a] or 0 -- read before `automatic` and the line after clear it
     automatic(a, t, o.kind, o)
+    local cs, R = A.slot[a], I.res
+    if cs > 0 then
+        castE, castL, castSp, castPin = R.est0[cs], R.lo0[cs], R.spends[cs], R.pinT[cs]
+        if paid > 0 and A.refund[a] > 0 or A.refundNow[a] then
+            if rfT[cs] >= 0 and rfT[cs] + rowWindow() > rfOld[cs] then
+                rfOld[cs] = rfT[cs] + rowWindow() -- an earlier cast's row may still come for the server's refund
+            end
+            rfT[cs] = o.t
+        end
+    end
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
     I.WindowCast(a, t) -- the stepped and strict windows' one per-cast hook (Families/Windows.lua), before the `now`
@@ -890,20 +978,22 @@ local function run(o, t)
         rawset(NAMES, "cast_id", A.ids[a][o.c] or A.id[a] or 0) -- `c`: the cast ID's place (Sources/Casts.lua)
         flight = A.lands[a] and travel(a) or 0
         pinned = I.CastSlot(a, o.t)
-        local r, R = A.refundNow[a] and A.slot[a] or 0, I.res
-        local e, l, h = R.est0[r], R.lo0[r], R.hi0[r] -- nil with no slot (r 0): not read
-        local s = A.slot[a]
+        local s, R = A.slot[a], I.res
+        local e, l, h = R.est0[s], R.lo0[s], R.hi0[s] -- nil with no slot (s 0): not read
         local top = s > 0 and R.hi0[s] or 0
         call(A.now[a], a, t)
         if top > 0 and R.hi0[s] <= 0 then -- the `now` spent the whole pool (L1793): a swing before it was in it
             I.Emptied(s, o.t)
         end
         pinned = 0
-        if r > 0 then -- the belief's own numbers (never a secret); a gain nets nothing back
-            nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = e, l, R.pinT[r], R.liftE[r], R.liftL[r], R.liftH[r]
-            e, l, h = e - R.est0[r], l - R.lo0[r], h - R.hi0[r]
-            nowE, nowL, nowH = e > 0 and e or 0, l > 0 and l or 0, h > 0 and h or 0
-            nowSp = R.spends[r]
+        if s > 0 then -- the belief's own numbers (never a secret)
+            local de, dl, dh = e - R.est0[s], l - R.lo0[s], h - R.hi0[s]
+            if A.refundNow[a] then -- what it took (a gain nets nothing back here)
+                nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = e, l, R.pinT[s], R.liftE[s], R.liftL[s], R.liftH[s]
+                nowE, nowL, nowH = de > 0 and de or 0, dl > 0 and dl or 0, dh > 0 and dh or 0
+                nowSp = R.spends[s]
+            end
+            gainE, gainL, gainH, gainPin = de < 0 and -de or 0, dl < 0 and -dl or 0, dh < 0 and -dh or 0, R.pinT[s]
         end
         flight = 0
         rawset(NAMES, "cast_start", 0)
@@ -975,6 +1065,7 @@ end)
 -- there and no avoid's to undo (a gain only a landed hit gives, as a mana return). Allocates nothing.
 I.On(Obs.Landed, function(o)
     local a = o.a
+    settled(a, o.b)
     if A.onLand[a] and A.key[a] and not A.extra[a] then
         journal = false
         call(A.onLand[a], a, o.t)
@@ -1000,23 +1091,19 @@ local function forget(a, castT)
         end
     end
 end
-I.On(Obs.Avoided, function(o, t)
-    fire(2, OUTCOME_OF[o.c] or 0, o.t) -- first: the target's reactions, at the outcome's row
-    if o.c == DEFLECT or o.c == EVADE then -- staged for reactions only (Events/Rows.lua REACTED): no undo, no refund
-        forget(o.a, o.b) -- nor by the verdict: the avoid path refunds none here (review 1b)
-        return
-    elseif o.a ~= undoA or o.b ~= undoT then
-        return
-    end
+-- The latest cast's undo: ability a cast at castT, avoided with I.HitKind c (or I.UNLANDED) at its row's time rowT,
+-- applied at t. `late`: the point fact's, at the settle after the drain's reads (L1832). Allocates nothing.
+local function undo(a, castT, c, rowT, t, late)
     undoA = 0
-    forget(o.a, o.b) -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
+    settled(a, castT)
+    forget(a, castT) -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
     -- (L1810 F4b, L1770) a record this cast's `now` wrote whose Cooldown Manager item lit since the cast: it landed, so
     -- the avoid is another's in its frame (the owner's tie ruling gave it the cast): no onAvoid, no refund. The undo
     -- still runs: its close lets the lit item re-open the record at the next poll as the light's own application (Hekili's
     -- missable hook drops the cast's, Engine/Schema/Spec/Abilities.lua trackMisses)
     local lit = false
     for k = 1, I.curSwapN == undoSwap and undoN or 0 do
-        lit = lit or I.AuraLitSince(undoJ[k], o.b)
+        lit = lit or I.AuraLitSince(undoJ[k], castT)
     end
     for k = 1, I.curSwapN == undoSwap and undoN or 0 do -- another target since the cast: its auras are not these
         local j = undoJ[k]
@@ -1024,23 +1111,45 @@ I.On(Obs.Avoided, function(o, t)
         local was, back = rec and rec.est or 0, undoE[k] > t and undoE[k] or 0
         I.AuraModel(2, j, undoAp[k], back, back > 0 and undoSt[k] or 0, t, Obs.Avoided, true)
         if back == 0 then
-            I.AuraUndone(j, o.b, undoE[k], t) -- a close: an item lit since the cast re-opens it at once (Sources/Auras.lua)
+            I.AuraUndone(j, castT, undoE[k], t) -- a close: an item lit since the cast re-opens it at once (Sources/Auras.lua)
         end
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
     end
     I.avoidsRun = I.avoidsRun + 1
-    if o.c == UNLANDED or lit then
+    if c == UNLANDED or lit then
         return
     end
-    -- onAvoid runs before the give-back check (L1295): a spend from the slot here would count as a spend since the
-    -- cast and cut the refund to the share (est low, the safe side); no pack's onAvoid spends today
-    if A.onAvoid[o.a] then
+    -- onAvoid runs before the give-back check (L1295): a spend from the slot here counts as a spend since the cast and
+    -- cuts the refund to the share (est low, the safe side); an onAvoid that spends back its own `now` gain does that
+    if A.onAvoid[a] then
         journal = false
-        call(A.onAvoid[o.a], o.a, o.t)
+        call(A.onAvoid[a], a, rowT)
         journal = true
     end
-    local r = A.slot[o.a]
-    local d = r > 0 and paid * A.refund[o.a] or 0
+    local r = A.slot[a]
+    -- a measurement of the slot since the cast, folded before this settle (a plain read; a 1% band, its time
+    -- R.bandAt), already holds the refund: none on top of it
+    if late and r > 0 and (I.res.plainT[r] >= castT or (I.res.bandOn[r] and I.res.bandAt[r] >= castT)) then
+        r = 0
+    end
+    -- (L1832) what the `now` gained the slot goes back out, as no spend (I.Unrefund: the refund below still sees no
+    -- spend since the cast): only a landing gives it (wowsims rogue.go:107-114, Relentless Strikes in ApplyFinisher).
+    -- First, so a short answer's top since the cast clamps the refund against the pool without it. Its pin since the
+    -- cast took it whole (pinDelta). Only an ability whose avoid refunds (`refundOnAvoid`: what it does needs the
+    -- landing) loses it; one with no refund keeps its gain (Rogue's Shank: its energy is no landing's). An ability with
+    -- an `onAvoid` takes back its own (Warrior's Heroic Strike: Unbridled Wrath and Reckless Swings), not again here.
+    -- shortcut: a full resist or immunity (UNLANDED, returned above) keeps the gain, unmeasured as its refund is;
+    -- upgrade if such a gain shows over the truth
+    -- shortcut (review M6): "refundOnAvoid" stands for "its `now` gain needs the landing", a proxy true of every pack
+    -- today, not a declaration; upgrade with the pack field registry lane (pack-declares-specifics)
+    -- shortcut (review M3, ledger L1844): an exact pin between the cast and a late row already holds the pool without
+    -- the gain, and this takes it off again: est low by the gain until the next answer (rare: 100% Relentless, an
+    -- avoided finisher, a flip pin inside the row's lag); upgrade with the late-row harness arm or a live snapshot
+    if r > 0 and gainH > 0 and A.refund[a] > 0 and not A.onAvoid[a] then
+        I.Unrefund(r, gainE, gainE, gainL, gainH, t, gainPin)
+        I.res.castGain[r] = I.res.castGain[r] - gainE -- a cast's declared gain no longer explains a flip
+    end
+    local d = r > 0 and paid * A.refund[a] or 0
     -- the `now`'s take comes back unless a pin since the cast (a plain read, a crossing) already measured the pool;
     -- a usable answer since (the poll's rung, every drain) only bounds it from below: the floors (I.Refund's fE, fL)
     -- and the rung's lift it explains (I.LiftExplained). A spend from the slot since (a reaction's) reset the marks
@@ -1050,12 +1159,128 @@ I.On(Obs.Avoided, function(o, t)
     if r > 0 and nowH > 0 and I.res.pinT[r] == nowPin and I.res.spends[r] == nowSp then
         I.Refund(r, d + nowE, t, false, d + nowL, d + nowH, nowE0 + d, nowL0 + d)
         I.LiftExplained(r, nowLE, nowLL, nowLH, d + nowE, d + nowL, d + nowH)
+    elseif r > 0 and d > 0 and late and I.res.spends[r] == castSp then
+        -- the point fact's undo comes a drain or more after the row would have: a usable answer since only bounded the
+        -- refunded pool, so the slot after the cast's spend plus the share is a floor (I.Refund's fE, fL); est adds the
+        -- least regen since, lo none (continuous regen runs ahead of a ticking pool: lo would pass the truth)
+        local g = I.RegenLo(r, castT, t - castT)
+        I.Refund(r, d, t, false, nil, nil, castE + d + g, castL + d)
     elseif r > 0 and d > 0 then
         I.Refund(r, d, t) -- at the fold; the answers since the cast's spend already saw it
+    end
+    -- a pin since the cast already held the server's refund (at the success): the window after it would count it again
+    if r > 0 and (d > 0 or nowH > 0 or gainH > 0) and I.res.pinT[r] ~= castPin then
+        I.res.pinValid[r] = false
     end
     if r > 0 and nowH > 0 then
         I.Emptied(r, -1e9) -- the pool its `now` spent came back: a swing before the cast pays again
     end
+end
+
+pointSilent = function(t)
+    local a = ptA
+    ptA = 0
+    if hHeld then
+        hHeld = false
+        if a == undoA and ptT == undoT then
+            undo(a, ptT, hC, hT, t, true)
+        end
+    end
+end
+
+-- (L1832) An avoid of a cast the point fact proved landed went out as the cast's SPELL_MISSED (Events/Rows.lua), and
+-- Hekili's missable hook drops a record applied at the cast's stamp (Engine/Schema/Spec/Abilities.lua trackMisses):
+-- each record its `now` wrote re-opens at t, its expiry and stacks kept (as F4b's light re-opens one, L1810). Allocates
+-- nothing.
+local function reopen(t)
+    for k = 1, I.curSwapN == undoSwap and undoN or 0 do
+        local j = undoJ[k]
+        local rec, st = VS.Aura("target", auraSpell[j], t)
+        if rec and rec.est > t then
+            I.AuraModel(2, j, t, rec.est, st or 1, t, Obs.Landed, true)
+        end
+    end
+end
+
+I.On(Obs.Avoided, function(o, t)
+    fire(2, OUTCOME_OF[o.c] or 0, o.t) -- first: the target's reactions, at the outcome's row
+    if o.c == DEFLECT or o.c == EVADE then -- staged for reactions only (Events/Rows.lua REACTED): no undo, no refund
+        forget(o.a, o.b) -- nor by the verdict: the avoid path refunds none here (review 1b)
+        return
+    elseif o.a ~= undoA or o.b ~= undoT then
+        -- shortcut (L1832): a cast between a landed builder and this late row (off the GCD, inside the row's ~0.47 s)
+        -- took the undo journal, so its records do not re-open and Hekili's missable hook drops them as before the
+        -- point fact; upgrade (keep the builder's journal past an off-GCD cast) if a trace shows it
+        return
+    elseif ptA == o.a and ptT == o.b then -- (L1832) the point fact decides: held until the settle, or another's
+        if ptGo == 0 and not hHeld then
+            hHeld, hC, hT = true, o.c, o.t
+        elseif ptGo == 1 then -- decided landed before this row (live: the point in the success's frame, rows ~0.47 s on)
+            reopen(t)
+        end
+        return
+    end
+    undo(o.a, o.b, o.c, o.t, t)
+end)
+
+-- (L1832) The point fact's decision at t: risen, landed (a held avoid is another's); no rise (see above), avoided (undone
+-- as a miss when no avoid of its own came: the kind only gates the refund and no reaction runs); a fall, a secret read
+-- or a swap, silent. It runs at the slot's read, in poll 1, so an undo comes before the drain's 1% bands and usable
+-- answers (polls 1.6 and 2), as an avoid row's would: after them, those answers read as already holding the refund
+-- (I.Refund) and it is lost. At the settle (`final`), no plain read past PT_AVOID is silent. Allocates nothing.
+local MISS = I.HitKind.MISS
+local function decide(t, final)
+    if ptA == 0 or ptGo ~= 0 then
+        return
+    elseif I.curSwapN ~= ptSwap or ptVT == -2 then
+        return pointSilent(t)
+    elseif ptVT >= ptT and ptV > ptV0 then
+        if hHeld then
+            reopen(t)
+        end
+        ptGo, hHeld = 1, false
+        forget(ptA, ptT) -- proven landed: no CDM verdict refunds it
+        settled(ptA, ptT)
+    elseif ptV == ptV0 and ptVT - ptT >= PT_AVOID - 1e-6 then
+        local a, held = ptA, hHeld
+        ptA, hHeld = 0, false
+        if a == undoA and ptT == undoT then -- not already consumed (the CDM verdict's refund, I.VerdictRefund)
+            undo(a, ptT, held and hC or MISS, held and hT or ptVT, t, true)
+        end
+    elseif final and t - ptT >= PT_AVOID - 1e-6 then
+        pointSilent(t)
+    end
+end
+-- The fact's read: the latest read of the slot at or after the cast; a secret one (the target-bound read's substituted
+-- 0, Sources/Power.lua I.readPlain) is none.
+I.On(Obs.Read, function(o, t)
+    local r = o.a
+    if o.c == I.ReadOf.Resource and I.readPlain[r] and o.t > rdT1[r] then
+        rdV2[r], rdT2[r], rdV1[r], rdT1[r] = rdV1[r], rdT1[r], o.b, o.t
+    end
+    if ptA ~= 0 and o.c == I.ReadOf.Resource and r == ptR and o.t >= ptT then
+        if I.readPlain[ptR] then
+            ptV, ptVT = o.b, o.t
+        else
+            ptVT = -2 -- the slot went secret: no fact
+        end
+        decide(t, false)
+    end
+end)
+-- A death since the cast: its points went with the target (wowsims core/energy.go:233-243), so only a rise read before
+-- it still proves the landing (the drain's poll 1 read folds before poll 4's TargetGone).
+I.On(Obs.TargetGone, function(_, t)
+    if ptA ~= 0 and ptGo == 0 then
+        if ptVT >= ptT and ptV > ptV0 then
+            ptGo, hHeld = 1, false
+            settled(ptA, ptT)
+        else
+            pointSilent(t)
+        end
+    end
+end)
+I.OnSettle(function(now)
+    decide(now, true)
 end)
 
 --- The CDM verdict closed target aura j's application `ap` as missed (Sources/Auras.lua, L1029): the cast whose own
@@ -1072,7 +1297,15 @@ function I.VerdictRefund(j, ap, t)
     end
     local castT, r = vT[j], A.slot[a]
     forget(a, castT)
+    settled(a, castT)
     if undoA == a and undoT == castT then
+        -- its `now`'s gain goes back out too (the undo's rule); a strike gives it back no more (est low, the safe side;
+        -- shortcut: upgrade if a struck verdict on a gaining finisher shows in a trace)
+        if gainH > 0 and A.refund[a] > 0 and not A.onAvoid[a] then
+            I.Unrefund(r, gainE, gainE, gainL, gainH, t, gainPin)
+            I.res.castGain[r] = I.res.castGain[r] - gainE
+            gainE, gainL, gainH = 0, 0, 0
+        end
         -- the share and the target undo were this verdict's; a plain avoid row of the cast still gives back what its
         -- `now` took (the row is proof: no L1096 widening), so a `refundNowOnAvoid` cast keeps its undo for it
         paid, undoN = 0, 0
@@ -1093,7 +1326,23 @@ function I.VerdictRefund(j, ap, t)
     local R, d = I.res, vPaid[j] * A.refund[a]
     bR[j], bD[j], bP[j] = r, d, R.pinT[r]
     bE[j], bL[j], bH[j] = I.Refund(r, d, t, R.spends[r] ~= vSpends[j] and R.raised[r] ~= vRaised[j])
+    if d > 0 and R.pinT[r] > castT then -- a pin since the cast held the server's refund (the undo's rule above)
+        R.pinValid[r] = false
+    end
     return castT
+end
+
+--- (L1832, owner 2026-11-25 "guard every refund") Whether a refund to slot r is unsettled at t: the latest refundable
+--- cast's point fact still pending, or its own avoid row (or an earlier refundable cast's) could still come within the
+--- cast ticket's row window. A pin then holds a refund the belief has not booked, so it measures no regen
+--- (Families/Resources.lua pin). Allocates nothing.
+function I.RefundPending(r, t)
+    -- the point fact decides the latest cast's refund, whatever a row paid to it said (a wound read as its landing)
+    if ptA ~= 0 and ptGo == 0 and A.slot[ptA] == r and (paid > 0 and A.refund[ptA] > 0 or A.refundNow[ptA]) then
+        return true
+    end
+    local c = rfT[r] or -1
+    return c >= 0 and t - c <= rowWindow() or (rfOld[r] or -1) >= t
 end
 
 --- The verdict that refunded target aura j's record was wrong (a strike, Sources/Auras.lua: the item lit with no cast
@@ -1134,6 +1383,11 @@ I.On(Obs.SwingSettled, function(o)
         fire(2, LAND, o.b, o.a)
     end
 end)
+-- shortcut (L1832 review M4): our own dodge may add a point of its own (a talent's chance, never modelled as a gain);
+-- one inside an avoided builder's PT_AVOID window reads as its landing (no refund, its debuff kept). Not guarded: the
+-- dodge's row on us trails the dodge (rows on us 0.39-0.57 s, Resources.lua I.TAKEN_ROW_LAG), so the fact has decided
+-- before it comes, and a row that came in the window would be an earlier dodge's. Rare (the talent, tanking, a dodge
+-- in 0.3 s); upgrade if a pack declares that point, or a live snapshot shows a false landing after a dodge.
 I.On(Obs.PlayerHit, function(o)
     fire(1, OUTCOME_OF[o.a] or 0, o.t)
 end)

@@ -58,6 +58,9 @@ local MUTILATE_HANDS = { procs = { ["1241584:14"] = true, ["1241584:15"] = true 
 -- Mutilate, 0.19 -> 0.20 s, among the few later), and the count floor 35 -> 36 (tests/Forever/helpers/wowsims.lua:447-450).
 -- Cause: the belief's Relentless Strikes rule (expected energy 25 x min(1, 4% x rank x points) on every finisher, was
 -- 25 at 5/5 and 5 points only); the wowsims log's procs are real rolls, the belief pays the mean.
+-- Lane cp-fact-2 (L1832, owner 2026-11-25): back to 25 at 5/5 and 5 points only (no expected gain for a random proc,
+-- L1397), taken back on an avoided finisher; with the point fact's 0.3 s hold, Assassination and Subtlety re-recorded
+-- (Subtlety: lo/est moved by a few hundredths, the regen guard; every row keeps its verdict).
 -- Re-pin e5a9cd2a2d -> e4ef929e54 (0.9; wowsims 41976091ed [Rogue] APL Improvements: the Eviscerate and Hemorrhage lines, and the
 -- builds' gear): replay floors Assassination 0.97 -> 0.96 (0.963 of 82), Combat 0.99 -> 0.98 (0.981 of 108), Subtlety 0.98 -> 1.00
 -- (1.000 of 99). Each spec's one new miss is Slice and Dice's last poll, an engine ranking class (traced, fix round 1): the belief's

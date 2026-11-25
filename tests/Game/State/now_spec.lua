@@ -1440,12 +1440,375 @@ describe("now handlers", function()
             assert.are.equal(1, I.avoidsRun)
         end)
 
+        -- (L1832) what the `now` gained the ability's own slot comes only with a landing (wowsims rogue.go:107-114: Relentless
+        -- Strikes inside ApplyFinisher, eviscerate.go:35-38): an avoid takes it back with the refund, as no spend
+        it("an avoid takes back what the `now` gained the cost's slot, then refunds", function()
+            h.Class.abilities.spender_c.funcs.now = function()
+                gain(5, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+            end
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "DODGE") -- 10 -> 0 paid, +5 gained, dodged: 8 back, the 5 out
+            assert.are.same({ 8, 1 }, { VS.Power(fs.RAGE, 5.1).est, I.avoidsRun })
+        end)
+        it("a cast whose avoid refunds nothing keeps what its `now` gained (no landing's gain)", function()
+            h.Class.abilities.spender_c.funcs.now = function()
+                gain(5, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+            end
+            h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 }
+            start()
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.usable[fs.SPENDER_C] = { true, false } -- pinned at 10 before the cast
+            ctl.now = 4
+            VS.Drain(4)
+            ctl.usable[fs.SPENDER_C] = nil
+            castOutcome(fs.SPENDER_C, 5, "DODGE")
+            assert.are.same({ 5, 1 }, { VS.Power(fs.RAGE, 5.1).est, I.avoidsRun })
+        end)
+        it("a landed cast keeps what its `now` gained the cost's slot", function()
+            h.Class.abilities.spender_c.funcs.now = function()
+                gain(5, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+            end
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 40)
+            assert.are.same({ 5, 0 }, { VS.Power(fs.RAGE, 5.1).est, I.avoidsRun })
+        end)
+
         it("a wound: the debuff stays and nothing comes back", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 40)
             assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
             assert.are.equal(0, VS.Power(fs.RAGE, 5.1).est)
             assert.are.equal(0, I.avoidsRun)
+        end)
+
+        -- (L1832) The point fact: a cast whose `now` gains a slot the client answers plain in combat landed when a plain
+        -- read after it shows the slot risen, and was avoided when a read PT_AVOID (0.3 s) or more after it shows no rise; that
+        -- read beats the rows' timing. Silent at the slot's max, on a secret read (the target-bound read's substituted 0),
+        -- and with no plain read past the window: the row's verdict stands.
+        describe("the point fact (a `now` gain of a slot read plain in combat)", function()
+            local POINTS = 4
+            local function beginPoints(before)
+                h.Class.resources.combo_points = { type = POINTS }
+                h.Class.abilities.spender_c.funcs.now = function()
+                    applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+                    gain(1, "combo_points") -- luacheck: ignore 113 (the `now` context's verb)
+                end
+                ctl.power[POINTS], ctl.powerMax[POINTS] = before, 5
+                begin()
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+                ctl.now = 4.5
+                VS.Drain(4.5) -- an in-combat plain read: the slot is readable
+            end
+            -- the cast at 5, the points `after` from its success on, its outcome row `act` (nil: none) 4 ms after, then a
+            -- drain inside the window (5.02) and one past it (5.4)
+            local function castRead(act, after)
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.comboPoints.target = after
+                if act then
+                    ctl.now = 5.004
+                    ctl.Fire("UNIT_COMBAT", "target", act, "", 0, 1)
+                end
+                ctl.Tick(5.01)
+                VS.Drain(5.02)
+                ctl.now = 5.4
+                ctl.Tick(5.4)
+                VS.Drain(5.4)
+            end
+            local function landedState()
+                local rec = VS.Aura("target", fs.SPENDER_C, 5.5)
+                return { rec and rec.est or false, VS.Power(fs.RAGE, 5.5).est, I.avoidsRun }
+            end
+
+            it("a dodge row in the cast's frame and the points risen: landed, the row is another's", function()
+                beginPoints(2)
+                castRead("DODGE", 3)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            it("an extra point (a crit's) proves the landing as well", function()
+                beginPoints(2)
+                castRead("DODGE", 4)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            it("no row and no rise by a read past the window: avoided, undone with 80% back", function()
+                beginPoints(2)
+                castRead(nil, 2)
+                assert.are.same({ false, 8, 1 }, landedState())
+            end)
+            it("a dodge row and no rise: undone once", function()
+                beginPoints(2)
+                castRead("DODGE", 2)
+                assert.are.same({ false, 8, 1 }, landedState())
+            end)
+            it("at the slot's max: silent, a cast with no row stays landed", function()
+                beginPoints(5)
+                castRead(nil, 5)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            it("at the slot's max: silent, a dodge row's verdict stands", function()
+                beginPoints(5)
+                castRead("DODGE", 5)
+                assert.are.same({ false, 8, 1 }, landedState())
+            end)
+            it("a secret read (the target-bound read's 0) is no fact: a cast with no row stays landed", function()
+                beginPoints(2)
+                castRead(nil, fake.SECRET)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            it("a secret read is no fact: a dodge row's verdict stands", function()
+                beginPoints(2)
+                castRead("DODGE", fake.SECRET)
+                assert.are.same({ false, 8, 1 }, landedState())
+            end)
+            -- a drain at t reading `points` on the target
+            local function readAt(t, points)
+                ctl.now = t
+                ctl.comboPoints.target = points
+                ctl.Tick(t)
+                VS.Drain(t)
+            end
+            -- probe-cp-lag-2026-11-25.txt: 4 of 33 landed builders' points came 0.102-0.119 s after the success
+            it("a point 0.119 s late: the read before it, inside the window, waits; landed", function()
+                beginPoints(2)
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                readAt(5.1, 2)
+                readAt(5.2, 3)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            -- (review I1) live, the point comes in the success's frame and a row ~0.47 s after it: a foreign avoid paid to
+            -- the cast after the fact decided "landed" goes out as the cast's SPELL_MISSED at the cast's stamp, and
+            -- Hekili's missable hook drops a record applied at that stamp; the record re-opens at the row instead
+            it(
+                "a foreign avoid row after the deciding read: landed, its record no longer at the cast's stamp",
+                function()
+                    beginPoints(2)
+                    ctl.now = 5
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                    readAt(5.02, 3) -- the fact: landed
+                    ctl.now = 5.47
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                    readAt(5.5, 3)
+                    local rec, _, applied = VS.Aura("target", fs.SPENDER_C, 5.5)
+                    assert.are.same({ 20, 0, 0 }, landedState())
+                    assert.is_true(rec ~= nil and math.abs(applied - 5) >= 0.01, tostring(applied))
+                end
+            )
+            -- the same with the Cooldown Manager on (its item proven, lit by the landing): no regression against the
+            -- undo's close and the light's re-open that came before the point fact
+            it("the same with the cast's Cooldown Manager item proven and lit: landed, no refund", function()
+                table.insert(ctl.viewer.sets[2], 502)
+                ctl.viewer.infos[502] = { spellID = fs.SPENDER_C }
+                local ti = ctl.ViewerItem("BuffIconCooldownViewer", 1, 502)
+                beginPoints(2)
+                ctl.auras.target.HARMFUL[1] = fake.SECRET
+                ctl.Fire("UNIT_AURA", "target")
+                readAt(4.6, 2)
+                ctl.ViewerAura(ti, "target")
+                readAt(4.7, 2)
+                ctl.ViewerClear(ti)
+                readAt(4.8, 2)
+                assert.is_true(I.PRESENCE.viewer.proven[502])
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 5.015
+                ctl.ViewerAura(ti, "target") -- the landing's light
+                readAt(5.02, 3)
+                ctl.now = 5.47
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                readAt(5.5, 3)
+                readAt(6, 3)
+                local rec, _, applied = VS.Aura("target", fs.SPENDER_C, 6)
+                assert.are.same({ 0, 0 }, { VS.Power(fs.RAGE, 6).est, I.avoidsRun })
+                assert.is_true(rec ~= nil and rec.est > 6 and math.abs(applied - 5) >= 0.01, tostring(applied))
+            end)
+            -- the same capture (seq 121 -> 124): a crit's second point 0.089 s after the first, with no cast of its own;
+            -- the next builder's slot before it is the count after that point, so its avoid is not read as a rise
+            it("a crit's late extra point, then an avoided builder: that builder is undone", function()
+                beginPoints(2)
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                readAt(5.02, 3)
+                readAt(5.2, 4)
+                ctl.now = 6
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C)
+                readAt(6.02, 4)
+                readAt(6.4, 4)
+                local rec = VS.Aura("target", fs.SPENDER_C, 6.5)
+                assert.are.same({ 20, 1 }, { rec and rec.est or false, I.avoidsRun }) -- the first cast's record back
+            end)
+            -- (review M9) the other silences: the rows' verdict stands (a dodge row refunds 8), or with no row the cast
+            -- stays landed
+            local function rageAvoids(t)
+                return { VS.Power(fs.RAGE, t).est, I.avoidsRun }
+            end
+            local function castDodge()
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 5.004
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            end
+            it("a target swap since the cast is silent: a rise on the new target proves nothing", function()
+                beginPoints(2)
+                castDodge()
+                ctl.Tick(5.006)
+                VS.Drain(5.008) -- the cast's fold: the fact opens on this target
+                ctl.now = 5.01
+                ctl.guid.target = "Creature-2"
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+                readAt(5.02, 3)
+                readAt(5.4, 3)
+                assert.are.same({ 8, 1 }, rageAvoids(5.5))
+            end)
+            it("the target's death since the cast is silent: a rise read after it proves nothing", function()
+                beginPoints(2)
+                castDodge()
+                ctl.Tick(5.006)
+                VS.Drain(5.008)
+                I.Sources.Direct(VS.Obs.TargetGone, 5.01, I.targetSlot)
+                readAt(5.02, 3)
+                readAt(5.4, 3)
+                assert.are.same({ 8, 1 }, rageAvoids(5.5))
+            end)
+            it("a fall since the cast is silent: a cast with no row stays landed", function()
+                beginPoints(2)
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                readAt(5.02, 1)
+                readAt(5.4, 1)
+                assert.are.same({ 20, 0, 0 }, landedState())
+            end)
+            it("the next cast silences the fact: its own fact decides it", function()
+                beginPoints(2)
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                readAt(5.02, 2)
+                ctl.now = 5.1
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C)
+                readAt(5.2, 2)
+                readAt(5.45, 2) -- the second cast avoided: undone once; the first stays landed
+                assert.are.equal(1, I.avoidsRun)
+                assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.5).est)
+            end)
+            -- (review M8) a secret UnitPower read ends the slot's plainness: no fact opens, the row decides at once
+            it("a secret read of a pooled counter before the cast: no fact, a dodge row undoes at once", function()
+                h.Class.resources.holy_power = { type = 9 }
+                h.Class.abilities.spender_c.funcs.now = function()
+                    applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+                    gain(1, "holy_power") -- luacheck: ignore 113 (the `now` context's verb)
+                end
+                ctl.power[9], ctl.powerMax[9] = 2, 5
+                begin()
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+                ctl.now = 4.5
+                VS.Drain(4.5) -- plain
+                ctl.power[9] = fake.SECRET
+                ctl.now = 4.8
+                ctl.Tick(4.8)
+                VS.Drain(4.8) -- secret
+                castDodge()
+                ctl.Tick(5.01)
+                VS.Drain(5.02)
+                assert.are.same({ 8, 1 }, rageAvoids(5.02))
+            end)
+        end)
+
+        -- (L1832, owner 2026-11-25 "guard every refund") No regen measurement while a refund on the slot is unsettled:
+        -- an exact flip pin inside a pending point fact, or before the latest refundable cast's avoid row could still
+        -- come, measures nothing; a refund booked after a pin since its cast leaves that pin measuring nothing either.
+        describe("a refund unsettled on the slot", function()
+            local ENERGY, POINTS = 3, 4
+            local function bootEnergy(points, cost)
+                h.Class.resources.energy = { type = ENERGY, state = { meta = { regen = 10, refundOnAvoid = 0.8 } } }
+                local probe, c = h.Class.abilities.spender_a, h.Class.abilities.spender_c
+                probe.spendType, probe.spend = "energy", 40 -- the probe: its flips at 40 pin the pool
+                c.spendType, c.spend, c.refundOnAvoid = "energy", cost or 30, true
+                if points then
+                    h.Class.resources.combo_points = { type = POINTS }
+                    c.funcs.now = function()
+                        gain(1, "combo_points") -- luacheck: ignore 113 (the `now` context's verb)
+                    end
+                    ctl.power[POINTS], ctl.powerMax[POINTS] = 2, 5
+                end
+                start()
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+            end
+            -- the probe's answer at t (usable or short of its 40), then the drain
+            local function answer(t, ok)
+                ctl.now = t
+                ctl.usable[fs.SPENDER_A] = { ok, not ok }
+                ctl.Tick(t)
+                VS.Drain(t)
+            end
+            local function regen(t)
+                return VS.Regen(ENERGY, t).est
+            end
+            -- an exact pin at 40 at 2.1, spender_c (30) at 4.6, a short answer at 4.62 and an exact flip at 4.67 (the
+            -- live capture's Hemorrhage: 0.107 s): 30 over 2.57 s measures 11.7 a second unless the guard holds it
+            local function pinCastFlip(act)
+                answer(2.0, false)
+                answer(2.1, true)
+                answer(4.5, true)
+                ctl.now = 4.6
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                if act then -- a row in the cast's frame
+                    ctl.now = 4.604
+                    ctl.Fire("UNIT_COMBAT", "target", act, "", 40, 1)
+                end
+                answer(4.62, false)
+                answer(4.67, true)
+            end
+
+            it("a flip pin inside a pending point fact does not calibrate", function()
+                bootEnergy(true)
+                pinCastFlip() -- the points read 2 at 4.62 and 4.67: no rise yet, inside the window
+                assert.are.equal(10, regen(4.67))
+            end)
+            it("a wound row paid to the cast does not end the pending fact: the flip pin does not calibrate", function()
+                bootEnergy(true)
+                pinCastFlip("WOUND") -- read as its landing by timing; the point that has not come yet still decides
+                assert.are.equal(10, regen(4.67))
+            end)
+            it("a flip pin between a cast and its late avoid row does not calibrate, nor the next window", function()
+                bootEnergy(false)
+                pinCastFlip()
+                assert.are.equal(10, regen(4.67))
+                ctl.now = 5.0 -- the cast's DODGE 0.4 s after it (a live row's lag): 24 back after the pin
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                ctl.Tick(5.01)
+                VS.Drain(5.02)
+                assert.are.equal(1, I.avoidsRun)
+                answer(6.9, false)
+                answer(7.0, true) -- its window holds the refund the pin at 4.67 already saw: no measurement
+                assert.are.equal(10, regen(7.0))
+            end)
+            -- (review M2) the server refunded at the success, so a pin since the cast already holds the refund the row
+            -- books later: the window from that pin would count it twice (a small refund, 4: inside the noise filter)
+            it("a refund booked after a pin since its cast invalidates that pin's window", function()
+                bootEnergy(false, 5)
+                pinCastFlip()
+                ctl.now = 5.0 -- the cast's DODGE 0.4 s after it: 4 back, after the pin at 4.67
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                ctl.Tick(5.01)
+                VS.Drain(5.02)
+                assert.are.equal(1, I.avoidsRun)
+                ctl.now = 6.0 -- the probe spends 40: the pool 40 + 13.3 - 40, back at 40 by 8.67
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_A)
+                answer(8.6, false)
+                answer(8.7, true) -- with the refund counted twice: 36 over 4 s, 9 a second
+                assert.are.equal(10, regen(8.7))
+            end)
+            it("a flip pin past the cast's row window calibrates", function()
+                bootEnergy(false)
+                answer(2.0, false)
+                answer(2.1, true)
+                ctl.now = 4.6
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                answer(5.5, false)
+                answer(5.6, true)
+                assert.is_true(regen(5.6) ~= 10, tostring(regen(5.6)))
+            end)
         end)
 
         it("a parry of a refresh puts the earlier application back, its expiry and stacks", function()

@@ -1088,10 +1088,12 @@ local function pin(r, v, width, t, origin, event, mid)
                     R.swAccG[r], R.swAccT[r] = 0, 0
                 end
                 -- an interval holding a gain the belief knows besides the swings (our cast's, a refund, a periodic or
-                -- decay step, a hit taken, a crit's extra) adds nothing: the scale measures swings only (the old
-                -- per-interval filter refused such intervals); the instant keeps that verdict for its re-estimates
-                R.pinSkip[r] = R.pinOwn[r]
-                if R.pinOwn[r] then
+                -- decay step, a hit taken, a crit's extra), or a refund it has not booked yet (I.RefundPending, L1832),
+                -- adds nothing: the scale measures swings only (the old per-interval filter refused such intervals);
+                -- the instant keeps that verdict for its re-estimates
+                local own = R.pinOwn[r] or I.RefundPending(r, t)
+                R.pinSkip[r] = own
+                if own then
                     R.skipFrom[r], R.skipTo[r] = R.pinT[r], t
                 else
                     if R.swAccT[r] == 0 then
@@ -1099,7 +1101,7 @@ local function pin(r, v, width, t, origin, event, mid)
                     end
                     R.swAccG[r], R.swAccT[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r], R.swAccT[r] + dt
                 end
-            elseif R.pinOwn[r] then
+            elseif R.pinOwn[r] or I.RefundPending(r, t) then
                 R.pinSkip[r] = true -- a known gain between pins of one instant: its re-estimate is none of the window's
             elseif R.swAccT[r] > 0 and not R.pinSkip[r] then
                 R.swAccG[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r]
@@ -1107,7 +1109,8 @@ local function pin(r, v, width, t, origin, event, mid)
         else
             R.swAccG[r], R.swAccT[r], R.pinSkip[r] = 0, 0, false
         end
-    elseif measures and R.pinValid[r] and dt >= I.PIN_GAP then
+    elseif measures and R.pinValid[r] and dt >= I.PIN_GAP and not I.RefundPending(r, t) then
+        -- (L1832) a refund unsettled on the slot: the pin holds what the server gave back, the belief not yet
         local gain = vm - R.pinV[r] - R.pinDelta[r]
         local m = R.shaped[r] and gain or gain / dt -- nonzero: dt >= PIN_GAP (1 s)
         calibrate(r, m, t, R.pinA[r], R.pinB[r], R.pinT[r], Obs.Usable)
@@ -2405,6 +2408,16 @@ function I.ResourceShift(r, delta, t, event, late)
     end
     I.Sample(R.power[r], "modelled", R.est0[r], t, event)
     return shown
+end
+
+--- The least slot r regenerates over (from, from + dt]: the floor's rates over the spans (spans, above); 0 for a slot
+--- its swings pay. A late refund's floor (Families/Now.lua, L1832). Allocates nothing.
+function I.RegenLo(r, from, dt)
+    if R.swing[r] ~= 0 or dt <= 0 then
+        return 0
+    end
+    local a, b, k = spans(r, from, dt)
+    return R.regL[r] * a + R.spL[r] * b + k
 end
 
 --- An avoided cast's refund `d` (> 0) to slot r, dated at that cast's success (the server refunds there, the user

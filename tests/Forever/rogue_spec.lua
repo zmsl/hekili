@@ -259,7 +259,9 @@ describe("Forever Rogue", function()
     end)
 
     -- Relentless Strikes (14179, rank curve {4..20} % a point, 14181's 25 energy): the expectation, chance x points x 25
-    it("refunds Relentless Strikes's expected energy by rank and points, on every finisher in its mask", function()
+    -- owner 2026-11-18 (L1397) and 2026-11-25: a random resource proc is never an expected gain; the energy is counted
+    -- only when certain (4% a point x rank: rank 5 at 5 points), in the sim's `handler` and the belief's `now` alike
+    it("gives Relentless Strikes's energy only when its chance is 100%, on every finisher in its mask", function()
         local function gain(key, cp, n, field)
             local env = ld.env(w)
             env.talent = rank(n)
@@ -279,10 +281,11 @@ describe("Forever Rogue", function()
             }) do
                 local at = key .. " " .. field
                 assert.are.equal(0, gain(key, 5, 0, field), at)
-                assert.is_true(math.abs(gain(key, 3, 2, field) - 25 * 0.24) < 1e-9, at)
-                assert.is_true(math.abs(gain(key, 1, 1, field) - 25 * 0.04) < 1e-9, at)
+                assert.are.equal(0, gain(key, 3, 2, field), at) -- 24%: a random proc
+                assert.are.equal(0, gain(key, 1, 1, field), at)
                 assert.are.equal(25, gain(key, 5, 5, field), at)
-                assert.is_true(math.abs(gain(key, 5, 3, field) - 25 * 0.6) < 1e-9, at) -- 12% a point x 5 points: 60%
+                assert.are.equal(0, gain(key, 5, 3, field), at) -- 12% a point x 5 points: 60%
+                assert.are.equal(0, gain(key, 4, 5, field), at) -- 80%
             end
         end
     end)
@@ -470,8 +473,8 @@ describe("Forever Rogue", function()
                 s = run("slice_and_dice", 5, field, rs5)
                 assert.is_true(math.abs(s.durations.slice_and_dice - 21 * 1.15) < 1e-9, field)
                 assert.are.same({ { 25, "energy" } }, s.gained, field)
-                assert.are.same({ { 20, "energy" } }, run("slice_and_dice", 4, field, rs5).gained, field) -- 4 x 20% x 25
-                assert.are.same({ { 20, "energy" } }, run("slice_and_dice", 5, field, rank(4)).gained, field) -- 5 x 16% x 25
+                assert.are.same({}, run("slice_and_dice", 4, field, rs5).gained, field) -- 4 x 20%: a random proc
+                assert.are.same({}, run("slice_and_dice", 5, field, rank(4)).gained, field) -- 5 x 16%
                 assert.are.equal(16, run("rupture", 5, field).durations.rupture, field)
             end
             -- the sim spends the points; the belief's poll reads them (no `now` spend)

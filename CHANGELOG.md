@@ -31,9 +31,11 @@
 
 - Mana costs given as a percent of base mana (Power Infusion, Shadowform, the druid forms, some seals, totems and others) now take a talent's cut after the base cost is rounded, so the cost Hekili expects can differ by under a point from before.
 - Feral Druid: a Rip or Rake that misses while one of your white swings lands at the same moment is now usually seen as missed, so Hekili far less often suggests Ferocious Bite (or Shred) as if the bleed were up.
+- Feral Druid and Rogue: a combo point builder (such as Rake or Sinister Strike) now counts as landed when your combo points rise after it and as missed when they do not, even when one of your white swings is dodged or missed at the same moment, so a landed Rake is no longer suggested again and a missed one is suggested again within about half a second (a landed builder's combo point can show up to about a tenth of a second late, so Hekili waits a little longer before calling it missed).
 - When the Cooldown Manager shows that your debuff missed, the next suggestion appears at once instead of one update later.
 - When the Cooldown Manager shows your debuff landed, a miss reported for another attack in the same moment no longer takes the debuff away or gives its energy back.
 - Warrior: a white swing that was dodged, parried or missed no longer counts as rage still on its way.
+- Rogue: Relentless Strikes' energy is now counted only when it is certain (5 combo points with all 5 talent ranks), and no longer when the finishing move misses or is dodged or parried.
 - When the game hides enemy identities, as in dungeons, your debuffs on an enemy are still remembered when its nameplate appears late, or drops out and returns while you target it. With no nameplate, your target's low health is still read from an ability usable only below a health threshold, and range checks keep updating.
 - A stacking debuff (such as Sunder Armor) used on one enemy just before you change target now adds its stack to that enemy's own count, not the new target's, so its stack count is right when you target it again.
 - An enemy the game reports dead and then alive again while you still target it no longer reads 0 health until you change target.

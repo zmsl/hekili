@@ -72,17 +72,18 @@ local function strike(key, debuffKey)
         points = key == "mutilate" and 2 or 1,
     }
 end
--- A finisher: `effect(W, e, cp, X)` before its points go; Relentless Strikes's expected 25.
+-- A finisher: `effect(W, e, cp, X)` before its points go; Relentless Strikes's 25, rolled.
 local function finisher(effect)
     return {
         effect = function(W, e, _, X)
             local cp = W.res(e, POINTS)
             effect(W, e, cp, X)
             -- an avoided finisher keeps its points and procs nothing (wowsims ApplyFinisher runs on a landed one only)
-            -- the proc is chance x points (rank x 4% a point, one proc); the world pays its mean, as the belief expects it
+            -- the proc is chance x points (rank x 4% a point, one proc, wowsims rogue.go:107-114): the world rolls it
+            -- (W.krng, its own proc stream), as the game does; the belief counts it only at 100% (L1832, owner L1397)
             local share = math.min(1, 0.04 * X.relentless * cp)
-            if share > 0 and (not e.lastHit or e.lastHit.act == "WOUND") then
-                W.emit({ kind = "gain", src = e, pt = ENERGY, rage = RELENTLESS * share })
+            if share > 0 and (not e.lastHit or e.lastHit.act == "WOUND") and (share >= 1 or W.krng.chance(share)) then
+                W.emit({ kind = "gain", src = e, pt = ENERGY, rage = RELENTLESS })
             end
         end,
         points = "all",
@@ -353,8 +354,10 @@ local function content(name)
         mobHealth = 15000,
     }
 
-    -- The client's other power reads: combo points plain (research addendum), energy never.
-    C.OBSERVE = { plainPower = { [POINTS] = "always" }, powerTokens = TOKENS }
+    -- The client's other power reads: combo points plain (research addendum), energy never. UnitPowerMax answers the
+    -- world's pools, plain [W PR16]: the points' 5 as live (2026-11-23 capture, SNAP resource COMBO_POINTS max=5), not
+    -- the fake's 100, so a builder at 5 points is at the cap (L1832: the point fact is silent there).
+    C.OBSERVE = { plainPower = { [POINTS] = "always" }, powerTokens = TOKENS, powerMax = true }
 
     -- No power is swing-paid.
     function C.gain()

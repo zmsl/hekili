@@ -93,13 +93,14 @@ local INSTANT_POISON = { 8928, 8927, 8926, 6950, 6949, 6947 }
 local DEADLY_POISON = { 20844, 8985, 8984, 2893, 2892 }
 
 -- Relentless Strikes (14179, rank curve {4, 8, 12, 16, 20} % a combo point to restore 14181's 25 energy; wowsims
--- rogue.go ApplyFinisher: chance x points, one proc): the expected energy, since energy is secret and the belief cannot
--- see which finisher proc'd. `talent` and `gain` are the caller's: the sim's state or the belief's.
+-- rogue.go:107-114 ApplyFinisher: chance x points, one proc, only on a landed finisher): the energy only when the chance
+-- is 100% (rank 5 at 5 points). A lower chance is a random resource proc, never an expected gain (owner L1397,
+-- 2026-11-25): the reads and pins find a proc that came. The belief takes it back when the finisher is avoided (its
+-- `now`'s gain, Families/Now.lua undo). `talent` and `gain` are the caller's: the sim's state or the belief's.
 local RELENTLESS_ENERGY = 25
 local function relentless(talent, points, gain)
-    local energy = RELENTLESS_ENERGY * math.min(1, 0.04 * talent.relentless_strikes.rank * points)
-    if energy > 0 then
-        gain(energy, "energy")
+    if talent.relentless_strikes.rank * points >= 25 then -- 4% x rank x points >= 100%, in integers
+        gain(RELENTLESS_ENERGY, "energy")
     end
 end
 
@@ -548,6 +549,7 @@ spec:RegisterAbilities(rogue({
             removeBuff("vanish")
             removeBuff("ghostly_strike_next")
             removeBuff("cold_blood")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -575,6 +577,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             removeBuff("cold_blood")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -713,6 +716,7 @@ spec:RegisterAbilities(rogue({
             removeBuff("vanish")
             removeBuff("ghostly_strike_next")
             applyDebuff("target", "garrote", 18 + 9 * talent.blood_splatter.rank)
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -740,6 +744,7 @@ spec:RegisterAbilities(rogue({
         now = function()
             applyBuff("ghostly_strike")
             applyBuff("ghostly_strike_next")
+            gain(1, "combo_points")
         end,
         onAvoid = function() -- the next-Garrote buff is the landing's: a dodge, parry or miss gives none
             removeBuff("ghostly_strike_next")
@@ -770,6 +775,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             applyDebuff("target", "hemorrhage")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -850,6 +856,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             removeBuff("cold_blood")
+            gain(2, "combo_points")
         end,
 
         handler = function()
@@ -950,6 +957,7 @@ spec:RegisterAbilities(rogue({
 
         now = function()
             removeBuff("cold_blood")
+            gain(1, "combo_points")
         end,
 
         handler = function()
@@ -1162,6 +1170,8 @@ spec:RegisterAbilities(rogue({
         startsCombat = true,
         known = knows(GOUGE),
 
+        -- (L1832 review M7) its point is the handler's only: no `now` gain, so no point fact (the rows decide its
+        -- avoid; it refunds nothing); wowsims has no cast for it, so no parity gap
         now = function()
             removeBuff("stealth")
             removeBuff("vanish")
@@ -1221,6 +1231,7 @@ spec:RegisterAbilities(rogue({
             return buff.stealth.up or buff.vanish.up, "requires stealth"
         end,
 
+        -- (L1832 review M7) as Gouge: its points are the handler's only, no point fact; wowsims has no cast for it
         now = function()
             removeBuff("stealth")
             removeBuff("vanish")

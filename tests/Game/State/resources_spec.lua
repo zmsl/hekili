@@ -957,6 +957,29 @@ describe("resources", function()
             end
         )
 
+        -- (L1832 call 4, owner 2026-11-25 "guard every refund") the server refunds an avoided spender at its success,
+        -- the belief at its row ~0.47 s later: an exact pin between them holds 8 rage the belief has not booked, so its
+        -- interval adds nothing to the swing-scale window (Resources.lua pin, the swing branch's I.RefundPending)
+        it("a pin between an avoided rage spender's cast and its row adds nothing to the swing-scale window", function()
+            local def = fs.def(fs.new(9))
+            def.abilities[3].refundOnAvoid = 0.8 -- spender_c: 10 rage, 8 back on an avoid
+            boot(def)
+            local R = I.res
+            obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+            obs(Obs.Swing, 11.3, 1, 2.6, 4)
+            obs(Obs.Swing, 11.3, 1, 0, 1)
+            obs(Obs.Read, 12.6, 1, 10.8, I.ReadOf.Resource) -- 20% above the model
+            I.Fold(12.6, false)
+            local g, d = R.swAccG[1], R.swAccT[1]
+            assert.is_true(d > 0)
+            obs(Obs.Swing, 13.9, 1, 2.6, 4)
+            obs(Obs.Swing, 13.9, 1, 0, 1)
+            obs(Obs.CastSuccess, 14.9, I.ab.bySpell[fs.SPENDER_C], 10, 1)
+            obs(Obs.Read, 15.2, 1, 10.8 + 10.8 - 10 + 8, I.ReadOf.Resource) -- the server's refund in it, 0.3 s on
+            I.Fold(15.2, false)
+            assert.are.same({ g, d, true }, { R.swAccG[1], R.swAccT[1], R.pinSkip[1] })
+        end)
+
         it("starts the swing-scale window over after the hand was idle past LIFT_WINDOW (GAP AC)", function()
             obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
             obs(Obs.Swing, 10.5, 1, 2.6, 4)
@@ -3757,7 +3780,8 @@ end)
 describe("resource bands (lane B4)", function()
     local RAGE, MANA, NRG = 1, 2, 3 -- the slots
     local SHOWS = 1 / 6 -- what the source sets for a watch at 60 fps (I.bandShows)
-    local PUNCH, SPELL, STAB, GUARDED, NUKE, SMASH = 1, 2, 3, 4, 5, 6 -- costs 20, 460, 40, 40 (its own need fails), 100, 60
+    -- costs 20, 460, 40, 40 (its own need fails), 100, 60, 30 (JAB: 80% back on an avoid)
+    local PUNCH, SPELL, STAB, GUARDED, NUKE, SMASH, JAB = 1, 2, 3, 4, 5, 6, 7
     local VS, I, R, S, Obs, EPS
 
     before_each(function()
@@ -3783,9 +3807,10 @@ describe("resource bands (lane B4)", function()
                 },
                 { key = "nuke", spend = 100 },
                 { key = "smash", spend = 60 },
+                { key = "jab", spend = 30, refundOnAvoid = 0.8 },
             },
-            abilityIds = { { 1001 }, { 1002 }, { 1003 }, { 1004 }, { 1005 }, { 1006 } },
-            abilitySlot = { RAGE, MANA, NRG, NRG, MANA, NRG },
+            abilityIds = { { 1001 }, { 1002 }, { 1003 }, { 1004 }, { 1005 }, { 1006 }, { 1007 } },
+            abilitySlot = { RAGE, MANA, NRG, NRG, MANA, NRG, MANA },
             resources = {
                 {
                     key = "rage",
@@ -4130,6 +4155,22 @@ describe("resource bands (lane B4)", function()
                 assert.are.equal(10, crossings({ t + lag + 1.2, 470, 480 }), lag)
                 unknown(t + 2, MANA)
             end
+        end)
+
+        -- (L1832 call 5a) the server refunds an avoided cast at its success, the belief at its row ~0.47 s later: a
+        -- crossing measures band values only, the cast's booked spend and the late refund each start the pair over,
+        -- so no pair holds the unbooked refund (no I.RefundPending guard here)
+        it("a refundable cast between crossings, its avoid row late: the pairs measure the true regen", function()
+            crossings({ 9.5, 440, 450 }, { 10, 450, 460 }) -- the mark at 450
+            S.Direct(Obs.CastSuccess, 10.3, JAB, 30, 1) -- truth 453 - 30 + 24 (the server's refund) = 447
+            band(11.05, MANA, 450, 460, 11) -- 454: the same cell as the mark's, across the cast
+            I.Fold(11.05)
+            crossings({ 11.6, 460, 470 }, { 12.6, 470, 480 })
+            S.Direct(Obs.Avoided, 12.9, JAB, 10.3, I.HitKind.DODGE) -- the late row: 24 booked now
+            I.Fold(12.9)
+            local e = crossings({ 13.6, 480, 490 }, { 14.6, 490, 500 })
+            assert.are.equal(1, I.avoidsRun)
+            assert.is_true(math.abs(e - 10) < 1e-6, e)
         end)
 
         it("an exact band's pins measure nothing themselves", function()
