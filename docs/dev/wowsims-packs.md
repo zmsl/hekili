@@ -158,7 +158,8 @@ Translation:
   talent is taken (Retribution's Twist of Light lines; Warrior's Berserker Rage, the user's ruling below). Not added
   when the condition already has the talent test as a top-level `&` term. A key naming no APL entry is an error (CN12; an omitted entry still matches).
 - `guard` (`{ [action or group snake name] = SimC expression }`): one `&(<expression>)` term appended to each such
-  entry's condition, in every list (rule 16's select lines too); keyed `"<list> #<n>"` (the APL's entry number), to
+  entry's condition, in every list (rule 16's select lines and rule 13's automatic lines too, a defensive racial's
+  inside its health term); keyed `"<list> #<n>"` (the APL's entry number), to
   that one entry's line (a move's reached lines carry it), with the value `{ expect = "<action>", cond = "<SimC
   expression>" }`: the build raises when that entry is not the expected action (its cast key, else its kind, e.g.
   `"move"`), names none, or sits in a list never translated, so a re-pin that shifts the list cannot silently guard
@@ -440,6 +441,11 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   `action.incinerate.known|(action.shadow_bolt.known&debuff.immolate.remains<action.shadow_bolt.cast)`: without
   Incinerate Immolate shows only inside the filler's cast of falling off, as wowsims's own line uses Incinerate's; with
   Incinerate the lines are wowsims's.
+- Paladin Protection, Stoneform under Divine Shield (owner 2026-11-24, L1808): rule 13's low-health Stoneform must not
+  show while Divine Shield is up, the term the Lay on Hands line has: `guard = { stoneform =
+  "!action.divine_shield.known|!buff.divine_shield.up" }`. wowsims never casts Divine Shield, so no replay or loop
+  number moves, and the gate's races cannot use Stoneform. Under the shield the engine forecasts its fall and queues
+  the line for then (Lay on Hands the same), unit-tested in defensive_lines_spec. Not checked in game.
 
 ## Pack notes
 

@@ -93,7 +93,8 @@
 --    an `and`/`or` writes a repeated term once): an APL written for a talent build (wowsims picks it by that
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
 --    The recipe's `guard` ({ [action key or group's snake name] = SimC expression }) appends `&(<expression>)` to the
---    condition of each such entry (rule 13's automatic lines too), in every list (after a required talent); keyed
+--    condition of each such entry (rule 13's automatic lines too, a defensive racial's inside its health term), in
+--    every list (after a required talent); keyed
 --    "<list> #<n>", to that entry's cast line, or a move entry's condition, which its reached lines carry (rule 19,
 --    the ON variant), its value { expect = action, cond = expression }: the build raises when that entry is not the
 --    expected action (its cast key, else its kind), names none, or sits in a list never translated: a

@@ -2106,6 +2106,24 @@ describe("the wowsims APL translator", function()
         assert(loadfile("src/Hekili/Engine/Sim/AplThresholds.lua"))("Hekili", core)
         assert.is_true(core.HealthGuarded(want(low("stoneform")):match(",if=(.*)$")))
         assert.are.equal("", lines("ClassPaladin", log()))
+        -- a recipe guard (rule 7, keyed by the racial's action) is one more term inside the health term, which stays
+        -- outermost (owner 2026-11-24, L1808: Protection Paladin's Stoneform waits while Divine Shield is up)
+        local shielded = apl.translate(
+            { priorityList = { auto } },
+            apl.context(
+                kit,
+                { guard = { stoneform = "!action.roar.known|!buff.roar.up" } },
+                log(),
+                { class = "ClassPaladin" },
+                nil,
+                true
+            )
+        )
+        assert.are.equal(
+            "actions=stoneform,if=health.known&health.pct<=settings.stoneform_health&(time>=5&(!action.roar.known|!buff.roar.up))",
+            shielded
+        )
+        assert.is_true(core.HealthGuarded(shielded:match(",if=(.*)$")))
         -- a defensive-health threshold or a cooldown timing (the player's `cooldowns`) is not modelled: an error
         local ok, err = pcall(
             apl.translate,
@@ -3299,11 +3317,13 @@ describe("the wowsims APL translator on a .siml-parsed APL", function()
             local r = dofile("tools/wowsims/specs/" .. spec .. ".lua")
             local set = require("Forever.helpers.engine").abilitySet(r.class)
             local log = slurp("tests/Forever/wowsims/" .. spec .. ".log")
-            local player = json.decode(slurp("tests/Forever/wowsims/" .. spec .. ".json")).raid.parties[1].players[1]
-            local want = { apl.translate(player.rotation, apl.context(set, r, log, player)) }
+            local req = json.decode(slurp("tests/Forever/wowsims/" .. spec .. ".json"))
+            local player = req.raid.parties[1].players[1]
+            local tank = apl.isTank(req) -- as dry.lua translates it: a tank gets rule 13 lines (Protection guards one)
+            local want = { apl.translate(player.rotation, apl.context(set, r, log, player, req.encounter, tank)) }
             local siml = json.decode(slurp("tests/Forever/fixtures/wowsims_siml_" .. spec .. ".apl.json"))
             assert.are.equal("TypeAPL", siml.type)
-            local got = { apl.translate(siml, apl.context(set, r, log, player)) }
+            local got = { apl.translate(siml, apl.context(set, r, log, player, req.encounter, tank)) }
             assert.are.same(want, got)
         end)
     end

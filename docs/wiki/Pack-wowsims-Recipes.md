@@ -36,7 +36,7 @@ Each recipe is `tools/wowsims/specs/<class>_<spec>.lua`. The file name is the sp
 | `auras` | `{ [aura ID] = key }`: an aura wowsims keys by an ability's own spell ID, where `map` would also change that ability's casts. |
 | `focus` | `{ [action] = tier }`: the display's focus tier by the line's role. Tier 1 is a reactive or windowed line the player must catch; tier 2 is upkeep (DoTs, debuffs, buffs kept up). Rotational strikes, cooldowns and pre-pull lines carry none. |
 | `requires` | `{ [action or group] = talent key }`: entries written for a talent build run only once the talent is taken. |
-| `guard` | `{ [action or group] = expression }`: one `&(<expression>)` term appended to each such entry's condition. |
+| `guard` | `{ [action or group] = expression }`: one `&(<expression>)` term appended to each such entry's condition, the automatic cooldown lines included. |
 | `condition` | `{ [action] = expression }`: replaces the APL's condition of each cast line of that action. |
 | `prepullSkip` | `{ action, ... }`: leaves out that action's pre-pull lines. |
 | `leveling` | Lines appended to `actions` for lower levels. |

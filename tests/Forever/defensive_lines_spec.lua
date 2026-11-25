@@ -120,7 +120,7 @@ for _, P in ipairs(PACKS) do
             assert.are.same(all(false), frames(12)) -- a reading, at full
             H.ctl.combat = true
             H.ctl.Fire("PLAYER_REGEN_DISABLED")
-            push(P.low or 200) -- 20%: under every threshold (the lowest, Frenzied Regeneration's, is < 25)
+            push(P.low or 200) -- 20%, the Paladin row 10%: under every threshold (the lowest, Frenzied Regeneration's, < 25)
             assert.are.same(all(true), frames(3))
             lhv:Prime("player", H.ctl.now) -- about 10 frames unknown, under the 1 s bound
             for i = 1, 12 do
@@ -196,6 +196,7 @@ local LINES = {
         spell = 20594,
         race = "Dwarf",
         label = ", Paladin",
+        shield = 642, -- (owner 2026-11-24, L1808) it waits while Divine Shield is up, as Lay on Hands does
     },
     { -- owner: "Desperate Prayer is exclusive to dwarf priests"
         require("Forever.helpers.priest_world").Shadow,
@@ -248,6 +249,9 @@ for _, P in ipairs(LINES) do
             local c = C.character()
             if P.spell then
                 c.known[#c.known + 1] = P.spell
+            end
+            if P.shield then
+                c.known[#c.known + 1] = P.shield
             end
             c.race = P.race or c.race
             if P.talent then
@@ -338,6 +342,33 @@ for _, P in ipairs(LINES) do
             assert.is_false(frames(2))
             assert.are.same({}, H.errors)
         end)
+
+        -- the line's wait in Defensives after n frames (nil: not its first icon); under the shield the engine
+        -- forecasts the shield's fall, so the line is queued for then, not offered now (Lay on Hands the same)
+        local function wait(n)
+            return frames(n) and H.Hekili.Engine.Output.Defensives.recs[1].wait or nil
+        end
+
+        if P.shield then
+            it("waits while the shield is up: queued for its fall, offered at once when it is gone", function()
+                assert.is_true(S.action.divine_shield.known, "divine_shield known")
+                push(100)
+                frames(14)
+                H.ctl.combat = true
+                H.ctl.Fire("PLAYER_REGEN_DISABLED")
+                push(S.settings[key] - 1)
+                assert.are.equal(0, wait(3))
+                H.ctl.auras.player.HELPFUL[1] =
+                    { spellId = P.shield, expirationTime = H.ctl.now + 12, applications = 0 }
+                H.ctl.Fire("UNIT_AURA", "player")
+                local w = wait(3)
+                assert.is_true(w == nil or w > 11, tostring(w))
+                H.ctl.auras.player.HELPFUL[1] = nil
+                H.ctl.Fire("UNIT_AURA", "player")
+                assert.are.equal(0, wait(3))
+                assert.are.same({}, H.errors)
+            end)
+        end
     end)
 end
 
