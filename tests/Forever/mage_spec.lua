@@ -217,7 +217,8 @@ describe("Forever Mage", function()
             e.buff = buffs(n > 0 and { arcane_blast = n } or {})
             out[#out + 1] = near(ld.run(ab.spend, e))
         end
-        assert.are.same({ 0.15, 0.3, 0.45, 0.6, 0.75 }, out) -- +100% a charge (hotfix 113554, wowsims 5508974417)
+        -- the fraction as declared; +100% a charge (hotfix 113554, wowsims 5508974417) is a per-stack cost modifier
+        assert.are.same({ 0.15, 0.15, 0.15, 0.15, 0.15 }, out)
         assert.is_true(ab.spendBase) -- every one a fraction of base
         -- 18 s from the first charge, never refreshed (hotfix 113554, wowsims 5508974417; the DB2 70707 says 15 s)
         assert.are.same(
@@ -470,6 +471,7 @@ describe("Forever Mage", function()
             ["clearcasting unless missile_barrage"] = { -1, 1, { 5143 } },
             missile_barrage = { -1, 1, { 5143 } },
             -- Arcane Wrath too: wowsims's mask (0x9000 of word 1 covers its 0x8000), its log's 513.5 = 395 x 1.3
+            arcane_blast = { 1, false, { 400574 } },
             arcane_power = {
                 0.3,
                 false,

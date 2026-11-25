@@ -549,6 +549,12 @@ local function summons(key)
     end
 end
 
+-- The summons' cost cuts: Master Summoner's -20% a rank and Fel Domination's -50% while its buff is up, each a cost
+-- modifier on the whole price, multiplied as wowsims does (spell_mod.go:505; L1793 item 1). Imp, Voidwalker, Succubus,
+-- Incubus and Felhunter.
+spec:RegisterCostMod({ talent = "master_summoner", pct = { -0.2, -0.4 }, spells = { 688, 697, 712, 713, 691 } })
+spec:RegisterCostMod({ aura = "fel_domination", pct = -0.5, spells = { 688, 697, 712, 713, 691 } })
+
 -- A summon: 10 s, -2 s and -20% cost a rank of Master Summoner (wowsims's curve; DB2 18709 mask: the five summons),
 -- and Fel Domination's -5.5 s and -50% while its buff is up (DB2 18708 effects 0, 1, the same mask); unhasted; `cost` a fraction of base mana (PowerCostPct), `shard` its Soul Shard.
 local function summon(key, id, cost, shard)
@@ -560,10 +566,8 @@ local function summon(key, id, cost, shard)
         cooldown = 0,
         gcd = "spell",
 
-        -- Fel Domination's -50% adds to Master Summoner's -20% a rank (both percent cost modifiers on the summons)
-        spend = function()
-            return cost * (1 - 0.2 * talent.master_summoner.rank - (buff.fel_domination.up and 0.5 or 0))
-        end,
+        -- Master Summoner's and Fel Domination's cuts are the cost modifiers below, on the rounded whole
+        spend = cost,
         spendType = "mana",
         spendBase = true, -- the 1 (100%) a fraction too
 

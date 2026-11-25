@@ -271,7 +271,7 @@ describe("Forever Priest", function()
         local e = ld.env(w)
         e.talent.mental_agility = { rank = 3 }
         -- wowsims's Smite log: Smite 252, Holy Fire 229.5, Shadow Word: Pain 423; Mind Blast and Penance outside it
-        assert.are.same({ 252, 229.5, 423, 0.18, 350, 385 }, {
+        assert.are.same({ 252, 229.5, 423, 0.2, 350, 385 }, {
             near(ld.run(A.smite.spend, e)),
             near(ld.run(A.holy_fire.spend, e)),
             near(ld.run(A.shadow_word_pain.spend, e)),
@@ -289,7 +289,7 @@ describe("Forever Priest", function()
         e.talent.devouring_contagion = { rank = 2 }
         assert.are.equal(492.5, ld.run(A.devouring_plague.spend, e)) -- wowsims's Shadow log: 246.25 in Shadowform
         e.talent.mental_agility = { rank = 5 } -- past wowsims's three: its last
-        assert.are.equal(0.36, near(ld.run(A.shadowform.spend, e)))
+        assert.are.equal(0.4, near(ld.run(A.shadowform.spend, e))) -- a fraction: the cost modifier cuts it
     end)
 
     it(
@@ -348,7 +348,7 @@ describe("Forever Priest", function()
                 spells[#spells + 1] = id
             end
             table.sort(spells)
-            by[m.aura] = { m.pct, m.charges or false, spells }
+            by[m.aura or m.talent] = { m.pct, m.charges or false, spells }
         end
         assert.are.same({
             shadowform = { -0.5, false, { 589, 2944, 8092, 15286, 15407, 15473, 18137, 1309595 } },
@@ -404,6 +404,7 @@ describe("Forever Priest", function()
                 },
             },
             holy_purpose = { -1, 1, { 15237 } },
+            mental_agility = { { -0.03, -0.07, -0.1 }, false, { 527, 528, 552, 2651, 10060, 15473 } },
         }, by)
     end)
 
@@ -473,7 +474,7 @@ describe("Forever Priest", function()
         -- Mental Agility reaches the instants and Renew, Fade, Scream, never the hard-cast heals
         assert.are.same({ 247.5, 189, 369 }, { spend("fade_spell"), spend("psychic_scream"), spend("renew") })
         assert.are.equal(1695 * 0.9, ld.run(A.power_word_fortitude.spend, e))
-        assert.are.equal(0.18 * 0.9, ld.run(A.dispel_magic.spend, e))
+        assert.are.equal(0.18, ld.run(A.dispel_magic.spend, e)) -- a fraction: its cut is the cost modifier
     end)
 
     it("times the heals by Divine Fury, Improved Mana Burn and Improved Psychic Scream", function()
@@ -704,6 +705,43 @@ describe("Forever Priest through the engine", function()
             assert.are.same({}, H.errors)
         end
     )
+end)
+
+-- A percent-of-base cost is rounded whole before Mental Agility cuts it, the cut left unrounded (wowsims mana.go
+-- newManaCost at ab0f00e4fc rounds the percent of base to the nearest (upstream 18a464037f), then spell.go
+-- ApplyCostModifiers: cost x PercentModifier; L1793 item 1).
+describe("Forever Priest percent-of-base costs under Mental Agility", function()
+    it("price round(pct x base) x (1 - cut), in the belief and the sim", function()
+        -- base 1376: Power Infusion 20% is 275, Shadowform 40% is 550
+        local want = { power_infusion = { 275, 266.75, 255.75, 247.5 }, shadowform = { 550, 533.5, 511.5, 495 } }
+        local ids = { power_infusion = 10060, shadowform = 15473 }
+        for rank = 0, 3 do
+            local c = {
+                class = "PRIEST",
+                classID = 5,
+                specID = 1487,
+                level = 60,
+                known = { 10060, 15473 },
+                talents = rank > 0 and { [14520] = rank } or {},
+                power = { type = 0, token = "MANA", max = 6000, value = 6000 },
+                speed = { 3 },
+            }
+            local H = headless.new({ character = c })
+            local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
+            local t = H.ctl.now + 1
+            assert.is_true(headless.cycle(H, t))
+            VS.Drain(t)
+            S.reset("Primary", true)
+            for key, id in pairs(ids) do
+                local a = I.ab.bySpell[id]
+                assert.are.same(
+                    { want[key][rank + 1], want[key][rank + 1] },
+                    { near(I.CostOf(a)), near(S.action[key].cost) },
+                    key .. " rank " .. rank
+                )
+            end
+        end
+    end)
 end)
 
 -- The priorities: the wowsims.com packs (generated from wowsims/forever's Priest builds by `make wowsims-packs`).

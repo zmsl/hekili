@@ -21,6 +21,7 @@
 
 ### Fixed
 
+- Mana costs given as a percent of base mana (Power Infusion, Shadowform, the druid forms, some seals, totems and others) now take a talent's cut after the base cost is rounded, so the cost Hekili expects can differ by under a point from before.
 - When the game hides enemy identities, as in dungeons, your debuffs on an enemy are still remembered when its nameplate appears late, or drops out and returns while you target it. With no nameplate, your target's low health is still read from an ability usable only below a health threshold, and range checks keep updating.
 - A stacking debuff (such as Sunder Armor) used on one enemy just before you change target now adds its stack to that enemy's own count, not the new target's, so its stack count is right when you target it again.
 - An enemy the game reports dead and then alive again while you still target it no longer reads 0 health until you change target.

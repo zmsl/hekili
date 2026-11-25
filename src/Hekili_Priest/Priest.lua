@@ -150,7 +150,9 @@ end
 -- Shadowform and Shadowguard; wowsims's Smite log: 252 = 280 x 0.9 at 3/3).
 local function agile(values, ids)
     return function()
-        return (values[knownRank(ids)] or values[1]) * (1 - perRank(MENTAL_AGILITY, talent.mental_agility.rank))
+        local c = values[knownRank(ids)] or values[1]
+        -- a percent of base is rounded whole first; its cut is the cost modifier below (L1793 item 1)
+        return c < 1 and c or c * (1 - perRank(MENTAL_AGILITY, talent.mental_agility.rank))
     end
 end
 
@@ -163,7 +165,7 @@ local IMPROVED_HEALING = { 0.05, 0.1, 0.15 }
 local function price(values, ids, agility, healing, warding)
     return function()
         local c = values[knownRank(ids)] or values[1]
-        if agility then
+        if agility and c >= 1 then -- a fraction's cut is the cost modifier (see agile)
             c = c * (1 - perRank(MENTAL_AGILITY, talent.mental_agility.rank))
         end
         if healing then
@@ -282,6 +284,15 @@ spec:RegisterResource(
         base = 1376, -- a fraction cost is of base mana (wowsims's priest base mana at 60, base_stats_auto_gen.go)
     }
 )
+
+-- Mental Agility's cut on the percent-of-base costs (Shadowform, Power Infusion, Dispel Magic, Cure and Abolish
+-- Disease, Elune's Grace): the cost is rounded whole, then cut unrounded (wowsims mana.go newManaCost, then spell.go
+-- ApplyCostModifiers: 20% of 1376 = 275, x 0.9 = 247.5; L1793 item 1). Flat costs take it in their own function.
+spec:RegisterCostMod({
+    talent = "mental_agility",
+    pct = { -MENTAL_AGILITY[1], -MENTAL_AGILITY[2], -MENTAL_AGILITY[3] },
+    spells = { 15473, 10060, 527, 528, 552, 2651 },
+})
 
 -- The cost modifiers, each on the class mask's (or school's) registered rank-1 IDs: Shadowform's -50% on Shadow spells
 -- (DB2 15473 effect 3: aura 72 misc 32, the school; wowsims's Shadow log: Mind Blast 175 = 350 x 0.5), Inner Focus's
@@ -579,7 +590,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.4 * (1 - perRank(MENTAL_AGILITY, talent.mental_agility.rank))
+            return 0.4
         end,
         spendType = "mana",
 
@@ -824,7 +835,7 @@ spec:RegisterAbilities({
         gcd = "off",
 
         spend = function()
-            return 0.2 * (1 - perRank(MENTAL_AGILITY, talent.mental_agility.rank))
+            return 0.2
         end,
         spendType = "mana",
 

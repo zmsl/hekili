@@ -6,7 +6,8 @@
 --   one maximum evaluator applies it (at the build, seeding the interval, and at each CombatEnd) until a plain maximum
 --   read arrives, which wins from then on.
 -- - `costMods`: { { aura = "<key>", talent = "<key>"|nil, pct = n | flat = n, charges = k|nil, spells = { IDs }|nil,
---   unless = "<key>"|nil }, ... }; with `talent` the modifier also needs that talent's believed rank above 0 and needs
+--   unless = "<key>"|nil, perStack = true|nil }, ... }; with `perStack` an aura's `pct` is for each stack
+--   it holds (the pct times its believed stacks); with `talent` the modifier also needs that talent's believed rank above 0 and needs
 --   no `aura` (a passive talent's cut), its `pct` or `flat` a list by rank or one number; an ability
 --   paying that resource whose spell ID (or a `copy` rank) is in `spells` (every ability when `spells` is nil) costs
 --   less while the aura is believed up on the player (I.CostOf). With `charges`, each cast whose declared cost is above
@@ -113,6 +114,10 @@ function I.CostMod(a, r, c, now)
             local p, f = mod.pct, mod.flat
             p, f = type(p) == "table" and p[rank] or p, type(f) == "table" and f[rank] or f
             if type(p) == "number" then
+                if mod.perStack then
+                    local _, n = VS.Aura("player", js[k], now)
+                    p = p * (n and n > 0 and n or 1)
+                end
                 c = c * (1 + p)
             elseif type(f) == "number" then
                 c = c + f

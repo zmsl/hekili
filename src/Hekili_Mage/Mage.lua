@@ -275,6 +275,9 @@ spec:RegisterCostMod({
 })
 spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = { 5143 }, unless = "missile_barrage" })
 spec:RegisterCostMod({ aura = "missile_barrage", pct = -1, charges = 1, spells = { 5143 } })
+-- Arcane Charges (400573): +100% of Arcane Blast's cost a stack, on the whole price (wowsims arcane_charge.go parses it
+-- per stack, then multiplies it with the others; L1793 item 1).
+spec:RegisterCostMod({ aura = "arcane_blast", pct = 1.0, perStack = true, spells = { 400574 } })
 spec:RegisterCostMod({
     aura = "arcane_power",
     pct = 0.3,
@@ -402,7 +405,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.15 * (1 + buff.arcane_blast.stack)
+            return 0.15 -- each Arcane Charge's +100% is the cost modifier below, on the rounded whole
         end,
         spendType = "mana",
         spendBase = true,
