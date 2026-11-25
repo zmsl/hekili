@@ -311,8 +311,8 @@ function M.prelude(W, o)
 end
 
 --- One case: the world (`c.viewer`, `c.cdmOff`, `c.plain`), the prelude (`c.bleed`, `c.swingAt`, `c.odd`), then our
---- cast of c.bleed at T with `c.act`, its row at `c.row` (nil: none) and its points `c.gain`, a tick at `c.tickAt`, run to
---- T + `c.span` (3.5). Returns W, T.
+--- cast of c.bleed at T with `c.act`, its row at `c.row` (nil: none) and its points `c.gain`, a tick at `c.tickAt`, the
+--- missing point's fact at `c.pointFact`, run to T + `c.span` (3.5). Returns W, T.
 function M.case(c)
     local W = M.world(c)
     local T = M.prelude(W, c)
@@ -324,6 +324,9 @@ function M.case(c)
         M.at(W, T + c.tickAt, "tick", function(W2)
             row(W2, "WOUND", 30)
         end, true)
+    end
+    if c.pointFact then -- the point that never came: a fact once no read shows it by then (L1832 PT_AVOID)
+        M.at(W, T + c.pointFact, "no point", function() end)
     end
     if c.pointsAt then -- builders not modelled: the plain points come back
         M.at(W, T + c.pointsAt[1], "points", function(W2)
