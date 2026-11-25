@@ -209,6 +209,7 @@ M.ARMS.ttd = {
 -- (tools/data/cooldownviewer's fixture; a class without one runs the viewer with no item). `gate`: it
 -- asserts as the default arm does (M.check), its own floors in pack_gate.ARM_FLOORS.shipped; `make gate` runs it.
 -- The client's own secrets (our auras in combat, UNIT_COMBAT amounts) are not switches of ours: not in this arm.
+-- Its observer feeds each mob's plate as the ttd arm's does (LibTimeToDie minor 5 reads plates as it ships; L1841).
 M.ARMS.shipped = {
     outcomes = "default",
     presence = "router",
@@ -216,6 +217,7 @@ M.ARMS.shipped = {
     layout = "fixture",
     bands = true,
     ttd = true,
+    bandKnobs = { plateBands = true },
     gate = true,
 }
 for name, knobs in pairs({

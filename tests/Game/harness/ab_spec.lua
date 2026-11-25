@@ -119,6 +119,7 @@ describe("the A/B harness", function()
             layout = "fixture",
             bands = true,
             ttd = true,
+            bandKnobs = { plateBands = true }, -- as the ttd arm (L1841)
             gate = true,
         }, ab.ARMS.shipped)
         assert.are.same(ab.providers("viewer-fixture"), ab.providers("shipped"))
