@@ -127,6 +127,7 @@ local R = {
     pinDelta = {},
     pinValid = {},
     pinOwn = {},
+    mayT = {}, -- the latest cast's time whose `now` declared a gain that may not come (mayGain, I.ResourceMayGain)
     ownT = {}, -- our latest cast gain's time (ownGain), and what we gained within I.GAIN_SHOWS of it
     ownV = {},
     swFrom = {},
@@ -533,6 +534,7 @@ I.OnBuild(function(def, now)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
+        R.mayT[r] = -1e9
         R.swAccG[r], R.swAccT[r] = 0, 0
         R.ownT[r], R.ownV[r], R.castGain[r] = -1e9, 0, 0
         R.crossT[r], R.crossLo[r] = -1e9, 0
@@ -1091,6 +1093,8 @@ local function pin(r, v, width, t, origin, event, mid)
                 -- decay step, a hit taken, a crit's extra), or a refund it has not booked yet (I.RefundPending, L1832),
                 -- adds nothing: the scale measures swings only (the old per-interval filter refused such intervals);
                 -- the instant keeps that verdict for its re-estimates
+                -- shortcut: a possible gain (I.ResourceMayGain) is not held out of the swing scale's window: no pack
+                -- declares one on a swing-paid slot; add `R.mayT[r] >= R.pinT[r] - 1e-6` here and below if one does
                 local own = R.pinOwn[r] or I.RefundPending(r, t)
                 R.pinSkip[r] = own
                 if own then
@@ -1109,8 +1113,16 @@ local function pin(r, v, width, t, origin, event, mid)
         else
             R.swAccG[r], R.swAccT[r], R.pinSkip[r] = 0, 0, false
         end
-    elseif measures and R.pinValid[r] and dt >= I.PIN_GAP and not I.RefundPending(r, t) then
-        -- (L1832) a refund unsettled on the slot: the pin holds what the server gave back, the belief not yet
+    elseif
+        measures
+        and R.pinValid[r]
+        and dt >= I.PIN_GAP
+        and not I.RefundPending(r, t)
+        and R.mayT[r] < R.pinT[r] - 1e-6
+    then
+        -- (L1832) a refund unsettled on the slot: the pin holds what the server gave back, the belief not yet; a gain
+        -- a cast may have given at or after the window's start (I.ResourceMayGain; a pin at its own stamp included:
+        -- one frame per event time) is in the pin or not, unseen: either way the window measures nothing
         local gain = vm - R.pinV[r] - R.pinDelta[r]
         local m = R.shaped[r] and gain or gain / dt -- nonzero: dt >= PIN_GAP (1 s)
         calibrate(r, m, t, R.pinA[r], R.pinB[r], R.pinT[r], Obs.Usable)
@@ -2527,6 +2539,15 @@ function I.ResourceSet(r, v, width, t, event)
     I.ResourceShift(r, v - R.est0[r], t, event)
     local max = R.max[r]
     R.lo0[r], R.over[r], R.hi0[r], R.topNext[r] = clamp(v, max), 0, clamp(v + width, max), 0
+end
+
+--- (L1832, cp-fact-4) Our own cast at t may have gained slot r something the belief does not book (a proc chance
+--- strictly between 0 and 1: owner L1397, no expected value): est, lo and hi stay; only the regen pins learn of it (a
+--- window holding t measures nothing, Families/Resources.lua pin). Allocates nothing.
+function I.ResourceMayGain(r, t)
+    if t > R.mayT[r] then
+        R.mayT[r] = t
+    end
 end
 
 --- Our own cast gained `d` (> 0) to slot r by a roll the belief does not see, `spread` either side (L481: a potion's

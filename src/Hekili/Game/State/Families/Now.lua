@@ -459,6 +459,21 @@ end
 function NAMES.spend(amount, resource)
     shift(type(amount) == "number" and -amount or amount, resource)
 end
+-- The belief's own verb (L1832, cp-fact-4): the cast may give `amount` of `resource`, by a proc chance strictly between
+-- 0 and 100% (owner L1397: never its expected value). Nothing is booked; the slot's regen pins measure no window that
+-- holds the cast (I.ResourceMayGain). A certain gain is `gain`'s.
+function NAMES.mayGain(amount, resource)
+    if not live then
+        return
+    end
+    local r = resByKey[resource]
+    if not r then
+        error("now: no tracked resource " .. tostring(resource), 2) -- counted as the `now`'s error; no write
+    end
+    if type(amount) == "number" and amount > 0 then
+        I.ResourceMayGain(r, T)
+    end
+end
 -- The belief's own verb (Hekili's handlers spend and gain): the cast set `resource` to `amount`, or up to `upto` more by
 -- a roll the belief does not see (the estimate at the floor, the top `upto` above it).
 function NAMES.resetResource(resource, amount, upto)

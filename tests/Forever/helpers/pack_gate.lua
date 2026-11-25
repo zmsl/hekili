@@ -556,7 +556,13 @@ M.FLICKER = {
     -- 100% rule's share is loOver, 369 -> 119 on the rolled world (the expected gain over a roll that did not come).
     -- The rolled dps A/B is partly the two runs' own rolls: A and B fight differently, so their W.krng draws part
     -- (Relentless procs A 355 / B 350 default, 361 / 350 bands), while bands agreement is 0.999
-    ["Assassination"] = { loOver = 119, flicker = 0, retracted = 0, heldReady = 166 }, -- 0 / 0 / 0, 0
+    -- lane cp-fact-4 (L1832, integ5 tracer A move 2; seeds 1-20, A/B on one tree with the pin guard off / on): loOver
+    -- 119 -> 0, heldReady 166 -> 167. Cause: Relentless Strikes below 100% declares `mayGain`, and a pin window holding
+    -- its stamp measures no regen (Families/Resources.lua pin): regE 10.000 on all 20 fights (was 10.0-11.75), so the
+    -- floor no longer runs ahead of the truth. heldReady: the fights re-time (14 held ticks gone, among them 2 Vanish and
+    -- 1 Cold Blood; 15 come, each a Mutilate, Eviscerate or Slice and Dice with the truth at its cost); agreement 0.993
+    -- -> 0.992, dps A/B 0.971 -> 0.969, readyShort 0 / 0; bands arm unchanged (loOver 0, heldReady 145, regE 10)
+    ["Assassination"] = { loOver = 0, flicker = 0, retracted = 0, heldReady = 167 }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
     -- tree, flips match base's tick for tick; Sinister Strike's entry is gated on `!(buff.slice_and_dice.remains<=2)`,

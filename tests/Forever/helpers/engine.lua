@@ -144,6 +144,7 @@ local function newState(class, race)
         "openWindow", -- the window verbs (re-pin design §3a): State.lua's, a handler's and a `now`'s
         "closeWindow",
         "resetResource", -- the belief's own verb (Families/Now.lua): a `now`'s only
+        "mayGain", -- the belief's own verb (Families/Now.lua): a `now`'s only
     }) do
         s[verb] = noop
     end
