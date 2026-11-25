@@ -1440,6 +1440,25 @@ describe("now handlers", function()
             assert.are.equal(1, I.avoidsRun)
         end)
 
+        -- (L1832) what the `now` gained the ability's own slot comes only with a landing (wowsims rogue.go:107-114: Relentless
+        -- Strikes inside ApplyFinisher, eviscerate.go:35-38): an avoid takes it back with the refund, as no spend
+        it("an avoid takes back what the `now` gained the cost's slot, then refunds", function()
+            h.Class.abilities.spender_c.funcs.now = function()
+                gain(5, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+            end
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "DODGE") -- 10 -> 0 paid, +5 gained, dodged: 8 back, the 5 out
+            assert.are.same({ 8, 1 }, { VS.Power(fs.RAGE, 5.1).est, I.avoidsRun })
+        end)
+        it("a landed cast keeps what its `now` gained the cost's slot", function()
+            h.Class.abilities.spender_c.funcs.now = function()
+                gain(5, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+            end
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 40)
+            assert.are.same({ 5, 0 }, { VS.Power(fs.RAGE, 5.1).est, I.avoidsRun })
+        end)
+
         it("a wound: the debuff stays and nothing comes back", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 40)

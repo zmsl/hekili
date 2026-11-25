@@ -105,6 +105,9 @@ local undoA, undoT, undoSwap, paid, undoN = 0, -1, 0, 0, 0
 -- ability with `refundNowOnAvoid`; 0 otherwise. With them: est and lo before the `now` (nowE0, nowL0), the slot's
 -- pin time (nowPin), its rung lifts (nowLE/LL/LH, Resources.lua owe) and its spend serial (nowSp) at the cast.
 local nowE, nowL, nowH, nowE0, nowL0, nowPin, nowLE, nowLL, nowLH, nowSp = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+-- And what its `now` gained that slot (est, floor, top; L1832: a finisher's Relentless Strikes energy, which only a
+-- landing gives), with the slot's pin time after the `now` (gainPin); 0 otherwise.
+local gainE, gainL, gainH, gainPin = 0, 0, 0, 0
 local journal = true -- false while an `onCrit` runs: a landed crit's writes are no avoid's to undo
 local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
@@ -949,6 +952,7 @@ local function run(o, t)
     pointSilent(t) -- the last cast's undo is about to go: an avoid it still holds gets the rows' verdict first
     undoA, undoT, undoSwap, paid, undoN = a, o.t, I.curSwapN, 0, 0
     nowE, nowL, nowH = 0, 0, 0
+    gainE, gainL, gainH = 0, 0, 0
     local started = o.kind == CAST and A.castStartT[a] or 0 -- read before `automatic` and the line after clear it
     automatic(a, t, o.kind, o)
     local cs, R = A.slot[a], I.res
@@ -970,20 +974,22 @@ local function run(o, t)
         rawset(NAMES, "cast_id", A.ids[a][o.c] or A.id[a] or 0) -- `c`: the cast ID's place (Sources/Casts.lua)
         flight = A.lands[a] and travel(a) or 0
         pinned = I.CastSlot(a, o.t)
-        local r, R = A.refundNow[a] and A.slot[a] or 0, I.res
-        local e, l, h = R.est0[r], R.lo0[r], R.hi0[r] -- nil with no slot (r 0): not read
-        local s = A.slot[a]
+        local s, R = A.slot[a], I.res
+        local e, l, h = R.est0[s], R.lo0[s], R.hi0[s] -- nil with no slot (s 0): not read
         local top = s > 0 and R.hi0[s] or 0
         call(A.now[a], a, t)
         if top > 0 and R.hi0[s] <= 0 then -- the `now` spent the whole pool (L1793): a swing before it was in it
             I.Emptied(s, o.t)
         end
         pinned = 0
-        if r > 0 then -- the belief's own numbers (never a secret); a gain nets nothing back
-            nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = e, l, R.pinT[r], R.liftE[r], R.liftL[r], R.liftH[r]
-            e, l, h = e - R.est0[r], l - R.lo0[r], h - R.hi0[r]
-            nowE, nowL, nowH = e > 0 and e or 0, l > 0 and l or 0, h > 0 and h or 0
-            nowSp = R.spends[r]
+        if s > 0 then -- the belief's own numbers (never a secret)
+            local de, dl, dh = e - R.est0[s], l - R.lo0[s], h - R.hi0[s]
+            if A.refundNow[a] then -- what it took (a gain nets nothing back here)
+                nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = e, l, R.pinT[s], R.liftE[s], R.liftL[s], R.liftH[s]
+                nowE, nowL, nowH = de > 0 and de or 0, dl > 0 and dl or 0, dh > 0 and dh or 0
+                nowSp = R.spends[s]
+            end
+            gainE, gainL, gainH, gainPin = de < 0 and -de or 0, dl < 0 and -dl or 0, dh < 0 and -dh or 0, R.pinT[s]
         end
         flight = 0
         rawset(NAMES, "cast_start", 0)
@@ -1122,6 +1128,16 @@ local function undo(a, castT, c, rowT, t, late)
     if late and r > 0 and (I.res.plainT[r] >= castT or (I.res.bandOn[r] and I.res.bandAt[r] >= castT)) then
         r = 0
     end
+    -- (L1832) what the `now` gained the slot goes back out, as no spend (I.Unrefund: the refund below still sees no
+    -- spend since the cast): only a landing gives it (wowsims rogue.go:107-114, Relentless Strikes in ApplyFinisher).
+    -- First, so a short answer's top since the cast clamps the refund against the pool without it. Its pin since the
+    -- cast took it whole (pinDelta). An ability with an `onAvoid` takes back its own (Warrior's Heroic Strike: its
+    -- Unbridled Wrath and Reckless Swings rage), so not again here. shortcut: a full resist or immunity (UNLANDED,
+    -- returned above) keeps the gain, unmeasured as its refund is; upgrade if such a gain shows over the truth
+    if r > 0 and gainH > 0 and not A.onAvoid[a] then
+        I.Unrefund(r, gainE, gainE, gainL, gainH, t, gainPin)
+        I.res.castGain[r] = I.res.castGain[r] - gainE -- a cast's declared gain no longer explains a flip
+    end
     local d = r > 0 and paid * A.refund[a] or 0
     -- the `now`'s take comes back unless a pin since the cast (a plain read, a crossing) already measured the pool;
     -- a usable answer since (the poll's rung, every drain) only bounds it from below: the floors (I.Refund's fE, fL)
@@ -1142,7 +1158,7 @@ local function undo(a, castT, c, rowT, t, late)
         I.Refund(r, d, t) -- at the fold; the answers since the cast's spend already saw it
     end
     -- a pin since the cast already held the server's refund (at the success): the window after it would count it again
-    if r > 0 and (d > 0 or nowH > 0) and I.res.pinT[r] ~= castPin then
+    if r > 0 and (d > 0 or nowH > 0 or gainH > 0) and I.res.pinT[r] ~= castPin then
         I.res.pinValid[r] = false
     end
     if r > 0 and nowH > 0 then
@@ -1260,6 +1276,13 @@ function I.VerdictRefund(j, ap, t)
     forget(a, castT)
     settled(a, castT)
     if undoA == a and undoT == castT then
+        -- its `now`'s gain goes back out too (the undo's rule); a strike gives it back no more (est low, the safe side;
+        -- shortcut: upgrade if a struck verdict on a gaining finisher shows in a trace)
+        if gainH > 0 and not A.onAvoid[a] then
+            I.Unrefund(r, gainE, gainE, gainL, gainH, t, gainPin)
+            I.res.castGain[r] = I.res.castGain[r] - gainE
+            gainE, gainL, gainH = 0, 0, 0
+        end
         -- the share and the target undo were this verdict's; a plain avoid row of the cast still gives back what its
         -- `now` took (the row is proof: no L1096 widening), so a `refundNowOnAvoid` cast keeps its undo for it
         paid, undoN = 0, 0
