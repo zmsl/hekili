@@ -253,6 +253,17 @@ describe("the ticket pool", function()
             assert.are.equal(0, T.SwingPending(1, 10.5))
         end)
 
+        -- L1810 item 5 (swing-avoid-fix: Fury L60 readyShort): a swing holding its own avoid (PROV) pends no rage; a
+        -- hand-back (its own wound) credits it then
+        it("is not a swing that holds its own avoid", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+            assert.are.equal(T.PROV, T.state[T.lastSwing[1]])
+            assert.are.equal(0, T.SwingPending(1, 10.5))
+        end)
+
         it("does not make a retraction's re-open the hand's latest swing", function()
             local i = T.OpenSwing(20, 1, "Creature-1", 1.5, 0, false, true)
             assert.are.equal(T.OPEN, T.state[i])
@@ -763,6 +774,83 @@ describe("the ticket pool", function()
                 assert.are.equal(1, count(VS.Obs.Avoided))
             end)
 
+            -- Feral harness gate seed 2 (lane swing-avoid-fix, L1793): Rip (an instant, no expects) at 87.2, our swing at
+            -- 87.535 misses, its row at 87.711 (lag 0.176: the tail, outside its core band), 0.511 past Rip's success
+            -- (inside its landing window): the swing owes that row, so the miss is held on it, never Rip's refund
+            local function afterCast(rowT)
+                ctl.now = 87.2
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 87.535
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = rowT
+                ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            end
+
+            it("holds it on a swing from after the cast that still owes its row too (Feral Rip)", function()
+                afterCast(87.711)
+                assert.are.equal(0, count(VS.Obs.Avoided))
+                assert.are.same({ T.PROV, "MISS" }, { T.state[mh], T.avoid[mh] })
+            end)
+
+            it("gives it back to the cast when that later swing's own wound lands", function()
+                ctl.now = 50
+                ctl.damage = { 40, 50, 10, 12 } -- 45 is the main hand's (exact)
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                afterCast(87.711)
+                ctl.Tick(87.8) -- the cast's window still open
+                ctl.now = 87.82 -- the swing's own wound (lag 0.285): it landed, the miss was the cast's
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+                assert.are.same({ 1, 1 }, { count(VS.Obs.Swing, 1), count(VS.Obs.Avoided) })
+            end)
+
+            -- Feral harness gate seed 16 (lane swing-avoid-fix): our swing at 69.903 was credited provisionally by a
+            -- white wound 51 ms later (past the frame, outside its core band: TENT); Rip at 70.4, and the swing's own
+            -- dodge at 70.404 (lag 0.501, its core band) in Rip's own frame: the narrow-band row replaces the swing's
+            -- provisional credit, never Rip's refund
+            it("gives a cast's own-frame avoid to a provisionally credited swing whose core band holds it", function()
+                ctl.now = 50
+                ctl.damage = { 40, 50, 10, 12 }
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.now = 69.903
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = 69.954
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+                assert.are.equal(T.TENT, T.state[mh])
+                ctl.now = 70.4
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 70.404
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                assert.are.equal(0, count(VS.Obs.Avoided))
+                assert.are.same({ T.PROV, "DODGE", 1 }, { T.state[mh], T.avoid[mh], T.replaced })
+            end)
+
+            -- review of swing-avoid-fix, Important 1: dual wield, the off hand open at 69.760 (lag 0.644 at the dodge,
+            -- outside its band: the tie refused it). The matched provisional credit is replaced; the generic score never
+            -- gives the row to that other open swing (no give-back record)
+            it("replaces the provisional credit it matched, never another open swing's score (dual wield)", function()
+                ctl.now = 50
+                ctl.damage = { 40, 50, 10, 12 }
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.now = 69.76
+                ctl.Fire("PLAYER_SWING", 2.6, 1)
+                oh = T.lastSwing[2]
+                ctl.now = 69.903
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = 69.954
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+                assert.are.same({ T.TENT, T.OPEN }, { T.state[mh], T.state[oh] })
+                ctl.now = 70.4
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 70.404
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                assert.are.equal(0, count(VS.Obs.Avoided))
+                assert.are.same({ T.PROV, "DODGE", 1 }, { T.state[mh], T.avoid[mh], T.replaced })
+                assert.are.same({ T.OPEN, "" }, { T.state[oh], T.avoid[oh] })
+            end)
+
             it("leaves a swing's avoid with no cast near it to the swing (its core band)", function()
                 ctl.now = 59.749
                 ctl.Fire("PLAYER_SWING", 2.6, 0)
@@ -852,6 +940,87 @@ describe("the ticket pool", function()
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
             assert.are.same({ 1, 1, 0 }, { count(VS.Obs.Swing, 1), count(VS.Obs.Avoided), count(VS.Obs.Landed) })
         end)
+
+        -- L1810 F1 (live: every amount secret): the swing's own secret white wound in its core band says it landed, so
+        -- a cast's own-frame avoid in that band is the cast's, in either order
+        describe("a swing's secret wound in its core band and a cast's own-frame avoid (L1810 F1)", function()
+            local sw
+            before_each(function()
+                ctl.now = 150
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.now = 163.13
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                sw = T.lastSwing[1]
+                ctl.now = 163.6
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            end)
+
+            it("the wound first: the avoid stays the cast's, the swing still owes nothing of it", function()
+                ctl.now = 163.603 -- lag 0.473, the core band
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+                ctl.now = 163.604
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                assert.are.same({ 1, T.OPEN }, { count(VS.Obs.Avoided), T.state[sw] })
+            end)
+
+            -- the wound stamped in the success's own frame is the cast's own hit (a landed instant's direct damage), not
+            -- the swing's landing: the avoid in a later frame stays the swing's by the tie (false-refund bisect, L1810)
+            it(
+                "the wound at the cast's own success stamp is the cast's hit: the tie keeps the avoid on the swing",
+                function()
+                    ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1) -- 163.6, lag 0.47
+                    ctl.now = 163.603 -- lag 0.473, the core band
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                    assert.are.same({ 0, T.PROV }, { count(VS.Obs.Avoided), T.state[sw] })
+                end
+            )
+
+            it(
+                "wound and avoid both at the success stamp: one frame, timing cannot split them, F1 gives the avoid to the cast",
+                function()
+                    ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1) -- 163.6
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1) -- 163.6, the same frame
+                    assert.are.same({ 1, T.OPEN }, { count(VS.Obs.Avoided), T.state[sw] })
+                end
+            )
+
+            it("the avoid first: the tie holds it on the swing, its secret wound then gives it back", function()
+                ctl.now = 163.603
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                assert.are.same({ 0, T.PROV }, { count(VS.Obs.Avoided), T.state[sw] }) -- MELEE wins the tie
+                ctl.now = 163.61
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+                assert.are.same({ 1, 1, 0 }, { count(VS.Obs.Avoided), count(VS.Obs.Swing, 1), count(VS.Obs.Landed) })
+            end)
+
+            it("a secret wound outside the swing's core band changes nothing: the tie keeps the avoid", function()
+                ctl.now = 163.33 -- lag 0.2
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+                ctl.now = 163.603
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                assert.are.same({ 0, T.PROV }, { count(VS.Obs.Avoided), T.state[sw] })
+            end)
+        end)
+
+        it(
+            "a cast that takes no wound of that school keeps F1: a wound at its stamp is the swing's landing (L1810)",
+            function()
+                local c = fs.new(9, nil, nil, true)
+                c.Class.abilities.spender_c.expects = "debuff"
+                I.Build(fs.def(c), 1)
+                ctl.now = 150
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.now = 163.13
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                local s = T.lastSwing[1]
+                ctl.now = 163.6
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+                ctl.now = 163.603
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", fake.SECRET, 1)
+                assert.are.same({ 1, T.OPEN }, { count(VS.Obs.Avoided), T.state[s] })
+            end
+        )
 
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30

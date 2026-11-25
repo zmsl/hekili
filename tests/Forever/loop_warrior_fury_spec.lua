@@ -15,6 +15,10 @@ describe("the headless Fury gates, 20 fights #loop", function()
         -- ratio is the kill-time ratio): 0.82 to 1.28, ours 303102 in 1697.4 s, the oracle's 304116 in 1661.6 s; ours
         -- kills slower in 15 of the 20, but the other sets read 1.028 / 1.017 and the fixed world already sat at 0.983:
         -- read as seed-set noise of the diverging runs' kill times, not traced to a mechanism
-        gate.solo(60, { agreement = 0.92, reactP90 = 1, unmatched = 2.5, dps = 0.97, overpower = 10 })
+        -- dps 0.97 -> 0.96 (swing-avoid-fix d1a7601ca, L1793; 0.975 -> 0.962): a truer belief re-times one fight
+        -- (s8: Sunder no longer falsely avoided, so no sixth Sunder at 50.0; the world's draws then differ, s8 72.2 ->
+        -- 92.0 s with a re-stack in execute, s9 carried); 18 of 20 fights identical, the oracle identical, sets 21-40 /
+        -- 41-60 1.052 / 1.000
+        gate.solo(60, { agreement = 0.92, reactP90 = 1, unmatched = 2.5, dps = 0.96, overpower = 10 })
     end)
 end)

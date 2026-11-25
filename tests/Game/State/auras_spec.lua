@@ -2007,18 +2007,24 @@ describe("auras", function()
                 for _, ab in ipairs(def.abilities) do
                     ab.now = ab.funcs and ab.funcs.now
                 end
+                def.abilities[3].refundOnAvoid = 0.8 -- spender_c: an avoid would give 8 of its 10 back
                 start(def)
+                ctl.usable[fs.SPENDER_C] = { true, false } -- rage >= 10: pinned at 10 before the cast
+                drain(10.5)
+                ctl.usable[fs.SPENDER_C] = nil
                 ctl.now = 11
-                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- 10 paid: 0
                 ctl.ViewerAura(ti, "target") -- it landed and lights
                 drain(11)
                 drain(11.2) -- an UP on the record up: the debounce remembers its expiry
                 assert.are.equal(26, est("target", fs.SPENDER_C, 11.2))
+                assert.are.equal(0, VS.Power(fs.RAGE, 11.2).est)
                 ctl.now = 11.3
                 ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- credited to the cast: the undo closes it
                 drain(11.3)
                 assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.3))
                 assert.are.equal(1, I.avoidsRun)
+                assert.are.equal(0, VS.Power(fs.RAGE, 11.3).est) -- (L1810 F4b) lit since the cast: no refund
                 drain(11.5)
                 assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 11.5)) -- not debounced against the old 26
             end)

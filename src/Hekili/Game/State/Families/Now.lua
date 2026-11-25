@@ -892,7 +892,12 @@ local function run(o, t)
         pinned = I.CastSlot(a, o.t)
         local r, R = A.refundNow[a] and A.slot[a] or 0, I.res
         local e, l, h = R.est0[r], R.lo0[r], R.hi0[r] -- nil with no slot (r 0): not read
+        local s = A.slot[a]
+        local top = s > 0 and R.hi0[s] or 0
         call(A.now[a], a, t)
+        if top > 0 and R.hi0[s] <= 0 then -- the `now` spent the whole pool (L1793): a swing before it was in it
+            I.Emptied(s, o.t)
+        end
         pinned = 0
         if r > 0 then -- the belief's own numbers (never a secret); a gain nets nothing back
             nowE0, nowL0, nowPin, nowLE, nowLL, nowLH = e, l, R.pinT[r], R.liftE[r], R.liftL[r], R.liftH[r]
@@ -1005,6 +1010,14 @@ I.On(Obs.Avoided, function(o, t)
     end
     undoA = 0
     forget(o.a, o.b) -- refunded here: the CDM verdict's refund (I.VerdictRefund) gives it nothing more
+    -- (L1810 F4b, L1770) a record this cast's `now` wrote whose Cooldown Manager item lit since the cast: it landed, so
+    -- the avoid is another's in its frame (the owner's tie ruling gave it the cast): no onAvoid, no refund. The undo
+    -- still runs: its close lets the lit item re-open the record at the next poll as the light's own application (Hekili's
+    -- missable hook drops the cast's, Engine/Schema/Spec/Abilities.lua trackMisses)
+    local lit = false
+    for k = 1, I.curSwapN == undoSwap and undoN or 0 do
+        lit = lit or I.AuraLitSince(undoJ[k], o.b)
+    end
     for k = 1, I.curSwapN == undoSwap and undoN or 0 do -- another target since the cast: its auras are not these
         local j = undoJ[k]
         local rec = VS.Aura("target", auraSpell[j], t)
@@ -1016,7 +1029,7 @@ I.On(Obs.Avoided, function(o, t)
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
     end
     I.avoidsRun = I.avoidsRun + 1
-    if o.c == UNLANDED then
+    if o.c == UNLANDED or lit then
         return
     end
     -- onAvoid runs before the give-back check (L1295): a spend from the slot here would count as a spend since the
@@ -1039,6 +1052,9 @@ I.On(Obs.Avoided, function(o, t)
         I.LiftExplained(r, nowLE, nowLL, nowLH, d + nowE, d + nowL, d + nowH)
     elseif r > 0 and d > 0 then
         I.Refund(r, d, t) -- at the fold; the answers since the cast's spend already saw it
+    end
+    if r > 0 and nowH > 0 then
+        I.Emptied(r, -1e9) -- the pool its `now` spent came back: a swing before the cast pays again
     end
 end)
 

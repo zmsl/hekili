@@ -714,6 +714,14 @@ function I.AuraVerdictClosed(k, t, ap)
     end
 end
 
+--- (L1810 F4b) Whether target record j's Cooldown Manager item lit since castT (UP, its state changed at or after the
+--- cast: dark before it, so a refresh proves nothing): our cast of it landed. Allocates nothing.
+function I.AuraLitSince(j, castT)
+    local F = I.presence and I.presence.fact
+    local k = I.AURA_UNIT + j
+    return F ~= nil and F.state[k] == I.UP and (F.t[k] or 0) >= castT
+end
+
 --- Our cast's avoid undo closed target record j (Families/Now.lua) at t; castT the undone cast's time, preE the
 --- record's expiry before it (0 none). Like any close it drops the debounce's memory, so an item lit since the cast
 --- re-opens it at the next poll instead of HOLD past the undone cast's expiry; an item lit since before the cast is the

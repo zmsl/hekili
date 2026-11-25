@@ -162,8 +162,16 @@ describe("expectation compile", function()
         { { expects = "travel", velocity = "fast" }, nil, "velocity is not a positive number" },
         { { expects = "travel", velocity = 0 }, nil, "velocity is not a positive number" },
         { { expects = "instant" }, nil, 'instant needs a school (no damage: expects "debuff")' },
-        { { expects = "debuff", school = "nature" }, nil, "debuff deals no damage: no school, no ticking aura" },
-        { { expects = "debuff" }, { spender_a = { tick_time = 3 } }, "debuff deals no damage: no school, no ticking" },
+        {
+            { expects = "debuff", school = "nature" },
+            nil,
+            'debuff deals no direct damage: no school, no dot = "debuff"',
+        },
+        {
+            { expects = "debuff" },
+            { spender_a = { tick_time = 3, dot = "debuff" } },
+            'debuff deals no direct damage: no school, no dot = "debuff"',
+        },
     }) do
         it("rejects " .. case[3], function()
             local kind, school, errors, err = one(case[1], case[2])
@@ -177,6 +185,19 @@ describe("expectation compile", function()
         assert.are.same({ X.FRAME, 0, 0 }, { kind, school, errors })
         assert.is_true(A.expDeclared[1])
     end)
+
+    -- L1810 F2 (Feral Rip: no direct hit, ticks later as background rows): its aura may tick; the ticket stays FRAME
+    -- with school 0, so a white wound in its frame is never its landing
+    it(
+        'compiles "debuff" with a ticking aura (no dot = "debuff") to the instant kind with school 0, not ticking',
+        function()
+            local kind, school, errors = one(
+                { startsCombat = true, expects = "debuff" },
+                { spender_a = { tick_time = 2 } }
+            )
+            assert.are.same({ X.FRAME, 0, 0, false }, { kind, school, errors, A.ticking[1] })
+        end
+    )
 
     it("keeps a declared school on a default type", function()
         local kind, school, errors = one({ startsCombat = true, school = "frost" })
