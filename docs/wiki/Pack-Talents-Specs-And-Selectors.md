@@ -51,7 +51,7 @@ Each entry of `specs` in `Hekili:NewClass(token, { specs = { ... } })` is one sp
 | `name` | The name shown to the player, as `L["Feral"]` |
 | `tree` | The talent tree the spec rides, 1 to 3. Two specs may share a tree. |
 | `icon` | The spec's icon, a texture file ID |
-| `role` | `"attack"`, `"tank"` or `"healer"`. Shown in the options; not simulated. |
+| `role` | `"attack"`, `"tank"` or `"healer"`. Shown in the options and simulated while the spec is active: a tank counts the enemies it can tell attack it in melee, and `tanking` reads true while it has aggro. |
 | `ranged` | True for a ranged spec. Sets the default **Enemy Range Radius** to 30 yards instead of 10. |
 | `nameplateRange` | The spec's own **Enemy Range Radius** default, in yards, when neither 30 nor 10 fits |
 | `package` | The spec's default priority, by name, such as `"Feral (wowsims.com)"` |

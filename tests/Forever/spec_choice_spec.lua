@@ -134,6 +134,22 @@ describe("the active spec (headless Warrior)", function()
         assert.are.equal(3, H.Hekili.DB.profile.specChoice[CHAR].last)
     end)
 
+    it("simulates the active tree's role, not the client pseudo-spec's (L1715)", function()
+        local function roles(S)
+            return { S.role.attack, S.role.tank, S.role.healer }
+        end
+        local H = boot({ talents = { [12298] = 5, [12975] = 1 } }) -- Protection; the client answers DAMAGER
+        settle(H)
+        assert.are.equal(PROT, H.Hekili.State.spec.id)
+        assert.are.same({ false, true, false }, roles(H.Hekili.State))
+        H.ctl.role = "TANK" -- the tree wins either way
+        H.ctl.traits = traits({ [12294] = 1, [12296] = 1, [12834] = 3 }) -- Arms
+        H.Fire("TRAIT_CONFIG_UPDATED")
+        settle(H)
+        assert.are.equal(ARMS, H.Hekili.State.spec.id)
+        assert.are.same({ true, false, false }, roles(H.Hekili.State))
+    end)
+
     it("moves a legacy scalar choice onto the current dominant tree once", function()
         local saved = { profiles = { Default = { specChoice = { [CHAR] = "fury" } } } }
         local H = boot({ saved = saved }) -- Arms talents
@@ -164,6 +180,7 @@ describe("the active spec (headless Warrior)", function()
         local H = boot({ pack = "Protection (wowsims.com)" })
         assert.are.equal(PROT, H.Hekili.State.spec.id)
         assert.are.equal("Protection (wowsims.com)", H.Hekili.DB.profile.specs[PROT].package)
+        assert.is_true(H.Hekili.State.role.tank) -- the loops' boot path: the tree's role (L1715)
     end)
 
     it("refreshes the belief's settings copy when the legacy profile's settings migrate onto the spec", function()

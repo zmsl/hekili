@@ -114,7 +114,7 @@ Each entry of `def.specs` in `Hekili:NewClass` describes one spec. The fields, f
 | `name` | The spec's display name, from the class's string table. |
 | `tree` | The talent tree (1 to 3) the spec rides. Two specs may share a tree. |
 | `icon` | The spec's icon (a file ID). |
-| `role` | `"attack"`, `"tank"` or `"healer"`. Shown, not simulated. |
+| `role` | `"attack"`, `"tank"` or `"healer"`. The role the simulation uses while the spec is active: a tank counts the enemies it can tell attack it in melee, and `tanking` reads true while it has aggro. |
 | `ranged` | `true` for a ranged spec. |
 | `nameplateRange` | The spec's default enemy range radius in yards, which target counting falls back to. 30 for a ranged spec and 10 for a melee spec unless set. |
 | `package` | The spec's default priority, such as `"Feral (wowsims.com)"`. |

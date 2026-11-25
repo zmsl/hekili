@@ -108,7 +108,7 @@ end
 --- (per-spec plan) A class pack's entry point. Returns the class kit: every Register* call on it (abilities, auras,
 --- talents as { tree (1-3, 0 unknown), spell, max rank }, resources, hooks, packs, settings) is the class's, read by
 --- each of its specs. `def.specs` lists the specs in order, each { key, name, tree (the talent tree it rides), icon,
---- role ("attack"|"tank"|"healer": shown, not simulated), ranged, nameplateRange (its Enemy Range Radius default in
+--- role ("attack"|"tank"|"healer": simulated while active), ranged, nameplateRange (its Enemy Range Radius default in
 --- yards; a ranged spec's is 30 unless set, a melee spec's 10, the radius the target count falls back to), package
 --- (its default priority), movement (true: its priorities read the Movement toggle, whose options row it then
 --- shows), fillWindow (a resource key: the forecast window reaches at least the time that pool takes to fill from
