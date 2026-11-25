@@ -1131,10 +1131,12 @@ local function undo(a, castT, c, rowT, t, late)
     -- (L1832) what the `now` gained the slot goes back out, as no spend (I.Unrefund: the refund below still sees no
     -- spend since the cast): only a landing gives it (wowsims rogue.go:107-114, Relentless Strikes in ApplyFinisher).
     -- First, so a short answer's top since the cast clamps the refund against the pool without it. Its pin since the
-    -- cast took it whole (pinDelta). An ability with an `onAvoid` takes back its own (Warrior's Heroic Strike: its
-    -- Unbridled Wrath and Reckless Swings rage), so not again here. shortcut: a full resist or immunity (UNLANDED,
-    -- returned above) keeps the gain, unmeasured as its refund is; upgrade if such a gain shows over the truth
-    if r > 0 and gainH > 0 and not A.onAvoid[a] then
+    -- cast took it whole (pinDelta). Only an ability whose avoid refunds (`refundOnAvoid`: what it does needs the
+    -- landing) loses it; one with no refund keeps its gain (Rogue's Shank: its energy is no landing's). An ability with
+    -- an `onAvoid` takes back its own (Warrior's Heroic Strike: Unbridled Wrath and Reckless Swings), not again here.
+    -- shortcut: a full resist or immunity (UNLANDED, returned above) keeps the gain, unmeasured as its refund is;
+    -- upgrade if such a gain shows over the truth
+    if r > 0 and gainH > 0 and A.refund[a] > 0 and not A.onAvoid[a] then
         I.Unrefund(r, gainE, gainE, gainL, gainH, t, gainPin)
         I.res.castGain[r] = I.res.castGain[r] - gainE -- a cast's declared gain no longer explains a flip
     end
@@ -1278,7 +1280,7 @@ function I.VerdictRefund(j, ap, t)
     if undoA == a and undoT == castT then
         -- its `now`'s gain goes back out too (the undo's rule); a strike gives it back no more (est low, the safe side;
         -- shortcut: upgrade if a struck verdict on a gaining finisher shows in a trace)
-        if gainH > 0 and not A.onAvoid[a] then
+        if gainH > 0 and A.refund[a] > 0 and not A.onAvoid[a] then
             I.Unrefund(r, gainE, gainE, gainL, gainH, t, gainPin)
             I.res.castGain[r] = I.res.castGain[r] - gainE
             gainE, gainL, gainH = 0, 0, 0

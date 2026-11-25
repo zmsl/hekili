@@ -1450,6 +1450,20 @@ describe("now handlers", function()
             castOutcome(fs.SPENDER_C, 5, "DODGE") -- 10 -> 0 paid, +5 gained, dodged: 8 back, the 5 out
             assert.are.same({ 8, 1 }, { VS.Power(fs.RAGE, 5.1).est, I.avoidsRun })
         end)
+        it("a cast whose avoid refunds nothing keeps what its `now` gained (no landing's gain)", function()
+            h.Class.abilities.spender_c.funcs.now = function()
+                gain(5, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+            end
+            h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 }
+            start()
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.usable[fs.SPENDER_C] = { true, false } -- pinned at 10 before the cast
+            ctl.now = 4
+            VS.Drain(4)
+            ctl.usable[fs.SPENDER_C] = nil
+            castOutcome(fs.SPENDER_C, 5, "DODGE")
+            assert.are.same({ 5, 1 }, { VS.Power(fs.RAGE, 5.1).est, I.avoidsRun })
+        end)
         it("a landed cast keeps what its `now` gained the cost's slot", function()
             h.Class.abilities.spender_c.funcs.now = function()
                 gain(5, "rage") -- luacheck: ignore 113 (the `now` context's verb)
