@@ -1039,7 +1039,7 @@ L["The picks on the lane."] = "Les choix sur la piste."
 L["The lane's time axis, the ruler and the focus zone."] = "L’axe du temps de la piste, la règle et la zone de mise en avant."
 
 -- Hekili/Engine/Sim/Scripts.lua
--- L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = ""
+L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = "Cette priorité compare %s à %d valeurs exactes ; Hekili peut en surveiller %d. Ces conditions utilisent plutôt le palier de 1 %% le plus proche."
 L["Priority %s, list %s, line %d reads your health without health.known first. While Hekili cannot read your health it counts as full, so this line can show when it should not: start its condition with health.known&."] = "La priorité %s, liste %s, ligne %d lit ta vie sans health.known en tête. Tant que Hekili ne peut pas lire ta vie, elle compte comme pleine, donc cette ligne peut s’afficher à tort : commence sa condition par health.known&."
 
 -- Hekili/Engine/Sim/Core.lua

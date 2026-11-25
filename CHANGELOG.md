@@ -7,6 +7,8 @@
 ### Changed
 
 ### Fixed
+- Simplified Chinese: the forecast window note, the priority editor's Condition and Display headers, the warning when a priority compares more exact values than Hekili can watch, and the snapshot help are now translated, thanks to dodoels; the custom-line health warning and Healing Potion are translated too.
+- German, Spanish and French: the warning when a priority compares more exact values than Hekili can watch is now translated.
 
 ### Known issues
 

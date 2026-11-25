@@ -16,4 +16,4 @@ end
 
 -- Hekili_Shared/Shared/Consumables.lua
 L["Healthstone"] = "治疗石"
--- L["Healing Potion"] = ""
+L["Healing Potion"] = "治疗药水"
