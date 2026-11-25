@@ -813,6 +813,9 @@ local function route(t, g, uid, act, flag, amount, school)
             -- (decision 48's narrow band) replaces that credit below, as the tie, and no other swing's score takes it;
             -- a credit a verdict or a spend fixed is no longer replaceable: the row stays the cast's
             local r = M.Replaceable(t, g, amount, flag, true, false)
+            if r and pass == 1 and t == T.at[p] then
+                r = nil -- (L1810) an avoid stamped at the cast's own success stays the cast's
+            end
             if r and T.rec[r] > 0 and I.CreditFixed and I.CreditFixed(T.rec[r]) then
                 T.Final(r, t)
                 r = nil

@@ -826,6 +826,25 @@ describe("the ticket pool", function()
                 assert.are.same({ T.PROV, "DODGE", 1 }, { T.state[mh], T.avoid[mh], T.replaced })
             end)
 
+            -- L1810, integ5 tracer C (shape B's mirror, Protection seed 6 t43.4): the cast's MISS stamped at its own
+            -- success, inside a provisionally credited swing's core band, is the cast's; the swing keeps its credit
+            it("leaves an avoid stamped at the cast's own success to the cast, not a provisional swing", function()
+                ctl.now = 50
+                ctl.damage = { 40, 50, 10, 12 }
+                ctl.Fire("PLAYER_REGEN_ENABLED")
+                ctl.now = 69.903
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                mh = T.lastSwing[1]
+                ctl.now = 69.954
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+                assert.are.equal(T.TENT, T.state[mh])
+                ctl.now = 70.4 -- lag 0.497 to the swing: its core band
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+                assert.are.equal(1, count(VS.Obs.Avoided))
+                assert.are.same({ T.TENT, "", 0 }, { T.state[mh], T.avoid[mh], T.replaced })
+            end)
+
             -- review of swing-avoid-fix, Important 1: dual wield, the off hand open at 69.760 (lag 0.644 at the dodge,
             -- outside its band: the tie refused it). The matched provisional credit is replaced; the generic score never
             -- gives the row to that other open swing (no give-back record)
