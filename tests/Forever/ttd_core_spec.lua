@@ -108,6 +108,42 @@ describe("time to die from LibTimeToDie (lane B8)", function()
         assert.are.equal(12.5, st.target.time_to_die)
     end)
 
+    -- The future state (State.lua): target.time_to_die is real_ttd less offset + delay, floored at 1, real_ttd read once
+    -- per reset (3600, unknown, is kept as it is); fight_remains, interpolated_fight_remains and the state-level
+    -- time_to_die are longest_ttd less offset + delay, floored at 1, with no unknown case: an unknown 3600 counts down.
+    it(
+        "in the future state: the estimate less offset + delay, floored at 1; an unknown target time stays 3600",
+        function()
+            install(H, lib)
+            lib.h.state, lib.h.est, lib.h.lo, lib.h.hi, lib.h.reason = "live", 20, 15, 25, "fit"
+            local st = hk.State
+            local function reads()
+                return { st.target.time_to_die, st.fight_remains, st.interpolated_fight_remains, st.time_to_die }
+            end
+            st.reset()
+            assert.are.same({ 0, 0 }, { st.offset, st.delay })
+            assert.are.same({ 20, 20, 20, 20 }, reads())
+            st.advance(3)
+            st.delay = 0.5
+            assert.are.same({ 3, 0.5 }, { st.offset, st.delay })
+            assert.are.same({ 16.5, 16.5, 16.5, 16.5 }, reads())
+            lib.h.est = 99 -- read once per reset: a new answer waits for the next
+            assert.are.same({ 16.5, 16.5, 16.5, 16.5 }, reads())
+            st.advance(30)
+            assert.are.same({ 1, 1, 1, 1 }, reads())
+
+            lib.h.state = "unknown"
+            st.reset()
+            assert.are.same({ 3600, 3600, 3600, 3600 }, reads())
+            st.advance(3)
+            st.delay = 0.5
+            -- reported (vendor-libs-next), not changed: fight_remains and the state-level time_to_die count an unknown down
+            assert.are.same({ 3600, 3596.5, 3596.5, 3596.5 }, reads())
+            st.advance(30)
+            assert.are.same({ 3600, 3567, 3567, 3567 }, reads())
+        end
+    )
+
     it("priming, unknown, gone, unavailable and paused answer 3600", function()
         install(H, lib)
         lib.h.est = 9

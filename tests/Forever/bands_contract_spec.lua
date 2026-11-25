@@ -277,6 +277,33 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.is_true(I.bandLive[-1])
     end)
 
+    -- (LibHiddenValues minor 10, L1804) Get is nil from the target change's own event on; the source read State live
+    -- first, so a drain in that same frame, before any tick, stages one unknown and never the last target's band
+    it("a target change or a cleared target drained in its own frame: one unknown, never the last band", function()
+        boot()
+        live()
+        local function drainNow()
+            local from, got = #seen + 1, {}
+            VS.Drain(sync())
+            for j = from, #seen do
+                if seen[j]:match("^%-1 ") then
+                    got[#got + 1] = seen[j]
+                end
+            end
+            return table.concat(got, ",")
+        end
+        W.unit.target = { health = 0.195 }
+        Fake.event("PLAYER_TARGET_CHANGED")
+        assert.are.equal("-1 -", drainNow())
+        assert.is_false(I.bandLive[-1])
+        frames(13)
+        assert.are.same({ true, 0.19, 0.2 }, { I.bandLive[-1], I.bandLo[-1], I.bandHi[-1] })
+        W.unit.target = nil
+        Fake.event("PLAYER_TARGET_CHANGED")
+        assert.are.equal("-1 -", drainNow())
+        assert.is_false(I.bandLive[-1])
+    end)
+
     -- Lane B2 (design 2.6): the target health family reads the band; a swap to a low target reads full through the
     -- library's prime (no low reading on a swap), then the new band's middle.
     it("a swap to a low target: the family reads full through the prime, then the new band (lane B2)", function()

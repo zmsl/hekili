@@ -1,6 +1,6 @@
 -- tests/Forever/ttd_chain_pull_spec.lua (ttd-chain-pull; lane B8, L1730, L1736): the next target does not take the last
--- one's kill time, and the first answers on a new target are the library's own. The real LibTimeToDie (vendored v0.4.0,
--- minor 4) over the fake bands (ttd_rig.lua), through the core's fight_remains, target.time_to_die and time to a
+-- one's kill time, and the first answers on a new target are the library's own. The real LibTimeToDie (vendored v0.5.0,
+-- minor 5) over the fake bands (ttd_rig.lua), through the core's fight_remains, target.time_to_die and time to a
 -- percent. vendor-libs removed B8's forget at the pull and its 0.5 s keep; a seed still reads unknown (the fight runs).
 local headless = require("Game.harness.headless")
 local fake_lhv = require("Game.harness.fake_lhv")
@@ -10,8 +10,9 @@ local fake = require("Game.State.helpers.fake_api")
 
 local UNKNOWN, TICK = 3600, 0.1
 
--- `nilForNone`: UnitExists answers nil for no unit, not false
-local function boot(nilForNone)
+-- `nilForNone`: UnitExists answers nil for no unit, not false; `lhvMinor`: the hidden-value library's minor (default
+-- the fake's own)
+local function boot(nilForNone, lhvMinor)
     local new = fake.new
     if nilForNone then
         fake.new = function(...) -- before the facade resolves UnitExists
@@ -36,11 +37,16 @@ local function boot(nilForNone)
             return ctl.now
         end,
     })
+    if lhvMinor then
+        function bands.GetVersion()
+            return "LibHiddenValues-1.0", lhvMinor
+        end
+    end
     local major, minor = bands:GetVersion()
     local stub = rawget(H.env, "LibStub")
     stub.libs[major], stub.minors[major] = bands, minor
     local rig = ttd_rig.install(H, bands)
-    local w = { H = H, tracks = 0 }
+    local w = { H = H, tracks = 0, rig = rig }
     local track = rig.lib.Track
     function rig.lib.Track(...)
         w.tracks = w.tracks + 1
@@ -202,6 +208,207 @@ describe("ttd-chain-pull: the next mob does not take the last one's kill time (l
             assert.are.equal(1, w.tracks)
         end)
     end
+
+    -- The library-off fallback (L1805): LibTimeToDie minor 5 needs LibHiddenValues minor 10 (LHV_MIN), so an older copy
+    -- reads every token unavailable, lhv-old; the core answers unknown, as with no library, and raises nothing.
+    it("an older LibHiddenValues (minor 9): unknown throughout, no error", function()
+        local w = boot(false, 9)
+        w.target("Creature-1", 100)
+        w.combat(true)
+        local known = 0
+        w.fight(100, 100 / 30, 12, function(_, r, t)
+            known = known + ((r ~= UNKNOWN or t ~= UNKNOWN) and 1 or 0)
+        end)
+        assert.are.equal(0, known)
+        assert.are.equal(UNKNOWN, w.H.Hekili:GetTimeToPct("target", 20))
+        assert.is_truthy(w.H.Hekili:GetTTDInfo():find("time to die: unavailable lhv-old", 1, true))
+    end)
+
+    -- The harness's worlds reuse nameplate1 for each fight's new mob with no NAME_PLATE_UNIT_REMOVED between (the client
+    -- always fires one first); LibTimeToDie minor 5 then took the new mob for the plate's last one and carried its time
+    -- into the pull (the ttd arm's Balance seeds: 249 s at a fresh pull). ttd_rig.newFight is the removal, per fight.
+    it("a new fight's mob on the last fight's plate token: unknown at the pull (ttd_rig.newFight)", function()
+        local w = boot()
+        local ctl = w.H.ctl
+        ctl.guid.nameplate1 = "Creature-1"
+        w.target("Creature-1", 100)
+        w.H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+        w.combat(true)
+        local remains = w.fight(100, 100 / 60, 10)
+        assert.is_true(remains < UNKNOWN)
+        w.combat(false)
+        ttd_rig.newFight(w.rig)
+        ctl.guid.nameplate1 = "Creature-2"
+        w.target("Creature-2", 100)
+        w.H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+        w.combat(true)
+        w.step()
+        assert.are.same({ UNKNOWN, UNKNOWN }, { w.read() })
+    end)
+
+    -- LibTimeToDie minor 5's lives through the core: switched away, the target's estimate stays on its plate (fed at 5%);
+    -- switched back while that plate is shown, fight_remains and time_to_die answer at once, not after 1.5 s of loss.
+    -- Every read for 6 s after a 5 s swap (the review's I1 cases) lies within [pace - 5.5, 1.1 x pace], pace the boss's
+    -- true time left. Low end: the boss lost nothing while away, and the life holds its estimate, counting it down, until
+    -- the next band, so the first reads are short by the time away (measured: 102 at pace 107, 13 at 18); 0.5 s more
+    -- for the fall since the last band. High end: LibTimeToDie's WIDEN (1.1), a plate-fed life's range, both ends
+    -- (measured: 1.001 x pace at most). A resume at 1.8x pace, or an unknown, fails.
+    for _, at in ipairs({ 90, 15 }) do
+        it(("back to a mob at %d%% whose plate kept its estimate: near pace from the first read"):format(at), function()
+            local w = boot()
+            local ctl, bands = w.H.ctl, w.rig.lhv
+            local function plate(tok, guid, pct)
+                ctl.guid[tok] = guid
+                bands:Prime(tok, ctl.now)
+                bands:Push("health", tok, nil, 12 * pct, 1200, ctl.now)
+                w.H.Fire("NAME_PLATE_UNIT_ADDED", tok)
+            end
+            plate("nameplate1", "Creature-1", 100)
+            plate("nameplate2", "Creature-2", 100)
+            w.target("Creature-1", 100)
+            w.combat(true)
+            local rate, away = 100 / 120, 5
+            local ticks = math.floor((100 - at) / rate / TICK + 0.5)
+            local remains = w.fight(100, rate, ticks * TICK)
+            assert.is_true(remains < UNKNOWN)
+            local left = 100 - rate * ticks * TICK
+            bands:Push("health", "nameplate1", nil, 12 * left, 1200, ctl.now)
+            w.target("Creature-2", 100) -- a new mob: no estimate yet
+            assert.are.same({ UNKNOWN, UNKNOWN }, { w.read() })
+            w.wait(away)
+            w.target("Creature-1", left) -- back: its plate held the estimate
+            local off = {}
+            w.fight(left, rate, 6, function(t, r, ttd)
+                local pace = (left - rate * t) / rate
+                if r ~= ttd or ttd < pace - away - 0.5 or ttd > 1.1 * pace then
+                    off[#off + 1] = ("%.1f s: %.1f/%.1f, pace %.1f"):format(t, r, ttd, pace)
+                end
+            end)
+            assert.are.same({}, off)
+        end)
+    end
+
+    -- vendor-libs-next review I1: a resumed life can answer stalled, prior or fit, then seed, then fit; the seed rule
+    -- blanked the seed part, so the reading went known, 3600, known (a 120 s boss at 15%: 16, then 3600 for 1.2 s,
+    -- then 12). A life that has given a non-seed answer keeps showing the library's answer through a seed; a mob never
+    -- estimated before still reads 3600 on its seed. The add here (a 28% hit, then 0.5% a second: the seed shape of
+    -- ttd-first-guess's residue) is that fresh mob, and its fit comes before the switch back on the 10 s cases.
+    -- Plates fed every tick, a read every tick; { boss length, seconds away, health at the switch back }.
+    for _, case in ipairs({ { 120, 5, 15 }, { 180, 6, 40 }, { 600, 10, 20 } }) do
+        local len, away, at = case[1], case[2], case[3]
+        it(
+            ("back to a %d s boss at %d%% after %d s on a fresh add: known at every read"):format(len, at, away),
+            function()
+                local w = boot()
+                local ctl, bands = w.H.ctl, w.rig.lhv
+                for i = 1, 2 do
+                    local tok = "nameplate" .. i
+                    ctl.guid[tok] = "Creature-" .. i
+                    bands:Prime(tok, ctl.now)
+                    bands:Push("health", tok, nil, 1200, 1200, ctl.now)
+                    w.H.Fire("NAME_PLATE_UNIT_ADDED", tok)
+                end
+                local rate, hp = 100 / len, 100
+                w.target("Creature-1", 100)
+                w.combat(true)
+                local function boss()
+                    w.step()
+                    hp = hp - rate * TICK
+                    w.health(hp)
+                    bands:Push("health", "nameplate1", nil, 12 * hp, 1200, ctl.now)
+                    return w.read()
+                end
+                for _ = 1, math.floor((100 - at) / rate / TICK + 0.5) do
+                    boss()
+                end
+                w.target("Creature-2", 100)
+                local seeds, shown = 0, {}
+                for i = 1, math.floor(away / TICK + 0.5) do
+                    w.step()
+                    w.health(i == 1 and 72 or 72 - 0.5 * (i - 1) * TICK)
+                    local r, t = w.read()
+                    if w.H.Hekili:GetTTDInfo():match("^time to die: live seed ") then
+                        seeds = seeds + 1
+                        if r < UNKNOWN or t < UNKNOWN then
+                            shown[#shown + 1] = ("%.1f s: %.1f/%.1f"):format(i * TICK, r, t)
+                        end
+                    end
+                end
+                assert.is_true(seeds > 0)
+                assert.are.same({}, shown)
+                w.target("Creature-1", hp)
+                local unknown = {}
+                for i = 1, 200 do
+                    local r, t = boss()
+                    if r >= UNKNOWN or t >= UNKNOWN then
+                        unknown[#unknown + 1] = ("%.1f s: %s"):format(
+                            i * TICK,
+                            w.H.Hekili:GetTTDInfo():match("^time to die: %S+ %S+")
+                        )
+                    end
+                end
+                assert.are.same({}, unknown)
+            end
+        )
+    end
+
+    -- vendor-libs-next-2 re-review m1: the core's remembered lives follow recency, as the library's do. A 600 s boss,
+    -- a fresh add fought 3 s to a fit, 10 s back on the boss, then four more such adds: the boss was the target after
+    -- the first add, so on the switch back (12 s away, its first answers seeds) it still shows. Remembered by first
+    -- answer, five adds pushed it out and it read 3600 for all 10 s.
+    it(
+        "back to a 600 s boss after five adds with a fit each, 10 s on it after the first: known at every read",
+        function()
+            local w = boot()
+            local ctl, bands = w.H.ctl, w.rig.lhv
+            ctl.guid.nameplate1 = "Creature-1"
+            bands:Prime("nameplate1", ctl.now)
+            bands:Push("health", "nameplate1", nil, 1200, 1200, ctl.now)
+            w.H.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+            local rate, hp = 100 / 600, 100
+            w.target("Creature-1", 100)
+            w.combat(true)
+            local function boss()
+                w.step()
+                hp = hp - rate * TICK
+                w.health(hp)
+                bands:Push("health", "nameplate1", nil, 12 * hp, 1200, ctl.now)
+                return w.read()
+            end
+            for _ = 1, 1500 do
+                boss()
+            end
+            for add = 1, 5 do
+                w.target("Creature-" .. (add + 1), 100)
+                local fit = false
+                for i = 1, 30 do
+                    w.step()
+                    w.health(100 - 9 * i * TICK)
+                    w.read()
+                    fit = fit or w.H.Hekili:GetTTDInfo():match("^time to die: live fit ") ~= nil
+                end
+                assert.is_true(fit, "add " .. add)
+                if add == 1 then
+                    w.target("Creature-1", hp)
+                    for _ = 1, 100 do
+                        boss()
+                    end
+                end
+            end
+            w.target("Creature-1", hp)
+            local unknown = {}
+            for i = 1, 100 do
+                local r, t = boss()
+                if r >= UNKNOWN or t >= UNKNOWN then
+                    unknown[#unknown + 1] = ("%.1f s: %s"):format(
+                        i * TICK,
+                        w.H.Hekili:GetTTDInfo():match("^time to die: %S+ %S+")
+                    )
+                end
+            end
+            assert.are.same({}, unknown)
+        end
+    )
 
     it("no unit answered nil, not false: forgotten all the same", function()
         local w = boot(true)
@@ -508,6 +715,24 @@ describe("ttd-first-guess: the library's first answers through the core (L1736)"
             w.health(pct)
         end)
         assert.are.equal("unknown: 3600 x24, fit: known x464, unknown: 3600 x9, fit: known x23", seen)
+    end)
+
+    -- vendor-libs-next: minor 5 seeds again after a stall on a mob never left (the ttd arm's Arms seed 17, Feral seed
+    -- 20). That life has given a fit, so its seed shows; the old rule read it 3600 between known reads.
+    it("a 120 s mob with a 6 s lull after 15 s: stalled, prior, seed, fit, all known after the first fit", function()
+        local w = boot()
+        pull(w)
+        local pct = 100
+        local seen = runs(w, 300, function(i)
+            if i <= 150 or i > 210 then
+                pct = pct - 100 / 120 * TICK
+            end
+            w.health(pct)
+        end)
+        assert.are.equal(
+            "unknown: 3600 x37, seed: 3600 x12, fit: known x156, stalled: known x12, prior: known x24, seed: known x12, fit: known x47",
+            seen
+        )
     end)
 
     -- A same-unit re-prime (a desync: the hidden-value library primes the source again) keeps the estimate.

@@ -207,14 +207,16 @@ describe("LibHiddenValues contract", function()
         assert.are.same({}, calls)
     end)
 
-    it("grants a step beside edges as the 1% step (any step asked: 1)", function()
+    it("grants a step beside edges as the 1% step (any step asked but 5 on health: 1)", function()
         W.unit.target = { health = 0.3 }
         local h = lib:Watch("A", { kind = "health", unit = "target", edges = { 20 }, step = 1 }, sink)
-        local five = lib:Watch("A", { kind = "health", unit = "target", step = 5 }, sink)
+        local three = lib:Watch("A", { kind = "health", unit = "target", step = 3 }, sink)
+        local mana = lib:Watch("A", { kind = "power", unit = "player", power = 0, step = 5 }, sink)
         Fake.login()
         untilLive(h)
         assert.are.same({ 1, 0, 100 }, { h:Domain() })
-        assert.are.same({ 1, 0, 100 }, { five:Domain() })
+        assert.are.same({ 1, 0, 100 }, { three:Domain() })
+        assert.are.same({ 1, 0, 100 }, { mana:Domain() }) -- 5% is health only
         assert.are.same({ 30, 31 }, lohi(h))
     end)
 

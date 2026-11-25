@@ -189,7 +189,16 @@ M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = fal
 -- The time to die (lane B8, design 2.7's jitter rule): the bands arm with the real LibTimeToDie over the fake library
 -- (ttd_rig.lua), so the core's fight_remains and time_to_die answer its live estimate; each fight writes a `ttd` row
 -- (loop.ttdRow: answered polls, error against the kill). Record-only: its flicker is compared with the bands arm's.
-M.ARMS.ttd = { outcomes = "default", presence = "router", viewer = false, bands = true, ttd = true }
+-- Its observer also feeds each mob's plate (observer.lua `plateBands`), so a past target's life moves to its plate and
+-- back (LibTimeToDie minor 5).
+M.ARMS.ttd = {
+    outcomes = "default",
+    presence = "router",
+    viewer = false,
+    bands = true,
+    ttd = true,
+    bandKnobs = { plateBands = true },
+}
 -- The shipped arm (L1814, Fable batch 4 I1; owner 2026-11-23 "Yes, before the tag"): the addon as it ships, every
 -- switch on (Engine/Schema/Tracked.lua providersOf: the Cooldown Manager unless Hekili.cdmOff, the bands unless
 -- Hekili.bandOff; Engine/Sim/Targets.lua: the time to die with the bands): the bands, the real LibTimeToDie (the ttd

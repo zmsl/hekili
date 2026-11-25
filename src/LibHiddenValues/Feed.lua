@@ -1,5 +1,5 @@
 -- Feed.lua: the driver (every live bar pushed every frame: the measured mode), the client events (login, target
--- change, health for death, re-layouts), the unit checks and the statistics. Every script and event handler runs
+-- change, nameplates coming and going, health for death, re-layouts), the unit checks and the statistics. Every script and event handler runs
 -- under pcall: an error turns the kind being fed off for the session (reason "error"), reported once.
 local lib = LibStub and LibStub("LibHiddenValues-1.0", true)
 if not (lib and lib.loading) then
@@ -11,6 +11,7 @@ lib.nPush = lib.nPush or 0
 lib.usAvg, lib.usPeak, lib.winPeak = lib.usAvg or 0, lib.usPeak or 0, lib.winPeak or 0
 lib.pushRate, lib.fireRate = lib.pushRate or 0, lib.fireRate or 0
 lib.winStart, lib.winPush, lib.winFire = lib.winStart or 0, lib.winPush or 0, lib.winFire or 0
+lib.plateOut = lib.plateOut or {} -- [token] = true from NAME_PLATE_UNIT_REMOVED to the next ADDED
 
 -- Re-layouts (UI scale, window size, the end of a loading screen) may fire a clip whose fill did not change (unprobed):
 -- every fed source re-primes. That corrects a stray firing that came before the event or within the HOLD frames after.
@@ -97,6 +98,8 @@ function lib.realise()
     evf:RegisterEvent("PLAYER_DEAD")
     evf:RegisterEvent("PLAYER_ALIVE")
     evf:RegisterEvent("PLAYER_UNGHOST")
+    evf:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+    evf:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
     evf:RegisterUnitEvent("UNIT_HEALTH", "player", "target")
     evf:RegisterUnitEvent("UNIT_MAXPOWER", "player") -- the plain max moves the point cuts
     for ev in pairs(RELAYOUT) do
@@ -115,10 +118,13 @@ function lib.realise()
 end
 
 -- Units: tokens only. A secret answer counts as "there" and "not dead": the bands carry on (the dead bar is a later
--- stage).
+-- stage). A removed plate is not there, whatever UnitExists says during its REMOVED.
 function lib.present(unit)
     if unit == "player" then
         return true
+    end
+    if lib.plateOut[unit] then
+        return false
     end
     local e = UnitExists(unit)
     return issecretvalue(e) or e == true
@@ -138,22 +144,50 @@ local function syncUnit(unit)
     end
 end
 
+-- The token may name another unit now: sync, and a source fed before and after primes again.
+local function renamed(unit)
+    local srcs = lib.sources
+    for i = 1, #srcs do
+        local s = srcs[i]
+        if s.unit == unit then
+            local was = s.active
+            lib.sync(s)
+            if was and s.active then
+                lib.reprime(s)
+            end
+        end
+    end
+end
+
+-- A plate event's unit: a plain "nameplate1" to "nameplate40", else nil (the event is ignored: an odd argument must
+-- never raise here and turn every kind off). issecretvalue first: a secret is never indexed or matched.
+local function plate(unit)
+    if issecretvalue(unit) or type(unit) ~= "string" or not unit:match("^nameplate%d+$") then
+        return nil
+    end
+    local k = lib.kinds.health
+    return k and k.units[unit] and unit or nil
+end
+
 function lib.event(event, unit)
+    if event == "NAME_PLATE_UNIT_ADDED" or event == "NAME_PLATE_UNIT_REMOVED" then
+        unit = plate(unit)
+        if not unit then
+            return
+        end
+    end
     if event == "PLAYER_LOGIN" then
         lib.realise()
     elseif event == "PLAYER_TARGET_CHANGED" then
-        -- under the lockdown a new target cannot be told from the old one: always prime
-        local srcs = lib.sources
-        for i = 1, #srcs do
-            local s = srcs[i]
-            if s.unit == "target" then
-                local was = s.active
-                lib.sync(s)
-                if was and s.active then
-                    lib.reprime(s)
-                end
-            end
-        end
+        renamed("target") -- under the lockdown a new target cannot be told from the old one: always prime
+    elseif event == "NAME_PLATE_UNIT_ADDED" then
+        lib.plateOut[unit] = nil
+        renamed(unit) -- a token can name another mob 0 s after its REMOVED (an in-game probe)
+    elseif event == "NAME_PLATE_UNIT_REMOVED" then
+        -- gone, never death: half the removals measured were not deaths (an in-game probe)
+        -- shortcut: plate death seen at removal, about 0.25 s late; add an unfiltered UNIT_HEALTH if that matters
+        lib.plateOut[unit] = true
+        syncUnit(unit)
     elseif event == "UNIT_HEALTH" or event == "UNIT_MAXPOWER" then
         syncUnit(unit)
     elseif RELAYOUT[event] then

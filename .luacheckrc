@@ -198,10 +198,11 @@ files["tests/LibHiddenValues/"] = {
 files["src/LibTimeToDie/"] = {
     not_globals = { "print" }, -- a pure API: no chat output
     read_globals = {
-        "CreateFrame", "GetTime", "GetLocale", "geterrorhandler", "UnitCanAttack", "UnitExists", "issecretvalue",
+        "CreateFrame", "GetTime", "GetLocale", "geterrorhandler", "UnitCanAttack", "UnitExists", "UnitIsUnit",
+        "issecretvalue",
     },
 }
 files["tests/LibTimeToDie/"] = {
     std = "+busted",
-    read_globals = { "LibStub", "GetTime" },
+    read_globals = { "LibStub", "GetTime", "UnitIsUnit" },
 }

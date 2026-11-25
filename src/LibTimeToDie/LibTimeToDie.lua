@@ -5,11 +5,14 @@
 -- sees the shared crossings and that owner's hints only. A target change starts a fresh stream (the last rate may only
 -- lengthen its first answers); a re-prime of the same unit keeps the history; gone (no unit, plainly dead) clears the
 -- stream and keeps the handle. Hints (HintRate, HintBelow) are numbers only and reach hostile units only.
+-- Minor 5, lives: the owners' records of one mob (a life, with an id) move with it between the target and its
+-- nameplate. Switching away hands the old target's life to its plate (a 5% watch: a lazy stream, no tracks); switching
+-- back takes it again, so the estimate resumes at once. A life moves between tokens only on a plain UnitIsUnit true.
 --
 -- Upgrades: the newest minor on the client runs; Estimator.lua returns unless this copy won LibStub (lib.loading).
 -- State lives on lib as plain data; scripts are one-line dispatchers through lib. The addon name and the private table
 -- from `...` are never used (an embedded copy would receive its host's).
-local MAJOR, MINOR = "LibTimeToDie-1.0", 4
+local MAJOR, MINOR = "LibTimeToDie-1.0", 5
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then
     return
@@ -19,10 +22,13 @@ lib.loading = true
 local LHV_MAJOR = "LibHiddenValues-1.0"
 local NEVER = 1e9 -- the estimator's end of an open-ended rate hint
 local IDLE = math.huge -- a stream's next driver read when only a band, a read, a hint or a capability change wakes it
-lib.LHV_MIN = 5 -- the oldest LibHiddenValues minor this library runs on (below it: unavailable, lhv-old)
+lib.LHV_MIN = 10 -- the oldest LibHiddenValues minor this library runs on (below it: unavailable, lhv-old); 10: plates
 lib.POLL = 0.1 -- seconds between the driver's reads of a stream
 lib.RETRY = 1 -- seconds between the driver's tries to open a stream's watch (no LibHiddenValues, too old, refused)
 lib.NONE = lib.NONE or {} -- shared and never written
+lib.RECENT = 4 -- lazy plate lives (past targets) kept at most; the oldest goes first
+lib.WIDEN = 1.1 -- a plate-fed (5%) range, both ends (the plates lab: about the 1% coverage again)
+lib.VETO = 3 -- a new feeder's first band this far above the life's last (its lo over the last hi): a new life
 
 -- Error codes: every call that refuses input returns nil, code. Codes are plain strings; lib:GetMessage gives words.
 lib.ERR = {
@@ -51,6 +57,7 @@ lib.MESSAGES = {
         unavailable = "Unavailable.",
         paused = "Paused by its owner.",
         released = "Released.",
+        untracked = "Untracked: this owner has no estimate on that unit token now.",
         ["lhv-missing"] = "LibHiddenValues is not loaded.",
         ["lhv-old"] = "The LibHiddenValues loaded is older than this library needs.",
         fit = "Estimated from the recent fall of the health.",
@@ -96,6 +103,11 @@ lib.belowP, lib.belowF = lib.belowP or {}, lib.belowF or {} -- per owner; factor
 lib.H = lib.H or {}
 lib.handleMeta = lib.handleMeta or { __index = lib.H }
 lib.spec = lib.spec or { kind = "health", unit = false, step = 1 } -- the watch spec (LibHiddenValues copies it)
+lib.plates = lib.plates or {} -- [token] = true while a nameplate token is shown (ADDED to REMOVED)
+lib.recent = lib.recent or {} -- plate streams holding a past target's life, newest last
+lib.noRecent = lib.noRecent or {} -- [owner] = true: opted out (SetRecent)
+lib.lastId = lib.lastId or 0 -- the last life's id
+lib.linkTok, lib.linkAt = lib.linkTok or false, lib.linkAt or 0 -- a plate ADDED for the target: linked at a later read
 
 -- Dispatchers: LibHiddenValues and the frame keep these references; a newer minor replaces what they call.
 lib.lhvDispatch = lib.lhvDispatch or function(...)
@@ -111,13 +123,12 @@ lib.onUpdate = lib.onUpdate
             lib.report(err)
         end
     end
-lib.onEvent = lib.onEvent
-    or function(_, event)
-        local ok, err = pcall(lib.event, event)
-        if not ok then
-            lib.report(err)
-        end
+lib.onEvent = function(_, event, unit) -- minor 5: always this copy's (minor 4's dropped the unit)
+    local ok, err = pcall(lib.event, event, unit)
+    if not ok then
+        lib.report(err)
     end
+end
 
 if CreateFrame and not lib.frame then
     lib.frame = CreateFrame("Frame") -- shows nothing: the client events and the driver (OnUpdate)
@@ -126,6 +137,9 @@ if lib.frame then
     lib.frame:SetScript("OnEvent", lib.onEvent)
     lib.frame:RegisterEvent("PLAYER_TARGET_CHANGED")
     lib.frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    lib.frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    lib.frame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+    lib.frame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 end
 
 -- Streams -------------------------------------------------------------------------------------------------------------
@@ -181,7 +195,7 @@ local function attach(s)
         return nil
     end
     lhv:OnCapability(MAJOR, lib.capDispatch)
-    lib.spec.unit = s.token
+    lib.spec.unit, lib.spec.step = s.token, s.step
     local lh, code = lhv:Watch(MAJOR, lib.spec, lib.lhvDispatch)
     if not lh then
         s.why = code
@@ -212,35 +226,133 @@ function lib.touch(s)
     lib.wake()
 end
 
-local function open(token)
-    local s = { token = token, tracks = {}, sinks = 0, owners = {}, byOwner = {}, at = false, due = false, retryAt = 0 }
-    s.state, s.why, s.hostile = "priming", nil, lib.hostile(token)
-    local code = attach(s)
-    if code then
-        return nil, code
-    end
-    lib.byToken[token] = s
-    lib.streams[#lib.streams + 1] = s
-    lib.wake()
-    return s
+-- Lives -------------------------------------------------------------------------------------------------------------
+-- A life (L) is one mob's records: { id, owners, byOwner, feeder, lo, hi }. A stream holds one life (s.owners and
+-- s.byOwner are its tables); the target stream and a plate stream may hold the same one. Only the feeder's bands reach
+-- its estimators (the target at 1% while it holds the life, else the plate at 5%); lo, hi: the last band it gave.
+
+local function newLife(s)
+    lib.lastId = lib.lastId + 1
+    return { id = lib.lastId, owners = {}, byOwner = {}, feeder = s, lo = false, hi = false }
 end
 
--- An owner's record on a stream. On a watch that already has a band it starts from that band (now), as a new watch
--- would; the history before it is not replayed.
-local function addOwner(s, owner)
-    local o = { owner = owner, e = lib.Estimator.New(), refs = 0, state = "priming", pub = false }
-    pushRate(s, o)
-    pushBelow(s, o)
-    if s.lh then
-        local lo, hi = s.lh:Get()
-        if lo then
-            o.e:Band(GetTime(), lo, hi)
+local function hold(s, L)
+    s.life, s.owners, s.byOwner = L, L.owners, L.byOwner
+end
+
+-- Another stream holding s's life, or false.
+local function other(L, s)
+    for i = 1, #lib.streams do
+        local x = lib.streams[i]
+        if x ~= s and x.life == L then
+            return x
         end
     end
-    s.owners[#s.owners + 1] = o
-    s.byOwner[owner] = o
+    return false
+end
+
+-- s's first band as its life's feeder: true when it is fed. A life with no band yet takes it as any first band; else it
+-- is never a crossing (a 5% cell's top read after a 1% band would be a heal, the plates lab), only the veto: its bottom
+-- VETO or more above the last band's top (health never proves identity, but this one cannot be that mob's now).
+local renew
+local function handover(s, lo, hi)
+    s.hand = false
+    local L = s.life
+    if not L.hi then
+        return true
+    end
+    if lo - L.hi >= lib.VETO then
+        renew(s)
+        return true
+    end
+    L.lo, L.hi = lo, hi
+    return false
+end
+
+-- s feeds its life from now: the band it holds now (a plate, not touched by the event) is the hand-over band, or the
+-- next one is. Never read from LibHiddenValues here: in an event handler it may not have seen the event yet.
+local function feed(s)
+    s.life.feeder = s
+    if s.hi then
+        handover(s, s.lo, s.hi)
+    else
+        s.hand = true
+    end
+end
+
+-- s lets go of its life; the life's other holder feeds it, or it is gone.
+local function leave(s)
+    local L = s.life
+    if not L then
+        return
+    end
+    s.life = false
+    if L.feeder == s then
+        L.feeder = other(L, s)
+        if L.feeder then
+            feed(L.feeder)
+        end
+    end
+end
+
+-- An owner's record on s's life. From a record (`from`): its copy, restarted (a new unit: the carried slope and the
+-- learned factor, as minor 4's Restart). Else a new estimator that starts from the feeder's band now, when it has one
+-- (the history before it is not replayed; never while a hand-over is due, the band may be another unit's).
+local function addOwner(s, owner, from)
+    local L, o = s.life, nil
+    if from then
+        o = { owner = owner, e = from.e:Clone(), state = "priming", pub = false }
+        o.e:Restart()
+    else
+        o = { owner = owner, e = lib.Estimator.New(), state = "priming", pub = false }
+        pushRate(s, o)
+        pushBelow(s, o)
+        local f = L.feeder
+        if f and f.lh and not f.hand then
+            local lo, hi = f.lh:Get()
+            if lo then
+                o.e:Band(GetTime(), lo, hi)
+            end
+        end
+    end
+    L.owners[#L.owners + 1] = o
+    L.byOwner[owner] = o
     lib.touch(s)
     return o
+end
+
+-- s holds L; every owner tracking s has a record on it (from: the life s held before, the records to copy).
+local function bind(s, L, from)
+    hold(s, L)
+    for i = 1, #s.tracks do
+        local owner = s.tracks[i].owner
+        if not L.byOwner[owner] then
+            addOwner(s, owner, from and from.byOwner[owner])
+        end
+    end
+end
+
+-- The veto: s's life is not this unit's; s gets a new one (copies of its records, restarted).
+function renew(s)
+    local L = s.life
+    leave(s)
+    bind(s, newLife(s), L)
+end
+
+-- Whether the target is the unit on token: a plain true only (a secret is no link, and never tested as a boolean).
+local function isUnit(token)
+    local v = UnitIsUnit("target", token)
+    return not (issecretvalue and issecretvalue(v)) and v == true
+end
+
+-- The shown plate that is the target's, or false.
+function lib.findPlate()
+    for token in pairs(lib.plates) do
+        if isUnit(token) then
+            return token
+        end
+    end
+    return false
 end
 
 local function remove(list, x)
@@ -252,7 +364,46 @@ local function remove(list, x)
     end
 end
 
-local function close(s)
+-- An explicit plate stream joins the target's life (it is the target's plate).
+local function share(p, t)
+    leave(p)
+    bind(p, t.life)
+end
+
+local close
+
+-- A stream (life: a lazy one, holding that life, no tracks). The target's records its plate; an explicit plate
+-- that is the target's shares the target's life.
+local function open(token, life)
+    local s = { token = token, tracks = {}, sinks = 0, at = false, due = false, retryAt = 0 }
+    s.lo, s.hi, s.hand, s.plate, s.lazy = false, false, false, false, life and true or false
+    s.step = token:match("^nameplate%d+$") and 5 or 1
+    s.state, s.why, s.hostile = "priming", nil, lib.hostile(token)
+    hold(s, life or newLife(s))
+    local code = attach(s)
+    if code then
+        return nil, code
+    end
+    lib.byToken[token] = s
+    lib.streams[#lib.streams + 1] = s
+    if life then
+        feed(s)
+    elseif token == "target" then
+        s.plate = lib.findPlate()
+    elseif s.step == 5 then
+        local t = lib.byToken.target
+        if t and lib.plates[token] and isUnit(token) then
+            t.plate = token
+            share(s, t)
+        end
+    end
+    lib.wake()
+    return s
+end
+
+function close(s)
+    leave(s)
+    remove(lib.recent, s)
     if s.lh then
         lib.byLhv[s.lh] = nil
         s.lh:Release()
@@ -260,25 +411,92 @@ local function close(s)
     end
     lib.byToken[s.token] = nil
     remove(lib.streams, s)
+    if s.token == "target" then -- the lazy lives were kept for it
+        for i = #lib.recent, 1, -1 do
+            local p = lib.recent[i]
+            if p and p.lazy then
+                close(p)
+            end
+        end
+    end
 end
 
--- A band (or unknown) from LibHiddenValues, to every owner's estimator. Unknown keeps the history (a re-prime of the
--- same unit) unless the unit is gone: the stream is cleared then. A target change is told by the client's event.
+-- The old target's life to its plate at a target change: true when the target let go of it. To a shown plate only,
+-- with a band (none: dead, gone or never read), held by that plate when it is tracked; to a lazy stream when some
+-- record has a crossing and some owner did not opt out, over RECENT the oldest lazy life going first (not keep, the
+-- plate stream the target is taking back).
+function lib.handOff(s, L, keep)
+    local token = s.plate
+    if not token or not lib.plates[token] or not L.hi then
+        return false
+    end
+    local p = lib.byToken[token]
+    if p then
+        if p.life ~= L then
+            return false
+        end
+        leave(s)
+    else
+        local cross, kept = false, false
+        for i = 1, #L.owners do
+            local o = L.owners[i]
+            cross = cross or o.e.n > 0
+            kept = kept or not lib.noRecent[o.owner]
+        end
+        if not (cross and kept) then
+            return false
+        end
+        local lazy = 0
+        for i = 1, #lib.recent do
+            lazy = lazy + ((lib.recent[i].lazy and lib.recent[i] ~= keep) and 1 or 0)
+        end
+        for _ = lib.RECENT, lazy do
+            for i = 1, #lib.recent do
+                if lib.recent[i].lazy and lib.recent[i] ~= keep then
+                    close(lib.recent[i])
+                    break
+                end
+            end
+        end
+        leave(s)
+        p = open(token, L)
+        if not p then -- refused (no bar): the life goes, as before minor 5
+            return true
+        end
+    end
+    lib.recent[#lib.recent + 1] = p
+    return true
+end
+
+-- A band (or unknown) from LibHiddenValues, to every owner's estimator of the life its stream feeds (another stream's
+-- feed: kept as that stream's band only). Unknown keeps the history (a re-prime of the same unit) unless the unit is
+-- gone: the life is cleared then (and never handed on). A target change is told by the client's event.
 function lib.lhvSink(lh, lo, hi, _, t)
     local s = lib.byLhv[lh]
     if not s then
         return
     end
+    s.lo, s.hi = lo or false, hi or false
+    local L = s.life
+    if L.feeder ~= s then
+        return
+    end
     lib.touch(s)
-    local owners = s.owners
     if lo == nil then
         if lh:State() == "gone" then
-            for i = 1, #owners do
-                owners[i].e:Restart()
+            L.lo, L.hi = false, false
+            for i = 1, #L.owners do
+                L.owners[i].e:Restart()
             end
         end
         return
     end
+    if s.hand and not handover(s, lo, hi) then
+        return
+    end
+    L = s.life -- the veto's new life: this is its first band
+    L.lo, L.hi = lo, hi
+    local owners = L.owners
     for i = 1, #owners do
         owners[i].e:Band(t, lo, hi)
     end
@@ -302,6 +520,13 @@ function lib.evaluate(s, now)
     if not s.lh and now >= (s.retryAt or 0) then
         attach(s)
     end
+    local f = s.life.feeder
+    if f and f ~= s then -- the feeder's watch answers for the life
+        lib.evaluate(f, now)
+        s.state = f.state
+        return
+    end
+    local wide = s.step == 5 and lib.WIDEN
     local lh, state, why, ls, lr = s.lh, nil, nil, nil, nil
     if not lh then
         state, why = "unavailable", s.why
@@ -327,6 +552,9 @@ function lib.evaluate(s, now)
             est, lo, hi, es = o.e:Get(now)
             if est then
                 ostate, owhy = "live", es
+                if wide then
+                    lo, hi = lo / wide, hi * wide
+                end
             elseif ls == "live" then
                 ostate = "unknown"
             end
@@ -343,6 +571,9 @@ end
 -- unsets itself when no stream wants a read.
 function lib.drive()
     local now = GetTime()
+    if lib.linkTok and now >= lib.linkAt then
+        lib.link()
+    end
     local streams = lib.streams
     local busy = false
     for i = #streams, 1, -1 do
@@ -361,7 +592,7 @@ function lib.drive()
                 local h = tracks[j]
                 local fn = h and h.sink
                 if fn then
-                    local o = h.o
+                    local o = s.byOwner[h.owner]
                     local paused = h.paused
                     local state = paused and "paused" or o.state
                     local pub = not paused and o.pub
@@ -413,28 +644,109 @@ local function flip(s, o)
     end
 end
 
--- The client's events. A target change: the target's streams start fresh (the last rate only lengthens) and the hints
--- follow its hostility; a gap between targets (no unit) is no flip. Combat start: an estimator with no crossing yet
--- starts again from now, so a mob targeted at full long before the pull is not anchored at the moment it was targeted
--- (the TTD lab's note on the full anchor).
-function lib.event(event)
+-- A plate ADDED for the target, linked at the driver's read POLL later unless a target change came first.
+function lib.link()
+    local token = lib.linkTok
+    lib.linkTok = false
+    local t = lib.byToken.target
+    if t and lib.plates[token] and isUnit(token) then
+        t.plate = token
+        local p = lib.byToken[token]
+        if p and p.life ~= t.life then
+            share(p, t)
+        end
+    end
+end
+
+-- A plate event's unit: a plain "nameplate1" to "nameplate40" (issecretvalue first: a secret is never matched).
+local function plateToken(unit)
+    if (issecretvalue and issecretvalue(unit)) or type(unit) ~= "string" or not unit:match("^nameplate%d+$") then
+        return nil
+    end
+    return unit
+end
+
+-- A target change. The same unit again (its plate holds the target's life, or is the one recorded): nothing changes.
+-- Else the old life goes to its plate (lib.handOff), and the target takes the new unit's life from its plate, or gets a
+-- new one (copies of the old records, restarted: the last rate only lengthens), or restarts its own in place when it
+-- kept it (no plate: as before minor 5, nothing allocated). The hints follow its hostility; a gap between targets (no
+-- unit) is no flip.
+local function targetChanged(s)
+    s.lo, s.hi = false, false -- the old unit's band: LibHiddenValues may not have seen the event yet
+    local L, token = s.life, lib.findPlate()
+    local p = token and lib.byToken[token]
+    if token and (token == s.plate or (p and p.life == L)) then
+        s.plate = token
+        lib.touch(s)
+        return
+    end
+    local moved = lib.handOff(s, L, p)
+    s.plate = token
+    local hostile = s.hostile
+    if lib.present("target") then
+        hostile = lib.hostile("target")
+    end
+    local flipped = hostile ~= s.hostile
+    s.hostile = hostile
+    local T = p and p.life
+    if T and T ~= L and T.hi then -- back to a mob whose plate holds its life: it resumes now
+        leave(s)
+        hold(s, T)
+        T.feeder, s.hand = s, true
+        bind(s, T, L)
+        if p.lazy then
+            close(p)
+        else
+            remove(lib.recent, p)
+        end
+        for i = 1, #T.owners do
+            local o = T.owners[i]
+            local owner, from = o.owner, L.byOwner[o.owner]
+            pushRate(s, o)
+            pushBelow(s, o)
+            if from and lib.belowP[owner] and not lib.belowF[owner] then -- learned: the newest learning carries
+                o.e.xf = from.e:ExecuteFactor()
+            end
+        end
+    else
+        if moved or other(L, s) then
+            leave(s)
+            bind(s, newLife(s), L)
+        else
+            lib.lastId = lib.lastId + 1
+            L.id, L.lo, L.hi = lib.lastId, false, false
+            for i = 1, #L.owners do
+                L.owners[i].e:Restart()
+            end
+        end
+        if flipped then
+            for i = 1, #s.owners do
+                flip(s, s.owners[i])
+            end
+        end
+    end
+    if moved and L.feeder and L.feeder.lazy then -- an opted-out owner's record does not move
+        for i = #L.owners, 1, -1 do
+            local o = L.owners[i]
+            if lib.noRecent[o.owner] then
+                table.remove(L.owners, i)
+                L.byOwner[o.owner] = nil
+            end
+        end
+    end
+    lib.touch(s)
+end
+
+-- The client's events. Combat start: an estimator with no crossing yet starts again from now, so a mob targeted at
+-- full long before the pull is not anchored at the moment it was targeted (the TTD lab's note on the full anchor).
+-- Combat end releases the lazy lives. A plate REMOVED ends its hold at once (a returning token is a new unit): a lazy
+-- life goes, a tracked plate gets a fresh life.
+function lib.event(event, unit)
     if event == "PLAYER_TARGET_CHANGED" then
+        lib.linkTok = false
         local s = lib.byToken.target
         if s then
-            local owners = s.owners
-            for i = 1, #owners do
-                owners[i].e:Restart()
-            end
-            if lib.present("target") then
-                local hostile = lib.hostile("target")
-                if hostile ~= s.hostile then
-                    s.hostile = hostile
-                    for i = 1, #owners do
-                        flip(s, owners[i])
-                    end
-                end
-            end
-            lib.touch(s)
+            targetChanged(s)
         end
     elseif event == "PLAYER_REGEN_DISABLED" then
         local now = GetTime()
@@ -444,7 +756,7 @@ function lib.event(event)
             if s.lh then
                 lo, hi = s.lh:Get()
             end
-            for j = 1, #s.owners do
+            for j = 1, s.life.feeder == s and #s.owners or 0 do -- a shared life: its feeder's band only
                 local e = s.owners[j].e
                 if e.known and e.n == 0 and not e.t0 then
                     e:Restart()
@@ -453,6 +765,43 @@ function lib.event(event)
                     end
                     lib.touch(s)
                 end
+            end
+        end
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        for i = #lib.recent, 1, -1 do
+            local p = lib.recent[i]
+            if p and p.lazy then
+                close(p)
+            end
+        end
+    elseif event == "NAME_PLATE_UNIT_ADDED" then
+        unit = plateToken(unit)
+        if unit then
+            lib.plates[unit] = true
+            if lib.byToken.target and isUnit(unit) then
+                lib.linkTok, lib.linkAt = unit, GetTime() + lib.POLL
+                lib.wake()
+            end
+        end
+    elseif event == "NAME_PLATE_UNIT_REMOVED" then
+        unit = plateToken(unit)
+        if unit then
+            lib.plates[unit] = nil
+            if lib.linkTok == unit then
+                lib.linkTok = false
+            end
+            local t = lib.byToken.target
+            if t and t.plate == unit then
+                t.plate = false
+            end
+            local p = lib.byToken[unit]
+            if p and p.lazy then
+                close(p)
+            elseif p then
+                remove(lib.recent, p)
+                leave(p)
+                p.lo, p.hi, p.hand = false, false, true
+                bind(p, newLife(p))
             end
         end
     end
@@ -479,9 +828,11 @@ function lib:Track(owner, token, sink)
             return nil, code
         end
     end
-    local o = s.byOwner[owner] or addOwner(s, owner)
-    local h = setmetatable({ owner = owner, token = token, s = s, o = o }, lib.handleMeta)
-    o.refs = o.refs + 1
+    s.lazy = false -- a lazy plate tracked: explicit from now
+    if not s.byOwner[owner] then
+        addOwner(s, owner)
+    end
+    local h = setmetatable({ owner = owner, token = token, s = s }, lib.handleMeta)
     s.tracks[#s.tracks + 1] = h
     lib.reg[#lib.reg + 1] = h
     lib.syncPause(s)
@@ -499,7 +850,12 @@ function lib:ReleaseAll(owner)
             h:Release()
         end
     end
-    if owner ~= nil then -- its records went with its tracks: nothing to push
+    if owner ~= nil then -- its records went with its tracks (and off the past targets' plates): nothing to push
+        for i = 1, #lib.recent do
+            local L = lib.recent[i].life
+            remove(L.owners, L.byOwner[owner])
+            L.byOwner[owner] = nil
+        end
         lib.rateF[owner], lib.rateS[owner], lib.rateE[owner] = nil, nil, nil
         lib.belowP[owner], lib.belowF[owner] = nil, nil
     end
@@ -522,7 +878,7 @@ end
 
 local H = lib.H
 
--- est, lo, hi (seconds from now; nil unless live), state, reason.
+-- est, lo, hi (seconds from now; nil unless live), state, reason, id (the life's: a whole number, plain).
 function H:Get()
     if self.released then
         return nil, nil, nil, "released"
@@ -530,9 +886,10 @@ function H:Get()
     if self.paused then
         return nil, nil, nil, "paused"
     end
-    local o = self.o
-    lib.evaluate(self.s, GetTime())
-    return o.est, o.lo, o.hi, o.state, o.why
+    local s = self.s
+    lib.evaluate(s, GetTime())
+    local o = s.byOwner[self.owner]
+    return o.est, o.lo, o.hi, o.state, o.why, s.life.id
 end
 
 function H:State()
@@ -571,18 +928,64 @@ function H:Release()
     self:SetSink(nil)
     self.released = true
     remove(lib.reg, self)
-    local s, o = self.s, self.o
+    local s, owner = self.s, self.owner
     remove(s.tracks, self)
-    o.refs = o.refs - 1
-    if o.refs == 0 then
-        remove(s.owners, o)
-        s.byOwner[o.owner] = nil
+    local L, kept = s.life, false
+    for i = 1, #lib.streams do -- the record stays while a track of its owner is on a stream holding its life
+        local x = lib.streams[i]
+        if x.life == L then
+            for j = 1, #x.tracks do
+                kept = kept or x.tracks[j].owner == owner
+            end
+        end
+    end
+    if not kept then
+        remove(L.owners, L.byOwner[owner])
+        L.byOwner[owner] = nil
     end
     if #s.tracks == 0 then
         close(s)
     else
         lib.syncPause(s)
     end
+end
+
+-- est, lo, hi, state, reason, id for whatever life token holds now (an owner's record on it), no handle; no record:
+-- nil, nil, nil, "untracked" (a lazy life released, a plate token another unit names now, a token not tracked).
+function lib:Get(owner, token)
+    local s = lib.byToken[token]
+    local o = s and s.byOwner[owner]
+    if not o then
+        return nil, nil, nil, "untracked"
+    end
+    lib.evaluate(s, GetTime())
+    return o.est, o.lo, o.hi, o.state, o.why, s.life.id
+end
+
+-- token, id of the i-th newest past target whose plate still holds its life with a record of the owner's; nil past
+-- the end.
+function lib:Recent(owner, i)
+    local n = 0
+    for j = #lib.recent, 1, -1 do
+        local p = lib.recent[j]
+        if p.byOwner[owner] then
+            n = n + 1
+            if n == i then
+                return p.token, p.life.id
+            end
+        end
+    end
+    return nil
+end
+
+-- Whether the owner's records follow its past targets to their plates (on by default). Off: they are dropped at the
+-- hand-off, so its target restarts as before minor 5. true, or nil, code.
+function lib:SetRecent(owner, on)
+    if type(owner) ~= "string" then
+        return nil, lib.ERR.OWNER_INVALID
+    end
+    lib.noRecent[owner] = not on or nil
+    return true
 end
 
 -- Hints -------------------------------------------------------------------------------------------------------------
@@ -679,18 +1082,19 @@ function lib:GetStreams()
         for j = 1, #s.owners do
             local o = s.owners[j]
             local e = o.e
-            local sinks = 0
+            local tracks, sinks = 0, 0
             for k = 1, #s.tracks do
                 local h = s.tracks[k]
-                if h.o == o and h.sink then
-                    sinks = sinks + 1
+                if h.owner == o.owner then
+                    tracks = tracks + 1
+                    sinks = sinks + (h.sink and 1 or 0)
                 end
             end
             local rate = e.hf ~= 1
             out[#out + 1] = {
                 token = s.token,
                 owner = o.owner,
-                tracks = o.refs,
+                tracks = tracks,
                 sinks = sinks,
                 state = o.state,
                 reason = o.why,
@@ -708,4 +1112,28 @@ function lib:GetStreams()
         end
     end
     return out
+end
+
+-- Load: the plates already shown (an addon loaded later sees no ADDED for them); an upgrade from minor 4: the records
+-- a stream holds become its life.
+for i = 1, 40 do
+    local token = "nameplate" .. i
+    if lib.present(token) then
+        lib.plates[token] = true
+    end
+end
+for i = 1, #lib.streams do
+    local s = lib.streams[i]
+    if not s.life then
+        local lo, hi = false, false
+        if s.lh then
+            lo, hi = s.lh:Get()
+        end
+        lib.lastId = lib.lastId + 1
+        s.life =
+            { id = lib.lastId, owners = s.owners, byOwner = s.byOwner, feeder = s, lo = lo or false, hi = hi or false }
+        s.lo, s.hi, s.hand, s.lazy = lo or false, hi or false, false, false
+        s.step = s.token:match("^nameplate%d+$") and 5 or 1
+        s.plate = s.token == "target" and lib.findPlate()
+    end
 end

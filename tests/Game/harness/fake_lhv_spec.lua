@@ -13,7 +13,7 @@ local floor = math.floor
 -- Each world: target health 63.7%, player health full, player mana 45% of 1000. `live()` runs until fresh watches are
 -- live; `frame(pct)` runs one frame with the target's health at pct% (nil: unchanged); `hp(pct)` and `mana(pct)` set our
 -- health and mana, seen on the next frame; `max(m)` sets the mana max (mana stays 45%), seen on the next frame; `retarget(pct)` swaps to a new
--- target at pct% (the client's PLAYER_TARGET_CHANGED).
+-- target at pct% (the client's PLAYER_TARGET_CHANGED); `clear()` clears the target (the same event, no unit).
 local IMPLS = {
     real = function()
         local Fake = dofile(FAKE)
@@ -47,12 +47,22 @@ local IMPLS = {
                     W.unit.target = { health = pct / 100 }
                     Fake.event("PLAYER_TARGET_CHANGED")
                 end,
+                clear = function()
+                    W.unit.target = nil
+                    Fake.event("PLAYER_TARGET_CHANGED")
+                end,
+                plate = function(pct) -- nameplate1 shows a mob at pct% (nil: its plate goes)
+                    Fake.plate("nameplate1", pct and { health = pct / 100 } or nil)
+                end,
+                plateHp = function(pct)
+                    W.unit.nameplate1.health = pct / 100
+                end,
                 now = rawget(_G, "GetTime"), -- the FakeClient's clock
                 done = Fake.restore,
             }
     end,
     fake = function()
-        local k, newMax, newHp, newMana = 0, nil, nil, nil -- k: the frame number: the clock is 1000 + k frames, never a running sum
+        local k, newMax, newHp, newMana, newPlate = 0, nil, nil, nil, nil -- k: the frame number: the clock is 1000 + k frames, never a running sum
         local function now()
             return 1000 + k * FRAME
         end
@@ -82,6 +92,10 @@ local IMPLS = {
                         lib:Push("power", "player", 0, newMana * 10, 1000, now())
                         newMana = nil
                     end
+                    if newPlate then
+                        lib:Push("health", "nameplate1", nil, newPlate * 10, 1000, now())
+                        newPlate = nil
+                    end
                 end,
                 hp = function(pct)
                     newHp = pct
@@ -95,6 +109,19 @@ local IMPLS = {
                 retarget = function(pct)
                     lib:Prime("target", now())
                     lib:Push("health", "target", nil, pct * 10, 1000, now())
+                end,
+                clear = function()
+                    lib:Prime("target", now())
+                    lib:Push("health", "target", nil, nil, nil, now())
+                end,
+                plate = function(pct) -- the observer's plate pushes (observer.lua plateBands)
+                    if pct then
+                        lib:Prime("nameplate1", now())
+                    end
+                    lib:Push("health", "nameplate1", nil, pct and pct * 10, pct and 1000, now())
+                end,
+                plateHp = function(pct)
+                    newPlate = pct
                 end,
                 now = now,
                 done = function() end,
@@ -193,6 +220,12 @@ local PRIMES = {
 
 local function get(h)
     return { h:Get() }
+end
+
+-- lo, hi and q (Get's t left out)
+local function unknown(h)
+    local lo, hi, _, q = h:Get()
+    return { lo, hi, q }
 end
 
 local function lohi(h)
@@ -345,6 +378,53 @@ for _, name in ipairs({ "real", "fake" }) do
             end
         )
 
+        -- (minor 10, L1804) a retarget or a cleared target drops the band in the event's own frame: Get never gives the
+        -- last unit's band (minor 9 kept it for the rest of that frame); a paused watch on the source drops it too
+        it(
+            "a retarget and a cleared target read nil at once, a paused watch too; the new unit live after its prime",
+            function()
+                local hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
+                local held = assert(lib:Watch("B", { kind = "health", unit = "target", step = 1 }))
+                w.live()
+                held:SetPaused(true)
+                assert.are.same({ 63, 64 }, lohi(hp))
+                assert.are.same({ 63, 64 }, lohi(held))
+                w.retarget(19.5)
+                assert.are.same({ nil, nil, lib.UNKNOWN }, unknown(hp)) -- t: the real library keeps the last stamp
+                assert.are.same({ nil, nil, lib.UNKNOWN }, unknown(held))
+                assert.are.equal("priming", hp:State())
+                for _ = 1, 12 do
+                    w.frame()
+                end
+                assert.are.same({ "live", 19, 20 }, { hp:State(), unpack(lohi(hp)) })
+                w.clear()
+                assert.are.same({ nil, nil, lib.UNKNOWN }, unknown(hp))
+                assert.are.equal("gone", hp:State())
+            end
+        )
+
+        -- (minor 10) a plate's health at the 5% step: the 5% cell, 95-99 [95, 100], full [100, 100], empty [0, 5]; its
+        -- REMOVED reads gone (the ttd arm's plates, observer.lua plateBands)
+        it(
+            "a plate at step 5: the 5% cell, 95-99 [95, 100], full [100, 100], empty [0, 5]; removed reads gone",
+            function()
+                local h = assert(lib:Watch("A", { kind = "health", unit = "nameplate1", step = 5 }))
+                w.plate(63.7)
+                w.live()
+                local rows = { table.concat(lohi(h), " ") }
+                for _, pct in ipairs({ 61, 97, 100, 0, 3 }) do
+                    w.plateHp(pct)
+                    for _ = 1, 4 do
+                        w.frame()
+                    end
+                    rows[#rows + 1] = table.concat({ pct, unpack(lohi(h)) }, " ")
+                end
+                assert.are.same({ "60 65", "61 60 65", "97 95 100", "100 100 100", "0 0 5", "3 0 5" }, rows)
+                w.plate(nil)
+                assert.are.same({ "gone", nil }, { h:State(), (h:Get()) })
+            end
+        )
+
         it("SetPoints: true, or nil and a code with the old set kept", function()
             local hp = assert(lib:Watch("A", { kind = "health", unit = "target", step = 1 }))
             local pts = assert(lib:Watch("A", { kind = "power", unit = "player", power = 0, points = { 400, 600 } }))
@@ -365,7 +445,7 @@ for _, name in ipairs({ "real", "fake" }) do
             assert.are.same({ true, "ready" }, { lib:IsAvailable("health", "target") })
             assert.are.same({ false, "unavailable", "unproven" }, { lib:IsAvailable("health", "focus") })
             assert.are.same({ "unavailable", "unproven" }, { focus:State() })
-            assert.are.same({ "LibHiddenValues-1.0", 9 }, { lib:GetVersion() })
+            assert.are.same({ "LibHiddenValues-1.0", 10 }, { lib:GetVersion() })
             local verdict, lines, running = lib:GetSelfTest()
             assert.are.same({ true, "table", false }, { verdict, type(lines), running })
             local stats = { lib:GetStats() }

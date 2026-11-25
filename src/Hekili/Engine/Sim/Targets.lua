@@ -1219,6 +1219,25 @@ do
     local TTD_RETRY = 1 -- seconds: between refused Tracks (each allocates)
     local ttdLib, ttdTrack -- the library once found; the target's handle
     local ttdRetryAt = 0 -- no Track before this
+    -- Lives (the library's plain whole-number ids) that have given a non-seed answer, by recency, written in place: a
+    -- life shown again after another is written again (repeats allowed), so the slot overwritten is the least recently
+    -- shown, as the library keeps its most recent past targets (at most four on their plates, plus the target's).
+    local REAL_LIVES = 5
+    local realLives, realLast = { 0, 0, 0, 0, 0 }, 1
+
+    local function noteReal( id )
+        if realLives[ realLast ] ~= id then
+            realLast = realLast % REAL_LIVES + 1
+            realLives[ realLast ] = id
+        end
+    end
+
+    local function hadReal( id )
+        for i = 1, REAL_LIVES do
+            if realLives[ i ] == id then return true end
+        end
+        return false
+    end
 
     local function ttdRelease()
         if ttdTrack then
@@ -1322,11 +1341,22 @@ do
             end
             if hintsDirty then sendHints() end
         end
-        local est, _, _, s, why = ttdTrack:Get()
-        -- shortcut: a seed answer reads unknown (owner L1742). LibTimeToDie minor 4 seeds only after 1.5 s of loss, but a
-        -- burst then a far slower fall still seeds at about half the true time; vendor-libs kept the rule on its fight
-        -- runs (removing it raised the swap set's flicker, L1736). Drop it when a library minor or a re-run shows no cost.
-        return s == "live" and why ~= "seed" and est or nil
+        local est, _, _, s, why, id = ttdTrack:Get()
+        if s ~= "live" then return nil end
+        -- shortcut: a seed answer reads unknown (owner L1742) until its life has given a non-seed answer. LibTimeToDie
+        -- minor 4 seeds only after 1.5 s of loss, but a burst then a far slower fall still seeds at about half the true
+        -- time; vendor-libs kept the rule on its fight runs (removing it raised the swap set's flicker, L1736). A life
+        -- resumed on a switch back can step from a fit to a seed and back: it keeps showing (vendor-libs-next I1, no
+        -- known, unknown, known). Drop the rule when a library minor or a re-run shows no cost.
+        if why ~= "seed" then
+            if id then noteReal( id ) end
+            return est
+        end
+        if id and hadReal( id ) then
+            noteReal( id )
+            return est
+        end
+        return nil
     end
 
     -- targetTTD's answer when the target is plainly attackable, else nil. The library first, so with none (or
@@ -1339,9 +1369,9 @@ do
     end
 
     -- The longest (and the shortest) time to die among the enemies (owner L1694): the target's with one enemy, unknown
-    -- with several (only the target is tracked; no scan here: that scan calls GetTTD itself). Nothing is kept across a
-    -- target change: the library answers nothing for a new target before 1.5 s of its loss, so the last one's time
-    -- would bridge to no answer, and it is no fact about this one.
+    -- with several (only the target is tracked; no scan here: that scan calls GetTTD itself). The core keeps nothing
+    -- across a target change: the library's answer is about whatever the target is now (a mob targeted again resumes
+    -- from its plate, LibTimeToDie minor 5; a new one reads nothing before 1.5 s of its loss).
     local function onlyEnemyTTD()
         if several then return nil end
         return hostileTargetTTD()

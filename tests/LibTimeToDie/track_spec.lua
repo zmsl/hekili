@@ -181,7 +181,7 @@ describe("LibTimeToDie tracking", function()
         setmetatable(e, old).priorEmpty = true
         rawset(LibStub.minors, "LibTimeToDie-1.0", 2) -- the running copy is minor 2
         Fake.loadTimeToDie()
-        assert.are.same({ "LibTimeToDie-1.0", 4 }, { ttd:GetVersion() })
+        assert.are.same({ "LibTimeToDie-1.0", 5 }, { ttd:GetVersion() })
         killThenTough(6, 1) -- the same owner's track: the held estimator
         assert.are.equal(ttd.Estimator, getmetatable(e))
     end)
@@ -228,7 +228,7 @@ describe("LibTimeToDie tracking", function()
         e.anchorFull, e.anchorBelow, e.seedTime = true, true, nil
         rawset(LibStub.minors, "LibTimeToDie-1.0", 3) -- the running copy is minor 3
         Fake.loadTimeToDie()
-        assert.are.same({ "LibTimeToDie-1.0", 4 }, { ttd:GetVersion() })
+        assert.are.same({ "LibTimeToDie-1.0", 5 }, { ttd:GetVersion() })
         assert.are.equal(ttd.Estimator, getmetatable(e))
         Fake.event("PLAYER_REGEN_DISABLED")
         bigFirstHit(h, 0.3) -- the held estimator reaches the seed rule
@@ -561,7 +561,7 @@ describe("LibTimeToDie tracking", function()
         end
         assert.are.equal(lhv:GetMessage("unproven"), ttd:GetMessage("unproven")) -- LibHiddenValues' reasons
         assert.is_nil(ttd:GetMessage("live", "deDE"))
-        assert.are.same({ "LibTimeToDie-1.0", 4 }, { ttd:GetVersion() })
+        assert.are.same({ "LibTimeToDie-1.0", 5 }, { ttd:GetVersion() })
     end)
 
     it("a token LibHiddenValues has not proven reads unavailable with its reason", function()

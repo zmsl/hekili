@@ -529,6 +529,18 @@ E.DEFAULTS.priorEmpty = false
 E.DEFAULTS.anchorFull = false
 E.DEFAULTS.anchorBelow = false
 E.DEFAULTS.seedTime = 1.5
+-- Minor 5: a copy (its own two rings), for a target change that hands the original on with its mob.
+function E:Clone()
+    local c = setmetatable({}, E)
+    for k, v in pairs(self) do
+        c[k] = v
+    end
+    c.rt, c.rp = {}, {}
+    for i = 1, self.ring do
+        c.rt[i], c.rp[i] = self.rt[i], self.rp[i]
+    end
+    return c
+end
 if lib then
     lib.Estimator = E
     for i = 1, #lib.streams do -- an upgrade: estimators an older minor made take this copy's rules

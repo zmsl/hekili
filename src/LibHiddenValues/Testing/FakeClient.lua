@@ -24,7 +24,9 @@
 -- (curve size limit), "refuse" name (that global function raises). The Cooldown Manager (the aura kind's source): W.cdm, W.aura,
 -- Fake.setAura, Fake.cdmLayout, Fake.cdmEnable, Fake.viewers, Fake.touched, Fake.hooks; see the comment above its
 -- viewers. W.cdm.unlearned ({ [cooldownID] = true }: no item, left out of the learned set); W.classID (11 by
--- default; the spec is 1).
+-- default; the spec is 1). Plates: Fake.plate(tok, unitTable) puts a unit on a nameplate token and fires
+-- NAME_PLATE_UNIT_ADDED; Fake.plate(tok, nil) fires NAME_PLATE_UNIT_REMOVED (the token still names the unit during the
+-- event, then not). UnitIsUnit: two tokens of one unit table are one unit; W.secretIsUnit makes its answer a secret.
 -- loadfile(path)({ before = fn, noLoad = true }): fn runs after the fake globals exist and before the library loads.
 --
 -- Fidelity limits: no taint model; a secret is a table, so only arithmetic, ordering, concatenation, tostring, length,
@@ -378,6 +380,14 @@ install("UnitPowerType", function(unit)
 end)
 install("UnitExists", function(unit)
     return W.unit[unit] ~= nil
+end)
+install("UnitIsUnit", function(a, b)
+    local u = W.unit[a]
+    local same = u ~= nil and u == W.unit[b]
+    if W.secretIsUnit then
+        return secret(same)
+    end
+    return same
 end)
 install("UnitIsDead", function(unit)
     local u = W.unit[unit]
@@ -960,6 +970,17 @@ function Fake.event(name, ...)
         if reg and (reg == true or reg[(...)]) and f.scripts.OnEvent then
             f.scripts.OnEvent(f, name, ...)
         end
+    end
+end
+
+-- A nameplate token comes (u: the unit table it names, shared with any other token of that unit) or goes (u nil).
+function Fake.plate(tok, u)
+    if u then
+        W.unit[tok] = u
+        Fake.event("NAME_PLATE_UNIT_ADDED", tok)
+    else
+        Fake.event("NAME_PLATE_UNIT_REMOVED", tok)
+        W.unit[tok] = nil
     end
 end
 

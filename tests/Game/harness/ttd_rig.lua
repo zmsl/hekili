@@ -42,7 +42,18 @@ function M.install(H, lhv)
             return stub(name, silent)
         end,
     })
-    local env = setmetatable({ LibStub = proxy }, { __index = H.env })
+    -- shortcut: the library's UnitIsUnit answers a target and a plate plainly from the fake client's GUIDs, so a past
+    -- target's life moves to its plate (minor 5); live, under the Map restriction it may answer secret, which links
+    -- nothing. The belief's UnitIsUnit (ctl.unitIs) is left as it was: no belief row moves for it.
+    local ctl = H.ctl
+    local function unitIsUnit(a, b)
+        local ga, gb = ctl.guid[a], ctl.guid[b]
+        if a ~= b and type(ga) == "string" and type(gb) == "string" then
+            return ga == gb
+        end
+        return H.env.UnitIsUnit(a, b)
+    end
+    local env = setmetatable({ LibStub = proxy, UnitIsUnit = unitIsUnit }, { __index = H.env })
     for _, file in ipairs({ "LibTimeToDie.lua", "Estimator.lua" }) do -- LibTimeToDie.xml's order
         local f = assert(loadfile(SRC .. file))
         setfenv(f, env)
@@ -50,6 +61,26 @@ function M.install(H, lhv)
     end
     rig.lib = stub("LibTimeToDie-1.0")
     return rig
+end
+
+--- A new fight in the same instance (loop.lua): the last world's plates are gone. The client fires
+--- NAME_PLATE_UNIT_REMOVED before a plate token names another mob, but each harness world starts afresh with
+--- nameplate1..N naming new mobs; unheard, the library takes the new target for the last one (the plate token it
+--- linked, LibTimeToDie minor 5) and carries its estimate into the pull. So the library's frame hears each removal and
+--- the fake's plate sources read gone. shortcut: the library's frame only; the instance's other frames keep today's
+--- stream.
+function M.newFight(rig)
+    local f, lhv, now = rig.lib.frame, rig.lhv, rig.ctl.now
+    local on = f and f.__scripts.OnEvent
+    for i = 1, 40 do
+        local tok = "nameplate" .. i
+        if on and rig.lib.plates and rig.lib.plates[tok] then
+            on(f, "NAME_PLATE_UNIT_REMOVED", tok)
+        end
+        if lhv.sources["health|" .. tok .. "|nil"] then
+            lhv:Push("health", tok, nil, nil, nil, now)
+        end
+    end
 end
 
 --- One harness tick: each watch's band change to the library's sink, then the library's driver. Allocates nothing.
