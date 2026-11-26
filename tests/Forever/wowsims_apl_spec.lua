@@ -2140,6 +2140,60 @@ describe("the wowsims APL translator", function()
         assert.is_false(ok)
         assert.matches("hpPercentForDefensives", err)
     end)
+
+    -- L1246 (Combat's Blade Flurry for a non-Orc): wowsims takes out of its automatic cooldowns only what the priority
+    -- list and the groups cast (sim/core/apl.go allAPLActions: a sequence's members too), never a pre-pull cast; and an
+    -- entry whose condition folds false is pruned (apl_action.go newAPLAction), a pruned sequence keeping its members
+    -- automatic (castSpellOf is nil for a sequence). A sequence gated on `spellIsKnown` of a racial is pruned for every
+    -- other race, so its members stay automatic there: the automatic line waits on that racial being unknown.
+    it("keeps a pre-pull or race-pruned sequence's member automatic, gated on the race (L1246)", function()
+        local kit = {
+            abilities = {
+                blade_flurry = { key = "blade_flurry", id = 13877, gcd = "spell" },
+                blood_fury = { key = "blood_fury", id = 20572, gcd = "off" },
+                roar = { key = "roar", id = 300, gcd = "off" },
+            },
+            auras = { roar = { id = 300 } },
+        }
+        local human = table.concat({
+            "# wowsims 0123 test seed 1 10 s target 63",
+            "[117.53] [Tester (#1)] Major cooldown used: {SpellID: 13877}",
+        }, "\n")
+        local auto =
+            { action = { autocastOtherCooldowns = {}, condition = { auraIsActive = { auraId = { spellId = 300 } } } } }
+        local seq = {
+            action = {
+                condition = AND(
+                    { spellIsReady = { spellId = { spellId = 13877 } } },
+                    { spellIsKnown = { spellId = { spellId = 20572 } } }
+                ),
+                strictSequence = { actions = { cast(20572).action, cast(13877).action } },
+            },
+        }
+        local pre = { action = cast(13877).action, doAtValue = const("-3s") }
+        local text, omitted =
+            apl.translate({ prepullActions = { pre }, priorityList = { seq, auto } }, apl.context(kit, {}, human))
+        -- the Orc's sequence stands; for any other race the automatic line casts it, as wowsims's Human log does
+        assert.are.equal(
+            "actions+=/blade_flurry,if=(!action.roar.known|buff.roar.up)&!action.blood_fury.known",
+            text:match("[^\n]+$")
+        )
+        assert.are.same({}, omitted)
+        -- the pre-pull cast alone does not take it out of the automatic set
+        text = apl.translate({ prepullActions = { pre }, priorityList = { auto } }, apl.context(kit, {}, human))
+        assert.are.equal(
+            "actions.precombat=blade_flurry\nactions=blade_flurry,if=(!action.roar.known|buff.roar.up)",
+            text
+        )
+        -- a sequence no `spellIsKnown` gates is cast by the APL for every race: no automatic line, the note stays
+        seq.action.condition = { spellIsReady = { spellId = { spellId = 13877 } } }
+        text, omitted = apl.translate({ priorityList = { seq, auto } }, apl.context(kit, {}, human))
+        assert.is_nil(text:find("\nactions+=/blade_flurry,if=(!action.roar", 1, true))
+        assert.are.same(
+            { "default #2: autocastOtherCooldowns: spell 13877 is blade_flurry, which the APL casts itself" },
+            omitted
+        )
+    end)
 end)
 
 -- Re-pin Phase 2 (docs/superpowers/plans/2026-11-03-wowsims-repin.md, Task 3): the reads e2842f0a78's APLs add.
