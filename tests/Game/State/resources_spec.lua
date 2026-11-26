@@ -4032,7 +4032,7 @@ describe("resource bands (lane B4)", function()
             assert.is_true(R.lo0[MANA] >= 658.8)
         end)
 
-        for _, case in ipairs({ { "just inside", -0.01, 460 - EPS }, { "just outside", 0.01, 450 } }) do
+        for _, case in ipairs({ { "just inside", -0.01, "the top" }, { "just outside", 0.01, "450" } }) do
             it("a floor " .. case[1] .. " the lag's regen over the top: lo " .. case[3], function()
                 local w = I.RegenLo(MANA, 10 - I.GAIN_SHOWS, I.GAIN_SHOWS)
                 local lo = 460 - EPS + w + case[2]
@@ -4040,7 +4040,7 @@ describe("resource bands (lane B4)", function()
                 band(10, MANA, 450, 470)
                 answer(10, SPELL, false)
                 I.Fold(10)
-                is(MANA, case[3], 460 - EPS, 460 - EPS)
+                is(MANA, case[2] < 0 and 460 - EPS or 450, 460 - EPS, 460 - EPS)
             end)
         end
 
