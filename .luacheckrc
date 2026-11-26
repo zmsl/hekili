@@ -11,6 +11,7 @@ exclude_files = {
     "src/LibTimeToDie/Libs/",
     ".claude/",
     ".lua/",
+    ".lj/",
     ".release/",
     ".ab/",
     ".superpowers/", -- the plans' git-ignored scratch (briefs, reports, agents' throwaway scripts)
