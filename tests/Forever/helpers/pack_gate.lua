@@ -40,6 +40,13 @@ M.REACT_P90_BY = {}
 -- + 0.01: the line rounds to two decimals); seeds 21-40 / 41-60 stand beside it as the spread (parry-haste spec
 -- decision 63: the loops are deterministic but a world change reorders every seeded fight). Older rows' comments
 -- record the earlier worst-of-three floors. A floor only moves down, except with a named cause recorded beside it.
+-- The cause field (refactor lane 4, L1827): every floor field above 0 here and in M.ARM_FLOORS names in its row's
+-- `cause` table why the floor sits at its value now: "L<n>" (a ledger row), "<lane>@<commit>" (the lane or branch and
+-- the commit, 7+ hex, that set it), several joined by " + ", or "untraced" alone (the HAR-1 queue:
+-- tools/floors.lua untraced). A re-measure that only tightens names the re-measure (L1814 for batch 5), except a
+-- floor above 0 only because of an untraced baseline (L1504): it stays untraced, so the HAR-1 queue keeps it. A value
+-- that rose with no traced cause is untraced. An arm row's cause explains its excess over this table. A re-floor changes a
+-- value and its cause together; pack_gate_spec checks the format. A 0 field needs no cause.
 -- Guardian is reported (M.gate's bars and the oracle + K bar are not asserted) but floored: its row below is applied
 -- on the reported branch too (gap CH).
 -- Flicker re-floored on forever-gap-bd (2026-10-26): the loop's cast bar on each instance's clock (gap BD) made every
@@ -115,7 +122,14 @@ M.FLICKER = {
     -- 2984, the measured worst (swing-avoid pairing, T.SwingPending fixed)
     -- INTEG re-measured: batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not
     -- re-measured): flicker 0.07 -> 0.05, heldReady 322 -> 282, loOver 2998 -> 2465; flicker 0.04
-    ["Arms"] = { loOver = 2465, flicker = 0.05, retracted = 0, readyShort = 0, heldReady = 282 }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
+    ["Arms"] = {
+        loOver = 2465,
+        flicker = 0.05,
+        retracted = 0,
+        readyShort = 0,
+        heldReady = 282,
+        cause = { loOver = "untraced", flicker = "L1814", heldReady = "L1814" },
+    }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.26 / 0.3 / 0.19, readyShort 0 / 0 / 5, heldReady 190 / 228 / 203):
@@ -199,7 +213,22 @@ M.FLICKER = {
     -- INTEG re-measured: batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not
     -- re-measured): flicker 0.26 -> 0.08, readyShort 6 -> 4, heldReady 276 -> 254, loOver 754 -> 701; flicker 0.07,
     -- retracted 0.04 (floor kept)
-    ["Fury L60"] = { loOver = 701, flicker = 0.08, flickerK = 0.6, retracted = 0.04, readyShort = 4, heldReady = 254 }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
+    ["Fury L60"] = {
+        loOver = 701,
+        flicker = 0.08,
+        flickerK = 0.6,
+        retracted = 0.04,
+        readyShort = 4,
+        heldReady = 254,
+        cause = {
+            loOver = "untraced",
+            flicker = "L1814",
+            flickerK = "forever-repin@9b802404f",
+            retracted = "L1456",
+            readyShort = "L1814",
+            heldReady = "L1814",
+        },
+    }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
     -- log-only aura) while presses ran on the dodge row; it now follows the world's window, which reorders the fights.
     -- Same world without Warrior.lua's client read: 0.90 / 1.08 / 0.83. Flips are mostly not Overpower; the mechanism is untraced.
@@ -314,7 +343,15 @@ M.FLICKER = {
     -- seeds 21-40 / 41-60 0.15 / 0.14 (unchanged): flicker 0.16 -> 0.19
     -- INTEG re-measured: batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not
     -- re-measured): heldReady 863 -> 679, loOver 451 -> 344; flicker 0.18 (its row 0.19, tracer A)
-    ["Fury L24"] = { loOver = 344, flicker = 0.19, flickerK = 0.6, retracted = 0, readyShort = 0, heldReady = 679 }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
+    ["Fury L24"] = {
+        loOver = 344,
+        flicker = 0.19,
+        flickerK = 0.6,
+        retracted = 0,
+        readyShort = 0,
+        heldReady = 679,
+        cause = { loOver = "untraced", flicker = "L1832", flickerK = "forever-repin@dd94c1854", heldReady = "L1814" },
+    }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
     -- guid, the observer's answers see a proxy of us); oracle flicker 0.42 / 0.42 / 0.45, gap 0.32 / 0.15 / 0.12 under K;
@@ -391,7 +428,14 @@ M.FLICKER = {
     -- an aura edge > shield_block (a swing only at the return)
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 383
     -- -> 379, loOver 2007 -> 1939
-    ["Warrior Protection"] = { loOver = 1939, flicker = 0.11, retracted = 0, readyShort = 0, heldReady = 379 }, -- flicker 0.10 / 0.08 / 0.02 (L1791), retracted 0 / 0 / 0
+    ["Warrior Protection"] = {
+        loOver = 1939,
+        flicker = 0.11,
+        retracted = 0,
+        readyShort = 0,
+        heldReady = 379,
+        cause = { loOver = "untraced", flicker = "L1791", heldReady = "L1814" },
+    }, -- flicker 0.10 / 0.08 / 0.02 (L1791), retracted 0 / 0 / 0
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
     -- 0.8 / 1.6 / 1.5 -> 0, agreement .970 / .969 / .958 -> .973 / .971 / .971); under base's 1.23 / 1.44 / 1.16 on every
@@ -445,7 +489,13 @@ M.FLICKER = {
     -- avoids in Rip's frame (the owner's tie hand-back), traced in the lane report
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 308
     -- -> 296, loOver 36 -> 14
-    ["Feral"] = { loOver = 14, flicker = 0, retracted = 0, heldReady = 296 }, -- 0.56 / 0.89 / 0.56, 0
+    ["Feral"] = {
+        loOver = 14,
+        flicker = 0,
+        retracted = 0,
+        heldReady = 296,
+        cause = { loOver = "untraced", heldReady = "L1814" },
+    }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
@@ -469,7 +519,7 @@ M.FLICKER = {
     -- loOver 107 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 0 / 0 / 107): untraced -> per-cell follow-up lane
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 189
     -- -> 183, loOver 107 -> 0
-    ["Balance"] = { loOver = 0, flicker = 0, retracted = 0, heldReady = 183 }, -- 0.03 / 0.05 / 0.07, 0
+    ["Balance"] = { loOver = 0, flicker = 0, retracted = 0, heldReady = 183, cause = { heldReady = "L1814" } }, -- 0.03 / 0.05 / 0.07, 0
     -- none -> floored (gap CH, 2026-10-31, measured on d7b972d76 at seeds 1-20 / 21-40 / 41-60; oracle flicker 0.30 /
     -- 0.37 / 0.21): the swing-paid rage class (a forecast swing's gain shows Lacerate or Primal Bite ready; retracted
     -- is lacerate:swing/cost). Applied on the reported branch: Guardian clears M.gate's agreement (0.900 / 0.896 /
@@ -543,7 +593,14 @@ M.FLICKER = {
     -- INTEG re-measured: batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not
     -- re-measured): heldReady 447 -> 443, loOver 2374 -> 428; flicker 0.30 (floor kept: the one rule's 0.31 would
     -- loosen it; forever read 0.29, the 0.30 already at stage 1 e59706ac9, untraced on this arm)
-    ["Guardian"] = { loOver = 428, flicker = 0.30, retracted = 0, readyShort = 0, heldReady = 443 }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
+    ["Guardian"] = {
+        loOver = 428,
+        flicker = 0.30,
+        retracted = 0,
+        readyShort = 0,
+        heldReady = 443,
+        cause = { loOver = "untraced", flicker = "untraced", heldReady = "L1814" },
+    }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
     -- heldReady 329 -> 159
@@ -578,7 +635,13 @@ M.FLICKER = {
     -- -> 0.992, dps A/B 0.971 -> 0.969, readyShort 0 / 0; bands arm unchanged (loOver 0, heldReady 145, regE 10)
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 167
     -- -> 166; held 130 on forever: cp-fact L1832 + cp-fact-4 (their rows above)
-    ["Assassination"] = { loOver = 0, flicker = 0, retracted = 0, heldReady = 166 }, -- 0 / 0 / 0, 0
+    ["Assassination"] = {
+        loOver = 0,
+        flicker = 0,
+        retracted = 0,
+        heldReady = 166,
+        cause = { heldReady = "L1832 + L1814" },
+    }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
     -- tree, flips match base's tick for tick; Sinister Strike's entry is gated on `!(buff.slice_and_dice.remains<=2)`,
@@ -609,7 +672,13 @@ M.FLICKER = {
     -- Dice at 0 s, the oracle's change at the same tick); each change follows a fact, the ledger lists none of them
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): loOver 419 ->
     -- 0
-    ["Combat"] = { loOver = 0, flicker = 0.06, retracted = 0, heldReady = 164 }, -- 0.15 / 0 / 0.02, 0
+    ["Combat"] = {
+        loOver = 0,
+        flicker = 0.06,
+        retracted = 0,
+        heldReady = 164,
+        cause = { flicker = "L1832", heldReady = "L1376" },
+    }, -- 0.15 / 0 / 0.02, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 382 / 364 / 363):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
@@ -629,7 +698,7 @@ M.FLICKER = {
     -- loOver 9 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 5 / 9 / 5): untraced -> per-cell follow-up lane
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 216
     -- -> 172, loOver 9 -> 0
-    ["Subtlety"] = { loOver = 0, flicker = 0, retracted = 0, heldReady = 172 }, -- 0.02 / 0 / 0, 0 (gap CE)
+    ["Subtlety"] = { loOver = 0, flicker = 0, retracted = 0, heldReady = 172, cause = { heldReady = "L1814" } }, -- 0.02 / 0 / 0, 0 (gap CE)
     -- 0.1 -> 0.2 (Task 5b, gap BV: the world takes the export's Resourcefulness 2/2, so wowsims's 60% cut makes the
     -- strikes cheap; seeds 1-20 / 21-40 / 41-60: 0.20 / 0.02 / 0.07, was 0.05 / 0 / 0; oracle 2.18 / 1.68 / 2.26, was 0):
     -- no longer mana-gated, Raptor Strike comes up on its cooldown end beside Wing Clip or Strider Kick, and in its last
@@ -699,7 +768,14 @@ M.FLICKER = {
     -- measured worst + 0.01: the line rounds to two decimals), cause "jitter rule L1762: press justified"
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): flicker 0.04
     -- -> 0, heldReady 107 -> 83
-    ["Survival"] = { loOver = 5711, flicker = 0, retracted = 0, readyShort = 0, heldReady = 83 }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
+    ["Survival"] = {
+        loOver = 5711,
+        flicker = 0,
+        retracted = 0,
+        readyShort = 0,
+        heldReady = 83,
+        cause = { loOver = "untraced", heldReady = "L1814" },
+    }, -- 1.51 / 1.10 / 0.93, 0 (oracle 0.07 / 0.02 / 0.02), 400 / 348 / 347
     -- wowsims's non-weave builds (owner 2026-11-12, ledger L661), first measured (R6; seeds 1-20 / 21-40 / 41-60, steady
     -- icons on): flicker 0 / 0 / 0 each (Survival Melee's oracle 0.02 / 0.03 / 0.02, the others' 0), retracted 0,
     -- readyShort 0; heldReady the Hunter rows' cost-crossing class (the floor a few units under the truth, gap BT),
@@ -746,7 +822,13 @@ M.FLICKER = {
     -- loOver 302 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 302 / 103 / 2): untraced -> per-cell follow-up lane
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): flicker 0.02
     -- -> 0, heldReady 249 -> 234, loOver 302 -> 272
-    ["Beast Mastery Turret"] = { loOver = 272, flicker = 0, retracted = 0, heldReady = 234 }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
+    ["Beast Mastery Turret"] = {
+        loOver = 272,
+        flicker = 0,
+        retracted = 0,
+        heldReady = 234,
+        cause = { loOver = "untraced", heldReady = "L1814" },
+    }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
     -- Marksmanship Turret, 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60
     -- heldReady 132 / 115 / 108, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 118 -> 132
     -- (the worst set). Cause harness: ladder-usable-085 cc02f47e5's between-fight rest window (fights start at the true
@@ -773,7 +855,13 @@ M.FLICKER = {
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): flicker 0.03
     -- -> 0; loOver 196 not tightened (controller ruling): default 0, but bands / shipped read 15 vs forever's 14 (seed 2,
     -- one poll), untraced and ledgered
-    ["Marksmanship Turret"] = { loOver = 196, flicker = 0, retracted = 0, heldReady = 218 }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
+    ["Marksmanship Turret"] = {
+        loOver = 196,
+        flicker = 0,
+        retracted = 0,
+        heldReady = 218,
+        cause = { loOver = "untraced", heldReady = "repin-ab0f-hunter@b95e5ed91" },
+    }, -- heldReady 101 / 116 / 104; after L667 118 / 102 / 101 (116 -> 118, cause harness)
     -- heldReady 117 -> 236 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3330 mana, 12.40 mp5 + 17.50 spirit, Resourcefulness's 50% share while casting (was 5000 and
     -- spirit 15.88, no mp5); seeds 1-20 / 21-40 / 41-60 heldReady 210 / 236 / 186, flicker 0, retracted 0, readyShort
@@ -788,7 +876,13 @@ M.FLICKER = {
     -- loOver 164 (L1504 gate, baseline 2026-11-20, 1b824d9fc: 164 / 0 / 1): untraced -> per-cell follow-up lane
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 260
     -- -> 224
-    ["Survival Turret"] = { loOver = 164, flicker = 0, retracted = 0, heldReady = 224 }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
+    ["Survival Turret"] = {
+        loOver = 164,
+        flicker = 0,
+        retracted = 0,
+        heldReady = 224,
+        cause = { loOver = "untraced", heldReady = "L1814" },
+    }, -- heldReady 115 / 117 / 106; after L667 104 / 103 / 105
     -- heldReady 183 -> 361 (re-pin e5a9cd2a2d -> e4ef929e54, repin-hunter-09 fix round 1: the world's pool and regen
     -- from its log, 3270 mana, 12.40 mp5 + 16.75 spirit (was 5000 and spirit 15.88, no mp5); seeds 1-20 / 21-40 /
     -- 41-60 heldReady 346 / 342 / 361, flicker 0 (oracle 0.13 / 0 / 0.02), retracted 0, readyShort 0, agreement .992 /
@@ -800,7 +894,7 @@ M.FLICKER = {
     -- the poll's; fights 26-40 re-time (per fight -2 to +5)
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 295
     -- -> 273; held 272 on forever: untraced (stage 1, already at e59706ac9)
-    ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 273 }, -- heldReady 166 / 183 / 177; after L667 173 / 169 / 174
+    ["Survival Melee"] = { flicker = 0, retracted = 0, heldReady = 273, cause = { heldReady = "untraced" } }, -- heldReady 166 / 183 / 177; after L667 173 / 169 / 174
     -- 0.1 -> 0.9 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.47 / 0.88 / 0.77, was 0.04 / 0 / 0.02; oracle 0.66 / 1.23 / 1.01):
     -- wowsims's logged regen (Ret 8.25/s casting) runs the world at an empty mana pool; the oracle's flicker rose too; our
     -- extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike); controller ruling
@@ -831,7 +925,13 @@ M.FLICKER = {
     -- 0.177 s, mean truth - lo 2.23 -> 2.05). Unsealed Wrath's 0.1 s proc cooldown is inert here (reverted: 177, the same)
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 155 / 151 / 140): flicker 0.02 -> 0, heldReady 177 -> 155
-    ["Retribution"] = { flicker = 0, retracted = 0, readyShort = 0, heldReady = 155 }, -- 0.04 / 0.04 / 0.04, 0 (oracle 0.04 / 0.00 / 0.11)
+    ["Retribution"] = {
+        flicker = 0,
+        retracted = 0,
+        readyShort = 0,
+        heldReady = 155,
+        cause = { heldReady = "integ/0.10.1@5bd9a14d5" },
+    }, -- 0.04 / 0.04 / 0.04, 0 (oracle 0.04 / 0.00 / 0.11)
     -- 0.5 -> 0.8 (Task 7; seeds 1-20 / 21-40 / 41-60: 0.54 / 0.71 / 0.49, was 0.45 / 0.03 / 0.68; oracle 0.59 / 1.81 / 1.73):
     -- wowsims's logged regen (Prot 0 casting) runs the world at an empty mana pool; the oracle's flicker rose to 0.59-1.81;
     -- our extra disagreement is gap AB (lo = 0 at an empty pool vs truth ~16: Judgement vs Holy Strike, agreement .99 ->
@@ -867,7 +967,7 @@ M.FLICKER = {
     -- 200 / 177 / 198, flicker 0): heldReady 198 -> 200. First divergence: seed 5's last mob swing and the fight's kill
     -- event at 174.0000000000000x now fall at the 174.00 poll, so the fight ends a poll earlier (its in-combat ticks ran
     -- on to 175.2 before) and fight 6 starts on another pool (33.1 -> 16.6); fights 7-20 re-time
-    ["Protection"] = { flicker = 0, retracted = 0, heldReady = 200 }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
+    ["Protection"] = { flicker = 0, retracted = 0, heldReady = 200, cause = { heldReady = "L1376" } }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0.08), retracted 0, readyShort 0 / 0 / 0, heldReady 65 / 70 / 94, agreement .998 / .999 / .997): flicker 0.01 (the
     -- measured worst + 0.01: the line rounds to two decimals), heldReady 94 (the worst set)
@@ -903,7 +1003,14 @@ M.FLICKER = {
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 93
     -- -> 89, loOver 5 -> 0; held 85 on forever. Likely cause (inferred for this arm, traced on bands by integ5 tracer
     -- C: 60 -> 86): priest-cost-rounding 3e0023f5c prices Judgement 82 -> 81.9, which re-times the mana-floor fights
-    ["Holy Shock"] = { loOver = 0, flicker = 0, retracted = 0, readyShort = 0, heldReady = 89 },
+    ["Holy Shock"] = {
+        loOver = 0,
+        flicker = 0,
+        retracted = 0,
+        readyShort = 0,
+        heldReady = 89,
+        cause = { heldReady = "untraced" },
+    },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
     -- a pick ~0.23 s from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2)
     -- 0.2 -> 0.3 (Task 11, Mana Spring Totem's mp5 as its own entry; seeds 1-20 / 21-40 / 41-60: 0.10 / 0.25 / 0.22, was
@@ -965,7 +1072,7 @@ M.FLICKER = {
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 153 / 166 / 169): flicker 0.01 -> 0
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 169
     -- -> 153
-    ["Enhancement"] = { flicker = 0, retracted = 0, heldReady = 153, readyShort = 0 },
+    ["Enhancement"] = { flicker = 0, retracted = 0, heldReady = 153, readyShort = 0, cause = { heldReady = "L1814" } },
     -- heldReady 134 -> 100 (re-pin e2842f0a78, the Mage fix round: seeds 1-20 / 21-40 / 41-60 100 / 100 / 95)
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0.02 / 0 / 0, readyShort 0 / 0 / 0, heldReady 109 / 102 / 93):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals); heldReady 100 -> 109 (cost crossings, lo < cost <= truth, on fights D2 re-times; C1 shows a crossing one update later)
@@ -997,7 +1104,7 @@ M.FLICKER = {
     -- 18.6 now pays 395 at its landing, so the belief's est no longer runs 118.5 over truth (the L1375 trace)
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 104
     -- -> 93
-    ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 93 }, -- 0 / 0 / 0, 0
+    ["Arcane"] = { flicker = 0, retracted = 0, heldReady = 93, cause = { heldReady = "L1814" } }, -- 0 / 0 / 0, 0
     -- heldReady 116 -> 175 (re-pin e2842f0a78; seeds 1-20 / 21-40 / 41-60 175 / 171 / 175, the fix round): the new
     -- list runs dry onto the Scorch filler; 174 of the 175 ticks (seeds 1-20) are Scorch at its 150 cost crossing, one
     -- tick an episode, lo 141-150 against the truth's 150-152 (gap BQ)
@@ -1017,7 +1124,14 @@ M.FLICKER = {
     -- pays no Master of Elements refund, the belief pays it as wowsims does
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): retracted
     -- 0.02 -> 0, readyShort 1 -> 0, heldReady 175 -> 168, loOver 2260 -> 1769
-    ["Fire"] = { loOver = 1769, flicker = 0, retracted = 0, heldReady = 168, readyShort = 0 }, -- 0 / 0 / 0, 0
+    ["Fire"] = {
+        loOver = 1769,
+        flicker = 0,
+        retracted = 0,
+        heldReady = 168,
+        readyShort = 0,
+        cause = { loOver = "L1814", heldReady = "L1814" },
+    }, -- 0 / 0 / 0, 0
     -- 0.2 -> 0.3 (Task 6; seeds 1-20 / 21-40 / 41-60: 0.12 / 0.20 / 0.23, was 0.17 / 0.13 / 0.07): the world credits
     -- Evocation's mana on the 0.1 s regen tick (wowsims) instead of 1 s channel lumps; same total, every fight re-timed
     -- after its Evocation, more fights reach the existing frostfire_bolt <-> scorch pooling edge (gap BS); isolated by
@@ -1046,7 +1160,13 @@ M.FLICKER = {
     -- own fact"
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): flicker 0.03
     -- -> 0, heldReady 113 -> 109, loOver 877 -> 862
-    ["Frostfire"] = { loOver = 862, flicker = 0, retracted = 0, heldReady = 109 }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
+    ["Frostfire"] = {
+        loOver = 862,
+        flicker = 0,
+        retracted = 0,
+        heldReady = 109,
+        cause = { loOver = "untraced", heldReady = "L1814" },
+    }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0), retracted 0, readyShort 0 / 0 / 0, heldReady 113 / 113 / 109, agreement .999 / .998 / .997): flicker 0.01 (the
     -- measured worst + 0.01), heldReady 113 (the worst set)
@@ -1065,7 +1185,7 @@ M.FLICKER = {
     -- integ/0.10.1 re-floor, worst of three (R6; seeds 1-20 / 21-40 / 41-60 on 8e31c1cb7: flicker 0 / 0 / 0, retracted
     -- 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 116 / 110 / 110): flicker 0.01 -> 0 (seeds 21-40 heldReady 117 -> 110
     -- from crowd-harness d7fba5a8a, the Frost row school; floored 116 there)
-    ["Frost"] = { flicker = 0, retracted = 0, readyShort = 0, heldReady = 116 },
+    ["Frost"] = { flicker = 0, retracted = 0, readyShort = 0, heldReady = 116, cause = { heldReady = "L1507" } },
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 396 / 398 / 399):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
     -- Priest re-pin lane (pin e5a9cd2a2dfc, CN8 merged, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, readyShort 0, heldReady 395 / 395 / 397):
@@ -1078,7 +1198,7 @@ M.FLICKER = {
     -- (mind_flay waiting 0.07-0.2 s at the mana crossing, the floor under the cost, the truth over it)
     -- re-pin e5a9cd2a2d -> e4ef929e54 (Priest lane, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, heldReady 405 / 406 / 396):
     -- flicker 0.02 -> 0 (the worst set reads 0); heldReady 406 holds. The new log moves 3 fixture rows and one decision (85 -> 86, a mind_flay tail), no loop-world value
-    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 406 }, -- flicker 0 / 0 / 0, retracted 0, heldReady 406 / 400 / 398
+    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 406, cause = { heldReady = "L755" } }, -- flicker 0 / 0 / 0, retracted 0, heldReady 406 / 400 / 398
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
@@ -1114,7 +1234,7 @@ M.FLICKER = {
     -- unchanged (integ5-trace-B-report.md move 1)
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 1
     -- -> 0
-    ["Smite"] = { flicker = 0.03, retracted = 0, heldReady = 0 }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
+    ["Smite"] = { flicker = 0.03, retracted = 0, heldReady = 0, cause = { flicker = "L1793 + L1791" } }, -- flicker 0.02 / 0 / 0, retracted 0, heldReady 0 / 1 / 0
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in; seeds 1-20 / 21-40 / 41-60: 0.15 / 0.1996 / 0.17, was 0.03 / 0.03 /
     -- 0.02; oracle 0.03 / 0.03 / 0.03): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s; a pick ~0.23 s
     -- from its cost slips a tick (owner ruling 2026-10-29, fallback of option 2). After Task 11 (Mana Spring Totem's
@@ -1156,7 +1276,7 @@ M.FLICKER = {
     -- threshold, as before)
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 308
     -- -> 288
-    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 288, readyShort = 0 }, -- 0.00 / 0.00 / 0.00, 0
+    ["Elemental"] = { flicker = 0, retracted = 0, heldReady = 288, readyShort = 0, cause = { heldReady = "L1814" } }, -- 0.00 / 0.00 / 0.00, 0
     -- 0.4 -> 0 (Task 10, a paid channel holds the five-second rule's casting rate to its end; seeds 1-20 / 21-40 / 41-60:
     -- 0 / 0 / 0, was 0 / 0.32 / 0.02): Wrack's 6 s paid channel no longer resumes the spirit part 5 s in, so the mana
     -- estimate stops running ahead of truth at its end, where Life Tap and Wrack were a near-tie (agreement .993 -> .996
@@ -1223,7 +1343,7 @@ M.FLICKER = {
     -- 2.500 s boundary tie (remains<2.5); no Life Tap or mana hold; oracle flicker 0)
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 21
     -- -> 1
-    ["Shadow Brand"] = { flicker = 0, retracted = 0, heldReady = 1 }, -- 0 / 0 / 0, 0
+    ["Shadow Brand"] = { flicker = 0, retracted = 0, heldReady = 1, cause = { heldReady = "L1814" } }, -- 0 / 0 / 0, 0
     -- the excess over the oracle (0 / 0 / 0) is at Conflagrate's and Shadowburn's cooldown ends, as Fire's Fire Blast
     -- (the not-ready flag's CD_PROBE, central). 0.4 -> 0.2 (Task 10b, gap CQ: the flag keeps a modelled end the GCD or a
     -- hard cast covers; 0.13 / 0.17 / 0.07, was 0.23 / 0.40 / 0.25; agreement .995 / .992 / .996); the rest is the probe
@@ -1280,13 +1400,13 @@ M.ARM_FLOORS = {
         -- then harness-frames L1793 (5ee7dce0c; seeds 1-20 0.42 in both arms, 21 -> 22 flips): Arms 0.41 -> 0.43, the
         -- fights re-time from seed 10, every moved flip the L1783 stale class (no fact / stale) (integ5-trace-B-report.md
         -- moves 3 and 5)
-        ["Arms"] = { flicker = 0.43 },
-        ["Fury L60"] = { flicker = 0.45 },
-        ["Fury L24"] = { flicker = 0.22 },
+        ["Arms"] = { flicker = 0.43, cause = { flicker = "L1783 + L1793" } },
+        ["Fury L60"] = { flicker = 0.45, cause = { flicker = "L1783 + L1793" } },
+        ["Fury L24"] = { flicker = 0.22, cause = { flicker = "L1783 + L1791" } },
         -- jitter rule L1791: a return needs its own fact (batch 4 bands run 76cc46e51, seeds 1-20: 0.08, + 0.01): five
         -- scorch > frostfire_bolt > scorch, the change at the mana band's crossing of 308.4, the return with no fact
         -- (seeds 2, 11, 12, 16, 20); the default arm reads 0 / 0.02 / 0 on the same rule (M.FLICKER 0.03)
-        ["Frostfire"] = { flicker = 0.09 },
+        ["Frostfire"] = { flicker = 0.09, cause = { flicker = "L1813 + L1791" } },
         -- T1 (L1794, traced on tag-blockers d578acd86): a regen pair of band crossings is stamped on the world's
         -- 0.1 s regen step (world.lua W.startRegen; the fake sees the pool only there), so each end reads up to one
         -- step late (the truth at the stamp sits that far into the cell: SM Ruin seed 2 104.010 3.87 over the low
@@ -1295,25 +1415,25 @@ M.ARM_FLOORS = {
         -- 0.1-0.5 mana, until a band edge. Inferred to be the harness's step, not measured: the mechanism is traced,
         -- but whether the client's bar moves per frame or in steps is not (probe owed, L1800). Seeds 1-20 as measured: SM Ruin seeds 2 and 3, Destruction
         -- 2 and 14, Frost 15 (69.107: residues 2.705 and 0.398), Elemental 20 (171.762: 2.595 and 0.160)
-        ["SM Ruin"] = { loOver = 279 },
-        ["Destruction"] = { loOver = 303, heldReady = 1 },
-        ["Frost"] = { loOver = 4 },
-        ["Elemental"] = { loOver = 1 },
+        ["SM Ruin"] = { loOver = 279, cause = { loOver = "L1794" } },
+        ["Destruction"] = { loOver = 303, heldReady = 1, cause = { loOver = "L1794", heldReady = "untraced" } },
+        ["Frost"] = { loOver = 4, cause = { loOver = "L1794" } },
+        ["Elemental"] = { loOver = 1, cause = { loOver = "L1794" } },
         -- T1 (L1794) re-timed by harness-frames L1793 (5ee7dce0c; fd666cd8a reads 0): seed 9's pre-pull band pair
         -- 2740.218 -> 2741.718 reads a 1.5 s window (true 1.598 s), spirit 30.07 vs 27.5, spE 28.27 (spL 27.72 over the
         -- truth); the floor climbs 0.07-0.375 over the truth in seed 9's 1.4 s out of the five-second rule after a mana
         -- gain (2754.8) and holds it to the exact read at 2763.4: 43 polls (integ5-trace-B-report.md move 2)
-        ["Affliction"] = { loOver = 43 },
+        ["Affliction"] = { loOver = 43, cause = { loOver = "L1794 + L1793" } },
         -- batch 5 one rule (L1814): rows the arm read inside the old M.FLICKER floors, named once the default table
         -- tightened to its seeds 1-20 reading (integ/batch5 9a8a95e23, + 0.01 on flicker / retracted). Each reading is
         -- unchanged against forever b72b09cd0's bands run (batch 4, 76cc46e51; Subtlety 184 there), the
         -- difference from the default arm is the arm's own (bands on), not traced: Fire retracted 0.02 / readyShort 1
         -- (default 0 / 0; old floor 0.02 / 1), Subtlety held 181 (172; 216), Survival flicker 0.02 / held 84 (0 / 83;
         -- 0.04 / 107), Survival Melee held 274 (273; 295), Destruction held 1 (0; 1, merged into its loOver row)
-        ["Fire"] = { retracted = 0.03, readyShort = 1 },
-        ["Subtlety"] = { heldReady = 181 },
-        ["Survival"] = { flicker = 0.03, heldReady = 84 },
-        ["Survival Melee"] = { heldReady = 274 },
+        ["Fire"] = { retracted = 0.03, readyShort = 1, cause = { retracted = "untraced", readyShort = "untraced" } },
+        ["Subtlety"] = { heldReady = 181, cause = { heldReady = "untraced" } },
+        ["Survival"] = { flicker = 0.03, heldReady = 84, cause = { flicker = "untraced", heldReady = "untraced" } },
+        ["Survival Melee"] = { heldReady = 274, cause = { heldReady = "untraced" } },
     },
     -- The gated shipped arm (L1814: bands, time to die and the Cooldown Manager on, as the addon ships). Measured on
     -- live-like-arm 04ca28b70 (batch 4 b72b09cd0 + the arm), seeds 1-20 / 21-40 / 41-60 beside each row (the floor is
@@ -1338,24 +1458,24 @@ M.ARM_FLOORS = {
         -- sunder_armor > rend > sunder_armor (stale change, verdict return) and s11 heroic_strike > rend > heroic_strike
         -- (no-fact change, band return) come, s12 bloodrage > sunder_armor > bloodrage goes; all L1783 / L1791 kinds:
         -- Fury L24 0.19 -> 0.22
-        ["Arms"] = { flicker = 0.43 },
-        ["Fury L60"] = { flicker = 0.37 },
-        ["Fury L24"] = { flicker = 0.22 },
+        ["Arms"] = { flicker = 0.43, cause = { flicker = "L1783 + L1793" } },
+        ["Fury L60"] = { flicker = 0.37, cause = { flicker = "L1783 + L1791" } },
+        ["Fury L24"] = { flicker = 0.22, cause = { flicker = "L1783 + L1793" } },
         -- L1813, a real flash (Fable batch 4 I2, owner ruling owed): scorch > frostfire_bolt > scorch at the mana
         -- band's crossing of 308.4, counted under L1791. 0.08 / 0.07 / 0.10, the bands arm the same; default 0 /
         -- 0.02 / 0
-        ["Frostfire"] = { flicker = 0.09 },
+        ["Frostfire"] = { flicker = 0.09, cause = { flicker = "L1813 + L1791" } },
         -- T1 (L1794, see the bands arm's): a regen pair of band crossings stamped on the world's 0.1 s regen step;
         -- inferred the harness's step (probe owed, L1800). Every value the bands arm's on the same set: SM Ruin 279 /
         -- 452 / 0, Destruction 303 / 0 / 0, Frost 4 / 49 / 0
-        ["SM Ruin"] = { loOver = 279 },
-        ["Destruction"] = { loOver = 303, heldReady = 1 },
-        ["Frost"] = { loOver = 4 },
+        ["SM Ruin"] = { loOver = 279, cause = { loOver = "L1794" } },
+        ["Destruction"] = { loOver = 303, heldReady = 1, cause = { loOver = "L1794", heldReady = "untraced" } },
+        ["Frost"] = { loOver = 4, cause = { loOver = "L1794" } },
         -- T1 (L1794) re-timed by harness-frames L1793 (5ee7dce0c; fd666cd8a reads 0): seed 9's pre-pull band pair
         -- 2740.218 -> 2741.718 reads a 1.5 s window (true 1.598 s), spirit 30.07 vs 27.5, spE 28.27 (spL 27.72 over the
         -- truth); the floor climbs 0.07-0.375 over the truth in seed 9's 1.4 s out of the five-second rule after a mana
         -- gain (2754.8) and holds it to the exact read at 2763.4: 43 polls (integ5-trace-B-report.md move 2)
-        ["Affliction"] = { loOver = 43 },
+        ["Affliction"] = { loOver = 43, cause = { loOver = "L1794 + L1793" } },
         -- The bands arm's untraced held-while-ready rows (L1799: they read MISS in that arm since batch 3), the shipped
         -- arm equal or under: Combat 168 / 161 / 173 (bands 169 / 173 / 177; default 160 / 157 on 21-60), Marksmanship
         -- Turret 219 / 218 / 211 (bands the same). Elemental 336 / 345 / 314, loOver 1 / 0 / 0 (bands the same; default
@@ -1363,15 +1483,19 @@ M.ARM_FLOORS = {
         -- probe, L1784), not traced. Warrior Protection held 400 / 304 / 374 (L1799; bands the same; default 289 /
         -- 331) and flicker 0.29 / 0.10 / 0.13 (bands 0.29 / 0.12 / 0.12): its 0.25 -> 0.29 is L1791 (Fable batch 4
         -- m1), the rest above the default 0.11 untraced (L1823)
-        ["Combat"] = { heldReady = 168 },
-        ["Marksmanship Turret"] = { heldReady = 219 },
-        ["Elemental"] = { heldReady = 336, loOver = 1 },
+        ["Combat"] = { heldReady = 168, cause = { heldReady = "untraced" } },
+        ["Marksmanship Turret"] = { heldReady = 219, cause = { heldReady = "untraced" } },
+        ["Elemental"] = { heldReady = 336, loOver = 1, cause = { heldReady = "untraced", loOver = "untraced" } },
         -- then batch 5 (controller ruling, stage 3; seeds 1-20 on 9a8a95e23): flicker 0.30 -> 0.31, heldReady 400 -> 391.
         -- The Rows.lua gate (df3072694, L1810) keeps a cast's own-stamp MISS on the cast, and the frames-merge step
         -- (integ5 tracer C, seed 16 t166.0, the L1783 stale class: 17 -> 18 flips, 0.304/min) now shows in this arm too:
         -- its 20 per-seed rows are identical to the bands arm's; held 394 -> 391 and agreement 0.966 -> 0.968 improve.
         -- Inferred: the viewer verdict used to re-time the shipped fights away from that flip
-        ["Warrior Protection"] = { flicker = 0.31, heldReady = 391 },
+        ["Warrior Protection"] = {
+            flicker = 0.31,
+            heldReady = 391,
+            cause = { flicker = "untraced", heldReady = "untraced" },
+        },
         -- Shipped only, traced (arms-trace-2, L1823). Balance held 194 / 187 / 165 against the bands arm's 189 / 174 /
         -- 174 and the ttd arm's 189 (seeds 1-20): re-timed fights after one viewer fact: seed 6 t7.6, without the
         -- viewer the belief drops a landed Insect Swarm on an avoid row and recasts it; all 5 extra polls are Wrath's
@@ -1381,7 +1505,7 @@ M.ARM_FLOORS = {
         -- then harness-frames L1793 (5ee7dce0c; seeds 1-20 201, the I1 viewer fix reversed reads 201 too): 194 -> 201,
         -- every held tick Wrath within 0.25 s (L1118), the fights re-timed from seed 1 (default 189 -> 183)
         -- (integ5-trace-B-report.md move 4)
-        ["Balance"] = { heldReady = 201 },
+        ["Balance"] = { heldReady = 201, cause = { heldReady = "L1823 + L1793" } },
         -- Feral { flicker = 0.05 } dropped (batch 5 one rule, 9a8a95e23): seeds 1-20 read 0, inside M.FLICKER
         -- batch 5 one rule (L1814): rows the arm read inside the old M.FLICKER floors, named once the default table
         -- tightened to its seeds 1-20 reading (integ/batch5 9a8a95e23, + 0.01 on flicker / retracted). Each reading is
@@ -1389,12 +1513,79 @@ M.ARM_FLOORS = {
         -- difference from the default arm is the arm's own (bands on), not traced: Fire retracted 0.02 / readyShort 1
         -- (default 0 / 0; old floor 0.02 / 1), Subtlety held 181 (172; 216), Survival flicker 0.02 / held 84 (0 / 83;
         -- 0.04 / 107), Survival Melee held 274 (273; 295), Destruction held 1 (0; 1, merged into its loOver row)
-        ["Fire"] = { retracted = 0.03, readyShort = 1 },
-        ["Subtlety"] = { heldReady = 181 },
-        ["Survival"] = { flicker = 0.03, heldReady = 84 },
-        ["Survival Melee"] = { heldReady = 274 },
+        ["Fire"] = { retracted = 0.03, readyShort = 1, cause = { retracted = "untraced", readyShort = "untraced" } },
+        ["Subtlety"] = { heldReady = 181, cause = { heldReady = "untraced" } },
+        ["Survival"] = { flicker = 0.03, heldReady = 84, cause = { flicker = "untraced", heldReady = "untraced" } },
+        ["Survival Melee"] = { heldReady = 274, cause = { heldReady = "untraced" } },
     },
 }
+
+-- Where the one rule is not uniform across the three tables (L1889 item 7; refactor lane 4 listed them, no floor
+-- value changed): { table, label, field, why }. pack_gate_spec holds every field named in one arm table and not the
+-- other to this list. Arm readings: gate-ab on 672c0df31 (the bands arm MISS rows are L1799's).
+M.ONE_RULE_EXCEPTIONS = {
+    {
+        "shipped",
+        "Combat",
+        "heldReady",
+        why = "bands reads 169, MISS since batch 3 (L1799): the gated shipped arm took its reading, the record-only arm none",
+    },
+    {
+        "shipped",
+        "Marksmanship Turret",
+        "heldReady",
+        why = "bands reads 219, MISS since batch 3 (L1799); bands' flicker MISS too, a field no table names",
+    },
+    {
+        "shipped",
+        "Elemental",
+        "heldReady",
+        why = "bands reads 336, MISS since batch 3 (L1799): the gated shipped arm took its reading, the record-only arm none",
+    },
+    {
+        "shipped",
+        "Warrior Protection",
+        "flicker",
+        why = "bands reads 0.30, MISS (L1799, L1823): the batch-5 stage-3 ruling (L1841) floored the gated arm only",
+    },
+    {
+        "shipped",
+        "Warrior Protection",
+        "heldReady",
+        why = "bands reads 391, MISS (L1799, L1823): the batch-5 stage-3 ruling (L1841) floored the gated arm only",
+    },
+    {
+        "shipped",
+        "Balance",
+        "heldReady",
+        why = "uniform: bands reads within M.FLICKER (no row); only the shipped viewer re-times the fights (L1823)",
+    },
+    {
+        "FLICKER",
+        "Marksmanship Turret",
+        "loOver",
+        why = "reads 0, kept at 196 (batch-5 ruling): at 0 the bands / shipped arms' untraced 15 need rows (L1853)",
+    },
+    {
+        "FLICKER",
+        "Guardian",
+        "flicker",
+        why = "reads its floor 0.30: the one rule's + 0.01 would loosen it, and a floor only moves down",
+    },
+    {
+        "FLICKER",
+        "Combat",
+        "flicker",
+        why = "reads its floor 0.06: the one rule's + 0.01 would loosen it, and a floor only moves down",
+    },
+    {
+        "FLICKER",
+        "Fury L60",
+        "retracted",
+        why = "reads its floor 0.04 (672c0df31): the one rule's + 0.01 would loosen it, and a floor only moves down",
+    },
+}
+
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. It tightens the bar when a change lowers the oracle's own flicker. 1.8 -> 0.5 (forever-gap-bd,
 -- 2026-10-26, the press rule and gap BD's cast bar; every gated pack but a row's own flickerK, seeds 1-20 / 21-40 /

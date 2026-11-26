@@ -330,6 +330,10 @@ NOT_INPUTS = {
     "UPDATES": "tests/Forever/windows_cpu_bench.lua: a dev-only CPU bench, not check",
     "BORDER_PACKS": "tools/check_border.sh: set only by border_check_spec to point at a fixture; unset in a real run",
     "BORDER_STATE": "tools/check_border.sh: set only by border_check_spec to point at a fixture; unset in a real run",
+    "FLOORS_LABEL": "tools/floors_trace.lua: the floor tools' busted helper, not check",
+    "FLOORS_OUT": "tools/floors_trace.lua: the floor tools' busted helper, not check",
+    "FLOORS_MODE": "tools/floors_trace.lua: the floor tools' busted helper, not check",
+    "FLOORS_SEEDS": "tools/floors_trace.lua: the floor tools' busted helper, not check",
 }
 # Files that read an environment variable by a computed name, with the names they read (all in ENV_VARS).
 DYNAMIC_READS = {"tools/wowsims/export.lua": "env(name): WOWSIMS, WOWSIMS_CLI, WOWDB"}
