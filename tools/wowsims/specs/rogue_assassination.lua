@@ -20,10 +20,12 @@
 -- Re-pin e2842f0a78 (Task 13): omitted 7 -> 9 (dry: 9 of 27 lines, waitUntil 0 outside the group): + the "Energy
 -- Pooling Checks" group's strictSequence of one waitUntil (`currentEnergy >= 90`) and the then-empty group. Its gate,
 -- "Gnome Eureka - Should Cast", needs the Gnome racial Eureka (spellIsKnown 1259812), so it holds nothing in this Human
--- fight. Not carried onto the lines it holds (spec section 3; ruling R37): the translator has no carry, and the gate
--- is Gnome-only (no scored decision can fall in a hold: the replay scores only wowsims's casts). A Gnome A/B of this request (same CLI, scratch) pools before Eureka (no casts 120-128.28, Eureka at 90 energy)
--- and replays 0.982 (56) [eviscerate -> venom 1, the fight's end] on this pack; Combat's Gnome A/B 1.000 (68). A
--- carried `energy.lo>=90` would be forecast (Engine/Sim/Scripts.lua `.lo` recheck, timeToLo; near_cost_spec).
+-- fight. Lane TR-1 (L4) carries it (rule 19's hold, the strictSequence of one waitUntil): every line after the call,
+-- Eureka's own too, takes `(!<Should Cast>|(action.eureka.known&action.eureka.disabled)|energy.lo>=90)`, true here
+-- (no Eureka) and inert while Eureka is disabled (its Cooldowns toggle off). A Gnome A/B of this request (same CLI,
+-- scratch, before the carry) pools before Eureka (no casts 120-128.28, Eureka at 90 energy) and replays 0.982 (56)
+-- [eviscerate -> venom 1, the fight's end] on this pack; Combat's Gnome A/B 1.000 (68). The carried `energy.lo>=90`
+-- is forecast (Engine/Sim/Scripts.lua `.lo` recheck, timeToLo; near_cost_spec).
 -- Affords: the builders' "SnD + builder" term is `energy.lo>(action.slice_and_dice.cost+action.<builder>.cost)`.
 -- Rogue Armor Energize 27788 in the log 10 times (4 Darkmantle pieces). Mutilate's hand
 -- hits stay procs; no other untagged GCD-0 cast in the log is a kit ability (Brain Damage 1290950 is the

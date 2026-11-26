@@ -579,6 +579,10 @@ describe("the wowsims APL translator", function()
                         end),
                     },
                     plain = { key = "plain", id = 1010, gcd = "spell", cooldown = 0 },
+                    -- L504: casts with travel (the kit's velocity, its flightTime), no aura of their own
+                    bolt = { key = "bolt", id = 1014, gcd = "spell", cooldown = 0, velocity = 20 },
+                    dart = { key = "dart", id = 1015, gcd = "spell", cooldown = 0, flightTime = 0.5 },
+                    lance = { key = "lance", id = 1016, gcd = "spell", cooldown = 60, velocity = 20 },
                     swing = {
                         key = "swing",
                         id = 1011,
@@ -736,6 +740,33 @@ describe("the wowsims APL translator", function()
                 }, "\n"),
                 text
             )
+        end)
+
+        -- L504: in game the player stays out of combat until the cast lands, so an unguarded line with travel shows
+        -- itself again while it flies and hides the next pre-pull line (Shadow Bolt then Corruption at -0.1 s); the term
+        -- releases itself once the travel time passed (a miss never blanks the line). The last line has none to hide;
+        -- a cooldown already hides it (Soul Fire's 60 s, Charge's).
+        it("guards a cast with travel and a later pre-pull line until its travel time has passed (L504)", function()
+            local text, omitted = apl.translate({
+                prepullActions = {
+                    at(1014, "-3s"),
+                    at(1015, "-2s"),
+                    at(1016, "-1.5s"),
+                    at(1010, "-1s"),
+                    at(1014, "-0.5s"),
+                },
+            }, guardCtx())
+            assert.are.equal(
+                table.concat({
+                    "actions.precombat=bolt,if=action.bolt.time_since>action.bolt.travel_time",
+                    "actions.precombat+=/dart,if=action.dart.time_since>action.dart.travel_time",
+                    "actions.precombat+=/lance",
+                    "actions.precombat+=/plain",
+                    "actions.precombat+=/bolt",
+                }, "\n"),
+                text
+            )
+            assert.are.same({}, omitted)
         end)
 
         it("guards a mutually exclusive group's first line by every member's aura, later ones by their own", function()
@@ -1546,12 +1577,16 @@ describe("the wowsims APL translator", function()
                 multidot(400, "2s", cmp("OpGt", { currentRage = {} }, const("10"))),
                 multidot(400), -- no maxOverlap (protojson's zero value): 0
                 multidot(999, "0ms"), -- an unmapped DoT: the whole entry (rule 2)
+                -- an empty maxOverlap (upstream's `max_overlap=none`, Balance at a342c253e6, `"maxOverlap": {}`) is
+                -- absent too: 0, not an unresolved read that drops the term (re-pin readiness 1.4)
+                { action = { multidot = { spellId = { spellId = 400 }, maxDots = 3, maxOverlap = {} } } },
             },
         }, ctx({}))
         assert.are.equal(
             table.concat({
                 "actions=dot,cycle_targets=1,max_cycle_targets=3,if=debuff.dot.remains<=0",
                 "actions+=/dot,cycle_targets=1,max_cycle_targets=3,if=(rage.lo>10&debuff.dot.remains<=2)",
+                "actions+=/dot,cycle_targets=1,max_cycle_targets=3,if=debuff.dot.remains<=0",
                 "actions+=/dot,cycle_targets=1,max_cycle_targets=3,if=debuff.dot.remains<=0",
             }, "\n"),
             text
@@ -1563,6 +1598,7 @@ describe("the wowsims APL translator", function()
             "# Deviation: default #1: " .. dev,
             "# Deviation: default #2: " .. dev,
             "# Deviation: default #3: " .. dev,
+            "# Deviation: default #5: " .. dev,
         }, header)
     end)
 
@@ -1844,6 +1880,10 @@ describe("the wowsims APL translator", function()
             "\nactions%+=/blood_fury,use_off_gcd=1,if=([^\n]*)\nactions%+=/adrenaline_rush,if=([^\n]*)\n"
         )
         assert.is_truthy(bf and bf:find("cooldown.adrenaline_rush.ready", 1, true)) -- the sequence's condition
+        -- L4: both lines end with the Gnome pooling hold (rule 19); the sequence reads Blood Fury's condition without it
+        local hold = bf:match("(&%(!%(action%.eureka%.known.*)$")
+        assert.is_truthy(hold and ar:sub(-#hold) == hold)
+        bf = bf:sub(1, #bf - #hold)
         -- split at the first term's known end (the pin's sequence condition nests `))&` inside bf, re-pin e2842f0a78)
         local at = "((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&" .. bf .. "))"
         assert.are.equal(at .. "&", ar:sub(1, #at + 1))
@@ -2139,6 +2179,89 @@ describe("the wowsims APL translator", function()
         )
         assert.is_false(ok)
         assert.matches("hpPercentForDefensives", err)
+    end)
+
+    -- L1246 (Combat's Blade Flurry for a non-Orc): wowsims takes out of its automatic cooldowns only what the priority
+    -- list and the groups cast (sim/core/apl.go allAPLActions: a sequence's members too), never a pre-pull cast; and an
+    -- entry whose condition folds false is pruned (apl_action.go newAPLAction), a pruned sequence keeping its members
+    -- automatic (castSpellOf is nil for a sequence). A sequence gated on `spellIsKnown` of a racial is pruned for every
+    -- other race, so its members stay automatic there: the automatic line waits on that racial being unknown.
+    it("keeps a pre-pull or race-pruned sequence's member automatic, gated on the race (L1246)", function()
+        local kit = {
+            abilities = {
+                blade_flurry = { key = "blade_flurry", id = 13877, gcd = "spell" },
+                blood_fury = { key = "blood_fury", id = 20572, gcd = "off" },
+                roar = { key = "roar", id = 300, gcd = "off" },
+            },
+            auras = { roar = { id = 300 } },
+        }
+        local human = table.concat({
+            "# wowsims 0123 test seed 1 10 s target 63",
+            "[117.53] [Tester (#1)] Major cooldown used: {SpellID: 13877}",
+        }, "\n")
+        local auto =
+            { action = { autocastOtherCooldowns = {}, condition = { auraIsActive = { auraId = { spellId = 300 } } } } }
+        local seq = {
+            action = {
+                condition = AND(
+                    { spellIsReady = { spellId = { spellId = 13877 } } },
+                    { spellIsKnown = { spellId = { spellId = 20572 } } }
+                ),
+                strictSequence = { actions = { cast(20572).action, cast(13877).action } },
+            },
+        }
+        local pre = { action = cast(13877).action, doAtValue = const("-3s") }
+        local text, omitted =
+            apl.translate({ prepullActions = { pre }, priorityList = { seq, auto } }, apl.context(kit, {}, human))
+        -- the Orc's sequence stands; for any other race the automatic line casts it, as wowsims's Human log does
+        assert.are.equal(
+            "actions+=/blade_flurry,if=(!action.roar.known|buff.roar.up)&!action.blood_fury.known",
+            text:match("[^\n]+$")
+        )
+        assert.are.same({}, omitted)
+        -- the pre-pull cast alone does not take it out of the automatic set
+        text = apl.translate({ prepullActions = { pre }, priorityList = { auto } }, apl.context(kit, {}, human))
+        assert.are.equal(
+            "actions.precombat=blade_flurry\nactions=blade_flurry,if=(!action.roar.known|buff.roar.up)",
+            text
+        )
+        -- a sequence no `spellIsKnown` gates is cast by the APL for every race: no automatic line, the note stays
+        seq.action.condition = { spellIsReady = { spellId = { spellId = 13877 } } }
+        text, omitted = apl.translate({ priorityList = { seq, auto } }, apl.context(kit, {}, human))
+        assert.is_nil(text:find("\nactions+=/blade_flurry,if=(!action.roar", 1, true))
+        assert.are.same(
+            { "default #2: autocastOtherCooldowns: spell 13877 is blade_flurry, which the APL casts itself" },
+            omitted
+        )
+    end)
+
+    -- Re-pin readiness 2.1 (upstream a342c253e6): Holy Shock's and Retribution's seal choice reads the item swap set
+    -- (`{"activeItemSwapSet": {"swapSet": "Main"}}`), Balance's Wrath line `{"spellIsHitCapped": {"spellId": ...}}`.
+    it("folds activeItemSwapSet (never swapped: Main) and spellIsHitCapped (the recipe's hitCapped)", function()
+        local swap = function(set)
+            return { activeItemSwapSet = { swapSet = set } }
+        end
+        local capped = { spellIsHitCapped = { spellId = { spellId = 500 } } }
+        local rotation = {
+            priorityList = {
+                cast(100, swap("Main")),
+                cast(200, swap("Swap1")),
+                cast(400, NOT(capped)),
+                cast(300, swap()),
+            },
+        }
+        local text, omitted, _, header = apl.translate(rotation, ctx({ focus = {}, hitCapped = false }))
+        assert.are.equal("actions=strike\nactions+=/dot", text)
+        local main =
+            "activeItemSwapSet Main is a constant: Hekili never swaps items, so the main set is always the one on."
+        local swap1 =
+            "activeItemSwapSet Swap1 is a constant: Hekili never swaps items, so the main set is always the one on."
+        local hit = "spellIsHitCapped is the recipe's build constant (false); the client's hit chance is not read."
+        assert.are.same({ "default #2: never: " .. swap1, "default #4: activeItemSwapSet nil" }, omitted)
+        assert.are.same({ "# Deviation: default #1: " .. main, "# Deviation: default #3: " .. hit }, header)
+        -- no recipe hitCapped: unsupported, the entry omitted rather than guessed
+        _, omitted = apl.translate({ priorityList = { cast(400, capped) } }, ctx({ focus = {} }))
+        assert.are.same({ "default #1: spellIsHitCapped (no recipe hitCapped)" }, omitted)
     end)
 end)
 
@@ -2809,6 +2932,56 @@ describe("the wowsims APL translator's move rewrite and sequences as windows", f
         assert.are.equal("actions=strike,if=buff.stance.up&(toggle.movement&target.outside5|target.within5)", text)
         assert.are.same({ "default #1: move", "default #2: waitUntil" }, omitted)
         assert.are.same({ "# Movement: default #1 reaches default: strike" }, header)
+    end)
+
+    -- L4 (Rogue x3, Gnome): "Energy Pooling Checks" is `if Should Cast: strictSequence[waitUntil(energy >= 90)]`;
+    -- wowsims holds the whole rotation there until 90 energy (apl_actions_timing.go WaitUntil, a controlling action).
+    -- The hold is carried onto every later line, the calling list's too: `(!<condition>|<inert>|<wait>)`, inert while
+    -- any ability the condition tests ready (spellIsReady) is disabled (its toggle off or ignored), so a Gnome with
+    -- Cooldowns off is never held for a Eureka the display will not show.
+    it("Rogue-shaped (L4): a strictSequence of one waitUntil holds the later lines, the caller's too", function()
+        local should = AND(
+            { spellIsKnown = { spellId = { spellId = 300 } } },
+            { spellIsReady = { spellId = { spellId = 300 } } }
+        )
+        local pool = {
+            action = {
+                condition = { variableRef = { name = "Should Cast" } },
+                strictSequence = {
+                    actions = { { waitUntil = { condition = cmp("OpGe", { currentEnergy = {} }, const("90")) } } },
+                },
+            },
+        }
+        local rotation = {
+            valueVariables = { { name = "Should Cast", value = should } },
+            priorityList = {
+                cast(200),
+                { action = { groupReference = { groupName = "Energy Pooling Checks" } } },
+                cast(100, stance),
+                cast(300),
+            },
+            groups = { { name = "Energy Pooling Checks", actions = { pool } } },
+        }
+        local text, omitted = apl.translate(rotation, ctx({}))
+        local hold =
+            "(!(action.roar.known&(!action.roar.known|cooldown.roar.ready))|(action.roar.known&action.roar.disabled)|energy.lo>=90)"
+        assert.are.equal(
+            lines({
+                "actions=big_hit",
+                "actions+=/strike,if=buff.stance.up&" .. hold,
+                "actions+=/roar,use_off_gcd=1,if=" .. hold,
+            }),
+            text
+        )
+        assert.are.same({
+            "energy_pooling_checks #1: strictSequence of waitUntil (held: carried onto the later lines)",
+            "default: empty group energy_pooling_checks",
+        }, omitted)
+        -- a call with its own condition would hold only under it: not carried, an error at build
+        rotation.priorityList[2].action.condition = stance
+        local ok, err = pcall(apl.translate, rotation, ctx({}))
+        assert.is_false(ok)
+        assert.matches("energy_pooling_checks", tostring(err))
     end)
 
     it("weave-shaped: a melee move under a timing condition reaches the strike's bracket", function()
@@ -3644,7 +3817,7 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
         local text, omitted, _, header = apl.translate(rot, ctx({}, { distanceFromTarget = 20 }))
         assert.are.equal(
             table.concat({
-                "actions.precombat=bolt",
+                "actions.precombat=bolt,if=action.bolt.time_since>action.bolt.travel_time", -- rule 1's travel guard (L504)
                 "actions.precombat+=/big_hit",
                 "actions.precombat+=/strike", -- no velocity: wowsims's 0 s travel, at the pull
             }, "\n"),
@@ -3657,7 +3830,7 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
         local c = ctx({}, { distanceFromTarget = 20 })
         c.set.abilities.bolt.flightTime = 0.5 -- a kit flight time wins over distance / velocity
         assert.are.equal( -- -(2.5 + 0.5) * 0.9 = -2.7: still before big_hit's -2.5
-            "actions.precombat=bolt\nactions.precombat+=/big_hit\nactions.precombat+=/strike",
+            "actions.precombat=bolt,if=action.bolt.time_since>action.bolt.travel_time\nactions.precombat+=/big_hit\nactions.precombat+=/strike",
             (apl.translate(rot, c))
         )
         c.set.abilities.bolt.flightTime = 0 -- -(2.5 + 0) * 0.9 = -2.25: after big_hit (distance / velocity unused)
@@ -3666,8 +3839,8 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
             (apl.translate(rot, c))
         )
         c.set.abilities.bolt.flightTime = nil
-        assert.are.equal( -- protojson omits a 0 distance: the travel time is 0
-            "actions.precombat=big_hit\nactions.precombat+=/bolt\nactions.precombat+=/strike",
+        assert.are.equal( -- protojson omits a 0 distance: the travel time is 0 (in game the bolt still flies)
+            "actions.precombat=big_hit\nactions.precombat+=/bolt,if=action.bolt.time_since>action.bolt.travel_time\nactions.precombat+=/strike",
             (apl.translate(rot, ctx({})))
         )
     end)

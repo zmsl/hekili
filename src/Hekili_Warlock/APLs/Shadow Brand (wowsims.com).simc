@@ -22,7 +22,7 @@
 # Omitted: cooldowns #1: item 18820
 # Omitted: cooldowns #2: item 250937
 
-actions.precombat=shadow_bolt
+actions.precombat=shadow_bolt,if=action.shadow_bolt.time_since>action.shadow_bolt.travel_time
 actions.precombat+=/corruption,if=!debuff.corruption.up
 actions=death_coil_defensive,if=health.known&health.pct<=settings.death_coil_defensive_health
 actions+=/healthstone,use_off_gcd=1,if=health.known&health.pct<=settings.healthstone_health

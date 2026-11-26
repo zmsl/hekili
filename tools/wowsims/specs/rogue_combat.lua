@@ -35,6 +35,9 @@
 -- reissue pieces again, so the 4-piece Rogue Armor Energize (27788, +20 energy, 0.8 PPM on landed white swings) fires in the log (the oracle set has no
 -- Darkmantle set-ID patch: the reissue pieces carry their own set ID), and Stormshroud's 3-piece 23863 (+30 energy) too. Both are random
 -- resource procs and are NOT modelled (owner L1396/L1397); energy is secret in combat, so the belief sees each gain at its next read.
+-- Lane TR-1 (L1246): Blade Flurry's in-fight cast is the #8 strict sequence after Blood Fury, which wowsims prunes for
+-- any race but the Orc, so #9's autocast casts it there (the Human log: 117.53, "priority 9"); the pack's #9 line
+-- `blade_flurry,if=...&!action.blood_fury.known` gives it to every non-Orc (rule 13).
 return {
     class = "ROGUE",
     pack = "Combat (wowsims.com)",
