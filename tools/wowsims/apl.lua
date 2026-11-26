@@ -2030,6 +2030,23 @@ local function readsAny(c, n, keys)
     return false
 end
 
+-- L1246: the `spellIsKnown` IDs among condition node `n`'s `&` terms (variables followed), appended to `out`.
+local function knownTerms(c, n, out)
+    while type(n) == "table" and n.variableRef and c.vars[n.variableRef.name] do
+        n = c.vars[n.variableRef.name]
+    end
+    if type(n) ~= "table" then
+        return out
+    elseif n["and"] then
+        for _, v in ipairs(n["and"].vals or {}) do
+            knownTerms(c, v, out)
+        end
+    elseif n.spellIsKnown then
+        out[#out + 1] = n.spellIsKnown.spellId
+    end
+    return out
+end
+
 local function sequence(c, members, cond, node)
     local out, at = {}, cond -- at: the condition that the sequence is at the next member (nil: always)
     local before = {} -- the keys of the members already cast
@@ -2389,6 +2406,10 @@ local function entryBody(c, e)
             local off = c.offGcd[x]
             local line = x .. (off and ",use_off_gcd=1" or "")
             local cx = guarded(c, x, required(c, x, cond))
+            local only = not c.namedKeys[x] and c.namedIf[x] -- L1246: where its race prunes the APL's own cast
+            if only then
+                cx = cx and (paren(cx) .. "&" .. only) or only
+            end
             local hp = c.lowHealth and c.lowHealth[x]
             if hp then -- rule 13: a tank's defensive racial waits for low health, rule 23's setting and guard outermost
                 local key = x .. "_health"
@@ -3048,26 +3069,51 @@ function M.translate(rotation, c)
     c.seqSize = {} -- rules 14, 14b (recipe `sequences`): [name] = its member count, the lines joined into its line
     c.conditioned = {} -- rule 7: the recipe's condition keys a line took
     c.keyUsed = {} -- CN12: "<field>:<key>" of each recipe guard, requires and windowVars key a line took
-    -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
+    for _, v in ipairs(rotation.valueVariables or {}) do
+        c.vars[v.name] = v.value
+    end
+    -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13). L1246: the keys only
+    -- the priority list and the groups cast (sim/core/apl.go allAPLActions: not a pre-pull cast; a sequence's members
+    -- too); a sequence whose condition tests `spellIsKnown` is pruned where one is unknown (apl_action.go
+    -- newAPLAction) and keeps its members automatic there, so those are c.namedIf: { [key] = the automatic line's gate }
+    c.namedIf = {}
     local lists = { rotation.prepullActions or {}, rotation.priorityList or {} }
     for _, g in ipairs(rotation.groups or {}) do
         lists[#lists + 1] = g.actions or {}
     end
-    for _, l in ipairs(lists) do
+    for li, l in ipairs(lists) do
         for _, e in ipairs(l) do
             local a = e.action or {}
             local s = (a.castSpell or a.channelSpell or a.castFriendlySpell or a.multidot or {}).spellId or {}
             if s.spellId or s.itemId then
                 c.named[(s.spellId and "spell:" or "item:") .. (s.spellId or s.itemId)] = true
             end
-            local x = (s.spellId or s.itemId or s.otherId) and spellLookup(c, s)
+            local x = li > 1 and (s.spellId or s.itemId or s.otherId) and spellLookup(c, s)
             if x then
                 c.namedKeys[x] = true
             end
+            local seq = li > 1 and (a.strictSequence or a.sequence)
+            local gate = seq and {}
+            for _, id in ipairs(seq and knownTerms(c, a.condition, {}) or {}) do
+                local k = spellLookup(c, id)
+                local t = k and knownTest(c, k)
+                if not t then -- unmapped or always known: no race prunes it here
+                    gate = {}
+                    break
+                end
+                gate[#gate + 1] = "!" .. t
+            end
+            local g = gate and #gate > 0 and (#gate > 1 and ("(" .. table.concat(gate, "|") .. ")") or gate[1])
+            for _, m in ipairs(seq and seq.actions or {}) do
+                local ms = (m.castSpell or m.channelSpell or m.castFriendlySpell or {}).spellId
+                local y = ms and spellLookup(c, ms)
+                if y and g then
+                    c.namedIf[y] = c.namedIf[y] and (c.namedIf[y] .. "&" .. g) or g
+                elseif y then
+                    c.namedKeys[y] = true
+                end
+            end
         end
-    end
-    for _, v in ipairs(rotation.valueVariables or {}) do
-        c.vars[v.name] = v.value
     end
     -- CN12 (review I2): every entry name the APL has, emitted or omitted: its action's key (a select's candidates, a
     -- sequence's members), a group call's snake name, `cancel_buff`, and "<list> #<n>" (a move entry's guard key)
