@@ -1844,6 +1844,10 @@ describe("the wowsims APL translator", function()
             "\nactions%+=/blood_fury,use_off_gcd=1,if=([^\n]*)\nactions%+=/adrenaline_rush,if=([^\n]*)\n"
         )
         assert.is_truthy(bf and bf:find("cooldown.adrenaline_rush.ready", 1, true)) -- the sequence's condition
+        -- L4: both lines end with the Gnome pooling hold (rule 19); the sequence reads Blood Fury's condition without it
+        local hold = bf:match("(&%(!%(action%.eureka%.known.*)$")
+        assert.is_truthy(hold and ar:sub(-#hold) == hold)
+        bf = bf:sub(1, #bf - #hold)
         -- split at the first term's known end (the pin's sequence condition nests `))&` inside bf, re-pin e2842f0a78)
         local at = "((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&" .. bf .. "))"
         assert.are.equal(at .. "&", ar:sub(1, #at + 1))
@@ -2863,6 +2867,56 @@ describe("the wowsims APL translator's move rewrite and sequences as windows", f
         assert.are.equal("actions=strike,if=buff.stance.up&(toggle.movement&target.outside5|target.within5)", text)
         assert.are.same({ "default #1: move", "default #2: waitUntil" }, omitted)
         assert.are.same({ "# Movement: default #1 reaches default: strike" }, header)
+    end)
+
+    -- L4 (Rogue x3, Gnome): "Energy Pooling Checks" is `if Should Cast: strictSequence[waitUntil(energy >= 90)]`;
+    -- wowsims holds the whole rotation there until 90 energy (apl_actions_timing.go WaitUntil, a controlling action).
+    -- The hold is carried onto every later line, the calling list's too: `(!<condition>|<inert>|<wait>)`, inert while
+    -- every ability the condition tests ready (spellIsReady) is disabled (its toggle off or ignored), so a Gnome with
+    -- Cooldowns off is never held for a Eureka the display will not show.
+    it("Rogue-shaped (L4): a strictSequence of one waitUntil holds the later lines, the caller's too", function()
+        local should = AND(
+            { spellIsKnown = { spellId = { spellId = 300 } } },
+            { spellIsReady = { spellId = { spellId = 300 } } }
+        )
+        local pool = {
+            action = {
+                condition = { variableRef = { name = "Should Cast" } },
+                strictSequence = {
+                    actions = { { waitUntil = { condition = cmp("OpGe", { currentEnergy = {} }, const("90")) } } },
+                },
+            },
+        }
+        local rotation = {
+            valueVariables = { { name = "Should Cast", value = should } },
+            priorityList = {
+                cast(200),
+                { action = { groupReference = { groupName = "Energy Pooling Checks" } } },
+                cast(100, stance),
+                cast(300),
+            },
+            groups = { { name = "Energy Pooling Checks", actions = { pool } } },
+        }
+        local text, omitted = apl.translate(rotation, ctx({}))
+        local hold =
+            "(!(action.roar.known&(!action.roar.known|cooldown.roar.ready))|(action.roar.known&action.roar.disabled)|energy.lo>=90)"
+        assert.are.equal(
+            lines({
+                "actions=big_hit",
+                "actions+=/strike,if=buff.stance.up&" .. hold,
+                "actions+=/roar,use_off_gcd=1,if=" .. hold,
+            }),
+            text
+        )
+        assert.are.same({
+            "energy_pooling_checks #1: strictSequence of waitUntil (held: carried onto the later lines)",
+            "default: empty group energy_pooling_checks",
+        }, omitted)
+        -- a call with its own condition would hold only under it: not carried, an error at build
+        rotation.priorityList[2].action.condition = stance
+        local ok, err = pcall(apl.translate, rotation, ctx({}))
+        assert.is_false(ok)
+        assert.matches("energy_pooling_checks", tostring(err))
     end)
 
     it("weave-shaped: a melee move under a timing condition reaches the strike's bracket", function()
