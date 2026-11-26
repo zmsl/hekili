@@ -1046,9 +1046,10 @@ end
 -- to one tick of it, and a multiplied spirit rate's first tick dwarfs the parts it would measure (a plain slot's
 -- whole-rate `mult` keeps its tick error small next to the interval's gain, and still measures). `a`, `b`: the
 -- interval's weights (pinA, pinB between two pins; spans between two band crossings), `from`: its start, `event`: what
--- measured it, `low`: the lowest m the interval allows (a band pair's, crossing; nil: m).
-local function calibrate(r, m, t, a, b, from, event, low)
-    local high = low and m - low or 0
+-- measured it. `qa`, `qb`, `qk`: the weights of the stretch before `from` a band pair's first stamp may have missed
+-- (crossing; nil: none): m may read high by that stretch's gain at its own rates (inside the window, the mp5 part's),
+-- the part m measures at its truth (the bound solved for it), the other at its estimate; at one rate, the pair's mean.
+local function calibrate(r, m, t, a, b, from, event, qa, qb, qk)
     if R.shaped[r] then
         local ok
         -- spans reads the latest window: an entry edge after the interval (a band pair folded after its stamp) hides
@@ -1058,9 +1059,12 @@ local function calibrate(r, m, t, a, b, from, event, low)
             return -- the game's ticks put the new rate on a grid the belief does not see: off by up to a tick of it
         elseif b <= 0 and a > 0 then
             local bound = R.fsr[r] and R.decl[r] + R.spDecl[r] or nil
-            ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound, R.regQ, high / a) -- a > 0 checked
+            local high = qa and m / a - (m - qk - qb * R.spH[r]) / (a + qa) or 0 -- a > 0 checked
+            ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound, R.regQ, high)
         elseif b >= I.PIN_GAP then
-            ok = ema(r, (m - R.regE[r] * a) / b, R.spDecl[r], R.spE, R.spL, R.spH, R.spDev, nil, R.spQ, high / b) -- b >= 1
+            local x = m - R.regE[r] * a
+            local high = qa and x / b - (x - qa * R.regE[r] - qk) / (b + qb) or 0 -- b >= 1
+            ok = ema(r, x / b, R.spDecl[r], R.spE, R.spL, R.spH, R.spDev, nil, R.spQ, high)
         end
         if ok then
             I.Sample(R.regen[r], "modelled", R.regE[r] + R.spE[r], t, event)
@@ -1068,7 +1072,7 @@ local function calibrate(r, m, t, a, b, from, event, low)
         return
     end
     if R.swing[r] == 0 then
-        if ema(r, m, R.decl[r], R.regE, R.regL, R.regH, R.dev, nil, R.regQ, high) then
+        if ema(r, m, R.decl[r], R.regE, R.regL, R.regH, R.dev, nil, R.regQ, qa and m * qa / (a + qa) or 0) then
             I.Sample(R.regen[r], "modelled", R.regE[r], t, event)
         end
         return
@@ -1807,10 +1811,10 @@ local function crossing(r, lo, hi, bt)
         end
         local a, b, k = spans(r, from, dt)
         local gain = lo - R.markV[r] - k
-        -- each end stamped up to a step late (L1794): the cell took up to dt + I.BAND_STAMP, its entries' k with it
-        local low = (lo - R.markV[r]) * dt / (dt + I.BAND_STAMP) - k
+        -- each end stamped up to a step late (L1794): the first end's may have missed the stretch before it
+        local qa, qb, qk = spans(r, from - I.BAND_STAMP, I.BAND_STAMP)
         local m = R.shaped[r] and gain or gain / dt -- nonzero: dt >= PIN_GAP (1 s)
-        calibrate(r, m, bt, a, b, from, Obs.Band, R.shaped[r] and low or low / dt)
+        calibrate(r, m, bt, a, b, from, Obs.Band, qa, qb, qk)
     end
     R.markT[r], R.markV[r] = bt, lo
 end
