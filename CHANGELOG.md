@@ -8,7 +8,7 @@
 
 ### Fixed
 - Combat Rogue: Blade Flurry is now recommended during the fight for every race, not only for Orcs.
-- Gnome Rogues: while Eureka is about to be used, the priority now pools energy up to 90 before anything else, as the wowsims rotation does (no pooling while Eureka's toggle is off).
+- Gnome Rogues: when Eureka is about to be used, the rotation after the energy pooling step now waits until you have 90 energy, as the wowsims rotation does. The lines above that step (defensives, Riposte, Garrote, Vanish, Preparation and the opening cooldowns) still show. There is no pooling while Eureka's toggle is off.
 - Shadow Brand Warlock: after the pre-pull Shadow Bolt is cast, Corruption is now recommended while the bolt is still flying, instead of Shadow Bolt again.
 
 ### Known issues

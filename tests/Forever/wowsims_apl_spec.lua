@@ -2937,7 +2937,7 @@ describe("the wowsims APL translator's move rewrite and sequences as windows", f
     -- L4 (Rogue x3, Gnome): "Energy Pooling Checks" is `if Should Cast: strictSequence[waitUntil(energy >= 90)]`;
     -- wowsims holds the whole rotation there until 90 energy (apl_actions_timing.go WaitUntil, a controlling action).
     -- The hold is carried onto every later line, the calling list's too: `(!<condition>|<inert>|<wait>)`, inert while
-    -- every ability the condition tests ready (spellIsReady) is disabled (its toggle off or ignored), so a Gnome with
+    -- any ability the condition tests ready (spellIsReady) is disabled (its toggle off or ignored), so a Gnome with
     -- Cooldowns off is never held for a Eureka the display will not show.
     it("Rogue-shaped (L4): a strictSequence of one waitUntil holds the later lines, the caller's too", function()
         local should = AND(

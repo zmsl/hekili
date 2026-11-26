@@ -265,8 +265,9 @@
 --    `&` term, onto every later APL line of its list, or, when none follows (it ends its group or sequence), onto the
 --    later lines of each calling list (one level; its own entry condition and a group call's are not carried).
 --    A strictSequence of one waitUntil (any condition: the Rogues' Gnome pooling, L4) holds the rotation the same
---    way, its gate `(!<entry condition>|<inert>|<wait>)`, `<inert>` `(action.<x>.known&action.<x>.disabled)` for
---    each ability the entry condition tests ready (the cast it waits for: no hold while its line cannot show); a
+--    way, its gate `(!<entry condition>|<inert>|<wait>)`, `<inert>` one `(action.<x>.known&action.<x>.disabled)` term
+--    for each ability the entry condition tests ready, so any one of them disabled releases the hold (the cast it
+--    waits for: no hold while its line cannot show); a
 --    call of it under a condition raises. Stateless (apl-stateless-guards): wowsims also holds the lines before it
 --    once the wait began; here they still show while their own condition holds.
 --    A move to D yards reaches: the held gates after it in its list; and every APL line of its list and its callers'
@@ -2799,7 +2800,7 @@ local function motion(c, a)
         if cond then
             parts[1] = "!" .. ((cond:match("^[%w_.]+$") or grouped(cond)) and cond or ("(" .. cond .. ")"))
         end
-        -- inert while every ability the condition tests ready is disabled (toggle off, ignored): it waits for that cast
+        -- inert while any ability the condition tests ready is disabled (toggle off, ignored): it waits for that cast
         local ready = readyKeys(c, a.condition, {}, {})
         table.sort(ready)
         for _, x in ipairs(ready) do
