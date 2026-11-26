@@ -126,6 +126,24 @@ describe("an on-use trinket", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- L1960 (trace lane trinket-flash): the line's use_off_gcd=1 reaches the items it walks, so a trinket never waits
+    -- out a running GCD a later use_off_gcd=1 line ignores (Fire: Combustion shown first until the GCD fell to 0.2 s,
+    -- then the trinket by list order, a now<->next swap with no fact); a plain use_items still waits for the GCD.
+    for _, c in ipairs({ { "use_items,use_off_gcd=1", false }, { "use_items", true } }) do
+        it("waits for a running GCD only without use_off_gcd=1 (" .. c[1] .. ")", function()
+            local H, t = boot(EYE, nil, c[1])
+            H.ctl.cooldown[H.ns.GCD_SPELL] = { isActive = true, isOnGCD = false, startTime = t, duration = 1.5 }
+            for _, left in ipairs({ 0.4, 0.2 }) do
+                assert(headless.cycle(H, t + 1.5 - left))
+                local r = H.Hekili.Engine.Output.Primary.recs[1]
+                assert.are.equal("eye_of_the_beast", r and r.actionName)
+                local want = c[2] and left or 0
+                assert.is_true(math.abs(r.time - want) < 0.05, ("GCD %.1f left: wait %.3f"):format(left, r.time))
+            end
+            assert.are.same({}, H.errors)
+        end)
+    end
+
     it("is not offered while the client calls it unusable, with no error on a secret answer", function()
         local H, t = boot(ANALYZER)
         H.ctl.itemUsable[ANALYZER] = false
