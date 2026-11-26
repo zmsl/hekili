@@ -208,6 +208,29 @@ describe("the pack field registry", function()
         st.rangefilter = false
     end)
 
+    -- decision 3c: one edit on a name of 2 or 3 letters is no evidence of a typo, so the rule compares a key only with
+    -- names of 4 or more; a key near a shorter name is listed like any unknown key. Plural slips of longer names fail.
+    it("3c: the one-edit rule compares only with registered names of 4 or more characters", function()
+        local env, F = druid()
+        local kit = env.class.kit
+        for i, k in ipairs({ "cd", "icd", "ids" }) do
+            local ok, err = pcall(kit.RegisterAbility, kit, "short_" .. k, { id = 990500 + i, [k] = 1 })
+            assert(ok, tostring(err))
+            assert.are.equal("DRUID ability short_" .. k .. ": " .. k .. " (V1)", F.findings[#F.findings])
+        end
+        local ok, err = pcall(kit.RegisterAura, kit, "short_di", { id = 990504, di = 1 })
+        assert(ok, tostring(err))
+        assert.are.equal("DRUID aura short_di: di (V1)", F.findings[#F.findings])
+        for k, close in pairs({ rank = "ranks", buffs = "buff", spends = "spend", toggles = "toggle", cas = "cast" }) do
+            ok, err = pcall(kit.RegisterAbility, kit, "slip_" .. k, { id = 990510, [k] = 1 })
+            assert.is_false(ok, k)
+            assert.is_truthy(tostring(err):find("V1: DRUID ability slip_" .. k .. ": " .. k .. " is one edit from " .. close, 1, true), err)
+        end
+        ok, err = pcall(kit.RegisterResource, kit, 1, { short_regen = { value = 1, ab = 2 } })
+        assert.is_false(ok)
+        assert.is_truthy(tostring(err):find("V1: DRUID regen", 1, true) and tostring(err):find("ab is no field", 1, true), err)
+    end)
+
     it("has one row per field with a type, a doc line and its bounds in order", function()
         local F = druid().ns.Fields
         local n = 0

@@ -6,7 +6,7 @@
 -- ones the shipped content declares and the ones the registration calls or the belief read. The registration calls
 -- validate what the pack wrote against it (F.Check), before they read or move anything, so a valid pack changes
 -- nothing and a mistake stops at load, never in combat:
---   V1 an unknown key: one edit from a registered name fails; on a regen entry or an `fsr` (belief-only tables) any
+--   V1 an unknown key: one edit from a registered name of 4 or more characters fails; on a regen entry or an `fsr` (belief-only tables) any
 --      unknown key fails; on an ability, an aura or a meta, which also carry the engine's own fields, it is listed
 --      (F.findings)
 --   V2 type and range       V3 references resolve (aura, resource, talent and ability keys: at the end of the load,
@@ -254,7 +254,8 @@ function F.Check(on, spec, key, data)
             local close
             if type(k) == "string" then
                 for _, name in ipairs(F.names[on]) do
-                    if near(k, name) then
+                    -- one edit on a name of 2 or 3 letters is no evidence of a typo (cd, icd and ids against id)
+                    if #name >= 4 and near(k, name) then
                         close = name
                         break
                     end
