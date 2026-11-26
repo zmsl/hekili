@@ -4053,6 +4053,7 @@ describe("resource bands (lane B4)", function()
         end)
 
         it("a swing-paid slot inside the lag window still takes the band's low end", function()
+            R.regE[RAGE], R.regL[RAGE], R.regH[RAGE] = 10, 10, 10 -- a window the regen-slot test would pass
             set(RAGE, 20.05, 21, 22)
             band(10, RAGE, 12, 30)
             answer(10, PUNCH, false)

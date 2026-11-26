@@ -424,7 +424,7 @@ local function ownGain(r, delta, t)
 end
 
 local keepFloor = false -- the Usable apply's: this short answer leaves the modelled floor (I.GAIN_SHOWS)
-local edgeFloor = false -- the Usable apply's: the floor was at or under this short answer's top I.GAIN_SHOWS ago (L1946)
+local edgeFloor = false -- the Usable apply's: the floor was at or under the answer's top I.GAIN_SHOWS ago (L1946)
 -- After a measurement moved lo0, slot r's modelled floor (`was`, lo0 + over before it), if any, stays where it was
 -- unless the measurement's top `top` falls under it (then it is lo0). Allocates nothing.
 local function remeasure(r, was, top)
@@ -1628,6 +1628,7 @@ I.On(Obs.Usable, function(o, t, lag)
     end
     local explained = I.CreditVerdict and judge(a, now, t, r, c, was, wasT)
     keepFloor = keepFloor and rung and c > 0 -- no rung, no kept floor: a later read must not inherit it
+    edgeFloor = edgeFloor and rung and c > 0
     if not rung then
         return -- a second power cost (Overpower's combo points) makes a short answer ambiguous: no rung
     end
