@@ -120,7 +120,11 @@ local function onCooldown(api, t)
     end
     local A, edge = I.ab, false
     for a = 1, A.n do
-        local r = ready(api, A.qid[a])
+        -- an item's cooldown is the item's, not its use spell's (lane gear-1): no use spell's flag constrains it
+        local r
+        if A.obj[a].item == nil then
+            r = ready(api, A.qid[a])
+        end
         if r ~= nil then
             local v = r and 1 or 0
             if v ~= last[a] then

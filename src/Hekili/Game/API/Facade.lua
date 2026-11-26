@@ -1076,6 +1076,36 @@ kept("C_Spell.IsSpellInRange", "hybrid", function(spellID, unit)
     return r
 end, "plain [W PR7]; by the known rank (KnownID); secret: nil, true (filter: in range; usable_on: unconfirmed)")
 
+-- Item cooldowns (lane gear-1): plain in combat in the one capture [W PR13], but only for idle items (no running
+-- cooldown, worn trinket or forced restriction was read); a secret answer is the belief's (VS.ItemCooldown: our cast of
+-- the item's use spell, its cooldown and its shared category), as the client's start, duration, enable. An item no
+-- tracked ability uses reads not ready for UNKNOWN_ITEM_CD from now: no recommendation, nothing compares a secret.
+local UNKNOWN_ITEM_CD = 3600
+local function itemCooldownPolicy(item)
+    local t = now()
+    local rec, len = VS.ItemCooldown(item, t)
+    if not rec then
+        return t, UNKNOWN_ITEM_CD, 1
+    elseif rec.est <= t then
+        return 0, 0, 1
+    end
+    if len < rec.est - t then
+        len = rec.est - t -- a category window longer than the item's own cooldown: its end stands
+    end
+    return rec.est - len, len, 1
+end
+local realGetItemCooldown = resolve("C_Item.GetItemCooldown")
+kept("C_Item.GetItemCooldown", realGetItemCooldown and "hybrid" or "virtual", function(item)
+    if realGetItemCooldown then
+        local ok, s, d, e = pcall(realGetItemCooldown, item) -- a raising read is answered as a secret one
+        if ok and not (issecretvalue(s) or issecretvalue(d) or issecretvalue(e)) then
+            return s, d, e
+        end
+    end
+    modelled = true
+    return itemCooldownPolicy(item)
+end, "plain [W PR13] (idle items only); secret or raising: ItemCooldown(), an untracked item not ready")
+
 kept("C_Spell.GetSpellCastCount", "virtual", zero, "flagged SecretWhenCooldownsRestricted; unprobed, unused")
 kept("C_Spell.GetSpellLossOfControlCooldown", "virtual", nothing, "absent on Forever")
 
@@ -1217,7 +1247,6 @@ local PASSTHROUGH = {
     },
     { "C_DamageMeter.IsDamageMeterAvailable", "Plain-gated (Outcomes/Meter.lua)" },
     { "C_Item.GetDetailedItemLevelInfo", "plain [W PR13]" },
-    { "C_Item.GetItemCooldown", "plain [W PR13]" },
     { "C_Item.GetItemCount", "plain [W PR13]" },
     { "C_Item.GetItemGem", "plain [W PR13]" },
     { "C_Item.GetItemInfo", "plain [W PR13]" },

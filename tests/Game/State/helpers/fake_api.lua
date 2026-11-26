@@ -151,6 +151,8 @@ function M.new()
         petPowerType = 0,
         itemCount = {}, -- [itemID] = C_Item.GetItemCount (default 0)
         itemUsable = {}, -- [itemID] = true: C_Item.IsUsableItem answers true (default false)
+        itemCooldown = {}, -- [itemID] = { start, duration }: C_Item.GetItemCooldown (either may be SECRET; default 0,
+        -- 0); "raise": the read raises
         -- [index] = UnitStat's value (its first two returns; default 0); .armor UnitArmor's, .block GetShieldBlock's
         stats = {},
         powerMax = {}, -- [powerType] = max
@@ -807,7 +809,13 @@ function M.new()
                 return id, nil, nil, i[2], nil, i[3], i[4]
             end
         end,
-        GetItemCooldown = function()
+        GetItemCooldown = function(id)
+            local c = ctl.itemCooldown[id]
+            if c == "raise" then
+                error("GetItemCooldown: a raising read")
+            elseif c then
+                return c[1], c[2], 1
+            end
             return 0, 0, 1
         end,
         IsEquippedItem = function(id) -- any slot holds it (ctl.inventory); no item cache needed
