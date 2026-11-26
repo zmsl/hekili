@@ -1987,7 +1987,9 @@ function M.line(m)
         "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; ready while short %d; held while ready %d; refused per 100 [%s], episodes %.2f/min; "
         .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f); "
         .. "errors %d raises %d self-check %d; cpu mean %.2f p99 %.2f ms ratio %.3f (calibration %.2f ms) "
-        .. "bytes %.0f per Update; top [%s]; power est-truth at disagreements %.1f"
+        .. "bytes("
+        .. (luajit and "lj" or "puc")
+        .. ") %.0f per Update; top [%s]; power est-truth at disagreements %.1f" -- per VM: a LuaJIT count is not a PUC one
     ):format(
         m.fights,
         r.agreement,

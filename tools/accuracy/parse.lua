@@ -23,7 +23,7 @@ function M.loop(line)
     r.cpuMs, p99, r.ratio, r.calibration =
         need(line, "cpu mean ([%d.]+) p99 ([%d.]+) ms ratio ([%d.]+) %(calibration ([%d.]+) ms%)", "cpu")
     assert(p99)
-    r.bytes = need(line, "bytes ([%d.]+) per Update", "bytes")
+    r.bytes = need(line, "bytes[^ ]* ([%d.]+) per Update", "bytes")
     local refused = line:match("refused per 100 %[(.-)%], episodes")
     if refused == nil then
         error("accuracy parse: no refusals in: " .. line:sub(1, 120), 0)

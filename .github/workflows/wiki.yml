@@ -38,7 +38,9 @@ jobs:
       - uses: jdx/mise-action@v2
       - uses: actions/cache@v4
         with:
-          path: .lua
+          path: |
+            .lua
+            .lj
           key: lua-${{ runner.os }}-${{ hashFiles('scripts/bootstrap.sh') }}
       - run: make bootstrap
       - run: make wiki-build
