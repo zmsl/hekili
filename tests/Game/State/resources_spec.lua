@@ -4208,6 +4208,21 @@ describe("resource bands (lane B4)", function()
             assert.is_true(math.abs(e - (10 + I.ALPHA * (20 / 1.6 - 10))) < 1e-6, e)
         end)
 
+        -- (band-edge round 2, Elemental seed 3; the L1794 class) each end of a pair is stamped up to a regen step late,
+        -- so a pair can read the rate a step's share high (the world's 0.1 s step over 2 s: +5%); the floor's rate is
+        -- a fact's (owner): over a run of such pairs it stays at or under the truth, while the estimate learns them
+        it("keeps the floor's rate at or under the truth over pairs each read a step short", function()
+            local late = 0.09 -- the pair's first end, under one step (the latency row band.stamp)
+            for k = 1, 6 do
+                local t = 20 * k
+                -- the truth is 10 a second: 450 at t, 470 at t + 2; the first end stamped late, the second on time
+                crossings({ t - 1, 440, 450 }, { t + late, 450, 460 }, { t + 1, 460, 470 }, { t + 2, 470, 480 })
+                unknown(t + 3, MANA)
+            end
+            assert.is_true(R.regE[MANA] > 10, R.regE[MANA])
+            assert.is_true(R.regL[MANA] <= 10, R.regL[MANA])
+        end)
+
         it("the first band, a widened one, one whose hi alone moved and a jump are none", function()
             assert.are.equal(10, crossings({ 9.5, 450, 460 }, { 11.2, 460, 470 }))
             assert.are.equal(10, crossings({ 12.5, 460, 480 }, { 14, 460, 475 }, { 16, 440, 480 }))
