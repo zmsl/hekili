@@ -173,6 +173,41 @@ describe("the pack field registry", function()
         end
     end)
 
+    -- decision 3b: range is number|fn (a function answers a number through the ability's funcs), so a ranked ability's
+    -- { byRank = values } passes too; the usable check's range gate compares the answer
+    it("3b: range takes a function or byRank; the range gate compares the number it answers", function()
+        local env = druid()
+        local kit = env.class.kit
+        local fn = function()
+            return 30
+        end
+        local ok, err = pcall(kit.RegisterAbility, kit, "range_fn", { id = 990400, range = fn })
+        assert(ok, tostring(err))
+        ok, err = pcall(kit.RegisterAbility, kit, "range_rank", { ranks = { 990401, 990402 }, range = { byRank = { 20, 30 } } })
+        assert(ok, tostring(err))
+        ok, err = pcall(kit.RegisterAbility, kit, "range_neg", { id = 990403, range = -1 })
+        assert.is_false(ok)
+        assert.is_truthy(tostring(err):find("V2: DRUID ability range_neg: range is -1, below 0", 1, true), err)
+
+        local H = boot()
+        local cls, st = H.Hekili.Class, H.Hekili.State
+        kit = cls.kit
+        kit:RegisterAbility("range_fn", { id = 5221, range = fn })
+        kit:RegisterAbility("range_rank", { ranks = { 5221, 990402 }, range = { byRank = { 20, 30 } } })
+        cls.abilities.range_fn, cls.abilities.range_rank = kit.abilities.range_fn, kit.abilities.range_rank
+        -- a target at 25 yards (the range library answers 20-25), the spell reaching 40; the belief polls it once
+        H.ctl.inRange.target, H.ctl.distance.target, H.ctl.ranges[5221] = true, 25, { 0, 40 }
+        H.ctl.level.target = 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        H.ctl.now = H.ctl.now + 0.2
+        assert.is_true(headless.cycle(H, H.ctl.now))
+        st.rangefilter = true
+        assert.are.equal(20, cls.abilities.range_rank.range) -- rank 1 known: byRank's first value
+        assert.are.same({ false, "not within ability-specified range (20)" }, { st:IsUsable("range_rank") })
+        assert.is_true((st:IsUsable("range_fn"))) -- 30
+        st.rangefilter = false
+    end)
+
     it("has one row per field with a type, a doc line and its bounds in order", function()
         local F = druid().ns.Fields
         local n = 0

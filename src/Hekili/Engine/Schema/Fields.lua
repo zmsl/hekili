@@ -439,7 +439,7 @@ row("ability", "essential", "bool", false, "true: recommended even while its tog
 row("ability", "interrupt", "bool", false, "true: an interrupt")
 row("ability", "readyTime", "number|fn", nil, "seconds until it may be used, beside the cooldown")
 row("ability", "timeToReady", "number|fn", nil, "seconds until it may be used, in place of the cooldown")
-row("ability", "range", "number", nil, "its range in yards", { min = 0 })
+row("ability", "range", "number|fn", nil, "its range in yards", { min = 0 })
 row("ability", "rangeSpell", "number|fn", nil, "the spell whose range the range check reads")
 row("ability", "equipped", "string|number", nil, "a slot kind or item that must be equipped")
 row("ability", "talent", "talent", nil, "the talent it needs")
