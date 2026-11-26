@@ -8,13 +8,19 @@ local addons = require("helpers.addons")
 describe("Engine/Content.lua", function()
     local WARRIOR = { "load Hekili_Shared", "meta Hekili_Warrior X-Hekili-ContentAPI", "load Hekili_Warrior" }
     local calls, notes, meta, loadResult, classToken, saved, ns
+    local finished -- each Fields.Finish call: how many client calls had run by then
 
     -- a fresh load of Content.lua (its once-per-session flag reset), LoadContent, then ContentNotice; `again` repeats
     -- both calls on the same load, as OnInitialize and a disable/enable's OnEnable would
     local function run(again)
-        calls, notes = {}, {}
+        calls, notes, finished = {}, {}, {}
         ns = {
             L = require("helpers.english"),
+            Fields = { -- Engine/Schema/Fields.lua's end-of-load checks
+                Finish = function()
+                    finished[#finished + 1] = #calls
+                end,
+            },
             Facade = {
                 UnitClass = function(unit)
                     assert.are.equal("player", unit)
@@ -134,6 +140,21 @@ describe("Engine/Content.lua", function()
         run(true)
         assert.are.same({ "load Hekili_Shared", "meta Hekili_Nopack X-Hekili-ContentAPI" }, calls)
         assert.are.same({ "no Forever pack for Nopack; install Hekili_Nopack" }, notes)
+    end)
+
+    -- refactor plan lane 3: V3 and V4 need every registration of the load, so they run once, after the last load, also
+    -- when no pack loads
+    it("runs the field registry's end-of-load checks once, after the last load, whatever the outcome", function()
+        run(true)
+        assert.are.same({ #WARRIOR }, finished)
+        classToken = "NOPACK"
+        run()
+        assert.are.same({ 2 }, finished)
+        loadResult = function()
+            return false, "DISABLED"
+        end
+        run()
+        assert.are.same({ 1 }, finished)
     end)
 
     it("declares one content API in every content TOC", function()
