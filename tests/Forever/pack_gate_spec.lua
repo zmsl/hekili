@@ -144,26 +144,35 @@ describe("pack_gate's floor causes", function()
     end)
 
     it("the check refuses a missing, malformed or stray cause and takes the three forms #self", function()
-        assert.are.same({
-            "t A flicker: cause nil",
-            "t B flicker: cause because",
-            "t C flicker: cause untraced + L1",
-            "t D heldReady: a cause with no floor",
-            "t E loOver: cause L12 + abc@12",
-        }, causeProblems({
-            t = {
-                A = { flicker = 0.1 },
-                B = { flicker = 0.1, cause = { flicker = "because" } },
-                C = { flicker = 0.1, cause = { flicker = "untraced + L1" } },
-                D = { flicker = 0, heldReady = 0, cause = { heldReady = "L1" } },
-                E = { loOver = 3, cause = { loOver = "L12 + abc@12" } },
-                F = { flicker = 0.1, loOver = 2, heldReady = 1, retracted = 0, cause = {
-                    flicker = "L1814",
-                    loOver = "untraced",
-                    heldReady = "integ/0.10.1@5bd9a14d5 + L1383",
-                } },
+        assert.are.same(
+            {
+                "t A flicker: cause nil",
+                "t B flicker: cause because",
+                "t C flicker: cause untraced + L1",
+                "t D heldReady: a cause with no floor",
+                "t E loOver: cause L12 + abc@12",
             },
-        }))
+            causeProblems({
+                t = {
+                    A = { flicker = 0.1 },
+                    B = { flicker = 0.1, cause = { flicker = "because" } },
+                    C = { flicker = 0.1, cause = { flicker = "untraced + L1" } },
+                    D = { flicker = 0, heldReady = 0, cause = { heldReady = "L1" } },
+                    E = { loOver = 3, cause = { loOver = "L12 + abc@12" } },
+                    F = {
+                        flicker = 0.1,
+                        loOver = 2,
+                        heldReady = 1,
+                        retracted = 0,
+                        cause = {
+                            flicker = "L1814",
+                            loOver = "untraced",
+                            heldReady = "integ/0.10.1@5bd9a14d5 + L1383",
+                        },
+                    },
+                },
+            })
+        )
     end)
 
     -- item 4 (L1889 7): the one rule names an arm row in both arm tables or lists why not (M.ONE_RULE_EXCEPTIONS)
