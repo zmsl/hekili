@@ -3182,3 +3182,119 @@ describe("the alternatives probe sends nothing (windows design v6 §5.1; review 
         assert.is_false(belief("p").up)
     end)
 end)
+
+-- (fable-eng3-decision.md Q1/Q3) The replay harness's drift guard wraps state.openWindow; since windows v6 the core acts
+-- on its result (Core.lua: an open_window line, a plain sequence's OPEN, a strict start), so the wrapper must hand it
+-- back: with the guard installed every pass sends the same operations and gives the same records as without it.
+describe("the replay drift guard is transparent (fable-eng3-decision.md Q1, Q3)", function()
+    local ws = require("Forever.helpers.wowsims")
+    local CASES = {
+        {
+            "an open_window line",
+            {
+                windows = "actions+=/window,name=x,duration=6",
+                default = "actions+=/open_window,name=x\nactions+=/bloodrage,if=window.x.up\nactions+=/defensive_stance",
+            },
+        },
+        {
+            "a plain sequence",
+            { default = "actions+=/sequence,name=x:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance" },
+        },
+        {
+            "a chosen strict sequence",
+            {
+                default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance,if=!test_fa\nactions+=/defensive_stance",
+            },
+        },
+    }
+    local function run(lists, guard)
+        boot()
+        flags.fa, flags.fb = false, false
+        if guard then
+            ws.windowGuard(H)
+        end
+        load(lists)
+        local out = {}
+        for i = 1, 3 do
+            local recs, sent = tick()
+            out[i] = {
+                sent = sent,
+                args = { unpack(opArgs, 1, #sent) },
+                first = recs[1].actionName,
+                second = recs[2] and recs[2].actionName,
+                restarts = recs[1].restarts,
+            }
+            if i == 2 then
+                cast(BR)
+            end
+        end
+        return out
+    end
+    for _, c in ipairs(CASES) do
+        it(c[1] .. ": the same operations and records with the guard installed", function()
+            local bare = run(c[2])
+            assert.are_not.same({}, bare[1].sent) -- the case sends: the comparison means something
+            assert.are.same(bare, run(c[2], true))
+        end)
+    end
+end)
+
+-- (fable-eng3-decision.md Q3) The replay gate's two checks for APL keys (wowsims.lua M.windowOps), driven as the replay
+-- drives them: each poll's passes, then the checks' tick. `stub`: the belief's VS.WindowOp does nothing, beneath them.
+describe("the replay gate's APL window checks (fable-eng3-decision.md Q3)", function()
+    local ws = require("Forever.helpers.wowsims")
+    local function run(lists, casts, stub)
+        boot()
+        flags.fa, flags.fb = false, false
+        if stub then
+            VS.WindowOp = function() end
+        end
+        local opsTick, done = ws.windowOps(H)
+        load(lists)
+        for i = 1, 6 do
+            for _, id in ipairs(casts[i] or {}) do
+                cast(id)
+            end
+            tick()
+            opsTick(t)
+        end
+        return done()
+    end
+    local PLAIN = { default = "actions+=/sequence,name=x:bloodrage:berserker_stance\nactions+=/defensive_stance" }
+
+    it("a plain sequence: OPEN sent and followed, up, parked once; nothing failed", function()
+        local failed, keys = run(PLAIN, { [3] = { BR }, [5] = { BS } })
+        assert.are.same({}, failed)
+        local k = keys[key("x")]
+        assert.are.same({ 1, 0, 0 }, { k.OPEN, k.CLOSE, k.STEP })
+        assert.is_true(k.up >= 4)
+        assert.are.equal(1, k.parks)
+    end)
+
+    it("fails with the belief's WindowOp stubbed out: an OPEN sent, the key not up", function()
+        local failed, keys = run(PLAIN, {}, true)
+        assert.is_true(keys[key("x")].OPEN >= 1) -- sent again each poll: the copy is seeded closed from the belief
+        assert.is_truthy(failed[1] and failed[1]:find(key("x") .. ": OPEN sent, not up", 1, true))
+    end)
+
+    it("an open_window then close_window pair: both followed", function()
+        local failed, keys = run({
+            windows = "actions+=/window,name=w,duration=6",
+            default = "actions+=/open_window,name=w,if=!test_fa\nactions+=/close_window,name=w,if=test_fa\n"
+                .. "actions+=/defensive_stance",
+        }, {})
+        assert.are.same({}, failed)
+        assert.are.equal(1, keys[key("w")].OPEN)
+    end)
+
+    -- KNOWN LIMIT (eng-3b report): the Drain replays the OPEN, then folds both member casts and closes the row; the
+    -- up-or-closed form cannot tell that from a dead OPEN. No shipped replay starts a strict sequence (Arms's lines
+    -- wait on Stance Dance, off at the pin); the re-pin lane needs the candidate fix before it measures with it on.
+    it("a strict sequence whose members both land between two polls fails the up-or-closed form", function()
+        local failed, keys = run({
+            default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance",
+        }, { [2] = { BR, BS } })
+        assert.are.equal(1, keys[key("s")].OPEN)
+        assert.are.same({ key("s") .. ": OPEN sent, not up" }, { failed[1] and failed[1]:match("^.-not up") })
+    end)
+end)

@@ -807,7 +807,9 @@ end
 --- one (closed by a cast the belief also saw) is a fresh open, held to the belief like any, so a held line is never a
 --- false miss while the belief's window is up. `tick(base)` reads the belief (`base`: the run clock's zero, for the
 --- times listed); `misses()` lists each unmatched predicted open as "<window> at <time> s", in time order; also
---- returned: the predicted and believed opens ({ name, time }).
+--- returned: the predicted and believed opens ({ name, time }). Lua windows only (design §12): an APL window's slot 2+
+--- forecast opens are never sent by design (rule 8); M.windowOps checks those keys. The wrapper hands back
+--- openWindow's result: the core acts on it (an open_window line, a sequence's OPEN, a strict start).
 function M.windowGuard(H, poll)
     poll = poll or 0.2
     local S, F = H.Hekili.State, H.ns.Facade
@@ -816,11 +818,19 @@ function M.windowGuard(H, poll)
     S.openWindow = function(name, ...)
         local w = S.window[name]
         local was = w and w.up and w.elapsed == 0
-        open(name, ...)
+        local r = open(name, ...)
         -- one poll ahead at most, plus the recheck's pad past a clock's crossing (Scripts.lua: 0.01)
-        if w and w.up and w.elapsed == 0 and not was and S.query_time - S.now <= poll + 0.02 then
+        if
+            H.Hekili.Class.windows[name]
+            and w
+            and w.up
+            and w.elapsed == 0
+            and not was
+            and S.query_time - S.now <= poll + 0.02
+        then
             predicted[#predicted + 1] = { name, S.query_time }
         end
+        return r
     end
     local function tick(base)
         zero = base or 0
@@ -850,33 +860,133 @@ function M.windowGuard(H, poll)
     return tick, misses, predicted, believed
 end
 
+--- (fable-eng3-decision.md Q3; design §12) The APL windows' two checks on headless instance `H`, counted through a
+--- transparent wrapper on the belief's VS.WindowOp (the belief's own counters restart at combat start). Call
+--- `tick(now)` after each poll's passes (a Drain, then the passes: headless.cycle). (1) Up or closed: a key whose last
+--- OPEN or CLOSE was sent before the previous tick is up (OPEN; unless its declared length ran out or combat started or
+--- ended since) or down (CLOSE) now, the Drain between having replayed it; no operation waits past a Drain. (2) No key
+--- goes up in the belief more often than OPENs were sent for it. `done()` adds the belief's refused and dropped counts
+--- (read at the fight's end) and returns the failures (text) and the counts per key: { OPEN, CLOSE, STEP, step1 (STEPs
+--- to step 1), up (ticks seen up), parks (edges onto the park step past the last member) }.
+function M.windowOps(H)
+    local VS, VSI = H.ns.VirtualState, H.ns.VirtualStateInternal
+    local Q = VSI.winOps
+    local keys, fails, batch, due, upWas, stepWas, edges = {}, {}, {}, {}, {}, {}, {}
+    local sinceTick, dueAt, dueCombat, prevAt = 0, 0, false, 0
+    local function count(key)
+        keys[key] = keys[key] or { OPEN = 0, CLOSE = 0, STEP = 0, step1 = 0, up = 0, parks = 0 }
+        return keys[key]
+    end
+    local op = VS.WindowOp
+    VS.WindowOp = function(key, code, arg)
+        local k = count(key)
+        sinceTick = sinceTick + 1
+        if code == 1 then
+            k.OPEN, batch[key] = k.OPEN + 1, 1
+        elseif code == 2 then
+            k.CLOSE, batch[key] = k.CLOSE + 1, 2
+        elseif code == 3 then
+            k.STEP, k.step1 = k.STEP + 1, k.step1 + (arg == 1 and 1 or 0)
+        end
+        return op(key, code, arg)
+    end
+    local function tick(now)
+        local defs = VSI.def and VSI.def.aplWindows or {}
+        local dur = {}
+        for _, d in ipairs(defs) do
+            dur[d.key] = d
+        end
+        for key, code in pairs(due) do
+            local up = VS.Window(key)
+            local d = dur[key] and dur[key].duration
+            local ranOut = type(d) == "number" and now - dueAt >= d
+            if code == 1 and not up and not ranOut and dueCombat == (VSI.inCombat == true) then
+                fails[#fails + 1] = ("%s: OPEN sent, not up at %.2f s"):format(key, now)
+            elseif code == 2 and up then
+                fails[#fails + 1] = ("%s: CLOSE sent, still up at %.2f s"):format(key, now)
+            end
+            due[key] = nil
+        end
+        if Q.n > sinceTick then
+            fails[#fails + 1] = ("%d operations waiting past a Drain at %.2f s"):format(Q.n - sinceTick, now)
+        end
+        for key, code in pairs(batch) do
+            due[key], batch[key] = code, nil
+        end
+        dueAt, dueCombat, prevAt, sinceTick = prevAt, VSI.inCombat == true, now, 0
+        for _, d in ipairs(defs) do
+            local key = d.key
+            local up, _, _, _, step = VS.Window(key)
+            local k = count(key)
+            if up then
+                k.up = k.up + 1
+                if not upWas[key] then
+                    edges[key] = (edges[key] or 0) + 1
+                    if edges[key] > k.OPEN then
+                        fails[#fails + 1] = ("%s: up at %.2f s without an OPEN sent"):format(key, now)
+                    end
+                end
+                local n = type(d.steps) == "table" and #d.steps or 0
+                if n > 0 and step > n and not (stepWas[key] and stepWas[key] > n) then
+                    k.parks = k.parks + 1
+                end
+            end
+            upWas[key], stepWas[key] = up, up and step or nil
+        end
+    end
+    local function done()
+        if Q.refused > 0 or Q.dropped > 0 then
+            fails[#fails + 1] = ("refused %d, dropped %d (last %s)"):format(Q.refused, Q.dropped, tostring(Q.lastDrop))
+        end
+        return fails, keys
+    end
+    return tick, done
+end
+
+--- `o.stubWindowOp` (the gate's self-test only): the belief's VS.WindowOp does nothing, beneath the checks' wrapper.
+--- Returns the summary, the line and M.windowOps's counts per key.
 function M.gate(label, C, spec, floor, o)
     C = M.logged(C, spec)
     local L = loop.new(C)
     local R = replay.new(M.log(spec), L.oracle, M.replayOptions(C, spec, o))
     local tick, misses, predicted, believed = M.windowGuard(L.us)
+    if o and o.stubWindowOp then
+        L.us.ns.VirtualState.WindowOp = function() end
+    end
+    local opsTick, opsDone = M.windowOps(L.us)
     local m = loop.replay(L, R, {
-        on = function(_, steps)
+        on = function(_, steps, t)
             tick(steps[1].base)
+            opsTick(steps[1].base + t)
         end,
     })
     local r, line = loop.summary(m), loop.line(m)
     print("\n" .. label .. " wowsims: " .. line)
     local missed = misses()
+    local failed, keys = opsDone()
+    local sent = {}
+    for key, k in pairs(keys) do
+        sent[#sent + 1] = ("%s %d/%d/%d up %d"):format(key:match("[^:]*$"), k.OPEN, k.STEP, k.CLOSE, k.up)
+    end
+    table.sort(sent)
     print(
-        ("%s windows: %d forecast opens, %d belief opens, drift %d [%s]"):format(
+        ("%s windows: %d forecast opens, %d belief opens, drift %d [%s]; APL OPEN/STEP/CLOSE [%s], failed %d [%s]"):format(
             label,
             #predicted,
             #believed,
             #missed,
-            table.concat(missed, "; ")
+            table.concat(missed, "; "),
+            table.concat(sent, "; "),
+            #failed,
+            table.concat(failed, "; ", 1, math.min(#failed, 5))
         )
     )
+    assert.are.same({}, failed, label .. ": an APL window operation the belief did not follow")
     pack_gate.health(m, r, line)
     assert.are.same({}, missed, label .. ": a forecast window open the belief did not make within one poll")
     ab.check(r.decisions >= floor, label, line) -- a bar: recorded in a provider arm (providers spec §4.1)
     M.ready(label, spec, R)
-    return r, line
+    return r, line, keys
 end
 
 --- The leveling gate of content `C` (its pack drives the loop's own world at C's level, `fights` [1] fights of 120 s,
