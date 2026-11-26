@@ -324,6 +324,18 @@ describe("the pack field registry", function()
         fails("RegisterTotemSlots", { { a = { slot = 1, other = 1 } } }, "V1: DRUID totem a: other is no field")
     end)
 
+    -- review r6 finding 5: the plan's placeholder form and an empty entry fail by name, not by a raw error or silently
+    it("r6: a totem slot entry is a { slot = n } table: a bare number or a missing slot fails V2", function()
+        local kit = druid().class.kit
+        local ok, err = pcall(kit.RegisterTotemSlots, kit, { fire = 1 })
+        assert.is_false(ok)
+        assert.is_truthy(tostring(err):find("V2: DRUID totem fire: entry is 1, not a table of fields", 1, true), err)
+        ok, err = pcall(kit.RegisterTotemSlots, kit, { fire = {} })
+        assert.is_false(ok)
+        assert.is_truthy(tostring(err):find("V2: DRUID totem fire: slot is missing", 1, true), err)
+        assert.is_nil(kit.totemSlots.fire)
+    end)
+
     -- lane 6: every pack states what the core guessed from the key name before (Tracked.lua's ON_TARGET,
     -- Constants.lua's passive_regen and points, Now.lua's TOTEM_SLOT), with the same values
     it("r6: every shipped pack declares the facts the core guessed from its resources' names", function()

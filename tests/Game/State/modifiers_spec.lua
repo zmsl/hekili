@@ -37,6 +37,10 @@ describe("resource modifiers", function()
         ns.ResourceRegenerates = function()
             return false
         end
+        -- the base's name-table stub: unread on the head (meta `points`), kept so the base runs to the assertion (red first)
+        ns.ResourceIsPoints = function(k)
+            return k == "combo_points"
+        end
         h.Class.auras.mod_aura_a = { key = "mod_aura_a", id = MOD_AURA, duration = 15 }
         -- a race pack's declarations (Engine/Schema/Races.lua), as Engine/Schema/Tracked.lua reads them
         ns.raceMods = {

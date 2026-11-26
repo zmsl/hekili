@@ -715,7 +715,7 @@ local HekiliSpecMixin = {
     -- totem slot it fills, `{ [element] = { slot = n } }` (the registry's `totem` rows, Engine/Schema/Fields.lua).
     RegisterTotemSlots = function( self, slots )
         for element, data in pairs( slots ) do
-            ns.Fields.Check( "totem", self, element, data )
+            ns.Fields.CheckEntry( "totem", self, element, data, "slot" )
             self.totemSlots[ element ] = data.slot
         end
     end,

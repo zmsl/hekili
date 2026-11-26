@@ -126,7 +126,8 @@ function ns.ResourceRegenerates( key )
     return false
 end
 
--- Forever: point resources (a count, not a pool), which a percentage maximum modifier does not scale (Engine/Schema/Tracked.lua).
+-- Forever: point resources (a count, not a pool), which a percentage maximum modifier does not scale. The belief build no
+-- longer reads it (a pack declares meta `points`, lane 6); kept, unread by the build (no old-code cleanup).
 local points = {
     combo_points = 1,
     runes = 1,

@@ -238,9 +238,8 @@ end
 -- Power On Miss), Ferocious Bite's too (wowsims e4ef929e54 ferocious_bite.go: 80% of its 35 base energy); not Swipe,
 -- Faerie Fire (Feral) or Demoralizing Roar.
 -- bear_pause: no energy comes in Bear Form (wowsims forms.go pauseCatEnergy); out of Cat it comes as in Cat, so the
--- pool at a Cat entry is wowsims's stored energy plus 10 a second outside Bear, capped (Furor's share: swap_form). It is
--- also the declared pause the belief's out-of-combat regen read skips a 0 under. rest = "max": energy rests full out of
--- combat. Combo points: a count the game binds to the target (only the current target's is usable), not a pool.
+-- pool at a Cat entry is wowsims's stored energy plus 10 a second outside Bear, capped (Furor's share: swap_form).
+-- rest = "max": energy rests full out of combat (and the belief skips an out-of-combat regen read of 0). Combo points: a count the game binds to the target (only the current target's is usable), not a pool.
 spec:RegisterResource(
     Enum.PowerType.Energy,
     { bear_pause = { aura = "bear_form", mult = 0 } },
