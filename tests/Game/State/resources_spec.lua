@@ -2622,6 +2622,31 @@ describe("resources", function()
             end
         )
 
+        -- (band-edge fix round 1, MM Turret seed 2) a band pair is folded after its stamp: an entry that fell between
+        -- the pair's end and the fold is gone from the window spans reads, so its share would be booked as mp5 (the
+        -- floor's rate then climbs faster than the truth: 25 a second for 15.4)
+        it("takes no measurement from a band pair whose entry fell between the pair's end and its fold", function()
+            shaped({ spirit = 10, mp5 = 12 }, { { aura = "focus", share = 0.5 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15: 12 + 0.5 x 10 = 17 with focus
+            I.AuraModel(1, 2, 9, 12.96, 1, 9, 0) -- focus up 9 to 12.96
+            local function cell(stamp, lo)
+                if I.log.n > 0 and I.bandT[1] ~= stamp then
+                    I.Fold(stamp - 1e-9, false)
+                end
+                I.bandT[1], I.bandShows[1] = stamp, 1 / 6
+                I.Settle(stamp + 0.05) -- the fold's sweep first, as the harness's (fellAt = the fold's clock)
+                obs(Obs.Band, stamp + 0.05, 1, lo, lo + 25)
+                I.Fold(stamp + 0.05, false)
+            end
+            cell(10.2, 400) -- the first band: no pair
+            cell(10 + 25 / 17, 425) -- the crossing that starts the pair
+            cell(10 + 50 / 17, 450) -- 12.941: folded at 12.991, after focus fell
+            assert.are.equal(0, I.auras.exp0[1][2])
+            assert.are.equal(12, I.res.regE[1])
+            assert.is_true(I.res.regL[1] <= 12, I.res.regL[1])
+        end)
+
         it("multiplies overlapping `spirit` auras and adds their shares", function()
             shaped(
                 { spirit = 10, mp5 = 2 },
