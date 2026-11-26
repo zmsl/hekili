@@ -94,7 +94,8 @@ function loop.truthRate(...) -- a ttd arm's calibration fights (loop.tally) are 
     return r
 end
 
-function pack_gate.solo(label, world, n)
+function pack_gate.solo(label, world, n, seed0)
+    assert((seed0 or 0) == 0, "floors_trace: the traced run starts at seed 1 (seed0 0); got seed0 " .. tostring(seed0))
     if label ~= LABEL or n < 20 then
         error("skipped by tools/floors_trace.lua (" .. LABEL .. " only)")
     end

@@ -43,8 +43,9 @@ M.REACT_P90_BY = {}
 -- The cause field (refactor lane 4, L1827): every floor field above 0 here and in M.ARM_FLOORS names in its row's
 -- `cause` table why the floor sits at its value now: "L<n>" (a ledger row), "<lane>@<commit>" (the lane or branch and
 -- the commit, 7+ hex, that set it), several joined by " + ", or "untraced" alone (the HAR-1 queue:
--- tools/floors.lua untraced). A re-measure that only tightens names the re-measure (L1814 for batch 5); a value that
--- rose with no traced cause is untraced. An arm row's cause explains its excess over this table. A re-floor changes a
+-- tools/floors.lua untraced). A re-measure that only tightens names the re-measure (L1814 for batch 5), except a
+-- floor above 0 only because of an untraced baseline (L1504): it stays untraced, so the HAR-1 queue keeps it. A value
+-- that rose with no traced cause is untraced. An arm row's cause explains its excess over this table. A re-floor changes a
 -- value and its cause together; pack_gate_spec checks the format. A 0 field needs no cause.
 -- Guardian is reported (M.gate's bars and the oracle + K bar are not asserted) but floored: its row below is applied
 -- on the reported branch too (gap CH).
@@ -127,7 +128,7 @@ M.FLICKER = {
         retracted = 0,
         readyShort = 0,
         heldReady = 282,
-        cause = { loOver = "L1814", flicker = "L1814", heldReady = "L1814" },
+        cause = { loOver = "untraced", flicker = "L1814", heldReady = "L1814" },
     }, -- 0.24 / 0.17 / 0.26, 0 / 0.02 / 0
     -- flickerK 0.6 (this label only): seeds 1-20 read 0.85 vs an oracle of 0.30 (gap 0.55; 21-40: 0.81 vs 0.30). W1 made the
     -- oracle quieter, 0.36 -> 0.30, while our own flicker fell to 0.85 (owner 2026-11-03)
@@ -220,7 +221,7 @@ M.FLICKER = {
         readyShort = 4,
         heldReady = 254,
         cause = {
-            loOver = "L1814",
+            loOver = "untraced",
             flicker = "L1814",
             flickerK = "forever-repin@9b802404f",
             retracted = "L1456",
@@ -433,7 +434,7 @@ M.FLICKER = {
         retracted = 0,
         readyShort = 0,
         heldReady = 379,
-        cause = { loOver = "L1814", flicker = "L1791", heldReady = "L1814" },
+        cause = { loOver = "untraced", flicker = "L1791", heldReady = "L1814" },
     }, -- flicker 0.10 / 0.08 / 0.02 (L1791), retracted 0 / 0 / 0
     -- 1.1 -> 1.3 (gap CE; seeds 1-20 / 21-40 / 41-60: 1.20 / 1.24 / 1.10, was 0.82 / 1.05 / 0.81; oracle 1.42 / 1.70 / 1.25):
     -- the mark on a floor inside the ready wait gives back part of the near-tie gain to close dim never promote (refused
@@ -493,7 +494,7 @@ M.FLICKER = {
         flicker = 0,
         retracted = 0,
         heldReady = 296,
-        cause = { loOver = "L1814", heldReady = "L1814" },
+        cause = { loOver = "untraced", heldReady = "L1814" },
     }, -- 0.56 / 0.89 / 0.56, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 133 / 125 / 136):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
@@ -598,7 +599,7 @@ M.FLICKER = {
         retracted = 0,
         readyShort = 0,
         heldReady = 443,
-        cause = { loOver = "L1814", flicker = "untraced", heldReady = "L1814" },
+        cause = { loOver = "untraced", flicker = "untraced", heldReady = "L1814" },
     }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
@@ -634,7 +635,7 @@ M.FLICKER = {
     -- -> 0.992, dps A/B 0.971 -> 0.969, readyShort 0 / 0; bands arm unchanged (loOver 0, heldReady 145, regE 10)
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 167
     -- -> 166; held 130 on forever: cp-fact L1832 + cp-fact-4 (their rows above)
-    ["Assassination"] = { loOver = 0, flicker = 0, retracted = 0, heldReady = 166, cause = { heldReady = "L1814" } }, -- 0 / 0 / 0, 0
+    ["Assassination"] = { loOver = 0, flicker = 0, retracted = 0, heldReady = 166, cause = { heldReady = "L1832 + L1814" } }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
     -- tree, flips match base's tick for tick; Sinister Strike's entry is gated on `!(buff.slice_and_dice.remains<=2)`,
@@ -670,7 +671,7 @@ M.FLICKER = {
         flicker = 0.06,
         retracted = 0,
         heldReady = 164,
-        cause = { flicker = "L1832", heldReady = "L1376 + L1383" },
+        cause = { flicker = "L1832", heldReady = "L1376" },
     }, -- 0.15 / 0 / 0.02, 0
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, readyShort 0 / 0 / 0, heldReady 382 / 364 / 363):
     -- flicker 0.1 -> 0 (S, steady icons on by default)
@@ -820,7 +821,7 @@ M.FLICKER = {
         flicker = 0,
         retracted = 0,
         heldReady = 234,
-        cause = { loOver = "L1814", heldReady = "L1814" },
+        cause = { loOver = "untraced", heldReady = "L1814" },
     }, -- heldReady 125 / 128 / 118; after L667 121 / 111 / 127
     -- Marksmanship Turret, 0.8.5 close (ledger L1132, measured on integ/0.8.5-w2 fa22dc2ad; seeds 1-20 / 21-40 / 41-60
     -- heldReady 132 / 115 / 108, flicker 0 / 0 / 0, retracted 0 / 0 / 0, readyShort 0 / 0 / 0): heldReady 118 -> 132
@@ -960,7 +961,7 @@ M.FLICKER = {
     -- 200 / 177 / 198, flicker 0): heldReady 198 -> 200. First divergence: seed 5's last mob swing and the fight's kill
     -- event at 174.0000000000000x now fall at the 174.00 poll, so the fight ends a poll earlier (its in-combat ticks ran
     -- on to 175.2 before) and fight 6 starts on another pool (33.1 -> 16.6); fights 7-20 re-time
-    ["Protection"] = { flicker = 0, retracted = 0, heldReady = 200, cause = { heldReady = "L1376 + L1383" } }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
+    ["Protection"] = { flicker = 0, retracted = 0, heldReady = 200, cause = { heldReady = "L1376" } }, -- 0.02 / 0.02 / 0.02, 0 (oracle 0.38 / 0.00 / 0.00)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0.08), retracted 0, readyShort 0 / 0 / 0, heldReady 65 / 70 / 94, agreement .998 / .999 / .997): flicker 0.01 (the
     -- measured worst + 0.01: the line rounds to two decimals), heldReady 94 (the worst set)
@@ -1158,7 +1159,7 @@ M.FLICKER = {
         flicker = 0,
         retracted = 0,
         heldReady = 109,
-        cause = { loOver = "L1814", heldReady = "L1814" },
+        cause = { loOver = "untraced", heldReady = "L1814" },
     }, -- 0 / 0.02 / 0, 0 (oracle 0.05 / 0.03 / 0.68)
     -- new pack 2026-11-12 (R6 first measurement; seeds 1-20 / 21-40 / 41-60 flicker 0.00 / 0.00 / 0.00 (oracle 0 / 0 /
     -- 0), retracted 0, readyShort 0 / 0 / 0, heldReady 113 / 113 / 109, agreement .999 / .998 / .997): flicker 0.01 (the
@@ -1399,7 +1400,7 @@ M.ARM_FLOORS = {
         -- jitter rule L1791: a return needs its own fact (batch 4 bands run 76cc46e51, seeds 1-20: 0.08, + 0.01): five
         -- scorch > frostfire_bolt > scorch, the change at the mana band's crossing of 308.4, the return with no fact
         -- (seeds 2, 11, 12, 16, 20); the default arm reads 0 / 0.02 / 0 on the same rule (M.FLICKER 0.03)
-        ["Frostfire"] = { flicker = 0.09, cause = { flicker = "L1791" } },
+        ["Frostfire"] = { flicker = 0.09, cause = { flicker = "L1813 + L1791" } },
         -- T1 (L1794, traced on tag-blockers d578acd86): a regen pair of band crossings is stamped on the world's
         -- 0.1 s regen step (world.lua W.startRegen; the fake sees the pool only there), so each end reads up to one
         -- step late (the truth at the stamp sits that far into the cell: SM Ruin seed 2 104.010 3.87 over the low
@@ -1457,7 +1458,7 @@ M.ARM_FLOORS = {
         -- L1813, a real flash (Fable batch 4 I2, owner ruling owed): scorch > frostfire_bolt > scorch at the mana
         -- band's crossing of 308.4, counted under L1791. 0.08 / 0.07 / 0.10, the bands arm the same; default 0 /
         -- 0.02 / 0
-        ["Frostfire"] = { flicker = 0.09, cause = { flicker = "L1813" } },
+        ["Frostfire"] = { flicker = 0.09, cause = { flicker = "L1813 + L1791" } },
         -- T1 (L1794, see the bands arm's): a regen pair of band crossings stamped on the world's 0.1 s regen step;
         -- inferred the harness's step (probe owed, L1800). Every value the bands arm's on the same set: SM Ruin 279 /
         -- 452 / 0, Destruction 303 / 0 / 0, Frost 4 / 49 / 0
@@ -1570,6 +1571,12 @@ M.ONE_RULE_EXCEPTIONS = {
         "Combat",
         "flicker",
         why = "reads its floor 0.06: the one rule's + 0.01 would loosen it, and a floor only moves down",
+    },
+    {
+        "FLICKER",
+        "Fury L60",
+        "retracted",
+        why = "reads its floor 0.04 (672c0df31): the one rule's + 0.01 would loosen it, and a floor only moves down",
     },
 }
 

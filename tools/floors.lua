@@ -101,10 +101,15 @@ function M.moved(baseText, headText)
             out[#out + 1] = key .. "\t" .. table.concat(d, "; ") .. "\t" .. b.spec
         end
     end
-    for key, a in pairs(A) do
+    local gone = {}
+    for key in pairs(A) do
         if not B[key] then
-            out[#out + 1] = key .. "\tbase only\t" .. a.spec
+            gone[#gone + 1] = key
         end
+    end
+    table.sort(gone)
+    for _, key in ipairs(gone) do
+        out[#out + 1] = key .. "\tbase only\t" .. A[key].spec
     end
     return out
 end

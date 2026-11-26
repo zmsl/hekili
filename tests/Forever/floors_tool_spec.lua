@@ -34,6 +34,7 @@ describe("tools/floors.lua", function()
             { "a_spec.lua", "Feral", "0.990", 296, "0.00" },
             { "b_spec.lua", "Feral", "0.990", 40, "0.00", "seeds 1-3" },
             { "c_spec.lua", "Gone", "0.990", 1, "0.00" },
+            { "d_spec.lua", "Alpha", "0.990", 1, "0.00" },
         })
         local head = log("default", {
             { "a_spec.lua", "Feral", "0.990", 301, "0.02" },
@@ -42,6 +43,7 @@ describe("tools/floors.lua", function()
         assert.are.same({
             "default\tFeral\theldReady 296 -> 301; flicker 0.00 -> 0.02\ta_spec.lua",
             "shipped\tFeral\thead only\ta_spec.lua",
+            "default\tAlpha\tbase only\td_spec.lua",
             "default\tGone\tbase only\tc_spec.lua",
         }, floors.moved(base, head))
     end)
