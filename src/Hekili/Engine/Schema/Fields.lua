@@ -415,6 +415,8 @@ row("ability", "indicator", "string", nil, "a small marker drawn on the recommen
 row("ability", "item", "number|fn", nil, "the item this ability uses")
 row("ability", "items", "list:number", nil, "more items the same ability uses")
 row("ability", "bagItem", "bool", false, "true: the item is used from the bags, not equipped")
+row("ability", "category", "number", nil, "the item's cooldown category (no reader in the core today)")
+row("ability", "categoryCooldown", "number", nil, "seconds a use holds its category's other items", { min = 0 })
 row("ability", "consumable", "fn", nil, "the consumable's state key")
 row("ability", "passive", "bool", false, "true: a spellbook passive the belief tracks the known rank of; never cast")
 row("ability", "known", "bool|number|fn", "the spellbook", "whether the player has it")
