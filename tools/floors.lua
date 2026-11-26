@@ -142,17 +142,19 @@ function M.dump(text)
     return d
 end
 
---- The first differing tick of two fights' rows: index, the differing columns (by kind), or nil when equal.
-function M.first(a, b)
+local ICON = { "ours", "theirs", "pressed" }
+
+--- The first differing tick of two fights' rows (over `cols`, default every column): index, the differing columns
+--- (by kind), or nil when equal.
+function M.first(a, b, cols)
     for i = 1, math.max(#a, #b) do
         local x, y = a[i], b[i]
         if not x or not y then
             return i, { "length" }
         end
-        local kinds, seen = {}, {}
-        for _, c in ipairs(T_COLS) do
-            if x[c] ~= y[c] and not seen[c] then
-                seen[c] = true
+        local kinds = {}
+        for _, c in ipairs(cols or T_COLS) do
+            if x[c] ~= y[c] then
                 kinds[#kinds + 1] = (WHAT[c] or c) .. ":" .. c
             end
         end
@@ -213,6 +215,10 @@ function M.diverge(A, B, clock)
                 why = " (its boot clock moved: an earlier fight re-timed it)"
             end
             out[#out + 1] = ("seed %s: first divergence at tick %d%s, %s"):format(s, i, why, table.concat(kinds, " "))
+            local k = M.first(a, b, ICON)
+            if k and k ~= i then -- where the icons part, when the belief or the world parted first
+                out[#out + 1] = ("  the icons part at tick %d (t %s)"):format(k, (a[k] or b[k]).t)
+            end
             if a[i - 1] then
                 out[#out + 1] = "  both    " .. row(a[i - 1]) .. "  (the tick before, the same on both)"
             end

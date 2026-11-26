@@ -82,6 +82,12 @@ describe("tools/floors.lua", function()
             s2 = s2 or l:match("^seed 2: .*")
         end
         assert.matches("boot clock moved", s2)
+        -- the belief parts first, the icons a tick later: both named
+        local C = dump({ T(3, 1, "a", "1.5000", "9"), T(3, 2, "a", "1.5000", "9") })
+        local D = dump({ T(3, 1, "a", "1.7000", "9"), T(3, 2, "b", "1.7000", "9") })
+        local cd = floors.diverge(C, D)
+        assert.are.equal("seed 3: first divergence at tick 1, belief:est", cd[2])
+        assert.are.equal("  the icons part at tick 2 (t 0.200)", cd[3])
         assert.matches("icon:ours icon:theirs$", s2)
         assert.are.same({ 2, { "length" } }, { floors.first(A.T["1"], { A.T["1"][1] }) }) -- a shorter fight
         assert.are.equal("no divergence: every fight's in-combat ticks are the same", floors.diverge(A, A)[1])
