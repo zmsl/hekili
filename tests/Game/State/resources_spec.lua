@@ -2647,6 +2647,36 @@ describe("resources", function()
             assert.is_true(I.res.regL[1] <= 12, I.res.regL[1])
         end)
 
+        -- (band-edge round 2, the fsr branch Elemental seed 3 runs) pairs inside the window, each with its first end a
+        -- step late, read the mp5 part high: its floor rate stays at or under the truth (12) while its estimate learns
+        it(
+            "keeps the mp5 part's floor rate at or under the truth over in-window pairs each read a step short",
+            function()
+                shaped({ spirit = 10, mp5 = 12 })
+                read(10, 500)
+                local function cell(stamp, lo)
+                    if I.log.n > 0 and I.bandT[1] ~= stamp then
+                        I.Fold(stamp - 1e-9, false)
+                    end
+                    I.bandT[1], I.bandShows[1] = stamp, 1 / 6
+                    I.Settle(stamp + 0.05)
+                    obs(Obs.Band, stamp + 0.05, 1, lo, lo + 25)
+                    I.Fold(stamp + 0.05, false)
+                end
+                local late, cross = 0.09, 25 / 12 -- a cell at the truth's 12 a second
+                for k = 1, 6 do
+                    local t = 20 * k
+                    I.Settle(t)
+                    I.ResourceShift(1, -100, t, Obs.CastSuccess) -- the window to t + 5
+                    cell(t + 0.2, 400) -- under the last band: no pair
+                    cell(t + 0.2 + cross + late, 425) -- the pair's first end, stamped late
+                    cell(t + 0.2 + 2 * cross, 450) -- its second, on time, inside the window
+                end
+                assert.is_true(I.res.regE[1] > 12, I.res.regE[1])
+                assert.is_true(I.res.regL[1] <= 12, I.res.regL[1])
+            end
+        )
+
         it("multiplies overlapping `spirit` auras and adds their shares", function()
             shaped(
                 { spirit = 10, mp5 = 2 },
