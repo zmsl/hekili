@@ -3780,8 +3780,8 @@ end)
 describe("resource bands (lane B4)", function()
     local RAGE, MANA, NRG = 1, 2, 3 -- the slots
     local SHOWS = 1 / 6 -- what the source sets for a watch at 60 fps (I.bandShows)
-    -- costs 20, 460, 40, 40 (its own need fails), 100, 60, 30 (JAB: 80% back on an avoid)
-    local PUNCH, SPELL, STAB, GUARDED, NUKE, SMASH, JAB = 1, 2, 3, 4, 5, 6, 7
+    -- costs 20, 460, 40, 40 (its own need fails), 100, 60, 30 (JAB: 80% back on an avoid), 658.8 (BANE: L1946's rung)
+    local PUNCH, SPELL, STAB, GUARDED, NUKE, SMASH, JAB, BANE = 1, 2, 3, 4, 5, 6, 7, 8
     local VS, I, R, S, Obs, EPS
 
     before_each(function()
@@ -3808,9 +3808,10 @@ describe("resource bands (lane B4)", function()
                 { key = "nuke", spend = 100 },
                 { key = "smash", spend = 60 },
                 { key = "jab", spend = 30, refundOnAvoid = 0.8 },
+                { key = "bane", spend = 658.8 },
             },
-            abilityIds = { { 1001 }, { 1002 }, { 1003 }, { 1004 }, { 1005 }, { 1006 }, { 1007 } },
-            abilitySlot = { RAGE, MANA, NRG, NRG, MANA, NRG, MANA },
+            abilityIds = { { 1001 }, { 1002 }, { 1003 }, { 1004 }, { 1005 }, { 1006 }, { 1007 }, { 1008 } },
+            abilitySlot = { RAGE, MANA, NRG, NRG, MANA, NRG, MANA, MANA },
             resources = {
                 {
                     key = "rage",
@@ -4014,6 +4015,57 @@ describe("resource bands (lane B4)", function()
             answer(10, SPELL, false)
             I.Fold(10)
             is(MANA, 450, 460 - EPS, 460 - EPS)
+        end)
+
+        -- (L1946, fable-bandedge-decision.md 1) a short answer the floor's own regen over the usability lag
+        -- (I.GAIN_SHOWS) explains is no proof against the floor: lo = the rung top, as with no band
+        it("the L1946 frame: a short answer at the crossing cuts lo to the rung top, not the band's low end", function()
+            R.regE[MANA], R.regL[MANA], R.regH[MANA] = 12, 12 * (1 - I.REGEN_SPREAD), 12 * (1 + I.REGEN_SPREAD)
+            set(MANA, 659.42, 659.51, 659.87)
+            band(10, MANA, 629.4, 692.3)
+            answer(10, BANE, false)
+            I.Fold(10)
+            is(MANA, 658.8 - EPS, 658.8 - EPS, 658.8 - EPS)
+            assert.is_true(VS.Power(0, 10).capped)
+            answer(10.006, BANE, true)
+            I.Fold(10.006)
+            assert.is_true(R.lo0[MANA] >= 658.8)
+        end)
+
+        for _, case in ipairs({ { "just inside", -0.01, 460 - EPS }, { "just outside", 0.01, 450 } }) do
+            it("a floor " .. case[1] .. " the lag's regen over the top: lo " .. case[3], function()
+                local w = I.RegenLo(MANA, 10 - I.GAIN_SHOWS, I.GAIN_SHOWS)
+                local lo = 460 - EPS + w + case[2]
+                set(MANA, lo, lo + 0.05, lo + 0.4)
+                band(10, MANA, 450, 470)
+                answer(10, SPELL, false)
+                I.Fold(10)
+                is(MANA, case[3], 460 - EPS, 460 - EPS)
+            end)
+        end
+
+        it("the test is on the floor, not est: a floor just over the top, est far over it: lo = the top", function()
+            set(MANA, 460.2, 480, 485)
+            band(10, MANA, 450, 500)
+            answer(10, SPELL, false)
+            I.Fold(10)
+            is(MANA, 460 - EPS, 460 - EPS, 460 - EPS)
+        end)
+
+        it("a swing-paid slot inside the lag window still takes the band's low end", function()
+            set(RAGE, 20.05, 21, 22)
+            band(10, RAGE, 12, 30)
+            answer(10, PUNCH, false)
+            I.Fold(10)
+            is(RAGE, 12, 20 - EPS, 20 - EPS)
+        end)
+
+        it("a band low end over the top (a true conflict): lo = the top", function()
+            set(MANA, 460.3, 460.5, 461)
+            band(10, MANA, 460.2, 470)
+            answer(10, SPELL, false)
+            I.Fold(10)
+            is(MANA, 460 - EPS, 460 - EPS, 460 - EPS)
         end)
 
         it("a flip with a band live pins nothing", function()
