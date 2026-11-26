@@ -1010,8 +1010,16 @@ function M.run(L, seed, o, drivers)
             return math.max(0, math.min(mob.health / perS, W.stopAt - math.max(W.t, M.PULL)))
         end
         for i, st in ipairs(steps) do
-            if st.plain then
+            if st.plain then -- the mob is the target: its own time to die (L1902's target-bound lines) the same truth
+                local own = st.H.Hekili.GetTTD
                 ttd[i], st.H.Hekili.GetGreatestTTD = st.H.Hekili.GetGreatestTTD, left
+                ttdTarget[i], st.H.Hekili.GetTTD =
+                    own, function(self, unit, isGUID)
+                        if unit == "target" and not isGUID then
+                            return left()
+                        end
+                        return own(self, unit, isGUID)
+                    end
             end
         end
     end
