@@ -8,9 +8,8 @@
 -- The hawk Turret list (upstream 65b3f51f61; owner L1154 (2): follow it): no melee; Hunter's Mark and Serpent Sting
 -- kept up, then the "HHA" sequence (Summon Hawk, Summon Hawk, Arcane Shot, reset when complete: the class's `hha`
 -- window, Hunter.lua), Aimed Shot, Multi-Shot off, and the walk in from Pull range (pull.apl.siml) to the 12 yd spot.
--- No Sniper Shot (the hawk list has none). The sequence is the pack's own APL sequence (rule 14b, `sequences`; windows
--- design v6 10.2, Phase 3 Part B, L1374): `restart_sequence,name=hha,if=window.hha.done` and
--- `sequence,name=hha,mode=continue:summon_hawk:summon_hawk:arcane_shot`; the class's Lua window is gone.
+-- No Sniper Shot (the hawk list has none). The sequence's reads stay `window.hha.next.*` lines (the windows rebuild,
+-- Phase 3, converts the class window later; no sequence lines here).
 -- The weave build's HHA notes (the retired Beast Mastery (wowsims.com) pack, L1154): wowsims's APLActionSequence
 -- advances its index only when the cast (or its queued action) fires (sim/core/apl_actions_sequences.go), so a queued
 -- hawk can stall the sequence where the kit's stepped window counts each cast (an oracle quirk, re-pin R15).
@@ -20,7 +19,6 @@ return {
     class = "HUNTER",
     pack = "Beast Mastery Turret (wowsims.com)",
     spec = "beast_mastery",
-    sequences = true, -- rule 14b: hha as an APL sequence (windows design v6 10.2, L1374)
     name = "Beast Mastery Turret",
     talentTree = "hunter",
     siml = "ui/specs/hunter/dps/builds/bm.siml",

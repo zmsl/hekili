@@ -4448,7 +4448,7 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
             "hunter_beast_mastery_turret",
             "Forever.helpers.hunter_world",
             "BeastMasteryTurret",
-            {}, -- L1374: the class's hha Lua window is gone
+            { "E1 restart_sequence: hha is not a plain sequence", "E3 hha is a class window" },
         },
         {
             "paladin_retribution",
