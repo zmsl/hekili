@@ -104,17 +104,26 @@ local function hit(key)
         W.hit(e, e.target, AMOUNT[key], SCHOOL[key] or 1)
     end
 end
--- A bear strike's hit (`key`'s amount; with `debuffKey`, the debuff when it lands): Primal Fury's rage on its crit in
--- Bear Form (X.primalFury, the class file's rule at the character's rank). Maul's queued strike crits at its swing
--- (its press's `crits`) and pays the same through C.WORLD's `struck` hook.
+-- Primal Fury's rage on a crit of ours in Bear Form ("Blood Frenzy" on Forever, 16958; wowsims e4ef929e54
+-- talents_feral_combat.go: 16959's 5 rage at the rank's curve {50, 100}, rank / 2): rolled per crit at `chance` from
+-- the world's own proc stream `rng` (W.krng; M.pfRng, handed over at the pull), so no other draw moves. The world's own
+-- rule, not the class file's (whose 1/2 books no proc on a white crit): rank 0 and 2/2 draw nothing.
+local PRIMAL_FURY = 5
+local function primalFury(chance, rng)
+    return chance > 0 and (chance >= 1 or rng.chance(chance)) and PRIMAL_FURY or 0
+end
+-- A bear strike's hit (`key`'s amount; with `debuffKey`, the debuff when it lands): Primal Fury's roll on its crit in
+-- Bear Form at X.bloodFrenzy's chance. Maul's queued strike crits at its swing (its press's `crits`) and rolls the same
+-- through C.WORLD's `struck` hook.
 local function bearHit(key, debuffKey)
     return function(W, e, _, X)
         local r = W.hit(e, e.target, AMOUNT[key], SCHOOL[key] or 1)
         if r.act == "WOUND" and debuffKey then
             aura(W, X, e.target, debuffKey)
         end
-        if r.flag == "CRITICAL" and e.form == FORM.bear_form and X.primalFury > 0 then
-            W.gain(e, X.primalFury)
+        local pf = r.flag == "CRITICAL" and e.form == FORM.bear_form and primalFury(X.bloodFrenzy, W.krng) or 0
+        if pf > 0 then
+            W.gain(e, pf)
         end
     end
 end
@@ -413,12 +422,12 @@ local PACKS = {
 -- The class data a press reads from a booted instance `H` (once per instance): each aura's ID, duration and stacks,
 -- whether the Eclipse talent is known, the Clearcasting cost modifier's covered spell IDs.
 local cache = setmetatable({}, { __mode = "k" })
--- shortcut: the latest booted oracle's Primal Fury rage (classData), for C.gain's white crits, which get no instance;
+-- shortcut: the latest booted oracle's Primal Fury chance (classData), for C.gain's white crits, which get no instance;
 -- right while one loop runs at a time (the loop boots its oracle, then reads usable(H)); upgrade if loops interleave.
-local pfRage = 0
+local pfChance = 0
 local function classData(H)
     if cache[H] then
-        pfRage = cache[H].primalFury
+        pfChance = cache[H].bloodFrenzy
         return cache[H]
     end
     local X = { aura = {}, covered = {} }
@@ -430,15 +439,9 @@ local function classData(H)
         end
     end
     X.eclipse = (H.Hekili.State.talent.eclipse.rank or 0) > 0
-    X.bloodFrenzy = (H.Hekili.State.talent.primal_fury.rank or 0) / 2 -- "Blood Frenzy" on Forever (catHit)
-    -- Primal Fury's rage on a crit of ours in Bear Form at the character's rank: the class file's white-crit rule read
-    -- under the booted state's talents, less its rank-0 crit (the recording load's)
-    local w, base = class(), rules().crit
-    local talent = w.state.talent
-    w.state.talent = H.Hekili.State.talent
-    X.primalFury = setfenv(w.resources[RAGE].models.mainhand.crit, w.state)() - base
-    w.state.talent = talent
-    pfRage = X.primalFury
+    -- "Blood Frenzy" on Forever: catHit's combo point and the bear's Primal Fury rage (primalFury), one chance
+    X.bloodFrenzy = (H.Hekili.State.talent.primal_fury.rank or 0) / 2
+    pfChance = X.bloodFrenzy
     X.cc = class().costMods[1]
     for _, id in ipairs(X.cc.spells) do
         X.covered[id] = true
@@ -533,12 +536,18 @@ local function content(name)
         regenPause = rules().pause, -- energy stops in Bear Form (the class file's bear_pause; both lists put Bear first)
         mobHealth = 15000,
         canParry = false, -- druids never parry (wowsims's CanParry: no parry haste of ours)
-        -- our queued strike's outcome at its swing (behaviours.lua): a Maul crit in Bear Form pays Primal Fury's
+        -- our queued strike's outcome at its swing (behaviours.lua): a Maul crit in Bear Form rolls Primal Fury's
         -- rage, as bearHit does for the on-GCD strikes (the e4ef929e54 Guardian log: 10 of its 21 16959 gains, plus one tied with a Lacerate crit)
-        script = function(_, us)
-            us.struck = function(W, act, flag)
-                if act == "WOUND" and flag == "CRITICAL" and us.form == FORM.bear_form and pfRage > 0 then
-                    W.gain(us, pfRage)
+        script = function(W, us)
+            M.pfRng = W.krng -- this world's Primal Fury rolls (white crits and Maul's swing; bearHit reads W.krng)
+            us.struck = function(W2, act, flag)
+                local pf = act == "WOUND"
+                        and flag == "CRITICAL"
+                        and us.form == FORM.bear_form
+                        and primalFury(pfChance, M.pfRng)
+                    or 0
+                if pf > 0 then
+                    W2.gain(us, pf)
                 end
             end
         end,
@@ -560,7 +569,7 @@ local function content(name)
             return 0
         end
         local R = rules()
-        return R.swing + (flag == "CRITICAL" and R.crit + pfRage or 0)
+        return R.swing + (flag == "CRITICAL" and R.crit + primalFury(pfChance, M.pfRng) or 0)
     end
 
     -- An ability's declared spend, scalar or function (nil: 0).
