@@ -15,7 +15,7 @@
 ### Known issues
 
 ### Upgrade notes
-- If you edited Beast Mastery Turret (wowsims.com) or Retribution (wowsims.com), your copy keeps its old lines that read `window.hha`, `window.move1` or `window.move2`. Those windows no longer exist, so the priority reports an unknown window for each such line and skips it. Reset the priority to its built-in version, or redo your edits on it.
+- If you made your own copy of Beast Mastery Turret (wowsims.com) or Retribution (wowsims.com), your copy keeps its old lines that read `window.hha`, `window.move1` or `window.move2`. After this update it silently shows no Summon Hawk (Beast Mastery) or no opener (Retribution), and no message tells you. Edits made in place on the built-in priority are replaced by the new built-in priority. To fix a copy, copy the new built-in priority again and redo your edits on it.
 
 ## v0.12.1
 

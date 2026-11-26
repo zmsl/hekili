@@ -4,11 +4,11 @@ Type: Reference
 Audience: theorycrafters
 Prerequisites: [APL overview](APL-Overview).
 -->
-A **rotation window** is a named span of time during a fight that a class pack registers, for a part of the rotation that the game shows no aura for, such as the few seconds in which a parry allows Riposte. A priority line reads a window with `window.<name>` expressions, and can open or close one for the rest of a walk with `open_window` and `close_window` lines. This page lists the window expressions and lines as they work in the current release. How a class pack registers a window is in [Pack windows and reactions](Pack-Windows-And-Reactions).
+A **rotation window** is a named span of time during a fight, registered by a class pack or declared by a priority as an APL sequence, for a part of the rotation that the game shows no aura for, such as the few seconds in which a parry allows Riposte. A priority line reads a window with `window.<name>` expressions, and can open or close one for the rest of a walk with `open_window` and `close_window` lines. This page lists the window expressions and lines as they work in the current release. How a class pack registers a window is in [Pack windows and reactions](Pack-Windows-And-Reactions).
 
 ## What a window is
 
-A window is registered by a class pack with `RegisterWindow`, under a name such as `weave` or `riposte`. It is either open or closed. While open it has an opening time, an end time and, for a stepped window, a current step.
+A window is registered by a class pack with `RegisterWindow`, or declared by a priority as an APL sequence (such as `hha` in Beast Mastery Turret), under a name such as `weave`, `riposte` or `hha`. It is either open or closed. While open it has an opening time, an end time and, for a stepped window, a current step.
 
 - Hekili Forever opens and closes the real windows from what the game reports: each window can have a test, run on every update, and the window opens when the test becomes true. A cast the player makes can also open or close it, and combat end closes every window.
 - A window lasts a fixed number of seconds, until the end of combat, or as long as a length the class pack works out at each opening. A window can also close when its test becomes false again.
