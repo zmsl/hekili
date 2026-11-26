@@ -746,7 +746,7 @@ end)
 
 -- The priorities: the wowsims.com packs (generated from wowsims/forever's Priest builds by `make wowsims-packs`).
 describe("Forever Priest priorities", function()
-    it("keeps the class file's generated blocks in step with APLs/", function()
+    it("#puc keeps the class file's generated blocks in step with APLs/", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))
         local src = f:read("*a")

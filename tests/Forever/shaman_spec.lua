@@ -977,7 +977,7 @@ describe("Forever Shaman priorities", function()
         error("no " .. action .. " if " .. tostring(criteria))
     end
 
-    it("keeps the class file's generated block in step with APLs/", function()
+    it("#puc keeps the class file's generated block in step with APLs/", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))
         local src = f:read("*a")

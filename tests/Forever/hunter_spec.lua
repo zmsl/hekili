@@ -822,7 +822,7 @@ describe("Forever Hunter priorities", function()
         assert.are.equal(10, n)
     end)
 
-    it("keeps the class file's generated blocks in step with APLs/ and retires the hand-built lists", function()
+    it("#puc keeps the class file's generated blocks in step with APLs/ and retires the hand-built lists", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))
         local src = f:read("*a")

@@ -16,7 +16,7 @@ local function lines(s)
 end
 
 describe("the English text a player sees", function()
-    it("is byte-identical to the golden written at the merge base", function()
+    it("#puc is byte-identical to the golden written at the merge base", function()
         local text = table.concat(enus.dump(), "\n") .. "\n"
         if os.getenv("ENUS_GOLDEN") == "update" then
             local f = assert(io.open(PATH, "wb"))
