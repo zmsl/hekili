@@ -313,6 +313,7 @@ NOT_INPUTS = {
     "ANTHROPIC_API_KEY": "release-only tool, mocked in its tests",
     "CF_API_KEY": "release-only tool, mocked in its tests",
     "DISCORD_RELEASES_WEBHOOK": "release-only tool, mocked in its tests",
+    "MAKE_VERSION": "make's own constant: the Makefile drops -Otarget on make 3.x, output order only",
     "XDG_CACHE_HOME": "scripts/busted_parallel.sh's run-order cache: order only",
     "GITHUB_ACTIONS": "scripts/busted_parallel.sh: output format only (groups, annotations, summary)",
     "GITHUB_STEP_SUMMARY": "scripts/busted_parallel.sh: output format only (groups, annotations, summary)",
