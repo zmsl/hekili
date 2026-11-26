@@ -20995,7 +20995,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	va
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0015	|cFFFF000015.|r restart_sequence - |cFFFFD100|cffffd100window.hha.done|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0016	|cFFFF000016.|r sequence
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0016	|cFFFF000016.|r sequence - |cFFFFD100|cffffd100time>0|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 19434
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 3044 - |cFFFFD100|cffffd100!action.summon_hawk.known&target.outside8|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
