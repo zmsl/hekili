@@ -199,18 +199,19 @@ local function packOf(spec)
     return tostring(spec and (spec.name or spec.key or spec.id) or "?")
 end
 
--- V3: each key `v` names (a list's every entry) waits for F.Finish.
+-- V3: each key `v` names (a list's every entry) waits for F.Finish: a string by the row's reference alternative, a
+-- table by its list-of-references alternative, whatever their order (aura|list:aura).
 local function refer(r, v, who, field)
     for _, a in ipairs(r.alts) do
-        local kind = KIND_OF[a:match("^list:(.+)$") or a]
-        if kind then
-            if type(v) == "string" then
-                F.pending[#F.pending + 1] = { kind = kind, value = v, who = who, field = field }
-            elseif type(v) == "table" and a:sub(1, 5) == "list:" then
-                for _, x in ipairs(v) do
-                    if type(x) == "string" then
-                        F.pending[#F.pending + 1] = { kind = kind, value = x, who = who, field = field }
-                    end
+        local list = a:match("^list:(.+)$")
+        local kind = KIND_OF[list or a]
+        if kind and not list and type(v) == "string" then
+            F.pending[#F.pending + 1] = { kind = kind, value = v, who = who, field = field }
+            return
+        elseif kind and list and type(v) == "table" then
+            for _, x in ipairs(v) do
+                if type(x) == "string" then
+                    F.pending[#F.pending + 1] = { kind = kind, value = x, who = who, field = field }
                 end
             end
             return
@@ -443,9 +444,9 @@ row("ability", "rangeSpell", "number|fn", nil, "the spell whose range the range 
 row("ability", "equipped", "string|number", nil, "a slot kind or item that must be equipped")
 row("ability", "talent", "talent", nil, "the talent it needs")
 row("ability", "form", "aura|fn", nil, "the form or stance aura it needs")
-row("ability", "buff", "aura|fn", nil, "a player aura it needs")
-row("ability", "nobuff", "aura", nil, "a player aura it may not be used under")
-row("ability", "debuff", "aura", nil, "a target aura it needs")
+row("ability", "buff", "aura|list:aura|fn", nil, "a player aura it needs (a list: each of them)")
+row("ability", "nobuff", "aura|list:aura", nil, "a player aura it may not be used under (a list: any of them)")
+row("ability", "debuff", "aura|list:aura", nil, "a target aura it needs (a list: each of them)")
 row("ability", "aura", "aura", "its own key", "the aura it applies (the simulation's and the belief's)")
 row("ability", "cycle", "aura|fn", nil, "the target aura a target swap spreads")
 row("ability", "auras", "table", nil, "auras registered with it (RegisterAuras)")

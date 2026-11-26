@@ -150,6 +150,29 @@ describe("the pack field registry", function()
         end
     end)
 
+    -- decision 3a (fable-r3-decision.md): the engine reads a list on buff, nobuff and debuff (State.lua), so the rows
+    -- take one, and V3 checks each of its entries
+    it("3a: buff, nobuff and debuff take a list of auras, V3 checks each entry, V2 each entry's type", function()
+        for _, field in ipairs({ "buff", "nobuff", "debuff" }) do
+            local env, F = druid()
+            local kit = env.class.kit
+            kit:RegisterAura("known_a", { id = 990300 })
+            kit:RegisterAura("known_b", { id = 990301 })
+            local ok, err = pcall(kit.RegisterAbility, kit, "list_ok", { id = 990302, [field] = { "known_a", "known_b" } })
+            assert(ok, tostring(err))
+            ok, err = pcall(F.Finish)
+            assert(ok, tostring(err))
+            ok, err = pcall(kit.RegisterAbility, kit, "list_nope", { id = 990303, [field] = { "known_a", "nope" } })
+            assert(ok, tostring(err))
+            ok, err = pcall(F.Finish)
+            assert.is_false(ok, field)
+            assert.is_truthy(tostring(err):find("V3: DRUID ability list_nope: " .. field .. " names nope", 1, true), err)
+            ok, err = pcall(kit.RegisterAbility, kit, "list_bad", { id = 990304, [field] = { "known_a", 5 } })
+            assert.is_false(ok, field)
+            assert.is_truthy(tostring(err):find("V2: DRUID ability list_bad: " .. field, 1, true), err)
+        end
+    end)
+
     it("has one row per field with a type, a doc line and its bounds in order", function()
         local F = druid().ns.Fields
         local n = 0
