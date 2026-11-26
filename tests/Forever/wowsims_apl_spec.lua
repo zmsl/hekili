@@ -4263,6 +4263,7 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
             local strict = 0
             for spec, lines in pairs(want) do
                 local _, text = apl.render(spec, forced)
+                local hasStrict = table.concat(lines, "\n"):find(" strict ", 1, true) ~= nil
                 local class = ex.recipe(spec).class
                 local abilities = engine.abilitySet(class).abilities
                 local function isAb(k)
@@ -4291,9 +4292,15 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
                             end
                         end
                         assert.is_falsy(body:find("allow_skip", 1, true), line)
-                        -- L1270: the hold walks the normal lists only for a window or variable line (holdWalk)
+                        -- L1270: the hold walks the normal lists only for a window or variable line (holdWalk): none
+                        -- in a pack with a strict line (a plain one may carry its close line: Retribution's, L898)
                         assert.is_falsy(
-                            body:match("^variable,") or body:match("^open_window") or body:match("^close_window"),
+                            hasStrict
+                                and (
+                                    body:match("^variable,")
+                                    or body:match("^open_window")
+                                    or body:match("^close_window")
+                                ),
                             line
                         )
                         assert.are.same({}, levels.line(body, isAb), line)
@@ -4434,7 +4441,8 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
     end)
 
     -- M1: the BM and Ret plain sequence lines parse without a warning; until each Part B lane drops the class's Lua
-    -- window of the same name, CheckWindows reports exactly that clash (E3) and, for BM, the restart line on it (E1)
+    -- window of the same name, CheckWindows reports exactly that clash (E3) and, for BM, the restart line on it (E1);
+    -- after it, nothing (Retribution: L1374)
     for _, case in ipairs({
         {
             "hunter_beast_mastery_turret",
@@ -4446,7 +4454,7 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
             "paladin_retribution",
             "Forever.helpers.paladin_world",
             "Retribution",
-            { "E3 move1 is a class window", "E3 move2 is a class window" },
+            {}, -- L1374: the class's move1 / move2 Lua windows are gone
         },
     }) do
         it("the engine parses the " .. case[1] .. " recipe's sequence lines", function()
@@ -4462,6 +4470,41 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
             assert.are.same(case[4], errs)
         end)
     end
+
+    -- L898 / design v6 10.3: a recipe's `sequenceIf` ANDs its term into that sequence's condition and writes the
+    -- sequence's close line, `close_window,name=<w>,if=window.<w>.up&!window.<w>.done&!(<term>)`, in default before
+    -- the line that reaches the sequence's list (the list is not walked once the term turns false, design 10.3)
+    it("sequenceIf: the term in the sequence's condition and its close line before the list's call", function()
+        local text = apl.translate({
+            priorityList = {
+                cast(400),
+                { action = { groupReference = { groupName = "Opener" } } },
+                cast(200),
+            },
+            groups = {
+                {
+                    name = "Opener",
+                    actions = {
+                        { action = { sequence = { name = "S", actions = { member(100), member(300) } } } },
+                    },
+                },
+            },
+        }, on({ sequenceIf = { s = "window.first.up" } }))
+        assert.are.equal(
+            lines({
+                "actions=dot",
+                "actions+=/close_window,name=s,if=window.s.up&!window.s.done&!(window.first.up)",
+                "actions+=/call_action_list,name=opener",
+                "actions+=/big_hit",
+                "actions.opener=sequence,name=s,mode=continue,if=window.first.up:strike:roar,use_off_gcd=1",
+            }),
+            text
+        )
+        -- a name the APL has no sequence of is an error, as is the field without `sequences`
+        assert.has_error(function()
+            apl.translate({ priorityList = { cast(400) } }, on({ sequenceIf = { s = "window.first.up" } }))
+        end, "sequenceIf: no sequence s in the APL")
+    end)
 
     -- Review M4 (L1374): a sequence in the pre-pull list is omitted and named (none at the pin or at a342c253e6): the
     -- pre-pull guard and focus strip would treat its members as ordinary lines, and the engine runs sequences only in

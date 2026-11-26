@@ -867,14 +867,14 @@ end
 --- ended since) or down (CLOSE) now, the Drain between having replayed it; no operation waits past a Drain. (2) No key
 --- goes up in the belief more often than OPENs were sent for it. `done()` adds the belief's refused and dropped counts
 --- (read at the fight's end) and returns the failures (text) and the counts per key: { OPEN, CLOSE, STEP, step1 (STEPs
---- to step 1), up (ticks seen up), parks (edges onto the park step past the last member) }.
+--- to step 1), up (ticks seen up), step (the last seen up), parks (edges onto the park step past the last member) }.
 function M.windowOps(H)
     local VS, VSI = H.ns.VirtualState, H.ns.VirtualStateInternal
     local Q = VSI.winOps
     local keys, fails, batch, due, upWas, stepWas, edges = {}, {}, {}, {}, {}, {}, {}
     local sinceTick, dueAt, dueCombat, prevAt = 0, 0, false, 0
     local function count(key)
-        keys[key] = keys[key] or { OPEN = 0, CLOSE = 0, STEP = 0, step1 = 0, up = 0, parks = 0 }
+        keys[key] = keys[key] or { OPEN = 0, CLOSE = 0, STEP = 0, step1 = 0, up = 0, parks = 0, step = 0 }
         return keys[key]
     end
     local op = VS.WindowOp
@@ -919,7 +919,7 @@ function M.windowOps(H)
             local up, _, _, _, step = VS.Window(key)
             local k = count(key)
             if up then
-                k.up = k.up + 1
+                k.up, k.step = k.up + 1, step
                 if not upWas[key] then
                     edges[key] = (edges[key] or 0) + 1
                     if edges[key] > k.OPEN then
@@ -966,7 +966,14 @@ function M.gate(label, C, spec, floor, o)
     local failed, keys = opsDone()
     local sent = {}
     for key, k in pairs(keys) do
-        sent[#sent + 1] = ("%s %d/%d/%d up %d"):format(key:match("[^:]*$"), k.OPEN, k.STEP, k.CLOSE, k.up)
+        sent[#sent + 1] = ("%s %d/%d/%d up %d step %d"):format(
+            key:match("[^:]*$"),
+            k.OPEN,
+            k.STEP,
+            k.CLOSE,
+            k.up,
+            k.step
+        )
     end
     table.sort(sent)
     print(
