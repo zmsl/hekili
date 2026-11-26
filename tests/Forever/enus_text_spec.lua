@@ -16,7 +16,7 @@ local function lines(s)
 end
 
 describe("the English text a player sees", function()
-    it("#puc is byte-identical to the golden written at the merge base", function()
+    it("is byte-identical to the golden written at the merge base", function()
         local text = table.concat(enus.dump(), "\n") .. "\n"
         if os.getenv("ENUS_GOLDEN") == "update" then
             local f = assert(io.open(PATH, "wb"))
@@ -51,4 +51,18 @@ describe("the English text a player sees", function()
         end
         assert.are.equal(want, text)
     end)
+
+    -- L1939: the dump read the Warnings log mid-walk, so it held a walk-time error under some pairs() orders only.
+    for _, order in ipairs({ "forward", "reverse" }) do
+        it("does not depend on table order (" .. order .. ")", function()
+            enus.order = order
+            local ok, got = pcall(enus.dump)
+            enus.order = nil
+            assert(ok, got)
+            local f = assert(io.open(PATH, "rb"))
+            local want = f:read("*a")
+            f:close()
+            assert.are.equal(want, table.concat(got, "\n") .. "\n")
+        end)
+    end
 end)

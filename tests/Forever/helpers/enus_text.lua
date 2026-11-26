@@ -61,6 +61,8 @@ local function boot(token)
 end
 
 -- Every name, desc and values string under `node`, as lines into `out` (a set).
+-- AceConfigDialog gives every call the deepest option's `arg` as info.arg (AceConfigDialog-3.0.lua:204,258,702); the
+-- Multi tab's descriptions read it (Options.lua optionConf). M.order: nil = pairs order, "forward"/"reverse" = sorted.
 local function walk(node, path, info, out, seen)
     if type(node) ~= "table" or seen[node] then
         return
@@ -96,8 +98,21 @@ local function walk(node, path, info, out, seen)
             children[k] = v
         end
     end
-    for k, v in pairs(children) do
-        local ci = {}
+    local keys = {}
+    for k in pairs(children) do
+        keys[#keys + 1] = k
+    end
+    if M.order then
+        table.sort(keys, function(a, b)
+            if M.order == "reverse" then
+                a, b = b, a
+            end
+            return tostring(a) < tostring(b)
+        end)
+    end
+    for _, k in ipairs(keys) do
+        local v = children[k]
+        local ci = { arg = type(v) == "table" and v.arg or nil }
         for i, s in ipairs(info) do
             ci[i] = s
         end

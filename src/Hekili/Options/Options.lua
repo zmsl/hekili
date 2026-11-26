@@ -4220,19 +4220,24 @@ found = true end
 
                                             local link = Hekili:GetSpellLinkWithTexture( spells.best )
                                             out = format( out, UnitClass( "player" ), link )
+                                            -- sorted: pairs() order differs per client/VM, and the list is shown to the player (L1939)
+                                            local alts = {}
                                             for spell in pairs( spells ) do
-                                                if type( spell ) == "number" and spell ~= spells.best then
-                                                    n = n + 1
+                                                if type( spell ) == "number" and spell ~= spells.best then alts[ #alts + 1 ] = spell end
+                                            end
+                                            table.sort( alts )
 
-                                                    link = Hekili:GetSpellLinkWithTexture( spell )
+                                            for _, spell in ipairs( alts ) do
+                                                n = n + 1
 
-                                                    if n == 2 and spells.count == 2 then
-                                                        out = out .. link .. "."
-                                                    elseif n ~= spells.count then
-                                                        out = out .. link .. ", "
-                                                    else
-                                                        out = out .. format( L["and %s."], link )
-                                                    end
+                                                link = Hekili:GetSpellLinkWithTexture( spell )
+
+                                                if n == 2 and spells.count == 2 then
+                                                    out = out .. link .. "."
+                                                elseif n ~= spells.count then
+                                                    out = out .. link .. ", "
+                                                else
+                                                    out = out .. format( L["and %s."], link )
                                                 end
                                             end
                                         end

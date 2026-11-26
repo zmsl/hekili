@@ -112,6 +112,7 @@ function Hekili:RestoreDefaults()
     if #changed > 0 then
         local msg
         local label = Hekili.Engine.Registry.PackLabel
+        table.sort( changed ) -- pairs() order differs per client/VM (L1939)
         for i = 1, #changed do changed[ i ] = label( changed[ i ] ) end
 
         if #changed == 1 then
@@ -140,6 +141,7 @@ function Hekili:RestoreDefaults()
     if #reverted > 0 then
         local msg
         local label = Hekili.Engine.Registry.PackLabel
+        table.sort( reverted )
         for i = 1, #reverted do reverted[ i ] = label( reverted[ i ] ) end
 
         if #reverted == 1 then

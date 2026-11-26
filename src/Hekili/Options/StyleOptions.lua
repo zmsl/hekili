@@ -150,6 +150,7 @@ local function base()
 
         delays = {
             fade = false,
+            desaturate = false,
         },
 
         -- The gamepad pictures (Engine/Sim/Events.lua ns.Gamepad): on the icon at their own anchor, as keybinding text
