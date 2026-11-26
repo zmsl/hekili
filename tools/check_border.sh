@@ -18,7 +18,7 @@ fail=0
 # character, so `I.class` and `r.state.meta` (a resource's own declarations, read through `def`) pass; no `state[`,
 # Tickets.lua's own state array. An optional path argument (a file or a tree) stands in for Game/, for the spec.
 for f in $(find "${1:-src/Hekili/Game}" -name '*.lua' | sort); do
-    hits=$(sed -E 's/--.*$//' "$f" | sed -E 's/^[[:space:]]*local _, ns = \.\.\.[[:space:]]*$//; s/\bns\.(Facade|VirtualStateInternal|VirtualState)\b//g' |
+    hits=$(sed -E 's/--.*$//' "$f" | sed -E -e 's/^[[:space:]]*local _, ns = \.\.\.[[:space:]]*$//; s/(^|[^[:alnum:]_])ns\.(Facade|VirtualStateInternal|VirtualState)([^[:alnum:]_]|$)/\1\3/g' -e 's/(^|[^[:alnum:]_])ns\.(Facade|VirtualStateInternal|VirtualState)([^[:alnum:]_]|$)/\1\3/g' |
         grep -nE '\bHekili\b|(^|[^.[:alnum:]_])(state[.:]|class[.:[])|\bns\b' | sed "s|^|$f:|")
     [ -n "$hits" ] && { echo "$hits"; fail=1; }
 done
@@ -35,7 +35,7 @@ if [ -n "${2:-}" ]; then
     core="$core $extra"
 fi
 for f in $core; do
-    hits=$(sed -E 's/--.*$//' "$f" | sed -E 's/\bns\.VirtualState\.(Drain|Build|SetLog|WindowOp)\b//g' |
+    hits=$(sed -E 's/--.*$//' "$f" | sed -E -e 's/(^|[^[:alnum:]_])ns\.VirtualState\.(Drain|Build|SetLog|WindowOp)([^[:alnum:]_]|$)/\1\3/g' -e 's/(^|[^[:alnum:]_])ns\.VirtualState\.(Drain|Build|SetLog|WindowOp)([^[:alnum:]_]|$)/\1\3/g' |
         grep -nE '\bVS\b|ns\.VirtualState|VirtualStateInternal' | sed "s|^|$f:|")
     [ -n "$hits" ] && { echo "$hits"; fail=1; }
 done
