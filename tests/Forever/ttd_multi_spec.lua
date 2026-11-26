@@ -19,9 +19,12 @@ local function fight(o, arm, seed)
     ab.record = function(label, line)
         rows[label] = line
     end
-    ab.check = function(_, label, line) -- every record-only row of the arm kept, none judged: the bands row's target
-        -- containment is not modelled across a death and a retarget (est 0 against the next mob's band), an open limit
+    ab.check = function(ok, label, line) -- every row kept; only the bands row goes unjudged: its target containment is
+        -- not modelled across a death and a retarget (est 0 against the next mob's band), an open limit (h-hw review Minor 1)
         rows[label] = line
+        if label ~= "bands" then
+            assert(ok, label .. ": " .. tostring(line))
+        end
     end
     o.arm, o.trace = arm, false
     local ok, run = pcall(loop.run, L, seed, o, { { H = L.us } })
