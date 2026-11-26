@@ -197,7 +197,15 @@ function M.world(o, seed)
                 if e.stopped or v.health <= 0 then
                     return
                 end
-                W.emit({ kind = "spell", src = e, dst = v, act = "WOUND", flag = "", amount = d.dps * every, school = 1 })
+                W.emit({
+                    kind = "spell",
+                    src = e,
+                    dst = v,
+                    act = "WOUND",
+                    flag = "",
+                    amount = d.dps * every,
+                    school = 1,
+                })
                 W.at(W.t + every, hit)
             end
             W.at(W.t + from + every, hit)
