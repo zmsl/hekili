@@ -319,6 +319,17 @@ describe("resources", function()
             assert.is_false(I.res.assume[1])
         end)
 
+        -- (band-edge review finding 5) the allowance is a timely answer's: one folded after the clock (lag) gets
+        -- ladder's lag move alone, so a short answer 10 ms late with the floor over the cost drops the floor
+        it("keeps no modelled floor past a short answer folded late (the lag's move is its only allowance)", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- from rest: 20, its floor moving with the spend
+            I.Settle(10.58) -- the clock moved on first
+            obs(Obs.Usable, 10.57, FINISHER, 0, 1) -- the floor then 25.13, 24.23 a tenth of a second before
+            I.Fold(10.58, false)
+            assert.is_false(I.res.assume[1])
+        end)
+
         it(
             "marks a read standing on a short answer's cap: a ceiling, not a measurement (Facade's UnitPower)",
             function()
@@ -2706,6 +2717,69 @@ describe("resources", function()
             end
         )
 
+        -- (band-edge review finding 4) a read is a fact: it clears each part's read-high (Q) with its EMA
+        it("clears each part's read-high at an out-of-combat regen read", function()
+            I.res.regQ[1], I.res.spQ[1] = 1, 2
+            obs(Obs.Read, 12, 1, 3, I.ReadOf.Regen)
+            obs(Obs.Read, 12, 1, 11, I.ReadOf.RegenSpirit)
+            I.Fold(12, false)
+            assert.are.same({ 3, 11, 0, 0 }, { I.res.regE[1], I.res.spE[1], I.res.regQ[1], I.res.spQ[1] })
+        end)
+
+        -- (band-edge review finding 4) a stamp's k: in-window pairs under an `mp5` entry (5 a second, up throughout)
+        -- read the mp5 part high; the entries' k over the measured dt, the cell over dt + band.stamp
+        it("keeps the mp5 part's floor rate at or under the truth over in-window pairs under an `mp5` entry", function()
+            shaped({ spirit = 10, mp5 = 12 }, { { aura = "spring", mp5 = 5 } })
+            I.AuraModel(1, 3, 5, 1000, 1, 5, 0) -- spring up 5 to 1000
+            read(10, 500)
+            local function cell(stamp, lo)
+                if I.log.n > 0 and I.bandT[1] ~= stamp then
+                    I.Fold(stamp - 1e-9, false)
+                end
+                I.bandT[1], I.bandShows[1] = stamp, 1 / 6
+                I.Settle(stamp + 0.05)
+                obs(Obs.Band, stamp + 0.05, 1, lo, lo + 25)
+                I.Fold(stamp + 0.05, false)
+            end
+            local late, cross = 0.09, 25 / 17 -- a cell at the truth's 12 + 5 a second
+            for k = 1, 6 do
+                local t = 20 * k
+                I.Settle(t)
+                I.ResourceShift(1, -100, t, Obs.CastSuccess) -- the window to t + 5
+                cell(t + 0.2, 400) -- under the last band: no pair
+                cell(t + 0.2 + cross + late, 425) -- the pair's first end, stamped late
+                cell(t + 0.2 + 2 * cross, 450) -- its second, on time, inside the window
+            end
+            assert.is_true(I.res.regE[1] > 12, I.res.regE[1])
+            assert.is_true(I.res.regL[1] <= 12, I.res.regL[1])
+        end)
+
+        -- (band-edge review finding 4) the spirit branch with regE off the truth, on the side the bound covers: the
+        -- mp5 part's truth 11.5 under regE 12, so each spirit sample reads low by the gap; spL stays under 10
+        it("keeps the spirit part's floor rate at or under the truth with regE over the mp5 part's truth", function()
+            shaped({ spirit = 10, mp5 = 12 })
+            read(10, 100)
+            local function cell(stamp, lo)
+                if I.log.n > 0 and I.bandT[1] ~= stamp then
+                    I.Fold(stamp - 1e-9, false)
+                end
+                I.bandT[1], I.bandShows[1] = stamp, 1 / 6
+                I.Settle(stamp + 0.05)
+                obs(Obs.Band, stamp + 0.05, 1, lo, lo + 25)
+                I.Fold(stamp + 0.05, false)
+            end
+            local late, cross = 0.09, 25 / 21.5 -- a cell at the truth's 11.5 + 10 a second
+            for k = 1, 6 do
+                local t, lo = 20 * k, 100 * k
+                cell(t, lo) -- a jump: no pair
+                cell(t + cross + late, lo + 25) -- the pair's first end, stamped late
+                cell(t + 2 * cross, lo + 50) -- its second, on time
+            end
+            assert.are.equal(12, I.res.regE[1])
+            assert.is_true(I.res.spE[1] > 10, I.res.spE[1])
+            assert.is_true(I.res.spL[1] <= 10, I.res.spL[1])
+        end)
+
         it("multiplies overlapping `spirit` auras and adds their shares", function()
             shaped(
                 { spirit = 10, mp5 = 2 },
@@ -2810,6 +2884,13 @@ describe("resources", function()
             readPair(105, 28, 22) -- truth M 4, S 24: idle M + S, casting M + 0.75 S
             within(16, I.res.regE[1]) -- M + cS
             within(12, I.res.spE[1]) -- (1 - c)S
+        end)
+
+        it("clears each part's read-high at an unmixed pair (C9; band-edge review finding 4)", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "focus", share = 0.25 } })
+            I.res.regQ[1], I.res.spQ[1] = 1, 2
+            readPair(105, 28, 22)
+            assert.are.same({ 0, 0 }, { I.res.regQ[1], I.res.spQ[1] })
         end)
 
         it("rescales the stored split by the total when the shares reach all of the spirit regen (C9)", function()
@@ -3142,6 +3223,26 @@ describe("resources", function()
             I.Fold(18, false)
             within(10 + I.ALPHA * 2, I.res.regE[1])
             within(10 + I.ALPHA * 2, VS.Regen(ENERGY, 18).est)
+        end)
+
+        -- (band-edge round 1, review finding 3) a plain slot's band pair folded after its stamp: the aura that fell
+        -- between the pair's end and the fold is gone from the window spans reads, so the x2 would read as unscaled
+        it("takes no measurement from a band pair whose aura fell between the pair's end and its fold", function()
+            I.AuraModel(1, RATE_AURA, 10, 12.8, 1, 10, 0) -- x2 to 12.8; the truth 9 unscaled: 18 a second
+            local function cell(stamp, lo)
+                if I.log.n > 0 and I.bandT[1] ~= stamp then
+                    I.Fold(stamp - 1e-9, false)
+                end
+                I.bandT[1], I.bandShows[1] = stamp, 1 / 6
+                I.Settle(stamp + 0.05) -- the fold's sweep first, as the harness's (fellAt = the fold's clock)
+                obs(Obs.Band, stamp + 0.05, 1, lo, lo + 25)
+                I.Fold(stamp + 0.05, false)
+            end
+            cell(10.2, 0) -- the first band: no pair
+            cell(10 + 25 / 18, 25) -- the crossing that starts the pair
+            cell(10 + 50 / 18, 50) -- 12.778: folded at 12.828, after the aura fell
+            assert.are.equal(0, I.auras.exp0[1][RATE_AURA])
+            assert.are.equal(10, I.res.regE[1])
         end)
 
         it("an out-of-combat regen read taken under the aura is stored unscaled", function()
@@ -4299,6 +4400,14 @@ describe("resource bands (lane B4)", function()
             end
             assert.is_true(R.regE[MANA] > 10, R.regE[MANA])
             assert.is_true(R.regL[MANA] <= 10, R.regL[MANA])
+        end)
+
+        -- (band-edge review finding 4) the bound's edge: a first end exactly band.stamp late reads the pair's low end
+        -- at the truth itself
+        it("reads a pair whose first end is exactly band.stamp late with its low end at the truth", function()
+            crossings({ 19, 440, 450 }, { 20 + I.BAND_STAMP, 450, 460 }, { 21, 460, 470 }, { 22, 470, 480 })
+            assert.is_true(R.regE[MANA] > 10, R.regE[MANA])
+            within(10, R.regE[MANA] - R.regQ[MANA], 1e-9) -- the seed 10, then the low end 20 / 2
         end)
 
         it("the first band, a widened one, one whose hi alone moved and a jump are none", function()
