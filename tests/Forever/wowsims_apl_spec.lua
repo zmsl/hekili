@@ -579,6 +579,9 @@ describe("the wowsims APL translator", function()
                         end),
                     },
                     plain = { key = "plain", id = 1010, gcd = "spell", cooldown = 0 },
+                    -- L504: casts with travel (the kit's velocity, its flightTime), no aura of their own
+                    bolt = { key = "bolt", id = 1014, gcd = "spell", cooldown = 0, velocity = 20 },
+                    dart = { key = "dart", id = 1015, gcd = "spell", cooldown = 0, flightTime = 0.5 },
                     swing = {
                         key = "swing",
                         id = 1011,
@@ -736,6 +739,25 @@ describe("the wowsims APL translator", function()
                 }, "\n"),
                 text
             )
+        end)
+
+        -- L504: in game the player stays out of combat until the cast lands, so an unguarded line with travel shows
+        -- itself again while it flies and hides the next pre-pull line (Shadow Bolt then Corruption at -0.1 s); the term
+        -- releases itself once the travel time passed (a miss never blanks the line). The last line has none to hide.
+        it("guards a cast with travel and a later pre-pull line until its travel time has passed (L504)", function()
+            local text, omitted = apl.translate({
+                prepullActions = { at(1014, "-3s"), at(1015, "-2s"), at(1010, "-1s"), at(1014, "-0.5s") },
+            }, guardCtx())
+            assert.are.equal(
+                table.concat({
+                    "actions.precombat=bolt,if=action.bolt.time_since>action.bolt.travel_time",
+                    "actions.precombat+=/dart,if=action.dart.time_since>action.dart.travel_time",
+                    "actions.precombat+=/plain",
+                    "actions.precombat+=/bolt",
+                }, "\n"),
+                text
+            )
+            assert.are.same({}, omitted)
         end)
 
         it("guards a mutually exclusive group's first line by every member's aura, later ones by their own", function()
@@ -3786,7 +3808,7 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
         local text, omitted, _, header = apl.translate(rot, ctx({}, { distanceFromTarget = 20 }))
         assert.are.equal(
             table.concat({
-                "actions.precombat=bolt",
+                "actions.precombat=bolt,if=action.bolt.time_since>action.bolt.travel_time", -- rule 1's travel guard (L504)
                 "actions.precombat+=/big_hit",
                 "actions.precombat+=/strike", -- no velocity: wowsims's 0 s travel, at the pull
             }, "\n"),
@@ -3799,7 +3821,7 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
         local c = ctx({}, { distanceFromTarget = 20 })
         c.set.abilities.bolt.flightTime = 0.5 -- a kit flight time wins over distance / velocity
         assert.are.equal( -- -(2.5 + 0.5) * 0.9 = -2.7: still before big_hit's -2.5
-            "actions.precombat=bolt\nactions.precombat+=/big_hit\nactions.precombat+=/strike",
+            "actions.precombat=bolt,if=action.bolt.time_since>action.bolt.travel_time\nactions.precombat+=/big_hit\nactions.precombat+=/strike",
             (apl.translate(rot, c))
         )
         c.set.abilities.bolt.flightTime = 0 -- -(2.5 + 0) * 0.9 = -2.25: after big_hit (distance / velocity unused)
@@ -3808,8 +3830,8 @@ describe("the wowsims APL translator's second-lane reads (CN14, CN16, the travel
             (apl.translate(rot, c))
         )
         c.set.abilities.bolt.flightTime = nil
-        assert.are.equal( -- protojson omits a 0 distance: the travel time is 0
-            "actions.precombat=big_hit\nactions.precombat+=/bolt\nactions.precombat+=/strike",
+        assert.are.equal( -- protojson omits a 0 distance: the travel time is 0 (in game the bolt still flies)
+            "actions.precombat=big_hit\nactions.precombat+=/bolt,if=action.bolt.time_since>action.bolt.travel_time\nactions.precombat+=/strike",
             (apl.translate(rot, ctx({})))
         )
     end)
