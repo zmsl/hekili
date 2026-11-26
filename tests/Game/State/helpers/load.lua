@@ -41,6 +41,7 @@ function M.module()
         CHUNKS[path] = f
         f("Hekili", ns)
     end
+    require("Game.harness.r6_pause_proof").install(ns, "fake")
     return ns
 end
 

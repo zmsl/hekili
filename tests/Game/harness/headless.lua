@@ -1041,6 +1041,7 @@ function M.new(o)
             sp.package = o.pack
         end
     end
+    require("Game.harness.r6_pause_proof").install(H.ns, o.character and o.character.class or "headless")
     H.phase = "run"
     return H
 end
