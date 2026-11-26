@@ -215,6 +215,25 @@ local function refer(r, v, who, field)
     end
 end
 
+-- Whether ability `data` names a positive spell ID (its id, a rank or a copy), as Tracked.lua's idsOf asks.
+local function spellIds(data)
+    local ids = { data.id, data.copy, data.ranks }
+    for i = 1, 3 do -- not ipairs: any of the three may be nil
+        local v = ids[i]
+        if type(v) == "number" and v > 0 then
+            return true
+        end
+        if type(v) == "table" then
+            for _, x in ipairs(v) do
+                if type(x) == "number" and x > 0 then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
 --- Checks registration `data` (object kind `on`, key `key`) of `spec` against the registry: V1, V2, V7 here, V3 and V4
 --- queued for F.Finish, V5 listed. Reads `data` only (never its metatable or a function). Raises on a failure.
 function F.Check(on, spec, key, data)
@@ -267,7 +286,8 @@ function F.Check(on, spec, key, data)
                 cycle = data.cycle,
                 aura = data.aura,
             }
-        elseif data.startsCombat == true then
+        elseif data.startsCombat == true and data.variantOf == nil and spellIds(data) then
+            -- only what the belief compiles (Tracked.lua: no variant, a positive spell ID)
             F.unlanded[#F.unlanded + 1] = packOf(spec) .. " " .. tostring(key)
         end
     end
