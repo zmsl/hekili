@@ -1043,7 +1043,10 @@ end
 local function calibrate(r, m, t, a, b, from, event)
     if R.shaped[r] then
         local ok
-        if R.fsr[r] and edged(r, from, t) then
+        -- spans reads the latest window: an entry edge after the interval (a band pair folded after its stamp) hides
+        -- the window the interval held, and its share would land on the wrong part (band-edge round 1: 25 for 15.4)
+        local to = I.clock > t and I.clock or t
+        if R.fsr[r] and edged(r, from, to) or to > t and edged(r, t, to) then
             return -- the game's ticks put the new rate on a grid the belief does not see: off by up to a tick of it
         elseif b <= 0 and a > 0 then
             local bound = R.fsr[r] and R.decl[r] + R.spDecl[r] or nil
