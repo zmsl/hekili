@@ -424,6 +424,7 @@ local function ownGain(r, delta, t)
 end
 
 local keepFloor = false -- the Usable apply's: this short answer leaves the modelled floor (I.GAIN_SHOWS)
+local edgeFloor = false -- the Usable apply's: the floor was at or under this short answer's top I.GAIN_SHOWS ago (L1946)
 -- After a measurement moved lo0, slot r's modelled floor (`was`, lo0 + over before it), if any, stays where it was
 -- unless the measurement's top `top` falls under it (then it is lo0). Allocates nothing.
 local function remeasure(r, was, top)
@@ -1165,8 +1166,9 @@ end
 -- is moved by the most regen could have changed it; a late short one is dropped if it then conflicts with the floor,
 -- and an affordable one above the believed top opens the top to the maximum, as a timely one does; while a band is live
 -- only the side it contradicts yields (L1675): a yes leaves the band's top (c past it: lo = hi = c), a short answer the
--- band's low end (the record's bounds may lie inside the band, or the band be held). True when it moved the estimate
--- (a snap: the estimate now stands on this rung, so the caller writes a `pinned` sample).
+-- band's low end (the record's bounds may lie inside the band, or the band be held), or the top when the floor's own
+-- regen over the usability lag explains the answer (edgeFloor, L1946: no proof against the floor). True when it moved
+-- the estimate (a snap: the estimate now stands on this rung, so the caller writes a `pinned` sample).
 local function ladder(r, c, affordable, t, lag)
     if lag > 0 and R.swing[r] == 0 then
         local a, b, k = spans(r, t - lag, lag)
@@ -1210,7 +1212,7 @@ local function ladder(r, c, affordable, t, lag)
         end
         if R.lo0[r] > top then
             local v = top < 0 and 0 or top -- the newest bound wins
-            if R.bandOn[r] and R.bandLo[r] < v then
+            if R.bandOn[r] and R.bandLo[r] < v and not edgeFloor then
                 v = R.bandLo[r]
             end
             R.lo0[r] = v
@@ -1580,11 +1582,12 @@ I.On(Obs.Usable, function(o, t, lag)
     end
     -- a short answer read before the regen's crossing of the cost could show (I.GAIN_SHOWS) still caps, but leaves the
     -- modelled floor: a pin a tick of regen contradicts is no proof the rest assumption was wrong (remeasure)
-    keepFloor = false
+    keepFloor, edgeFloor = false, false
     if now == SHORT and r ~= 0 and R.swing[r] == 0 and lag <= 0 then
         local c = I.CostOf(a)
         local ga, gb, gk = spans(r, o.t - I.GAIN_SHOWS, I.GAIN_SHOWS)
         keepFloor = c - I.EPS >= R.est0[r] - R.regE[r] * ga - R.spE[r] * gb - gk and R.lo0[r] + R.over[r] >= c - I.EPS
+        edgeFloor = c - I.EPS >= R.lo0[r] - R.regL[r] * ga - R.spL[r] * gb - gk
     end
     local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
@@ -1695,7 +1698,7 @@ I.On(Obs.Usable, function(o, t, lag)
             R.raised[r] = R.raised[r] + 1
         end
     end
-    keepFloor = false -- this apply's only (remeasure)
+    keepFloor, edgeFloor = false, false -- this apply's only (remeasure, ladder)
 end)
 
 I.On(Obs.Read, function(o, t, lag)
