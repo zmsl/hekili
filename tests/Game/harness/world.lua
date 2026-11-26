@@ -26,7 +26,7 @@ end
 --- The item categories of class data `class` (the on-use trinkets: an ability with an `item` and a `category`):
 --- { [key] = { item, window (its `categoryCooldown`), members = { { key, item }, ... } (the category's, key order) } }.
 function M.itemCategories(class)
-    local keys, out, byCat = {}, {}, {}
+    local keys, out, byCategory = {}, {}, {}
     for key, a in pairs(class.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
             keys[#keys + 1] = key
@@ -37,8 +37,8 @@ function M.itemCategories(class)
         local a = class.abilities[key]
         local item = rawget(a, "item")
         if type(item) == "number" and a.category then
-            local members = byCat[a.category] or {}
-            byCat[a.category] = members
+            local members = byCategory[a.category] or {}
+            byCategory[a.category] = members
             members[#members + 1] = { key = key, item = item }
             out[key] = { item = item, window = tonumber(a.categoryCooldown) or 0, members = members }
         end
@@ -428,14 +428,14 @@ function M.new(seed)
         W.stopChannel(e)
     end
 
-    --- `e` used the item of category entry `cat` (M.itemCategories) of ability `key`, its cooldown `cd` s from now and
+    --- `e` used the item of category entry `group` (M.itemCategories) of ability `key`, its cooldown `cd` s from now and
     --- its category's hold `lag` s already run (a replay's log line placed after its time): the client answers the
     --- item's cooldown (observer "itemCooldown") and holds each other member for the category's cooldown, a longer
     --- running one never shortened, in the truth (cdUntil) and the client alike.
-    function W.itemUse(e, key, cat, cd, lag)
-        W.emit({ kind = "itemCooldown", src = e, item = cat.item, cd = cd })
-        local hold = cat.window - (lag or 0)
-        for _, m in ipairs(cat.members) do
+    function W.itemUse(e, key, group, cd, lag)
+        W.emit({ kind = "itemCooldown", src = e, item = group.item, cd = cd })
+        local hold = group.window - (lag or 0)
+        for _, m in ipairs(group.members) do
             if m.key ~= key and hold > 0 and W.t + hold > (e.cdUntil[m.key] or 0) + 1e-9 then
                 e.cdUntil[m.key] = W.t + hold
                 W.emit({ kind = "itemCooldown", src = e, item = m.item, cd = hold })

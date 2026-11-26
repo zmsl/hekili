@@ -373,7 +373,7 @@ function M.new(text, H, o)
     local keyOf, itemOf, rankIDs, cd, dur, form, spacing, engine, useOf = {}, {}, {}, {}, {}, {}, {}, {}, {}
     local computed = {} -- keys whose cooldown the kit computes: R.world's run instance answers it at each cast
     -- an item in a category (the on-use trinkets): its use answers its cooldown and holds the other members (apply)
-    local catOf = world.itemCategories(class)
+    local itemGroups = world.itemCategories(class)
     local keys = {}
     for key, a in pairs(class.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
@@ -866,8 +866,8 @@ function M.new(text, H, o)
                 -- member for the category's cooldown, a longer running one never shortened (truth and client alike)
                 -- shortcut: an item without a category (a consumable) still reads ready (0, 0), as before lane gear-1b;
                 -- answer it too with its own re-floor cause
-                if c > 0 and catOf[key] then
-                    W.itemUse(us, key, catOf[key], cdk, T - (R.pull + e.t))
+                if c > 0 and itemGroups[key] then
+                    W.itemUse(us, key, itemGroups[key], cdk, T - (R.pull + e.t))
                 end
                 local use = useOf[e.item]
                 if use and e.kind == "completed" then

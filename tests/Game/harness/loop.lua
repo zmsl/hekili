@@ -22,16 +22,16 @@ local world = require("Game.harness.world")
 local M = {}
 
 -- [class data] = its item categories (world.itemCategories), built once per class table
-local itemCats = setmetatable({}, { __mode = "k" })
+local itemGroups = setmetatable({}, { __mode = "k" })
 
 --- The press of `key` of class data `class` when it is an item in a category (an on-use trinket: lane gear-1b), else
 --- nil (the content resolves it): its use spell's cast (its first `copy`; no spell cooldown, the item's is answered
 --- through C_Item), off the GCD, free, the item's cooldown and its category's hold (W.itemUse) in its effect.
 function M.itemPress(class, key)
-    local cats = itemCats[class] or world.itemCategories(class)
-    itemCats[class] = cats
-    local cat = cats[key]
-    if not cat then
+    local groups = itemGroups[class] or world.itemCategories(class)
+    itemGroups[class] = groups
+    local group = groups[key]
+    if not group then
         return nil
     end
     local a = class.abilities[key]
@@ -42,7 +42,7 @@ function M.itemPress(class, key)
         offGcd = true,
         effect = function(W, e)
             e.cdUntil[key] = W.t + cd
-            W.itemUse(e, key, cat, cd)
+            W.itemUse(e, key, group, cd)
         end,
     }
 end

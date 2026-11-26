@@ -1,12 +1,11 @@
--- tests/Game/harness/item_cooldown_spec.lua (lane gear-1b): the replay worlds wear the request's trinkets, the fake
--- client calls them usable, and a logged use of an item with a category (the on-use trinkets) answers its cooldown and
+-- tests/Game/harness/item_cooldown_spec.lua (lane gear-1b; the worn trinkets: tests/Forever/wowsims_gear_spec.lua): a
+-- logged use of an item with a category (the on-use trinkets) answers its cooldown and
 -- holds the category's other members for the category's cooldown (never shortening a longer one), plain or secret by
 -- the observer's knob, through C_Item.GetItemCooldown and C_Container.GetItemCooldown.
 local replay = require("Game.harness.replay")
 local observer = require("Game.harness.observer")
 local drive = require("Game.harness.drive")
 local fake = require("Game.State.helpers.fake_api")
-local ws = require("Forever.helpers.wowsims")
 
 local WO = { level = 60, max = 100, pt = 1, weapons = { { 100, 150, 3.6 } } }
 
@@ -78,18 +77,6 @@ local function run(lines, k)
 end
 
 describe("the harness's item cooldowns", function()
-    it("wears the request's trinket slots (13, 14)", function()
-        local g = ws.gear("mage_arcane")
-        assert.are.same({ 22268 }, g[13])
-        assert.are.same({ 13968 }, g[14])
-        local c = ws.logged({
-            character = function()
-                return { items = { [16] = { 1 } } }
-            end,
-        }, "mage_arcane").character()
-        assert.are.same({ [13] = { 22268 }, [14] = { 13968 }, [16] = { 1 } }, c.items)
-    end)
-
     it("answers a use plain: the item's cooldown, the other member's window, each end ready", function()
         local us, R, got = run({ { 10, 800201 } }, { plain = true })
         assert.are.same({
@@ -175,14 +162,5 @@ describe("the harness's item cooldowns", function()
         assert.is_nil(loop.itemPress(H.Hekili.Class, "tonic")) -- no category: the content's own press
         W.t = 10
         assert.are.same({ false, "cooldown" }, { W.press(us, "charm", loop.itemPress(H.Hekili.Class, "charm")) })
-    end)
-
-    it("the client calls a worn trinket usable", function()
-        local headless = require("Game.harness.headless")
-        local Hh = headless.new({
-            character = { class = "MAGE", classID = 8, level = 60, known = {}, items = { [13] = { 800201 } } },
-        })
-        assert.is_true(Hh.api.C_Item.IsUsableItem(800201))
-        assert.is_false(Hh.api.C_Item.IsUsableItem(800202))
     end)
 end)
