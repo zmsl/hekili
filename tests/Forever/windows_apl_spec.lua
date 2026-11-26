@@ -3239,11 +3239,13 @@ describe("the replay drift guard is transparent (fable-eng3-decision.md Q1, Q3)"
     end
 end)
 
--- (fable-eng3-decision.md Q3) The replay gate's two checks for APL keys (wowsims.lua M.windowOps), driven as the replay
--- drives them: each poll's passes, then the checks' tick. `stub`: the belief's VS.WindowOp does nothing, beneath them.
-describe("the replay gate's APL window checks (fable-eng3-decision.md Q3)", function()
+-- (fable-eng3-decision.md Q3, fable-eng3b-decision.md Q2) The replay gate's checks for APL keys (wowsims.lua
+-- M.windowOps), driven as the replay drives them: each poll's Drain (the replay judged as it returns), its passes, then
+-- the checks' tick. `stub`: the belief's VS.WindowOp does nothing, beneath them. `casts[i]`: the cast IDs heard before
+-- poll i, or a function run then. `ooc`: combat ends right after the load (the polls start out of combat).
+describe("the replay gate's APL window checks (fable-eng3-decision.md Q3, fable-eng3b-decision.md Q2)", function()
     local ws = require("Forever.helpers.wowsims")
-    local function run(lists, casts, stub)
+    local function run(lists, casts, stub, ooc)
         boot()
         flags.fa, flags.fb = false, false
         if stub then
@@ -3251,9 +3253,17 @@ describe("the replay gate's APL window checks (fable-eng3-decision.md Q3)", func
         end
         local opsTick, done = ws.windowOps(H)
         load(lists)
+        if ooc then
+            H.Fire("PLAYER_REGEN_ENABLED")
+        end
         for i = 1, 6 do
-            for _, id in ipairs(casts[i] or {}) do
-                cast(id)
+            local c = casts[i]
+            if type(c) == "function" then
+                c()
+            else
+                for _, id in ipairs(c or {}) do
+                    cast(id)
+                end
             end
             tick()
             opsTick(t)
@@ -3287,15 +3297,73 @@ describe("the replay gate's APL window checks (fable-eng3-decision.md Q3)", func
         assert.are.equal(1, keys[key("w")].OPEN)
     end)
 
-    -- KNOWN LIMIT (eng-3b report): the Drain replays the OPEN, then folds both member casts and closes the row; the
-    -- up-or-closed form cannot tell that from a dead OPEN. No shipped replay starts a strict sequence (Arms's lines
-    -- wait on Stance Dance, off at the pin); the re-pin lane needs the candidate fix before it measures with it on.
-    it("a strict sequence whose members both land between two polls fails the up-or-closed form", function()
-        local failed, keys = run({
-            default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance",
-        }, { [2] = { BR, BS } })
+    local STRICT = {
+        default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance",
+    }
+
+    it("fails with the belief's WindowOp stubbed out: a strict sequence's OPEN sent, the key not up", function()
+        local failed, keys = run(STRICT, {}, true)
+        assert.is_true(keys[key("s")].OPEN >= 1)
+        assert.is_truthy(failed[1] and failed[1]:find(key("s") .. ": OPEN sent, not up", 1, true))
+    end)
+
+    -- Was the KNOWN LIMIT (eng-3b report): the Drain replays the OPEN, then folds both member casts and closes the row.
+    -- Judged at the replay, before the fold, the row is up: the replay did what was sent.
+    it("a strict sequence whose members both land between two polls: followed, the row down after the Drain", function()
+        local failed, keys, acct = run(STRICT, { [2] = { BR, BS } })
+        assert.are.same({}, failed)
         assert.are.equal(1, keys[key("s")].OPEN)
-        assert.are.same({ key("s") .. ": OPEN sent, not up" }, { failed[1] and failed[1]:match("^.-not up") })
+        assert.are.same({ 1, 1 }, { acct.sent, acct.applied })
+        assert.is_false(belief("s").up)
+    end)
+
+    -- The belief's counters restart at combat start inside the Drain that folds it, after the replay: the harness's own
+    -- count is what the check reads.
+    it(
+        "an OPEN sent out of combat, replayed by the Drain that folds the pull: counted applied by the harness",
+        function()
+            local failed, keys, acct = run(PLAIN, {
+                [2] = function()
+                    H.Fire("PLAYER_REGEN_DISABLED")
+                end,
+            }, false, true)
+            assert.are.same({}, failed)
+            assert.are.equal(1, keys[key("x")].OPEN)
+            assert.are.same({ 1, 1 }, { acct.sent, acct.applied })
+            assert.are.equal(0, VSI.winOps.applied) -- the belief's own count, zeroed by the pull after the replay
+            assert.is_true(belief("x").up)
+        end
+    )
+
+    -- An operation dropped before the pull (a STEP on a closed row) is still reported after combat starts.
+    it("an operation dropped before the pull is reported at the run's end", function()
+        local failed, _, acct = run(PLAIN, {
+            [1] = function()
+                VS.WindowOp(key("x"), STEP, 2) -- out of combat, the row closed: dropped at the replay
+            end,
+            [3] = function()
+                H.Fire("PLAYER_REGEN_DISABLED")
+            end,
+        }, false, true)
+        assert.is_truthy(failed[#failed] and failed[#failed]:find("dropped 1", 1, true), tostring(failed[#failed]))
+        assert.are.equal(1, acct.dropped)
+        assert.are.equal(0, VSI.winOps.dropped) -- the belief's own count, zeroed by the pull
+    end)
+
+    -- A reset_on_target_change row: the OPEN replayed and the target swap folded in the same Drain closes it; the replay
+    -- did what was sent.
+    it("a reset_on_target_change sequence: an OPEN replayed in the Drain that folds a target swap passes", function()
+        local failed, keys = run({
+            default = "actions+=/sequence,name=x,reset_on_target_change=1:bloodrage:berserker_stance\n"
+                .. "actions+=/defensive_stance",
+        }, {
+            [2] = function()
+                H.ctl.guid.target = "Creature-swap"
+                H.Fire("PLAYER_TARGET_CHANGED")
+            end,
+        })
+        assert.are.same({}, failed)
+        assert.is_true(keys[key("x")].OPEN >= 2) -- chosen again after the swap closed it
     end)
 end)
 

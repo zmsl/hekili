@@ -860,19 +860,27 @@ function M.windowGuard(H, poll)
     return tick, misses, predicted, believed
 end
 
---- (fable-eng3-decision.md Q3; design §12) The APL windows' two checks on headless instance `H`, counted through a
---- transparent wrapper on the belief's VS.WindowOp (the belief's own counters restart at combat start). Call
---- `tick(now)` after each poll's passes (a Drain, then the passes: headless.cycle). (1) Up or closed: a key whose last
---- OPEN or CLOSE was sent before the previous tick is up (OPEN; unless its declared length ran out or combat started or
---- ended since) or down (CLOSE) now, the Drain between having replayed it; no operation waits past a Drain. (2) No key
---- goes up in the belief more often than OPENs were sent for it. `done()` adds the belief's refused and dropped counts
---- (read at the fight's end) and returns the failures (text) and the counts per key: { OPEN, CLOSE, STEP, step1 (STEPs
---- to step 1), up (ticks seen up), step (the last seen up), parks (edges onto the park step past the last member) }.
+--- (fable-eng3-decision.md Q3, fable-eng3b-decision.md Q2; design §12) The APL windows' checks on headless instance
+--- `H`, through transparent wrappers on the belief's VS.WindowOp (the sends) and on I.WindowOps (the Drain's replay, its
+--- first windows step; the Drain calls it through `I`). Judged when the replay returns, before the Drain folds anything
+--- newer (member casts, combat end, a target swap, an expiry: the windows matrix's rules, not the replay's), one rule
+--- for every key, strict or plain: (1) up or closed: each key with an OPEN or CLOSE in the batch is up if its last one
+--- was an OPEN, down if a CLOSE; skipped and counted (`rebuilt`) for a replay in which the belief rebuilt its APL rows
+--- (W.gen changed). (2) The harness's own accounting across the call (the belief's counters restart at combat start,
+--- inside the same Drain's fold): the buffer's length at entry is the operations sent since the last replay (else
+--- lost at send: over the bound, or discarded by a Build), and applied + refused + dropped rise by that length; refused
+--- and dropped are summed over the run. Call `tick(now)` after each poll's passes (a Drain, then the passes:
+--- headless.cycle): no operation waits past a Drain, and no key goes up in the belief more often than OPENs were sent
+--- for it. `done()` adds the run's refused and dropped and returns the failures (text, the up-or-closed ones first in
+--- each replay), the counts per key { OPEN, CLOSE, STEP, step1 (STEPs to step 1), up (ticks seen up), step (the last
+--- seen up), parks (edges onto the park step past the last member) } and the run's { sent, applied, refused, dropped,
+--- rebuilt } (replays).
 function M.windowOps(H)
     local VS, VSI = H.ns.VirtualState, H.ns.VirtualStateInternal
-    local Q = VSI.winOps
-    local keys, fails, batch, due, upWas, stepWas, edges = {}, {}, {}, {}, {}, {}, {}
-    local sinceTick, dueAt, dueCombat, prevAt = 0, 0, false, 0
+    local Q, W = VSI.winOps, VSI.win
+    local keys, fails, batch, upWas, stepWas, edges = {}, {}, {}, {}, {}, {}
+    local acct = { sent = 0, applied = 0, refused = 0, dropped = 0, rebuilt = 0 }
+    local sinceTick, sinceReplay = Q.n, Q.n -- anything already buffered is replayed and counted as sent
     local function count(key)
         keys[key] = keys[key] or { OPEN = 0, CLOSE = 0, STEP = 0, step1 = 0, up = 0, parks = 0, step = 0 }
         return keys[key]
@@ -880,7 +888,7 @@ function M.windowOps(H)
     local op = VS.WindowOp
     VS.WindowOp = function(key, code, arg)
         local k = count(key)
-        sinceTick = sinceTick + 1
+        sinceTick, sinceReplay, acct.sent = sinceTick + 1, sinceReplay + 1, acct.sent + 1
         if code == 1 then
             k.OPEN, batch[key] = k.OPEN + 1, 1
         elseif code == 2 then
@@ -890,30 +898,47 @@ function M.windowOps(H)
         end
         return op(key, code, arg)
     end
+    local replay = VSI.WindowOps
+    VSI.WindowOps = function(...)
+        local n, a0, r0, d0, gen = Q.n, Q.applied, Q.refused, Q.dropped, W.gen
+        local r = replay(...)
+        local t = VSI.clock or 0
+        local da, dr, dd = Q.applied - a0, Q.refused - r0, Q.dropped - d0
+        if W.gen ~= gen then
+            acct.rebuilt = acct.rebuilt + 1
+        else
+            for key, code in pairs(batch) do
+                local up = VS.Window(key)
+                if code == 1 and not up then
+                    fails[#fails + 1] = ("%s: OPEN sent, not up at %.2f s"):format(key, t)
+                elseif code == 2 and up then
+                    fails[#fails + 1] = ("%s: CLOSE sent, still up at %.2f s"):format(key, t)
+                end
+            end
+        end
+        if n ~= sinceReplay then
+            fails[#fails + 1] = ("%d sent, %d buffered at the replay at %.2f s (lost at send)"):format(
+                sinceReplay,
+                n,
+                t
+            )
+        end
+        if da + dr + dd ~= n then
+            fails[#fails + 1] = ("%d replayed, applied %d refused %d dropped %d at %.2f s"):format(n, da, dr, dd, t)
+        end
+        acct.applied, acct.refused, acct.dropped = acct.applied + da, acct.refused + dr, acct.dropped + dd
+        for key in pairs(batch) do
+            batch[key] = nil
+        end
+        sinceReplay = 0
+        return r
+    end
     local function tick(now)
         local defs = VSI.def and VSI.def.aplWindows or {}
-        local dur = {}
-        for _, d in ipairs(defs) do
-            dur[d.key] = d
-        end
-        for key, code in pairs(due) do
-            local up = VS.Window(key)
-            local d = dur[key] and dur[key].duration
-            local ranOut = type(d) == "number" and now - dueAt >= d
-            if code == 1 and not up and not ranOut and dueCombat == (VSI.inCombat == true) then
-                fails[#fails + 1] = ("%s: OPEN sent, not up at %.2f s"):format(key, now)
-            elseif code == 2 and up then
-                fails[#fails + 1] = ("%s: CLOSE sent, still up at %.2f s"):format(key, now)
-            end
-            due[key] = nil
-        end
         if Q.n > sinceTick then
             fails[#fails + 1] = ("%d operations waiting past a Drain at %.2f s"):format(Q.n - sinceTick, now)
         end
-        for key, code in pairs(batch) do
-            due[key], batch[key] = code, nil
-        end
-        dueAt, dueCombat, prevAt, sinceTick = prevAt, VSI.inCombat == true, now, 0
+        sinceTick = 0
         for _, d in ipairs(defs) do
             local key = d.key
             local up, _, _, _, step = VS.Window(key)
@@ -935,10 +960,14 @@ function M.windowOps(H)
         end
     end
     local function done()
-        if Q.refused > 0 or Q.dropped > 0 then
-            fails[#fails + 1] = ("refused %d, dropped %d (last %s)"):format(Q.refused, Q.dropped, tostring(Q.lastDrop))
+        if acct.refused > 0 or acct.dropped > 0 then
+            fails[#fails + 1] = ("refused %d, dropped %d (last %s)"):format(
+                acct.refused,
+                acct.dropped,
+                tostring(Q.lastDrop)
+            )
         end
-        return fails, keys
+        return fails, keys, acct
     end
     return tick, done
 end

@@ -272,6 +272,8 @@ describe("the replay gate's APL window checks #slow #wowsims", function()
         local ok, err = pcall(ws.gate, p[3], content(p[1], W[p[2]], p[3], 60, p[8] or REPLAY_EXTRA), p[1], p[4], opts)
         assert.is_false(ok)
         assert.is_truthy(tostring(err):find("an APL window operation the belief did not follow", 1, true))
+        -- judged at the replay (fable-eng3b-decision.md Q2): the up-or-closed failure, listed first
+        assert.is_truthy(tostring(err):find("hha#Primary: OPEN sent, not up", 1, true), tostring(err))
     end)
 end)
 
