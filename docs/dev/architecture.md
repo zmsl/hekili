@@ -578,9 +578,9 @@ A refund booked after a pin since its cast leaves that pin measuring nothing (`p
 guard: they measure band values only, and the cast's booked spend and the late refund each start the pair over.
 
 **A gain that may not come** (L1832, cp-fact-4). A `now` declares a gain with a chance strictly between 0 and 100% with
-`mayGain(amount, resource)` (Rogue's Relentless Strikes below 100%): nothing is booked (owner L1397), and the slot's
-exact pins measure no regen across a window whose start is at or before the cast (`I.ResourceMayGain`; inclusive, so a
-pin in the cast's own frame starts no measuring window). Without it the next pin pair learned an unseen proc as regen
+`mayGain(amount, resource)` (Rogue's Relentless Strikes below 100%, Paladin's Sanctified Judgement below 3/3): nothing
+is booked (owner L1397), and the slot's exact pins measure no regen across a window whose start is at or before the
+cast (`I.ResourceMayGain`; inclusive, so a pin in the cast's own frame starts no measuring window). Without it the next pin pair learned an unseen proc as regen
 (Assassination 10 to 11.5-13 a second, then a finisher shown ready while short). The swing scale's window does not
 honour it yet (no pack declares one on a swing-paid slot). Band crossings measured 10 a second on the bands arm without it.
 Shortcut: a chance gain declared on a cast every 1 s (`I.PIN_GAP`) or less would skip every window, so that slot's regen
