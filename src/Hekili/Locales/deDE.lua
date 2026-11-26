@@ -873,6 +873,7 @@ L["could not load %s (%s)"] = "%s konnte nicht geladen werden (%s)"
 L["could not read your class at load; /reload"] = "deine Klasse ließ sich beim Laden nicht lesen; /reload"
 L["no Forever pack for %s; install %s"] = "kein Forever-Paket für %s; installiere %s"
 L["%s is for content API %s, this Hekili Forever for %s; update the older one"] = "%s ist für die Inhalts-API %s, dieses Hekili Forever für %s; aktualisiere das ältere"
+-- L["a content load check failed, so that content may be incomplete: %s"] = ""
 
 -- Hekili/UI/UI.lua
 L["Notifications"] = "Benachrichtigungen"

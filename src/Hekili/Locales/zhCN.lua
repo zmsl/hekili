@@ -873,6 +873,7 @@ L["could not load %s (%s)"] = "无法加载 %s（%s）"
 L["could not read your class at load; /reload"] = "加载时无法读取你的职业；请 /reload"
 L["no Forever pack for %s; install %s"] = "没有适用于 %s 的 Forever 优先级包；请安装 %s"
 L["%s is for content API %s, this Hekili Forever for %s; update the older one"] = "%s 适用于内容 API %s，而此 Hekili Forever 适用于 %s；请更新较旧的一方"
+-- L["a content load check failed, so that content may be incomplete: %s"] = ""
 
 -- Hekili/UI/UI.lua
 L["Notifications"] = "通知"
