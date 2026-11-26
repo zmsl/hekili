@@ -20996,8 +20996,8 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	va
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1293241 - |cFFFFD100|cffffd100window.hha.next.summon_hawk|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0015	|cFFFF000015.|r restart_sequence - |cFFFFD100|cffffd100window.hha.done|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0016	|cFFFF000016.|r sequence
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 19434
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 3044 - |cFFFFD100|cffffd100!action.summon_hawk.known&target.outside8|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
@@ -21186,7 +21186,6 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.var_name	de
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.var_name	name	Variable Name
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	name	Window Name
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	values.hha	hha
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	values.weave	weave
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.copyPack	desc	Copy Priority
@@ -26428,7 +26427,6 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.var_name	desc
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.var_name	name	Variable Name
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	name	Window Name
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	values.hha	hha
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	values.weave	weave
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.copyPack	desc	Copy Priority
@@ -28891,7 +28889,6 @@ options.packs.survival.Survival (wowsims.com).lists.var_name	desc	Specify a name
 options.packs.survival.Survival (wowsims.com).lists.var_name	name	Variable Name
 options.packs.survival.Survival (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.survival.Survival (wowsims.com).lists.window_name	name	Window Name
-options.packs.survival.Survival (wowsims.com).lists.window_name	values.hha	hha
 options.packs.survival.Survival (wowsims.com).lists.window_name	values.weave	weave
 options.packs.survival.Survival (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.survival.Survival (wowsims.com).pack.copyPack	desc	Copy Priority
@@ -29210,7 +29207,6 @@ options.packs.survival.Survival Melee (wowsims.com).lists.var_name	desc	Specify 
 options.packs.survival.Survival Melee (wowsims.com).lists.var_name	name	Variable Name
 options.packs.survival.Survival Melee (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.survival.Survival Melee (wowsims.com).lists.window_name	name	Window Name
-options.packs.survival.Survival Melee (wowsims.com).lists.window_name	values.hha	hha
 options.packs.survival.Survival Melee (wowsims.com).lists.window_name	values.weave	weave
 options.packs.survival.Survival Melee (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.survival.Survival Melee (wowsims.com).pack.copyPack	desc	Copy Priority
@@ -29519,7 +29515,6 @@ options.packs.survival.Survival Turret (wowsims.com).lists.var_name	desc	Specify
 options.packs.survival.Survival Turret (wowsims.com).lists.var_name	name	Variable Name
 options.packs.survival.Survival Turret (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.survival.Survival Turret (wowsims.com).lists.window_name	name	Window Name
-options.packs.survival.Survival Turret (wowsims.com).lists.window_name	values.hha	hha
 options.packs.survival.Survival Turret (wowsims.com).lists.window_name	values.weave	weave
 options.packs.survival.Survival Turret (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.survival.Survival Turret (wowsims.com).pack.copyPack	desc	Copy Priority

@@ -5,6 +5,7 @@
 ### New
 
 ### Changed
+- Beast Mastery Turret (wowsims.com): the Summon Hawk, Summon Hawk, Arcane Shot loop is now a sequence in the priority itself instead of a rotation window inside the class pack.
 - Retribution (wowsims.com): the opener at the pull (Judgement, then a seal, while moving to melee) is now a sequence in the priority itself, ended by the fight's first main-hand swing, instead of a rotation window inside the class pack.
 
 ### Fixed
