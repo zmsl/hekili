@@ -23,7 +23,7 @@
 # Omitted: cooldowns #1: item 18820
 # Omitted: cooldowns #2: item 250937
 
-actions.precombat=soul_fire
+actions.precombat=soul_fire,if=action.soul_fire.time_since>action.soul_fire.travel_time
 actions.precombat+=/immolate,if=!debuff.immolate.up
 actions=death_coil_defensive,if=health.known&health.pct<=settings.death_coil_defensive_health
 actions+=/healthstone,use_off_gcd=1,if=health.known&health.pct<=settings.healthstone_health

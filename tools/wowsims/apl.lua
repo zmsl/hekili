@@ -25,6 +25,11 @@
 --      unless the aura's duration is at most the ability's cooldown (moot: the cooldown already hides it); a duration
 --      or cooldown the kit computes (a function, which the stub state may not answer) is unknown, never moot (CN21);
 --    - it summons a totem of its own key: `!totem.<element>.up` (the element's slot);
+--    - it travels (the kit's flightTime, else its velocity) and a later line follows in its list:
+--      `action.<key>.time_since>action.<key>.travel_time` (L504: in game the player is out of combat until it lands,
+--      so the line would show again while it flies and hide the next one; the term releases itself, a miss included),
+--      unless a fixed cooldown already hides it (a computed one is unknown, never moot; `in_flight` never answers for
+--      a kit ability with no `impact`);
 --    - otherwise no guard (the ability's own usability and cooldown decide).
 --    A guard term the line's condition already has as an `&` term is not added twice (L102).
 --    A mutually exclusive group (lines of one list whose handlers remove each other's aura) guards its first line by
@@ -2588,6 +2593,14 @@ function guard(c, name, out, origin, omitted)
                 end
             elseif r and r.element then
                 eff[i] = r
+            elseif i < #out and type(a) == "table" then
+                -- L504: out of combat until it lands, so it would show again while it flies; the engine's travel_time
+                -- (State.lua): the kit's flightTime when set, else the target's range over the velocity. Moot under a
+                -- cooldown (it already hides the line); a computed one is unknown, never moot (CN21).
+                local f, cd = tonumber(a.flightTime), fixed(a, "cooldown")
+                if (f or tonumber(a.velocity) or 0) > 0 and not (type(cd) == "number" and cd > 0) then
+                    eff[i] = { travel = x }
+                end
             end
         end
     end
@@ -2604,6 +2617,8 @@ function guard(c, name, out, origin, omitted)
                 end
             end
             g = parts
+        elseif r and r.travel then
+            g = { ("action.%s.time_since>action.%s.travel_time"):format(r.travel, r.travel) }
         elseif r then
             g = { "!totem." .. r.element .. ".up" }
         end

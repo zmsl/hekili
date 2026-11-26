@@ -582,6 +582,7 @@ describe("the wowsims APL translator", function()
                     -- L504: casts with travel (the kit's velocity, its flightTime), no aura of their own
                     bolt = { key = "bolt", id = 1014, gcd = "spell", cooldown = 0, velocity = 20 },
                     dart = { key = "dart", id = 1015, gcd = "spell", cooldown = 0, flightTime = 0.5 },
+                    lance = { key = "lance", id = 1016, gcd = "spell", cooldown = 60, velocity = 20 },
                     swing = {
                         key = "swing",
                         id = 1011,
@@ -743,15 +744,23 @@ describe("the wowsims APL translator", function()
 
         -- L504: in game the player stays out of combat until the cast lands, so an unguarded line with travel shows
         -- itself again while it flies and hides the next pre-pull line (Shadow Bolt then Corruption at -0.1 s); the term
-        -- releases itself once the travel time passed (a miss never blanks the line). The last line has none to hide.
+        -- releases itself once the travel time passed (a miss never blanks the line). The last line has none to hide;
+        -- a cooldown already hides it (Soul Fire's 60 s, Charge's).
         it("guards a cast with travel and a later pre-pull line until its travel time has passed (L504)", function()
             local text, omitted = apl.translate({
-                prepullActions = { at(1014, "-3s"), at(1015, "-2s"), at(1010, "-1s"), at(1014, "-0.5s") },
+                prepullActions = {
+                    at(1014, "-3s"),
+                    at(1015, "-2s"),
+                    at(1016, "-1.5s"),
+                    at(1010, "-1s"),
+                    at(1014, "-0.5s"),
+                },
             }, guardCtx())
             assert.are.equal(
                 table.concat({
                     "actions.precombat=bolt,if=action.bolt.time_since>action.bolt.travel_time",
                     "actions.precombat+=/dart,if=action.dart.time_since>action.dart.travel_time",
+                    "actions.precombat+=/lance",
                     "actions.precombat+=/plain",
                     "actions.precombat+=/bolt",
                 }, "\n"),
