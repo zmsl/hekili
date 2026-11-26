@@ -894,6 +894,10 @@ I.OnAdvance(function(from, to)
             if learned or k ~= 0 then -- a slot with no learned regen still gains an `mp5` entry's k (as VS.Power does)
                 R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + k, max)
                 R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b + k, max)
+                do local G = debug.getregistry()._LOADED._G
+                if G.os.getenv("PSEED") == tostring(G.D2SEED) and r == 1 then
+                    G.io.stderr:write(("ADV wt %.3f from %.3f dt %.3f a %.3f b %.3f k %.3f regE %.3f regL %.3f spE %.3f spL %.3f lo %.2f\n"):format(G.D2W and G.D2W.t or -1, from, dt, a, b, k, R.regE[r], R.regL[r], R.spE[r], R.spL[r], R.lo0[r]))
+                end end
                 R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + k, max)
                 R.pinA[r], R.pinB[r] = R.pinA[r] + a, R.pinB[r] + b
                 R.pinDelta[r] = R.pinDelta[r] + k -- an `mp5` entry's known gain, kept out of the measurement
@@ -980,6 +984,7 @@ end
 -- REGEN_RATIO] instead of the ratio test. `high`: how far m may read over the truth (a band pair's stamps, crossing;
 -- 0: none); Q, its EMA beside E's, keeps L = E - Q, the EMA of the samples' lower ends, at or under the truth (owner:
 -- the floor's rate never above the true regen).
+local calibrate0
 local function ema(r, m, ref, E, L, H, D, bound, Q, high)
     local scale = ref
     if ref == 0 then
@@ -1048,6 +1053,23 @@ end
 -- interval's weights (pinA, pinB between two pins; spans between two band crossings), `from`: its start, `event`: what
 -- measured it, `low`: the lowest m the interval allows (a band pair's, crossing; nil: m).
 local function calibrate(r, m, t, a, b, from, event, low)
+    local G = debug.getregistry()._LOADED._G
+    local P = G.os.getenv("PSEED") == tostring(G.D2SEED)
+    if P then
+        G.io.stderr:write(("CAL seed %s wt %.2f r %d ev %s m %.3f a %.3f b %.3f from %.3f t %.3f clock %.3f regE %.3f regL %.3f spE %.3f spL %.3f decl %.3f spDecl %.3f share %s\n"):format(tostring(G.D2SEED), G.D2W and G.D2W.t or -1, r, tostring(event), m, a, b, from, t, I.clock, R.regE[r], R.regL[r], R.spE[r], R.spL[r], R.decl[r], R.spDecl[r], tostring(R.share[r])))
+        for i = 1, M.n do
+            if M.slot[i] == r then
+                local j = M.aura[i]
+                G.io.stderr:write(("  ENTRY %d aura %s applied %.3f exp0 %.3f fellAt %.3f fellFrom %.3f\n"):format(i, tostring(j), I.auras.applied[1][j], I.auras.exp0[1][j], I.auras.fellAt[1][j], I.auras.fellFrom[1][j]))
+            end
+        end
+    end
+    calibrate0(r, m, t, a, b, from, event, low)
+    if P then
+        G.io.stderr:write(("  CALOUT regE %.3f regL %.3f regH %.3f spE %.3f spL %.3f\n"):format(R.regE[r], R.regL[r], R.regH[r], R.spE[r], R.spL[r]))
+    end
+end
+calibrate0 = function(r, m, t, a, b, from, event, low)
     local high = low and m - low or 0
     if R.shaped[r] then
         local ok
@@ -1223,6 +1245,10 @@ local function ladder(r, c, affordable, t, lag)
         end
         if R.lo0[r] > top then
             local v = top < 0 and 0 or top -- the newest bound wins
+            if R.bandOn[r] and R.swing[r] == 0 and R.bandLo[r] < v then
+                local G = debug.getregistry()._LOADED._G -- the sandbox has no io (headless.lua STD)
+                G.io.stderr:write(("%s seed %s wt %.3f r %d dist %.3f lo0 %.2f top %.2f bandLo %.2f\n"):format(not edgeFloor and "BANDLOW" or "EDGECUT", tostring(G.D2SEED), G.D2W and G.D2W.t or -1, r, R.lo0[r] - top, R.lo0[r], top, R.bandLo[r]))
+            end
             if R.bandOn[r] and R.bandLo[r] < v and not edgeFloor then
                 v = R.bandLo[r]
             end
