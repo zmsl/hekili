@@ -368,6 +368,12 @@ function M.calibrate()
     end
     return (os.clock() - c0) * 1000, sum
 end
+-- LuaJIT compiles this tight loop to ~1 ms (6.8 ms on PUC) while the engine's code gains far less, which would inflate the
+-- ratio about 3x: keep the calibration interpreted, the yardstick for "engine cost per interpreted read".
+local luajit = rawget(_G, "jit")
+if luajit then
+    luajit.off(M.calibrate, true)
+end
 
 --- Each tick's ms (`cpu`) over its window's calibration: tick i's window is ceil(i / `every`), `cals[w]` timed just
 --- before that window's first tick. Appended to `out` (a new list if nil), which is returned.
