@@ -635,7 +635,13 @@ M.FLICKER = {
     -- -> 0.992, dps A/B 0.971 -> 0.969, readyShort 0 / 0; bands arm unchanged (loOver 0, heldReady 145, regE 10)
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 167
     -- -> 166; held 130 on forever: cp-fact L1832 + cp-fact-4 (their rows above)
-    ["Assassination"] = { loOver = 0, flicker = 0, retracted = 0, heldReady = 166, cause = { heldReady = "L1832 + L1814" } }, -- 0 / 0 / 0, 0
+    ["Assassination"] = {
+        loOver = 0,
+        flicker = 0,
+        retracted = 0,
+        heldReady = 166,
+        cause = { heldReady = "L1832 + L1814" },
+    }, -- 0 / 0 / 0, 0
     -- 0.1 -> 0.2 (gap CE; 0.15 / 0 / 0.02, was 0.04 / 0 / 0, oracle 0.04 / 0.06 / 0.04): seeds 1-20 flips 2 (round 2)
     -- -> 7, base 15; the extra 5 are fight 8, t 23.0-24.2, sinister_strike vs slice_and_dice, no capped read in either
     -- tree, flips match base's tick for tick; Sinister Strike's entry is gated on `!(buff.slice_and_dice.remains<=2)`,
