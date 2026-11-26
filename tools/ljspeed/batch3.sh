@@ -10,8 +10,7 @@ FIVE="$S/loop_warlock_destruction_spec.lua $S/loop_warlock_shadow_brand_spec.lua
 R=tools/ljspeed/run.sh
 B=../ljs-base
 rm -rf "$B"
-git clone -q . "$B"
-git -C "$B" checkout -q "$BASE"
+git worktree add -q --detach "$B" "$BASE" # shares the partial clone's promisor (missing blobs fetched lazily)
 ln -s "$(readlink -f .lj)" "$B/.lj"
 mkdir -p .ab/ljspeed
 export LJAB=1
