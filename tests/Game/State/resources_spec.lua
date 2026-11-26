@@ -565,40 +565,13 @@ describe("resources", function()
             I.Fold(t, false)
         end
 
-        -- lane 6 (L1827 row 4): the 0 skipped is the declared pause's (a `mult` 0 entry of the slot up), not a guess from
-        -- where the slot rests
-        it("skips a 0 while a declared pause of the slot is up, takes one with none up, and a positive read", function()
-            boot({
-                abilities = {},
-                abilityIds = {},
-                abilitySlot = {},
-                resources = {
-                    {
-                        key = "energy",
-                        type = ENERGY,
-                        token = "ENERGY",
-                        max = 100,
-                        rest = true,
-                        regen = 10,
-                        mult = { { aura = "pause_a", mult = 0 } },
-                    },
-                },
-                auras = { { key = "pause_a", id = 1051 } },
-                auraIds = { { 1051 } },
-                talents = {},
-                units = { "player", "target" },
-            })
-            api = I.api
-            VS.Start(api)
-            I.AuraModel(1, 1, 100, 107, 1, 100, 0) -- the pause up 100 to 107
+        it("skips a 0 for a resource resting at its maximum, and takes a positive read", function()
             api.ctl.regen[ENERGY] = { 0, 0 }
             poll(105)
-            assert.are.same({ 10, -1e9 }, { VS.Regen(ENERGY, 105).est, I.res.readT[1] })
-            poll(110)
-            assert.are.same({ 0, 110 }, { VS.Regen(ENERGY, 110).est, I.res.readT[1] })
+            assert.are.equal(10, VS.Regen(ENERGY, 105).est)
             api.ctl.regen[ENERGY] = { 12, 12 }
-            poll(115)
-            assert.are.equal(12, VS.Regen(ENERGY, 115).est)
+            poll(110)
+            assert.are.equal(12, VS.Regen(ENERGY, 110).est)
         end)
 
         it("takes a 0 for a resource resting at 0, as before", function()
@@ -2098,7 +2071,7 @@ describe("resources", function()
             assert.are.same({ 2, 10 }, { I.res.regE[1], I.res.spE[1] })
         end)
 
-        it("reads both parts out of combat (spirit + mp5, casting the mp5 part); a 0 with no pause up as 0", function()
+        it("reads both parts out of combat: not casting is spirit + mp5, casting the mp5 part", function()
             local api = fake.new()
             I.api = api
             VS.Start(api)
@@ -2111,10 +2084,9 @@ describe("resources", function()
             poll(105)
             assert.are.same({ 3, 11 }, { I.res.regE[1], I.res.spE[1] })
             assert.are.same({ 14, 3 }, { VS.Regen(MANA, 105).est, VS.Regen(MANA, 105, true).est })
-            -- a total 0 with no declared pause (`mult` 0 entry) up is a rate of 0, wherever the slot rests (L1827 row 4)
-            api.ctl.regen[MANA] = { 0, 0 }
+            api.ctl.regen[MANA] = { 0, 0 } -- a total 0 for a slot at rest at its maximum: no news
             poll(110)
-            assert.are.equal(0, VS.Regen(MANA, 110).est)
+            assert.are.equal(14, VS.Regen(MANA, 110).est)
         end)
 
         -- The lower bound mana floors (D7, `mana.pct>=N`) are judged on: the build assumes rest, the floor too (mana is

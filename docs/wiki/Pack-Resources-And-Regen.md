@@ -119,7 +119,7 @@ A rate entry changes the continuous rate while a player aura is up. It has `aura
 
 | Field | Meaning |
 |---|---|
-| `mult` | The whole rate times this. 0 stops the resource, as Bear Form stops energy; while it is up, the belief takes the game's out-of-combat rate of 0 as the pause, not as a rate. |
+| `mult` | The whole rate times this. 0 stops the resource, as Bear Form stops energy. |
 | `spirit` | The spirit part of the rate times this, a number or a function |
 | `share` | This share of the spirit part continues inside the five-second rule, added to the meta's `share` and capped at all of it |
 | `mp5` | This much more a second, inside and outside the five-second rule |
@@ -148,7 +148,7 @@ A race applies a rate entry with `race:RegisterRegenMod({ resource, aura, ... })
 | `decayInterval` | function | The seconds between decay steps; with `decay`, the decay is stepped |
 | `fsr` | table | The five-second rule's parts ([below](#the-five-second-rule)) |
 | `refundOnAvoid` | number | The class's default share of an avoided ability's cost given back ([below](#refunds)) |
-| `rest` | `"max"` or `"zero"` | Where the pool rests out of combat. Energy and mana declare `"max"`. Without it, 0, as rage rests. |
+| `rest` | `"max"` or `"zero"` | Where the pool rests out of combat. Energy and mana declare `"max"`. Without it, 0, as rage rests. On a `"max"` pool the game's out-of-combat rate of 0 is taken as a form's pause, not as a rate. |
 | `onTarget` | boolean | True when the game binds the count to one target, as combo points: only the current target's count is usable |
 | `points` | boolean | True for a count rather than a pool: a race's percentage maximum bonus never scales it |
 

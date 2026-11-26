@@ -796,18 +796,6 @@ local function readAt(r, t)
     end
     return f, k, mixed, s
 end
-
---- Whether a declared pause of slot r (a regen entry with `mult` 0, such as a form that stops the pool) is believed up
---- at t: the out-of-combat read's 0 is then the pause's, no rate (Sources/Power.lua; lane 6, L1827 row 4). Allocates
---- nothing.
-function I.RegenPaused(r, t)
-    for i = 1, M.n do
-        if M.slot[i] == r and M.mult[i] == 0 and I.AuraUpAt(1, M.aura[i], t) then
-            return true
-        end
-    end
-    return false
-end
 local pendAct = {} -- by slot: an `fsr` slot's casting read under a share-only entry, unmixed at its spirit read (-1 none)
 
 -- Slot r's regen weights over (from, from + dt]: the integrals of coefAt's fa, fb and k, split at the window's end and
