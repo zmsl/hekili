@@ -1136,7 +1136,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                     end
 
                 elseif holdOffOnly > 0 and ability and not holdPass[ action ]
-                    and not ( holdOffOnly == 1 and entry.use_off_gcd == 1 and ability.gcd == "off" ) then
+                    and not ( holdOffOnly == 1 and ( entry.use_off_gcd == 1 or state.itemsOffGCD ) and ability.gcd == "off" ) then
                     -- a strict hold (rulings 23, 29): outside the sequence only window lines and, by default, use_off_gcd=1 off-GCD lines
                     if debug then self:Debug( "[---] %s ( %s - %d ) held by a strict sequence; skipping...", action, listName, actID ) end
 
@@ -1329,7 +1329,9 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                     if aScriptPass then
                                         if action == "use_items" then
                                             self:AddToStack( scriptID, "items", caller )
+                                            state.itemsOffGCD = entry.use_off_gcd == 1 -- the line's flag holds for the items it walks (L1960)
                                             rAction, rWait, rDepth = self:GetPredictionFromAPL( dispName, "UseItems", "items", slot, rAction, rWait, rDepth, scriptID )
+                                            state.itemsOffGCD = false
                                             if debug then self:Debug( "Returned from Use Items; current recommendation is %s (+%.2f).", rAction or "NO ACTION", rWait ) end
                                             self:PopStack()
                                         else
@@ -1782,7 +1784,7 @@ local function nextPrediction( self, dispName, packName, slot )
     twipe( InUse )
     inPrecombat = false -- in case a walk was interrupted
     -- the sequence walk's flags too (a dropped thread, a raising sequence_ready handler)
-    holdOffOnly, seqStartStep, state.seqBypass, state.gateSkip = 0, 0, 0, false
+    holdOffOnly, seqStartStep, state.seqBypass, state.gateSkip, state.itemsOffGCD = 0, 0, 0, false, false
     state.ready = false
 
     for k, v in pairs( listCache ) do tinsert( lcPool, v ); twipe( v ); listCache[ k ] = nil end
