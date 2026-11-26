@@ -137,7 +137,15 @@
 --    variable or APL entry (an action, a group, a move entry; emitted or omitted) is an error (CN12).
 --    `remainingTime` is `fight_remains`: on Forever the target's estimated time to die, "unknown" (3600 s) with several
 --    enemies or no estimate: an API-forced deviation (the replay world answers the log's time to its end: R42,
---    tests/Game/harness/loop.lua). `multipleCdUsages` without a
+--    tests/Game/harness/loop.lua). L1902 (the owner's rule; Fable rulings, fable-ttd-unclear-decision.md): a
+--    target-bound occurrence, its value lost if this target dies first, is `target.time_to_die` instead, with a
+--    `# Deviation:` line. Per occurrence, a side holding only it and numbers, in a cmp or math node: against a target
+--    aura's duration or remaining time (`debuff.`), or a cast (+ travel) landing on the target (`action.<key>.cast`);
+--    against a flat number where the line's action applies a target aura (its handler, rule 1's `effect`); the
+--    recipe's `targetBound` ({ [action key] = the wowsims variable it is read through, or true inline }; one that
+--    matches nothing is an error). A racial, item or own-cooldown line (it reads `cooldown.<key>.duration`) and an
+--    automatic one stay `fight_remains`; so does every other read. A hoisted variable (CN25) whose readers classify it
+--    differently is an error. `multipleCdUsages` without a
 --    base spell is wowsims's GetBool on it: `alignCdEnd` `(fight_remains<=D|fight_remains>(CD+(D/2)))`, D the
 --    spell's buff's duration (`buff.<key>.duration`), CD `cooldown.<key>.duration`; without `alignCdEnd` true; with a
 --    base spell unsupported.
@@ -391,13 +399,16 @@
 --    `debuff.<key>.up` and `dotIsActiveOnAnyTarget` is `dotIsActive`, each on the current target with a `# Deviation:`
 --    line (rule 17's precedent; "any" errs the other way: a DoT on another target reads down); of the current target
 --    (wowsims's default unit) `targetIsActive` is true, `timeUntilTargetActive` 0 (a line is read only with the target
---    up) and `timeUntilTargetDies` `fight_remains` (one target, no despawn schedule: wowsims's fight end, as
---    `remainingTime`); another target unit is unsupported, for these and `isExecutePhase`. CN24, an API-forced
+--    up) and `timeUntilTargetDies` `target.time_to_die` (L1902 rule 0: the source's own choice, no deviation);
+--    another target unit is unsupported, for these and `isExecutePhase`. CN24, an API-forced
 --    deviation: Forever gives no other target's time to die, so an entry reading another target's (wowsims's
 --    NextTarget, Feral's 2/3-target lists) is omitted with that reason. A comparison of the current target's with
---    `remainingTime` (both `fight_remains` here, gap AN: Guardian's "dies before the fight ends") is a constant term,
---    folded as S4's: false for `<`, `>` and `!=`, true for `<=`, `>=` and `=`, with a `# Deviation:` line and the
---    reason on an entry it empties. `numActiveAdds` (no boss/add
+--    `remainingTime` (gap AN: Guardian's "dies before the fight ends"; L1902 dropped its constant fold) is the raw
+--    estimates', `target.real_ttd` against `longest_ttd` (the look-ahead offset moves both alike; an unknown one is 3600
+--    on both sides), under one enemy's alias: `(active_enemies<=1|...)` for `<=`, `>=`, `=` and
+--    `(active_enemies>1&...)` for `<`, `>`, `!=` (one enemy: the old fold's constant), with a `# Deviation:` line. No
+--    pack at the pins reads it; one that does lands after the multi-target `fight_remains` (Fable condition (i)).
+--    `numActiveAdds` (no boss/add
 --    split in the engine) and `remainingCastTime` (no read mapped; no APL uses it) stay unsupported.
 -- Absent enum fields (protojson omits a zero value; zeros from the pinned proto/*.proto): rule 16's option is its
 -- recipe `zero`; every other enum read here has an "unknown" zero that wowsims rejects, so an absent one is
@@ -650,6 +661,7 @@ function M.context(set, r, log, player, encounter, tank)
         exclusive = r.exclusive or {},
         requires = r.requires or {},
         condition = r.condition or {}, -- rule 7: { [action key] = SimC expression }, an owner deviation's condition
+        targetBound = r.targetBound or {}, -- L1902: { [action key] = wowsims variable name or true (inline) }, T
         windowVars = r.windowVars or {}, -- rule 10: { [variable name] = window }, a time since read from the window
         ranges = r.ranges or {}, -- rule 19: { [action key] = { min, max } yards }, the DB2's, where the APL gives none
         sequences = r.sequences == true, -- rules 14, 14b: sequences as APL sequence lines (windows Phase 3, per recipe)
@@ -1082,8 +1094,42 @@ local function currentTarget(k, v, why)
     end
 end
 local OTHER_DEATH = ": Forever gives no other target's time to die" -- CN24, API-forced
-local FIGHT_END = "timeUntilTargetDies against remainingTime: the target's time to die is fight_remains here (gap AN),"
-    .. " so the comparison is a constant."
+local FIGHT_END = "timeUntilTargetDies against remainingTime: with one enemy both are its one estimate (the comparison's"
+    .. " constant); with several, the target's estimate against the longest-living enemy's, before the look-ahead."
+local TARGET_BOUND = "remainingTime is the target's time to die on this line: its value is lost if this target dies"
+    .. " first (owner rule, L1902)."
+-- L1902: a remainingTime occurrence's mark while its line translates, resolved per line (`resolved`): T the target's
+-- time to die, A the target's on a line whose action applies a target aura, U the fight's
+local RT = { U = "wowsims_rt_u", A = "wowsims_rt_a", T = "wowsims_rt_t" }
+
+-- L1902: remainingTime here, T where the recipe's `targetBound` names this line's action with the wowsims variable it
+-- is read through (`true`: read inline), else U
+local function remaining(c)
+    local want = c.self and c.targetBound[c.self]
+    if want ~= nil and want == (c.varName or true) then
+        c.boundUsed[c.self] = true
+        return RT.T
+    end
+    return RT.U
+end
+
+-- L1902, per occurrence: side `s` holding only remainingTime marks and numbers, against the other side `o` of a cmp or
+-- math node: T against a target aura's duration or remaining time or a cast (+ travel) landing on the target, A against
+-- a flat number
+local function marked(s, o)
+    if not (s and o and s:find("wowsims_rt_", 1, true)) or (s:gsub("wowsims_rt_%a", "")):find("%a") then
+        return s
+    elseif
+        o:find("debuff%.[%w_]+%.duration")
+        or o:find("debuff%.[%w_]+%.remains")
+        or o:find("action%.[%w_]+%.cast")
+    then
+        return (s:gsub("wowsims_rt_[ua]", RT.T))
+    elseif not o:find("%a") then
+        return (s:gsub(RT.U, RT.A))
+    end
+    return s
+end
 local FACING = "frontOfTarget is the request's in-front setting (%s the target); the client gives no facing."
 local MOB_TYPE = "targetIsMobType is the request's target type (%s); the client's creature type is not read."
 local SWAP_SET = "activeItemSwapSet %s is a constant: Hekili never swaps items, so the main set is always the one on."
@@ -1200,6 +1246,32 @@ function M.terms(s)
     return n
 end
 
+local effect -- below (rule 1)
+
+-- L1902: condition text `s` with its remainingTime marks resolved for this line. A racial, item or own-cooldown line
+-- (point 3: it reads `cooldown.<its key>.duration`) and an automatic one are fight-length; else T reads the target's
+-- time to die, as A does where the line's action applies a target aura (its handler), and U the fight's.
+local function resolved(c, s)
+    if not (s and s:find("wowsims_rt_", 1, true)) then
+        return s
+    end
+    local a = c.self and c.set.abilities[c.self] or {}
+    local fight = c.auto
+        or (c.set.racial or {})[c.self]
+        or a.item
+        or a.items
+        or (c.self and s:find("cooldown." .. c.self .. ".duration", 1, true))
+    local fx = not fight and c.self and effect(c, c.self)
+    local hits
+    s, hits = s:gsub(RT.T, fight and "fight_remains" or "target.time_to_die")
+    local n
+    s, n = s:gsub(RT.A, (fx and fx.unit == "debuff") and "target.time_to_die" or "fight_remains")
+    if not fight and ((fx and fx.unit == "debuff" and n > 0) or hits > 0) then
+        deviate(c, TARGET_BOUND)
+    end
+    return (s:gsub(RT.U, "fight_remains"))
+end
+
 -- Variable `name`'s translated text `s` as read here (CN25). A text reading a window stays inline (the line's own
 -- window recheck, Scripts.lua ReadsWindow), as does one reading the target's range (rule 19 scans the line's own
 -- `target.within`/`target.outside`/`in_range` terms) and one with a comma (the SimC line's separator).
@@ -1214,6 +1286,12 @@ local function hoisted(c, name, s)
         or s:find(",", 1, true)
     then
         return s
+    end
+    local raw = name .. "\0" .. s
+    s = resolved(c, s) -- one line for every reader: they must agree (L1902)
+    c.hoistRT[raw] = c.hoistRT[raw] or s
+    if c.hoistRT[raw] ~= s then
+        error(("CN25: variable %s reads remainingTime that its readers classify differently (L1902)"):format(name), 0)
     end
     local base, k = "v_" .. M.snake(name), 1
     local x = base
@@ -1253,10 +1331,12 @@ local function value(c, n, pct)
             end
             c.known[M.KNOWN[k]] = true
         end
-        return M.VALUES[k], false
+        return k == "remainingTime" and remaining(c) or M.VALUES[k], false
     elseif k == "variableRef" then
-        local n0 = c.movedN or 0
+        local n0, outer = c.movedN or 0, c.varName
+        c.varName = v.name
         local s, u = value(c, c.vars[v.name] or unsupported("variable " .. v.name), pct)
+        c.varName = outer
         movedVar(c, v.name, n0, u)
         return hoisted(c, v.name, s), u
     elseif k == "unitMovementSpeed" or k == "unitDistance" then -- rule 18 (rule 11 compares yards in bool())
@@ -1283,6 +1363,7 @@ local function value(c, n, pct)
         if u == true then
             return nil, true
         end
+        l, r = marked(l, r), marked(r, l)
         return "(" .. l .. op .. r .. ")", u
     elseif k == "min" or k == "max" then -- wowsims's newValueMin/Max: a nil term dropped, nil when every term is
         local parts, us = {}, {}
@@ -1369,9 +1450,9 @@ local function value(c, n, pct)
     elseif k == "timeUntilTargetActive" then -- CN4: the current target is up while a line reads it
         currentTarget(k, v)
         return "0", false
-    elseif k == "timeUntilTargetDies" then -- CN4: one target, no schedule: wowsims's fight end, as remainingTime
+    elseif k == "timeUntilTargetDies" then -- L1902 rule 0: the current target's, the source's own choice
         currentTarget(k, v, OTHER_DEATH)
-        return M.VALUES.remainingTime, false
+        return "target.time_to_die", false
     elseif k == "totemRemainingTime" then
         if v.totemType == nil then -- TypeUnknownTotem (0, proto/shaman.proto): wowsims's nil node
             return nil, true
@@ -1523,15 +1604,23 @@ local function bool(c, n)
         local l, lu = value(c, v.lhs, percentRead(c, v.rhs))
         local r, ru = value(c, v.rhs, percentRead(c, v.lhs))
         local op = M.OPS[v.op] or unsupported("op " .. tostring(v.op))
-        if l == M.VALUES.remainingTime and r == l then -- CN24: the target's death against the fight's end, a constant
+        local tl, tr = l == "target.time_to_die", r == "target.time_to_die"
+        if (tl or tr) and (tl and r or l):match("^wowsims_rt_%a$") then
+            -- CN24 (L1902): the target's death against the fight's end. One enemy: the one estimate, S4's constant
+            -- (false for `<`, `>`, `!=`); several: the raw estimates, as the offset moves both alike (an unknown 3600
+            -- each: the constant again)
             deviate(c, FIGHT_END)
-            c.folds[#c.folds + 1] = FIGHT_END -- S4: an entry this fold empties keeps the reason on its `never`
-            return nil, v.op == "OpLe" or v.op == "OpGe" or v.op == "OpEq", false
+            local raw = (tl and "target.real_ttd" or "longest_ttd") .. op .. (tl and "longest_ttd" or "target.real_ttd")
+            if v.op == "OpLe" or v.op == "OpGe" or v.op == "OpEq" then
+                return "(active_enemies<=1|" .. raw .. ")", nil, false
+            end
+            return "(active_enemies>1&" .. raw .. ")", nil, false
         end
         local u = nilOr(lu, ru)
         if u == true then
             return nil, nil, true
         end
+        l, r = marked(l, r), marked(r, l)
         -- rule 22: our mana under a number, as the number's share of the kit's pool too
         -- shortcut: a whole-number share with `<=` can miss lo == N at the kit's pool by float error (the engine's
         -- 100*(lo/max)); none at the pins, add a margin if one appears.
@@ -1784,8 +1873,10 @@ local function bool(c, n)
         end
         return "(window." .. w .. ".up&window." .. w .. ".elapsed" .. op .. x .. ")", nil, u
     elseif k == "variableRef" then
-        local n0 = c.movedN or 0
+        local n0, outer = c.movedN or 0, c.varName
+        c.varName = v.name
         local s, b, u = bool(c, c.vars[v.name] or unsupported("variable " .. v.name))
+        c.varName = outer
         movedVar(c, v.name, n0, u)
         return hoisted(c, v.name, s), b, u
     elseif c.selectValue[k] then -- rule 16
@@ -1986,12 +2077,13 @@ end
 
 local function condition(c, n)
     local outer, mine = c.known, {} -- rule 23: the enablement terms this condition's reads need
-    c.known = mine
+    c.known, c.varName = mine, nil
     local ok, s, b, u = pcall(bool, c, n)
     c.known = outer
     if not ok then
         error(s, 0)
     end
+    s = resolved(c, s)
     if u ~= true and b == false then
         return false
     elseif u ~= true and s then
@@ -2366,6 +2458,7 @@ local function entryBody(c, e)
         return nil, "empty"
     end
     local body, key, auto, seq
+    c.auto = nil -- L1902: an automatic line is fight-length
     local tg = type(a[kind]) == "table" and a[kind].target
     if type(tg) == "table" and tg.type == "Target" and (tg.index or 0) > 0 then -- rule 21: another target's cast
         if kind ~= "castSpell" and kind ~= "channelSpell" then
@@ -2444,7 +2537,7 @@ local function entryBody(c, e)
         c.self = nil
         body, key = "restart_sequence,name=" .. M.snake(a.resetSequence.sequenceName or ""), "restart_sequence"
     elseif kind == "autocastOtherCooldowns" or kind == "castAllStatBuffCooldowns" then
-        c.self, auto = nil, automatic(c, kind, a[kind])
+        c.self, auto, c.auto = nil, automatic(c, kind, a[kind]), true
         if #auto == 0 then
             return nil, #c.notes > 0 and table.concat(c.notes, "; ") or (kind .. ": none in the log")
         end
@@ -2511,7 +2604,7 @@ end
 -- Run in the handler's own environment (the kit's stub state: Register* setfenv( f, state )) with the verbs rebound,
 -- once as the stub stands and once with every buff up (a removal conditional on another aura being up).
 local VERBS = { "applyBuff", "applyDebuff", "summonTotem", "removeBuff" }
-local function effect(c, key)
+function effect(c, key)
     local done = c.effects[key]
     if done ~= nil then
         return done[1], done[2]
@@ -3168,6 +3261,7 @@ end
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
     c.hoist, c.hoistOrder = {}, {} -- CN25: { [variable] = text }, in first-read order
+    c.hoistRT, c.boundUsed = {}, {} -- L1902: a hoisted text by its unresolved one; the targetBound keys a line took
     c.dropNote = {}
     c.callers, c.deviated, c.deviations, c.moves, c.movedAll = {}, {}, {}, {}, {}
     c.held, c.windows, c.loops, c.moving = {}, {}, {}, {} -- rules 14b, 19
@@ -3524,6 +3618,11 @@ function M.translate(rotation, c)
     for x in pairs(c.condition) do -- after the groups: a condition may name an action cast only in one (review M1)
         if not c.conditioned[x] then
             error("condition: no " .. x .. " cast line", 0)
+        end
+    end
+    for x, var in pairs(c.targetBound) do -- L1902: an override that matches nothing (a re-pin renamed it) is an error
+        if not c.boundUsed[x] then
+            error(("targetBound: %s reads no remainingTime of %s"):format(x, var == true and "its own" or var), 0)
         end
     end
     -- CN12: a recipe key that names nothing is an error, as for `condition` (an upstream rename would drop it silently)

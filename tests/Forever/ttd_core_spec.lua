@@ -430,4 +430,54 @@ describe("time to die with more than one enemy (lane B8)", function()
         rawget(H.env, "LibStub").libs[MAJOR].h.state = "priming"
         assert.are.equal(3600, H.Hekili:GetGreatestTTD())
     end)
+
+    -- L1902 (CN24's fold dropped; Fable condition (ii)): the translator's comparison of the target's death with the
+    -- fight's end reads the old fold's constants (false for `<`, `>`, `!=`; true for `<=`, `>=`, `=`) with one enemy,
+    -- known or not, with several both unknown and with the library off, in the look-ahead too; only several with the
+    -- target's estimate known compare (5 s against the unknown longest)
+    it("the translated target's death against the fight's end: the fold's constants unless it is known", function()
+        local apl = require("tools.wowsims.apl")
+        local H = boot()
+        local st, lib = H.Hekili.State, rawget(H.env, "LibStub").libs[MAJOR]
+        local kit = { abilities = { x = { key = "x", id = 1, gcd = "spell" } }, auras = {}, talents = {} }
+        local FOLD = { OpLt = false, OpGt = false, OpNe = false, OpLe = true, OpGe = true, OpEq = true }
+        local function reads()
+            local out = {}
+            for op in pairs(FOLD) do
+                local text = apl.translate({
+                    priorityList = {
+                        {
+                            action = {
+                                castSpell = { spellId = { spellId = 1 } },
+                                condition = {
+                                    cmp = { op = op, lhs = { timeUntilTargetDies = {} }, rhs = { remainingTime = {} } },
+                                },
+                            },
+                        },
+                    },
+                }, apl.context(kit, {}))
+                local f = assert(loadstring("return " .. H.Hekili.Scripts.SimToLua(text:match(",if=(.*)$"))))
+                out[op] = setfenv(f, st)() and true or false
+            end
+            return out
+        end
+        local function world(n, state)
+            count(H, n)
+            assert.are.equal(n, count(H, n))
+            lib.h.state = state
+            st.reset()
+            st.advance(3)
+            st.delay = 0.5
+            return reads()
+        end
+        assert.are.same(FOLD, world(1, "live"))
+        assert.are.same(FOLD, world(1, "priming"))
+        assert.are.same(FOLD, world(3, "priming"))
+        H.Hekili.bandOff = true
+        assert.are.same(FOLD, world(3, "live"))
+        assert.are.same(FOLD, world(1, "live"))
+        H.Hekili.bandOff = nil
+        local several = world(3, "live")
+        assert.are.same({ true, false, true }, { several.OpLt, several.OpGe, several.OpNe })
+    end)
 end)

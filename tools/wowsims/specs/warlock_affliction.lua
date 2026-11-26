@@ -85,6 +85,9 @@ return {
             is = "warlockIsAssignedCurse",
         },
     },
+    -- L1902 (Fable rulings): Amplify Curse's `remainingTime>12` (Single Target DoT Logic, inline) is judged by the
+    -- empowered curse's life on this target; its own aura is a buff of ours, so the rule cannot see it
+    targetBound = { amplify_curse = true },
     -- focus by role (docs/dev/wowsims-packs.md): tier 1 the proc lines, tier 2 the upkeep (the DoTs, the Banes, the
     -- curses, a debuff kept up); the cooldowns (Amplify Curse, the racials), the core casts and Life Tap none
     focus = {
