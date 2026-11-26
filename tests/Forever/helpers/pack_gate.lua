@@ -1528,7 +1528,7 @@ M.ONE_RULE_EXCEPTIONS = {
         "shipped",
         "Combat",
         "heldReady",
-        why = "bands reads 169, MISS since batch 3 (L1799): the gated shipped arm took its reading, the record-only arm none",
+        why = "bands reads 170, MISS since batch 3 (L1799): the gated shipped arm took its reading, the record-only arm none",
     },
     {
         "shipped",

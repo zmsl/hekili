@@ -8,7 +8,8 @@
 
 ### Changed
 - Warlock, Rogue and Druid (Feral, Guardian's cat lines) priorities: damage over time effects (Banes, Corruption, Immolate, Rupture, Rip, Rake) are no longer started on a target about to die, and the end-of-target finishers (Ferocious Bite, Eviscerate), Warlock's quick casts and the Warlock cooldowns line now look at your current target's time to die rather than the whole fight, so recommendations can differ from before, including in single-target fights.
-- Arms (wowsims.com) with Stance Dance on: the Battle Stance, then Overpower (or Rend) pairs are now strict sequences in the priority itself; while one runs, the display shows only its next step.
+- Arms (wowsims.com) with Stance Dance on: the Battle Stance, then Overpower (or Rend) pairs are now strict sequences in the priority itself; while one runs, the display shows only its next step. With Stance Dance off (the default), in fights with two or more enemies, Rend is no longer suggested right after the return to Battle Stance during the execute phase; Execute shows instead.
+- A potion, Healthstone or trinket whose cooldown the game hides from addons (or fails to report) is now timed from Hekili's own tracking of your uses, instead of being taken as the game gave it.
 - Beast Mastery Turret (wowsims.com): the Summon Hawk, Summon Hawk, Arcane Shot loop is now a sequence in the priority itself instead of a rotation window inside the class pack. It starts only in combat, at its first Summon Hawk in every fight.
 - Retribution (wowsims.com): the opener at the pull (Judgement, then a seal, while moving to melee) is now a sequence in the priority itself, ended by the fight's first main-hand swing, instead of a rotation window inside the class pack.
 
@@ -16,6 +17,8 @@
 - Combat Rogue: Blade Flurry is now recommended during the fight for every race, not only for Orcs.
 - Gnome Rogues: when Eureka is about to be used, the rotation after the energy pooling step now waits until you have 90 energy, as the wowsims rotation does. The lines above that step (defensives, Riposte, Garrote, Vanish, Preparation and the opening cooldowns) still show. There is no pooling while Eureka's toggle is off.
 - Shadow Brand Warlock: after the pre-pull Shadow Bolt is cast, Corruption is now recommended while the bolt is still flying, instead of Shadow Bolt again.
+- On-use trinkets from a shared trinket line are now suggested during the global cooldown, like other off-GCD lines, instead of trading places with another off-GCD cooldown (such as Combustion) for a moment.
+- The Desaturate option on the Multiple displays tab now shows its per-display Checked/Unchecked lines in its tooltip. The Targets tab's list of alternative pet abilities and the "priorities were updated/reverted" message now list their entries in a fixed order instead of a varying one.
 
 ### Known issues
 

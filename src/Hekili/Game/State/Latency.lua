@@ -50,7 +50,7 @@ row("swing.lag", { 0.474, 0.703, 1.686 }, "s", "measured", "P log 2, G5 (seeds, 
 row("swing.lag.spread", { 0.060, 0.020, 0.020 }, "s", "measured", "P log 2, G5 (seeds, learned online)", "ATT")
 -- the longest landing lag per hand (measured 1287 / 1686 ms plus a margin): L.PAIR_WINDOW_MS, I.LIFT_WINDOW
 row("swing.land", { 1.5, 2.0 }, "s", "measured", "P log 2", "ATT, STALE-A")
-row("combat.first", 0.01, "s", "ruling", "U10 (second Rogue capture)", "ATT") -- Events/Rows.lua first swing
+row("combat.first", 0.01, "s", "ruling", "U10 (second melee capture)", "ATT") -- Events/Rows.lua first swing
 
 -- The client's answers.
 -- The usability answers' lag: the core's def.oracleMin at the build (the harness's usableDelay); 0.1 until then.

@@ -69,6 +69,9 @@ local format = string.format
 -- defensive line's health threshold slider).
 --   Since then, without a bump: HealthOption's second argument (an ability key naming the slider's form, def-2 review
 --   Minor 4); an older core shows the ability's name alone.
+--   Also without a bump: the `now` and handler verb `lockCooldown` and the ability fields `category` and
+--   `categoryCooldown` (on-use trinkets); an older core reads nil for the verb, so a use's category lock raises, and
+--   ignores the fields.
 local CONTENT_API = 17
 
 local done, notice = false, nil
