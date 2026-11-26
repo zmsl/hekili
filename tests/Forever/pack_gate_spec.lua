@@ -60,8 +60,10 @@ describe("pack_gate's arm floors", function()
             local fl = pack_gate.FLICKER[label]
             assert.is_table(fl, label) -- a gated label's other fields come from M.FLICKER
             for k, v in pairs(own) do
-                assert.is_true(fields[k], label .. " " .. k)
-                assert.is_true(v > (fl[k] or 0), label .. " " .. k) -- named only where the shipped arm reads worse
+                if k ~= "cause" then -- a row's causes, not a floor (the cause spec below)
+                    assert.is_true(fields[k], label .. " " .. k)
+                    assert.is_true(v > (fl[k] or 0), label .. " " .. k) -- named only where the shipped arm reads worse
+                end
             end
         end
     end)
@@ -85,6 +87,116 @@ describe("pack_gate's arm floors", function()
             missed = {}
             pack_gate.flicker("SM Ruin", r, "line", true)
             assert.are.same(want, missed, name)
+        end
+    end)
+end)
+
+-- (refactor lane 4, L1827) every floor names its cause: pack_gate.lua's header, "The cause field"
+local function token(s)
+    return s:match("^L%d+$") or s:match("^%w[%w%./_-]*@%x%x%x%x%x%x%x+$")
+end
+
+local function causeOk(c)
+    if c == "untraced" then
+        return true
+    end
+    if type(c) ~= "string" then
+        return false
+    end
+    for part in (c .. " + "):gmatch("(.-) %+ ") do
+        if not token(part) then
+            return false
+        end
+    end
+    return true
+end
+
+--- Every problem with the causes of `tables` ({ name = { label = row } }), sorted: a floor field above 0 with no
+--- cause or a malformed one, or a cause naming no floor of its row.
+local function causeProblems(tables)
+    local out = {}
+    for name, rows in pairs(tables) do
+        for label, row in pairs(rows) do
+            local cause = row.cause or {}
+            for k, v in pairs(row) do
+                if k ~= "cause" and v ~= 0 and not causeOk(cause[k]) then
+                    out[#out + 1] = ("%s %s %s: cause %s"):format(name, label, k, tostring(cause[k]))
+                end
+            end
+            for k in pairs(cause) do
+                if (row[k] or 0) == 0 then
+                    out[#out + 1] = ("%s %s %s: a cause with no floor"):format(name, label, k)
+                end
+            end
+        end
+    end
+    table.sort(out)
+    return out
+end
+
+describe("pack_gate's floor causes", function()
+    it("every floor field above 0 in M.FLICKER and both ARM_FLOORS tables names its cause #self", function()
+        local tables = { FLICKER = pack_gate.FLICKER }
+        for arm, rows in pairs(pack_gate.ARM_FLOORS) do
+            tables[arm] = rows
+        end
+        assert.are.same({}, causeProblems(tables))
+    end)
+
+    it("the check refuses a missing, malformed or stray cause and takes the three forms #self", function()
+        assert.are.same({
+            "t A flicker: cause nil",
+            "t B flicker: cause because",
+            "t C flicker: cause untraced + L1",
+            "t D heldReady: a cause with no floor",
+            "t E loOver: cause L12 + abc@12",
+        }, causeProblems({
+            t = {
+                A = { flicker = 0.1 },
+                B = { flicker = 0.1, cause = { flicker = "because" } },
+                C = { flicker = 0.1, cause = { flicker = "untraced + L1" } },
+                D = { flicker = 0, heldReady = 0, cause = { heldReady = "L1" } },
+                E = { loOver = 3, cause = { loOver = "L12 + abc@12" } },
+                F = { flicker = 0.1, loOver = 2, heldReady = 1, retracted = 0, cause = {
+                    flicker = "L1814",
+                    loOver = "untraced",
+                    heldReady = "integ/0.10.1@5bd9a14d5 + L1383",
+                } },
+            },
+        }))
+    end)
+
+    -- item 4 (L1889 7): the one rule names an arm row in both arm tables or lists why not (M.ONE_RULE_EXCEPTIONS)
+    it("the bands and shipped tables name the same fields, but for the listed exceptions #self", function()
+        local B, S = pack_gate.ARM_FLOORS.bands, pack_gate.ARM_FLOORS.shipped
+        local only = {}
+        for _, pair in ipairs({ { "bands", B, S }, { "shipped", S, B } }) do
+            for label, row in pairs(pair[2]) do
+                for k in pairs(row) do
+                    if k ~= "cause" and (pair[3][label] or {})[k] == nil then
+                        only[#only + 1] = pair[1] .. " " .. label .. " " .. k
+                    end
+                end
+            end
+        end
+        table.sort(only)
+        local listed = {}
+        for _, e in ipairs(pack_gate.ONE_RULE_EXCEPTIONS) do
+            assert.is_string(e.why, e[2])
+            local rows = e[1] == "FLICKER" and pack_gate.FLICKER or pack_gate.ARM_FLOORS[e[1]]
+            assert.is_number((rows[e[2]] or {})[e[3]], table.concat(e, " ")) -- a listed row exists
+            if e[1] ~= "FLICKER" then
+                listed[#listed + 1] = table.concat(e, " ")
+            end
+        end
+        table.sort(listed)
+        assert.are.same(listed, only)
+        for label, row in pairs(B) do -- the bands arm, as the shipped one: named only where it reads worse
+            local fl = pack_gate.FLICKER[label]
+            assert.is_table(fl, label)
+            for k, v in pairs(row) do
+                assert.is_true(k == "cause" or v > (fl[k] or 0), label .. " " .. k)
+            end
         end
     end)
 end)
