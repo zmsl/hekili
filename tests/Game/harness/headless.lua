@@ -12,6 +12,34 @@ local addons = require("helpers.addons")
 
 local M = {}
 
+-- lj-speed spike (L1954), off unless set: LJSPEED_CLOCK=mono|cpu gives the fake debugprofilestop an FFI clock_gettime
+-- (LuaJIT only); LJSPEED_COUNT counts its calls (M.clockCalls, written per fight by loop.fight's LJSPEED_AB line)
+M.clockCalls = 0
+M.countClock = os.getenv("LJSPEED_COUNT") ~= nil
+-- LJSPEED_LOOPCPU: loop.lua's per-update CPU clock (seconds) through FFI clock_gettime(CLOCK_PROCESS_CPUTIME_ID)
+do
+    local which = os.getenv("LJSPEED_CLOCK")
+    local okffi, ffi = pcall(require, "ffi")
+    if okffi and (which or os.getenv("LJSPEED_LOOPCPU")) then
+        ffi.cdef("typedef struct { long tv_sec; long tv_nsec; } ljs_timespec; int clock_gettime(int, ljs_timespec *);")
+        local osx = ffi.os == "OSX"
+        local C = ffi.C
+        local function clock(id, scale)
+            local ts = ffi.new("ljs_timespec")
+            return function()
+                C.clock_gettime(id, ts)
+                return (tonumber(ts.tv_sec) + tonumber(ts.tv_nsec) * 1e-9) * scale
+            end
+        end
+        if which then
+            M.fastClock = clock(which == "cpu" and (osx and 12 or 2) or (osx and 6 or 1), 1000)
+        end
+        if os.getenv("LJSPEED_LOOPCPU") then
+            M.cpuClock = clock(osx and 12 or 2, 1)
+        end
+    end
+end
+
 M.ROOT = "src/Hekili/"
 M.SETTLE = 5 -- seconds the clock runs after login before the instance is handed over
 -- The one file the loader skips, and why.
@@ -349,6 +377,16 @@ function M.new(o)
     -- wall clock for Hekili's frame budget only; the loop calls Update directly and never reaches it (§1.3)
     function env.debugprofilestop()
         return os.clock() * 1000
+    end
+    if M.fastClock then -- lj-speed spike P1: the client's timer is a cheap monotonic clock, not process CPU time
+        env.debugprofilestop = M.fastClock
+    end
+    if M.countClock then -- lj-speed spike: count the calls
+        local f = env.debugprofilestop
+        env.debugprofilestop = function()
+            M.clockCalls = M.clockCalls + 1
+            return f()
+        end
     end
     function env.debugstack()
         return debug.traceback("", 2)

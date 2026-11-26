@@ -21,6 +21,10 @@ local world = require("Game.harness.world")
 
 local M = {}
 
+-- the process CPU clock of the per-update cost and its calibration (lj-speed spike: headless.cpuClock, an FFI
+-- clock_gettime(CLOCK_PROCESS_CPUTIME_ID), when LJSPEED_LOOPCPU is set; os.clock otherwise)
+local cpuClock = headless.cpuClock or os.clock
+
 -- [class data] = its item categories (world.itemCategories), built once per class table
 local itemGroups = setmetatable({}, { __mode = "k" })
 
@@ -443,14 +447,14 @@ M.CAL_EVERY = 50
 
 --- The calibration workload's process CPU time, in ms (and its checksum, so no step is dead code).
 function M.calibrate()
-    local c0, sum = os.clock(), 0
+    local c0, sum = cpuClock(), 0
     for _ = 1, CAL_ROUNDS do
         for i = 1, CAL_N do
             local t = calSet[i]
             sum = sum + t.a + t.x + t.y - t.b
         end
     end
-    return (os.clock() - c0) * 1000, sum
+    return (cpuClock() - c0) * 1000, sum
 end
 -- LuaJIT compiles this tight loop to ~1 ms (6.8 ms on PUC) while the engine's code gains far less, which would inflate the
 -- ratio about 3x: keep the calibration interpreted, the yardstick for "engine cost per interpreted read".
@@ -1197,10 +1201,10 @@ function M.run(L, seed, o, drivers)
                 collectgarbage("stop")
                 b0 = collectgarbage("count")
             end
-            local c0 = os.clock()
+            local c0 = cpuClock()
             local ok = headless.cycle(st.H, st.base + tc)
             if counted then
-                run.cpu[#run.cpu + 1] = (os.clock() - c0) * 1000
+                run.cpu[#run.cpu + 1] = (cpuClock() - c0) * 1000
             end
             if sampled then
                 run.bytes, run.sampled = run.bytes + (collectgarbage("count") - b0) * 1024, run.sampled + 1
@@ -1671,7 +1675,7 @@ function M.fight(L, seed, o)
     local b = M.run(L, seed, o, { { H = L.oracle, plain = true } })
     if ljspeedAB then
         local fh = assert(io.open(ljspeedAB, "a"))
-        fh:write(string.format("%d\t%.3f\t%.3f\n", seed, c1 - c0, os.clock() - c1))
+        fh:write(string.format("%d\t%.3f\t%.3f\t%d\n", seed, c1 - c0, os.clock() - c1, headless.clockCalls))
         fh:close()
     end
     return a, b
