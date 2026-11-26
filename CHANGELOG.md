@@ -5,6 +5,7 @@
 ### New
 
 ### Changed
+- Warlock, Rogue and Feral priorities: damage over time, curses, Rupture, Rip, Rake and the end-of-fight finishers now look at how long your current target will live, not the whole fight, so they are no longer recommended on an add about to die while the fight goes on (single-target fights are unchanged).
 
 ### Fixed
 - Combat Rogue: Blade Flurry is now recommended during the fight for every race, not only for Orcs.
