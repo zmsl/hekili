@@ -76,7 +76,7 @@ I.auraOurs = ours
 -- for this one), and the LONG clamp (a record whose CDM stops answering is held HOLD more; its debounce then counts
 -- from that clamped expiry, fix round 1 I2). The rule's alternatives (4b's re-stage within LAPSE of the expiry, L309's
 -- LONG re-stage) were measured and removed (cdm-default Task 9, review S2).
-local LAT = 0.35
+local LAT = I.Lat.lag("cdm.light")
 local HOLD, LONG = LAT, 3600
 -- D14: after our cast wrote an application, its NONE closes it only once the fact read UP REFRESH_LAG after the write: an
 -- item still showing the old application inside the client's latency says nothing of the new one.

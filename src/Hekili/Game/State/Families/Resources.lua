@@ -16,12 +16,13 @@ local abs, floor = math.abs, math.floor
 local Stats = I.Stats
 
 --- A flip pin measures regen only when the last short report was at most this long before it (TDF Belief.PIN_EXACT).
-I.PIN_EXACT = 0.15
+I.PIN_EXACT = I.Lat.lag("usable.flip")
 --- Seconds a cast's declared gain (its `now`'s `gain`) takes to reach the client's usability answers (the harness's
 --- usableDelay, UNMEASURED until G7): a short answer read sooner that the gain lifts past the cost predates it (a
 --- same-frame press after Bloodrage), so it is no rung. A refund and a hit's `taken` rage are estimates the answer may
 --- correct, so they do not count (both raised the loops' flicker: Guardian 3.35 -> 3.52, Fury 1.77 -> 1.96).
-I.GAIN_SHOWS = 0.1
+--- One row with the core's def.oracleMin (Latency.lua's usable.shows, re-read at the build).
+I.GAIN_SHOWS = I.Lat.lag("usable.shows")
 --- A swing-paid slot's scale is measured over at least this many model steps of its paying hand (GAP AC).
 I.SWING_STEPS = 5
 
@@ -375,7 +376,7 @@ end
 local OTHER = 0
 -- A melee wound row on us trails its rage by up to this (389-565 ms measured, docs/research/2026-10-23-damagemeter-api.md):
 -- a swing's sample waits it out, and a wound row up to then unteaches it (the rage may be that hit's).
-I.TAKEN_ROW_LAG = 0.6
+I.TAKEN_ROW_LAG = I.Lat.lag("wound.taken")
 -- Per hand, the swing a band change covered alone (shortcut: one a hand, so a swing settling after that hand's next
 -- covered one teaches nothing; widen if a trace shows off-hand samples lost): its slot (0: none), its window, the
 -- swing's time, the rise, whether it crit and whether it settled landed (taught at a fold's end past the row's lag).
@@ -490,6 +491,7 @@ end
 
 I.OnBuild(function(def, now)
     I.FSR = def.fsr
+    I.GAIN_SHOWS = I.Lat.lag("usable.shows") -- the core's def.oracleMin (Latency.lua)
     for k in pairs(R.slotOf) do
         R.slotOf[k] = nil
     end
@@ -1228,9 +1230,9 @@ local function ladder(r, c, affordable, t, lag)
     return snapped
 end
 
--- The lift a swing whose wound is still in flight can owe: its wound comes within the longest landing lag (Rows.lua's
--- pair window, 2 s off hand), so an older lift is nobody's.
-I.LIFT_WINDOW = 2
+-- The lift a swing whose wound is still in flight can owe: its wound comes within the longest landing lag (the
+-- swing.land row's off hand, Rows.lua's pair window), so an older lift is nobody's.
+I.LIFT_WINDOW = I.Lat.lag("swing.land", 2)
 
 -- Swing-paid slot r was at e, lo, hi before a rung at t moved it: what it lifted is owed by a swing at or before t
 -- whose wound has not landed yet (I.On(Obs.Swing)). A lift older than the window is dropped first; a rung that lifts

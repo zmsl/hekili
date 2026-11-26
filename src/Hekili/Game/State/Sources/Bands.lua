@@ -33,7 +33,7 @@ local ceil = math.ceil
 --- before it is not counted", its README): three frames at 60 fps (the integration design's bound). A band's whole
 --- delay behind one of our events is I.bandShows[channel] = h:Latency() (seven frames, by the measured frame time, so
 --- it grows as the frame rate falls) + this: about 0.17 s at 60 fps (Families/Resources.lua's hold).
-I.BAND_MARGIN = 0.05
+I.BAND_MARGIN = I.Lat.lag("band.margin")
 local MAJOR = "LibHiddenValues-1.0"
 local OWNER = "HekiliBelief" -- the border check keeps the bare addon name out of Game/ (design 2.1)
 local MANA = 0 -- Enum.PowerType.Mana: fed in every form (design 5.3)

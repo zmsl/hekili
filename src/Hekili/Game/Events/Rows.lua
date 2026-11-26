@@ -63,7 +63,7 @@ end
 -- EARLY (fix round 1 M1): the measured lead of an own row over its success, 1-22 ms (L361: -22/-12/-6 ms; 28 of 287
 -- melee instants, L1763), with a few ms over. Not SAME_FRAME (50 ms): an avoid of another player's that
 -- far before our success would pay our cast.
-local EARLY = 0.025
+local EARLY = I.Lat.lag("own.row.early")
 local hT, hU, hG, hAct, hFlag, hAmt, hSch, hCast = {}, {}, {}, {}, {}, {}, {}, {}
 for k = 1, T.CAP do
     hT[k], hU[k], hG[k], hAct[k], hFlag[k], hAmt[k], hSch[k], hCast[k] = 0, 0, "", "", "", 0, 0, ""
@@ -323,10 +323,11 @@ end)
 -- U10 (owner ruling): auto-attack turns on at once, and the first PLAYER_SWING after entering combat is that first
 -- swing; its row's lag is one sample (989 ms in the second Rogue capture), so it teaches nothing and its Due band is
 -- its whole window. The client may send that swing first in the same ms (second Rogue capture: both at 628).
+local FIRST_SWING = I.Lat.lag("combat.first") -- "the same ms", with float room
 S.On("PLAYER_ENTER_COMBAT", nil, function(api, t)
     local marked = false
     for i = 1, T.CAP do -- every hand: dual wield can open both swings in that ms
-        if T.state[i] ~= 0 and T.kind[i] == MELEE and t - T.at[i] <= 0.01 then
+        if T.state[i] ~= 0 and T.kind[i] == MELEE and t - T.at[i] <= FIRST_SWING then
             T.first[i], marked = true, true
         end
     end

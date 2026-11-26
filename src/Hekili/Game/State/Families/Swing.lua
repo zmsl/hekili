@@ -149,7 +149,7 @@ end)
 -- A paired rage step (spec §6.4): a PowerTick of a swing-paid resource that no PLAYER_SWING and no own cast
 -- explains is a landed swing when it falls one swing after the previous such tick (a pair: anchor at weight 0.5 when
 -- the clock is weaker) or on a predicted swing (a confirmation: the clock re-anchors there).
-local OWN_TICK = 0.1 -- TDF Belief.OWN_TICK: a tick this close to our cast is the cast's own change
+local OWN_TICK = I.Lat.lag("own.tick") -- TDF Belief.OWN_TICK: a tick this close to our cast is the cast's own change
 
 I.On(Obs.PowerTick, function(o, t)
     local h = I.res.swing[o.a]

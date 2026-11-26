@@ -297,12 +297,18 @@ end
 --- drain's fold or the one just before, with no model since, is the cast's own application seen early (the light polled
 --- a drain before the cast's event was logged), so it reads down: a handler's `stack + 1` or addStack does not count
 --- it twice. Drains, not seconds (review S3). Allocates nothing.
+local CDM_LEAD = I.Lat.lag("cdm.lead") -- drains
 function I.CastAura(unit, spellID, t)
     local u, j = U.index[unit], U.bySpell[spellID]
     if u and j then
         local last = U.rec[u][j].last
         local o = last.observed
-        if o.event == CDM_OPEN and U.openFold[u][j] >= I.folds - 1 and o.t >= last.modelled.t and U.exp0[u][j] > t then
+        if
+            o.event == CDM_OPEN
+            and U.openFold[u][j] > I.folds - CDM_LEAD
+            and o.t >= last.modelled.t
+            and U.exp0[u][j] > t
+        then
             return nil
         end
     end

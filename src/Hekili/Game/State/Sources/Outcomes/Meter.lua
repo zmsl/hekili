@@ -10,8 +10,11 @@ local S = I.Sources
 local Plain = S.Plain
 
 local EVENT = "DAMAGE_METER_COMBAT_SESSION_UPDATED"
-local RING, MERGE, SWING_WIN, WHITE_BACK = 64, 0.003, 0.015, 2.0
-local TAKEN_FAR, TAKEN_NEAR, SPELL_TAKEN, MUTE_AT, AUDIT_FOR = 0.6, 0.3, 0.005, 3, 3
+local Lat = I.Lat
+local RING, WHITE_BACK, MUTE_AT, AUDIT_FOR = 64, 2.0, 3, 3
+local MERGE, SWING_WIN = Lat.lag("meter.merge"), Lat.lag("meter.swing")
+local TAKEN_FAR, TAKEN_NEAR = Lat.lag("meter.taken.far"), Lat.lag("meter.taken.near")
+local SPELL_TAKEN = Lat.lag("meter.spell.taken")
 
 local P = { name = "meter", SWING_DELAY = SWING_WIN, ROW_DELAY = SWING_WIN, muted = 0 } -- l10n: verbatim
 local gT, gKind, gUsed = {}, {}, {}

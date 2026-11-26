@@ -57,7 +57,7 @@ local GCD_MIN, GCD_MAX = { 1.0, 0.9 }, { 1.51, 1.01 }
 -- pinned by tests/Forever/gcd_rule_spec.lua.
 local GCD_FLOOR = 1.0
 -- An own cast within this of the GCD's rising edge, before or after it, opened it (UNMEASURED until checkpoint G3).
-local GCD_EDGE = 0.1
+local GCD_EDGE = I.Lat.lag("gcd.edge")
 
 -- The cast or channel in progress (0: none), and the GCD fixed at its rising edge: its opener (ability index, 0
 -- none), the opener kind a GCD without one takes (the last opener's), whether GcdInfo has answered it, and the
