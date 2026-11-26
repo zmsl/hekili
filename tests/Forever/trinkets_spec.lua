@@ -10,7 +10,8 @@ local SECRET = fake.SECRET
 local ANALYZER, ANALYZER_SPELL = 272438, 1291101 -- Weakness Analyzer: 360 s, category 1141 (20 s)
 local EYE, EYE_SPELL = 13968, 1287840 -- Eye of the Beast: 300 s, category 1141 (20 s)
 
--- A Frost Mage wearing `t13` and `t14`, its gear read, in combat, on a pack of `line` then Frostbolt.
+-- A Frost Mage wearing `t13` and `t14`, its gear read, in combat, on a pack of `line` (simc lines, "\n" apart) then
+-- Frostbolt; a strict sequence's windows are applied and built as an options edit would.
 local function boot(t13, t14, line)
     local char = C.character()
     char.items = char.items or {}
@@ -26,11 +27,19 @@ local function boot(t13, t14, line)
     H.Fire("PLAYER_EQUIPMENT_CHANGED")
     local t = H.ctl.now + 1.5 -- the gear re-read runs 1 s after the event
     assert(headless.cycle(H, t))
-    local lines = H.Hekili:ParseActionList("actions+=/" .. (line or "use_items"))
-    lines[1].enabled = true
-    lines[2] = { enabled = true, action = "frostbolt" }
+    local lines = H.Hekili:ParseActionList("actions+=/" .. (line or "use_items"):gsub("\n", "\nactions+=/"))
+    for _, l in ipairs(lines) do
+        l.enabled = true
+    end
+    lines[#lines + 1] = { enabled = true, action = "frostbolt" }
     H.Hekili.DB.profile.packs[C.PACK].lists = { precombat = {}, default = lines }
     H.Hekili:LoadScripts()
+    if line and line:find("strict_sequence", 1, true) then
+        H.Hekili:ReviewPacks()
+        H.Hekili.Scripts:ApplyWindows(C.PACK)
+        H.Hekili.State:BuildWindows()
+        H.ns.VirtualState.Drain(H.ctl.now)
+    end
     H.Hekili:FireToggle("cooldowns", "on")
     H.Fire("PLAYER_REGEN_DISABLED")
     assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
@@ -140,6 +149,40 @@ describe("an on-use trinket", function()
                 local want = c[2] and left or 0
                 assert.is_true(math.abs(r.time - want) < 0.05, ("GCD %.1f left: wait %.3f"):format(left, r.time))
             end
+            assert.are.same({}, H.errors)
+        end)
+    end
+
+    -- L1960 condition 1: the swap itself. A use_items,use_off_gcd=1 line above a direct use_off_gcd=1 off-GCD line, both
+    -- ready under a running GCD: the same now and next at 0.4 and 0.2 s left (before the fix Cold Snap took slot 1
+    -- while the trinket waited out the GCD, then the trinket at the 0.2 s early exit: a swap with no fact).
+    it("keeps its slot above a later use_off_gcd=1 line through a running GCD (no now<->next swap)", function()
+        local H, t = boot(EYE, nil, "use_items,use_off_gcd=1\ncold_snap,use_off_gcd=1")
+        H.ctl.cooldown[H.ns.GCD_SPELL] = { isActive = true, isOnGCD = false, startTime = t, duration = 1.5 }
+        for _, left in ipairs({ 0.4, 0.2 }) do
+            assert(headless.cycle(H, t + 1.5 - left))
+            local recs = H.Hekili.Engine.Output.Primary.recs
+            local got = { recs[1] and recs[1].actionName, recs[2] and recs[2].actionName }
+            assert.are.same({ "eye_of_the_beast", "cold_snap" }, got, ("GCD %.1f left"):format(left))
+        end
+        assert.are.same({}, H.errors)
+    end)
+
+    -- L1960 condition 2: a strict hold (holdOffOnly 1, ruling 29) lets a trinket walked from use_items,use_off_gcd=1
+    -- through, as it does a direct use_off_gcd=1 off-GCD line; a plain use_items line is held, and hold_off_gcd=1 holds
+    -- every outside line (the variable line makes that hold walk the lists).
+    for _, c in ipairs({
+        { "", "use_items,use_off_gcd=1", "eye_of_the_beast" },
+        { "", "use_items", "frostbolt" },
+        { ",hold_off_gcd=1", "use_items,use_off_gcd=1", "frostbolt" },
+    }) do
+        it("under a strict hold" .. c[1] .. ", from " .. c[2] .. ": " .. c[3] .. " first", function()
+            local seq = "variable,name=v,value=1\nstrict_sequence,name=s" .. c[1] .. ":frostbolt:ice_lance\n"
+            local H, t = boot(EYE, nil, seq .. c[2])
+            assert(headless.cycle(H, t + 0.2)) -- opens the sequence at step 1 (Frostbolt)
+            assert(headless.cycle(H, t + 0.4)) -- the hold walks the outside lines
+            local recs = H.Hekili.Engine.Output.Primary.recs
+            assert.are.equal(c[3], recs[1] and recs[1].actionName)
             assert.are.same({}, H.errors)
         end)
     end
