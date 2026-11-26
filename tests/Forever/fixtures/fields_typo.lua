@@ -1,7 +1,8 @@
 -- tests/Forever/fixtures/fields_typo.lua: a pack's registrations with one deliberate mistake each (refactor plan lane 3,
 -- the plan's four examples and one per kind), for tests/Forever/fields_spec.lua. Each entry: the Register* method, its
 -- arguments, and the check and field the failure must name; `at = "finish"`: it fails at the end of the load
--- (Fields.Finish), not in the call; `listed`: it fails nothing and is listed.
+-- (Fields.Finish), not in the call; `listed`: it fails nothing and is listed; `passes`: a valid one, neither failed nor
+-- listed by V5; `pre`: a registration made first ({ method, args }).
 return {
     {
         what = "an expects value not in the list",
@@ -66,6 +67,50 @@ return {
         check = "V4",
         field = "expects",
         at = "finish",
+    },
+    {
+        what = "ticks on an aura that declares no tick_time",
+        pre = { "RegisterAura", { "typo_dot", { id = 990010, dot = "debuff" } } },
+        call = "RegisterAbility",
+        args = { "typo_ticks", { id = 990011, startsCombat = true, expects = "ticks", aura = "typo_dot" } },
+        check = "V4",
+        field = "expects",
+        at = "finish",
+    },
+    {
+        what = 'debuff on an aura that ticks as a dot = "debuff"',
+        pre = { "RegisterAura", { "typo_tick_dot", { id = 990012, dot = "debuff", tick_time = 3 } } },
+        call = "RegisterAbility",
+        args = { "typo_wound", { id = 990013, startsCombat = true, expects = "debuff", aura = "typo_tick_dot" } },
+        check = "V4",
+        field = "expects",
+        at = "finish",
+    },
+    {
+        what = "channel on an aura whose tick_time is a function",
+        pre = {
+            "RegisterAura",
+            {
+                "typo_channel",
+                {
+                    id = 990014,
+                    tick_time = function()
+                        return 1
+                    end,
+                },
+            },
+        },
+        call = "RegisterAbility",
+        args = { "typo_channel", { id = 990015, startsCombat = true, expects = "channel" } },
+        at = "finish",
+        passes = true,
+    },
+    {
+        what = "a combat-starting variant, not listed by V5 (the belief compiles only its original)",
+        call = "RegisterAbility",
+        args = { "typo_variant", { id = 990016, startsCombat = true, variantOf = "rip" } },
+        at = "finish",
+        passes = true,
     },
     {
         what = "an unknown key on an ability, far from any registered name",

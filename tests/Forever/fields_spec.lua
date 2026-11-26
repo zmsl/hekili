@@ -62,14 +62,37 @@ describe("the pack field registry", function()
         end
     end)
 
+    -- A class with no pack (missing, another content API, a failed load): ns.LoadContent still finishes the load, so
+    -- the shared and race content's references must resolve on their own.
+    it("finishes a load with no class pack, with every race, with zero findings", function()
+        for _, race in ipairs(RACES) do
+            local env = engine.load("NOPACK", race)
+            assert.are.same({}, env.loadErrors, race)
+            assert.is_nil(rawget(env.class, "kit") or nil, race)
+            local ok, err = pcall(env.ns.Fields.Finish)
+            assert(ok, race .. ": " .. tostring(err))
+            assert.are.same({}, env.ns.Fields.findings, race)
+        end
+    end)
+
     for _, t in ipairs(TYPOS) do
-        it("stops a pack's mistake at load: " .. t.what, function()
+        it((t.passes and "accepts at load: " or "stops a pack's mistake at load: ") .. t.what, function()
             local env, F = druid()
             local kit = env.class.kit
+            if t.pre then
+                kit[t.pre[1]](kit, unpack(t.pre[2]))
+            end
             local ok, err = pcall(kit[t.call], kit, unpack(t.args, 1, 4))
             if t.at == "finish" then
                 assert(ok, tostring(err)) -- the call itself passes: the reference may register later
                 ok, err = pcall(F.Finish)
+            end
+            if t.passes then
+                assert(ok, tostring(err))
+                for _, line in ipairs(F.unlanded) do
+                    assert.is_falsy(line:find(t.args[1], 1, true), line)
+                end
+                return
             end
             if t.listed then
                 assert(ok, tostring(err))
