@@ -27,11 +27,12 @@ On every update the forecast copies the windows as they stand. Lines and simulat
 | `window.<name>.step` | number | The step that is due, from 1; 0 when closed or not stepped | `window.hha.step=3` |
 | `window.<name>.next.<key>` | boolean | The window is open and its due step is the ability `<key>` | `window.hha.next.summon_hawk` |
 
-From Beast Mastery Turret (wowsims.com), whose `hha` is a sequence the priority declares itself:
+From Beast Mastery Turret (wowsims.com), whose `hha` is a sequence the priority declares itself, started only in
+combat (`time>0`), so each fight starts it at its first member:
 
 ```simc
 actions+=/restart_sequence,name=hha,if=window.hha.done
-actions+=/sequence,name=hha,mode=continue:summon_hawk:summon_hawk:arcane_shot
+actions+=/sequence,name=hha,mode=continue,if=time>0:summon_hawk:summon_hawk:arcane_shot
 ```
 
 From Retribution (wowsims.com), the opener's sequence runs only before the fight's first main-hand swing:

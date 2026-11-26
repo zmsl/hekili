@@ -178,6 +178,11 @@ Translation:
   that the APL does not say: Retribution's opener runs until the first main-hand swing,
   `window.before_first_swing.up` (the Paladin class's Lua window; windows design v6 10.3, L898). A window the term
   reads counts as the kit's. A name the APL has no sequence of is an error (CN12), as is a list `default` never calls.
+  The term `time>0` binds a sequence to the fight and writes no close line (it turns false only at combat end, which
+  closes every row): Beast Mastery Turret's hha (L1919). A bare sequence line is walked out of combat as well, so
+  without it combat end's own poll reopened hha and the fight's last Summon Hawk carried into the next pull at step 2;
+  wowsims restarts every sequence at the pull (sim.reset before PrePull). A recipe that converts a sequence wowsims
+  runs only in the fight gives it this term.
 - `windowVars` (`{ [variable name] = window }`): an APL variable that times "since the last shot or swing", read from
   the kit's registered window instead (rule 10: `window.<w>.up&window.<w>.elapsed<op>x`; the hunters' "Just shot"
   from `weave`). A name the APL's variables lack is an error (CN12).

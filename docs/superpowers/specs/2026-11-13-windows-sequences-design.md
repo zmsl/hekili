@@ -737,7 +737,15 @@ actions+=/arcane_shot,if=window.hha.next.arcane_shot&toggle.movement&<the gate o
 - As built (L1374, lane eng-3; review M2): the current Beast Mastery Turret pack had one ungated `arcane_shot` member
   line and no reader copies, so the translation is the two lines `restart_sequence,name=hha,if=window.hha.done` and
   `sequence,name=hha,mode=continue:summon_hawk:summon_hawk:arcane_shot` after Hunter's Mark and Serpent Sting; the
-  text above describes an older pack. The line is walked out of combat too, so the sequence may open before the pull.
+  text above describes an older pack.
+- As built (L1919, lane eng-3c; fable-eng3b-decision.md Q1): the sequence line is gated on the fight,
+  `sequence,name=hha,mode=continue,if=time>0:summon_hawk:summon_hawk:arcane_shot` (recipe `sequenceIf = { hha =
+  "time>0" }`; no close line for this term, since it turns false only at combat end, which closes every row). Bare,
+  the line was walked out of combat: combat end's own poll reopened it, and the fight's last Summon Hawk, heard after
+  combat end, moved it to step 2, which it kept (`duration=combat`, no later combat end) into the next pull. wowsims
+  starts every sequence at its first member at the pull (sim.reset before PrePull: curIdx 0), and the 0.8.5 Lua
+  window's evaluator was `combat > 0`; the gate gives both. The engine default for a bare `duration=combat` sequence
+  out of combat is an owner question (L1921).
 
 ### 10.3 Paladin `move1` / `move2` (ruling 32)
 
@@ -923,6 +931,14 @@ restarts per slot, the three converted packs on an open-world mob.
 Harness gates: the drift guard keeps its meaning for Lua windows. APL windows are excluded from it and get two
 checks: after every Drain, each key's belief state equals the state the sending pass left in its copy (the replay
 invariant, section 13), and no APL window is ever up without a logged OPEN.
+
+As built (L1920, lane eng-3c; fable-eng3b-decision.md Q2): the first check is judged where the invariant holds, when
+the Drain's replay (`I.WindowOps`) returns, before the fold applies anything newer (member casts, combat end, a target
+swap, an expiry: the windows matrix's rules): each key with an OPEN or CLOSE in the batch is up after its last OPEN,
+down after its last CLOSE, one rule for strict and plain keys, skipped (and counted) only for a replay in which the
+belief rebuilt its APL rows. The harness keeps its own accounting across that call (the buffer's length at entry is
+what was sent since the last replay; applied, refused and dropped rise by that length; refused and dropped summed over
+the run), since the belief's counters restart at combat start inside the same Drain.
 
 ## 13. Test matrix
 

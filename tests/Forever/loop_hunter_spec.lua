@@ -303,56 +303,59 @@ end)
 describe("Beast Mastery Turret's hha sequence", function()
     -- fable-eng3-decision.md Q1 test 5: never parked more than one poll per loop (a restart the offset rule held back
     -- would show as a longer park)
-    it("opens in every fight at its first member after the pull, and loops; parked one poll per loop at most", function()
-        local loop = require("Game.harness.loop")
-        local L = loop.new(require("Forever.helpers.hunter_world").BeastMasteryTurret)
-        assert.is_nil(L.us.Hekili.Class.windows.hha)
-        local W = L.us.ns.VirtualStateInternal.win
-        local KEY = "Beast Mastery Turret (wowsims.com):hha#Primary"
-        local FIGHTS = 8
-        local first, up, loops, prev, parked, longest = {}, {}, 0, 0, 0, 0
-        local fight, lastRun, early = 0, nil, {}
-        loop.tally(L, FIGHTS, {
-            on = function(run, steps, t)
-                if steps[1].H ~= L.us then
-                    return
-                end
-                if run ~= lastRun then
-                    fight, lastRun = fight + 1, run
-                end
-                local w = W.byKey[KEY]
-                local isUp, step = w and W.up[w], w and W.step[w] or 0
-                if isUp and t < loop.PULL then
-                    early[#early + 1] = ("fight %d up at %.1f s (step %d)"):format(fight, t, step)
-                end
-                if isUp and first[fight] == nil then
-                    first[fight] = step
-                end
-                up[run] = up[run] or isUp
-                if isUp and step == 1 and prev == 4 then
-                    loops = loops + 1 -- parked past the third member, then restarted
-                end
-                prev = isUp and step or 0
-                parked = prev == 4 and parked + 1 or 0
-                longest = math.max(longest, parked)
-            end,
-        })
-        local n = 0
-        for _, was in pairs(up) do
-            n = n + 1
-            assert.is_true(was)
-        end
-        assert.are.equal(FIGHTS, n)
-        -- closed before every pull, and the first tick it is up reads the first member (never a step carried in)
-        assert.are.same({}, early)
-        local notFirst = {}
-        for f = 1, FIGHTS do
-            if first[f] ~= 1 then
-                notFirst[#notFirst + 1] = ("fight %d first up at step %s"):format(f, tostring(first[f]))
+    it(
+        "opens in every fight at its first member after the pull, and loops; parked one poll per loop at most",
+        function()
+            local loop = require("Game.harness.loop")
+            local L = loop.new(require("Forever.helpers.hunter_world").BeastMasteryTurret)
+            assert.is_nil(L.us.Hekili.Class.windows.hha)
+            local W = L.us.ns.VirtualStateInternal.win
+            local KEY = "Beast Mastery Turret (wowsims.com):hha#Primary"
+            local FIGHTS = 8
+            local first, up, loops, prev, parked, longest = {}, {}, 0, 0, 0, 0
+            local fight, lastRun, early = 0, nil, {}
+            loop.tally(L, FIGHTS, {
+                on = function(run, steps, t)
+                    if steps[1].H ~= L.us then
+                        return
+                    end
+                    if run ~= lastRun then
+                        fight, lastRun = fight + 1, run
+                    end
+                    local w = W.byKey[KEY]
+                    local isUp, step = w and W.up[w], w and W.step[w] or 0
+                    if isUp and t < loop.PULL then
+                        early[#early + 1] = ("fight %d up at %.1f s (step %d)"):format(fight, t, step)
+                    end
+                    if isUp and first[fight] == nil then
+                        first[fight] = step
+                    end
+                    up[run] = up[run] or isUp
+                    if isUp and step == 1 and prev == 4 then
+                        loops = loops + 1 -- parked past the third member, then restarted
+                    end
+                    prev = isUp and step or 0
+                    parked = prev == 4 and parked + 1 or 0
+                    longest = math.max(longest, parked)
+                end,
+            })
+            local n = 0
+            for _, was in pairs(up) do
+                n = n + 1
+                assert.is_true(was)
             end
+            assert.are.equal(FIGHTS, n)
+            -- closed before every pull, and the first tick it is up reads the first member (never a step carried in)
+            assert.are.same({}, early)
+            local notFirst = {}
+            for f = 1, FIGHTS do
+                if first[f] ~= 1 then
+                    notFirst[#notFirst + 1] = ("fight %d first up at step %s"):format(f, tostring(first[f]))
+                end
+            end
+            assert.are.same({}, notFirst)
+            assert.is_true(loops > 0, "hha never restarted")
+            assert.is_true(longest <= 1, "parked " .. longest .. " polls in a row")
         end
-        assert.are.same({}, notFirst)
-        assert.is_true(loops > 0, "hha never restarted")
-        assert.is_true(longest <= 1, "parked " .. longest .. " polls in a row")
-    end)
+    )
 end)
