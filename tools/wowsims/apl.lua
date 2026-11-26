@@ -33,7 +33,7 @@
 --    gives no guard and a header note.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`schedule`, `itemSwap`, `wait`,
---    `activeItemSwapSet`, `selectedConjured`), an action other than a cast aimed at another target (`target` Target
+--    `selectedConjured`), an action other than a cast aimed at another target (`target` Target
 --    with an index above 0: wowsims's second target; aura audit C7, never on the current one; a cast is rule 21), a
 --    `changeTarget` rule 20 does not absorb, or whose own action is an unmapped spell, item or other ID (an unmapped
 --    read drops only its branch: rule 12); a call of a group whose every entry was omitted. Also listed: rule 12's
@@ -157,7 +157,11 @@
 --    AddMajorCooldown in sim/core/major_cooldown.go and not cast by the APL itself, ready-at then priority first, cast
 --    once the GCD is ready) is one line per cooldown the log's "Major cooldown used" lines name, in first-use order
 --    (a proxy for wowsims's ready-then-priority; equal when they are first ready together), each key once and none
---    the APL casts itself under another ID (that key's own line stands; noted), with rule 7's `use_off_gcd` for an
+--    the APL casts itself under another ID (that key's own line stands; noted). "Casts itself" is wowsims's
+--    (sim/core/apl.go allAPLActions, L1246): a cast in the priority list or a group, a sequence's member included,
+--    never a pre-pull cast; a sequence whose condition has `spellIsKnown` `&` terms is pruned where one is unknown
+--    (a racial of another race) and keeps its members automatic there, so their automatic line takes
+--    `!action.<that key>.known` (Combat's Blade Flurry for every race but the Orc). Each line has rule 7's `use_off_gcd` for an
 --    off-GCD ability (a documented deviation, packs_spec requiring the flag on every off-GCD line: wowsims waits for
 --    the GCD before an automatic cast, the fork shows an off-GCD cooldown as soon as it is ready; the replay scores
 --    on-GCD decisions only), under the entry's condition and
@@ -231,7 +235,7 @@
 --    build value with no candidate is an error. The value `activeAll` (the selected spell on every target) is `active`
 --    on the current target, with rule 17's `# Deviation:` line, except in a swap rule 20 absorbs.
 -- 17. `multidot` (wowsims: the DoT cast on up to `maxDots` targets whose DoT has at most `maxOverlap` left) is the
---    cast's line under the entry's condition and `debuff.<key>.remains<=<maxOverlap>` (0 when absent), its aura read as
+--    cast's line under the entry's condition and `debuff.<key>.remains<=<maxOverlap>` (0 when absent or empty: `{}`), its aura read as
 --    `dotRemainingTime` (rules 5, 6, 12; `rank` ignored, rule 5). With `maxDots` above 1 (option D) the line carries
 --    `,cycle_targets=1,max_cycle_targets=<maxDots>` (Recommend Target Swaps: the engine's cycle on the belief's count,
 --    active_dot) and the `# Deviation:` line "multidot keeps the DoT on the first N targets in wowsims; here on up to N,
@@ -255,6 +259,11 @@
 --    whose condition is unsupported says so and reaches nothing). A waitUntil's condition is held: carried, as one
 --    `&` term, onto every later APL line of its list, or, when none follows (it ends its group or sequence), onto the
 --    later lines of each calling list (one level; its own entry condition and a group call's are not carried).
+--    A strictSequence of one waitUntil (any condition: the Rogues' Gnome pooling, L4) holds the rotation the same
+--    way, its gate `(!<entry condition>|<inert>|<wait>)`, `<inert>` `(action.<x>.known&action.<x>.disabled)` for
+--    each ability the entry condition tests ready (the cast it waits for: no hold while its line cannot show); a
+--    call of it under a condition raises. Stateless (apl-stateless-guards): wowsims also holds the lines before it
+--    once the wait began; here they still show while their own condition holds.
 --    A move to D yards reaches: the held gates after it in its list; and every APL line of its list and its callers'
 --    lists (before or after it) whose ability cannot be cast beyond D (D a constant, or a min()/max() of constants,
 --    rounded up to whole yards here): a `target.within<D>` term (one of the line's `&` terms, or of a parenthesised
@@ -353,7 +362,8 @@
 --    apl_values_*.go): `talentIsKnown` (wowsims's constant: the build holds that rank or a higher one) of an ID that
 --    resolves to a talent (a kit talent's spell, or a recipe `map` to a talent's key, as rule 4) is
 --    `talent.<key>.enabled` (a `rank` above 1: `talent.<key>.rank>=<rank>`), of one that resolves to a kit ability
---    (R52: wowsims's talent, our ability, Feral's Shifting Power) `action.<key>.known`, else false; `talentRank` is
+--    (R52: wowsims's talent, our ability only; Shifting Power left it once it became a kit talent)
+--    `action.<key>.known`, else false; `talentRank` is
 --    `talent.<key>.rank`, else 0; `spellFullCooldown` `cooldown.<key>.duration`, `spellTravelTime`
 --    `action.<key>.travel_time` and `spellGcdHastedDuration` `action.<key>.gcd` (each nil while the spell is unknown:
 --    rules 6, 12); `gcdIsReady` `gcd.remains<=0` (wowsims also counts the queue window); `currentHealth`
@@ -366,7 +376,10 @@
 --    `spellIsChanneling` is `action.<key>.channeling` for a kit ability declared `channeled`, else false (CN14);
 --    `frontOfTarget` and `targetIsMobType` are the request's constants, `inFrontOfTarget` (absent: false) and the
 --    encounter target's `mobType` (absent: unknown, every type false), each a `# Deviation:` line where its entry
---    emits: the client gives no facing and the creature type is not read (CN16). `spellExpectedDpet` stays unsupported (no damage model: CN5, docs/dev/wowsims-packs.md), as
+--    emits: the client gives no facing and the creature type is not read (CN16). Re-pin readiness 2.1:
+--    `activeItemSwapSet` is a constant (Hekili never swaps items: `Main` true, `Swap1` false, absent unsupported) and
+--    `spellIsHitCapped` the recipe's `hitCapped` (the build's gear hit against the cap; absent: unsupported), each a
+--    `# Deviation:` line. `spellExpectedDpet` stays unsupported (no damage model: CN5, docs/dev/wowsims-packs.md), as
 --    does a class's own "on all targets" read with no recipe `select` field (rule 16's `activeAll`).
 --    CN4 (upstream's values after the pin): `auraIsActiveOnAnyTarget` is `active_dot.<key>>0` (option D: the belief's
 --    count of enemies carrying it); `auraIsActiveOnAllTargets` is the target's
@@ -623,6 +636,7 @@ function M.context(set, r, log, player, encounter, tank)
         knownAs = r.knownAs or {}, -- { [aura ID] = talent key }: `auraIsKnown` of that aura is the talent's `enabled`
         focus = r.focus or {},
         executePhase = r.executePhase,
+        hitCapped = r.hitCapped, -- spellIsHitCapped: the build's gear hit against the cap (no default: unsupported)
         leveling = r.leveling or {},
         levelingFirst = r.levelingFirst or {},
         extra = r.extra or {},
@@ -1067,6 +1081,8 @@ local FIGHT_END = "timeUntilTargetDies against remainingTime: the target's time 
     .. " so the comparison is a constant."
 local FACING = "frontOfTarget is the request's in-front setting (%s the target); the client gives no facing."
 local MOB_TYPE = "targetIsMobType is the request's target type (%s); the client's creature type is not read."
+local SWAP_SET = "activeItemSwapSet %s is a constant: Hekili never swaps items, so the main set is always the one on."
+local HIT_CAPPED = "spellIsHitCapped is the recipe's build constant (%s); the client's hit chance is not read."
 local PREPULL_CAST = "the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast."
 local PREPULL_GCD =
     "the pre-pull time uses the kit's unhasted GCD (1 s off the GCD, wowsims's floor); wowsims uses the hasted GCD."
@@ -1568,7 +1584,7 @@ local function bool(c, n)
     elseif k == "talentIsKnown" then -- wowsims: a constant, the build holds the rank or a higher one
         local t = talentOf(c, v.talentId)
         if not t then
-            local x = spellLookup(c, v.talentId) -- R52: wowsims's talent the kit has as an ability (Shifting Power)
+            local x = spellLookup(c, v.talentId) -- R52: wowsims's talent the kit has only as an ability
             if x and c.ability[x] then
                 return "action." .. x .. ".known", nil, false
             end
@@ -1629,7 +1645,7 @@ local function bool(c, n)
         end
         local un = v.sourceUnit and unit(v) or "debuff" -- wowsims reads it on the target by default
         local overlap, ou = "0", false
-        if v.maxOverlap then
+        if v.maxOverlap and next(v.maxOverlap) then -- an empty one is absent, as rule 17's
             overlap, ou = value(c, v.maxOverlap)
         end
         local u = nilOr(reads(c, a), ou)
@@ -1697,6 +1713,25 @@ local function bool(c, n)
         deviate(c, d)
         c.folds[#c.folds + 1] = d -- S4: an entry this fold empties keeps the reason on its `never`
         return nil, c.inFront, false
+    elseif k == "activeItemSwapSet" then -- re-pin readiness 2.1: Hekili never swaps items, the main set stays on
+        local set = v.swapSet
+        if set ~= "Main" and set ~= "Swap1" then -- absent: the enum's Unknown, which wowsims rejects
+            unsupported("activeItemSwapSet " .. tostring(set))
+        end
+        local d = SWAP_SET:format(set)
+        deviate(c, d)
+        c.folds[#c.folds + 1] = d
+        return nil, set == "Main", false
+    elseif k == "spellIsHitCapped" then -- re-pin readiness 2.1: the recipe's build constant (gear hit vs the cap)
+        if type(c.hitCapped) ~= "boolean" then
+            unsupported("spellIsHitCapped (no recipe hitCapped)")
+        end
+        -- shortcut: one constant for every spell (one school's cap); upgrade to a per-key table when an APL reads
+        -- the hit cap of spells of two schools
+        local d = HIT_CAPPED:format(tostring(c.hitCapped))
+        deviate(c, d)
+        c.folds[#c.folds + 1] = d
+        return nil, c.hitCapped, false
     elseif k == "targetIsMobType" then -- CN16: the request's target type, a constant (creature type is not read)
         if c.mobType then
             local d = MOB_TYPE:format((tostring(c.mobType):gsub("^MobType", ""):lower()))
@@ -2355,7 +2390,8 @@ local function entryBody(c, e)
             cmp = {
                 op = "OpLe",
                 lhs = { dotRemainingTime = { spellId = m.spellId } },
-                rhs = m.maxOverlap or { const = { val = "0s" } },
+                -- an empty one (`"maxOverlap": {}`, upstream's none) is absent: 0 ms, as wowsims's nil
+                rhs = (m.maxOverlap and next(m.maxOverlap)) and m.maxOverlap or { const = { val = "0s" } },
             },
         }
         local cond = a.condition and { ["and"] = { vals = { a.condition, due } } } or due

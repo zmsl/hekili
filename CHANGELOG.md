@@ -7,6 +7,8 @@
 ### Changed
 
 ### Fixed
+- Combat Rogue: Blade Flurry is now recommended during the fight for every race, not only for Orcs.
+- Gnome Rogues: while Eureka is about to be used, the priority now pools energy up to 90 before anything else, as the wowsims rotation does (no pooling while Eureka's toggle is off).
 
 ### Known issues
 
