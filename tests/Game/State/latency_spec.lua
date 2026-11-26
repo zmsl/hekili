@@ -63,6 +63,7 @@ describe("the latency table", function()
         assert.are.same({
             "aura.read",
             "band.margin",
+            "band.stamp",
             "channel.stop",
             "gcd.edge",
             "own.tick",

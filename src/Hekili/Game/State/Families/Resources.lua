@@ -17,6 +17,8 @@ local Stats = I.Stats
 
 --- A flip pin measures regen only when the last short report was at most this long before it (TDF Belief.PIN_EXACT).
 I.PIN_EXACT = I.Lat.lag("usable.flip")
+--- How late a band crossing's stamp can be (a regen step, L1794): a regen pair's floor side reads with it (crossing).
+I.BAND_STAMP = I.Lat.lag("band.stamp")
 --- Seconds a cast's declared gain (its `now`'s `gain`) takes to reach the client's usability answers (the harness's
 --- usableDelay, UNMEASURED until G7): a short answer read sooner that the gain lifts past the cost predates it (a
 --- same-frame press after Bloodrage), so it is no rung. A refund and a hit's `taken` rage are estimates the answer may
@@ -105,6 +107,7 @@ local R = {
     regE = {},
     regL = {},
     regH = {},
+    regQ = {}, -- a part's stamp share: the EMA of its samples' read-high by I.BAND_STAMP (ema); spQ the spirit part's
     decl = {},
     dev = {},
     fsr = {},
@@ -116,6 +119,7 @@ local R = {
     spE = {},
     spL = {},
     spH = {},
+    spQ = {},
     spDecl = {},
     spDev = {},
     shaped = {},
@@ -534,7 +538,7 @@ I.OnBuild(function(def, now)
         R.regE[r], R.regL[r], R.regH[r] = rate, rate * (1 - I.REGEN_SPREAD), rate * (1 + I.REGEN_SPREAD)
         R.spDecl[r], R.spDev[r] = spirit, 0
         R.spE[r], R.spL[r], R.spH[r] = spirit, spirit * (1 - I.REGEN_SPREAD), spirit * (1 + I.REGEN_SPREAD)
-        R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
+        R.dev[r], R.scale[r], R.spread[r], R.regQ[r], R.spQ[r] = 0, 1, I.REGEN_SPREAD, 0, 0
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
         R.mayT[r] = -1e9
@@ -973,8 +977,10 @@ end
 -- One measurement m of a continuous part of slot r (its declared rate ref, its EMA E/L/H and deviation D) into that
 -- part's EMA (TDF calibrate). False when m is noise (a missed spend, a cap) or the part has no declared rate. A part
 -- declared 0 with a `bound` (an `fsr` slot's mp5 part: the slot's declared total) learns any m in [0, bound x
--- REGEN_RATIO] instead of the ratio test.
-local function ema(r, m, ref, E, L, H, D, bound)
+-- REGEN_RATIO] instead of the ratio test. `high`: how far m may read over the truth (a band pair's stamps, crossing;
+-- 0: none); Q, its EMA beside E's, keeps L = E - Q, the EMA of the samples' lower ends, at or under the truth (owner:
+-- the floor's rate never above the true regen).
+local function ema(r, m, ref, E, L, H, D, bound, Q, high)
     local scale = ref
     if ref == 0 then
         scale = bound or 0
@@ -989,8 +995,9 @@ local function ema(r, m, ref, E, L, H, D, bound)
     end
     -- the spread floor is REGEN_SPREAD_MIN times the reference m is measured against (calibrate's ratio: x 1)
     local est, dev, spread = Stats.Ema(E[r], D[r], m, I.ALPHA, abs(scale) * I.REGEN_SPREAD_MIN)
-    D[r] = dev
-    E[r], L[r], H[r] = est, est - spread, est + spread
+    local q = Q[r] + I.ALPHA * (high - Q[r])
+    D[r], Q[r] = dev, q
+    E[r], L[r], H[r] = est, est - (spread > q and spread or q), est + spread
     return true
 end
 
@@ -1039,8 +1046,9 @@ end
 -- to one tick of it, and a multiplied spirit rate's first tick dwarfs the parts it would measure (a plain slot's
 -- whole-rate `mult` keeps its tick error small next to the interval's gain, and still measures). `a`, `b`: the
 -- interval's weights (pinA, pinB between two pins; spans between two band crossings), `from`: its start, `event`: what
--- measured it.
-local function calibrate(r, m, t, a, b, from, event)
+-- measured it, `low`: the lowest m the interval allows (a band pair's, crossing; nil: m).
+local function calibrate(r, m, t, a, b, from, event, low)
+    local high = low and m - low or 0
     if R.shaped[r] then
         local ok
         -- spans reads the latest window: an entry edge after the interval (a band pair folded after its stamp) hides
@@ -1050,9 +1058,9 @@ local function calibrate(r, m, t, a, b, from, event)
             return -- the game's ticks put the new rate on a grid the belief does not see: off by up to a tick of it
         elseif b <= 0 and a > 0 then
             local bound = R.fsr[r] and R.decl[r] + R.spDecl[r] or nil
-            ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound) -- nonzero: a > 0 checked
+            ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound, R.regQ, high / a) -- a > 0 checked
         elseif b >= I.PIN_GAP then
-            ok = ema(r, (m - R.regE[r] * a) / b, R.spDecl[r], R.spE, R.spL, R.spH, R.spDev) -- nonzero: b >= 1
+            ok = ema(r, (m - R.regE[r] * a) / b, R.spDecl[r], R.spE, R.spL, R.spH, R.spDev, nil, R.spQ, high / b) -- b >= 1
         end
         if ok then
             I.Sample(R.regen[r], "modelled", R.regE[r] + R.spE[r], t, event)
@@ -1060,7 +1068,7 @@ local function calibrate(r, m, t, a, b, from, event)
         return
     end
     if R.swing[r] == 0 then
-        if ema(r, m, R.decl[r], R.regE, R.regL, R.regH, R.dev) then
+        if ema(r, m, R.decl[r], R.regE, R.regL, R.regH, R.dev, nil, R.regQ, high) then
             I.Sample(R.regen[r], "modelled", R.regE[r], t, event)
         end
         return
@@ -1752,20 +1760,20 @@ I.On(Obs.Read, function(o, t, lag)
                 end
                 e = e > 0 and e or 0
                 R.decl[r], R.spDecl[r], R.readT[r] = e, sp, t
-                R.regE[r], R.regL[r], R.regH[r] = e, e, e
-                R.spE[r], R.spL[r], R.spH[r] = sp, sp, sp
+                R.regE[r], R.regL[r], R.regH[r], R.regQ[r] = e, e, e, 0
+                R.spE[r], R.spL[r], R.spH[r], R.spQ[r] = sp, sp, sp, 0
                 I.Sample(R.regen[r], "observed", e + sp, t, Obs.Read)
             end
         elseif c == ReadOf.Regen and R.swing[r] == 0 and not (R.fsr[r] and mixed) then
             local v = o.b / f - k -- nonzero: f > 0 checked above
             v = v > 0 and v or 0 -- an `mp5` aura believed up that the game dropped: never a draining rate
             R.decl[r], R.readT[r] = v, t
-            R.regE[r], R.regL[r], R.regH[r] = v, v, v
+            R.regE[r], R.regL[r], R.regH[r], R.regQ[r] = v, v, v, 0
             I.Sample(R.regen[r], "observed", v + R.spE[r], t, Obs.Read)
         elseif c == ReadOf.RegenSpirit and R.fsr[r] and not mixed then -- after its slot's Regen read (Power.lua)
             local v = o.b / f -- nonzero: f > 0 checked above
             R.spDecl[r], R.readT[r] = v, t
-            R.spE[r], R.spL[r], R.spH[r] = v, v, v
+            R.spE[r], R.spL[r], R.spH[r], R.spQ[r] = v, v, v, 0
             I.Sample(R.regen[r], "observed", R.regE[r] + v, t, Obs.Read)
         end
     end
@@ -1799,8 +1807,10 @@ local function crossing(r, lo, hi, bt)
         end
         local a, b, k = spans(r, from, dt)
         local gain = lo - R.markV[r] - k
+        -- each end stamped up to a step late (L1794): the cell took up to dt + I.BAND_STAMP, its entries' k with it
+        local low = (lo - R.markV[r]) * dt / (dt + I.BAND_STAMP) - k
         local m = R.shaped[r] and gain or gain / dt -- nonzero: dt >= PIN_GAP (1 s)
-        calibrate(r, m, bt, a, b, from, Obs.Band)
+        calibrate(r, m, bt, a, b, from, Obs.Band, R.shaped[r] and low or low / dt)
     end
     R.markT[r], R.markV[r] = bt, lo
 end
