@@ -120,6 +120,23 @@ local REPLAY = {
 -- sit on a 0.5 s grid; the new gear re-times the fight onto it.
 -- Frost 0.96 kept (0.966, 56 of 58; frostbolt -> cone_of_cold 2, the old log's class). LIVE60 kept (measured Arcane
 -- 8.4, Fire 6.2, Frostfire 11.8, Frost 6.0).
+-- Trinket fix d868ecf6f (L1960, FABLE-FOR-OWNER 2026-11-26, fable-trinket-flash-decision.md): a `use_items,use_off_gcd=1`
+-- line's flag now reaches the trinkets it walks. Before, the trinket waited out the GCD while the later
+-- `combustion,use_off_gcd=1` line read ready, and at 0.2 s left the early exit gave slot 1 back to the trinket: a
+-- now<->next swap with no fact. Fire: now flashes and swaps 0.33 -> 0.00/min, flashes 0.67 -> 0.00, tick agreement
+-- 0.895 unchanged; decisions and floors unchanged. Timing fixtures re-recorded (in:grain -> early), two row classes:
+-- trinkets (Fire eye_of_the_beast log 13.50 -1.4, Frostfire 9.00 -1.3): the flag now reaches the item, so it shows
+-- ready during the GCD, and wowsims presses it at its GCD's end (generator rule 7, tools/wowsims/apl.lua: use_off_gcd=1
+-- is the documented deviation from wowsims's GCD wait). Off the GCD per the wowsims pin ab0f00e4fc: its logs cast every
+-- item with `GCD = 0s` (mage_fire.log 301/305), and Items.lua's `gcd = "off"` comes from the pin's db.json; no live
+-- capture yet (L1973). Direct lines (Fire combustion -1.4): its own use_off_gcd=1 line already read ready from log
+-- 12.10 at base; the swap poll broke timing.lua's b streak, so b read 0 (an existing early reading the swap hid).
+-- Frostfire tick agreement 0.839 (0.848 before gear-1's trinket line; this fix leaves it) is a record, no floor (ruled
+-- FABLE-FOR-OWNER, L1931): its 8 disagreeing ticks (harness 12.60-14.00 = log 6.10-7.50) fall in the fifth Scorch's
+-- cast (log 6.00-7.50), where we show the trinket from the cast's first poll, waiting out the cast, on the Fire
+-- Vulnerability stack projected to the cast's end, through the landing poll; wowsims reads that stack with
+-- includeReactionTime (the request's 100 ms), presses Fire Blast at 7.50 and the items at its GCD's end, 9.00
+-- (mage_frostfire.log 198-225). The generator drops includeReactionTime by rule (apl.lua rule 5).
 local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.98, 10.0, 0 },
     -- LIVE60 6.0 -> 6.2 (CN8 D2): the same dry-pool wait for Scorch (96.4-102.4 s, mana 49-153), one poll longer on
