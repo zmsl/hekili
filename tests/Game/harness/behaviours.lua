@@ -93,10 +93,15 @@ function M.melee(p)
             end
             function swing() -- the local above
                 local tgt = e.target
+                local w = e.weapons[h]
                 if e.stopped or not tgt or tgt.health <= 0 then
+                    -- a multi-life world moves our target on 0.5 s after a kill (world.lua): a swing due in that gap
+                    -- keeps the timer, as out of reach below, instead of ending our auto attack for the fight
+                    if not e.stopped and W.livesLeft and W.livesLeft > 0 then
+                        due(W.t + w[3] / (p.haste or 1))
+                    end
                     return
                 end
-                local w = e.weapons[h]
                 -- shortcut: out of reach only for us (the world's one position); the timer runs on, not reset at reach
                 if e == W.ents[1] and not W.inMelee() then
                     due(W.t + w[3] / (p.haste or 1))
