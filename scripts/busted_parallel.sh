@@ -19,37 +19,53 @@ trap 'rm -rf "$OUT"' EXIT
 # One progress line per finished file, printed at once (a noclobber-file lock keeps parallel jobs from interleaving and the counter
 # exact): "[done/total done, N running] file ok|FAIL 3m41s, about 6 min left". The ETA is the last-run times of the files
 # not yet finished over the job count; none known, none printed. The report after the run does not depend on these lines.
+# eta_text <seconds> <jobs> <suffix>: ", about N min<suffix>" / ", under 1 min<suffix>"; nothing when no time is known (seconds <= 0).
+eta_text() {
+    awk -v s="$1" -v j="$2" -v w="$3" 'BEGIN { if (s > 0) { m = int(s / j / 60 + 0.5); printf ", %s%s", m < 1 ? "under 1 min" : "about " m " min", w } }'
+}
+# GitHub workflow-command escaping (data: % CR LF; property values also , and : in the awk below)
+esc() { local v=${1//%/%25}; v=${v//$'\r'/%0D}; echo "${v//$'\n'/%0A}"; }
+export -f eta_text esc
+
 progress() {
-    local f=$1 rc=$2 secs=$3 log=$4 status=ok done left eta="" line
+    local f=$1 rc=$2 secs=$3 log=$4 status=ok done left eta="" line tries=0 zero="" e
     [ "$rc" = 0 ] || status=FAIL
     awk '/ failures? \/ .* errors? \/ / { if ($4 + $7 > 0) bad = 1 } END { exit !bad }' "$log" && status=FAIL
-    until (set -C; : >"$OUT/.lock") 2>/dev/null; do sleep 0.05; done # O_EXCL: mkdir races on uutils coreutils
+    [ "$status" = ok ] && grep -q '^0 successes / 0 failures / 0 errors / 0 pending' "$log" && zero=1
+    # O_EXCL: mkdir races on uutils coreutils. Give up on the lock after 60 s (a holder killed by SIGKILL), and leave when $OUT is gone.
+    until (set -C; : >"$OUT/.lock") 2>/dev/null; do
+        [ -d "$OUT" ] || return
+        [ $((tries += 1)) -gt 1200 ] && break
+        sleep 0.05
+    done
     echo "$f" >>"$OUT/.finished"
     done=$(wc -l <"$OUT/.finished" | tr -d ' ')
-    left=$(awk 'FILENAME == ARGV[1] { d[$0] = 1; next } !($2 in d) { s += $1; n++ } END { if (n) printf "%d", s }' \
-        "$OUT/.finished" "$TIMES")
-    if [ -n "$left" ] && [ "$left" -gt 0 ]; then
-        eta=$(awk -v s="$left" -v j="$JOBS" 'BEGIN { m = int(s / j / 60 + 0.5); printf ", %s left", m < 1 ? "under 1 min" : "about " m " min" }')
-    fi
-    line=$(printf '[%d/%d done, %d running] %s %s %dm%02ds%s' "$done" "$TOTAL" "$((TOTAL - done < JOBS ? TOTAL - done : JOBS))" \
-        "$f" "$status" "$((secs / 60))" "$((secs % 60))" "$eta")
-    if [ "${GITHUB_ACTIONS:-}" = true ]; then # a collapsible group per file; failures become annotations (20 a run at most)
-        echo "::group::$line"
-        cat "$log"
-        echo "::endgroup::"
-        # busted prints "Failure → file @ line", the test name, then "file:line: message"
-        awk -v f="$f" -v cap=20 -v used="$(cat "$OUT/.annot" 2>/dev/null || echo 0)" '
-            /^(Failure|Error) → / { ln = ""; n = split($0, a, " @ "); if (n > 1) ln = a[2]; st = 1; next }
-            st == 1 { name = $0; gsub(/%/, "%25", name); st = 2; next }
-            st == 2 { msg = $0; gsub(/%/, "%25", msg); gsub(/\r/, "", msg)
-                if (match(msg, /[^ ]+:[0-9]+:/)) { split(substr(msg, RSTART, RLENGTH), b, ":"); ln = b[2] }
-                if (used < cap) { printf "::error file=%s%s::%s: %s\n", f, (ln != "" ? ",line=" ln : ""), name, msg; used++ }
-                st = 0 }
-            END { print used > "/dev/stderr" }' "$log" 2>"$OUT/.annot"
-        awk -v f="$f" -v st="$status" -v t="$secs" '/ success(es)? \/ .* failures? \/ .* errors? \/ / { p = $1; x = $4 + $7 }
-            END { printf "%s\t%s\t%d\t%d\t%d\n", f, st, t, p, x }' "$log" >>"$OUT/.rows"
-    else
-        echo "$line"
+    if [ -z "$zero" ]; then # a file that ran no test under the tag filter prints nothing here (it still counts in done/total)
+        left=$(awk 'FILENAME == ARGV[1] { c[$0] = 1; next } FILENAME == ARGV[2] { d[$0] = 1; next } ($2 in c) && !($2 in d) { s += $1 }
+            END { printf "%.3f", s }' "$OUT/.files" "$OUT/.finished" "$TIMES")
+        eta=$(eta_text "$left" "$JOBS" " left")
+        line=$(printf '[%d/%d done, %d running] %s %s %dm%02ds%s' "$done" "$TOTAL" "$((TOTAL - done < JOBS ? TOTAL - done : JOBS))" \
+            "$f" "$status" "$((secs / 60))" "$((secs % 60))" "$eta")
+        if [ "${GITHUB_ACTIONS:-}" = true ]; then # a collapsible group per file; failures become annotations (20 a run at most)
+            e=$(esc "$f")
+            echo "::group::${line/"$f"/$e}"
+            sed 's/^::/ ::/' "$log" # a log line starting with :: would be run as a workflow command
+            echo "::endgroup::"
+            # busted prints "Failure -> file @ line" (older versions an arrow), the test name, then "file:line: message"
+            awk -v f="$e" -v cap=20 -v used="$(cat "$OUT/.annot" 2>/dev/null || echo 0)" '
+                BEGIN { gsub(/,/, "%2C", f); gsub(/:/, "%3A", f) }
+                /^(Failure|Error) (->|→) / { ln = ""; n = split($0, a, " @ "); if (n > 1) ln = a[2]; st = 1; next }
+                st == 1 { name = $0; gsub(/%/, "%25", name); st = 2; next }
+                st == 2 { msg = $0; gsub(/%/, "%25", msg); gsub(/\r/, "", msg)
+                    if (match(msg, /[^ ]+:[0-9]+:/)) { split(substr(msg, RSTART, RLENGTH), b, ":"); ln = b[2] }
+                    if (used < cap) { printf "::error file=%s%s::%s: %s\n", f, (ln != "" ? ",line=" ln : ""), name, msg; used++ }
+                    st = 0 }
+                END { print used > "/dev/stderr" }' "$log" 2>"$OUT/.annot"
+            awk -v f="$f" -v st="$status" -v t="$secs" '/ success(es)? \/ .* failures? \/ .* errors? \/ / { p = $1; x = $4 + $7 }
+                END { printf "%s\t%s\t%d\t%d\t%d\n", f, st, t, p, x }' "$log" >>"$OUT/.rows"
+        else
+            echo "$line"
+        fi
     fi
     rm -f "$OUT/.lock"
 }
@@ -71,10 +87,9 @@ mkdir -p "$(dirname "$TIMES")" 2>/dev/null
 touch "$TIMES" 2>/dev/null
 [ -r "$TIMES" ] && [ -w "$TIMES" ] || TIMES=/dev/null # the order is an optimisation: never fail a run over it
 export TIMES TOTAL=${#files[@]} JOBS=${BUSTED_JOBS:-$(nproc)}
-all=$(printf '%s\n' "${files[@]}" | awk 'FILENAME == ARGV[1] { t[$2] = $1; next } $0 in t { s += t[$0] } END { printf "%d", s }' "$TIMES" -)
-eta=""
-[ "$all" -gt 0 ] && eta=$(awk -v s="$all" -v j="$JOBS" 'BEGIN { printf ", about %d min", int(s / j / 60 + 0.5) }')
-echo "running $TOTAL spec files, $JOBS at a time$eta"
+printf '%s\n' "${files[@]}" >"$OUT/.files"
+all=$(awk 'FILENAME == ARGV[1] { c[$0] = 1; next } $2 in c { s += $1 } END { printf "%.3f", s }' "$OUT/.files" "$TIMES")
+echo "running $TOTAL spec files, $JOBS at a time$(eta_text "$all" "$JOBS" "")"
 printf '%s\n' "${files[@]}" | awk 'FILENAME == ARGV[1] { t[$2] = $1; next } { print ($0 in t ? t[$0] : 1e9), $0 }' \
     "$TIMES" - | LC_ALL=C sort -s -k1,1gr | cut -d' ' -f2 | tr '\n' '\0' | xargs -0 -P "$JOBS" -I{} bash -c 'run_one "$@"' _ {} "$@"
 
@@ -83,6 +98,8 @@ for f in "${files[@]}"; do # this run's times, for the next run's order
 done >"$TIMES"
 
 failed=()
+# shortcut: the end dump stays byte-identical to the plain run, so a log line starting with :: inside this one group still runs
+# as a workflow command; neutralise it here if a spec ever prints one.
 [ "${GITHUB_ACTIONS:-}" = true ] && echo "::group::Full per-file output (path order)"
 for f in "${files[@]}"; do
     log="$OUT/${f//\//_}"

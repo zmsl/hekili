@@ -1,0 +1,8 @@
+-
+0 successes / 1 failure / 0 errors / 0 pending : 0.000354 seconds
+
+Failure -> tests/Forever/zz_runner_probe_spec.lua @ 2
+runner probe #druid fails on purpose to test annotations
+tests/Forever/zz_runner_probe_spec.lua:3: Expected objects to be equal.
+Passed in:
+(number) 2
