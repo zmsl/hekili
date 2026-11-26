@@ -96,6 +96,13 @@ end
 -- The replay flicker ceiling (per minute, the last column): plain flicker bars, 0 in all five, measured 0.00/min (oracle
 -- 0.00) at the re-pin e2842f0a78. They say nothing about Movement: Demonology and Shadow Brand replay with it ON (R8) but
 -- every replay is single-target and the Hellfire line needs active_enemies>=3.
+-- Trinket fix d868ecf6f (L1960, FABLE-FOR-OWNER 2026-11-26, fable-trinket-flash-decision.md): a `use_items,use_off_gcd=1`
+-- line's flag now reaches the trinkets it walks (they read ready during the GCD). Demonology and Destruction re-recorded
+-- one timing row each, the log 1.40 curse_of_the_elements (class first, verdict scope, no floor reads it): its
+-- predicted offset a 0.001 -> 0.000. Traced: at the poll before the decision (harness 6.40) slot 1 is the Eye of the
+-- Beast, slot 2 the curse, which the engine counts from slot 1's press; at base the Eye waited the GCD's last 0.0004 s
+-- (the flag lost), so the curse read 0.0010; now the Eye reads 0 and the curse its own 0.0004 (the GCD's remains). A
+-- direct consequence of the trinket's wait reading 0. Every other row, agreement and flicker unchanged.
 local PACKS = {
     { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.95, 0.2, 0 },
     { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.80, 0.2, 0 },

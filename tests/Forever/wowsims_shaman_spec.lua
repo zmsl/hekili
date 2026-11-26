@@ -73,6 +73,16 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     -- cost crossing (gap BT). The log's 22 Windfury Totem strikes (`Casting {SpellID: 10610}`) map to no ability and are
     -- not scored. With lane mana-09 merged (Stormstrike 122, the log's price): 0.963 (80) unchanged; LIVE60 below 5.8
     -- unchanged
+    -- Trinket fix d868ecf6f (L1960, FABLE-FOR-OWNER 2026-11-26, fable-trinket-flash-decision.md): a
+    -- `use_items,use_off_gcd=1` line's flag now reaches the trinkets it walks. Timing fixture re-recorded, two rows at log
+    -- 0.00, in:grain -> early -0.8 (off-GCD real 0 -> 2, no floor reads off-GCD rows). The trinket (weakness_analyzer):
+    -- it now shows ready during the GCD, and wowsims presses it at its GCD's end (generator rule 7, tools/wowsims/apl.lua:
+    -- use_off_gcd=1 is the documented deviation from wowsims's GCD wait); off the GCD per the wowsims pin ab0f00e4fc
+    -- (shaman_enhancement.log 82: `GCD = 0s`; Items.lua's `gcd = "off"` from the pin's db.json); no live capture yet
+    -- (L1973). The direct line (rage_of_the_farseer, its own use_off_gcd=1 line), traced: it read ready (slot 1, wait 0)
+    -- from harness 4.20 at base and head alike (decision 5.00); at base the trinket, waiting out the GCD, took slot 1 at
+    -- 4.80 (0.2 s left, the early exit) and pushed it to 0.201, which broke timing.lua's b streak, so b read 0; now no
+    -- swap, b -0.8 (an existing early reading the swap hid). Decisions, agreement and flicker unchanged.
     it(PACK .. " follows wowsims's casts", function()
         local C = content("shaman_enhancement", sw.Enhancement, PACK, 60)
         ws.gate(PACK, C, "shaman_enhancement", 0.96, ENH_REPLAY)
@@ -118,6 +128,13 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     -- (Fire Nova above Elemental Mastery, Chain Lightning only at mana.pct_lo > 40 without Elemental Mastery, Earth
     -- Shock on Revelation at any target count) drop the old misses; two left [chain_lightning -> lightning_bolt 1,
     -- lightning_bolt -> searing_totem 1]
+    -- Trinket fix d868ecf6f (L1960, FABLE-FOR-OWNER 2026-11-26, fable-trinket-flash-decision.md): a
+    -- `use_items,use_off_gcd=1` line's flag now reaches the trinkets it walks. Timing fixture re-recorded, one row:
+    -- weakness_analyzer at log 0.00 in:grain -> early -0.8 (off-GCD real 1 -> 2, median 1.430 -> 0.800; no floor reads
+    -- off-GCD rows): it now shows ready during the GCD, and wowsims presses it at its GCD's end (generator rule 7,
+    -- tools/wowsims/apl.lua: use_off_gcd=1 is the documented deviation from wowsims's GCD wait); off the GCD per the
+    -- wowsims pin ab0f00e4fc (shaman_elemental.log 80: `GCD = 0s`; Items.lua's `gcd = "off"` from the pin's db.json); no
+    -- live capture yet (L1973). Decisions, agreement and flicker unchanged.
     it(ELE .. " follows wowsims's casts", function()
         ws.gate(ELE, content("shaman_elemental", sw.Elemental, ELE, 60), "shaman_elemental", 0.97, ELE_REPLAY)
     end)
