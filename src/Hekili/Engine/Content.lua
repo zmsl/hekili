@@ -69,7 +69,10 @@ local format = string.format
 -- defensive line's health threshold slider).
 --   Since then, without a bump: HealthOption's second argument (an ability key naming the slider's form, def-2 review
 --   Minor 4); an older core shows the ability's name alone.
-local CONTENT_API = 17
+-- 18 (2026-11-26, lane 6, L1827): spec:RegisterTotemSlots and a resource meta's `onTarget`, `rest` and `points`, which
+-- the core no longer guesses from key names: an older core raises on the call, and this core gives an older pack's
+-- combo points no target binding, its energy and mana no rest at the maximum and its element names no slot.
+local CONTENT_API = 18
 
 local done, notice = false, nil
 

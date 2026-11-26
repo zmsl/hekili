@@ -327,22 +327,45 @@ describe("the tracked set", function()
         end
     )
 
-    it("forwards a regenerating resource's rest as a flag and a swing entry's `aura` as its gate", function()
+    -- lane 6 (L1827 rows 1-3): onTarget, rest and points come from the resource's meta, never its key name; rage is in
+    -- none of the core's old name tables, so only the declaration can give it each
+    it(
+        "forwards the declared onTarget, rest (as a flag) and points of a resource, and a swing entry's `aura`",
+        function()
+            local got
+            local build = I.Build
+            I.Build = function(def, t)
+                got = def
+                return build(def, t)
+            end
+            local rage = h.Class.resources.rage.state
+            ns.raceMods = { maxMods = { { pct = 0.05 } }, costMods = {} }
+            ns.BuildTracked()
+            local d = got.resources[1]
+            assert.are.same({ false, false, nil, 1 }, { d.rest, d.onTarget, d.swingAura, #d.maxMods })
+            rage.meta = { rest = "max", onTarget = true, points = true }
+            rage.regenModel.mainhand.aura = "bear_form"
+            ns.BuildTracked()
+            I.Build, ns.raceMods, rage.meta, rage.regenModel.mainhand.aura = build, nil, nil, nil
+            d = got.resources[1]
+            assert.are.same({ true, true, "bear_form", nil }, { d.rest, d.onTarget, d.swingAura, d.maxMods })
+        end
+    )
+
+    -- lane 6 (L1827 row 5): the element names of totem.<element> and summonTotem are the pack's declaration
+    it("hands the belief a plain copy of the declared totem slots", function()
         local got
         local build = I.Build
         I.Build = function(def, t)
             got = def
             return build(def, t)
         end
+        local slots = { spirit = 2 }
+        h.Class.totemSlots = slots
         ns.BuildTracked()
-        assert.are.same({ false, nil }, { got.resources[1].rest, got.resources[1].swingAura })
-        ns.ResourceRegenerates = function(k)
-            return k == "rage"
-        end
-        h.Class.resources.rage.state.regenModel.mainhand.aura = "bear_form"
-        ns.BuildTracked()
-        I.Build = build
-        assert.are.same({ true, "bear_form" }, { got.resources[1].rest, got.resources[1].swingAura })
+        I.Build, h.Class.totemSlots = build, nil
+        assert.are.same({ spirit = 2 }, got.totemSlots)
+        assert.are_not.equal(slots, got.totemSlots)
     end)
 
     it("leaves the cast history, the real queue and the swing fields to the combat-log rows", function()

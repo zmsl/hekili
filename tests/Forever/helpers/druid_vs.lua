@@ -28,7 +28,7 @@ function M.boot(ns, api, edit)
     end
     class.resources = {
         energy = { type = 3, state = { meta = w.resources[3].meta, regenMult = rates } },
-        combo_points = { type = 4, state = {} },
+        combo_points = { type = 4, state = { meta = w.resources[4].meta } }, -- on the target, points (the pack's)
         rage = { type = 1, state = { regenModel = w.resources[1].models, meta = w.resources[1].meta } },
         mana = { type = 0, state = { meta = w.resources[0].meta } }, -- its `base`: a fraction cost's base mana
     }
@@ -74,12 +74,6 @@ function M.boot(ns, api, edit)
     h.Class = class
     fs.clock = api.GetTime
     ns.spendResources = fs.spend
-    ns.ResourceRegenerates = function(k)
-        return k == "energy" or k == "mana"
-    end
-    ns.ResourceIsPoints = function(k) -- Constants.lua's, for the one point resource here
-        return k == "combo_points"
-    end
     -- Clearcasting and Nature's Grace, as spec:RegisterCostMod and spec:RegisterGcdMod append them
     ns.raceMods = { maxMods = {}, costMods = w.costMods, gcdMods = w.gcdMods }
     load.schema(ns, h)

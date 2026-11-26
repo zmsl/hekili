@@ -105,6 +105,7 @@ function Hekili:SpecializationChanged()
     wipe( class.resourceAuras )
 
     wipe( class.pets )
+    wipe( class.totemSlots )
     wipe( class.windows )
     wipe( class.reactions )
 
@@ -265,6 +266,10 @@ function Hekili:SpecializationChanged()
 
             for k, v in pairs( spec.totems ) do
                 if not class.totems[ k ] then class.totems[ k ] = v end
+            end
+
+            for k, v in pairs( spec.totemSlots ) do
+                if not class.totemSlots[ k ] then class.totemSlots[ k ] = v end
             end
 
             for k, v in pairs( spec.packs ) do

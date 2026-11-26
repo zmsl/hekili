@@ -153,7 +153,8 @@ local function sndDuration(cp, rank)
     return (6 + 3 * cp) * (1 + 0.15 * rank)
 end
 
-spec:RegisterResource(Enum.PowerType.ComboPoints)
+-- Combo points: a count the game binds to the target (only the current target's is usable), not a pool.
+spec:RegisterResource(Enum.PowerType.ComboPoints, nil, nil, { onTarget = true, points = true })
 -- Adrenaline Rush (13750 aura 110 misc 3 base 100): +100% energy regen while it is up, a rate multiplier (C3b).
 -- regen: energy's base rate a second, the belief's from the build until a plain rate read (energy is secret even out
 -- of combat): wowsims/forever's 1 energy every 0.1 s (sim/core/energy.go:48-49).
@@ -163,7 +164,7 @@ spec:RegisterResource(Enum.PowerType.ComboPoints)
 -- no refund for it, so its registration below leaves `refundOnAvoid` off.
 spec:RegisterResource(Enum.PowerType.Energy, {
     adrenaline_rush = { aura = "adrenaline_rush", mult = 2 },
-}, nil, { regen = 10, refundOnAvoid = 0.8 })
+}, nil, { regen = 10, rest = "max", refundOnAvoid = 0.8 }) -- rest: energy rests full out of combat
 
 -- Talents: { talent tree (1 Assassination, 2 Combat, 3 Subtlety: the dominant tree picks the spec), rank 1's spell,
 -- max rank }: Forever's tree as wowsims/forever's ui/sim/talents/trees/rogue.json lists it (tools/wowsims/talents.lua

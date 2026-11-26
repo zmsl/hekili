@@ -36,7 +36,7 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- belief cannot see (a proc's expected gain; 0: none). Continuous regen is per second (regE/regL/regH); a swing-paid
 -- resource's step is the spec's model value of that hand x scale (spread around it), its floor step (value - width) x
 -- (scale - spread) and its top step (value + width) x (scale + spread). `restMax[r]`: a regenerating
--- resource rests at its maximum (energy, mana), the others at 0 (rage).
+-- resource rests at its maximum (its pack's meta `rest = "max"`: energy, mana), the others at 0 (rage).
 -- The five-second rule (C3): a slot with an `fsr` meta splits its continuous regen in two parts, each with its own
 -- calibrated state: the `mp5` part (regE/regL/regH, decl, dev) always, the `spirit` part (spE/spL/spH, spDecl, spDev;
 -- 0 for every other slot) only outside the window our own spend opens (`fsrUntil[r]`: its end, I.FSR after the
@@ -795,6 +795,18 @@ local function readAt(r, t)
         end
     end
     return f, k, mixed, s
+end
+
+--- Whether a declared pause of slot r (a regen entry with `mult` 0, such as a form that stops the pool) is believed up
+--- at t: the out-of-combat read's 0 is then the pause's, no rate (Sources/Power.lua; lane 6, L1827 row 4). Allocates
+--- nothing.
+function I.RegenPaused(r, t)
+    for i = 1, M.n do
+        if M.slot[i] == r and M.mult[i] == 0 and I.AuraUpAt(1, M.aura[i], t) then
+            return true
+        end
+    end
+    return false
 end
 local pendAct = {} -- by slot: an `fsr` slot's casting read under a share-only entry, unmixed at its spirit read (-1 none)
 

@@ -37,9 +37,6 @@ describe("resource modifiers", function()
         ns.ResourceRegenerates = function()
             return false
         end
-        ns.ResourceIsPoints = function(k) -- Constants.lua's, for the one point resource here
-            return k == "combo_points"
-        end
         h.Class.auras.mod_aura_a = { key = "mod_aura_a", id = MOD_AURA, duration = 15 }
         -- a race pack's declarations (Engine/Schema/Races.lua), as Engine/Schema/Tracked.lua reads them
         ns.raceMods = {
@@ -125,11 +122,13 @@ describe("resource modifiers", function()
         assert.are.equal(15, I.CostOf(spender_b))
     end)
 
-    it("never raises a point resource's maximum", function()
-        h.Class.resources.combo_points = { type = 4 }
+    -- lane 6 (L1827 row 3): a point resource is the pack's declaration (meta `points`), never its key name: focus is in
+    -- none of the core's old name tables
+    it("never raises the maximum of a resource whose meta declares it points", function()
+        h.Class.resources.focus = { type = 2, state = { meta = { points = true } } }
         ns.BuildTracked()
         local R = I.res
-        assert.are.same({ 105, 100 }, { R.max[R.slotOfToken.RAGE], R.max[R.slotOfToken.COMBO_POINTS] })
+        assert.are.same({ 105, 100 }, { R.max[R.slotOfToken.RAGE], R.max[R.slotOfToken.FOCUS] })
     end)
 
     it("matches a listed `copy` rank, and every ability of the resource when `spells` is absent", function()

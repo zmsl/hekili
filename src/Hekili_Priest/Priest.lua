@@ -282,6 +282,7 @@ spec:RegisterResource(
             end,
         },
         base = 1376, -- a fraction cost is of base mana (wowsims's priest base mana at 60, base_stats_auto_gen.go)
+        rest = "max", -- mana rests full out of combat
     }
 )
 

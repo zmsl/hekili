@@ -711,6 +711,15 @@ local HekiliSpecMixin = {
         end
     end,
 
+    -- Forever (lane 6, L1827 row 5): the belief's `totem.<element>` and summonTotem's element names, each the client
+    -- totem slot it fills, `{ [element] = { slot = n } }` (the registry's `totem` rows, Engine/Schema/Fields.lua).
+    RegisterTotemSlots = function( self, slots )
+        for element, data in pairs( slots ) do
+            ns.Fields.Check( "totem", self, element, data )
+            self.totemSlots[ element ] = data.slot
+        end
+    end,
+
     GetSetting = function( self, info )
         local setting = info[ #info ]
         return Hekili.Engine.settings.specs[ self.id ].settings[ setting ]

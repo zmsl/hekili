@@ -156,14 +156,14 @@ S.Poll(1, function(api, t)
         if not I.inCombat and R.swing[r] == 0 then
             local rawIn, rawAct = api.GetPowerRegenForPowerType(R.type[r]) -- secret: Plain next
             local idle, act = Plain(api, rawIn), Plain(api, rawAct)
-            -- A 0 for a slot resting at its maximum is a form that does not regenerate it (a pull from Bear Form): skip.
+            -- A 0 while a declared pause of the slot is up is the pause's (a form that stops the pool), no rate: skip.
             if R.fsr[r] then
                 -- an `fsr` slot (C3): not casting is both parts, casting the mp5 part alone
                 if
                     type(idle) == "number"
                     and type(act) == "number"
                     and idle >= act
-                    and (idle ~= 0 or not R.restMax[r])
+                    and (idle ~= 0 or not I.RegenPaused(r, t))
                     -- news: a rate that differs, or a band still open (a read equal to the seed narrows it, L1289)
                     and (act ~= R.regE[r] or idle - act ~= R.spE[r] or R.regL[r] ~= R.regH[r] or R.spL[r] ~= R.spH[r])
                 then
@@ -174,7 +174,7 @@ S.Poll(1, function(api, t)
                 idle ~= nil
                 and type(act) == "number"
                 and (act ~= R.regE[r] or R.regL[r] ~= R.regH[r])
-                and (act ~= 0 or not R.restMax[r])
+                and (act ~= 0 or not I.RegenPaused(r, t))
             then
                 Direct(Obs.Read, t, r, act, ReadOf.Regen)
             end

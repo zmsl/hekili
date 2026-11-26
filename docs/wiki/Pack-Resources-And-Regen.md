@@ -34,12 +34,12 @@ spec:RegisterResource(
     Enum.PowerType.Energy,
     { bear_pause = { aura = "bear_form", mult = 0 } },
     nil,
-    { regen = 10, refundOnAvoid = 0.8 }
+    { regen = 10, rest = "max", refundOnAvoid = 0.8 }
 )
-spec:RegisterResource(Enum.PowerType.ComboPoints)
+spec:RegisterResource(Enum.PowerType.ComboPoints, nil, nil, { onTarget = true, points = true })
 ```
 
-Energy comes in at 10 a second, stops while Bear Form is up, and gives back 80% of an avoided ability's cost. Combo points are read plainly from the game and need nothing more.
+Energy comes in at 10 a second, stops while Bear Form is up, rests full out of combat and gives back 80% of an avoided ability's cost. Combo points are read plainly from the game, count on the current target only, and are a count rather than a pool.
 
 In both layers the resource reads as `<key>.current` (the best guess), `<key>.lo` and `<key>.hi` (the ends of the belief's band), `<key>.max` and more ([APL expression reference](APL-Expression-Reference)).
 
@@ -119,7 +119,7 @@ A rate entry changes the continuous rate while a player aura is up. It has `aura
 
 | Field | Meaning |
 |---|---|
-| `mult` | The whole rate times this. 0 stops the resource, as Bear Form stops energy. |
+| `mult` | The whole rate times this. 0 stops the resource, as Bear Form stops energy; while it is up, the belief takes the game's out-of-combat rate of 0 as the pause, not as a rate. |
 | `spirit` | The spirit part of the rate times this, a number or a function |
 | `share` | This share of the spirit part continues inside the five-second rule, added to the meta's `share` and capped at all of it |
 | `mp5` | This much more a second, inside and outside the five-second rule |
@@ -148,6 +148,9 @@ A race applies a rate entry with `race:RegisterRegenMod({ resource, aura, ... })
 | `decayInterval` | function | The seconds between decay steps; with `decay`, the decay is stepped |
 | `fsr` | table | The five-second rule's parts ([below](#the-five-second-rule)) |
 | `refundOnAvoid` | number | The class's default share of an avoided ability's cost given back ([below](#refunds)) |
+| `rest` | `"max"` or `"zero"` | Where the pool rests out of combat. Energy and mana declare `"max"`. Without it, 0, as rage rests. |
+| `onTarget` | boolean | True when the game binds the count to one target, as combo points: only the current target's count is usable |
+| `points` | boolean | True for a count rather than a pool: a race's percentage maximum bonus never scales it |
 
 From `src/Hekili_Druid/Druid.lua`, rage decays 1.25 a second out of combat, in one-second steps:
 
