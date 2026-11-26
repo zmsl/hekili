@@ -307,17 +307,33 @@ describe("Forever Paladin", function()
         end
     )
 
-    -- Sanctified Judgement (1311074): a 33/66/100% chance to return 20/40/60% of the seal's base cost: the mean at every rank.
-    it("refunds Sanctified Judgement's expected mana at every rank", function()
+    -- Sanctified Judgement (1311074): a 33/66/100% chance to return 20/40/60% of the seal's base cost. Owner 2026-11-18
+    -- (L1397, L1851): a random resource proc is never an expected gain, so the refund only at 3/3 (certain), in the sim's
+    -- `handler` and the belief's `now` alike; at 1-2 the `now` declares `mayGain` (the refund it may give), the
+    -- `handler` nothing.
+    it("refunds Sanctified Judgement's mana only at 3/3; ranks 1-2 only may gain it", function()
         w.game.known[20920] = true
         for _, field in ipairs({ "now", "handler" }) do
-            for r, want in ipairs({ 210 * 0.33 * 0.2, 210 * 0.66 * 0.4, 210 * 0.6 }) do
+            for r, want in ipairs({ 0, 0, 210 * 0.6 }) do
                 local e = ld.env(w)
+                e.may = {}
+                if field == "now" then -- the belief's verb (Families/Now.lua); the sim's state has none
+                    function e.mayGain(n, resource)
+                        table.insert(e.may, { n, resource })
+                    end
+                end
                 e.talent = talents({ sanctified_judgement = r })
                 e.buff = buffs({ seal_of_command = true })
                 ld.run(w.abilities.judgement[field], e)
-                assert.are.equal(1, #e.gained, field .. r)
-                assert.is_true(math.abs(e.gained[1][1] - want) < 1e-9, field .. r .. " " .. tostring(e.gained[1][1]))
+                local got = e.gained[1] and e.gained[1][1] or 0
+                assert.is_true(math.abs(got - want) < 1e-9, field .. r .. " " .. tostring(got))
+                if field == "now" and r < 3 then
+                    assert.are.equal(1, #e.may, field .. r)
+                    assert.is_true(math.abs(e.may[1][1] - 210 * 0.2 * r) < 1e-9, field .. r .. " may")
+                    assert.are.equal("mana", e.may[1][2], field .. r)
+                else
+                    assert.are.equal(0, #e.may, field .. r)
+                end
             end
         end
     end)
