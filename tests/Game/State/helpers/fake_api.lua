@@ -834,6 +834,7 @@ function M.new()
             return ctl.enchants[slot] or NO_ENCHANTS
         end,
     }
+    api.C_Container = { GetItemCooldown = api.C_Item.GetItemCooldown } -- the same item cooldown answer
     api.C_LossOfControl = { GetActiveLossOfControlData = none, GetActiveLossOfControlDataCount = zero }
     api.C_PetBattles = { IsInBattle = no }
     api.C_PvP = { IsWarModeDesired = no }

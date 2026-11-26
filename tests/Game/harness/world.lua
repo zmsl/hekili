@@ -23,6 +23,29 @@ function M.refundOf(class, key)
     return type(f) == "number" and f or nil
 end
 
+--- The item categories of class data `class` (the on-use trinkets: an ability with an `item` and a `category`):
+--- { [key] = { item, window (its `categoryCooldown`), members = { { key, item }, ... } (the category's, key order) } }.
+function M.itemCategories(class)
+    local keys, out, byCat = {}, {}, {}
+    for key, a in pairs(class.abilities) do
+        if type(key) == "string" and type(a) == "table" and a.key == key then
+            keys[#keys + 1] = key
+        end
+    end
+    table.sort(keys)
+    for _, key in ipairs(keys) do
+        local a = class.abilities[key]
+        local item = rawget(a, "item")
+        if type(item) == "number" and a.category then
+            local members = byCat[a.category] or {}
+            byCat[a.category] = members
+            members[#members + 1] = { key = key, item = item }
+            out[key] = { item = item, window = tonumber(a.categoryCooldown) or 0, members = members }
+        end
+    end
+    return out
+end
+
 -- The outcomes an ability of ours can roll on the target (a press's `outcomes`; wowsims/forever core/spell_outcome.go):
 -- "melee" the special melee tables (OutcomeMeleeSpecialHit*, OutcomeMeleeWeaponSpecial*: miss, dodge, parry), "miss"
 -- the ones with a miss roll only (OutcomeMeleeSpecialNoBlockDodgeParry*: from behind, Overpower; OutcomeRangedHit*),
@@ -403,6 +426,21 @@ function M.new(seed)
             e.hardSpell, e.castUntil = nil, W.t
         end
         W.stopChannel(e)
+    end
+
+    --- `e` used the item of category entry `cat` (M.itemCategories) of ability `key`, its cooldown `cd` s from now and
+    --- its category's hold `lag` s already run (a replay's log line placed after its time): the client answers the
+    --- item's cooldown (observer "itemCooldown") and holds each other member for the category's cooldown, a longer
+    --- running one never shortened, in the truth (cdUntil) and the client alike.
+    function W.itemUse(e, key, cat, cd, lag)
+        W.emit({ kind = "itemCooldown", src = e, item = cat.item, cd = cd })
+        local hold = cat.window - (lag or 0)
+        for _, m in ipairs(cat.members) do
+            if m.key ~= key and hold > 0 and W.t + hold > (e.cdUntil[m.key] or 0) + 1e-9 then
+                e.cdUntil[m.key] = W.t + hold
+                W.emit({ kind = "itemCooldown", src = e, item = m.item, cd = hold })
+            end
+        end
     end
 
     --- `e`'s cooldown of `key` (its ranks' spell IDs `ids`) finishes now: the world's and the client's answers.

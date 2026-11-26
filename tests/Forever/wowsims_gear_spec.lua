@@ -2,12 +2,12 @@
 local ws = require("Forever.helpers.wowsims")
 
 describe("the request's gear", function()
-    it("maps by position to client slots, skipping the weapons and trinkets", function()
+    it("maps by position to client slots, skipping the weapons (the trinkets worn: lane gear-1b)", function()
         local g = ws.gear("druid_balance")
         assert.are.same({ 272430 }, g[18]) -- index 17 (Ranged) -> slot 18: the Swarming Idol
         assert.are.same({ 10250 }, g[1]) -- Head
-        assert.is_nil(g[13])
-        assert.is_nil(g[14])
+        assert.are.same({ 272438 }, g[13])
+        assert.are.same({ 272439 }, g[14])
         assert.is_nil(g[16])
         assert.is_nil(g[17])
     end)
