@@ -1867,12 +1867,14 @@ describe("now handlers", function()
                 ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
                 ctl.Tick(5.02)
                 VS.Drain(5.03)
+                -- (L1917) both in their own frames: the latest's (spender_b, a target undo of nothing); spender_c's stays
                 assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+                assert.are.same({ 1, 1 }, { I.Tickets.ties, I.avoidsRun })
                 castOutcome(fs.SPENDER_C, 30, "MISS", 0.7) -- past the landing window (0.474 + 3 x 0.06)
                 assert.are.equal(45, VS.Aura("target", fs.SPENDER_C, 30.8).est)
                 castOutcome(fs.SPENDER_C, 50, fake.SECRET)
                 assert.are.equal(65, VS.Aura("target", fs.SPENDER_C, 50.1).est)
-                assert.are.equal(0, I.avoidsRun)
+                assert.are.equal(1, I.avoidsRun) -- the tie's only
             end
         )
 
