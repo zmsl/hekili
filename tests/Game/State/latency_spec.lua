@@ -47,9 +47,9 @@ describe("the latency table", function()
     end)
 
     it("refuses an unknown channel name", function()
-        assert.has_error(function()
+        assert.has_error(function() -- its own message (red_first: any raise passed on a tree with no table at all)
             Lat.lag("no.such.channel")
-        end)
+        end, "no.such.channel")
     end)
 
     it("marks the rows with no measurement unmeasured: the probe list", function()
@@ -134,14 +134,17 @@ describe("the latency table", function()
         end)
     end
 
-    it("counts only the read form in code: a name in a comment or another spelling is no read (L1913 M3)", function()
-        assert.is_true(reads('local X = I.Lat.lag("cp.avoid")', "cp.avoid"))
-        assert.is_true(reads('local X = Lat.lag("swing.lag", 2)', "swing.lag"))
-        assert.is_false(reads('-- local X = Lat.lag("cp.avoid")\nlocal X = 0.3', "cp.avoid"))
-        assert.is_false(reads('--[[ Lat.lag("cp.avoid") ]] local X = 0.3', "cp.avoid"))
-        assert.is_false(reads('local X = Lat.lag("cp.avoid.x")', "cp.avoid"))
-        assert.is_false(reads('local X = "Lat.lag" -- ("cp.avoid")', "cp.avoid"))
-    end)
+    it(
+        "counts only the read form in code: a name in a comment or another spelling is no read (L1913 M3) #self",
+        function()
+            assert.is_true(reads('local X = I.Lat.lag("cp.avoid")', "cp.avoid"))
+            assert.is_true(reads('local X = Lat.lag("swing.lag", 2)', "swing.lag"))
+            assert.is_false(reads('-- local X = Lat.lag("cp.avoid")\nlocal X = 0.3', "cp.avoid"))
+            assert.is_false(reads('--[[ Lat.lag("cp.avoid") ]] local X = 0.3', "cp.avoid"))
+            assert.is_false(reads('local X = Lat.lag("cp.avoid.x")', "cp.avoid"))
+            assert.is_false(reads('local X = "Lat.lag" -- ("cp.avoid")', "cp.avoid"))
+        end
+    )
 
     it("leaves every row read somewhere (no orphan row)", function()
         local files = {}
