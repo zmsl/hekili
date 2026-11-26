@@ -94,4 +94,44 @@ describe("tools/floors.lua", function()
         assert.are.same({ 2, { "length" } }, { floors.first(A.T["1"], { A.T["1"][1] }) }) -- a shorter fight
         assert.are.equal("no divergence: every fight's in-combat ticks are the same", floors.diverge(A, A)[1])
     end)
+
+    it("floors_trace chains from FLOORS_SEEDS' first seed on a fresh boot (the wrap's sets)", function()
+        local ab, loop, pack_gate =
+            require("Game.harness.ab"), require("Game.harness.loop"), require("Forever.helpers.pack_gate")
+        local keep = {
+            { ab, "check" },
+            { ab, "record" },
+            { loop, "run" },
+            { loop, "truthRate" },
+            { loop, "tally" },
+            { loop, "new" },
+            { loop, "summary" },
+            { loop, "line" },
+            { pack_gate, "solo" },
+            { os, "getenv" },
+        }
+        for _, k in ipairs(keep) do
+            k[3] = k[1][k[2]]
+        end
+        local out, got = os.tmpname(), {}
+        local function trace(seeds)
+            local env = { FLOORS_LABEL = "X", FLOORS_OUT = out, FLOORS_SEEDS = seeds }
+            os.getenv = function(k) -- luacheck: ignore 122 (restored below)
+                return env[k]
+            end
+            dofile("tools/floors_trace.lua")
+            loop.new, loop.summary, loop.line = function() end, function() end, function() end
+            loop.tally = function(_, n, o)
+                got[#got + 1] = { n, o.seed0 }
+            end
+            pack_gate.solo("X", {}, 20, 0)
+            for _, k in ipairs(keep) do
+                k[1][k[2]] = k[3]
+            end
+        end
+        trace(nil)
+        trace("41-60")
+        os.remove(out)
+        assert.are.same({ { 20, 0 }, { 20, 40 } }, got)
+    end)
 end)
