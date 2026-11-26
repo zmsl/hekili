@@ -909,7 +909,8 @@ local function content(name)
                     if m.requires and not m.requires(W, e, X, H) then
                         return false, false
                     end
-                    if needsShard(key, onEntity(e, X)) and W.items(e, SOUL_SHARD) < 1 then
+                    -- SHARD first (lj-speed P4): onEntity's closure only for a shard spell, not on every answer
+                    if SHARD[key] and needsShard(key, onEntity(e, X)) and W.items(e, SOUL_SHARD) < 1 then
                         return false, false
                     end
                     local cost = costOf(key, ids, H)
