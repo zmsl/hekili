@@ -6,7 +6,8 @@
 # it is green by design: #pin (it pins today's behaviour for a later lane, as the pairing matrix does) or #self (it checks
 # the spec's own tooling, not src/). A declared one red on base fails too. A spec file that raises before any test runs
 # is reported as a load error and counts as red for its new tests.
-# SPEC defaults to the *_spec.lua files under tests/ added or changed against BASE (the working tree included).
+# SPEC defaults to the *_spec.lua files under tests/ added or changed against BASE (the working tree and untracked
+# files included).
 # Exit 0: every new test is red on base (or declared and green); 1: a finding; 2: usage.
 # Read-only on the repository: BASE is exported with git archive into a temporary directory, removed on exit.
 # Example: tools/red_first.sh origin/forever, or tools/red_first.sh 8a00bd0b9 tests/Game/State/latency_spec.lua
@@ -23,7 +24,10 @@ LUA_ENV=$(realpath .lua)
 if [ $# -gt 0 ]; then
     specs=("$@")
 else
-    mapfile -t specs < <(git diff --name-only --diff-filter=AM "$BASE" -- 'tests/*_spec.lua' | LC_ALL=C sort)
+    mapfile -t specs < <({
+        git diff --name-only --diff-filter=AM "$BASE" -- 'tests/*_spec.lua'
+        git ls-files --others --exclude-standard -- 'tests/*_spec.lua' # new, not yet added
+    } | LC_ALL=C sort -u)
 fi
 if [ ${#specs[@]} -eq 0 ]; then
     echo "red_first: no spec file added or changed against $BASE"
