@@ -293,6 +293,9 @@ function M.powerPoll(run, st, pt, now, replay)
     end
     local p, v, truth = run.power, st.H.ns.VirtualState.Power(pt, now), run.preTruth
     p.n, p.err = p.n + 1, p.err + math.abs(v.est - truth)
+    if os.getenv("PSEED") == tostring(_G.D2SEED) then
+        io.stderr:write(("POW seed %s wt %.2f lo %.2f est %.2f hi %.2f truth %.2f\n"):format(tostring(_G.D2SEED), _G.D2W and _G.D2W.t or -1, v.lo, v.est, v.hi, truth))
+    end
     if v.lo > truth + M.LO_EPS then
         p.over = p.over + 1
         if not replay then
@@ -745,6 +748,7 @@ end
 --- (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle just before each decision;
 --- `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
 function M.run(L, seed, o, drivers)
+    _G.D2SEED = seed
     o = o or {}
     local content = L.content
     local tick = 1 / (o.hz or 5)
@@ -1403,6 +1407,8 @@ function M.run(L, seed, o, drivers)
                 run.up[u[1]] = (run.up[u[1]] or 0) + ((tgt and tgt.auras[u[2]]) and 1 or 0)
             end
             run.ours[n] = steps[1].q.name[1]
+            run.dbg = run.dbg or {}
+            run.dbg[n] = ("t %.2f ours [%s %s %s] oracle [%s %s %s] pow %.1f"):format(W.t, tostring(steps[1].q.name[1]), tostring(steps[1].q.name[2]), tostring(steps[1].q.name[3]), tostring(steps[2] and steps[2].q.name[1]), tostring(steps[2] and steps[2].q.name[2]), tostring(steps[2] and steps[2].q.name[3]), us.power or -1)
             local out = steps[1].H.Hekili.Engine.Output.Primary
             if out.count > 0 and out.recs[1].focus then
                 run.focus = run.focus + 1
@@ -1671,6 +1677,7 @@ local function flips(seq, n, press, why, by)
                 end
             else
                 f = f + 1
+                if by and _G.FLIPS then _G.FLIPS[#_G.FLIPS + 1] = { i = i, w = w, r = r } end
             end
         end
     end
@@ -1844,14 +1851,26 @@ function M.tally(L, n, o)
         -- the shadow takes the world's facts (its frame: the shared events), never the viewer's late ones nor a band
         m.oracleFlicker = m.oracleFlicker + flips(a.theirs, a.combat, a.shadowPress, flicker.changes(a.frames[2], lo))
         m.oracleOld = m.oracleOld + flips(a.theirs, a.combat, a.shadowPress)
+        _G.WAITP = true
         m.led.ours = flicker.merge(m.led.ours, flicker.ledger(a.frames[1], lv))
+        _G.WAITP = false
         m.led.oracle = flicker.merge(m.led.oracle, flicker.ledger(a.frames[2], lo))
         for side, r in pairs({ A = a, B = b }) do
             local s = m[side]
             s.combat, s.full, s.idle = s.combat + r.combat, s.full + r.full, s.idle + r.idle
             s.damage, s.time = s.damage + r.damage, s.time + r.combat / (o.hz or 5)
             local why = side == "A" and flicker.changes(a.frames[1], lv) or nil -- run B has no frames: presses only
+            _G.FLIPS = side == "A" and {} or nil
             s.flicker = s.flicker + flips(r.ours, r.combat, r.pressed, why, side == "A" and m.excused or nil)
+            for _, fl in ipairs(_G.FLIPS or {}) do
+                io.stderr:write(("FLIP seed %d i %d %s -> %s -> %s why %s/%s\n"):format(seed, fl.i, tostring(r.ours[fl.i]), tostring(r.ours[fl.i+1]), tostring(r.ours[fl.i+2]), tostring(fl.w), tostring(fl.r)))
+                for k = math.max(1, fl.i - 8), math.min(r.combat, fl.i + 8) do
+                    local p = r.pressed and r.pressed[k]
+                    local ps = type(p) == "table" and table.concat((function() local t = {} for kk in pairs(p) do t[#t+1] = kk end return t end)(), ",") or tostring(p)
+                    io.stderr:write(("  %s%d %s press %s why %s\n"):format(k == fl.i + 1 and ">" or " ", k, r.dbg and r.dbg[k] or "?", ps, tostring(why and why[k])))
+                end
+            end
+            _G.FLIPS = nil
             s.flickerOld = s.flickerOld + flips(r.ours, r.combat, r.pressed)
             for key, k in pairs(r.up) do
                 s.up[key] = (s.up[key] or 0) + k

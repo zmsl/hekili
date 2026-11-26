@@ -318,6 +318,7 @@ function M.ledger(f, o)
                 end
             elseif same and wait[c] > math.max(0, wait[p] - tick) + tick + EPS and not event(f, c) then
                 add({ kind = "wait", from = x, to = x, len = 1 }, s, p, c)
+                if _G.WAITP then io.stderr:write(("WAIT seed %s slot %d tick %d %s wait %.3f -> %.3f lo %s -> %s est %s -> %s\n"):format(tostring(_G.D2SEED), s, c, tostring(x), wait[p], wait[c], tostring(f.lo[p]), tostring(f.lo[c]), tostring(f.est[p]), tostring(f.est[c]))) end
             end
         end
     end

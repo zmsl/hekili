@@ -640,6 +640,7 @@ function M.new(W, k)
             push(t + d, "SPELL_UPDATE_COOLDOWN")
         end
     end
+    _G.D2W = W
     local deltas, dseq = {}, 0 -- our power's changes as the client's usability sees them: { answer time, delta, power type, true time, seq } (a
     -- form change: { t, form, "form", seq }; byTime orders by the last field)
     -- the answers' view of us: our form as of the answer's time (a form change is a delta), the rest live
@@ -1065,6 +1066,9 @@ function M.new(W, k)
                 end
             end
             deltas[#deltas + 1] = { when, d, pt, t, dseq }
+            if os.getenv("D2") and _G.D2SEED == 11 and t > 65.8 and t < 66.5 then
+                io.stderr:write(("D2 DELTA kind %s t %.3f power %s d %.3f when %.3f\n"):format(kind, t, tostring(ev.power), d, when))
+            end
             if ev.power then
                 push(t, "@truth", ev.power) -- the metrics' truth (harness design §3.3), no client answer
             end
@@ -1098,6 +1102,9 @@ function M.new(W, k)
             if usable[u[1]] ~= st then
                 usable[u[1]] = st
                 push(t, "@usable", u[1], st)
+                if os.getenv("D2") and _G.D2SEED == 11 and t > 65.8 and t < 66.5 then
+                    io.stderr:write(("D2 USABLE t %.3f id %s st %d client power %.3f\n"):format(t, tostring(u[1]), st, power))
+                end
                 flipped = true
             end
         end
@@ -1185,6 +1192,13 @@ function M.new(W, k)
             end
             deltas = keep
             if tEnd < math.huge then
+                if os.getenv("D2") and _G.D2SEED == 11 and tEnd > 65.8 and tEnd < 66.5 then
+                    local pend = {}
+                    for _, x in ipairs(deltas) do
+                        pend[#pend + 1] = ("%.3f@%.3f"):format(x[2], x[1])
+                    end
+                    io.stderr:write(("D2 POLL t %.3f client power %.3f pending (d@when) %s\n"):format(tEnd, power, table.concat(pend, " ")))
+                end
                 answer(tEnd)
             end
         end
