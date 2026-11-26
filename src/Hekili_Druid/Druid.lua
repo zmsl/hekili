@@ -184,17 +184,21 @@ local BEAR_RAGE_RATE = 4.5
 local FUROR_RAGE = 10
 local BEAR_SWING = 2.5
 -- Primal Fury ("Blood Frenzy" on Forever, DB2 16958; wowsims/forever talents_feral_combat.go): a melee crit of ours in
--- Bear Form gives 16959's 5 rage, always at 2/2 and half the time at 1/2 (wowsims's ladder): its expected rage. The
--- Cat's combo point on a builder's crit is not declared: combo points are a plain read on Forever.
+-- Bear Form gives 16959's 5 rage, always at 2/2 and half the time at 1/2 (wowsims's ladder). At 1/2 the proc is a roll
+-- the belief cannot see (owner L1397: no expected gain; Fable L1984): a range, floor none, estimate the mean 2.5, top a
+-- whole proc (the swing-paid slot's form, as Unbridled Wrath's). The Cat's combo point on a builder's crit is not
+-- declared: combo points are a plain read on Forever.
 local PRIMAL_FURY = 5
-local function primalFury(rank)
-    return PRIMAL_FURY * rank / 2
-end
 -- A bear strike's `onCrit` (the belief's own crit, Families/Now.lua): a closure per ability.
 local function primalFuryOnCrit()
     return function()
         if buff.bear_form.up then
-            gain(primalFury(talent.primal_fury.rank), "rage")
+            local rank = talent.primal_fury.rank
+            if rank >= 2 then
+                gain(PRIMAL_FURY, "rage")
+            elseif rank == 1 then
+                gain(PRIMAL_FURY / 2, "rage", PRIMAL_FURY / 2)
+            end
         end
     end
 end
@@ -254,7 +258,7 @@ spec:RegisterResource(
         -- Rage per white swing in Bear or Dire Bear Form only (the Warrior's speed rule; Cat and caster swings add
         -- none).
         -- `aura` gates it in both layers (the belief's swing entry, spec §0.3; Hekili's forecast); `stop` too.
-        -- A white crit adds one more base swing (without the two-hand factor), as wowsims's, and Primal Fury's rage:
+        -- A white crit adds one more base swing (without the two-hand factor), as wowsims's, and Primal Fury's rage at 2/2:
         -- `crit`. A yellow crit's Primal Fury is the strikes' `onCrit`.
         -- NAMED GAP (owner 2026-11-07): no `taken` (rage from hits) until CN7 gives the belief its hook; the archived rule
         -- (lane-feralguardian-taken-wip.patch) lifts the Guardian replay 0.632 -> 0.923 but with replay flicker 14.65/min: land it
@@ -282,8 +286,10 @@ spec:RegisterResource(
             value = function()
                 return BEAR_RAGE_RATE * BEAR_SWING
             end,
+            -- shortcut: no width on a swing's crit, so 1/2 books no proc here (estimate 2.5 short, top a proc short until the
+            -- next pin); add a crit width in core if a ceiling read or L1852 (a) needs it
             crit = function()
-                return BEAR_RAGE_RATE * BEAR_SWING + primalFury(talent.primal_fury.rank)
+                return BEAR_RAGE_RATE * BEAR_SWING + (talent.primal_fury.rank >= 2 and PRIMAL_FURY or 0)
             end,
         },
 

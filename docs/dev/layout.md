@@ -688,7 +688,8 @@ Recorded deviations (each one's reason in the named file):
   Protection replay's top disagreements are replay limits (the decision instant at a cooldown's end, an exact tie at
   the GCD's length, Shatter Curse at 50% health).
 - Druid (`druid_*.lua`, `Druid.lua`): Lacerate's cost per Shredding Attacks rank from the wowsims log (13), not the
-  DB2's 6 a rank (ruling: wowsims is the oracle); Primal Fury at 1/2 an average, not wowsims's 50% roll.
+  DB2's 6 a rank (ruling: wowsims is the oracle); Primal Fury at 1/2 a range on a strike's crit (floor none,
+  estimate 2.5, top 5) and nothing on a white crit, where wowsims rolls 50% for 5 (the loop world rolls it too).
 - Rogue (`rogue_*.lua`, `rogue_world.lua`): the energy floor seeded from `floor(lo)` and an unknown regen tick phase
   (GAP Y); Improved Sinister Strike at 1/2 scaled from the whole talent's DB2 value.
 - Paladin (`paladin_*.lua`): Benediction and Holy Conduit partial ranks from wowsims's per-rank curves (the DB2 holds

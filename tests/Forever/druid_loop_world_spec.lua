@@ -21,11 +21,15 @@ describe("the Druid world's Primal Fury roll", function()
                 return table.remove(procs, 1)
             end,
         }
-        W = { t = 0, krng = rng, rng = {
-            chance = function()
-                return false
-            end,
-        } }
+        W = {
+            t = 0,
+            krng = rng,
+            rng = {
+                chance = function()
+                    return false
+                end,
+            },
+        }
         function W.gain(_, n)
             gains[#gains + 1] = n
         end

@@ -79,7 +79,7 @@ mainhand = {
         return BEAR_RAGE_RATE * BEAR_SWING
     end,
     crit = function()
-        return BEAR_RAGE_RATE * BEAR_SWING + primalFury(talent.primal_fury.rank)
+        return BEAR_RAGE_RATE * BEAR_SWING + (talent.primal_fury.rank >= 2 and PRIMAL_FURY or 0)
     end,
 },
 ```
