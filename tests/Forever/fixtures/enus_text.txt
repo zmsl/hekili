@@ -16433,7 +16433,7 @@ options.displays.Multi.classic.captions.textStyle.fontStyle	values.THICKOUTLINE	
 options.displays.Multi.classic.delays	desc	When an ability is recommended some time in the future, a colored indicator or countdown timer can communicate that there is a delay.
 options.displays.Multi.classic.delays	name	Delays
 options.displays.Multi.classic.delays.break01	name	\032
-options.displays.Multi.classic.delays.desaturate	desc	Desaturate the primary icon when you should wait before using the ability.\n
+options.displays.Multi.classic.delays.desaturate	desc	Desaturate the primary icon when you should wait before using the ability.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
 options.displays.Multi.classic.delays.desaturate	name	|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0|t Desaturate
 options.displays.Multi.classic.delays.extend	desc	If checked, the primary icon's cooldown spiral will continue until the ability should be used.\n\n|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
 options.displays.Multi.classic.delays.extend	name	Extend Spiral
@@ -16490,8 +16490,9 @@ options.displays.Multi.classic.delays.type	values.__NA	No Indicator
 options.displays.Multi.classic.gamepad	desc	Options for the controller button pictures shown for the game's gamepad action bars.
 options.displays.Multi.classic.gamepad	name	Gamepad
 options.displays.Multi.classic.gamepad.cPort	name	ConsolePort
+options.displays.Multi.classic.gamepad.cPort.cPortOverride	desc	|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
 options.displays.Multi.classic.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
-options.displays.Multi.classic.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.\n
+options.displays.Multi.classic.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD1000.60|r\n|cFF00B4FFAOE:|r |cFFFFD1000.60|r\n|cFF00B4FFCooldowns:|r |cFFFFD1000.60|r\n|cFF00B4FFDefensives:|r |cFFFFD1000.60|r\n|cFF00B4FFInterrupts:|r |cFFFFD1000.60|r
 options.displays.Multi.classic.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Multi.classic.gamepad.pos	name	Position
 options.displays.Multi.classic.gamepad.pos.anchor	desc	|cFF00B4FFPrimary:|r |cFFFFD100Top Right|r\n|cFF00B4FFAOE:|r |cFFFFD100Top Right|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Top Right|r\n|cFF00B4FFDefensives:|r |cFFFFD100Top Right|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Top Right|r
@@ -17010,7 +17011,7 @@ options.displays.Multi.timeline.tab_now.captions.textStyle.fontStyle	values.OUTL
 options.displays.Multi.timeline.tab_now.captions.textStyle.fontStyle	values.THICKOUTLINE	Thick Outline
 options.displays.Multi.timeline.tab_now.delays	desc	When an ability is recommended some time in the future, a colored indicator or countdown timer can communicate that there is a delay.
 options.displays.Multi.timeline.tab_now.delays	name	Delays
-options.displays.Multi.timeline.tab_now.delays.desaturate	desc	Desaturate the primary icon when you should wait before using the ability.\n
+options.displays.Multi.timeline.tab_now.delays.desaturate	desc	Desaturate the primary icon when you should wait before using the ability.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
 options.displays.Multi.timeline.tab_now.delays.desaturate	name	|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0|t Desaturate
 options.displays.Multi.timeline.tab_now.delays.fade	desc	Fade the primary icon when you should wait before using the ability, similar to when an ability is lacking required resources.\n\n|cFF00B4FFPrimary:|r |cFFFF0000Unchecked|r\n|cFF00B4FFAOE:|r |cFFFF0000Unchecked|r\n|cFF00B4FFCooldowns:|r |cFFFF0000Unchecked|r\n|cFF00B4FFDefensives:|r |cFFFF0000Unchecked|r\n|cFF00B4FFInterrupts:|r |cFFFF0000Unchecked|r
 options.displays.Multi.timeline.tab_now.delays.fade	name	Fade as Unusable
@@ -17055,8 +17056,9 @@ options.displays.Multi.timeline.tab_now.focusReadyStyle	values.ring	Ring
 options.displays.Multi.timeline.tab_now.gamepad	desc	Options for the controller button pictures shown for the game's gamepad action bars.
 options.displays.Multi.timeline.tab_now.gamepad	name	Gamepad
 options.displays.Multi.timeline.tab_now.gamepad.cPort	name	ConsolePort
+options.displays.Multi.timeline.tab_now.gamepad.cPort.cPortOverride	desc	|cFF00B4FFPrimary:|r |cFF00FF00Checked|r\n|cFF00B4FFAOE:|r |cFF00FF00Checked|r\n|cFF00B4FFCooldowns:|r |cFF00FF00Checked|r\n|cFF00B4FFDefensives:|r |cFF00FF00Checked|r\n|cFF00B4FFInterrupts:|r |cFF00FF00Checked|r
 options.displays.Multi.timeline.tab_now.gamepad.cPort.cPortOverride	name	Use ConsolePort Buttons
-options.displays.Multi.timeline.tab_now.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.\n
+options.displays.Multi.timeline.tab_now.gamepad.cPort.cPortZoom	desc	The ConsolePort button textures generally have a significant amount of blank padding around them. Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.\n\n|cFF00B4FFPrimary:|r |cFFFFD1000.60|r\n|cFF00B4FFAOE:|r |cFFFFD1000.60|r\n|cFF00B4FFCooldowns:|r |cFFFFD1000.60|r\n|cFF00B4FFDefensives:|r |cFFFFD1000.60|r\n|cFF00B4FFInterrupts:|r |cFFFFD1000.60|r
 options.displays.Multi.timeline.tab_now.gamepad.cPort.cPortZoom	name	ConsolePort Button Zoom
 options.displays.Multi.timeline.tab_now.gamepad.pos	name	Position
 options.displays.Multi.timeline.tab_now.gamepad.pos.anchor	desc	|cFF00B4FFPrimary:|r |cFFFFD100Top Right|r\n|cFF00B4FFAOE:|r |cFFFFD100Top Right|r\n|cFF00B4FFCooldowns:|r |cFFFFD100Top Right|r\n|cFF00B4FFDefensives:|r |cFFFFD100Top Right|r\n|cFF00B4FFInterrupts:|r |cFFFFD100Top Right|r
