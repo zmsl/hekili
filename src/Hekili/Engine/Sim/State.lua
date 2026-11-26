@@ -7770,6 +7770,8 @@ function state:TimeToReady( action, pool )
     -- 2. The ability is flagged as an interrupt or defensive.
     local requires = ability.toggle
     local pre = 0 -- the GCD this ability waits on: the near-cost window opens at its end (L628)
+    -- shortcut: itemsOffGCD skips the GCD wait without reading the item's own gcd (every registered on-use item is gcd
+    -- "off"); read ability.gcd here once an on-GCD on-use item is registered (L1972)
     if requires ~= "interrupts" and requires ~= "defensives" and not self.itemsOffGCD and not self.safebool( self.args.use_off_gcd ) then
         pre = self.cooldown.global_cooldown.remains
         wait = max( wait, pre )

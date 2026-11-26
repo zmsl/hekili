@@ -164,13 +164,16 @@ describe("an on-use trinket", function()
             local recs = H.Hekili.Engine.Output.Primary.recs
             local got = { recs[1] and recs[1].actionName, recs[2] and recs[2].actionName }
             assert.are.same({ "eye_of_the_beast", "cold_snap" }, got, ("GCD %.1f left"):format(left))
+            -- the flag holds for the items walk only: Core clears it after the walk (a leak skips later lines' GCD wait)
+            assert.is_false(H.Hekili.State.itemsOffGCD)
         end
         assert.are.same({}, H.errors)
     end)
 
     -- L1960 condition 2: a strict hold (holdOffOnly 1, ruling 29) lets a trinket walked from use_items,use_off_gcd=1
-    -- through, as it does a direct use_off_gcd=1 off-GCD line; a plain use_items line is held, and hold_off_gcd=1 holds
-    -- every outside line (the variable line makes that hold walk the lists).
+    -- through, as it does a direct use_off_gcd=1 off-GCD line; a plain use_items line is itself held by the strict hold
+    -- (Core.lua's holdOffOnly test: no use_off_gcd=1 on the line), so its items are never walked (this pins existing
+    -- behaviour); hold_off_gcd=1 holds every outside line (the variable line makes that hold walk the lists).
     for _, c in ipairs({
         { "", "use_items,use_off_gcd=1", "eye_of_the_beast" },
         { "", "use_items", "frostbolt" },

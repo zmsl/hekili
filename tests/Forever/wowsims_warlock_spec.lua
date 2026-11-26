@@ -100,9 +100,9 @@ end
 -- line's flag now reaches the trinkets it walks (they read ready during the GCD). Demonology and Destruction re-recorded
 -- one timing row each, the log 1.40 curse_of_the_elements (class first, verdict scope, no floor reads it): its
 -- predicted offset a 0.001 -> 0.000. Traced: at the poll before the decision (harness 6.40) slot 1 is the Eye of the
--- Beast, slot 2 the curse, which the engine counts from slot 1's press; at base the Eye waited the GCD's last 0.0004 s
--- (the flag lost), so the curse read 0.0010; now the Eye reads 0 and the curse its own 0.0004 (the GCD's remains). A
--- direct consequence of the trinket's wait reading 0. Every other row, agreement and flicker unchanged.
+-- Beast, slot 2 the curse; at base the Eye waited the GCD's last 0.0004 s (the flag lost) and the curse read 0.0010;
+-- now the Eye reads 0 and the curse its own 0.0004 (the GCD's remains). Observed, not derived from code: only the Eye's
+-- wait differs at that poll and the curse's follows it, a direct consequence of the trinket's wait reading 0. Every other row, agreement and flicker unchanged.
 local PACKS = {
     { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.95, 0.2, 0 },
     { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.80, 0.2, 0 },
