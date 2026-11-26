@@ -19,13 +19,14 @@ I.Melee = M
 
 -- Per hand (1 main, 2 off), the support of a swing's landing lag (ms), capped at the hand's swing period: measured
 -- maximum lags 1287 / 1686 ms plus a margin (P log 2).
-L.PAIR_WINDOW_MS = { 1500, 2000 }
+local Lat = I.Lat
+L.PAIR_WINDOW_MS = { Lat.lag("swing.land", 1) * 1000, Lat.lag("swing.land", 2) * 1000 }
 -- Seconds a cast waits for its own wound, and within which an on-next-swing strike's success and its swing are one
 -- event pair (the same frame, log 1).
 M.CAST_WINDOW, M.STRIKE_WINDOW = 0.2, 0.2
 -- Seconds within which a cast's own wound comes (its frame); also the foreign strike frame after a WOUND 0
 -- (G 177249/177250).
-M.SAME_FRAME = 0.05
+M.SAME_FRAME = Lat.lag("wound.frame")
 local CAST_WINDOW = M.CAST_WINDOW
 -- The window our cast's own avoid may follow its success in: a main-hand landing lag's window (the learned median
 -- plus three spreads). Hand h's; also how long a swing's rage stays pending (VS.SwingPending).
@@ -59,7 +60,9 @@ L.EPS = { 0.12, 0.10 }
 L.LAMBDA0, L.T0, L.TAU = 0.01, 5, 10
 -- The landing lag per reference (1 main; 2 off from its own swing; 3 off from the latest main swing), seeds
 -- (MEASURED: P log 2, G5) learned online from clean credits.
-L.med, L.spr = { 0.474, 0.703, 1.686 }, { 0.060, 0.020, 0.020 }
+-- (copies: the learning moves these, never the rows)
+L.med = { Lat.lag("swing.lag", 1), Lat.lag("swing.lag", 2), Lat.lag("swing.lag", 3) }
+L.spr = { Lat.lag("swing.lag.spread", 1), Lat.lag("swing.lag.spread", 2), Lat.lag("swing.lag.spread", 3) }
 -- The background: per class (1-3 main exact, loose, above; 4-6 off; 7 avoid; 8 white, any amount) and the quiet time.
 L.bg, L.quiet = { 0, 0, 0, 0, 0, 0, 0, 0 }, 0
 local lastT = 0

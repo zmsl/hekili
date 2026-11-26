@@ -5,6 +5,7 @@ local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
 local alloc = require("Game.State.helpers.alloc")
+local scenario = require("Game.harness.scenario")
 
 -- A `now` that spends the rest of the pool (after an optional target debuff), out of reach of the spec's local `rage`.
 local function spendRest(debuff)
@@ -72,6 +73,11 @@ describe("now handlers", function()
         end
         fs.clock = nil
     end)
+
+    -- the scenario builder on this spec's client: plain amounts, no frame loop (only the ticks and drains given)
+    local function sc()
+        return scenario.new({ ctl = ctl, ns = ns }, { plain = true, dt = false })
+    end
 
     local function start()
         VS.Start(api)
@@ -1901,16 +1907,14 @@ describe("now handlers", function()
 
         -- Fix A (L1763): live, 28 of 287 cat instants logged their target row 1-20 ms before their success, while the
         -- ticket was still COMMITTED (opened at SENT): the row is held on that ticket and paid when the success arms it.
-        local function sentEarly(t, act, lead)
-            ctl.now = t - 0.1
-            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_C)
-            ctl.now = t - lead
-            ctl.Fire("UNIT_COMBAT", "target", act, "", 0, 1)
-            ctl.now = t
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
-            ctl.Tick(t + 0.01)
-            VS.Drain(t + 0.02)
-            ctl.Tick(t + 0.03)
+        local function sentEarly(t, act, lead) -- the row first: at lead 0 it still comes before the success
+            sc()
+                :row(t - lead, act)
+                :cast(t, fs.SPENDER_C, { sent = 0.1, guid = "Cast-1" })
+                :tick(t + 0.01)
+                :drain(t + 0.02)
+                :tick(t + 0.03)
+                :run()
         end
 
         it("fix A: a dodge logged 15 ms before its success, the cast committed: no debuff, 80% back", function()
@@ -1979,22 +1983,19 @@ describe("now handlers", function()
         -- fix round 1 I1: a held row is scored against our swings at its own time; only the cast's own-frame band
         -- reads the success's. A white avoid inside the swing's core band (main 0.474 +/- 0.12 s, off 0.703 +/- 0.04 s)
         -- at its own time is the swing's, whatever instant succeeds just after it.
-        local function swingThenEarly(hand, swingT, act, rowT, lead)
-            ctl.now = 1.0
-            ctl.Fire("PLAYER_SWING", 3.6, hand)
-            ctl.Tick(2.0)
-            ctl.now = swingT
-            ctl.Fire("PLAYER_SWING", 3.6, hand)
-            ctl.now = 4.9
-            ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_C)
-            ctl.now = rowT
-            ctl.Fire("UNIT_COMBAT", "target", act, "", 0, 1)
-            ctl.now = rowT + lead
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
-            ctl.Tick(rowT + 0.1)
-            VS.Drain(rowT + 0.1)
-            ctl.Tick(7.5)
-            VS.Drain(7.5)
+        local function swingThenEarly(hand, swingT, act, rowT, lead) -- SENT at 4.9, the success `lead` after the row
+            local swing = { speed = 3.6, hand = hand, act = false }
+            sc()
+                :swing(1.0, swing)
+                :tick(2.0)
+                :swing(swingT, swing)
+                :row(rowT, act)
+                :cast(rowT + lead, fs.SPENDER_C, { sent = rowT + lead - 4.9, guid = "Cast-1" })
+                :tick(rowT + 0.1)
+                :drain(rowT + 0.1)
+                :tick(7.5)
+                :drain(7.5)
+                :run()
         end
         for _, c in ipairs({
             { "main-hand DODGE at lag 0.59, 15 ms before the success", 0, 4.41, "DODGE", 0.015 },

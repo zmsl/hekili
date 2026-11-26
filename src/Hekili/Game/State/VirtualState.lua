@@ -116,7 +116,8 @@ I.REGEN_SPREAD = 0.1
 I.REGEN_SPREAD_MIN = 0.02
 I.REGEN_RATIO = 2
 I.EPS = 0.01
-I.CAP_WAIT = 0.06 -- seconds of regen a capped read sits under the cost: past Engine/Output.lua's READY, 0.05 (Resolve, Timeline's READY_EPS)
+-- I.CAP_WAIT (seconds of regen a capped read sits under the cost: past Engine/Output.lua's READY, 0.05; Resolve,
+-- Timeline's READY_EPS) and I.SAME_FRAME: rows of the latency table (Latency.lua).
 I.CD_PROBE = 0.5
 I.SNAP_HOLD = 1
 I.AURA_HALF_LIFE = 10
@@ -124,7 +125,6 @@ I.CAST_GRACE = 0.5
 I.TARGET_CAP = 16
 I.SWING_DECAY = 10
 I.SWING_TOL = 0.15
-I.SAME_FRAME = 0.05 -- a plain aura read at most this long before our cast, or after it, shows its effect (Auras.lua)
 I.RING = 8 -- debug ring slots per origin (spec §2)
 
 I.ORIGINS = { "observed", "pinned", "modelled", "default" }

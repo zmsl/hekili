@@ -137,7 +137,7 @@ local bR, bD, bE, bL, bH, bP = {}, {}, {}, {}, {}, {}
 -- PT_AVOID from the owner's two Feral captures (probe-cp-lag-2026-11-25.txt): of 33 landed builders, 29 showed the point
 -- in the success's own frame and 4 later, at 0.102 / 0.103 / 0.105 / 0.119 s; none before the success. 0.3 s covers the
 -- tail with margin (n = 33: a longer tail is unseen); a crit's second point once came 0.089 s after the first.
-local PT_AVOID = 0.3
+local PT_AVOID = I.Lat.lag("cp.avoid")
 local rdV1, rdT1, rdV2, rdT2 = {}, {}, {}, {}
 local castE, castL, castSp, castPin = 0, 0, 0, 0
 local ptA, ptT, ptR, ptV0, ptSwap, ptGo, ptV, ptVT = 0, -1, 0, 0, 0, 0, 0, -1
@@ -1037,7 +1037,7 @@ end)
 -- ran it full (wowsims: the last tick lands at the end), so its `now_finish` runs at the stop, its writes no avoid's
 -- to undo. A stop earlier (a break, a clip), later than FINISH_LATE past the end, or a channel with no plain start runs
 -- nothing (dim: never a full channel assumed). Allocates nothing.
-local FINISH_TOL = 0.05 -- UNMEASURED: CHANNEL_STOP at a full channel's end is read at or just after it
+local FINISH_TOL = I.Lat.lag("channel.stop") -- UNMEASURED: CHANNEL_STOP at a full channel's end is read at or after it
 local FINISH_LATE = 0.5 -- a stop later than this past the end is another channel's (one whose start was secret)
 local chanA, chanEnd = 0, 0
 local stopA, stopT = 0, -1 -- the last stopped channel and its stop's time (a kill in the same instant still sees it)

@@ -2409,8 +2409,10 @@ describe("auras", function()
             end
         )
 
-        -- fix round 1: REFRESH_LAG's value (LAT 0.35 s; was 0.5) pinned at its boundary, both sides
-        for _, c in ipairs({ { 0.4, true }, { 0.3, false } }) do
+        -- fix round 1: REFRESH_LAG's value (the cdm.light row, Game/State/Latency.lua; was 0.5) pinned at its boundary,
+        -- both sides
+        local lag = load.module().VirtualStateInternal.Lat.lag("cdm.light")
+        for _, c in ipairs({ { lag + 0.05, true }, { lag - 0.05, false } }) do
             it(
                 ("D14: an UP read %.1f s after our refresh, then dark: %s"):format(
                     c[1],

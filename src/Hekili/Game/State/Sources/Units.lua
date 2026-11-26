@@ -19,7 +19,8 @@ local Obs = ns.VirtualState.Obs
 local U = {}
 I.Units = U
 
-U.UNIT_CAP, U.DUP_N, U.DUP_WINDOW, U.GRACE, U.KILL_TELL = 64, 4, 0.005, 0.1, 0.010
+U.UNIT_CAP, U.DUP_N, U.GRACE = 64, 4, 0.1
+U.DUP_WINDOW, U.KILL_TELL = I.Lat.lag("unit.dup"), I.Lat.lag("unit.kill")
 U.FREE, U.LIVE, U.GRACE_S, U.GONE, U.DEAD, U.RESET = 0, 1, 2, 3, 4, 0
 local FREE, LIVE, GRACE_S, GONE, DEAD, RESET = 0, 1, 2, 3, 4, 0
 local CAP, DUP_N, NTOK = U.UNIT_CAP, U.DUP_N, 44

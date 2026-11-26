@@ -5,13 +5,13 @@
 -- spell, that the finisher (Ferocious Bite) or the builder never shows while the bleed is truly down beyond the case's
 -- information window, the believed bleed against the truth, energy and combo points, and that each change of slot 1
 -- follows a fact. Tests only: a failing case is a finding for the controller, not fixed here.
+-- The world is a scenario builder (Game/harness/scenario.lua, refactor lane 2): its queue, frames, swings, casts and rows;
+-- this file keeps the truth (energy, points, the bleeds) and the Feral specifics.
 local headless = require("Game.harness.headless")
+local scenario = require("Game.harness.scenario")
 local dlw = require("Forever.helpers.druid_loop_world")
-local SECRET = require("Game.State.helpers.fake_api").SECRET
 
-local DT = 1 / 60 -- one client frame
 local SWING = 1.0 -- the Feral world's main hand (druid_loop_world: weapon 1.0 s)
-local LAND = 0.474 -- a white swing's row after PLAYER_SWING (observer.lua DEFAULTS.main.med, P log 2)
 local REGEN = 10 -- energy a second (wowsims energy.go; the class file's regen)
 local REFUND = 0.8 -- refundOnMiss (wowsims feral.go; the class file's refundOnAvoid)
 
@@ -42,12 +42,28 @@ local function character()
     return c
 end
 
---- A world: `o.viewer` "proven" (the Cooldown Manager tracks Rip and Rake, both proven by a landed cast) or false (no
+-- One frame after its events: the VirtualState frame (the staged flush, the verdict's deadline wake), the timers
+-- (headless.frame), and the driver's choice (Driver.lua:150-170).
+local function frame(W, ft)
+    local was = W.engine.criticalUpdate
+    headless.frame(W.H, ft)
+    if W.engine.criticalUpdate and not was then -- the verdict's deadline wake (or another belief edge) asked a cycle
+        W.facts[#W.facts + 1] = { t = ft, what = "wake" }
+    end
+    local eng = W.engine
+    eng.refreshTimer = (eng.refreshTimer or 0) + W.dt
+    if eng.refreshTimer > (eng.criticalUpdate and 0.2 or (W.ctl.combat and 0.5 or 0.25)) then
+        eng.criticalUpdate, eng.refreshTimer = false, 0
+        local ok, err = xpcall(W.H.Hekili.Update, debug.traceback)
+        assert(ok, err)
+    end
+end
+
+--- A world (`o.rows`: W.rows keeps the belief's emitted rows, scenario.lua): `o.viewer` "proven" (the Cooldown Manager tracks Rip and Rake, both proven by a landed cast) or false (no
 --- item), `o.cdmOff` (the debug session switch), `o.plain` (UNIT_COMBAT amounts plain: the October beta; else secret,
 --- live). The fight starts at W.t0 with our white swings every SWING s.
 function M.world(o)
     o = o or {}
-    local W = { o = o, facts = {}, pubs = {}, queue = {}, seq = 0, items = {} }
     local H = headless.new({
         character = character(),
         pack = dlw.Feral.PACK,
@@ -56,7 +72,8 @@ function M.world(o)
         end,
     })
     assert(#H.loadErrors == 0, table.concat(H.loadErrors, "; "))
-    W.H, W.ctl = H, H.ctl
+    local W = scenario.new(H, { plain = o.plain, frame = frame, rows = o.rows })
+    W.o, W.pubs, W.items = o, {}, {}
     W.S, W.VS, W.I = H.Hekili.State, H.ns.VirtualState, H.ns.VirtualStateInternal
     local ctl = H.ctl
     ctl.viewer.log = false
@@ -87,7 +104,6 @@ function M.world(o)
     W.energy, W.eT, W.cp = 100, ctl.now, 0
     W.up = {} -- [bleed] = true expiry while truly up
     W.t0 = ctl.now + 0.5
-    W.now = ctl.now
     return W
 end
 
@@ -101,63 +117,30 @@ end
 
 --- Schedules `fn(W, t)` at world time t (a fact named `what` unless `bg`, a background event).
 function M.at(W, t, what, fn, bg)
-    W.seq = W.seq + 1
-    W.queue[#W.queue + 1] = { t = t, what = what, fn = fn, bg = bg, seq = W.seq }
-end
-
--- One frame: the due events in time order at their own times, then the VirtualState frame (the staged flush, the
--- verdict's deadline wake), the timers, and the driver's choice (Driver.lua:150-170).
-local function frame(W, ft)
-    local ctl = W.ctl
-    table.sort(W.queue, function(a, b)
-        return a.t < b.t or (a.t == b.t and a.seq < b.seq)
-    end)
-    while W.queue[1] and W.queue[1].t <= ft do
-        local e = table.remove(W.queue, 1)
-        ctl.now = e.t
-        e.fn(W, e.t)
-        if not e.bg then
-            W.facts[#W.facts + 1] = { t = e.t, what = e.what }
-        end
-    end
-    ctl.now = ft
-    local was = W.engine.criticalUpdate
-    W.vsFrame.__scripts.OnUpdate(W.vsFrame, DT)
-    if W.engine.criticalUpdate and not was then -- the verdict's deadline wake (or another belief edge) asked a cycle
-        W.facts[#W.facts + 1] = { t = ft, what = "wake" }
-    end
-    W.H.RunTimers(ft)
-    local eng = W.engine
-    eng.refreshTimer = (eng.refreshTimer or 0) + DT
-    if eng.refreshTimer > (eng.criticalUpdate and 0.2 or (ctl.combat and 0.5 or 0.25)) then
-        eng.criticalUpdate, eng.refreshTimer = false, 0
-        local ok, err = xpcall(W.H.Hekili.Update, debug.traceback)
-        assert(ok, err)
-    end
+    W:at(t, what, fn, bg)
 end
 
 --- Runs the world to time t.
 function M.run(W, t)
-    while W.now + DT <= t + 1e-9 do
-        W.now = W.now + DT
-        frame(W, W.now)
-    end
+    W:run(t)
 end
 
 -- The client's events -------------------------------------------------------------------------------------------------
 
-local function row(W, act, amount)
-    W.H.Fire("UNIT_COMBAT", "target", act, "", W.o.plain and amount or SECRET, 1)
-end
-local function points(W, n)
-    W.cp, W.ctl.power[4] = n, n
-    W.H.Fire("UNIT_POWER_FREQUENT", "player", "COMBO_POINTS")
+-- The plain combo points read n (or n(W) then) at t, the truth with it.
+local function points(W, t, n, name)
+    W:power(t, 4, n, {
+        name = name or "points",
+        set = function(W2, v)
+            W2.cp = v
+        end,
+    })
 end
 -- The aura edge as the observer fires it: the list entry (raising in combat), UNIT_AURA, the viewer 4 ms later.
 local function auraEdge(W, t, b, up)
     local B = BLEED[b]
     M.at(W, t, b .. (up and " up" or " down"), function(W2)
-        W2.H.Fire("UNIT_AURA", "target")
+        W2:fire("UNIT_AURA", "target")
     end)
     local it = W.items[b]
     if it then
@@ -171,21 +154,17 @@ local function auraEdge(W, t, b, up)
     end
 end
 
---- Our white swings from `from` every SWING s until `to`: PLAYER_SWING, its row (a wound) LAND s later. Background.
+--- Our white swings from `from` every SWING s until `to`: PLAYER_SWING, its row (a wound) scenario.LAND s later
+--- (background).
 --- `odd` ({ at, act, lag }) changes the one swing at `at`: its row `act` (a wound or an avoid) `lag` s after it.
 function M.swings(W, from, to, odd)
     local t = from
     while t <= to do
-        local act, lag = "WOUND", LAND
+        local act, lag = "WOUND", scenario.LAND
         if odd and math.abs(t - odd.at) < 1e-6 then
             act, lag = odd.act, odd.lag
         end
-        M.at(W, t, "swing", function(W2)
-            W2.H.Fire("PLAYER_SWING", SWING, 0)
-        end, act == "WOUND")
-        M.at(W, t + lag, "swing row " .. act, function(W2)
-            row(W2, act, act == "WOUND" and 60 or 0)
-        end, act == "WOUND")
+        W:swing(t, { speed = SWING, act = act, lag = lag })
         t = t + SWING
     end
 end
@@ -200,24 +179,18 @@ end
 --- 2 with Blood Frenzy's point on its crit, wowsims talents_feral_combat.go:146).
 function M.cast(W, t, b, c)
     local B = BLEED[b]
-    local guid = "Cast-" .. b .. "-" .. t
-    M.at(W, t - 0.08, b .. " sent", function(W2)
-        W2.H.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", guid, B.cast)
-    end)
-    M.at(W, t, b .. " success", function(W2, tt)
-        W2.H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", guid, B.cast)
-        setEnergy(W2, tt, M.energyAt(W2, tt) - B.cost)
-    end)
-    local landed = c.act == "WOUND"
-    if c.row then
-        M.at(W, t + c.row, b .. " row " .. c.act, function(W2)
-            row(W2, c.act, landed and 50 or 0)
-        end)
-    end
-    if landed then
-        M.at(W, t + (c.cpLag or 0.002), b .. " points", function(W2)
-            points(W2, b == "rip" and 0 or math.min(5, W2.cp + (c.gain or 1))) -- `c.gain` 2: Blood Frenzy's crit point
-        end)
+    W:cast(t, B.cast, {
+        name = b,
+        act = c.act,
+        row = c.row,
+        success = function(W2, tt)
+            setEnergy(W2, tt, M.energyAt(W2, tt) - B.cost)
+        end,
+    })
+    if c.act == "WOUND" then
+        points(W, t + (c.cpLag or 0.002), function(W2) -- `c.gain` 2: Blood Frenzy's crit point
+            return b == "rip" and 0 or math.min(5, W2.cp + (c.gain or 1))
+        end, b .. " points")
         local exp = t + (b == "rip" and 12 or 9)
         M.at(W, t, b .. " applied", function(W2)
             W2.up[b] = exp
@@ -226,9 +199,7 @@ function M.cast(W, t, b, c)
         auraEdge(W, exp, b, false)
         local tick = b == "rip" and 2 or 3
         for k = tick, exp - t + 1e-6, tick do
-            M.at(W, t + k, b .. " tick", function(W2)
-                row(W2, "WOUND", 30)
-            end, true)
+            W:row(t + k, "WOUND", { name = b .. " tick", amount = 30, bg = true })
         end
         M.at(W, exp, b .. " expired", function(W2)
             if W2.up[b] == exp then
@@ -293,19 +264,13 @@ function M.prelude(W, o)
     local swingAt = o.swingAt or -0.9
     local first = t0 + 0.1 + (M.CAST_AT + swingAt - 0.1) % SWING
     M.swings(W, first, T + 15, o.odd and { at = T + swingAt, act = o.odd.act, lag = o.odd.lag })
-    M.at(W, t0 + 0.3, "points", function(W2)
-        points(W2, 5)
-    end)
+    points(W, t0 + 0.3, 5)
     M.cast(W, t0 + 0.5, "rip", { act = "WOUND" }) -- runs out at t0 + 12.5
     M.cast(W, t0 + 1.5, "rake", { act = "WOUND", row = 0.004 }) -- runs out at t0 + 10.5
-    M.at(W, t0 + 2.0, "points", function(W2)
-        points(W2, 2)
-    end)
+    points(W, t0 + 2.0, 2)
     if (o.bleed or "rip") == "rip" then
         M.cast(W, t0 + 13.5, "rake", { act = "WOUND", row = 0.004 }) -- up through the case (to T + 4.5)
-        M.at(W, t0 + 14.0, "points", function(W2)
-            points(W2, 5)
-        end)
+        points(W, t0 + 14.0, 5)
     end
     return T
 end
@@ -321,17 +286,13 @@ function M.case(c)
     W.bleed = b
     M.cast(W, T, b, { act = c.act, row = c.row, gain = c.gain })
     if c.tickAt then -- a bleed's tick (a background white wound) at T + c.tickAt
-        M.at(W, T + c.tickAt, "tick", function(W2)
-            row(W2, "WOUND", 30)
-        end, true)
+        W:row(T + c.tickAt, "WOUND", { name = "tick", amount = 30, bg = true })
     end
     if c.pointFact then -- the point that never came: a fact once no read shows it by then (L1832 PT_AVOID)
         M.at(W, T + c.pointFact, "no point", function() end)
     end
     if c.pointsAt then -- builders not modelled: the plain points come back
-        M.at(W, T + c.pointsAt[1], "points", function(W2)
-            points(W2, c.pointsAt[2])
-        end)
+        points(W, T + c.pointsAt[1], c.pointsAt[2])
     end
     M.run(W, T + 0.05)
     -- the verdict's window of the record our cast wrote (Auras.lua: max(W0, travel + TOL))

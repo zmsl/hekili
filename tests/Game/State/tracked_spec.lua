@@ -61,6 +61,8 @@ describe("the tracked set", function()
         ns.BuildTracked()
         assert.are.same({ 7, 4242, 0.3 }, { I.FSR, I.GCD_SPELL, I.Log.ORACLE_MIN })
         assert.are.same({ 7, 4242, 0.3 }, { I.def.fsr, I.def.gcdSpell, I.def.oracleMin })
+        -- one usability latency (Pr-1): the row and the resources' GAIN_SHOWS follow the core's oracleMin
+        assert.are.same({ 0.3, 0.3 }, { I.Lat.lag("usable.shows"), I.GAIN_SHOWS })
     end)
 
     it("builds the tracked set's contents: ids from id and copy, spender slots, talents de-duplicated", function()
