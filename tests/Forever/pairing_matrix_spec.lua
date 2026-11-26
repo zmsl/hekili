@@ -7,7 +7,8 @@
 --   route   the belief's emitted miss and hit rows near T (SPELL_MISSED / SPELL_DAMAGE: the cast took the row;
 --           SWING_MISSED: the swing did; none: no row was paid), each at its stamp from T;
 --   undo    the believed bleed's first SPELL_AURA_REMOVED from T (the record undone), "-" none;
---   refunds I.avoidsRun at the end (the avoided-cast reactions run: the refund);
+--   avoids  I.avoidsRun at the end: the avoided-cast reactions that ran (the undo and refund path; a Cooldown Manager
+--           light since the cast still drops the refund after it, F4b, so 1 here is not always a refund paid);
 --   verdict finisher_world's check: "pass", or its first failure (finisher_miss_spec's pinned windows);
 --   back    slot 1's first return to the bleed and the last wrong icon's publish, s from T ("-" none).
 -- The research counted 57 cases (2026-11-23); the spec had 60 at its commit then (743b76463) and has 65 today: the five
@@ -55,7 +56,7 @@ local function outcome(knobs)
     return table.concat(route, "; "), undo, W.I.avoidsRun, fails[1] or "pass", s(sum.back) .. " " .. s(sum.wrongLast)
 end
 
--- { name, knobs, route, undo, refunds, verdict, back }. Names: 1-5 finisher_miss_spec's ways a miss reaches the belief,
+-- { name, knobs, route, undo, avoids, verdict, back }. Names: 1-5 finisher_miss_spec's ways a miss reaches the belief,
 -- C the controls, M the mirror (a landed Rip, our swing's avoid in its window), P the combo point fact.
 local MATRIX = {
     {
@@ -735,13 +736,13 @@ describe("the pairing matrix (finisher_miss_spec's cases, refactor lane 2) #pin"
     local capture = os.getenv("MATRIX_CAPTURE")
     for _, m in ipairs(MATRIX) do
         it(m[1], function()
-            local route, undo, refunds, verdict, back = outcome(m[2])
+            local route, undo, avoids, verdict, back = outcome(m[2])
             if capture then
                 local out = assert(io.open(capture, "a"))
-                out:write(("%q: %q, %q, %d, %q, %q\n"):format(m[1], route, undo, refunds, verdict, back))
+                out:write(("%q: %q, %q, %d, %q, %q\n"):format(m[1], route, undo, avoids, verdict, back))
                 out:close()
             end
-            assert.are.same({ m[3], m[4], m[5], m[6], m[7] }, { route, undo, refunds, verdict, back })
+            assert.are.same({ m[3], m[4], m[5], m[6], m[7] }, { route, undo, avoids, verdict, back })
         end)
     end
 end)

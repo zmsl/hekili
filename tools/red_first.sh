@@ -5,7 +5,7 @@
 # green on base proves nothing about the lane's change, so it fails this check, unless its name carries a tag that says
 # it is green by design: #pin (it pins today's behaviour for a later lane, as the pairing matrix does) or #self (it checks
 # the spec's own tooling, not src/). A declared one red on base fails too. A spec file that raises before any test runs
-# is reported as a load error and counts as red for its new tests.
+# counts as red for its new tests (their names are listed on this checkout, where the file loads).
 # SPEC defaults to the *_spec.lua files under tests/ added or changed against BASE (the working tree and untracked
 # files included).
 # Exit 0: every new test is red on base (or declared and green); 1: a finding; 2: usage.
@@ -39,11 +39,13 @@ trap 'rm -rf "$TMP"' EXIT
 git archive "$BASE" | tar -x -C "$TMP" || exit 2
 ln -s "$LUA_ENV" "$TMP/.lua"
 
-# the full names a spec file holds (busted --list: "file:line: name")
-names() { (cd "$TMP" && "$BUSTED" --list "$1" 2>/dev/null | sed -E 's/^[^:]+:[0-9]+: //' | LC_ALL=C sort -u); }
+# the full names spec file $2 holds in tree $1 (busted --list: "file:line: name")
+names() { (cd "$1" && "$BUSTED" --list "$2" 2>/dev/null | sed -E 's/^[^:]+:[0-9]+: //' | LC_ALL=C sort -u); }
 
+# BASE's names on BASE's tree; the lane's on this checkout (a spec that raises at load over BASE's src still lists here)
 for f in "${specs[@]}"; do
-    if [ -f "$TMP/$f" ]; then names "$f" >"$TMP/.base.${f//\//_}"; else : >"$TMP/.base.${f//\//_}"; fi
+    if [ -f "$TMP/$f" ]; then names "$TMP" "$f" >"$TMP/.base.${f//\//_}"; else : >"$TMP/.base.${f//\//_}"; fi
+    names . "$f" >"$TMP/.lane.${f//\//_}"
 done
 rm -rf "$TMP/tests"
 cp -r tests "$TMP/tests"
@@ -51,7 +53,7 @@ cp -r tests "$TMP/tests"
 bad=0
 for f in "${specs[@]}"; do
     key=${f//\//_}
-    names "$f" | LC_ALL=C comm -23 - "$TMP/.base.$key" >"$TMP/.new.$key"
+    LC_ALL=C comm -23 "$TMP/.lane.$key" "$TMP/.base.$key" >"$TMP/.new.$key"
     n=$(wc -l <"$TMP/.new.$key")
     if [ "$n" -eq 0 ]; then
         echo "$f: no new test"
