@@ -635,7 +635,8 @@ function M.context(set, r, log, player, encounter, tank)
         ranges = r.ranges or {}, -- rule 19: { [action key] = { min, max } yards }, the DB2's, where the APL gives none
         sequences = r.sequences == true, -- rules 14, 14b: sequences as APL sequence lines (windows Phase 3, per recipe)
         -- rule 14b (L898, design v6 10.3): { [sequence name] = SimC term }, ANDed into that sequence's condition, with
-        -- its close line (`close_window` while it runs and the term is false) in default before the call reaching it
+        -- its close line (`close_window` while it runs and the term is false) in default before the call reaching it;
+        -- the term `time>0` (fight-bound, L1919) has no close line: combat end closes every row
         sequenceIf = r.sequenceIf or {},
         seqIfList = {}, -- [sequence name] = the list its line sits in
         maintenance = {}, -- rule 15: { { action key, setting key } }, by action key
