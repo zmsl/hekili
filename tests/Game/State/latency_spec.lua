@@ -12,6 +12,14 @@ local function source(path)
     return s
 end
 
+-- (L1913 M3) The read form in code: `Lat.lag("<name>")` or `Lat.lag("<name>", <rung>)` outside a comment; a name in a
+-- comment, or any other spelling, is no read. Comments go first (a `--` inside a string is not a pattern any site has).
+local function reads(src, name)
+    local code = src:gsub("%-%-%[(=*)%[.-%]%1%]", ""):gsub("%-%-[^\n]*", "")
+    local q = name:gsub("%p", "%%%0")
+    return code:find('Lat%.lag%("' .. q .. '"%s*[,)]') ~= nil
+end
+
 describe("the latency table", function()
     local ns, I, Lat
 
@@ -121,10 +129,19 @@ describe("the latency table", function()
         it(("%s reads the row %s, not a literal"):format(s[1], s[2]), function()
             local src = source(s[1])
             assert.is_truthy(Lat.rows[s[2]], s[2])
-            assert.is_truthy(src:find('Lat.lag("' .. s[2] .. '"', 1, true), s[2])
+            assert.is_true(reads(src, s[2]), s[2])
             assert.is_nil(src:find(s[3], 1, true), s[3])
         end)
     end
+
+    it("counts only the read form in code: a name in a comment or another spelling is no read (L1913 M3)", function()
+        assert.is_true(reads('local X = I.Lat.lag("cp.avoid")', "cp.avoid"))
+        assert.is_true(reads('local X = Lat.lag("swing.lag", 2)', "swing.lag"))
+        assert.is_false(reads('-- local X = Lat.lag("cp.avoid")\nlocal X = 0.3', "cp.avoid"))
+        assert.is_false(reads('--[[ Lat.lag("cp.avoid") ]] local X = 0.3', "cp.avoid"))
+        assert.is_false(reads('local X = Lat.lag("cp.avoid.x")', "cp.avoid"))
+        assert.is_false(reads('local X = "Lat.lag" -- ("cp.avoid")', "cp.avoid"))
+    end)
 
     it("leaves every row read somewhere (no orphan row)", function()
         local files = {}
@@ -135,7 +152,7 @@ describe("the latency table", function()
         end
         local all = table.concat(files, "\n")
         for _, name in ipairs(Lat.names) do
-            assert.is_truthy(all:find('Lat.lag("' .. name .. '"', 1, true), name)
+            assert.is_true(reads(all, name), name)
         end
     end)
 end)
