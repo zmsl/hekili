@@ -60,6 +60,63 @@ function M.ttdRow(r, killAt, seed, pack)
     )
 end
 
+-- (mobHealths worlds, lane h-hw) The multi-life row: the core's fight_remains and the target's time_to_die at each
+-- in-combat poll (r[k] = { fr, tt, tc, guid }), each against its truth: fight_remains against the last death
+-- (W.killAt), the target's against that mob's own death (its diedAt). Per figure: polls answered (under UNKNOWN), those
+-- scored (a truth ahead), the absolute error's median and p90 in seconds and the share short of the truth. Record-only;
+-- `deaths` lists each life's end from the pull, `ens` the most enemies the core counted.
+local function figure(label, got, truths, tcs)
+    local err, live, short = {}, 0, 0
+    for k = 1, #got do
+        local est, truth = got[k], truths[k]
+        if est < UNKNOWN then
+            live = live + 1
+            if truth and truth > tcs[k] then
+                local left = truth - tcs[k]
+                err[#err + 1] = math.abs(est - left)
+                short = short + (est < left and 1 or 0)
+            end
+        end
+    end
+    return ("%s live %d scored %d err med %.2f p90 %.2f short %.2f"):format(
+        label,
+        live,
+        #err,
+        pct(err, 0.5),
+        pct(err, 0.9),
+        #err > 0 and short / #err or 0
+    )
+end
+function M.ttdmRow(r, W, seed, pack, arm)
+    local died = {}
+    for _, e in ipairs(W.ents) do
+        if e.kind == "mob" then
+            died[e.guid] = e.diedAt
+        end
+    end
+    local fr, tt, tcs, ft, ftt = {}, {}, {}, {}, {}
+    for k = 1, #r do
+        local p = r[k]
+        fr[k], tt[k], tcs[k], ft[k], ftt[k] = p[1], p[2], p[3], W.killAt, died[p[4]]
+    end
+    local deaths = {}
+    for _, e in ipairs(W.ents) do
+        if e.kind == "mob" then
+            deaths[#deaths + 1] = e.diedAt and ("%.1f"):format(e.diedAt - M.PULL) or "-"
+        end
+    end
+    return ("%s arm %s seed %d polls %d ens %d deaths %s %s | %s"):format(
+        tostring(pack),
+        arm,
+        seed,
+        #r,
+        r.ens or 0,
+        table.concat(deaths, "/"),
+        figure("fight_remains", fr, ft, tcs),
+        figure("target.ttd", tt, ftt, tcs)
+    )
+end
+
 -- (bands arms) The containment check of one drain (LibHiddenValues integration design 5.4, L1666 a): at every fold the
 -- true value (the fake library's pushes, lhv:TruthAt) lies inside the band the family applied. A channel a family reads
 -- (Sources/Bands.lua's I.bandUsed rose since the last check; b.used starts at the run's start) is checked against what
@@ -694,6 +751,10 @@ function M.run(L, seed, o, drivers)
     local arm = ab.ARMS[armName] -- o.arm: a spec's own arm (its shapes; the floors stay the env's)
     local aw = arm.world or {} -- a verdict arm's world knobs that shape the world's build (ab.lua; not a replay's)
     wo.mobAvoid, wo.swapEvery, wo.extraMobs = aw.mobAvoid, aw.swapEvery, aw.extraMobs
+    if o.mobHealths then -- (lane h-hw) several lives: o.mobHealths, o.drains, o.switchTo, scenarios.world's
+        wo.mobHealths, wo.drains, wo.switchTo = o.mobHealths, o.drains, o.switchTo
+        wo.extraMobs, wo.swapEvery = #o.mobHealths - 1, o.swapEvery
+    end
     -- the instance whose state is the run's truth, a press resolving from it: the oracle when it is driven, else the
     -- driver (a run of ours alone, ws.live, never steps the oracle, whose state then stays at its boot); a
     -- replay's computed cooldowns are its answers at each cast
@@ -720,6 +781,7 @@ function M.run(L, seed, o, drivers)
         bands = M.newBands(), -- a bands arm's M.bandCheck
         power = M.newPower(), -- every arm's "power" row (M.powerPoll)
         ttd = { polls = 0, live = 0, err = {}, rel = {} }, -- a ttd arm's fight_remains against the kill (M.ttdRow)
+        ttdm = {}, -- a mobHealths world's fight_remains and target time to die per poll (M.ttdmRow)
     }
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
@@ -835,6 +897,12 @@ function M.run(L, seed, o, drivers)
             ctl.cvars.nameplateShowAll = aw.plates and "1" or nil
             for i = 1, 1 + (aw.extraMobs or 0) do
                 ctl.exists["nameplate" .. i] = aw.plates or nil
+            end
+        end
+        if o.mobHealths then -- (lane h-hw) every mob's plate shown and counted, the client's enemy plates on
+            ctl.cvars.nameplateShowEnemies, ctl.cvars.nameplateShowAll = "1", "1"
+            for i = 1, #o.mobHealths do
+                ctl.exists["nameplate" .. i] = true
             end
         end
         local fresh = {
@@ -1101,6 +1169,11 @@ function M.run(L, seed, o, drivers)
                 r.polls = r.polls + 1
                 r[r.polls] = st.H.Hekili:GetGreatestTTD()
                 r[-r.polls] = tc
+            end
+            if wo.mobHealths and st.H == drivers[1].H and tc >= wo.pull then -- the multi-life record (M.ttdmRow)
+                local r, hk = run.ttdm, st.H.Hekili
+                r[#r + 1] = { hk:GetGreatestTTD(), hk:GetTTD("target"), tc, st.H.ctl.guid.target }
+                r.ens = math.max(r.ens or 0, hk.State.active_enemies or 0)
             end
             queue(st.H, st.q, 3, res)
             if st.edge then
@@ -1407,6 +1480,9 @@ function M.run(L, seed, o, drivers)
                         .. (e.offs[1] and (" offs " .. table.concat(e.offs, "; ")) or "")
                 )
             )
+        end
+        if wo.mobHealths and i == 1 then
+            ab.record("ttdm", M.ttdmRow(run.ttdm, W, seed, content.PACK, armName))
         end
         if st.ttd then
             ab.check(true, "ttd", M.ttdRow(run.ttd, W.killAt, seed, content.PACK))
