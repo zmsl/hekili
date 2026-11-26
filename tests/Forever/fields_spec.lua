@@ -290,22 +290,10 @@ describe("the pack field registry", function()
         v2("RegisterResource", { 1, { iv_neg = { value = 1, interval = -1 } }, nil, nil }, "regen")
         v2("RegisterResource", { 3, nil, nil, { decayInterval = -1 } }, "meta")
         passes("RegisterResource", { 1, { iv_name = { value = 1, interval = "mainhand_speed" } }, nil, nil })
-        passes(
-            "RegisterResource",
-            {
-                1,
-                {
-                    iv_fn = {
-                        value = 1,
-                        interval = function()
-                            return 2
-                        end,
-                    },
-                },
-                nil,
-                nil,
-            }
-        )
+        local two = function()
+            return 2
+        end
+        passes("RegisterResource", { 1, { iv_fn = { value = 1, interval = two } }, nil, nil })
         passes("RegisterResource", { 3, nil, nil, { decayInterval = 0 } })
     end)
 
