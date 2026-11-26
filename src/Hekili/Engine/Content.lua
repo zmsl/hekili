@@ -133,6 +133,7 @@ function ns.LoadContent()
     done = true
     loadAll()
     ns.Fields.Finish()
+    ns.Fields.closed = true -- later registrations are unchecked (Fields.lua F.Check): never a raise in combat
 end
 
 --- Shows LoadContent's notice, once (OnEnable: the profile and the notice frame exist by then).

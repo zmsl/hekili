@@ -30,6 +30,7 @@ local F = {
     findings = {}, -- V1's listed keys: "<pack> <object> <key>: <field> (V1)"
     unlanded = {}, -- V5: "<pack> <key>" of each combat-starting ability with no `expects`
     pending = {}, -- V3's references and V4's declarations, checked at F.Finish
+    closed = false, -- true once ns.LoadContent has run the end-of-load pass: F.Check returns at once
 }
 ns.Fields = F
 
@@ -236,7 +237,12 @@ end
 
 --- Checks registration `data` (object kind `on`, key `key`) of `spec` against the registry: V1, V2, V7 here, V3 and V4
 --- queued for F.Finish, V5 listed. Reads `data` only (never its metatable or a function). Raises on a failure.
+--- Once ns.LoadContent has run the end-of-load pass (F.closed), returns at once: a later registration (the simulation's
+--- unknown-aura fallbacks, Engine/Sim/State.lua applyBuff and applyDebuff) is unchecked, as before the registry.
 function F.Check(on, spec, key, data)
+    if F.closed then
+        return
+    end
     local rows = F.rows[on]
     local who = packOf(spec) .. " " .. on .. " " .. tostring(key)
     for k, v in pairs(data) do

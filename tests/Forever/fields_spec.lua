@@ -22,6 +22,22 @@ for _, path in ipairs(addons.files("Hekili_Shared")) do
     end
 end
 
+local headless = require("Game.harness.headless")
+
+-- A headless Druid through the real login (OnInitialize's ns.LoadContent); `o` adds to headless.new's options.
+local function boot(o)
+    o = o or {}
+    o.character = {
+        class = "DRUID",
+        classID = 11,
+        specID = 1483,
+        level = 60,
+        known = { 768, 5487, 5221 },
+        power = { type = 3, token = "ENERGY", max = 100 },
+    }
+    return headless.new(o)
+end
+
 -- A fresh Druid load whose own registrations are already finished (so a later Finish sees the fixture's alone).
 local function druid()
     local env = engine.load("DRUID")
@@ -244,21 +260,38 @@ describe("the pack field registry", function()
     end)
 
     it("checks at the end of the real load (ns.LoadContent): nothing left queued, nothing listed", function()
-        local headless = require("Game.harness.headless")
-        local H = headless.new({
-            character = {
-                class = "DRUID",
-                classID = 11,
-                specID = 1483,
-                level = 60,
-                known = { 768, 5487, 5221 },
-                power = { type = 3, token = "ENERGY", max = 100 },
-            },
-        })
+        local H = boot()
         assert.are.same({}, H.loadErrors)
         local F = H.ns.Fields
         assert.are.same({}, F.pending)
         assert.are.same({}, F.findings)
         assert.is_true(#F.unlanded > 0)
+    end)
+
+    -- decision 2 (fable-r3-decision.md): once the load's end-of-load pass has run, a registration is not checked, so the
+    -- simulation's unknown-aura fallbacks (Engine/Sim/State.lua applyBuff, applyDebuff: { duration = the caller's })
+    -- log and register as before the registry, never raise in combat
+    it("closes at the end of the real load: a later registration, the unknown-aura fallbacks, raises nothing", function()
+        local H = boot()
+        assert.are.same({}, H.loadErrors)
+        local F, kit, st = H.ns.Fields, H.Hekili.Class.kit, H.Hekili.State
+        local findings = #F.findings
+        for i, d in ipairs({ -1, math.huge - math.huge, "10" }) do
+            local ok, err = pcall(kit.RegisterAura, kit, "late_" .. i, { duration = d })
+            assert(ok, tostring(err))
+            assert.is_truthy(rawget(kit.auras, "late_" .. i))
+            local n = #H.errors
+            ok, err = pcall(st.applyBuff, "late_buff_" .. i, d)
+            assert(ok, tostring(err))
+            assert.is_truthy(H.errors[n + 1] and H.errors[n + 1]:find("apply unknown buff", 1, true))
+            assert.is_truthy(rawget(H.Hekili.Class.auras, "late_buff_" .. i))
+            n = #H.errors
+            ok, err = pcall(st.applyDebuff, "target", "late_debuff_" .. i, d)
+            assert(ok, tostring(err))
+            assert.is_truthy(H.errors[n + 1] and H.errors[n + 1]:find("apply unknown debuff", 1, true))
+            assert.is_truthy(rawget(H.Hekili.Class.auras, "late_debuff_" .. i))
+        end
+        assert.are.same({}, F.pending)
+        assert.are.equal(findings, #F.findings)
     end)
 end)
