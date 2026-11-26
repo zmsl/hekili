@@ -140,12 +140,30 @@ function M.new(seed)
             ev.health = v.health -- after the wound (a secret-free client's UnitHealth)
             if v.health <= 0 and not v.dead then -- a kill (headless loop design §2.1.5): the fight's end
                 ev.killing = true -- the observer shapes this outcome by kind (unit-registry spec §6.1 row 7)
-                v.dead, W.killAt = true, W.t
+                v.dead = true
+                v.diedAt = W.t -- (mobHealths worlds) each life's end; the fight's truth is the last
+                if W.livesLeft then -- several lives (scenarios o.mobHealths): the fight ends at the last death
+                    W.livesLeft = W.livesLeft - 1
+                    W.killAt = W.livesLeft <= 0 and W.t or nil
+                else
+                    W.killAt = W.t
+                end
                 W.emit({ kind = "kill", dst = v, src = ev.src, cause = ev })
                 for _, e in ipairs(W.ents) do -- a cast at the dead stops (the client's INTERRUPTED and STOP)
                     if e.target == v then
                         W.endCasts(e)
                     end
+                end
+                if W.livesLeft and W.livesLeft > 0 and me and me.target == v then -- a pack: on to the next live mob
+                    W.at(W.t + 0.5, function()
+                        for _, e in ipairs(W.ents) do
+                            if e.kind == "mob" and not e.dead then
+                                me.target = e
+                                W.emit({ kind = "target" })
+                                return
+                            end
+                        end
+                    end)
                 end
             end
         elseif ev.act == "HEAL" and ev.dst then

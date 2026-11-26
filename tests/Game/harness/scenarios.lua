@@ -173,7 +173,7 @@ function M.world(o, seed)
             level = lvl,
             dr = i == 1 and (o.dr or 0) or 0,
             weapons = { { dmg[1], dmg[2], m.period or o.mobPeriod or 2.0 } },
-            health = i == 1 and o.mobHealth or 1e9,
+            health = o.mobHealths and o.mobHealths[i] or (i == 1 and o.mobHealth or 1e9),
             creatureType = m.creatureType or o.creatureType,
             avoid = o.mobAvoid,
         }))
@@ -182,6 +182,35 @@ function M.world(o, seed)
         mob.plate = i > 1 and o.extraMobs ~= nil or nil
     end
     us.target = mobs[1]
+    if o.mobHealths then -- several lives: the fight is over at the last death (world.lua W.livesLeft)
+        assert(#o.mobHealths == #mobs, "mobHealths: one health a mob")
+        W.livesLeft = #mobs
+    end
+    -- group drain (mobHealths worlds): { { mob, dps, from [0], every [0.5] } }, a party member's damage on a mob that
+    -- is not our target, so the lives differ; no draws (the world's generators move for no other row)
+    for i, d in ipairs(o.drains or {}) do
+        local e = W.add(entities.new({ guid = "Drain-" .. i .. (o.tag or ""), level = lvl, weapons = {} }))
+        W.at(o.pull or 1, function()
+            local every, from = d.every or 0.5, d.from or 0
+            local function hit()
+                local v = mobs[d.mob]
+                if e.stopped or v.health <= 0 then
+                    return
+                end
+                W.emit({
+                    kind = "spell",
+                    src = e,
+                    dst = v,
+                    act = "WOUND",
+                    flag = "",
+                    amount = d.dps * every,
+                    school = 1,
+                })
+                W.at(W.t + every, hit)
+            end
+            W.at(W.t + from + every, hit)
+        end)
+    end
     local others = {}
     for i, kind in ipairs(o.others or {}) do
         local e, b = ARCHETYPES[kind](W, lvl)
