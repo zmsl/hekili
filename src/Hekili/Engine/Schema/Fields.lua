@@ -1,11 +1,11 @@
 -- Engine/Schema/Fields.lua
 -- The pack field registry (refactor plan lane 3, L1819, L1827; belief-purpose-taxonomy 5.2): one row per field a
 -- registration may declare on an ability (RegisterAbility), an aura (RegisterAura), a resource's meta and its `fsr`
--- (RegisterResource), a regen entry and a totem element's slot (RegisterTotemSlots), each with its type, today's default (stated, never written: the consumers keep
--- their own), its bounds and one doc line. Generic: no class, spell or form word. Only the fields that exist today: the
--- ones the shipped content declares and the ones the registration calls or the belief read. The registration calls
--- validate what the pack wrote against it (F.Check), before they read or move anything, so a valid pack changes
--- nothing and a mistake stops at load, never in combat:
+-- (RegisterResource), a regen entry and a totem element's slot (RegisterTotemSlots), each with its type, today's
+-- default (stated, never written: the consumers keep their own), its bounds and one doc line. Generic: no class, spell
+-- or form word. Only the fields that exist today: the ones the shipped content declares and the ones the registration
+-- calls or the belief read. The registration calls validate what the pack wrote against it (F.Check), before they read
+-- or move anything, so a valid pack changes nothing and a mistake stops at load, never in combat:
 --   V1 an unknown key: one edit from a registered name of 4 or more characters fails; on a regen entry or an `fsr` (belief-only tables) any
 --      unknown key fails; on an ability, an aura or a meta, which also carry the engine's own fields, it is listed
 --      (F.findings)
@@ -303,6 +303,22 @@ function F.Check(on, spec, key, data)
             -- only what the belief compiles (Tracked.lua: no variant, a positive spell ID)
             F.unlanded[#F.unlanded + 1] = packOf(spec) .. " " .. tostring(key)
         end
+    end
+end
+
+--- F.Check for an entry that must be a table holding field `need` (RegisterTotemSlots' `{ slot = n }`): a bare value
+--- or an entry without `need` fails V2, naming the pack and the entry, instead of a raw error or a silent nothing.
+function F.CheckEntry(on, spec, key, data, need)
+    if F.closed then
+        return
+    end
+    local who = packOf(spec) .. " " .. on .. " " .. tostring(key)
+    if type(data) ~= "table" then
+        fail(2, who, "entry", format("is %s, not a table of fields", tostring(data)))
+    end
+    F.Check(on, spec, key, data)
+    if data[need] == nil then
+        fail(2, who, need, "is missing")
     end
 end
 

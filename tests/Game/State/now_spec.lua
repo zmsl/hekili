@@ -989,7 +989,7 @@ describe("now handlers", function()
             costMods = {},
             gcdMods = { { aura = "grace_test", pct = -0.1, spells = { fs.SPENDER_C } } },
         }
-        ns.ResourceIsPoints = function() -- Tracked.lua's race path (Engine/Sim/Constants.lua's)
+        ns.ResourceIsPoints = function() -- unread since lane 6 (the build reads meta `points`); kept, no old-code cleanup
             return false
         end
         start()
@@ -1797,8 +1797,7 @@ describe("now handlers", function()
         describe("a refund unsettled on the slot", function()
             local ENERGY, POINTS = 3, 4
             local function bootEnergy(points, cost)
-                local meta = { regen = 10, rest = "max", refundOnAvoid = 0.8 } -- the packs' energy (L1827 row 2)
-                h.Class.resources.energy = { type = ENERGY, state = { meta = meta } }
+                h.Class.resources.energy = { type = ENERGY, state = { meta = { regen = 10, refundOnAvoid = 0.8 } } }
                 local probe, c = h.Class.abilities.spender_a, h.Class.abilities.spender_c
                 probe.spendType, probe.spend = "energy", 40 -- the probe: its flips at 40 pin the pool
                 c.spendType, c.spend, c.refundOnAvoid = "energy", cost or 30, true
@@ -2262,7 +2261,7 @@ describe("now handlers", function()
         -- energy (regen 10), the probe spender_a at 40 (its flips pin the pool), spender_c at `cost` whose `now` runs
         -- `now`; nothing refunds on an avoid
         local function boot(cost, now)
-            h.Class.resources.energy = { type = ENERGY, state = { meta = { regen = 10, rest = "max" } } } -- the packs'
+            h.Class.resources.energy = { type = ENERGY, state = { meta = { regen = 10 } } }
             local probe, c = h.Class.abilities.spender_a, h.Class.abilities.spender_c
             probe.spendType, probe.spend = "energy", 40
             c.spendType, c.spend, c.funcs.now = "energy", cost, now

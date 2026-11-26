@@ -30,6 +30,10 @@ describe("the tracked set", function()
         ns.ResourceRegenerates = function()
             return false
         end
+        -- the base's name-table guess: unread on the head (meta `points`), kept so the base runs to the assertion (red first)
+        ns.ResourceIsPoints = function()
+            return false
+        end
         load.schema(ns, h)
         VS.Start(api)
         ns.BuildTracked()
