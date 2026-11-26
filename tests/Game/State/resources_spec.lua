@@ -3032,6 +3032,25 @@ describe("resources", function()
             assert.is_false(I.res.pinValid[1])
         end)
 
+        -- (band-edge review finding 2) a share change reshares each part's read-high EMA (Q) with E: E - Q stays the
+        -- reshared EMA of the samples' lower ends, so the next measurement's floor is exact
+        it("reshares each part's read-high with E in combat: E - Q stays exact", function()
+            bootShare(false)
+            local R = I.res
+            R.regQ[1], R.spQ[1] = 1, 2 -- earlier band pairs' read-highs: lows 11 and 8
+            obs(Obs.CastSuccess, 11, 2) -- c 0.5 -> 0: S = 8 / 0.5 = 16, lows (11 - 8, 16)
+            I.Fold(11, false)
+            within(3, R.regE[1] - R.regQ[1])
+            within(16, R.spE[1] - R.spQ[1])
+            local v = VS.Power(MANA, 12).est
+            obs(Obs.Read, 12, 1, v, I.ReadOf.Resource)
+            I.Fold(12, false)
+            obs(Obs.Read, 14, 1, v + 2 * 2 + 2 * 22, I.ReadOf.Resource) -- outside: the spirit part (48 - 2 x 2) / 2
+            I.Fold(14, false)
+            within(20 + I.ALPHA * 2, R.spE[1])
+            within(16 + I.ALPHA * (22 - 16), R.spE[1] - R.spQ[1]) -- a pin: its high 0
+        end)
+
         it("takes S from the mp5 part when the share was all of it (shortcut: M 0)", function()
             bootShare(true)
             assert.are.same({ 1, 20, 0, 20, 0 }, parts())

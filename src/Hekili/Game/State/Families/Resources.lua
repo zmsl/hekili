@@ -978,8 +978,11 @@ end
 -- part's EMA (TDF calibrate). False when m is noise (a missed spend, a cap) or the part has no declared rate. A part
 -- declared 0 with a `bound` (an `fsr` slot's mp5 part: the slot's declared total) learns any m in [0, bound x
 -- REGEN_RATIO] instead of the ratio test. `high`: how far m may read over the truth (a band pair's stamps, crossing;
--- 0: none); Q, its EMA beside E's, keeps L = E - Q, the EMA of the samples' lower ends, at or under the truth (owner:
--- the floor's rate never above the true regen).
+-- 0: none); Q, its EMA beside E's, makes E - Q the EMA of the samples' lower ends, and L = E - max(spread, Q) is at
+-- most that. On a plain slot and an `fsr` mp5 part that is at or under the true rate (owner: the floor's rate never
+-- above the true regen) while each stamp is at most band.stamp late and never early, the seed is at or under the truth
+-- and the true rate holds over the EMA's memory; an `fsr` spirit part's sample prices the mp5 part at regE, so its low
+-- also needs regE at or over the mp5 truth (L1975).
 local function ema(r, m, ref, E, L, H, D, bound, Q, high)
     local scale = ref
     if ref == 0 then
@@ -1808,7 +1811,7 @@ local function crossing(r, lo, hi, bt)
         local a, b, k = spans(r, from, dt)
         local gain = lo - R.markV[r] - k
         -- each end stamped up to a step late (L1794): the cell took up to dt + I.BAND_STAMP, its entries' k with it
-        local low = (lo - R.markV[r]) * dt / (dt + I.BAND_STAMP) - k
+        local low = (lo - R.markV[r]) * dt / (dt + I.BAND_STAMP) - k -- nonzero: dt >= PIN_GAP (1 s)
         local m = R.shaped[r] and gain or gain / dt -- nonzero: dt >= PIN_GAP (1 s)
         calibrate(r, m, bt, a, b, from, Obs.Band, R.shaped[r] and low or low / dt)
     end
@@ -2251,6 +2254,7 @@ function I.ShareRead()
                 R.regE[r], R.spE[r] = reshare(R.regE[r], R.spE[r], c, n)
                 R.regL[r], R.spL[r] = reshare(R.regL[r], R.spL[r], c, n)
                 R.regH[r], R.spH[r] = reshare(R.regH[r], R.spH[r], c, n)
+                R.regQ[r], R.spQ[r] = reshare(R.regQ[r], R.spQ[r], c, n) -- reshare is linear: E - Q stays exact
                 R.decl[r], R.spDecl[r] = reshare(R.decl[r], R.spDecl[r], c, n)
                 R.pinValid[r] = false
                 moved(r, I.clock)

@@ -60,7 +60,7 @@ row("usable.flip", 0.15, "s", "unmeasured", "TDF Belief.PIN_EXACT (carried over)
 row("band.margin", 0.05, "s", "unmeasured", "L1670 (design bound), probe L1800", "STALE-P, EXCL") -- I.BAND_MARGIN
 -- How late a band crossing's stamp can be against the value's own crossing: one regen step if the bar moves in
 -- server steps (the harness's world.lua: 0.1 s), else the firing delay above. A regen pair's floor side reads with it.
-row("band.stamp", 0.1, "s", "unmeasured", "L1794, probe L1800 (band-edge round 2)", "CLAMP") -- Families/Resources.lua
+row("band.stamp", 0.1, "s", "unmeasured", "L1794, probe L1800 (band-edge round 2)", "CLAMP") -- I.BAND_STAMP
 -- Cast to Cooldown Manager light p99 27 ms, max 109, one 323 ms debuff (L448, L361): Sources/Auras.lua HOLD and
 -- REFRESH_LAG.
 row("cdm.light", 0.35, "s", "measured", "L448, L361", "HOLD, STALE-P, CLAMP")
