@@ -54,6 +54,12 @@ return {
     class = "PALADIN",
     pack = "Retribution (wowsims.com)",
     spec = "retribution",
+    -- rule 14b (windows design v6 10.3, Phase 3; L1374): move1 / move2 as APL sequences (was the class's Lua windows).
+    -- wowsims runs each until the move ends in melee, where the first main-hand swing lands: `sequenceIf` keeps that
+    -- span (L898: `window.before_first_swing.up`, the class's Lua window on PLAYER_SWING), and closes a sequence the
+    -- swing cut short (the move_to_melee list is no longer walked in melee).
+    sequences = true,
+    sequenceIf = { move1 = "window.before_first_swing.up", move2 = "window.before_first_swing.up" },
     name = "Retribution",
     talentTree = "paladin",
     apl = "ui/specs/paladin/retribution/apls/default.apl.siml",

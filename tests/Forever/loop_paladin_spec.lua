@@ -89,3 +89,39 @@ describe("the headless Paladin gates, 3 fights a pack #slow", function()
         )
     end
 end)
+
+-- L898 / windows Phase 3 (design v6 10.3): the Retribution opener's "before the fight's first main-hand swing", as the
+-- priority reads it (`window.before_first_swing.up`, the Paladin class's Lua window), agrees at every update with the
+-- belief's term (`combat > 0 and lastSwing(1) < combat`), and closes at the first swing in every fight
+describe("Retribution's before_first_swing", function()
+    it("agrees with the belief's first-swing term at every update, and turns false in every fight", function()
+        local L = loop.new(pw.Retribution)
+        local S, VS, VSI = L.us.Hekili.State, L.us.ns.VirtualState, L.us.ns.VirtualStateInternal
+        local ticks, early, ended, bad = 0, 0, {}, {}
+        loop.tally(L, 3, {
+            on = function(run, steps, t)
+                if steps[1].H ~= L.us then
+                    return
+                end
+                ticks = ticks + 1
+                local belief = VSI.combatT > 0 and VS.LastSwing(1) < VSI.combatT
+                local engine = S.window.before_first_swing.up
+                if engine ~= belief and #bad < 5 then
+                    bad[#bad + 1] = ("t %.2f engine %s belief %s"):format(t, tostring(engine), tostring(belief))
+                end
+                if engine then
+                    early = early + 1
+                elseif VSI.combatT > 0 then
+                    ended[run] = true
+                end
+            end,
+        })
+        assert.are.same({}, bad)
+        assert.is_true(early > 0, "never before the first swing in combat")
+        local n = 0
+        for _ in pairs(ended) do
+            n = n + 1
+        end
+        assert.are.equal(3, n, "a fight whose first swing never landed")
+    end)
+end)

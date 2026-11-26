@@ -634,6 +634,10 @@ function M.context(set, r, log, player, encounter, tank)
         windowVars = r.windowVars or {}, -- rule 10: { [variable name] = window }, a time since read from the window
         ranges = r.ranges or {}, -- rule 19: { [action key] = { min, max } yards }, the DB2's, where the APL gives none
         sequences = r.sequences == true, -- rules 14, 14b: sequences as APL sequence lines (windows Phase 3, per recipe)
+        -- rule 14b (L898, design v6 10.3): { [sequence name] = SimC term }, ANDed into that sequence's condition, with
+        -- its close line (`close_window` while it runs and the term is false) in default before the call reaching it
+        sequenceIf = r.sequenceIf or {},
+        seqIfList = {}, -- [sequence name] = the list its line sits in
         maintenance = {}, -- rule 15: { { action key, setting key } }, by action key
     }
     for key, setting in pairs(r.maintenance or {}) do
@@ -2245,6 +2249,11 @@ local function windowed(c, a)
     end
     if c.sequences then
         declare(c, w, #steps, "sequence")
+        local term = c.sequenceIf[w]
+        if term then
+            cond = cond and (cond .. "&" .. paren(term)) or term
+            c.seqIfList[w] = c.listName
+        end
         table.insert(out, 1, "sequence,name=" .. w .. ",mode=continue" .. (cond and (",if=" .. cond) or ""))
         return out
     end
@@ -2768,6 +2777,11 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
     end
     for _, w in pairs(c.windowVars) do -- a recipe window (the kit registers it)
         made[w] = true
+    end
+    for _, term in pairs(c.sequenceIf) do -- a window a sequenceIf term reads (the kit registers it)
+        for w in term:gmatch("window%.([%w_]+)%.") do
+            made[w] = true
+        end
     end
     for _, l in ipairs(lists) do
         local L, j = l[1], 1
@@ -3372,6 +3386,33 @@ function M.translate(rotation, c)
         if not c.conditioned[x] then
             error("condition: no " .. x .. " cast line", 0)
         end
+    end
+    -- rule 14b's `sequenceIf` (L898, design v6 10.3): each sequence's close line, in default before the line that
+    -- reaches its list (before the sequence's own line in default): the list is not walked once its term is false
+    local seqIf = {}
+    for w in pairs(c.sequenceIf) do
+        seqIf[#seqIf + 1] = w
+    end
+    table.sort(seqIf) -- a fixed order: the pack is written byte for byte
+    for _, w in ipairs(seqIf) do
+        local term, list = c.sequenceIf[w], c.seqIfList[w]
+        if not list then
+            error("sequenceIf: no sequence " .. w .. " in the APL", 0)
+        end
+        local want = list == "default" and ("^sequence,name=" .. w .. "[,:]")
+            or ("^[%a_]+_action_list,name=" .. list .. "[,]?")
+        local at
+        for i, body in ipairs(byName.default) do
+            if not at and body:find(want) and (list == "default" or body:match("^[%a_]+,name=([%w_]+)") == list) then
+                at = i
+            end
+        end
+        if not at then
+            error("sequenceIf: " .. w .. "'s list " .. list .. " is not called from default", 0)
+        end
+        local line = ("close_window,name=%s,if=window.%s.up&!window.%s.done&!(%s)"):format(w, w, w, term)
+        table.insert(byName.default, at, line)
+        table.insert(origin.default, at, false)
     end
     -- CN12: a recipe key that names nothing is an error, as for `condition` (an upstream rename would drop it silently)
     for _, field in ipairs({ "guard", "requires", "windowVars" }) do

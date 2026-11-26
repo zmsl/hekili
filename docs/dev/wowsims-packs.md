@@ -170,6 +170,13 @@ Translation:
 - `sequences` (`true`): the APL's `strictSequence` and `sequence` entries are written as `strict_sequence` and
   `sequence` lines (rules 14 and 14b below; windows design v6 §10). Unset, they stay `prev.1` chains and
   class-registered windows. Set per recipe as each spec moves to APL sequences.
+- `sequenceIf` (`{ [sequence name] = SimC term }`, with `sequences`): the term is ANDed into that sequence's
+  condition, and the translator writes the sequence's close line,
+  `close_window,name=<w>,if=window.<w>.up&!window.<w>.done&!(<term>)`, in `default` before the line that reaches the
+  sequence's list (the list is no longer walked once the term turns false). For a span wowsims's sequence ends on
+  that the APL does not say: Retribution's opener runs until the first main-hand swing,
+  `window.before_first_swing.up` (the Paladin class's Lua window; windows design v6 10.3, L898). A window the term
+  reads counts as the kit's. A name the APL has no sequence of is an error (CN12), as is a list `default` never calls.
 - `windowVars` (`{ [variable name] = window }`): an APL variable that times "since the last shot or swing", read from
   the kit's registered window instead (rule 10: `window.<w>.up&window.<w>.elapsed<op>x`; the hunters' "Just shot"
   from `weave`). A name the APL's variables lack is an error (CN12).

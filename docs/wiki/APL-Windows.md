@@ -20,7 +20,7 @@ On every update the forecast copies the windows as they stand. Lines and simulat
 
 | Expression | Type | Meaning | Example |
 |---|---|---|---|
-| `window.<name>.up` | boolean | The window is open at this point of the forecast | `window.move1.up` |
+| `window.<name>.up` | boolean | The window is open at this point of the forecast | `window.before_first_swing.up` |
 | `window.<name>.down` | boolean | The window is closed | `window.hha.down` |
 | `window.<name>.remains` | seconds | Time until the window ends; 0 when closed | `window.hha.remains>0` |
 | `window.<name>.elapsed` | seconds | Time since the window opened; 0 when closed | `window.weave.elapsed>1` |
@@ -33,10 +33,10 @@ From Beast Mastery Turret (wowsims.com):
 actions+=/summon_hawk,if=window.hha.next.summon_hawk
 ```
 
-From Retribution (wowsims.com):
+From Retribution (wowsims.com), the opener's sequence runs only before the fight's first main-hand swing:
 
 ```simc
-actions.move_to_melee=judgement,use_off_gcd=1,if=window.move1.next.judgement&(toggle.movement&window.move1.up|action.judgement.in_range)
+actions.move_to_melee=sequence,name=move1,mode=continue,if=(talent.seal_of_command.enabled&!window.move1.done)&window.before_first_swing.up:judgement,use_off_gcd=1,if=(toggle.movement|action.judgement.in_range):seal_of_command,focus=1,if=talent.twist_of_light.enabled
 ```
 
 A window that never stops on a timer, one that lasts until combat ends, reads a very large `remains`.
@@ -136,7 +136,7 @@ When the priority loads, each error is reported once as an error message and its
 |---|---|---|---|
 | `hha` | Hunter | Beast Mastery's sequence of Summon Hawk, Summon Hawk, Arcane Shot, repeated for the whole fight | Beast Mastery Turret (wowsims.com) |
 | `weave` | Hunter | The moment after a ranged shot in which a melee strike fits before the next shot | No built-in priority |
-| `move1`, `move2` | Paladin | Retribution's opener: Judgement, then a seal, from the pull until the first melee swing | Retribution (wowsims.com) |
+| `before_first_swing` | Paladin | In combat, until the fight's first main-hand swing | Retribution (wowsims.com), its opener sequences |
 | `riposte` | Rogue | The 5 seconds after a parry in which Riposte can be used | The class pack, to decide when Riposte is usable |
 
 ## See also
