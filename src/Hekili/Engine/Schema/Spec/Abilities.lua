@@ -129,6 +129,7 @@ local methods = {
     -- upstream's "not while this is up". `ranks` (rank-ordered spell IDs) and `effect` (one factory for `handler` and
     -- `now`) are derived first: Spec/Ranks.lua.
     RegisterAbility = function( self, ability, data )
+        ns.Fields.Check( "ability", self, ability, data ) -- the field registry's load checks, before anything reads data
         ns.DeriveAbility( ability, data, KnownRank ) -- `ranks` and `effect` into their fields, before anything reads them
 
         -- A passive (a spell the spellbook knows, never cast): the belief tracks its known rank; the sim never sees it.

@@ -84,15 +84,8 @@ local function load(name)
     end
 end
 
---- Loads Hekili_Shared, then the player's class pack, once per session (OnInitialize, its only caller; a later call
---- does nothing). Keeps a notice when the shared content fails to load (then no pack is tried: it depends on it), the
---- class cannot be read, or the pack is not installed, declares another content API (then it is not loaded) or fails
---- to load.
-function ns.LoadContent()
-    if done then
-        return
-    end
-    done = true
+-- The loads, and the notice when one fails (LoadContent below).
+local function loadAll()
     notice = load("Hekili_Shared")
     if notice then
         return
@@ -125,6 +118,21 @@ function ns.LoadContent()
     if not notice then
         ns.PackAddon = name -- its string table labels its built-in priorities (Registry.PackLabel)
     end
+end
+
+--- Loads Hekili_Shared, then the player's class pack, once per session (OnInitialize, its only caller; a later call
+--- does nothing). Keeps a notice when the shared content fails to load (then no pack is tried: it depends on it), the
+--- class cannot be read, or the pack is not installed, declares another content API (then it is not loaded) or fails
+--- to load.
+--- Then runs the field registry's end-of-load checks (V3 references, V4 landing evidence: Engine/Schema/Fields.lua) over
+--- every registration the content made: a mistake raises there, at login, never in combat.
+function ns.LoadContent()
+    if done then
+        return
+    end
+    done = true
+    loadAll()
+    ns.Fields.Finish()
 end
 
 --- Shows LoadContent's notice, once (OnEnable: the profile and the notice frame exist by then).

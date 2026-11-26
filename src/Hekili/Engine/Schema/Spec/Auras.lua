@@ -28,6 +28,7 @@ local methods = {
     -- entry says whether some member is up, the family's latest application in the belief says which
     -- (Game/State/Sources/Presence/CooldownViewer.lua).
     RegisterAura = function( self, aura, data )
+        ns.Fields.Check( "aura", self, aura, data ) -- the field registry's load checks (Engine/Schema/Fields.lua)
         CommitKey( aura )
 
         local a = setmetatable( {
