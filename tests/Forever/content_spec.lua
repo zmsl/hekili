@@ -167,28 +167,31 @@ describe("Engine/Content.lua", function()
     end)
 
     -- fable-r3-decision.md 1: a failed end-of-load pass is reported and the load goes on; the registry closes either way
-    it("adds a failed end-of-load check to the notice, keeps a load's notice, logs it, and closes the registry", function()
-        run()
-        assert.is_true(ns.Fields.closed)
-        assert.are.same({}, logged)
-        finishErr = "Hekili field check V3: x"
-        classToken = "NOPACK"
-        run()
-        assert.is_true(ns.Fields.closed)
-        assert.are.same({
-            "no Forever pack for Nopack; install Hekili_Nopack\n"
-                .. "a content load check failed, so that content may be incomplete: Hekili field check V3: x",
-        }, notes)
-        assert.are.same({ finishErr }, logged)
-        inFile, finishErr = "Hekili field check V2: y", nil -- a pack file raised; Finish passed: noted, not logged
-        classToken = "WARRIOR"
-        run()
-        assert.are.same(
-            { "a content load check failed, so that content may be incomplete: Hekili field check V2: y" },
-            notes
-        )
-        assert.are.same({}, logged)
-    end)
+    it(
+        "adds a failed end-of-load check to the notice, keeps a load's notice, logs it, and closes the registry",
+        function()
+            run()
+            assert.is_true(ns.Fields.closed)
+            assert.are.same({}, logged)
+            finishErr = "Hekili field check V3: x"
+            classToken = "NOPACK"
+            run()
+            assert.is_true(ns.Fields.closed)
+            assert.are.same({
+                "no Forever pack for Nopack; install Hekili_Nopack\n"
+                    .. "a content load check failed, so that content may be incomplete: Hekili field check V3: x",
+            }, notes)
+            assert.are.same({ finishErr }, logged)
+            inFile, finishErr = "Hekili field check V2: y", nil -- a pack file raised; Finish passed: noted, not logged
+            classToken = "WARRIOR"
+            run()
+            assert.are.same(
+                { "a content load check failed, so that content may be incomplete: Hekili field check V2: y" },
+                notes
+            )
+            assert.are.same({}, logged)
+        end
+    )
 
     it("declares one content API in every content TOC", function()
         for _, name in ipairs(addons.CONTENT) do

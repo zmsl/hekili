@@ -158,7 +158,8 @@ describe("the pack field registry", function()
             local kit = env.class.kit
             kit:RegisterAura("known_a", { id = 990300 })
             kit:RegisterAura("known_b", { id = 990301 })
-            local ok, err = pcall(kit.RegisterAbility, kit, "list_ok", { id = 990302, [field] = { "known_a", "known_b" } })
+            local ok, err =
+                pcall(kit.RegisterAbility, kit, "list_ok", { id = 990302, [field] = { "known_a", "known_b" } })
             assert(ok, tostring(err))
             ok, err = pcall(F.Finish)
             assert(ok, tostring(err))
@@ -166,7 +167,10 @@ describe("the pack field registry", function()
             assert(ok, tostring(err))
             ok, err = pcall(F.Finish)
             assert.is_false(ok, field)
-            assert.is_truthy(tostring(err):find("V3: DRUID ability list_nope: " .. field .. " names nope", 1, true), err)
+            assert.is_truthy(
+                tostring(err):find("V3: DRUID ability list_nope: " .. field .. " names nope", 1, true),
+                err
+            )
             ok, err = pcall(kit.RegisterAbility, kit, "list_bad", { id = 990304, [field] = { "known_a", 5 } })
             assert.is_false(ok, field)
             assert.is_truthy(tostring(err):find("V2: DRUID ability list_bad: " .. field, 1, true), err)
@@ -183,7 +187,12 @@ describe("the pack field registry", function()
         end
         local ok, err = pcall(kit.RegisterAbility, kit, "range_fn", { id = 990400, range = fn })
         assert(ok, tostring(err))
-        ok, err = pcall(kit.RegisterAbility, kit, "range_rank", { ranks = { 990401, 990402 }, range = { byRank = { 20, 30 } } })
+        ok, err = pcall(
+            kit.RegisterAbility,
+            kit,
+            "range_rank",
+            { ranks = { 990401, 990402 }, range = { byRank = { 20, 30 } } }
+        )
         assert(ok, tostring(err))
         ok, err = pcall(kit.RegisterAbility, kit, "range_neg", { id = 990403, range = -1 })
         assert.is_false(ok)
@@ -224,11 +233,21 @@ describe("the pack field registry", function()
         for k, close in pairs({ rank = "ranks", buffs = "buff", spends = "spend", toggles = "toggle", cas = "cast" }) do
             ok, err = pcall(kit.RegisterAbility, kit, "slip_" .. k, { id = 990510, [k] = 1 })
             assert.is_false(ok, k)
-            assert.is_truthy(tostring(err):find("V1: DRUID ability slip_" .. k .. ": " .. k .. " is one edit from " .. close, 1, true), err)
+            assert.is_truthy(
+                tostring(err):find(
+                    "V1: DRUID ability slip_" .. k .. ": " .. k .. " is one edit from " .. close,
+                    1,
+                    true
+                ),
+                err
+            )
         end
         ok, err = pcall(kit.RegisterResource, kit, 1, { short_regen = { value = 1, ab = 2 } })
         assert.is_false(ok)
-        assert.is_truthy(tostring(err):find("V1: DRUID regen", 1, true) and tostring(err):find("ab is no field", 1, true), err)
+        assert.is_truthy(
+            tostring(err):find("V1: DRUID regen", 1, true) and tostring(err):find("ab is no field", 1, true),
+            err
+        )
     end)
 
     -- decision 3d: only RegisterAbility converts { byRank = values } (Spec/Ranks.lua); elsewhere it would reach the
@@ -249,6 +268,38 @@ describe("the pack field registry", function()
         end
         local ok, err = pcall(kit.RegisterAbility, kit, "rank_spend", { ranks = { 990601, 990602 }, spend = ranked })
         assert(ok, tostring(err))
+    end)
+
+    -- decision 3e: the simulation divides by an aura's tick_time unguarded (0 raises in the client), an ability's 0 tick
+    -- and a regen interval at or below 0 are declarations nothing reads; a meta decayInterval of 0 is continuous decay
+    it("3e: tick_time and a regen interval are above 0; a meta decayInterval is at least 0", function()
+        local env = druid()
+        local kit = env.class.kit
+        local function v2(call, args, what)
+            local ok, err = pcall(kit[call], kit, unpack(args, 1, 4))
+            assert.is_false(ok, what)
+            assert.is_truthy(tostring(err):find("V2: DRUID " .. what, 1, true), err)
+        end
+        local function passes(call, args)
+            local ok, err = pcall(kit[call], kit, unpack(args, 1, 4))
+            assert(ok, tostring(err))
+        end
+        v2("RegisterAura", { "tt_aura", { id = 990700, tick_time = 0 } }, "aura tt_aura: tick_time is 0, not above 0")
+        v2("RegisterAbility", { "tt_ab", { id = 990701, tick_time = 0 } }, "ability tt_ab: tick_time is 0, not above 0")
+        v2("RegisterResource", { 1, { iv_zero = { value = 1, interval = 0 } }, nil, nil }, "regen")
+        v2("RegisterResource", { 1, { iv_neg = { value = 1, interval = -1 } }, nil, nil }, "regen")
+        v2("RegisterResource", { 3, nil, nil, { decayInterval = -1 } }, "meta")
+        passes("RegisterResource", { 1, { iv_name = { value = 1, interval = "mainhand_speed" } }, nil, nil })
+        passes(
+            "RegisterResource",
+            { 1, { iv_fn = {
+                value = 1,
+                interval = function()
+                    return 2
+                end,
+            } }, nil, nil }
+        )
+        passes("RegisterResource", { 3, nil, nil, { decayInterval = 0 } })
     end)
 
     it("has one row per field with a type, a doc line and its bounds in order", function()
@@ -387,29 +438,32 @@ describe("the pack field registry", function()
     -- decision 2 (fable-r3-decision.md): once the load's end-of-load pass has run, a registration is not checked, so the
     -- simulation's unknown-aura fallbacks (Engine/Sim/State.lua applyBuff, applyDebuff: { duration = the caller's })
     -- log and register as before the registry, never raise in combat
-    it("closes at the end of the real load: a later registration, the unknown-aura fallbacks, raises nothing", function()
-        local H = boot()
-        assert.are.same({}, H.loadErrors)
-        local F, kit, st = H.ns.Fields, H.Hekili.Class.kit, H.Hekili.State
-        local findings = #F.findings
-        for i, d in ipairs({ -1, math.huge - math.huge, "10" }) do
-            local ok, err = pcall(kit.RegisterAura, kit, "late_" .. i, { duration = d })
-            assert(ok, tostring(err))
-            assert.is_truthy(rawget(kit.auras, "late_" .. i))
-            local n = #H.errors
-            ok, err = pcall(st.applyBuff, "late_buff_" .. i, d)
-            assert(ok, tostring(err))
-            assert.is_truthy(H.errors[n + 1] and H.errors[n + 1]:find("apply unknown buff", 1, true))
-            assert.is_truthy(rawget(H.Hekili.Class.auras, "late_buff_" .. i))
-            n = #H.errors
-            ok, err = pcall(st.applyDebuff, "target", "late_debuff_" .. i, d)
-            assert(ok, tostring(err))
-            assert.is_truthy(H.errors[n + 1] and H.errors[n + 1]:find("apply unknown debuff", 1, true))
-            assert.is_truthy(rawget(H.Hekili.Class.auras, "late_debuff_" .. i))
+    it(
+        "closes at the end of the real load: a later registration, the unknown-aura fallbacks, raises nothing",
+        function()
+            local H = boot()
+            assert.are.same({}, H.loadErrors)
+            local F, kit, st = H.ns.Fields, H.Hekili.Class.kit, H.Hekili.State
+            local findings = #F.findings
+            for i, d in ipairs({ -1, math.huge - math.huge, "10" }) do
+                local ok, err = pcall(kit.RegisterAura, kit, "late_" .. i, { duration = d })
+                assert(ok, tostring(err))
+                assert.is_truthy(rawget(kit.auras, "late_" .. i))
+                local n = #H.errors
+                ok, err = pcall(st.applyBuff, "late_buff_" .. i, d)
+                assert(ok, tostring(err))
+                assert.is_truthy(H.errors[n + 1] and H.errors[n + 1]:find("apply unknown buff", 1, true))
+                assert.is_truthy(rawget(H.Hekili.Class.auras, "late_buff_" .. i))
+                n = #H.errors
+                ok, err = pcall(st.applyDebuff, "target", "late_debuff_" .. i, d)
+                assert(ok, tostring(err))
+                assert.is_truthy(H.errors[n + 1] and H.errors[n + 1]:find("apply unknown debuff", 1, true))
+                assert.is_truthy(rawget(H.Hekili.Class.auras, "late_debuff_" .. i))
+            end
+            assert.are.same({}, F.pending)
+            assert.are.equal(findings, #F.findings)
         end
-        assert.are.same({}, F.pending)
-        assert.are.equal(findings, #F.findings)
-    end)
+    )
 
     -- decision 1 (fable-r3-decision.md): a failed end-of-load pass is reported and the addon goes on: OnInitialize
     -- finishes (the profile, /hekili, the launchers), the content notice carries the check's message once, the client's
