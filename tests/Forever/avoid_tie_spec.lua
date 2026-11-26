@@ -25,7 +25,7 @@ end
 local function run(events)
     local H, t0 = boot()
     local S, VS, ctl, I = H.Hekili.State, H.ns.VirtualState, H.ctl, H.ns.VirtualStateInternal
-    local d0 = I.Tickets.divergent
+    local d0, e0 = I.Tickets.divergent, I.Tickets.ties or 0
     local misses, avoided = {}, {}
     local miss = I.Log.Miss
     I.Log.Miss = function(...)
@@ -64,6 +64,7 @@ local function run(events)
         corr = { S.debuff.corruption.up, VS.Aura("target", CORR_AURA, te) ~= nil },
         reck = { S.debuff.curse_of_recklessness.up, VS.Aura("target", RECK_AURA, te) ~= nil },
         divergent = I.Tickets.divergent - d0,
+        ties = (I.Tickets.ties or 0) - e0,
         misses = misses,
         avoided = avoided,
         undoFull = I.undoFull,
@@ -112,5 +113,75 @@ describe("a missed curse (L1918: the belief's undo reaches it)", function()
         assert.are.same({ false, false }, r.curse)
         assert.is_true(r.reck[2])
         assert.are.same({ 0, { CURSE }, 0 }, { r.divergent, r.misses, r.undoFull })
+    end)
+end)
+
+-- (L1917, D2) an avoid row two of our casts could own, each inside its own same-frame band (0.05 s after its success),
+-- one the latest success: paid to the latest, as a full resist (I.UNLANDED: target undo only, no refund, no onAvoid)
+describe("a same-frame avoid between two casts of ours (L1917: the latest success's)", function()
+    local UNLANDED = 0 -- I.UNLANDED
+
+    it("B: Corruption's success and the curse's in one instant, then the MISS: the curse's (seed 15)", function()
+        local r = run({
+            { -1.6, "start", "Cast-1", CORR },
+            { 0, "success", "Cast-1", CORR },
+            { 0, "success", "Cast-2", CURSE },
+            { 0, "row", "MISS", 1 },
+        })
+        assert.are.same({ false, false }, r.curse)
+        assert.are.same({ true, true }, r.corr)
+        assert.are.same({ 0, 1, { CURSE } }, { r.divergent, r.ties, r.misses })
+        assert.are.same({ { "curse_of_the_elements", UNLANDED } }, r.avoided)
+    end)
+
+    it("B3: Corruption's success 30 ms before the curse's: still both frames, the curse's", function()
+        local r = run({
+            { -1.6, "start", "Cast-1", CORR },
+            { -0.03, "success", "Cast-1", CORR },
+            { 0, "success", "Cast-2", CURSE },
+            { 0, "row", "MISS", 1 },
+        })
+        assert.are.same({ false, false }, r.curse)
+        assert.are.same({ true, true }, r.corr)
+        assert.are.same({ 0, 1, { CURSE } }, { r.divergent, r.ties, r.misses })
+        assert.are.same({ { "curse_of_the_elements", UNLANDED } }, r.avoided)
+    end)
+
+    it("B4 (unchanged): Corruption's success 100 ms before: past its frame, one candidate, the curse's", function()
+        local r = run({
+            { -1.6, "start", "Cast-1", CORR },
+            { -0.1, "success", "Cast-1", CORR },
+            { 0, "success", "Cast-2", CURSE },
+            { 0, "row", "MISS", 1 },
+        })
+        assert.are.same({ false, false }, r.curse)
+        assert.are.same({ true, true }, r.corr)
+        assert.are.same({ 0, 0, { CURSE } }, { r.divergent, r.ties, r.misses })
+    end)
+
+    it("M1 (unchanged): Corruption's success, the MISS, then the curse's success: Corruption's", function()
+        local r = run({
+            { -1.6, "start", "Cast-1", CORR },
+            { 0, "success", "Cast-1", CORR },
+            { 0, "row", "MISS", 1 },
+            { 0, "success", "Cast-2", CURSE },
+        })
+        assert.are.same({ false, false }, r.corr)
+        assert.are.same({ true, true }, r.curse)
+        assert.are.same({ 0, 0, { CORR } }, { r.divergent, r.ties, r.misses })
+    end)
+
+    -- the known limit (L1927, ROWS-2): the curse's own MISS arriving 2 ms before the curse's success has one candidate,
+    -- Corruption, so it is paid there: Corruption taken down, the missed curse kept up. Pinned, not fixed.
+    it("known limit: the curse's MISS before the curse's own success is paid to Corruption", function()
+        local r = run({
+            { -1.6, "start", "Cast-1", CORR },
+            { 0, "success", "Cast-1", CORR },
+            { 0.002, "row", "MISS", 1 },
+            { 0.004, "success", "Cast-2", CURSE },
+        })
+        assert.are.same({ false, false }, r.corr)
+        assert.are.same({ true, true }, r.curse)
+        assert.are.same({ 0, 0, { CORR } }, { r.divergent, r.ties, r.misses })
     end)
 end)

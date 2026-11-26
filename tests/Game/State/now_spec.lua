@@ -1351,6 +1351,43 @@ describe("now handlers", function()
             assert.are.equal(0, I.nowErrors)
         end)
 
+        -- (L1917, fable-tr1-decision.md D2) an avoid two of our casts could own in their own frames, one the latest
+        -- success: the latest's, as a full resist (target undo only): its debuff down, no refund, no onAvoid, its
+        -- SPELL_MISSED; the payment is final at once (pass 1: never held, so no later stage can refund either)
+        it("a same-frame avoid goes to the latest success as a target undo only: no refund, no onAvoid", function()
+            local avoids = 0
+            register("frame_test", { id = 2690, startsCombat = true }) -- a default FRAME ticket, any school
+            h.Class.abilities.spender_c.funcs.onAvoid = function()
+                avoids = avoids + 1
+            end
+            begin()
+            h.Class.abilities.spender_c.funcs.onAvoid = nil
+            local T = I.Tickets
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 2690)
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C) -- 10 paid: 0
+            local n = #rows
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            for i = 1, T.CAP do
+                assert.are_not.equal(T.TENT, T.state[i])
+                assert.are.equal(0, T.held[i])
+            end
+            ctl.Tick(5.01)
+            VS.Drain(5.02)
+            ctl.Tick(5.03)
+            VS.Drain(5.5)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.5))
+            assert.are.same({ 0, 0, 1 }, { VS.Power(fs.RAGE, 5.5).est, avoids, I.avoidsRun })
+            assert.are.same({ 1, 0 }, { T.ties, T.divergent })
+            local missed = {}
+            for k = n + 1, #rows do
+                if rows[k][1] == "SPELL_MISSED" then
+                    missed[#missed + 1] = rows[k][3]
+                end
+            end
+            assert.are.same({ fs.SPENDER_C }, missed)
+        end)
+
         it("a crit a pending swing explains runs no onCrit; one in the newer cast's frame is its (GAP T)", function()
             local crits = 0
             h.Class.abilities.spender_c.funcs.onCrit = function()
