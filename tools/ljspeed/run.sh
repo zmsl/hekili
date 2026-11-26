@@ -4,6 +4,7 @@
 # usage: tools/ljspeed/run.sh <phase> <jobs> <spec>...
 #   LJX   extra luajit arguments, '@' replaced by .ab/ljspeed/<phase>/<file> (e.g. LJX='-jp=Gplvi1,@.prof -jv=@.jv')
 #   LJPRE Lua run before busted (e.g. 'collectgarbage("setpause",400)')
+#   LJAB  set: loop.fight's run A / run B seconds per fight to <file>.fights (LJSPEED_AB)
 #   LJNAME suffix for the output names (several variants of one file in one phase)
 set -uo pipefail
 cd "$(dirname "$0")/../.."
@@ -18,6 +19,7 @@ one() {
     n=$(basename "$f" _spec.lua)${LJNAME:-}
     x=${LJX:-}
     x=${x//@/$OUTD/$n}
+    if [ -n "${LJAB:-}" ]; then export LJSPEED_AB=$OUTD/$n.fights; fi
     TIMEFORMAT="TIME real %R user %U sys %S"
     # shellcheck disable=SC2086
     { time "$LJ/bin/lua" -Omaxtrace=65000 -Omaxmcode=262144 -Osizemcode=512 -Ohotloop=1000 -Ohotexit=200 -Otryside=20 \

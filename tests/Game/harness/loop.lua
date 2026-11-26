@@ -1663,9 +1663,17 @@ function M.viewerLayout(H, preset, seed, wo)
 end
 
 --- Fight `seed`: run A (ours drives, the oracle shadows) and run B (the oracle drives a fresh world of the same seed).
+local ljspeedAB = os.getenv("LJSPEED_AB") -- lj-speed spike: run A / run B process seconds per fight to this file
 function M.fight(L, seed, o)
+    local c0 = os.clock()
     local a = M.run(L, seed, o, { { H = L.us }, { H = L.oracle, plain = true } })
+    local c1 = os.clock()
     local b = M.run(L, seed, o, { { H = L.oracle, plain = true } })
+    if ljspeedAB then
+        local fh = assert(io.open(ljspeedAB, "a"))
+        fh:write(string.format("%d\t%.3f\t%.3f\n", seed, c1 - c0, os.clock() - c1))
+        fh:close()
+    end
     return a, b
 end
 
