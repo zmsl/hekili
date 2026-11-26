@@ -209,7 +209,7 @@ tools-test:
 	python3 -m unittest discover -s tests/tools -t tests/tools
 
 # `make check` skips (one line) when every input matches the last green run (scripts/check_stamp.sh); FULL=1 runs it.
-# check-full: the four long checks at once (-Otarget keeps each one's output whole), then the short serial tail; one (Apple make 3.81 lacks -O: output interleaves there)
+# check-full: the four long checks at once (-Otarget keeps each one's output whole), then the short serial tail (Apple make 3.81 lacks -O, so there the output interleaves); one
 # exit code. The begin and write lines hold no $(MAKE), so `make -n` never runs them; make stops at the first failing
 # line, so write (the stamp) runs only after both stages pass. A command-line override other than FULL (a subset or
 # another tool) or -i/-e (errors ignored, environment over the Makefile) never skips and never stamps.
