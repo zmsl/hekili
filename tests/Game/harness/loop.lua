@@ -17,8 +17,35 @@ local rng = require("Game.harness.rng")
 local edgestats = require("Game.harness.edgestats")
 local fake_lhv = require("Game.harness.fake_lhv")
 local ttd_rig = require("Game.harness.ttd_rig")
+local world = require("Game.harness.world")
 
 local M = {}
+
+-- [class data] = its item categories (world.itemCategories), built once per class table
+local itemGroups = setmetatable({}, { __mode = "k" })
+
+--- The press of `key` of class data `class` when it is an item in a category (an on-use trinket: lane gear-1b), else
+--- nil (the content resolves it): its use spell's cast (its first `copy`; no spell cooldown, the item's is answered
+--- through C_Item), off the GCD, free, the item's cooldown and its category's hold (W.itemUse) in its effect.
+function M.itemPress(class, key)
+    local groups = itemGroups[class] or world.itemCategories(class)
+    itemGroups[class] = groups
+    local group = groups[key]
+    if not group then
+        return nil
+    end
+    local a = class.abilities[key]
+    local copy, cd = a.copy, tonumber(a.cooldown) or 0
+    return {
+        spell = type(copy) == "table" and copy[1] or copy,
+        cost = 0,
+        offGcd = true,
+        effect = function(W, e)
+            e.cdUntil[key] = W.t + cd
+            W.itemUse(e, key, group, cd)
+        end,
+    }
+end
 
 -- (ttd arms, lane B8) A fight's time-to-die row: of the in-combat polls, how many answered (not 3600: the library
 -- live), and against the kill's time (killAt, the world's clock; nil: no kill, no error) the absolute error of each
@@ -541,7 +568,7 @@ local function feed(H, obs, t, base, sink, sub, open)
             local a1, a2, a3, a4 = s.a1[i], s.a2[i], s.a3[i], s.a4[i]
             if (ev == "@casting" or ev == "@channel") and a1 then -- gap BD: the bar was on the world's clock
                 a1, a2 = a1 + base * 1000, a2 + base * 1000
-            elseif ev == "@cooldown" and type(a2) == "number" and a2 > 0 then
+            elseif (ev == "@cooldown" or ev == "@itemCooldown") and type(a2) == "number" and a2 > 0 then
                 a2 = base + a2
             elseif ev == "@aura" and a4 > 0 then
                 a4 = base + a4
@@ -1320,7 +1347,8 @@ function M.run(L, seed, o, drivers)
         end
         if press then
             truth.Hekili.State.reset("Primary", true) -- Update leaves its last prediction (a predicted buff, query_time ahead of now)
-            local p = content.resolve(key, truth, us) -- the world's us: its auras price the press (L1233)
+            -- the world's us: its auras price the press (L1233); an on-use trinket is the harness's own (M.itemPress)
+            local p = M.itemPress(truth.Hekili.Class, key) or content.resolve(key, truth, us)
             -- the driver's shown press of another spell during our channel cuts it, as a player's press does in game
             -- (the engine moved off the channel: a pack's interrupt_if, CheckChannel); W.press keeps the GCD and the
             -- queue's reach. A verdict arm's forced recast is not the engine's pick: refused "casting", as before.

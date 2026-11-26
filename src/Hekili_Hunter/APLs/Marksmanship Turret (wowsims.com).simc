@@ -7,7 +7,6 @@
 # Setting healthstone_health (player health threshold, percent), default 30.
 # Deviation: precombat #4: the pre-pull time uses the kit's base cast time; wowsims uses the hasted cast.
 # Omitted: precombat #3: move
-# Omitted: default #1: autocastOtherCooldowns: unmapped item 13965
 # Omitted: default #1: autocastOtherCooldowns: unmapped item 250943
 # Omitted: default #1: autocastOtherCooldowns: unmapped item 18588
 # Omitted: default #4: resetSequence
@@ -31,6 +30,7 @@ actions+=/healing_potion,use_off_gcd=1,if=health.known&health.pct<=settings.heal
 actions+=/elunes_light,use_off_gcd=1,if=time>=5
 actions+=/blood_fury,use_off_gcd=1,if=time>=5
 actions+=/berserking,use_off_gcd=1,if=time>=5
+actions+=/blackhands_breadth,use_off_gcd=1,if=time>=5
 actions+=/rapid_fire,use_off_gcd=1,if=time>=5
 actions+=/demonic_rune,use_off_gcd=1,if=time>=5
 actions+=/major_mana_potion,use_off_gcd=1,if=time>=5

@@ -372,6 +372,8 @@ function M.new(text, H, o)
     -- spell ID -> ability key (every rank), the key's IDs and cooldown; aura ID -> duration
     local keyOf, itemOf, rankIDs, cd, dur, form, spacing, engine, useOf = {}, {}, {}, {}, {}, {}, {}, {}, {}
     local computed = {} -- keys whose cooldown the kit computes: R.world's run instance answers it at each cast
+    -- an item in a category (the on-use trinkets): its use answers its cooldown and holds the other members (apply)
+    local itemGroups = world.itemCategories(class)
     local keys = {}
     for key, a in pairs(class.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
@@ -859,6 +861,13 @@ function M.new(text, H, o)
             if key and not e.id then -- an item: its cooldown, and its use spell's success when the kit names one (L481)
                 if c > 0 then
                     us.cdUntil[key] = T + cdk
+                end
+                -- an item in a category: the client answers its cooldown (C_Item.GetItemCooldown) and holds each other
+                -- member for the category's cooldown, a longer running one never shortened (truth and client alike)
+                -- shortcut: an item without a category (a consumable) still reads ready (0, 0), as before lane gear-1b;
+                -- answer it too with its own re-floor cause
+                if c > 0 and itemGroups[key] then
+                    W.itemUse(us, key, itemGroups[key], cdk, T - (R.pull + e.t))
                 end
                 local use = useOf[e.item]
                 if use and e.kind == "completed" then

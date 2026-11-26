@@ -428,6 +428,10 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         else
             ctl.cooldown[a1] = { isActive = true, isOnGCD = false, startTime = a2, duration = a3 }
         end
+    elseif ev == "@itemCooldown" then -- itemID, start, duration (either SECRET); nil: ready, plain (0, 0). Allocates
+        -- once per item (an item use is rare)
+        local ic = ctl.itemCooldown[a1] or {}
+        ctl.itemCooldown[a1], ic[1], ic[2] = ic, a2 or 0, a3 or 0
     elseif ev == "@forms" then -- the client's forms, index to spell ID (the content's list)
         ctl.forms = a1
     elseif ev == "@regen" then -- powerType, not casting (nil: secret), casting; allocates (no 0-byte drive fires one)

@@ -24,6 +24,13 @@ describe("the on-use trinket 13968", function()
         end)
     end
 
+    it("shaman_enhancement maps 13968 and 13965 beside 272438 (lane gear-1)", function()
+        local r = require("tools.wowsims.specs.shaman_enhancement")
+        assert.are.equal("use_items", r.map["item:272438"])
+        assert.are.equal("use_items", r.map["item:13968"])
+        assert.are.equal("use_items", r.map["item:13965"])
+    end)
+
     it("translates a cast of it to the use_items line", function()
         local kit =
             { abilities = { use_items = { key = "use_items", id = -1, gcd = "off" } }, auras = {}, talents = {} }

@@ -627,6 +627,15 @@ local function setCooldown( action, duration )
 end
 state.setCooldown = setCooldown
 
+-- Hold `action` on cooldown for at least `duration` from now, never shortening a longer one: a shared cooldown
+-- category's window (an on-use trinket's lock on the others, Hekili_Shared Items.lua). The belief's `now` has the same
+-- verb (Game/State/Families/Now.lua).
+local function lockCooldown( action, duration )
+    local cd = state.cooldown[ action ]
+    if cd and cd.remains < duration then setCooldown( action, duration ) end
+end
+state.lockCooldown = lockCooldown
+
 
 local function spendCharges( action, charges )
     state.changes = state.changes + 1

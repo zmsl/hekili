@@ -44,6 +44,7 @@ local A = {
 I.ab = A
 A.bySpell = {}
 A.idPos = {} -- by spell ID: its place among its ability's IDs (A.ids), the rank a cast of it was (Obs.CastSuccess `c`)
+A.byItem = {} -- by item ID: the ability whose `item` (a number) or `items` names it (VS.ItemCooldown)
 
 -- Unknown, not ready, ready (the plain isActive flag as last reported).
 local UNKNOWN, NOT, YES = -1, 0, 1
@@ -218,6 +219,9 @@ I.OnBuild(function(def, now)
     for k in pairs(A.bySpell) do
         A.bySpell[k], A.idPos[k] = nil, nil
     end
+    for k in pairs(A.byItem) do
+        A.byItem[k] = nil
+    end
     for r = 1, #def.resources do
         local b = def.resources[r].base
         I.baseDefault[r] = type(b) == "number" and b > 0 and b or 0
@@ -232,6 +236,14 @@ I.OnBuild(function(def, now)
         A.ids[a], A.id[a] = ids, ids[1]
         for k = 1, #ids do
             A.bySpell[ids[k]], A.idPos[ids[k]] = a, k
+        end
+        if type(obj.item) == "number" then
+            A.byItem[obj.item] = a
+        end
+        if type(obj.items) == "table" then
+            for _, item in ipairs(obj.items) do
+                A.byItem[item] = A.byItem[item] or a
+            end
         end
         A.slot[a] = def.abilitySlot[a]
         A.qid[a], A.readCost[a], A.multiCost[a] = ids[1], 0, false
@@ -422,6 +434,13 @@ I.On(Obs.Cooldown, function(o, t)
             A.cdLen[a] = len
         end
     end
+end)
+
+-- An item's plain cooldown read (Sources/Spellbook.lua): its ready time as the client says it, our own use or not (an
+-- equip's lock, a use before a reload, a category window).
+I.On(Obs.ItemCooldown, function(o, t)
+    A.ready0[o.a] = o.b
+    I.Sample(A.cd[o.a], "pinned", o.b, t, Obs.ItemCooldown)
 end)
 
 -- The standing flags at `now` (TDF constrain): ready pulls a later ready time back to now (and restores a charge);
@@ -662,6 +681,20 @@ function VS.Cooldown(spellID, now)
     rec.est, rec.lo, rec.hi = ready, ready, ready
     ageConf(rec, now)
     return rec
+end
+
+--- The believed ready time (absolute) of the tracked ability that uses item `item` (its `item` or one of its `items`;
+--- Engine/Schema/Tracked.lua tracks an item ability by its use spell, a `copy`), and its cooldown length in seconds; nil
+--- for an item no tracked ability uses. The Facade's secret item cooldown answer.
+function VS.ItemCooldown(item, now)
+    local a = A.byItem[item]
+    if not a then
+        return nil
+    end
+    local rec, ready = A.cd[a], A.ready0[a]
+    rec.est, rec.lo, rec.hi = ready, ready, ready
+    ageConf(rec, now)
+    return rec, A.cdLen[a] > 0 and A.cdLen[a] or I.CooldownOf(a, I.clock)
 end
 
 --- (spec §3.1) Seconds: the length learned from the last observed cooldown, else the spec's `cooldown`.

@@ -212,7 +212,7 @@ end
 --- swing's true time), actor[] (the entity index of a hit on us) }. An `ev` starting with "@" is a client-answer change
 --- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`,
 --- `@current` IsCurrentSpell, `@aura` an aura list entry, `@itemCount` C_Item.GetItemCount, `@pet` the pet unit and
---- its power, `@petPower`, `@stats` UnitStat's values, `@stealthed` IsStealthed, `@dead`, `@cooldown`, `@power`, `@regen`, `@attackSpeed`,
+--- its power, `@petPower`, `@stats` UnitStat's values, `@stealthed` IsStealthed, `@dead`, `@cooldown`, `@itemCooldown`, `@power`, `@regen`, `@attackSpeed`,
 --- `@rangedSpeed`, `@forms`, `@distance` the range checks' yards), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
 --- random choice and record it on the truth event), so batch and incremental streams of one world are equal for
 --- power-only answers (in batch, a list answer that reads `W` sees the finished world at every time).
@@ -601,10 +601,11 @@ function M.new(W, k)
     local castN = 0
     -- a cooldown's pending end (at or after `t`) whose start a restart or a reset supersedes: dropped, or it would end the
     -- new one (a restart on the old end's instant: that end's float sum lands a ulp after the new start)
-    local function dropEnds(t, id)
+    local function dropEnds(t, id, ev)
+        ev = ev or "@cooldown"
         for i = #list, 1, -1 do
             local e = list[i]
-            if e[1] >= t and e[3] == "@cooldown" and e[4] == id then
+            if e[1] >= t and e[3] == ev and e[4] == id then
                 table.remove(list, i)
             end
         end
@@ -966,6 +967,14 @@ function M.new(W, k)
         elseif kind == "channelStop" and ev.src == us then -- its end or a clip: UnitChannelInfo empty, then the stop
             push(t, "@channel", nil)
             castEv(t, ev.onUs, "UNIT_SPELLCAST_CHANNEL_STOP", "Cast-" .. chanN, spellID(ev.spell))
+        elseif kind == "itemCooldown" and ev.src == us then -- an item's cooldown from `t` (a use, or its category's
+            -- hold: replay.lua sends only a longer one): C_Item.GetItemCooldown, the times plain by the knob, and
+            -- SPELL_UPDATE_COOLDOWN at both edges (UNCAPTURED: no capture holds an active item cooldown, G6)
+            dropEnds(t, ev.item, "@itemCooldown")
+            push(t, "@itemCooldown", ev.item, k.plain and t or fake.SECRET, k.plain and ev.cd or fake.SECRET)
+            push(t + ev.cd, "@itemCooldown", ev.item, k.plain and 0 or nil, k.plain and 0 or nil)
+            push(t, "SPELL_UPDATE_COOLDOWN")
+            push(t + ev.cd, "SPELL_UPDATE_COOLDOWN")
         elseif kind == "cdreset" and ev.src == us then -- a cooldown finished early (W.resetCooldown): every rank ready
             for _, id in ipairs(ev.ids) do
                 dropEnds(t, id)

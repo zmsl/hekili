@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- On-use trinkets are now recommended: the Weakness Analyzer, Talisman of Ephemeral Power, Mind Quickening Gem, Everlook Pathcarver, Eye of the Beast and Blackhand's Breadth show up through "Use Items" (and the priorities that name them) while you wear them, and using one holds your other trinket for its shared lockout.
 
 ### Changed
 

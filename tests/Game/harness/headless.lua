@@ -947,6 +947,9 @@ function M.new(o)
         end
         for slot, item in pairs(c.items or {}) do -- { [slot] = { itemID, name, equipLoc, classID?, subClassID? } }
             ctl.inventory[slot], ctl.items[item[1]] = item[1], { item[2], item[3], item[4], item[5] }
+            if slot == 13 or slot == 14 then -- a worn trinket: IsUsableItem (its cooldown is the drive's @itemCooldown)
+                ctl.itemUsable[item[1]] = true
+            end
         end
         for i, id in ipairs(c.forms or {}) do
             ctl.forms[i] = id

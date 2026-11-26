@@ -136,6 +136,7 @@ local function newState(class, race)
         "spend",
         "gain",
         "setCooldown",
+        "lockCooldown",
         "setDistance",
         "interrupt",
         "summonTotem",

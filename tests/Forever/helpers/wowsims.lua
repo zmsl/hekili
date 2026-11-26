@@ -91,8 +91,9 @@ local function rankIDs(token, key)
 end
 
 -- wowsims's ItemSlot order (proto/common.proto: Head 0 ... Ranged 16) as client inventory slots; 0 not equipped here:
--- the trinkets and weapons (the world owns weapon facts; no trinket effect is modelled yet)
-M.SLOT = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8, 11, 12, 0, 0, 0, 0, 18 }
+-- the weapons (the world owns weapon facts). The trinkets are worn (lane gear-1b: an on-use one is recommended and
+-- its use answers its cooldown, replay.lua; no trinket effect is modelled)
+M.SLOT = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8, 11, 12, 13, 14, 0, 0, 18 }
 
 --- The request's gear of spec `spec` as headless `items` ({ [slot] = { itemID } }: no name, an uncached item), minus
 --- the pieces of each set in `skips` ({ [set key] = { piece IDs } }; default the recipe's `oracleSkips`, R35: sets the
@@ -253,9 +254,11 @@ function M.content(base, o)
 end
 
 --- Content `C` as the replay character of spec `spec`'s log: its power's maximum the log's (replay.pools), the pool
---- the world and the client's UnitPowerMax read too, so percent costs are priced on it at boot.
+--- the world and the client's UnitPowerMax read too, so percent costs are priced on it at boot; it wears the request's
+--- trinkets (slots 13 and 14, where C wears none: the log's uses of them are decisions, lane gear-1b).
 function M.logged(C, spec)
     local _, maxOf = replay.pools(replay.parse(M.log(spec)).ev)
+    local gear = M.gear(spec)
     return setmetatable({
         character = function()
             local c = C.character()
@@ -263,6 +266,12 @@ function M.logged(C, spec)
             if m then
                 c.power = { type = p.type, token = p.token, value = p.value, max = m }
             end
+            local items = {}
+            for slot, item in pairs(c.items or {}) do
+                items[slot] = item
+            end
+            items[13], items[14] = items[13] or gear[13], items[14] or gear[14]
+            c.items = items
             return c
         end,
     }, { __index = C })

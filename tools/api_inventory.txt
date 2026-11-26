@@ -16,7 +16,7 @@ C_DamageMeter.IsDamageMeterAvailable	passthrough
 C_GamepadUI.GetFirstGamepadActionBarStorageSlotIndexForActiveStance	passthrough
 C_GamepadUI.GetFirstGamepadActionStorageSlotIndex	passthrough
 C_Item.GetDetailedItemLevelInfo	passthrough
-C_Item.GetItemCooldown	passthrough
+C_Item.GetItemCooldown	hybrid
 C_Item.GetItemCount	passthrough
 C_Item.GetItemGem	passthrough
 C_Item.GetItemInfo	passthrough
