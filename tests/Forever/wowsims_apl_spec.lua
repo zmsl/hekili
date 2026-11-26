@@ -1546,12 +1546,16 @@ describe("the wowsims APL translator", function()
                 multidot(400, "2s", cmp("OpGt", { currentRage = {} }, const("10"))),
                 multidot(400), -- no maxOverlap (protojson's zero value): 0
                 multidot(999, "0ms"), -- an unmapped DoT: the whole entry (rule 2)
+                -- an empty maxOverlap (upstream's `max_overlap=none`, Balance at a342c253e6, `"maxOverlap": {}`) is
+                -- absent too: 0, not an unresolved read that drops the term (re-pin readiness 1.4)
+                { action = { multidot = { spellId = { spellId = 400 }, maxDots = 3, maxOverlap = {} } } },
             },
         }, ctx({}))
         assert.are.equal(
             table.concat({
                 "actions=dot,cycle_targets=1,max_cycle_targets=3,if=debuff.dot.remains<=0",
                 "actions+=/dot,cycle_targets=1,max_cycle_targets=3,if=(rage.lo>10&debuff.dot.remains<=2)",
+                "actions+=/dot,cycle_targets=1,max_cycle_targets=3,if=debuff.dot.remains<=0",
                 "actions+=/dot,cycle_targets=1,max_cycle_targets=3,if=debuff.dot.remains<=0",
             }, "\n"),
             text
@@ -1563,6 +1567,7 @@ describe("the wowsims APL translator", function()
             "# Deviation: default #1: " .. dev,
             "# Deviation: default #2: " .. dev,
             "# Deviation: default #3: " .. dev,
+            "# Deviation: default #5: " .. dev,
         }, header)
     end)
 
@@ -2197,6 +2202,35 @@ describe("the wowsims APL translator", function()
             { "default #2: autocastOtherCooldowns: spell 13877 is blade_flurry, which the APL casts itself" },
             omitted
         )
+    end)
+
+    -- Re-pin readiness 2.1 (upstream a342c253e6): Holy Shock's and Retribution's seal choice reads the item swap set
+    -- (`{"activeItemSwapSet": {"swapSet": "Main"}}`), Balance's Wrath line `{"spellIsHitCapped": {"spellId": ...}}`.
+    it("folds activeItemSwapSet (never swapped: Main) and spellIsHitCapped (the recipe's hitCapped)", function()
+        local swap = function(set)
+            return { activeItemSwapSet = { swapSet = set } }
+        end
+        local capped = { spellIsHitCapped = { spellId = { spellId = 500 } } }
+        local rotation = {
+            priorityList = {
+                cast(100, swap("Main")),
+                cast(200, swap("Swap1")),
+                cast(400, NOT(capped)),
+                cast(300, swap()),
+            },
+        }
+        local text, omitted, _, header = apl.translate(rotation, ctx({ focus = {}, hitCapped = false }))
+        assert.are.equal("actions=strike\nactions+=/dot", text)
+        local main =
+            "activeItemSwapSet Main is a constant: Hekili never swaps items, so the main set is always the one on."
+        local swap1 =
+            "activeItemSwapSet Swap1 is a constant: Hekili never swaps items, so the main set is always the one on."
+        local hit = "spellIsHitCapped is the recipe's build constant (false); the client's hit chance is not read."
+        assert.are.same({ "default #2: never: " .. swap1, "default #4: activeItemSwapSet nil" }, omitted)
+        assert.are.same({ "# Deviation: default #1: " .. main, "# Deviation: default #3: " .. hit }, header)
+        -- no recipe hitCapped: unsupported, the entry omitted rather than guessed
+        _, omitted = apl.translate({ priorityList = { cast(400, capped) } }, ctx({ focus = {} }))
+        assert.are.same({ "default #1: spellIsHitCapped (no recipe hitCapped)" }, omitted)
     end)
 end)
 
