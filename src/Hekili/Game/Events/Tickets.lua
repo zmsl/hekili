@@ -105,6 +105,7 @@ for k = 0, 7 do
     T.paid[k], T.lost[k] = 0, 0
 end
 T.ours, T.foreign, T.absorbed, T.divergent, T.bandRejected, T.aoeOther = 0, 0, 0, 0, 0, 0
+T.ties = 0 -- (L1917) same-frame avoids paid to the latest success (T.Tie), beside `divergent`
 T.overpaid = 0 -- payments past `owed` (never: the invariant sweep asserts 0)
 T.onExpire, T.onPay = nil, nil
 -- FLIGHT (spec §3.3.1): per ticket its speed (yd/s) and hard window length H = rMax / speed + TOL. CLOSE: 7 yd/s, a
@@ -221,6 +222,7 @@ local function teach(a, amount, flag) -- a new low or high takes it, else each e
     I.Bands.Learn(T.bandLo, T.bandHi, T.bandN, a, I.Bands.Normalise(amount, flag, "ours"), 0.05)
 end
 T.latestT = -1 -- the latest success of a mapped ability (Families/Now.lua's latest cast, whose avoid undoes it)
+T.latestI = 0 -- its ticket (0: none, a NONE kind): two successes in one instant share latestT, not this
 -- The pending swing (owner ruling 2026-10-22: the ticket is its single owner): each hand's latest swing ticket and its
 -- time; a swing is pending while that ticket is open and within the hand's pending window. PEND_CAP: Resources'
 -- drift guard, moved here unchanged (Melee's learn can widen the landing window to about 2.7 s main, 3.2 s off).
@@ -422,7 +424,7 @@ end
 function T.OpenCast(t, a, spellID, g)
     local k = a > 0 and A.expKind[a] or UNMAPPED
     if a > 0 then
-        T.latestT = t
+        T.latestT, T.latestI = t, 0
     end
     if k == NONE then
         T.opened = T.opened + 1
@@ -436,6 +438,9 @@ function T.OpenCast(t, a, spellID, g)
     end
     arm(i, t)
     compose(i, t)
+    if a > 0 then
+        T.latestI = i
+    end
     return i
 end
 
@@ -461,7 +466,7 @@ function T.Arm(castGUID, t)
         if state[i] == COMMITTED and cast[i] == castGUID then
             arm(i, t)
             compose(i, t)
-            T.latestT = t
+            T.latestT, T.latestI = t, i
             return i
         end
     end
@@ -540,6 +545,28 @@ function T.Divergent(p, t, pass, act, flag, amount, sch, isAvoid)
         end
     end
     return same, same
+end
+
+--- (L1917, fable-tr1-decision.md D2, amends decision 25) An avoid at t that Pick matched at pass 1 with a second
+--- candidate: the latest success's ticket when every pass-1 candidate is a cast of ours (mapped) whose own same-frame
+--- band (SAME_FRAME after its success) holds t and one of them is that latest success; else 0 (divergent as before).
+--- The row comes after both successes, and solo captures show an avoid row in its own success's frame, right after it.
+--- Allocates nothing.
+function T.Tie(p, t, act, flag, amount, sch)
+    local K, frame, li, latest = I.Kinds, I.Melee.SAME_FRAME, T.latestI, 0
+    for i = 1, CAP do
+        if state[i] >= OPEN and guid[i] == guid[p] and K.Accepts(i, act, flag, amount, sch, true) then
+            local lo, h = K.Band(i, 1, t, true, act, sch, amount == nil)
+            if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
+                if ab[i] <= 0 or t < at[i] - 1e-9 or t > at[i] + frame + 1e-9 then
+                    return 0
+                elseif i == li and at[i] == T.latestT then
+                    latest = i
+                end
+            end
+        end
+    end
+    return latest
 end
 
 -- What a clean payment teaches: a flight's lag (any pass, pass 3 included: with no record a ticket is a candidate at
@@ -934,7 +961,7 @@ I.OnSnapshot(function(out)
         lost = lost + T.lost[k]
     end
     out[#out + 1] = string.format(
-        "tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d divergent=%d overflow=%d absorbed=%d ours=%d aoeOther=%d overpaid=%d tentative=%d replaced=%d assumed=%d confirmed=%d refunded=%d",
+        "tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d divergent=%d ties=%d overflow=%d absorbed=%d ours=%d aoeOther=%d overpaid=%d tentative=%d replaced=%d assumed=%d confirmed=%d refunded=%d",
         open,
         c.none,
         c.paid,
@@ -947,6 +974,7 @@ I.OnSnapshot(function(out)
         c.gone,
         T.bandRejected,
         T.divergent,
+        T.ties,
         c.overflow,
         T.absorbed,
         T.ours,

@@ -253,11 +253,11 @@ local function settle(hand, at)
 end
 
 -- Our cast's own avoid for the belief (Families/Now.lua): an action that refuses the whole ability, staged at the
--- ticket's anchor (the refund belongs there).
-local function avoided(i, t, act)
+-- ticket's anchor (the refund belongs there). `tie` (T.Tie): staged as a full resist, the target undo only.
+local function avoided(i, t, act, tie)
     local a = T.ab[i]
     if (REFUSED[act] or REACTED[act]) and a > 0 then
-        S.Stage(Obs.Avoided, t, a, T.at[i], I.HitKind[act] or I.UNLANDED)
+        S.Stage(Obs.Avoided, t, a, T.at[i], not tie and I.HitKind[act] or I.UNLANDED)
     end
 end
 
@@ -405,7 +405,13 @@ for k = 1, T.CAP do
 end
 local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
     local divergent, lands = false, false -- lands: only the same-ability direct-vs-tick crit diverged (landed either way)
-    if (avoid or crit) and n > 1 then
+    -- (L1917) a refusing avoid in the frames of two casts of ours goes to the latest success, as a full resist: its
+    -- target writes undone and its SPELL_MISSED, no refund or onAvoid (a wrong guess costs one recast)
+    local tie = avoid and n > 1 and pass == 1 and REFUSED[act] and T.Tie(p, t, act, flag, amount, school) or 0
+    if tie > 0 then
+        p, T.ties = tie, T.ties + 1
+    end
+    if (avoid or crit) and n > 1 and tie == 0 then
         divergent, lands = T.Divergent(p, t, pass, act, flag, amount, school, avoid)
     end
     local kk, xx, dst, at0, sch = T.kind[p], T.x[p], T.guid[p], T.at[p], T.school[p]
@@ -419,7 +425,7 @@ local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
     elseif held then
         T.held[p] = avoid and 2 or (crit and 1 or 0)
     elseif avoid then
-        avoided(p, t, act)
+        avoided(p, t, act, tie > 0)
     elseif crit then
         S.Stage(Obs.Crit, t, T.ab[p], at0, 0) -- our cast's own crit (the target's row carries the flag plain): GAP T
     end

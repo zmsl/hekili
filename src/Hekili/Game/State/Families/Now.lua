@@ -171,6 +171,7 @@ local refund = {} -- by resource slot: the class's default share (the resource m
 A.refund = {} -- by ability index: the share of its cost an avoid gives back (the ability's `refundOnAvoid`), 0 none
 A.refundNow = {} -- by ability index: true when an avoid gives back what its `now` took (`refundNowOnAvoid`, L1237)
 I.avoidsRun = 0
+I.undoFull = 0 -- (L1918) target writes a full undo journal could not hold (asserted 0 in tests)
 
 --- The context's reads answer at `t` from now on (a resource's `taken`, run at a hit: Families/Resources.lua); its
 --- verbs stay inert outside a cast. Allocates nothing.
@@ -517,14 +518,18 @@ local function aura(u, key, duration, stacks)
         end
         return
     end
-    if u == 2 and journal and undoN < UNDO then
+    -- (L1918) a down aura kept down (a group's other members removed before the cast's own write) has nothing to undo:
+    -- it takes no slot, so the cast's own write is journalled
+    if u == 2 and journal and (before > 0 or after > 0) then
         local first = true
         for k = 1, undoN do
             first = first and undoJ[k] ~= j
         end
-        if first then -- as it was before the cast: a second write of the same aura keeps the first's
+        if first and undoN < UNDO then -- as it was before the cast: a second write of the same aura keeps the first's
             undoN = undoN + 1
             undoJ[undoN], undoE[undoN], undoAp[undoN], undoSt[undoN] = j, before, applied or 0, have or 0
+        elseif first then
+            I.undoFull = I.undoFull + 1
         end
     end
     I.AuraModel(u, j, u == 2 and T + flight or T, after, stacks or 1, T, CAST, u == 2)

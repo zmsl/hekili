@@ -2029,6 +2029,54 @@ describe("auras", function()
                 assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 11.5)) -- not debounced against the old 26
             end)
 
+            -- (L1918, fable-tr1-decision.md D4) a `now` that first removes four auras of its group that are down (a
+            -- Warlock curse's) then writes its own: the four 0 -> 0 writes take no journal slot, so the undo still
+            -- reaches the cast's own record, and the lit rule reads that record's light: closed, re-opened, no refund.
+            it("four 0 -> 0 removals before the `now`'s own write: lit since the cast, closed and re-opened", function()
+                local h = fs.new(9)
+                local group = {}
+                for k = 1, 4 do
+                    local key = "group_" .. k
+                    h.Class.auras[key] = { key = key, id = 1100 + k, duration = 30 }
+                    group[k] = key
+                end
+                h.Class.abilities.spender_c.funcs.now = function()
+                    for k = 1, 4 do
+                        removeDebuff("target", group[k]) -- luacheck: ignore 113 (the `now` context's verb)
+                    end
+                    applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
+                end
+                local def = fs.def(h)
+                for k = 1, 4 do
+                    def.auras[#def.auras + 1], def.auraIds[#def.auraIds + 1] = h.Class.auras[group[k]], { 1100 + k }
+                end
+                for _, ab in ipairs(def.abilities) do
+                    ab.now = ab.funcs and ab.funcs.now
+                end
+                def.abilities[3].refundOnAvoid = 0.8 -- spender_c: an avoid would give 8 of its 10 back
+                start(def)
+                ctl.usable[fs.SPENDER_C] = { true, false } -- rage >= 10: pinned at 10 before the cast
+                drain(10.5)
+                ctl.usable[fs.SPENDER_C] = nil
+                ctl.now = 11
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- 10 paid: 0
+                ctl.ViewerAura(ti, "target") -- it landed and lights
+                drain(11)
+                drain(11.2)
+                assert.are.equal(26, est("target", fs.SPENDER_C, 11.2))
+                ctl.now = 11.3
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- credited to the cast: the undo closes it
+                drain(11.3)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 11.3))
+                assert.are.same({ 1, 0 }, { I.avoidsRun, I.undoFull })
+                assert.are.equal(0, VS.Power(fs.RAGE, 11.3).est) -- lit since the cast: no refund
+                drain(11.5)
+                assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 11.5)) -- the light re-opens it
+                for k = 1, 4 do
+                    assert.is_nil(VS.Aura("target", 1100 + k, 11.5)) -- down before, down after
+                end
+            end)
+
             -- Hotfix 0.8.6 fix round 1 (review I1): a light that began before the undone cast is the earlier
             -- application's, still shown by the viewer's lag; the undo's close must not let it re-open the record.
             it("an avoid undo's close keeps a light from before the cast debounced: no re-open", function()
