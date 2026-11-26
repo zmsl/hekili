@@ -63,6 +63,7 @@ describe("the latency table", function()
         assert.are.same({
             "aura.read",
             "band.margin",
+            "band.stamp",
             "channel.stop",
             "gcd.edge",
             "own.tick",
@@ -85,6 +86,7 @@ describe("the latency table", function()
         assert.are.equal(Lat.lag("wound.frame"), M.SAME_FRAME)
         assert.are.equal(Lat.lag("aura.read"), I.SAME_FRAME)
         assert.are.equal(Lat.lag("band.margin"), I.BAND_MARGIN)
+        assert.are.equal(Lat.lag("band.stamp"), I.BAND_STAMP)
         assert.are.equal(Lat.lag("usable.shows"), I.GAIN_SHOWS)
         assert.are.equal(Lat.lag("usable.flip"), I.PIN_EXACT)
         assert.are.equal(Lat.lag("wound.taken"), I.TAKEN_ROW_LAG)
