@@ -18921,7 +18921,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.modPooling.extra_amount	
 options.packs.affliction.Affliction (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.affliction.Affliction (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.affliction.Affliction (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.affliction.Affliction (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.affliction.Affliction (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.affliction.Affliction (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.affliction.Affliction (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.affliction.Affliction (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -19239,7 +19239,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.extra_amount	des
 options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.affliction.SM Ruin (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.affliction.SM Ruin (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -19604,7 +19604,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.modPooling.extra_amount	desc	Spe
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.arcane.Arcane (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.arcane.Arcane (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.arcane.Arcane (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.arcane.Arcane (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -20002,7 +20002,7 @@ options.packs.arms.Arms (wowsims.com).lists.modPooling.extra_amount	desc	Specify
 options.packs.arms.Arms (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.arms.Arms (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.arms.Arms (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healing Potion)
-options.packs.arms.Arms (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.arms.Arms (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.arms.Arms (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.arms.Arms (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.arms.Arms (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -20365,7 +20365,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.modPooling.extra_a
 options.packs.assassination.Assassination (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.assassination.Assassination (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.assassination.Assassination (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.assassination.Assassination (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.assassination.Assassination (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.assassination.Assassination (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.assassination.Assassination (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.assassination.Assassination (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -20769,7 +20769,7 @@ options.packs.balance.Balance (wowsims.com).lists.modPooling.extra_amount	desc	S
 options.packs.balance.Balance (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.balance.Balance (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.balance.Balance (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 22812)
-options.packs.balance.Balance (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.balance.Balance (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.balance.Balance (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.balance.Balance (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.balance.Balance (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -21149,7 +21149,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -21510,7 +21510,7 @@ options.packs.combat.Combat (wowsims.com).lists.modPooling.extra_amount	desc	Spe
 options.packs.combat.Combat (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.combat.Combat (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.combat.Combat (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.combat.Combat (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.combat.Combat (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.combat.Combat (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.combat.Combat (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.combat.Combat (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -21909,7 +21909,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.modPooling.extra_amount	
 options.packs.demonology.Demonology (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.demonology.Demonology (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.demonology.Demonology (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.demonology.Demonology (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.demonology.Demonology (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.demonology.Demonology (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.demonology.Demonology (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.demonology.Demonology (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -22237,7 +22237,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.extra_amoun
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.demonology.Shadow Brand (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.demonology.Shadow Brand (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -22644,7 +22644,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.modPooling.extra_amoun
 options.packs.destruction.Destruction (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.destruction.Destruction (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.destruction.Destruction (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.destruction.Destruction (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.destruction.Destruction (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.destruction.Destruction (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.destruction.Destruction (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.destruction.Destruction (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -23022,7 +23022,7 @@ options.packs.discipline.Smite (wowsims.com).lists.modPooling.extra_amount	desc	
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 13908)
-options.packs.discipline.Smite (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.discipline.Smite (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.discipline.Smite (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.discipline.Smite (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -23394,7 +23394,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.modPooling.extra_amount	de
 options.packs.elemental.Elemental (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.elemental.Elemental (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.elemental.Elemental (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healing Potion)
-options.packs.elemental.Elemental (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.elemental.Elemental (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.elemental.Elemental (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.elemental.Elemental (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.elemental.Elemental (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -23766,7 +23766,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.extra_amoun
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 8017)
-options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.enhancement.Enhancement (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.enhancement.Enhancement (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -24179,7 +24179,7 @@ options.packs.feral.Feral (wowsims.com).lists.modPooling.extra_amount	desc	Speci
 options.packs.feral.Feral (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.feral.Feral (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.feral.Feral (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (|cff00ccff[Variable]|r)
-options.packs.feral.Feral (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.feral.Feral (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.feral.Feral (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.feral.Feral (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.feral.Feral (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -24547,7 +24547,7 @@ options.packs.fire.Fire (wowsims.com).lists.modPooling.extra_amount	desc	Specify
 options.packs.fire.Fire (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.fire.Fire (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.fire.Fire (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.fire.Fire (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.fire.Fire (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.fire.Fire (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.fire.Fire (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.fire.Fire (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -24833,7 +24833,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.modPooling.extra_amount	desc	Sp
 options.packs.fire.Frostfire (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.fire.Frostfire (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.fire.Frostfire (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.fire.Frostfire (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.fire.Frostfire (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.fire.Frostfire (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.fire.Frostfire (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.fire.Frostfire (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -25192,7 +25192,7 @@ options.packs.frost.Frost (wowsims.com).lists.modPooling.extra_amount	desc	Speci
 options.packs.frost.Frost (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.frost.Frost (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.frost.Frost (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.frost.Frost (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.frost.Frost (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.frost.Frost (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.frost.Frost (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.frost.Frost (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -25584,7 +25584,7 @@ options.packs.fury.Fury (wowsims.com).lists.modPooling.extra_amount	desc	Specify
 options.packs.fury.Fury (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.fury.Fury (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.fury.Fury (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healing Potion)
-options.packs.fury.Fury (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.fury.Fury (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.fury.Fury (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.fury.Fury (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.fury.Fury (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -25998,7 +25998,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.modPooling.extra_amount	desc
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 5487)
-options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.guardian.Guardian (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.guardian.Guardian (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -26390,7 +26390,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.ex
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -26934,7 +26934,7 @@ options.packs.protection.Protection (wowsims.com).lists.modPooling.extra_amount	
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 633)
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 871)
-options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.protection.Protection (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.protection.Protection (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -27334,7 +27334,7 @@ options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.extra_amount
 options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 633)
-options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.retribution.Holy Shock (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.retribution.Holy Shock (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -27649,7 +27649,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.modPooling.extra_amoun
 options.packs.retribution.Retribution (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.retribution.Retribution (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.retribution.Retribution (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 633)
-options.packs.retribution.Retribution (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.retribution.Retribution (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.retribution.Retribution (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.retribution.Retribution (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.retribution.Retribution (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -28033,7 +28033,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.modPooling.extra_amount	desc	Spe
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 13908)
-options.packs.shadow.Shadow (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.shadow.Shadow (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.shadow.Shadow (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.shadow.Shadow (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -28448,7 +28448,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.extra_amount	desc
 options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.subtlety.Subtlety (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.subtlety.Subtlety (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -28852,7 +28852,7 @@ options.packs.survival.Survival (wowsims.com).lists.modPooling.extra_amount	desc
 options.packs.survival.Survival (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.survival.Survival (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.survival.Survival (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.survival.Survival (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.survival.Survival (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.survival.Survival (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.survival.Survival (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.survival.Survival (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -29170,7 +29170,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.extra_amoun
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.survival.Survival Melee (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.survival.Survival Melee (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -29478,7 +29478,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.extra_amou
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.survival.Survival Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.survival.Survival Turret (wowsims.com).lists.newListBtn	desc	Create a New Action List

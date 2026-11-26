@@ -64,10 +64,10 @@ actions+=/rip,focus=2,if=((!action.cat_form.known|buff.cat_form.up)&...
 
 ### Pooling
 
-`pool_resource` has two forms. Only one works.
+`pool_resource` has two forms.
 
-- `pool_resource,for_next=1[,extra_amount=<n>]` works. When the next line's ability is known, usable and off cooldown but its resource is short, the walk moves its clock forward until the low end of the resource covers the cost plus `extra_amount`, and continues only if the next line's condition holds at that time. When the resource is already there, or the wait would pass the current choice, the line does nothing.
-- `pool_resource,wait=<seconds>` and `pool_resource` without `for_next=1` are accepted and do nothing.
+- `pool_resource,for_next=1[,extra_amount=<n>]`: when the next line's ability is known, usable and off cooldown but its resource is short, the walk moves its clock forward until the low end of the resource covers the cost plus `extra_amount`, and continues only if the next line's condition holds at that time. When the resource is already there, or the wait would pass the current choice, the line does nothing.
+- `pool_resource,if=<condition>` (without `for_next=1`): while the condition is true, no line below it is recommended, in its list and in the lists that called it. The lines below are offered from the first time in the forecast at which the condition is false, so their icon counts down to that time. When the condition stays true through the whole forecast, nothing below it is shown. Lines above it are not affected, and the line never shows an icon of its own. `wait=<seconds>` is kept but has no effect: every update checks the condition again.
 
 > [!WARNING]
 > **Different from retail Hekili:** A priority does not need `pool_resource` to wait for energy, rage or mana. Every line already waits for its own cost in the forecast ([Comparisons that wait](APL-Expression-Reference#comparisons-that-wait)).
@@ -86,7 +86,7 @@ These options are accepted and stored, but nothing in Hekili Forever reads them.
 
 | Option | Editor field | Note |
 |---|---|---|
-| `wait` on `pool_resource` | **Pooling Time** | Pooling for a fixed time is not implemented. |
+| `wait` on `pool_resource` | **Pooling Time** | The entries below wait while the line's condition is true, however long that is ([Pooling](#pooling)). |
 | `strict`, `strict_if` on an ability line | **Test Conditions Immediately**, **Additional Immediate Criteria** | They act only on `call_action_list`, `run_action_list` and `use_items` lines. |
 
 The importer drops SimulationCraft lines for `snapshot_stats`, `flask`, `food` and `augmentation` without a warning.

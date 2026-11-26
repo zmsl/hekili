@@ -6315,8 +6315,9 @@ n = tonumber( n ) + 1
                                         wait = {
                                             type = "input",
                                             name = L["Pooling Time"],
-                                            desc = L["Specify the time, in seconds, as a number or as an expression that evaluates to a number.\n" ..
-                                                "Default is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r."],
+                                            -- (fable-eng3-decision.md Q2, reading D) parsed and kept, no effect: every update is a fresh walk
+                                            desc = L["Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, " ..
+                                                "and are shown from the time they stop being true."],
                                             order = 6,
                                             width = 1.5,
                                             multiline = 3,

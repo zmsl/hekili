@@ -160,6 +160,7 @@ When a `pure=1` line breaks one of these rules, loading the priority reports an 
 |---|---|---|
 | `wait` | `wait,sec=<seconds>[,if=<condition>]` | Shows a wait in the queue for `sec` seconds (0.5 when not given). A value of 0 or less skips the line. |
 | `pool_resource` | `pool_resource,for_next=1[,extra_amount=<n>]` | Delays the walk until the next line's ability is affordable, plus `extra_amount` ([APL line options](APL-Line-Options#pooling)) |
+| `pool_resource` | `pool_resource,if=<condition>` | Holds every line below it while the condition is true; they count down to the time it turns false ([APL line options](APL-Line-Options#pooling)) |
 | `cancel_action` | `cancel_action,name=<ability>[,if=<condition>]` | While the player channels `<ability>` and the condition holds, lets the walk recommend something that breaks the channel |
 | `cancel_buff` | `cancel_buff,buff_name=<aura>[,if=<condition>]` | Recommends removing a buff, when the class pack defines a way to cancel it |
 | `open_window`, `close_window` | `open_window,name=<window>[,if=<condition>]` | Opens or closes a rotation window for the rest of the walk ([APL windows](APL-Windows)) |

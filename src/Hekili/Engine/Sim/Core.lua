@@ -165,6 +165,82 @@ local function blockHelper( ... )
 end
 
 
+-- A blocking script (a run_action_list's, a plain pool line's) at the current delay: when it holds there, delayMin
+-- moves to the first time it no longer does (its recheck times, then halving towards it). Returns that time, or nil
+-- (it does not hold now, or no time ends it). The delay is left as found.
+local function tuneMin( scriptID )
+    local priorMin, actualDelay, firstFail = state.delayMin, state.delay, nil
+
+    -- If the script would block at the present time, find when it wouldn't block.
+    if scripts:CheckScript( scriptID ) then
+        local script = scripts:GetScript( scriptID )
+
+        if script.Recheck then
+            if #blockValues > 0 then twipe( blockValues ) end
+            blockHelper( script.Recheck() )
+
+            if Hekili.ActiveDebug then Hekili:Debug( " - blocking script did not immediately block; will attempt to tune it." ) end
+            for i, check in ipairs( blockValues ) do
+                state.delay = actualDelay + check
+
+                if not scripts:CheckScript( scriptID ) then
+                    firstFail = check
+                    break
+                end
+            end
+
+            if firstFail and firstFail > 0 then
+                state.delayMin = actualDelay + firstFail
+
+                local subFail
+
+                -- May want to try to tune even better?
+                for i = 1, 10 do
+                    if subFail then subFail = firstFail - ( firstFail - subFail ) / 2
+                    else subFail = firstFail / 2 end
+
+                    state.delay = actualDelay + subFail
+                    if not scripts:CheckScript( scriptID ) then
+                        firstFail = subFail
+                        subFail = nil
+                    end
+                end
+
+                state.delayMin = actualDelay + firstFail
+                if Hekili.ActiveDebug then Hekili:Debug( " - setting delayMin to " .. state.delayMin .. " based on recheck and brute force." ) end
+            else
+                firstFail = nil
+                state.delayMin = priorMin
+                -- Leave it alone.
+                if Hekili.ActiveDebug then Hekili:Debug( " - leaving delayMin at " .. state.delayMin .. "." ) end
+            end
+        end
+    end
+
+    state.delay = actualDelay
+    return firstFail
+end
+
+
+-- (fable-eng3-decision.md Q2, reading D; L893) A plain pool_resource line (no for_next): a run_action_list's block with
+-- no list to run. The lines below it, in its list and in every caller that reached it (no parent: kept for the walk),
+-- fail CheckStack at each time its condition holds; held at the earliest time a line below could be offered, delayMin
+-- moves to its condition's first false time, so they count down to it. Returns true when it holds there with no end
+-- in sight (the walk stops here and in its callers). `wait=` has no effect: every update is a fresh walk.
+local function poolLine( scriptID, listName )
+    local b = tremove( StackPool ) or {}
+    b.script, b.list, b.parent, b.run, b.priorMin = scriptID, listName, false, nil, nil
+    tinsert( Block, b )
+
+    local actualDelay = state.delay
+    state.delay = state.delayMin
+    local held = scripts:CheckScript( scriptID )
+    local ends = held and tuneMin( scriptID )
+    state.delay = actualDelay
+    return held and not ends
+end
+
+
 function Hekili:PopStack()
     local x = tremove( Stack, #Stack )
     if not x then return end
@@ -197,56 +273,7 @@ function Hekili:PopStack()
 
         -- Set up new delayMin.
         x.priorMin = state.delayMin
-        local actualDelay = state.delay
-
-        -- If the script would block at the present time, find when it wouldn't block.
-        if scripts:CheckScript( x.script ) then
-            local script = scripts:GetScript( x.script )
-
-            if script.Recheck then
-                if #blockValues > 0 then twipe( blockValues ) end
-                blockHelper( script.Recheck() )
-
-                local firstFail
-
-                if Hekili.ActiveDebug then Hekili:Debug( " - blocking script did not immediately block; will attempt to tune it." ) end
-                for i, check in ipairs( blockValues ) do
-                    state.delay = actualDelay + check
-
-                    if not scripts:CheckScript( x.script ) then
-                        firstFail = check
-                        break
-                    end
-                end
-
-                if firstFail and firstFail > 0 then
-                    state.delayMin = actualDelay + firstFail
-
-                    local subFail
-
-                    -- May want to try to tune even better?
-                    for i = 1, 10 do
-                        if subFail then subFail = firstFail - ( firstFail - subFail ) / 2
-                        else subFail = firstFail / 2 end
-
-                        state.delay = actualDelay + subFail
-                        if not scripts:CheckScript( x.script ) then
-                            firstFail = subFail
-                            subFail = nil
-                        end
-                    end
-
-                    state.delayMin = actualDelay + firstFail
-                    if Hekili.ActiveDebug then Hekili:Debug( " - setting delayMin to " .. state.delayMin .. " based on recheck and brute force." ) end
-                else
-                    state.delayMin = x.priorMin
-                    -- Leave it alone.
-                    if Hekili.ActiveDebug then Hekili:Debug( " - leaving delayMin at " .. state.delayMin .. "." ) end
-                end
-            end
-        end
-
-        state.delay = actualDelay
+        tuneMin( x.script )
     end
 
     InUse[ x.list ] = nil
@@ -1639,10 +1666,9 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                             end
 
                                                         else
-                                                            -- Pooling for a Wait Value.
-                                                            -- NYI.
-                                                            -- if debug then self:Debug( "Pooling for a specified period of time is not supported yet.  Skipping." ) end
-                                                            if debug then self:Debug( "pool_resource is disabled as pooling is automatically accounted for by the forecasting engine." ) end
+                                                            -- (reading D) the lines below wait while the condition holds
+                                                            if poolLine( scriptID, listName ) then stop, seqHalt = true, true end
+                                                            if debug then self:Debug( "Pooling: the lines below wait while this condition holds (from +%.2f%s).", state.delayMin, stop and "; held through the window, the walk stops here" or "" ) end
                                                         end
 
                                                     else

@@ -55,7 +55,7 @@ Every update builds the simulated state again from the estimates and walks the p
 This has three consequences for a priority author:
 
 - A condition describes the situation in which the ability is right, not a step in a plan. To hold an ability back, write a condition that is false until the right moment. The forecast shows the ability when that moment comes.
-- Waiting for a resource needs no line of its own, because the forecast already waits for each line's cost. Of `pool_resource`, only the form that delays the walk until the next line is affordable works (`for_next=1`, see [APL line options](APL-Line-Options)).
+- Waiting for a resource needs no line of its own, because the forecast already waits for each line's cost. `pool_resource` either delays the walk until the next line is affordable (`for_next=1`) or holds the lines below it while its condition is true (see [APL line options](APL-Line-Options#pooling)).
 - Two walks that start from the same state give the same answer. A recommendation changes because the game changed, or because an estimate was corrected.
 
 A recommendation that changes and changes back within a few updates is called flicker, and Hekili Forever treats it as a defect. [APL debugging](APL-Debugging) describes how to avoid it.

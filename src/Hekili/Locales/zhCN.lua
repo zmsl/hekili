@@ -641,7 +641,7 @@ L["Not Set"] = "未设置"
 L["Pool for Next Entry (%s)"] = "为下一条目攒资源（%s）"
 L["If checked, the addon will pool resources until the next entry has enough resources to use."] = "勾选后，插件会攒资源，直到下一条目有足够的资源可以使用。"
 L["Pooling Time"] = "攒资源时间"
-L["Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r."] = "指定时间（秒），可以是数字，也可以是计算结果为数字的表达式。\n默认为 |cFFFFD1000.5|r。表达式示例：|cFFFFD100energy.time_to_max|r。"
+-- L["Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true."] = ""
 L["Extra Pooling"] = "额外攒资源"
 L["Specify the amount of extra resources to pool in addition to what is needed for the next entry."] = "指定在下一条目所需资源之外，还要额外攒多少资源。"
 L["Conditions"] = "条件"
@@ -1046,6 +1046,7 @@ L["Priority %s, list %s, line %d reads your health without health.known first. W
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
 
 -- No longer used (the English changed or went away): reuse or delete
+L["Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r."] = "指定时间（秒），可以是数字，也可以是计算结果为数字的表达式。\n默认为 |cFFFFD1000.5|r。表达式示例：|cFFFFD100energy.time_to_max|r。"
 L[" and "] = " 和 "
 L["The %s priority was retired; a spec that used it now runs its default priority."] = "%s优先级已停用；使用它的专精现在将运行其默认优先级。"
 L["The %s priorities were retired; a spec that used one now runs its default priority."] = "%s优先级已停用；使用其中之一的专精现在将运行其默认优先级。"

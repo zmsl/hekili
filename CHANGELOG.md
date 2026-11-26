@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Custom and imported priorities: a `pool_resource` entry with conditions (no "Pool for Next Entry") now holds the entries below it while its conditions are true, and shows them counting down to the time the conditions stop being true. Its Pooling Time is kept but has no effect. No built-in priority uses it.
 
 ### Changed
 - Arms (wowsims.com) with Stance Dance on: the Battle Stance, then Overpower (or Rend) pairs are now strict sequences in the priority itself; while one runs, the display shows only its next step.
