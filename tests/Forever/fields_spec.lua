@@ -260,12 +260,27 @@ describe("the pack field registry", function()
     end)
 
     it("checks at the end of the real load (ns.LoadContent): nothing left queued, nothing listed", function()
-        local H = boot()
+        local notes = {}
+        local H = boot({
+            beforeLogin = function(core)
+                local notify = core.Notify
+                core.Notify = function(self, text, ...)
+                    notes[#notes + 1] = tostring(text)
+                    return notify(self, text, ...)
+                end
+            end,
+        })
         assert.are.same({}, H.loadErrors)
         local F = H.ns.Fields
         assert.are.same({}, F.pending)
         assert.are.same({}, F.findings)
         assert.is_true(#F.unlanded > 0)
+        for _, note in ipairs(notes) do -- decision 1: a valid load reports nothing (the priorities' notes may show)
+            assert.is_falsy(note:find("load check", 1, true), note)
+        end
+        for _, e in ipairs(H.errors) do
+            assert.is_falsy(e:find("field check", 1, true), e)
+        end
     end)
 
     -- decision 2 (fable-r3-decision.md): once the load's end-of-load pass has run, a registration is not checked, so the
@@ -293,5 +308,87 @@ describe("the pack field registry", function()
         end
         assert.are.same({}, F.pending)
         assert.are.equal(findings, #F.findings)
+    end)
+
+    -- decision 1 (fable-r3-decision.md): a failed end-of-load pass is reported and the addon goes on: OnInitialize
+    -- finishes (the profile, /hekili, the launchers), the content notice carries the check's message once, the client's
+    -- error handler hears it once and ns.Error logs it. A check that raised inside a pack file (the client reported it)
+    -- joins the notice too. `register(shared)` runs before OnInitialize, on the shared spec.
+    local function brokenBoot(register)
+        local notes = {}
+        local H = boot({
+            beforeLogin = function(core)
+                register(core.Class.specs[0])
+                local notify = core.Notify
+                core.Notify = function(self, text, ...)
+                    notes[#notes + 1] = tostring(text)
+                    return notify(self, text, ...)
+                end
+            end,
+        })
+        assert.are.same({}, H.loadErrors)
+        assert.is_table(H.Hekili.DB and H.Hekili.DB.profile) -- InitializeProfile ran
+        assert.is_truthy(H.env.SlashCmdList.ACECONSOLE_HEKILI) -- /hekili
+        assert.is_function(rawget(H.env, "Hekili_OnAddonCompartmentClick")) -- CreateLaunchers ran
+        assert.are.same({}, H.ns.Fields.pending)
+        assert.is_true(H.ns.Fields.closed)
+        return H, table.concat(notes, "\n")
+    end
+
+    local function count(s, part)
+        local n, at = 0, 1
+        while true do
+            local i = s:find(part, at, true)
+            if not i then
+                return n
+            end
+            n, at = n + 1, i + #part
+        end
+    end
+
+    -- The Finish failure `msg`: once in the notice, once to the error handler, once in ns.Error's log.
+    local function reported(H, notice, msg)
+        assert.are.equal(1, count(notice, msg), notice)
+        local n = 0
+        for _, e in ipairs(H.errors) do
+            n = n + (e == msg and 1 or 0)
+        end
+        assert.are.equal(1, H.Hekili.ErrorDB[msg] and H.Hekili.ErrorDB[msg].n, msg) -- ns.Error, once
+        assert.are.equal(2, n, msg) -- H.errors hears ns.Error and the error handler: the handler once
+    end
+
+    it("reports a V3 failure at the end of the load and goes on (notice, error handler, ns.Error)", function()
+        local H, notice = brokenBoot(function(shared)
+            shared:RegisterAura("broken_alias", { id = 990200, alias = { "no_such_aura" } })
+        end)
+        local msg = "Hekili field check V3: Shared aura broken_alias: alias names no_such_aura, which no registration "
+            .. "declares (auras)"
+        reported(H, notice, msg)
+    end)
+
+    it("reports a V4 failure at the end of the load and goes on", function()
+        local H, notice = brokenBoot(function(shared)
+            shared:RegisterAbility("broken_travel", { id = 990201, startsCombat = true, expects = "travel" })
+        end)
+        reported(H, notice, "Hekili field check V4: Shared ability broken_travel: expects travel needs velocity")
+    end)
+
+    it("adds a check that raised inside a pack file to the notice, once, beside the end-of-load failure", function()
+        local v2 = "Hekili field check V2: Shared aura broken_duration: duration is -1, below 0"
+        local H, notice = brokenBoot(function(shared)
+            local ok, err = pcall(shared.RegisterAura, shared, "broken_duration", { id = 990202, duration = -1 })
+            assert.are.same({ false, v2 }, { ok, err }) -- the client reports a pack file's raise itself
+            shared:RegisterAura("broken_alias", { id = 990203, alias = { "no_such_aura" } })
+        end)
+        assert.are.equal(1, count(notice, v2), notice)
+        for _, e in ipairs(H.errors) do
+            assert.are_not.equal(v2, e) -- not handed on again: the client reported it
+        end
+        reported(
+            H,
+            notice,
+            "Hekili field check V3: Shared aura broken_alias: alias names no_such_aura, which no registration "
+                .. "declares (auras)"
+        )
     end)
 end)

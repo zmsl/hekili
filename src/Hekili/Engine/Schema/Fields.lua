@@ -40,7 +40,9 @@ local KIND_OF = { aura = "auras", resource = "resources", talent = "talents", ab
 local SOURCES = { measured = true, wowsims = true, ruling = true, design = true, unmeasured = true } -- as the latency table's
 
 local function fail(n, who, field, why)
-    error(format("Hekili field check V%d: %s: %s %s", n, who, tostring(field), why), 0)
+    local msg = format("Hekili field check V%d: %s: %s %s", n, who, tostring(field), why)
+    F.failed = F.failed or msg -- the first failure: ns.LoadContent's notice names it, also when a pack file raised
+    error(msg, 0)
 end
 
 local function isa(t, v)
