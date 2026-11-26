@@ -63,8 +63,8 @@ end
 
 --- Adds field `name` to kind `on` ("ability", "aura", "meta", "fsr", "regen"). `ty`: alternatives joined by "|" of
 --- bool, number, string, table, fn, key (a number or a string), any, enum (a string of `opt.enum`), or a reference
---- (aura, resource, talent, ability: a key checked at F.Finish), each optionally "list:" (an array of it). "fn" also
---- admits a `{ byRank = values }` table (Spec/Ranks.lua). `opt`: min, max, gt (a number above it), enum, tune
+--- (aura, resource, talent, ability: a key checked at F.Finish), each optionally "list:" (an array of it). "fn" on an
+--- ability also admits a `{ byRank = values }` table (only RegisterAbility converts it: Spec/Ranks.lua). `opt`: min, max, gt (a number above it), enum, tune
 --- ({ source, row }: V6), atLeast (another field of the same object: V7). Load only.
 function F.Row(on, name, ty, default, doc, opt)
     opt = opt or {}
@@ -162,7 +162,7 @@ local function misfit(r, v)
                     end
                 end
             end
-        elseif isa(a, v) or (a == "fn" and type(v) == "table" and rawget(v, "byRank") ~= nil) then
+        elseif isa(a, v) or (a == "fn" and r.on == "ability" and type(v) == "table" and rawget(v, "byRank") ~= nil) then
             ok = true
             if a == "enum" and not r.enum[v] then
                 return "is " .. tostring(v) .. ", not one of " .. table.concat(r.enumList, ", ")

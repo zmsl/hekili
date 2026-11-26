@@ -231,6 +231,26 @@ describe("the pack field registry", function()
         assert.is_truthy(tostring(err):find("V1: DRUID regen", 1, true) and tostring(err):find("ab is no field", 1, true), err)
     end)
 
+    -- decision 3d: only RegisterAbility converts { byRank = values } (Spec/Ranks.lua); elsewhere it would reach the
+    -- consumer as a table, so V2 refuses it there
+    it("3d: byRank passes only on an ability's function rows", function()
+        local env = druid()
+        local kit = env.class.kit
+        local ranked = { byRank = { 9, 12 } }
+        for _, c in ipairs({
+            { "RegisterAura", { "rank_aura", { id = 990600, duration = ranked } }, "aura rank_aura: duration" },
+            { "RegisterResource", { 3, nil, nil, { max = ranked } }, "meta", "max is a table" },
+            { "RegisterResource", { 1, { rank_regen = { value = ranked } }, nil, nil }, "regen", "value is a table" },
+        }) do
+            local ok, err = pcall(kit[c[1]], kit, unpack(c[2], 1, 4))
+            assert.is_false(ok, c[3])
+            err = tostring(err)
+            assert.is_truthy(err:find("V2: DRUID " .. c[3], 1, true) and err:find(c[4] or "is a table", 1, true), err)
+        end
+        local ok, err = pcall(kit.RegisterAbility, kit, "rank_spend", { ranks = { 990601, 990602 }, spend = ranked })
+        assert(ok, tostring(err))
+    end)
+
     it("has one row per field with a type, a doc line and its bounds in order", function()
         local F = druid().ns.Fields
         local n = 0
