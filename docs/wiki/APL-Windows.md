@@ -8,7 +8,7 @@ A **rotation window** is a named span of time during a fight that a class pack r
 
 ## What a window is
 
-A window is registered by a class pack with `RegisterWindow`, under a name such as `hha` or `riposte`. It is either open or closed. While open it has an opening time, an end time and, for a stepped window, a current step.
+A window is registered by a class pack with `RegisterWindow`, under a name such as `weave` or `riposte`. It is either open or closed. While open it has an opening time, an end time and, for a stepped window, a current step.
 
 - Hekili Forever opens and closes the real windows from what the game reports: each window can have a test, run on every update, and the window opens when the test becomes true. A cast the player makes can also open or close it, and combat end closes every window.
 - A window lasts a fixed number of seconds, until the end of combat, or as long as a length the class pack works out at each opening. A window can also close when its test becomes false again.
@@ -27,10 +27,11 @@ On every update the forecast copies the windows as they stand. Lines and simulat
 | `window.<name>.step` | number | The step that is due, from 1; 0 when closed or not stepped | `window.hha.step=3` |
 | `window.<name>.next.<key>` | boolean | The window is open and its due step is the ability `<key>` | `window.hha.next.summon_hawk` |
 
-From Beast Mastery Turret (wowsims.com):
+From Beast Mastery Turret (wowsims.com), whose `hha` is a sequence the priority declares itself:
 
 ```simc
-actions+=/summon_hawk,if=window.hha.next.summon_hawk
+actions+=/restart_sequence,name=hha,if=window.hha.done
+actions+=/sequence,name=hha,mode=continue:summon_hawk:summon_hawk:arcane_shot
 ```
 
 From Retribution (wowsims.com):
@@ -134,7 +135,6 @@ When the priority loads, each error is reported once as an error message and its
 
 | Window | Class | Covers | Read by |
 |---|---|---|---|
-| `hha` | Hunter | Beast Mastery's sequence of Summon Hawk, Summon Hawk, Arcane Shot, repeated for the whole fight | Beast Mastery Turret (wowsims.com) |
 | `weave` | Hunter | The moment after a ranged shot in which a melee strike fits before the next shot | No built-in priority |
 | `move1`, `move2` | Paladin | Retribution's opener: Judgement, then a seal, from the pull until the first melee swing | Retribution (wowsims.com) |
 | `riposte` | Rogue | The 5 seconds after a parry in which Riposte can be used | The class pack, to decide when Riposte is usable |

@@ -734,6 +734,11 @@ actions+=/arcane_shot,if=window.hha.next.arcane_shot&toggle.movement&<the gate o
   when its line is first reached at now, not at combat start; there is one `hha` per display with Sequences on
   (Primary and AOE), each advanced by the same casts; while parked nothing is due.
 
+- As built (L1374, lane eng-3; review M2): the current Beast Mastery Turret pack had one ungated `arcane_shot` member
+  line and no reader copies, so the translation is the two lines `restart_sequence,name=hha,if=window.hha.done` and
+  `sequence,name=hha,mode=continue:summon_hawk:summon_hawk:arcane_shot` after Hunter's Mark and Serpent Sting; the
+  text above describes an older pack. The line is walked out of combat too, so the sequence may open before the pull.
+
 ### 10.3 Paladin `move1` / `move2` (ruling 32)
 
 wowsims (ui/specs/paladin/retribution/apls/default.apl.siml, group "Move to melee"):

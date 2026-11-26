@@ -6,6 +6,7 @@
 
 ### Changed
 - Arms (wowsims.com) with Stance Dance on: the Battle Stance, then Overpower (or Rend) pairs are now strict sequences in the priority itself; while one runs, the display shows only its next step.
+- Beast Mastery Turret (wowsims.com): the Summon Hawk, Summon Hawk, Arcane Shot loop is now a sequence in the priority itself instead of a rotation window inside the class pack.
 
 ### Fixed
 

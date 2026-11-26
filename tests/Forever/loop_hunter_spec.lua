@@ -293,3 +293,50 @@ describe("the Hunter at range, then in melee", function()
         )
     end
 end)
+
+-- L1374 (windows design v6 10.2): hha is the Beast Mastery Turret pack's own APL sequence, keyed per display; the class
+-- registers no hha window. User report (v0.7.3, L1060): after the first fight the hawk sequence never came back until a
+-- reload. The sequence opens when its line is reached in each fight (Hunter's Mark and Serpent Sting up), steps on the
+-- casts, parks and restarts (restart_sequence), and combat end closes it.
+describe("Beast Mastery Turret's hha sequence", function()
+    -- fable-eng3-decision.md Q1 test 5: never parked more than one poll per loop (a restart the offset rule held back
+    -- would show as a longer park)
+    it("opens in every fight, fresh at each pull, and loops; parked one poll per loop at most", function()
+        local loop = require("Game.harness.loop")
+        local L = loop.new(require("Forever.helpers.hunter_world").BeastMasteryTurret)
+        assert.is_nil(L.us.Hekili.Class.windows.hha)
+        local W = L.us.ns.VirtualStateInternal.win
+        local KEY = "Beast Mastery Turret (wowsims.com):hha#Primary"
+        local first, up, loops, prev, parked, longest = {}, {}, 0, 0, 0, 0
+        loop.tally(L, 2, {
+            on = function(run, steps)
+                if steps[1].H ~= L.us then
+                    return
+                end
+                local w = W.byKey[KEY]
+                local isUp, step = w and W.up[w], w and W.step[w] or 0
+                if first[run] == nil then
+                    first[run] = step
+                end
+                up[run] = up[run] or isUp
+                if isUp and step == 1 and prev == 4 then
+                    loops = loops + 1 -- parked past the third member, then restarted
+                end
+                prev = isUp and step or 0
+                parked = prev == 4 and parked + 1 or 0
+                longest = math.max(longest, parked)
+            end,
+        })
+        local n = 0
+        for run, was in pairs(up) do
+            n = n + 1
+            assert.is_true(was)
+            -- fresh at the pull: closed, or open at its first member (the line is walked out of combat too, design
+            -- v6 10.2), never where the last fight left it (combat end closes it)
+            assert.is_true(first[run] <= 1, tostring(first[run]))
+        end
+        assert.are.equal(2, n)
+        assert.is_true(loops > 0, "hha never restarted")
+        assert.is_true(longest <= 1, "parked " .. longest .. " polls in a row")
+    end)
+end)
