@@ -4521,6 +4521,29 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
         assert.has_error(function()
             apl.translate({ priorityList = { cast(400) } }, on({ sequenceIf = { s = "window.first.up" } }))
         end, "sequenceIf: no sequence s in the APL")
+        assert.has_error(function()
+            apl.translate({ priorityList = { cast(400) } }, on({ sequenceIf = { s = "time>0" } }))
+        end, "sequenceIf: no sequence s in the APL")
+    end)
+
+    -- L1919 (fable-eng3b-decision.md Q1): the fight-bound term `time>0` goes into the sequence's condition with no close
+    -- line (it turns false only at combat end, which closes every row): Beast Mastery's hha
+    it("sequenceIf time>0: the term in the sequence's condition, no close line", function()
+        local text = apl.translate({
+            priorityList = {
+                cast(400),
+                { action = { sequence = { name = "S", actions = { member(100), member(300) } } } },
+                cast(200),
+            },
+        }, on({ sequenceIf = { s = "time>0" } }))
+        assert.are.equal(
+            lines({
+                "actions=dot",
+                "actions+=/sequence,name=s,mode=continue,if=time>0:strike:roar,use_off_gcd=1",
+                "actions+=/big_hit",
+            }),
+            text
+        )
     end)
 
     -- Review M4 (L1374): a sequence in the pre-pull list is omitted and named (none at the pin or at a342c253e6): the

@@ -3298,3 +3298,88 @@ describe("the replay gate's APL window checks (fable-eng3-decision.md Q3)", func
         assert.are.same({ key("s") .. ": OPEN sent, not up" }, { failed[1] and failed[1]:match("^.-not up") })
     end)
 end)
+
+-- (fable-eng3b-decision.md Q1 test 4, L1919) Every shipped priority with a plain `sequence` line keeps it to the fight: out
+-- of combat, a target selected, its walk sends no OPEN for a sequence key. A bare `duration=combat` sequence reopens out
+-- of combat and carries its step into the next pull (Beast Mastery's hha before eng-3c); wowsims starts every sequence
+-- at its first member at the pull (sim.reset before PrePull). Each pack in its own world's character.
+describe("the shipped plain sequences are fight-bound (fable-eng3b-decision.md Q1)", function()
+    local WORLDS = {
+        ["Beast Mastery Turret (wowsims.com)"] = function()
+            return require("Forever.helpers.hunter_world").BeastMasteryTurret
+        end,
+        ["Retribution (wowsims.com)"] = function()
+            return require("Forever.helpers.paladin_world").Retribution
+        end,
+    }
+
+    it("lists a world for every shipped pack with a plain sequence line", function()
+        local found = {}
+        local p = assert(io.popen("ls src/*/APLs/*.simc"))
+        for path in p:lines() do
+            local f = assert(io.open(path))
+            local text = f:read("*a")
+            f:close()
+            if text:find("[=/]sequence,name=") then
+                found[path:match("([^/]+)%.simc$")] = true
+            end
+        end
+        p:close()
+        local want = {}
+        for pack in pairs(WORLDS) do
+            want[pack] = true
+        end
+        assert.are.same(want, found)
+    end)
+
+    -- the pack's sequence lines alone are its priority, so each is reached on every walk: the line's own condition is
+    -- what keeps it to the fight (the lines above it in the shipped priority vary with the world's auras)
+    for pack, world in pairs(WORLDS) do
+        it(pack .. ": out of combat with a target, no OPEN sent for a sequence", function()
+            local C = world()
+            assert.are.equal(pack, C.PACK)
+            local h = headless.new({ character = C.character(), pack = C.PACK })
+            assert.are.same({}, h.loadErrors)
+            local seqs, lines = {}, {}
+            for _, entries in pairs(h.Hekili.DB.profile.packs[pack].lists) do
+                for _, e in ipairs(entries) do
+                    if e.action == "sequence" then
+                        seqs[pack .. ":" .. e.window_name .. "#Primary"] = true
+                        lines[#lines + 1] = e
+                    end
+                end
+            end
+            assert.is_truthy(next(seqs))
+            h.Hekili.DB.profile.packs[pack].lists = { precombat = {}, default = lines }
+            h.Hekili:LoadScripts()
+            h.Hekili:ReviewPacks()
+            h.Hekili.Scripts:ApplyWindows(pack)
+            h.Hekili.State:BuildWindows()
+            h.ns.VirtualState.Drain(h.ctl.now)
+            local sent, walked = {}, 0
+            local op = h.ns.VirtualState.WindowOp
+            h.ns.VirtualState.WindowOp = function(k, code, arg)
+                if code == OPEN and seqs[k] then
+                    sent[#sent + 1] = k
+                end
+                return op(k, code, arg)
+            end
+            h.ctl.inRange.target, h.ctl.level.target = true, 60
+            h.Fire("PLAYER_TARGET_CHANGED")
+            local now = h.ctl.now
+            for i = 1, 15 do
+                assert(headless.cycle(h, now + 0.2 * i))
+            end
+            assert.are.same({}, sent)
+            -- the same lines at the pull do send it: the walk reaches them, so the check above means something
+            h.ctl.now, h.ctl.combat = now + 3.1, true
+            h.Fire("PLAYER_REGEN_DISABLED")
+            for i = 1, 3 do
+                assert(headless.cycle(h, now + 3.1 + 0.2 * i))
+                walked = walked + #sent
+            end
+            assert.is_true(walked > 0, "no OPEN at the pull")
+            assert.are.same({}, h.errors)
+        end)
+    end
+end)

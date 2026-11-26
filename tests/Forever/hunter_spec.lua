@@ -1239,6 +1239,71 @@ describe("Forever Hunter through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- (fable-eng3b-decision.md Q1 test 3, L1919) Beast Mastery's hha is bound to the fight (`time>0` on the shipped line):
+    -- the poll at combat end walks out of combat and must not reopen it, so a Summon Hawk heard after combat end (the
+    -- driver's last press) never counts toward the next pull; there it starts at the first member, as wowsims's reset.
+    it("keeps Beast Mastery's hha to the fight: a hawk after combat end does not carry into the next pull", function()
+        local pack = "Beast Mastery Turret (wowsims.com)"
+        local KEY = pack .. ":hha#Primary"
+        local seq = {}
+        for _, e in ipairs(H.Hekili.DB.profile.packs[pack].lists.default) do
+            if e.window_name == "hha" then
+                seq[#seq + 1] = e -- the shipped restart_sequence and sequence lines
+            end
+        end
+        assert.are.equal(2, #seq)
+        H.Hekili.DB.profile.packs[pack].lists = { precombat = {}, default = seq }
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        H.Hekili.Scripts:ApplyWindows(pack)
+        H.Hekili.State:BuildWindows()
+        local VS = H.ns.VirtualState
+        VS.Drain(H.ctl.now)
+        local opens = { ooc = 0, combat = 0 }
+        local op = VS.WindowOp
+        VS.WindowOp = function(k, code, arg)
+            if k == KEY and code == 1 then
+                local c = H.ctl.combat and "combat" or "ooc"
+                opens[c] = opens[c] + 1
+            end
+            return op(k, code, arg)
+        end
+        H.ctl.level.target, H.ctl.distance.target, H.ctl.inRange.target = 60, 20, true
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 1
+        local function at(dt)
+            H.ctl.now = t + dt
+            assert.is_true(headless.cycle(H, t + dt))
+        end
+        local function hawk(dt)
+            H.ctl.now = t + dt
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. dt, 1293527)
+        end
+        H.ctl.now, H.ctl.combat = t, true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        at(0.2)
+        at(0.4)
+        local up0, _, _, _, step0 = VS.Window(KEY)
+        assert.are.same({ true, 1 }, { up0, step0 }) -- opened at the pull, at the first hawk
+        H.ctl.now, H.ctl.combat = t + 10, false
+        H.Fire("PLAYER_REGEN_ENABLED")
+        at(10) -- combat end's own poll walks out of combat
+        hawk(10.05) -- the last press of the fight, heard after combat end
+        for dt = 10.2, 40, 0.2 do
+            at(dt)
+            assert.is_false((VS.Window(KEY)), ("hha up out of combat at %.1f s"):format(dt))
+        end
+        assert.are.equal(0, opens.ooc)
+        H.ctl.now, H.ctl.combat = t + 40.1, true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        at(40.2)
+        at(40.4)
+        local up, _, _, _, step = VS.Window(KEY)
+        assert.are.same({ true, 1 }, { up, step }) -- the first member at the new pull
+        assert.are.equal(2, opens.combat)
+        assert.are.same({}, H.errors)
+    end)
+
     it("forecasts no weave open at the pull, before any shot", function()
         local S, F = weaveWorld(11)
         lines(

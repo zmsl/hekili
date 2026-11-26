@@ -10,7 +10,10 @@
 -- window, Hunter.lua), Aimed Shot, Multi-Shot off, and the walk in from Pull range (pull.apl.siml) to the 12 yd spot.
 -- No Sniper Shot (the hawk list has none). The sequence is the pack's own APL sequence (rule 14b, `sequences`; windows
 -- design v6 10.2, Phase 3 Part B, L1374): `restart_sequence,name=hha,if=window.hha.done` and
--- `sequence,name=hha,mode=continue:summon_hawk:summon_hawk:arcane_shot`; the class's Lua window is gone.
+-- `sequence,name=hha,mode=continue,if=time>0:summon_hawk:summon_hawk:arcane_shot`; the class's Lua window is gone.
+-- `time>0` (`sequenceIf`, fable-eng3b-decision.md Q1, L1919) binds it to the fight, as wowsims's reset at every pull
+-- (sim.reset before PrePull: curIdx 0) and the old Lua window's `combat > 0`: walked out of combat, the bare line
+-- reopened at combat end's own poll and counted the fight's last Summon Hawk into the next pull.
 -- The weave build's HHA notes (the retired Beast Mastery (wowsims.com) pack, L1154): wowsims's APLActionSequence
 -- advances its index only when the cast (or its queued action) fires (sim/core/apl_actions_sequences.go), so a queued
 -- hawk can stall the sequence where the kit's stepped window counts each cast (an oracle quirk, re-pin R15).
@@ -21,6 +24,7 @@ return {
     pack = "Beast Mastery Turret (wowsims.com)",
     spec = "beast_mastery",
     sequences = true, -- rule 14b: hha as an APL sequence (windows design v6 10.2, L1374)
+    sequenceIf = { hha = "time>0" }, -- fight-bound (L1919): no close line for this term
     name = "Beast Mastery Turret",
     talentTree = "hunter",
     siml = "ui/specs/hunter/dps/builds/bm.siml",

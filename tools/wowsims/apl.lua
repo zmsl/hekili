@@ -3397,7 +3397,9 @@ function M.translate(rotation, c)
         end
     end
     -- rule 14b's `sequenceIf` (L898, design v6 10.3): each sequence's close line, in default before the line that
-    -- reaches its list (before the sequence's own line in default): the list is not walked once its term is false
+    -- reaches its list (before the sequence's own line in default): the list is not walked once its term is false.
+    -- The term `time>0` (the fight-bound sequence, L1919) has none: it turns false only at combat end, which closes
+    -- every row itself.
     local seqIf = {}
     for w in pairs(c.sequenceIf) do
         seqIf[#seqIf + 1] = w
@@ -3408,20 +3410,26 @@ function M.translate(rotation, c)
         if not list then
             error("sequenceIf: no sequence " .. w .. " in the APL", 0)
         end
-        local want = list == "default" and ("^sequence,name=" .. w .. "[,:]")
-            or ("^[%a_]+_action_list,name=" .. list .. "[,]?")
-        local at
-        for i, body in ipairs(byName.default) do
-            if not at and body:find(want) and (list == "default" or body:match("^[%a_]+,name=([%w_]+)") == list) then
-                at = i
+        if term ~= "time>0" then
+            local want = list == "default" and ("^sequence,name=" .. w .. "[,:]")
+                or ("^[%a_]+_action_list,name=" .. list .. "[,]?")
+            local at
+            for i, body in ipairs(byName.default) do
+                if
+                    not at
+                    and body:find(want)
+                    and (list == "default" or body:match("^[%a_]+,name=([%w_]+)") == list)
+                then
+                    at = i
+                end
             end
+            if not at then
+                error("sequenceIf: " .. w .. "'s list " .. list .. " is not called from default", 0)
+            end
+            local line = ("close_window,name=%s,if=window.%s.up&!window.%s.done&!(%s)"):format(w, w, w, term)
+            table.insert(byName.default, at, line)
+            table.insert(origin.default, at, false)
         end
-        if not at then
-            error("sequenceIf: " .. w .. "'s list " .. list .. " is not called from default", 0)
-        end
-        local line = ("close_window,name=%s,if=window.%s.up&!window.%s.done&!(%s)"):format(w, w, w, term)
-        table.insert(byName.default, at, line)
-        table.insert(origin.default, at, false)
     end
     -- CN12: a recipe key that names nothing is an error, as for `condition` (an upstream rename would drop it silently)
     for _, field in ipairs({ "guard", "requires", "windowVars" }) do

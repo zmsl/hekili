@@ -35,6 +35,6 @@ actions+=/major_mana_potion,use_off_gcd=1,if=time>=5
 actions+=/hunters_mark,focus=2,if=!debuff.hunters_mark.up
 actions+=/serpent_sting,focus=1,if=!debuff.serpent_sting.up
 actions+=/restart_sequence,name=hha,if=window.hha.done
-actions+=/sequence,name=hha,mode=continue:summon_hawk:summon_hawk:arcane_shot
+actions+=/sequence,name=hha,mode=continue,if=time>0:summon_hawk:summon_hawk:arcane_shot
 actions+=/aimed_shot
 actions+=/arcane_shot,if=!action.summon_hawk.known&target.outside8
