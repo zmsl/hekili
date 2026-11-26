@@ -2706,6 +2706,44 @@ describe("resources", function()
             end
         )
 
+        -- (band-edge round 3, the mixed pair) a pair whose first end sits inside the window: that end's stamp is late
+        -- at the window's rate (the mp5 part, 12), not the pair's mean, so the spirit part's floor rate stays near the
+        -- truth (30; the pair's mean over 1.27 s put it near 27.8); a first end just past the window's end stays sound
+        it(
+            "keeps the spirit part's floor rate near the truth over pairs whose first end is inside the window",
+            function()
+                for _, edge in ipairs({ 4.9, 4.95 }) do -- the true crossing; stamped 0.09 late: inside, then 0.04 past
+                    shaped({ spirit = 30, mp5 = 12 })
+                    read(10, 500)
+                    local function cell(stamp, lo)
+                        if I.log.n > 0 and I.bandT[1] ~= stamp then
+                            I.Fold(stamp - 1e-9, false)
+                        end
+                        I.bandT[1], I.bandShows[1] = stamp, 1 / 6
+                        I.Settle(stamp + 0.05)
+                        obs(Obs.Band, stamp + 0.05, 1, lo, lo + 25)
+                        I.Fold(stamp + 0.05, false)
+                    end
+                    local mid = 5 + (25 - 12 * (5 - edge)) / 42 -- 425 at edge, 12 a second to 5, 42 after
+                    for k = 1, 6 do
+                        local t = 20 * k
+                        I.Settle(t)
+                        I.ResourceShift(1, -100, t, Obs.CastSuccess) -- the window to t + 5
+                        cell(t + 0.2, 400) -- a fall: no pair
+                        cell(t + edge + 0.09, 425) -- the pair's first end, stamped late
+                        cell(t + mid, 450) -- under I.PIN_GAP after it: the pair goes on
+                        cell(t + mid + 25 / 42, 475) -- its second end, on time, outside the window
+                    end
+                    assert.are.equal(12, I.res.regE[1])
+                    assert.is_true(I.res.spE[1] > 30, I.res.spE[1])
+                    assert.is_true(I.res.spL[1] <= 30, I.res.spL[1])
+                    if edge == 4.9 then
+                        assert.is_true(I.res.spL[1] > 29.5, I.res.spL[1])
+                    end
+                end
+            end
+        )
+
         it("multiplies overlapping `spirit` auras and adds their shares", function()
             shaped(
                 { spirit = 10, mp5 = 2 },
