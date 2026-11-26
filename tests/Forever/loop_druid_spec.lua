@@ -154,9 +154,10 @@ describe("the Guardian loop world's press", function()
     end)
 
     -- Blood Frenzy 1/2 (the e4ef929e54 log's 16958=1): its 5 rage (16959) on half our crits in Bear Form, Maul's
-    -- included: the log's 18 Maul crits bring 10 of its 21 gains, plus one tied with a Lacerate crit (each 0.01 s after the crit), so the world pays the
-    -- class file's expected 2.5 on a Maul crit at its swing, as on the on-GCD strikes' and the white swings'
-    it("pays Primal Fury's rage on a Maul crit at its swing", function()
+    -- included: the log's 18 Maul crits bring 10 of its 21 gains, plus one tied with a Lacerate crit (each 0.01 s after the crit), so the world rolls
+    -- the 5 at 50% on a Maul crit at its swing (Fable L1984), as on the on-GCD strikes' and the white swings'; the roll
+    -- is stubbed to a proc here (druid_loop_world_spec rolls it)
+    it("rolls Primal Fury's rage on a Maul crit at its swing", function()
         local C = dlw.Guardian
         local H = headless.new({ character = C.character(), pack = C.PACK })
         local p = C.resolve("maul", H)
@@ -164,6 +165,13 @@ describe("the Guardian loop world's press", function()
         local us = W.ents[1]
         W.t = 1
         W.crit = 1
+        local asked = {}
+        W.krng = { -- handed to the world's Primal Fury at the pull (t 1, inside W.run)
+            chance = function(c)
+                asked[#asked + 1] = c
+                return true
+            end,
+        }
         us.target.avoid = {}
         local ok, why = W.press(us, "maul", p)
         assert.is_true(ok, tostring(why))
@@ -176,7 +184,8 @@ describe("the Guardian loop world's press", function()
                 out[#out + 1] = "gain " .. tostring(ev.rage)
             end
         end
-        assert.are.same({ "strike CRITICAL", "gain 2.5" }, { out[1], out[2] })
+        assert.are.same({ "strike CRITICAL", "gain 5" }, { out[1], out[2] })
+        assert.are.same({ 0.5 }, asked)
     end)
 end)
 
