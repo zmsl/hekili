@@ -1248,6 +1248,9 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                 Timer:Track("Post-TTR and Essential")
                                 if action == "call_action_list" or action == "run_action_list" or action == "use_items" then
                                     -- We handle these here to avoid early forking between starkly different APLs.
+                                    -- L1902 caveat (b): a cycle an unusable swap line left set is not this line's (its
+                                    -- target.time_to_die and debuff reads are the target's)
+                                    state.ClearCycle()
                                     local aScriptPass = true
                                     local strict_if = false
 

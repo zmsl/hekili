@@ -6,6 +6,7 @@
 # Setting healing_potion_health (player health threshold, percent), default 25.
 # Setting healthstone_health (player health threshold, percent), default 30.
 # Setting assigned_curse (choice of curseOptions: elements, nocurse, recklessness, weakness), default elements in game and in the harness.
+# Deviation: default #4: remainingTime is the target's time to die on this line: its value is lost if this target dies first (owner rule, L1902).
 # Omitted: default #3: hidden
 # Omitted: default #6: spellExpectedDpet
 # Omitted: default #7: spellExpectedDpet
@@ -25,7 +26,7 @@ actions+=/major_mana_potion,use_off_gcd=1
 actions+=/curse_of_the_elements,focus=2,if=settings.assigned_curse='elements'&(!((settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))
 actions+=/curse_of_recklessness,focus=2,if=settings.assigned_curse='recklessness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(action.curse_of_weakness.known&settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))
 actions+=/curse_of_weakness,focus=2,if=settings.assigned_curse='weakness'&(!((action.curse_of_the_elements.known&settings.assigned_curse='elements'&debuff.curse_of_the_elements.up)|(action.curse_of_recklessness.known&settings.assigned_curse='recklessness'&debuff.curse_of_recklessness.up)|(settings.assigned_curse='weakness'&debuff.curse_of_weakness.up)))
-actions+=/bane_of_doom,focus=2,if=fight_remains>=60
+actions+=/bane_of_doom,focus=2,if=target.time_to_die>=60
 actions+=/shadow_bolt,focus=1,if=buff.shadow_trance.up
 actions+=/corruption,focus=2,if=debuff.corruption.remains<=action.corruption.cast
 actions+=/siphon_life,focus=2,if=debuff.siphon_life.remains<=action.siphon_life.cast

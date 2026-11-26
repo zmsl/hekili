@@ -1076,13 +1076,21 @@ function M.run(L, seed, o, drivers)
     end
     -- R42, a replay-world assumption: wowsims knows its fight's length, so a replay answers `fight_remains` (the
     -- engine's GetGreatestTTD) as the time to the log's end on each instance's clock; loops outside a ttd arm keep
-    -- the unknown (3600 s, gap AN). Restored with the trace hooks at the run's end.
-    local ttd = {}
+    -- the unknown (3600 s, gap AN). Restored with the trace hooks at the run's end. Its one target dies at that end, so
+    -- the target's time to die (GetTTD, target.time_to_die: L1902's target-bound lines) answers the same.
+    local ttd, ttdTarget = {}, {}
     for i, st in ipairs(R and steps or {}) do
         local hk, ctl, endAt = st.H.Hekili, st.H.ctl, st.base + R.pull + R.duration
-        ttd[i] = hk.GetGreatestTTD
+        local own = hk.GetTTD
+        ttd[i], ttdTarget[i] = hk.GetGreatestTTD, own
         hk.GetGreatestTTD = function()
             return endAt - ctl.now
+        end
+        hk.GetTTD = function(self, unit, isGUID)
+            if unit == "target" and not isGUID then
+                return endAt - ctl.now
+            end
+            return own(self, unit, isGUID)
         end
     end
     -- (L1814) a ttd arm's plain instances answer the true time left (fix1_helper's truth override), so the arm measures
@@ -1097,8 +1105,16 @@ function M.run(L, seed, o, drivers)
             return math.max(0, math.min(mob.health / perS, W.stopAt - math.max(W.t, M.PULL)))
         end
         for i, st in ipairs(steps) do
-            if st.plain then
+            if st.plain then -- the mob is the target: its own time to die (L1902's target-bound lines) the same truth
+                local own = st.H.Hekili.GetTTD
                 ttd[i], st.H.Hekili.GetGreatestTTD = st.H.Hekili.GetGreatestTTD, left
+                ttdTarget[i], st.H.Hekili.GetTTD =
+                    own, function(self, unit, isGUID)
+                        if unit == "target" and not isGUID then
+                            return left()
+                        end
+                        return own(self, unit, isGUID)
+                    end
             end
         end
     end
@@ -1529,6 +1545,9 @@ function M.run(L, seed, o, drivers)
         end
         if ttd[i] then
             st.H.Hekili.GetGreatestTTD = ttd[i]
+        end
+        if ttdTarget[i] then
+            st.H.Hekili.GetTTD = ttdTarget[i]
         end
         for name, n in pairs(st.H.ns.Facade.secrets) do
             run.secrets[name] = (run.secrets[name] or 0) + n

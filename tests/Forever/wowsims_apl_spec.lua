@@ -2528,7 +2528,7 @@ describe("the wowsims APL translator's re-pin reads", function()
         end
     )
 
-    it("reads the current target as active now and its death at the fight's end; other units unsupported", function()
+    it("reads the current target as active now and its own time to die; other units unsupported", function()
         local other = { type = "Target", index = 1 }
         local text, omitted = apl.translate({
             priorityList = {
@@ -2549,7 +2549,7 @@ describe("the wowsims APL translator's re-pin reads", function()
             table.concat({
                 "actions=strike,focus=1",
                 "actions+=/big_hit,if=0<=0",
-                "actions+=/roar,use_off_gcd=1,if=fight_remains>20",
+                "actions+=/roar,use_off_gcd=1,if=target.time_to_die>20",
             }, "\n"),
             text
         )
@@ -3937,15 +3937,16 @@ describe("the wowsims APL translator's target swaps (option D)", function()
 
     -- CN24 (API-forced): Forever gives no other target's time to die, so an entry that reads another target's death
     -- (Feral's 2/3-target lists, through their variables) or compares the current target's with the fight's end
-    -- (Guardian's, both fight_remains here) is omitted with its reason, never folded into an always-false term
-    -- review M2: the target's death against the fight's end is a constant term (S4's fold), so `|`, `!` and
-    -- `<=`/`>=`/`=` keep their meaning: false for `<`, `>`, `!=`; true for `<=`, `>=`, `=`
+    -- is omitted with its reason, never folded into an always-false term. L1902 (the fold dropped): the current
+    -- target's death against the fight's end (Guardian's) is the real comparison of the raw estimates, with one enemy
+    -- the old fold's constant (false for `<`, `>`, `!=`; true for `<=`, `>=`, `=`; wowsims_ttd_split_spec pins it at
+    -- run time), with a deviation line
     it(
-        "CN24: omits another target's death and a swap to it; folds the target's death against the fight's end",
+        "CN24: omits another target's death and a swap to it; compares the target's death with the fight's end",
         function()
             local next = { timeUntilTargetDies = { targetUnit = { type = "NextTarget" } } }
             local dies = { timeUntilTargetDies = { targetUnit = { type = "CurrentTarget" } } }
-            local text, omitted = apl.translate({
+            local text, omitted, _, header = apl.translate({
                 priorityList = {
                     cast(100, cmp("OpGt", next, const("10s"))),
                     cast(100, { variableRef = { name = "Next target lives" } }),
@@ -3965,24 +3966,32 @@ describe("the wowsims APL translator's target swaps (option D)", function()
             }, ctx({}))
             assert.are.equal(
                 table.concat({
-                    "actions=big_hit,if=fight_remains<3",
-                    "actions+=/roar,use_off_gcd=1,if=fight_remains<2",
-                    "actions+=/dot,if=rage.lo>5",
-                    "actions+=/starfire",
+                    "actions=big_hit,if=(target.time_to_die<3&(active_enemies>1&target.real_ttd<longest_ttd))",
+                    "actions+=/big_hit,if=(active_enemies>1&longest_ttd>target.real_ttd)",
+                    "actions+=/big_hit,if=target.time_to_die<3",
+                    "actions+=/roar,use_off_gcd=1,if=((active_enemies>1&target.real_ttd<longest_ttd)|target.time_to_die<2)",
+                    "actions+=/dot,if=((active_enemies<=1|target.real_ttd<=longest_ttd)&rage.lo>5)",
+                    "actions+=/starfire,if=!(active_enemies>1&target.real_ttd<longest_ttd)",
                 }, "\n"),
                 text
             )
             local other = "timeUntilTargetDies of NextTarget: Forever gives no other target's time to die"
-            local fight = "never: timeUntilTargetDies against remainingTime: the target's time to die is fight_remains here"
-                .. " (gap AN), so the comparison is a constant."
             assert.are.same({
                 "default #1: " .. other,
                 "default #2: " .. other,
                 "default #3: changeTarget NextTarget: no on-all-targets read of a cast before it in this list",
                 "default #4: changeTarget PreviousTarget: no previous target in Hekili",
-                "default #5: " .. fight,
-                "default #6: " .. fight,
             }, omitted)
+            local fight = "timeUntilTargetDies against remainingTime: with one enemy both are its one estimate (the"
+                .. " comparison's constant); with several, the target's estimate against the longest-living enemy's,"
+                .. " before the look-ahead."
+            assert.are.same({
+                "# Deviation: default #5: " .. fight,
+                "# Deviation: default #6: " .. fight,
+                "# Deviation: default #8: " .. fight,
+                "# Deviation: default #9: " .. fight,
+                "# Deviation: default #10: " .. fight,
+            }, header)
         end
     )
 
@@ -4651,5 +4660,189 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
             "default #1: reads window s, whose sequence was omitted",
             "default #3: reads window s, whose sequence was omitted",
         }, omitted)
+    end)
+end)
+
+-- L1902 (owner rule, fable-ttd-unclear-decision.md): a remaining-time read whose value is lost if THIS target dies
+-- first reads target.time_to_die; a fight-length one keeps fight_remains. Rule 0: timeUntilTargetDies of the current
+-- target is the source's own choice. remainingTime, per occurrence (cmp and math): against a target aura's duration or
+-- remaining time, or a cast (+ travel) landing on the target; against a flat number on a line whose action applies a
+-- target aura (the kit's handler); never on a racial, item or own-cooldown line; the recipe's `targetBound` overrides.
+describe("L1902: target-bound remaining time", function()
+    -- the kit's handler as the engine runs it (its own environment): applies its own aura on `unit`
+    local function lands(key, unit)
+        local env = {}
+        return setfenv(function()
+            if unit == "debuff" then
+                env.applyDebuff("target", key)
+            else
+                env.applyBuff(key)
+            end
+        end, env)
+    end
+    local function tctx(r)
+        local kit = {
+            abilities = {
+                rend = { key = "rend", id = 100, gcd = "spell", handler = lands("rend", "debuff") },
+                big_hit = { key = "big_hit", id = 200, gcd = "spell" },
+                roar = { key = "roar", id = 300, gcd = "off", handler = lands("roar", "buff") },
+                bolt = { key = "bolt", id = 800, cast = 2.5, velocity = 20, gcd = "spell" },
+                trinket = { key = "trinket", id = -1, item = 555, gcd = "off" },
+                mend = { key = "mend", id = 600, gcd = "spell", handler = lands("mend", "buff") },
+            },
+            auras = { rend = { id = 100 }, dot = { id = 400 }, mend = { id = 600 }, roar = { id = 300 } },
+            talents = {},
+            racial = { roar = "RaceOrc" },
+        }
+        return apl.context(kit, r or {})
+    end
+    local function math(op, lhs, rhs)
+        return { math = { op = op, lhs = lhs, rhs = rhs } }
+    end
+    local function spell(k, id)
+        return { [k] = { spellId = { spellId = id } } }
+    end
+    local rt, dies = { remainingTime = {} }, { timeUntilTargetDies = {} }
+    local dur = spell("dotBaseDuration", 400)
+    local DEV = "remainingTime is the target's time to die on this line: its value is lost if this target dies first"
+        .. " (owner rule, L1902)."
+
+    it("rule 0 and rule 1: the target's death, a target aura, a cast landing, a flat number on a DoT", function()
+        local text, omitted, _, header = apl.translate({
+            priorityList = {
+                cast(200, cmp("OpLe", dies, const("1s"))), -- rule 0: the source's own read, no deviation
+                cast(200, cmp("OpGt", rt, dur)),
+                cast(200, cmp("OpGt", math("OpAdd", spell("spellCastTime", 800), spell("spellTravelTime", 800)), rt)),
+                cast(200, cmp("OpGt", spell("spellCastTime", 800), rt)),
+                cast(100, cmp("OpGt", rt, const("12"))), -- a flat number on a line applying a target aura
+                cast(100, NOT(cmp("OpLe", rt, const("6s")))),
+                cast(200, cmp("OpGt", rt, const("12"))), -- the action applies no aura: the fight
+                cast(600, cmp("OpGt", rt, const("12"))), -- a buff of ours: the fight
+                cast(100, cmp("OpLe", math("OpAdd", { currentTime = {} }, rt), const("60"))), -- the fight's length
+                cast(100, cmp("OpLt", rt, spell("spellTimeToReady", 200))), -- a cooldown's alignment
+            },
+        }, tctx())
+        assert.are.equal(
+            table.concat({
+                "actions=big_hit,if=target.time_to_die<=1",
+                "actions+=/big_hit,if=target.time_to_die>debuff.dot.duration",
+                "actions+=/big_hit,if=(!action.bolt.known|(action.bolt.cast+action.bolt.travel_time)>target.time_to_die)",
+                "actions+=/big_hit,if=(!action.bolt.known|action.bolt.cast>target.time_to_die)",
+                "actions+=/rend,if=target.time_to_die>12",
+                "actions+=/rend,if=!(target.time_to_die<=6)",
+                "actions+=/big_hit,if=fight_remains>12",
+                "actions+=/mend,if=fight_remains>12",
+                "actions+=/rend,if=(time+fight_remains)<=60",
+                "actions+=/rend,if=(!action.big_hit.known|fight_remains<cooldown.big_hit.remains)",
+            }, "\n"),
+            text
+        )
+        assert.are.same({}, omitted)
+        assert.are.same({
+            "# Deviation: default #2: " .. DEV,
+            "# Deviation: default #3: " .. DEV,
+            "# Deviation: default #4: " .. DEV,
+            "# Deviation: default #5: " .. DEV,
+            "# Deviation: default #6: " .. DEV,
+        }, header)
+    end)
+
+    it("classifies through math and a variable, on a call line too (the Warlocks' cooldowns gate)", function()
+        local text = apl.translate({
+            valueVariables = { { name = "Dooms left", value = math("OpDiv", math("OpSub", rt, const("5s")), dur) } },
+            priorityList = {
+                {
+                    action = {
+                        groupReference = { groupName = "Cooldowns" },
+                        condition = cmp("OpLt", { variableRef = { name = "Dooms left" } }, const("1")),
+                    },
+                },
+            },
+            groups = { { name = "Cooldowns", actions = { cast(200) } } },
+        }, tctx())
+        assert.are.equal(
+            "actions=call_action_list,name=cooldowns,if=((target.time_to_die-5)/debuff.dot.duration)<1\n"
+                .. "actions.cooldowns=big_hit",
+            text
+        )
+    end)
+
+    it("keeps the fight on a racial, an item and an own-cooldown line, whatever the other operand", function()
+        local text = apl.translate({
+            priorityList = {
+                cast(300, cmp("OpGt", rt, dur)),
+                { action = { castSpell = { spellId = { itemId = 555 } }, condition = cmp("OpGt", rt, dur) } },
+                cast(
+                    200,
+                    AND(
+                        cmp("OpGe", rt, spell("spellFullCooldown", 200)),
+                        cmp("OpGt", math("OpSub", rt, dur), const("1"))
+                    )
+                ),
+            },
+        }, tctx())
+        assert.are.equal(
+            table.concat({
+                "actions=roar,use_off_gcd=1,if=fight_remains>debuff.dot.duration",
+                "actions+=/trinket,use_off_gcd=1,if=fight_remains>debuff.dot.duration",
+                "actions+=/big_hit,if=(fight_remains>=cooldown.big_hit.duration&(fight_remains-debuff.dot.duration)>1)",
+            }, "\n"),
+            text
+        )
+    end)
+
+    it(
+        "the recipe's targetBound: by action and wowsims variable (true: inline); one that matches nothing raises",
+        function()
+            local vars = { { name = "End near", value = cmp("OpLe", rt, const("6s")) } }
+            local text, _, _, header = apl.translate({
+                valueVariables = vars,
+                priorityList = {
+                    cast(200, { variableRef = { name = "End near" } }),
+                    cast(600, { variableRef = { name = "End near" } }),
+                    cast(600, cmp("OpGt", rt, const("12"))),
+                },
+            }, tctx({ targetBound = { big_hit = "End near", mend = true } }))
+            assert.are.equal(
+                table.concat({
+                    "actions=big_hit,if=target.time_to_die<=6",
+                    "actions+=/mend,if=fight_remains<=6",
+                    "actions+=/mend,if=target.time_to_die>12",
+                }, "\n"),
+                text
+            )
+            assert.are.same({ "# Deviation: default #1: " .. DEV, "# Deviation: default #3: " .. DEV }, header)
+            assert.has_error(function()
+                apl.translate({
+                    valueVariables = vars,
+                    priorityList = { cast(200, { variableRef = { name = "End near" } }) },
+                }, tctx({ targetBound = { big_hit = "Other" } }))
+            end, "targetBound: big_hit reads no remainingTime of Other")
+        end
+    )
+
+    it("a hoisted variable whose readers classify its remainingTime differently is a generation error", function()
+        local t = { cmp("OpGt", rt, const("12")) }
+        for i = 2, apl.HOIST_TERMS do
+            t[i] = cmp("OpLt", { currentRage = {} }, const(tostring(i)))
+        end
+        local big = { { name = "Big", value = AND(unpack(t)) } }
+        local same = apl.translate({
+            valueVariables = big,
+            priorityList = {
+                cast(200, { variableRef = { name = "Big" } }),
+                cast(600, { variableRef = { name = "Big" } }),
+            },
+        }, tctx())
+        assert.is_truthy(same:find("^actions=variable,name=v_big,pure=1,value=%(fight_remains>12&"))
+        assert.has_error(function()
+            apl.translate({
+                valueVariables = big,
+                priorityList = {
+                    cast(200, { variableRef = { name = "Big" } }),
+                    cast(100, { variableRef = { name = "Big" } }),
+                },
+            }, tctx())
+        end, "CN25: variable Big reads remainingTime that its readers classify differently (L1902)")
     end)
 end)

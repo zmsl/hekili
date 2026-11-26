@@ -430,4 +430,99 @@ describe("time to die with more than one enemy (lane B8)", function()
         rawget(H.env, "LibStub").libs[MAJOR].h.state = "priming"
         assert.are.equal(3600, H.Hekili:GetGreatestTTD())
     end)
+
+    -- L1902 caveat (b) (Fable lane check): a cycle set up by a swap line that turns out unusable (a usable one reaches
+    -- Core.lua's clear after its ready test, picked or not) must not leak into a later call_action_list line's condition
+    -- (a call line checks its condition without reaching the cycle block), where target.time_to_die would read
+    -- raid_event.adds.remains (fight_remains, 3600 with several) instead of the target's own estimate: the Warlocks'
+    -- cooldowns gate after their multi-target DoT list. The control has no swap line before the call.
+    it("a cycle left by an unpicked swap line does not reach a call line's target.time_to_die", function()
+        local H = boot()
+        count(H, 3)
+        assert.are.equal(3, count(H, 3))
+        H.Hekili.Engine.settings.specs[ww.SPEC].cycle = true
+        H.Hekili.Class.abilities.execute.cycle = "rend" -- its swap keyed on a debuff the kit models (SetupCycle)
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        H.Fire("PLAYER_REGEN_DISABLED")
+        local function first(swap)
+            local default = {
+                { enabled = true, action = "call_action_list", list_name = "cds", criteria = "target.time_to_die<10" },
+                { enabled = true, action = "battle_shout" },
+            }
+            if swap then -- a swap line set up, then unusable (Execute above 20%): never picked, its cycle left set
+                table.insert(default, 1, { enabled = true, action = "execute", other_target = 1 })
+            end
+            H.Hekili.DB.profile.packs[ww.PACK].lists = {
+                default = default,
+                cds = { { enabled = true, action = "defensive_stance", use_off_gcd = 1 } },
+            }
+            H.Hekili:LoadScripts()
+            H.Hekili:ReviewPacks() -- the new lists active
+            local st, cycled = H.Hekili.State, false
+            local setup = st.SetupCycle
+            st.SetupCycle = function(...) -- the swap line set a live cycle (the leak's precondition)
+                setup(...)
+                cycled = cycled or st.IsCycling(nil, true)
+            end
+            H.ctl.now = H.ctl.now + 0.2
+            assert(headless.cycle(H, H.ctl.now))
+            st.SetupCycle = setup
+            assert.are.same({}, H.errors)
+            assert.are.equal(swap, cycled)
+            return out.recs[1] and out.recs[1].actionName
+        end
+        assert.are.equal("defensive_stance", first(false))
+        assert.are.equal("defensive_stance", first(true))
+    end)
+
+    -- L1902 (CN24's fold dropped; Fable condition (ii)): the translator's comparison of the target's death with the
+    -- fight's end reads the old fold's constants (false for `<`, `>`, `!=`; true for `<=`, `>=`, `=`) with one enemy,
+    -- known or not, with several both unknown and with the library off, in the look-ahead too; only several with the
+    -- target's estimate known compare (5 s against the unknown longest)
+    it("the translated target's death against the fight's end: the fold's constants unless it is known", function()
+        local apl = require("tools.wowsims.apl")
+        local H = boot()
+        local st, lib = H.Hekili.State, rawget(H.env, "LibStub").libs[MAJOR]
+        local kit = { abilities = { x = { key = "x", id = 1, gcd = "spell" } }, auras = {}, talents = {} }
+        local FOLD = { OpLt = false, OpGt = false, OpNe = false, OpLe = true, OpGe = true, OpEq = true }
+        local function reads()
+            local out = {}
+            for op in pairs(FOLD) do
+                local text = apl.translate({
+                    priorityList = {
+                        {
+                            action = {
+                                castSpell = { spellId = { spellId = 1 } },
+                                condition = {
+                                    cmp = { op = op, lhs = { timeUntilTargetDies = {} }, rhs = { remainingTime = {} } },
+                                },
+                            },
+                        },
+                    },
+                }, apl.context(kit, {}))
+                local f = assert(loadstring("return " .. H.Hekili.Scripts.SimToLua(text:match(",if=(.*)$"))))
+                out[op] = setfenv(f, st)() and true or false
+            end
+            return out
+        end
+        local function world(n, state)
+            count(H, n)
+            assert.are.equal(n, count(H, n))
+            lib.h.state = state
+            st.reset()
+            st.advance(3)
+            st.delay = 0.5
+            return reads()
+        end
+        assert.are.same(FOLD, world(1, "live"))
+        assert.are.same(FOLD, world(1, "priming"))
+        assert.are.same(FOLD, world(3, "priming"))
+        H.Hekili.bandOff = true
+        assert.are.same(FOLD, world(3, "live"))
+        assert.are.same(FOLD, world(1, "live"))
+        H.Hekili.bandOff = nil
+        local several = world(3, "live")
+        assert.are.same({ true, false, true }, { several.OpLt, several.OpGe, several.OpNe })
+    end)
 end)

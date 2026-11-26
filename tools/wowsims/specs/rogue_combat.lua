@@ -63,6 +63,9 @@ return {
     -- by role (docs/dev/wowsims-packs.md): Garrote a stealth-window cast; Slice and Dice and Rupture both at 1, so they
     -- sort by soonest; Venom none (the user, 2026-10-21)
     focus = { garrote = 1, slice_and_dice = 1, rupture = 1 },
+    -- L1902 (Fable ruling 1b): the 3-point "Fight About to End" Eviscerate dumps points bound to this target, so it reads
+    -- the target's death; Slice and Dice's read of the same variable (a buff of ours) stays the fight's
+    targetBound = { eviscerate = "Fight About to End" },
     leveling = {},
     -- Riposte (owner ruling R70, 2026-11-06: "add it to the apl and make it focus=1"): not from wowsims, which never plays it
     -- (its fight has no parry on us; at 4b0030a44b the Combat SS build does not even take the talent). Off the global

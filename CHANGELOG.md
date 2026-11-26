@@ -6,6 +6,7 @@
 - On-use trinkets are now recommended: the Weakness Analyzer, Talisman of Ephemeral Power, Mind Quickening Gem, Everlook Pathcarver, Eye of the Beast and Blackhand's Breadth show up through "Use Items" (and the priorities that name them) while you wear them, and using one holds your other trinket for its shared lockout.
 
 ### Changed
+- Warlock, Rogue and Druid (Feral, Guardian's cat lines) priorities: damage over time effects (Banes, Corruption, Immolate, Rupture, Rip, Rake) are no longer started on a target about to die, and the end-of-target finishers (Ferocious Bite, Eviscerate), Warlock's quick casts and the Warlock cooldowns line now look at your current target's time to die rather than the whole fight, so recommendations can differ from before, including in single-target fights.
 
 ### Fixed
 - Combat Rogue: Blade Flurry is now recommended during the fight for every race, not only for Orcs.
