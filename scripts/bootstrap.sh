@@ -7,7 +7,8 @@ cd "$(dirname "$0")/.."
 ENV_DIR=.lua
 
 if [ ! -x "$ENV_DIR/bin/luarocks" ]; then
-    python -m venv "$ENV_DIR/venv"
+    PY=$(command -v python3 || command -v python) # macOS has no `python`
+    "$PY" -m venv "$ENV_DIR/venv"
     "$ENV_DIR/venv/bin/pip" install --quiet hererocks==0.25.1
     # --no-readline: WSL and CI images lack the readline headers; the REPL isn't needed.
     "$ENV_DIR/venv/bin/hererocks" "$ENV_DIR" --lua 5.1 --luarocks 3.8.0 --no-readline
